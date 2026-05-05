@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1848C8">
+<title>Dr. Bike Sydney</title>
+<link href="index_files/css2.css" rel="stylesheet">
+<script src="index_files/supabase-js@2"></script>
+<style>
+:root{
+  --blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;
+  --navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;
+  --border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;
+  --red:#DC2626;--amber:#D97706;--amber-lt:#FEF3C7;
+  --gold:#F59E0B;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-font-smoothing:antialiased}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+#loading.hide{opacity:0;pointer-events:none}
+.load-logo{width:64px;height:64px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);margin-bottom:20px;animation:pulse 1.5s infinite}
+.load-logo svg{width:38px;height:38px}
+.load-text{font-size:14px;color:rgba(255,255,255,0.4);font-weight:300}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+/* ── VIEWS ── */
+.view{display:none}.view.active{display:block}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;height:64px;padding:0 32px}
+.nav-brand{display:flex;align-items:center;gap:11px;cursor:pointer}
+.nav-logo{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);flex-shrink:0}
+.nav-logo svg{width:22px;height:22px}
+.nav-name{font-size:17px;font-weight:700;color:var(--navy)}
+.nav-tagline{font-size:10px;color:var(--mgray);letter-spacing:0.05em;text-transform:uppercase;margin-top:1px}
+.nav-links{display:flex;align-items:center;gap:2px}
+.nl{padding:6px 14px;font-size:13px;color:var(--mgray);cursor:pointer;border:none;background:transparent;font-family:var(--sans);transition:color .15s;border-radius:6px}
+.nl:hover,.nl.on{color:var(--navy);background:#F3F4F6}
+.nl.cta{background:var(--blue);color:#fff;padding:9px 20px;margin-left:8px;font-size:13px;font-weight:500;transition:background .15s;border:none;cursor:pointer;font-family:var(--sans);border-radius:8px}
+.nl.cta:hover{background:var(--blue2)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{width:20px;height:1.5px;background:var(--navy);display:block;border-radius:2px}
+
+/* ── HERO ── */
+.hero{padding:88px 32px 96px;text-align:center;border-bottom:1px solid var(--border)}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';width:28px;height:1.5px;background:var(--blue);border-radius:2px}
+.hero h1{font-size:clamp(42px,6vw,68px);font-weight:800;color:var(--navy);line-height:1.1;margin-bottom:12px;max-width:620px;margin-left:auto;margin-right:auto;letter-spacing:-0.03em}
+.accent{color:var(--blue)}
+.hero-sub{font-size:18px;font-weight:300;color:var(--mgray);margin-bottom:16px}
+.hero p{font-size:15px;color:var(--mgray);max-width:420px;margin:0 auto 40px;line-height:1.7;font-weight:300}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--blue);color:#fff;border:none;padding:14px 32px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;border-radius:9px;box-shadow:0 4px 14px rgba(24,72,200,0.35)}
+.btn-primary:hover{background:var(--blue2);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--border);padding:13px 32px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border-radius:9px}
+.btn-ghost:hover{border-color:var(--navy)}
+.hero-stats{display:flex;justify-content:center;margin-top:60px;padding-top:48px;border-top:1px solid var(--border);flex-wrap:wrap}
+.hs{padding:0 40px;text-align:center;border-right:1px solid var(--border)}
+.hs:last-child{border-right:none}
+.hs-n{font-size:30px;font-weight:700;color:var(--navy);line-height:1;letter-spacing:-0.02em}
+.hs-l{font-size:10px;color:var(--mgray);margin-top:6px;letter-spacing:0.08em;text-transform:uppercase;font-weight:500}
+
+/* ── SECTION ── */
+.section{padding:80px 32px;border-bottom:1px solid var(--border)}
+.section.off{background:var(--off)}
+.sec-inner{max-width:860px;margin:0 auto}
+.sec-eye{font-size:11px;font-weight:600;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sec-eye::before{content:'';width:18px;height:1.5px;background:var(--blue);border-radius:2px}
+.sec-h2{font-size:clamp(26px,4vw,40px);font-weight:700;color:var(--navy);margin-bottom:14px;letter-spacing:-0.02em}
+.sec-p{font-size:15px;color:var(--mgray);line-height:1.7;font-weight:300;max-width:520px;margin-bottom:44px}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat{background:var(--white);border-radius:var(--r);padding:28px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.feat-num{font-size:12px;font-weight:700;color:var(--blue);margin-bottom:14px;letter-spacing:0.06em}
+.feat-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.feat-desc{font-size:13px;color:var(--mgray);line-height:1.6;font-weight:300}
+
+/* ── PLANS PREVIEW ── */
+.plan-pills{display:flex;justify-content:center;gap:16px;margin-top:40px;flex-wrap:wrap}
+.plan-pill{border:1.5px solid var(--border);border-radius:var(--r);padding:22px 24px;text-align:center;min-width:170px;cursor:pointer;transition:all .15s;background:var(--white);position:relative;box-shadow:var(--shadow)}
+.plan-pill:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.plan-pill.hot{background:var(--navy);border-color:var(--navy)}
+.pp-label{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--mgray);margin-bottom:8px}
+.plan-pill.hot .pp-label{color:rgba(255,255,255,0.5)}
+.pp-price{font-size:26px;font-weight:700;color:var(--navy);line-height:1}
+.plan-pill.hot .pp-price{color:#fff}
+.pp-sub{font-size:11px;color:var(--mgray);margin-top:6px}
+.plan-pill.hot .pp-sub{color:rgba(255,255,255,0.5)}
+.pop-ribbon{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:3px 12px;border-radius:20px;white-space:nowrap}
+
+/* ── CARDS / SHARED ── */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.card-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600;color:var(--navy)}
+.card-sub{font-size:11px;color:var(--mgray);margin-top:2px}
+
+/* ── LOGIN / AUTH ── */
+.auth-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--off)}
+.auth-card{background:var(--white);border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.auth-badge{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
+.auth-badge svg{width:22px;height:22px}
+.auth-brand{font-size:18px;font-weight:700;color:var(--navy)}
+.auth-title{font-size:24px;font-weight:700;color:var(--navy);margin-bottom:6px;letter-spacing:-0.01em}
+.auth-sub{font-size:13px;color:var(--mgray);margin-bottom:28px;line-height:1.6;font-weight:300}
+.google-btn{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:9px;background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--navy);margin-bottom:16px;transition:all .15s}
+.google-btn:hover{border-color:var(--blue);background:var(--blue-lt)}
+.or-row{display:flex;align-items:center;gap:12px;margin:16px 0;font-size:11px;color:var(--mgray)}
+.or-line{flex:1;height:1px;background:var(--border)}
+.inp{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--navy);background:var(--white);margin-bottom:10px;font-family:var(--sans);font-weight:300;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--blue)}
+.submit-btn{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 4px 14px rgba(24,72,200,0.3)}
+.submit-btn:hover{background:var(--blue2)}
+.auth-foot{font-size:12px;color:var(--mgray);margin-top:16px;text-align:center}
+.auth-foot span{color:var(--blue);cursor:pointer;font-weight:500}
+.auth-err{background:var(--red);background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
+
+/* ── DASHBOARD ── */
+.dash-hdr{background:var(--white);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.dash-av{width:40px;height:40px;background:var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff}
+.dash-name{font-size:15px;font-weight:600;color:var(--navy)}
+.dash-plan-sub{font-size:11px;color:var(--mgray);margin-top:1px}
+.mem-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:5px 12px;border-radius:20px}
+.mem-vip{background:#FEF3C7;color:var(--gold);border:1px solid rgba(245,158,11,0.2)}
+.mem-std{background:var(--blue-lt);color:var(--blue);border:1px solid rgba(24,72,200,0.2)}
+.mem-basic{background:var(--off);color:var(--mgray);border:1px solid var(--border)}
+.mem-none{background:var(--off);color:var(--mgray);border:1px solid var(--border)}
+.dash-body{padding:20px;background:var(--off);display:flex;flex-direction:column;gap:14px;min-height:60vh}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{background:var(--white);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.kpi-n{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-0.01em}
+.kpi-n.blue{color:var(--blue)}
+.kpi-l{font-size:10px;color:var(--mgray);margin-top:4px;letter-spacing:0.04em;text-transform:uppercase;font-weight:500}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ct{font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ct::before{content:'';width:14px;height:2px;background:var(--blue);border-radius:2px}
+.hist-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F3F4F6;font-size:13px}
+.hist-row:last-child{border-bottom:none}
+.hist-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.hist-svc{flex:1;color:var(--navy)}
+.hist-date{font-size:11px;color:var(--mgray)}
+.hist-price{font-weight:600;color:var(--navy);margin-left:8px}
+.empty-state{text-align:center;padding:32px 16px;color:var(--mgray);font-size:13px;font-weight:300}
+.dash-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.da{padding:12px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--navy);font-family:var(--sans);transition:all .15s;border-radius:9px}
+.da:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+.da.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.da.blue{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ── BOOKING ── */
+.book-wrap{max-width:720px;margin:0 auto;padding:24px}
+.steps-row{display:flex;background:var(--white);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px}
+.step-item{flex:1;text-align:center;padding:14px 6px;font-size:11px;color:var(--mgray);border-bottom:2px solid transparent;transition:all .15s;letter-spacing:0.04em;text-transform:uppercase;font-weight:500}
+.step-item.done{color:var(--blue);border-color:var(--blue)}
+.step-item.active{color:var(--navy);font-weight:600;border-color:var(--navy)}
+.svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.svc-card{background:var(--white);border-radius:var(--r);border:1.5px solid var(--border);padding:16px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
+.svc-card:hover{border-color:var(--blue);transform:translateY(-1px)}
+.svc-card.selected{border-color:var(--blue);background:var(--blue-lt)}
+.svc-name{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.svc-dur{font-size:11px;color:var(--mgray);margin-bottom:8px;font-weight:300}
+.svc-price{font-size:20px;font-weight:700;color:var(--blue)}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cdow{font-size:10px;color:var(--mgray);text-align:center;padding:5px 0;text-transform:uppercase;font-weight:500}
+.cday{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;color:var(--navy);transition:all .13s;border-radius:7px}
+.cday:hover:not(.ot):not(.pt){background:var(--blue-lt);color:var(--blue)}
+.cday.ot,.cday.pt{color:#D1D5DB;cursor:default}
+.cday.sel{background:var(--blue);color:#fff;font-weight:600}
+.cday.avail::after{content:'';width:4px;height:4px;background:var(--blue);border-radius:50%;position:absolute;bottom:3px;left:50%;transform:translateX(-50%)}
+.cday{position:relative}
+.tg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ts{padding:10px;font-size:12px;text-align:center;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--navy);font-family:var(--sans);transition:all .13s;border-radius:8px}
+.ts:hover:not(.bk){border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+.ts.sel{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.ts.bk{background:#F9FAFB;color:#D1D5DB;cursor:default}
+.conf-row{display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-bottom:1px solid #F3F4F6}
+.conf-row:last-of-type{border-bottom:none}
+.conf-label{color:var(--mgray);font-weight:300}
+.conf-total{display:flex;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:2px solid var(--border)}
+.conf-btn{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;margin-top:18px;transition:all .15s;box-shadow:0 4px 14px rgba(24,72,200,0.3)}
+.conf-btn:hover{background:var(--blue2)}
+.conf-btn:disabled{background:#ccc;box-shadow:none;cursor:not-allowed}
+.success-box{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:32px;text-align:center;box-shadow:var(--shadow-lg)}
+.success-icon{width:56px;height:56px;background:var(--green-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+
+/* ── SERVICES PAGE ── */
+.svcs-wrap{max-width:860px;margin:0 auto;padding:24px}
+.filter-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.fp{padding:6px 16px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;background:var(--white);color:var(--mgray);font-family:var(--sans);transition:all .15s}
+.fp.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.cat-label{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.1em;padding:16px 0 10px;display:flex;align-items:center;gap:8px}
+.cat-label::before{content:'';width:14px;height:2px;background:var(--blue);border-radius:2px;display:inline-block}
+
+/* ── MEMBERSHIP ── */
+.plans-wrap{max-width:920px;margin:0 auto;padding:24px}
+.bill-tgl{display:inline-flex;background:#F3F4F6;border-radius:10px;padding:4px;margin-bottom:24px}
+.bt{padding:9px 24px;font-size:13px;cursor:pointer;color:var(--mgray);border:none;background:transparent;font-family:var(--sans);transition:all .13s;border-radius:7px;font-weight:500}
+.bt.on{background:var(--white);color:var(--navy);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+.plans3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start}
+.pl{background:var(--white);border-radius:16px;padding:28px;display:flex;flex-direction:column;border:1.5px solid var(--border);box-shadow:var(--shadow);position:relative}
+.pl.pop{border-color:var(--blue);box-shadow:0 4px 6px rgba(24,72,200,0.08),0 12px 40px rgba(24,72,200,0.15)}
+.pop-tag{background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:6px 16px;margin-bottom:16px;letter-spacing:0.05em;text-transform:uppercase;display:inline-block;border-radius:20px}
+.pl-name{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px;letter-spacing:-0.01em}
+.pl-who{font-size:13px;color:var(--mgray);margin-bottom:20px}
+.pl-price{font-size:40px;font-weight:700;color:var(--navy);line-height:1;letter-spacing:-0.02em}
+.pl-mo{font-size:15px;font-weight:400;color:var(--mgray)}
+.pl-annual{font-size:12px;color:var(--mgray);margin-top:6px;margin-bottom:16px;font-weight:300}
+.bikes-tag{font-size:12px;font-weight:500;padding:6px 14px;margin-bottom:20px;display:inline-block;border-radius:8px;border:1.5px solid var(--border)}
+.feat-sl{font-size:11px;font-weight:700;color:var(--mgray);text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 10px}
+.pf{display:flex;align-items:flex-start;gap:9px;margin-bottom:8px;font-size:13px;line-height:1.5}
+.pfd{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.pf.no .pfd{background:#E5E7EB}
+.pf.no span{color:#9CA3AF}
+.pl-btn-wrap{margin-top:24px}
+.plb{width:100%;padding:14px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .15s;border-radius:10px}
+.plb:hover{opacity:.9;transform:translateY(-1px)}
+.plb-note{font-size:11px;color:var(--mgray);text-align:center;margin-top:10px;font-weight:300}
+
+/* ── MECHANIC MAP WIDGET ── */
+.map-widget{background:var(--navy);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.map-dot{width:12px;height:12px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite}
+.map-info{flex:1}
+.map-title{font-size:14px;font-weight:600;color:#fff}
+.map-sub{font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;font-weight:300}
+.map-eta{font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.02em;white-space:nowrap}
+.map-eta-l{font-size:10px;color:rgba(255,255,255,0.4);text-align:center;text-transform:uppercase;letter-spacing:0.06em}
+.map-fake{background:linear-gradient(135deg,#1a3a6b 0%,#0d2040 100%);border-radius:9px;height:120px;margin-top:12px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.map-fake-grid{position:absolute;inset:0;opacity:0.15;background-image:linear-gradient(rgba(255,255,255,0.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.3) 1px,transparent 1px);background-size:30px 30px}
+.map-road{position:absolute;width:70%;height:3px;background:rgba(255,255,255,0.15);border-radius:2px}
+.map-road.v{width:3px;height:70%;left:40%}
+.map-mechanic-dot{width:14px;height:14px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 8px rgba(24,72,200,0.5);position:absolute;left:35%;top:45%;animation:moveDot 4s ease-in-out infinite}
+.map-dest-dot{width:12px;height:12px;border-radius:50%;background:var(--red);border:3px solid #fff;position:absolute;right:22%;top:30%}
+@keyframes moveDot{0%,100%{left:35%;top:45%}50%{left:50%;top:35%}}
+.map-legend{display:flex;gap:16px;margin-top:8px}
+.ml{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,0.5)}
+.mld{width:8px;height:8px;border-radius:50%}
+
+/* ── NOTIFICATION TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;box-shadow:var(--shadow-lg);white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── FOOTER ── */
+footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.fb{font-size:17px;font-weight:700;color:#fff}
+.fb em{color:var(--blue);font-style:normal}
+.fs{font-size:10px;color:rgba(255,255,255,0.4);margin-top:3px;letter-spacing:0.06em;text-transform:uppercase}
+.flinks{display:flex;gap:20px}
+.fl{font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;transition:color .15s}
+.fl:hover{color:#fff}
+
+/* ── SPINNER ── */
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:700px){
+  nav{padding:0 16px;height:56px}
+  .nav-links{display:none;flex-direction:column;position:fixed;top:56px;left:0;right:0;background:var(--white);border-bottom:1px solid var(--border);padding:16px;gap:4px;z-index:99}
+  .nav-links.open{display:flex}
+  .hamburger{display:flex}
+  .feats,.plans3{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .two-col,.svc-grid,.dash-acts{grid-template-columns:1fr}
+  .plan-pills{flex-direction:column;align-items:center}
+  .hero-stats{flex-direction:column}
+  .hs{border-right:none;border-bottom:1px solid var(--border);padding:16px 0;width:100%}
+  .hs:last-child{border-bottom:none}
+  .hero{padding:60px 20px 72px}
+  .section{padding:56px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading" class="hide">
+  <div class="load-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round">
+      <circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle>
+      <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path>
+    </svg>
+  </div>
+  <div class="load-text">Loading Dr. Bike...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══ HOME ══ -->
+<div id="view-home" class="view active">
+  <nav>
+    <div class="nav-brand" onclick="showView('home')">
+      <div class="nav-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle>
+          <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path>
+        </svg>
+      </div>
+      <div>
+        <div class="nav-name">Dr. Bike</div>
+        <div class="nav-tagline">Sydney · Mobile repair</div>
+      </div>
+    </div>
+    <div class="nav-links" id="nav-links">
+      <button class="nl" onclick="showView('services')">Services</button>
+      <button class="nl" onclick="showView('membership')">Membership</button>
+      <button class="nl" onclick="showView('book')">Book</button>
+      <button class="nl" onclick="showView('dashboard')">My account</button>
+      <button class="nl cta" onclick="showView('auth')" id="nav-auth-btn">Sign in</button>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')"><span></span><span></span><span></span></button>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-eyebrow">Mobile bicycle repair · Sydney</div>
+    <h1>Your bike, fixed at<br><span class="accent">your front door</span></h1>
+    <div class="hero-sub">Premium service. No workshop required.</div>
+    <p>Professional mechanics come to you anywhere in Sydney. Book online, track your history and manage your membership.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="showView('auth')">Sign in with Google</button>
+      <button class="btn-ghost" onclick="showView('services')">View all services</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hs"><div class="hs-n">50+</div><div class="hs-l">Services</div></div>
+      <div class="hs"><div class="hs-n">2</div><div class="hs-l">Vans in Sydney</div></div>
+      <div class="hs"><div class="hs-n">$25</div><div class="hs-l">From per service</div></div>
+      <div class="hs"><div class="hs-n">$57</div><div class="hs-l">Membership/mo</div></div>
+    </div>
+  </div>
+
+  <div class="section off">
+    <div class="sec-inner">
+      <div class="sec-eye">Why Dr. Bike</div>
+      <div class="sec-h2">Everything your bike needs,<br>at your doorstep</div>
+      <p class="sec-p">No workshop trips, no loading the car. We bring a fully equipped mobile workshop to you, Mon–Sat across Sydney.</p>
+      <div class="feats">
+        <div class="feat"><div class="feat-num">01</div><div class="feat-title">Same-day availability</div><div class="feat-desc">Book this morning and we are at your door by afternoon. Six days a week across Sydney.</div></div>
+        <div class="feat"><div class="feat-num">02</div><div class="feat-title">Qualified mechanics</div><div class="feat-desc">Road, MTB and e-bikes serviced with professional-grade tools. Experienced hands every time.</div></div>
+        <div class="feat"><div class="feat-num">03</div><div class="feat-title">Transparent pricing</div><div class="feat-desc">Fixed prices, no hidden charges. Members save 8–18% on every service.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-inner" style="text-align:center">
+      <div class="sec-eye" style="justify-content:center">Membership</div>
+      <div class="sec-h2">Save more. Ride more.</div>
+      <p class="sec-p" style="margin:0 auto 0">From $57/month — priority booking, discounts and free Tune-Ups.</p>
+      <div class="plan-pills">
+        <div class="plan-pill" onclick="showView('membership')">
+          <div class="pp-label">Basic</div>
+          <div class="pp-price">$57<span style="font-size:13px;font-weight:300;color:var(--mgray)">/mo</span></div>
+          <div class="pp-sub">1 bike · 8% off</div>
+        </div>
+        <div class="plan-pill hot" onclick="showView('membership')">
+          <div class="pop-ribbon">Most popular</div>
+          <div class="pp-label">Standard</div>
+          <div class="pp-price">$97<span style="font-size:13px;font-weight:300;color:rgba(255,255,255,0.5)">/mo</span></div>
+          <div class="pp-sub">1 bike · 12% off</div>
+        </div>
+        <div class="plan-pill" onclick="showView('membership')" style="border-color:#D97706">
+          <div class="pp-price" style="color:#B45309">$147<span style="font-size:13px;font-weight:300;color:var(--mgray)">/mo</span></div>
+          <div class="pp-label" style="color:#B45309">VIP · 3 bikes</div>
+        </div>
+      </div>
+      <div style="margin-top:28px"><button class="btn-primary" onclick="showView('membership')">See full membership details</button></div>
+    </div>
+  </div>
+
+  <footer>
+    <div><div class="fb">Dr. <em>Bike</em> · Sydney</div><div class="fs">drbike.com.au · Mobile bicycle repair</div></div>
+    <div class="flinks">
+      <span class="fl" onclick="showView('services')">Services</span>
+      <span class="fl" onclick="showView('membership')">Membership</span>
+      <span class="fl" onclick="showView('book')">Book</span>
+      <span class="fl" onclick="showView('auth')">Sign in</span>
+    </div>
+  </footer>
+</div>
+
+<!-- ══ AUTH ══ -->
+<div id="view-auth" class="view">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path></svg></div>
+        <div class="auth-brand">Dr. Bike</div>
+      </div>
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Sign in to manage bookings, view history and access your membership.</div>
+      <div class="auth-err" id="auth-err"></div>
+      <button class="google-btn" onclick="signInGoogle()">
+        <svg width="17" height="17" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path></svg>
+        Continue with Google
+      </button>
+      <div class="or-row"><div class="or-line"></div>or<div class="or-line"></div></div>
+      <input class="inp" type="email" placeholder="Email address" id="auth-email">
+      <input class="inp" type="password" placeholder="Password" id="auth-password" style="margin-bottom:16px">
+      <button class="submit-btn" onclick="signInEmail()" id="signin-btn">Sign in</button>
+      <div class="auth-foot">No account? <span onclick="signUpEmail()">Create one free</span> &nbsp;·&nbsp; <span onclick="showView('home')">Back to home</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="view-dashboard" class="view">
+  <div class="dash-hdr">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="dash-av" id="d-av">?</div>
+      <div>
+        <div class="dash-name" id="d-name">Loading...</div>
+        <div class="dash-plan-sub" id="d-plan">Loading membership...</div>
+      </div>
+    </div>
+    <div id="d-badge" class="mem-badge mem-none">No plan</div>
+  </div>
+  <div class="dash-body">
+    <!-- Mechanic map (shown when booking is active) -->
+    <div id="map-widget" style="display:none">
+      <div class="map-widget">
+        <div class="map-dot"></div>
+        <div class="map-info">
+          <div class="map-title">Your mechanic is on the way</div>
+          <div class="map-sub" id="map-mech-name">Van 1 · Mechanic 1</div>
+          <div class="map-fake" style="margin-top:10px">
+            <div class="map-fake-grid"></div>
+            <div class="map-road"></div>
+            <div class="map-road v"></div>
+            <div class="map-mechanic-dot"></div>
+            <div class="map-dest-dot"></div>
+            <div class="map-legend" style="position:absolute;bottom:8px;left:10px">
+              <div class="ml"><div class="mld" style="background:var(--blue)"></div>Mechanic</div>
+              <div class="ml"><div class="mld" style="background:var(--red)"></div>Your location</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;flex-shrink:0">
+          <div class="map-eta" id="map-eta">8</div>
+          <div class="map-eta-l">min away</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-n" id="kpi-jobs">—</div><div class="kpi-l">Total services</div></div>
+      <div class="kpi"><div class="kpi-n blue" id="kpi-spent">—</div><div class="kpi-l">Total spent</div></div>
+      <div class="kpi"><div class="kpi-n" id="kpi-next">—</div><div class="kpi-l">Next booking</div></div>
+      <div class="kpi"><div class="kpi-n" id="kpi-disc">—</div><div class="kpi-l">My discount</div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card" style="padding:16px 18px">
+        <div class="ct">Booking history</div>
+        <div id="booking-history"><div class="empty-state">No bookings yet.<br>Book your first service below.</div></div>
+      </div>
+      <div class="card" style="padding:16px 18px">
+        <div class="ct">My bikes</div>
+        <div id="bikes-list"><div class="empty-state">No bikes added yet.</div></div>
+        <button style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);cursor:pointer;color:var(--navy);font-family:var(--sans);margin-top:12px;font-weight:500;transition:all .15s" onclick="showView('book')">+ Book a service</button>
+      </div>
+    </div>
+    <div class="dash-acts">
+      <button class="da primary" onclick="showView('book')">Book a service</button>
+      <button class="da" onclick="showView('services')">All services</button>
+      <button class="da blue" onclick="showView('membership')">Membership</button>
+    </div>
+    <button style="width:100%;padding:11px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--white);cursor:pointer;color:var(--red);font-family:var(--sans);font-weight:500;margin-top:4px" onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<!-- ══ SERVICES ══ -->
+<div id="view-services" class="view">
+  <div style="background:var(--white);padding:32px 28px 24px;border-bottom:1px solid var(--border)">
+    <div class="sec-eye">Services</div>
+    <div style="font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-0.02em">Our services</div>
+    <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">Tap any service to book. Members save 8–18%.</div>
+    <button class="btn-ghost" style="margin-top:14px;padding:8px 18px;font-size:13px" onclick="showView('home')">← Back</button>
+  </div>
+  <div class="svcs-wrap">
+    <div class="filter-pills" id="filter-pills"><button class="fp on" onclick="setSvcFilter('all')">All services</button></div>
+    <div id="services-grid"><div class="empty-state">Loading services...</div></div>
+  </div>
+</div>
+
+<!-- ══ BOOKING ══ -->
+<div id="view-book" class="view">
+  <div style="background:var(--white);padding:32px 28px 24px;border-bottom:1px solid var(--border)">
+    <div class="sec-eye">Booking</div>
+    <div style="font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-0.02em">Book a service</div>
+    <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">We come to your door, Mon–Sat.</div>
+  </div>
+  <div class="book-wrap">
+    <div class="steps-row">
+      <div class="step-item active" id="bs1">1. Service</div>
+      <div class="step-item" id="bs2">2. Date &amp; time</div>
+      <div class="step-item" id="bs3">3. Address</div>
+      <div class="step-item" id="bs4">4. Confirm</div>
+    </div>
+
+    <!-- Step 1: Service -->
+    <div id="step-1">
+      <div class="card" style="padding:18px;margin-bottom:14px">
+        <div class="ct">Select a service</div>
+        <div class="svc-grid" id="book-svcs-grid"></div>
+      </div>
+    </div>
+
+    <!-- Step 2: Date & Time -->
+    <div id="step-2" style="display:none">
+      <div class="card" style="padding:18px;margin-bottom:14px">
+        <div class="ct">Selected: <span id="sel-svc-name" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--blue)">—</span></div>
+        <div class="ct">Choose a date</div>
+        <div class="cal-g" style="margin-bottom:16px">
+          <div class="cdow">Su</div><div class="cdow">Mo</div><div class="cdow">Tu</div><div class="cdow">We</div><div class="cdow">Th</div><div class="cdow">Fr</div><div class="cdow">Sa</div>
+          <div class="cday ot">27</div><div class="cday ot">28</div><div class="cday ot">29</div><div class="cday ot">30</div><div class="cday pt">1</div><div class="cday avail" onclick="selDay(this,'2026-05-02')">2</div><div class="cday avail" onclick="selDay(this,'2026-05-03')">3</div>
+          <div class="cday pt">4</div><div class="cday avail" onclick="selDay(this,'2026-05-05')">5</div><div class="cday avail" onclick="selDay(this,'2026-05-06')">6</div><div class="cday avail" onclick="selDay(this,'2026-05-07')">7</div><div class="cday avail" onclick="selDay(this,'2026-05-08')">8</div><div class="cday avail" onclick="selDay(this,'2026-05-09')">9</div><div class="cday avail" onclick="selDay(this,'2026-05-10')">10</div>
+        </div>
+        <div id="times-section" style="display:none">
+          <div class="ct">Choose a time</div>
+          <div class="tg" id="times-grid"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(1)">← Back</button>
+          <button class="conf-btn" style="margin-top:0;flex:1" onclick="goStep(3)" id="step2-next" disabled="disabled">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Address -->
+    <div id="step-3" style="display:none">
+      <div class="card" style="padding:18px;margin-bottom:14px">
+        <div class="ct">Your address</div>
+        <input class="inp" type="text" placeholder="Street address" id="addr-street" style="margin-bottom:8px">
+        <input class="inp" type="text" placeholder="Suburb" id="addr-suburb" style="margin-bottom:8px">
+        <input class="inp" type="text" placeholder="Postcode" id="addr-postcode" style="margin-bottom:16px">
+        <div style="background:var(--blue-lt);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);font-weight:500;margin-bottom:14px">
+          📍 We cover: Inner West, Eastern Suburbs, CBD, North Shore, Manly and Northern Beaches
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(2)">← Back</button>
+          <button class="conf-btn" style="margin-top:0;flex:1" onclick="goStep(4)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Confirm -->
+    <div id="step-4" style="display:none">
+      <div class="card" style="padding:18px;margin-bottom:14px">
+        <div class="ct">Confirm booking</div>
+        <div class="conf-row"><span class="conf-label">Service</span><span id="cf-svc">—</span></div>
+        <div class="conf-row"><span class="conf-label">Date &amp; time</span><span id="cf-dt">—</span></div>
+        <div class="conf-row"><span class="conf-label">Address</span><span id="cf-addr">—</span></div>
+        <div class="conf-row"><span class="conf-label">Van assigned</span><span id="cf-van">Auto-assigned by zone</span></div>
+        <div class="conf-total"><span style="font-weight:600;color:var(--navy)">Total</span><span style="font-size:24px;font-weight:700;color:var(--blue)" id="cf-price">—</span></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(3)">← Back</button>
+          <button class="conf-btn" style="margin-top:0;flex:1" onclick="confirmBooking()" id="confirm-btn">Confirm booking</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success -->
+    <div id="step-success" style="display:none">
+      <div class="success-box">
+        <div class="success-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <div style="font-size:24px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:-0.01em">Booking confirmed ✓</div>
+        <div style="font-size:13px;color:var(--mgray);margin-bottom:20px;font-weight:300;line-height:1.6">We'll send you a confirmation. Your mechanic will contact you 30 minutes before arrival.</div>
+        <button class="btn-primary" onclick="showView('dashboard')">View in my account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MEMBERSHIP ══ -->
+<div id="view-membership" class="view">
+  <div style="background:var(--off);padding:48px 28px 32px;border-bottom:1px solid var(--border);text-align:center">
+    <div class="sec-eye" style="justify-content:center">Membership</div>
+    <div style="font-size:36px;font-weight:800;color:var(--navy);letter-spacing:-0.02em;margin-bottom:10px">Dr. Bike membership</div>
+    <div style="font-size:14px;color:var(--mgray);max-width:440px;margin:0 auto 24px;line-height:1.7;font-weight:300">Priority booking, member discounts and free services. 3-month minimum. Parts always extra.</div>
+    <div class="bill-tgl">
+      <button class="bt on" id="bt-m" onclick="setBilling('m')">Monthly</button>
+      <button class="bt" id="bt-a" onclick="setBilling('a')">Annual — save 20%</button>
+    </div>
+  </div>
+  <div style="padding:32px 24px;background:var(--off)">
+    <div class="plans3" id="plans3" style="max-width:920px;margin:0 auto 24px"><div class="pl">
+      
+      <div class="pl-name">Basic</div><div class="pl-who">For occasional riders</div>
+      <div class="pl-price" style="color:var(--navy)">$57<span class="pl-mo">/mo</span></div>
+      <div class="pl-annual">Or $46/mo billed annually</div>
+      <span class="bikes-tag" style="background:#F3F4F6;color:#4B5563;border-color:#F3F4F6">1 bike · parts extra</span>
+      <div class="feat-sl">Priority</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Priority booking before non-members</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>SMS reminder when service is due</span></div><div class="pf no"><div class="pfd" style="background:#E5E7EB"></div><span>Same-day booking guarantee</span></div><div class="feat-sl">Discounts</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>8% off all labour every visit</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>$20 call-out fee waived</span></div><div class="feat-sl">Free services</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>1 × Tune-Up/year (value $109)</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Tyre pressure check monthly</span></div><div class="pf no"><div class="pfd" style="background:#E5E7EB"></div><span>Brake check every 3 months</span></div>
+      <div class="pl-btn-wrap">
+        <button class="plb" style="background:#0D1F3C;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="showView('auth')">Get started — Basic</button>
+        <div class="plb-note">3-month minimum · cancel anytime after</div>
+      </div>
+    </div><div class="pl pop">
+      <div class="pop-tag">Most popular</div>
+      <div class="pl-name">Standard</div><div class="pl-who">Best value · most popular</div>
+      <div class="pl-price" style="color:var(--navy)">$97<span class="pl-mo">/mo</span></div>
+      <div class="pl-annual">Or $78/mo billed annually</div>
+      <span class="bikes-tag" style="background:#EEF3FC;color:#1848C8;border-color:#EEF3FC">1 bike · parts extra</span>
+      <div class="feat-sl">Priority</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>First-access priority — top of the queue</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>2-hour guaranteed arrival window</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>SMS + call 30 min before arrival</span></div><div class="feat-sl">Discounts</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>12% off all labour every visit</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>$20 call-out fee waived</span></div><div class="feat-sl">Free services</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>2 × Tune-Ups/year (value $218)</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Brake check every 3 months</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Tyre pressure check monthly</span></div>
+      <div class="pl-btn-wrap">
+        <button class="plb" style="background:#1848C8;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="showView('auth')">Get started — Standard</button>
+        <div class="plb-note">3-month minimum · cancel anytime after</div>
+      </div>
+    </div><div class="pl">
+      
+      <div class="pl-name">VIP</div><div class="pl-who">Serious riders &amp; families</div>
+      <div class="pl-price" style="color:#B45309">$147<span class="pl-mo">/mo</span></div>
+      <div class="pl-annual">Or $118/mo billed annually</div>
+      <span class="bikes-tag" style="background:#FEF3C7;color:#B45309;border-color:#FEF3C7">Up to 3 bikes · parts extra</span>
+      <div class="feat-sl">Priority</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Absolute priority in the schedule</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Same-day booking on request</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>1-hour arrival window guarantee</span></div><div class="feat-sl">Discounts</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>18% off all labour every visit</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>$20 call-out fee waived</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Direct mechanic WhatsApp access</span></div><div class="feat-sl">Free services</div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>3 × Tune-Ups/year (value $327)</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Brake &amp; gear check every 2 months</span></div><div class="pf"><div class="pfd" style="background:#1848C8"></div><span>Dedicated mechanic — same person always</span></div>
+      <div class="pl-btn-wrap">
+        <button class="plb" style="background:#92400E;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="showView('auth')">Get started — VIP</button>
+        <div class="plb-note">3-month minimum · cancel anytime after</div>
+      </div>
+    </div></div>
+    <div style="max-width:920px;margin:0 auto;background:var(--navy);border-radius:var(--r);padding:24px 28px">
+      <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.75;font-weight:300">
+        Your bike is your transport, your exercise, or something you simply love. With Dr. Bike, <strong style="color:#fff">we come to you</strong>. A membership makes every visit cheaper, faster and easier.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE INIT ────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── APP STATE ────────────────────────────────────────────────────────────────
+let currentUser = null;
+let userProfile = null;
+let services = [];
+let booking = { service:null, date:null, time:null };
+let billing = 'm';
+let svcFilter = 'all';
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+async function init(){
+  // Check session
+  const { data: { session } } = await sb.auth.getSession();
+  if(session?.user){
+    currentUser = session.user;
+    await loadProfile();
+  }
+  // Load services from Supabase
+  await loadServices();
+  // Hide loading
+  setTimeout(()=>{ document.getElementById('loading').classList.add('hide'); },800);
+
+  // Auth state listener
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if(session?.user){
+      currentUser = session.user;
+      await loadProfile();
+      updateNavAuth();
+    } else {
+      currentUser = null;
+      userProfile = null;
+      updateNavAuth();
+    }
+  });
+
+  // Realtime: listen for new bookings (mechanic location updates)
+  sb.channel('mechanic_locations')
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'mechanic_locations' }, payload => {
+      updateMapWidget(payload.new);
+    }).subscribe();
+}
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+async function signInGoogle(){
+  const { error } = await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{ redirectTo: window.location.href }
+  });
+  if(error) showErr(error.message);
+}
+
+async function signInEmail(){
+  const email = document.getElementById('auth-email').value;
+  const pwd = document.getElementById('auth-password').value;
+  if(!email||!pwd){ showErr('Please enter email and password'); return; }
+  const btn = document.getElementById('signin-btn');
+  btn.innerHTML = '<span class="spinner"></span>Signing in...';
+  btn.disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password:pwd });
+  btn.innerHTML = 'Sign in';
+  btn.disabled = false;
+  if(error){ showErr(error.message); return; }
+  currentUser = data.user;
+  await loadProfile();
+  updateNavAuth();
+  showView('dashboard');
+  toast('Welcome back! 👋');
+}
+
+async function signUpEmail(){
+  const email = document.getElementById('auth-email').value;
+  const pwd = document.getElementById('auth-password').value;
+  if(!email||!pwd){ showErr('Please enter email and password'); return; }
+  const { data, error } = await sb.auth.signUp({ email, password:pwd });
+  if(error){ showErr(error.message); return; }
+  toast('Account created! Check your email to verify.');
+}
+
+async function signOut(){
+  await sb.auth.signOut();
+  currentUser = null;
+  userProfile = null;
+  updateNavAuth();
+  showView('home');
+  toast('Signed out');
+}
+
+function showErr(msg){
+  const el = document.getElementById('auth-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+
+// ── PROFILE ──────────────────────────────────────────────────────────────────
+async function loadProfile(){
+  if(!currentUser) return;
+  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if(error || !data){
+    // Create profile if doesn't exist
+    const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+    const { data: newP } = await sb.from('profiles').insert({
+      id: currentUser.id,
+      email: currentUser.email,
+      full_name: name,
+      role: 'client',
+      membership: 'none'
+    }).select().single();
+    userProfile = newP;
+  } else {
+    userProfile = data;
+  }
+  updateDashboard();
+}
+
+async function updateDashboard(){
+  if(!userProfile) return;
+  const name = userProfile.full_name || userProfile.email?.split('@')[0] || 'there';
+  const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('d-av').textContent = initials;
+  document.getElementById('d-name').textContent = `Good day, ${name.split(' ')[0]}!`;
+  const memLabels = { none:'No membership', basic:'Basic member', std:'Standard member', vip:'VIP member' };
+  const mem = userProfile.membership || 'none';
+  document.getElementById('d-plan').textContent = memLabels[mem] || 'No membership';
+  const badgeEl = document.getElementById('d-badge');
+  const badgeClass = { none:'mem-none', basic:'mem-basic', std:'mem-std', vip:'mem-vip' };
+  const badgeTxt = { none:'No plan', basic:'⭐ Basic', std:'● Standard', vip:'★ VIP' };
+  badgeEl.className = 'mem-badge ' + (badgeClass[mem]||'mem-none');
+  badgeEl.textContent = badgeTxt[mem]||'No plan';
+  const discounts = { none:'0%', basic:'8%', std:'12%', vip:'18%' };
+  document.getElementById('kpi-disc').textContent = discounts[mem]||'0%';
+
+  // Load bookings
+  const { data: bkgs } = await sb.from('bookings')
+    .select('*').eq('client_id', currentUser.id)
+    .order('created_at', { ascending:false }).limit(10);
+
+  document.getElementById('kpi-jobs').textContent = bkgs?.length || 0;
+  const total = bkgs?.reduce((s,b)=>s+(b.service_price||0),0)||0;
+  document.getElementById('kpi-spent').textContent = total > 0 ? '$'+total : '$0';
+
+  const next = bkgs?.find(b=>b.status==='confirmed'||b.status==='pending');
+  document.getElementById('kpi-next').textContent = next ? new Date(next.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'}) : '—';
+
+  // Render history
+  const histEl = document.getElementById('booking-history');
+  if(bkgs && bkgs.length > 0){
+    histEl.innerHTML = bkgs.slice(0,5).map(b=>`
+      <div class="hist-row">
+        <div class="hist-dot"></div>
+        <span class="hist-svc">${b.service_name||'Service'}</span>
+        <span class="hist-date">${new Date(b.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'})}</span>
+        <span class="hist-price">$${b.service_price||0}</span>
+      </div>`).join('');
+
+    // Show map widget if there's an enroute booking
+    const enroute = bkgs.find(b=>b.status==='enroute');
+    if(enroute){
+      document.getElementById('map-widget').style.display = 'block';
+      document.getElementById('map-mech-name').textContent = 'Van '+(enroute.van_number||1)+' · Mechanic '+(enroute.van_number||1);
+    }
+  } else {
+    histEl.innerHTML = '<div class="empty-state">No bookings yet.<br>Book your first service below.</div>';
+  }
+}
+
+function updateNavAuth(){
+  const btn = document.getElementById('nav-auth-btn');
+  if(currentUser){
+    btn.textContent = 'My account';
+    btn.onclick = ()=>showView('dashboard');
+  } else {
+    btn.textContent = 'Sign in';
+    btn.onclick = ()=>showView('auth');
+  }
+}
+
+// ── MAP WIDGET ───────────────────────────────────────────────────────────────
+function updateMapWidget(loc){
+  if(!loc.is_online) return;
+  const eta = Math.floor(Math.random()*10+5); // In production: calculate from real coords
+  document.getElementById('map-eta').textContent = eta;
+  document.getElementById('map-widget').style.display = 'block';
+}
+
+// ── SERVICES ─────────────────────────────────────────────────────────────────
+async function loadServices(){
+  const { data } = await sb.from('services').select('*').eq('active',true).order('category');
+  if(data) services = data;
+  renderServices();
+  renderBookingServices();
+}
+
+function renderServices(){
+  const cats = [...new Set(services.map(s=>s.category))];
+  const filterEl = document.getElementById('filter-pills');
+  filterEl.innerHTML = ['all',...cats].map(c=>`<button class="fp${svcFilter===c?' on':''}" onclick="setSvcFilter('${c}')">${c==='all'?'All services':c}</button>`).join('');
+  const filtered = svcFilter==='all' ? services : services.filter(s=>s.category===svcFilter);
+  const grouped = {};
+  filtered.forEach(s=>{ if(!grouped[s.category]) grouped[s.category]=[]; grouped[s.category].push(s); });
+  let html = '';
+  Object.entries(grouped).forEach(([cat,svcs])=>{
+    html += `<div class="cat-label">${cat}</div><div class="svc-grid" style="margin-bottom:20px">`;
+    html += svcs.map(s=>`<div class="svc-card" onclick="selectService('${s.id}')">
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-dur">${s.duration_min}–${s.duration_max} min</div>
+      <div class="svc-price">$${s.price}</div>
+    </div>`).join('');
+    html += '</div>';
+  });
+  document.getElementById('services-grid').innerHTML = html || '<div class="empty-state">Loading services...</div>';
+}
+
+function setSvcFilter(f){ svcFilter=f; renderServices(); }
+
+function renderBookingServices(){
+  const top = services.slice(0,8);
+  document.getElementById('book-svcs-grid').innerHTML = top.map(s=>`
+    <div class="svc-card${booking.service?.id===s.id?' selected':''}" onclick="selectService('${s.id}')">
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-dur">${s.duration_min}–${s.duration_max} min</div>
+      <div class="svc-price">$${s.price}</div>
+    </div>`).join('');
+}
+
+function selectService(id){
+  booking.service = services.find(s=>s.id===id);
+  if(!booking.service) return;
+  showView('book');
+  goStep(2);
+}
+
+// ── BOOKING FLOW ─────────────────────────────────────────────────────────────
+function goStep(n){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('step-'+i).style.display = i===n?'block':'none';
+    const s = document.getElementById('bs'+i);
+    s.className = 'step-item'+(i<n?' done':i===n?' active':'');
+  });
+  document.getElementById('step-success').style.display='none';
+  if(n===2 && booking.service){
+    document.getElementById('sel-svc-name').textContent = booking.service.name+' — $'+booking.service.price;
+  }
+  if(n===4){ fillConfirm(); }
+  window.scrollTo(0,0);
+}
+
+let selDayEl = null;
+function selDay(el, date){
+  if(selDayEl) selDayEl.classList.remove('sel');
+  el.classList.add('sel'); selDayEl=el;
+  booking.date = date;
+  // Show times
+  document.getElementById('times-section').style.display='block';
+  const times = ['8:30 am','9:00 am','10:00 am','10:30 am','1:00 pm','1:30 pm','2:30 pm','3:00 pm'];
+  const booked = ['8:30 am','1:00 pm']; // demo
+  document.getElementById('times-grid').innerHTML = times.map(t=>`
+    <div class="ts${booked.includes(t)?' bk':''}" onclick="${booked.includes(t)?'':("selTime(this,'"+t+"')")}">${t}</div>`).join('');
+  booking.time = null;
+  document.getElementById('step2-next').disabled = true;
+}
+
+let selTimeEl = null;
+function selTime(el, t){
+  if(selTimeEl) selTimeEl.classList.remove('sel');
+  el.classList.add('sel'); selTimeEl=el;
+  booking.time = t;
+  document.getElementById('step2-next').disabled = false;
+}
+
+function fillConfirm(){
+  document.getElementById('cf-svc').textContent = booking.service?.name||'—';
+  const d = booking.date ? new Date(booking.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'long'}) : '—';
+  document.getElementById('cf-dt').textContent = d + (booking.time?' · '+booking.time:'');
+  const suburb = document.getElementById('addr-suburb')?.value||'';
+  const street = document.getElementById('addr-street')?.value||'';
+  document.getElementById('cf-addr').textContent = [street,suburb].filter(Boolean).join(', ')||'—';
+  document.getElementById('cf-price').textContent = '$'+(booking.service?.price||0);
+  // Auto-assign van by suburb
+  const van1 = ['newtown','paddington','bondi','surry hills','glebe','balmain','marrickville','rozelle','annandale','leichhardt','cbd','pyrmont'];
+  const sub = suburb.toLowerCase();
+  const vanNum = van1.some(z=>sub.includes(z)) ? 1 : 2;
+  document.getElementById('cf-van').textContent = 'Van '+vanNum+' · Mechanic '+vanNum;
+}
+
+async function confirmBooking(){
+  if(!currentUser){ showView('auth'); return; }
+  const btn = document.getElementById('confirm-btn');
+  btn.innerHTML='<span class="spinner"></span>Confirming...';
+  btn.disabled=true;
+
+  const suburb = document.getElementById('addr-suburb').value;
+  const van1 = ['newtown','paddington','bondi','surry hills','glebe','balmain','marrickville','rozelle','annandale','leichhardt','cbd','pyrmont'];
+  const vanNum = van1.some(z=>suburb.toLowerCase().includes(z)) ? 1 : 2;
+
+  const { data, error } = await sb.from('bookings').insert({
+    client_id: currentUser.id,
+    service_id: booking.service?.id,
+    service_name: booking.service?.name,
+    service_price: booking.service?.price,
+    scheduled_date: booking.date,
+    scheduled_time: booking.time?.replace(' am','').replace(' pm',''),
+    address: [document.getElementById('addr-street').value, document.getElementById('addr-suburb').value, document.getElementById('addr-postcode').value].filter(Boolean).join(', '),
+    suburb: suburb,
+    van_number: vanNum,
+    status: 'pending'
+  }).select().single();
+
+  btn.innerHTML='Confirm booking';
+  btn.disabled=false;
+
+  if(error){ toast('Error: '+error.message); return; }
+
+  // Show success
+  [1,2,3,4].forEach(i=>document.getElementById('step-'+i).style.display='none');
+  ['bs1','bs2','bs3','bs4'].forEach(id=>document.getElementById(id).className='step-item done');
+  document.getElementById('step-success').style.display='block';
+  toast('Booking confirmed! 🎉');
+
+  // Refresh dashboard
+  await updateDashboard();
+}
+
+// ── MEMBERSHIP ───────────────────────────────────────────────────────────────
+function setBilling(b){
+  billing=b;
+  document.getElementById('bt-m').classList.toggle('on',b==='m');
+  document.getElementById('bt-a').classList.toggle('on',b==='a');
+  renderPlans();
+}
+
+const P3=[
+  {id:'b',n:'Basic',w:'For occasional riders',mo:57,bikes:'1 bike',bb:'#0D1F3C',
+   secs:[{l:'Priority',f:[{t:'Priority booking before non-members',y:true},{t:'SMS reminder when service is due',y:true},{t:'Same-day booking guarantee',y:false}]},{l:'Discounts',f:[{t:'8% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'1 × Tune-Up/year (value $109)',y:true},{t:'Tyre pressure check monthly',y:true},{t:'Brake check every 3 months',y:false}]}]},
+  {id:'s',n:'Standard',w:'Best value · most popular',mo:97,pop:true,bikes:'1 bike',bb:'#1848C8',
+   secs:[{l:'Priority',f:[{t:'First-access priority — top of the queue',y:true},{t:'2-hour guaranteed arrival window',y:true},{t:'SMS + call 30 min before arrival',y:true}]},{l:'Discounts',f:[{t:'12% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'2 × Tune-Ups/year (value $218)',y:true},{t:'Brake check every 3 months',y:true},{t:'Tyre pressure check monthly',y:true}]}]},
+  {id:'v',n:'VIP',w:'Serious riders & families',mo:147,bikes:'Up to 3 bikes',bb:'#92400E',
+   secs:[{l:'Priority',f:[{t:'Absolute priority in the schedule',y:true},{t:'Same-day booking on request',y:true},{t:'1-hour arrival window guarantee',y:true}]},{l:'Discounts',f:[{t:'18% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true},{t:'Direct mechanic WhatsApp access',y:true}]},{l:'Free services',f:[{t:'3 × Tune-Ups/year (value $327)',y:true},{t:'Brake & gear check every 2 months',y:true},{t:'Dedicated mechanic — same person always',y:true}]}]},
+];
+
+function renderPlans(){
+  document.getElementById('plans3').innerHTML=P3.map(p=>{
+    const mo=billing==='a'?Math.round(p.mo*0.8):p.mo;
+    const annLine=billing==='a'?`Billed $${mo*12}/year — 20% saved`:`Or $${Math.round(p.mo*0.8)}/mo billed annually`;
+    const priceCol=p.id==='v'?'#B45309':'var(--navy)';
+    const bikeBg=p.id==='v'?'#FEF3C7':p.id==='s'?'#EEF3FC':'#F3F4F6';
+    const bikeFc=p.id==='v'?'#B45309':p.id==='s'?'#1848C8':'#4B5563';
+    const feats=p.secs.map(s=>`<div class="feat-sl">${s.l}</div>${s.f.map(f=>`<div class="pf${f.y?'':' no'}"><div class="pfd" style="background:${f.y?'#1848C8':'#E5E7EB'}"></div><span>${f.t}</span></div>`).join('')}`).join('');
+    return`<div class="pl${p.pop?' pop':''}">
+      ${p.pop?'<div class="pop-tag">Most popular</div>':''}
+      <div class="pl-name">${p.n}</div><div class="pl-who">${p.w}</div>
+      <div class="pl-price" style="color:${priceCol}">$${mo}<span class="pl-mo">/mo</span></div>
+      <div class="pl-annual">${annLine}</div>
+      <span class="bikes-tag" style="background:${bikeBg};color:${bikeFc};border-color:${bikeBg}">${p.bikes} · parts extra</span>
+      ${feats}
+      <div class="pl-btn-wrap">
+        <button class="plb" style="background:${p.bb};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="showView('auth')">Get started — ${p.n}</button>
+        <div class="plb-note">3-month minimum · cancel anytime after</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('nav-links').classList.remove('open');
+  window.scrollTo(0,0);
+  if(v==='dashboard'){
+    if(!currentUser){ showView('auth'); return; }
+    updateDashboard();
+  }
+  if(v==='book') renderBookingServices();
+  if(v==='services') renderServices();
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── START ────────────────────────────────────────────────────────────────────
+renderPlans();
+init();
+</script>
+
+
+<img id="BtnTool" src="index_files/icon.png" style="position: absolute; top: 50%; left: 50%; z-index: 9999; cursor: pointer; display: none;" height="25" width="25"><img id="LoadingGif" src="moz-extension://b0005110-3221-4723-8d2a-d91733895c16/icons/loading.gif" style="position: absolute; top: 50%; z-index: 9999; cursor: pointer; display: none;" height="70" width="70"></body></html>
