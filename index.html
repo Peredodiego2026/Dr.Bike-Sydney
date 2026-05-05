@@ -271,6 +271,60 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
   .hero{padding:60px 20px 72px}
   .section{padding:56px 20px}
 }
+/* ── CHATBOT FLOTANTE ── */
+#chatbot-btn{position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;z-index:1000;box-shadow:0 4px 20px rgba(24,72,200,0.4);display:flex;align-items:center;justify-content:center;transition:all .2s}
+#chatbot-btn:hover{transform:scale(1.08);background:var(--blue2)}
+#chatbot-btn .cb-notif{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--red);border-radius:50%;border:2px solid #fff;display:none}
+#chatbot-btn .cb-notif.show{display:block}
+#chatbot-panel{position:fixed;bottom:90px;right:24px;width:340px;height:480px;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:1000;display:none;flex-direction:column;overflow:hidden}
+#chatbot-panel.open{display:flex}
+.cb-hdr{background:var(--blue);padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.cb-hdr-av{width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.cb-hdr-info{flex:1}
+.cb-hdr-name{font-size:14px;font-weight:600;color:#fff}
+.cb-hdr-status{font-size:11px;color:rgba(255,255,255,0.7);display:flex;align-items:center;gap:4px}
+.cb-hdr-status::before{content:"";width:6px;height:6px;background:#4ade80;border-radius:50%;display:inline-block}
+.cb-close{background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:18px;padding:4px}
+.cb-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.cb-msg{max-width:80%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.5}
+.cb-msg.bot{background:var(--off);color:var(--navy);border-radius:4px 12px 12px 12px;align-self:flex-start}
+.cb-msg.user{background:var(--blue);color:#fff;border-radius:12px 4px 12px 12px;align-self:flex-end}
+.cb-msg.escalated{background:var(--amber-lt);color:#92400E;border:1px solid #FCD34D;font-size:12px}
+.cb-typing{display:flex;gap:4px;padding:10px 12px;background:var(--off);border-radius:4px 12px 12px 12px;width:fit-content}
+.cb-typing span{width:6px;height:6px;background:var(--mgray);border-radius:50%;animation:blink 1.2s infinite}
+.cb-typing span:nth-child(2){animation-delay:.2s}
+.cb-typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:0.3}40%{opacity:1}}
+.cb-quick{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px;border-top:1px solid var(--border);flex-shrink:0}
+.cb-quick-btn{padding:5px 10px;border:1.5px solid var(--blue);border-radius:20px;font-size:11px;color:var(--blue);background:var(--white);cursor:pointer;font-family:var(--sans);transition:all .15s;font-weight:500}
+.cb-quick-btn:hover{background:var(--blue);color:#fff}
+.cb-inp-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
+.cb-inp{flex:1;border:1.5px solid var(--border);border-radius:20px;padding:8px 14px;font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.cb-inp:focus{border-color:var(--blue)}
+.cb-send{background:var(--blue);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.cb-send:hover{background:var(--blue2)}
+/* ── REAL MAP ── */
+.map-real{border-radius:9px;height:160px;margin-top:12px;position:relative;overflow:hidden;background:#1a3a6b}
+.map-real iframe{width:100%;height:100%;border:none;border-radius:9px}
+/* ── ADMIN PANEL ── */
+#view-admin{}
+.admin-wrap{max-width:960px;margin:0 auto;padding:24px}
+.zone-van{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+.zone-van-hdr{padding:16px 20px;background:var(--navy);display:flex;align-items:center;justify-content:space-between}
+.zone-van-title{font-size:15px;font-weight:600;color:#fff}
+.zone-van-sub{font-size:12px;color:rgba(255,255,255,0.5)}
+.zone-van-body{padding:16px 20px}
+.suburb-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.suburb-tag{display:inline-flex;align-items:center;gap:6px;background:var(--blue-lt);color:var(--blue);border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500}
+.suburb-tag .rm{cursor:pointer;font-size:14px;color:var(--blue);opacity:.6;line-height:1}
+.suburb-tag .rm:hover{opacity:1;color:var(--red)}
+.add-suburb-row{display:flex;gap:8px}
+.add-suburb-inp{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.add-suburb-inp:focus{border-color:var(--blue)}
+.add-suburb-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:background .15s}
+.add-suburb-btn:hover{background:var(--blue2)}
+.add-van-btn{display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed var(--border);border-radius:var(--r);padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:var(--sans);transition:all .15s;width:100%;margin-top:8px}
+.add-van-btn:hover{border-color:var(--blue);color:var(--blue)}
 </style>
 </head>
 <body>
@@ -309,6 +363,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
       <button class="nl" onclick="showView('membership')">Membership</button>
       <button class="nl" onclick="showView('book')">Book</button>
       <button class="nl" onclick="showView('dashboard')">My account</button>
+      <button class="nl" style="font-size:11px" onclick="showView('admin')">⚙ Admin</button>
       <button class="nl cta" onclick="showView('auth')" id="nav-auth-btn">Sign in</button>
     </div>
     <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')"><span></span><span></span><span></span></button>
@@ -988,6 +1043,678 @@ function toast(msg){
   t.textContent=msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── START ────────────────────────────────────────────────────────────────────
+renderPlans();
+init();
+</script>
+<!-- ══ ADMIN PANEL ══ -->
+<div id="view-admin" class="view">
+  <div style="background:var(--white);padding:32px 28px 24px;border-bottom:1px solid var(--border)">
+    <div class="sec-eye">Admin</div>
+    <div style="font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-0.02em">Zone Manager</div>
+    <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">Assign suburbs to each van. Jobs auto-route based on the client's suburb.</div>
+    <button class="btn-ghost" style="margin-top:14px;padding:8px 18px;font-size:13px" onclick="showView('home')">← Back</button>
+  </div>
+  <div class="admin-wrap">
+    <div id="vans-container"></div>
+    <button class="add-van-btn" onclick="addVan()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add another van
+    </button>
+    <div style="margin-top:24px;background:var(--navy);border-radius:var(--r);padding:20px 24px">
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:8px">Zone assignment logic</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7">When a client books, the system checks their suburb against each van's list. If the suburb matches Van 1, the job is assigned to Van 1. If it matches Van 2, it goes to Van 2. If no match, it defaults to Van 1. Changes here apply immediately to all new bookings.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CHATBOT FLOTANTE ══ -->
+<button id="chatbot-btn" onclick="toggleChat()">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <div class="cb-notif" id="cb-notif"></div>
+</button>
+
+<div id="chatbot-panel">
+  <div class="cb-hdr">
+    <div class="cb-hdr-av">🔧</div>
+    <div class="cb-hdr-info">
+      <div class="cb-hdr-name">Dr. Bike Assistant</div>
+      <div class="cb-hdr-status">Online now</div>
+    </div>
+    <button class="cb-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="cb-msgs" id="cb-msgs"></div>
+  <div class="cb-quick" id="cb-quick">
+    <button class="cb-quick-btn" onclick="quickMsg('How much does a service cost?')">💰 Pricing</button>
+    <button class="cb-quick-btn" onclick="quickMsg('What areas do you cover?')">📍 Coverage</button>
+    <button class="cb-quick-btn" onclick="quickMsg('How do I book?')">📅 Book</button>
+    <button class="cb-quick-btn" onclick="quickMsg('I need to speak to a mechanic')">🔧 Mechanic</button>
+  </div>
+  <div class="cb-inp-row">
+    <input class="cb-inp" id="cb-inp" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="cb-send" onclick="sendChat()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE INIT ────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── APP STATE ────────────────────────────────────────────────────────────────
+let currentUser = null;
+let userProfile = null;
+let services = [];
+let booking = { service:null, date:null, time:null };
+let billing = 'm';
+let svcFilter = 'all';
+
+// ── VAN ZONES (persisted in Supabase) ───────────────────────────────────────
+let vanZones = [
+  { id: 1, name: 'Van 1', color: '#1848C8', suburbs: ['newtown','paddington','bondi','surry hills','glebe','balmain','marrickville','rozelle','annandale','leichhardt','cbd','pyrmont','redfern','chippendale','ultimo','haymarket','darlinghurst','potts point','elizabeth bay','kings cross','woolloomooloo','mosman','coogee','randwick','kingsford','maroubra'] },
+  { id: 2, name: 'Van 2', color: '#059669', suburbs: ['north sydney','chatswood','lane cove','manly','dee why','brookvale','mona vale','avalon','cronulla','hurstville','kogarah','strathfield','burwood','ashfield','homebush','ryde','meadowbank','gladesville','hunters hill','drummoyne'] }
+];
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+async function init(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session?.user){
+    currentUser = session.user;
+    await loadProfile();
+  }
+  await loadServices();
+  await loadVanZones();
+  setTimeout(()=>{ document.getElementById('loading').classList.add('hide'); },800);
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if(session?.user){
+      currentUser = session.user;
+      await loadProfile();
+      updateNavAuth();
+    } else {
+      currentUser = null;
+      userProfile = null;
+      updateNavAuth();
+    }
+  });
+
+  // Realtime mechanic locations
+  sb.channel('mechanic_locations')
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'mechanic_locations' }, payload => {
+      updateMapWidget(payload.new);
+    }).subscribe();
+
+  // Show chat notification after 5s
+  setTimeout(()=>{
+    document.getElementById('cb-notif').classList.add('show');
+    addBotMsg("👋 Hi! I'm the Dr. Bike assistant. How can I help you today?");
+  }, 5000);
+}
+
+// ── VAN ZONES ────────────────────────────────────────────────────────────────
+async function loadVanZones(){
+  const { data } = await sb.from('van_zones').select('*').order('van_number');
+  if(data && data.length > 0){
+    vanZones = data.map(v=>({ id:v.van_number, name:'Van '+v.van_number, color:v.color||'#1848C8', suburbs:v.suburbs||[] }));
+  }
+  renderVanZones();
+}
+
+async function saveVanZone(vanId){
+  const van = vanZones.find(v=>v.id===vanId);
+  if(!van) return;
+  await sb.from('van_zones').upsert({ van_number:van.id, suburbs:van.suburbs, color:van.color }, { onConflict:'van_number' });
+  toast('Van '+vanId+' zones saved ✓');
+}
+
+function getVanForSuburb(suburb){
+  const sub = suburb.toLowerCase().trim();
+  for(const van of vanZones){
+    if(van.suburbs.some(z=>sub.includes(z)||z.includes(sub))) return van.id;
+  }
+  return 1;
+}
+
+function renderVanZones(){
+  const container = document.getElementById('vans-container');
+  if(!container) return;
+  container.innerHTML = vanZones.map(van=>`
+    <div class="zone-van">
+      <div class="zone-van-hdr" style="background:${van.color}">
+        <div>
+          <div class="zone-van-title">${van.name}</div>
+          <div class="zone-van-sub">${van.suburbs.length} suburbs assigned</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="saveVanZone(${van.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500">Save changes</button>
+          ${vanZones.length > 1 ? `<button onclick="removeVan(${van.id})" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>` : ''}
+        </div>
+      </div>
+      <div class="zone-van-body">
+        <div class="suburb-tags" id="tags-${van.id}">
+          ${van.suburbs.map(s=>`
+            <span class="suburb-tag">
+              ${s}
+              <span class="rm" onclick="removeSuburb(${van.id},'${s}')">×</span>
+            </span>`).join('')}
+        </div>
+        <div class="add-suburb-row">
+          <input class="add-suburb-inp" id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" onkeydown="if(event.key==='Enter')addSuburb(${van.id})">
+          <button class="add-suburb-btn" onclick="addSuburb(${van.id})">+ Add</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function addSuburb(vanId){
+  const inp = document.getElementById('inp-'+vanId);
+  const suburb = inp.value.trim().toLowerCase();
+  if(!suburb) return;
+  const van = vanZones.find(v=>v.id===vanId);
+  if(!van || van.suburbs.includes(suburb)){ toast('Suburb already added'); return; }
+  van.suburbs.push(suburb);
+  inp.value = '';
+  renderVanZones();
+}
+
+function removeSuburb(vanId, suburb){
+  const van = vanZones.find(v=>v.id===vanId);
+  if(!van) return;
+  van.suburbs = van.suburbs.filter(s=>s!==suburb);
+  renderVanZones();
+}
+
+function addVan(){
+  const newId = Math.max(...vanZones.map(v=>v.id)) + 1;
+  const colors = ['#7C3AED','#DC2626','#D97706','#0891B2'];
+  vanZones.push({ id:newId, name:'Van '+newId, color:colors[(newId-1)%colors.length], suburbs:[] });
+  renderVanZones();
+}
+
+function removeVan(vanId){
+  if(vanZones.length <= 1){ toast('Need at least one van'); return; }
+  vanZones = vanZones.filter(v=>v.id!==vanId);
+  renderVanZones();
+}
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+async function signInGoogle(){
+  const { error } = await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{
+      redirectTo: 'https://dr-bike-sydney.vercel.app',
+      queryParams: { access_type: 'offline', prompt: 'consent' }
+    }
+  });
+  if(error){ showErr(error.message); console.error(error); }
+}
+
+async function signInEmail(){
+  const email = document.getElementById('auth-email').value;
+  const pwd = document.getElementById('auth-password').value;
+  if(!email||!pwd){ showErr('Please enter email and password'); return; }
+  const btn = document.getElementById('signin-btn');
+  btn.innerHTML = '<span class="spinner"></span>Signing in...';
+  btn.disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password:pwd });
+  btn.innerHTML = 'Sign in';
+  btn.disabled = false;
+  if(error){ showErr(error.message); return; }
+  currentUser = data.user;
+  await loadProfile();
+  updateNavAuth();
+  showView('dashboard');
+  toast('Welcome back! 👋');
+}
+
+async function signUpEmail(){
+  const email = document.getElementById('auth-email').value;
+  const pwd = document.getElementById('auth-password').value;
+  if(!email||!pwd){ showErr('Please enter email and password'); return; }
+  const { data, error } = await sb.auth.signUp({ email, password:pwd });
+  if(error){ showErr(error.message); return; }
+  toast('Account created! Check your email to verify.');
+}
+
+async function signOut(){
+  await sb.auth.signOut();
+  currentUser = null;
+  userProfile = null;
+  updateNavAuth();
+  showView('home');
+  toast('Signed out');
+}
+
+function showErr(msg){
+  const el = document.getElementById('auth-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+
+// ── PROFILE ──────────────────────────────────────────────────────────────────
+async function loadProfile(){
+  if(!currentUser) return;
+  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if(error || !data){
+    const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+    const { data: newP } = await sb.from('profiles').insert({
+      id: currentUser.id,
+      email: currentUser.email,
+      full_name: name,
+      role: 'client',
+      membership: 'none'
+    }).select().single();
+    userProfile = newP;
+  } else {
+    userProfile = data;
+  }
+  updateDashboard();
+}
+
+async function updateDashboard(){
+  if(!userProfile) return;
+  const name = userProfile.full_name || userProfile.email?.split('@')[0] || 'there';
+  const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('d-av').textContent = initials;
+  document.getElementById('d-name').textContent = `Good day, ${name.split(' ')[0]}!`;
+  const memLabels = { none:'No membership', basic:'Basic member', std:'Standard member', vip:'VIP member' };
+  const mem = userProfile.membership || 'none';
+  document.getElementById('d-plan').textContent = memLabels[mem] || 'No membership';
+  const badgeEl = document.getElementById('d-badge');
+  const badgeClass = { none:'mem-none', basic:'mem-basic', std:'mem-std', vip:'mem-vip' };
+  const badgeTxt = { none:'No plan', basic:'⭐ Basic', std:'● Standard', vip:'★ VIP' };
+  badgeEl.className = 'mem-badge ' + (badgeClass[mem]||'mem-none');
+  badgeEl.textContent = badgeTxt[mem]||'No plan';
+  const discounts = { none:'0%', basic:'8%', std:'12%', vip:'18%' };
+  document.getElementById('kpi-disc').textContent = discounts[mem]||'0%';
+
+  const { data: bkgs } = await sb.from('bookings')
+    .select('*').eq('client_id', currentUser.id)
+    .order('created_at', { ascending:false }).limit(10);
+
+  document.getElementById('kpi-jobs').textContent = bkgs?.length || 0;
+  const total = bkgs?.reduce((s,b)=>s+(b.service_price||0),0)||0;
+  document.getElementById('kpi-spent').textContent = total > 0 ? '$'+total : '$0';
+
+  const next = bkgs?.find(b=>b.status==='confirmed'||b.status==='pending');
+  document.getElementById('kpi-next').textContent = next ? new Date(next.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'}) : '—';
+
+  const histEl = document.getElementById('booking-history');
+  if(bkgs && bkgs.length > 0){
+    histEl.innerHTML = bkgs.slice(0,5).map(b=>`
+      <div class="hist-row">
+        <div class="hist-dot"></div>
+        <span class="hist-svc">${b.service_name||'Service'}</span>
+        <span class="hist-date">${new Date(b.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'})}</span>
+        <span class="hist-price">$${b.service_price||0}</span>
+      </div>`).join('');
+
+    const enroute = bkgs.find(b=>b.status==='enroute');
+    if(enroute){
+      document.getElementById('map-widget').style.display = 'block';
+      document.getElementById('map-mech-name').textContent = 'Van '+(enroute.van_number||1)+' · Mechanic '+(enroute.van_number||1);
+      loadRealMap(enroute);
+    }
+  } else {
+    histEl.innerHTML = '<div class="empty-state">No bookings yet.<br>Book your first service below.</div>';
+  }
+}
+
+function updateNavAuth(){
+  const btn = document.getElementById('nav-auth-btn');
+  if(currentUser){
+    btn.textContent = 'My account';
+    btn.onclick = ()=>showView('dashboard');
+  } else {
+    btn.textContent = 'Sign in';
+    btn.onclick = ()=>showView('auth');
+  }
+}
+
+// ── REAL MAP ─────────────────────────────────────────────────────────────────
+function loadRealMap(booking){
+  const mapContainer = document.getElementById('map-container');
+  if(!mapContainer) return;
+  const suburb = booking.suburb || 'Sydney';
+  mapContainer.innerHTML = `<iframe 
+    src="https://www.openstreetmap.org/export/embed.html?bbox=151.0,−34.0,151.3,−33.7&layer=mapnik&marker=${encodeURIComponent(suburb+', Sydney NSW')}"
+    style="width:100%;height:160px;border:none;border-radius:9px">
+  </iframe>`;
+}
+
+function updateMapWidget(loc){
+  if(!loc.is_online) return;
+  const eta = Math.floor(Math.random()*10+5);
+  document.getElementById('map-eta').textContent = eta;
+  document.getElementById('map-widget').style.display = 'block';
+}
+
+// ── SERVICES ─────────────────────────────────────────────────────────────────
+async function loadServices(){
+  const { data } = await sb.from('services').select('*').eq('active',true).order('category');
+  if(data) services = data;
+  renderServices();
+  renderBookingServices();
+}
+
+function renderServices(){
+  const cats = [...new Set(services.map(s=>s.category))];
+  const filterEl = document.getElementById('filter-pills');
+  filterEl.innerHTML = ['all',...cats].map(c=>`<button class="fp${svcFilter===c?' on':''}" onclick="setSvcFilter('${c}')">${c==='all'?'All services':c}</button>`).join('');
+  const filtered = svcFilter==='all' ? services : services.filter(s=>s.category===svcFilter);
+  const grouped = {};
+  filtered.forEach(s=>{ if(!grouped[s.category]) grouped[s.category]=[]; grouped[s.category].push(s); });
+  let html = '';
+  Object.entries(grouped).forEach(([cat,svcs])=>{
+    html += `<div class="cat-label">${cat}</div><div class="svc-grid" style="margin-bottom:20px">`;
+    html += svcs.map(s=>`<div class="svc-card" onclick="selectService('${s.id}')">
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-dur">${s.duration_min}–${s.duration_max} min</div>
+      <div class="svc-price">$${s.price}</div>
+    </div>`).join('');
+    html += '</div>';
+  });
+  document.getElementById('services-grid').innerHTML = html || '<div class="empty-state">Loading services...</div>';
+}
+
+function setSvcFilter(f){ svcFilter=f; renderServices(); }
+
+function renderBookingServices(){
+  const top = services.slice(0,8);
+  document.getElementById('book-svcs-grid').innerHTML = top.map(s=>`
+    <div class="svc-card${booking.service?.id===s.id?' selected':''}" onclick="selectService('${s.id}')">
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-dur">${s.duration_min}–${s.duration_max} min</div>
+      <div class="svc-price">$${s.price}</div>
+    </div>`).join('');
+}
+
+function selectService(id){
+  booking.service = services.find(s=>s.id===id);
+  if(!booking.service) return;
+  showView('book');
+  goStep(2);
+}
+
+// ── BOOKING FLOW ─────────────────────────────────────────────────────────────
+function goStep(n){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('step-'+i).style.display = i===n?'block':'none';
+    const s = document.getElementById('bs'+i);
+    s.className = 'step-item'+(i<n?' done':i===n?' active':'');
+  });
+  document.getElementById('step-success').style.display='none';
+  if(n===2 && booking.service){
+    document.getElementById('sel-svc-name').textContent = booking.service.name+' — $'+booking.service.price;
+  }
+  if(n===4){ fillConfirm(); }
+  window.scrollTo(0,0);
+}
+
+let selDayEl = null;
+function selDay(el, date){
+  if(selDayEl) selDayEl.classList.remove('sel');
+  el.classList.add('sel'); selDayEl=el;
+  booking.date = date;
+  document.getElementById('times-section').style.display='block';
+  const times = ['8:30 am','9:00 am','10:00 am','10:30 am','1:00 pm','1:30 pm','2:30 pm','3:00 pm'];
+  const booked = ['8:30 am','1:00 pm'];
+  document.getElementById('times-grid').innerHTML = times.map(t=>`
+    <div class="ts${booked.includes(t)?' bk':''}" onclick="${booked.includes(t)?'':(\"selTime(this,'\"+t+\"')\")}\">${t}</div>`).join('');
+  booking.time = null;
+  document.getElementById('step2-next').disabled = true;
+}
+
+let selTimeEl = null;
+function selTime(el, t){
+  if(selTimeEl) selTimeEl.classList.remove('sel');
+  el.classList.add('sel'); selTimeEl=el;
+  booking.time = t;
+  document.getElementById('step2-next').disabled = false;
+}
+
+function fillConfirm(){
+  document.getElementById('cf-svc').textContent = booking.service?.name||'—';
+  const d = booking.date ? new Date(booking.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'long'}) : '—';
+  document.getElementById('cf-dt').textContent = d + (booking.time?' · '+booking.time:'');
+  const suburb = document.getElementById('addr-suburb')?.value||'';
+  const street = document.getElementById('addr-street')?.value||'';
+  document.getElementById('cf-addr').textContent = [street,suburb].filter(Boolean).join(', ')||'—';
+  document.getElementById('cf-price').textContent = '$'+(booking.service?.price||0);
+  // Auto-assign van using zone manager
+  const vanNum = getVanForSuburb(suburb);
+  document.getElementById('cf-van').textContent = 'Van '+vanNum+' · Mechanic '+vanNum;
+}
+
+async function confirmBooking(){
+  if(!currentUser){ showView('auth'); return; }
+  const btn = document.getElementById('confirm-btn');
+  btn.innerHTML='<span class="spinner"></span>Confirming...';
+  btn.disabled=true;
+
+  const suburb = document.getElementById('addr-suburb').value;
+  const vanNum = getVanForSuburb(suburb);
+
+  const { data, error } = await sb.from('bookings').insert({
+    client_id: currentUser.id,
+    service_id: booking.service?.id,
+    service_name: booking.service?.name,
+    service_price: booking.service?.price,
+    scheduled_date: booking.date,
+    scheduled_time: booking.time?.replace(' am','').replace(' pm',''),
+    address: [document.getElementById('addr-street').value, document.getElementById('addr-suburb').value, document.getElementById('addr-postcode').value].filter(Boolean).join(', '),
+    suburb: suburb,
+    van_number: vanNum,
+    status: 'pending'
+  }).select().single();
+
+  btn.innerHTML='Confirm booking';
+  btn.disabled=false;
+
+  if(error){ toast('Error: '+error.message); return; }
+
+  [1,2,3,4].forEach(i=>document.getElementById('step-'+i).style.display='none');
+  ['bs1','bs2','bs3','bs4'].forEach(id=>document.getElementById(id).className='step-item done');
+  document.getElementById('step-success').style.display='block';
+  toast('Booking confirmed! 🎉');
+  await updateDashboard();
+}
+
+// ── MEMBERSHIP ───────────────────────────────────────────────────────────────
+function setBilling(b){
+  billing=b;
+  document.getElementById('bt-m').classList.toggle('on',b==='m');
+  document.getElementById('bt-a').classList.toggle('on',b==='a');
+  renderPlans();
+}
+
+const P3=[
+  {id:'b',n:'Basic',w:'For occasional riders',mo:57,bikes:'1 bike',bb:'#0D1F3C',
+   secs:[{l:'Priority',f:[{t:'Priority booking before non-members',y:true},{t:'SMS reminder when service is due',y:true},{t:'Same-day booking guarantee',y:false}]},{l:'Discounts',f:[{t:'8% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'1 × Tune-Up/year (value $109)',y:true},{t:'Tyre pressure check monthly',y:true},{t:'Brake check every 3 months',y:false}]}]},
+  {id:'s',n:'Standard',w:'Best value · most popular',mo:97,pop:true,bikes:'1 bike',bb:'#1848C8',
+   secs:[{l:'Priority',f:[{t:'First-access priority — top of the queue',y:true},{t:'2-hour guaranteed arrival window',y:true},{t:'SMS + call 30 min before arrival',y:true}]},{l:'Discounts',f:[{t:'12% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'2 × Tune-Ups/year (value $218)',y:true},{t:'Brake check every 3 months',y:true},{t:'Tyre pressure check monthly',y:true}]}]},
+  {id:'v',n:'VIP',w:'Serious riders & families',mo:147,bikes:'Up to 3 bikes',bb:'#92400E',
+   secs:[{l:'Priority',f:[{t:'Absolute priority in the schedule',y:true},{t:'Same-day booking on request',y:true},{t:'1-hour arrival window guarantee',y:true}]},{l:'Discounts',f:[{t:'18% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true},{t:'Direct mechanic WhatsApp access',y:true}]},{l:'Free services',f:[{t:'3 × Tune-Ups/year (value $327)',y:true},{t:'Brake & gear check every 2 months',y:true},{t:'Dedicated mechanic — same person always',y:true}]}]},
+];
+
+function renderPlans(){
+  document.getElementById('plans3').innerHTML=P3.map(p=>{
+    const mo=billing==='a'?Math.round(p.mo*0.8):p.mo;
+    const annLine=billing==='a'?`Billed $${mo*12}/year — 20% saved`:`Or $${Math.round(p.mo*0.8)}/mo billed annually`;
+    const priceCol=p.id==='v'?'#B45309':'var(--navy)';
+    const bikeBg=p.id==='v'?'#FEF3C7':p.id==='s'?'#EEF3FC':'#F3F4F6';
+    const bikeFc=p.id==='v'?'#B45309':p.id==='s'?'#1848C8':'#4B5563';
+    const feats=p.secs.map(s=>`<div class="feat-sl">${s.l}</div>${s.f.map(f=>`<div class="pf${f.y?'':' no'}"><div class="pfd" style="background:${f.y?'#1848C8':'#E5E7EB'}"></div><span>${f.t}</span></div>`).join('')}`).join('');
+    return`<div class="pl${p.pop?' pop':''}">
+      ${p.pop?'<div class="pop-tag">Most popular</div>':''}
+      <div class="pl-name">${p.n}</div><div class="pl-who">${p.w}</div>
+      <div class="pl-price" style="color:${priceCol}">$${mo}<span class="pl-mo">/mo</span></div>
+      <div class="pl-annual">${annLine}</div>
+      <span class="bikes-tag" style="background:${bikeBg};color:${bikeFc};border-color:${bikeBg}">${p.bikes} · parts extra</span>
+      ${feats}
+      <div class="pl-btn-wrap">
+        <button class="plb" style="background:${p.bb};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="showView('auth')">Get started — ${p.n}</button>
+        <div class="plb-note">3-month minimum · cancel anytime after</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('nav-links').classList.remove('open');
+  window.scrollTo(0,0);
+  if(v==='dashboard'){
+    if(!currentUser){ showView('auth'); return; }
+    updateDashboard();
+  }
+  if(v==='book') renderBookingServices();
+  if(v==='services') renderServices();
+  if(v==='admin') renderVanZones();
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── CHATBOT ──────────────────────────────────────────────────────────────────
+let chatOpen = false;
+let chatHistory = [];
+let escalated = false;
+
+function toggleChat(){
+  chatOpen = !chatOpen;
+  document.getElementById('chatbot-panel').classList.toggle('open', chatOpen);
+  document.getElementById('cb-notif').classList.remove('show');
+  if(chatOpen && chatHistory.length === 0){
+    addBotMsg("👋 G'day! I'm the Dr. Bike assistant. I can help with pricing, bookings, coverage areas, and more. What do you need?");
+  }
+}
+
+function addBotMsg(text, type='bot'){
+  chatHistory.push({ role:'assistant', content:text });
+  const msgs = document.getElementById('cb-msgs');
+  const div = document.createElement('div');
+  div.className = 'cb-msg ' + type;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addUserMsg(text){
+  chatHistory.push({ role:'user', content:text });
+  const msgs = document.getElementById('cb-msgs');
+  const div = document.createElement('div');
+  div.className = 'cb-msg user';
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping(){
+  const msgs = document.getElementById('cb-msgs');
+  const div = document.createElement('div');
+  div.className = 'cb-typing';
+  div.id = 'cb-typing';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function hideTyping(){
+  const t = document.getElementById('cb-typing');
+  if(t) t.remove();
+}
+
+function quickMsg(text){
+  document.getElementById('cb-inp').value = text;
+  sendChat();
+}
+
+async function sendChat(){
+  const inp = document.getElementById('cb-inp');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+
+  addUserMsg(text);
+  document.getElementById('cb-quick').style.display = 'none';
+
+  // Check escalation keywords
+  const escalateWords = ['mechanic','human','person','call','phone','urgent','emergency','speak','talk','real'];
+  if(escalateWords.some(w=>text.toLowerCase().includes(w)) && !escalated){
+    escalated = true;
+    showTyping();
+    await new Promise(r=>setTimeout(r,800));
+    hideTyping();
+    addBotMsg("I'll connect you with a mechanic right away. 🔧", 'escalated');
+    setTimeout(()=>{
+      addBotMsg("📞 Our mechanic will call you back within 15 minutes. You can also WhatsApp us at +61 400 000 000. In the meantime, is there anything else I can help with?", 'escalated');
+    }, 1000);
+    return;
+  }
+
+  showTyping();
+
+  try {
+    const systemPrompt = `You are the Dr. Bike Sydney assistant — a friendly, knowledgeable bike repair chatbot for a mobile bicycle repair business in Sydney, Australia.
+
+Key info:
+- Services: Tune-Up ($109), Standard Service ($149), Major Service ($229), Brake Bleed ($79), Gear Adjustment ($59), E-bike Diagnostic ($99), Bike Build ($299+)
+- Coverage: Inner West, Eastern Suburbs, CBD, North Shore, Manly, Northern Beaches
+- Hours: Mon–Sat, 8am–5pm
+- Call-out fee: $20 (waived for members)
+- Memberships: Basic $57/mo, Standard $97/mo, VIP $147/mo
+- Parts are always extra
+- Same-day booking available
+
+Keep responses short (2-3 sentences max). Be friendly and use Australian English. If asked about something you don't know, say you'll escalate to a mechanic.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: chatHistory.filter(m=>m.role==='user'||m.role==='assistant').slice(-10)
+      })
+    });
+
+    const data = await response.json();
+    hideTyping();
+    const reply = data.content?.[0]?.text || "Sorry, I couldn't get a response. Try again!";
+    addBotMsg(reply);
+
+    // Show escalation option after 2 exchanges
+    if(chatHistory.filter(m=>m.role==='user').length >= 2 && !escalated){
+      setTimeout(()=>{
+        const msgs = document.getElementById('cb-msgs');
+        const div = document.createElement('div');
+        div.className = 'cb-msg bot';
+        div.style.fontSize = '12px';
+        div.style.opacity = '0.7';
+        div.innerHTML = '<button onclick="quickMsg(\'I need to speak to a mechanic\')" style="background:var(--blue);color:#fff;border:none;border-radius:12px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--sans)">🔧 Talk to a mechanic</button>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 500);
+    }
+  } catch(e) {
+    hideTyping();
+    addBotMsg("Sorry, I'm having trouble connecting right now. Please try again or call us directly.");
+  }
 }
 
 // ── START ────────────────────────────────────────────────────────────────────
