@@ -1158,9 +1158,18 @@ async function init(){
 
 // ── VAN ZONES ────────────────────────────────────────────────────────────────
 async function loadVanZones(){
-  const { data } = await sb.from('van_zones').select('*').order('van_number');
+  const { data } = await sb.from('van_zones').select('*').eq('active', true).order('van_number');
   if(data && data.length > 0){
-    vanZones = data.map(v=>({ id:v.van_number, name:'Van '+v.van_number, color:v.color||'#1848C8', suburbs:v.suburbs||[] }));
+    // Group rows by van_number (one row per suburb)
+    const grouped = {};
+    data.forEach(row => {
+      if(!grouped[row.van_number]){
+        const colors = { 1:'#1848C8', 2:'#059669', 3:'#7C3AED', 4:'#DC2626' };
+        grouped[row.van_number] = { id:row.van_number, name:'Van '+row.van_number, color:colors[row.van_number]||'#1848C8', suburbs:[] };
+      }
+      grouped[row.van_number].suburbs.push(row.suburb);
+    });
+    vanZones = Object.values(grouped).sort((a,b)=>a.id-b.id);
   }
   renderVanZones();
 }
@@ -1168,7 +1177,12 @@ async function loadVanZones(){
 async function saveVanZone(vanId){
   const van = vanZones.find(v=>v.id===vanId);
   if(!van) return;
-  await sb.from('van_zones').upsert({ van_number:van.id, suburbs:van.suburbs, color:van.color }, { onConflict:'van_number' });
+  // Delete existing rows for this van then reinsert
+  await sb.from('van_zones').delete().eq('van_number', vanId);
+  if(van.suburbs.length > 0){
+    const rows = van.suburbs.map(s=>({ van_number:vanId, suburb:s, postcode:'', active:true }));
+    await sb.from('van_zones').insert(rows);
+  }
   toast('Van '+vanId+' zones saved ✓');
 }
 
