@@ -1272,72 +1272,105 @@ async function sendChat(){
   addUserMsg(text);
   document.getElementById('cb-quick').style.display = 'none';
 
-  // Check escalation keywords
-  const escalateWords = ['mechanic','human','person','call','phone','urgent','emergency','speak','talk','real'];
-  if(escalateWords.some(w=>text.toLowerCase().includes(w)) && !escalated){
+  const t = text.toLowerCase();
+
+  // Escalation
+  const escalateWords = ['mechanic','human','person','call','phone','urgent','emergency','speak','talk','real','help'];
+  if(escalateWords.some(w=>t.includes(w)) && !escalated){
     escalated = true;
     showTyping();
-    await new Promise(r=>setTimeout(r,800));
+    await new Promise(r=>setTimeout(r,700));
     hideTyping();
-    addBotMsg("I'll connect you with a mechanic right away. 🔧", 'escalated');
+    addBotMsg("I'll connect you with a mechanic right away! 🔧", 'escalated');
     setTimeout(()=>{
-      addBotMsg("📞 Our mechanic will call you back within 15 minutes. You can also WhatsApp us at +61 400 000 000. In the meantime, is there anything else I can help with?", 'escalated');
-    }, 1000);
+      addBotMsg("📞 Our mechanic will call you back within 15 minutes. You can also WhatsApp us at +61 400 000 000. Anything else I can help with in the meantime?", 'escalated');
+    }, 900);
     return;
   }
 
   showTyping();
+  await new Promise(r=>setTimeout(r,600));
+  hideTyping();
 
-  try {
-    const systemPrompt = `You are the Dr. Bike Sydney assistant — a friendly, knowledgeable bike repair chatbot for a mobile bicycle repair business in Sydney, Australia.
+  // Smart rule-based responses
+  let reply = '';
 
-Key info:
-- Services: Tune-Up ($109), Standard Service ($149), Major Service ($229), Brake Bleed ($79), Gear Adjustment ($59), E-bike Diagnostic ($99), Bike Build ($299+)
-- Coverage: Inner West, Eastern Suburbs, CBD, North Shore, Manly, Northern Beaches
-- Hours: Mon–Sat, 8am–5pm
-- Call-out fee: $20 (waived for members)
-- Memberships: Basic $57/mo, Standard $97/mo, VIP $147/mo
-- Parts are always extra
-- Same-day booking available
+  if(t.match(/price|cost|how much|charge|fee|expensive|cheap/)){
+    reply = "Our prices include a $20 mobile call-out fee 🚐 Services start from $59 (Gear Adjustment) up to $299+ (Bike Build). Popular ones: Tune-Up $109, Standard Service $149, Major Service $229, Brake Bleed $79. Members get the call-out fee waived!";
+  } else if(t.match(/tune.?up|tuneup/)){
+    reply = "Our Tune-Up is $109 and takes about 45–60 min. It includes brake & gear adjustment, tyre pressure check, and a general safety inspection. Great for bikes that haven't been serviced in a while! 🚲";
+  } else if(t.match(/standard service/)){
+    reply = "The Standard Service is $149 and covers everything in a Tune-Up plus drivetrain cleaning, cable check, and a full safety assessment. Most popular service for regular riders! ✅";
+  } else if(t.match(/major service/)){
+    reply = "The Major Service is $229 — our most comprehensive service. Includes full drivetrain clean & lube, bearing check, brake bleed (hydraulic), wheel true, and complete safety check. 🔧";
+  } else if(t.match(/brake/)){
+    reply = "Brake Bleed is $79 for hydraulic brakes. Brake pad install starts at $40. We carry most common brake pads — parts are always extra at cost price. 🛑";
+  } else if(t.match(/gear|derailleur|shift/)){
+    reply = "Gear Adjustment is $59 and usually takes 20–30 min. If your gears are skipping or not shifting cleanly, this is the fix! Cable replacement is extra if needed. ⚙️";
+  } else if(t.match(/ebike|e-bike|electric/)){
+    reply = "We service e-bikes! E-bike Diagnostic is $99. We work on most brands — Bosch, Shimano Steps, Yamaha motors. Battery and motor repairs depend on the issue. ⚡";
+  } else if(t.match(/build|new bike|assemble/)){
+    reply = "Bike builds start at $299+, depending on complexity. We can assemble bikes from boxes (online purchases) or do full custom builds. Usually takes 1–2 hours. 🏗️";
+  } else if(t.match(/area|suburb|cover|location|where|come to|travel/)){
+    reply = "We cover most of Sydney! 📍 Inner West (Newtown, Glebe, Balmain), Eastern Suburbs (Bondi, Paddington, Randwick), CBD, North Shore (Chatswood, Mosman), Manly & Northern Beaches. Not sure if we cover your area? Just ask!";
+  } else if(t.match(/hour|open|available|time|when|day/)){
+    reply = "We operate Monday to Saturday, 8am–5pm 🕗 Same-day bookings are available! Book online and we'll confirm your slot within 30 minutes.";
+  } else if(t.match(/book|reserv|appoint|schedul/)){
+    reply = "Booking is easy! 📅 Click 'Book' in the menu, pick your service, choose a date and time, and enter your address. We come to you! Same-day slots are often available.";
+  } else if(t.match(/member|membership|subscription|plan/)){
+    reply = "We have 3 membership plans 🌟 Basic $57/mo (8% off + call-out waived), Standard $97/mo (12% off + 2 free tune-ups/year), VIP $147/mo (18% off + 3 free tune-ups + priority booking). Annual billing saves 20%!";
+  } else if(t.match(/basic|57/)){
+    reply = "Basic membership is $57/mo 🌟 You get 8% off all services, call-out fee waived, 1 free Tune-Up per year, and priority booking. Great value if you service your bike 2+ times a year!";
+  } else if(t.match(/vip|147/)){
+    reply = "VIP membership is $147/mo 👑 Best for serious riders — 18% off all services, 3 free Tune-Ups/year, same-day booking on request, 1-hour arrival guarantee, and direct WhatsApp access to your mechanic!";
+  } else if(t.match(/part|spare|componen/)){
+    reply = "Parts are always charged at cost price — no markup! 💪 We carry common parts in the van (tubes, brake pads, cables, chains). For specialty parts we'll let you know in advance.";
+  } else if(t.match(/payment|pay|card|cash|stripe/)){
+    reply = "We accept card payments (Visa, Mastercard, Amex) and bank transfer 💳 Payment is taken after the job is complete. Members are billed monthly automatically.";
+  } else if(t.match(/cancel|reschedule|change/)){
+    reply = "No worries! You can cancel or reschedule up to 2 hours before your booking with no charge. Just reply to your confirmation email or message us on WhatsApp. 📱";
+  } else if(t.match(/how long|duration|time take/)){
+    reply = "Most services take 45–90 minutes ⏱️ Simple jobs like gear adjustment are 20–30 min. Major services or bike builds can take 2+ hours. We'll give you an estimate when you book!";
+  } else if(t.match(/hello|hi|hey|g'day|gday|howdy/)){
+    reply = "G'day! 👋 I'm the Dr. Bike assistant. I can help with pricing, bookings, what services we offer, and our coverage areas. What can I help you with?";
+  } else if(t.match(/thank|thanks|cheers|great|awesome|perfect/)){
+    reply = "No worries at all! 😊 Feel free to ask if you need anything else. Happy riding! 🚲";
+  } else if(t.match(/warranty|guarantee/)){
+    reply = "All our work comes with a 30-day satisfaction guarantee 💯 If anything isn't right after your service, we'll come back and fix it at no charge!";
+  } else {
+    reply = "Good question! I'm not 100% sure about that one 🤔 For specific questions, I'd recommend chatting with one of our mechanics directly — they'll know exactly what you need!";
+    // Show escalation button
+    setTimeout(()=>{
+      const msgs = document.getElementById('cb-msgs');
+      const div = document.createElement('div');
+      div.className = 'cb-msg bot';
+      const btn = document.createElement('button');
+      btn.textContent = '🔧 Ask a mechanic';
+      btn.style.cssText = 'background:var(--blue);color:#fff;border:none;border-radius:12px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:4px';
+      btn.onclick = ()=>quickMsg('I need to speak to a mechanic');
+      div.appendChild(btn);
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 500);
+  }
 
-Keep responses short (2-3 sentences max). Be friendly and use Australian English. If asked about something you don't know, say you'll escalate to a mechanic.`;
+  addBotMsg(reply);
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: chatHistory.filter(m=>m.role==='user'||m.role==='assistant').slice(-10)
-      })
-    });
-
-    const data = await response.json();
-    hideTyping();
-    const reply = data.content?.[0]?.text || "Sorry, I couldn't get a response. Try again!";
-    addBotMsg(reply);
-
-    // Show escalation option after 2 exchanges
-    if(chatHistory.filter(m=>m.role==='user').length >= 2 && !escalated){
-      setTimeout(()=>{
-        const msgs = document.getElementById('cb-msgs');
-        const div = document.createElement('div');
-        div.className = 'cb-msg bot';
-        div.style.fontSize = '12px';
-        div.style.opacity = '0.7';
-        const btn = document.createElement('button');
-        btn.textContent = '🔧 Talk to a mechanic';
-        btn.style.cssText = 'background:var(--blue);color:#fff;border:none;border-radius:12px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--sans)';
-        btn.onclick = ()=>quickMsg('I need to speak to a mechanic');
-        div.appendChild(btn);
-        msgs.appendChild(div);
-        msgs.scrollTop = msgs.scrollHeight;
-      }, 500);
-    }
-  } catch(e) {
-    hideTyping();
-    addBotMsg("Sorry, I'm having trouble connecting right now. Please try again or call us directly.");
+  // After 3 msgs show escalation option
+  const userMsgs = chatHistory.filter(m=>m.role==='user').length;
+  if(userMsgs === 3 && !escalated){
+    setTimeout(()=>{
+      const msgs = document.getElementById('cb-msgs');
+      const div = document.createElement('div');
+      div.className = 'cb-msg bot';
+      const btn = document.createElement('button');
+      btn.textContent = '🔧 Talk to a mechanic';
+      btn.style.cssText = 'background:var(--blue);color:#fff;border:none;border-radius:12px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:4px';
+      btn.onclick = ()=>quickMsg('I need to speak to a mechanic');
+      div.appendChild(btn);
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 600);
   }
 }
 
