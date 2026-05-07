@@ -1083,8 +1083,11 @@ function selDay(el, date){
   document.getElementById('times-section').style.display='block';
   const times = ['8:30 am','9:00 am','10:00 am','10:30 am','1:00 pm','1:30 pm','2:30 pm','3:00 pm'];
   const booked = ['8:30 am','1:00 pm'];
-  document.getElementById('times-grid').innerHTML = times.map(t=>`
-    <div class="ts${booked.includes(t)?' bk':''}" onclick="${booked.includes(t)?'':(\"selTime(this,'\"+t+\"')\")}\">${t}</div>`).join('');
+  document.getElementById('times-grid').innerHTML = times.map(t=>{
+    const isBk = booked.includes(t);
+    if(isBk) return '<div class="ts bk">'+t+'</div>';
+    return '<div class="ts" onclick="selTime(this,\'' + t + '\')">'+t+'</div>';
+  }).join('');
   booking.time = null;
   document.getElementById('step2-next').disabled = true;
 }
@@ -1324,7 +1327,11 @@ Keep responses short (2-3 sentences max). Be friendly and use Australian English
         div.className = 'cb-msg bot';
         div.style.fontSize = '12px';
         div.style.opacity = '0.7';
-        div.innerHTML = '<button onclick="quickMsg(\'I need to speak to a mechanic\')" style="background:var(--blue);color:#fff;border:none;border-radius:12px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--sans)">🔧 Talk to a mechanic</button>';
+        const btn = document.createElement('button');
+        btn.textContent = '🔧 Talk to a mechanic';
+        btn.style.cssText = 'background:var(--blue);color:#fff;border:none;border-radius:12px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--sans)';
+        btn.onclick = ()=>quickMsg('I need to speak to a mechanic');
+        div.appendChild(btn);
         msgs.appendChild(div);
         msgs.scrollTop = msgs.scrollHeight;
       }, 500);
