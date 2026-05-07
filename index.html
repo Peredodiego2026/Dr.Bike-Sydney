@@ -1281,9 +1281,31 @@ async function sendChat(){
     showTyping();
     await new Promise(r=>setTimeout(r,700));
     hideTyping();
-    addBotMsg("I'll connect you with a mechanic right away! 🔧", 'escalated');
-    setTimeout(()=>{
-      addBotMsg("📞 Our mechanic will call you back within 15 minutes. You can also WhatsApp us at +61 400 000 000. Anything else I can help with in the meantime?", 'escalated');
+    addBotMsg("I'll connect you with our team right away! 🔧", 'escalated');
+    // Load real contacts from Supabase
+    setTimeout(async ()=>{
+      try {
+        const { data: contacts } = await sb.from('escalation_contacts').select('*').order('role');
+        const msgs = document.getElementById('cb-msgs');
+        if(contacts && contacts.length > 0){
+          contacts.forEach(c=>{
+            const roleLabel = { manager:'Manager', mechanic:'Mechanic' };
+            const div = document.createElement('div');
+            div.className = 'cb-msg escalated';
+            div.innerHTML = '📱 <b>'+c.first_name+' '+c.last_name+'</b> — '+(roleLabel[c.role]||c.role)+'<br><a href="tel:'+c.phone.replace(/\s/g,'')+'" style="color:inherit;font-weight:700">'+c.phone+'</a>';
+            msgs.appendChild(div);
+          });
+          const div2 = document.createElement('div');
+          div2.className = 'cb-msg escalated';
+          div2.textContent = "We'll get back to you within 15 minutes! 🙏";
+          msgs.appendChild(div2);
+        } else {
+          addBotMsg("📞 WhatsApp us at +61 433 963 250 — we'll get back to you within 15 minutes!", 'escalated');
+        }
+        msgs.scrollTop = msgs.scrollHeight;
+      } catch(e){
+        addBotMsg("📞 WhatsApp us at +61 433 963 250 — we'll get back to you within 15 minutes!", 'escalated');
+      }
     }, 900);
     return;
   }

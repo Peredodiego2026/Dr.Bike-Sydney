@@ -249,6 +249,10 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
       Zone Manager
     </button>
+    <button class="sb-item" onclick="go('contacts',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"></path></svg>
+      Escalation Contacts
+    </button>
     <div class="sb-section">System</div>
     <button class="sb-item" onclick="go('settings',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -568,6 +572,54 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
       </div>
     </div>
 
+    <!-- CONTACTS -->
+    <div id="page-contacts" class="page">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--navy)">Escalation Contacts</div>
+          <div style="font-size:13px;color:var(--mgray);margin-top:4px">When the chatbot can't help, it shows these contacts to clients</div>
+        </div>
+        <button onclick="openContactModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New contact
+        </button>
+      </div>
+      <div id="contacts-list"></div>
+    </div>
+
+    <!-- CONTACT MODAL -->
+    <div id="contact-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:16px;padding:28px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:20px" id="modal-title">New Contact</div>
+        <input type="hidden" id="modal-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">First name</div>
+            <input class="inp" id="modal-fname" placeholder="e.g. Diego">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Last name</div>
+            <input class="inp" id="modal-lname" placeholder="e.g. Peredó">
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone (WhatsApp)</div>
+          <input class="inp" id="modal-phone" placeholder="+61 400 000 000">
+        </div>
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Role</div>
+          <select class="inp" id="modal-role">
+            <option value="mechanic">Mechanic</option>
+            <option value="manager">Manager</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onclick="saveContact()" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
+          <button onclick="closeContactModal()" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ZONES -->
     <div id="page-zones" class="page">
       <div id="zones-container"></div>
@@ -636,8 +688,8 @@ const SUPABASE_KEY = 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
-const titles = { dashboard:'Dashboard', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings' };
-const subs = { dashboard:'Live operations · Sydney', bookings:'Live bookings from Supabase', vans:'2 vans online · both active', clients:'Client database', finance:'Financial overview', zones:'Assign suburbs to each van', settings:'System settings' };
+const titles = { dashboard:'Dashboard', contacts:'Escalation Contacts', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings' };
+const subs = { dashboard:'Live operations · Sydney', contacts:'Manage who receives escalated chats', bookings:'Live bookings from Supabase', vans:'2 vans online · both active', clients:'Client database', finance:'Financial overview', zones:'Assign suburbs to each van', settings:'System settings' };
 
 function go(page, btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -648,6 +700,7 @@ function go(page, btn){
   document.getElementById('page-sub').textContent = subs[page]||'';
   document.getElementById('sidebar').classList.remove('open');
   if(page==='zones') loadVanZones();
+  if(page==='contacts') loadContacts();
   if(page==='bookings') loadBookings();
   if(page==='clients') loadClients();
   if(page==='dashboard') loadDashboard();
@@ -877,6 +930,83 @@ const days=[980,1120,850,1340,1580,0,1210,1050,1420,1680,1240,0,1380,1520,980,16
 const max=Math.max(...days);
 const chart=document.getElementById('chart');
 if(chart) chart.innerHTML=days.map((v,i)=>`<div class="bar-wrap"><div class="bar" style="height:${v?Math.max((v/max)*100,4):4}%;background:${v?'#1848C8':'#F3F4F6'};opacity:${v?1:0.3}" title="$${v}"></div>${i%7===0?`<div class="bar-label">${['W1','W2','W3','W4'][Math.floor(i/7)]}</div>`:'<div class="bar-label"></div>'}</div>`).join('');
+
+// ── ESCALATION CONTACTS ───────────────────────────────────────────────────────
+async function loadContacts(){
+  const { data } = await sb.from('escalation_contacts').select('*').order('role').order('first_name');
+  const list = document.getElementById('contacts-list');
+  if(!list) return;
+  if(!data || data.length === 0){
+    list.innerHTML = '<div style="text-align:center;color:#6B7280;padding:48px;font-size:14px">No contacts yet. Add your first contact above.</div>';
+    return;
+  }
+  const roleColors = { manager:'#1848C8', mechanic:'#059669' };
+  const roleBg = { manager:'#EEF3FC', mechanic:'#ECFDF5' };
+  list.innerHTML = data.map(c=>`
+    <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
+      <div style="width:44px;height:44px;border-radius:50%;background:${roleBg[c.role]||'#F3F4F6'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role]||'#6B7280'};flex-shrink:0">
+        ${c.first_name[0]}${c.last_name[0]}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:600;color:#0D1F3C">${c.first_name} ${c.last_name}</div>
+        <div style="font-size:13px;color:#6B7280;margin-top:2px">${c.phone}</div>
+      </div>
+      <span style="background:${roleBg[c.role]||'#F3F4F6'};color:${roleColors[c.role]||'#6B7280'};font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;text-transform:capitalize">${c.role}</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="editContact('${c.id}','${c.first_name}','${c.last_name}','${c.phone}','${c.role}')" style="background:#F7F8FA;border:1.5px solid #E5E7EB;color:#0D1F3C;border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
+        <button onclick="deleteContact('${c.id}')" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function openContactModal(){ 
+  document.getElementById('modal-title').textContent = 'New Contact';
+  document.getElementById('modal-id').value = '';
+  document.getElementById('modal-fname').value = '';
+  document.getElementById('modal-lname').value = '';
+  document.getElementById('modal-phone').value = '';
+  document.getElementById('modal-role').value = 'mechanic';
+  document.getElementById('contact-modal').style.display = 'flex'; 
+}
+
+function closeContactModal(){ 
+  document.getElementById('contact-modal').style.display = 'none'; 
+}
+
+function editContact(id, fname, lname, phone, role){
+  document.getElementById('modal-title').textContent = 'Edit Contact';
+  document.getElementById('modal-id').value = id;
+  document.getElementById('modal-fname').value = fname;
+  document.getElementById('modal-lname').value = lname;
+  document.getElementById('modal-phone').value = phone;
+  document.getElementById('modal-role').value = role;
+  document.getElementById('contact-modal').style.display = 'flex';
+}
+
+async function saveContact(){
+  const id = document.getElementById('modal-id').value;
+  const fname = document.getElementById('modal-fname').value.trim();
+  const lname = document.getElementById('modal-lname').value.trim();
+  const phone = document.getElementById('modal-phone').value.trim();
+  const role = document.getElementById('modal-role').value;
+  if(!fname||!lname||!phone){ showToast('Please fill all fields'); return; }
+  if(id){
+    await sb.from('escalation_contacts').update({first_name:fname,last_name:lname,phone,role}).eq('id',id);
+    showToast('Contact updated ✓');
+  } else {
+    await sb.from('escalation_contacts').insert({first_name:fname,last_name:lname,phone,role,active:true});
+    showToast('Contact added ✓');
+  }
+  closeContactModal();
+  loadContacts();
+}
+
+async function deleteContact(id){
+  if(!confirm('Delete this contact?')) return;
+  await sb.from('escalation_contacts').delete().eq('id',id);
+  showToast('Contact deleted');
+  loadContacts();
+}
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 loadDashboard();
