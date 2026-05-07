@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. Bike — Notifications</title>
+<link href="Dr.%20Bike%20%E2%80%94%20Notifications_files/css2.css" rel="stylesheet">
+<style>
+:root{
+  --blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;
+  --navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;
+  --border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;
+  --red:#DC2626;--red-lt:#FEF2F2;--amber:#D97706;--amber-lt:#FEF3C7;
+  --wa:#25D366;--wa-lt:#EDFBF3;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg:0 4px 6px rgba(0,0,0,0.05),0 10px 40px rgba(0,0,0,0.1);
+  --r:12px;--sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased}
+
+/* NAV */
+.topnav{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:34px;height:34px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
+.brand-logo svg{width:20px;height:20px}
+.brand-name{font-size:15px;font-weight:700;color:var(--navy)}
+.brand-tag{font-size:10px;color:var(--mgray);letter-spacing:0.06em;text-transform:uppercase;margin-top:1px}
+.nav-tabs{display:flex;gap:4px}
+.tab{padding:7px 16px;font-size:13px;font-weight:500;color:var(--mgray);cursor:pointer;border-radius:8px;border:none;background:transparent;font-family:var(--sans);transition:all .15s}
+.tab:hover{background:#F3F4F6;color:var(--navy)}
+.tab.on{background:var(--blue-lt);color:var(--blue)}
+
+/* LAYOUT */
+.wrap{max-width:1060px;margin:0 auto;padding:24px}
+.page{display:none}.page.active{display:flex;flex-direction:column;gap:20px}
+
+/* KPIS */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi{background:var(--white);border-radius:var(--r);padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kpi.blue::after{background:var(--blue)}
+.kpi.green::after{background:var(--green)}
+.kpi.wa::after{background:var(--wa)}
+.kpi.amber::after{background:var(--amber)}
+.kpi-l{font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
+.kpi-n{font-size:26px;font-weight:700;color:var(--navy);letter-spacing:-0.02em;line-height:1}
+.kpi-s{font-size:12px;color:var(--mgray);margin-top:6px;font-weight:300}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.b-on{background:var(--green-lt);color:var(--green)}
+.b-off{background:#F3F4F6;color:var(--mgray)}
+.b-wa{background:var(--wa-lt);color:var(--wa)}
+.b-pending{background:var(--amber-lt);color:var(--amber)}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.card-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600;color:var(--navy)}
+.card-sub{font-size:11px;color:var(--mgray);margin-top:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* CHANNEL CARDS */
+.channels{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.ch-card{background:var(--white);border-radius:var(--r);border:1.5px solid var(--border);padding:22px;box-shadow:var(--shadow);transition:all .15s;cursor:pointer}
+.ch-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.ch-card.active{border-color:var(--blue)}
+.ch-card.wa-card.active{border-color:var(--wa)}
+.ch-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.ch-name{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.ch-desc{font-size:12px;color:var(--mgray);line-height:1.6;font-weight:300;margin-bottom:16px}
+.ch-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ch-stat{background:var(--off);border-radius:7px;padding:9px 10px}
+.ch-stat-n{font-size:16px;font-weight:700;color:var(--navy)}
+.ch-stat-l{font-size:9px;color:var(--mgray);margin-top:1px;text-transform:uppercase;letter-spacing:0.04em}
+.ch-toggle{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.ch-toggle-label{font-size:12px;font-weight:500;color:var(--navy)}
+.toggle{width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;border:none}
+.toggle.on{background:var(--blue)}
+.toggle.off{background:#E5E7EB}
+.toggle.wa-on{background:var(--wa)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.toggle.on::after,.toggle.wa-on::after{left:21px}
+.toggle.off::after{left:3px}
+
+/* TEMPLATE EDITOR */
+.tmpl-list{display:flex;flex-direction:column;gap:0}
+.tmpl-item{padding:16px 22px;border-bottom:1px solid #F9FAFB;cursor:pointer;transition:background .13s}
+.tmpl-item:last-child{border-bottom:none}
+.tmpl-item:hover,.tmpl-item.open{background:#FAFAFA}
+.tmpl-hdr{display:flex;align-items:center;gap:12px}
+.tmpl-channel{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tmpl-name{font-size:13px;font-weight:600;color:var(--navy);flex:1}
+.tmpl-trigger{font-size:11px;color:var(--mgray);font-weight:300}
+.tmpl-arr{transition:transform .2s;color:var(--mgray)}
+.tmpl-item.open .tmpl-arr{transform:rotate(180deg)}
+.tmpl-body{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:none}
+.tmpl-item.open .tmpl-body{display:block}
+.msg-preview{background:var(--off);border-radius:10px;padding:14px;font-size:13px;color:var(--navy);line-height:1.7;font-weight:300;border-left:3px solid var(--blue);margin-bottom:12px;white-space:pre-line}
+.msg-preview.wa{border-left-color:var(--wa)}
+.msg-preview.email{border-left-color:var(--amber)}
+.var-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.var-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--blue-lt);color:var(--blue);cursor:pointer;font-family:monospace;border:none}
+.var-pill:hover{background:var(--blue);color:#fff}
+.tmpl-actions{display:flex;gap:8px}
+.tmpl-btn{padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);border:none;transition:all .15s}
+.tmpl-btn.primary{background:var(--blue);color:#fff}
+.tmpl-btn.secondary{background:var(--off);color:var(--navy);border:1px solid var(--border)}
+.tmpl-btn.test{background:var(--green-lt);color:var(--green);border:1px solid rgba(5,150,105,0.2)}
+
+/* LOG */
+.log-item{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid #F9FAFB;font-size:13px}
+.log-item:last-child{border-bottom:none}
+.log-ch{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.log-recipient{font-weight:500;color:var(--navy);flex:1}
+.log-msg{font-size:11px;color:var(--mgray);font-weight:300;margin-top:1px}
+.log-time{font-size:11px;color:var(--mgray);width:80px;text-align:right;flex-shrink:0}
+.log-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;flex-shrink:0}
+.ls-sent{background:var(--green-lt);color:var(--green)}
+.ls-opened{background:var(--blue-lt);color:var(--blue)}
+.ls-failed{background:var(--red-lt);color:var(--red)}
+
+/* SETUP */
+.setup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.setup-card{background:var(--white);border-radius:var(--r);border:1.5px solid var(--border);padding:22px;box-shadow:var(--shadow)}
+.setup-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.setup-name{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.setup-desc{font-size:12px;color:var(--mgray);line-height:1.6;font-weight:300;margin-bottom:16px}
+.setup-price{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.setup-price-sub{font-size:11px;color:var(--mgray);font-weight:300;margin-bottom:14px}
+.setup-steps-mini{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.ssm{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--mgray);font-weight:300}
+.ssm-n{width:18px;height:18px;border-radius:50%;background:var(--blue-lt);color:var(--blue);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0px}
+.setup-btn{width:100%;padding:10px;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:background .15s}
+
+/* PHONE MOCKUP */
+.phone{width:240px;background:var(--navy);border-radius:24px;padding:12px;box-shadow:var(--shadow-lg);flex-shrink:0}
+.phone-screen{background:#fff;border-radius:16px;overflow:hidden;min-height:380px}
+.phone-status{background:#1A1A2E;padding:8px 14px;display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,0.6)}
+.phone-wa-hdr{background:var(--wa);padding:10px 14px;display:flex;align-items:center;gap:8px}
+.phone-wa-av{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+.phone-wa-name{font-size:12px;font-weight:600;color:#fff}
+.phone-wa-sub{font-size:9px;color:rgba(255,255,255,0.7)}
+.phone-msgs{padding:12px;display:flex;flex-direction:column;gap:10px;background:#ECE5DD}
+.msg-bubble{max-width:80%;padding:8px 10px;border-radius:10px;font-size:11px;line-height:1.5;position:relative}
+.msg-in{background:#fff;align-self:flex-start;border-bottom-left-radius:2px}
+.msg-out{background:#DCF8C6;align-self:flex-end;border-bottom-right-radius:2px}
+.msg-time{font-size:9px;color:#8C9A8C;margin-top:3px;text-align:right}
+
+.email-preview{background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.email-hdr{background:var(--navy);padding:20px;text-align:center}
+.email-logo{width:36px;height:36px;background:var(--blue);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
+.email-brand{font-size:16px;font-weight:700;color:#fff}
+.email-body{padding:24px;font-size:13px;color:var(--navy);line-height:1.7;font-weight:300}
+.email-cta{display:block;width:fit-content;margin:20px auto;background:var(--blue);color:#fff;padding:12px 28px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none;cursor:pointer;border:none;font-family:var(--sans)}
+.email-footer{background:var(--off);padding:14px;text-align:center;font-size:10px;color:var(--mgray);border-top:1px solid var(--border)}
+
+@media(max-width:768px){
+  .kpis,.channels,.setup-grid{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+  .nav-tabs{display:none}
+  .phone{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="brand">
+    <div class="brand-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path><circle cx="12" cy="6" r="1.5" fill="#fff" stroke="none"></circle></svg></div>
+    <div><div class="brand-name">Dr. Bike — Notifications</div><div class="brand-tag">WhatsApp · Email · SMS</div></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab on" onclick="go('overview',this)">Overview</button>
+    <button class="tab" onclick="go('templates',this)">Templates</button>
+    <button class="tab" onclick="go('log',this)">Message log</button>
+    <button class="tab" onclick="go('setup',this)">Setup guide</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- OVERVIEW -->
+  <div id="page-overview" class="page active">
+    <div class="kpis">
+      <div class="kpi blue"><div class="kpi-l">Sent this month</div><div class="kpi-n">847</div><div class="kpi-s">All channels combined</div></div>
+      <div class="kpi green"><div class="kpi-l">Email open rate</div><div class="kpi-n">68%</div><div class="kpi-s">Industry avg: 21%</div></div>
+      <div class="kpi wa"><div class="kpi-l">WhatsApp delivered</div><div class="kpi-n">100%</div><div class="kpi-s">0 failed messages</div></div>
+      <div class="kpi amber"><div class="kpi-l">Monthly cost</div><div class="kpi-n">~$67</div><div class="kpi-s">SMS + WhatsApp API</div></div>
+    </div>
+
+    <div class="channels">
+      <div class="ch-card active" onclick="go('templates',document.querySelectorAll('.tab')[1])">
+        <div class="ch-icon" style="background:var(--wa-lt)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--wa)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg>
+        </div>
+        <div class="ch-name">WhatsApp Business</div>
+        <div class="ch-desc">Send booking confirmations, mechanic ETA and payment reminders directly to clients' WhatsApp. 98% open rate.</div>
+        <div class="ch-stats">
+          <div class="ch-stat"><div class="ch-stat-n">423</div><div class="ch-stat-l">Sent</div></div>
+          <div class="ch-stat"><div class="ch-stat-n">~$0.05</div><div class="ch-stat-l">Per message</div></div>
+        </div>
+        <div class="ch-toggle"><span class="ch-toggle-label">Status</span><span class="badge b-pending">Setup required</span></div>
+      </div>
+
+      <div class="ch-card active" onclick="go('templates',document.querySelectorAll('.tab')[1])">
+        <div class="ch-icon" style="background:var(--amber-lt)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        </div>
+        <div class="ch-name">Email</div>
+        <div class="ch-desc">Professional branded emails for booking confirmation, receipts and membership invoices. Free via Resend or SendGrid.</div>
+        <div class="ch-stats">
+          <div class="ch-stat"><div class="ch-stat-n">312</div><div class="ch-stat-l">Sent</div></div>
+          <div class="ch-stat"><div class="ch-stat-n">Free</div><div class="ch-stat-l">Per message</div></div>
+        </div>
+        <div class="ch-toggle"><span class="ch-toggle-label">Status</span><span class="badge b-pending">Setup required</span></div>
+      </div>
+
+      <div class="ch-card" onclick="go('templates',document.querySelectorAll('.tab')[1])">
+        <div class="ch-icon" style="background:var(--blue-lt)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <div class="ch-name">SMS</div>
+        <div class="ch-desc">Simple text message reminders for clients who prefer SMS. Ideal for mechanic "on my way" alerts. Via Twilio.</div>
+        <div class="ch-stats">
+          <div class="ch-stat"><div class="ch-stat-n">112</div><div class="ch-stat-l">Sent</div></div>
+          <div class="ch-stat"><div class="ch-stat-n">~$0.08</div><div class="ch-stat-l">Per message</div></div>
+        </div>
+        <div class="ch-toggle"><span class="ch-toggle-label">Status</span><span class="badge b-pending">Setup required</span></div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <!-- WhatsApp preview -->
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">WhatsApp preview</div><div class="card-sub">Booking confirmation message</div></div>
+          <div style="padding:20px;display:flex;justify-content:center">
+            <div class="phone">
+              <div class="phone-screen">
+                <div class="phone-status"><span>9:41</span><span>●●● 100%</span></div>
+                <div class="phone-wa-hdr">
+                  <div class="phone-wa-av">DB</div>
+                  <div><div class="phone-wa-name">Dr. Bike Sydney</div><div class="phone-wa-sub">Online</div></div>
+                </div>
+                <div class="phone-msgs">
+                  <div class="msg-bubble msg-in">
+                    Hi Sarah! 👋 Your booking is confirmed.<br><br>
+                    <b>Service:</b> Standard Service<br>
+                    <b>Date:</b> Mon 4 May, 10:00 am<br>
+                    <b>Location:</b> Paddington<br>
+                    <b>Mechanic:</b> Van 1<br>
+                    <b>Total:</b> $149<br><br>
+                    We'll message you 30 min before arrival. See you then! 🚲
+                    <div class="msg-time">9:41 am ✓✓</div>
+                  </div>
+                  <div class="msg-bubble msg-out">
+                    Perfect, thanks! 😊
+                    <div class="msg-time">9:42 am ✓✓</div>
+                  </div>
+                  <div class="msg-bubble msg-in">
+                    Our mechanic is 8 minutes away! 🔧<br>
+                    He'll call when he arrives at your door.
+                    <div class="msg-time">9:58 am ✓✓</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <!-- Email preview -->
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Email preview</div><div class="card-sub">Booking confirmation email</div></div>
+          <div style="padding:20px">
+            <div class="email-preview">
+              <div class="email-hdr">
+                <div class="email-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path><circle cx="12" cy="6" r="1.5" fill="#fff" stroke="none"></circle></svg></div>
+                <div class="email-brand">Dr. Bike Sydney</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px">drbike.com.au</div>
+              </div>
+              <div class="email-body">
+                <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:14px">Booking confirmed ✓</div>
+                Hi <b>Sarah</b>,<br><br>
+                Your Dr. Bike service is locked in. Here are the details:
+                <div style="background:var(--off);border-radius:8px;padding:14px;margin:14px 0;font-size:12px;border-left:3px solid var(--blue)">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                    <div><div style="font-weight:600;color:var(--navy)">Service</div><div style="color:var(--mgray);margin-top:2px">Standard Service</div></div>
+                    <div><div style="font-weight:600;color:var(--navy)">Date &amp; time</div><div style="color:var(--mgray);margin-top:2px">Mon 4 May · 10:00 am</div></div>
+                    <div><div style="font-weight:600;color:var(--navy)">Location</div><div style="color:var(--mgray);margin-top:2px">Paddington, NSW</div></div>
+                    <div><div style="font-weight:600;color:var(--navy)">Total</div><div style="color:var(--blue);margin-top:2px;font-weight:700">$149</div></div>
+                  </div>
+                </div>
+                Your mechanic will call you 30 minutes before arrival.
+                <button class="email-cta">View my booking</button>
+              </div>
+              <div class="email-footer">Dr. Bike Sydney · drbike.com.au · Unsubscribe</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEMPLATES -->
+  <div id="page-templates" class="page">
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Message templates</div><div class="card-sub">Click any template to edit. Variables update automatically per booking.</div></div></div>
+      <div class="tmpl-list">
+
+        <div class="tmpl-item" onclick="toggleTmpl(this)">
+          <div class="tmpl-hdr">
+            <div class="tmpl-channel" style="background:var(--wa-lt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--wa)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg></div>
+            <div style="flex:1"><div class="tmpl-name">Booking confirmation</div><div class="tmpl-trigger">Trigger: when booking is confirmed</div></div>
+            <span class="badge b-on" style="margin-right:10px">Active</span>
+            <svg class="tmpl-arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="tmpl-body">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Variables available</div>
+            <div class="var-pills">
+              <button class="var-pill">{{client_name}}</button>
+              <button class="var-pill">{{service}}</button>
+              <button class="var-pill">{{date}}</button>
+              <button class="var-pill">{{time}}</button>
+              <button class="var-pill">{{suburb}}</button>
+              <button class="var-pill">{{total}}</button>
+              <button class="var-pill">{{mechanic}}</button>
+            </div>
+            <div class="msg-preview wa">Hi {{client_name}}! 👋 Your booking is confirmed.
+
+<b>Service:</b> {{service}}
+<b>Date:</b> {{date}}, {{time}}
+<b>Location:</b> {{suburb}}
+<b>Mechanic:</b> {{mechanic}}
+<b>Total:</b> {{total}}
+
+We'll message you 30 min before arrival. See you then! 🚲</div>
+            <div class="tmpl-actions">
+              <button class="tmpl-btn primary">Save template</button>
+              <button class="tmpl-btn test" onclick="alert('Test message sent to your WhatsApp!')">Send test</button>
+              <button class="tmpl-btn secondary">Reset to default</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tmpl-item" onclick="toggleTmpl(this)">
+          <div class="tmpl-hdr">
+            <div class="tmpl-channel" style="background:var(--wa-lt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--wa)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg></div>
+            <div style="flex:1"><div class="tmpl-name">Mechanic on the way</div><div class="tmpl-trigger">Trigger: 30 min before arrival</div></div>
+            <span class="badge b-on" style="margin-right:10px">Active</span>
+            <svg class="tmpl-arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="tmpl-body">
+            <div class="var-pills"><button class="var-pill">{{client_name}}</button><button class="var-pill">{{mechanic}}</button><button class="var-pill">{{eta_minutes}}</button></div>
+            <div class="msg-preview wa">Hey {{client_name}}! 🔧
+
+Our mechanic is {{eta_minutes}} minutes away. He'll call you when he arrives at your door.
+
+Please have your bike ready — it helps us keep on schedule. See you soon!</div>
+            <div class="tmpl-actions"><button class="tmpl-btn primary">Save template</button><button class="tmpl-btn test" onclick="alert('Test message sent!')">Send test</button></div>
+          </div>
+        </div>
+
+        <div class="tmpl-item" onclick="toggleTmpl(this)">
+          <div class="tmpl-hdr">
+            <div class="tmpl-channel" style="background:var(--wa-lt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--wa)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg></div>
+            <div style="flex:1"><div class="tmpl-name">Job completed + payment request</div><div class="tmpl-trigger">Trigger: mechanic marks job complete</div></div>
+            <span class="badge b-on" style="margin-right:10px">Active</span>
+            <svg class="tmpl-arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="tmpl-body">
+            <div class="var-pills"><button class="var-pill">{{client_name}}</button><button class="var-pill">{{service}}</button><button class="var-pill">{{total}}</button><button class="var-pill">{{payment_link}}</button></div>
+            <div class="msg-preview wa">Hi {{client_name}}! Your {{service}} is done ✅
+
+Your bike is road-ready. Here's your invoice:
+💰 Total: {{total}}
+
+Pay securely here: {{payment_link}}
+
+Thank you for choosing Dr. Bike! 🚲</div>
+            <div class="tmpl-actions"><button class="tmpl-btn primary">Save template</button><button class="tmpl-btn test" onclick="alert('Test sent!')">Send test</button></div>
+          </div>
+        </div>
+
+        <div class="tmpl-item" onclick="toggleTmpl(this)">
+          <div class="tmpl-hdr">
+            <div class="tmpl-channel" style="background:var(--amber-lt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+            <div style="flex:1"><div class="tmpl-name">Email — Booking confirmation</div><div class="tmpl-trigger">Trigger: when booking is confirmed</div></div>
+            <span class="badge b-on" style="margin-right:10px">Active</span>
+            <svg class="tmpl-arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="tmpl-body">
+            <div class="var-pills"><button class="var-pill">{{client_name}}</button><button class="var-pill">{{service}}</button><button class="var-pill">{{date}}</button><button class="var-pill">{{time}}</button><button class="var-pill">{{suburb}}</button><button class="var-pill">{{total}}</button></div>
+            <div class="msg-preview email">Subject: Your Dr. Bike booking is confirmed ✓
+
+Hi {{client_name}},
+
+Your {{service}} is booked for {{date}} at {{time}} in {{suburb}}.
+
+Total: {{total}} (inclusive of $20 call-out fee)
+
+Your mechanic will contact you 30 minutes before arrival. If you need to reschedule, reply to this email.
+
+See you soon,
+The Dr. Bike team</div>
+            <div class="tmpl-actions"><button class="tmpl-btn primary">Save template</button><button class="tmpl-btn test" onclick="alert('Test email sent!')">Send test</button></div>
+          </div>
+        </div>
+
+        <div class="tmpl-item" onclick="toggleTmpl(this)">
+          <div class="tmpl-hdr">
+            <div class="tmpl-channel" style="background:var(--amber-lt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+            <div style="flex:1"><div class="tmpl-name">Email — Payment overdue reminder</div><div class="tmpl-trigger">Trigger: 7 days after invoice sent, unpaid</div></div>
+            <span class="badge b-on" style="margin-right:10px">Active</span>
+            <svg class="tmpl-arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="tmpl-body">
+            <div class="var-pills"><button class="var-pill">{{client_name}}</button><button class="var-pill">{{amount}}</button><button class="var-pill">{{days_overdue}}</button><button class="var-pill">{{payment_link}}</button></div>
+            <div class="msg-preview email">Subject: Friendly reminder — invoice overdue
+
+Hi {{client_name}},
+
+This is a gentle reminder that your invoice of {{amount}} is now {{days_overdue}} days overdue.
+
+Pay securely here: {{payment_link}}
+
+If you have any questions, just reply to this email.
+
+Thanks,
+Diego — Dr. Bike Sydney</div>
+            <div class="tmpl-actions"><button class="tmpl-btn primary">Save template</button><button class="tmpl-btn test" onclick="alert('Test email sent!')">Send test</button></div>
+          </div>
+        </div>
+
+        <div class="tmpl-item" onclick="toggleTmpl(this)">
+          <div class="tmpl-hdr">
+            <div class="tmpl-channel" style="background:var(--blue-lt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+            <div style="flex:1"><div class="tmpl-name">SMS — Mechanic on the way</div><div class="tmpl-trigger">Trigger: 30 min before arrival</div></div>
+            <span class="badge b-on" style="margin-right:10px">Active</span>
+            <svg class="tmpl-arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="tmpl-body">
+            <div class="var-pills"><button class="var-pill">{{client_name}}</button><button class="var-pill">{{eta_minutes}}</button></div>
+            <div class="msg-preview">Dr. Bike: Hi {{client_name}}, your mechanic is {{eta_minutes}} min away. Please have your bike ready. Questions? Call 0412 345 678.</div>
+            <div class="tmpl-actions"><button class="tmpl-btn primary">Save template</button><button class="tmpl-btn test" onclick="alert('Test SMS sent!')">Send test</button></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div id="page-log" class="page">
+    <div class="kpis">
+      <div class="kpi blue"><div class="kpi-l">Sent today</div><div class="kpi-n">18</div><div class="kpi-s">All channels</div></div>
+      <div class="kpi green"><div class="kpi-l">Delivered</div><div class="kpi-n">18</div><div class="kpi-s">100% delivery rate</div></div>
+      <div class="kpi wa"><div class="kpi-l">Opened</div><div class="kpi-n">14</div><div class="kpi-s">78% open rate</div></div>
+      <div class="kpi amber"><div class="kpi-l">Cost today</div><div class="kpi-n">$1.44</div><div class="kpi-s">18 messages × avg $0.08</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Message log</div><div class="card-sub">All outgoing notifications — today</div></div></div>
+      <div>
+        <div class="log-item">
+          <div class="log-ch" style="background:var(--wa-lt)"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--wa)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg></div>
+          <div style="flex:1"><div class="log-recipient">Sarah M.</div><div class="log-msg">Booking confirmation — Standard Service, Mon 4 May 10:00 am</div></div>
+          <div class="log-time">9:15 am</div>
+          <span class="log-status ls-opened">Opened</span>
+        </div>
+        <div class="log-item">
+          <div class="log-ch" style="background:var(--amber-lt)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+          <div style="flex:1"><div class="log-recipient">Sarah M.</div><div class="log-msg">Email confirmation — Standard Service $149</div></div>
+          <div class="log-time">9:15 am</div>
+          <span class="log-status ls-opened">Opened</span>
+        </div>
+        <div class="log-item">
+          <div class="log-ch" style="background:var(--wa-lt)"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--wa)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg></div>
+          <div style="flex:1"><div class="log-recipient">Olivia P.</div><div class="log-msg">Mechanic on the way — 8 minutes ETA</div></div>
+          <div class="log-time">8:52 am</div>
+          <span class="log-status ls-sent">Delivered</span>
+        </div>
+        <div class="log-item">
+          <div class="log-ch" style="background:var(--wa-lt)"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--wa)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg></div>
+          <div style="flex:1"><div class="log-recipient">Olivia P.</div><div class="log-msg">Job complete + payment request — $369</div></div>
+          <div class="log-time">12:41 pm</div>
+          <span class="log-status ls-opened">Opened</span>
+        </div>
+        <div class="log-item">
+          <div class="log-ch" style="background:var(--blue-lt)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+          <div style="flex:1"><div class="log-recipient">Ethan R.</div><div class="log-msg">SMS — Mechanic on the way, 12 minutes</div></div>
+          <div class="log-time">11:18 am</div>
+          <span class="log-status ls-sent">Delivered</span>
+        </div>
+        <div class="log-item">
+          <div class="log-ch" style="background:var(--amber-lt)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+          <div style="flex:1"><div class="log-recipient">Benjamin T.</div><div class="log-msg">Invoice overdue reminder — $369 · 14 days</div></div>
+          <div class="log-time">8:00 am</div>
+          <span class="log-status ls-opened">Opened</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="page-setup" class="page">
+    <div class="setup-grid">
+      <div class="setup-card" style="border-color:var(--wa);background:var(--wa-lt)">
+        <div class="setup-icon" style="background:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="var(--wa)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg></div>
+        <div class="setup-name">WhatsApp Business API</div>
+        <div class="setup-desc">Send automated WhatsApp messages to clients. 98% open rate. Much better than SMS for engagement.</div>
+        <div class="setup-price">~$0.05 AUD per message</div>
+        <div class="setup-price-sub">Via Meta Business API · ~$21/mo for 423 msgs</div>
+        <div class="setup-steps-mini">
+          <div class="ssm"><div class="ssm-n">1</div><span>Create a Meta Business account at business.facebook.com</span></div>
+          <div class="ssm"><div class="ssm-n">2</div><span>Apply for WhatsApp Business API access</span></div>
+          <div class="ssm"><div class="ssm-n">3</div><span>Get your phone number verified by Meta</span></div>
+          <div class="ssm"><div class="ssm-n">4</div><span>Share your API key with me — I connect it to the app</span></div>
+        </div>
+        <button class="setup-btn" style="background:var(--wa);color:#fff" onclick="window.open('https://business.facebook.com','_blank')">Start WhatsApp setup →</button>
+      </div>
+
+      <div class="setup-card">
+        <div class="setup-icon" style="background:var(--amber-lt)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+        <div class="setup-name">Email — Resend</div>
+        <div class="setup-desc">Professional branded emails for 
+bookings, receipts and invoices. Resend is free up to 3,000 emails/month
+ — more than enough for Dr. Bike.</div>
+        <div class="setup-price">Free up to 3,000 emails/month</div>
+        <div class="setup-price-sub">Then $20 USD/mo · you'll likely stay on free forever</div>
+        <div class="setup-steps-mini">
+          <div class="ssm"><div class="ssm-n">1</div><span>Create account at resend.com (free)</span></div>
+          <div class="ssm"><div class="ssm-n">2</div><span>Verify your domain: drbike.com.au</span></div>
+          <div class="ssm"><div class="ssm-n">3</div><span>Get your API key from the dashboard</span></div>
+          <div class="ssm"><div class="ssm-n">4</div><span>Share key with me — I set up all email templates</span></div>
+        </div>
+        <button class="setup-btn" style="background:var(--navy);color:#fff" onclick="window.open('https://resend.com','_blank')">Create Resend account →</button>
+      </div>
+
+      <div class="setup-card">
+        <div class="setup-icon" style="background:var(--blue-lt)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+        <div class="setup-name">SMS — Twilio</div>
+        <div class="setup-desc">Simple text message alerts for clients who prefer SMS. Use for mechanic ETA alerts when WhatsApp is not available.</div>
+        <div class="setup-price">~$0.08 AUD per SMS</div>
+        <div class="setup-price-sub">Australian local number ~$2/mo + usage</div>
+        <div class="setup-steps-mini">
+          <div class="ssm"><div class="ssm-n">1</div><span>Create account at twilio.com (free trial)</span></div>
+          <div class="ssm"><div class="ssm-n">2</div><span>Buy an Australian phone number ($2/mo)</span></div>
+          <div class="ssm"><div class="ssm-n">3</div><span>Get your Account SID and Auth Token</span></div>
+          <div class="ssm"><div class="ssm-n">4</div><span>Share credentials with me — I connect SMS to the app</span></div>
+        </div>
+        <button class="setup-btn" style="background:var(--blue);color:#fff" onclick="window.open('https://twilio.com','_blank')">Create Twilio account →</button>
+      </div>
+    </div>
+
+    <div style="background:var(--navy);border-radius:var(--r);padding:28px;display:flex;align-items:center;gap:24px">
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px">The simple path: do all 3</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.6);font-weight:300;line-height:1.7">Total monthly cost: WhatsApp ~$21 + Email free + SMS ~$10 = <strong style="color:#fff">~$31 AUD/month</strong>
+ for professional automated notifications to every client, every time. 
+Once you have the API keys, share them with me and I connect everything.</div>
+      </div>
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-size:32px;font-weight:800;color:#fff;letter-spacing:-0.02em">~$31</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px">AUD / month</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function go(page,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(btn)btn.classList.add('on');
+}
+function toggleTmpl(el){
+  const wasOpen=el.classList.contains('open');
+  document.querySelectorAll('.tmpl-item').forEach(i=>i.classList.remove('open'));
+  if(!wasOpen)el.classList.add('open');
+}
+</script>
+
+
+<img id="BtnTool" src="Dr.%20Bike%20%E2%80%94%20Notifications_files/icon.png" style="position: absolute; top: 1059px; left: 868px; z-index: 9999; cursor: pointer; display: none;" height="25" width="25"><img id="LoadingGif" src="moz-extension://b0005110-3221-4723-8d2a-d91733895c16/icons/loading.gif" style="position: absolute; top: 1059px; z-index: 9999; cursor: pointer; display: none; left: 868px;" height="70" width="70"></body></html>

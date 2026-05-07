@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. Bike — Payments</title>
+<link href="Dr.%20Bike%20%E2%80%94%20Payments_files/css2.css" rel="stylesheet">
+<style>
+:root{
+  --blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;
+  --navy:#0D1F3C;--navy2:#162947;
+  --white:#fff;--off:#F7F8FA;--mgray:#6B7280;
+  --border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;
+  --red:#DC2626;--red-lt:#FEF2F2;--amber:#D97706;--amber-lt:#FEF3C7;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg:0 4px 6px rgba(0,0,0,0.05),0 10px 40px rgba(0,0,0,0.1);
+  --r:12px;--sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased}
+
+/* TOP NAV */
+.topnav{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:34px;height:34px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
+.brand-logo svg{width:20px;height:20px}
+.brand-name{font-size:15px;font-weight:700;color:var(--navy)}
+.brand-tag{font-size:10px;color:var(--mgray);letter-spacing:0.06em;text-transform:uppercase;margin-top:1px}
+.nav-tabs{display:flex;gap:4px}
+.tab{padding:7px 16px;font-size:13px;font-weight:500;color:var(--mgray);cursor:pointer;border-radius:8px;border:none;background:transparent;font-family:var(--sans);transition:all .15s}
+.tab:hover{background:#F3F4F6;color:var(--navy)}
+.tab.on{background:var(--blue-lt);color:var(--blue)}
+.live-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--green);background:var(--green-lt);padding:5px 12px;border-radius:20px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* LAYOUT */
+.wrap{max-width:1100px;margin:0 auto;padding:24px 24px}
+.page{display:none}.page.active{display:flex;flex-direction:column;gap:20px}
+
+/* KPIS */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi{background:var(--white);border-radius:var(--r);padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kpi.blue::after{background:var(--blue)}
+.kpi.green::after{background:var(--green)}
+.kpi.amber::after{background:var(--amber)}
+.kpi.red::after{background:var(--red)}
+.kpi-l{font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
+.kpi-n{font-size:26px;font-weight:700;color:var(--navy);letter-spacing:-0.02em;line-height:1}
+.kpi-s{font-size:12px;color:var(--mgray);margin-top:6px;font-weight:300}
+.kpi-t{font-size:11px;font-weight:600;margin-top:8px;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px}
+.kpi-t.up{color:var(--green);background:var(--green-lt)}
+.kpi-t.dn{color:var(--red);background:var(--red-lt)}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.card-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600;color:var(--navy)}
+.card-sub{font-size:11px;color:var(--mgray);margin-top:2px}
+.row2{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:10px;font-weight:700;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;padding:10px 20px;text-align:left;border-bottom:1px solid var(--border);background:#FAFAFA}
+.tbl td{padding:13px 20px;font-size:13px;border-bottom:1px solid #F9FAFB;color:var(--navy);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#FAFAFA}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.b-paid{background:var(--green-lt);color:var(--green)}
+.b-pending{background:var(--amber-lt);color:var(--amber)}
+.b-failed{background:var(--red-lt);color:var(--red)}
+.b-refund{background:#F3F4F6;color:var(--mgray)}
+.b-sub{background:var(--blue-lt);color:var(--blue)}
+
+/* PAYMENT METHODS */
+.pm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:20px}
+.pm-card{border:1.5px solid var(--border);border-radius:10px;padding:16px;position:relative;transition:all .15s;cursor:pointer}
+.pm-card:hover{border-color:var(--blue);box-shadow:var(--shadow)}
+.pm-card.on{border-color:var(--blue);background:var(--blue-lt)}
+.pm-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.pm-name{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:3px}
+.pm-desc{font-size:11px;color:var(--mgray);font-weight:300;line-height:1.4}
+.pm-status{position:absolute;top:12px;right:12px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+.pm-on{background:var(--green-lt);color:var(--green)}
+.pm-off{background:#F3F4F6;color:var(--mgray)}
+
+/* SUBSCRIPTION PLANS */
+.subs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:20px}
+.sub-card{border:1.5px solid var(--border);border-radius:10px;padding:18px;transition:all .15s}
+.sub-card.active-plan{border-color:var(--blue);background:var(--blue-lt)}
+.sub-name{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.sub-price{font-size:24px;font-weight:700;color:var(--blue);margin:8px 0 3px;letter-spacing:-0.01em}
+.sub-cycle{font-size:12px;color:var(--mgray);margin-bottom:14px;font-weight:300}
+.sub-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sub-stat{background:var(--white);border-radius:7px;padding:8px 10px}
+.sub-stat-n{font-size:16px;font-weight:700;color:var(--navy)}
+.sub-stat-l{font-size:10px;color:var(--mgray);margin-top:1px;text-transform:uppercase;letter-spacing:0.04em}
+.sub-mrr{font-size:12px;font-weight:600;color:var(--green);margin-top:12px;display:flex;align-items:center;gap:5px}
+
+/* INVOICES */
+.inv-item{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid #F9FAFB;transition:background .13s;cursor:pointer}
+.inv-item:last-child{border-bottom:none}
+.inv-item:hover{background:#FAFAFA}
+.inv-num{font-size:12px;font-weight:600;color:var(--blue);width:80px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.inv-client{font-size:13px;font-weight:500;color:var(--navy);flex:1}
+.inv-svc{font-size:11px;color:var(--mgray);margin-top:1px;font-weight:300}
+.inv-date{font-size:11px;color:var(--mgray);width:70px;flex-shrink:0}
+.inv-age{font-size:11px;color:var(--mgray);width:60px;flex-shrink:0}
+.inv-amt{font-size:14px;font-weight:700;color:var(--navy);width:60px;text-align:right;flex-shrink:0}
+.inv-actions{display:flex;gap:6px;margin-left:12px}
+.inv-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .15s}
+.inv-btn.send{background:var(--blue);color:#fff}
+.inv-btn.send:hover{background:var(--blue2)}
+.inv-btn.mark{background:var(--green-lt);color:var(--green);border:1px solid rgba(5,150,105,0.2)}
+
+/* PAYOUT */
+.payout-card{background:var(--navy);border-radius:var(--r);padding:24px;color:#fff}
+.payout-title{font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.payout-amount{font-size:40px;font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1;margin-bottom:4px}
+.payout-sub{font-size:13px;color:rgba(255,255,255,0.5);font-weight:300;margin-bottom:20px}
+.payout-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.payout-item{background:rgba(255,255,255,0.06);border-radius:9px;padding:12px}
+.payout-item-n{font-size:18px;font-weight:700;color:#fff}
+.payout-item-l{font-size:10px;color:rgba(255,255,255,0.5);margin-top:3px;text-transform:uppercase;letter-spacing:0.04em}
+.payout-btn{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+.payout-btn:hover{background:var(--blue2)}
+
+/* SETUP GUIDE */
+.setup-steps{display:flex;flex-direction:column;gap:0;padding:20px}
+.setup-step{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid #F9FAFB}
+.setup-step:last-child{border-bottom:none}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.step-num.done{background:var(--green-lt);color:var(--green)}
+.step-num.todo{background:var(--blue-lt);color:var(--blue)}
+.step-num.lock{background:#F3F4F6;color:var(--mgray)}
+.step-title{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:3px}
+.step-desc{font-size:12px;color:var(--mgray);font-weight:300;line-height:1.5}
+.step-action{margin-top:8px}
+.step-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .15s}
+.step-btn.primary{background:var(--blue);color:#fff}
+.step-btn.done-btn{background:var(--green-lt);color:var(--green);cursor:default}
+
+/* CHART BARS */
+.mini-chart{display:flex;align-items:flex-end;gap:5px;height:100px;padding:16px 20px 8px}
+.b{flex:1;border-radius:3px 3px 0 0;min-height:3px;cursor:pointer;transition:opacity .15s}
+.b:hover{opacity:.8}
+
+@media(max-width:768px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .row2,.subs-grid,.pm-grid{grid-template-columns:1fr}
+  .nav-tabs{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="brand">
+    <div class="brand-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path><circle cx="12" cy="6" r="1.5" fill="#fff" stroke="none"></circle></svg></div>
+    <div><div class="brand-name">Dr. Bike — Payments</div><div class="brand-tag">Powered by Stripe</div></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab on" onclick="go('overview',this)">Overview</button>
+    <button class="tab" onclick="go('invoices',this)">Invoices</button>
+    <button class="tab" onclick="go('subscriptions',this)">Subscriptions</button>
+    <button class="tab" onclick="go('methods',this)">Payment methods</button>
+    <button class="tab" onclick="go('setup',this)">Setup guide</button>
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>Test mode</div>
+</nav>
+
+<div class="wrap">
+
+  <!-- OVERVIEW -->
+  <div id="page-overview" class="page active">
+    <div class="kpis">
+      <div class="kpi blue"><div class="kpi-l">Monthly revenue</div><div class="kpi-n">$36,138</div><div class="kpi-s">423 transactions</div><div class="kpi-t up">↑ +12% vs last month</div></div>
+      <div class="kpi green"><div class="kpi-l">Collected</div><div class="kpi-n">$35,056</div><div class="kpi-s">97% collection rate</div><div class="kpi-t up">↑ Excellent</div></div>
+      <div class="kpi amber"><div class="kpi-l">Outstanding</div><div class="kpi-n">$1,082</div><div class="kpi-s">4 unpaid invoices</div><div class="kpi-t dn">2 overdue</div></div>
+      <div class="kpi green"><div class="kpi-l">Subscription MRR</div><div class="kpi-n">$0</div><div class="kpi-s">Activate Stripe to start</div><div class="kpi-t dn">Not connected</div></div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">Recent transactions</div><div class="card-sub">Last 10 payments</div></div><span style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:500" onclick="go('invoices',document.querySelectorAll('.tab')[1])">View all →</span></div>
+        <table class="tbl">
+          <thead><tr><th>Client</th><th>Service</th><th>Date</th><th>Method</th><th>Status</th><th>Amount</th></tr></thead>
+          <tbody>
+            <tr><td><b>Olivia P.</b></td><td>Ultimate Overhaul</td><td>27 Apr</td><td>Card</td><td><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></td><td><b>$369</b></td></tr>
+            <tr><td><b>Sarah M.</b></td><td>Standard Service</td><td>26 Apr</td><td>Apple Pay</td><td><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></td><td><b>$149</b></td></tr>
+            <tr><td><b>Mia C.</b></td><td>Major Service</td><td>28 Apr</td><td>Card</td><td><span class="badge b-pending"><span class="badge-dot"></span>Pending</span></td><td><b>$199</b></td></tr>
+            <tr><td><b>Ethan R.</b></td><td>Brake Bleed</td><td>26 Apr</td><td>Transfer</td><td><span class="badge b-pending"><span class="badge-dot"></span>Pending</span></td><td><b>$80</b></td></tr>
+            <tr><td><b>Noah G.</b></td><td>Hub Adjustment</td><td>29 Apr</td><td>Card</td><td><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></td><td><b>$55</b></td></tr>
+            <tr><td><b>Sofia D.</b></td><td>Brake Bleed</td><td>30 Apr</td><td>Apple Pay</td><td><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></td><td><b>$120</b></td></tr>
+            <tr><td><b>Henry W.</b></td><td>Tubeless Install</td><td>22 Apr</td><td>Card</td><td><span class="badge b-refund"><span class="badge-dot"></span>Refunded</span></td><td><b>$110</b></td></tr>
+            <tr><td><b>Leo H.</b></td><td>Tune-Up</td><td>30 Apr</td><td>Card</td><td><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></td><td><b>$109</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="payout-card">
+          <div class="payout-title">Available for payout</div>
+          <div class="payout-amount">$31,420</div>
+          <div class="payout-sub">Next payout: Wednesday 6 May</div>
+          <div class="payout-grid">
+            <div class="payout-item"><div class="payout-item-n">$3,891</div><div class="payout-item-l">In transit</div></div>
+            <div class="payout-item"><div class="payout-item-n">$827</div><div class="payout-item-l">Processing</div></div>
+            <div class="payout-item"><div class="payout-item-n">1.4%</div><div class="payout-item-l">Stripe fee</div></div>
+          </div>
+          <button class="payout-btn" onclick="alert('Connect Stripe to activate real payouts.')">Request payout</button>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Revenue this month</div></div>
+          <div class="mini-chart" id="chart"><div class="b" style="height:48.196721311475414%;background:#1848C8" title="$980"></div><div class="b" style="height:55.08196721311476%;background:#1848C8" title="$1120"></div><div class="b" style="height:41.80327868852459%;background:#1848C8" title="$850"></div><div class="b" style="height:65.90163934426229%;background:#1848C8" title="$1340"></div><div class="b" style="height:77.70491803278688%;background:#1848C8" title="$1580"></div><div class="b" style="height:3%;background:#E5E7EB" title="$0"></div><div class="b" style="height:59.50819672131147%;background:#1848C8" title="$1210"></div><div class="b" style="height:51.63934426229508%;background:#1848C8" title="$1050"></div><div class="b" style="height:69.83606557377048%;background:#1848C8" title="$1420"></div><div class="b" style="height:82.62295081967213%;background:#1848C8" title="$1680"></div><div class="b" style="height:60.983606557377044%;background:#1848C8" title="$1240"></div><div class="b" style="height:3%;background:#E5E7EB" title="$0"></div><div class="b" style="height:67.8688524590164%;background:#1848C8" title="$1380"></div><div class="b" style="height:74.75409836065575%;background:#1848C8" title="$1520"></div><div class="b" style="height:48.196721311475414%;background:#1848C8" title="$980"></div><div class="b" style="height:79.67213114754098%;background:#1848C8" title="$1620"></div><div class="b" style="height:86.0655737704918%;background:#1848C8" title="$1750"></div><div class="b" style="height:3%;background:#E5E7EB" title="$0"></div><div class="b" style="height:63.442622950819676%;background:#1848C8" title="$1290"></div><div class="b" style="height:70.81967213114754%;background:#1848C8" title="$1440"></div><div class="b" style="height:58.032786885245905%;background:#1848C8" title="$1180"></div><div class="b" style="height:76.72131147540983%;background:#1848C8" title="$1560"></div><div class="b" style="height:90%;background:#1848C8" title="$1830"></div><div class="b" style="height:3%;background:#E5E7EB" title="$0"></div><div class="b" style="height:55.08196721311476%;background:#1848C8" title="$1120"></div><div class="b" style="height:43.77049180327869%;background:#1848C8" title="$890"></div></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 20px 16px;font-size:10px;color:var(--mgray);font-weight:500">
+            <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOICES -->
+  <div id="page-invoices" class="page">
+    <div class="kpis">
+      <div class="kpi blue"><div class="kpi-l">Total invoices</div><div class="kpi-n">18</div><div class="kpi-s">April 2026</div></div>
+      <div class="kpi green"><div class="kpi-l">Paid</div><div class="kpi-n">14</div><div class="kpi-s">$35,056 collected</div></div>
+      <div class="kpi amber"><div class="kpi-l">Pending</div><div class="kpi-n">2</div><div class="kpi-s">$279 outstanding</div></div>
+      <div class="kpi red"><div class="kpi-l">Overdue</div><div class="kpi-n">2</div><div class="kpi-s">$803 overdue</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">All invoices</div><div class="card-sub">April 2026 · click to send reminder</div></div>
+        <button style="padding:8px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer">+ New invoice</button>
+      </div>
+      <div>
+        <div class="inv-item"><div class="inv-num">#DR-0018</div><div><div class="inv-client">Benjamin T.</div><div class="inv-svc">Ultimate Overhaul</div></div><div class="inv-date">12 Apr</div><div class="inv-age" style="color:var(--red);font-weight:600">14 days</div><div class="inv-amt">$369</div><div><span class="badge b-pending" style="margin-right:8px"><span class="badge-dot"></span>Overdue</span></div><div class="inv-actions"><button class="inv-btn send" onclick="alert('Reminder sent to Benjamin!')">Send reminder</button></div></div>
+        <div class="inv-item"><div class="inv-num">#DR-0017</div><div><div class="inv-client">Layla G.</div><div class="inv-svc">Chain Install</div></div><div class="inv-date">14 Apr</div><div class="inv-age" style="color:var(--red);font-weight:600">12 days</div><div class="inv-amt">$40</div><div><span class="badge b-pending" style="margin-right:8px"><span class="badge-dot"></span>Overdue</span></div><div class="inv-actions"><button class="inv-btn send" onclick="alert('Reminder sent to Layla!')">Send reminder</button></div></div>
+        <div class="inv-item"><div class="inv-num">#DR-0016</div><div><div class="inv-client">Ethan R.</div><div class="inv-svc">Brake Bleed</div></div><div class="inv-date">22 Apr</div><div class="inv-age">4 days</div><div class="inv-amt">$80</div><div><span class="badge b-pending"><span class="badge-dot"></span>Pending</span></div><div class="inv-actions"><button class="inv-btn send" onclick="alert('Reminder sent to Ethan!')">Send reminder</button></div></div>
+        <div class="inv-item"><div class="inv-num">#DR-0015</div><div><div class="inv-client">Mia C.</div><div class="inv-svc">Major Service</div></div><div class="inv-date">28 Apr</div><div class="inv-age">Today</div><div class="inv-amt">$199</div><div><span class="badge b-pending"><span class="badge-dot"></span>Pending</span></div><div class="inv-actions"><button class="inv-btn send">Send invoice</button></div></div>
+        <div class="inv-item"><div class="inv-num">#DR-0014</div><div><div class="inv-client">Olivia P.</div><div class="inv-svc">Ultimate Overhaul</div></div><div class="inv-date">27 Apr</div><div class="inv-age">1 day</div><div class="inv-amt">$369</div><div><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></div><div class="inv-actions"><button class="inv-btn mark">✓ Paid</button></div></div>
+        <div class="inv-item"><div class="inv-num">#DR-0013</div><div><div class="inv-client">Sarah M.</div><div class="inv-svc">Standard Service</div></div><div class="inv-date">26 Apr</div><div class="inv-age">2 days</div><div class="inv-amt">$149</div><div><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></div><div class="inv-actions"><button class="inv-btn mark">✓ Paid</button></div></div>
+        <div class="inv-item"><div class="inv-num">#DR-0012</div><div><div class="inv-client">Sofia D.</div><div class="inv-svc">Brake Bleed (both)</div></div><div class="inv-date">30 Apr</div><div class="inv-age">Today</div><div class="inv-amt">$120</div><div><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></div><div class="inv-actions"><button class="inv-btn mark">✓ Paid</button></div></div>
+        <div class="inv-item"><div class="inv-num">#DR-0011</div><div><div class="inv-client">Leo H.</div><div class="inv-svc">Tune-Up</div></div><div class="inv-date">30 Apr</div><div class="inv-age">Today</div><div class="inv-amt">$109</div><div><span class="badge b-paid"><span class="badge-dot"></span>Paid</span></div><div class="inv-actions"><button class="inv-btn mark">✓ Paid</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBSCRIPTIONS -->
+  <div id="page-subscriptions" class="page">
+    <div class="kpis">
+      <div class="kpi blue"><div class="kpi-l">Active subscribers</div><div class="kpi-n">0</div><div class="kpi-s">Connect Stripe to start</div></div>
+      <div class="kpi green"><div class="kpi-l">Monthly MRR</div><div class="kpi-n">$0</div><div class="kpi-s">Target: $5,000</div></div>
+      <div class="kpi amber"><div class="kpi-l">Annual MRR</div><div class="kpi-n">$0</div><div class="kpi-s">20% discount active</div></div>
+      <div class="kpi green"><div class="kpi-l">Churn rate</div><div class="kpi-n">—</div><div class="kpi-s">No data yet</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Subscription plans</div><div class="card-sub">Configure and activate your 3 membership tiers</div></div></div>
+      <div class="subs-grid">
+        <div class="sub-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="sub-name">Basic</div>
+            <span class="badge b-pending">Not live</span>
+          </div>
+          <div class="sub-price">$57<span style="font-size:14px;font-weight:400;color:var(--mgray)">/mo</span></div>
+          <div class="sub-cycle">Or $46/mo billed annually · 1 bike · parts extra</div>
+          <div class="sub-stats">
+            <div class="sub-stat"><div class="sub-stat-n">—</div><div class="sub-stat-l">Subscribers</div></div>
+            <div class="sub-stat"><div class="sub-stat-n">—</div><div class="sub-stat-l">MRR</div></div>
+          </div>
+          <div style="margin-top:14px"><button style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer" onclick="showStripeSetup()">Activate on Stripe →</button></div>
+        </div>
+        <div class="sub-card active-plan">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="sub-name">Standard</div>
+            <span class="badge b-sub">Most popular</span>
+          </div>
+          <div class="sub-price">$97<span style="font-size:14px;font-weight:400;color:var(--mgray)">/mo</span></div>
+          <div class="sub-cycle">Or $78/mo billed annually · 1 bike · parts extra</div>
+          <div class="sub-stats">
+            <div class="sub-stat"><div class="sub-stat-n">—</div><div class="sub-stat-l">Subscribers</div></div>
+            <div class="sub-stat"><div class="sub-stat-n">—</div><div class="sub-stat-l">MRR</div></div>
+          </div>
+          <div style="margin-top:14px"><button style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer" onclick="showStripeSetup()">Activate on Stripe →</button></div>
+        </div>
+        <div class="sub-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="sub-name">VIP</div>
+            <span class="badge b-pending">Not live</span>
+          </div>
+          <div class="sub-price" style="color:#B45309">$147<span style="font-size:14px;font-weight:400;color:var(--mgray)">/mo</span></div>
+          <div class="sub-cycle">Or $118/mo billed annually · 3 bikes · parts extra</div>
+          <div class="sub-stats">
+            <div class="sub-stat"><div class="sub-stat-n">—</div><div class="sub-stat-l">Subscribers</div></div>
+            <div class="sub-stat"><div class="sub-stat-n">—</div><div class="sub-stat-l">MRR</div></div>
+          </div>
+          <div style="margin-top:14px"><button style="width:100%;padding:10px;background:#B45309;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer" onclick="showStripeSetup()">Activate on Stripe →</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">MRR projection</div><div class="card-sub">What 50 subscribers would look like</div></div></div>
+      <div style="padding:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="background:var(--off);border-radius:10px;padding:16px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">10 subscribers</div><div style="font-size:22px;font-weight:700;color:var(--navy)">$970</div><div style="font-size:11px;color:var(--mgray);margin-top:4px">avg. Standard plan</div></div>
+        <div style="background:var(--blue-lt);border-radius:10px;padding:16px;text-align:center;border:1px solid rgba(24,72,200,0.15)"><div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">30 subscribers</div><div style="font-size:22px;font-weight:700;color:var(--blue)">$2,910</div><div style="font-size:11px;color:var(--mgray);margin-top:4px">covers 15% fixed costs</div></div>
+        <div style="background:var(--blue-lt);border-radius:10px;padding:16px;text-align:center;border:1px solid rgba(24,72,200,0.15)"><div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">50 subscribers</div><div style="font-size:22px;font-weight:700;color:var(--blue)">$4,850</div><div style="font-size:11px;color:var(--mgray);margin-top:4px">covers 25% fixed costs</div></div>
+        <div style="background:var(--navy);border-radius:10px;padding:16px;text-align:center"><div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">100 subscribers</div><div style="font-size:22px;font-weight:700;color:#fff">$9,700</div><div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px">50% of fixed costs covered</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT METHODS -->
+  <div id="page-methods" class="page">
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Accepted payment methods</div><div class="card-sub">All methods active once Stripe is connected</div></div></div>
+      <div class="pm-grid">
+        <div class="pm-card on">
+          <span class="pm-status pm-on">Active</span>
+          <div class="pm-icon" style="background:#EEF3FC"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
+          <div class="pm-name">Credit &amp; debit card</div>
+          <div class="pm-desc">Visa, Mastercard, Amex. Charged immediately at booking. 1.4% + 30¢ fee.</div>
+        </div>
+        <div class="pm-card on">
+          <span class="pm-status pm-on">Active</span>
+          <div class="pm-icon" style="background:#F0FDF4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg></div>
+          <div class="pm-name">Apple Pay</div>
+          <div class="pm-desc">One-tap payment for iPhone users. Fastest checkout experience. Same Stripe fees apply.</div>
+        </div>
+        <div class="pm-card on">
+          <span class="pm-status pm-on">Active</span>
+          <div class="pm-icon" style="background:#FEF3C7"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg></div>
+          <div class="pm-name">Google Pay</div>
+          <div class="pm-desc">One-tap payment for Android users. Automatically enabled when Stripe is active.</div>
+        </div>
+        <div class="pm-card">
+          <span class="pm-status pm-off">Manual</span>
+          <div class="pm-icon" style="background:#F3F4F6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.8"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></div>
+          <div class="pm-name">Bank transfer</div>
+          <div class="pm-desc">Manual BSB/account payment. You mark as paid when received. No Stripe fee — 0%.</div>
+        </div>
+        <div class="pm-card">
+          <span class="pm-status pm-off">Manual</span>
+          <div class="pm-icon" style="background:#F3F4F6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="3"></circle><path d="M6 12h.01M18 12h.01"></path></svg></div>
+          <div class="pm-name">Cash on-site</div>
+          <div class="pm-desc">Mechanic collects cash at the door. Recorded manually in the admin panel. No fee.</div>
+        </div>
+        <div class="pm-card">
+          <span class="pm-status pm-off">Coming soon</span>
+          <div class="pm-icon" style="background:#F3F4F6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>
+          <div class="pm-name">Buy now, pay later</div>
+          <div class="pm-desc">Afterpay / Zip Pay integration. Split into 4 fortnightly payments. Available Q3 2026.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Stripe fee calculator</div><div class="card-sub">Australian domestic rates</div></div></div>
+      <div style="padding:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="background:var(--off);border-radius:10px;padding:16px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">$109 Tune-Up</div><div style="font-size:20px;font-weight:700;color:var(--navy)">$107.57</div><div style="font-size:11px;color:var(--red);margin-top:4px">Fee: $1.43</div></div>
+        <div style="background:var(--off);border-radius:10px;padding:16px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">$149 Standard</div><div style="font-size:20px;font-weight:700;color:var(--navy)">$147.39</div><div style="font-size:11px;color:var(--red);margin-top:4px">Fee: $1.61</div></div>
+        <div style="background:var(--off);border-radius:10px;padding:16px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">$199 Major</div><div style="font-size:20px;font-weight:700;color:var(--navy)">$197.19</div><div style="font-size:11px;color:var(--red);margin-top:4px">Fee: $1.81</div></div>
+        <div style="background:var(--off);border-radius:10px;padding:16px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">$369 Overhaul</div><div style="font-size:20px;font-weight:700;color:var(--navy)">$365.43</div><div style="font-size:11px;color:var(--red);margin-top:4px">Fee: $3.57</div></div>
+      </div>
+      <div style="padding:0 20px 16px;font-size:11px;color:var(--mgray);font-weight:300">Stripe Australian rate: 1.4% + $0.30 per successful card charge. International cards: 2.9% + $0.30. No monthly fees.</div>
+    </div>
+  </div>
+
+  <!-- SETUP GUIDE -->
+  <div id="page-setup" class="page">
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-title">Stripe activation guide</div><div class="card-sub">Follow these steps to start accepting real payments</div></div><span class="badge b-pending">2 of 6 done</span></div>
+      <div class="setup-steps">
+        <div class="setup-step">
+          <div class="step-num done">✓</div>
+          <div>
+            <div class="step-title">Create a Stripe account</div>
+            <div class="step-desc">Go to stripe.com and create a free account using your business email. Takes 2 minutes.</div>
+            <div class="step-action"><button class="step-btn done-btn">✓ Done</button></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num done">✓</div>
+          <div>
+            <div class="step-title">Add business details</div>
+            <div class="step-desc">Enter your business name (Dr. Bike Sydney), ABN, and bank account for payouts. Required by Australian law.</div>
+            <div class="step-action"><button class="step-btn done-btn">✓ Done</button></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num todo">3</div>
+          <div>
+            <div class="step-title">Get your Stripe API keys</div>
+            <div class="step-desc">In Stripe Dashboard → Developers → API keys. Copy your "Publishable key" and "Secret key". You'll need both.</div>
+            <div class="step-action"><button class="step-btn primary" onclick="window.open('https://dashboard.stripe.com/apikeys','_blank')">Open Stripe Dashboard →</button></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num lock">4</div>
+          <div>
+            <div class="step-title">Add keys to Dr. Bike app</div>
+            <div class="step-desc">Share your Stripe keys with Claude 
+and I'll integrate real payment processing into the Dr. Bike app 
+automatically — no code needed on your end.</div>
+            <div class="step-action"><div style="font-size:12px;color:var(--mgray);background:var(--off);padding:10px 14px;border-radius:8px;font-family:monospace">STRIPE_PUBLIC_KEY=pk_live_...<br>STRIPE_SECRET_KEY=sk_live_...</div></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num lock">5</div>
+          <div>
+            <div class="step-title">Create subscription products</div>
+            <div class="step-desc">I'll create the 3 membership plans 
+(Basic $57, Standard $97, VIP $147) directly in your Stripe account with
+ monthly and annual billing options.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num lock">6</div>
+          <div>
+            <div class="step-title">Go live</div>
+            <div class="step-desc">Switch from test mode to live mode in
+ Stripe. The Dr. Bike app starts accepting real card payments, Apple Pay
+ and subscription billing automatically.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--navy);border-radius:var(--r);padding:24px;display:flex;align-items:center;gap:20px">
+      <div style="flex:1"><div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px">Ready to activate Stripe?</div><div style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:300;line-height:1.6">Once
+ you have your Stripe API keys, share them with me and I'll connect 
+everything — payments, subscriptions and invoices — without you touching
+ any code.</div></div>
+      <button style="padding:13px 24px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0" onclick="window.open('https://stripe.com','_blank')">Create Stripe account →</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function go(page, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(btn) btn.classList.add('on');
+}
+function showStripeSetup(){go('setup',document.querySelectorAll('.tab')[4]);}
+
+// Revenue chart
+const data=[980,1120,850,1340,1580,0,1210,1050,1420,1680,1240,0,1380,1520,980,1620,1750,0,1290,1440,1180,1560,1830,0,1120,890];
+const max=Math.max(...data);
+document.getElementById('chart').innerHTML=data.map(v=>`<div class="b" style="height:${v?Math.max((v/max)*90,3):3}%;background:${v?'#1848C8':'#E5E7EB'}" title="$${v}"></div>`).join('');
+</script>
+
+
+<img id="BtnTool" src="Dr.%20Bike%20%E2%80%94%20Payments_files/icon.png" style="position: absolute; top: 227px; left: 17px; z-index: 9999; cursor: pointer; display: none;" height="25" width="25"><img id="LoadingGif" src="moz-extension://b0005110-3221-4723-8d2a-d91733895c16/icons/loading.gif" style="position: absolute; top: 227px; z-index: 9999; cursor: pointer; display: none; left: 17px;" height="70" width="70"></body></html>
