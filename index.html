@@ -1193,6 +1193,7 @@ function showPaymentModal(bkg, price){
       </button>
       <div style="text-align:center;margin-top:12px;font-size:11px;color:#9CA3AF">🔒 Secured by Stripe · Card charged after service</div>
       <button onclick="skipPayment('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#6B7280;font-size:13px;margin-top:10px;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline">Pay cash on the day instead</button>
+      <button onclick="cancelBookingModal('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#DC2626;font-size:12px;margin-top:6px;cursor:pointer;font-family:Inter,sans-serif">← Cancel and go back</button>
     </div>`;
   document.body.appendChild(modal);
 
@@ -1226,6 +1227,14 @@ async function processPayment(bookingId, price){
   await sb.from('bookings').update({ status:'confirmed', payment_method_id: paymentMethod.id }).eq('id', bookingId);
   document.getElementById('payment-modal').remove();
   showBookingSuccess();
+}
+
+async function cancelBookingModal(bookingId){
+  // Delete the pending booking and close modal
+  await sb.from('bookings').delete().eq('id', bookingId);
+  document.getElementById('payment-modal').remove();
+  // Go back to step 4
+  goStep(4);
 }
 
 async function skipPayment(bookingId){
