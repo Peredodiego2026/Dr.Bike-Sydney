@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1848C8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dr. Bike">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.svg">
+<script src="https://js.stripe.com/v3/"></script>
 <title>Dr. Bike Sydney</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1112,23 +1118,28 @@ function fillConfirm(){
   document.getElementById('cf-van').textContent = 'Van '+vanNum+' · Mechanic '+vanNum;
 }
 
+// Stripe
+const stripe = Stripe('pk_test_51TUbG9ApfjPBFYNnVe0zpeuO6cuLYiWHkMw6UvRFNsTcN2v4L6a8WimSa7TMLQJDJqh8bV0bGMkVt3tUNhgOvVOf00vJnJjjaN');
+
 async function confirmBooking(){
   if(!currentUser){ showView('auth'); return; }
   const btn = document.getElementById('confirm-btn');
-  btn.innerHTML='<span class="spinner"></span>Confirming...';
+  btn.innerHTML='<span class="spinner"></span>Processing...';
   btn.disabled=true;
 
   const suburb = document.getElementById('addr-suburb').value;
   const vanNum = getVanForSuburb(suburb);
+  const price = booking.service?.price || 0;
 
-  const { data, error } = await sb.from('bookings').insert({
+  // Save booking first as pending
+  const { data: bkg, error } = await sb.from('bookings').insert({
     client_id: currentUser.id,
     service_id: booking.service?.id,
     service_name: booking.service?.name,
-    service_price: booking.service?.price,
+    service_price: price,
     scheduled_date: booking.date,
     scheduled_time: booking.time?.replace(' am','').replace(' pm',''),
-    address: [document.getElementById('addr-street').value, document.getElementById('addr-suburb').value, document.getElementById('addr-postcode').value].filter(Boolean).join(', '),
+    address: [document.getElementById('addr-street').value, suburb, document.getElementById('addr-postcode').value].filter(Boolean).join(', '),
     suburb: suburb,
     van_number: vanNum,
     status: 'pending'
@@ -1139,11 +1150,80 @@ async function confirmBooking(){
 
   if(error){ toast('Error: '+error.message); return; }
 
+  // Show Stripe payment modal
+  showPaymentModal(bkg, price);
+}
+
+function showPaymentModal(bkg, price){
+  // Remove existing modal
+  document.getElementById('payment-modal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'payment-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:flex-end;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;box-shadow:0 -8px 40px rgba(0,0,0,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#0D1F3C">Payment</div>
+          <div style="font-size:13px;color:#6B7280;margin-top:2px">${bkg.service_name} · $${price}</div>
+        </div>
+        <button onclick="document.getElementById('payment-modal').remove()" style="background:#F7F8FA;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer">✕</button>
+      </div>
+      <div id="stripe-card-element" style="border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px;font-size:16px"></div>
+      <div id="stripe-error" style="color:#DC2626;font-size:13px;margin-bottom:12px;display:none"></div>
+      <button id="pay-btn" onclick="processPayment('${bkg.id}',${price})" style="width:100%;background:#1848C8;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
+        Pay $${price} AUD
+      </button>
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:#9CA3AF">🔒 Secured by Stripe · Card charged after service</div>
+      <button onclick="skipPayment('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#6B7280;font-size:13px;margin-top:10px;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline">Pay cash on the day instead</button>
+    </div>`;
+  document.body.appendChild(modal);
+
+  // Mount Stripe element
+  const elements = stripe.elements();
+  window._stripeCard = elements.create('card', {
+    style: { base: { fontSize:'16px', color:'#0D1F3C', fontFamily:'Inter,sans-serif', '::placeholder':{ color:'#9CA3AF' } } }
+  });
+  window._stripeCard.mount('#stripe-card-element');
+}
+
+async function processPayment(bookingId, price){
+  const btn = document.getElementById('pay-btn');
+  btn.innerHTML='<span class="spinner"></span>Processing...';
+  btn.disabled=true;
+
+  const { paymentMethod, error } = await stripe.createPaymentMethod({
+    type: 'card',
+    card: window._stripeCard,
+  });
+
+  if(error){
+    document.getElementById('stripe-error').style.display='block';
+    document.getElementById('stripe-error').textContent = error.message;
+    btn.innerHTML='Pay $'+price+' AUD';
+    btn.disabled=false;
+    return;
+  }
+
+  // Update booking as confirmed with payment method
+  await sb.from('bookings').update({ status:'confirmed', payment_method_id: paymentMethod.id }).eq('id', bookingId);
+  document.getElementById('payment-modal').remove();
+  showBookingSuccess();
+}
+
+async function skipPayment(bookingId){
+  await sb.from('bookings').update({ status:'confirmed', payment_method:'cash' }).eq('id', bookingId);
+  document.getElementById('payment-modal').remove();
+  showBookingSuccess();
+}
+
+function showBookingSuccess(){
   [1,2,3,4].forEach(i=>document.getElementById('step-'+i).style.display='none');
   ['bs1','bs2','bs3','bs4'].forEach(id=>document.getElementById(id).className='step-item done');
   document.getElementById('step-success').style.display='block';
   toast('Booking confirmed! 🎉');
-  await updateDashboard();
+  updateDashboard();
 }
 
 // ── MEMBERSHIP ───────────────────────────────────────────────────────────────
@@ -1399,6 +1479,50 @@ async function sendChat(){
 // ── START ────────────────────────────────────────────────────────────────────
 renderPlans();
 init();
+</script>
+<script>
+// PWA Service Worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js').then(r=>{
+      console.log('SW registered');
+    }).catch(e=>console.log('SW error:', e));
+  });
+}
+
+// PWA Install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install banner after 30s
+  setTimeout(()=>{
+    if(deferredPrompt) showInstallBanner();
+  }, 30000);
+});
+
+function showInstallBanner(){
+  const banner = document.createElement('div');
+  banner.id = 'install-banner';
+  banner.style.cssText = 'position:fixed;bottom:90px;left:16px;right:16px;background:#0D1F3C;color:#fff;border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.3)';
+  banner.innerHTML = `
+    <div style="width:42px;height:42px;background:#1848C8;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">🚲</div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:600">Add Dr. Bike to your home screen</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px">Install the app for faster access</div>
+    </div>
+    <button onclick="installPWA()" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">Install</button>
+    <button onclick="document.getElementById('install-banner').remove()" style="background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;cursor:pointer">✕</button>`;
+  document.body.appendChild(banner);
+}
+
+async function installPWA(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-banner')?.remove();
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,18 @@
+{
+  "name": "Dr. Bike Sydney",
+  "short_name": "Dr. Bike",
+  "description": "Mobile bicycle repair service in Sydney",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D1F3C",
+  "theme_color": "#1848C8",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Book a service", "url": "/?view=book", "description": "Book a bike repair" },
+    { "name": "My bookings", "url": "/?view=dashboard", "description": "View my bookings" }
+  ]
+}
