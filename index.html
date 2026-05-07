@@ -731,6 +731,22 @@ let vanZones = [
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 async function init(){
+  // Handle Supabase OAuth redirect (hash contains access_token)
+  if(window.location.hash && window.location.hash.includes('access_token')){
+    const { data: { session }, error } = await sb.auth.getSession();
+    if(session){
+      currentUser = session.user;
+      await loadProfile();
+      updateNavAuth();
+      // Clean URL and go to dashboard
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(()=>{
+        document.getElementById('loading').classList.add('hide');
+        showView('dashboard');
+      }, 500);
+      return;
+    }
+  }
   const { data: { session } } = await sb.auth.getSession();
   if(session?.user){
     currentUser = session.user;
