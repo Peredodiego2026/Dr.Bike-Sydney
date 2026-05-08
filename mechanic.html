@@ -1,252 +1,245 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html lang="en">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#0D1F3C">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>Dr. Bike — Mechanic</title>
 <meta name="theme-color" content="#059669">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DrBike Mech">
 <link rel="manifest" href="/mechanic-manifest.json">
-<link rel="apple-touch-icon" href="/icon-mech-192.svg">
+<title>Dr. Bike — Mechanic</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{
-  --blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;
-  --navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;
-  --border:#E5E7EB;
-  --green:#059669;--green-lt:#ECFDF5;
-  --red:#DC2626;--red-lt:#FEF2F2;
-  --amber:#D97706;--amber-lt:#FEF3C7;
-  --wa:#25D366;--wa-lt:#EDFBF3;
-  --gold:#F59E0B;
-  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
-  --shadow-lg:0 8px 32px rgba(0,0,0,0.14);
-  --r:14px;--sans:'Inter',sans-serif;
-}
+:root{--blue:#1848C8;--navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;--border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;--red:#DC2626;--red-lt:#FEF2F2;--amber:#D97706;--amber-lt:#FEF3C7;--wa:#25D366;--wa-lt:#EDFBF3;--blue-lt:#EEF3FC;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);--sans:'Inter',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-
-/* ── SCREENS ── */
-.screen{display:none;min-height:100vh;flex-direction:column}
-.screen.active{display:flex}
-
-/* ── LOGIN ── */
-#s-login{background:var(--navy);align-items:center;justify-content:center;padding:32px 24px;position:relative;overflow:hidden}
-#s-login::before{content:'';position:absolute;top:-30%;right:-20%;width:400px;height:400px;border-radius:50%;background:rgba(24,72,200,0.12);pointer-events:none}
-#s-login::after{content:'';position:absolute;bottom:-20%;left:-15%;width:300px;height:300px;border-radius:50%;background:rgba(24,72,200,0.07);pointer-events:none}
-.login-logo{width:68px;height:68px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);margin-bottom:18px}
-.login-logo svg{width:40px;height:40px}
-.login-title{font-size:26px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px;letter-spacing:-0.02em}
-.login-sub{font-size:13px;color:rgba(255,255,255,0.45);text-align:center;margin-bottom:36px;font-weight:300}
-.login-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:26px;width:100%;max-width:340px;position:relative;z-index:1}
-.lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px}
-.van-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.van-opt{padding:12px;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;text-align:center;cursor:pointer;transition:all .15s;color:rgba(255,255,255,0.5);font-size:13px;font-weight:500}
-.van-opt.sel{border-color:var(--blue);background:rgba(24,72,200,0.3);color:#fff}
-.van-opt-name{font-size:12px;margin-top:2px;font-weight:300;color:rgba(255,255,255,0.4)}
-.van-opt.sel .van-opt-name{color:rgba(255,255,255,0.7)}
-.login-inp{width:100%;padding:13px 16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;font-family:var(--sans);font-size:15px;color:#fff;outline:none;margin-bottom:12px;transition:border-color .15s}
-.login-inp:focus{border-color:var(--blue)}
-.login-inp::placeholder{color:rgba(255,255,255,0.25)}
-.login-btn{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 4px 14px rgba(24,72,200,0.4)}
-.login-btn:active{background:var(--blue2);transform:scale(0.99)}
-
-/* ── TOP BAR ── */
-.topbar{background:var(--navy);padding:0;display:flex;flex-direction:column}
-.topbar-main{padding:16px 20px 12px;display:flex;align-items:center;gap:12px}
-.topbar-logo{width:32px;height:32px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);flex-shrink:0}
-.topbar-logo svg{width:18px;height:18px}
-.topbar-info{flex:1}
-.topbar-name{font-size:14px;font-weight:700;color:#fff}
-.topbar-van{font-size:11px;color:rgba(255,255,255,0.45);margin-top:1px}
-.topbar-status{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-family:var(--sans);transition:all .15s}
-.topbar-status.on{background:var(--green-lt);color:var(--green)}
-.topbar-status.off{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)}
-.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
-.topbar-date{padding:8px 20px 14px;font-size:12px;color:rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:space-between}
-.day-progress{flex:1;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin:0 12px;overflow:hidden}
-.day-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .6s}
-
-/* ── NAV TABS ── */
-.nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:40}
-.nav-tab{flex:1;padding:13px 8px;text-align:center;font-size:11px;font-weight:600;color:var(--mgray);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:0.02em;border:none;background:transparent;font-family:var(--sans)}
-.nav-tab.on{color:var(--blue);border-color:var(--blue)}
-.nav-tab svg{display:block;margin:0 auto 4px;width:18px;height:18px}
-
-/* ── CONTENT ── */
-.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.tab-page{display:none;padding:16px;display:flex;flex-direction:column;gap:12px}
-.tab-page.active{display:flex}
-
-/* ── TODAY SUMMARY ── */
-.day-summary{background:var(--navy);border-radius:var(--r);padding:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative;overflow:hidden}
-.day-summary::before{content:'';position:absolute;top:-40%;right:-10%;width:160px;height:160px;border-radius:50%;background:rgba(24,72,200,0.15);pointer-events:none}
-.ds-item{text-align:center;padding:0 8px}
-.ds-item:not(:last-child){border-right:1px solid rgba(255,255,255,0.08)}
-.ds-n{font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.02em}
-.ds-l{font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;font-weight:500}
-
-/* ── JOB CARD ── */
-.job-card{background:var(--white);border-radius:var(--r);border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow);transition:all .15s}
-.job-card.next{border-color:var(--blue);box-shadow:0 4px 20px rgba(24,72,200,0.15)}
-.job-card.done{opacity:0.6;border-color:var(--border)}
-.job-card.vip{border-color:var(--gold);box-shadow:0 4px 20px rgba(245,158,11,0.15)}
-.job-hdr{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
-.job-time-block{background:var(--blue);color:#fff;border-radius:9px;padding:7px 12px;text-align:center;flex-shrink:0;min-width:56px}
-.job-card.vip .job-time-block{background:var(--gold)}
-.job-card.done .job-time-block{background:var(--green)}
-.job-time{font-size:14px;font-weight:700;line-height:1}
-.job-ampm{font-size:9px;margin-top:2px;opacity:0.8;text-transform:uppercase;letter-spacing:0.04em}
-.job-hdr-info{flex:1}
-.job-client{font-size:15px;font-weight:700;color:var(--navy)}
-.job-svc{font-size:12px;color:var(--mgray);margin-top:2px;font-weight:300}
-.job-status{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;border:none;cursor:default}
-.js-next{background:var(--blue-lt);color:var(--blue)}
-.js-done{background:var(--green-lt);color:var(--green)}
-.js-pending{background:var(--amber-lt);color:var(--amber)}
-.job-card.vip .job-status{background:#FEF3C7;color:var(--gold)}
-.job-body{padding:14px 16px}
-.job-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
-.job-row:last-child{margin-bottom:0}
-.job-row-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.job-row-label{font-size:11px;color:var(--mgray);margin-bottom:1px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
-.job-row-val{font-size:14px;font-weight:500;color:var(--navy)}
-.job-row-sub{font-size:11px;color:var(--mgray);margin-top:1px;font-weight:300}
-
-/* ── MEMBERSHIP BADGE ── */
-.mem-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
-.mem-vip{background:#FEF3C7;color:var(--gold);border:1px solid rgba(245,158,11,0.25)}
-.mem-std{background:var(--blue-lt);color:var(--blue);border:1px solid rgba(24,72,200,0.2)}
-.mem-basic{background:var(--off);color:var(--mgray);border:1px solid var(--border)}
-.mem-none{background:var(--off);color:var(--mgray);border:1px solid var(--border)}
-
-/* ── ACTION BUTTONS ── */
-.job-actions{display:grid;gap:8px;padding:14px 16px;border-top:1px solid var(--border);background:#FAFAFA}
-.job-actions.two{grid-template-columns:1fr 1fr}
-.job-actions.three{grid-template-columns:1fr 1fr 1fr}
-.jbtn{padding:11px 8px;border-radius:10px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;letter-spacing:0.01em}
-.jbtn:active{transform:scale(0.97)}
-.jbtn.wa{background:var(--wa);color:#fff}
-.jbtn.wa:hover{background:#1EB855}
-.jbtn.sms{background:var(--blue-lt);color:var(--blue);border:1.5px solid rgba(24,72,200,0.2)}
-.jbtn.maps{background:var(--navy);color:#fff}
-.jbtn.call{background:var(--green-lt);color:var(--green);border:1.5px solid rgba(5,150,105,0.2)}
-.jbtn.complete{background:var(--green);color:#fff;grid-column:1/-1}
-.jbtn.complete:hover{background:#047857}
-.jbtn.undo{background:var(--off);color:var(--mgray);border:1.5px solid var(--border);grid-column:1/-1}
-.jbtn svg{width:16px;height:16px;flex-shrink:0}
-.next-label{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.08em;padding:8px 16px 0;display:flex;align-items:center;gap:6px}
-.next-label::before{content:'';width:20px;height:2px;background:var(--blue);border-radius:2px}
-
-/* ── CHECKLIST ── */
-.checklist{display:flex;flex-direction:column;gap:0}
-.chk-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .13s}
-.chk-item:last-child{border-bottom:none}
-.chk-item:hover{background:#FAFAFA}
-.chk-item.done-chk .chk-label{text-decoration:line-through;color:var(--mgray)}
-.chk-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.chk-item.done-chk .chk-box{background:var(--green);border-color:var(--green)}
-.chk-label{font-size:14px;color:var(--navy);font-weight:400}
-
-/* ── NOTES ── */
-.notes-inp{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);font-size:14px;color:var(--navy);background:var(--white);outline:none;resize:none;min-height:80px;transition:border-color .15s;font-weight:300}
-.notes-inp:focus{border-color:var(--blue)}
-
-/* ── EMPTY STATE ── */
-.empty{text-align:center;padding:48px 24px}
-.empty-icon{width:56px;height:56px;background:var(--blue-lt);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
-.empty-title{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:6px}
-.empty-sub{font-size:13px;color:var(--mgray);font-weight:300;line-height:1.6}
-
-/* ── PROFILE TAB ── */
-.profile-hdr{background:var(--navy);border-radius:var(--r);padding:22px;display:flex;align-items:center;gap:14px}
-.profile-av{width:52px;height:52px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
-.profile-name{font-size:18px;font-weight:700;color:#fff}
-.profile-van{font-size:12px;color:rgba(255,255,255,0.45);margin-top:2px}
-.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.ps{background:var(--white);border-radius:10px;padding:14px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow)}
-.ps-n{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-0.01em}
-.ps-l{font-size:10px;color:var(--mgray);margin-top:3px;text-transform:uppercase;letter-spacing:0.05em}
-.setting-row{background:var(--white);border-radius:10px;border:1px solid var(--border);overflow:hidden}
-.sr{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .13s}
-.sr:last-child{border-bottom:none}
-.sr:hover{background:#FAFAFA}
-.sr-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.sr-label{font-size:14px;color:var(--navy);font-weight:500;flex:1}
-.sr-val{font-size:12px;color:var(--mgray);font-weight:300}
-.sr-arr{color:var(--border)}
-
-/* ── BOTTOM SAFE AREA ── */
-.safe-bottom{height:env(safe-area-inset-bottom,0px)}
-
-@media(min-width:480px){
-  #s-login{padding:48px 32px}
-  .login-card{padding:32px}
-}
-</style>
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    includedLanguages: 'en,es,zh-CN,pt,it,ko,fr,ar,hi,ja',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: false
-  }, 'google_translate_element');
-}
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-<style>
-.goog-te-banner-frame { display: none !important; }
-body { top: 0 !important; }
-.goog-te-gadget { font-size: 0 !important; }
-#lang-btn-admin { 
-  position: fixed; bottom: 24px; right: 24px; 
-  width: 44px; height: 44px; 
-  background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2);
-  border-radius: 50%; cursor: pointer; z-index: 998;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; transition: all .2s; color: white;
-}
-#lang-btn-admin:hover { background: rgba(255,255,255,0.2); }
-#lang-panel-admin {
-  position: fixed; bottom: 76px; right: 24px;
-  background: #fff; border: 1px solid #E5E7EB;
-  border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-  z-index: 997; padding: 8px; width: 200px; display: none;
-}
-#lang-panel-admin.open { display: block; }
-.lang-opt-a {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border-radius: 10px; cursor: pointer;
-  font-size: 13px; font-weight: 500; color: #0D1F3C;
-  transition: background .15s; border: none; background: none;
-  width: 100%; text-align: left; font-family: Inter,sans-serif;
-}
-.lang-opt-a:hover { background: #F7F8FA; }
-
-/* ── JOB CARDS ── */
-.job-card{background:#fff;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);border:1px solid var(--border)}
-.job-card.done-card{opacity:0.7}
-.job-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.job-client{font-size:15px;font-weight:700;color:var(--navy)}
+html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased}
+.screen{display:none;min-height:100vh;flex-direction:column}.screen.active{display:flex}
+#s-login{background:var(--navy);align-items:center;justify-content:center;padding:32px 24px}
+.login-logo{width:64px;height:64px;background:var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:30px}
+.login-title{font-size:24px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px}
+.login-sub{font-size:13px;color:rgba(255,255,255,0.45);text-align:center;margin-bottom:32px}
+.login-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;width:100%;max-width:340px}
+.lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:block}
+.van-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.van-opt{padding:12px;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;text-align:center;cursor:pointer;color:rgba(255,255,255,0.5);font-size:13px;font-weight:500;transition:all .15s}
+.van-opt.sel{border-color:var(--green);background:rgba(5,150,105,0.2);color:#fff}
+.pin-inp{width:100%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px;font-size:22px;font-weight:700;color:#fff;font-family:var(--sans);text-align:center;letter-spacing:10px;outline:none;margin-bottom:12px}
+.pin-inp::placeholder{letter-spacing:2px;font-size:13px;font-weight:400;color:rgba(255,255,255,0.25)}
+.login-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.login-err{color:#FCA5A5;font-size:12px;text-align:center;margin-top:8px;display:none}
+.topbar{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-name{font-size:15px;font-weight:700;color:#fff}
+.topbar-van{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px}
+.status-btn{background:rgba(5,150,105,0.15);color:var(--green);border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+.nav-tabs{display:flex;background:#fff;border-bottom:1px solid var(--border)}
+.nav-tab{flex:1;padding:13px 8px;background:none;border:none;border-bottom:2.5px solid transparent;font-size:12px;font-weight:500;color:var(--mgray);cursor:pointer;font-family:var(--sans);transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav-tab.on{color:var(--green);border-bottom-color:var(--green);font-weight:700}
+.tab-badge{background:var(--green);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;display:none}
+.tab-badge.show{display:block}
+.jobs-wrap{flex:1;padding:16px;overflow-y:auto}
+.job-card{background:#fff;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.job-card.done{opacity:0.6}
+.job-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.job-client{font-size:16px;font-weight:700;color:var(--navy)}
 .job-meta{font-size:12px;color:var(--mgray);margin-top:2px}
-.job-service{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:6px}
-.job-addr{font-size:12px;color:var(--mgray);margin-bottom:8px}
-.job-price-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.job-price{font-size:18px;font-weight:800;color:var(--blue)}
-.status-pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
-.job-actions{display:flex;gap:8px;flex-wrap:wrap}
-.jbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s}
-.jbtn.maps{background:var(--blue-lt);color:var(--blue)}
-.jbtn.wa{background:var(--wa-lt);color:var(--wa)}
-.jbtn.enroute{background:var(--amber-lt);color:var(--amber)}
-.jbtn.complete{background:var(--green-lt);color:var(--green)}
-.jbtn.undo{background:var(--off);color:var(--mgray);border:1.5px solid var(--border)}
+.job-service{font-size:14px;font-weight:600;margin-bottom:6px}
+.job-addr{font-size:12px;color:var(--mgray);margin-bottom:10px}
+.job-price{font-size:22px;font-weight:800;color:var(--green);margin-bottom:14px}
+.status-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.abtn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:9px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+.abtn.nav{background:var(--blue-lt);color:var(--blue)}
+.abtn.chat{background:var(--wa-lt);color:var(--wa)}
+.abtn.go{background:var(--amber-lt);color:var(--amber)}
+.abtn.done{background:var(--green-lt);color:var(--green)}
+.abtn.undo{background:var(--off);color:var(--mgray);border:1.5px solid var(--border)}
+.notes-inp{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-family:var(--sans);outline:none;color:var(--navy);margin-top:12px}
+.notes-inp:focus{border-color:var(--green)}
+.profile-wrap{padding:24px}
+.profile-av{width:72px;height:72px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin:0 auto 12px}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
 .kpi-card{background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border);text-align:center}
 .kpi-val{font-size:22px;font-weight:800;color:var(--navy)}
 .kpi-lbl{font-size:11px;color:var(--mgray);margin-top:4px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1}
 </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div class="screen active" id="s-login">
+  <div style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px;margin:0 auto">
+    <div class="login-logo">🔧</div>
+    <div class="login-title">Dr. Bike Mechanic</div>
+    <div class="login-sub">Sign in to see your jobs</div>
+    <div class="login-card">
+      <label class="lbl">Select your van</label>
+      <div class="van-grid">
+        <div class="van-opt sel" id="v1" onclick="selVan(1)">🚐 Van 1<div style="font-size:11px;opacity:0.6;margin-top:2px">Inner West</div></div>
+        <div class="van-opt" id="v2" onclick="selVan(2)">🚐 Van 2<div style="font-size:11px;opacity:0.6;margin-top:2px">North Shore</div></div>
+      </div>
+      <label class="lbl">PIN — last 4 digits of your phone</label>
+      <input class="pin-inp" id="pin-inp" type="tel" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in →</button>
+      <div class="login-err" id="login-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="screen" id="s-main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-name" id="mech-name">Mechanic</div>
+      <div class="topbar-van" id="van-label">Van 1</div>
+    </div>
+    <button class="status-btn" id="status-btn" onclick="toggleStatus()">● Online</button>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab on" onclick="goTab('today',this)">Today<span class="tab-badge" id="b-today"></span></button>
+    <button class="nav-tab" onclick="goTab('upcoming',this)">Upcoming<span class="tab-badge" id="b-upcoming"></span></button>
+    <button class="nav-tab" onclick="goTab('done',this)">Done<span class="tab-badge" id="b-done"></span></button>
+    <button class="nav-tab" onclick="goTab('profile',this)">Profile</button>
+  </div>
+  <div class="jobs-wrap" id="jobs-list">
+    <div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:32px;margin-bottom:12px">⏳</div><div>Loading...</div></div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn');
+let mechanic=null, vanNum=1, jobs=[], tab='today', online=true;
+
+async function init(){
+  const s = localStorage.getItem('drbike-mech');
+  if(s){ try{ mechanic=JSON.parse(s); vanNum=mechanic.van_number||1; go('s-main'); updateUI(); await load(); sub(); }catch(e){ localStorage.removeItem('drbike-mech'); } }
+}
+
+async function doLogin(){
+  const pin = document.getElementById('pin-inp').value.trim();
+  if(pin.length<4){ err('Enter your 4-digit PIN'); return; }
+  const btn=document.getElementById('login-btn');
+  btn.textContent='Signing in...'; btn.disabled=true;
+  const {data} = await sb.from('escalation_contacts').select('*').eq('active',true);
+  const m = data?.find(c=>c.phone.replace(/[\s+]/g,'').slice(-4)===pin);
+  btn.textContent='Sign in →'; btn.disabled=false;
+  if(!m){ err('Invalid PIN'); return; }
+  mechanic={...m,van_number:vanNum};
+  localStorage.setItem('drbike-mech',JSON.stringify(mechanic));
+  go('s-main'); updateUI(); await load(); sub();
+}
+
+function err(msg){ const e=document.getElementById('login-err'); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',3000); }
+function doLogout(){ if(!confirm('Sign out?')) return; localStorage.removeItem('drbike-mech'); mechanic=null; jobs=[]; go('s-login'); }
+function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v.classList.remove('sel')); document.getElementById('v'+n).classList.add('sel'); }
+
+async function load(){
+  const {data} = await sb.from('bookings').select('*, profiles(full_name,email)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
+  jobs=(data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||''}));
+  render(); badges();
+}
+
+function sub(){
+  sb.channel('mech').on('postgres_changes',{event:'*',schema:'public',table:'bookings'},p=>{ load(); if(p.eventType==='INSERT') alert2(p.new); }).subscribe();
+}
+
+function alert2(j){
+  const d=document.createElement('div');
+  d.style.cssText='position:fixed;top:80px;left:16px;right:16px;background:#059669;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3)';
+  d.innerHTML=`<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${j.service_name} · ${j.suburb} · $${j.service_price}</span>`;
+  document.body.appendChild(d); setTimeout(()=>d.remove(),5000);
+}
+
+function render(){
+  const today=new Date().toISOString().split('T')[0];
+  let list;
+  if(tab==='today') list=jobs.filter(j=>j.date===today&&j.status!=='completed'&&j.status!=='cancelled');
+  else if(tab==='upcoming') list=jobs.filter(j=>j.date>today&&j.status!=='cancelled');
+  else if(tab==='done') list=jobs.filter(j=>j.status==='completed');
+  else { profile(); return; }
+  const c=document.getElementById('jobs-list');
+  if(!list.length){ const m={today:'☀️|No jobs today|New bookings appear instantly',upcoming:'📅|No upcoming jobs|Future bookings show here',done:'✅|No completed jobs|Completed jobs appear here'}[tab]?.split('|'); c.innerHTML=`<div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:48px;margin-bottom:16px">${m[0]}</div><div style="font-size:16px;font-weight:600;color:var(--navy);margin-bottom:8px">${m[1]}</div><div style="font-size:13px">${m[2]}</div></div>`; return; }
+  c.innerHTML=list.map(j=>card(j)).join('');
+}
+
+function card(j){
+  const today=new Date().toISOString().split('T')[0];
+  const t=j.time?j.time.substring(0,5):'';
+  const d=j.date?new Date(j.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}):'';
+  const done=j.status==='completed';
+  const sc={pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',completed:'#059669',cancelled:'#DC2626'};
+  const sl={pending:'Pending',confirmed:'Confirmed',enroute:'🚐 En route',completed:'✅ Done',cancelled:'Cancelled'};
+  const st=j.status||'pending';
+  const addr=(j.address||j.suburb||'Sydney').replace(/\\/g,'').replace(/'/g,"\\'");
+  return `<div class="job-card${done?' done':''}">
+    <div class="job-header">
+      <div><div class="job-client">${j.client}</div><div class="job-meta">${j.date===today?'Today':''}${t?' · '+t:''} ${j.date!==today?'· '+d:''}</div></div>
+      <span class="status-badge" style="background:${sc[st]}20;color:${sc[st]}">${sl[st]||st}</span>
+    </div>
+    <div class="job-service">🔧 ${j.service}</div>
+    <div class="job-addr">📍 ${j.address||j.suburb||'—'}</div>
+    <div class="job-price">$${j.price}</div>
+    <div class="actions">
+      <button class="abtn nav" onclick="openMaps('${addr}')">📍 Navigate</button>
+      <button class="abtn chat" onclick="openWA('${j.email}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
+      ${!done?`${st!=='enroute'?`<button class="abtn go" onclick="setStatus('${j.id}','enroute')">🚐 En route</button>`:''}
+      <button class="abtn done" onclick="completeJob('${j.id}')">✅ Complete</button>`
+      :`<button class="abtn undo" onclick="setStatus('${j.id}','confirmed')">↩ Undo</button>`}
+    </div>
+    ${!done?`<input class="notes-inp" placeholder="Mechanic notes..." value="${j.mnotes}" onblur="saveNotes('${j.id}',this.value)">`:''}
+  </div>`;
+}
+
+async function setStatus(id,status){ await sb.from('bookings').update({status}).eq('id',id); const j=jobs.find(x=>x.id===id); if(j) j.status=status; render(); badges(); toast(status==='enroute'?'🚐 En route':'Updated'); }
+async function completeJob(id){ await sb.from('bookings').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id); const j=jobs.find(x=>x.id===id); if(j) j.status='completed'; render(); badges(); toast('✅ Job completed!'); }
+async function saveNotes(id,notes){ await sb.from('bookings').update({mechanic_notes:notes}).eq('id',id); }
+
+function openMaps(a){ window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a+', Sydney NSW')},'_blank'`); }
+function openWA(email,name){ window.open(`https://wa.me/?text=${encodeURIComponent('Hi '+name+'! This is your Dr. Bike mechanic. I am on my way! 🚲')}`, '_blank'); }
+
+function goTab(t, btn){ tab=t; document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('on')); if(btn) btn.classList.add('on'); render(); }
+function toggleStatus(){ online=!online; const b=document.getElementById('status-btn'); b.textContent=online?'● Online':'○ Offline'; b.style.color=online?'var(--green)':'var(--mgray)'; }
+
+function badges(){
+  const today=new Date().toISOString().split('T')[0];
+  [['today',jobs.filter(j=>j.date===today&&j.status!=='completed'&&j.status!=='cancelled').length],
+   ['upcoming',jobs.filter(j=>j.date>today&&j.status!=='cancelled').length],
+   ['done',jobs.filter(j=>j.status==='completed').length]].forEach(([k,n])=>{
+    const el=document.getElementById('b-'+k); if(el){ el.textContent=n; el.classList.toggle('show',n>0); }
+  });
+}
+
+function profile(){
+  const today=new Date().toISOString().split('T')[0];
+  const td=jobs.filter(j=>j.date===today&&j.status==='completed');
+  const all=jobs.filter(j=>j.status==='completed');
+  document.getElementById('jobs-list').innerHTML=`<div class="profile-wrap">
+    <div style="text-align:center;margin-bottom:24px">
+      <div class="profile-av">${mechanic?.first_name?.[0]||'M'}${mechanic?.last_name?.[0]||''}</div>
+      <div style="font-size:18px;font-weight:700">${mechanic?.first_name} ${mechanic?.last_name}</div>
+      <div style="font-size:13px;color:var(--mgray);margin-top:4px">Van ${vanNum} · ${mechanic?.role||'Mechanic'}</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-val">${td.length}</div><div class="kpi-lbl">Today's jobs</div></div>
+      <div class="kpi-card"><div class="kpi-val">$${td.reduce((s,j)=>s+j.price,0)}</div><div class="kpi-lbl">Today's revenue</div></div>
+      <div class="kpi-card"><div class="kpi-val">${all.length}</div><div class="kpi-lbl">Total done</div></div>
+      <div class="kpi-card"><div class="kpi-val">$${all.reduce((s,j)=>s+j.price,0)}</div><div class="kpi-lbl">Total revenue</div></div>
+    </div>
+    <button onclick="doLogout()" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
+  </div>`;
+}
+
+function go(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id)?.classList.add('active'); }
+function updateUI(){ document.getElementById('mech-name').textContent=(mechanic?.first_name||'')+' '+(mechanic?.last_name||''); document.getElementById('van-label').textContent='Van '+vanNum; }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+init();
+</script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>
