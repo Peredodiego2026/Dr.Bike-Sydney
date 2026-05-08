@@ -123,6 +123,22 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
 const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn');
 let mechanic=null, vanNum=1, jobs=[], tab='today', online=true;
 
+function ratingHTML(jobs){
+  const rated = jobs.filter(j=>j.rating);
+  if(rated.length === 0) return '<div style="text-align:center;padding:16px;background:#fff;border-radius:12px;border:1px solid var(--border);color:var(--mgray);font-size:13px">No ratings yet — complete jobs to get reviews!</div>';
+  const avg = (rated.reduce((s,j)=>s+(j.rating||0),0)/rated.length).toFixed(1);
+  const stars = '⭐'.repeat(Math.round(avg));
+  return `<div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px;text-align:center;margin-bottom:16px">
+    <div style="font-size:32px;font-weight:800;color:var(--navy)">${avg}</div>
+    <div style="font-size:20px;margin:4px 0">${stars}</div>
+    <div style="font-size:12px;color:var(--mgray)">${rated.length} review${rated.length!==1?'s':''}</div>
+    ${rated.slice(-3).reverse().map(j=>`<div style="margin-top:10px;padding:10px;background:var(--off);border-radius:8px;text-align:left">
+      <div style="font-size:11px;font-weight:600;color:var(--navy)">${'⭐'.repeat(j.rating||0)} ${j.client}</div>
+      ${j.review?`<div style="font-size:11px;color:var(--mgray);margin-top:3px;font-style:italic">"${j.review}"</div>`:''}
+    </div>`).join('')}
+  </div>`;
+}
+
 async function init(){
   const s = localStorage.getItem('drbike-mech');
   if(s){ try{ mechanic=JSON.parse(s); vanNum=mechanic.van_number||1; go('s-main'); updateUI(); await load(); sub(); }catch(e){ localStorage.removeItem('drbike-mech'); } }
@@ -148,7 +164,7 @@ function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v
 
 async function load(){
   const {data} = await sb.from('bookings').select('*, profiles(full_name,email)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
-  jobs=(data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||''}));
+  jobs=(data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
   render(); badges();
 }
 
@@ -238,6 +254,7 @@ function profile(){
       <div class="kpi-card"><div class="kpi-val">${all.length}</div><div class="kpi-lbl">Total done</div></div>
       <div class="kpi-card"><div class="kpi-val">$${all.reduce((s,j)=>s+j.price,0)}</div><div class="kpi-lbl">Total revenue</div></div>
     </div>
+    ${ratingHTML(jobs)}
     <button onclick="doLogout()" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
   </div>`;
 }
