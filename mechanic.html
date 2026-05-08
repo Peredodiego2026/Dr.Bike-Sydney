@@ -219,7 +219,15 @@ function card(j){
   </div>`;
 }
 
-async function setStatus(id,status){ await sb.from('bookings').update({status}).eq('id',id); const j=jobs.find(x=>x.id===id); if(j) j.status=status; render(); badges(); toast(status==='enroute'?'🚐 En route':'Updated'); }
+async function setStatus(id, status) {
+  await sb.from('bookings').update({status}).eq('id', id);
+  const j = jobs.find(x => x.id === id);
+  if (j) j.status = status;
+  render(); badges();
+  toast(status === 'enroute' ? '🚐 En route' : 'Updated');
+  if (status === 'enroute') startGPS(id);
+  else if (status === 'completed' || status === 'cancelled') stopGPS();
+}
 async function completeJob(id){ await sb.from('bookings').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id); const j=jobs.find(x=>x.id===id); if(j) j.status='completed'; render(); badges(); toast('✅ Job completed!'); }
 async function saveNotes(id,notes){ await sb.from('bookings').update({mechanic_notes:notes}).eq('id',id); }
 
@@ -263,7 +271,70 @@ function go(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.rem
 function updateUI(){ document.getElementById('mech-name').textContent=(mechanic?.first_name||'')+' '+(mechanic?.last_name||''); document.getElementById('van-label').textContent='Van '+vanNum; }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
+// ── GPS TRACKING ──────────────────────────────────────────────────────────────
+let gpsInterval = null;
+let activeJobId = null;
+let watchId = null;
+
+function startGPS(bookingId) {
+  activeJobId = bookingId;
+  if (!navigator.geolocation) { toast('GPS not available'); return; }
+  toast('📍 Location sharing started');
+
+  // Send immediately
+  sendLocation(bookingId);
+
+  // Then every 10 seconds
+  gpsInterval = setInterval(() => sendLocation(bookingId), 10000);
+
+  // Also use watchPosition for smoother updates
+  watchId = navigator.geolocation.watchPosition(
+    pos => upsertLocation(bookingId, pos.coords.latitude, pos.coords.longitude, pos.coords.heading || 0),
+    err => console.warn('GPS error:', err),
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+  );
+}
+
+function sendLocation(bookingId) {
+  navigator.geolocation.getCurrentPosition(
+    pos => upsertLocation(bookingId, pos.coords.latitude, pos.coords.longitude, pos.coords.heading || 0),
+    err => console.warn('GPS error:', err),
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
+}
+
+async function upsertLocation(bookingId, lat, lng, heading) {
+  const mechanicId = mechanic?.id || 'unknown';
+  // Check if record exists
+  const { data } = await sb.from('mechanic_locations')
+    .select('id').eq('booking_id', bookingId).limit(1);
+
+  if (data && data[0]) {
+    await sb.from('mechanic_locations')
+      .update({ lat, lng, heading, updated_at: new Date().toISOString() })
+      .eq('booking_id', bookingId);
+  } else {
+    await sb.from('mechanic_locations')
+      .insert({ mechanic_id: mechanicId, booking_id: bookingId, lat, lng, heading });
+  }
+}
+
+function stopGPS() {
+  if (gpsInterval) { clearInterval(gpsInterval); gpsInterval = null; }
+  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  activeJobId = null;
+}
+
+// Resume tracking if there's an active enroute job on page load
+async function resumeTrackingIfNeeded() {
+  const today = new Date().toISOString().split('T')[0];
+  const enroute = jobs.find(j => j.status === 'enroute' && j.date === today);
+  if (enroute) startGPS(enroute.id);
+}
+
 init();
+// Resume GPS after jobs load
+setTimeout(() => { if (jobs.length) resumeTrackingIfNeeded(); }, 2000);
 </script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </body>
