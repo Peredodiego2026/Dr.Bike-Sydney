@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-GXYD68JXZW');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1848C8">
@@ -995,6 +1003,7 @@ function removeVan(vanId){
 
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 async function signInGoogle(){
+  trackEvent('login_attempt', { method: 'google' });
   const { error } = await sb.auth.signInWithOAuth({
     provider:'google',
     options:{
@@ -1401,6 +1410,7 @@ async function skipPayment(bookingId){
 }
 
 function showBookingSuccess(){
+  trackEvent('booking_completed', { service: booking.service?.name, price: booking.service?.price });
   [1,2,3,4].forEach(i=>document.getElementById('step-'+i).style.display='none');
   ['bs1','bs2','bs3','bs4'].forEach(id=>document.getElementById(id).className='step-item done');
   document.getElementById('step-success').style.display='block';
@@ -1450,6 +1460,7 @@ function renderPlans(){
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
 function showView(v){
+  trackEvent('page_view', { page: v });
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   document.getElementById('nav-links').classList.remove('open');
@@ -1759,6 +1770,11 @@ async function sendEmail(type, bookingData){
       })
     });
   } catch(e){ console.log('Email error:', e); }
+}
+
+// ── ANALYTICS ────────────────────────────────────────────────────────────────
+function trackEvent(name, params){
+  if(typeof gtag !== 'undefined') gtag('event', name, params||{});
 }
 
 // ── START ────────────────────────────────────────────────────────────────────
