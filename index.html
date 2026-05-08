@@ -333,6 +333,10 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .cb-inp:focus{border-color:var(--blue)}
 .cb-send{background:var(--blue);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
 .cb-send:hover{background:var(--blue2)}
+@media (max-width: 640px) {
+  #lang-btn { top: 12px; left: 50%; transform: translateX(-50%); bottom: auto; }
+  .fp { font-size: 12px; padding: 6px 12px; }
+}
 /* ── REAL MAP ── */
 .map-real{border-radius:9px;height:160px;margin-top:12px;position:relative;overflow:hidden;background:#1a3a6b}
 .map-real iframe{width:100%;height:100%;border:none;border-radius:9px}
@@ -377,7 +381,7 @@ body { top: 0 !important; }
 
 /* Language selector */
 #lang-btn { 
-  position: fixed; bottom: 88px; right: 24px; 
+  position: fixed; bottom: 88px; left: 24px; 
   width: 44px; height: 44px; 
   background: var(--white); border: 1.5px solid var(--border);
   border-radius: 50%; cursor: pointer; z-index: 998;
@@ -387,7 +391,7 @@ body { top: 0 !important; }
 }
 #lang-btn:hover { border-color: var(--blue); transform: scale(1.05); }
 #lang-panel {
-  position: fixed; bottom: 140px; right: 24px;
+  position: fixed; bottom: 140px; left: 24px;
   background: var(--white); border: 1px solid var(--border);
   border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
   z-index: 997; padding: 8px; width: 200px;
@@ -531,7 +535,7 @@ body { top: 0 !important; }
 
 <!-- ══ AUTH ══ -->
 <div id="view-auth" class="view">
-  <div style="padding:12px 20px;border-bottom:1px solid var(--border);background:var(--white)">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
@@ -561,7 +565,7 @@ body { top: 0 !important; }
 
 <!-- ══ DASHBOARD ══ -->
 <div id="view-dashboard" class="view">
-  <div style="padding:12px 20px;border-bottom:1px solid var(--border);background:var(--white)">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
@@ -613,11 +617,11 @@ body { top: 0 !important; }
 
     <div class="two-col">
       <div class="card" style="padding:16px 18px">
-        <div class="ct">Booking history</div>
+        <div class="ct" style="margin-bottom:8px">Booking history</div>
         <div id="booking-history"><div class="empty-state">No bookings yet.<br>Book your first service below.</div></div>
       </div>
       <div class="card" style="padding:16px 18px">
-        <div class="ct" style="display:flex;align-items:center;justify-content:space-between">
+        <div class="ct" style="display:flex;align-items:center;justify-content:space-between;padding-left:0">
           My bikes
           <button onclick="openBikeModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Add</button>
         </div>
@@ -636,7 +640,7 @@ body { top: 0 !important; }
 
 <!-- ══ SERVICES ══ -->
 <div id="view-services" class="view">
-  <div style="padding:12px 20px;border-bottom:1px solid var(--border);background:var(--white)">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
@@ -646,7 +650,7 @@ body { top: 0 !important; }
     <div class="sec-eye">Services</div>
     <div style="font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-0.02em">Our services</div>
     <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">Tap any service to book. Members save 8–18%.</div>
-    <button class="btn-ghost" style="margin-top:14px;padding:8px 18px;font-size:13px" onclick="showView('home')">← Back</button>
+    <button style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);padding:0;display:inline-flex;align-items:center;gap:4px;margin-top:8px" onclick="showView('home')">← Back to home</button>
   </div>
   <div class="svcs-wrap">
     <div class="filter-pills" id="filter-pills"></div>
@@ -656,7 +660,7 @@ body { top: 0 !important; }
 
 <!-- ══ BOOKING ══ -->
 <div id="view-book" class="view">
-  <div style="padding:12px 20px;border-bottom:1px solid var(--border);background:var(--white)">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
@@ -679,7 +683,7 @@ body { top: 0 !important; }
     <div id="step-1">
       <div class="card" style="padding:18px;margin-bottom:14px">
         <div class="ct">Select a service</div>
-        <div id="book-cat-pills" style="display:flex;gap:8px;flex-wrap:nowrap;margin-bottom:16px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
+        <div id="book-cat-pills" style="display:flex;gap:8px;flex-wrap:nowrap;margin-bottom:16px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none"></div>
         <div class="svc-grid" id="book-svcs-grid"></div>
       </div>
     </div>
@@ -754,7 +758,7 @@ body { top: 0 !important; }
 
 <!-- ══ MEMBERSHIP ══ -->
 <div id="view-membership" class="view">
-  <div style="padding:12px 20px;border-bottom:1px solid var(--border);background:var(--white)">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
@@ -786,7 +790,7 @@ body { top: 0 !important; }
     <div class="sec-eye">Admin</div>
     <div style="font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-0.02em">Zone Manager</div>
     <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">Assign suburbs to each van. Jobs auto-route based on the client's suburb.</div>
-    <button class="btn-ghost" style="margin-top:14px;padding:8px 18px;font-size:13px" onclick="showView('home')">← Back</button>
+    <button style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);padding:0;display:inline-flex;align-items:center;gap:4px;margin-top:8px" onclick="showView('home')">← Back to home</button>
   </div>
   <div class="admin-wrap">
     <div id="vans-container"></div>
@@ -1253,7 +1257,7 @@ function renderServices(){
     html += `<div class="cat-label">${cat}</div><div class="svc-grid" style="margin-bottom:20px">`;
     html += svcs.map(s=>`<div class="svc-card" onclick="selectService('${s.id}')">
       <div class="svc-name">${s.name}</div>
-      <div class="svc-dur">${s.duration_min}–${s.duration_max} min</div>
+      <div class="svc-dur">${s.duration_min === s.duration_max ? s.duration_min+" min" : s.duration_min+"–"+s.duration_max+" min"}</div>
       <div class="svc-price">$${s.price}</div>
     </div>`).join('');
     html += '</div>';
@@ -1289,7 +1293,7 @@ function renderBookingServices(){
   grid.innerHTML = list.length > 0 ? list.map(s=>`
     <div class="svc-card${booking.service?.id===s.id?' selected':''}" onclick="selectService('${s.id}')">
       <div class="svc-name">${s.name}</div>
-      <div class="svc-dur">${s.duration_min}–${s.duration_max} min</div>
+      <div class="svc-dur">${s.duration_min === s.duration_max ? s.duration_min+" min" : s.duration_min+"–"+s.duration_max+" min"}</div>
       <div class="svc-price">$${s.price}</div>
     </div>`).join('') : '<div style="color:var(--mgray);font-size:13px;padding:20px;grid-column:1/-1;text-align:center">No services in this category</div>';
 }
