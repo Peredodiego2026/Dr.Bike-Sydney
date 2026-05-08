@@ -280,7 +280,6 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
   #lang-btn{display:none}
   .nav-mobile-right{display:flex}
   #lang-btn-mob{display:flex}
-  .hamburger{display:flex}
   .feats,.plans3{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .two-col,.svc-grid,.dash-acts{grid-template-columns:1fr}
@@ -471,12 +470,12 @@ body { top: 0 !important; }
       <button class="nl" onclick="showView('services')">Services</button>
       <button class="nl" onclick="showView('membership')">Membership</button>
       <button class="nl" onclick="showView('book')">Book</button>
-      <button id="lang-btn" onclick="toggleLangPanel()" title="Change language">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span id="lang-label">EN</span>
-      </button>
       <button class="nl cta" onclick="showView('auth')" id="nav-auth-btn">Sign in</button>
     </div>
+    <button id="lang-btn" onclick="toggleLangPanel()" title="Change language">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span id="lang-label">EN</span>
+    </button>
     <div class="nav-mobile-right">
       <button id="lang-btn-mob" onclick="toggleLangPanel()" title="Change language">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
