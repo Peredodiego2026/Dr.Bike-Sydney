@@ -335,6 +335,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .cb-send:hover{background:var(--blue2)}
 @media (max-width: 640px) {
   #lang-btn { top: 12px; left: 50%; transform: translateX(-50%); bottom: auto; }
+  #lang-panel { top: 56px; left: 50%; transform: translateX(-50%); bottom: auto; }
   .fp { font-size: 12px; padding: 6px 12px; }
   #chatbot-btn { bottom: 16px; right: 16px; }
   #chatbot-panel { bottom: 82px; right: 8px; left: 8px; width: auto; }
@@ -386,16 +387,20 @@ body { top: 0 !important; }
 /* Language selector */
 #lang-btn { 
   position: fixed; bottom: 88px; left: 24px; 
-  width: 44px; height: 44px; 
+  height: 36px;
   background: var(--white); border: 1.5px solid var(--border);
-  border-radius: 50%; cursor: pointer; z-index: 998;
+  border-radius: 20px; cursor: pointer; z-index: 998;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.12); font-size: 18px;
+  gap: 6px; padding: 0 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  font-size: 12px; font-weight: 600; color: var(--navy);
+  font-family: var(--sans);
   transition: all .2s;
 }
-#lang-btn:hover { border-color: var(--blue); transform: scale(1.05); }
+#lang-btn:hover { border-color: var(--blue); color: var(--blue); }
+#lang-btn svg { flex-shrink: 0; }
 #lang-panel {
-  position: fixed; bottom: 140px; left: 24px;
+  position: fixed; bottom: 132px; left: 24px;
   background: var(--white); border: 1px solid var(--border);
   border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
   z-index: 997; padding: 8px; width: 200px;
@@ -1990,7 +1995,10 @@ init();
 <div id="google_translate_element" style="display:none"></div>
 
 <!-- Language selector button -->
-<button id="lang-btn" onclick="toggleLangPanel()" title="Change language">🌐</button>
+<button id="lang-btn" onclick="toggleLangPanel()" title="Change language">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+  <span id="lang-label">EN</span>
+</button>
 
 <div id="lang-panel">
   <div style="font-size:11px;font-weight:600;color:var(--mgray);padding:4px 12px 8px;text-transform:uppercase;letter-spacing:0.06em">Language</div>
@@ -2044,8 +2052,10 @@ function setLang(lang, flag, name){
   currentLang = lang;
   localStorage.setItem('drbike-lang', lang);
   
-  // Update button
-  document.getElementById('lang-btn').textContent = flag;
+  // Update button label
+  const langLabels = {en:'EN',es:'ES','zh-CN':'中文',pt:'PT',it:'IT',ko:'한국',fr:'FR',ar:'AR',hi:'HI',ja:'JA'};
+  const labelEl = document.getElementById('lang-label');
+  if(labelEl) labelEl.textContent = langLabels[lang] || lang.toUpperCase().slice(0,2);
   
   // Update active state
   document.querySelectorAll('.lang-opt').forEach(b=>b.classList.remove('active'));
@@ -2080,8 +2090,9 @@ function setLang(lang, flag, name){
 // Apply saved language on load
 window.addEventListener('load', ()=>{
   if(currentLang && currentLang !== 'en'){
-    const langMap = {es:'🇪🇸','zh-CN':'🇨🇳',pt:'🇧🇷',it:'🇮🇹',ko:'🇰🇷',fr:'🇫🇷',ar:'🇸🇦',hi:'🇮🇳',ja:'🇯🇵'};
-    document.getElementById('lang-btn').textContent = langMap[currentLang] || '🌐';
+    const langLabels = {es:'ES','zh-CN':'中文',pt:'PT',it:'IT',ko:'한국',fr:'FR',ar:'AR',hi:'HI',ja:'JA'};
+    const labelEl = document.getElementById('lang-label');
+    if(labelEl) labelEl.textContent = langLabels[currentLang] || currentLang.toUpperCase().slice(0,2);
     document.querySelectorAll('.lang-opt').forEach(b=>b.classList.remove('active'));
     document.getElementById('lang-'+currentLang.split('-')[0])?.classList.add('active');
   }
