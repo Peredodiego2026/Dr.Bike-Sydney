@@ -275,7 +275,6 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
   .nav-links{display:none;flex-direction:column;position:fixed;top:56px;left:0;right:0;background:var(--white);border-bottom:1px solid var(--border);padding:16px;gap:4px;z-index:99}
   .nav-links.open{display:flex}
   .hamburger{display:flex}
-  #lang-btn{display:flex}
   .feats,.plans3{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .two-col,.svc-grid,.dash-acts{grid-template-columns:1fr}
@@ -303,11 +302,11 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .bike-type-opt{padding:10px 8px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:500;color:var(--navy);transition:all .15s;font-family:var(--sans);background:none}
 .bike-type-opt.sel{border-color:var(--blue);background:var(--blue-lt);color:var(--blue)}
 /* ── CHATBOT FLOTANTE ── */
-#chatbot-btn{position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;z-index:1000;box-shadow:0 4px 20px rgba(24,72,200,0.4);display:flex;align-items:center;justify-content:center;transition:all .2s}
+#chatbot-btn{position:fixed;bottom:80px;right:24px;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;z-index:900;box-shadow:0 4px 20px rgba(24,72,200,0.4);display:flex;align-items:center;justify-content:center;transition:all .2s}
 #chatbot-btn:hover{transform:scale(1.08);background:var(--blue2)}
 #chatbot-btn .cb-notif{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--red);border-radius:50%;border:2px solid #fff;display:none}
 #chatbot-btn .cb-notif.show{display:block}
-#chatbot-panel{position:fixed;bottom:90px;right:24px;width:340px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 120px);background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:1000;display:none;flex-direction:column;overflow:hidden}
+#chatbot-panel{position:fixed;bottom:148px;right:24px;width:340px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 180px);background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:900;display:none;flex-direction:column;overflow:hidden}
 #chatbot-panel.open{display:flex}
 .cb-hdr{background:var(--blue);padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .cb-hdr-av{width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
@@ -336,8 +335,8 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .cb-send:hover{background:var(--blue2)}
 @media (max-width: 640px) {
   .fp { font-size: 12px; padding: 6px 12px; }
-  #chatbot-btn { bottom: 16px; right: 16px; }
-  #chatbot-panel { bottom: 82px; right: 8px; left: 8px; width: auto; }
+  #chatbot-btn { bottom: 72px; right: 16px; }
+  #chatbot-panel { bottom: 140px; right: 8px; left: 8px; width: auto; }
 }
 /* ── BACK BUTTON ── */
 .back-btn{background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s}
@@ -385,20 +384,21 @@ body { top: 0 !important; }
 
 /* Language selector */
 #lang-btn { 
-  display: none;
+  display: flex;
   align-items: center; justify-content: center;
   gap: 5px; padding: 0 10px;
   height: 32px;
   background: var(--off); border: 1.5px solid var(--border);
-  border-radius: 20px; cursor: pointer; z-index: 998;
+  border-radius: 20px; cursor: pointer;
   font-size: 12px; font-weight: 600; color: var(--navy);
   font-family: var(--sans);
   transition: all .2s;
+  margin-left: 8px;
 }
 #lang-btn:hover { border-color: var(--blue); color: var(--blue); }
 #lang-btn svg { flex-shrink: 0; }
 #lang-panel {
-  position: fixed; top: 60px; right: 16px;
+  position: fixed; top: 68px; right: 16px;
   background: var(--white); border: 1px solid var(--border);
   border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
   z-index: 997; padding: 8px; width: 200px;
