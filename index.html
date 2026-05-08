@@ -275,6 +275,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
   .nav-links{display:none;flex-direction:column;position:fixed;top:56px;left:0;right:0;background:var(--white);border-bottom:1px solid var(--border);padding:16px;gap:4px;z-index:99}
   .nav-links.open{display:flex}
   .hamburger{display:flex}
+  #lang-btn{display:flex}
   .feats,.plans3{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .two-col,.svc-grid,.dash-acts{grid-template-columns:1fr}
@@ -334,8 +335,6 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .cb-send{background:var(--blue);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
 .cb-send:hover{background:var(--blue2)}
 @media (max-width: 640px) {
-  #lang-btn { top: 12px; left: 50%; transform: translateX(-50%); bottom: auto; }
-  #lang-panel { top: 56px; left: 50%; transform: translateX(-50%); bottom: auto; }
   .fp { font-size: 12px; padding: 6px 12px; }
   #chatbot-btn { bottom: 16px; right: 16px; }
   #chatbot-panel { bottom: 82px; right: 8px; left: 8px; width: auto; }
@@ -386,13 +385,12 @@ body { top: 0 !important; }
 
 /* Language selector */
 #lang-btn { 
-  position: fixed; bottom: 88px; left: 24px; 
-  height: 36px;
-  background: var(--white); border: 1.5px solid var(--border);
+  display: none;
+  align-items: center; justify-content: center;
+  gap: 5px; padding: 0 10px;
+  height: 32px;
+  background: var(--off); border: 1.5px solid var(--border);
   border-radius: 20px; cursor: pointer; z-index: 998;
-  display: flex; align-items: center; justify-content: center;
-  gap: 6px; padding: 0 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
   font-size: 12px; font-weight: 600; color: var(--navy);
   font-family: var(--sans);
   transition: all .2s;
@@ -400,7 +398,7 @@ body { top: 0 !important; }
 #lang-btn:hover { border-color: var(--blue); color: var(--blue); }
 #lang-btn svg { flex-shrink: 0; }
 #lang-panel {
-  position: fixed; bottom: 132px; left: 24px;
+  position: fixed; top: 60px; right: 16px;
   background: var(--white); border: 1px solid var(--border);
   border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
   z-index: 997; padding: 8px; width: 200px;
@@ -457,6 +455,10 @@ body { top: 0 !important; }
       <button class="nl cta" onclick="showView('auth')" id="nav-auth-btn">Sign in</button>
     </div>
     <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')"><span></span><span></span><span></span></button>
+    <button id="lang-btn" onclick="toggleLangPanel()" title="Change language">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span id="lang-label">EN</span>
+    </button>
   </nav>
 
   <div class="hero">
@@ -1995,11 +1997,6 @@ init();
 <div id="google_translate_element" style="display:none"></div>
 
 <!-- Language selector button -->
-<button id="lang-btn" onclick="toggleLangPanel()" title="Change language">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-  <span id="lang-label">EN</span>
-</button>
-
 <div id="lang-panel">
   <div style="font-size:11px;font-weight:600;color:var(--mgray);padding:4px 12px 8px;text-transform:uppercase;letter-spacing:0.06em">Language</div>
   <button class="lang-opt active" id="lang-en" onclick="setLang('en','🇬🇧','English')">
