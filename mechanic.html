@@ -188,554 +188,65 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
   .login-card{padding:32px}
 }
 </style>
-</head>
-<body>
-
-<!-- ══ LOGIN ══ -->
-<div id="s-login" class="screen active">
-  <div class="login-logo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round">
-      <circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle>
-      <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path>
-      <circle cx="12" cy="6" r="1.5" fill="#fff" stroke="none"></circle>
-    </svg>
-  </div>
-  <div class="login-title">Dr. Bike</div>
-  <div class="login-sub">Mechanic app · Sydney</div>
-
-  <div class="login-card">
-    <div class="lbl" style="margin-bottom:10px">Select your van</div>
-    <div class="van-grid">
-      <div class="van-opt sel" id="v1" onclick="selVan(1)">
-        <div>🚐 Van 1</div>
-        <div class="van-opt-name">Inner West · CBD</div>
-      </div>
-      <div class="van-opt" id="v2" onclick="selVan(2)">
-        <div>🚐 Van 2</div>
-        <div class="van-opt-name">North Shore · Manly</div>
-      </div>
-    </div>
-    <div class="lbl">PIN</div>
-    <input class="login-inp" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN" id="pin-inp">
-    <button class="login-btn" onclick="doLogin()">Sign in</button>
-  </div>
-</div>
-
-<!-- ══ MAIN APP ══ -->
-<div id="s-app" class="screen">
-
-  <!-- Top bar -->
-  <div class="topbar">
-    <div class="topbar-main">
-      <div class="topbar-logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle>
-          <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path>
-          <circle cx="12" cy="6" r="1.5" fill="#fff" stroke="none"></circle>
-        </svg>
-      </div>
-      <div class="topbar-info">
-        <div class="topbar-name" id="tb-name">Mechanic 1</div>
-        <div class="topbar-van" id="tb-van">Van 1 · Inner West · CBD · Eastern Suburbs</div>
-      </div>
-      <button class="topbar-status on" id="status-btn" onclick="toggleStatus()">
-        <div class="status-dot"></div>
-        <span id="status-text">Online</span>
-      </button>
-    </div>
-    <div class="topbar-date">
-      <span id="tb-date">Tuesday 5 May 2026</span>
-      <div class="day-progress"><div class="day-fill" id="day-fill" style="width: 23.6111%;"></div></div>
-      <span id="tb-time">8:50 am</span>
-    </div>
-  </div>
-
-  <!-- Nav -->
-  <div class="nav-tabs">
-    <button class="nav-tab on" onclick="goTab('today',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-      Today
-    </button>
-    <button class="nav-tab" onclick="goTab('upcoming',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-      Upcoming
-    </button>
-    <button class="nav-tab" onclick="goTab('done',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-      Completed
-    </button>
-    <button class="nav-tab" onclick="goTab('profile',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-      Me
-    </button>
-  </div>
-
-  <div class="content">
-
-    <!-- ── TODAY ── -->
-    <div class="tab-page active" id="tab-today">
-
-      <div class="day-summary">
-        <div class="ds-item">
-          <div class="ds-n" id="ds-total">6</div>
-          <div class="ds-l">Jobs today</div>
-        </div>
-        <div class="ds-item">
-          <div class="ds-n" id="ds-done">1</div>
-          <div class="ds-l">Done</div>
-        </div>
-        <div class="ds-item">
-          <div class="ds-n" id="ds-revenue">$812</div>
-          <div class="ds-l">Revenue</div>
-        </div>
-      </div>
-
-      <!-- Jobs list -->
-      <div id="jobs-list"></div>
-
-    </div>
-
-    <!-- ── UPCOMING ── -->
-    <div class="tab-page" id="tab-upcoming">
-      <div id="upcoming-list"></div>
-    </div>
-
-    <!-- ── COMPLETED ── -->
-    <div class="tab-page" id="tab-done">
-      <div id="done-list"></div>
-    </div>
-
-    <!-- ── PROFILE ── -->
-    <div class="tab-page" id="tab-profile">
-      <div class="profile-hdr">
-        <div class="profile-av" id="pf-av">M1</div>
-        <div>
-          <div class="profile-name" id="pf-name">Mechanic 1</div>
-          <div class="profile-van" id="pf-zone">Van 1 · Inner West · CBD · Eastern Suburbs</div>
-        </div>
-      </div>
-
-      <div class="profile-stats">
-        <div class="ps"><div class="ps-n">214</div><div class="ps-l">Jobs / mo</div></div>
-        <div class="ps"><div class="ps-n">$101</div><div class="ps-l">Avg ticket</div></div>
-        <div class="ps"><div class="ps-n">4.9⭐</div><div class="ps-l">Rating</div></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="sr" onclick="toggleStatus()">
-          <div class="sr-icon" style="background:var(--green-lt)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          </div>
-          <div class="sr-label">Availability</div>
-          <div class="sr-val" id="pf-status">Online</div>
-          <svg class="sr-arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-        <div class="sr">
-          <div class="sr-icon" style="background:var(--blue-lt)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-          </div>
-          <div class="sr-label">My territory</div>
-          <div class="sr-val" id="pf-territory">Inner West · CBD</div>
-          <svg class="sr-arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-        <div class="sr">
-          <div class="sr-icon" style="background:var(--amber-lt)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          </div>
-          <div class="sr-label">Notifications</div>
-          <div class="sr-val">On</div>
-          <svg class="sr-arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-        <div class="sr" onclick="doLogout()">
-          <div class="sr-icon" style="background:var(--red-lt)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-          </div>
-          <div class="sr-label" style="color:var(--red)">Sign out</div>
-          <svg class="sr-arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div style="padding:14px 16px">
-          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Monthly performance</div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)">
-            <span style="color:var(--mgray);font-weight:300">Jobs completed</span><span style="font-weight:600">214</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)">
-            <span style="color:var(--mgray);font-weight:300">Revenue generated</span><span style="font-weight:600;color:var(--blue)">$21,683</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)">
-            <span style="color:var(--mgray);font-weight:300">Avg ticket</span><span style="font-weight:600">$101</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0">
-            <span style="color:var(--mgray);font-weight:300">Client rating</span><span style="font-weight:600">4.9 ⭐</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="safe-bottom"></div>
-  </div>
-</div>
-
-<script>
-// ── DATA ────────────────────────────────────────────────────────────────────
-let vanSel = 1;
-let isOnline = true;
-let completedIds = new Set();
-
-const VANS = {
-  1: { name:'Mechanic 1', zone:'Inner West · CBD · Eastern Suburbs', av:'M1', territory:'Inner West · CBD' },
-  2: { name:'Mechanic 2', zone:'North Shore · Manly · Northern Beaches', av:'M2', territory:'North Shore · Manly' }
-};
-
-const JOBS = [
-  {
-    id:1, van:1, time:'9:00', ampm:'am', client:'Olivia P.', phone:'+61412345678',
-    service:'Ultimate Overhaul', address:'14 Marine Parade, Manly NSW 2095',
-    suburb:'Manly', price:'$369', duration:'3–4 hrs', notes:'Canyon Spectral AL. Rear derailleur may need hanger.',
-    membership:'vip', memLabel:'VIP Member', status:'done',
-    checklist:['Safety check all components','Full strip and clean','Replace cables (internal + outer)','Brake bleed both ends','Gear adjustment and indexing','Headset service','Test ride and sign-off'],
-    whatsapp:true
-  },
-  {
-    id:2, van:1, time:'10:00', ampm:'am', client:'Sarah M.', phone:'+61487654321',
-    service:'Standard Service', address:'22 Oxford St, Paddington NSW 2021',
-    suburb:'Paddington', price:'$149', duration:'60–90 min', notes:'Specialized Tarmac SL6. No known issues.',
-    membership:'std', memLabel:'Standard Member', status:'next',
-    checklist:['Safety check','Gear adjustment','Brake check and adjust','Drivetrain clean and lube','Tyre pressure check','Frame wipe down'],
-    whatsapp:true
-  },
-  {
-    id:3, van:1, time:'11:30', ampm:'am', client:'Ethan R.', phone:'+61498765432',
-    service:'Tune-Up', address:'8 Campbell Parade, Bondi Beach NSW 2026',
-    suburb:'Bondi', price:'$109', duration:'45–60 min', notes:'Trek FX3 commuter. Hasn\'t been serviced in 8 months.',
-    membership:'basic', memLabel:'Basic Member', status:'pending',
-    checklist:['Safety check','Gear & brake adjustment','Tyre pressure','Drivetrain lube'],
-    whatsapp:false
-  },
-  {
-    id:4, van:1, time:'1:00', ampm:'pm', client:'Noah G.', phone:'+61467891234',
-    service:'Gear Adjustment', address:'55 King St, Newtown NSW 2042',
-    suburb:'Newtown', price:'$65', duration:'35 min', notes:'Rear derailleur skipping on 2nd and 4th.',
-    membership:'none', memLabel:'No membership', status:'pending',
-    checklist:['Inspect derailleur hanger','Adjust cable tension','Set limit screws','Test all gears'],
-    whatsapp:false
-  },
-  {
-    id:5, van:1, time:'2:30', ampm:'pm', client:'Mia C.', phone:'+61423456789',
-    service:'Brake Bleed (both ends)', address:'3 Illawarra Rd, Marrickville NSW 2204',
-    suburb:'Marrickville', price:'$120', duration:'60 min', notes:'Shimano hydraulics. New pads requested.',
-    membership:'std', memLabel:'Standard Member', status:'pending',
-    checklist:['Bleed front brake','Bleed rear brake','Install new pads both ends','Test brake feel and power'],
-    whatsapp:true
-  },
-  {
-    id:6, van:1, time:'4:00', ampm:'pm', client:'Leo H.', phone:'+61445678901',
-    service:'Tyre / Tube Install', address:'18 Erskineville Rd, Erskineville NSW 2043',
-    suburb:'Erskineville', price:'$30', duration:'20 min', notes:'Rear flat. Client has own tube.',
-    membership:'none', memLabel:'No membership', status:'pending',
-    checklist:['Remove wheel','Replace tube','Check rim tape','Inflate and test'],
-    whatsapp:false
-  },
-  // Van 2 jobs
-  {
-    id:7, van:2, time:'9:00', ampm:'am', client:'James T.', phone:'+61411222333',
-    service:'E-bike Diagnostic', address:'7 The Corso, Manly NSW 2095',
-    suburb:'Manly', price:'$60', duration:'30–45 min', notes:'Bosch CX motor. Error code 503.',
-    membership:'vip', memLabel:'VIP Member', status:'done',
-    checklist:['Connect Bosch diagnostic tool','Read error codes','Check battery health','Firmware update if needed','Test ride'],
-    whatsapp:true
-  },
-  {
-    id:8, van:2, time:'10:30', ampm:'am', client:'Ava L.', phone:'+61422333444',
-    service:'Brake Pad Install', address:'22 Military Rd, Mosman NSW 2088',
-    suburb:'Mosman', price:'$40', duration:'25 min', notes:'Front disc only. Sintered pads preferred.',
-    membership:'none', memLabel:'No membership', status:'next',
-    checklist:['Remove caliper','Install new pads','Align caliper to rotor','Bed in pads'],
-    whatsapp:false
-  },
-  {
-    id:9, van:2, time:'1:00', ampm:'pm', client:'Ruby K.', phone:'+61433444555',
-    service:'Wheel Truing — Minor', address:'41 Pacific Hwy, Chatswood NSW 2067',
-    suburb:'Chatswood', price:'$45', duration:'25 min', notes:'Front wheel slight wobble.',
-    membership:'basic', memLabel:'Basic Member', status:'pending',
-    checklist:['Check lateral and radial run-out','Adjust spoke tension','Recheck true','Final spin test'],
-    whatsapp:false
-  }
-];
-
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function membadge(m){
-  if(m==='vip') return `<span class="mem-badge mem-vip">⭐ VIP Member</span>`;
-  if(m==='std') return `<span class="mem-badge mem-std">● Standard</span>`;
-  if(m==='basic') return `<span class="mem-badge mem-basic">Basic</span>`;
-  return `<span class="mem-badge mem-none">No plan</span>`;
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,es,zh-CN,pt,it,ko,fr,ar,hi,ja',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false
+  }, 'google_translate_element');
 }
-
-function waNote(job){
-  if(job.membership==='vip') return '<div style="background:var(--wa-lt);border-radius:8px;padding:8px 12px;font-size:11px;color:#127345;font-weight:500;margin-top:8px">⭐ VIP — direct WhatsApp access included in their plan</div>';
-  if(job.membership==='std') return '<div style="background:var(--blue-lt);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--blue);font-weight:500;margin-top:8px">● Standard — WhatsApp available for confirmed bookings</div>';
-  return '<div style="background:var(--off);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--mgray);font-weight:400;margin-top:8px">No membership — use SMS or call only</div>';
-}
-
-function buildActions(job){
-  const isDone = completedIds.has(job.id) || job.status==='done';
-  if(isDone){
-    return `<div class="job-actions"><button class="jbtn undo" onclick="undoJob(${job.id})">↩ Mark as not completed</button></div>`;
-  }
-  const wa = (job.membership==='vip'||job.membership==='std')
-    ? `<button class="jbtn wa" onclick="openWA('${job.phone}','${job.client}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>WhatsApp</button>`
-    : `<button class="jbtn sms" onclick="openSMS('${job.phone}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>SMS</button>`;
-  return `<div class="job-actions three">
-    ${wa}
-    <button class="jbtn call" onclick="openCall('${job.phone}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.79a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call</button>
-    <button class="jbtn maps" onclick="openMaps('${job.address}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Maps</button>
-  </div>
-  <div class="job-actions"><button class="jbtn complete" onclick="completeJob(${job.id})">✓ Mark as completed</button></div>`;
-}
-
-function buildChecklist(job){
-  const isDone = completedIds.has(job.id) || job.status==='done';
-  return job.checklist.map((t,i)=>`
-    <div class="chk-item${isDone?' done-chk':''}" onclick="toggleChk(this)" id="chk-${job.id}-${i}">
-      <div class="chk-box">${isDone?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
-      <span class="chk-label">${t}</span>
-    </div>`).join('');
-}
-
-function buildJobCard(job, showNext=false){
-  const isDone = completedIds.has(job.id) || job.status==='done';
-  const isNext = !isDone && (job.status==='next' || showNext);
-  const isVip = job.membership==='vip';
-  let cls = 'job-card';
-  if(isDone) cls += ' done';
-  else if(isVip) cls += ' vip';
-  else if(isNext) cls += ' next';
-  let statusCls = 'js-pending', statusTxt = 'Pending';
-  if(isDone){ statusCls='js-done'; statusTxt='✓ Done'; }
-  else if(isNext){ statusCls='js-next'; statusTxt='Next up'; }
-  const nextLabel = isNext && !isDone ? '<div class="next-label">Next job</div>' : '';
-  return `${nextLabel}<div class="${cls}" id="job-${job.id}">
-    <div class="job-hdr">
-      <div class="job-time-block"><div class="job-time">${job.time}</div><div class="job-ampm">${job.ampm}</div></div>
-      <div class="job-hdr-info">
-        <div class="job-client">${job.client}</div>
-        <div class="job-svc">${job.service} · ${job.price}</div>
-      </div>
-      <span class="job-status ${statusCls}">${statusTxt}</span>
-    </div>
-    <div class="job-body">
-      <div class="job-row">
-        <div class="job-row-icon" style="background:#EEF3FC"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-        <div>
-          <div class="job-row-label">Address</div>
-          <div class="job-row-val">${job.address}</div>
-        </div>
-      </div>
-      <div class="job-row">
-        <div class="job-row-icon" style="background:#ECFDF5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-        <div>
-          <div class="job-row-label">Service · Duration</div>
-          <div class="job-row-val">${job.service}</div>
-          <div class="job-row-sub">${job.duration} · ${job.price}</div>
-        </div>
-      </div>
-      <div class="job-row">
-        <div class="job-row-icon" style="background:#FEF3C7"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-        <div>
-          <div class="job-row-label">Client · Membership</div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px">${membadge(job.membership)}</div>
-          ${waNote(job)}
-        </div>
-      </div>
-      ${job.notes?`<div class="job-row">
-        <div class="job-row-icon" style="background:var(--off)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div><div class="job-row-label">Mechanic notes</div><div class="job-row-val" style="font-weight:300;font-size:13px">${job.notes}</div></div>
-      </div>`:''}
-      <div style="margin-top:4px">
-        <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Service checklist</div>
-        <div class="checklist">${buildChecklist(job)}</div>
-      </div>
-      <div style="margin-top:12px">
-        <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Job notes</div>
-        <textarea class="notes-inp" placeholder="Add notes about this job..." rows="2"></textarea>
-      </div>
-    </div>
-    ${buildActions(job)}
-  </div>`;
-}
-
-// ── RENDER ───────────────────────────────────────────────────────────────────
-function renderJobs(){
-  const myVan = vanSel;
-  const myJobs = JOBS.filter(j=>j.van===myVan);
-
-  // TODAY — all jobs
-  const todayJobs = myJobs;
-  let firstPending = true;
-  const todayHtml = todayJobs.map(job=>{
-    const isDone = completedIds.has(job.id)||job.status==='done';
-    let showNext = false;
-    if(!isDone && firstPending){ showNext=true; firstPending=false; }
-    return buildJobCard(job, showNext);
-  }).join('');
-  document.getElementById('jobs-list').innerHTML = todayHtml||emptyState('No jobs today','Enjoy your day off! 🚲');
-
-  // UPCOMING — next 7 days (showing tomorrow's preview)
-  const upcomingHtml = `
-    <div style="font-size:12px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;padding:4px 0 8px;display:flex;align-items:center;gap:8px"><span style="width:16px;height:2px;background:var(--blue);border-radius:2px;display:inline-block"></span>Tomorrow — Tuesday 5 May</div>
-    <div class="job-card"><div class="job-hdr"><div class="job-time-block" style="background:var(--mgray)"><div class="job-time">9:00</div><div class="job-ampm">am</div></div><div class="job-hdr-info"><div class="job-client">Sofia D.</div><div class="job-svc">Major Service · $199</div></div><span class="job-status js-pending">Confirmed</span></div><div class="job-body"><div class="job-row"><div class="job-row-icon" style="background:#EEF3FC"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><div class="job-row-label">Address</div><div class="job-row-val">12 Victoria Rd, Rozelle NSW 2039</div></div></div><div class="job-row"><div class="job-row-icon" style="background:#FEF3C7"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="job-row-label">Client · Membership</div><div style="margin-top:3px">${membadge('std')}</div></div></div></div></div>
-    <div class="job-card" style="margin-top:10px"><div class="job-hdr"><div class="job-time-block" style="background:var(--mgray)"><div class="job-time">11:00</div><div class="job-ampm">am</div></div><div class="job-hdr-info"><div class="job-client">Henry W.</div><div class="job-svc">Tubeless Install · $55</div></div><span class="job-status js-pending">Confirmed</span></div><div class="job-body"><div class="job-row"><div class="job-row-icon" style="background:#EEF3FC"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><div class="job-row-label">Address</div><div class="job-row-val">88 Enmore Rd, Enmore NSW 2042</div></div></div><div class="job-row"><div class="job-row-icon" style="background:#FEF3C7"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="job-row-label">Client · Membership</div><div style="margin-top:3px">${membadge('none')}</div></div></div></div></div>`;
-  document.getElementById('upcoming-list').innerHTML = upcomingHtml;
-
-  // DONE — completed today
-  const doneJobs = myJobs.filter(j=>completedIds.has(j.id)||j.status==='done');
-  const doneHtml = doneJobs.length
-    ? doneJobs.map(j=>buildJobCard(j,false)).join('')
-    : emptyState('No completed jobs yet','Jobs you mark complete will appear here.');
-  document.getElementById('done-list').innerHTML = doneHtml;
-
-  // Update summary
-  const done = doneJobs.length;
-  document.getElementById('ds-done').textContent = done;
-  const revenue = doneJobs.reduce((acc,j)=>acc+parseInt(j.price.replace('$','')),0);
-  document.getElementById('ds-revenue').textContent = '$'+revenue;
-}
-
-function emptyState(title,sub){
-  return `<div class="empty"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="empty-title">${title}</div><div class="empty-sub">${sub}</div></div>`;
-}
-
-// ── ACTIONS ──────────────────────────────────────────────────────────────────
-function completeJob(id){
-  completedIds.add(id);
-  renderJobs();
-  // scroll to top
-  document.querySelector('.content').scrollTo({top:0,behavior:'smooth'});
-}
-
-function undoJob(id){
-  completedIds.delete(id);
-  // reset status if it was originally done
-  const job = JOBS.find(j=>j.id===id);
-  if(job) job.status='pending';
-  renderJobs();
-}
-
-function toggleChk(el){
-  el.classList.toggle('done-chk');
-  const box = el.querySelector('.chk-box');
-  if(el.classList.contains('done-chk')){
-    box.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-  } else {
-    box.innerHTML='';
-  }
-}
-
-function openWA(phone, name){
-  const msg = encodeURIComponent(`Hi ${name}, this is your Dr. Bike mechanic. I'm on my way to your location. See you soon!`);
-  window.open(`https://wa.me/${phone.replace(/\s+/g,'').replace('+','')}?text=${msg}`,'_blank');
-}
-
-function openSMS(phone){
-  window.open(`sms:${phone}`,'_blank');
-}
-
-function openCall(phone){
-  window.open(`tel:${phone}`,'_blank');
-}
-
-function openMaps(address){
-  const q = encodeURIComponent(address);
-  // Opens Apple Maps on iOS, Google Maps on Android
-  window.open(`https://maps.google.com/?q=${q}`,'_blank');
-}
-
-// ── LOGIN / NAV ──────────────────────────────────────────────────────────────
-function selVan(n){
-  vanSel=n;
-  document.getElementById('v1').classList.toggle('sel',n===1);
-  document.getElementById('v2').classList.toggle('sel',n===2);
-}
-
-function doLogin(){
-  const pin = document.getElementById('pin-inp').value;
-  // Simple demo PIN check — in production this hits Supabase auth
-  const validPins = {'1':'1234','2':'5678'};
-  if(pin===validPins[vanSel] || pin==='0000'){
-    const v = VANS[vanSel];
-    document.getElementById('tb-name').textContent = v.name;
-    document.getElementById('tb-van').textContent = 'Van '+vanSel+' · '+v.zone;
-    document.getElementById('pf-av').textContent = v.av;
-    document.getElementById('pf-name').textContent = v.name;
-    document.getElementById('pf-zone').textContent = 'Van '+vanSel+' · '+v.zone;
-    document.getElementById('pf-territory').textContent = v.territory;
-    document.getElementById('s-login').classList.remove('active');
-    document.getElementById('s-app').classList.add('active');
-    renderJobs();
-    updateTime();
-  } else {
-    document.getElementById('pin-inp').style.borderColor='var(--red)';
-    document.getElementById('pin-inp').value='';
-    document.getElementById('pin-inp').placeholder='Wrong PIN — try again';
-    setTimeout(()=>{
-      document.getElementById('pin-inp').style.borderColor='';
-      document.getElementById('pin-inp').placeholder='4-digit PIN';
-    },2000);
-  }
-}
-
-function doLogout(){
-  document.getElementById('s-app').classList.remove('active');
-  document.getElementById('s-login').classList.add('active');
-  document.getElementById('pin-inp').value='';
-  completedIds.clear();
-}
-
-function goTab(tab, btn){
-  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('on'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  btn.classList.add('on');
-}
-
-let statusOn = true;
-function toggleStatus(){
-  statusOn = !statusOn;
-  const btn = document.getElementById('status-btn');
-  const txt = document.getElementById('status-text');
-  const pf = document.getElementById('pf-status');
-  btn.className = 'topbar-status '+(statusOn?'on':'off');
-  txt.textContent = statusOn?'Online':'Offline';
-  if(pf) pf.textContent = statusOn?'Online':'Offline';
-}
-
-function updateTime(){
-  const now = new Date();
-  const h = now.getHours();
-  const m = now.getMinutes().toString().padStart(2,'0');
-  const ampm = h>=12?'pm':'am';
-  const h12 = h%12||12;
-  document.getElementById('tb-time').textContent = h12+':'+m+' '+ampm;
-  // Day progress (6am to 6pm = workday)
-  const pct = Math.min(Math.max((h*60+now.getMinutes()-360)/720*100,0),100);
-  document.getElementById('day-fill').style.width = pct+'%';
-  // Date
-  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('tb-date').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-}
-
-// Demo login shortcut — press Enter
-document.addEventListener('keydown', e => {
-  if(e.key==='Enter') doLogin();
-});
-
-setInterval(updateTime, 30000);
-updateTime();
 </script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<style>
+.goog-te-banner-frame { display: none !important; }
+body { top: 0 !important; }
+.goog-te-gadget { font-size: 0 !important; }
+#lang-btn-admin { 
+  position: fixed; bottom: 24px; right: 24px; 
+  width: 44px; height: 44px; 
+  background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 50%; cursor: pointer; z-index: 998;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: all .2s; color: white;
+}
+#lang-btn-admin:hover { background: rgba(255,255,255,0.2); }
+#lang-panel-admin {
+  position: fixed; bottom: 76px; right: 24px;
+  background: #fff; border: 1px solid #E5E7EB;
+  border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  z-index: 997; padding: 8px; width: 200px; display: none;
+}
+#lang-panel-admin.open { display: block; }
+.lang-opt-a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: #0D1F3C;
+  transition: background .15s; border: none; background: none;
+  width: 100%; text-align: left; font-family: Inter,sans-serif;
+}
+.lang-opt-a:hover { background: #F7F8FA; }
 
-
-<img id="BtnTool" src="Dr.%20Bike%20%E2%80%94%20App%20Mechanic_files/icon.png" style="position: absolute; top: 50%; left: 50%; z-index: 9999; cursor: pointer; display: none;" height="25" width="25"><img id="LoadingGif" src="moz-extension://b0005110-3221-4723-8d2a-d91733895c16/icons/loading.gif" style="position: absolute; top: 50%; z-index: 9999; cursor: pointer; display: none;" height="70" width="70"></body></html>
+/* ── JOB CARDS ── */
+.job-card{background:#fff;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);border:1px solid var(--border)}
+.job-card.done-card{opacity:0.7}
+.job-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.job-client{font-size:15px;font-weight:700;color:var(--navy)}
+.job-meta{font-size:12px;color:var(--mgray);margin-top:2px}
+.job-service{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:6px}
+.job-addr{font-size:12px;color:var(--mgray);margin-bottom:8px}
+.job-price-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.job-price{font-size:18px;font-weight:800;color:var(--blue)}
+.status-pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.job-actions{display:flex;gap:8px;flex-wrap:wrap}
+.jbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.jbtn.maps{background:var(--blue-lt);color:var(--blue)}
+.jbtn.wa{background:var(--wa-lt);color:var(--wa)}
+.jbtn.enroute{background:var(--amber-lt);color:var(--amber)}
+.jbtn.complete{background:var(--green-lt);color:var(--green)}
+.jbtn.undo{background:var(--off);color:var(--mgray);border:1.5px solid var(--border)}
+.kpi-card{background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border);text-align:center}
+.kpi-val{font-size:22px;font-weight:800;color:var(--navy)}
+.kpi-lbl{font-size:11px;color:var(--mgray);margin-top:4px}
+</style>

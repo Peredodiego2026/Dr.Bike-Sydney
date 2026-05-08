@@ -332,6 +332,55 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .add-van-btn{display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed var(--border);border-radius:var(--r);padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:var(--sans);transition:all .15s;width:100%;margin-top:8px}
 .add-van-btn:hover{border-color:var(--blue);color:var(--blue)}
 </style>
+<meta name="google-translate-customization" content="drbike-sydney">
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,es,zh-CN,pt,it,ko,fr,ar,hi,ja',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false
+  }, 'google_translate_element');
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<style>
+/* Hide Google Translate toolbar */
+.goog-te-banner-frame { display: none !important; }
+body { top: 0 !important; }
+.goog-te-gadget { font-size: 0 !important; }
+.goog-te-gadget select { display: none; }
+
+/* Language selector */
+#lang-btn { 
+  position: fixed; bottom: 88px; right: 24px; 
+  width: 44px; height: 44px; 
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: 50%; cursor: pointer; z-index: 998;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12); font-size: 18px;
+  transition: all .2s;
+}
+#lang-btn:hover { border-color: var(--blue); transform: scale(1.05); }
+#lang-panel {
+  position: fixed; bottom: 140px; right: 24px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  z-index: 997; padding: 8px; width: 200px;
+  display: none;
+}
+#lang-panel.open { display: block; }
+.lang-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--navy);
+  transition: background .15s; border: none; background: none;
+  width: 100%; text-align: left; font-family: var(--sans);
+}
+.lang-opt:hover { background: var(--off); }
+.lang-opt.active { background: var(--blue-lt); color: var(--blue); }
+.lang-flag { font-size: 18px; line-height: 1; }
+</style>
 </head>
 <body>
 
@@ -1577,6 +1626,108 @@ async function sendChat(){
 renderPlans();
 init();
 </script>
+<!-- Google Translate hidden element -->
+<div id="google_translate_element" style="display:none"></div>
+
+<!-- Language selector button -->
+<button id="lang-btn" onclick="toggleLangPanel()" title="Change language">🌐</button>
+
+<div id="lang-panel">
+  <div style="font-size:11px;font-weight:600;color:var(--mgray);padding:4px 12px 8px;text-transform:uppercase;letter-spacing:0.06em">Language</div>
+  <button class="lang-opt active" id="lang-en" onclick="setLang('en','🇬🇧','English')">
+    <span class="lang-flag">🇬🇧</span> English
+  </button>
+  <button class="lang-opt" id="lang-es" onclick="setLang('es','🇪🇸','Español')">
+    <span class="lang-flag">🇪🇸</span> Español
+  </button>
+  <button class="lang-opt" id="lang-zh" onclick="setLang('zh-CN','🇨🇳','中文')">
+    <span class="lang-flag">🇨🇳</span> 中文
+  </button>
+  <button class="lang-opt" id="lang-pt" onclick="setLang('pt','🇧🇷','Português')">
+    <span class="lang-flag">🇧🇷</span> Português
+  </button>
+  <button class="lang-opt" id="lang-it" onclick="setLang('it','🇮🇹','Italiano')">
+    <span class="lang-flag">🇮🇹</span> Italiano
+  </button>
+  <button class="lang-opt" id="lang-ko" onclick="setLang('ko','🇰🇷','한국어')">
+    <span class="lang-flag">🇰🇷</span> 한국어
+  </button>
+  <button class="lang-opt" id="lang-fr" onclick="setLang('fr','🇫🇷','Français')">
+    <span class="lang-flag">🇫🇷</span> Français
+  </button>
+  <button class="lang-opt" id="lang-ar" onclick="setLang('ar','🇸🇦','العربية')">
+    <span class="lang-flag">🇸🇦</span> العربية
+  </button>
+  <button class="lang-opt" id="lang-hi" onclick="setLang('hi','🇮🇳','हिन्दी')">
+    <span class="lang-flag">🇮🇳</span> हिन्दी
+  </button>
+  <button class="lang-opt" id="lang-ja" onclick="setLang('ja','🇯🇵','日本語')">
+    <span class="lang-flag">🇯🇵</span> 日本語
+  </button>
+</div>
+
+<script>
+let currentLang = localStorage.getItem('drbike-lang') || 'en';
+
+function toggleLangPanel(){
+  document.getElementById('lang-panel').classList.toggle('open');
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#lang-btn') && !e.target.closest('#lang-panel')){
+    document.getElementById('lang-panel').classList.remove('open');
+  }
+});
+
+function setLang(lang, flag, name){
+  currentLang = lang;
+  localStorage.setItem('drbike-lang', lang);
+  
+  // Update button
+  document.getElementById('lang-btn').textContent = flag;
+  
+  // Update active state
+  document.querySelectorAll('.lang-opt').forEach(b=>b.classList.remove('active'));
+  document.getElementById('lang-'+lang.split('-')[0])?.classList.add('active');
+  
+  // Apply translation via Google Translate
+  if(lang === 'en'){
+    // Reset to English
+    const iframe = document.querySelector('.goog-te-banner-frame');
+    if(iframe) iframe.contentDocument.querySelector('.restore')?.click();
+    const select = document.querySelector('.goog-te-combo');
+    if(select){ select.value = ''; select.dispatchEvent(new Event('change')); }
+    document.cookie = 'googtrans=/en/en; domain=.vercel.app; path=/';
+    document.cookie = 'googtrans=/en/en; path=/';
+    location.reload();
+  } else {
+    document.cookie = `googtrans=/en/${lang}; domain=.vercel.app; path=/`;
+    document.cookie = `googtrans=/en/${lang}; path=/`;
+    const select = document.querySelector('.goog-te-combo');
+    if(select){
+      select.value = lang;
+      select.dispatchEvent(new Event('change'));
+    } else {
+      // Fallback: reload with cookie
+      location.reload();
+    }
+  }
+  
+  document.getElementById('lang-panel').classList.remove('open');
+}
+
+// Apply saved language on load
+window.addEventListener('load', ()=>{
+  if(currentLang && currentLang !== 'en'){
+    const langMap = {es:'🇪🇸','zh-CN':'🇨🇳',pt:'🇧🇷',it:'🇮🇹',ko:'🇰🇷',fr:'🇫🇷',ar:'🇸🇦',hi:'🇮🇳',ja:'🇯🇵'};
+    document.getElementById('lang-btn').textContent = langMap[currentLang] || '🌐';
+    document.querySelectorAll('.lang-opt').forEach(b=>b.classList.remove('active'));
+    document.getElementById('lang-'+currentLang.split('-')[0])?.classList.add('active');
+  }
+});
+</script>
+
 <script>
 // PWA Service Worker
 if('serviceWorker' in navigator){
