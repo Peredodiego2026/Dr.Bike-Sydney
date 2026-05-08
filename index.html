@@ -286,6 +286,21 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
   .section{padding:56px 20px}
 }
 @keyframes slideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* ── BIKE PROFILE ── */
+.bike-card{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
+.bike-card:hover{border-color:var(--blue);transform:translateY(-1px)}
+.bike-icon{width:44px;height:44px;background:var(--blue-lt);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.bike-info{flex:1}
+.bike-name{font-size:14px;font-weight:600;color:var(--navy)}
+.bike-sub{font-size:12px;color:var(--mgray);margin-top:2px}
+.add-bike-btn{width:100%;padding:12px;background:var(--off);border:1.5px dashed var(--border);border-radius:12px;font-size:13px;color:var(--mgray);cursor:pointer;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.add-bike-btn:hover{border-color:var(--blue);color:var(--blue)}
+#bike-modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:flex-end;justify-content:center}
+#bike-modal.open{display:flex}
+.bike-modal-inner{background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px}
+.bike-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.bike-type-opt{padding:10px 8px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:500;color:var(--navy);transition:all .15s;font-family:var(--sans);background:none}
+.bike-type-opt.sel{border-color:var(--blue);background:var(--blue-lt);color:var(--blue)}
 /* ── CHATBOT FLOTANTE ── */
 #chatbot-btn{position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;z-index:1000;box-shadow:0 4px 20px rgba(24,72,200,0.4);display:flex;align-items:center;justify-content:center;transition:all .2s}
 #chatbot-btn:hover{transform:scale(1.08);background:var(--blue2)}
@@ -602,8 +617,11 @@ body { top: 0 !important; }
         <div id="booking-history"><div class="empty-state">No bookings yet.<br>Book your first service below.</div></div>
       </div>
       <div class="card" style="padding:16px 18px">
-        <div class="ct">My bikes</div>
-        <div id="bikes-list"><div class="empty-state">No bikes added yet.</div></div>
+        <div class="ct" style="display:flex;align-items:center;justify-content:space-between">
+          My bikes
+          <button onclick="openBikeModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Add</button>
+        </div>
+        <div id="my-bikes-list"></div>
         <button style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);cursor:pointer;color:var(--navy);font-family:var(--sans);margin-top:12px;font-weight:500;transition:all .15s" onclick="showView('book')">+ Book a service</button>
       </div>
     </div>
@@ -780,6 +798,51 @@ body { top: 0 !important; }
       <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:8px">Zone assignment logic</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7">When a client books, the system checks their suburb against each van's list. If the suburb matches Van 1, the job is assigned to Van 1. If it matches Van 2, it goes to Van 2. If no match, it defaults to Van 1. Changes here apply immediately to all new bookings.</div>
     </div>
+  </div>
+</div>
+
+<!-- ══ BIKE MODAL ══ -->
+<div id="bike-modal">
+  <div class="bike-modal-inner">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-size:18px;font-weight:700;color:var(--navy)" id="bike-modal-title">Add a bike</div>
+      <button onclick="closeBikeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">✕</button>
+    </div>
+    <input type="hidden" id="bike-id">
+    <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Bike type</div>
+    <div class="bike-type-grid">
+      <button class="bike-type-opt sel" id="bt-road" onclick="setBikeType('road',this)">🚴 Road</button>
+      <button class="bike-type-opt" id="bt-mtb" onclick="setBikeType('mtb',this)">🚵 MTB</button>
+      <button class="bike-type-opt" id="bt-ebike" onclick="setBikeType('ebike',this)">⚡ E-bike</button>
+      <button class="bike-type-opt" id="bt-hybrid" onclick="setBikeType('hybrid',this)">🚲 Hybrid</button>
+      <button class="bike-type-opt" id="bt-bmx" onclick="setBikeType('bmx',this)">🛴 BMX</button>
+      <button class="bike-type-opt" id="bt-kids" onclick="setBikeType('kids',this)">👶 Kids</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Nickname *</div>
+        <input id="bike-nickname" placeholder="e.g. My Trek" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-family:var(--sans);outline:none">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Brand</div>
+        <input id="bike-brand" placeholder="e.g. Trek" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-family:var(--sans);outline:none">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Model</div>
+        <input id="bike-model" placeholder="e.g. Domane SL5" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-family:var(--sans);outline:none">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Year</div>
+        <input id="bike-year" type="number" placeholder="e.g. 2021" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-family:var(--sans);outline:none">
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Notes (optional)</div>
+      <input id="bike-notes" placeholder="e.g. Red frame, Shimano 105" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-family:var(--sans);outline:none">
+    </div>
+    <button onclick="saveBike()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Save bike 🚲</button>
   </div>
 </div>
 
@@ -1079,6 +1142,7 @@ async function loadProfile(){
 
 async function updateDashboard(){
   if(!userProfile) return;
+  loadBikes();
   const name = userProfile.full_name || userProfile.email?.split('@')[0] || 'there';
   const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
   document.getElementById('d-av').textContent = initials;
@@ -1770,6 +1834,90 @@ async function sendEmail(type, bookingData){
       })
     });
   } catch(e){ console.log('Email error:', e); }
+}
+
+// ── BIKE PROFILE ─────────────────────────────────────────────────────────────
+let selectedBikeType = 'road';
+
+function openBikeModal(bikeId){
+  document.getElementById('bike-modal-title').textContent = bikeId ? 'Edit bike' : 'Add a bike';
+  document.getElementById('bike-id').value = bikeId || '';
+  document.getElementById('bike-nickname').value = '';
+  document.getElementById('bike-brand').value = '';
+  document.getElementById('bike-model').value = '';
+  document.getElementById('bike-year').value = '';
+  document.getElementById('bike-notes').value = '';
+  selectedBikeType = 'road';
+  document.querySelectorAll('.bike-type-opt').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('bt-road')?.classList.add('sel');
+  document.getElementById('bike-modal').classList.add('open');
+}
+
+function closeBikeModal(){
+  document.getElementById('bike-modal').classList.remove('open');
+}
+
+function setBikeType(type, btn){
+  selectedBikeType = type;
+  document.querySelectorAll('.bike-type-opt').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+async function saveBike(){
+  if(!currentUser) return;
+  const nickname = document.getElementById('bike-nickname').value.trim();
+  if(!nickname){ toast('Please add a nickname for your bike'); return; }
+
+  const bikeId = document.getElementById('bike-id').value;
+  const bikeData = {
+    client_id: currentUser.id,
+    nickname,
+    brand: document.getElementById('bike-brand').value.trim(),
+    model: document.getElementById('bike-model').value.trim(),
+    year: parseInt(document.getElementById('bike-year').value)||null,
+    type: selectedBikeType,
+    notes: document.getElementById('bike-notes').value.trim()
+  };
+
+  if(bikeId){
+    await sb.from('bikes').update(bikeData).eq('id', bikeId);
+    toast('Bike updated ✓');
+  } else {
+    await sb.from('bikes').insert(bikeData);
+    toast('Bike added! 🚲');
+    trackEvent('bike_added', { type: selectedBikeType });
+  }
+  closeBikeModal();
+  loadBikes();
+}
+
+async function loadBikes(){
+  if(!currentUser) return;
+  const { data } = await sb.from('bikes').select('*').eq('client_id', currentUser.id).order('created_at');
+  const el = document.getElementById('my-bikes-list');
+  if(!el) return;
+
+  const typeIcons = { road:'🚴', mtb:'🚵', ebike:'⚡', hybrid:'🚲', bmx:'🛴', kids:'👶' };
+  if(!data || data.length === 0){
+    el.innerHTML = `<button class="add-bike-btn" onclick="openBikeModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add your first bike
+    </button>`;
+    return;
+  }
+
+  el.innerHTML = data.map(b=>`
+    <div class="bike-card" onclick="openBikeModal('${b.id}')">
+      <div class="bike-icon">${typeIcons[b.type]||'🚲'}</div>
+      <div class="bike-info">
+        <div class="bike-name">${b.nickname}</div>
+        <div class="bike-sub">${[b.brand,b.model,b.year].filter(Boolean).join(' · ')||'Tap to add details'}</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`).join('') + `<button class="add-bike-btn" onclick="openBikeModal()" style="margin-top:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add another bike
+    </button>`;
 }
 
 // ── ANALYTICS ────────────────────────────────────────────────────────────────
