@@ -880,6 +880,9 @@ async function init(){
         const booking = payload.new;
         showStatusUpdate(booking);
         updateDashboard();
+        if(booking.status === 'enroute' || booking.status === 'completed'){
+          sendEmail(booking.status, booking);
+        }
       }).subscribe();
   }
 
@@ -1381,6 +1384,8 @@ async function cancelBookingModal(bookingId){
 async function skipPayment(bookingId){
   await sb.from('bookings').update({ status:'confirmed', payment_method:'cash' }).eq('id', bookingId);
   document.getElementById('payment-modal').remove();
+  const {data:bkgData} = await sb.from('bookings').select('*').eq('id',bookingId).single();
+  if(bkgData) sendEmail('confirmation', bkgData);
   showBookingSuccess();
 }
 
@@ -1721,6 +1726,28 @@ async function sendChat(){
       msgs.scrollTop = msgs.scrollHeight;
     }, 600);
   }
+}
+
+// ── EMAIL ────────────────────────────────────────────────────────────────────
+async function sendEmail(type, bookingData){
+  try {
+    const email = currentUser?.email || userProfile?.email;
+    if(!email) return;
+    await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: email,
+        name: userProfile?.full_name || email.split('@')[0],
+        service: bookingData.service_name || bookingData.service,
+        date: bookingData.scheduled_date ? new Date(bookingData.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}) : '',
+        time: bookingData.scheduled_time || '',
+        address: bookingData.address || '',
+        price: bookingData.service_price || bookingData.price || 0,
+        type: type
+      })
+    });
+  } catch(e){ console.log('Email error:', e); }
 }
 
 // ── START ────────────────────────────────────────────────────────────────────
