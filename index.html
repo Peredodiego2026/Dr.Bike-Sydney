@@ -946,8 +946,12 @@ async function init(){
     currentUser = session.user;
     await loadProfile();
   }
-  await loadServices();
-  await loadVanZones();
+  try {
+    await loadServices();
+    await loadVanZones();
+  } catch(e) {
+    console.error('Init error:', e);
+  }
   handleStripeReturn();
   setTimeout(()=>{ document.getElementById('loading').classList.add('hide'); },800);
 
@@ -1694,7 +1698,7 @@ async function subscribePlan(planId) {
         name: currentUser.user_metadata?.full_name || currentUser.email,
         plan: planKey,
         billing: billingKey,
-        customerId: currentProfile?.stripe_customer_id || null
+        customerId: userProfile?.stripe_customer_id || null
       })
     });
 
@@ -1735,8 +1739,8 @@ const P3=[
 ];
 
 function renderPlans(){
-  const userPlan = currentProfile?.membership_plan;
-  const userStatus = currentProfile?.membership_status;
+  const userPlan = userProfile?.membership_plan;
+  const userStatus = userProfile?.membership_status;
 
   document.getElementById('plans3').innerHTML=P3.map(p=>{
     const mo=billing==='a'?Math.round(p.mo*0.8):p.mo;
