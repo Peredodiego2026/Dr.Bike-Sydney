@@ -948,6 +948,7 @@ async function init(){
   }
   await loadServices();
   await loadVanZones();
+  handleStripeReturn();
   setTimeout(()=>{ document.getElementById('loading').classList.add('hide'); },800);
 
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -1658,6 +1659,72 @@ function setBilling(b){
   renderPlans();
 }
 
+// ── STRIPE PRICE IDs ─────────────────────────────────────────────────────────
+// Reemplazá estos con los Price IDs reales de tu Stripe dashboard
+const STRIPE_PRICES = {
+  basic:    { monthly: 'price_BASIC_MONTHLY',    annual: 'price_BASIC_ANNUAL'    },
+  standard: { monthly: 'price_STANDARD_MONTHLY', annual: 'price_STANDARD_ANNUAL' },
+  vip:      { monthly: 'price_VIP_MONTHLY',       annual: 'price_VIP_ANNUAL'      },
+};
+
+const PLAN_NAMES = { b: 'basic', s: 'standard', v: 'vip' };
+
+async function subscribePlan(planId) {
+  if (!currentUser) { showView('auth'); return; }
+
+  const planKey = PLAN_NAMES[planId];
+  const billingKey = billing === 'a' ? 'annual' : 'monthly';
+  const priceId = STRIPE_PRICES[planKey]?.[billingKey];
+
+  if (!priceId || priceId.startsWith('price_BASIC') || priceId.startsWith('price_STANDARD') || priceId.startsWith('price_VIP')) {
+    toast('⚠️ Stripe not configured yet — contact us to subscribe');
+    return;
+  }
+
+  const btn = document.getElementById(`plan-btn-${planId}`);
+  if (btn) { btn.textContent = 'Redirecting...'; btn.disabled = true; }
+
+  try {
+    const res = await fetch('/api/create-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        priceId,
+        email: currentUser.email,
+        name: currentUser.user_metadata?.full_name || currentUser.email,
+        plan: planKey,
+        billing: billingKey,
+        customerId: currentProfile?.stripe_customer_id || null
+      })
+    });
+
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Failed to create session');
+    }
+  } catch (err) {
+    toast('❌ ' + err.message);
+    if (btn) { btn.textContent = `Get started — ${planKey}`; btn.disabled = false; }
+  }
+}
+
+// Handle return from Stripe checkout
+function handleStripeReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get('subscription');
+  if (status === 'success') {
+    const plan = params.get('plan');
+    toast(`🎉 Welcome to Dr. Bike ${plan?.charAt(0).toUpperCase()+plan?.slice(1)}!`);
+    window.history.replaceState({}, '', '/');
+    setTimeout(() => { if (currentUser) showView('dashboard'); }, 500);
+  } else if (status === 'cancelled') {
+    toast('Subscription cancelled — no charge made');
+    window.history.replaceState({}, '', '/');
+  }
+}
+
 const P3=[
   {id:'b',n:'Basic',w:'For occasional riders',mo:57,bikes:'1 bike',bb:'#0D1F3C',
    secs:[{l:'Priority',f:[{t:'Priority booking before non-members',y:true},{t:'SMS reminder when service is due',y:true},{t:'Same-day booking guarantee',y:false}]},{l:'Discounts',f:[{t:'8% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'1 × Tune-Up/year (value $109)',y:true},{t:'Tyre pressure check monthly',y:true},{t:'Brake check every 3 months',y:false}]}]},
@@ -1668,6 +1735,9 @@ const P3=[
 ];
 
 function renderPlans(){
+  const userPlan = currentProfile?.membership_plan;
+  const userStatus = currentProfile?.membership_status;
+
   document.getElementById('plans3').innerHTML=P3.map(p=>{
     const mo=billing==='a'?Math.round(p.mo*0.8):p.mo;
     const annLine=billing==='a'?`Billed $${mo*12}/year — 20% saved`:`Or $${Math.round(p.mo*0.8)}/mo billed annually`;
@@ -1675,6 +1745,20 @@ function renderPlans(){
     const bikeBg=p.id==='v'?'#FEF3C7':p.id==='s'?'#EEF3FC':'#F3F4F6';
     const bikeFc=p.id==='v'?'#B45309':p.id==='s'?'#1848C8':'#4B5563';
     const feats=p.secs.map(s=>`<div class="feat-sl">${s.l}</div>${s.f.map(f=>`<div class="pf${f.y?'':' no'}"><div class="pfd" style="background:${f.y?'#1848C8':'#E5E7EB'}"></div><span>${f.t}</span></div>`).join('')}`).join('');
+
+    const planKey = PLAN_NAMES[p.id];
+    const isActive = userPlan === planKey && userStatus === 'active';
+    const isPastDue = userPlan === planKey && userStatus === 'past_due';
+
+    let btnHtml;
+    if (isActive) {
+      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:#059669;color:#fff" disabled>✅ Your current plan</button>`;
+    } else if (isPastDue) {
+      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:#DC2626;color:#fff" onclick="subscribePlan('${p.id}')">⚠️ Payment failed — update card</button>`;
+    } else {
+      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:${p.bb};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="subscribePlan('${p.id}')">Get started — ${p.n}</button>`;
+    }
+
     return`<div class="pl${p.pop?' pop':''}">
       ${p.pop?'<div class="pop-tag">Most popular</div>':''}
       <div class="pl-name">${p.n}</div><div class="pl-who">${p.w}</div>
@@ -1683,7 +1767,7 @@ function renderPlans(){
       <span class="bikes-tag" style="background:${bikeBg};color:${bikeFc};border-color:${bikeBg}">${p.bikes} · parts extra</span>
       ${feats}
       <div class="pl-btn-wrap">
-        <button class="plb" style="background:${p.bb};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="showView('auth')">Get started — ${p.n}</button>
+        ${btnHtml}
         <div class="plb-note">3-month minimum · cancel anytime after</div>
       </div>
     </div>`;
