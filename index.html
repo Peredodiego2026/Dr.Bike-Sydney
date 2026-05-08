@@ -588,6 +588,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
     <div id="step-1">
       <div class="card" style="padding:18px;margin-bottom:14px">
         <div class="ct">Select a service</div>
+        <div id="book-cat-pills" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;overflow-x:auto;padding-bottom:4px"></div>
         <div class="svc-grid" id="book-svcs-grid"></div>
       </div>
     </div>
@@ -1094,14 +1095,40 @@ function renderServices(){
 
 function setSvcFilter(f){ svcFilter=f; renderServices(); }
 
+let bookCatFilter = 'popular';
+
 function renderBookingServices(){
-  const top = services.slice(0,8);
-  document.getElementById('book-svcs-grid').innerHTML = top.map(s=>`
+  const grid = document.getElementById('book-svcs-grid');
+  if(!grid) return;
+
+  // Get unique categories
+  const cats = [...new Set(services.map(s=>s.category).filter(Boolean))];
+  
+  // Popular = top 6 by price descending (main services)
+  const popular = services.slice(0,6);
+  const list = bookCatFilter === 'popular' ? popular : services.filter(s=>s.category===bookCatFilter);
+
+  // Render category pills
+  const pillsEl = document.getElementById('book-cat-pills');
+  if(pillsEl){
+    const allPills = ['popular', ...cats];
+    pillsEl.innerHTML = allPills.map(c=>`
+      <button onclick="setBookCat('${c}')" style="padding:7px 16px;border-radius:20px;border:1.5px solid ${bookCatFilter===c?'var(--blue)':'var(--border)'};background:${bookCatFilter===c?'var(--blue)':'var(--white)'};color:${bookCatFilter===c?'#fff':'var(--navy)'};font-size:12px;font-weight:${bookCatFilter===c?'600':'400'};cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap">
+        ${c==='popular'?'⭐ Popular':c}
+      </button>`).join('');
+  }
+
+  grid.innerHTML = list.length > 0 ? list.map(s=>`
     <div class="svc-card${booking.service?.id===s.id?' selected':''}" onclick="selectService('${s.id}')">
       <div class="svc-name">${s.name}</div>
       <div class="svc-dur">${s.duration_min}–${s.duration_max} min</div>
       <div class="svc-price">$${s.price}</div>
-    </div>`).join('');
+    </div>`).join('') : '<div style="color:var(--mgray);font-size:13px;padding:20px;grid-column:1/-1;text-align:center">No services in this category</div>';
+}
+
+function setBookCat(cat){
+  bookCatFilter = cat;
+  renderBookingServices();
 }
 
 function selectService(id){
