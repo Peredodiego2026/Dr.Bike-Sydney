@@ -1278,8 +1278,9 @@ function fillConfirm(){
   document.getElementById('cf-van').textContent = 'Van '+vanNum+' · Mechanic '+vanNum;
 }
 
-// Stripe
-const stripe = Stripe('pk_test_51TUbG9ApfjPBFYNnVe0zpeuO6cuLYiWHkMw6UvRFNsTcN2v4L6a8WimSa7TMLQJDJqh8bV0bGMkVt3tUNhgOvVOf00vJnJjjaN');
+// Stripe - lazy init
+let stripe = null;
+function getStripe(){ if(!stripe && window.Stripe) stripe = Stripe('pk_test_51TUbG9ApfjPBFYNnVe0zpeuO6cuLYiWHkMw6UvRFNsTcN2v4L6a8WimSa7TMLQJDJqh8bV0bGMkVt3tUNhgOvVOf00vJnJjjaN'); return stripe; }
 
 async function confirmBooking(){
   if(!currentUser){ showView('auth'); return; }
@@ -1342,11 +1343,20 @@ function showPaymentModal(bkg, price){
   document.body.appendChild(modal);
 
   // Mount Stripe element
-  const elements = stripe.elements();
-  window._stripeCard = elements.create('card', {
-    style: { base: { fontSize:'16px', color:'#0D1F3C', fontFamily:'Inter,sans-serif', '::placeholder':{ color:'#9CA3AF' } } }
-  });
-  window._stripeCard.mount('#stripe-card-element');
+  try {
+    const stripeInstance = getStripe();
+    if(stripeInstance){
+      const elements = stripeInstance.elements();
+      window._stripeCard = elements.create('card', {
+        style: { base: { fontSize:'16px', color:'#0D1F3C', fontFamily:'Inter,sans-serif', '::placeholder':{ color:'#9CA3AF' } } }
+      });
+      window._stripeCard.mount('#stripe-card-element');
+    } else {
+      document.getElementById('stripe-card-element').innerHTML = '<div style="padding:12px;color:#DC2626;font-size:13px">Card payment unavailable. Please use cash.</div>';
+    }
+  } catch(e) {
+    document.getElementById('stripe-card-element').innerHTML = '<div style="padding:12px;color:#DC2626;font-size:13px">Card payment unavailable. Please use cash.</div>';
+  }
 }
 
 async function processPayment(bookingId, price){
@@ -1354,7 +1364,8 @@ async function processPayment(bookingId, price){
   btn.innerHTML='<span class="spinner"></span>Processing...';
   btn.disabled=true;
 
-  const { paymentMethod, error } = await stripe.createPaymentMethod({
+  const stripeInst = getStripe(); if(!stripeInst){ toast('Card unavailable, please use cash'); return; }
+  const { paymentMethod, error } = await stripeInst.createPaymentMethod({
     type: 'card',
     card: window._stripeCard,
   });
