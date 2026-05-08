@@ -898,6 +898,14 @@ let vanZones = [
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 async function init(){
+  // Handle direct navigation via hash
+  const hash = window.location.hash;
+  if(hash === '#dashboard' && currentUser){
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setTimeout(()=>{ document.getElementById('loading').classList.add('hide'); showView('dashboard'); }, 800);
+    return;
+  }
+
   // Handle Supabase OAuth redirect (hash contains access_token)
   if(window.location.hash && window.location.hash.includes('access_token')){
     const { data: { session }, error } = await sb.auth.getSession();
