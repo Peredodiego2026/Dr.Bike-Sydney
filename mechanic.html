@@ -21,11 +21,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--blue:#1848C8;--navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;--border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;--red:#DC2626;--red-lt:#FEF2F2;--amber:#D97706;--amber-lt:#FEF3C7;--wa:#25D366;--wa-lt:#EDFBF3;--blue-lt:#EEF3FC;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);--sans:'Inter',sans-serif}
+:root{--blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;--navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;--border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;--red:#DC2626;--red-lt:#FEF2F2;--amber:#D97706;--amber-lt:#FEF3C7;--gold:#F59E0B;--wa:#25D366;--wa-lt:#EDFBF3;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);--shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--sans:'Inter',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased}
-.screen{display:none;min-height:100vh;flex-direction:column}.screen.active{display:flex}
-#s-login{background:var(--navy);align-items:center;justify-content:center;padding:32px 24px}
+html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.screen{display:none;min-height:100vh;min-height:-webkit-fill-available;flex-direction:column}.screen.active{display:flex}
+#s-login{background:var(--navy);align-items:center;justify-content:center;padding:32px 24px;padding-bottom:calc(32px + env(safe-area-inset-bottom))}
 .login-logo{width:64px;height:64px;background:var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:30px}
 .login-title{font-size:24px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px}
 .login-sub{font-size:13px;color:rgba(255,255,255,0.45);text-align:center;margin-bottom:32px}
@@ -164,7 +164,7 @@ function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v
 
 async function load(){
   const {data} = await sb.from('bookings').select('*, profiles(full_name,email)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
-  jobs=(data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
+  jobs=(data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',phone:b.profiles?.phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
   render(); badges();
 }
 
@@ -210,7 +210,7 @@ function card(j){
     <div class="job-price">$${j.price}</div>
     <div class="actions">
       <button class="abtn nav" onclick="openMaps('${addr}')">📍 Navigate</button>
-      <button class="abtn chat" onclick="openWA('${j.email}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
+      <button class="abtn chat" onclick="openWA('${j.phone||j.email||""}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
       ${!done?`${st!=='enroute'?`<button class="abtn go" onclick="setStatus('${j.id}','enroute')">🚐 En route</button>`:''}
       <button class="abtn done" onclick="completeJob('${j.id}')">✅ Complete</button>`
       :`<button class="abtn undo" onclick="setStatus('${j.id}','confirmed')">↩ Undo</button>`}
@@ -223,8 +223,8 @@ async function setStatus(id,status){ await sb.from('bookings').update({status}).
 async function completeJob(id){ await sb.from('bookings').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id); const j=jobs.find(x=>x.id===id); if(j) j.status='completed'; render(); badges(); toast('✅ Job completed!'); }
 async function saveNotes(id,notes){ await sb.from('bookings').update({mechanic_notes:notes}).eq('id',id); }
 
-function openMaps(a){ window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a+', Sydney NSW')},'_blank'`); }
-function openWA(email,name){ window.open(`https://wa.me/?text=${encodeURIComponent('Hi '+name+'! This is your Dr. Bike mechanic. I am on my way! 🚲')}`, '_blank'); }
+function openMaps(a){ window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a+', Sydney NSW')}`, '_blank'); }
+function openWA(phone,name){ const num=(phone||'').replace(/[^\d]/g,''); window.open(`https://wa.me/${num}?text=${encodeURIComponent('Hi '+name+'! This is your Dr. Bike mechanic. I am on my way! 🚲')}`, '_blank'); }
 
 function goTab(t, btn){ tab=t; document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('on')); if(btn) btn.classList.add('on'); render(); }
 function toggleStatus(){ online=!online; const b=document.getElementById('status-btn'); b.textContent=online?'● Online':'○ Offline'; b.style.color=online?'var(--green)':'var(--mgray)'; }

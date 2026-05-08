@@ -8,7 +8,6 @@
   gtag('js', new Date());
   gtag('config', 'G-GXYD68JXZW');
 </script>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dr. Bike — Admin</title>
@@ -210,7 +209,12 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
   .row2,.fin-row,.vans,.settings-grid{grid-template-columns:1fr}
   .clients-grid{grid-template-columns:1fr}
   .quick-actions{grid-template-columns:repeat(2,1fr)}
+  .card-body{overflow-x:auto}
+  .tbl{min-width:600px}
 }
+/* Sidebar backdrop overlay */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:49}
+.sb-overlay.open{display:block}
 </style>
 <script type="text/javascript">
 function googleTranslateElementInit() {
@@ -255,7 +259,8 @@ body { top: 0 !important; }
 </head>
 <body>
 
-<button class="mob-toggle" id="mob-tog" onclick="document.getElementById('sidebar').classList.toggle('open')">
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+<button class="mob-toggle" id="mob-tog" onclick="toggleSidebar()">
   <span></span><span></span><span></span>
 </button>
 
@@ -753,11 +758,24 @@ function go(page, btn){
   document.getElementById('page-title').textContent = titles[page]||page;
   document.getElementById('page-sub').textContent = subs[page]||'';
   document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
   if(page==='zones') loadVanZones();
   if(page==='contacts') loadContacts();
   if(page==='bookings') loadBookings();
   if(page==='clients') loadClients();
   if(page==='dashboard') loadDashboard();
+}
+
+// ── SIDEBAR TOGGLE ─────────────────────────────────────────────────────────────
+function toggleSidebar(){
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sb-overlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────

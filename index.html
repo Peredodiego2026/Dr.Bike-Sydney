@@ -32,7 +32,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-font-smoothing:antialiased}
+body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
@@ -166,7 +166,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .da.blue{background:var(--blue);color:#fff;border-color:var(--blue)}
 
 /* ── BOOKING ── */
-.book-wrap{max-width:720px;margin:0 auto;padding:24px}
+.book-wrap{max-width:720px;margin:0 auto;padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 .steps-row{display:flex;background:var(--white);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px}
 .step-item{flex:1;text-align:center;padding:14px 6px;font-size:11px;color:var(--mgray);border-bottom:2px solid transparent;transition:all .15s;letter-spacing:0.04em;text-transform:uppercase;font-weight:500}
 .step-item.done{color:var(--blue);border-color:var(--blue)}
@@ -306,7 +306,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 #chatbot-btn:hover{transform:scale(1.08);background:var(--blue2)}
 #chatbot-btn .cb-notif{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--red);border-radius:50%;border:2px solid #fff;display:none}
 #chatbot-btn .cb-notif.show{display:block}
-#chatbot-panel{position:fixed;bottom:90px;right:24px;width:340px;height:480px;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:1000;display:none;flex-direction:column;overflow:hidden}
+#chatbot-panel{position:fixed;bottom:90px;right:24px;width:340px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 120px);background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:1000;display:none;flex-direction:column;overflow:hidden}
 #chatbot-panel.open{display:flex}
 .cb-hdr{background:var(--blue);padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .cb-hdr-av{width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
@@ -336,8 +336,12 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 @media (max-width: 640px) {
   #lang-btn { top: 12px; left: 50%; transform: translateX(-50%); bottom: auto; }
   .fp { font-size: 12px; padding: 6px 12px; }
+  #chatbot-btn { bottom: 16px; right: 16px; }
+  #chatbot-panel { bottom: 82px; right: 8px; left: 8px; width: auto; }
 }
-/* ── REAL MAP ── */
+/* ── BACK BUTTON ── */
+.back-btn{background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s}
+.back-btn:hover{color:var(--navy)}
 .map-real{border-radius:9px;height:160px;margin-top:12px;position:relative;overflow:hidden;background:#1a3a6b}
 .map-real iframe{width:100%;height:100%;border:none;border-radius:9px}
 /* ── ADMIN PANEL ── */
@@ -455,23 +459,7 @@ body { top: 0 !important; }
     <h1>Your bike, fixed at<br><span class="accent">your front door</span></h1>
     <div class="hero-sub">Premium service. No workshop required.</div>
     <p>Professional mobile mechanics across Sydney — at your door, Mon–Sat.</p>
-    <div style="display:flex;justify-content:center;gap:32px;margin-bottom:36px;flex-wrap:wrap">
-        <div style="text-align:center">
-          <div style="font-size:24px;font-weight:800;color:var(--navy)">500+</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">Happy riders</div>
-        </div>
-        <div style="width:1px;background:var(--border)"></div>
-        <div style="text-align:center">
-          <div style="font-size:24px;font-weight:800;color:var(--navy)">Same day</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">Availability</div>
-        </div>
-        <div style="width:1px;background:var(--border)"></div>
-        <div style="text-align:center">
-          <div style="font-size:24px;font-weight:800;color:var(--navy)">⭐ 4.9</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">Client rating</div>
-        </div>
-      </div>
-      <div class="hero-btns">
+    <div class="hero-btns">
       <button class="btn-primary" onclick="showView('auth')">Sign in with Google</button>
       <button class="btn-ghost" onclick="showView('services')">View all services</button>
     </div>
@@ -536,7 +524,7 @@ body { top: 0 !important; }
 <!-- ══ AUTH ══ -->
 <div id="view-auth" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
-    <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
+    <button onclick="showView('home')" class="back-btn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
     </button>
@@ -566,7 +554,7 @@ body { top: 0 !important; }
 <!-- ══ DASHBOARD ══ -->
 <div id="view-dashboard" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
-    <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
+    <button onclick="showView('home')" class="back-btn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
     </button>
@@ -641,7 +629,7 @@ body { top: 0 !important; }
 <!-- ══ SERVICES ══ -->
 <div id="view-services" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
-    <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
+    <button onclick="showView('home')" class="back-btn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
     </button>
@@ -661,7 +649,7 @@ body { top: 0 !important; }
 <!-- ══ BOOKING ══ -->
 <div id="view-book" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
-    <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
+    <button onclick="showView('home')" class="back-btn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
     </button>
@@ -693,10 +681,8 @@ body { top: 0 !important; }
       <div class="card" style="padding:18px;margin-bottom:14px">
         <div class="ct">Selected: <span id="sel-svc-name" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--blue)">—</span></div>
         <div class="ct">Choose a date</div>
-        <div class="cal-g" style="margin-bottom:16px">
+        <div class="cal-g" style="margin-bottom:16px" id="cal-grid">
           <div class="cdow">Su</div><div class="cdow">Mo</div><div class="cdow">Tu</div><div class="cdow">We</div><div class="cdow">Th</div><div class="cdow">Fr</div><div class="cdow">Sa</div>
-          <div class="cday ot">27</div><div class="cday ot">28</div><div class="cday ot">29</div><div class="cday ot">30</div><div class="cday pt">1</div><div class="cday avail" onclick="selDay(this,'2026-05-02')">2</div><div class="cday avail" onclick="selDay(this,'2026-05-03')">3</div>
-          <div class="cday pt">4</div><div class="cday avail" onclick="selDay(this,'2026-05-05')">5</div><div class="cday avail" onclick="selDay(this,'2026-05-06')">6</div><div class="cday avail" onclick="selDay(this,'2026-05-07')">7</div><div class="cday avail" onclick="selDay(this,'2026-05-08')">8</div><div class="cday avail" onclick="selDay(this,'2026-05-09')">9</div><div class="cday avail" onclick="selDay(this,'2026-05-10')">10</div>
         </div>
         <div id="times-section" style="display:none">
           <div class="ct">Choose a time</div>
@@ -759,7 +745,7 @@ body { top: 0 !important; }
 <!-- ══ MEMBERSHIP ══ -->
 <div id="view-membership" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
-    <button onclick="showView('home')" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;padding:6px 0;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--mgray)'">
+    <button onclick="showView('home')" class="back-btn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back to home
     </button>
@@ -1320,9 +1306,68 @@ function goStep(n){
   document.getElementById('step-success').style.display='none';
   if(n===2 && booking.service){
     document.getElementById('sel-svc-name').textContent = booking.service.name+' — $'+booking.service.price;
+    renderCalendar();
   }
   if(n===4){ fillConfirm(); }
   window.scrollTo(0,0);
+}
+
+// ── CALENDAR ─────────────────────────────────────────────────────────────────
+function renderCalendar(){
+  const cal = document.getElementById('cal-grid');
+  if(!cal) return;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+
+  // Remove old day cells (keep the 7 header cells)
+  const cells = cal.querySelectorAll('.cday');
+  cells.forEach(c => c.remove());
+
+  // Pad with prev month days
+  for(let i = firstDay - 1; i >= 0; i--){
+    const d = document.createElement('div');
+    d.className = 'cday ot';
+    d.textContent = daysInPrev - i;
+    cal.appendChild(d);
+  }
+
+  // Current month days
+  for(let d = 1; d <= daysInMonth; d++){
+    const date = new Date(year, month, d);
+    date.setHours(0,0,0,0);
+    const dayOfWeek = date.getDay(); // 0=Sun, 6=Sat
+    const isPast = date < today;
+    const isSunday = dayOfWeek === 0;
+    const dateStr = date.toISOString().split('T')[0];
+
+    const el = document.createElement('div');
+    if(isPast || isSunday){
+      el.className = 'cday pt';
+    } else {
+      el.className = 'cday avail';
+      el.onclick = () => selDay(el, dateStr);
+    }
+    if(d === today.getDate()) el.style.fontWeight = '700';
+    el.textContent = d;
+    cal.appendChild(el);
+  }
+
+  // Pad with next month
+  const totalCells = firstDay + daysInMonth;
+  const remainder = totalCells % 7;
+  if(remainder > 0){
+    for(let d = 1; d <= 7 - remainder; d++){
+      const el = document.createElement('div');
+      el.className = 'cday ot';
+      el.textContent = d;
+      cal.appendChild(el);
+    }
+  }
 }
 
 let selDayEl = null;
