@@ -606,7 +606,11 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
   #chatbot-btn { bottom: 100px; right: 16px; }
   #chatbot-panel { bottom: 140px; right: 8px; left: 8px; width: auto; }
 }
-/* ── POLISH & MICRO-INTERACTIONS ── */
+/* PWA banner solo en mobile */
+#pwa-banner{display:none}
+@media(max-width:700px){
+  #pwa-banner{display:block}
+}
 /* Smooth scroll */
 html{scroll-behavior:smooth}
 /* Better button press feel */
