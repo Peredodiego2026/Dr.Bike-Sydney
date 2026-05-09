@@ -138,12 +138,27 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 [data-theme="dark"] .feat-title{color:#F2F2F7}
 [data-theme="dark"] .feat-desc{color:#98989F}
 [data-theme="dark"] .feat-num{color:#60A5FA}
-/* Calendar dark */
-[data-theme="dark"] .cday{color:#F2F2F7}
-[data-theme="dark"] .cday.ot,[data-theme="dark"] .cday.pt{color:#48484A}
-[data-theme="dark"] .cdow{color:#636366}
-[data-theme="dark"] .cday.avail:hover{background:rgba(24,72,200,0.25);color:#60A5FA}
-[data-theme="dark"] .cday.sel{background:#1848C8;color:#fff}
+/* Calendar dark - fix días visibles */
+[data-theme="dark"] .cday{color:#F2F2F7 !important}
+[data-theme="dark"] .cday.ot,[data-theme="dark"] .cday.pt{color:#48484A !important}
+[data-theme="dark"] .cdow{color:#636366 !important}
+[data-theme="dark"] .cday.avail{color:#F2F2F7 !important;cursor:pointer}
+[data-theme="dark"] .cday.avail:hover{background:rgba(24,72,200,0.3);color:#60A5FA !important}
+[data-theme="dark"] .cday.sel{background:#1848C8 !important;color:#fff !important}
+/* Botón Next/confirm dark */
+[data-theme="dark"] .conf-btn{background:#1848C8;color:#fff}
+[data-theme="dark"] .conf-btn:disabled{background:#38383A;color:#636366}
+/* Botón ghost dark */
+[data-theme="dark"] .btn-ghost{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
+[data-theme="dark"] .btn-ghost:hover{border-color:#F2F2F7}
+/* Caja de texto membresía dark */
+[data-theme="dark"] [style*="background:var(--navy)"] > div{color:#F2F2F7}
+[data-theme="dark"] .pl > div[style*="background:var(--navy)"]{background:#0D1F3C !important}
+[data-theme="dark"] [style*="background:var(--navy)"] *{color:#F2F2F7 !important}
+/* Fix membresía bottom card */
+[data-theme="dark"] div[style*="background:var(--navy);border-radius"]{background:#0D1F3C !important}
+[data-theme="dark"] div[style*="background:var(--navy);border-radius"] *{color:rgba(255,255,255,0.75) !important}
+[data-theme="dark"] div[style*="background:var(--navy);border-radius"] strong{color:#fff !important}
 /* Time slots dark */
 [data-theme="dark"] .ts{background:#2C2C2E;color:#F2F2F7;border-color:#38383A}
 [data-theme="dark"] .ts.sel{background:#1848C8;color:#fff;border-color:#1848C8}
