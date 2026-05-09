@@ -114,7 +114,7 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
 #loading.hide{opacity:0;pointer-events:none}
-.load-logo{width:64px;height:64px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);margin-bottom:20px;animation:pulse 1.5s infinite}
+.load-logo{width:64px;height:64px;background:var(--blue);display:flex;align-items:center;justify-content:center;border-radius:18px;margin-bottom:20px;animation:pulse 1.5s infinite;box-shadow:0 4px 20px rgba(24,72,200,0.4)}
 .load-logo svg{width:38px;height:38px}
 .load-text{font-size:14px;color:rgba(255,255,255,0.4);font-weight:300}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
@@ -312,7 +312,8 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 /* Nav centrado en desktop */
 nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;height:64px;padding:0 32px}
 .nav-brand{display:flex;align-items:center;gap:11px;cursor:pointer;flex:0 0 200px}
-.nav-logo{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);flex-shrink:0}
+/* ── NAV LOGO ── */
+.nav-logo{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;border-radius:10px;flex-shrink:0;box-shadow:0 2px 8px rgba(24,72,200,0.3)}
 .nav-logo svg{width:22px;height:22px}
 .nav-name{font-size:17px;font-weight:700;color:var(--navy)}
 .nav-tagline{font-size:10px;color:var(--mgray);letter-spacing:0.05em;text-transform:uppercase;margin-top:1px}
@@ -382,7 +383,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .auth-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--off)}
 .auth-card{background:var(--white);border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px}
-.auth-badge{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
+.auth-badge{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;border-radius:10px}
 .auth-badge svg{width:22px;height:22px}
 .auth-brand{font-size:18px;font-weight:700;color:var(--navy)}
 .auth-title{font-size:24px;font-weight:700;color:var(--navy);margin-bottom:6px;letter-spacing:-0.01em}
@@ -605,7 +606,50 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
   #chatbot-btn { bottom: 100px; right: 16px; }
   #chatbot-panel { bottom: 140px; right: 8px; left: 8px; width: auto; }
 }
-/* ── TRUST BAR ── */
+/* ── POLISH & MICRO-INTERACTIONS ── */
+/* Smooth scroll */
+html{scroll-behavior:smooth}
+/* Better button press feel */
+.btn-primary:active{transform:scale(0.97)}
+.btn-ghost:active{transform:scale(0.97)}
+/* Service card hover */
+.svc-card{transition:all .18s cubic-bezier(0.4,0,0.2,1)}
+.svc-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(24,72,200,0.12)}
+.svc-card:active{transform:scale(0.98)}
+/* Plan card hover */
+.pl{transition:all .2s cubic-bezier(0.4,0,0.2,1)}
+.pl:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.1)}
+/* Step card hover */
+.step-card{transition:all .2s}
+.step-card:hover{transform:translateY(-2px);border-color:var(--blue)}
+/* Review card hover */
+.review-card{transition:all .2s}
+.review-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+/* Nav link underline animation */
+.nl::after{content:'';display:block;height:2px;background:var(--blue);width:0;transition:width .2s;margin:0 auto}
+.nl:hover::after{width:60%}
+/* Input focus glow */
+.inp:focus{box-shadow:0 0 0 3px rgba(24,72,200,0.12)}
+/* Chatbot button pulse when has message */
+@keyframes chatPulse{0%,100%{box-shadow:0 4px 20px rgba(24,72,200,0.4)}50%{box-shadow:0 4px 28px rgba(24,72,200,0.7),0 0 0 6px rgba(24,72,200,0.1)}}
+#chatbot-btn.has-msg{animation:chatPulse 2s infinite}
+/* Smooth view transitions */
+.view.active{animation:fadeSlideIn .25s cubic-bezier(0.4,0,0.2,1)}
+/* KPI card hover */
+.kpi{transition:all .18s}
+.kpi:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+/* Booking step indicator active */
+.step-item.active{font-weight:700}
+/* Success checkmark animation */
+@keyframes checkPop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.success-check{animation:checkPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275)}
+/* Better scrollbars */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--mgray)}
+/* Selection color */
+::selection{background:rgba(24,72,200,0.15);color:var(--navy)}
 .trust-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0 4px}
 .trust-item{font-size:12px;font-weight:500;color:var(--mgray);background:var(--white);border:1px solid var(--border);border-radius:20px;padding:5px 12px}
 
@@ -793,9 +837,12 @@ body { top: 0 !important; }
   <nav>
     <div class="nav-brand" onclick="showView('home')">
       <div class="nav-logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/>
-          <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <circle cx="5.5" cy="17" r="3.5"/>
+          <circle cx="18.5" cy="17" r="3.5"/>
+          <path d="M5.5 17l4-9.5h4.5L17 14h-5.5L9 10"/>
+          <path d="M14 7.5h2.5"/>
+          <path d="M18.5 17L15 10"/>
         </svg>
       </div>
       <div>
@@ -1491,6 +1538,7 @@ async function init(){
   // Show chat notification after 5s
   setTimeout(()=>{
     document.getElementById('cb-notif').classList.add('show');
+    document.getElementById('chatbot-btn').classList.add('has-msg');
     addBotMsg("👋 Hi! I'm the Dr. Bike assistant. How can I help you today?");
   }, 5000);
 }
@@ -2886,12 +2934,47 @@ async function sendChat(){
   }
 
   showTyping();
-  await new Promise(r=>setTimeout(r,600));
-  hideTyping();
 
-  // Smart rule-based responses
+  // AI-powered response via Claude
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [...chatHistory, { role: 'user', content: text }],
+        userProfile: userProfile ? { full_name: userProfile.full_name, membership_plan: userProfile.membership_plan } : null
+      })
+    });
+    const data = await res.json();
+    hideTyping();
+    const reply = data.reply || "I'm not sure about that — type 'mechanic' to speak with our team! 🔧";
+    addBotMsg(reply);
+
+    // Show escalation button after 3 messages
+    const userMsgs = chatHistory.filter(m=>m.role==='user').length;
+    if(userMsgs >= 3 && !escalated){
+      setTimeout(()=>{
+        const msgs = document.getElementById('cb-msgs');
+        const div = document.createElement('div');
+        div.className = 'cb-msg bot';
+        const btn = document.createElement('button');
+        btn.textContent = '🔧 Talk to a mechanic';
+        btn.style.cssText = 'background:var(--blue);color:#fff;border:none;border-radius:12px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:4px;width:100%';
+        btn.onclick = ()=>quickMsg('I need to speak to a mechanic');
+        div.appendChild(btn);
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 800);
+    }
+    return;
+  } catch(e) {
+    hideTyping();
+    addBotMsg("Sorry, I'm having trouble. Type 'mechanic' to reach our team! 🔧");
+    return;
+  }
+
+  // Fallback rule-based (never reached if API works)
   let reply = '';
-
   if(t.match(/price|cost|how much|charge|fee|expensive|cheap/)){
     reply = "Our prices include a $20 mobile call-out fee 🚐 Services start from $59 (Gear Adjustment) up to $299+ (Bike Build). Popular ones: Tune-Up $109, Standard Service $149, Major Service $229, Brake Bleed $79. Members get the call-out fee waived!";
   } else if(t.match(/tune.?up|tuneup/)){
