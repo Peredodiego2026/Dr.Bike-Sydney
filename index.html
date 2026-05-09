@@ -1199,7 +1199,25 @@ body { top: 0 !important; }
         <div class="conf-row"><span class="conf-label">Date & time</span><span id="cf-dt">—</span></div>
         <div class="conf-row"><span class="conf-label">Address</span><span id="cf-addr">—</span></div>
         <div class="conf-row"><span class="conf-label">Van assigned</span><span id="cf-van">Auto-assigned by zone</span></div>
-        <div class="conf-total"><span style="font-weight:600;color:var(--navy)">Total</span><span style="font-size:24px;font-weight:700;color:var(--blue)" id="cf-price">—</span></div>
+
+        <!-- Referral code field -->
+        <div style="margin:14px 0;padding:14px;background:var(--off);border-radius:10px;border:1.5px solid var(--border)">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">🎁 Got a referral code?</div>
+          <div style="display:flex;gap:8px">
+            <input id="referral-input" class="inp" placeholder="e.g. BIKE5H7F" style="margin-bottom:0;text-transform:uppercase;letter-spacing:0.08em;font-weight:600" oninput="this.value=this.value.toUpperCase()" maxlength="9">
+            <button onclick="applyReferral()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap">Apply</button>
+          </div>
+          <div id="referral-msg" style="font-size:12px;margin-top:6px;display:none"></div>
+        </div>
+
+        <div class="conf-total">
+          <span style="font-weight:600;color:var(--navy)">Total</span>
+          <div style="text-align:right">
+            <div id="cf-price-original" style="font-size:13px;color:var(--mgray);text-decoration:line-through;display:none"></div>
+            <div style="font-size:24px;font-weight:700;color:var(--blue)" id="cf-price">—</div>
+            <div id="cf-discount-label" style="font-size:11px;color:var(--green);font-weight:600;display:none">🎉 Referral discount applied!</div>
+          </div>
+        </div>
         <div style="display:flex;gap:10px;margin-top:16px">
           <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(3)">← Back</button>
           <button class="conf-btn" style="margin-top:0;flex:1" onclick="confirmBooking()" id="confirm-btn">Confirm booking</button>
@@ -1812,6 +1830,47 @@ function toggleTheme(){
   setTheme(current === 'dark' ? 'light' : 'dark');
 }
 
+// ── REFERRAL CODE ─────────────────────────────────────────────────────────────
+let appliedDiscount = 0;
+let appliedReferralCode = null;
+
+async function applyReferral(){
+  const code = document.getElementById('referral-input')?.value?.trim().toUpperCase();
+  const msgEl = document.getElementById('referral-msg');
+  if(!code){ showReferralMsg('Please enter a code', 'error'); return; }
+  if(code === userProfile?.referral_code){ showReferralMsg("You can't use your own code", 'error'); return; }
+
+  showReferralMsg('Checking...', 'neutral');
+
+  // Check if code exists in profiles
+  const { data } = await sb.from('profiles').select('id,full_name,referral_code').eq('referral_code', code).single();
+  if(!data){ showReferralMsg('Invalid code — please check and try again', 'error'); return; }
+
+  // Apply $15 discount
+  appliedDiscount = 15;
+  appliedReferralCode = code;
+  const originalPrice = booking.service?.price || 0;
+  const discountedPrice = Math.max(0, originalPrice - appliedDiscount);
+
+  document.getElementById('cf-price-original').style.display = 'block';
+  document.getElementById('cf-price-original').textContent = '$' + originalPrice;
+  document.getElementById('cf-price').textContent = '$' + discountedPrice;
+  document.getElementById('cf-discount-label').style.display = 'block';
+  document.getElementById('referral-input').disabled = true;
+  document.querySelector('button[onclick="applyReferral()"]').textContent = '✓';
+  document.querySelector('button[onclick="applyReferral()"]').style.background = 'var(--green)';
+
+  showReferralMsg(`✅ $15 off applied! Referred by ${data.full_name?.split(' ')[0] || 'a friend'}`, 'success');
+}
+
+function showReferralMsg(msg, type){
+  const el = document.getElementById('referral-msg');
+  if(!el) return;
+  el.style.display = 'block';
+  el.textContent = msg;
+  el.style.color = type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--green)' : 'var(--mgray)';
+}
+
 // ── COPY REFERRAL ─────────────────────────────────────────────────────────────
 function copyReferral(){
   const code = userProfile?.referral_code;
@@ -1953,9 +2012,15 @@ function setSvcFilter(f){ svcFilter=f; renderServices(); }
 
 let bookCatFilter = 'popular';
 
-function renderBookingServices(){
+async function renderBookingServices(){
   const grid = document.getElementById('book-svcs-grid');
   if(!grid) return;
+
+  // Si no hay servicios, cargarlos primero
+  if(!services || services.length === 0){
+    grid.innerHTML = '<div style="color:var(--mgray);font-size:13px;padding:20px;grid-column:1/-1;text-align:center">Loading...</div>';
+    await loadServices();
+  }
 
   // Get unique categories
   const cats = [...new Set(services.map(s=>s.category).filter(Boolean))];
@@ -2124,7 +2189,17 @@ function fillConfirm(){
   const suburb = document.getElementById('addr-suburb')?.value||'';
   const street = document.getElementById('addr-street')?.value||'';
   document.getElementById('cf-addr').textContent = [street,suburb].filter(Boolean).join(', ')||'—';
+  // Reset discount state
+  appliedDiscount = 0; appliedReferralCode = null;
   document.getElementById('cf-price').textContent = '$'+(booking.service?.price||0);
+  document.getElementById('cf-price-original').style.display = 'none';
+  document.getElementById('cf-discount-label').style.display = 'none';
+  const refInput = document.getElementById('referral-input');
+  if(refInput){ refInput.value=''; refInput.disabled=false; }
+  const refMsg = document.getElementById('referral-msg');
+  if(refMsg) refMsg.style.display='none';
+  const applyBtn = document.querySelector('button[onclick="applyReferral()"]');
+  if(applyBtn){ applyBtn.textContent='Apply'; applyBtn.style.background='var(--blue)'; }
   // Auto-assign van using zone manager
   const vanNum = getVanForSuburb(suburb);
   document.getElementById('cf-van').textContent = 'Van '+vanNum+' · Mechanic '+vanNum;
@@ -2142,7 +2217,8 @@ async function confirmBooking(){
 
   const suburb = document.getElementById('addr-suburb').value;
   const vanNum = getVanForSuburb(suburb);
-  const price = booking.service?.price || 0;
+  const originalPrice = booking.service?.price || 0;
+  const price = Math.max(0, originalPrice - (appliedDiscount || 0));
 
   // Save booking first as pending
   const { data: bkg, error } = await sb.from('bookings').insert({
@@ -2150,6 +2226,9 @@ async function confirmBooking(){
     service_id: booking.service?.id,
     service_name: booking.service?.name,
     service_price: price,
+    original_price: originalPrice,
+    referral_code_used: appliedReferralCode || null,
+    discount_applied: appliedDiscount || 0,
     scheduled_date: booking.date,
     scheduled_time: booking.time?.replace(' am','').replace(' pm',''),
     address: [document.getElementById('addr-street').value, suburb, document.getElementById('addr-postcode').value].filter(Boolean).join(', '),
@@ -2162,6 +2241,14 @@ async function confirmBooking(){
   btn.disabled=false;
 
   if(error){ toast('Error: '+error.message); return; }
+
+  // Si se usó un código de referido, incrementar el contador del referidor
+  if(appliedReferralCode){
+    const { data: referrer } = await sb.from('profiles').select('id,referral_count').eq('referral_code', appliedReferralCode).single();
+    if(referrer){
+      await sb.from('profiles').update({ referral_count: (referrer.referral_count||0) + 1 }).eq('id', referrer.id);
+    }
+  }
 
   // Show Stripe payment modal
   showPaymentModal(bkg, price);
