@@ -185,7 +185,14 @@ async function load(){
 }
 
 function sub(){
-  sb.channel('mech').on('postgres_changes',{event:'*',schema:'public',table:'bookings'},p=>{ load(); if(p.eventType==='INSERT') alert2(p.new); }).subscribe();
+  const mechChannel = sb.channel('mech-jobs')
+    .on('postgres_changes',{event:'*',schema:'public',table:'bookings'},p=>{ 
+      load(); 
+      if(p.eventType==='INSERT') alert2(p.new); 
+    }).subscribe();
+  
+  // Cleanup on unload
+  window.addEventListener('beforeunload', () => sb.removeChannel(mechChannel));
 }
 
 function alert2(j){

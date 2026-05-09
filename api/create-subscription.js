@@ -6,24 +6,32 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { priceId, customerId, email, name, plan, billing } = req.body;
-
   if (!priceId || !email) return res.status(400).json({ error: 'Missing required fields' });
 
   try {
     // Get or create Stripe customer
     let customer;
     if (customerId) {
-      try { customer = await stripe.customers.retrieve(customerId); } catch {}
+      try { 
+        const c = await stripe.customers.retrieve(customerId);
+        if (!c.deleted) customer = c;
+      } catch(e) {}
     }
-    if (!customer || customer.deleted) {
-      customer = await stripe.customers.create({
-        email,
-        name,
-        metadata: { supabase_user: email }
-      });
+    if (!customer) {
+      // Check if customer already exists by email
+      const existing = await stripe.customers.list({ email, limit: 1 });
+      if (existing.data.length > 0) {
+        customer = existing.data[0];
+      } else {
+        customer = await stripe.customers.create({
+          email,
+          name,
+          metadata: { supabase_user: email }
+        });
+      }
     }
 
-    // Create checkout session for subscription
+    // Create checkout session — per Stripe v18, subscription is created after payment
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
       mode: 'subscription',
@@ -34,7 +42,9 @@ export default async function handler(req, res) {
       subscription_data: {
         metadata: { plan, billing, email }
       },
+      metadata: { plan, billing, email },
       allow_promotion_codes: true,
+      billing_address_collection: 'auto',
       locale: 'en',
     });
 

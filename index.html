@@ -2068,6 +2068,12 @@ function copyReferral(){
 // ── TRANSITIONS ───────────────────────────────────────────────────────────────
 let liveMap = null, mechMarker = null, destMarker = null, trackingChannel = null;
 
+
+// Cleanup realtime channels on page unload
+window.addEventListener('beforeunload', () => {
+  if (trackingChannel) sb.removeChannel(trackingChannel);
+});
+
 function startTracking(bookingId, mechName, destAddress) {
   document.getElementById('map-widget').style.display = 'block';
   document.getElementById('map-mech-name').textContent = mechName || 'Your mechanic';
@@ -2108,7 +2114,7 @@ function initLiveMap(bookingId, destAddress) {
   }
 
   // Subscribe realtime
-  if (trackingChannel) { trackingChannel.unsubscribe(); trackingChannel = null; }
+  if (trackingChannel) { sb.removeChannel(trackingChannel); trackingChannel = null; }
   trackingChannel = sb.channel('mech-loc-' + bookingId)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'mechanic_locations', filter: `booking_id=eq.${bookingId}` },
       payload => { if (payload.new?.lat) moveMechanic(payload.new.lat, payload.new.lng); })
@@ -2156,7 +2162,7 @@ function calcETA(mechLat, mechLng) {
 }
 
 function stopTracking() {
-  if (trackingChannel) { trackingChannel.unsubscribe(); trackingChannel = null; }
+  if (trackingChannel) { sb.removeChannel(trackingChannel); trackingChannel = null; }
   if (liveMap) { liveMap.remove(); liveMap = null; mechMarker = null; destMarker = null; }
   document.getElementById('map-widget').style.display = 'none';
 }
