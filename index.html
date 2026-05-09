@@ -122,6 +122,175 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 .view{display:none}.view.active{display:block;animation:fadeSlideIn .22s ease}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── DARK MODE FIXES ── */
+[data-theme="dark"] body{background:#1C1C1E;color:#F2F2F7}
+[data-theme="dark"] .sec-h2{color:#F2F2F7}
+[data-theme="dark"] .sec-p{color:#98989F}
+[data-theme="dark"] .hero h1{color:#F2F2F7}
+[data-theme="dark"] .hero-sub{color:#98989F}
+[data-theme="dark"] .hero p{color:#98989F}
+[data-theme="dark"] .hero-eyebrow{color:#60A5FA}
+[data-theme="dark"] .hero-eyebrow::before,[data-theme="dark"] .hero-eyebrow::after{background:#60A5FA}
+[data-theme="dark"] .hs-n{color:#F2F2F7}
+[data-theme="dark"] .hs-l{color:#98989F}
+[data-theme="dark"] .hs{border-color:#38383A}
+[data-theme="dark"] .feat{background:#242426;border-color:#38383A}
+[data-theme="dark"] .feat-title{color:#F2F2F7}
+[data-theme="dark"] .feat-desc{color:#98989F}
+[data-theme="dark"] .feat-num{color:#60A5FA}
+/* Calendar dark */
+[data-theme="dark"] .cday{color:#F2F2F7}
+[data-theme="dark"] .cday.ot,[data-theme="dark"] .cday.pt{color:#48484A}
+[data-theme="dark"] .cdow{color:#636366}
+[data-theme="dark"] .cday.avail:hover{background:rgba(24,72,200,0.25);color:#60A5FA}
+[data-theme="dark"] .cday.sel{background:#1848C8;color:#fff}
+/* Time slots dark */
+[data-theme="dark"] .ts{background:#2C2C2E;color:#F2F2F7;border-color:#38383A}
+[data-theme="dark"] .ts.sel{background:#1848C8;color:#fff;border-color:#1848C8}
+[data-theme="dark"] .ts.bk{background:#1C1C1E;color:#48484A;border-color:#2C2C2E}
+/* Cards dark */
+[data-theme="dark"] .card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .card-title{color:#F2F2F7}
+[data-theme="dark"] .card-sub{color:#98989F}
+[data-theme="dark"] .ct{color:#98989F}
+/* Booking steps dark */
+[data-theme="dark"] .steps-row{background:#242426;border-color:#38383A}
+[data-theme="dark"] .step-item{color:#636366}
+[data-theme="dark"] .step-item.done{color:#1848C8}
+[data-theme="dark"] .step-item.active{color:#F2F2F7}
+[data-theme="dark"] .svc-card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .svc-name{color:#F2F2F7}
+[data-theme="dark"] .svc-dur{color:#98989F}
+/* Inputs dark */
+[data-theme="dark"] .inp{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
+[data-theme="dark"] .inp::placeholder{color:#636366}
+[data-theme="dark"] .inp:focus{border-color:#1848C8}
+/* Confirm rows dark */
+[data-theme="dark"] .conf-row{border-color:#38383A}
+[data-theme="dark"] .conf-label{color:#98989F}
+[data-theme="dark"] .conf-total{border-color:#38383A}
+/* Action buttons dark */
+[data-theme="dark"] .da{background:#242426;border-color:#38383A;color:#F2F2F7}
+[data-theme="dark"] .da:hover{border-color:#1848C8;color:#60A5FA;background:#2C2C2E}
+[data-theme="dark"] .da.primary{background:#0D1F3C;color:#fff;border-color:#1848C8}
+[data-theme="dark"] .da.blue{background:#1848C8;color:#fff;border-color:#1848C8}
+/* KPIs dark */
+[data-theme="dark"] .kpi{background:#242426;border-color:#38383A}
+[data-theme="dark"] .kpi-n{color:#F2F2F7}
+[data-theme="dark"] .kpi-l{color:#98989F}
+/* Dash header dark */
+[data-theme="dark"] .dash-hdr{background:#242426;border-color:#38383A}
+[data-theme="dark"] .dash-name{color:#F2F2F7}
+[data-theme="dark"] .dash-plan-sub{color:#98989F}
+[data-theme="dark"] .dash-body{background:#1C1C1E}
+[data-theme="dark"] .dash-av{background:#1848C8}
+/* History rows dark */
+[data-theme="dark"] .hist-row{border-color:#38383A}
+[data-theme="dark"] .hist-svc{color:#F2F2F7}
+[data-theme="dark"] .hist-date{color:#98989F}
+[data-theme="dark"] .hist-price{color:#F2F2F7}
+/* Plan pills dark */
+[data-theme="dark"] .plan-pill{background:#242426;border-color:#38383A}
+[data-theme="dark"] .plan-pill:hover{border-color:#1848C8}
+[data-theme="dark"] .pp-price{color:#F2F2F7}
+[data-theme="dark"] .pp-label{color:#98989F}
+[data-theme="dark"] .pp-sub{color:#98989F}
+[data-theme="dark"] .plan-pill.hot{background:#1848C8;border-color:#1848C8}
+[data-theme="dark"] .plan-pill.hot .pp-price,[data-theme="dark"] .plan-pill.hot .pp-label,[data-theme="dark"] .plan-pill.hot .pp-sub{color:#fff}
+/* Plans membership page dark */
+[data-theme="dark"] .pl{background:#242426;border-color:#38383A}
+[data-theme="dark"] .pl.pop{border-color:#1848C8}
+[data-theme="dark"] .pl-name{color:#F2F2F7}
+[data-theme="dark"] .pl-who{color:#98989F}
+[data-theme="dark"] .pl-annual{color:#98989F}
+[data-theme="dark"] .feat-sl{color:#636366}
+[data-theme="dark"] .pf span{color:#F2F2F7}
+[data-theme="dark"] .pf.no span{color:#48484A}
+[data-theme="dark"] .plb-note{color:#636366}
+[data-theme="dark"] .bill-tgl{background:#2C2C2E}
+[data-theme="dark"] .bt{color:#98989F}
+[data-theme="dark"] .bt.on{background:#38383A;color:#F2F2F7}
+/* Reviews dark */
+[data-theme="dark"] .review-card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .review-text{color:#D1D1D6}
+[data-theme="dark"] .review-name{color:#F2F2F7}
+[data-theme="dark"] .review-suburb{color:#98989F}
+[data-theme="dark"] .review-avatar{background:#1848C8}
+/* Steps dark */
+[data-theme="dark"] .step-card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .step-title{color:#F2F2F7}
+[data-theme="dark"] .step-desc{color:#98989F}
+/* Service preview dark */
+[data-theme="dark"] .svc-preview .svc-card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .svc-preview .svc-name{color:#F2F2F7}
+[data-theme="dark"] .svc-preview .svc-time{color:#98989F}
+/* Auth dark */
+[data-theme="dark"] .auth-wrap{background:#1C1C1E}
+[data-theme="dark"] .auth-card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .auth-title{color:#F2F2F7}
+[data-theme="dark"] .auth-sub{color:#98989F}
+[data-theme="dark"] .auth-brand{color:#F2F2F7}
+[data-theme="dark"] .google-btn{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
+[data-theme="dark"] .google-btn:hover{background:#38383A;border-color:#1848C8}
+[data-theme="dark"] .or-line{background:#38383A}
+[data-theme="dark"] .auth-foot{color:#636366}
+[data-theme="dark"] .auth-foot span{color:#60A5FA}
+/* Nav dark */
+[data-theme="dark"] nav{background:rgba(28,28,30,0.96);border-color:#38383A}
+[data-theme="dark"] .nav-name{color:#F2F2F7}
+[data-theme="dark"] .nav-tagline{color:#636366}
+[data-theme="dark"] .nl{color:#98989F}
+[data-theme="dark"] .nl:hover{color:#F2F2F7;background:#2C2C2E}
+[data-theme="dark"] .hamburger span{background:#F2F2F7}
+/* Trust bar dark */
+[data-theme="dark"] .trust-item{background:#242426;border-color:#38383A;color:#98989F}
+/* Filter pills dark */
+[data-theme="dark"] .fp{background:#242426;border-color:#38383A;color:#98989F}
+[data-theme="dark"] .fp.on{background:#1848C8;color:#fff;border-color:#1848C8}
+/* Cat label dark */
+[data-theme="dark"] .cat-label{color:#60A5FA}
+/* Membership section bg dark */
+[data-theme="dark"] [style*="background:var(--off)"]{background:#242426 !important}
+/* Bike cards dark */
+[data-theme="dark"] .bike-card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .bike-name{color:#F2F2F7}
+[data-theme="dark"] .bike-sub{color:#98989F}
+[data-theme="dark"] .add-bike-btn{background:#1C1C1E;border-color:#38383A;color:#98989F}
+[data-theme="dark"] .bike-modal-inner{background:#242426}
+[data-theme="dark"] .bike-type-opt{border-color:#38383A;color:#F2F2F7;background:#2C2C2E}
+[data-theme="dark"] #bike-modal .inp{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
+/* Loading dark */
+[data-theme="dark"] #loading{background:#0D1F3C}
+/* Toast dark */
+[data-theme="dark"] .toast{background:#242426;color:#F2F2F7}
+/* Footer dark */
+[data-theme="dark"] footer{background:#0D1F3C}
+/* Section off dark */
+[data-theme="dark"] .section.off{background:#242426}
+/* Success box dark */
+[data-theme="dark"] .success-box{background:#242426;border-color:#38383A}
+/* Back btn dark */
+[data-theme="dark"] .back-btn{color:#636366}
+[data-theme="dark"] .back-btn:hover{color:#F2F2F7}
+[data-theme="dark"] [style*="border-bottom:1px solid var(--border)"]{border-color:#38383A !important}
+/* Sign out btn dark */
+[data-theme="dark"] button[onclick="signOut()"]{background:#1C1C1E;border-color:#38383A;color:#FF453A}
+/* Map widget stays dark always - ok */
+/* Chatbot dark */
+[data-theme="dark"] #chatbot-panel{background:#242426;border-color:#38383A}
+[data-theme="dark"] .cb-msg.bot{background:#2C2C2E;color:#F2F2F7}
+[data-theme="dark"] .cb-inp{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
+[data-theme="dark"] .cb-quick-btn{background:#2C2C2E;color:#60A5FA;border-color:#1848C8}
+[data-theme="dark"] .cb-inp-row,[data-theme="dark"] .cb-quick{border-color:#38383A}
+/* Lang panel dark */
+[data-theme="dark"] #lang-panel{background:#242426;border-color:#38383A}
+[data-theme="dark"] .lang-opt{color:#F2F2F7}
+[data-theme="dark"] .lang-opt:hover{background:#38383A}
+[data-theme="dark"] #lang-btn,[data-theme="dark"] #lang-btn-mob{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
+/* Theme btn dark */
+[data-theme="dark"] #theme-btn{background:#2C2C2E;border-color:#38383A}
+
+
 /* ── NAV ── */
 /* Nav centrado en desktop */
 nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;height:64px;padding:0 32px}
@@ -733,11 +902,11 @@ body { top: 0 !important; }
   </div>
 
   <!-- FINAL CTA -->
-  <div class="section" style="background:var(--navy)">
+  <div class="section" style="background:#0D1F3C">
     <div class="sec-inner" style="text-align:center">
       <div class="sec-h2" style="color:#fff;margin-bottom:12px">Ready to ride better?</div>
       <p style="color:rgba(255,255,255,0.7);margin-bottom:28px;font-size:16px">Join 500+ Sydney cyclists who never visit a workshop again.</p>
-      <button class="btn-primary" style="background:#fff;color:var(--navy);font-size:16px;padding:14px 32px" onclick="showView('auth')">Book your first service →</button>
+      <button class="btn-primary" style="background:#fff;color:#0D1F3C;font-size:16px;padding:14px 32px" onclick="showView('auth')">Book your first service →</button>
       <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:12px">No account needed to browse · Sign in with Google to book</p>
     </div>
   </div>

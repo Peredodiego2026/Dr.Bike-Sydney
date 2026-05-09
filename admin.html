@@ -38,6 +38,39 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
+/* Dark mode fixes admin */
+[data-theme="dark"] body{background:#1C1C1E;color:#F2F2F7}
+[data-theme="dark"] .main{background:#1C1C1E}
+[data-theme="dark"] .card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .card-title{color:#F2F2F7}
+[data-theme="dark"] .card-sub{color:#98989F}
+[data-theme="dark"] .card-action{color:#60A5FA}
+[data-theme="dark"] .topbar{background:#242426;border-color:#38383A}
+[data-theme="dark"] .topbar-title{color:#F2F2F7}
+[data-theme="dark"] .topbar-sub{color:#98989F}
+[data-theme="dark"] .date-badge{background:#2C2C2E;border-color:#38383A;color:#98989F}
+[data-theme="dark"] .notif-btn{background:#2C2C2E;border-color:#38383A}
+[data-theme="dark"] .notif-btn svg{stroke:#F2F2F7}
+[data-theme="dark"] .kpi-card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .kpi-label{color:#98989F}
+[data-theme="dark"] .kpi-value{color:#F2F2F7}
+[data-theme="dark"] .kpi-sub{color:#636366}
+[data-theme="dark"] .tbl th{background:#2C2C2E;color:#636366}
+[data-theme="dark"] .tbl td{color:#F2F2F7;border-color:#2C2C2E}
+[data-theme="dark"] .tbl tr:hover td{background:#2C2C2E}
+[data-theme="dark"] .inp{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
+[data-theme="dark"] .inp::placeholder{color:#636366}
+[data-theme="dark"] .zone-van{background:#242426;border-color:#38383A}
+[data-theme="dark"] .suburb-tag{background:rgba(24,72,200,0.2);border-color:rgba(24,72,200,0.3);color:#60A5FA}
+[data-theme="dark"] .add-suburb-inp{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
+[data-theme="dark"] .add-van-btn{background:#1C1C1E;border-color:#38383A;color:#98989F}
+[data-theme="dark"] .pl-row{color:#F2F2F7;border-color:#38383A}
+[data-theme="dark"] .pl-label{color:#98989F}
+[data-theme="dark"] .pl-val{color:#F2F2F7}
+[data-theme="dark"] select.inp{background:#2C2C2E;color:#F2F2F7}
+[data-theme="dark"] .sb-overlay{background:rgba(0,0,0,0.7)}
+[data-theme="dark"] #fin-chart div{opacity:0.9}
+
 
 /* SIDEBAR */
 .sidebar{width:240px;background:var(--navy);min-height:100vh;display:flex;flex-direction:column;flex-shrink:0;position:fixed;left:0;top:0;bottom:0;z-index:50}
