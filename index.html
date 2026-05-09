@@ -1704,16 +1704,11 @@ let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  // Show banner after 2 visits or 30 seconds on page
-  const visits = parseInt(localStorage.getItem('drbike-visits') || '0') + 1;
-  localStorage.setItem('drbike-visits', visits);
-  const dismissed = localStorage.getItem('drbike-pwa-dismissed');
-  if(!dismissed && visits >= 2){
+  if(!localStorage.getItem('drbike-pwa-dismissed')){
     setTimeout(() => showPWABanner(), 5000);
   }
 });
 
-// Check if already installed
 window.addEventListener('appinstalled', () => {
   hidePWABanner();
   localStorage.setItem('drbike-pwa-dismissed', 'installed');
@@ -1723,15 +1718,9 @@ window.addEventListener('appinstalled', () => {
 function showPWABanner(){
   const banner = document.getElementById('pwa-banner');
   if(!banner) return;
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  if(isStandalone) return; // Already installed
-  if(localStorage.getItem('drbike-pwa-dismissed')) return;
+  if(isStandalone || localStorage.getItem('drbike-pwa-dismissed')) return;
   banner.style.display = 'block';
-  if(isIOS){
-    document.getElementById('pwa-install-btn').style.display = 'none';
-    document.getElementById('ios-banner').style.display = 'block';
-  }
 }
 
 function hidePWABanner(){
@@ -1740,13 +1729,23 @@ function hidePWABanner(){
 }
 
 async function installPWA(){
-  if(!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  hidePWABanner();
-  if(outcome === 'accepted'){
-    localStorage.setItem('drbike-pwa-dismissed', 'installed');
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    hidePWABanner();
+    if(outcome === 'accepted') localStorage.setItem('drbike-pwa-dismissed', 'installed');
+  } else {
+    // Fallback manual instructions
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    hidePWABanner();
+    if(isIOS){
+      document.getElementById('ios-banner').style.display = 'block';
+      document.getElementById('pwa-banner').style.display = 'block';
+      document.getElementById('pwa-install-btn').style.display = 'none';
+    } else {
+      toast('📱 Tap ⋮ menu → "Add to Home Screen" or "Install app"', 5000);
+    }
   }
 }
 
@@ -1755,24 +1754,20 @@ function dismissPWA(){
   localStorage.setItem('drbike-pwa-dismissed', 'dismissed');
 }
 
-// iOS: show banner after 10 seconds on first visit if not installed
+// iOS — mostrar banner después de 5 segundos en primera visita
 (function(){
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isStandalone = window.navigator.standalone;
   const dismissed = localStorage.getItem('drbike-pwa-dismissed');
   if(isIOS && !isStandalone && !dismissed){
-    const visits = parseInt(localStorage.getItem('drbike-visits') || '0') + 1;
-    localStorage.setItem('drbike-visits', visits);
-    if(visits >= 2){
-      setTimeout(() => {
-        const banner = document.getElementById('pwa-banner');
-        if(banner){
-          banner.style.display = 'block';
-          document.getElementById('pwa-install-btn').style.display = 'none';
-          document.getElementById('ios-banner').style.display = 'block';
-        }
-      }, 8000);
-    }
+    setTimeout(() => {
+      const banner = document.getElementById('pwa-banner');
+      if(banner && banner.style.display !== 'block'){
+        banner.style.display = 'block';
+        document.getElementById('pwa-install-btn').style.display = 'none';
+        document.getElementById('ios-banner').style.display = 'block';
+      }
+    }, 5000);
   }
 })();
 
