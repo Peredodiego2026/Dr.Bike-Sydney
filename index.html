@@ -114,7 +114,7 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
 #loading.hide{opacity:0;pointer-events:none}
-.load-logo{width:64px;height:64px;background:var(--blue);display:flex;align-items:center;justify-content:center;border-radius:18px;margin-bottom:20px;animation:pulse 1.5s infinite;box-shadow:0 4px 20px rgba(24,72,200,0.4)}
+.load-logo{width:64px;height:64px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);margin-bottom:20px;animation:pulse 1.5s infinite}
 .load-logo svg{width:38px;height:38px}
 .load-text{font-size:14px;color:rgba(255,255,255,0.4);font-weight:300}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
@@ -313,7 +313,7 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;height:64px;padding:0 32px}
 .nav-brand{display:flex;align-items:center;gap:11px;cursor:pointer;flex:0 0 200px}
 /* ── NAV LOGO ── */
-.nav-logo{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;border-radius:10px;flex-shrink:0;box-shadow:0 2px 8px rgba(24,72,200,0.3)}
+.nav-logo{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);flex-shrink:0}
 .nav-logo svg{width:22px;height:22px}
 .nav-name{font-size:17px;font-weight:700;color:var(--navy)}
 .nav-tagline{font-size:10px;color:var(--mgray);letter-spacing:0.05em;text-transform:uppercase;margin-top:1px}
@@ -383,7 +383,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .auth-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--off)}
 .auth-card{background:var(--white);border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px}
-.auth-badge{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;border-radius:10px}
+.auth-badge{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
 .auth-badge svg{width:22px;height:22px}
 .auth-brand{font-size:18px;font-weight:700;color:var(--navy)}
 .auth-title{font-size:24px;font-weight:700;color:var(--navy);margin-bottom:6px;letter-spacing:-0.01em}
@@ -841,12 +841,11 @@ body { top: 0 !important; }
   <nav>
     <div class="nav-brand" onclick="showView('home')">
       <div class="nav-logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
-          <circle cx="5.5" cy="17" r="3.5"/>
-          <circle cx="18.5" cy="17" r="3.5"/>
-          <path d="M5.5 17l4-9.5h4.5L17 14h-5.5L9 10"/>
-          <path d="M14 7.5h2.5"/>
-          <path d="M18.5 17L15 10"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <circle cx="5.5" cy="17" r="3"/>
+          <circle cx="18.5" cy="17" r="3"/>
+          <path d="M5.5 17L9 8h6l3.5 9"/>
+          <path d="M9 8l3.5 9"/>
         </svg>
       </div>
       <div>
