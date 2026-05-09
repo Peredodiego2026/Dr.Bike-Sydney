@@ -335,7 +335,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .bike-type-opt{padding:10px 8px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:500;color:var(--navy);transition:all .15s;font-family:var(--sans);background:none}
 .bike-type-opt.sel{border-color:var(--blue);background:var(--blue-lt);color:var(--blue)}
 /* ── CHATBOT FLOTANTE ── */
-#chatbot-btn{position:fixed;bottom:80px;right:24px;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;z-index:900;box-shadow:0 4px 20px rgba(24,72,200,0.4);display:flex;align-items:center;justify-content:center;transition:all .2s}
+#chatbot-btn{position:fixed;bottom:100px;right:24px;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;z-index:900;box-shadow:0 4px 20px rgba(24,72,200,0.4);display:flex;align-items:center;justify-content:center;transition:all .2s}
 #chatbot-btn:hover{transform:scale(1.08);background:var(--blue2)}
 #chatbot-btn .cb-notif{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--red);border-radius:50%;border:2px solid #fff;display:none}
 #chatbot-btn .cb-notif.show{display:block}
@@ -369,7 +369,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 @media (max-width: 640px) {
   .fp { font-size: 12px; padding: 6px 12px; }
   #lang-panel { top: 60px; }
-  #chatbot-btn { bottom: 72px; right: 16px; }
+  #chatbot-btn { bottom: 100px; right: 16px; }
   #chatbot-panel { bottom: 140px; right: 8px; left: 8px; width: auto; }
 }
 /* ── TRUST BAR ── */
@@ -1622,6 +1622,9 @@ function goStep(n){
     s.className = 'step-item'+(i<n?' done':i===n?' active':'');
   });
   document.getElementById('step-success').style.display='none';
+  // Ocultar chatbot en step 4 para no tapar el botón Confirm
+  const chatBtn = document.getElementById('chatbot-btn');
+  if(chatBtn) chatBtn.style.display = n===4 ? 'none' : 'flex';
   if(n===2 && booking.service){
     document.getElementById('sel-svc-name').textContent = booking.service.name+' — $'+booking.service.price;
     renderCalendar();
