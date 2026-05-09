@@ -2333,6 +2333,19 @@ function showView(v){
   document.getElementById('view-'+v).classList.add('active');
   document.getElementById('nav-links').classList.remove('open');
   window.scrollTo(0,0);
+
+  // Ocultar chatbot durante el booking — no molestar al usuario
+  const chatBtn = document.getElementById('chatbot-btn');
+  const chatPanel = document.getElementById('chatbot-panel');
+  if(chatBtn){
+    if(v === 'book'){
+      chatBtn.style.display = 'none';
+      if(chatPanel) chatPanel.classList.remove('open');
+    } else {
+      chatBtn.style.display = 'flex';
+    }
+  }
+
   if(v==='dashboard'){
     if(!currentUser){ showView('auth'); return; }
     updateDashboard();
