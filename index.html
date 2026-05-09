@@ -754,16 +754,30 @@ body { top: 0 !important; }
       <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px">Book repairs in one tap — free</div>
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0">
-      <button onclick="dismissPWA()" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent;min-width:60px">Later</button>
-      <button onclick="installPWA()" id="pwa-install-btn" style="background:#1848C8;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent;min-width:60px">Install</button>
+      <button onclick="dismissPWA()" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent">Later</button>
+      <button onclick="installPWA()" id="pwa-install-btn" style="background:#1848C8;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent">Install</button>
     </div>
   </div>
-  <!-- iOS instructions -->
-  <div id="ios-banner" style="display:none;background:#162540;padding:10px 16px;text-align:center;border-top:1px solid rgba(255,255,255,0.08)">
-    <div style="font-size:12px;color:rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap">
-      Tap
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-      then <strong style="color:#fff">"Add to Home Screen"</strong>
+  <!-- iOS step-by-step instructions -->
+  <div id="ios-banner" style="display:none;background:#162540;padding:12px 16px;border-top:1px solid rgba(255,255,255,0.08)">
+    <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">How to install on iPhone</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:24px;height:24px;background:#1848C8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">1</div>
+        <div style="font-size:13px;color:#fff;display:flex;align-items:center;gap:6px">
+          Tap the Share button
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          <span style="color:rgba(255,255,255,0.5);font-size:11px">at the bottom of Safari</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:24px;height:24px;background:#1848C8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">2</div>
+        <div style="font-size:13px;color:#fff">Tap <strong style="color:#60A5FA">"Add to Home Screen"</strong></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:24px;height:24px;background:#059669;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">✓</div>
+        <div style="font-size:13px;color:#fff">Tap <strong style="color:#4ade80">"Add"</strong> — done! 🎉</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1731,6 +1745,13 @@ function hidePWABanner(){
 }
 
 async function installPWA(){
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(isIOS){
+    // En iOS no hay API — mostrar instrucciones paso a paso
+    document.getElementById('pwa-install-btn').style.display = 'none';
+    document.getElementById('ios-banner').style.display = 'block';
+    return;
+  }
   if(deferredPrompt){
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
@@ -1738,16 +1759,8 @@ async function installPWA(){
     hidePWABanner();
     if(outcome === 'accepted') localStorage.setItem('drbike-pwa-dismissed', 'installed');
   } else {
-    // Fallback manual instructions
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    toast('📱 Tap ⋮ menu → "Add to Home Screen"');
     hidePWABanner();
-    if(isIOS){
-      document.getElementById('ios-banner').style.display = 'block';
-      document.getElementById('pwa-banner').style.display = 'block';
-      document.getElementById('pwa-install-btn').style.display = 'none';
-    } else {
-      toast('📱 Tap ⋮ menu → "Add to Home Screen" or "Install app"', 5000);
-    }
   }
 }
 
