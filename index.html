@@ -16,7 +16,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Dr. Bike">
 <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icon-192.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <script src="https://js.stripe.com/v3/"></script>
 <title>Dr. Bike Sydney — Mobile Bicycle Repair at Your Door</title>
 <meta name="description" content="Sydney's premium mobile bike repair service. We come to you — home, work or park. Same-day availability, qualified mechanics, fixed prices. Book online in 60 seconds.">
@@ -742,6 +743,29 @@ body { top: 0 !important; }
   <div class="load-text">Loading Dr. Bike...</div>
 </div>
 
+<!-- PWA INSTALL BANNER -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;padding:0 0 env(safe-area-inset-bottom)">
+  <div style="background:#0D1F3C;padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 -4px 24px rgba(0,0,0,0.3)">
+    <div style="width:48px;height:48px;background:#1848C8;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/></svg>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700;color:#fff">Add Dr. Bike to your home screen</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px">Book bike repairs in one tap — no app store needed</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button onclick="dismissPWA()" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;padding:8px 12px;font-size:12px;color:rgba(255,255,255,0.6);cursor:pointer;font-family:Inter,sans-serif">Later</button>
+      <button onclick="installPWA()" id="pwa-install-btn" style="background:#1848C8;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:Inter,sans-serif">Install</button>
+    </div>
+  </div>
+  <!-- iOS instruction (shows only on iOS) -->
+  <div id="ios-banner" style="display:none;background:#1C2F5C;padding:12px 20px;text-align:center">
+    <div style="font-size:12px;color:rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;gap:6px">
+      Tap <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> then <strong style="color:#fff">"Add to Home Screen"</strong>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1362,6 +1386,14 @@ async function init(){
     console.error('Init error:', e);
   }
   handleStripeReturn();
+
+  // Manejar shortcuts PWA (?action=book, ?action=dashboard)
+  const action = new URLSearchParams(window.location.search).get('action');
+  if(action && currentUser){
+    window.history.replaceState({}, '', '/');
+    setTimeout(() => showView(action), 300);
+  }
+
   setTimeout(()=>{ document.getElementById('loading').classList.add('hide'); },800);
 
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -1665,6 +1697,84 @@ function updateNavAuth(){
     btn.onclick = ()=>showView('auth');
   }
 }
+
+// ── PWA INSTALL ───────────────────────────────────────────────────────────────
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show banner after 2 visits or 30 seconds on page
+  const visits = parseInt(localStorage.getItem('drbike-visits') || '0') + 1;
+  localStorage.setItem('drbike-visits', visits);
+  const dismissed = localStorage.getItem('drbike-pwa-dismissed');
+  if(!dismissed && visits >= 2){
+    setTimeout(() => showPWABanner(), 5000);
+  }
+});
+
+// Check if already installed
+window.addEventListener('appinstalled', () => {
+  hidePWABanner();
+  localStorage.setItem('drbike-pwa-dismissed', 'installed');
+  toast('🎉 Dr. Bike added to your home screen!');
+});
+
+function showPWABanner(){
+  const banner = document.getElementById('pwa-banner');
+  if(!banner) return;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if(isStandalone) return; // Already installed
+  if(localStorage.getItem('drbike-pwa-dismissed')) return;
+  banner.style.display = 'block';
+  if(isIOS){
+    document.getElementById('pwa-install-btn').style.display = 'none';
+    document.getElementById('ios-banner').style.display = 'block';
+  }
+}
+
+function hidePWABanner(){
+  const banner = document.getElementById('pwa-banner');
+  if(banner) banner.style.display = 'none';
+}
+
+async function installPWA(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  hidePWABanner();
+  if(outcome === 'accepted'){
+    localStorage.setItem('drbike-pwa-dismissed', 'installed');
+  }
+}
+
+function dismissPWA(){
+  hidePWABanner();
+  localStorage.setItem('drbike-pwa-dismissed', 'dismissed');
+}
+
+// iOS: show banner after 10 seconds on first visit if not installed
+(function(){
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  const dismissed = localStorage.getItem('drbike-pwa-dismissed');
+  if(isIOS && !isStandalone && !dismissed){
+    const visits = parseInt(localStorage.getItem('drbike-visits') || '0') + 1;
+    localStorage.setItem('drbike-visits', visits);
+    if(visits >= 2){
+      setTimeout(() => {
+        const banner = document.getElementById('pwa-banner');
+        if(banner){
+          banner.style.display = 'block';
+          document.getElementById('pwa-install-btn').style.display = 'none';
+          document.getElementById('ios-banner').style.display = 'block';
+        }
+      }, 8000);
+    }
+  }
+})();
 
 // ── DARK MODE ─────────────────────────────────────────────────────────────────
 function initTheme(){
@@ -2334,12 +2444,13 @@ function showView(v){
   document.getElementById('nav-links').classList.remove('open');
   window.scrollTo(0,0);
 
-  // Ocultar chatbot durante el booking — no molestar al usuario
+  // Ocultar chatbot y PWA banner durante el booking
   const chatBtn = document.getElementById('chatbot-btn');
   const chatPanel = document.getElementById('chatbot-panel');
   if(chatBtn){
     if(v === 'book'){
       chatBtn.style.display = 'none';
+      hidePWABanner();
       if(chatPanel) chatPanel.classList.remove('open');
     } else {
       chatBtn.style.display = 'flex';
