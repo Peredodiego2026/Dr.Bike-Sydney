@@ -25,9 +25,16 @@
   --navy:#0D1F3C;--navy2:#162947;
   --white:#fff;--off:#F7F8FA;--mgray:#6B7280;
   --border:#E5E7EB;--red:#DC2626;--green:#059669;
+  --orange:#EA580C;
   --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
   --shadow-lg:0 4px 6px rgba(0,0,0,0.05),0 10px 40px rgba(0,0,0,0.1);
   --r:12px;--sans:'Inter',sans-serif;
+}
+[data-theme="dark"]{
+  --white:#1C1C1E;--off:#242426;--mgray:#98989F;--border:#38383A;
+  --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
+  --blue-lt:rgba(24,72,200,0.18);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
@@ -335,7 +342,8 @@ body { top: 0 !important; }
       <div class="topbar-sub" id="page-sub">Monday, 4 May 2026 · Sydney</div>
     </div>
     <div class="topbar-right">
-      <div class="date-badge">Mon 4 May 2026</div>
+      <button id="theme-btn-admin" onclick="toggleAdminTheme()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px">🌙</button>
+      <div class="date-badge" id="admin-date-badge">Mon 4 May 2026</div>
       <div class="notif-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
         <div class="notif-dot"></div>
@@ -803,6 +811,13 @@ body { top: 0 !important; }
 </main>
 
 <script>
+// ── THEME ────────────────────────────────────────────────────────────────────
+(function(){
+  const saved = localStorage.getItem('drbike-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+})();
+
 const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -832,6 +847,23 @@ function go(page, btn){
   if(page==='clients') loadClients();
   if(page==='dashboard') loadDashboard();
 }
+
+function toggleAdminTheme(){
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('drbike-theme', next);
+  document.getElementById('theme-btn-admin').textContent = next === 'dark' ? '☀️' : '🌙';
+}
+// Init theme button icon
+(function(){
+  const t = localStorage.getItem('drbike-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const btn = document.getElementById('theme-btn-admin');
+  if(btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+  // Update date badge
+  const db = document.getElementById('admin-date-badge');
+  if(db) db.textContent = new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+})();
 
 // ── SIDEBAR TOGGLE ─────────────────────────────────────────────────────────────
 function toggleSidebar(){

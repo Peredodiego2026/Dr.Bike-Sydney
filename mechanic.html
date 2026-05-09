@@ -22,6 +22,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;--navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;--border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;--red:#DC2626;--red-lt:#FEF2F2;--amber:#D97706;--amber-lt:#FEF3C7;--gold:#F59E0B;--wa:#25D366;--wa-lt:#EDFBF3;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);--shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--sans:'Inter',sans-serif}
+[data-theme="dark"]{
+  --white:#1C1C1E;--off:#242426;--mgray:#98989F;--border:#38383A;
+  --blue-lt:rgba(24,72,200,0.18);--green-lt:rgba(5,150,105,0.15);
+  --amber-lt:rgba(217,119,6,0.15);--red-lt:rgba(220,38,38,0.15);
+  --wa-lt:rgba(37,211,102,0.12);
+  --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .screen{display:none;min-height:100vh;min-height:-webkit-fill-available;flex-direction:column}.screen.active{display:flex}
@@ -106,7 +113,10 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
       <div class="topbar-name" id="mech-name">Mechanic</div>
       <div class="topbar-van" id="van-label">Van 1</div>
     </div>
-    <button class="status-btn" id="status-btn" onclick="toggleStatus()">● Online</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="theme-btn-mech" onclick="(function(){const c=document.documentElement.getAttribute('data-theme')||'light';const n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('drbike-theme',n);document.getElementById('theme-btn-mech').textContent=n==='dark'?'☀️':'🌙';})()" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:34px;height:34px;font-size:15px;cursor:pointer">🌙</button>
+      <button class="status-btn" id="status-btn" onclick="toggleStatus()">● Online</button>
+    </div>
   </div>
   <div class="nav-tabs">
     <button class="nav-tab on" onclick="goTab('today',this)">Today<span class="tab-badge" id="b-today"></span></button>
@@ -121,6 +131,12 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
 
 <script>
 const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn');
+// Init theme
+(function(){
+  const saved = localStorage.getItem('drbike-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+})();
 let mechanic=null, vanNum=1, jobs=[], tab='today', online=true;
 
 function ratingHTML(jobs){
@@ -359,6 +375,10 @@ async function resumeTrackingIfNeeded() {
 }
 
 init();
+// Fix theme button icon
+const _t = localStorage.getItem('drbike-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+const _tb = document.getElementById('theme-btn-mech');
+if(_tb) _tb.textContent = _t === 'dark' ? '☀️' : '🌙';
 // Resume GPS after jobs load
 setTimeout(() => { if (jobs.length) resumeTrackingIfNeeded(); }, 2000);
 </script>

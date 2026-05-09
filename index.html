@@ -58,6 +58,53 @@
   --red:#DC2626;--amber:#D97706;--amber-lt:#FEF3C7;
   --gold:#F59E0B;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
   --shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--sans:'Inter',sans-serif;
+  --orange:#EA580C;
+  /* Semantic tokens — light mode */
+  --bg:var(--white);
+  --bg2:var(--off);
+  --bg3:#F0F1F3;
+  --text:var(--navy);
+  --text2:var(--mgray);
+  --text3:#9CA3AF;
+  --bdr:var(--border);
+  --card-bg:var(--white);
+  --nav-bg:rgba(255,255,255,0.95);
+  --input-bg:var(--white);
+  --hero-h1:var(--navy);
+}
+
+/* ── DARK MODE ── */
+[data-theme="dark"], @media(prefers-color-scheme:dark){
+  :root{
+    --white:#1C1C1E;
+    --off:#242426;
+    --bg:#1C1C1E;
+    --bg2:#242426;
+    --bg3:#2C2C2E;
+    --navy:#F2F2F7;
+    --mgray:#98989F;
+    --border:#38383A;
+    --text:#F2F2F7;
+    --text2:#98989F;
+    --text3:#636366;
+    --bdr:#38383A;
+    --card-bg:#242426;
+    --nav-bg:rgba(28,28,30,0.95);
+    --input-bg:#2C2C2E;
+    --hero-h1:#F2F2F7;
+    --blue-lt:rgba(24,72,200,0.18);
+    --green-lt:rgba(5,150,105,0.15);
+    --amber-lt:rgba(217,119,6,0.15);
+    --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
+    --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
+  }
+}
+[data-theme="dark"]{
+  --white:#1C1C1E;--off:#242426;--navy:#F2F2F7;--mgray:#98989F;
+  --border:#38383A;--blue-lt:rgba(24,72,200,0.18);--green-lt:rgba(5,150,105,0.15);
+  --amber-lt:rgba(217,119,6,0.15);
+  --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -536,6 +583,7 @@ body { top: 0 !important; }
       <button class="nl cta" onclick="showView('auth')" id="nav-auth-btn">Sign in</button>
     </div>
     <div class="nav-right">
+      <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s">🌙</button>
       <button id="lang-btn" onclick="toggleLangPanel()" title="Change language">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span id="lang-label">EN</span>
@@ -1073,6 +1121,7 @@ body { top: 0 !important; }
 
 <script>
 // ── SUPABASE INIT ────────────────────────────────────────────────────────────
+initTheme(); // Apply theme before anything renders
 const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1433,7 +1482,31 @@ function updateNavAuth(){
   }
 }
 
-function copyReferral(){
+// ── DARK MODE ─────────────────────────────────────────────────────────────────
+function initTheme(){
+  const saved = localStorage.getItem('drbike-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved ? saved === 'dark' : prefersDark;
+  setTheme(isDark ? 'dark' : 'light', false);
+  // Listen for system changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if(!localStorage.getItem('drbike-theme')) setTheme(e.matches ? 'dark' : 'light', false);
+  });
+}
+
+function setTheme(theme, save=true){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-btn');
+  if(btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  if(save) localStorage.setItem('drbike-theme', theme);
+}
+
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// ── COPY REFERRAL ─────────────────────────────────────────────────────────────
   const code = userProfile?.referral_code;
   if(!code) return;
   const text = `Book Dr. Bike Sydney with my code ${code} and we both get $15 off! 🚲 dr-bike-sydney.vercel.app`;
