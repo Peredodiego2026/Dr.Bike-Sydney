@@ -122,6 +122,7 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 /* ── VIEWS ── */
 .view{display:none}.view.active{display:block;animation:fadeSlideIn .22s ease}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes progress{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
 
 /* ── DARK MODE FIXES ── */
 [data-theme="dark"] body{background:#1C1C1E;color:#F2F2F7}
@@ -1148,6 +1149,27 @@ body { top: 0 !important; }
 
     <!-- Step 1: Service -->
     <div id="step-1">
+      <!-- AI Photo Diagnosis -->
+      <div class="card" style="padding:18px;margin-bottom:14px;border:1.5px solid var(--blue-lt);background:linear-gradient(135deg,rgba(24,72,200,0.04),rgba(24,72,200,0.01))">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--navy)">🤖 AI Bike Diagnosis</div>
+            <div style="font-size:11px;color:var(--mgray)">Photo your bike issue — Claude tells you what's wrong</div>
+          </div>
+        </div>
+        <div id="diag-upload-area" onclick="document.getElementById('diag-photo-input').click()" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:28px;margin-bottom:6px">📸</div>
+          <div style="font-size:13px;font-weight:600;color:var(--navy)">Take or upload a photo</div>
+          <div style="font-size:11px;color:var(--mgray);margin-top:2px">of the problem area</div>
+        </div>
+        <input type="file" id="diag-photo-input" accept="image/*" capture="environment" style="display:none" onchange="analyzeBikePhoto(this)">
+        <!-- Result area -->
+        <div id="diag-result" style="display:none;margin-top:12px"></div>
+      </div>
+
       <div class="card" style="padding:18px;margin-bottom:14px">
         <div class="ct">Select a service</div>
         <div id="book-cat-pills" style="display:flex;gap:8px;flex-wrap:nowrap;margin-bottom:16px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none"></div>
@@ -1828,6 +1850,114 @@ function setTheme(theme, save=true){
 function toggleTheme(){
   const current = document.documentElement.getAttribute('data-theme') || 'light';
   setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// ── AI BIKE DIAGNOSIS ─────────────────────────────────────────────────────────
+async function analyzeBikePhoto(input){
+  const file = input.files?.[0];
+  if(!file) return;
+
+  const resultEl = document.getElementById('diag-result');
+  const uploadArea = document.getElementById('diag-upload-area');
+
+  // Show loading
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `
+    <div style="text-align:center;padding:20px">
+      <div style="font-size:24px;margin-bottom:8px">🔍</div>
+      <div style="font-size:13px;font-weight:600;color:var(--navy)">Analysing your bike...</div>
+      <div style="font-size:11px;color:var(--mgray);margin-top:4px">Claude is inspecting the image</div>
+      <div style="margin-top:12px;height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="height:100%;background:var(--blue);border-radius:2px;animation:progress 2s ease-in-out infinite"></div>
+      </div>
+    </div>`;
+
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    const mimeType = file.type || 'image/jpeg';
+
+    // Show image preview in upload area
+    uploadArea.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">`;
+
+    try {
+      const res = await fetch('/api/diagnose-bike', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mimeType })
+      });
+
+      const data = await res.json();
+
+      if(!res.ok || !data.diagnosis) {
+        throw new Error(data.error || 'Diagnosis failed');
+      }
+
+      const d = data.diagnosis;
+      const urgencyColor = { low: '#059669', medium: '#D97706', high: '#DC2626' }[d.urgency] || '#1848C8';
+      const urgencyLabel = { low: '🟢 Low urgency', medium: '🟡 Moderate urgency', high: '🔴 Urgent' }[d.urgency] || '';
+
+      resultEl.innerHTML = `
+        <div style="background:var(--off);border-radius:10px;padding:14px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:var(--navy)">🤖 AI Diagnosis</div>
+            <span style="font-size:10px;font-weight:600;color:${urgencyColor};background:${urgencyColor}18;padding:3px 8px;border-radius:10px">${urgencyLabel}</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">${d.problem}</div>
+          <div style="font-size:12px;color:var(--mgray);line-height:1.5;margin-bottom:10px">${d.explanation}</div>
+          ${d.tips ? `<div style="background:var(--blue-lt);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--blue);margin-bottom:10px">💡 <strong>Quick tip:</strong> ${d.tips}</div>` : ''}
+          <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:11px;color:var(--mgray)">Recommended service</div>
+              <div style="font-size:13px;font-weight:700;color:var(--navy)">${d.recommended_service}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;color:var(--mgray)">Estimate</div>
+              <div style="font-size:16px;font-weight:700;color:var(--blue)">${d.price_estimate}</div>
+            </div>
+          </div>
+          <button onclick="autoSelectService('${d.recommended_service}')" style="width:100%;margin-top:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">
+            Book ${d.recommended_service} →
+          </button>
+          <button onclick="resetDiagnosis()" style="width:100%;margin-top:6px;background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans)">Try another photo</button>
+        </div>`;
+
+    } catch(err) {
+      resultEl.innerHTML = `
+        <div style="background:#FEF2F2;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:12px;color:var(--red)">⚠️ Could not analyse image. Please select a service manually.</div>
+          <button onclick="resetDiagnosis()" style="margin-top:8px;background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans)">Try again</button>
+        </div>`;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetDiagnosis(){
+  document.getElementById('diag-result').style.display = 'none';
+  document.getElementById('diag-photo-input').value = '';
+  document.getElementById('diag-upload-area').innerHTML = `
+    <div style="font-size:28px;margin-bottom:6px">📸</div>
+    <div style="font-size:13px;font-weight:600;color:var(--navy)">Take or upload a photo</div>
+    <div style="font-size:11px;color:var(--mgray);margin-top:2px">of the problem area</div>`;
+  document.getElementById('diag-upload-area').onclick = () => document.getElementById('diag-photo-input').click();
+}
+
+function autoSelectService(serviceName){
+  // Find matching service by name (fuzzy)
+  const match = services.find(s =>
+    s.name.toLowerCase().includes(serviceName.toLowerCase().split(' ')[0]) ||
+    serviceName.toLowerCase().includes(s.name.toLowerCase().split(' ')[0])
+  );
+  if(match){
+    selectService(match.id);
+    goStep(2);
+    toast('✅ Service selected: ' + match.name);
+  } else {
+    toast('Please select a service from the list below');
+    document.getElementById('diag-result').scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 // ── REFERRAL CODE ─────────────────────────────────────────────────────────────
