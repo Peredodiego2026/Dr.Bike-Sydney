@@ -76,14 +76,14 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 
 /* ── NAV ── */
 /* Nav centrado en desktop */
-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:64px;padding:0 32px}
-.nav-brand{display:flex;align-items:center;gap:11px;cursor:pointer;justify-self:start}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;height:64px;padding:0 32px}
+.nav-brand{display:flex;align-items:center;gap:11px;cursor:pointer;flex:0 0 200px}
 .nav-logo{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);flex-shrink:0}
 .nav-logo svg{width:22px;height:22px}
 .nav-name{font-size:17px;font-weight:700;color:var(--navy)}
 .nav-tagline{font-size:10px;color:var(--mgray);letter-spacing:0.05em;text-transform:uppercase;margin-top:1px}
-.nav-links{display:flex;align-items:center;gap:2px;justify-self:center}
-.nav-right{display:flex;align-items:center;gap:8px;justify-self:end}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}
+.nav-right{display:flex;align-items:center;gap:8px;flex:0 0 200px;justify-content:flex-end}
 #lang-btn-mob{display:none}
 .nl{padding:6px 14px;font-size:13px;color:var(--mgray);cursor:pointer;border:none;background:transparent;font-family:var(--sans);transition:color .15s;border-radius:6px}
 .nl:hover,.nl.on{color:var(--navy);background:#F3F4F6}
