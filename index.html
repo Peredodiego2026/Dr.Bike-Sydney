@@ -1664,11 +1664,10 @@ function setBilling(b){
 }
 
 // ── STRIPE PRICE IDs ─────────────────────────────────────────────────────────
-// Reemplazá estos con los Price IDs reales de tu Stripe dashboard
 const STRIPE_PRICES = {
-  basic:    { monthly: 'price_BASIC_MONTHLY',    annual: 'price_BASIC_ANNUAL'    },
-  standard: { monthly: 'price_STANDARD_MONTHLY', annual: 'price_STANDARD_ANNUAL' },
-  vip:      { monthly: 'price_VIP_MONTHLY',       annual: 'price_VIP_ANNUAL'      },
+  basic:    { monthly: 'price_1TUxlvApfjPBFYNnwJuSOilQ', annual: 'price_1TUxKFApfjPBFYNnLKXbvr3v' },
+  standard: { monthly: 'price_1TUxMGApfjPBFYNn4RZ5Iel7', annual: 'price_1TUxMVApfjPBFYNnBz87h0IA' },
+  vip:      { monthly: 'price_1TUxQFApfjPBFYNnvpR8bCRZ', annual:  'price_1TUxQVApfjPBFYNnSKES9AXQ' },
 };
 
 const PLAN_NAMES = { b: 'basic', s: 'standard', v: 'vip' };
@@ -1680,8 +1679,8 @@ async function subscribePlan(planId) {
   const billingKey = billing === 'a' ? 'annual' : 'monthly';
   const priceId = STRIPE_PRICES[planKey]?.[billingKey];
 
-  if (!priceId || priceId.startsWith('price_BASIC') || priceId.startsWith('price_STANDARD') || priceId.startsWith('price_VIP')) {
-    toast('⚠️ Stripe not configured yet — contact us to subscribe');
+  if (!priceId) {
+    toast('⚠️ Plan not available — contact us');
     return;
   }
 
