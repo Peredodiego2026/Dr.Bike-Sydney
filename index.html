@@ -72,7 +72,8 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 
 /* ── VIEWS ── */
-.view{display:none}.view.active{display:block}
+.view{display:none}.view.active{display:block;animation:fadeSlideIn .22s ease}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── NAV ── */
 /* Nav centrado en desktop */
@@ -807,6 +808,25 @@ body { top: 0 !important; }
       <button class="da" onclick="showView('services')">All services</button>
       <button class="da blue" onclick="showView('membership')">Membership</button>
     </div>
+
+    <!-- Referral card -->
+    <div class="card" style="padding:18px;background:linear-gradient(135deg,#0D1F3C,#1848C8);border:none" id="referral-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">🎁 Refer a friend — earn $15 each</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:8px">Share your code. When they book, you both get $15 off.</div>
+          <div style="background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;display:inline-flex;align-items:center;gap:10px">
+            <span style="font-size:16px;font-weight:800;color:#fff;letter-spacing:0.08em" id="referral-code-display">—</span>
+            <button onclick="copyReferral()" style="background:rgba(255,255,255,0.2);border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;font-family:Inter,sans-serif">Copy</button>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#fff" id="referral-count">0</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em">Friends referred</div>
+        </div>
+      </div>
+    </div>
+
     <button style="width:100%;padding:11px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--white);cursor:pointer;color:var(--red);font-family:var(--sans);font-weight:500;margin-top:4px" onclick="signOut()">Sign out</button>
   </div>
 </div>
@@ -1314,15 +1334,24 @@ async function loadProfile(){
   const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if(error || !data){
     const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+    const refCode = 'BIKE' + Math.random().toString(36).substr(2,5).toUpperCase();
     const { data: newP } = await sb.from('profiles').insert({
       id: currentUser.id,
       email: currentUser.email,
       full_name: name,
       role: 'client',
-      membership: 'none'
+      membership: 'none',
+      referral_code: refCode,
+      referral_count: 0
     }).select().single();
     userProfile = newP;
   } else {
+    // Generate referral code if missing
+    if(!data.referral_code){
+      const refCode = 'BIKE' + Math.random().toString(36).substr(2,5).toUpperCase();
+      await sb.from('profiles').update({ referral_code: refCode }).eq('id', currentUser.id);
+      data.referral_code = refCode;
+    }
     userProfile = data;
   }
   updateDashboard();
@@ -1345,6 +1374,11 @@ async function updateDashboard(){
   badgeEl.textContent = badgeTxt[mem]||'No plan';
   const discounts = { none:'0%', basic:'8%', std:'12%', vip:'18%' };
   document.getElementById('kpi-disc').textContent = discounts[mem]||'0%';
+
+  const refEl = document.getElementById('referral-code-display');
+  if(refEl) refEl.textContent = userProfile?.referral_code || '—';
+  const refCount = document.getElementById('referral-count');
+  if(refCount) refCount.textContent = userProfile?.referral_count || 0;
 
   const { data: bkgs } = await sb.from('bookings')
     .select('*').eq('client_id', currentUser.id)
@@ -1399,7 +1433,19 @@ function updateNavAuth(){
   }
 }
 
-// ── LIVE MAP ──────────────────────────────────────────────────────────────────
+function copyReferral(){
+  const code = userProfile?.referral_code;
+  if(!code) return;
+  const text = `Book Dr. Bike Sydney with my code ${code} and we both get $15 off! 🚲 dr-bike-sydney.vercel.app`;
+  navigator.clipboard?.writeText(text).then(()=>toast('📋 Referral link copied!')).catch(()=>{
+    const el = document.createElement('textarea');
+    el.value = text; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    toast('📋 Referral link copied!');
+  });
+}
+
+// ── TRANSITIONS ───────────────────────────────────────────────────────────────
 let liveMap = null, mechMarker = null, destMarker = null, trackingChannel = null;
 
 function startTracking(bookingId, mechName, destAddress) {
@@ -1585,58 +1631,79 @@ function goStep(n){
 }
 
 // ── CALENDAR ─────────────────────────────────────────────────────────────────
-function renderCalendar(){
+async function renderCalendar(){
   const cal = document.getElementById('cal-grid');
   if(!cal) return;
-  const today = new Date();
-  today.setHours(0,0,0,0);
+
+  const today = new Date(); today.setHours(0,0,0,0);
   const year = today.getFullYear();
   const month = today.getMonth();
-  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const daysInPrev = new Date(year, month, 0).getDate();
 
-  // Remove old day cells (keep the 7 header cells)
-  const cells = cal.querySelectorAll('.cday');
-  cells.forEach(c => c.remove());
+  // Fetch existing bookings for this month to show availability
+  const dateFrom = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  const dateTo = `${year}-${String(month+1).padStart(2,'0')}-${daysInMonth}`;
+  const { data: existing } = await sb.from('bookings')
+    .select('scheduled_date, scheduled_time, status')
+    .gte('scheduled_date', dateFrom).lte('scheduled_date', dateTo)
+    .in('status', ['pending','confirmed','enroute']);
 
-  // Pad with prev month days
-  for(let i = firstDay - 1; i >= 0; i--){
+  // Count jobs per day (max 4 jobs per day)
+  const MAX_JOBS = 4;
+  const jobsPerDay = {};
+  (existing||[]).forEach(b => {
+    const d = b.scheduled_date;
+    jobsPerDay[d] = (jobsPerDay[d]||0) + 1;
+  });
+
+  // Remove old day cells (keep header cells)
+  cal.querySelectorAll('.cday').forEach(c => c.remove());
+
+  // Pad prev month
+  for(let i = firstDay-1; i >= 0; i--){
     const d = document.createElement('div');
-    d.className = 'cday ot';
-    d.textContent = daysInPrev - i;
+    d.className = 'cday ot'; d.textContent = daysInPrev - i;
     cal.appendChild(d);
   }
 
-  // Current month days
+  // Current month
   for(let d = 1; d <= daysInMonth; d++){
-    const date = new Date(year, month, d);
-    date.setHours(0,0,0,0);
-    const dayOfWeek = date.getDay(); // 0=Sun, 6=Sat
+    const date = new Date(year, month, d); date.setHours(0,0,0,0);
+    const dayOfWeek = date.getDay();
     const isPast = date < today;
     const isSunday = dayOfWeek === 0;
     const dateStr = date.toISOString().split('T')[0];
+    const jobCount = jobsPerDay[dateStr] || 0;
+    const isFull = jobCount >= MAX_JOBS;
 
     const el = document.createElement('div');
-    if(isPast || isSunday){
+    if(isPast || isSunday || isFull){
       el.className = 'cday pt';
+      if(isFull) el.title = 'Fully booked';
     } else {
       el.className = 'cday avail';
       el.onclick = () => selDay(el, dateStr);
+      // Show availability dots
+      if(jobCount > 0){
+        const spots = MAX_JOBS - jobCount;
+        el.title = `${spots} spot${spots!==1?'s':''} left`;
+        el.style.opacity = 0.7 + (spots/MAX_JOBS)*0.3;
+      }
     }
     if(d === today.getDate()) el.style.fontWeight = '700';
     el.textContent = d;
     cal.appendChild(el);
   }
 
-  // Pad with next month
+  // Pad next month
   const totalCells = firstDay + daysInMonth;
   const remainder = totalCells % 7;
   if(remainder > 0){
-    for(let d = 1; d <= 7 - remainder; d++){
+    for(let d = 1; d <= 7-remainder; d++){
       const el = document.createElement('div');
-      el.className = 'cday ot';
-      el.textContent = d;
+      el.className = 'cday ot'; el.textContent = d;
       cal.appendChild(el);
     }
   }
@@ -1715,6 +1782,32 @@ async function confirmBooking(){
 
   // Show Stripe payment modal
   showPaymentModal(bkg, price);
+
+  // Notify mechanic by email
+  try {
+    const { data: mechanics } = await sb.from('escalation_contacts').select('*').eq('active', true);
+    if(mechanics?.length){
+      const vanMech = mechanics.find(m => m.van_number === vanNum) || mechanics[0];
+      if(vanMech?.phone){
+        const mechEmail = vanMech.email || 'peredo.dm@gmail.com';
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: mechEmail,
+            name: vanMech.first_name || 'Mechanic',
+            service: bkg.service_name,
+            date: new Date(bkg.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}),
+            time: bkg.scheduled_time,
+            address: bkg.address,
+            price: bkg.service_price,
+            type: 'mechanic_new_booking',
+            bookingId: bkg.id
+          })
+        });
+      }
+    }
+  } catch(e){ console.log('Mechanic email error:', e); }
 }
 
 function showPaymentModal(bkg, price){
@@ -1798,7 +1891,24 @@ async function skipPayment(bookingId){
   await sb.from('bookings').update({ status:'confirmed', payment_method:'cash' }).eq('id', bookingId);
   document.getElementById('payment-modal').remove();
   const {data:bkgData} = await sb.from('bookings').select('*').eq('id',bookingId).single();
-  if(bkgData) sendEmail('confirmation', bkgData);
+  if(bkgData){
+    await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: currentUser?.email,
+        name: userProfile?.full_name || currentUser?.email?.split('@')[0],
+        service: bkgData.service_name,
+        date: new Date(bkgData.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}),
+        time: bkgData.scheduled_time,
+        address: bkgData.address,
+        price: bkgData.service_price,
+        type: 'confirmation',
+        bookingId: bkgData.id,
+        referralCode: userProfile?.referral_code
+      })
+    });
+  }
   showBookingSuccess();
 }
 

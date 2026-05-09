@@ -228,7 +228,33 @@ async function setStatus(id, status) {
   if (status === 'enroute') startGPS(id);
   else if (status === 'completed' || status === 'cancelled') stopGPS();
 }
-async function completeJob(id){ await sb.from('bookings').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id); const j=jobs.find(x=>x.id===id); if(j) j.status='completed'; render(); badges(); toast('✅ Job completed!'); }
+async function completeJob(id){ 
+  await sb.from('bookings').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id); 
+  const j=jobs.find(x=>x.id===id); 
+  if(j) j.status='completed'; 
+  render(); badges(); 
+  toast('✅ Job completed!'); 
+  stopGPS();
+  // Send completion email with mechanic notes
+  try {
+    const mnotes = document.querySelector(`input.notes-inp[onblur*="${id}"]`)?.value || j?.mnotes || '';
+    await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: j?.email || 'peredo.dm@gmail.com',
+        name: j?.client || 'Client',
+        service: j?.service,
+        date: j?.date,
+        price: j?.price,
+        type: 'completed',
+        bookingId: id,
+        mechNotes: mnotes || null,
+        nextService: 'We recommend a full service check in 3–6 months or 500km, whichever comes first.'
+      })
+    });
+  } catch(e){ console.log('Completion email error:', e); }
+}
 async function saveNotes(id,notes){ await sb.from('bookings').update({mechanic_notes:notes}).eq('id',id); }
 
 function openMaps(a){ window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a+', Sydney NSW')}`, '_blank'); }
