@@ -2137,6 +2137,28 @@ async function processPayment(bookingId, price){
   // Update booking as confirmed with payment method
   await sb.from('bookings').update({ status:'confirmed', payment_method_id: paymentMethod.id }).eq('id', bookingId);
   document.getElementById('payment-modal').remove();
+
+  // Email confirmación al cliente
+  const {data:bkgData} = await sb.from('bookings').select('*').eq('id',bookingId).single();
+  if(bkgData){
+    await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: currentUser?.email,
+        name: userProfile?.full_name || currentUser?.email?.split('@')[0],
+        service: bkgData.service_name,
+        date: new Date(bkgData.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}),
+        time: bkgData.scheduled_time,
+        address: bkgData.address,
+        price: bkgData.service_price,
+        type: 'confirmation',
+        bookingId: bkgData.id,
+        referralCode: userProfile?.referral_code
+      })
+    });
+  }
+
   showBookingSuccess();
 }
 
