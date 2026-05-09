@@ -602,31 +602,92 @@ body { top: 0 !important; }
 
     <!-- FINANCE -->
     <div id="page-finance" class="page">
-      <div class="kpis">
-        <div class="kpi-card blue"><div class="kpi-label">Monthly revenue</div><div class="kpi-value">$36,138</div><div class="kpi-trend up">↑ +12% vs last month</div></div>
-        <div class="kpi-card green"><div class="kpi-label">Gross profit</div><div class="kpi-value">$31,904</div><div class="kpi-sub">88.3% margin</div></div>
-        <div class="kpi-card orange"><div class="kpi-label">Net profit</div><div class="kpi-value">$14,604</div><div class="kpi-sub">40.4% margin</div></div>
-        <div class="kpi-card red"><div class="kpi-label">Outstanding</div><div class="kpi-value">$1,082</div><div class="kpi-sub">4 unpaid invoices</div></div>
-      </div>
-      <div class="fin-row">
-        <div class="card">
-          <div class="card-hdr"><div><div class="card-title">Revenue — April 2026</div><div class="card-sub">Daily breakdown</div></div></div>
-          <div class="mini-chart" id="chart"><div class="bar-wrap"><div class="bar" style="height:53.551912568306015%;background:#1848C8;opacity:1" title="$980"></div><div class="bar-label">W1</div></div><div class="bar-wrap"><div class="bar" style="height:61.20218579234973%;background:#1848C8;opacity:1" title="$1120"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:46.44808743169399%;background:#1848C8;opacity:1" title="$850"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:73.224043715847%;background:#1848C8;opacity:1" title="$1340"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:86.33879781420765%;background:#1848C8;opacity:1" title="$1580"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:4%;background:#F3F4F6;opacity:0.3" title="$0"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:66.12021857923497%;background:#1848C8;opacity:1" title="$1210"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:57.377049180327866%;background:#1848C8;opacity:1" title="$1050"></div><div class="bar-label">W2</div></div><div class="bar-wrap"><div class="bar" style="height:77.59562841530054%;background:#1848C8;opacity:1" title="$1420"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:91.80327868852459%;background:#1848C8;opacity:1" title="$1680"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:67.75956284153006%;background:#1848C8;opacity:1" title="$1240"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:4%;background:#F3F4F6;opacity:0.3" title="$0"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:75.40983606557377%;background:#1848C8;opacity:1" title="$1380"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:83.06010928961749%;background:#1848C8;opacity:1" title="$1520"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:53.551912568306015%;background:#1848C8;opacity:1" title="$980"></div><div class="bar-label">W3</div></div><div class="bar-wrap"><div class="bar" style="height:88.52459016393442%;background:#1848C8;opacity:1" title="$1620"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:95.62841530054644%;background:#1848C8;opacity:1" title="$1750"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:4%;background:#F3F4F6;opacity:0.3" title="$0"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:70.49180327868852%;background:#1848C8;opacity:1" title="$1290"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:78.68852459016394%;background:#1848C8;opacity:1" title="$1440"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:64.48087431693989%;background:#1848C8;opacity:1" title="$1180"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:85.24590163934425%;background:#1848C8;opacity:1" title="$1560"></div><div class="bar-label">W4</div></div><div class="bar-wrap"><div class="bar" style="height:100%;background:#1848C8;opacity:1" title="$1830"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:4%;background:#F3F4F6;opacity:0.3" title="$0"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:61.20218579234973%;background:#1848C8;opacity:1" title="$1120"></div><div class="bar-label"></div></div><div class="bar-wrap"><div class="bar" style="height:48.63387978142077%;background:#1848C8;opacity:1" title="$890"></div><div class="bar-label"></div></div></div>
+      <!-- Period selector -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <select id="fin-month" class="inp" style="width:140px" onchange="loadFinance()">
+            <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+            <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+            <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+          </select>
+          <select id="fin-year" class="inp" style="width:100px" onchange="loadFinance()">
+            <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option>
+          </select>
+          <select id="fin-view" class="inp" style="width:120px" onchange="loadFinance()">
+            <option value="month">Monthly</option>
+            <option value="quarter">Quarterly</option>
+            <option value="year">Annual</option>
+          </select>
         </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="exportFinancePDF()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export PDF
+          </button>
+          <button onclick="exportFinanceCSV()" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">CSV</button>
+        </div>
+      </div>
+
+      <!-- KPIs reales -->
+      <div class="kpis" id="fin-kpis">
+        <div class="kpi-card blue"><div class="kpi-label">Revenue (incl. GST)</div><div class="kpi-value" id="fk-revenue">$—</div><div class="kpi-sub" id="fk-jobs">— jobs</div></div>
+        <div class="kpi-card green"><div class="kpi-label">GST Collected</div><div class="kpi-value" id="fk-gst">$—</div><div class="kpi-sub">10% · payable to ATO</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Net Revenue (ex GST)</div><div class="kpi-value" id="fk-net">$—</div><div class="kpi-sub" id="fk-avg">avg $— / job</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Est. Net Profit</div><div class="kpi-value" id="fk-profit">$—</div><div class="kpi-sub" id="fk-margin">— margin</div></div>
+      </div>
+
+      <div class="fin-row">
+        <!-- Chart de revenue diario -->
         <div class="card">
-          <div class="card-hdr"><div><div class="card-title">P&amp;L — April 2026</div></div></div>
-          <div>
-            <div class="pl-row"><span class="pl-label dark">Revenue</span><span style="font-weight:600;color:var(--green)">$36,138</span></div>
-            <div class="pl-row"><span class="pl-label">Variable costs</span><span class="pl-val neg">–$4,234</span></div>
-            <div class="pl-row subtotal"><span class="pl-label dark">Gross profit</span><span style="font-weight:700;color:var(--green)">$31,904</span></div>
-            <div class="pl-row"><span class="pl-label">Payroll (3 staff)</span><span class="pl-val neg">–$16,100</span></div>
-            <div class="pl-row"><span class="pl-label">Fleet OpEx</span><span class="pl-val neg">–$960</span></div>
-            <div class="pl-row"><span class="pl-label">Insurance</span><span class="pl-val neg">–$360</span></div>
-            <div class="pl-row"><span class="pl-label">Marketing</span><span class="pl-val neg">–$400</span></div>
-            <div class="pl-row"><span class="pl-label">Phone + software</span><span class="pl-val neg">–$120</span></div>
-            <div class="pl-row"><span class="pl-label">Other fixed</span><span class="pl-val neg">–$360</span></div>
-            <div class="pl-row total"><span class="pl-label dark">Net profit</span><span class="pl-val total">$14,604</span></div>
+          <div class="card-hdr"><div><div class="card-title">Revenue by day</div><div class="card-sub" id="fin-chart-sub">Loading...</div></div></div>
+          <div id="fin-chart" style="height:160px;display:flex;align-items:flex-end;gap:2px;padding:8px 0"></div>
+        </div>
+
+        <!-- P&L real -->
+        <div class="card" id="fin-pl">
+          <div class="card-hdr"><div><div class="card-title">P&L Summary</div><div class="card-sub" id="fin-pl-period">Loading...</div></div></div>
+          <div id="fin-pl-rows"></div>
+        </div>
+      </div>
+
+      <!-- BAS Summary para ATO -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-hdr">
+          <div><div class="card-title">🇦🇺 BAS Summary — ATO Reporting</div><div class="card-sub">Business Activity Statement · GST quarterly obligations</div></div>
+          <button onclick="exportBAS()" style="background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Export BAS</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px" id="bas-grid">
+          <div style="background:var(--off);border-radius:10px;padding:14px">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em">G1 Total Sales</div>
+            <div style="font-size:20px;font-weight:700;color:var(--navy);margin-top:6px" id="bas-g1">$—</div>
           </div>
+          <div style="background:#FFF7ED;border-radius:10px;padding:14px">
+            <div style="font-size:11px;font-weight:600;color:#92400E;text-transform:uppercase;letter-spacing:0.04em">1A GST on Sales</div>
+            <div style="font-size:20px;font-weight:700;color:#B45309;margin-top:6px" id="bas-1a">$—</div>
+          </div>
+          <div style="background:#F0FDF4;border-radius:10px;padding:14px">
+            <div style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:0.04em">1B GST on Purchases</div>
+            <div style="font-size:20px;font-weight:700;color:#059669;margin-top:6px" id="bas-1b">$—</div>
+          </div>
+          <div style="background:#EEF3FC;border-radius:10px;padding:14px">
+            <div style="font-size:11px;font-weight:600;color:#1848C8;text-transform:uppercase;letter-spacing:0.04em">Net GST Payable</div>
+            <div style="font-size:20px;font-weight:700;color:#1848C8;margin-top:6px" id="bas-net">$—</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px;background:#FEF3C7;border-radius:8px;font-size:12px;color:#92400E">
+          ⚠️ <strong>BAS due dates:</strong> Q1 (Jul–Sep) → 28 Oct · Q2 (Oct–Dec) → 28 Feb · Q3 (Jan–Mar) → 28 Apr · Q4 (Apr–Jun) → 28 Jul
+        </div>
+      </div>
+
+      <!-- Tabla de transacciones -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-hdr"><div><div class="card-title">Transactions</div><div class="card-sub" id="fin-tx-sub">All completed jobs</div></div></div>
+        <div class="card-body">
+          <table class="tbl">
+            <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Amount</th><th>GST</th><th>Net</th><th>Status</th></tr></thead>
+            <tbody id="fin-tx-body"><tr><td colspan="7" style="text-align:center;color:var(--mgray);padding:24px">Loading...</td></tr></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -760,6 +821,12 @@ function go(page, btn){
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sb-overlay').classList.remove('open');
   if(page==='zones') loadVanZones();
+  if(page==='finance'){
+    const now = new Date();
+    document.getElementById('fin-month').value = now.getMonth()+1;
+    document.getElementById('fin-year').value = now.getFullYear();
+    loadFinance();
+  }
   if(page==='contacts') loadContacts();
   if(page==='bookings') loadBookings();
   if(page==='clients') loadClients();
@@ -778,7 +845,227 @@ function closeSidebar(){
   document.getElementById('sb-overlay').classList.remove('open');
 }
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
+// ── FINANCE ───────────────────────────────────────────────────────────────────
+const FIXED_COSTS = { payroll: 0, fleet: 960, insurance: 360, marketing: 400, software: 120, other: 360 };
+// Payroll: Phase 1 solo = $0 salary, Phase 2 = $16,100
+const VAR_COST_PER_JOB = 10; // parts/supplies per job
+
+async function loadFinance() {
+  const month = parseInt(document.getElementById('fin-month')?.value || new Date().getMonth()+1);
+  const year  = parseInt(document.getElementById('fin-year')?.value  || new Date().getFullYear());
+  const view  = document.getElementById('fin-view')?.value || 'month';
+
+  let dateFrom, dateTo;
+  if (view === 'month') {
+    dateFrom = `${year}-${String(month).padStart(2,'0')}-01`;
+    dateTo   = new Date(year, month, 0).toISOString().split('T')[0];
+  } else if (view === 'quarter') {
+    const q = Math.ceil(month/3);
+    dateFrom = `${year}-${String((q-1)*3+1).padStart(2,'0')}-01`;
+    dateTo   = new Date(year, q*3, 0).toISOString().split('T')[0];
+  } else {
+    dateFrom = `${year}-01-01`;
+    dateTo   = `${year}-12-31`;
+  }
+
+  const { data: bookings } = await sb.from('bookings')
+    .select('*,profiles(full_name,email)')
+    .eq('status','completed')
+    .gte('scheduled_date', dateFrom)
+    .lte('scheduled_date', dateTo)
+    .order('scheduled_date', { ascending: true });
+
+  const jobs = bookings || [];
+  const revenue = jobs.reduce((s,j) => s + (j.service_price||0), 0);
+  const jobCount = jobs.length;
+  const gst = Math.round(revenue / 11); // GST inclusive: 1/11
+  const netRevenue = revenue - gst;
+  const varCosts = jobCount * VAR_COST_PER_JOB;
+  const fixedTotal = Object.values(FIXED_COSTS).reduce((a,b)=>a+b,0);
+  const grossProfit = netRevenue - varCosts;
+  const netProfit = grossProfit - fixedTotal;
+  const margin = netRevenue > 0 ? Math.round(netProfit/netRevenue*100) : 0;
+  const avgJob = jobCount > 0 ? Math.round(revenue/jobCount) : 0;
+
+  // KPIs
+  document.getElementById('fk-revenue').textContent = '$'+revenue.toLocaleString();
+  document.getElementById('fk-jobs').textContent = jobCount + ' jobs';
+  document.getElementById('fk-gst').textContent = '$'+gst.toLocaleString();
+  document.getElementById('fk-net').textContent = '$'+netRevenue.toLocaleString();
+  document.getElementById('fk-avg').textContent = 'avg $'+avgJob+' / job';
+  document.getElementById('fk-profit').textContent = '$'+netProfit.toLocaleString();
+  document.getElementById('fk-margin').textContent = margin + '% margin';
+
+  // P&L rows
+  const plRows = [
+    { label:'Revenue (incl. GST)', val: revenue, bold: true, color:'var(--green)' },
+    { label:'GST collected (1/11)', val: -gst, neg: true },
+    { label:'Net revenue (ex GST)', val: netRevenue, bold: true, sub: true },
+    { label:'Variable costs (parts)', val: -varCosts, neg: true },
+    { label:'Gross profit', val: grossProfit, bold: true, color:'var(--green)' },
+    { label:'Payroll', val: -FIXED_COSTS.payroll, neg: true },
+    { label:'Fleet & van', val: -FIXED_COSTS.fleet, neg: true },
+    { label:'Insurance', val: -FIXED_COSTS.insurance, neg: true },
+    { label:'Marketing', val: -FIXED_COSTS.marketing, neg: true },
+    { label:'Software & phone', val: -FIXED_COSTS.software, neg: true },
+    { label:'Other fixed', val: -FIXED_COSTS.other, neg: true },
+    { label:'Net profit', val: netProfit, bold: true, total: true, color: netProfit>=0?'var(--green)':'var(--red)' },
+  ];
+
+  const periodStr = view==='month' ? new Date(year,month-1,1).toLocaleString('en-AU',{month:'long',year:'numeric'})
+    : view==='quarter' ? `Q${Math.ceil(month/3)} ${year}` : `FY ${year}`;
+
+  document.getElementById('fin-pl-period').textContent = periodStr;
+  document.getElementById('fin-pl-rows').innerHTML = plRows.map(r=>`
+    <div class="pl-row${r.sub?' subtotal':''}${r.total?' total':''}">
+      <span class="pl-label${r.bold?' dark':''}">${r.label}</span>
+      <span style="font-weight:${r.bold?'700':'500'};color:${r.color||(r.neg?'var(--red)':'var(--navy)')}">
+        ${r.val>=0?'$':'–$'}${Math.abs(r.val).toLocaleString()}
+      </span>
+    </div>`).join('');
+
+  // Daily chart
+  const dailyMap = {};
+  jobs.forEach(j => {
+    const d = j.scheduled_date;
+    dailyMap[d] = (dailyMap[d]||0) + (j.service_price||0);
+  });
+  const days = Object.keys(dailyMap).sort();
+  const maxVal = Math.max(...Object.values(dailyMap), 1);
+  document.getElementById('fin-chart-sub').textContent = periodStr + ' · ' + jobCount + ' jobs';
+  document.getElementById('fin-chart').innerHTML = days.length ? days.map(d=>{
+    const v = dailyMap[d];
+    const h = Math.max(8, Math.round(v/maxVal*140));
+    const label = new Date(d+'T00:00:00').getDate();
+    return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:3px" title="${d}: $${v}">
+      <div style="width:100%;background:#1848C8;border-radius:3px 3px 0 0;height:${h}px;min-height:4px"></div>
+      <div style="font-size:9px;color:var(--mgray)">${label}</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--mgray);font-size:13px;margin:auto">No completed jobs in this period</div>';
+
+  // BAS
+  document.getElementById('bas-g1').textContent  = '$'+revenue.toLocaleString();
+  document.getElementById('bas-1a').textContent  = '$'+gst.toLocaleString();
+  document.getElementById('bas-1b').textContent  = '$0'; // no GST on purchases yet
+  document.getElementById('bas-net').textContent = '$'+gst.toLocaleString();
+
+  // Transactions table
+  document.getElementById('fin-tx-sub').textContent = jobCount + ' completed jobs · ' + periodStr;
+  document.getElementById('fin-tx-body').innerHTML = jobs.length ? jobs.map(j=>{
+    const price = j.service_price||0;
+    const jGst  = Math.round(price/11);
+    const jNet  = price - jGst;
+    const name  = j.profiles?.full_name || j.profiles?.email?.split('@')[0] || 'Client';
+    return `<tr>
+      <td>${j.scheduled_date}</td>
+      <td>${name}</td>
+      <td>${j.service_name||'Service'}</td>
+      <td style="font-weight:600">$${price.toLocaleString()}</td>
+      <td style="color:var(--orange)">$${jGst}</td>
+      <td>$${jNet}</td>
+      <td><span style="background:#D1FAE5;color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--mgray);padding:24px">No transactions in this period</td></tr>';
+
+  // Store for export
+  window._finData = { jobs, revenue, gst, netRevenue, grossProfit, netProfit, margin, jobCount, avgJob, periodStr, dateFrom, dateTo };
+}
+
+function exportFinanceCSV() {
+  const d = window._finData;
+  if (!d) return;
+  const rows = [
+    ['Date','Client','Service','Amount (incl GST)','GST','Net Amount','Status'],
+    ...d.jobs.map(j => {
+      const price = j.service_price||0;
+      const gst = Math.round(price/11);
+      return [j.scheduled_date, j.profiles?.full_name||j.profiles?.email||'', j.service_name||'', price, gst, price-gst, 'Completed'];
+    }),
+    [],
+    ['SUMMARY','','','','','',''],
+    ['Period',d.periodStr,'','','','',''],
+    ['Total Revenue (incl GST)',d.revenue,'','','','',''],
+    ['GST Collected',d.gst,'','','','',''],
+    ['Net Revenue',d.netRevenue,'','','','',''],
+    ['Net Profit',d.netProfit,'','','','',''],
+    ['Margin',d.margin+'%','','','','',''],
+  ];
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `DrBike_Finance_${d.periodStr.replace(/ /g,'_')}.csv`;
+  a.click();
+}
+
+function exportBAS() {
+  const d = window._finData;
+  if (!d) return;
+  const content = `DR. BIKE SYDNEY — BAS SUMMARY
+Period: ${d.periodStr}
+ABN: [Your ABN here]
+Generated: ${new Date().toLocaleDateString('en-AU')}
+
+G1 — Total Sales (incl GST): $${d.revenue.toLocaleString()}
+G2 — Export Sales: $0
+G3 — Other GST-free Sales: $0
+G10 — Capital Purchases: $0
+G11 — Non-capital Purchases: $0
+
+1A — GST on Sales (G1/11): $${d.gst.toLocaleString()}
+1B — GST Credits on Purchases: $0
+NET GST PAYABLE TO ATO: $${d.gst.toLocaleString()}
+
+Jobs completed: ${d.jobCount}
+Average job value: $${d.avgJob}
+
+NOTE: This is an estimate. Please verify with your registered tax agent before lodging.`;
+  const blob = new Blob([content], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `DrBike_BAS_${d.periodStr.replace(/ /g,'_')}.txt`;
+  a.click();
+}
+
+function exportFinancePDF() {
+  const d = window._finData;
+  if (!d) { toast('Load finance data first'); return; }
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Dr. Bike Finance Report</title>
+  <style>
+    body{font-family:Inter,sans-serif;padding:40px;color:#0F1D3A;max-width:800px;margin:0 auto}
+    h1{color:#1848C8;margin-bottom:4px}
+    .sub{color:#6B7280;font-size:14px;margin-bottom:32px}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th{background:#0F1D3A;color:#fff;padding:10px;text-align:left;font-size:12px}
+    td{padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:13px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+    .kpi{background:#F9FAFB;border-radius:10px;padding:16px}
+    .kpi-label{font-size:11px;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em}
+    .kpi-val{font-size:22px;font-weight:700;color:#0F1D3A;margin-top:6px}
+    .footer{margin-top:40px;font-size:11px;color:#6B7280;border-top:1px solid #E5E7EB;padding-top:16px}
+    @media print{button{display:none}}
+  </style></head><body>
+  <h1>Dr. Bike Sydney — Finance Report</h1>
+  <div class="sub">Period: ${d.periodStr} · Generated ${new Date().toLocaleDateString('en-AU')}</div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Revenue (incl GST)</div><div class="kpi-val">$${d.revenue.toLocaleString()}</div></div>
+    <div class="kpi"><div class="kpi-label">GST Collected</div><div class="kpi-val">$${d.gst.toLocaleString()}</div></div>
+    <div class="kpi"><div class="kpi-label">Net Revenue</div><div class="kpi-val">$${d.netRevenue.toLocaleString()}</div></div>
+    <div class="kpi"><div class="kpi-label">Net Profit</div><div class="kpi-val">$${d.netProfit.toLocaleString()}</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Amount</th><th>GST</th><th>Net</th></tr></thead>
+    <tbody>${d.jobs.map(j=>{
+      const p=j.service_price||0,g=Math.round(p/11);
+      return `<tr><td>${j.scheduled_date}</td><td>${j.profiles?.full_name||'Client'}</td><td>${j.service_name||''}</td><td>$${p}</td><td>$${g}</td><td>$${p-g}</td></tr>`;
+    }).join('')}</tbody>
+  </table>
+  <div class="footer">Dr. Bike Sydney · drbike.com.au · ABN: [Your ABN] · This report is for internal use only.</div>
+  <br><button onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </body></html>`);
+  win.document.close();
+}
 function showToast(msg){
   let t = document.getElementById('admin-toast');
   if(!t){
