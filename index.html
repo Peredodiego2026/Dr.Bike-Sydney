@@ -1216,6 +1216,21 @@ body { top: 0 !important; }
           <div style="font-size:11px;color:var(--mgray);margin-top:2px">of the problem area</div>
         </div>
         <input type="file" id="diag-photo-input" accept="image/*" capture="environment" style="display:none" onchange="analyzeBikePhoto(this)">
+
+        <!-- Audio description option -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <span style="font-size:11px;color:var(--mgray);white-space:nowrap">or describe the sound</span>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="diag-mic-btn" onclick="toggleVoiceDiagnosis()" style="flex:1;background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:var(--sans);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">
+            🎙️ Record noise description
+          </button>
+        </div>
+        <div id="diag-voice-status" style="display:none;font-size:12px;text-align:center;margin-top:8px;color:var(--mgray)"></div>
+        <textarea id="diag-text-input" placeholder="Or type a description... e.g. 'clicking noise when pedaling on the left side'" style="display:none;width:100%;margin-top:8px;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;color:var(--navy);background:var(--white);resize:none;height:72px;box-sizing:border-box" oninput="this.style.display='block'"></textarea>
+        <button id="diag-text-btn" onclick="analyzeBikeText()" style="display:none;width:100%;margin-top:8px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">🔍 Analyse description</button>
         <!-- Result area -->
         <div id="diag-result" style="display:none;margin-top:12px"></div>
       </div>
@@ -1901,6 +1916,166 @@ function setTheme(theme, save=true){
 function toggleTheme(){
   const current = document.documentElement.getAttribute('data-theme') || 'light';
   setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// ── VOICE & TEXT DIAGNOSIS ────────────────────────────────────────────────────
+let recognition = null;
+let isRecording = false;
+
+function toggleVoiceDiagnosis(){
+  const btn = document.getElementById('diag-mic-btn');
+  const status = document.getElementById('diag-voice-status');
+  const textArea = document.getElementById('diag-text-input');
+  const analyzeBtn = document.getElementById('diag-text-btn');
+
+  // Check if Web Speech API is available
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    // Fallback to text input
+    textArea.style.display = 'block';
+    analyzeBtn.style.display = 'block';
+    textArea.placeholder = "Describe the problem or noise... e.g. 'clicking sound when pedaling, worse on left side'";
+    textArea.focus();
+    status.style.display = 'none';
+    btn.style.display = 'none';
+    return;
+  }
+
+  if(isRecording){
+    recognition?.stop();
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-AU';
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    btn.innerHTML = '🔴 Listening... tap to stop';
+    btn.style.background = '#FEF2F2';
+    btn.style.borderColor = 'var(--red)';
+    btn.style.color = 'var(--red)';
+    status.style.display = 'block';
+    status.innerHTML = '🎙️ <em>Speak clearly — describe the noise or problem with your bike</em>';
+    textArea.style.display = 'block';
+    textArea.value = '';
+  };
+
+  recognition.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    textArea.style.display = 'block';
+    textArea.value = transcript;
+    analyzeBtn.style.display = 'block';
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    btn.innerHTML = '🎙️ Record again';
+    btn.style.background = 'var(--off)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--navy)';
+    if(textArea.value){
+      status.innerHTML = '✅ Got it! Review and tap Analyse.';
+      analyzeBtn.style.display = 'block';
+    } else {
+      status.innerHTML = '⚠️ Nothing recorded. Try again or type below.';
+      textArea.style.display = 'block';
+      textArea.placeholder = "Type your description here...";
+    }
+  };
+
+  recognition.onerror = (e) => {
+    isRecording = false;
+    btn.innerHTML = '🎙️ Record noise description';
+    btn.style.background = 'var(--off)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--navy)';
+    // Fallback to text
+    textArea.style.display = 'block';
+    analyzeBtn.style.display = 'block';
+    status.innerHTML = '⚠️ Mic not available — type your description below';
+    status.style.display = 'block';
+  };
+
+  recognition.start();
+}
+
+// Show analyze button when typing
+document.addEventListener('DOMContentLoaded', () => {
+  const textArea = document.getElementById('diag-text-input');
+  if(textArea){
+    textArea.addEventListener('input', () => {
+      const btn = document.getElementById('diag-text-btn');
+      if(btn) btn.style.display = textArea.value.trim() ? 'block' : 'none';
+    });
+  }
+});
+
+async function analyzeBikeText(){
+  const text = document.getElementById('diag-text-input')?.value?.trim();
+  if(!text) return;
+
+  const resultEl = document.getElementById('diag-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `
+    <div style="text-align:center;padding:20px">
+      <div style="font-size:24px;margin-bottom:8px">🔍</div>
+      <div style="font-size:13px;font-weight:600;color:var(--navy)">Analysing your description...</div>
+      <div style="font-size:11px;color:var(--mgray);margin-top:4px">Claude is diagnosing based on your description</div>
+      <div style="margin-top:12px;height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="height:100%;background:var(--blue);border-radius:2px;animation:progress 2s ease-in-out infinite"></div>
+      </div>
+    </div>`;
+
+  try {
+    const res = await fetch('/api/diagnose-bike-text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: text })
+    });
+
+    const data = await res.json();
+    if(!res.ok || !data.diagnosis) throw new Error(data.error || 'Diagnosis failed');
+
+    const d = data.diagnosis;
+    const urgencyColor = { low: '#059669', medium: '#D97706', high: '#DC2626' }[d.urgency] || '#1848C8';
+    const urgencyLabel = { low: '🟢 Low urgency', medium: '🟡 Moderate urgency', high: '🔴 Urgent' }[d.urgency] || '';
+
+    resultEl.innerHTML = `
+      <div style="background:var(--off);border-radius:10px;padding:14px;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:12px;font-weight:700;color:var(--navy)">🤖 AI Diagnosis</div>
+          <span style="font-size:10px;font-weight:600;color:${urgencyColor};background:${urgencyColor}18;padding:3px 8px;border-radius:10px">${urgencyLabel}</span>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">${d.problem}</div>
+        <div style="font-size:12px;color:var(--mgray);line-height:1.5;margin-bottom:10px">${d.explanation}</div>
+        ${d.tips ? `<div style="background:var(--blue-lt);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--blue);margin-bottom:10px">💡 <strong>Quick tip:</strong> ${d.tips}</div>` : ''}
+        <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:11px;color:var(--mgray)">Recommended service</div>
+            <div style="font-size:13px;font-weight:700;color:var(--navy)">${d.recommended_service}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--mgray)">Estimate</div>
+            <div style="font-size:16px;font-weight:700;color:var(--blue)">${d.price_estimate}</div>
+          </div>
+        </div>
+        <button onclick="autoSelectService('${d.recommended_service}')" style="width:100%;margin-top:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">
+          Book ${d.recommended_service} →
+        </button>
+        <button onclick="resetDiagnosis()" style="width:100%;margin-top:6px;background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans)">Try again</button>
+      </div>`;
+
+  } catch(err) {
+    resultEl.innerHTML = `
+      <div style="background:#FEF2F2;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:12px;color:var(--red)">⚠️ Could not analyse. Please try again or select a service manually.</div>
+        <button onclick="resetDiagnosis()" style="margin-top:8px;background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans)">Try again</button>
+      </div>`;
+  }
 }
 
 // ── AI BIKE DIAGNOSIS ─────────────────────────────────────────────────────────
