@@ -1227,45 +1227,55 @@ function openCouponModal(){
   modal = document.createElement('div');
   modal.id = 'coupon-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
-  modal.innerHTML = `
-    <div style="background:var(--white);border-radius:16px;width:100%;max-width:400px;padding:24px">
-      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:20px">Create discount code</div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">CODE</label>
-        <div style="display:flex;gap:8px">
-          <input id="c-code" class="inp" style="margin:0;text-transform:uppercase;font-weight:700;letter-spacing:0.08em" placeholder="e.g. NEWRIDER20">
-          <button onclick="document.getElementById('c-code').value='BIKE'+Math.random().toString(36).substr(2,5).toUpperCase()" style="white-space:nowrap;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif">Random</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">TYPE</label>
-          <select id="c-type" class="inp" style="margin:0">
-            <option value="fixed">Fixed $ off</option>
-            <option value="percent">Percentage %</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">VALUE</label>
-          <input id="c-value" type="number" class="inp" style="margin:0" placeholder="15" min="1">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">MAX USES (blank=unlimited)</label>
-          <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited">
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">EXPIRES</label>
-          <input id="c-expires" type="date" class="inp" style="margin:0">
-        </div>
-      </div>
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--white);border-radius:16px;width:100%;max-width:400px;padding:24px';
+  box.innerHTML = `
+    <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:20px">Create discount code</div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">CODE</label>
       <div style="display:flex;gap:8px">
-        <button onclick="document.getElementById('coupon-modal').remove()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:Inter,sans-serif;cursor:pointer">Cancel</button>
-        <button onclick="saveCoupon()" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
+        <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.08em" placeholder="e.g. NEWRIDER20">
+        <button id="c-random-btn" style="white-space:nowrap;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)">Random</button>
       </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">TYPE</label>
+        <select id="c-type" class="inp" style="margin:0">
+          <option value="fixed">Fixed $ off</option>
+          <option value="percent">Percentage %</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">VALUE</label>
+        <input id="c-value" type="number" class="inp" style="margin:0" placeholder="15" min="1">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">MAX USES</label>
+        <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">EXPIRES</label>
+        <input id="c-expires" type="date" class="inp" style="margin:0">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button id="c-cancel-btn" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy)">Cancel</button>
+      <button id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
     </div>`;
+
+  modal.appendChild(box);
   document.body.appendChild(modal);
+
+  // Event listeners — no onclick inline
+  document.getElementById('c-random-btn').addEventListener('click', () => {
+    document.getElementById('c-code').value = 'BIKE' + Math.random().toString(36).substr(2,5).toUpperCase();
+  });
+  document.getElementById('c-cancel-btn').addEventListener('click', () => modal.remove());
+  document.getElementById('c-save-btn').addEventListener('click', saveCoupon);
 }
 
 function toast(msg){
