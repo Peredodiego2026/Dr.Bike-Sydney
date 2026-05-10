@@ -884,7 +884,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
           <div><div class="card-title">🇦🇺 BAS Summary — ATO Reporting</div><div class="card-sub">Business Activity Statement · GST quarterly obligations</div></div>
           <button onclick="exportBAS()" style="background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Export BAS</button>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px" id="bas-grid">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px" id="bas-grid" class="bas-grid">
           <div style="background:var(--off);border-radius:10px;padding:14px">
             <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em">G1 Total Sales</div>
             <div style="font-size:20px;font-weight:700;color:var(--navy);margin-top:6px" id="bas-g1">$—</div>
@@ -984,56 +984,54 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
     <div id="page-coupons" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">Discount Codes</div>
-        <button onclick="toggleCouponForm()" id="btn-toggle-coupon-form" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">+ Create code</button>
+        <button onclick="toggleCouponForm()" id="btn-toggle-coupon-form" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create code
+        </button>
       </div>
 
-      <!-- INLINE CREATE FORM (hidden by default) -->
-      <div id="coupon-inline-form" style="display:none;background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:22px;margin-bottom:20px">
-        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:18px">New discount code</div>
+      <!-- INLINE CREATE FORM -->
+      <div id="coupon-inline-form" style="display:none;background:var(--white);border:1.5px solid var(--border);border-radius:16px;padding:22px;margin-bottom:20px;box-shadow:var(--shadow)">
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:18px">🎟️ New discount code</div>
         <div style="margin-bottom:12px">
-          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">CODE</label>
+          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Code</label>
           <div style="display:flex;gap:8px">
-            <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.08em" placeholder="e.g. NEWRIDER20">
+            <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.1em;font-size:15px" placeholder="e.g. NEWRIDER20">
             <button onclick="document.getElementById('c-code').value='BIKE'+Math.random().toString(36).substr(2,5).toUpperCase()" style="white-space:nowrap;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)">Random</button>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">TYPE</label>
+            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Type</label>
             <select id="c-type" class="inp" style="margin:0">
               <option value="fixed">Fixed $ off</option>
               <option value="percent">Percentage %</option>
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">VALUE</label>
-            <input id="c-value" type="number" class="inp" style="margin:0" placeholder="15" min="1">
+            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Value</label>
+            <input id="c-value" type="number" class="inp" style="margin:0;font-size:16px;font-weight:700" placeholder="15" min="1">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">MAX USES</label>
-            <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited (optional)">
+            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Max uses</label>
+            <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited">
           </div>
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">EXPIRES</label>
+            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Expires</label>
             <input id="c-expires" type="date" class="inp" style="margin:0">
           </div>
         </div>
         <div style="display:flex;gap:8px">
-          <button onclick="toggleCouponForm()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy);font-size:13px">Cancel</button>
-          <button onclick="saveCoupon()" id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
+          <button onclick="toggleCouponForm()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy);font-size:13px">Cancel</button>
+          <button onclick="saveCoupon()" id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
         </div>
       </div>
 
-      <!-- TABLE -->
-      <div class="card">
-        <div class="card-body">
-          <table class="tbl">
-            <thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Uses</th><th>Expires</th><th>Status</th><th></th></tr></thead>
-            <tbody id="coupons-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">Loading...</td></tr></tbody>
-          </table>
-        </div>
+      <!-- CARDS GRID -->
+      <div id="coupons-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+        <div style="text-align:center;padding:48px;color:var(--mgray);grid-column:1/-1;font-size:13px">Loading...</div>
       </div>
     </div>
 
@@ -1479,38 +1477,74 @@ function showToast(msg){
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 // ── DISCOUNT CODES ────────────────────────────────────────────────────────────
 async function loadCoupons(){
-  const tbody = document.getElementById('coupons-tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">Loading...</td></tr>';
+  const grid = document.getElementById('coupons-grid');
+  if(!grid) return;
+  grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--mgray);grid-column:1/-1;font-size:13px">Loading...</div>';
 
   try {
     const { data, error } = await sb.from('discount_codes').select('*').order('created_at',{ascending:false});
     console.log('[loadCoupons]', { data, error });
 
     if(error){
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">❌ ${error.message}<br><small style="color:var(--mgray)">Check that the discount_codes table exists in Supabase and RLS allows select.</small></td></tr>`;
+      grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--red);grid-column:1/-1">❌ ${error.message}<br><small style="color:var(--mgray)">Check that the discount_codes table exists in Supabase and RLS allows select.</small></div>`;
       return;
     }
     if(!data?.length){
-      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">No codes yet — create your first one above!</td></tr>';
+      grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--mgray);grid-column:1/-1;font-size:13px">No codes yet — create your first one above! 🎟️</div>';
       return;
     }
-    tbody.innerHTML = data.map(c=>`
-      <tr>
-        <td data-label="Code"><strong style="letter-spacing:0.05em">${c.code}</strong></td>
-        <td data-label="Type">${c.discount_type==='percent'?'Percentage':'Fixed $'}</td>
-        <td data-label="Value" style="font-weight:600;color:var(--blue)">${c.discount_type==='percent'?c.discount_value+'%':'$'+c.discount_value}</td>
-        <td data-label="Uses">${c.uses_count||0}${c.max_uses?'/'+c.max_uses:' (∞)'}</td>
-        <td data-label="Expires">${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
-        <td data-label="Status"><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
-        <td data-label="Actions" style="display:flex;gap:6px;align-items:center">
-          <button onclick="toggleCoupon('${c.id}',${!c.active})" class="coupon-btn ${c.active?'coupon-btn-deactivate':'coupon-btn-activate'}">${c.active?'Deactivate':'Activate'}</button>
-          <button onclick="deleteCoupon('${c.id}','${c.code}')" class="coupon-btn coupon-btn-delete">Delete</button>
-        </td>
-      </tr>`).join('');
+
+    grid.innerHTML = data.map(c => {
+      const isActive = c.active;
+      const isPct = c.discount_type === 'percent';
+      const valDisplay = isPct ? `${c.discount_value}%` : `$${c.discount_value}`;
+      const usesDisplay = `${c.uses_count||0}${c.max_uses ? ' / '+c.max_uses : ''}`;
+      const expDisplay = c.expires_at ? new Date(c.expires_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : 'No expiry';
+      const expired = c.expires_at && new Date(c.expires_at) < new Date();
+
+      return `
+      <div style="background:var(--white);border:1.5px solid ${isActive&&!expired?'var(--border)':'#FECACA'};border-radius:16px;padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:box-shadow .2s">
+        <!-- Color accent top bar -->
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${isActive&&!expired?'linear-gradient(90deg,var(--blue),#6366F1)':'#FCA5A5'}"></div>
+
+        <!-- Code + status -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;margin-top:4px">
+          <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:0.08em;font-variant-numeric:tabular-nums">${c.code}</div>
+          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive&&!expired?'#DCFCE7':'#FEE2E2'};color:${isActive&&!expired?'#15803D':'#DC2626'}">${expired?'Expired':isActive?'Active':'Inactive'}</span>
+        </div>
+
+        <!-- Big value display -->
+        <div style="background:${isPct?'#EEF3FC':'#ECFDF5'};border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:28px;font-weight:800;color:${isPct?'var(--blue)':'#059669'}">${valDisplay}</div>
+          <div style="font-size:12px;color:var(--mgray);line-height:1.4">${isPct?'percentage<br>discount':'fixed amount<br>discount'}</div>
+        </div>
+
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div style="background:var(--off);border-radius:10px;padding:10px 12px">
+            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Uses</div>
+            <div style="font-size:14px;font-weight:700;color:var(--navy)">${usesDisplay}</div>
+          </div>
+          <div style="background:var(--off);border-radius:10px;padding:10px 12px">
+            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Expires</div>
+            <div style="font-size:12px;font-weight:600;color:${expired?'var(--red)':'var(--navy)'}">${expDisplay}</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleCoupon('${c.id}',${!isActive})" style="flex:1;padding:9px;border:1.5px solid ${isActive?'#FCA5A5':'#86EFAC'};border-radius:8px;background:${isActive?'#FEF2F2':'#F0FDF4'};color:${isActive?'#DC2626':'#16A34A'};font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            ${isActive?'Deactivate':'Activate'}
+          </button>
+          <button onclick="deleteCoupon('${c.id}','${c.code}')" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#DC2626;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
   } catch(e) {
     console.error('[loadCoupons] exception:', e);
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">❌ Exception: ${e.message}</td></tr>`;
+    grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--red);grid-column:1/-1">❌ Exception: ${e.message}</div>`;
   }
 }
 
