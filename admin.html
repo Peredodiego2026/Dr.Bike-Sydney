@@ -1197,17 +1197,27 @@ function showToast(msg){
 async function loadCoupons(){
   const tbody = document.getElementById('coupons-tbody');
   if(!tbody) return;
-  const { data } = await sb.from('discount_codes').select('*').order('created_at',{ascending:false});
-  if(!data?.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">No codes yet. Create your first one!</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">Loading...</td></tr>';
+  
+  const { data, error } = await sb.from('discount_codes').select('*').order('created_at',{ascending:false});
+  
+  if(error){ 
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">Error: ${error.message}</td></tr>`;
+    return; 
+  }
+  if(!data?.length){ 
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">No codes yet. Create your first one!</td></tr>'; 
+    return; 
+  }
   tbody.innerHTML = data.map(c=>`
     <tr>
-      <td><strong>${c.code}</strong></td>
-      <td>${c.discount_type==='percent'?'Percentage':'Fixed $'}</td>
-      <td>${c.discount_type==='percent'?c.discount_value+'%':'$'+c.discount_value}</td>
-      <td>${c.uses_count}${c.max_uses?'/'+c.max_uses:' (unlimited)'}</td>
-      <td>${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
+      <td><strong style="color:var(--navy);letter-spacing:0.05em">${c.code}</strong></td>
+      <td style="color:var(--mgray)">${c.discount_type==='percent'?'Percentage':'Fixed $'}</td>
+      <td style="font-weight:600;color:var(--blue)">${c.discount_type==='percent'?c.discount_value+'%':'$'+c.discount_value}</td>
+      <td style="color:var(--mgray)">${c.uses_count||0}${c.max_uses?'/'+c.max_uses:' (∞)'}</td>
+      <td style="color:var(--mgray)">${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
       <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
-      <td><button onclick="toggleCoupon('${c.id}',${!c.active})" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif">${c.active?'Deactivate':'Activate'}</button></td>
+      <td><button onclick="toggleCoupon('${c.id}',${!c.active})" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif;color:var(--navy)">${c.active?'Deactivate':'Activate'}</button></td>
     </tr>`).join('');
 }
 
@@ -1271,12 +1281,34 @@ async function saveCoupon(){
   const value = parseInt(document.getElementById('c-value')?.value);
   const maxUses = parseInt(document.getElementById('c-maxuses')?.value)||null;
   const expires = document.getElementById('c-expires')?.value||null;
-  if(!code||!value){ alert('Please fill in code and value'); return; }
-  const { error } = await sb.from('discount_codes').insert({ code, discount_type:type, discount_value:value, max_uses:maxUses, expires_at:expires?new Date(expires).toISOString():null });
-  if(error){ alert('Error: '+error.message); return; }
-  document.getElementById('coupon-modal').remove();
-  loadCoupons();
-  toast('✅ Discount code created!');
+  if(!code){ alert('Please enter a code'); return; }
+  if(!value || isNaN(value)){ alert('Please enter a value'); return; }
+  
+  const btn = document.querySelector('#coupon-modal button[onclick="saveCoupon()"]');
+  if(btn){ btn.textContent='Creating...'; btn.disabled=true; }
+  
+  try {
+    const insertData = { 
+      code, 
+      discount_type: type || 'fixed', 
+      discount_value: value,
+      active: true,
+      uses_count: 0
+    };
+    if(maxUses) insertData.max_uses = maxUses;
+    if(expires) insertData.expires_at = new Date(expires).toISOString();
+    
+    const { data, error } = await sb.from('discount_codes').insert(insertData).select();
+    if(error){ alert('Error creating code: ' + error.message); return; }
+    
+    document.getElementById('coupon-modal').remove();
+    await loadCoupons();
+    toast('✅ Discount code created!');
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    if(btn){ btn.textContent='Create code'; btn.disabled=false; }
+  }
 }
 
 async function toggleCoupon(id, active){
