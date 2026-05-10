@@ -1467,9 +1467,13 @@ async function loadVanZones(){
     data.forEach(row=>{
       if(!grouped[row.van_number]){
         const colors = {1:'#1848C8',2:'#D97706',3:'#7C3AED',4:'#DC2626'};
-        grouped[row.van_number] = {id:row.van_number,name:'Van '+row.van_number,color:colors[row.van_number]||'#1848C8',suburbs:[]};
+        grouped[row.van_number] = {id:row.van_number,name:'Van '+row.van_number,color:colors[row.van_number]||'#1848C8',suburbs:[],driverName:''};
       }
-      grouped[row.van_number].suburbs.push(row.suburb);
+      if(row.suburb === '__driver__'){
+        grouped[row.van_number].driverName = row.postcode || '';
+      } else {
+        grouped[row.van_number].suburbs.push(row.suburb);
+      }
     });
     vanZones = Object.values(grouped).sort((a,b)=>a.id-b.id);
   }
@@ -1490,18 +1494,18 @@ function renderVanZones(){
   const container = document.getElementById('zones-container');
   if(!container) return;
   container.innerHTML = vanZones.map(van=>{
-    const driverKey = `drbike-driver-van${van.id}`;
-    const driverName = localStorage.getItem(driverKey) || '';
     return `
     <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:20px;overflow:hidden">
       <div style="padding:16px 20px;background:${van.color};display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:600;color:#fff;margin-bottom:4px">${van.name}</div>
-          <input id="driver-${van.id}" value="${driverName}" placeholder="Mechanic name (e.g. Diego)"
-            onchange="localStorage.setItem('drbike-driver-van${van.id}',this.value)"
-            style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:4px 10px;font-size:12px;color:#fff;font-family:Inter,sans-serif;outline:none;width:100%;max-width:220px"
-            placeholder="Mechanic name">
-          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">${van.suburbs.length} suburbs assigned</div>
+          <div style="font-size:15px;font-weight:600;color:#fff;margin-bottom:6px">${van.name}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:11px;color:rgba(255,255,255,0.6);white-space:nowrap">👤 Mechanic:</span>
+            <input id="driver-${van.id}" value="${van.driverName||''}" placeholder="e.g. Diego Peredó"
+              style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:4px 10px;font-size:12px;color:#fff;font-family:Inter,sans-serif;outline:none;flex:1;max-width:200px"
+              onblur="saveDriverName(${van.id},this.value)">
+          </div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs assigned</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0">
           <button onclick="saveVanZone(${van.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
@@ -1520,6 +1524,17 @@ function renderVanZones(){
       </div>
     </div>`;
   }).join('');
+}
+
+async function saveDriverName(vanId, name){
+  // Store driver name as special suburb row with suburb='__driver__' and postcode=name
+  await sb.from('van_zones').delete().eq('van_number', vanId).eq('suburb', '__driver__');
+  if(name.trim()){
+    await sb.from('van_zones').insert({van_number: vanId, suburb: '__driver__', postcode: name.trim(), active: true});
+  }
+  const van = vanZones.find(v=>v.id===vanId);
+  if(van) van.driverName = name.trim();
+  showToast('Mechanic name saved ✓');
 }
 
 function addSuburb(vanId){

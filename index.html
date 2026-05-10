@@ -1791,7 +1791,8 @@ async function updateDashboard(){
 
     const enroute = bkgs.find(b=>b.status==='enroute');
     if(enroute){
-      startTracking(enroute.id, 'Van '+(enroute.van_number||1)+' · Your Mechanic', enroute.address || enroute.suburb);
+      const driverName = await getDriverName(enroute.van_number||1);
+      startTracking(enroute.id, driverName, enroute.address || enroute.suburb);
       initJobChat(enroute.id);
     } else {
       stopTracking();
@@ -2380,6 +2381,17 @@ let liveMap = null, mechMarker = null, destMarker = null, trackingChannel = null
 window.addEventListener('beforeunload', () => {
   if (trackingChannel) sb.removeChannel(trackingChannel);
 });
+
+async function getDriverName(vanNumber){
+  const { data } = await sb.from('van_zones')
+    .select('postcode')
+    .eq('van_number', vanNumber)
+    .eq('suburb', '__driver__')
+    .eq('active', true)
+    .limit(1);
+  const name = data?.[0]?.postcode;
+  return name ? name + ' 🚐' : 'Van '+vanNumber+' · Your Mechanic';
+}
 
 function startTracking(bookingId, mechName, destAddress) {
   document.getElementById('map-widget').style.display = 'block';
@@ -3091,7 +3103,9 @@ function showStatusUpdate(booking){
   // If enroute, show map widget
   if(booking.status === 'enroute'){
     document.getElementById('map-widget').style.display = 'block';
-    document.getElementById('map-mech-name').textContent = 'Van '+(booking.van_number||1)+' · On the way';
+    getDriverName(booking.van_number||1).then(name => {
+      document.getElementById('map-mech-name').textContent = name;
+    });
     document.getElementById('map-eta').textContent = Math.floor(Math.random()*15+5);
   }
 
