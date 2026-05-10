@@ -1299,7 +1299,7 @@ async function saveCoupon(){
   if(!code){ alert('Please enter a code'); savingCoupon=false; return; }
   if(!value || isNaN(value)){ alert('Please enter a value'); savingCoupon=false; return; }
   
-  const btn = document.querySelector('#coupon-modal button:last-child');
+  const btn = document.getElementById('c-save-btn');
   if(btn){ btn.textContent='Creating...'; btn.disabled=true; }
   
   try {
@@ -1318,7 +1318,8 @@ async function saveCoupon(){
     
     if(error){ 
       alert('Error: ' + error.message); 
-      if(btn){ btn.textContent='Create code'; btn.disabled=false; }
+      const btn2 = document.getElementById('c-save-btn');
+      if(btn2){ btn2.textContent='Create code'; btn2.disabled=false; }
       savingCoupon=false;
       return; 
     }
