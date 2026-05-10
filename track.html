@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1848C8">
+<title>Track your Dr. Bike service</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#F7F8FA;color:#0D1F3C;min-height:100vh}
+.top{background:#fff;border-bottom:1px solid #E5E7EB;padding:14px 20px;display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;background:#1848C8;display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
+.brand{font-size:16px;font-weight:700;color:#0D1F3C}
+.wrap{max-width:520px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.status-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+.pending{background:#FEF3C7;color:#D97706}
+.confirmed{background:#EEF3FC;color:#1848C8}
+.enroute{background:#ECFDF5;color:#059669}
+.completed{background:#ECFDF5;color:#059669}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F3F4F6;font-size:13px}
+.row:last-child{border:none}
+.lbl{color:#6B7280}
+#track-map{height:200px;border-radius:10px;margin-top:12px;overflow:hidden;background:#1a3a6b}
+.err{text-align:center;padding:40px 20px;color:#6B7280}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20">
+      <circle cx="5.5" cy="17" r="3"/><circle cx="18.5" cy="17" r="3"/>
+      <path d="M5.5 17L9 8h6l3.5 9"/><path d="M9 8l3.5 9"/>
+    </svg>
+  </div>
+  <div class="brand">Dr. Bike Sydney</div>
+</div>
+
+<div class="wrap">
+  <div id="content"><div class="card"><div class="err">Loading your booking...</div></div></div>
+</div>
+
+<script>
+const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn');
+
+const stColors={pending:'pending',confirmed:'confirmed',enroute:'enroute',completed:'completed'};
+const stLabels={pending:'⏳ Pending confirmation',confirmed:'✅ Confirmed',enroute:'🚐 Mechanic on the way!',completed:'✅ Service completed'};
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const bookingId = params.get('id');
+  const content = document.getElementById('content');
+
+  if(!bookingId){
+    content.innerHTML = '<div class="card"><div class="err">No booking ID provided.<br><br><a href="/" style="color:#1848C8">← Back to Dr. Bike</a></div></div>';
+    return;
+  }
+
+  const { data: bkg, error } = await sb.from('bookings').select('*').eq('id', bookingId).single();
+  if(error || !bkg){
+    content.innerHTML = '<div class="card"><div class="err">Booking not found.<br><br><a href="/" style="color:#1848C8">← Back to Dr. Bike</a></div></div>';
+    return;
+  }
+
+  const date = new Date(bkg.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+  const statusClass = stColors[bkg.status]||'pending';
+  const statusLabel = stLabels[bkg.status]||bkg.status;
+
+  content.innerHTML = `
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#0D1F3C">${bkg.service_name}</div>
+          <div style="font-size:12px;color:#6B7280;margin-top:2px">${date}${bkg.scheduled_time?' · '+bkg.scheduled_time:''}</div>
+        </div>
+        <span class="status-chip ${statusClass}">${statusLabel}</span>
+      </div>
+      <div class="row"><span class="lbl">Address</span><span>${bkg.address||'—'}</span></div>
+      <div class="row"><span class="lbl">Van</span><span>Van ${bkg.van_number||1} · Mechanic ${bkg.van_number||1}</span></div>
+      <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:#1848C8">$${bkg.service_price}</span></div>
+      ${bkg.status==='enroute'?'<div id="track-map"></div>':''}
+    </div>
+
+    ${bkg.status==='enroute'?`
+    <div class="card" style="text-align:center;background:#ECFDF5;border-color:#6EE7B7">
+      <div style="font-size:24px;margin-bottom:8px">🚐</div>
+      <div style="font-size:14px;font-weight:700;color:#065F46">Your mechanic is on the way!</div>
+      <div style="font-size:12px;color:#059669;margin-top:4px">This page updates automatically</div>
+    </div>`:''}
+
+    ${bkg.status==='completed'?`
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;color:#0D1F3C;margin-bottom:12px">✅ Service completed</div>
+      ${bkg.mechanic_notes?`<div style="background:#F7F8FA;border-radius:8px;padding:12px;font-size:13px;color:#0D1F3C;margin-bottom:10px">📝 ${bkg.mechanic_notes}</div>`:''}
+      ${bkg.parts_used?`<div style="font-size:12px;color:#6B7280;margin-bottom:6px">🔧 Parts: ${bkg.parts_used}</div>`:''}
+      ${bkg.next_service_date?`<div style="font-size:12px;color:#059669;font-weight:600">📅 Next service: ${new Date(bkg.next_service_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
+    </div>`:''}
+
+    <div class="card" style="text-align:center">
+      <div style="font-size:13px;color:#6B7280;margin-bottom:12px">Questions? Contact us</div>
+      <a href="tel:+61433963250" style="display:block;background:#1848C8;color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:8px">📞 Call +61 433 963 250</a>
+      <a href="https://wa.me/61433963250" style="display:block;background:#25D366;color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px">💬 WhatsApp</a>
+    </div>`;
+
+  // Live map if enroute
+  if(bkg.status === 'enroute'){
+    setTimeout(async () => {
+      const mapEl = document.getElementById('track-map');
+      if(!mapEl) return;
+      const map = L.map('track-map', { zoomControl:false, attributionControl:false });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+      map.setView([-33.8688, 151.2093], 13);
+
+      // Subscribe to mechanic location
+      sb.channel('mech-loc-'+bookingId)
+        .on('postgres_changes',{event:'*',schema:'public',table:'mechanic_locations',filter:`van_number=eq.${bkg.van_number||1}`},
+          p => {
+            const { lat, lng } = p.new;
+            if(!lat||!lng) return;
+            map.setView([lat,lng], 15);
+            L.marker([lat,lng], {icon: L.divIcon({html:'🚐', className:'', iconSize:[24,24]})}).addTo(map);
+          })
+        .subscribe();
+    }, 300);
+  }
+
+  // Auto-refresh status every 30 seconds
+  setInterval(async () => {
+    const { data: updated } = await sb.from('bookings').select('status,mechanic_notes,parts_used').eq('id',bookingId).single();
+    if(updated && updated.status !== bkg.status) window.location.reload();
+  }, 30000);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -48,7 +48,8 @@ export default async function handler(req, res) {
             <p style="font-size:13px;color:#065F46;font-weight:700;margin:0 0 4px">🎁 Your referral code: <span style="font-size:16px;letter-spacing:0.08em">${referralCode}</span></p>
             <p style="font-size:12px;color:#065F46;margin:0;opacity:0.8">Share with friends — you both get $15 off your next service!</p>
           </div>` : ''}
-          <a href="https://dr-bike-sydney.vercel.app" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">View my booking →</a>
+          <a href="https://dr-bike-sydney.vercel.app/track.html?id=${bookingId||''}" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:8px">Track my service →</a>
+          <a href="https://dr-bike-sydney.vercel.app" style="display:block;background:#F7F8FA;color:#0D1F3C;text-decoration:none;text-align:center;padding:12px;border-radius:10px;font-size:13px;border:1px solid #E5E7EB;margin-bottom:12px">View my booking</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">Need to cancel or reschedule? Reply to this email or WhatsApp +61 400 000 000</p>
         </div>${footer()}`
     },
@@ -117,6 +118,19 @@ export default async function handler(req, res) {
           <a href="https://dr-bike-sydney.vercel.app/mechanic.html" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
         </div>${footer()}`
     }
+        reminder: {
+      subject: `🚲 Time for a bike check-up, ${name}!`,
+      html: \`\${header('#059669','🚲','Time for a service!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 24px;line-height:1.6">Hi <strong style="color:#0D1F3C">\${name}</strong>, it's been <strong>\${monthsAgo || 6}+ months</strong> since your last service (\${lastService}). Regular maintenance keeps your bike safe and riding smoothly!</p>
+          <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:24px">
+            <p style="font-size:13px;color:#1848C8;font-weight:700;margin:0 0 8px">🔧 Why regular servicing matters</p>
+            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6;opacity:0.8">Worn brake pads, stretched cables and dirty drivetrains reduce performance and can be dangerous. A quick tune-up extends your bike's life significantly.</p>
+          </div>
+          <a href="https://dr-bike-sydney.vercel.app" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Book a service now →</a>
+          <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you — home, work or park · Mon–Sat</p>
+        </div>\${footer()}\`
+    },
   };
 
   const template = templates[type] || templates.confirmation;

@@ -342,6 +342,14 @@ body { top: 0 !important; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
       Finance
     </button>
+    <button class="sb-item" onclick="go('coupons',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+      Discount Codes
+    </button>
+    <button class="sb-item" onclick="go('reminders',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      Reminders
+    </button>
 
     <div class="sb-section">Zones</div>
     <button class="sb-item" onclick="go('zones',this)">
@@ -794,6 +802,38 @@ body { top: 0 !important; }
       </div>
     </div>
 
+    <!-- DISCOUNT CODES -->
+    <div id="page-coupons" class="page">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">Discount Codes</div>
+        <button onclick="openCouponModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">+ Create code</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <table class="tbl">
+            <thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Uses</th><th>Expires</th><th>Status</th><th></th></tr></thead>
+            <tbody id="coupons-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REMINDERS -->
+    <div id="page-reminders" class="page">
+      <div class="card" style="padding:24px;margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:8px">📧 Service Reminders</div>
+        <div class="card-sub" style="margin-bottom:20px">Send automated reminder emails to clients who haven't booked in 6+ months.</div>
+        <div style="background:var(--off);border-radius:10px;padding:16px;margin-bottom:16px">
+          <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">How it works</div>
+          <div style="font-size:12px;color:var(--mgray);line-height:1.6">The system finds all clients whose last completed service was 6+ months ago and sends them a friendly reminder email with a booking link. Emails are sent via Resend from your Dr. Bike address.</div>
+        </div>
+        <button onclick="sendReminders()" id="reminder-btn" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          🚲 Send reminders now
+        </button>
+        <div id="reminder-result" style="margin-top:12px;font-size:13px;display:none"></div>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div id="page-settings" class="page">
       <div class="settings-grid">
@@ -856,7 +896,7 @@ const SUPABASE_KEY = 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
-const titles = { dashboard:'Dashboard', contacts:'Escalation Contacts', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings' };
+const titles = { dashboard:'Dashboard', contacts:'Escalation Contacts', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings', coupons:'Discount Codes', reminders:'Service Reminders' };
 const subs = { dashboard:'Live operations · Sydney', contacts:'Manage who receives escalated chats', bookings:'Live bookings from Supabase', vans:'2 vans online · both active', clients:'Client database', finance:'Financial overview', zones:'Assign suburbs to each van', settings:'System settings' };
 
 function go(page, btn){
@@ -879,6 +919,7 @@ function go(page, btn){
   if(page==='bookings') loadBookings();
   if(page==='clients') loadClients();
   if(page==='dashboard') loadDashboard();
+  if(page==='coupons') loadCoupons();
 }
 
 function toggleAdminTheme(){
@@ -1142,6 +1183,107 @@ function showToast(msg){
   t.textContent = msg;
   t.style.opacity = '1';
   setTimeout(()=>t.style.opacity='0', 3000);
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+// ── DISCOUNT CODES ────────────────────────────────────────────────────────────
+async function loadCoupons(){
+  const tbody = document.getElementById('coupons-tbody');
+  if(!tbody) return;
+  const { data } = await sb.from('discount_codes').select('*').order('created_at',{ascending:false});
+  if(!data?.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">No codes yet. Create your first one!</td></tr>'; return; }
+  tbody.innerHTML = data.map(c=>`
+    <tr>
+      <td><strong>${c.code}</strong></td>
+      <td>${c.discount_type==='percent'?'Percentage':'Fixed $'}</td>
+      <td>${c.discount_type==='percent'?c.discount_value+'%':'$'+c.discount_value}</td>
+      <td>${c.uses_count}${c.max_uses?'/'+c.max_uses:' (unlimited)'}</td>
+      <td>${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
+      <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
+      <td><button onclick="toggleCoupon('${c.id}',${!c.active})" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif">${c.active?'Deactivate':'Activate'}</button></td>
+    </tr>`).join('');
+}
+
+function openCouponModal(){
+  let modal = document.getElementById('coupon-modal');
+  if(modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'coupon-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--white);border-radius:16px;width:100%;max-width:400px;padding:24px">
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:20px">Create discount code</div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">CODE</label>
+        <div style="display:flex;gap:8px">
+          <input id="c-code" class="inp" style="margin:0;text-transform:uppercase;font-weight:700;letter-spacing:0.08em" placeholder="e.g. NEWRIDER20">
+          <button onclick="document.getElementById('c-code').value='BIKE'+Math.random().toString(36).substr(2,5).toUpperCase()" style="white-space:nowrap;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif">Random</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">TYPE</label>
+          <select id="c-type" class="inp" style="margin:0">
+            <option value="fixed">Fixed $ off</option>
+            <option value="percent">Percentage %</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">VALUE</label>
+          <input id="c-value" type="number" class="inp" style="margin:0" placeholder="15" min="1">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">MAX USES (blank=unlimited)</label>
+          <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">EXPIRES</label>
+          <input id="c-expires" type="date" class="inp" style="margin:0">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="document.getElementById('coupon-modal').remove()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:Inter,sans-serif;cursor:pointer">Cancel</button>
+        <button onclick="saveCoupon()" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveCoupon(){
+  const code = document.getElementById('c-code')?.value?.trim().toUpperCase();
+  const type = document.getElementById('c-type')?.value;
+  const value = parseInt(document.getElementById('c-value')?.value);
+  const maxUses = parseInt(document.getElementById('c-maxuses')?.value)||null;
+  const expires = document.getElementById('c-expires')?.value||null;
+  if(!code||!value){ alert('Please fill in code and value'); return; }
+  const { error } = await sb.from('discount_codes').insert({ code, discount_type:type, discount_value:value, max_uses:maxUses, expires_at:expires?new Date(expires).toISOString():null });
+  if(error){ alert('Error: '+error.message); return; }
+  document.getElementById('coupon-modal').remove();
+  loadCoupons();
+  toast('✅ Discount code created!');
+}
+
+async function toggleCoupon(id, active){
+  await sb.from('discount_codes').update({ active }).eq('id', id);
+  loadCoupons();
+}
+
+// ── REMINDERS ─────────────────────────────────────────────────────────────────
+async function sendReminders(){
+  const btn = document.getElementById('reminder-btn');
+  const result = document.getElementById('reminder-result');
+  btn.textContent = '⏳ Sending...'; btn.disabled = true;
+  result.style.display = 'none';
+  try {
+    const res = await fetch('/api/send-reminders', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+    const data = await res.json();
+    result.style.display = 'block';
+    result.style.color = res.ok ? 'var(--green)' : 'var(--red)';
+    result.textContent = res.ok ? `✅ ${data.message}` : `❌ Error: ${data.error}`;
+  } catch(e){ result.style.display='block'; result.textContent='❌ '+e.message; }
+  btn.textContent = '🚲 Send reminders now'; btn.disabled = false;
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────

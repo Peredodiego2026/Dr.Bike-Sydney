@@ -121,6 +121,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
   <div class="nav-tabs">
     <button class="nav-tab on" onclick="goTab('today',this)">Today<span class="tab-badge" id="b-today"></span></button>
     <button class="nav-tab" onclick="goTab('upcoming',this)">Upcoming<span class="tab-badge" id="b-upcoming"></span></button>
+    <button class="nav-tab" onclick="goTab('agenda',this)">📅 Agenda</button>
     <button class="nav-tab" onclick="goTab('done',this)">Done<span class="tab-badge" id="b-done"></span></button>
     <button class="nav-tab" onclick="goTab('profile',this)">Profile</button>
   </div>
@@ -208,6 +209,7 @@ function render(){
   if(tab==='today') list=jobs.filter(j=>j.date===today&&j.status!=='completed'&&j.status!=='cancelled');
   else if(tab==='upcoming') list=jobs.filter(j=>j.date>today&&j.status!=='cancelled');
   else if(tab==='done') list=jobs.filter(j=>j.status==='completed');
+  else if(tab==='agenda'){ renderAgenda(); return; }
   else { profile(); return; }
   const c=document.getElementById('jobs-list');
   if(!list.length){ const m={today:'☀️|No jobs today|New bookings appear instantly',upcoming:'📅|No upcoming jobs|Future bookings show here',done:'✅|No completed jobs|Completed jobs appear here'}[tab]?.split('|'); c.innerHTML=`<div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:48px;margin-bottom:16px">${m[0]}</div><div style="font-size:16px;font-weight:600;color:var(--navy);margin-bottom:8px">${m[1]}</div><div style="font-size:13px">${m[2]}</div></div>`; return; }
@@ -233,6 +235,7 @@ function card(j){
     <div class="job-price">$${j.price}</div>
     <div class="actions">
       <button class="abtn nav" onclick="openMaps('${addr}')">📍 Navigate</button>
+      <button class="abtn" onclick="openMechChat('${j.id}')" style="background:rgba(24,72,200,0.1);color:#1848C8;border-color:#1848C8">💬 Chat</button>
       <button class="abtn chat" onclick="openWA('${j.phone||j.email||""}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
       ${!done?`${st!=='enroute'?`<button class="abtn go" onclick="setStatus('${j.id}','enroute')">🚐 En route</button>`:''}
       <button class="abtn done" onclick="completeJob('${j.id}')">✅ Complete</button>`
@@ -251,32 +254,116 @@ async function setStatus(id, status) {
   if (status === 'enroute') startGPS(id);
   else if (status === 'completed' || status === 'cancelled') stopGPS();
 }
-async function completeJob(id){ 
-  await sb.from('bookings').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id); 
-  const j=jobs.find(x=>x.id===id); 
-  if(j) j.status='completed'; 
-  render(); badges(); 
-  toast('✅ Job completed!'); 
+function openCompleteModal(id){
+  const j = jobs.find(x=>x.id===id);
+  if(!j) return;
+  let modal = document.getElementById('complete-modal');
+  if(modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'complete-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--white);border-radius:16px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
+      <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);font-size:15px">✅ Complete job — ${j.service}</div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Work completed</label>
+          <textarea id="comp-notes" placeholder="Describe what was done..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;height:80px;resize:none;background:var(--white);color:var(--navy)">${j.mnotes||''}</textarea>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Parts used (optional)</label>
+          <input id="comp-parts" type="text" placeholder="e.g. Brake pads x2, cable..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Next service recommended</label>
+          <input id="comp-next" type="date" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature</label>
+          <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
+          <button onclick="clearSig()" style="font-size:11px;color:#6B7280;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--sans)">Clear signature</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="document.getElementById('complete-modal').remove()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--sans);cursor:pointer;font-size:13px;color:var(--navy)">Cancel</button>
+          <button onclick="submitComplete('${id}')" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">✅ Complete job</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  // Setup signature canvas
+  setTimeout(()=>{
+    const canvas = document.getElementById('sig-canvas');
+    if(!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = 120 * window.devicePixelRatio;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = '120px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    ctx.strokeStyle = '#0D1F3C'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    let drawing = false;
+    const getPos = e => {
+      const r = canvas.getBoundingClientRect();
+      const t = e.touches?.[0] || e;
+      return { x: (t.clientX-r.left), y: (t.clientY-r.top) };
+    };
+    canvas.addEventListener('mousedown', e => { drawing=true; ctx.beginPath(); const p=getPos(e); ctx.moveTo(p.x,p.y); });
+    canvas.addEventListener('mousemove', e => { if(!drawing) return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+    canvas.addEventListener('mouseup', ()=>drawing=false);
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; ctx.beginPath(); const p=getPos(e); ctx.moveTo(p.x,p.y); });
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); if(!drawing) return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+    canvas.addEventListener('touchend', ()=>drawing=false);
+  }, 100);
+}
+
+function clearSig(){
+  const c = document.getElementById('sig-canvas');
+  if(c) c.getContext('2d').clearRect(0,0,c.width,c.height);
+}
+
+async function submitComplete(id){
+  const notes = document.getElementById('comp-notes')?.value||'';
+  const parts = document.getElementById('comp-parts')?.value||'';
+  const nextDate = document.getElementById('comp-next')?.value||null;
+  const canvas = document.getElementById('sig-canvas');
+  const signature = canvas ? canvas.toDataURL('image/png') : null;
+
+  await sb.from('bookings').update({
+    status:'completed',
+    mechanic_notes: notes,
+    parts_used: parts,
+    next_service_date: nextDate,
+    client_signature: signature,
+    completed_at: new Date().toISOString()
+  }).eq('id',id);
+
+  document.getElementById('complete-modal').remove();
+  const j = jobs.find(x=>x.id===id);
+  if(j) j.status='completed';
+  render(); badges();
+  toast('✅ Job completed!');
   stopGPS();
-  // Send completion email with mechanic notes
+
+  // Send completion email
   try {
-    const mnotes = document.querySelector(`input.notes-inp[onblur*="${id}"]`)?.value || j?.mnotes || '';
     await fetch('/api/send-email', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        to: j?.email || 'peredo.dm@gmail.com',
-        name: j?.client || 'Client',
-        service: j?.service,
-        date: j?.date,
-        price: j?.price,
-        type: 'completed',
-        bookingId: id,
-        mechNotes: mnotes || null,
-        nextService: 'We recommend a full service check in 3–6 months or 500km, whichever comes first.'
+        to: j?.email||'peredo.dm@gmail.com',
+        name: j?.client||'Client',
+        service: j?.service, date: j?.date, price: j?.price,
+        type:'completed', bookingId: id,
+        mechNotes: notes||null,
+        nextService: nextDate ? `Your next recommended service is on ${new Date(nextDate).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}` : 'We recommend a service check every 3-6 months.'
       })
     });
-  } catch(e){ console.log('Completion email error:', e); }
+  } catch(e){ console.log('Email error',e); }
+}
+
+async function completeJob(id){
+  openCompleteModal(id);
 }
 async function saveNotes(id,notes){ await sb.from('bookings').update({mechanic_notes:notes}).eq('id',id); }
 
@@ -319,6 +406,137 @@ function profile(){
 function go(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id)?.classList.add('active'); }
 function updateUI(){ document.getElementById('mech-name').textContent=(mechanic?.first_name||'')+' '+(mechanic?.last_name||''); document.getElementById('van-label').textContent='Van '+vanNum; }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+function renderAgenda(){
+  const c = document.getElementById('jobs-list');
+  if(!c) return;
+  
+  // Group jobs by date for next 7 days
+  const days = [];
+  for(let i=0; i<7; i++){
+    const d = new Date(); d.setDate(d.getDate()+i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  
+  let html = '<div style="padding:0 16px 16px">';
+  days.forEach(date=>{
+    const dayJobs = jobs.filter(j=>j.date===date&&j.status!=='cancelled');
+    const dateObj = new Date(date+'T00:00:00');
+    const isToday = date===new Date().toISOString().split('T')[0];
+    const label = isToday ? 'Today' : dateObj.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'short'});
+    const revenue = dayJobs.reduce((s,j)=>s+j.price,0);
+    
+    html += `<div style="margin-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;color:${isToday?'#1848C8':'#0D1F3C'}">${label}</div>
+        ${dayJobs.length?`<div style="font-size:12px;color:#6B7280">${dayJobs.length} job${dayJobs.length!==1?'s':''} · $${revenue}</div>`:''}
+      </div>`;
+    
+    if(!dayJobs.length){
+      html += `<div style="padding:12px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;font-size:12px;color:#9CA3AF">No jobs scheduled</div>`;
+    } else {
+      // Timeline view
+      const times = ['8:00 am','8:30 am','9:00 am','9:30 am','10:00 am','10:30 am','11:00 am','11:30 am','12:00 pm','12:30 pm','1:00 pm','1:30 pm','2:00 pm','2:30 pm','3:00 pm','3:30 pm','4:00 pm','4:30 pm','5:00 pm'];
+      const stColors={pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',completed:'#059669'};
+      
+      dayJobs.sort((a,b)=>(a.time||'').localeCompare(b.time||'')).forEach(j=>{
+        const color = stColors[j.status]||'#6B7280';
+        html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
+          <div style="width:52px;font-size:11px;color:#9CA3AF;padding-top:10px;flex-shrink:0;text-align:right">${j.time||'—'}</div>
+          <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" onclick="openMechChat('${j.id}')">
+            <div style="font-size:13px;font-weight:600;color:#0D1F3C">${j.service}</div>
+            <div style="font-size:12px;color:#6B7280;margin-top:2px">${j.client} · ${j.suburb||j.address||'—'}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+              <span style="font-size:11px;font-weight:600;color:${color}">${j.status.toUpperCase()}</span>
+              <span style="font-size:13px;font-weight:700;color:#0D1F3C">$${j.price}</span>
+            </div>
+          </div>
+        </div>`;
+      });
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+// ── JOB CHAT ────────────────────────────────────────────────────────────────
+let mechChatChannel = null;
+let mechChatBookingId = null;
+
+function openMechChat(bookingId){
+  mechChatBookingId = bookingId;
+  // Create modal
+  let modal = document.getElementById('mech-chat-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'mech-chat-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:flex-end';
+    modal.innerHTML = `
+      <div style="background:var(--white);border-radius:16px 16px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div style="font-weight:700;color:var(--navy);font-size:14px">💬 Chat with client</div>
+          <button onclick="closeMechChat()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">×</button>
+        </div>
+        <div id="mech-chat-msgs" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--off);min-height:200px"></div>
+        <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">
+          <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMechMessage()">
+          <button onclick="sendMechMessage()" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;cursor:pointer;font-size:18px">→</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+  loadMechMessages(bookingId);
+
+  if(mechChatChannel) sb.removeChannel(mechChatChannel);
+  mechChatChannel = sb.channel('mech-chat-' + bookingId)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'job_messages',filter:`booking_id=eq.${bookingId}`},
+      p => appendMechMessage(p.new))
+    .subscribe();
+}
+
+function closeMechChat(){
+  document.getElementById('mech-chat-modal').style.display = 'none';
+  if(mechChatChannel){ sb.removeChannel(mechChatChannel); mechChatChannel=null; }
+}
+
+async function loadMechMessages(bookingId){
+  const {data} = await sb.from('job_messages').select('*').eq('booking_id',bookingId).order('created_at',{ascending:true});
+  const c = document.getElementById('mech-chat-msgs');
+  if(!c) return;
+  c.innerHTML = '';
+  if(!data?.length){ c.innerHTML='<div style="text-align:center;color:#6B7280;font-size:12px;padding:20px">No messages yet</div>'; return; }
+  data.forEach(m=>appendMechMessage(m,false));
+  c.scrollTop = c.scrollHeight;
+}
+
+function appendMechMessage(msg, scroll=true){
+  const c = document.getElementById('mech-chat-msgs');
+  if(!c) return;
+  c.querySelector('div[style*="text-align:center"]')?.remove();
+  const isMech = msg.sender_role === 'mechanic';
+  const div = document.createElement('div');
+  div.style.cssText = `display:flex;flex-direction:column;align-items:${isMech?'flex-end':'flex-start'};gap:2px;margin-bottom:6px`;
+  const bubble = document.createElement('div');
+  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:13px;background:${isMech?'#1848C8':'#fff'};color:${isMech?'#fff':'#0D1F3C'};border:${isMech?'none':'1px solid #E5E7EB'}`;
+  bubble.textContent = msg.message;
+  const time = document.createElement('div');
+  time.style.cssText = 'font-size:10px;color:#6B7280';
+  time.textContent = new Date(msg.created_at).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+  div.appendChild(bubble); div.appendChild(time);
+  c.appendChild(div);
+  if(scroll) c.scrollTop = c.scrollHeight;
+}
+
+async function sendMechMessage(){
+  if(!mechChatBookingId) return;
+  const inp = document.getElementById('mech-chat-inp');
+  const text = inp?.value?.trim();
+  if(!text) return;
+  inp.value = '';
+  await sb.from('job_messages').insert({ booking_id: mechChatBookingId, sender_role:'mechanic', sender_id: mechanic?.id||'mech', message: text });
+}
 
 // ── GPS TRACKING ──────────────────────────────────────────────────────────────
 let gpsInterval = null;
