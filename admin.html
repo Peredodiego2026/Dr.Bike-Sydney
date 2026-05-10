@@ -1489,14 +1489,21 @@ async function saveVanZone(vanId){
 function renderVanZones(){
   const container = document.getElementById('zones-container');
   if(!container) return;
-  container.innerHTML = vanZones.map(van=>`
+  container.innerHTML = vanZones.map(van=>{
+    const driverKey = `drbike-driver-van${van.id}`;
+    const driverName = localStorage.getItem(driverKey) || '';
+    return `
     <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:20px;overflow:hidden">
-      <div style="padding:16px 20px;background:${van.color};display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:15px;font-weight:600;color:#fff">${van.name}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs assigned</div>
+      <div style="padding:16px 20px;background:${van.color};display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:600;color:#fff;margin-bottom:4px">${van.name}</div>
+          <input id="driver-${van.id}" value="${driverName}" placeholder="Mechanic name (e.g. Diego)"
+            onchange="localStorage.setItem('drbike-driver-van${van.id}',this.value)"
+            style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:4px 10px;font-size:12px;color:#fff;font-family:Inter,sans-serif;outline:none;width:100%;max-width:220px"
+            placeholder="Mechanic name">
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">${van.suburbs.length} suburbs assigned</div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-shrink:0">
           <button onclick="saveVanZone(${van.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
           ${vanZones.length>1?`<button onclick="removeVan(${van.id})" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>`:''}
         </div>
@@ -1511,7 +1518,8 @@ function renderVanZones(){
           <button onclick="addSuburb(${van.id})" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function addSuburb(vanId){
