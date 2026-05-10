@@ -340,26 +340,43 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
   /* All grids single column */
   .row2,.fin-row,.vans,.settings-grid,.clients-grid{grid-template-columns:1fr !important}
   .quick-actions{grid-template-columns:repeat(2,1fr);gap:8px}
-  /* Tables - horizontal scroll, keep normal display */
-  .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:calc(100vw - 24px)}
-  .tbl{min-width:400px;font-size:11px;width:100%}
-  .tbl th,.tbl td{padding:7px 5px;white-space:nowrap}
+  /* CARD-STACK TABLES — no horizontal scroll */
+  .card-body{overflow-x:visible !important;max-width:100%}
+  .tbl{min-width:0 !important;width:100%;font-size:13px}
+  .tbl thead{display:none !important}
+  .tbl tbody tr{display:block;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;padding:10px 12px;background:var(--white)}
+  .tbl tbody td{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border:none;min-height:28px}
+  .tbl tbody td::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;flex-shrink:0;white-space:nowrap;margin-right:8px}
+  /* Finance transactions */
+  #fin-tx-body tr{display:block;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;padding:10px 12px;background:var(--white)}
+  #fin-tx-body td{display:flex;justify-content:space-between;border:none;padding:5px 0;font-size:13px}
+  #fin-tx-body td::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--mgray);text-transform:uppercase;flex-shrink:0;margin-right:8px}
+  #fin-tx-body thead{display:none !important}
+  /* Finance BAS grid */
+  .bas-grid{grid-template-columns:repeat(2,1fr) !important;gap:8px !important}
+  /* Monthly performance in Vans */
+  .perf-tbl{min-width:0 !important;width:100%}
+  .perf-tbl thead{display:none !important}
+  .perf-tbl tbody tr{display:block;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;padding:10px 12px;background:var(--white)}
+  .perf-tbl tbody td{display:flex;justify-content:space-between;border:none;padding:5px 0;font-size:13px}
+  .perf-tbl tbody td::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--mgray);text-transform:uppercase;flex-shrink:0;margin-right:8px}
+  /* 7-day perf - stack vans */
+  #mech-perf-grid{grid-template-columns:1fr !important}
+  /* Zone manager */
+  #zones-container > div > div[style*="padding:16px"]{flex-direction:column !important;align-items:flex-start !important;gap:10px !important}
+  /* Booking filters */
+  #booking-filters{flex-wrap:wrap;gap:8px}
+  /* Coupon form */
+  #coupon-inline-form [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
   /* Page */
   .page{padding:10px;gap:10px}
   .card-hdr{padding:12px 14px}
   .qa-sub{display:none}
-  /* Zone manager header */
-  #zones-container > div > div[style*="padding:16px"]{flex-direction:column !important;align-items:flex-start !important;gap:10px !important}
-  /* 7-day perf - stack vans */
-  #mech-perf-grid{grid-template-columns:1fr !important}
-  /* Booking filters */
-  #booking-filters{flex-wrap:wrap;gap:8px}
   /* Bottom nav */
   .mobile-bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);z-index:60;height:60px;padding-bottom:env(safe-area-inset-bottom)}
   .mobile-bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9px;font-weight:600;color:var(--mgray);cursor:pointer;text-decoration:none;border:none;background:none;font-family:var(--sans);transition:color .15s;padding:6px 0;text-transform:uppercase;letter-spacing:0.04em}
   .mobile-bottom-nav a.active{color:var(--blue)}
   .mobile-bottom-nav a svg{width:20px;height:20px}
-  .mobile-bottom-nav a .nav-badge{position:absolute;top:6px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;min-width:16px;text-align:center}
 }
 @media(min-width:769px){
   .mobile-bottom-nav{display:none}
@@ -702,11 +719,25 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
       </div>
       <div class="card">
         <div class="card-hdr"><div><div class="card-title">Monthly performance</div><div class="card-sub">April 2026</div></div></div>
-        <table class="tbl">
+        <table class="tbl perf-tbl">
           <thead><tr><th>Van</th><th>Jobs</th><th>Revenue</th><th>Avg ticket</th><th>Utilisation</th><th>Top service</th></tr></thead>
           <tbody>
-            <tr><td><span class="mech-tag v1">Van 1</span></td><td>214</td><td><b>$21,683</b></td><td>$101</td><td>88%</td><td>Standard Service</td></tr>
-            <tr><td><span class="mech-tag v2">Van 2</span></td><td>209</td><td><b>$14,455</b></td><td>$69</td><td>74%</td><td>Tune-Up</td></tr>
+            <tr>
+              <td data-label="Van"><span class="mech-tag v1">Van 1</span></td>
+              <td data-label="Jobs">214</td>
+              <td data-label="Revenue"><b>$21,683</b></td>
+              <td data-label="Avg ticket">$101</td>
+              <td data-label="Utilisation">88%</td>
+              <td data-label="Top service">Standard Service</td>
+            </tr>
+            <tr>
+              <td data-label="Van"><span class="mech-tag v2">Van 2</span></td>
+              <td data-label="Jobs">209</td>
+              <td data-label="Revenue"><b>$14,455</b></td>
+              <td data-label="Avg ticket">$69</td>
+              <td data-label="Utilisation">74%</td>
+              <td data-label="Top service">Tune-Up</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1299,13 +1330,13 @@ async function loadFinance() {
     const jNet  = price - jGst;
     const name  = j.profiles?.full_name || j.profiles?.email?.split('@')[0] || 'Client';
     return `<tr>
-      <td>${j.scheduled_date}</td>
-      <td>${name}</td>
-      <td>${j.service_name||'Service'}</td>
-      <td style="font-weight:600">$${price.toLocaleString()}</td>
-      <td style="color:var(--orange)">$${jGst}</td>
-      <td>$${jNet}</td>
-      <td><span style="background:#D1FAE5;color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
+      <td data-label="Date">${j.scheduled_date}</td>
+      <td data-label="Client">${name}</td>
+      <td data-label="Service">${j.service_name||'Service'}</td>
+      <td data-label="Amount" style="font-weight:600">$${price.toLocaleString()}</td>
+      <td data-label="GST" style="color:var(--orange)">$${jGst}</td>
+      <td data-label="Net">$${jNet}</td>
+      <td data-label="Status"><span style="background:#D1FAE5;color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
     </tr>`;
   }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--mgray);padding:24px">No transactions in this period</td></tr>';
 
