@@ -319,125 +319,48 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .mob-toggle{display:none;position:fixed;top:14px;left:14px;z-index:200;width:38px;height:38px;background:var(--navy);border-radius:8px;border:none;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 .mob-toggle span{width:16px;height:1.5px;background:var(--white);border-radius:2px;display:block}
 @media(max-width:768px){
-  /* Sidebar — slide in/out */
+  /* Sidebar */
   .sidebar{transform:translateX(-100%);transition:transform .25s;z-index:100}
   .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0;padding-bottom:70px}
-  .mob-toggle{display:flex}
-
-  /* Topbar compact */
+  .main{margin-left:0;padding-bottom:70px;overflow-x:hidden}
+  /* Topbar */
   .mob-toggle{display:none !important}
   .mob-toggle-inline{display:flex !important}
   .topbar{padding:0 12px;height:52px}
-  .topbar-title{font-size:13px}
-  .topbar-sub{display:none}
-  .date-badge{display:none}
-  body{overflow-x:hidden}
-  .main{overflow-x:hidden}
-  .content{overflow-x:hidden}
+  .topbar-title{font-size:14px}
+  .topbar-sub,.date-badge{display:none}
+  /* Prevent overflow */
+  body,html{overflow-x:hidden}
+  .content,.page{overflow-x:hidden;max-width:100vw}
+  /* KPIs */
   .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi-card{padding:12px}
   .kpi-value{font-size:20px}
-  .kpi-label{font-size:10px}
-  .kpi-sub{font-size:10px}
   .kpi-trend{display:none}
-  .row2{grid-template-columns:1fr}
-  .fin-row{grid-template-columns:1fr}
-  .vans{grid-template-columns:1fr}
-  .settings-grid{grid-template-columns:1fr}
-  .clients-grid{grid-template-columns:1fr}
+  /* All grids single column */
+  .row2,.fin-row,.vans,.settings-grid,.clients-grid{grid-template-columns:1fr !important}
   .quick-actions{grid-template-columns:repeat(2,1fr);gap:8px}
-  .van-stats{grid-template-columns:repeat(3,1fr)}
-  .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .tbl{min-width:0;font-size:12px}
-  .tbl thead{display:none}
-  .tbl tbody tr{display:block;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;padding:10px 12px;background:var(--white)}
-  .tbl tbody td{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border:none;font-size:12px}
-  .tbl tbody td::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;flex-shrink:0;margin-right:8px}
-  .card-body{overflow-x:visible}
-  /* Vans grid */
-  .vans{grid-template-columns:1fr !important}
-  /* Zone manager */
-  .zone-van{padding:12px}
-  #zones-container > div{margin-bottom:12px}
-  #zones-container [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
-  /* Finance */
-  .fin-kpis{grid-template-columns:repeat(2,1fr) !important}
-  /* Discount codes form */
-  #coupon-inline-form [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
-  /* Escalation contacts */
-  .contact-card{flex-direction:column;align-items:flex-start !important}
-  /* Monthly performance table */
-  .perf-tbl thead{display:none}
-  .perf-tbl tbody tr{display:block;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;padding:10px}
-  .perf-tbl tbody td{display:flex;justify-content:space-between;border:none;padding:4px 0;font-size:12px}
-  /* 7-day chart */
-  .chart-wrap{overflow-x:auto}
+  /* Tables - horizontal scroll, keep normal display */
+  .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:calc(100vw - 24px)}
+  .tbl{min-width:400px;font-size:11px;width:100%}
+  .tbl th,.tbl td{padding:7px 5px;white-space:nowrap}
+  /* Page */
   .page{padding:10px;gap:10px}
-  .card{border-radius:10px}
   .card-hdr{padding:12px 14px}
-  .card-hdr-right{gap:6px}
-  .sch-item{padding:10px 12px}
-  .qa-icon{width:32px;height:32px;margin-bottom:8px}
-  .qa-label{font-size:11px}
   .qa-sub{display:none}
-  .topbar-title{font-size:14px}
-  .topbar-sub{display:none}
-  .date-badge{display:none}
-
-  /* KPIs — 2 col grid */
-  .kpis{grid-template-columns:repeat(2,1fr);gap:10px}
-  .kpi-card{padding:14px}
-  .kpi-value{font-size:22px}
-  .kpi-label{font-size:10px}
-  .kpi-sub{font-size:10px}
-
-  /* Grids — single col */
-  .row2,.fin-row,.vans,.settings-grid{grid-template-columns:1fr}
-  .clients-grid{grid-template-columns:1fr}
-  .quick-actions{grid-template-columns:repeat(2,1fr);gap:10px}
-
-  /* Tables — horizontal scroll */
-  .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .tbl{min-width:500px;font-size:12px}
-  .tbl th,.tbl td{padding:10px 8px}
-
-  /* Page padding */
-  .page{padding:12px;gap:12px}
-  .card{border-radius:10px}
-  .card-hdr{padding:14px 16px}
-
-  /* Schedule items */
-  .sch-item{padding:10px 12px;gap:10px}
-  .sch-time{font-size:11px;min-width:36px}
-
-  /* Zone manager */
-  .zone-van{padding:14px}
-
-  /* Booking filters — wrap */
+  /* Zone manager header */
+  #zones-container > div > div[style*="padding:16px"]{flex-direction:column !important;align-items:flex-start !important;gap:10px !important}
+  /* 7-day perf - stack vans */
+  #mech-perf-grid{grid-template-columns:1fr !important}
+  /* Booking filters */
   #booking-filters{flex-wrap:wrap;gap:8px}
-  #booking-filters select,#booking-filters input{font-size:13px;padding:7px 10px}
-
-  /* Bottom nav bar */
-  .mobile-bottom-nav{
-    display:flex;position:fixed;bottom:0;left:0;right:0;
-    background:var(--white);border-top:1px solid var(--border);
-    z-index:60;height:60px;padding-bottom:env(safe-area-inset-bottom)
-  }
-  .mobile-bottom-nav a{
-    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;font-size:9px;font-weight:600;color:var(--mgray);cursor:pointer;
-    text-decoration:none;border:none;background:none;font-family:var(--sans);
-    transition:color .15s;padding:6px 0;text-transform:uppercase;letter-spacing:0.04em
-  }
+  /* Bottom nav */
+  .mobile-bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);z-index:60;height:60px;padding-bottom:env(safe-area-inset-bottom)}
+  .mobile-bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9px;font-weight:600;color:var(--mgray);cursor:pointer;text-decoration:none;border:none;background:none;font-family:var(--sans);transition:color .15s;padding:6px 0;text-transform:uppercase;letter-spacing:0.04em}
   .mobile-bottom-nav a.active{color:var(--blue)}
   .mobile-bottom-nav a svg{width:20px;height:20px}
-  .mobile-bottom-nav a .nav-badge{
-    position:absolute;top:6px;background:var(--red);color:#fff;
-    border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;min-width:16px;text-align:center
-  }
+  .mobile-bottom-nav a .nav-badge{position:absolute;top:6px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;min-width:16px;text-align:center}
 }
-
 @media(min-width:769px){
   .mobile-bottom-nav{display:none}
 }
@@ -1951,7 +1874,7 @@ async function renderMechStats(){
   });
   statsDiv.innerHTML = `<div class="card" style="margin-top:0">
     <div class="card-hdr"><div><div class="card-title">7-Day Mechanic Performance</div><div class="card-sub">Last 7 days · completed jobs</div></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px">
+    <div id="mech-perf-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px">
     ${vanNums.map((v,i)=>{
       const data = allStats[i];
       const totalJobs = data.length;
@@ -2064,20 +1987,20 @@ function renderVanZones(){
   container.innerHTML = vanZones.map(van=>{
     return `
     <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:20px;overflow:hidden">
-      <div style="padding:16px 20px;background:${van.color};display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:600;color:#fff;margin-bottom:6px">${van.name}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:11px;color:rgba(255,255,255,0.6);white-space:nowrap">👤 Mechanic:</span>
-            <input id="driver-${van.id}" value="${van.driverName||''}" placeholder="e.g. Diego Peredó"
-              style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:4px 10px;font-size:12px;color:#fff;font-family:Inter,sans-serif;outline:none;flex:1;max-width:200px"
-              onblur="saveDriverName(${van.id},this.value)">
-          </div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs assigned</div>
+      <div style="padding:14px 16px;background:${van.color}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:15px;font-weight:600;color:#fff">${van.name}</div>
+          ${vanZones.length>1?`<button onclick="removeVan(${van.id})" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>`:''}
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap">👤</span>
+          <input id="driver-${van.id}" value="${van.driverName||''}" placeholder="Mechanic name"
+            style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:6px 10px;font-size:13px;color:#fff;font-family:Inter,sans-serif;outline:none;flex:1;min-width:0"
+            onblur="saveDriverName(${van.id},this.value)">
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:11px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs</div>
           <button onclick="saveVanZone(${van.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
-          ${vanZones.length>1?`<button onclick="removeVan(${van.id})" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>`:''}
         </div>
       </div>
       <div style="padding:16px 20px">
