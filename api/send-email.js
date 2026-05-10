@@ -117,19 +117,19 @@ export default async function handler(req, res) {
           </div>
           <a href="https://dr-bike-sydney.vercel.app/mechanic.html" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
         </div>${footer()}`
-    }
-        reminder: {
+    },
+    reminder: {
       subject: `🚲 Time for a bike check-up, ${name}!`,
-      html: \`\${header('#059669','🚲','Time for a service!')}
+      html: `${header('#059669','🚲','Time for a service!')}
         <div style="padding:32px 28px">
-          <p style="color:#6B7280;font-size:14px;margin:0 0 24px;line-height:1.6">Hi <strong style="color:#0D1F3C">\${name}</strong>, it's been <strong>\${monthsAgo || 6}+ months</strong> since your last service (\${lastService}). Regular maintenance keeps your bike safe and riding smoothly!</p>
+          <p style="color:#6B7280;font-size:14px;margin:0 0 24px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, it's been 6+ months since your last service. Regular maintenance keeps your bike safe and riding smoothly!</p>
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:24px">
             <p style="font-size:13px;color:#1848C8;font-weight:700;margin:0 0 8px">🔧 Why regular servicing matters</p>
             <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6;opacity:0.8">Worn brake pads, stretched cables and dirty drivetrains reduce performance and can be dangerous. A quick tune-up extends your bike's life significantly.</p>
           </div>
           <a href="https://dr-bike-sydney.vercel.app" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Book a service now →</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you — home, work or park · Mon–Sat</p>
-        </div>\${footer()}\`
+        </div>${footer()}`
     },
   };
 
