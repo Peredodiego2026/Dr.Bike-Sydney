@@ -1251,6 +1251,13 @@ function openCouponModal(){
   document.body.appendChild(modal);
 }
 
+function toast(msg){
+  let t = document.getElementById('admin-toast');
+  if(!t){ t=document.createElement('div'); t.id='admin-toast'; t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0D1F3C;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;font-family:Inter,sans-serif'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  setTimeout(()=>t.style.opacity='0', 3000);
+}
+
 async function saveCoupon(){
   const code = document.getElementById('c-code')?.value?.trim().toUpperCase();
   const type = document.getElementById('c-type')?.value;
