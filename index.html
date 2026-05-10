@@ -713,24 +713,8 @@ html{scroll-behavior:smooth}
 .add-van-btn{display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed var(--border);border-radius:var(--r);padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:var(--sans);transition:all .15s;width:100%;margin-top:8px}
 .add-van-btn:hover{border-color:var(--blue);color:var(--blue)}
 </style>
-<meta name="google-translate-customization" content="drbike-sydney">
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    includedLanguages: 'en,es,zh-CN,pt,it,ko,fr,ar,hi,ja',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: false
-  }, 'google_translate_element');
-}
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <style>
-/* Hide Google Translate toolbar */
-.goog-te-banner-frame { display: none !important; }
-body { top: 0 !important; }
-.goog-te-gadget { font-size: 0 !important; }
-.goog-te-gadget select { display: none; }
+/* Language selector */
 
 /* Language selector */
 #lang-btn { 
@@ -3553,7 +3537,7 @@ renderPlans();
 init();
 </script>
 <!-- Google Translate hidden element -->
-<div id="google_translate_element" style="display:none"></div>
+
 
 <!-- Language selector button -->
 <div id="lang-panel">
@@ -3607,41 +3591,36 @@ document.addEventListener('click', e=>{
 function setLang(lang, flag, name){
   currentLang = lang;
   localStorage.setItem('drbike-lang', lang);
-  
+
   // Update button label
   const langLabels = {en:'EN',es:'ES','zh-CN':'中文',pt:'PT',it:'IT',ko:'한국',fr:'FR',ar:'AR',hi:'HI',ja:'JA'};
   const label = langLabels[lang] || lang.toUpperCase().slice(0,2);
   const labelEl = document.getElementById('lang-label');
   if(labelEl) labelEl.textContent = label;
-  
+
   // Update active state
   document.querySelectorAll('.lang-opt').forEach(b=>b.classList.remove('active'));
   document.getElementById('lang-'+lang.split('-')[0])?.classList.add('active');
-  
-  // Apply translation via Google Translate
-  if(lang === 'en'){
-    // Reset to English
-    const iframe = document.querySelector('.goog-te-banner-frame');
-    if(iframe) iframe.contentDocument.querySelector('.restore')?.click();
-    const select = document.querySelector('.goog-te-combo');
-    if(select){ select.value = ''; select.dispatchEvent(new Event('change')); }
-    document.cookie = 'googtrans=/en/en; domain=.vercel.app; path=/';
-    document.cookie = 'googtrans=/en/en; path=/';
-    location.reload();
-  } else {
-    document.cookie = `googtrans=/en/${lang}; domain=.vercel.app; path=/`;
-    document.cookie = `googtrans=/en/${lang}; path=/`;
-    const select = document.querySelector('.goog-te-combo');
-    if(select){
-      select.value = lang;
-      select.dispatchEvent(new Event('change'));
-    } else {
-      // Fallback: reload with cookie
-      location.reload();
-    }
-  }
-  
+
   document.getElementById('lang-panel').classList.remove('open');
+
+  if(lang === 'en'){
+    // If page was translated via Google, strip the translate.goog wrapper
+    const url = window.location.href;
+    if(url.includes('translate.goog') || url.includes('_x_tr_')){
+      // Extract original URL and navigate back
+      try {
+        const orig = new URL(url);
+        const base = orig.searchParams.get('_x_tr_sl') ? window.location.origin + window.location.pathname : window.location.href;
+        window.location.href = window.location.origin + window.location.pathname;
+      } catch(e){ window.location.href = window.location.origin; }
+    }
+    return;
+  }
+
+  // Use Google Translate URL approach — no widget script needed
+  const pageUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+  window.location.href = `https://translate.google.com/translate?sl=en&tl=${lang}&u=${pageUrl}`;
 }
 
 // Apply saved language on load
