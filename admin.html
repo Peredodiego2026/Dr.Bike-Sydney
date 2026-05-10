@@ -41,7 +41,14 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 /* Dark mode fixes admin */
 [data-theme="dark"] body{background:#1C1C1E;color:#F2F2F7}
 [data-theme="dark"] .main{background:#1C1C1E}
-[data-theme="dark"] .card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .card-title{color:#F2F2F7}
+[data-theme="dark"] .card-sub{color:#98989F}
+[data-theme="dark"] #page-reminders .card{background:#242426;border-color:#38383A}
+[data-theme="dark"] #page-reminders [style*="background:var(--off)"]{background:#2C2C2E !important;border-color:#38383A !important}
+[data-theme="dark"] #page-coupons .card{background:#242426;border-color:#38383A}
+[data-theme="dark"] .tbl th{background:#2C2C2E;color:#98989F;border-color:#38383A}
+[data-theme="dark"] .tbl td{color:#F2F2F7;border-color:#2C2C2E}
+[data-theme="dark"] .tbl tr:hover td{background:#2C2C2E}
 [data-theme="dark"] .card-title{color:#F2F2F7}
 [data-theme="dark"] .card-sub{color:#98989F}
 [data-theme="dark"] .card-action{color:#60A5FA}
@@ -823,7 +830,7 @@ body { top: 0 !important; }
       <div class="card" style="padding:24px;margin-bottom:16px">
         <div class="card-title" style="margin-bottom:8px">📧 Service Reminders</div>
         <div class="card-sub" style="margin-bottom:20px">Send automated reminder emails to clients who haven't booked in 6+ months.</div>
-        <div style="background:var(--off);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="background:var(--off);border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid var(--border)">
           <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">How it works</div>
           <div style="font-size:12px;color:var(--mgray);line-height:1.6">The system finds all clients whose last completed service was 6+ months ago and sends them a friendly reminder email with a booking link. Emails are sent via Resend from your Dr. Bike address.</div>
         </div>
