@@ -32,6 +32,7 @@
 }
 [data-theme="dark"]{
   --white:#1C1C1E;--off:#242426;--mgray:#98989F;--border:#38383A;
+  --navy:#F2F2F7;--navy2:#E5E5EA;
   --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
   --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
   --blue-lt:rgba(24,72,200,0.18);
@@ -99,14 +100,14 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 [data-theme="dark"] .card-hdr{border-color:#38383A}
 /* Force all navy inline text to white in dark mode */
 [data-theme="dark"] [style*="color:var(--navy)"]{color:#F2F2F7 !important}
-[data-theme="dark"] [style*="color:#0D1F3C"]{color:#F2F2F7 !important}
+[data-theme="dark"] [style*="color:var(--navy)"]{color:#F2F2F7 !important}
 [data-theme="dark"] [style*="color:#0d1f3c"]{color:#F2F2F7 !important}
 [data-theme="dark"] [style*="color:var(--mgray)"]{color:#8E8E93 !important}
-[data-theme="dark"] [style*="color:#6B7280"]{color:#8E8E93 !important}
-[data-theme="dark"] [style*="background:#FAFAFA"]{background:#2C2C2E !important}
-[data-theme="dark"] [style*="background:#F7F8FA"]{background:#2C2C2E !important}
+[data-theme="dark"] [style*="color:var(--mgray)"]{color:#8E8E93 !important}
+[data-theme="dark"] [style*="background:var(--off)"]{background:#2C2C2E !important}
+[data-theme="dark"] [style*="background:var(--off)"]{background:#2C2C2E !important}
 [data-theme="dark"] [style*="background:var(--white)"]{background:#242426 !important}
-[data-theme="dark"] [style*="border-color:#E5E7EB"]{border-color:#38383A !important}
+[data-theme="dark"] [style*="border-color:var(--border)"]{border-color:#38383A !important}
 [data-theme="dark"] [style*="color:#E5E7EB"]{color:#38383A !important}
 /* Toggle/switch labels */
 [data-theme="dark"] .toggle-label{color:#F2F2F7}
@@ -120,8 +121,8 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 [data-theme="dark"] #page-reminders{color:#F2F2F7}
 /* Vans page */
 [data-theme="dark"] #page-vans [style*="color:#fff"]{color:#fff !important}
-[data-theme="dark"] #page-vans [style*="background:#fff"]{background:#242426 !important;color:#F2F2F7 !important}
-[data-theme="dark"] #page-vans [style*="border:1px solid #E5E7EB"]{border-color:#38383A !important}
+[data-theme="dark"] #page-vans [style*="background:var(--white)"]{background:#242426 !important;color:#F2F2F7 !important}
+[data-theme="dark"] #page-vans [style*="border:1px solid var(--border)"]{border-color:#38383A !important}
 /* Settings page inline navy text */
 [data-theme="dark"] #page-settings [style*="font-weight:600;color:var(--mgray)"]{color:#8E8E93 !important}
 [data-theme="dark"] #page-settings label{color:#8E8E93}
@@ -186,15 +187,15 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 
 /* TABLE */
 .tbl{width:100%;border-collapse:collapse}
-.tbl th{font-size:10px;font-weight:700;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);background:#FAFAFA}
+.tbl th{font-size:10px;font-weight:700;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);background:var(--off)}
 .tbl td{padding:12px 16px;font-size:13px;border-bottom:1px solid #F9FAFB;color:var(--navy)}
 .tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:#FAFAFA}
+.tbl tr:hover td{background:var(--off)}
 .status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
 .status.confirmed{background:#ECFDF5;color:#059669}
 .status.pending{background:#FEF3C7;color:#D97706}
 .status.enroute{background:#EEF3FC;color:var(--blue)}
-.status.completed{background:#F3F4F6;color:#6B7280}
+.status.completed{background:#F3F4F6;color:var(--mgray)}
 .status.cancelled{background:#FEF2F2;color:var(--red)}
 .status-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
 .mech-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:6px}
@@ -205,7 +206,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .schedule-list{display:flex;flex-direction:column}
 .sch-item{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid #F9FAFB;transition:background .13s;cursor:pointer}
 .sch-item:last-child{border-bottom:none}
-.sch-item:hover{background:#FAFAFA}
+.sch-item:hover{background:var(--off)}
 .sch-time{font-size:12px;font-weight:600;color:var(--navy);width:56px;flex-shrink:0}
 .sch-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .sch-name{font-size:13px;font-weight:500;color:var(--navy)}
@@ -260,7 +261,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .pl-row{display:flex;justify-content:space-between;align-items:center;padding:9px 20px;border-bottom:1px solid #F9FAFB;font-size:13px}
 .pl-row:last-child{border-bottom:none}
 .pl-row.total{background:var(--blue-lt);font-weight:700;font-size:14px;border-radius:0 0 var(--r) var(--r)}
-.pl-row.subtotal{background:#FAFAFA;font-weight:600}
+.pl-row.subtotal{background:var(--off);font-weight:600}
 .pl-label{color:var(--mgray)}
 .pl-label.dark{color:var(--navy)}
 .pl-val.pos{color:var(--green);font-weight:600}
@@ -285,7 +286,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .setting-val{color:var(--mgray);font-weight:300}
 .toggle{width:40px;height:22px;background:#E5E7EB;border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
 .toggle.on{background:var(--blue)}
-.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:var(--white);border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
 .toggle.on::after{left:21px}
 .inp{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--navy);font-family:var(--sans);outline:none;transition:border-color .15s;background:var(--white)}
 .inp:focus{border-color:var(--blue)}
@@ -294,7 +295,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 
 /* MOBILE TOGGLE */
 .mob-toggle{display:none;position:fixed;top:14px;left:14px;z-index:200;width:38px;height:38px;background:var(--navy);border-radius:8px;border:none;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.mob-toggle span{width:16px;height:1.5px;background:#fff;border-radius:2px;display:block}
+.mob-toggle span{width:16px;height:1.5px;background:var(--white);border-radius:2px;display:block}
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%);transition:transform .25s}
   .sidebar.open{transform:translateX(0)}
@@ -770,7 +771,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 
     <!-- CONTACT MODAL -->
     <div id="contact-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
-      <div style="background:#fff;border-radius:16px;padding:28px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="background:var(--white);border-radius:16px;padding:28px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
         <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:20px" id="modal-title">New Contact</div>
         <input type="hidden" id="modal-id">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -804,7 +805,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
     <!-- ZONES -->
     <div id="page-zones" class="page">
       <div id="zones-container"></div>
-      <button class="add-van-btn" onclick="addVan()" style="display:flex;align-items:center;gap:8px;background:#F7F8FA;border:1.5px dashed #E5E7EB;border-radius:12px;padding:16px 20px;cursor:pointer;font-size:14px;color:#6B7280;font-family:Inter,sans-serif;transition:all .15s;width:100%;margin-top:8px">
+      <button class="add-van-btn" onclick="addVan()" style="display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed #E5E7EB;border-radius:12px;padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:Inter,sans-serif;transition:all .15s;width:100%;margin-top:8px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add another van
       </button>
@@ -988,18 +989,18 @@ function applyDarkModeInline(){
       if(s.color === 'var(--mgray)' || el.getAttribute('style')?.includes('color:var(--mgray)') || el.getAttribute('style')?.includes('color: var(--mgray)')){
         el.style.setProperty('color','#8E8E93','important');
       }
-      if(el.getAttribute('style')?.includes('background:#fff') || el.getAttribute('style')?.includes('background: #fff') || el.getAttribute('style')?.includes('background:#FAFAFA') || el.getAttribute('style')?.includes('background:#F7F8FA')){
+      if(el.getAttribute('style')?.includes('background:#fff') || el.getAttribute('style')?.includes('background: #fff') || el.getAttribute('style')?.includes('background:var(--off)') || el.getAttribute('style')?.includes('background:var(--off)')){
         if(!el.getAttribute('style')?.includes('rgba')){
           el.style.setProperty('background','#242426','important');
         }
       }
-      if(el.getAttribute('style')?.includes('border-color:#E5E7EB') || el.getAttribute('style')?.includes('border:1px solid #E5E7EB') || el.getAttribute('style')?.includes('border: 1px solid #E5E7EB')){
+      if(el.getAttribute('style')?.includes('border-color:var(--border)') || el.getAttribute('style')?.includes('border:1px solid var(--border)') || el.getAttribute('style')?.includes('border: 1px solid #E5E7EB')){
         el.style.setProperty('border-color','#38383A','important');
       }
-      if(el.getAttribute('style')?.includes('color:#6B7280') || el.getAttribute('style')?.includes('color: #6B7280')){
+      if(el.getAttribute('style')?.includes('color:var(--mgray)') || el.getAttribute('style')?.includes('color: #6B7280')){
         el.style.setProperty('color','#8E8E93','important');
       }
-      if(el.getAttribute('style')?.includes('color:#0D1F3C') || el.getAttribute('style')?.includes('color:#0d1f3c')){
+      if(el.getAttribute('style')?.includes('color:var(--navy)') || el.getAttribute('style')?.includes('color:#0d1f3c')){
         el.style.setProperty('color','#F2F2F7','important');
       }
     } else {
@@ -1235,15 +1236,15 @@ function exportFinancePDF() {
   <style>
     body{font-family:Inter,sans-serif;padding:40px;color:#0F1D3A;max-width:800px;margin:0 auto}
     h1{color:#1848C8;margin-bottom:4px}
-    .sub{color:#6B7280;font-size:14px;margin-bottom:32px}
+    .sub{color:var(--mgray);font-size:14px;margin-bottom:32px}
     table{width:100%;border-collapse:collapse;margin-top:16px}
     th{background:#0F1D3A;color:#fff;padding:10px;text-align:left;font-size:12px}
     td{padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:13px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
     .kpi{background:#F9FAFB;border-radius:10px;padding:16px}
-    .kpi-label{font-size:11px;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em}
+    .kpi-label{font-size:11px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em}
     .kpi-val{font-size:22px;font-weight:700;color:#0F1D3A;margin-top:6px}
-    .footer{margin-top:40px;font-size:11px;color:#6B7280;border-top:1px solid #E5E7EB;padding-top:16px}
+    .footer{margin-top:40px;font-size:11px;color:var(--mgray);border-top:1px solid #E5E7EB;padding-top:16px}
     @media print{button{display:none}}
   </style></head><body>
   <h1>Dr. Bike Sydney — Finance Report</h1>
@@ -1459,7 +1460,7 @@ async function loadDashboard(){
         <td><span class="status ${stClass[st]||'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase()+st.slice(1)}</span></td>
         <td><b>$${b.service_price||0}</b></td>
       </tr>`;
-    }).join('') || '<tr><td colspan="6" style="text-align:center;color:#6B7280;padding:24px">No bookings yet — ready to go!</td></tr>';
+    }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--mgray);padding:24px">No bookings yet — ready to go!</td></tr>';
   }
 
   // Schedule — today's jobs
@@ -1474,7 +1475,7 @@ async function loadDashboard(){
           <div class="sch-price">$${b.service_price||0}</div>
         </div>`).join('');
     } else {
-      schList.innerHTML = '<div style="padding:24px;text-align:center;color:#6B7280;font-size:13px">No jobs scheduled today</div>';
+      schList.innerHTML = '<div style="padding:24px;text-align:center;color:var(--mgray);font-size:13px">No jobs scheduled today</div>';
     }
   }
 }
@@ -1486,7 +1487,7 @@ async function loadBookings(){
   if(!tbody) return;
   const stClass = {confirmed:'confirmed',pending:'pending',enroute:'enroute',completed:'completed',cancelled:'cancelled'};
   if(!data || data.length === 0){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6B7280;padding:32px">No bookings yet — ready to go!</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--mgray);padding:32px">No bookings yet — ready to go!</td></tr>';
   } else {
     tbody.innerHTML = data.map(b=>{
       const name = b.profiles?.full_name || b.profiles?.email || 'Client';
@@ -1521,7 +1522,7 @@ async function loadClients(){
   if(!grid) return;
   const colors = ['#1848C8','#059669','#D97706','#7C3AED','#0891B2','#DC2626'];
   if(!data || data.length === 0){
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#6B7280;padding:48px;font-size:14px">No clients yet — they will appear here when they sign up.</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--mgray);padding:48px;font-size:14px">No clients yet — they will appear here when they sign up.</div>';
     return;
   }
   grid.innerHTML = data.map((c,i)=>{
@@ -1588,7 +1589,7 @@ function renderVanZones(){
   if(!container) return;
   container.innerHTML = vanZones.map(van=>{
     return `
-    <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:20px;overflow:hidden">
+    <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:20px;overflow:hidden">
       <div style="padding:16px 20px;background:${van.color};display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:600;color:#fff;margin-bottom:6px">${van.name}</div>
@@ -1611,7 +1612,7 @@ function renderVanZones(){
         </div>
         <div style="display:flex;gap:8px">
           <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" onkeydown="if(event.key==='Enter')addSuburb(${van.id})"
-            style="flex:1;border:1.5px solid #E5E7EB;border-radius:8px;padding:9px 14px;font-size:13px;font-family:Inter,sans-serif;outline:none">
+            style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:Inter,sans-serif;outline:none">
           <button onclick="addSuburb(${van.id})" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
         </div>
       </div>
@@ -1672,23 +1673,23 @@ async function loadContacts(){
   const list = document.getElementById('contacts-list');
   if(!list) return;
   if(!data || data.length === 0){
-    list.innerHTML = '<div style="text-align:center;color:#6B7280;padding:48px;font-size:14px">No contacts yet. Add your first contact above.</div>';
+    list.innerHTML = '<div style="text-align:center;color:var(--mgray);padding:48px;font-size:14px">No contacts yet. Add your first contact above.</div>';
     return;
   }
   const roleColors = { manager:'#1848C8', mechanic:'#059669' };
   const roleBg = { manager:'#EEF3FC', mechanic:'#ECFDF5' };
   list.innerHTML = data.map(c=>`
-    <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
+    <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
       <div style="width:44px;height:44px;border-radius:50%;background:${roleBg[c.role]||'#F3F4F6'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role]||'#6B7280'};flex-shrink:0">
         ${c.first_name[0]}${c.last_name[0]}
       </div>
       <div style="flex:1">
-        <div style="font-size:15px;font-weight:600;color:#0D1F3C">${c.first_name} ${c.last_name}</div>
-        <div style="font-size:13px;color:#6B7280;margin-top:2px">${c.phone}</div>
+        <div style="font-size:15px;font-weight:600;color:var(--navy)">${c.first_name} ${c.last_name}</div>
+        <div style="font-size:13px;color:var(--mgray);margin-top:2px">${c.phone}</div>
       </div>
       <span style="background:${roleBg[c.role]||'#F3F4F6'};color:${roleColors[c.role]||'#6B7280'};font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;text-transform:capitalize">${c.role}</span>
       <div style="display:flex;gap:8px">
-        <button onclick="editContact('${c.id}','${c.first_name}','${c.last_name}','${c.phone}','${c.role}')" style="background:#F7F8FA;border:1.5px solid #E5E7EB;color:#0D1F3C;border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
+        <button onclick="editContact('${c.id}','${c.first_name}','${c.last_name}','${c.phone}','${c.role}')" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
         <button onclick="deleteContact('${c.id}')" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`).join('');
