@@ -1224,7 +1224,7 @@ async function loadCoupons(){
         <td>${c.uses_count||0}${c.max_uses?'/'+c.max_uses:' (∞)'}</td>
         <td>${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
         <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
-        <td><button onclick="toggleCoupon('${c.id}',${!c.active})" style="font-size:11px;padding:4px 10px;border:1px solid ${c.active?'#ef4444':'#22c55e'};border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif;color:${c.active?'#ef4444':'#22c55e'}">${c.active?'Deactivate':'Activate'}</button></td>
+        <td><button onclick="toggleCoupon('${c.id}',${!c.active})" style="font-size:11px;padding:4px 10px;border:1px solid ${c.active?'#ef4444':'#22c55e'};border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif;color:${c.active?'#ef4444':'#22c55e'};font-weight:600">${c.active?'Deactivate':'Activate'}</button></td>
       </tr>`).join('');
   } catch(e) {
     console.error('[loadCoupons] exception:', e);
