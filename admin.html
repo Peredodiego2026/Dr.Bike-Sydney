@@ -813,8 +813,49 @@ body { top: 0 !important; }
     <div id="page-coupons" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">Discount Codes</div>
-        <button onclick="openCouponModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">+ Create code</button>
+        <button onclick="toggleCouponForm()" id="btn-toggle-coupon-form" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">+ Create code</button>
       </div>
+
+      <!-- INLINE CREATE FORM (hidden by default) -->
+      <div id="coupon-inline-form" style="display:none;background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:22px;margin-bottom:20px">
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:18px">New discount code</div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">CODE</label>
+          <div style="display:flex;gap:8px">
+            <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.08em" placeholder="e.g. NEWRIDER20">
+            <button onclick="document.getElementById('c-code').value='BIKE'+Math.random().toString(36).substr(2,5).toUpperCase()" style="white-space:nowrap;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)">Random</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">TYPE</label>
+            <select id="c-type" class="inp" style="margin:0">
+              <option value="fixed">Fixed $ off</option>
+              <option value="percent">Percentage %</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">VALUE</label>
+            <input id="c-value" type="number" class="inp" style="margin:0" placeholder="15" min="1">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">MAX USES</label>
+            <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited (optional)">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">EXPIRES</label>
+            <input id="c-expires" type="date" class="inp" style="margin:0">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleCouponForm()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy);font-size:13px">Cancel</button>
+          <button onclick="saveCoupon()" id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
       <div class="card">
         <div class="card-body">
           <table class="tbl">
@@ -1198,84 +1239,50 @@ async function loadCoupons(){
   const tbody = document.getElementById('coupons-tbody');
   if(!tbody) return;
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">Loading...</td></tr>';
-  
-  const { data, error } = await sb.from('discount_codes').select('*').order('created_at',{ascending:false});
-  
-  if(error){ 
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">Error: ${error.message}</td></tr>`;
-    return; 
+
+  try {
+    const { data, error } = await sb.from('discount_codes').select('*').order('created_at',{ascending:false});
+    console.log('[loadCoupons]', { data, error });
+
+    if(error){
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">❌ ${error.message}<br><small style="color:var(--mgray)">Check that the discount_codes table exists in Supabase and RLS allows select.</small></td></tr>`;
+      return;
+    }
+    if(!data?.length){
+      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">No codes yet — create your first one above!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(c=>`
+      <tr>
+        <td><strong style="color:var(--navy);letter-spacing:0.05em">${c.code}</strong></td>
+        <td style="color:var(--mgray)">${c.discount_type==='percent'?'Percentage':'Fixed $'}</td>
+        <td style="font-weight:600;color:var(--blue)">${c.discount_type==='percent'?c.discount_value+'%':'$'+c.discount_value}</td>
+        <td style="color:var(--mgray)">${c.uses_count||0}${c.max_uses?'/'+c.max_uses:' (∞)'}</td>
+        <td style="color:var(--mgray)">${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
+        <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
+        <td><button onclick="toggleCoupon('${c.id}',${!c.active})" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif;color:var(--navy)">${c.active?'Deactivate':'Activate'}</button></td>
+      </tr>`).join('');
+  } catch(e) {
+    console.error('[loadCoupons] exception:', e);
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">❌ Exception: ${e.message}</td></tr>`;
   }
-  if(!data?.length){ 
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">No codes yet. Create your first one!</td></tr>'; 
-    return; 
-  }
-  tbody.innerHTML = data.map(c=>`
-    <tr>
-      <td><strong style="color:var(--navy);letter-spacing:0.05em">${c.code}</strong></td>
-      <td style="color:var(--mgray)">${c.discount_type==='percent'?'Percentage':'Fixed $'}</td>
-      <td style="font-weight:600;color:var(--blue)">${c.discount_type==='percent'?c.discount_value+'%':'$'+c.discount_value}</td>
-      <td style="color:var(--mgray)">${c.uses_count||0}${c.max_uses?'/'+c.max_uses:' (∞)'}</td>
-      <td style="color:var(--mgray)">${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
-      <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
-      <td><button onclick="toggleCoupon('${c.id}',${!c.active})" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif;color:var(--navy)">${c.active?'Deactivate':'Activate'}</button></td>
-    </tr>`).join('');
 }
 
-function openCouponModal(){
-  let modal = document.getElementById('coupon-modal');
-  if(modal) modal.remove();
-  modal = document.createElement('div');
-  modal.id = 'coupon-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
-
-  const box = document.createElement('div');
-  box.style.cssText = 'background:var(--white);border-radius:16px;width:100%;max-width:400px;padding:24px';
-  box.innerHTML = `
-    <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:20px">Create discount code</div>
-    <div style="margin-bottom:12px">
-      <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">CODE</label>
-      <div style="display:flex;gap:8px">
-        <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.08em" placeholder="e.g. NEWRIDER20">
-        <button id="c-random-btn" style="white-space:nowrap;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)">Random</button>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">TYPE</label>
-        <select id="c-type" class="inp" style="margin:0">
-          <option value="fixed">Fixed $ off</option>
-          <option value="percent">Percentage %</option>
-        </select>
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">VALUE</label>
-        <input id="c-value" type="number" class="inp" style="margin:0" placeholder="15" min="1">
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">MAX USES</label>
-        <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited">
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">EXPIRES</label>
-        <input id="c-expires" type="date" class="inp" style="margin:0">
-      </div>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button id="c-cancel-btn" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy)">Cancel</button>
-      <button id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
-    </div>`;
-
-  modal.appendChild(box);
-  document.body.appendChild(modal);
-
-  // Event listeners — no onclick inline
-  document.getElementById('c-random-btn').addEventListener('click', () => {
-    document.getElementById('c-code').value = 'BIKE' + Math.random().toString(36).substr(2,5).toUpperCase();
-  });
-  document.getElementById('c-cancel-btn').addEventListener('click', () => modal.remove());
-  document.getElementById('c-save-btn').addEventListener('click', saveCoupon);
+function toggleCouponForm(){
+  const form = document.getElementById('coupon-inline-form');
+  const btn  = document.getElementById('btn-toggle-coupon-form');
+  if(!form) return;
+  const isHidden = form.style.display === 'none';
+  form.style.display = isHidden ? 'block' : 'none';
+  if(btn) btn.textContent = isHidden ? '✕ Cancel' : '+ Create code';
+  if(isHidden){
+    // Reset form fields when opening
+    document.getElementById('c-code').value = '';
+    document.getElementById('c-type').value = 'fixed';
+    document.getElementById('c-value').value = '';
+    document.getElementById('c-maxuses').value = '';
+    document.getElementById('c-expires').value = '';
+  }
 }
 
 function toast(msg){
@@ -1289,47 +1296,42 @@ let savingCoupon = false;
 async function saveCoupon(){
   if(savingCoupon) return;
   savingCoupon = true;
-  
-  const code = document.getElementById('c-code')?.value?.trim().toUpperCase();
-  const type = document.getElementById('c-type')?.value;
-  const value = parseInt(document.getElementById('c-value')?.value);
-  const maxUses = parseInt(document.getElementById('c-maxuses')?.value)||null;
-  const expires = document.getElementById('c-expires')?.value||null;
-  
-  if(!code){ alert('Please enter a code'); savingCoupon=false; return; }
-  if(!value || isNaN(value)){ alert('Please enter a value'); savingCoupon=false; return; }
-  
+
+  const code    = (document.getElementById('c-code')?.value||'').trim().toUpperCase();
+  const type    = document.getElementById('c-type')?.value || 'fixed';
+  const value   = parseFloat(document.getElementById('c-value')?.value);
+  const maxUses = parseInt(document.getElementById('c-maxuses')?.value) || null;
+  const expires = document.getElementById('c-expires')?.value || null;
+
+  if(!code){ toast('⚠️ Please enter a code'); savingCoupon=false; return; }
+  if(!value || isNaN(value)){ toast('⚠️ Please enter a discount value'); savingCoupon=false; return; }
+
   const btn = document.getElementById('c-save-btn');
-  if(btn){ btn.textContent='Creating...'; btn.disabled=true; }
-  
+  if(btn){ btn.textContent='Creating…'; btn.disabled=true; }
+
   try {
-    const insertData = { 
-      code, 
-      discount_type: type || 'fixed', 
-      discount_value: value,
-      active: true,
-      uses_count: 0
-    };
+    const insertData = { code, discount_type: type, discount_value: value, active: true, uses_count: 0 };
     if(maxUses && !isNaN(maxUses)) insertData.max_uses = maxUses;
     if(expires) insertData.expires_at = new Date(expires).toISOString();
-    
+
     const { data, error } = await sb.from('discount_codes').insert(insertData).select();
-    console.log('Result:', {data, error});
-    
-    if(error){ 
-      alert('Error: ' + error.message); 
-      const btn2 = document.getElementById('c-save-btn');
-      if(btn2){ btn2.textContent='Create code'; btn2.disabled=false; }
+
+    if(error){
+      toast('❌ Error: ' + error.message);
+      if(btn){ btn.textContent='Create code'; btn.disabled=false; }
       savingCoupon=false;
-      return; 
+      return;
     }
-    
-    document.getElementById('coupon-modal')?.remove();
+
+    // Hide form and reload table
+    document.getElementById('coupon-inline-form').style.display='none';
+    const toggleBtn = document.getElementById('btn-toggle-coupon-form');
+    if(toggleBtn) toggleBtn.textContent='+ Create code';
     await loadCoupons();
     toast('✅ Code ' + code + ' created!');
   } catch(e) {
-    console.error('Exception:', e);
-    alert('Exception: ' + e.message);
+    console.error('saveCoupon exception:', e);
+    toast('❌ Exception: ' + e.message);
     if(btn){ btn.textContent='Create code'; btn.disabled=false; }
   }
   savingCoupon = false;
