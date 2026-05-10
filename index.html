@@ -569,6 +569,8 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .bike-type-opt{padding:10px 8px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:500;color:var(--navy);transition:all .15s;font-family:var(--sans);background:none}
 .bike-type-opt.sel{border-color:var(--blue);background:var(--blue-lt);color:var(--blue)}
 /* ── CHATBOT FLOTANTE ── */
+#view-book.active ~ #chatbot-btn,
+#view-book.active ~ * #chatbot-btn { display: none !important; visibility: hidden !important; }
 #chatbot-btn{position:fixed;bottom:100px;right:24px;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;z-index:900;box-shadow:0 4px 20px rgba(24,72,200,0.4);display:flex;align-items:center;justify-content:center;transition:all .2s}
 #chatbot-btn:hover{transform:scale(1.08);background:var(--blue2)}
 #chatbot-btn .cb-notif{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--red);border-radius:50%;border:2px solid #fff;display:none}
@@ -3188,10 +3190,13 @@ function showView(v){
   if(chatBtn){
     if(v === 'book'){
       chatBtn.style.display = 'none';
+      chatBtn.style.visibility = 'hidden';
       hidePWABanner();
-      if(chatPanel) chatPanel.classList.remove('open');
+      if(chatPanel){ chatPanel.classList.remove('open'); chatPanel.style.display = 'none'; }
     } else {
       chatBtn.style.display = 'flex';
+      chatBtn.style.visibility = 'visible';
+      if(chatPanel) chatPanel.style.display = '';
     }
   }
 
