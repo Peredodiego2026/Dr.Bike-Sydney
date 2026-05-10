@@ -105,6 +105,9 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 [data-theme="dark"] .pl-label{color:#98989F}
 [data-theme="dark"] .pl-val{color:#F2F2F7}
 [data-theme="dark"] select.inp{background:#2C2C2E;color:#F2F2F7}
+[data-theme="dark"] .mobile-bottom-nav{background:#242426;border-color:#38383A}
+[data-theme="dark"] .mobile-bottom-nav a{color:#636366}
+[data-theme="dark"] .mobile-bottom-nav a.active{color:#60A5FA}
 [data-theme="dark"] .sb-overlay{background:rgba(0,0,0,0.7)}
 [data-theme="dark"] #fin-chart div{opacity:0.9}
 /* Settings, Vans, Reminders text fixes */
@@ -316,16 +319,73 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .mob-toggle{display:none;position:fixed;top:14px;left:14px;z-index:200;width:38px;height:38px;background:var(--navy);border-radius:8px;border:none;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 .mob-toggle span{width:16px;height:1.5px;background:var(--white);border-radius:2px;display:block}
 @media(max-width:768px){
-  .sidebar{transform:translateX(-100%);transition:transform .25s}
+  /* Sidebar — slide in/out */
+  .sidebar{transform:translateX(-100%);transition:transform .25s;z-index:100}
   .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0}
+  .main{margin-left:0;padding-bottom:70px}
   .mob-toggle{display:flex}
-  .kpis{grid-template-columns:repeat(2,1fr)}
+
+  /* Topbar compact */
+  .topbar{padding:0 16px;height:52px}
+  .topbar-title{font-size:14px}
+  .topbar-sub{display:none}
+  .date-badge{display:none}
+
+  /* KPIs — 2 col grid */
+  .kpis{grid-template-columns:repeat(2,1fr);gap:10px}
+  .kpi-card{padding:14px}
+  .kpi-value{font-size:22px}
+  .kpi-label{font-size:10px}
+  .kpi-sub{font-size:10px}
+
+  /* Grids — single col */
   .row2,.fin-row,.vans,.settings-grid{grid-template-columns:1fr}
   .clients-grid{grid-template-columns:1fr}
-  .quick-actions{grid-template-columns:repeat(2,1fr)}
-  .card-body{overflow-x:auto}
-  .tbl{min-width:600px}
+  .quick-actions{grid-template-columns:repeat(2,1fr);gap:10px}
+
+  /* Tables — horizontal scroll */
+  .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tbl{min-width:500px;font-size:12px}
+  .tbl th,.tbl td{padding:10px 8px}
+
+  /* Page padding */
+  .page{padding:12px;gap:12px}
+  .card{border-radius:10px}
+  .card-hdr{padding:14px 16px}
+
+  /* Schedule items */
+  .sch-item{padding:10px 12px;gap:10px}
+  .sch-time{font-size:11px;min-width:36px}
+
+  /* Zone manager */
+  .zone-van{padding:14px}
+
+  /* Booking filters — wrap */
+  #booking-filters{flex-wrap:wrap;gap:8px}
+  #booking-filters select,#booking-filters input{font-size:13px;padding:7px 10px}
+
+  /* Bottom nav bar */
+  .mobile-bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    background:var(--white);border-top:1px solid var(--border);
+    z-index:60;height:60px;padding-bottom:env(safe-area-inset-bottom)
+  }
+  .mobile-bottom-nav a{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;font-size:9px;font-weight:600;color:var(--mgray);cursor:pointer;
+    text-decoration:none;border:none;background:none;font-family:var(--sans);
+    transition:color .15s;padding:6px 0;text-transform:uppercase;letter-spacing:0.04em
+  }
+  .mobile-bottom-nav a.active{color:var(--blue)}
+  .mobile-bottom-nav a svg{width:20px;height:20px}
+  .mobile-bottom-nav a .nav-badge{
+    position:absolute;top:6px;background:var(--red);color:#fff;
+    border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;min-width:16px;text-align:center
+  }
+}
+
+@media(min-width:769px){
+  .mobile-bottom-nav{display:none}
 }
 /* Sidebar backdrop overlay */
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:49}
@@ -1067,6 +1127,12 @@ function go(page, btn){
   if(page==='dashboard') loadDashboard();
   if(page==='coupons') loadCoupons();
   setTimeout(applyDarkModeInline, 100);
+
+  // Update mobile bottom nav active state
+  ['dashboard','bookings','clients','finance'].forEach(p => {
+    const el = document.getElementById('mbnav-'+p);
+    if(el) el.classList.toggle('active', p === page);
+  });
 }
 
 function applyDarkModeInline(){
@@ -1356,7 +1422,31 @@ function exportFinancePDF() {
   </table>
   <div class="footer">Dr. Bike Sydney · drbike.com.au · ABN: [Your ABN] · This report is for internal use only.</div>
   <br><button onclick="window.print()">🖨️ Print / Save as PDF</button>
-  </body></html>`);
+<!-- Mobile bottom nav -->
+<nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+  <a onclick="go('dashboard')" id="mbnav-dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a onclick="go('bookings')" id="mbnav-bookings" style="position:relative">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Bookings
+    <span class="nav-badge" id="mbnav-badge" style="display:none">0</span>
+  </a>
+  <a onclick="go('clients')" id="mbnav-clients">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    Clients
+  </a>
+  <a onclick="go('finance')" id="mbnav-finance">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Finance
+  </a>
+  <a onclick="toggleSidebar()" id="mbnav-more">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    More
+  </a>
+</nav>
+</body></html>`);
   win.document.close();
 }
 function showToast(msg){
