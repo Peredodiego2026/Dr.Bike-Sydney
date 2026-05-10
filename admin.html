@@ -1281,10 +1281,13 @@ async function saveCoupon(){
   const value = parseInt(document.getElementById('c-value')?.value);
   const maxUses = parseInt(document.getElementById('c-maxuses')?.value)||null;
   const expires = document.getElementById('c-expires')?.value||null;
+  
+  console.log('saveCoupon called:', {code, type, value, maxUses, expires});
+  
   if(!code){ alert('Please enter a code'); return; }
   if(!value || isNaN(value)){ alert('Please enter a value'); return; }
   
-  const btn = document.querySelector('#coupon-modal button[onclick="saveCoupon()"]');
+  const btn = document.querySelector('#coupon-modal button:last-child');
   if(btn){ btn.textContent='Creating...'; btn.disabled=true; }
   
   try {
@@ -1295,17 +1298,24 @@ async function saveCoupon(){
       active: true,
       uses_count: 0
     };
-    if(maxUses) insertData.max_uses = maxUses;
+    if(maxUses && !isNaN(maxUses)) insertData.max_uses = maxUses;
     if(expires) insertData.expires_at = new Date(expires).toISOString();
     
+    console.log('Inserting:', insertData);
     const { data, error } = await sb.from('discount_codes').insert(insertData).select();
-    if(error){ alert('Error creating code: ' + error.message); return; }
+    console.log('Result:', {data, error});
+    
+    if(error){ 
+      alert('Supabase error: ' + error.message + '\nCode: ' + error.code); 
+      return; 
+    }
     
     document.getElementById('coupon-modal').remove();
     await loadCoupons();
     toast('✅ Discount code created!');
   } catch(e) {
-    alert('Error: ' + e.message);
+    console.error('Exception:', e);
+    alert('Exception: ' + e.message);
   } finally {
     if(btn){ btn.textContent='Create code'; btn.disabled=false; }
   }
