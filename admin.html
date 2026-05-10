@@ -57,8 +57,10 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .coupon-btn{font-size:11px;padding:4px 10px;border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;border:1px solid}
 .coupon-btn-deactivate{color:#ef4444;border-color:#ef4444}
 .coupon-btn-activate{color:#22c55e;border-color:#22c55e}
+.coupon-btn-delete{color:#ef4444;border-color:#ef4444;background:rgba(239,68,68,0.08)}
 [data-theme="dark"] .coupon-btn-deactivate{color:#f87171 !important;border-color:#f87171 !important;background:transparent !important}
 [data-theme="dark"] .coupon-btn-activate{color:#4ade80 !important;border-color:#4ade80 !important;background:transparent !important}
+[data-theme="dark"] .coupon-btn-delete{color:#f87171 !important;border-color:#f87171 !important;background:rgba(239,68,68,0.12) !important}
 [data-theme="dark"] .card-title{color:#F2F2F7}
 [data-theme="dark"] .card-sub{color:#98989F}
 [data-theme="dark"] .card-action{color:#60A5FA}
@@ -1229,7 +1231,10 @@ async function loadCoupons(){
         <td>${c.uses_count||0}${c.max_uses?'/'+c.max_uses:' (∞)'}</td>
         <td>${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
         <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
-        <td><button onclick="toggleCoupon('${c.id}',${!c.active})" class="coupon-btn ${c.active?'coupon-btn-deactivate':'coupon-btn-activate'}">${c.active?'Deactivate':'Activate'}</button></td>
+        <td style="display:flex;gap:6px;align-items:center">
+          <button onclick="toggleCoupon('${c.id}',${!c.active})" class="coupon-btn ${c.active?'coupon-btn-deactivate':'coupon-btn-activate'}">${c.active?'Deactivate':'Activate'}</button>
+          <button onclick="deleteCoupon('${c.id}','${c.code}')" class="coupon-btn coupon-btn-delete">Delete</button>
+        </td>
       </tr>`).join('');
   } catch(e) {
     console.error('[loadCoupons] exception:', e);
@@ -1309,6 +1314,13 @@ async function saveCoupon(){
 async function toggleCoupon(id, active){
   await sb.from('discount_codes').update({ active }).eq('id', id);
   loadCoupons();
+}
+
+async function deleteCoupon(id, code){
+  if(!confirm(`Delete code "${code}"? This cannot be undone.`)) return;
+  await sb.from('discount_codes').delete().eq('id', id);
+  loadCoupons();
+  toast('🗑️ Code ' + code + ' deleted');
 }
 
 // ── REMINDERS ─────────────────────────────────────────────────────────────────
