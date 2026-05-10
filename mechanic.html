@@ -166,13 +166,20 @@ async function doLogin(){
   if(pin.length<4){ err('Enter your 4-digit PIN'); return; }
   const btn=document.getElementById('login-btn');
   btn.textContent='Signing in...'; btn.disabled=true;
-  const {data} = await sb.from('escalation_contacts').select('*').eq('active',true);
-  const m = data?.find(c=>c.phone.replace(/[\s+]/g,'').slice(-4)===pin);
-  btn.textContent='Sign in →'; btn.disabled=false;
-  if(!m){ err('Invalid PIN'); return; }
-  mechanic={...m,van_number:vanNum};
-  localStorage.setItem('drbike-mech',JSON.stringify(mechanic));
-  go('s-main'); updateUI(); await load(); sub();
+
+  try {
+    const {data, error} = await sb.from('escalation_contacts').select('*');
+    const contacts = data || [];
+    const m = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()]/g,'').slice(-4) === pin);
+    btn.textContent='Sign in →'; btn.disabled=false;
+    if(!m){ err('Invalid PIN — use last 4 digits of your phone'); return; }
+    mechanic={...m, van_number:vanNum};
+    localStorage.setItem('drbike-mech',JSON.stringify(mechanic));
+    go('s-main'); updateUI(); await load(); sub();
+  } catch(e) {
+    btn.textContent='Sign in →'; btn.disabled=false;
+    err('Connection error — try again');
+  }
 }
 
 function err(msg){ const e=document.getElementById('login-err'); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',3000); }
