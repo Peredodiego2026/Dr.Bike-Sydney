@@ -421,9 +421,10 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
     <div class="topbar-right">
       <button id="theme-btn-admin" onclick="toggleAdminTheme()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px">🌙</button>
       <div class="date-badge" id="admin-date-badge">Mon 4 May 2026</div>
-      <div class="notif-btn">
+      <div class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" style="cursor:pointer">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <div class="notif-dot"></div>
+        <div class="notif-dot" id="notif-dot" style="display:none"></div>
+        <span id="notif-count" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;border:2px solid var(--white)"></span>
       </div>
     </div>
   </header>
@@ -512,27 +513,98 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 
     <!-- BOOKINGS -->
     <div id="page-bookings" class="page">
-      <div class="kpis">
-        <div class="kpi-card blue"><div class="kpi-label">Total bookings</div><div class="kpi-value">18</div><div class="kpi-sub">April 2026</div></div>
-        <div class="kpi-card green"><div class="kpi-label">Confirmed</div><div class="kpi-value">10</div><div class="kpi-sub">Ready to go</div></div>
-        <div class="kpi-card orange"><div class="kpi-label">Pending</div><div class="kpi-value">4</div><div class="kpi-sub">Need confirmation</div></div>
-        <div class="kpi-card red"><div class="kpi-label">Month revenue</div><div class="kpi-value">$36,138</div><div class="kpi-sub">All bookings</div></div>
+      <div class="kpis" id="bk-kpis">
+        <div class="kpi-card blue"><div class="kpi-label">Total bookings</div><div class="kpi-value" id="bk-total">—</div><div class="kpi-sub">loaded from Supabase</div></div>
+        <div class="kpi-card green"><div class="kpi-label">Confirmed</div><div class="kpi-value" id="bk-confirmed">—</div><div class="kpi-sub">Ready to go</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Pending</div><div class="kpi-value" id="bk-pending">—</div><div class="kpi-sub">Need confirmation</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Revenue (filtered)</div><div class="kpi-value" id="bk-revenue">$—</div><div class="kpi-sub">completed jobs</div></div>
       </div>
+
+      <!-- Filters -->
+      <div class="card" style="padding:16px 20px">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">From</div>
+            <input type="date" id="bk-f-from" class="inp" style="width:140px">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">To</div>
+            <input type="date" id="bk-f-to" class="inp" style="width:140px">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Van</div>
+            <select id="bk-f-van" class="inp" style="width:110px">
+              <option value="">All vans</option>
+              <option value="1">Van 1</option>
+              <option value="2">Van 2</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Status</div>
+            <select id="bk-f-status" class="inp" style="width:130px">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="enroute">En route</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:180px">
+            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Client name</div>
+            <input type="text" id="bk-f-search" class="inp" placeholder="Search client..." oninput="applyBookingFilters()">
+          </div>
+          <button onclick="applyBookingFilters()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Filter</button>
+          <button onclick="resetBookingFilters()" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Reset</button>
+        </div>
+      </div>
+
       <div class="card">
-        <div class="card-hdr"><div><div class="card-title">All bookings</div><div class="card-sub">April 2026 · sorted by date</div></div></div>
-        <table class="tbl">
-          <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Suburb</th><th>Mechanic</th><th>Status</th><th>Total</th></tr></thead>
-          <tbody>
-            <tr><td>26 Apr</td><td><b>Sarah M.</b></td><td>Standard Service</td><td>Paddington</td><td><span class="mech-tag v1">Van 1</span></td><td><span class="status confirmed"><span class="status-dot"></span>Confirmed</span></td><td><b>$149</b></td></tr>
-            <tr><td>26 Apr</td><td><b>James T.</b></td><td>Tune-Up</td><td>Randwick</td><td><span class="mech-tag v2">Van 2</span></td><td><span class="status confirmed"><span class="status-dot"></span>Confirmed</span></td><td><b>$109</b></td></tr>
-            <tr><td>27 Apr</td><td><b>Olivia P.</b></td><td>Ultimate Overhaul</td><td>Manly</td><td><span class="mech-tag v2">Van 2</span></td><td><span class="status confirmed"><span class="status-dot"></span>Confirmed</span></td><td><b>$369</b></td></tr>
-            <tr><td>27 Apr</td><td><b>Ethan R.</b></td><td>Brake Bleed</td><td>Bondi</td><td><span class="mech-tag v1">Van 1</span></td><td><span class="status pending"><span class="status-dot"></span>Pending</span></td><td><b>$80</b></td></tr>
-            <tr><td>28 Apr</td><td><b>Mia C.</b></td><td>Major Service</td><td>Marrickville</td><td><span class="mech-tag v1">Van 1</span></td><td><span class="status confirmed"><span class="status-dot"></span>Confirmed</span></td><td><b>$199</b></td></tr>
-            <tr><td>28 Apr</td><td><b>Luca B.</b></td><td>Shock Air Can Service</td><td>Bondi</td><td><span class="mech-tag v2">Van 2</span></td><td><span class="status pending"><span class="status-dot"></span>Pending</span></td><td><b>$99</b></td></tr>
-            <tr><td>29 Apr</td><td><b>Ava L.</b></td><td>Brake Pad Install</td><td>Mosman</td><td><span class="mech-tag v2">Van 2</span></td><td><span class="status confirmed"><span class="status-dot"></span>Confirmed</span></td><td><b>$40</b></td></tr>
-            <tr><td>25 Apr</td><td><b>Isla B.</b></td><td>E-bike Diagnostic</td><td>Manly</td><td><span class="mech-tag v2">Van 2</span></td><td><span class="status cancelled"><span class="status-dot"></span>Cancelled</span></td><td><b>$60</b></td></tr>
-          </tbody>
-        </table>
+        <div class="card-hdr"><div><div class="card-title">All bookings</div><div class="card-sub" id="bk-sub">Loading from Supabase...</div></div></div>
+        <div class="card-body" style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Suburb</th><th>Van</th><th>Status</th><th>Total</th><th>Actions</th></tr></thead>
+            <tbody id="bk-tbody"><tr><td colspan="8" style="text-align:center;color:var(--mgray);padding:24px">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancel modal -->
+    <div id="cancel-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+      <div style="background:var(--white);border-radius:16px;padding:24px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Cancel booking</div>
+        <input type="hidden" id="cancel-booking-id">
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Reason</div>
+          <select id="cancel-reason" class="inp">
+            <option value="Client request">Client request</option>
+            <option value="Mechanic unavailable">Mechanic unavailable</option>
+            <option value="Weather">Weather conditions</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Notes (optional)</div>
+          <textarea id="cancel-notes" class="inp" style="height:70px;resize:none" placeholder="Additional notes..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onclick="confirmCancel()" style="flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel booking</button>
+          <button onclick="document.getElementById('cancel-modal').style.display='none'" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Go back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reassign modal -->
+    <div id="reassign-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+      <div style="background:var(--white);border-radius:16px;padding:24px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Reassign to van</div>
+        <input type="hidden" id="reassign-booking-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <button onclick="doReassign(1)" style="padding:16px;border:2px solid #1848C8;border-radius:10px;background:#EEF3FC;color:#1848C8;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">🚐 Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
+          <button onclick="doReassign(2)" style="padding:16px;border:2px solid #D97706;border-radius:10px;background:#FEF3C7;color:#D97706;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">🚐 Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
+        </div>
+        <button onclick="document.getElementById('reassign-modal').style.display='none'" style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
       </div>
     </div>
 
@@ -988,6 +1060,7 @@ function go(page, btn){
     document.getElementById('fin-year').value = now.getFullYear();
     loadFinance();
   }
+  if(page==='vans') renderMechStats();
   if(page==='contacts') loadContacts();
   if(page==='bookings') loadBookings();
   if(page==='clients') loadClients();
@@ -1500,38 +1573,270 @@ async function loadDashboard(){
 }
 
 // ── BOOKINGS ──────────────────────────────────────────────────────────────────
+let allBookings = [];
+
 async function loadBookings(){
-  const { data } = await sb.from('bookings').select('*, profiles(full_name, email)').order('created_at',{ascending:false}).limit(50);
-  const tbody = document.querySelector('#page-bookings .tbl tbody');
+  const { data } = await sb.from('bookings').select('*, profiles(full_name, email)').order('created_at',{ascending:false}).limit(200);
+  allBookings = data || [];
+  applyBookingFilters();
+}
+
+function applyBookingFilters(){
+  const from = document.getElementById('bk-f-from')?.value;
+  const to = document.getElementById('bk-f-to')?.value;
+  const van = document.getElementById('bk-f-van')?.value;
+  const status = document.getElementById('bk-f-status')?.value;
+  const search = (document.getElementById('bk-f-search')?.value||'').toLowerCase();
+
+  let filtered = allBookings.filter(b=>{
+    if(from && b.scheduled_date < from) return false;
+    if(to && b.scheduled_date > to) return false;
+    if(van && String(b.van_number) !== van) return false;
+    if(status && b.status !== status) return false;
+    if(search){
+      const name = (b.profiles?.full_name || b.profiles?.email || '').toLowerCase();
+      if(!name.includes(search)) return false;
+    }
+    return true;
+  });
+
+  renderBookingsTable(filtered);
+}
+
+function resetBookingFilters(){
+  ['bk-f-from','bk-f-to','bk-f-search'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['bk-f-van','bk-f-status'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  applyBookingFilters();
+}
+
+function renderBookingsTable(data){
+  const tbody = document.getElementById('bk-tbody');
   if(!tbody) return;
   const stClass = {confirmed:'confirmed',pending:'pending',enroute:'enroute',completed:'completed',cancelled:'cancelled'};
-  if(!data || data.length === 0){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--mgray);padding:32px">No bookings yet — ready to go!</td></tr>';
-  } else {
-    tbody.innerHTML = data.map(b=>{
-      const name = b.profiles?.full_name || b.profiles?.email || 'Client';
-      const date = b.scheduled_date ? new Date(b.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '—';
-      const st = b.status||'pending';
-      return `<tr>
-        <td>${date}</td>
-        <td><b>${name}</b></td>
-        <td>${b.service_name||'—'}</td>
-        <td>${b.suburb||'—'}</td>
-        <td><span class="mech-tag v${b.van_number||1}">Van ${b.van_number||1}</span></td>
-        <td><span class="status ${stClass[st]||'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase()+st.slice(1)}</span></td>
-        <td><b>$${b.service_price||0}</b></td>
-      </tr>`;
-    }).join('');
+
+  const completed = (data||[]).filter(b=>b.status==='completed');
+  const revenue = completed.reduce((s,b)=>s+(b.service_price||0),0);
+  const el = id => document.getElementById(id);
+  if(el('bk-total')) el('bk-total').textContent = data.length;
+  if(el('bk-confirmed')) el('bk-confirmed').textContent = data.filter(b=>b.status==='confirmed').length;
+  if(el('bk-pending')) el('bk-pending').textContent = data.filter(b=>b.status==='pending').length;
+  if(el('bk-revenue')) el('bk-revenue').textContent = '$'+revenue.toLocaleString();
+  if(el('bk-sub')) el('bk-sub').textContent = `${data.length} booking${data.length!==1?'s':''} · filtered`;
+
+  if(!data.length){
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--mgray);padding:32px">No bookings match your filters.</td></tr>';
+    return;
   }
-  // KPIs
-  const total = (data||[]).reduce((s,b)=>s+(b.service_price||0),0);
-  const confirmed = (data||[]).filter(b=>b.status==='confirmed').length;
-  const pending = (data||[]).filter(b=>b.status==='pending').length;
-  const kpis = document.querySelectorAll('#page-bookings .kpi-value');
-  if(kpis[0]) kpis[0].textContent = (data||[]).length;
-  if(kpis[1]) kpis[1].textContent = confirmed;
-  if(kpis[2]) kpis[2].textContent = pending;
-  if(kpis[3]) kpis[3].textContent = '$'+(total||0).toLocaleString();
+
+  tbody.innerHTML = data.map(b=>{
+    const name = b.profiles?.full_name || b.profiles?.email?.split('@')[0] || 'Client';
+    const date = b.scheduled_date ? new Date(b.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '—';
+    const st = b.status || 'pending';
+    const isPending = st === 'pending';
+    const isCancelled = st === 'cancelled' || st === 'completed';
+    return `<tr>
+      <td>${date}</td>
+      <td><b>${name}</b></td>
+      <td>${b.service_name||'—'}</td>
+      <td>${b.suburb||'—'}</td>
+      <td><span class="mech-tag v${b.van_number||1}">Van ${b.van_number||1}</span></td>
+      <td><span class="status ${stClass[st]||'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase()+st.slice(1)}</span></td>
+      <td><b>$${b.service_price||0}</b></td>
+      <td style="white-space:nowrap">
+        ${isPending?`<button onclick="confirmBookingAdmin('${b.id}')" style="background:#ECFDF5;color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">✅ Confirm</button>`:''}
+        ${!isCancelled?`<button onclick="openReassign('${b.id}')" style="background:#EEF3FC;color:#1848C8;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">🔄 Reassign</button>`:''}
+        ${!isCancelled?`<button onclick="openCancel('${b.id}')" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">❌ Cancel</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function confirmBookingAdmin(id){
+  await sb.from('bookings').update({status:'confirmed'}).eq('id',id);
+  const b = allBookings.find(x=>x.id===id);
+  if(b) b.status = 'confirmed';
+  applyBookingFilters();
+  showToast('✅ Booking confirmed');
+}
+
+function openCancel(id){
+  document.getElementById('cancel-booking-id').value = id;
+  document.getElementById('cancel-notes').value = '';
+  document.getElementById('cancel-modal').style.display = 'flex';
+}
+
+async function confirmCancel(){
+  const id = document.getElementById('cancel-booking-id').value;
+  const reason = document.getElementById('cancel-reason').value;
+  const notes = document.getElementById('cancel-notes').value;
+  const fullReason = [reason, notes].filter(Boolean).join(' — ');
+  await sb.from('bookings').update({status:'cancelled', mechanic_notes: fullReason}).eq('id',id);
+  const b = allBookings.find(x=>x.id===id);
+  if(b){ b.status='cancelled'; b.mechanic_notes=fullReason; }
+  document.getElementById('cancel-modal').style.display = 'none';
+  applyBookingFilters();
+  showToast('Booking cancelled');
+}
+
+function openReassign(id){
+  document.getElementById('reassign-booking-id').value = id;
+  document.getElementById('reassign-modal').style.display = 'flex';
+}
+
+async function doReassign(vanNum){
+  const id = document.getElementById('reassign-booking-id').value;
+  await sb.from('bookings').update({van_number: vanNum}).eq('id',id);
+  const b = allBookings.find(x=>x.id===id);
+  if(b) b.van_number = vanNum;
+  document.getElementById('reassign-modal').style.display = 'none';
+  applyBookingFilters();
+  showToast(`Reassigned to Van ${vanNum} ✓`);
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
+let unreadCount = 0;
+let notifPanelOpen = false;
+
+function toggleNotifPanel(){
+  notifPanelOpen = !notifPanelOpen;
+  const panel = document.getElementById('notif-panel');
+  if(!panel) return;
+  panel.style.display = notifPanelOpen ? 'block' : 'none';
+  if(notifPanelOpen){ unreadCount = 0; updateNotifBadge(); loadRecentNotifications(); }
+}
+
+document.addEventListener('click', e => {
+  if(!document.getElementById('notif-btn')?.contains(e.target) && !document.getElementById('notif-panel')?.contains(e.target)){
+    const panel = document.getElementById('notif-panel');
+    if(panel) panel.style.display = 'none';
+    notifPanelOpen = false;
+  }
+});
+
+function updateNotifBadge(){
+  const dot = document.getElementById('notif-dot');
+  const cnt = document.getElementById('notif-count');
+  if(dot) dot.style.display = unreadCount > 0 ? 'block' : 'none';
+  if(cnt){ cnt.style.display = unreadCount > 0 ? 'block' : 'none'; cnt.textContent = unreadCount > 9 ? '9+' : unreadCount; }
+  const sb2 = document.querySelector('#sidebar .sb-badge');
+  if(sb2){ sb2.textContent = unreadCount > 0 ? unreadCount : ''; sb2.style.display = unreadCount > 0 ? '' : 'none'; }
+}
+
+async function loadRecentNotifications(){
+  const since = new Date(Date.now() - 24*60*60*1000).toISOString();
+  const { data } = await sb.from('bookings').select('*, profiles(full_name,email)').gte('created_at', since).order('created_at',{ascending:false}).limit(20);
+  const list = document.getElementById('notif-list');
+  if(!list) return;
+  if(!data?.length){ list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">No new bookings in the last 24h</div>'; return; }
+  const stColors = {pending:'#D97706',confirmed:'#059669',enroute:'#1848C8',completed:'#6B7280',cancelled:'#DC2626'};
+  list.innerHTML = data.map(b=>{
+    const name = b.profiles?.full_name || b.profiles?.email?.split('@')[0] || 'Client';
+    const time = new Date(b.created_at).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true});
+    const st = b.status||'pending';
+    return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" onclick="go('bookings',document.querySelector('[onclick*=bookings]'))">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <div style="font-size:13px;font-weight:600;color:var(--navy)">${name}</div>
+        <span style="font-size:10px;color:#fff;background:${stColors[st]||'#6B7280'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
+      </div>
+      <div style="font-size:12px;color:var(--mgray)">${b.service_name||'Service'} · ${b.suburb||'—'}</div>
+      <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price||0}</div>
+    </div>`;
+  }).join('');
+}
+
+function prependNotification(b){
+  const list = document.getElementById('notif-list');
+  if(!list) return;
+  const time = new Date(b.created_at||Date.now()).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true});
+  const div = document.createElement('div');
+  div.style.cssText = 'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid #1848C8;animation:fadeSlideIn .3s';
+  div.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--navy)">🔔 New booking</div>
+    <div style="font-size:12px;color:var(--mgray)">${b.service_name||'Service'} · ${b.suburb||'—'}</div>
+    <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price||0}</div>`;
+  list.prepend(div);
+}
+
+function markAllRead(){
+  unreadCount = 0;
+  updateNotifBadge();
+}
+
+function subscribeToBookings(){
+  sb.channel('admin-bookings-notifs')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'bookings'}, payload=>{
+      allBookings.unshift(payload.new);
+      unreadCount++;
+      updateNotifBadge();
+      prependNotification(payload.new);
+    })
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'bookings'}, payload=>{
+      const idx = allBookings.findIndex(b=>b.id===payload.new.id);
+      if(idx>=0) allBookings[idx] = {...allBookings[idx], ...payload.new};
+    })
+    .subscribe();
+}
+
+// ── MECHANIC STATS ────────────────────────────────────────────────────────────
+async function loadMechStats(vanNum){
+  const weekAgo = new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
+  const { data } = await sb.from('bookings')
+    .select('service_price,client_rating,completed_at,scheduled_date,status')
+    .eq('van_number', vanNum).eq('status','completed').gte('scheduled_date', weekAgo);
+  return data || [];
+}
+
+async function renderMechStats(){
+  const vansDiv = document.querySelector('#page-vans');
+  if(!vansDiv) return;
+  let statsDiv = document.getElementById('mech-stats-section');
+  if(!statsDiv){
+    statsDiv = document.createElement('div');
+    statsDiv.id = 'mech-stats-section';
+    vansDiv.appendChild(statsDiv);
+  }
+  const vanNums = [1,2];
+  const allStats = await Promise.all(vanNums.map(v=>loadMechStats(v)));
+  const days7 = Array.from({length:7},(_,i)=>{
+    const d=new Date(); d.setDate(d.getDate()-6+i); return d.toISOString().split('T')[0];
+  });
+  statsDiv.innerHTML = `<div class="card" style="margin-top:0">
+    <div class="card-hdr"><div><div class="card-title">7-Day Mechanic Performance</div><div class="card-sub">Last 7 days · completed jobs</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px">
+    ${vanNums.map((v,i)=>{
+      const data = allStats[i];
+      const totalJobs = data.length;
+      const totalRev = data.reduce((s,b)=>s+(b.service_price||0),0);
+      const ratings = data.filter(b=>b.client_rating);
+      const avgRating = ratings.length ? (ratings.reduce((s,b)=>s+(b.client_rating||0),0)/ratings.length).toFixed(1) : '—';
+      const maxSlots = 7*9;
+      const util = Math.round((totalJobs/maxSlots)*100);
+      const byDay = {};
+      days7.forEach(d=>byDay[d]=0);
+      data.forEach(b=>{ if(byDay[b.scheduled_date]!==undefined) byDay[b.scheduled_date]++; });
+      const vals = Object.values(byDay);
+      const maxVal = Math.max(...vals,1);
+      const colors={1:'#1848C8',2:'#D97706'};
+      return `<div style="background:var(--off);border-radius:10px;padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🚐 Van ${v}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:${colors[v]}">${totalJobs}</div><div style="font-size:10px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Jobs done</div></div>
+          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">$${totalRev}</div><div style="font-size:10px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Revenue</div></div>
+          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--gold)">${avgRating}${avgRating!=='—'?'★':''}</div><div style="font-size:10px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Avg rating</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">Utilisation: ${util}% · ${totalJobs}/${maxSlots} slots</div>
+        <div style="height:5px;background:var(--border);border-radius:3px;margin-bottom:12px"><div style="height:100%;width:${Math.min(util,100)}%;background:${colors[v]};border-radius:3px"></div></div>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:60px">
+          ${days7.map((d,di)=>{
+            const v2=byDay[d]||0;
+            const h=Math.max((v2/maxVal)*100,v2>0?8:4);
+            const day=new Date(d+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short'}).slice(0,2);
+            return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:100%;height:${h}%;background:${v2>0?colors[v]:'#E5E7EB'};border-radius:3px 3px 0 0;transition:height .4s" title="${v2} job${v2!==1?'s':''}"></div><div style="font-size:8px;color:var(--mgray)">${day}</div></div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+    </div>
+  </div>`;
 }
 
 // ── CLIENTS ───────────────────────────────────────────────────────────────────
@@ -1765,6 +2070,20 @@ async function deleteContact(id){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 loadDashboard();
+subscribeToBookings();
+
+// Inject notification panel into body
+(function(){
+  const panel = document.createElement('div');
+  panel.id = 'notif-panel';
+  panel.style.cssText = 'display:none;position:fixed;top:68px;right:16px;width:360px;max-height:480px;overflow-y:auto;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:200';
+  panel.innerHTML = `<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white)">
+    <div style="font-size:14px;font-weight:700;color:var(--navy)">🔔 Notifications</div>
+    <button onclick="markAllRead()" style="font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Mark all read</button>
+  </div>
+  <div id="notif-list" style="padding:8px"><div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">Loading...</div></div>`;
+  document.body.appendChild(panel);
+})();
 </script>
 
 

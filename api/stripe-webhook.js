@@ -9,6 +9,32 @@ const sb = createClient(
 
 export const config = { api: { bodyParser: false } };
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getPlanFromMetadata(obj) {
+  const plan =
+    obj.metadata?.plan ||
+    obj.items?.data?.[0]?.price?.nickname?.toLowerCase() ||
+    'basic';
+  return ['basic', 'standard', 'vip'].includes(plan) ? plan : 'basic';
+}
+
+function mapStripeStatus(stripeStatus) {
+  const map = {
+    active: 'active',
+    past_due: 'past_due',
+    canceled: 'cancelled',
+    cancelled: 'cancelled',
+    unpaid: 'past_due',
+    trialing: 'active',
+    incomplete: 'pending',
+    incomplete_expired: 'cancelled',
+  };
+  return map[stripeStatus] || stripeStatus;
+}
+
 async function getRawBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -17,6 +43,10 @@ async function getRawBody(req) {
     req.on('error', reject);
   });
 }
+
+// ---------------------------------------------------------------------------
+// Handler
+// ---------------------------------------------------------------------------
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -32,54 +62,85 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `Webhook error: ${err.message}` });
   }
 
+  console.log(`[Stripe webhook] Received: ${event.type}`);
+
+  // Always return 200 after signature verification — DB errors are logged, not surfaced
+  res.status(200).json({ received: true });
+
   try {
     switch (event.type) {
 
       case 'checkout.session.completed': {
         const session = event.data.object;
-        if (session.mode !== 'subscription') break;
 
-        const email = session.customer_details?.email || session.metadata?.email;
-        const plan = session.metadata?.plan || 'basic';
-        const billing = session.metadata?.billing || 'monthly';
-        const customerId = session.customer;
-        const subscriptionId = session.subscription;
+        if (session.mode === 'subscription') {
+          const email = session.customer_details?.email || session.metadata?.email;
+          const plan = session.metadata?.plan || 'basic';
+          const billing = session.metadata?.billing || 'monthly';
+          const customerId = session.customer;
+          const subscriptionId = session.subscription;
 
-        if (email) {
-          await sb.from('profiles').update({
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            membership_plan: plan,
-            membership_billing: billing,
-            membership_status: 'active',
-            membership_started_at: new Date().toISOString(),
-          }).eq('email', email);
+          if (email) {
+            try {
+              await sb.from('profiles').update({
+                stripe_customer_id: customerId,
+                stripe_subscription_id: subscriptionId,
+                membership_plan: plan,
+                membership_billing: billing,
+                membership_status: 'active',
+                membership_started_at: new Date().toISOString(),
+              }).eq('email', email);
+              console.log(`[checkout.session.completed] Activated ${plan} membership for ${email}`);
+            } catch (err) {
+              console.error('[checkout.session.completed] DB update failed:', err.message);
+            }
+          }
+        } else {
+          // One-time payment — log for now; extend as needed
+          console.log(`[checkout.session.completed] One-time payment: ${session.id}`);
         }
         break;
       }
 
-      case 'invoice.paid': {
-        const invoice = event.data.object;
-        const customerId = invoice.customer;
-        const subscriptionId = invoice.subscription;
+      case 'customer.subscription.created': {
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+        const plan = getPlanFromMetadata(subscription);
+        const billing = subscription.metadata?.billing || 'monthly';
+        const status = mapStripeStatus(subscription.status);
 
-        // Keep membership active on successful renewal
-        await sb.from('profiles')
-          .update({ 
-            membership_status: 'active',
-            membership_renewed_at: new Date().toISOString()
-          })
-          .eq('stripe_customer_id', customerId);
+        try {
+          await sb.from('profiles').update({
+            stripe_subscription_id: subscription.id,
+            membership_plan: plan,
+            membership_billing: billing,
+            membership_status: status,
+            membership_started_at: new Date().toISOString(),
+          }).eq('stripe_customer_id', customerId);
+          console.log(`[customer.subscription.created] Plan=${plan} status=${status} for customer ${customerId}`);
+        } catch (err) {
+          console.error('[customer.subscription.created] DB update failed:', err.message);
+        }
         break;
       }
 
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object;
-        const customerId = invoice.customer;
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+        const status = mapStripeStatus(subscription.status);
+        const plan = getPlanFromMetadata(subscription);
+        const billing = subscription.metadata?.billing;
 
-        await sb.from('profiles')
-          .update({ membership_status: 'past_due' })
-          .eq('stripe_customer_id', customerId);
+        const updateData = { membership_status: status };
+        if (plan) updateData.membership_plan = plan;
+        if (billing) updateData.membership_billing = billing;
+
+        try {
+          await sb.from('profiles').update(updateData).eq('stripe_customer_id', customerId);
+          console.log(`[customer.subscription.updated] status=${status} plan=${plan} for customer ${customerId}`);
+        } catch (err) {
+          console.error('[customer.subscription.updated] DB update failed:', err.message);
+        }
         break;
       }
 
@@ -87,31 +148,61 @@ export default async function handler(req, res) {
         const subscription = event.data.object;
         const customerId = subscription.customer;
 
-        await sb.from('profiles')
-          .update({ 
+        try {
+          await sb.from('profiles').update({
             membership_status: 'cancelled',
             membership_plan: null,
-            stripe_subscription_id: null
-          })
-          .eq('stripe_customer_id', customerId);
+            stripe_subscription_id: null,
+          }).eq('stripe_customer_id', customerId);
+          console.log(`[customer.subscription.deleted] Cancelled membership for customer ${customerId}`);
+        } catch (err) {
+          console.error('[customer.subscription.deleted] DB update failed:', err.message);
+        }
         break;
       }
 
-      case 'customer.subscription.updated': {
+      case 'customer.subscription.trial_will_end': {
         const subscription = event.data.object;
-        const customerId = subscription.customer;
-        const status = subscription.status; // active, past_due, cancelled, trialing
-
-        await sb.from('profiles')
-          .update({ membership_status: status })
-          .eq('stripe_customer_id', customerId);
+        const trialEnd = new Date(subscription.trial_end * 1000).toISOString();
+        console.warn(`[customer.subscription.trial_will_end] Trial ends at ${trialEnd} for subscription ${subscription.id}`);
+        // Extend here: send reminder email via Resend
         break;
       }
-    }
 
-    return res.status(200).json({ received: true });
+      case 'invoice.paid': {
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+
+        try {
+          await sb.from('profiles').update({
+            membership_status: 'active',
+            membership_renewed_at: new Date().toISOString(),
+          }).eq('stripe_customer_id', customerId);
+          console.log(`[invoice.paid] Renewed membership for customer ${customerId}`);
+        } catch (err) {
+          console.error('[invoice.paid] DB update failed:', err.message);
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+
+        try {
+          await sb.from('profiles').update({ membership_status: 'past_due' })
+            .eq('stripe_customer_id', customerId);
+          console.log(`[invoice.payment_failed] Marked past_due for customer ${customerId}`);
+        } catch (err) {
+          console.error('[invoice.payment_failed] DB update failed:', err.message);
+        }
+        break;
+      }
+
+      default:
+        console.log(`[Stripe webhook] Unhandled event type: ${event.type}`);
+    }
   } catch (error) {
-    console.error('Webhook handler error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('[Stripe webhook] Unexpected handler error:', error);
   }
 }

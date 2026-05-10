@@ -2739,21 +2739,55 @@ async function renderCalendar(){
   }
 }
 
+const ALL_TIME_SLOTS = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00'];
+const MAX_JOBS_PER_SLOT = 3;
+
+async function getAvailableSlots(date, vanNum) {
+  try {
+    const [{ data: bookings }, { data: blocked }] = await Promise.all([
+      sb.from('bookings').select('scheduled_time').eq('scheduled_date', date).eq('van_number', vanNum).neq('status','cancelled'),
+      sb.from('availability').select('time_slot,van_number').eq('date', date).eq('blocked', true).catch(()=>({data:[]}))
+    ]);
+    const slotCounts = {};
+    (bookings||[]).forEach(b => {
+      const t = b.scheduled_time?.substring(0,5);
+      if(t) slotCounts[t] = (slotCounts[t]||0) + 1;
+    });
+    const blockedSet = new Set((blocked||[]).filter(b=>!b.van_number||b.van_number===vanNum).map(b=>b.time_slot));
+    return ALL_TIME_SLOTS.map(t => ({
+      time: t,
+      label: new Date('2000-01-01T'+t+':00').toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true}),
+      available: !blockedSet.has(t) && (slotCounts[t]||0) < MAX_JOBS_PER_SLOT,
+      full: (slotCounts[t]||0) >= MAX_JOBS_PER_SLOT,
+      blocked: blockedSet.has(t)
+    }));
+  } catch(e) {
+    return ALL_TIME_SLOTS.map(t => ({ time:t, label:t, available:true, full:false, blocked:false }));
+  }
+}
+
 let selDayEl = null;
-function selDay(el, date){
+async function selDay(el, date){
   if(selDayEl) selDayEl.classList.remove('sel');
   el.classList.add('sel'); selDayEl=el;
   booking.date = date;
-  document.getElementById('times-section').style.display='block';
-  const times = ['8:30 am','9:00 am','10:00 am','10:30 am','1:00 pm','1:30 pm','2:30 pm','3:00 pm'];
-  const booked = ['8:30 am','1:00 pm'];
-  document.getElementById('times-grid').innerHTML = times.map(t=>{
-    const isBk = booked.includes(t);
-    if(isBk) return '<div class="ts bk">'+t+'</div>';
-    return '<div class="ts" onclick="selTime(this,\'' + t + '\')">'+t+'</div>';
-  }).join('');
   booking.time = null;
   document.getElementById('step2-next').disabled = true;
+  const ts = document.getElementById('times-section');
+  const tg = document.getElementById('times-grid');
+  ts.style.display = 'block';
+  tg.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;color:var(--mgray);font-size:13px">⏳ Checking availability...</div>';
+
+  // Use van from booking context or default to van 1
+  const suburb = document.getElementById('addr-suburb')?.value || '';
+  const van = getVanForSuburb(suburb) || 1;
+  const slots = await getAvailableSlots(date, van);
+
+  tg.innerHTML = slots.map(s => {
+    if(s.blocked) return `<div class="ts bk" title="Blocked">${s.label}<br><span style="font-size:9px">Blocked</span></div>`;
+    if(s.full) return `<div class="ts bk" title="Fully booked">${s.label}<br><span style="font-size:9px">Full</span></div>`;
+    return `<div class="ts" onclick="selTime(this,'${s.label}')">${s.label}</div>`;
+  }).join('');
 }
 
 let selTimeEl = null;
@@ -3582,7 +3616,7 @@ async function showBikeHistory(bikeId, bikeName){
   modal.id = 'bike-history-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:flex-end;justify-content:center';
   modal.innerHTML = `
-    <div style="background:var(--white);border-radius:16px 16px 0 0;width:100%;max-width:540px;max-height:80vh;display:flex;flex-direction:column">
+    <div style="background:var(--white);border-radius:16px 16px 0 0;width:100%;max-width:540px;max-height:85vh;display:flex;flex-direction:column">
       <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--navy)">🚲 ${bikeName}</div>
@@ -3590,36 +3624,55 @@ async function showBikeHistory(bikeId, bikeName){
         </div>
         <button onclick="document.getElementById('bike-history-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mgray)">×</button>
       </div>
+      <div id="bike-history-reminder" style="display:none"></div>
       <div id="bike-history-content" style="overflow-y:auto;padding:16px;flex:1">
-        <div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">Loading...</div>
+        <div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">⏳ Loading...</div>
+      </div>
+      <div style="padding:14px 16px;border-top:1px solid var(--border)">
+        <button onclick="document.getElementById('bike-history-modal').remove();showView('book')" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Book next service</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
 
-  // Load history from completed bookings for this client
   const {data:bkgs} = await sb.from('bookings')
     .select('*')
     .eq('client_id', currentUser.id)
     .eq('status','completed')
     .order('completed_at',{ascending:false});
 
+  // Check if any upcoming service recommendation is due
+  const allNextDates = (bkgs||[]).map(b=>b.next_service_date).filter(Boolean);
+  if(allNextDates.length){
+    const soonest = allNextDates.sort()[0];
+    const diff = Math.ceil((new Date(soonest) - new Date()) / (1000*60*60*24));
+    const rem = document.getElementById('bike-history-reminder');
+    if(diff <= 30){
+      const msg = diff < 0 ? `⚠️ Service overdue by ${Math.abs(diff)} days` : `📅 Next service due in ${diff} day${diff!==1?'s':''}`;
+      rem.style.cssText = 'padding:10px 16px;background:'+(diff<0?'#FEF2F2':'#ECFDF5')+';color:'+(diff<0?'#DC2626':'#059669')+';font-size:12px;font-weight:600;display:block;border-bottom:1px solid var(--border)';
+      rem.textContent = msg + ' — ' + new Date(soonest+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+    }
+  }
+
   const content = document.getElementById('bike-history-content');
   if(!bkgs?.length){
-    content.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:32px">No service history yet for this bike.<br><br>Your completed services will appear here automatically.</div>';
+    content.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:32px">No service history yet.<br><br>Completed jobs appear here automatically.</div>';
     return;
   }
 
   content.innerHTML = bkgs.map(b=>{
     const date = new Date(b.completed_at||b.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+    const mechLabel = b.van_number ? `Van ${b.van_number}` : '';
     return `<div style="padding:14px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div style="font-size:13px;font-weight:600;color:var(--navy)">${b.service_name}</div>
-        <div style="font-size:14px;font-weight:700;color:var(--blue)">$${b.service_price}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--navy)">${b.service_name||'Service'}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--blue)">$${b.service_price||0}</div>
       </div>
-      <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">${date}</div>
-      ${b.mechanic_notes?`<div style="background:var(--off);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--navy);line-height:1.5">📝 ${b.mechanic_notes}</div>`:''}
-      ${b.parts_used?`<div style="font-size:11px;color:var(--mgray);margin-top:4px">🔧 Parts: ${b.parts_used}</div>`:''}
-      ${b.next_service_date?`<div style="font-size:11px;color:var(--green);margin-top:4px;font-weight:600">📅 Next service: ${new Date(b.next_service_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
+      <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">${date}${mechLabel?' · 🔧 '+mechLabel:''}</div>
+      ${b.mechanic_notes?`<div style="background:var(--off);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--navy);line-height:1.5;margin-bottom:6px">📝 ${b.mechanic_notes}</div>`:''}
+      ${b.parts_used?`<div style="font-size:11px;color:var(--mgray);margin-bottom:4px">🔧 Parts: ${b.parts_used}</div>`:''}
+      ${b.photo_before||b.photo_after?`<div style="display:flex;gap:6px;margin-top:6px">${b.photo_before?`<img src="${b.photo_before}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" alt="Before">`:''}${b.photo_after?`<img src="${b.photo_after}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" alt="After">`:''}${(b.photo_before||b.photo_after)?'<div style="font-size:10px;color:var(--mgray);display:flex;flex-direction:column;justify-content:flex-end;gap:2px">'+(b.photo_before?'<span>Before</span>':'')+(b.photo_after?'<span>After</span>':'')+'</div>':''}</div>`:''}
+      ${b.next_service_date?`<div style="font-size:11px;color:var(--green);margin-top:6px;font-weight:600">📅 Next service: ${new Date(b.next_service_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
+      ${b.client_rating?`<div style="font-size:12px;margin-top:4px">${'⭐'.repeat(b.client_rating)}</div>`:''}
     </div>`;
   }).join('');
 }

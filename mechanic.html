@@ -139,6 +139,7 @@ const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','sb_
   document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
 })();
 let mechanic=null, vanNum=1, jobs=[], tab='today', online=true;
+let timerIntervals = {};
 
 function ratingHTML(jobs){
   const rated = jobs.filter(j=>j.rating);
@@ -248,6 +249,55 @@ function render(){
   const c=document.getElementById('jobs-list');
   if(!list.length){ const m={today:'☀️|No jobs today|New bookings appear instantly',upcoming:'📅|No upcoming jobs|Future bookings show here',done:'✅|No completed jobs|Completed jobs appear here'}[tab]?.split('|'); c.innerHTML=`<div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:48px;margin-bottom:16px">${m[0]}</div><div style="font-size:16px;font-weight:600;color:var(--navy);margin-bottom:8px">${m[1]}</div><div style="font-size:13px">${m[2]}</div></div>`; return; }
   c.innerHTML=list.map(j=>card(j)).join('');
+  // Attach swipe gestures for pending jobs
+  list.filter(j=>j.status==='pending').forEach(j=>{
+    const el = c.querySelector(`[data-job-id="${j.id}"]`);
+    if(el) attachSwipe(el, j.id);
+  });
+  // Start timers for enroute jobs
+  list.filter(j=>j.status==='enroute').forEach(j=>startRouteTimer(j.id));
+}
+
+function attachSwipe(card, jobId){
+  let startX=0, currentX=0;
+  card.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; }, {passive:true});
+  card.addEventListener('touchmove', e=>{
+    currentX=e.touches[0].clientX-startX;
+    if(currentX>0){ card.style.transform=`translateX(${Math.min(currentX,120)}px)`; card.style.transition='none'; card.style.background=`rgba(5,150,105,${Math.min(currentX/120,1)*0.25})`; }
+  },{passive:true});
+  card.addEventListener('touchend', ()=>{
+    card.style.transition='transform .3s,background .3s';
+    if(currentX>80){ card.style.transform='translateX(110%)'; setTimeout(()=>setStatus(jobId,'confirmed'),300); }
+    else{ card.style.transform=''; card.style.background=''; }
+    currentX=0;
+  });
+}
+
+function startRouteTimer(jobId){
+  const key='enroute-start-'+jobId;
+  if(!localStorage.getItem(key)) localStorage.setItem(key, Date.now());
+  if(timerIntervals[jobId]) return;
+  timerIntervals[jobId]=setInterval(()=>{
+    const start=parseInt(localStorage.getItem(key)||Date.now());
+    const elapsed=Math.floor((Date.now()-start)/1000);
+    const mm=String(Math.floor(elapsed/60)).padStart(2,'0');
+    const ss=String(elapsed%60).padStart(2,'0');
+    const el=document.getElementById('timer-'+jobId);
+    if(el) el.textContent=`🕐 En route: ${mm}:${ss}`;
+    else{ clearInterval(timerIntervals[jobId]); delete timerIntervals[jobId]; }
+  },1000);
+}
+
+function stopRouteTimer(jobId){
+  clearInterval(timerIntervals[jobId]); delete timerIntervals[jobId];
+  localStorage.removeItem('enroute-start-'+jobId);
+}
+
+function checklistChanged(){
+  const items = document.querySelectorAll('#service-checklist .chk-item');
+  const allChecked = items.length > 0 && [...items].every(c => c.checked);
+  const btn = document.querySelector('#complete-modal button[onclick^="submitComplete"]');
+  if(btn){ btn.disabled = !allChecked; btn.style.opacity = allChecked ? '1' : '0.5'; btn.style.cursor = allChecked ? 'pointer' : 'not-allowed'; }
 }
 
 function card(j){
@@ -259,23 +309,30 @@ function card(j){
   const sl={pending:'Pending',confirmed:'Confirmed',enroute:'🚐 En route',completed:'✅ Done',cancelled:'Cancelled'};
   const st=j.status||'pending';
   const addr=(j.address||j.suburb||'Sydney').replace(/\\/g,'').replace(/'/g,"\\'");
-  return `<div class="job-card${done?' done':''}">
+  const isPending = st==='pending';
+  const isEnroute = st==='enroute';
+  return `<div class="job-card${done?' done':''}" data-job-id="${j.id}" style="overflow:hidden;position:relative">
+    ${isPending?`<div style="position:absolute;inset:0;background:#059669;display:flex;align-items:center;justify-content:center;font-size:24px;z-index:0;border-radius:14px">✓ Accept</div>`:''}
+    <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
       <div><div class="job-client">${j.client}</div><div class="job-meta">${j.date===today?'Today':''}${t?' · '+t:''} ${j.date!==today?'· '+d:''}</div></div>
       <span class="status-badge" style="background:${sc[st]}20;color:${sc[st]}">${sl[st]||st}</span>
     </div>
+    ${isEnroute?`<div id="timer-${j.id}" style="font-size:12px;color:var(--amber);font-weight:600;margin-bottom:6px;padding:0 18px">🕐 En route: 00:00</div>`:''}
     <div class="job-service">🔧 ${j.service}</div>
     <div class="job-addr">📍 ${j.address||j.suburb||'—'}</div>
     <div class="job-price">$${j.price}</div>
     <div class="actions">
       <button class="abtn nav" onclick="openMaps('${addr}')">📍 Navigate</button>
-      <button class="abtn" onclick="openMechChat('${j.id}')" style="background:rgba(24,72,200,0.1);color:#1848C8;border-color:#1848C8">💬 Chat</button>
+      <button class="abtn" onclick="openMechChat('${j.id}')" style="background:rgba(24,72,200,0.1);color:#1848C8">💬 Chat</button>
       <button class="abtn chat" onclick="openWA('${j.phone||j.email||""}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
       ${!done?`${st!=='enroute'?`<button class="abtn go" onclick="setStatus('${j.id}','enroute')">🚐 En route</button>`:''}
       <button class="abtn done" onclick="completeJob('${j.id}')">✅ Complete</button>`
       :`<button class="abtn undo" onclick="setStatus('${j.id}','confirmed')">↩ Undo</button>`}
     </div>
     ${!done?`<input class="notes-inp" placeholder="Mechanic notes..." value="${j.mnotes}" onblur="saveNotes('${j.id}',this.value)">`:''}
+    ${isPending?`<div style="text-align:center;font-size:11px;color:#059669;padding:6px 0;font-weight:600">→ Swipe right to accept</div>`:''}
+    </div>
   </div>`;
 }
 
@@ -286,7 +343,7 @@ async function setStatus(id, status) {
   render(); badges();
   toast(status === 'enroute' ? '🚐 En route' : 'Updated');
   if (status === 'enroute') startGPS(id);
-  else if (status === 'completed' || status === 'cancelled') stopGPS();
+  else if (status === 'completed' || status === 'cancelled') { stopGPS(); stopRouteTimer(id); }
 }
 function openCompleteModal(id){
   const j = jobs.find(x=>x.id===id);
@@ -300,6 +357,10 @@ function openCompleteModal(id){
     <div style="background:var(--white);border-radius:16px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
       <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);font-size:15px">✅ Complete job — ${j.service}</div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">✅ Service checklist</label>
+          <div id="service-checklist" style="display:flex;flex-direction:column;gap:4px;background:var(--off);border-radius:8px;padding:10px"></div>
+        </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Work completed</label>
           <textarea id="comp-notes" placeholder="Describe what was done..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;height:80px;resize:none;background:var(--white);color:var(--navy)">${j.mnotes||''}</textarea>
@@ -343,6 +404,25 @@ function openCompleteModal(id){
       </div>
     </div>`;
   document.body.appendChild(modal);
+
+  // Build service checklist
+  setTimeout(()=>{
+    const chkDiv = document.getElementById('service-checklist');
+    if(chkDiv){
+      const base = ['Checked bike for additional issues','Cleaned work area','Explained work done to client'];
+      const svcLower = (j.service||'').toLowerCase();
+      const extra = [];
+      if(svcLower.includes('tune')) extra.push('Adjusted gears','Adjusted brakes','Lubricated chain','Checked tyre pressure');
+      if(svcLower.includes('brake')) extra.push('Tested brake lever feel','Confirmed adequate stopping power');
+      if(svcLower.includes('chain')||svcLower.includes('cable')) extra.push('Tested under load');
+      if(svcLower.includes('flat')||svcLower.includes('tyre')) extra.push('Checked for sharp objects in tyre');
+      const items = [...base, ...extra];
+      chkDiv.innerHTML = items.map((item,i)=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:4px 0">
+        <input type="checkbox" class="chk-item" data-idx="${i}" style="width:16px;height:16px;accent-color:#059669" onchange="checklistChanged()"> ${item}
+      </label>`).join('');
+      checklistChanged();
+    }
+  },50);
 
   // Setup signature canvas
   setTimeout(()=>{
@@ -572,9 +652,13 @@ function openMechChat(bookingId){
           <button onclick="closeMechChat()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">×</button>
         </div>
         <div id="mech-chat-msgs" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--off);min-height:200px"></div>
-        <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">
+        <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
+          <label style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;flex-shrink:0;font-size:18px;background:var(--off)" title="Send photo">
+            📷
+            <input type="file" accept="image/*" capture="environment" id="mech-chat-photo-inp" style="display:none" onchange="sendMechPhoto()">
+          </label>
           <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMechMessage()">
-          <button onclick="sendMechMessage()" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;cursor:pointer;font-size:18px">→</button>
+          <button onclick="sendMechMessage()" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;cursor:pointer;font-size:18px">→</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
@@ -613,13 +697,40 @@ function appendMechMessage(msg, scroll=true){
   div.style.cssText = `display:flex;flex-direction:column;align-items:${isMech?'flex-end':'flex-start'};gap:2px;margin-bottom:6px`;
   const bubble = document.createElement('div');
   bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:13px;background:${isMech?'#1848C8':'#fff'};color:${isMech?'#fff':'#0D1F3C'};border:${isMech?'none':'1px solid #E5E7EB'}`;
-  bubble.textContent = msg.message;
+  const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
+  if(photoMatch){
+    const img = document.createElement('img');
+    img.src = photoMatch[1];
+    img.style.cssText = 'max-width:200px;border-radius:8px;display:block;cursor:pointer';
+    img.onclick = () => window.open(photoMatch[1], '_blank');
+    bubble.style.padding = '4px';
+    bubble.appendChild(img);
+  } else {
+    bubble.textContent = msg.message;
+  }
   const time = document.createElement('div');
   time.style.cssText = 'font-size:10px;color:#6B7280';
   time.textContent = new Date(msg.created_at).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
   div.appendChild(bubble); div.appendChild(time);
   c.appendChild(div);
   if(scroll) c.scrollTop = c.scrollHeight;
+}
+
+async function sendMechPhoto(){
+  const inp = document.getElementById('mech-chat-photo-inp');
+  if(!inp?.files?.[0] || !mechChatBookingId) return;
+  const file = inp.files[0];
+  inp.value = '';
+  toast('Uploading photo...');
+  const ext = file.name.split('.').pop() || 'jpg';
+  const path = `chat/${mechChatBookingId}/${Date.now()}.${ext}`;
+  const { data, error } = await sb.storage.from('job-photos').upload(path, file, { contentType: file.type, upsert: false });
+  if(error){ toast('Upload failed'); return; }
+  const { data: urlData } = sb.storage.from('job-photos').getPublicUrl(path);
+  const url = urlData?.publicUrl;
+  if(!url){ toast('Could not get photo URL'); return; }
+  await sb.from('job_messages').insert({ booking_id: mechChatBookingId, sender_role:'mechanic', sender_id: mechanic?.id||'mech', message: `[PHOTO:${url}]` });
+  toast('Photo sent');
 }
 
 async function sendMechMessage(){
