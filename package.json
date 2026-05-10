@@ -1,0 +1,11 @@
+{
+  "name": "dr-bike-sydney",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "stripe": "^14.0.0",
+    "twilio": "^5.0.0"
+  }
+}

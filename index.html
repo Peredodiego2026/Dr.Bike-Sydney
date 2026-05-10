@@ -48,8 +48,8 @@
 }
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>window.googleMapsLoaded = new Promise(r => { window._gmInit = r; });</script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=REPLACE_WITH_GOOGLE_MAPS_API_KEY&libraries=geometry&callback=_gmInit"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -2443,8 +2443,19 @@ async function sendJobMessage(){
 }
 
 // ── TRANSITIONS ───────────────────────────────────────────────────────────────
-let liveMap = null, mechMarker = null, destMarker = null, trackingChannel = null;
+let liveMap = null, mechMarker = null, destMarker = null, destLatLng = null, trackingChannel = null;
 
+const GMAP_DARK = [
+  { elementType: 'geometry', stylers: [{ color: '#0d1f3c' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#0d1f3c' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#8ec3b9' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1a3a6b' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca3af' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#1848c8' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0a1628' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+];
 
 // Cleanup realtime channels on page unload
 window.addEventListener('beforeunload', () => {
@@ -2469,36 +2480,40 @@ function startTracking(bookingId, mechName, destAddress) {
   setTimeout(() => initLiveMap(bookingId, destAddress), 150);
 }
 
-function initLiveMap(bookingId, destAddress) {
+async function initLiveMap(bookingId, destAddress) {
   const el = document.getElementById('live-map');
   if (!el) return;
 
-  if (liveMap) { liveMap.remove(); liveMap = null; mechMarker = null; destMarker = null; }
+  await window.googleMapsLoaded;
 
-  liveMap = L.map('live-map', { zoomControl: false, attributionControl: false })
-    .setView([-33.8688, 151.2093], 13);
+  mechMarker = null; destMarker = null; destLatLng = null;
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(liveMap);
-  L.control.zoom({ position: 'bottomright' }).addTo(liveMap);
-
-  const destIcon = L.divIcon({
-    className: '',
-    html: `<div style="width:28px;height:28px;background:#ef4444;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(239,68,68,0.6);display:flex;align-items:center;justify-content:center;font-size:14px">📍</div>`,
-    iconSize: [28, 28], iconAnchor: [14, 14]
+  liveMap = new google.maps.Map(el, {
+    center: { lat: -33.8688, lng: 151.2093 },
+    zoom: 13,
+    disableDefaultUI: true,
+    zoomControl: true,
+    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
+    styles: GMAP_DARK,
   });
 
-  // Geocode destination
   if (destAddress) {
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destAddress+', Sydney NSW Australia')}&format=json&limit=1`)
-      .then(r => r.json())
-      .then(data => {
-        if (data && data[0]) {
-          const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
-          destMarker = L.marker([lat, lng], { icon: destIcon }).addTo(liveMap).bindPopup('📍 Your address');
-          liveMap.setView([lat, lng], 14);
-          fitMarkers();
-        }
-      }).catch(() => {});
+    new google.maps.Geocoder().geocode(
+      { address: destAddress + ', Sydney NSW Australia' },
+      (results, status) => {
+        if (status !== 'OK' || !results[0]) return;
+        destLatLng = results[0].geometry.location;
+        destMarker = new google.maps.Marker({
+          position: destLatLng,
+          map: liveMap,
+          title: 'Your address',
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: '#ef4444', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
+        });
+        liveMap.setCenter(destLatLng);
+        liveMap.setZoom(14);
+        fitMarkers();
+      }
+    );
   }
 
   // Subscribe realtime
@@ -2522,36 +2537,51 @@ function initLiveMap(bookingId, destAddress) {
 function moveMechanic(lat, lng) {
   if (!liveMap) return;
   document.getElementById('map-loading').style.display = 'none';
-  const mechIcon = L.divIcon({
-    className: '',
-    html: `<div style="width:36px;height:36px;background:#1848C8;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px rgba(24,72,200,0.6);display:flex;align-items:center;justify-content:center;font-size:18px">🚐</div>`,
-    iconSize: [36, 36], iconAnchor: [18, 18]
-  });
-  if (!mechMarker) mechMarker = L.marker([lat, lng], { icon: mechIcon }).addTo(liveMap).bindPopup('🚐 Mechanic');
-  else mechMarker.setLatLng([lat, lng]);
+  const pos = new google.maps.LatLng(lat, lng);
+  if (!mechMarker) {
+    mechMarker = new google.maps.Marker({
+      position: pos,
+      map: liveMap,
+      title: 'Your mechanic',
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 11, fillColor: '#1848C8', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
+    });
+  } else {
+    mechMarker.setPosition(pos);
+  }
   fitMarkers();
   calcETA(lat, lng);
 }
 
 function fitMarkers() {
   if (!liveMap) return;
-  const pts = [];
-  if (mechMarker) pts.push(mechMarker.getLatLng());
-  if (destMarker) pts.push(destMarker.getLatLng());
-  if (pts.length === 2) liveMap.fitBounds(pts, { padding: [40, 40] });
-  else if (pts.length === 1) liveMap.setView(pts[0], 15);
+  const bounds = new google.maps.LatLngBounds();
+  if (mechMarker) bounds.extend(mechMarker.getPosition());
+  if (destMarker) bounds.extend(destMarker.getPosition());
+  if (mechMarker && destMarker) liveMap.fitBounds(bounds, 40);
+  else if (mechMarker || destMarker) { liveMap.setCenter(bounds.getCenter()); liveMap.setZoom(15); }
 }
 
 function calcETA(mechLat, mechLng) {
-  if (!destMarker) return;
-  const d = liveMap.distance([mechLat, mechLng], destMarker.getLatLng()) / 1000;
-  const eta = Math.max(1, Math.round(d / 0.4));
-  document.getElementById('map-eta').textContent = eta > 60 ? '60+' : eta;
+  if (!destLatLng || !window.google) return;
+  new google.maps.DistanceMatrixService().getDistanceMatrix({
+    origins: [{ lat: mechLat, lng: mechLng }],
+    destinations: [destLatLng],
+    travelMode: google.maps.TravelMode.DRIVING,
+  }, (resp, status) => {
+    if (status !== 'OK') return;
+    const el = resp?.rows?.[0]?.elements?.[0];
+    if (el?.status === 'OK') {
+      const mins = Math.ceil(el.duration.value / 60);
+      document.getElementById('map-eta').textContent = mins > 60 ? '60+' : mins;
+    }
+  });
 }
 
 function stopTracking() {
   if (trackingChannel) { sb.removeChannel(trackingChannel); trackingChannel = null; }
-  if (liveMap) { liveMap.remove(); liveMap = null; mechMarker = null; destMarker = null; }
+  if (mechMarker) { mechMarker.setMap(null); mechMarker = null; }
+  if (destMarker) { destMarker.setMap(null); destMarker = null; }
+  destLatLng = null; liveMap = null;
   document.getElementById('map-widget').style.display = 'none';
 }
 

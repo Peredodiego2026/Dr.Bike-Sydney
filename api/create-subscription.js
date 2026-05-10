@@ -1,3 +1,6 @@
+// PRODUCTION ENV VARS (Vercel):
+//   STRIPE_SECRET_KEY       → sk_live_...
+//   (webhook secret set in stripe-webhook.js)
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -45,6 +48,7 @@ export default async function handler(req, res) {
       metadata: { plan, billing, email },
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
+      phone_number_collection: { enabled: true },
       locale: 'en',
     });
 

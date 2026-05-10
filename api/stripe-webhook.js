@@ -1,10 +1,22 @@
+// PRODUCTION ENV VARS (Vercel):
+//   STRIPE_SECRET_KEY        → sk_live_...
+//   STRIPE_WEBHOOK_SECRET    → whsec_...  (from Stripe Dashboard → Webhooks)
+//   SUPABASE_SERVICE_KEY     → service_role key (not anon key)
+//   SUPABASE_URL             → https://tgpipbloisahufaywhqb.supabase.co
+//
+// Webhook URL to register: https://dr-bike-sydney.vercel.app/api/stripe-webhook
+// Events to enable: checkout.session.completed, customer.subscription.created,
+//   customer.subscription.updated, customer.subscription.deleted,
+//   customer.subscription.trial_will_end, customer.subscription.paused,
+//   customer.subscription.resumed, invoice.paid, invoice.payment_failed,
+//   invoice.payment_action_required
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const sb = createClient(
-  'https://tgpipbloisahufaywhqb.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn'
+  process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co',
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
 );
 
 export const config = { api: { bodyParser: false } };
@@ -165,7 +177,30 @@ export default async function handler(req, res) {
         const subscription = event.data.object;
         const trialEnd = new Date(subscription.trial_end * 1000).toISOString();
         console.warn(`[customer.subscription.trial_will_end] Trial ends at ${trialEnd} for subscription ${subscription.id}`);
-        // Extend here: send reminder email via Resend
+        break;
+      }
+
+      case 'customer.subscription.paused': {
+        const subscription = event.data.object;
+        try {
+          await sb.from('profiles').update({ membership_status: 'paused' })
+            .eq('stripe_customer_id', subscription.customer);
+          console.log(`[customer.subscription.paused] for customer ${subscription.customer}`);
+        } catch (err) {
+          console.error('[customer.subscription.paused] DB update failed:', err.message);
+        }
+        break;
+      }
+
+      case 'customer.subscription.resumed': {
+        const subscription = event.data.object;
+        try {
+          await sb.from('profiles').update({ membership_status: 'active' })
+            .eq('stripe_customer_id', subscription.customer);
+          console.log(`[customer.subscription.resumed] for customer ${subscription.customer}`);
+        } catch (err) {
+          console.error('[customer.subscription.resumed] DB update failed:', err.message);
+        }
         break;
       }
 
@@ -195,6 +230,21 @@ export default async function handler(req, res) {
           console.log(`[invoice.payment_failed] Marked past_due for customer ${customerId}`);
         } catch (err) {
           console.error('[invoice.payment_failed] DB update failed:', err.message);
+        }
+        break;
+      }
+
+      // 3DS authentication required on renewal
+      case 'invoice.payment_action_required': {
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+
+        try {
+          await sb.from('profiles').update({ membership_status: 'past_due' })
+            .eq('stripe_customer_id', customerId);
+          console.log(`[invoice.payment_action_required] 3DS required for customer ${customerId}`);
+        } catch (err) {
+          console.error('[invoice.payment_action_required] DB update failed:', err.message);
         }
         break;
       }
