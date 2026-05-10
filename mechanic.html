@@ -196,18 +196,45 @@ function sub(){
   const mechChannel = sb.channel('mech-jobs')
     .on('postgres_changes',{event:'*',schema:'public',table:'bookings'},p=>{ 
       load(); 
-      if(p.eventType==='INSERT') alert2(p.new); 
+      if(p.eventType==='INSERT') {
+        alert2(p.new);
+        sendPushNotif(p.new);
+      }
     }).subscribe();
-  
-  // Cleanup on unload
   window.addEventListener('beforeunload', () => sb.removeChannel(mechChannel));
+  requestPushPermission();
+}
+
+async function requestPushPermission(){
+  if(!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if(Notification.permission === 'granted') return;
+  if(Notification.permission === 'denied') return;
+  const perm = await Notification.requestPermission();
+  if(perm === 'granted') toast('🔔 Push notifications enabled!');
+}
+
+async function sendPushNotif(job){
+  if(!('Notification' in window)) return;
+  if(Notification.permission !== 'granted') return;
+  // Show native browser notification (works even when app is open)
+  const reg = await navigator.serviceWorker.ready;
+  reg.showNotification('🔔 New job — Dr. Bike', {
+    body: `${job.service_name||'Service'} · ${job.suburb||''} · $${job.service_price||0}`,
+    icon: '/icon-mech-192.png',
+    badge: '/icon-mech-192.png',
+    vibrate: [200,100,200],
+    tag: 'new-job-'+job.id,
+    renotify: true,
+    data: { url: '/mechanic.html' }
+  });
 }
 
 function alert2(j){
   const d=document.createElement('div');
-  d.style.cssText='position:fixed;top:80px;left:16px;right:16px;background:#059669;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3)';
+  d.style.cssText='position:fixed;top:80px;left:16px;right:16px;background:#059669;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
   d.innerHTML=`<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${j.service_name} · ${j.suburb} · $${j.service_price}</span>`;
-  document.body.appendChild(d); setTimeout(()=>d.remove(),5000);
+  d.onclick = () => d.remove();
+  document.body.appendChild(d); setTimeout(()=>d.remove(),6000);
 }
 
 function render(){
@@ -282,6 +309,25 @@ function openCompleteModal(id){
           <input id="comp-parts" type="text" placeholder="e.g. Brake pads x2, cable..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
         </div>
         <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">📸 Before & after photos</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <div style="font-size:11px;color:#6B7280;margin-bottom:4px">Before</div>
+              <label style="display:flex;align-items:center;justify-content:center;height:80px;border:2px dashed var(--border);border-radius:8px;cursor:pointer;background:var(--off);font-size:24px" id="before-label">
+                📷
+                <input type="file" accept="image/*" capture="environment" id="photo-before" style="display:none" onchange="previewPhoto('before')">
+              </label>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#6B7280;margin-bottom:4px">After</div>
+              <label style="display:flex;align-items:center;justify-content:center;height:80px;border:2px dashed var(--border);border-radius:8px;cursor:pointer;background:var(--off);font-size:24px" id="after-label">
+                📷
+                <input type="file" accept="image/*" capture="environment" id="photo-after" style="display:none" onchange="previewPhoto('after')">
+              </label>
+            </div>
+          </div>
+        </div>
+        <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Next service recommended</label>
           <input id="comp-next" type="date" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
         </div>
@@ -325,9 +371,32 @@ function openCompleteModal(id){
   }, 100);
 }
 
+function previewPhoto(type){
+  const input = document.getElementById('photo-'+type);
+  const label = document.getElementById(type+'-label');
+  if(!input?.files?.[0] || !label) return;
+  const url = URL.createObjectURL(input.files[0]);
+  label.style.backgroundImage = `url(${url})`;
+  label.style.backgroundSize = 'cover';
+  label.style.backgroundPosition = 'center';
+  label.textContent = '';
+}
+
 function clearSig(){
   const c = document.getElementById('sig-canvas');
   if(c) c.getContext('2d').clearRect(0,0,c.width,c.height);
+}
+
+async function uploadPhoto(bookingId, file, type){
+  if(!file) return null;
+  try {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `jobs/${bookingId}/${type}_${Date.now()}.${ext}`;
+    const { data, error } = await sb.storage.from('job-photos').upload(path, file, { upsert: true });
+    if(error) { console.warn('Photo upload error:', error.message); return null; }
+    const { data: urlData } = sb.storage.from('job-photos').getPublicUrl(path);
+    return urlData?.publicUrl || null;
+  } catch(e) { console.warn('Photo upload exception:', e); return null; }
 }
 
 async function submitComplete(id){
@@ -337,20 +406,37 @@ async function submitComplete(id){
   const canvas = document.getElementById('sig-canvas');
   const signature = canvas ? canvas.toDataURL('image/png') : null;
 
-  await sb.from('bookings').update({
+  const btn = document.querySelector('#complete-modal button[onclick*="submitComplete"]');
+  if(btn){ btn.textContent='Saving...'; btn.disabled=true; }
+
+  // Upload photos
+  const beforeFile = document.getElementById('photo-before')?.files?.[0];
+  const afterFile = document.getElementById('photo-after')?.files?.[0];
+  const [photoBeforeUrl, photoAfterUrl] = await Promise.all([
+    uploadPhoto(id, beforeFile, 'before'),
+    uploadPhoto(id, afterFile, 'after')
+  ]);
+
+  const updateData = {
     status:'completed',
     mechanic_notes: notes,
     parts_used: parts,
     next_service_date: nextDate,
     client_signature: signature,
     completed_at: new Date().toISOString()
-  }).eq('id',id);
+  };
+  if(photoBeforeUrl) updateData.photo_before = photoBeforeUrl;
+  if(photoAfterUrl) updateData.photo_after = photoAfterUrl;
+
+  await sb.from('bookings').update(updateData).eq('id',id);
 
   document.getElementById('complete-modal').remove();
   const j = jobs.find(x=>x.id===id);
   if(j) j.status='completed';
   render(); badges();
-  toast('✅ Job completed!');
+  stopGPS();
+  toast('✅ Job completed!' + (photoBeforeUrl||photoAfterUrl ? ' Photos saved.' : ''));
+
   stopGPS();
 
   // Send completion email

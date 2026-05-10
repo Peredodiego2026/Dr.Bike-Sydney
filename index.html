@@ -1165,6 +1165,17 @@ html{scroll-behavior:smooth}
     <div class="filter-pills" id="filter-pills"></div>
     <div id="services-grid"></div>
   </div>
+
+  <!-- ── PUBLIC REVIEWS ── -->
+  <div style="padding:40px 20px;border-top:1px solid var(--border);max-width:900px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:11px;font-weight:600;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">⭐ Client reviews</div>
+      <div style="font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-0.02em">What our clients say</div>
+    </div>
+    <div id="public-reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+      <div style="text-align:center;color:var(--mgray);font-size:13px;padding:24px;grid-column:1/-1">Loading reviews...</div>
+    </div>
+  </div>
 </div>
 
 <!-- ══ BOOKING ══ -->
@@ -1496,6 +1507,7 @@ async function init(){
   try {
     await loadServices();
     await loadVanZones();
+    loadPublicReviews();
   } catch(e) {
     console.error('Init error:', e);
   }
@@ -2178,9 +2190,10 @@ function autoSelectService(serviceName){
   }
 }
 
-// ── REFERRAL CODE ─────────────────────────────────────────────────────────────
+// ── REFERRAL / DISCOUNT CODE ──────────────────────────────────────────────────
 let appliedDiscount = 0;
 let appliedReferralCode = null;
+let appliedDiscountCodeId = null;
 
 async function applyReferral(){
   const code = document.getElementById('referral-input')?.value?.trim().toUpperCase();
@@ -2190,24 +2203,62 @@ async function applyReferral(){
 
   showReferralMsg('Checking...', 'neutral');
 
-  // Check if code exists in profiles
+  // 1. Check discount_codes table first
+  const { data: dc } = await sb.from('discount_codes')
+    .select('*').eq('code', code).eq('active', true).single();
+
+  if(dc){
+    // Check expiry
+    if(dc.expires_at && new Date(dc.expires_at) < new Date()){
+      showReferralMsg('This code has expired', 'error'); return;
+    }
+    // Check max uses
+    if(dc.max_uses && dc.uses_count >= dc.max_uses){
+      showReferralMsg('This code has reached its usage limit', 'error'); return;
+    }
+    const originalPrice = booking.service?.price || 0;
+    let discountAmt = 0;
+    let label = '';
+    if(dc.discount_type === 'percent'){
+      discountAmt = Math.round(originalPrice * dc.discount_value / 100);
+      label = `🎉 ${dc.discount_value}% discount applied!`;
+    } else {
+      discountAmt = Math.min(dc.discount_value, originalPrice);
+      label = `🎉 $${dc.discount_value} off applied!`;
+    }
+    appliedDiscount = discountAmt;
+    appliedDiscountCodeId = dc.id;
+    appliedReferralCode = null;
+    const discountedPrice = Math.max(0, originalPrice - discountAmt);
+    document.getElementById('cf-price-original').style.display = 'block';
+    document.getElementById('cf-price-original').textContent = '$' + originalPrice;
+    document.getElementById('cf-price').textContent = '$' + discountedPrice;
+    document.getElementById('cf-discount-label').style.display = 'block';
+    document.getElementById('cf-discount-label').textContent = label;
+    document.getElementById('referral-input').disabled = true;
+    document.querySelector('button[onclick="applyReferral()"]').textContent = '✓';
+    document.querySelector('button[onclick="applyReferral()"]').style.background = 'var(--green)';
+    showReferralMsg(label, 'success');
+    return;
+  }
+
+  // 2. Check referral codes in profiles
   const { data } = await sb.from('profiles').select('id,full_name,referral_code').eq('referral_code', code).single();
   if(!data){ showReferralMsg('Invalid code — please check and try again', 'error'); return; }
 
-  // Apply $15 discount
   appliedDiscount = 15;
   appliedReferralCode = code;
+  appliedDiscountCodeId = null;
   const originalPrice = booking.service?.price || 0;
-  const discountedPrice = Math.max(0, originalPrice - appliedDiscount);
-
+  const discountedPrice = Math.max(0, originalPrice - 15);
   document.getElementById('cf-price-original').style.display = 'block';
   document.getElementById('cf-price-original').textContent = '$' + originalPrice;
   document.getElementById('cf-price').textContent = '$' + discountedPrice;
   document.getElementById('cf-discount-label').style.display = 'block';
+  document.getElementById('cf-discount-label').textContent = '🎉 Referral discount applied!';
   document.getElementById('referral-input').disabled = true;
   document.querySelector('button[onclick="applyReferral()"]').textContent = '✓';
   document.querySelector('button[onclick="applyReferral()"]').style.background = 'var(--green)';
-
   showReferralMsg(`✅ $15 off applied! Referred by ${data.full_name?.split(' ')[0] || 'a friend'}`, 'success');
 }
 
@@ -2487,6 +2538,31 @@ function stopTracking() {
 }
 
 // ── SERVICES ─────────────────────────────────────────────────────────────────
+async function loadPublicReviews(){
+  const grid = document.getElementById('public-reviews-grid');
+  if(!grid) return;
+  const { data } = await sb.from('bookings')
+    .select('client_rating,client_review,service_name,profiles(full_name)')
+    .not('client_rating','is',null)
+    .not('client_review','is',null)
+    .gte('client_rating',4)
+    .order('created_at',{ascending:false})
+    .limit(6);
+  if(!data?.length){
+    grid.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:24px;grid-column:1/-1">No reviews yet — be the first! 🚲</div>';
+    return;
+  }
+  grid.innerHTML = data.map(r=>{
+    const stars = '⭐'.repeat(r.client_rating||5);
+    const name = r.profiles?.full_name ? r.profiles.full_name.split(' ')[0]+' '+((r.profiles.full_name.split(' ')[1]||'')[0]||'')+'. ' : 'Happy client';
+    return `<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow)">
+      <div style="font-size:16px;margin-bottom:8px">${stars}</div>
+      <div style="font-size:13px;color:var(--navy);line-height:1.6;margin-bottom:12px">"${r.client_review}"</div>
+      <div style="font-size:11px;font-weight:600;color:var(--mgray)">${name} · ${r.service_name||'Bike service'}</div>
+    </div>`;
+  }).join('');
+}
+
 async function loadServices(){
   const { data } = await sb.from('services').select('*').eq('active',true).order('category');
   if(data) services = data;
@@ -2696,7 +2772,7 @@ function fillConfirm(){
   const street = document.getElementById('addr-street')?.value||'';
   document.getElementById('cf-addr').textContent = [street,suburb].filter(Boolean).join(', ')||'—';
   // Reset discount state
-  appliedDiscount = 0; appliedReferralCode = null;
+  appliedDiscount = 0; appliedReferralCode = null; appliedDiscountCodeId = null;
   document.getElementById('cf-price').textContent = '$'+(booking.service?.price||0);
   document.getElementById('cf-price-original').style.display = 'none';
   document.getElementById('cf-discount-label').style.display = 'none';
@@ -2754,6 +2830,14 @@ async function confirmBooking(){
     if(referrer){
       await sb.from('profiles').update({ referral_count: (referrer.referral_count||0) + 1 }).eq('id', referrer.id);
     }
+  }
+
+  // Si se usó un discount code, incrementar uses_count
+  if(appliedDiscountCodeId){
+    await sb.from('discount_codes').update({ uses_count: sb.rpc ? undefined : undefined }).eq('id', appliedDiscountCodeId);
+    // Use raw increment
+    const { data: dc } = await sb.from('discount_codes').select('uses_count').eq('id', appliedDiscountCodeId).single();
+    if(dc) await sb.from('discount_codes').update({ uses_count: (dc.uses_count||0) + 1 }).eq('id', appliedDiscountCodeId);
   }
 
   // Show Stripe payment modal

@@ -46,21 +46,9 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 [data-theme="dark"] #page-reminders .card{background:#242426;border-color:#38383A}
 [data-theme="dark"] #page-reminders [style*="background:var(--off)"]{background:#2C2C2E !important;border-color:#38383A !important}
 [data-theme="dark"] #page-coupons .card{background:#242426;border-color:#38383A}
-[data-theme="dark"] #coupon-inline-form{background:#242426;border-color:#38383A}
-[data-theme="dark"] #coupon-inline-form [style*="color:var(--navy)"]{color:#F2F2F7 !important}
-[data-theme="dark"] #page-coupons > div > div[style*="color:var(--navy)"]{color:#F2F2F7 !important}
-[data-theme="dark"] .tbl th{background:#2C2C2E;color:#8E8E93 !important;border-color:#38383A}
-[data-theme="dark"] .tbl td{color:#F2F2F7 !important;border-color:#2C2C2E}
-[data-theme="dark"] .tbl td strong{color:#F2F2F7 !important}
+[data-theme="dark"] .tbl th{background:#2C2C2E;color:#98989F;border-color:#38383A}
+[data-theme="dark"] .tbl td{color:#F2F2F7;border-color:#2C2C2E}
 [data-theme="dark"] .tbl tr:hover td{background:#2C2C2E}
-[data-theme="dark"] .tbl button{color:#F2F2F7 !important;border-color:#48484A !important;background:#38383A !important}
-.coupon-btn{font-size:11px;padding:4px 10px;border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;border:1px solid}
-.coupon-btn-deactivate{color:#ef4444;border-color:#ef4444}
-.coupon-btn-activate{color:#22c55e;border-color:#22c55e}
-.coupon-btn-delete{color:#ef4444;border-color:#ef4444;background:rgba(239,68,68,0.08)}
-[data-theme="dark"] .coupon-btn-deactivate{color:#f87171 !important;border-color:#f87171 !important;background:transparent !important}
-[data-theme="dark"] .coupon-btn-activate{color:#4ade80 !important;border-color:#4ade80 !important;background:transparent !important}
-[data-theme="dark"] .coupon-btn-delete{color:#f87171 !important;border-color:#f87171 !important;background:rgba(239,68,68,0.12) !important}
 [data-theme="dark"] .card-title{color:#F2F2F7}
 [data-theme="dark"] .card-sub{color:#98989F}
 [data-theme="dark"] .card-action{color:#60A5FA}
@@ -74,9 +62,11 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 [data-theme="dark"] .kpi-label{color:#98989F}
 [data-theme="dark"] .kpi-value{color:#F2F2F7}
 [data-theme="dark"] .kpi-sub{color:#636366}
+[data-theme="dark"] .tbl th{background:#2C2C2E;color:#636366}
+[data-theme="dark"] .tbl td{color:#F2F2F7;border-color:#2C2C2E}
+[data-theme="dark"] .tbl tr:hover td{background:#2C2C2E}
 [data-theme="dark"] .inp{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
 [data-theme="dark"] .inp::placeholder{color:#636366}
-[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1)}
 [data-theme="dark"] .zone-van{background:#242426;border-color:#38383A}
 [data-theme="dark"] .suburb-tag{background:rgba(24,72,200,0.2);border-color:rgba(24,72,200,0.3);color:#60A5FA}
 [data-theme="dark"] .add-suburb-inp{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
@@ -273,7 +263,46 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:49}
 .sb-overlay.open{display:block}
 </style>
-
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,es,zh-CN,pt,it,ko,fr,ar,hi,ja',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false
+  }, 'google_translate_element');
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<style>
+.goog-te-banner-frame { display: none !important; }
+body { top: 0 !important; }
+.goog-te-gadget { font-size: 0 !important; }
+#lang-btn-admin { 
+  position: fixed; bottom: 24px; right: 24px; 
+  width: 44px; height: 44px; 
+  background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 50%; cursor: pointer; z-index: 998;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: all .2s; color: white;
+}
+#lang-btn-admin:hover { background: rgba(255,255,255,0.2); }
+#lang-panel-admin {
+  position: fixed; bottom: 76px; right: 24px;
+  background: #fff; border: 1px solid #E5E7EB;
+  border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  z-index: 997; padding: 8px; width: 200px; display: none;
+}
+#lang-panel-admin.open { display: block; }
+.lang-opt-a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: #0D1F3C;
+  transition: background .15s; border: none; background: none;
+  width: 100%; text-align: left; font-family: Inter,sans-serif;
+}
+.lang-opt-a:hover { background: #F7F8FA; }
+</style>
 </head>
 <body>
 
@@ -377,23 +406,27 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
       <div class="kpis">
         <div class="kpi-card blue">
           <div class="kpi-label">Revenue today</div>
-          <div class="kpi-value">$—</div>
-          <div class="kpi-sub">0 jobs today</div>
+          <div class="kpi-value">$1,340</div>
+          <div class="kpi-sub">9 jobs completed</div>
+          <div class="kpi-trend up">↑ +18% vs yesterday</div>
         </div>
         <div class="kpi-card green">
           <div class="kpi-label">Monthly revenue</div>
-          <div class="kpi-value">$—</div>
-          <div class="kpi-sub">0 jobs this month</div>
+          <div class="kpi-value">$36,138</div>
+          <div class="kpi-sub">423 jobs this month</div>
+          <div class="kpi-trend up">↑ +12% vs last month</div>
         </div>
         <div class="kpi-card orange">
-          <div class="kpi-label">Pending bookings</div>
-          <div class="kpi-value">—</div>
-          <div class="kpi-sub">awaiting confirmation</div>
+          <div class="kpi-label">Active bookings</div>
+          <div class="kpi-value">14</div>
+          <div class="kpi-sub">Next 7 days</div>
+          <div class="kpi-trend up">4 pending confirmation</div>
         </div>
         <div class="kpi-card red">
-          <div class="kpi-label">Total clients</div>
-          <div class="kpi-value">—</div>
-          <div class="kpi-sub">total clients</div>
+          <div class="kpi-label">Outstanding</div>
+          <div class="kpi-value">$1,082</div>
+          <div class="kpi-sub">4 unpaid invoices</div>
+          <div class="kpi-trend dn">↑ 2 overdue</div>
         </div>
       </div>
 
@@ -780,49 +813,8 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
     <div id="page-coupons" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">Discount Codes</div>
-        <button onclick="toggleCouponForm()" id="btn-toggle-coupon-form" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">+ Create code</button>
+        <button onclick="openCouponModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">+ Create code</button>
       </div>
-
-      <!-- INLINE CREATE FORM (hidden by default) -->
-      <div id="coupon-inline-form" style="display:none;background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:22px;margin-bottom:20px">
-        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:18px">New discount code</div>
-        <div style="margin-bottom:12px">
-          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">CODE</label>
-          <div style="display:flex;gap:8px">
-            <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.08em" placeholder="e.g. NEWRIDER20">
-            <button onclick="document.getElementById('c-code').value='BIKE'+Math.random().toString(36).substr(2,5).toUpperCase()" style="white-space:nowrap;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)">Random</button>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">TYPE</label>
-            <select id="c-type" class="inp" style="margin:0">
-              <option value="fixed">Fixed $ off</option>
-              <option value="percent">Percentage %</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">VALUE</label>
-            <input id="c-value" type="number" class="inp" style="margin:0" placeholder="15" min="1">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">MAX USES</label>
-            <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited (optional)">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">EXPIRES</label>
-            <input id="c-expires" type="date" class="inp" style="margin:0">
-          </div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button onclick="toggleCouponForm()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy);font-size:13px">Cancel</button>
-          <button onclick="saveCoupon()" id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
-        </div>
-      </div>
-
-      <!-- TABLE -->
       <div class="card">
         <div class="card-body">
           <table class="tbl">
@@ -1206,53 +1198,84 @@ async function loadCoupons(){
   const tbody = document.getElementById('coupons-tbody');
   if(!tbody) return;
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">Loading...</td></tr>';
-
-  try {
-    const { data, error } = await sb.from('discount_codes').select('*').order('created_at',{ascending:false});
-    console.log('[loadCoupons]', { data, error });
-
-    if(error){
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">❌ ${error.message}<br><small style="color:var(--mgray)">Check that the discount_codes table exists in Supabase and RLS allows select.</small></td></tr>`;
-      return;
-    }
-    if(!data?.length){
-      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">No codes yet — create your first one above!</td></tr>';
-      return;
-    }
-    tbody.innerHTML = data.map(c=>`
-      <tr>
-        <td><strong style="letter-spacing:0.05em">${c.code}</strong></td>
-        <td>${c.discount_type==='percent'?'Percentage':'Fixed $'}</td>
-        <td style="font-weight:600;color:var(--blue)">${c.discount_type==='percent'?c.discount_value+'%':'$'+c.discount_value}</td>
-        <td>${c.uses_count||0}${c.max_uses?'/'+c.max_uses:' (∞)'}</td>
-        <td>${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
-        <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
-        <td style="display:flex;gap:6px;align-items:center">
-          <button onclick="toggleCoupon('${c.id}',${!c.active})" class="coupon-btn ${c.active?'coupon-btn-deactivate':'coupon-btn-activate'}">${c.active?'Deactivate':'Activate'}</button>
-          <button onclick="deleteCoupon('${c.id}','${c.code}')" class="coupon-btn coupon-btn-delete">Delete</button>
-        </td>
-      </tr>`).join('');
-  } catch(e) {
-    console.error('[loadCoupons] exception:', e);
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">❌ Exception: ${e.message}</td></tr>`;
+  
+  const { data, error } = await sb.from('discount_codes').select('*').order('created_at',{ascending:false});
+  
+  if(error){ 
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">Error: ${error.message}</td></tr>`;
+    return; 
   }
+  if(!data?.length){ 
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mgray)">No codes yet. Create your first one!</td></tr>'; 
+    return; 
+  }
+  tbody.innerHTML = data.map(c=>`
+    <tr>
+      <td><strong style="color:var(--navy);letter-spacing:0.05em">${c.code}</strong></td>
+      <td style="color:var(--mgray)">${c.discount_type==='percent'?'Percentage':'Fixed $'}</td>
+      <td style="font-weight:600;color:var(--blue)">${c.discount_type==='percent'?c.discount_value+'%':'$'+c.discount_value}</td>
+      <td style="color:var(--mgray)">${c.uses_count||0}${c.max_uses?'/'+c.max_uses:' (∞)'}</td>
+      <td style="color:var(--mgray)">${c.expires_at?new Date(c.expires_at).toLocaleDateString('en-AU'):'Never'}</td>
+      <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${c.active?'var(--green-lt)':'var(--off)'};color:${c.active?'var(--green)':'var(--mgray)'}">${c.active?'Active':'Inactive'}</span></td>
+      <td><button onclick="toggleCoupon('${c.id}',${!c.active})" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-family:Inter,sans-serif;color:var(--navy)">${c.active?'Deactivate':'Activate'}</button></td>
+    </tr>`).join('');
 }
 
-function toggleCouponForm(){
-  const form = document.getElementById('coupon-inline-form');
-  const btn  = document.getElementById('btn-toggle-coupon-form');
-  if(!form) return;
-  const isHidden = form.style.display === 'none';
-  form.style.display = isHidden ? 'block' : 'none';
-  if(btn) btn.textContent = isHidden ? '✕ Cancel' : '+ Create code';
-  if(isHidden){
-    // Reset form fields when opening
-    document.getElementById('c-code').value = '';
-    document.getElementById('c-type').value = 'fixed';
-    document.getElementById('c-value').value = '';
-    document.getElementById('c-maxuses').value = '';
-    document.getElementById('c-expires').value = '';
-  }
+function openCouponModal(){
+  let modal = document.getElementById('coupon-modal');
+  if(modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'coupon-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--white);border-radius:16px;width:100%;max-width:400px;padding:24px';
+  box.innerHTML = `
+    <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:20px">Create discount code</div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">CODE</label>
+      <div style="display:flex;gap:8px">
+        <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.08em" placeholder="e.g. NEWRIDER20">
+        <button id="c-random-btn" style="white-space:nowrap;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)">Random</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">TYPE</label>
+        <select id="c-type" class="inp" style="margin:0">
+          <option value="fixed">Fixed $ off</option>
+          <option value="percent">Percentage %</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">VALUE</label>
+        <input id="c-value" type="number" class="inp" style="margin:0" placeholder="15" min="1">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">MAX USES</label>
+        <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px">EXPIRES</label>
+        <input id="c-expires" type="date" class="inp" style="margin:0">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button id="c-cancel-btn" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy)">Cancel</button>
+      <button id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
+    </div>`;
+
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+
+  // Event listeners — no onclick inline
+  document.getElementById('c-random-btn').addEventListener('click', () => {
+    document.getElementById('c-code').value = 'BIKE' + Math.random().toString(36).substr(2,5).toUpperCase();
+  });
+  document.getElementById('c-cancel-btn').addEventListener('click', () => modal.remove());
+  document.getElementById('c-save-btn').addEventListener('click', saveCoupon);
 }
 
 function toast(msg){
@@ -1266,42 +1289,47 @@ let savingCoupon = false;
 async function saveCoupon(){
   if(savingCoupon) return;
   savingCoupon = true;
-
-  const code    = (document.getElementById('c-code')?.value||'').trim().toUpperCase();
-  const type    = document.getElementById('c-type')?.value || 'fixed';
-  const value   = parseFloat(document.getElementById('c-value')?.value);
-  const maxUses = parseInt(document.getElementById('c-maxuses')?.value) || null;
-  const expires = document.getElementById('c-expires')?.value || null;
-
-  if(!code){ toast('⚠️ Please enter a code'); savingCoupon=false; return; }
-  if(!value || isNaN(value)){ toast('⚠️ Please enter a discount value'); savingCoupon=false; return; }
-
+  
+  const code = document.getElementById('c-code')?.value?.trim().toUpperCase();
+  const type = document.getElementById('c-type')?.value;
+  const value = parseInt(document.getElementById('c-value')?.value);
+  const maxUses = parseInt(document.getElementById('c-maxuses')?.value)||null;
+  const expires = document.getElementById('c-expires')?.value||null;
+  
+  if(!code){ alert('Please enter a code'); savingCoupon=false; return; }
+  if(!value || isNaN(value)){ alert('Please enter a value'); savingCoupon=false; return; }
+  
   const btn = document.getElementById('c-save-btn');
-  if(btn){ btn.textContent='Creating…'; btn.disabled=true; }
-
+  if(btn){ btn.textContent='Creating...'; btn.disabled=true; }
+  
   try {
-    const insertData = { code, discount_type: type, discount_value: value, active: true, uses_count: 0 };
+    const insertData = { 
+      code, 
+      discount_type: type || 'fixed', 
+      discount_value: value,
+      active: true,
+      uses_count: 0
+    };
     if(maxUses && !isNaN(maxUses)) insertData.max_uses = maxUses;
     if(expires) insertData.expires_at = new Date(expires).toISOString();
-
+    
     const { data, error } = await sb.from('discount_codes').insert(insertData).select();
-
-    if(error){
-      toast('❌ Error: ' + error.message);
-      if(btn){ btn.textContent='Create code'; btn.disabled=false; }
+    console.log('Result:', {data, error});
+    
+    if(error){ 
+      alert('Error: ' + error.message); 
+      const btn2 = document.getElementById('c-save-btn');
+      if(btn2){ btn2.textContent='Create code'; btn2.disabled=false; }
       savingCoupon=false;
-      return;
+      return; 
     }
-
-    // Hide form and reload table
-    document.getElementById('coupon-inline-form').style.display='none';
-    const toggleBtn = document.getElementById('btn-toggle-coupon-form');
-    if(toggleBtn) toggleBtn.textContent='+ Create code';
+    
+    document.getElementById('coupon-modal')?.remove();
     await loadCoupons();
     toast('✅ Code ' + code + ' created!');
   } catch(e) {
-    console.error('saveCoupon exception:', e);
-    toast('❌ Exception: ' + e.message);
+    console.error('Exception:', e);
+    alert('Exception: ' + e.message);
     if(btn){ btn.textContent='Create code'; btn.disabled=false; }
   }
   savingCoupon = false;
@@ -1310,13 +1338,6 @@ async function saveCoupon(){
 async function toggleCoupon(id, active){
   await sb.from('discount_codes').update({ active }).eq('id', id);
   loadCoupons();
-}
-
-async function deleteCoupon(id, code){
-  if(!confirm(`Delete code "${code}"? This cannot be undone.`)) return;
-  await sb.from('discount_codes').delete().eq('id', id);
-  loadCoupons();
-  toast('🗑️ Code ' + code + ' deleted');
 }
 
 // ── REMINDERS ─────────────────────────────────────────────────────────────────
@@ -1338,33 +1359,17 @@ async function sendReminders(){
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function loadDashboard(){
   const today = new Date().toISOString().split('T')[0];
-  const firstOfMonth = today.slice(0,8)+'01';
-
-  const [
-    { data: todayJobs },
-    { data: monthJobs },
-    { data: pendingJobs },
-    { data: recentBookings },
-    { data: allClients }
-  ] = await Promise.all([
-    sb.from('bookings').select('*').eq('scheduled_date', today),
-    sb.from('bookings').select('*').gte('scheduled_date', firstOfMonth).neq('status','cancelled'),
-    sb.from('bookings').select('*').eq('status','pending'),
-    sb.from('bookings').select('*, profiles(full_name)').order('created_at',{ascending:false}).limit(5),
-    sb.from('profiles').select('id')
-  ]);
+  const { data: todayJobs } = await sb.from('bookings').select('*').eq('scheduled_date', today);
+  const { data: allBookings } = await sb.from('bookings').select('*').eq('status','pending');
+  const { data: recentBookings } = await sb.from('bookings').select('*, profiles(full_name)').order('created_at',{ascending:false}).limit(5);
 
   const todayRev = (todayJobs||[]).reduce((s,b)=>s+(b.service_price||0),0);
-  const monthRev = (monthJobs||[]).reduce((s,b)=>s+(b.service_price||0),0);
-  const completedToday = (todayJobs||[]).filter(b=>b.status==='completed').length;
-
   const kpis = document.querySelectorAll('#page-dashboard .kpi-value');
-  if(kpis[0]){ kpis[0].textContent = '$'+todayRev.toLocaleString(); kpis[0].nextElementSibling.textContent = (todayJobs||[]).length+' jobs today'; }
-  if(kpis[1]){ kpis[1].textContent = '$'+monthRev.toLocaleString(); kpis[1].nextElementSibling.textContent = (monthJobs||[]).length+' jobs this month'; }
-  if(kpis[2]){ kpis[2].textContent = (pendingJobs||[]).length; kpis[2].nextElementSibling.textContent = 'awaiting confirmation'; }
-  if(kpis[3]){ kpis[3].textContent = (allClients||[]).length; kpis[3].nextElementSibling.textContent = 'total clients'; }
+  if(kpis[0]) kpis[0].textContent = '$'+todayRev.toLocaleString();
+  if(kpis[0]) kpis[0].nextElementSibling.textContent = (todayJobs||[]).length+' jobs today';
+  if(kpis[2]) kpis[2].textContent = (allBookings||[]).length;
 
-  // Recent bookings table
+  // Today's bookings table
   const tbody = document.querySelector('#page-dashboard .tbl tbody');
   if(tbody && recentBookings){
     const stClass = {confirmed:'confirmed',pending:'pending',enroute:'enroute',completed:'completed',cancelled:'cancelled'};
@@ -1375,7 +1380,7 @@ async function loadDashboard(){
       return `<tr>
         <td><b>${name}</b></td>
         <td>${b.service_name||'—'}</td>
-        <td>${b.scheduled_date||'—'}</td>
+        <td>${t}</td>
         <td><span class="mech-tag v${b.van_number||1}">Van ${b.van_number||1}</span></td>
         <td><span class="status ${stClass[st]||'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase()+st.slice(1)}</span></td>
         <td><b>$${b.service_price||0}</b></td>
@@ -1383,20 +1388,18 @@ async function loadDashboard(){
     }).join('') || '<tr><td colspan="6" style="text-align:center;color:#6B7280;padding:24px">No bookings yet — ready to go!</td></tr>';
   }
 
-  // Schedule — today's jobs
+  // Schedule
   const schList = document.querySelector('.schedule-list');
-  if(schList){
-    if(todayJobs && todayJobs.length > 0){
-      schList.innerHTML = todayJobs.sort((a,b)=>(a.scheduled_time||'').localeCompare(b.scheduled_time||'')).map(b=>`
-        <div class="sch-item">
-          <div class="sch-time">${b.scheduled_time||'—'}</div>
-          <div class="sch-dot" style="background:#1848C8"></div>
-          <div><div class="sch-name">${b.service_name||'Service'}</div><div class="sch-svc">${b.suburb||'—'} · ${b.status||'pending'}</div></div>
-          <div class="sch-price">$${b.service_price||0}</div>
-        </div>`).join('');
-    } else {
-      schList.innerHTML = '<div style="padding:24px;text-align:center;color:#6B7280;font-size:13px">No jobs scheduled today</div>';
-    }
+  if(schList && todayJobs && todayJobs.length > 0){
+    schList.innerHTML = todayJobs.map(b=>`
+      <div class="sch-item">
+        <div class="sch-time">${b.scheduled_time||'—'}</div>
+        <div class="sch-dot" style="background:#1848C8"></div>
+        <div><div class="sch-name">${b.service_name||'Service'}</div><div class="sch-svc">${b.suburb||'—'}</div></div>
+        <div class="sch-price">$${b.service_price||0}</div>
+      </div>`).join('');
+  } else if(schList){
+    schList.innerHTML = '<div style="padding:24px;text-align:center;color:#6B7280;font-size:13px">No jobs scheduled today</div>';
   }
 }
 
@@ -1481,13 +1484,9 @@ async function loadVanZones(){
     data.forEach(row=>{
       if(!grouped[row.van_number]){
         const colors = {1:'#1848C8',2:'#D97706',3:'#7C3AED',4:'#DC2626'};
-        grouped[row.van_number] = {id:row.van_number,name:'Van '+row.van_number,color:colors[row.van_number]||'#1848C8',suburbs:[],driverName:''};
+        grouped[row.van_number] = {id:row.van_number,name:'Van '+row.van_number,color:colors[row.van_number]||'#1848C8',suburbs:[]};
       }
-      if(row.suburb === '__driver__'){
-        grouped[row.van_number].driverName = row.postcode || '';
-      } else {
-        grouped[row.van_number].suburbs.push(row.suburb);
-      }
+      grouped[row.van_number].suburbs.push(row.suburb);
     });
     vanZones = Object.values(grouped).sort((a,b)=>a.id-b.id);
   }
@@ -1507,21 +1506,14 @@ async function saveVanZone(vanId){
 function renderVanZones(){
   const container = document.getElementById('zones-container');
   if(!container) return;
-  container.innerHTML = vanZones.map(van=>{
-    return `
+  container.innerHTML = vanZones.map(van=>`
     <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:20px;overflow:hidden">
-      <div style="padding:16px 20px;background:${van.color};display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:600;color:#fff;margin-bottom:6px">${van.name}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:11px;color:rgba(255,255,255,0.6);white-space:nowrap">👤 Mechanic:</span>
-            <input id="driver-${van.id}" value="${van.driverName||''}" placeholder="e.g. Diego Peredó"
-              style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:4px 10px;font-size:12px;color:#fff;font-family:Inter,sans-serif;outline:none;flex:1;max-width:200px"
-              onblur="saveDriverName(${van.id},this.value)">
-          </div>
+      <div style="padding:16px 20px;background:${van.color};display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:15px;font-weight:600;color:#fff">${van.name}</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs assigned</div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
+        <div style="display:flex;gap:8px">
           <button onclick="saveVanZone(${van.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
           ${vanZones.length>1?`<button onclick="removeVan(${van.id})" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>`:''}
         </div>
@@ -1536,19 +1528,7 @@ function renderVanZones(){
           <button onclick="addSuburb(${van.id})" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
         </div>
       </div>
-    </div>`;
-  }).join('');
-}
-
-async function saveDriverName(vanId, name){
-  // Store driver name as special suburb row with suburb='__driver__' and postcode=name
-  await sb.from('van_zones').delete().eq('van_number', vanId).eq('suburb', '__driver__');
-  if(name.trim()){
-    await sb.from('van_zones').insert({van_number: vanId, suburb: '__driver__', postcode: name.trim(), active: true});
-  }
-  const van = vanZones.find(v=>v.id===vanId);
-  if(van) van.driverName = name.trim();
-  showToast('Mechanic name saved ✓');
+    </div>`).join('');
 }
 
 function addSuburb(vanId){
