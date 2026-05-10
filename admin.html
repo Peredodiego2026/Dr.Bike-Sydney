@@ -32,7 +32,6 @@
 }
 [data-theme="dark"]{
   --white:#1C1C1E;--off:#242426;--mgray:#98989F;--border:#38383A;
-  --navy:#F2F2F7;--navy2:#E5E5EA;
   --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
   --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
   --blue-lt:rgba(24,72,200,0.18);
@@ -41,7 +40,27 @@
 body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
 /* Dark mode fixes admin */
 [data-theme="dark"] body{background:#1C1C1E;color:#F2F2F7}
-[data-theme="dark"] .main{background:#1C1C1E}
+[data-theme="dark"] .main{background:#1C1C1E;color:#F2F2F7}
+[data-theme="dark"] .main .card-title{color:#F2F2F7}
+[data-theme="dark"] .main .card-sub{color:#98989F}
+[data-theme="dark"] .main .setting-title{color:#F2F2F7}
+[data-theme="dark"] .main .setting-sub{color:#98989F}
+[data-theme="dark"] .main .setting-label{color:#F2F2F7}
+[data-theme="dark"] .main .setting-val{color:#98989F}
+[data-theme="dark"] .main .van-name{color:#F2F2F7}
+[data-theme="dark"] .main .van-zone{color:#98989F}
+[data-theme="dark"] .main .vs-n{color:#F2F2F7}
+[data-theme="dark"] .main .vs-l{color:#98989F}
+[data-theme="dark"] .main .sch-name{color:#F2F2F7}
+[data-theme="dark"] .main .sch-svc{color:#98989F}
+[data-theme="dark"] .main .sch-time{color:#F2F2F7}
+[data-theme="dark"] .main .sch-price{color:#F2F2F7}
+[data-theme="dark"] .main .qa-label{color:#F2F2F7}
+[data-theme="dark"] .main .qa-sub{color:#98989F}
+[data-theme="dark"] .main .cl-name{color:#F2F2F7}
+[data-theme="dark"] .main [style*="color:var(--navy)"]{color:#F2F2F7 !important}
+[data-theme="dark"] .main [style*="color:var(--mgray)"]{color:#8E8E93 !important}
+[data-theme="dark"] .main [style*="color:#6B7280"]{color:#8E8E93 !important}
 [data-theme="dark"] .card-title{color:#F2F2F7}
 [data-theme="dark"] .card-sub{color:#98989F}
 [data-theme="dark"] #page-reminders .card{background:#242426;border-color:#38383A}
