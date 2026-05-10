@@ -973,6 +973,45 @@ function go(page, btn){
   if(page==='clients') loadClients();
   if(page==='dashboard') loadDashboard();
   if(page==='coupons') loadCoupons();
+  setTimeout(applyDarkModeInline, 100);
+}
+
+function applyDarkModeInline(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  // Fix all inline style elements that use navy/mgray colors
+  document.querySelectorAll('[style]').forEach(el => {
+    const s = el.style;
+    if(isDark){
+      if(s.color === 'var(--navy)' || el.getAttribute('style')?.includes('color:var(--navy)') || el.getAttribute('style')?.includes('color: var(--navy)')){
+        el.style.setProperty('color','#F2F2F7','important');
+      }
+      if(s.color === 'var(--mgray)' || el.getAttribute('style')?.includes('color:var(--mgray)') || el.getAttribute('style')?.includes('color: var(--mgray)')){
+        el.style.setProperty('color','#8E8E93','important');
+      }
+      if(el.getAttribute('style')?.includes('background:#fff') || el.getAttribute('style')?.includes('background: #fff') || el.getAttribute('style')?.includes('background:#FAFAFA') || el.getAttribute('style')?.includes('background:#F7F8FA')){
+        if(!el.getAttribute('style')?.includes('rgba')){
+          el.style.setProperty('background','#242426','important');
+        }
+      }
+      if(el.getAttribute('style')?.includes('border-color:#E5E7EB') || el.getAttribute('style')?.includes('border:1px solid #E5E7EB') || el.getAttribute('style')?.includes('border: 1px solid #E5E7EB')){
+        el.style.setProperty('border-color','#38383A','important');
+      }
+      if(el.getAttribute('style')?.includes('color:#6B7280') || el.getAttribute('style')?.includes('color: #6B7280')){
+        el.style.setProperty('color','#8E8E93','important');
+      }
+      if(el.getAttribute('style')?.includes('color:#0D1F3C') || el.getAttribute('style')?.includes('color:#0d1f3c')){
+        el.style.setProperty('color','#F2F2F7','important');
+      }
+    } else {
+      // Restore light mode - remove forced important styles
+      ['color','background','border-color'].forEach(prop => {
+        if(el.style.getPropertyPriority(prop) === 'important'){
+          const orig = el.getAttribute('style') || '';
+          // Only remove if it was a dark mode injection
+        }
+      });
+    }
+  });
 }
 
 function toggleAdminTheme(){
@@ -981,15 +1020,17 @@ function toggleAdminTheme(){
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('drbike-theme', next);
   document.getElementById('theme-btn-admin').textContent = next === 'dark' ? '☀️' : '🌙';
+  setTimeout(applyDarkModeInline, 50);
 }
 // Init theme button icon
 (function(){
   const t = localStorage.getItem('drbike-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', t);
   const btn = document.getElementById('theme-btn-admin');
   if(btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
-  // Update date badge
   const db = document.getElementById('admin-date-badge');
   if(db) db.textContent = new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  setTimeout(applyDarkModeInline, 100);
 })();
 
 // ── SIDEBAR TOGGLE ─────────────────────────────────────────────────────────────
