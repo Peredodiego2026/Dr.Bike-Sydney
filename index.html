@@ -1474,54 +1474,69 @@ let vanZones = [
 ];
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
-async function init(){
-  // Handle direct navigation via hash
-  const hash = window.location.hash;
-  if(hash === '#dashboard' && currentUser){
-    window.history.replaceState({}, document.title, window.location.pathname);
-    setTimeout(()=>{ document.getElementById('loading').classList.add('hide'); showView('dashboard'); }, 800);
-    return;
-  }
+function hideLoading(){ document.getElementById('loading').classList.add('hide'); }
 
-  // Handle Supabase OAuth redirect (hash contains access_token)
-  if(window.location.hash && window.location.hash.includes('access_token')){
-    const { data: { session }, error } = await sb.auth.getSession();
-    if(session){
-      currentUser = session.user;
-      await loadProfile();
-      updateNavAuth();
-      // Clean URL and go to dashboard
+async function init(){
+  // Safety net: always hide loading after 5s no matter what
+  const loadingGuard = setTimeout(hideLoading, 5000);
+
+  try {
+    // Handle direct navigation via hash
+    const hash = window.location.hash;
+    if(hash === '#dashboard' && currentUser){
       window.history.replaceState({}, document.title, window.location.pathname);
-      setTimeout(()=>{
-        document.getElementById('loading').classList.add('hide');
-        showView('dashboard');
-      }, 500);
+      clearTimeout(loadingGuard);
+      setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 800);
       return;
     }
-  }
-  const { data: { session } } = await sb.auth.getSession();
-  if(session?.user){
-    currentUser = session.user;
-    await loadProfile();
-  }
-  try {
-    await loadServices();
-    await loadVanZones();
-    loadPublicReviews();
-  } catch(e) {
-    console.error('Init error:', e);
-  }
-  handleStripeReturn();
 
-  // Manejar shortcuts PWA (?action=book, ?action=dashboard)
-  const action = new URLSearchParams(window.location.search).get('action');
-  if(action && currentUser){
-    window.history.replaceState({}, '', '/');
-    setTimeout(() => showView(action), 300);
-  }
+    // Handle Supabase OAuth redirect (hash contains access_token)
+    if(window.location.hash && window.location.hash.includes('access_token')){
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if(session){
+          currentUser = session.user;
+          await loadProfile();
+          updateNavAuth();
+          window.history.replaceState({}, document.title, window.location.pathname);
+          clearTimeout(loadingGuard);
+          setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 500);
+          return;
+        }
+      } catch(e){ console.error('OAuth session error:', e); }
+    }
 
-  loadReviews();
-  setTimeout(()=>{ document.getElementById('loading').classList.add('hide'); },800);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if(session?.user){
+        currentUser = session.user;
+        await loadProfile();
+      }
+    } catch(e){ console.error('Session/profile error:', e); }
+
+    try {
+      await loadServices();
+      await loadVanZones();
+      loadPublicReviews();
+    } catch(e){ console.error('Init data error:', e); }
+
+    handleStripeReturn();
+
+    // Manejar shortcuts PWA (?action=book, ?action=dashboard)
+    const action = new URLSearchParams(window.location.search).get('action');
+    if(action && currentUser){
+      window.history.replaceState({}, '', '/');
+      setTimeout(() => showView(action), 300);
+    }
+
+    loadReviews();
+    clearTimeout(loadingGuard);
+    setTimeout(hideLoading, 800);
+  } catch(e){
+    console.error('Init fatal error:', e);
+    clearTimeout(loadingGuard);
+    hideLoading();
+  }
 
   sb.auth.onAuthStateChange(async (event, session) => {
     if(session?.user){
