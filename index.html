@@ -30,6 +30,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Dr. Bike Sydney — Mobile Bicycle Repair">
 <meta name="twitter:description" content="Your bike fixed at your front door. Same-day service across Sydney.">
+<meta name="twitter:image" content="https://dr-bike-sydney.vercel.app/icon-512.png">
+<meta name="twitter:site" content="@drbikesydney">
 <link rel="canonical" href="https://drbike.com.au">
 <script type="application/ld+json">
 {
@@ -2958,6 +2960,27 @@ async function confirmBooking(){
 
   // Show Stripe payment modal
   showPaymentModal(bkg, price);
+
+  // Confirmation SMS + WhatsApp to client (fire-and-forget)
+  const clientPhone = userProfile?.phone_number || userProfile?.phone;
+  if (clientPhone) {
+    const notifBody = JSON.stringify({
+      to: clientPhone,
+      template: 'confirmation',
+      data: {
+        name: userProfile?.full_name?.split(' ')[0] || 'there',
+        service: bkg.service_name,
+        date: new Date(bkg.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }),
+        suburb: bkg.suburb,
+        price: bkg.service_price,
+        trackUrl: `https://dr-bike-sydney.vercel.app/track.html?id=${bkg.id}`
+      }
+    });
+    Promise.allSettled([
+      fetch('/api/send-sms',      { method:'POST', headers:{'Content-Type':'application/json'}, body: notifBody }),
+      fetch('/api/send-whatsapp', { method:'POST', headers:{'Content-Type':'application/json'}, body: notifBody }),
+    ]).catch(() => {});
+  }
 
   // Notify mechanic by email
   try {

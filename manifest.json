@@ -3,22 +3,59 @@
   "short_name": "Dr. Bike",
   "description": "Mobile bicycle repair at your door — Sydney",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#0D1F3C",
   "theme_color": "#1848C8",
-  "orientation": "portrait",
-  "categories": ["lifestyle", "utilities"],
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "utilities", "sports"],
+  "lang": "en-AU",
+  "dir": "ltr",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
   ],
   "shortcuts": [
-    { "name": "Book a service", "short_name": "Book", "url": "/?action=book", "description": "Book a bike repair now", "icons": [{"src": "/icon-192.png", "sizes": "192x192"}] },
-    { "name": "My bookings", "short_name": "Bookings", "url": "/?action=dashboard", "description": "View my bookings", "icons": [{"src": "/icon-192.png", "sizes": "192x192"}] }
+    {
+      "name": "Book a service",
+      "short_name": "Book",
+      "url": "/?action=book",
+      "description": "Book a bike repair right now",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My bookings",
+      "short_name": "Bookings",
+      "url": "/?action=dashboard",
+      "description": "View and manage my bookings",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Track mechanic",
+      "short_name": "Track",
+      "url": "/track.html",
+      "description": "Track your mechanic live",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ],
   "screenshots": [
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "narrow" }
-  ]
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dr. Bike Sydney app"
+    }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": { "title": "title", "text": "text", "url": "url" }
+  },
+  "prefer_related_applications": false,
+  "related_applications": []
 }

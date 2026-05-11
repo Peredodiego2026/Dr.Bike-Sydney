@@ -1687,6 +1687,8 @@
     });
     observer.observe(langDrop, {attributes:true, attributeFilter:['class']});
   }
+
+  function toggleFaq(i) {
     const ans = document.getElementById('faq-ans-'+i);
     const icon = document.getElementById('faq-icon-'+i);
     if(!ans) return;
@@ -1696,6 +1698,84 @@
     icon.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
   }
   </script>
+
+  <!-- TRUST BADGES -->
+  <section style="padding:32px 20px;background:#F8FAFF;border-top:1px solid #E5E7EB;border-bottom:1px solid #E5E7EB">
+    <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:0;justify-content:center">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 24px;border-right:1px solid #E5E7EB;flex:1;min-width:160px;justify-content:center">
+        <span style="font-size:20px">🛡️</span>
+        <div><div style="font-size:12px;font-weight:700;color:#0D1F3C">$2M Insured</div><div style="font-size:11px;color:#6B7280">Public liability</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 24px;border-right:1px solid #E5E7EB;flex:1;min-width:160px;justify-content:center">
+        <span style="font-size:20px">⭐</span>
+        <div><div style="font-size:12px;font-weight:700;color:#0D1F3C">4.9★ Rating</div><div style="font-size:11px;color:#6B7280">200+ happy riders</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 24px;border-right:1px solid #E5E7EB;flex:1;min-width:160px;justify-content:center">
+        <span style="font-size:20px">⚡</span>
+        <div><div style="font-size:12px;font-weight:700;color:#0D1F3C">Same-day service</div><div style="font-size:11px;color:#6B7280">Available 7 days</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 24px;border-right:1px solid #E5E7EB;flex:1;min-width:160px;justify-content:center">
+        <span style="font-size:20px">🔒</span>
+        <div><div style="font-size:12px;font-weight:700;color:#0D1F3C">Fixed prices</div><div style="font-size:11px;color:#6B7280">No hidden fees</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 24px;flex:1;min-width:160px;justify-content:center">
+        <span style="font-size:20px">🔄</span>
+        <div><div style="font-size:12px;font-weight:700;color:#0D1F3C">30-day guarantee</div><div style="font-size:11px;color:#6B7280">We fix it free</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLEET / CORPORATE -->
+  <section id="fleet" style="padding:72px 20px;background:#fff">
+    <div style="max-width:900px;margin:0 auto">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center">
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#1848C8;margin-bottom:12px">🏢 Corporate & Fleet</div>
+          <h2 style="font-size:28px;font-weight:800;margin:0 0 16px;letter-spacing:-0.02em;color:#0D1F3C;line-height:1.2">Keep your team's bikes rolling</h2>
+          <p style="font-size:15px;color:#6B7280;line-height:1.7;margin:0 0 24px">We partner with businesses, cycling clubs, strata buildings and Citi Bike operators across Sydney. One call — we service your whole fleet on-site, no disruption, no downtime.</p>
+          <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:10px">
+            <li style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#374151">
+              <span style="color:#059669;font-weight:700;flex-shrink:0;margin-top:1px">✓</span>
+              <span><strong>Scheduled fleet servicing</strong> — monthly or quarterly maintenance visits, invoiced to your business</span>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#374151">
+              <span style="color:#059669;font-weight:700;flex-shrink:0;margin-top:1px">✓</span>
+              <span><strong>End-of-trip facility servicing</strong> — we work at your building's bike parking, no employee drop-off needed</span>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#374151">
+              <span style="color:#059669;font-weight:700;flex-shrink:0;margin-top:1px">✓</span>
+              <span><strong>Corporate accounts &amp; invoicing</strong> — net-30 terms, monthly consolidated invoices, GST receipts</span>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#374151">
+              <span style="color:#059669;font-weight:700;flex-shrink:0;margin-top:1px">✓</span>
+              <span><strong>Staff ride-to-work programme</strong> — subsidised repairs for employees, promote cycling to work</span>
+            </li>
+          </ul>
+          <a href="mailto:fleet@drbikesydney.com.au?subject=Fleet%20enquiry" style="display:inline-flex;align-items:center;gap:8px;background:#1848C8;color:#fff;text-decoration:none;padding:13px 24px;border-radius:10px;font-size:14px;font-weight:600;letter-spacing:0.01em">
+            📋 Get a fleet quote
+          </a>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:#F0F4FF;border-radius:14px;padding:20px;text-align:center">
+            <div style="font-size:32px;font-weight:800;color:#1848C8;margin-bottom:4px">10+</div>
+            <div style="font-size:12px;color:#6B7280;font-weight:500">bikes minimum<br>fleet contract</div>
+          </div>
+          <div style="background:#F0FFF4;border-radius:14px;padding:20px;text-align:center">
+            <div style="font-size:32px;font-weight:800;color:#059669;margin-bottom:4px">20%</div>
+            <div style="font-size:12px;color:#6B7280;font-weight:500">fleet discount<br>on all services</div>
+          </div>
+          <div style="background:#FFF7ED;border-radius:14px;padding:20px;text-align:center">
+            <div style="font-size:32px;font-weight:800;color:#D97706;margin-bottom:4px">48h</div>
+            <div style="font-size:12px;color:#6B7280;font-weight:500">turnaround on<br>fleet bookings</div>
+          </div>
+          <div style="background:#FDF2F8;border-radius:14px;padding:20px;text-align:center">
+            <div style="font-size:32px;font-weight:800;color:#9333EA;margin-bottom:4px">∞</div>
+            <div style="font-size:12px;color:#6B7280;font-weight:500">no cap on<br>fleet size</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- INSURANCE & TRUST SECTION -->
   <section style="background:#0D1F3C;padding:64px 20px;color:#fff">
