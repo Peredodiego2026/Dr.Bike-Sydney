@@ -1077,12 +1077,12 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
           <div class="setting-title">Business details</div>
           <div class="setting-sub">Your Dr. Bike business information shown to clients</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Business name</div><input class="inp" value="Dr. Bike Sydney"></div>
-            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone</div><input class="inp" value="+61 4XX XXX XXX"></div>
-            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Email</div><input class="inp" value="hello@drbike.com.au"></div>
-            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">ABN</div><input class="inp" value="Pending registration"></div>
+            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Business name</div><input id="set-biz-name" class="inp" placeholder="Dr. Bike Sydney"></div>
+            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone</div><input id="set-biz-phone" class="inp" placeholder="+61 4XX XXX XXX"></div>
+            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Email</div><input id="set-biz-email" class="inp" placeholder="hello@drbike.com.au"></div>
+            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">ABN</div><input id="set-biz-abn" class="inp" placeholder="Pending registration"></div>
           </div>
-          <button class="btn-save">Save changes</button>
+          <button class="btn-save" onclick="saveBusinessDetails()">Save changes</button>
         </div>
         <div class="setting-card">
           <div class="setting-title">Notifications</div>
@@ -1107,11 +1107,45 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
         <div class="setting-card">
           <div class="setting-title">Integrations</div>
           <div class="setting-sub">Connect external services to power Dr. Bike</div>
-          <div class="setting-row"><span class="setting-label">Stripe payments</span><span class="setting-val" style="color:#DC2626;font-weight:500">Not connected</span></div>
-          <div class="setting-row"><span class="setting-label">Supabase database</span><span class="setting-val" style="color:#DC2626;font-weight:500">Not connected</span></div>
+          <div class="setting-row"><span class="setting-label">Stripe payments</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Configured</span></div>
+          <div class="setting-row"><span class="setting-label">Supabase database</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Connected</span></div>
           <div class="setting-row"><span class="setting-label">Google Sign-In</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Active</span></div>
-          <div class="setting-row"><span class="setting-label">Twilio SMS</span><span class="setting-val" style="color:#DC2626;font-weight:500">Not connected</span></div>
+          <div class="setting-row"><span class="setting-label">Twilio SMS/WhatsApp</span><span id="integ-twilio" class="setting-val" style="color:#F59E0B;font-weight:500">Checking…</span></div>
           <div class="setting-row"><span class="setting-label">Vercel hosting</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Live</span></div>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--off);border-radius:8px;font-size:12px;color:var(--mgray);line-height:1.5">
+            Env vars are set in <strong>Vercel → Project → Settings → Environment Variables</strong>. Keys required: <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>, <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, <code>TWILIO_PHONE_NUMBER</code>, <code>RESEND_API_KEY</code>.
+          </div>
+        </div>
+        <div class="setting-card" style="grid-column:span 2">
+          <div class="setting-title" style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">💬</span> WhatsApp Business Number
+          </div>
+          <div class="setting-sub">The number clients receive WhatsApp messages from (bookings, status updates, ETAs)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:4px">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Business WhatsApp number</div>
+                <input id="wa-number-input" class="inp" placeholder="+61 4XX XXX XXX" style="font-size:15px;letter-spacing:0.03em">
+              </div>
+              <div id="wa-status" style="font-size:12px;padding:10px 12px;background:var(--off);border-radius:8px;line-height:1.6;color:var(--mgray)">
+                No number configured — WhatsApp messages are currently disabled.
+              </div>
+              <button class="btn-save" onclick="saveWhatsappNumber()" style="align-self:flex-start">Save number</button>
+            </div>
+            <div style="font-size:12px;color:var(--mgray);line-height:1.7;padding:4px 0">
+              <div style="font-weight:600;color:var(--navy);margin-bottom:8px;font-size:13px">How to activate WhatsApp Business</div>
+              <ol style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:6px">
+                <li>Go to <strong>console.twilio.com → Messaging → Senders → WhatsApp Senders</strong></li>
+                <li>Click <strong>"Connect a Sender"</strong> and follow the Meta Business verification flow</li>
+                <li>Once approved, your Twilio number is WhatsApp-enabled</li>
+                <li>Enter that number here in international format (e.g. <code>+61412345678</code>)</li>
+                <li>The same <code>TWILIO_AUTH_TOKEN</code> and <code>TWILIO_ACCOUNT_SID</code> are used — no extra keys needed</li>
+              </ol>
+              <div style="margin-top:12px;padding:8px 10px;background:rgba(245,158,11,0.1);border-radius:6px;border-left:3px solid #F59E0B;font-size:11px;color:var(--navy)">
+                During Twilio WhatsApp sandbox testing you can use the sandbox number without Meta approval. Production requires Meta Business verification.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1157,6 +1191,7 @@ function go(page, btn){
   if(page==='clients') loadClients();
   if(page==='dashboard') loadDashboard();
   if(page==='coupons') loadCoupons();
+  if(page==='settings') loadSettings();
   setTimeout(applyDarkModeInline, 100);
 
   // Update mobile bottom nav active state
@@ -2230,6 +2265,82 @@ async function deleteContact(id){
   await sb.from('escalation_contacts').delete().eq('id',id);
   showToast('Contact deleted');
   loadContacts();
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+const SETTING_KEYS = ['__biz_name__','__biz_phone__','__biz_email__','__biz_abn__','__whatsapp__'];
+
+async function loadSettings() {
+  const { data: rows } = await sb.from('van_zones')
+    .select('suburb,postcode')
+    .eq('van_number', 0)
+    .in('suburb', SETTING_KEYS);
+
+  const map = {};
+  (rows || []).forEach(r => { map[r.suburb] = r.postcode; });
+
+  const set = (id, key) => { const el = document.getElementById(id); if(el && map[key]) el.value = map[key]; };
+  set('set-biz-name',  '__biz_name__');
+  set('set-biz-phone', '__biz_phone__');
+  set('set-biz-email', '__biz_email__');
+  set('set-biz-abn',   '__biz_abn__');
+
+  const waInput  = document.getElementById('wa-number-input');
+  const waStatus = document.getElementById('wa-status');
+  if (map['__whatsapp__']) {
+    if(waInput) waInput.value = map['__whatsapp__'];
+    if(waStatus) {
+      waStatus.textContent = `Active ✓ — messages sent from ${map['__whatsapp__']}`;
+      waStatus.style.color = '#059669';
+    }
+    const twilioEl = document.getElementById('integ-twilio');
+    if(twilioEl){ twilioEl.textContent = '✓ Active'; twilioEl.style.color = '#059669'; }
+  } else {
+    if(waStatus) {
+      waStatus.textContent = 'No number configured — WhatsApp messages are currently disabled.';
+      waStatus.style.color = '';
+    }
+    const twilioEl = document.getElementById('integ-twilio');
+    if(twilioEl){ twilioEl.textContent = 'SMS only (no WhatsApp number)'; twilioEl.style.color = '#F59E0B'; }
+  }
+}
+
+async function saveWhatsappNumber() {
+  const raw = (document.getElementById('wa-number-input')?.value || '').trim();
+  if (!raw) { showToast('Enter a phone number first'); return; }
+  const normalized = raw.startsWith('+') ? raw : (raw.startsWith('0') ? '+61' + raw.slice(1) : '+61' + raw);
+  if (!/^\+61\d{9}$/.test(normalized)) { showToast('Enter a valid AU mobile number (+61XXXXXXXXX)'); return; }
+
+  const { error } = await sb.from('van_zones').upsert(
+    { van_number: 0, suburb: '__whatsapp__', postcode: normalized, active: true },
+    { onConflict: 'van_number,suburb' }
+  );
+  if (error) { showToast('Save failed: ' + error.message); return; }
+
+  document.getElementById('wa-number-input').value = normalized;
+  const waStatus = document.getElementById('wa-status');
+  if(waStatus){ waStatus.textContent = `Active ✓ — messages sent from ${normalized}`; waStatus.style.color = '#059669'; }
+  const twilioEl = document.getElementById('integ-twilio');
+  if(twilioEl){ twilioEl.textContent = '✓ Active'; twilioEl.style.color = '#059669'; }
+  showToast('WhatsApp number saved ✓');
+}
+
+async function saveBusinessDetails() {
+  const fields = [
+    { key: '__biz_name__',  id: 'set-biz-name' },
+    { key: '__biz_phone__', id: 'set-biz-phone' },
+    { key: '__biz_email__', id: 'set-biz-email' },
+    { key: '__biz_abn__',   id: 'set-biz-abn' },
+  ];
+  const rows = fields.map(f => ({
+    van_number: 0,
+    suburb: f.key,
+    postcode: (document.getElementById(f.id)?.value || '').trim().slice(0, 200),
+    active: true,
+  }));
+  const { error } = await sb.from('van_zones').upsert(rows, { onConflict: 'van_number,suburb' });
+  if (error) { showToast('Save failed: ' + error.message); return; }
+  showToast('Business details saved ✓');
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
