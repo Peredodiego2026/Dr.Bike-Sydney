@@ -1481,7 +1481,7 @@ function hideLoading(){ document.getElementById('loading').classList.add('hide')
 
 async function init(){
   // Safety net: always hide loading after 5s no matter what
-  const loadingGuard = setTimeout(hideLoading, 5000);
+  const loadingGuard = setTimeout(()=>{ hideLoading(); }, 3000);
 
   try {
     // Handle direct navigation via hash
@@ -1499,7 +1499,7 @@ async function init(){
         const { data: { session } } = await sb.auth.getSession();
         if(session){
           currentUser = session.user;
-          await loadProfile();
+          try { await loadProfile(); } catch(e){ console.warn('OAuth loadProfile:', e); }
           updateNavAuth();
           window.history.replaceState({}, document.title, window.location.pathname);
           clearTimeout(loadingGuard);
