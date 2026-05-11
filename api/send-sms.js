@@ -12,7 +12,7 @@ const client = twilio(
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { to, name, service, address, price, type, bookingId, mechName } = req.body;
+  const { to, name, service, address, price, type, bookingId, mechName, reviewLink } = req.body;
   if (!to) return res.status(400).json({ error: 'Missing phone number' });
 
   const phone = normalizeAUPhone(to);
@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     enroute: `Hi ${name}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${address} 🚐\nEst. arrival: 10-20 min\nTrack live: ${trackUrl}`,
     completed: `Hi ${name}! Your ${service} is complete ✅ Total: $${price} AUD\nBook again: https://dr-bike-sydney.vercel.app — Thanks for choosing Dr. Bike Sydney!`,
     reminder: `Hi ${name}! Time for a bike check-up 🚲 Book your next service at https://dr-bike-sydney.vercel.app — We come to you, Mon–Sat.`,
+    review_request: `Hi ${name}! Your ${service} is done ✅ How did we do? Leave a quick review (30 sec): ${reviewLink || 'https://dr-bike-sydney.vercel.app'} — Thanks! ⭐`,
   };
 
   const body = messages[type] || messages.confirmation;

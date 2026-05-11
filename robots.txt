@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /landing.html
+Allow: /index.html
+
+# Block admin and mechanic apps from indexing
+Disallow: /admin.html
+Disallow: /mechanic.html
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://dr-bike-sydney.vercel.app/sitemap.xml
+
+# Crawl delay (be nice to the server)
+Crawl-delay: 10

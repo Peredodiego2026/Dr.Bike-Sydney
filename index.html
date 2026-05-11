@@ -1823,12 +1823,14 @@ async function updateDashboard(){
     histEl.innerHTML = bkgs.slice(0,5).map(b=>{
       const st=b.status||'pending';
       const date=b.scheduled_date?new Date(b.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'}):'—';
-      return `<div class="hist-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      const canCancel = ['pending','confirmed'].includes(st);
+      return `<div class="hist-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
         <div style="width:8px;height:8px;border-radius:50%;background:${stColors[st]};flex-shrink:0"></div>
-        <span class="hist-svc" style="flex:1;font-size:13px;font-weight:500">${b.service_name||'Service'}</span>
+        <span class="hist-svc" style="flex:1;font-size:13px;font-weight:500;min-width:100px">${b.service_name||'Service'}</span>
         <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stColors[st]}20;color:${stColors[st]};font-weight:600">${stLabels[st]||st}</span>
         <span class="hist-date" style="font-size:12px;color:var(--mgray)">${date}</span>
         <span class="hist-price" style="font-size:13px;font-weight:700">$${b.service_price||0}</span>
+        ${canCancel ? `<button onclick="clientCancelBooking('${b.id}','${b.service_name||'Service'}')" style="font-size:11px;color:#DC2626;background:none;border:1px solid #FECACA;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">Cancel</button>` : ''}
       </div>`;
     }).join('');
 
@@ -1844,6 +1846,38 @@ async function updateDashboard(){
   } else {
     histEl.innerHTML = '<div class="empty-state">No bookings yet.<br>Book your first service below.</div>';
   }
+}
+
+async function clientCancelBooking(bookingId, serviceName){
+  const confirmed = confirm(`Cancel your ${serviceName} booking?\n\nCancellations made more than 2 hours before your booking are fully refunded.`);
+  if(!confirmed) return;
+
+  const { error } = await sb.from('bookings').update({
+    status: 'cancelled',
+    cancelled_at: new Date().toISOString(),
+    cancel_reason: 'Client cancelled via app'
+  }).eq('id', bookingId).eq('client_id', currentUser.id);
+
+  if(error){ toast('Could not cancel — please contact us on WhatsApp'); return; }
+
+  toast('Booking cancelled ✓');
+  updateDashboard();
+
+  // Notify admin via email (non-blocking)
+  try {
+    const bkgName = userProfile?.full_name || 'Client';
+    await fetch('/api/send-email', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: 'hello@drbike.com.au',
+        name: 'Admin',
+        service: serviceName,
+        type: 'cancellation',
+        bookingId,
+        clientName: bkgName
+      })
+    });
+  } catch(e){ console.log('Cancel notify error', e); }
 }
 
 function updateNavAuth(){

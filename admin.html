@@ -562,30 +562,22 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
       <div class="row2">
         <div class="card">
           <div class="card-hdr">
-            <div><div class="card-title">Today's bookings</div><div class="card-sub">Monday 4 May · 9 jobs</div></div>
+            <div><div class="card-title">Today's bookings</div><div class="card-sub" id="dash-today-sub">Loading...</div></div>
             <span class="card-action" onclick="go('bookings',document.querySelector('[onclick*=bookings]'))">View all →</span>
           </div>
           <table class="tbl">
-            <thead><tr><th>Client</th><th>Service</th><th>Time</th><th>Mechanic</th><th>Status</th><th>Total</th></tr></thead>
-            <tbody>
-              <tr><td><b>Sarah M.</b></td><td>Standard Service</td><td>10:00 am</td><td><span class="mech-tag v1">Van 1</span></td><td><span class="status enroute"><span class="status-dot"></span>En route</span></td><td><b>$149</b></td></tr>
-              <tr><td><b>Olivia P.</b></td><td>Ultimate Overhaul</td><td>9:00 am</td><td><span class="mech-tag v2">Van 2</span></td><td><span class="status completed"><span class="status-dot"></span>Completed</span></td><td><b>$369</b></td></tr>
-              <tr><td><b>Ethan R.</b></td><td>Tune-Up</td><td>11:30 am</td><td><span class="mech-tag v1">Van 1</span></td><td><span class="status confirmed"><span class="status-dot"></span>Confirmed</span></td><td><b>$109</b></td></tr>
-              <tr><td><b>Noah G.</b></td><td>Gear Adjustment</td><td>2:00 pm</td><td><span class="mech-tag v1">Van 1</span></td><td><span class="status pending"><span class="status-dot"></span>Pending</span></td><td><b>$65</b></td></tr>
-              <tr><td><b>Mia C.</b></td><td>Brake Bleed</td><td>3:30 pm</td><td><span class="mech-tag v2">Van 2</span></td><td><span class="status confirmed"><span class="status-dot"></span>Confirmed</span></td><td><b>$120</b></td></tr>
+            <thead><tr><th>Client</th><th>Service</th><th>Time</th><th>Van</th><th>Status</th><th>Total</th></tr></thead>
+            <tbody id="dash-today-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--mgray);padding:20px;font-size:13px">Loading today's jobs...</td></tr>
             </tbody>
           </table>
         </div>
         <div class="card">
           <div class="card-hdr">
-            <div><div class="card-title">Schedule</div><div class="card-sub">Upcoming today</div></div>
+            <div><div class="card-title">Schedule</div><div class="card-sub" id="dash-schedule-sub">Upcoming today</div></div>
           </div>
-          <div class="schedule-list">
-            <div class="sch-item"><div class="sch-time">9:00 am</div><div class="sch-dot" style="background:#059669"></div><div><div class="sch-name">Olivia P.</div><div class="sch-svc">Ultimate Overhaul · Manly</div></div><div class="sch-price">$369</div></div>
-            <div class="sch-item"><div class="sch-time">10:00 am</div><div class="sch-dot" style="background:#1848C8"></div><div><div class="sch-name">Sarah M.</div><div class="sch-svc">Standard Service · Paddington</div></div><div class="sch-price">$149</div></div>
-            <div class="sch-item"><div class="sch-time">11:30 am</div><div class="sch-dot" style="background:#1848C8"></div><div><div class="sch-name">Ethan R.</div><div class="sch-svc">Tune-Up · Bondi</div></div><div class="sch-price">$109</div></div>
-            <div class="sch-item"><div class="sch-time">2:00 pm</div><div class="sch-dot" style="background:#F59E0B"></div><div><div class="sch-name">Noah G.</div><div class="sch-svc">Gear Adjustment · Newtown</div></div><div class="sch-price">$65</div></div>
-            <div class="sch-item"><div class="sch-time">3:30 pm</div><div class="sch-dot" style="background:#1848C8"></div><div><div class="sch-name">Mia C.</div><div class="sch-svc">Brake Bleed · Marrickville</div></div><div class="sch-price">$120</div></div>
+          <div class="schedule-list" id="dash-schedule-list">
+            <div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">Loading...</div>
           </div>
         </div>
       </div>
@@ -1864,7 +1856,7 @@ async function loadDashboard(){
     { data: recentBookings },
     { data: allClients }
   ] = await Promise.all([
-    sb.from('bookings').select('*').eq('scheduled_date', today),
+    sb.from('bookings').select('*, profiles(full_name)').eq('scheduled_date', today),
     sb.from('bookings').select('*').gte('scheduled_date', firstOfMonth).neq('status','cancelled'),
     sb.from('bookings').select('*').eq('status','pending'),
     sb.from('bookings').select('*, profiles(full_name)').order('created_at',{ascending:false}).limit(5),
@@ -1905,19 +1897,66 @@ async function loadDashboard(){
     }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--mgray);padding:24px">No bookings yet — ready to go!</td></tr>';
   }
 
-  // Schedule — today's jobs
-  const schList = document.querySelector('.schedule-list');
-  if(schList){
+  // ── Today's bookings table ──
+  const todayDate = new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+  const todaySub = document.getElementById('dash-today-sub');
+  if(todaySub) todaySub.textContent = `${todayDate} · ${(todayJobs||[]).length} job${(todayJobs||[]).length!==1?'s':''}`;
+
+  const todayTbody = document.getElementById('dash-today-tbody');
+  if(todayTbody){
+    const stColors2={pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',completed:'#6B7280',cancelled:'#DC2626'};
+    const stBg2={pending:'#FEF3C7',confirmed:'#EEF3FC',enroute:'#ECFDF5',completed:'#F3F4F6',cancelled:'#FEF2F2'};
+    const stLabel2={pending:'Pending',confirmed:'Confirmed',enroute:'En route',completed:'Completed',cancelled:'Cancelled'};
     if(todayJobs && todayJobs.length > 0){
-      schList.innerHTML = todayJobs.sort((a,b)=>(a.scheduled_time||'').localeCompare(b.scheduled_time||'')).map(b=>`
+      const sorted = [...todayJobs].sort((a,b)=>(a.scheduled_time||'').localeCompare(b.scheduled_time||''));
+      todayTbody.innerHTML = sorted.map(b=>{
+        const st=b.status||'pending';
+        const vanNum=b.van_number||1;
+        const clientName=b.profiles?.full_name||b.client_name||'Client';
+        const timeStr=b.scheduled_time||'—';
+        return `<tr>
+          <td data-label="Client" style="font-weight:600">${clientName}</td>
+          <td data-label="Service">${b.service_name||'—'}</td>
+          <td data-label="Time">${timeStr}</td>
+          <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
+          <td data-label="Status"><span style="background:${stBg2[st]};color:${stColors2[st]};padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600">${stLabel2[st]||st}</span></td>
+          <td data-label="Total" style="font-weight:700;color:var(--blue)">$${b.service_price||0}</td>
+        </tr>`;
+      }).join('');
+    } else {
+      todayTbody.innerHTML = `<tr><td colspan="6"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:8px">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div style="font-size:14px;font-weight:600;color:var(--mgray)">No jobs today</div>
+        <div style="font-size:12px;color:var(--mgray);opacity:.7">New bookings appear here automatically</div>
+      </div></td></tr>`;
+    }
+  }
+
+  // ── Schedule timeline ──
+  const schList = document.getElementById('dash-schedule-list');
+  const schSub = document.getElementById('dash-schedule-sub');
+  if(schList){
+    const upcoming = (todayJobs||[]).filter(b=>b.status!=='completed'&&b.status!=='cancelled')
+      .sort((a,b)=>(a.scheduled_time||'').localeCompare(b.scheduled_time||''));
+    if(schSub) schSub.textContent = `${upcoming.length} upcoming today`;
+    const stDotColors={pending:'#F59E0B',confirmed:'#1848C8',enroute:'#059669',completed:'#6B7280',cancelled:'#DC2626'};
+    if(upcoming.length > 0){
+      schList.innerHTML = upcoming.map(b=>`
         <div class="sch-item">
           <div class="sch-time">${b.scheduled_time||'—'}</div>
-          <div class="sch-dot" style="background:#1848C8"></div>
-          <div><div class="sch-name">${b.service_name||'Service'}</div><div class="sch-svc">${b.suburb||'—'} · ${b.status||'pending'}</div></div>
+          <div class="sch-dot" style="background:${stDotColors[b.status||'pending']}"></div>
+          <div style="flex:1;min-width:0">
+            <div class="sch-name">${b.profiles?.full_name||b.client_name||'Client'}</div>
+            <div class="sch-svc">${b.service_name||'Service'} · ${b.suburb||'—'}</div>
+          </div>
           <div class="sch-price">$${b.service_price||0}</div>
         </div>`).join('');
     } else {
-      schList.innerHTML = '<div style="padding:24px;text-align:center;color:var(--mgray);font-size:13px">No jobs scheduled today</div>';
+      schList.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:8px">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div style="font-size:14px;font-weight:600;color:var(--mgray)">All clear for today</div>
+        <div style="font-size:12px;color:var(--mgray);opacity:.7">No upcoming jobs</div>
+      </div>`;
     }
   }
 }
