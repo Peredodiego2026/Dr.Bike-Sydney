@@ -1073,9 +1073,34 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
     <!-- SETTINGS -->
     <div id="page-settings" class="page">
       <div class="settings-grid">
+
+        <!-- ══ NOTIFICATION NUMBERS ══ -->
+        <div class="setting-card" style="grid-column:1/-1">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <span style="font-size:20px">📲</span>
+            <div class="setting-title" style="margin:0">Notification Numbers</div>
+            <button onclick="openNotifModal()" style="margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap">+ Add number</button>
+          </div>
+          <div class="setting-sub" style="margin-bottom:16px">
+            Each mechanic receives SMS/WhatsApp alerts only for their zone. Manager numbers receive all zones.
+          </div>
+
+          <!-- Zone legend -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#EEF3FC;color:#1848C8">🚐 Van 1 — Inner West / Eastern / CBD</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#F0FDF4;color:#15803D">🚐 Van 2 — North Shore / Manly / Beaches</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ All zones — Manager</span>
+          </div>
+
+          <div id="notif-numbers-list" style="display:flex;flex-direction:column;gap:8px">
+            <div style="text-align:center;color:var(--mgray);padding:24px;font-size:13px">Loading…</div>
+          </div>
+        </div>
+
+        <!-- ══ BUSINESS DETAILS ══ -->
         <div class="setting-card">
           <div class="setting-title">Business details</div>
-          <div class="setting-sub">Your Dr. Bike business information shown to clients</div>
+          <div class="setting-sub">Saved to Supabase — used in notifications and invoices</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Business name</div><input id="set-biz-name" class="inp" placeholder="Dr. Bike Sydney"></div>
             <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone</div><input id="set-biz-phone" class="inp" placeholder="+61 4XX XXX XXX"></div>
@@ -1084,68 +1109,97 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
           </div>
           <button class="btn-save" onclick="saveBusinessDetails()">Save changes</button>
         </div>
+
+        <!-- ══ WHATSAPP BUSINESS ══ -->
         <div class="setting-card">
-          <div class="setting-title">Notifications</div>
-          <div class="setting-sub">Choose when and how you get notified about bookings and payments</div>
-          <div class="setting-row"><span class="setting-label">New booking alert</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Payment received</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Booking cancelled</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Daily summary email</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Low revenue alert</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">WhatsApp notifications</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-title" style="display:flex;align-items:center;gap:8px"><span>💬</span> WhatsApp Business</div>
+          <div class="setting-sub">Number clients receive WhatsApp messages from</div>
+          <div style="margin-top:8px">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Sender number</div>
+            <input id="wa-number-input" class="inp" placeholder="+61 4XX XXX XXX">
+          </div>
+          <div id="wa-status" style="font-size:12px;padding:8px 12px;background:var(--off);border-radius:8px;line-height:1.6;color:var(--mgray);margin-top:8px">
+            No number configured — WhatsApp disabled.
+          </div>
+          <button class="btn-save" onclick="saveWhatsappNumber()" style="margin-top:10px">Save number</button>
+          <details style="margin-top:10px">
+            <summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600">How to activate ›</summary>
+            <ol style="font-size:12px;color:var(--mgray);margin:8px 0 0 16px;line-height:2">
+              <li>console.twilio.com → Messaging → Senders → WhatsApp Senders</li>
+              <li>Connect sender + Meta Business verification (1–3 days)</li>
+              <li>Enter the approved number above</li>
+              <li>Add <code>TWILIO_WHATSAPP_NUMBER</code> to Vercel env vars</li>
+            </ol>
+          </details>
         </div>
-        <div class="setting-card">
-          <div class="setting-title">Service zones</div>
-          <div class="setting-sub">Active coverage areas for each van</div>
-          <div class="setting-row"><span class="setting-label">Van 1 — Inner West</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Van 1 — Eastern Suburbs</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Van 1 — CBD</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Van 2 — North Shore</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Van 2 — Manly</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          <div class="setting-row"><span class="setting-label">Van 2 — Northern Beaches</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-        </div>
+
+        <!-- ══ INTEGRATIONS ══ -->
         <div class="setting-card">
           <div class="setting-title">Integrations</div>
-          <div class="setting-sub">Connect external services to power Dr. Bike</div>
-          <div class="setting-row"><span class="setting-label">Stripe payments</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Configured</span></div>
+          <div class="setting-sub">Live status of connected services</div>
+          <div class="setting-row"><span class="setting-label">Stripe payments</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Active (test)</span></div>
           <div class="setting-row"><span class="setting-label">Supabase database</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Connected</span></div>
           <div class="setting-row"><span class="setting-label">Google Sign-In</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Active</span></div>
-          <div class="setting-row"><span class="setting-label">Twilio SMS/WhatsApp</span><span id="integ-twilio" class="setting-val" style="color:#F59E0B;font-weight:500">Checking…</span></div>
+          <div class="setting-row"><span class="setting-label">Resend email</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Active</span></div>
+          <div class="setting-row"><span class="setting-label">Twilio SMS/WhatsApp</span><span id="integ-twilio" class="setting-val" style="color:#F59E0B;font-weight:500">⚠ Needs keys</span></div>
           <div class="setting-row"><span class="setting-label">Vercel hosting</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Live</span></div>
-          <div style="margin-top:12px;padding:10px 12px;background:var(--off);border-radius:8px;font-size:12px;color:var(--mgray);line-height:1.5">
-            Env vars are set in <strong>Vercel → Project → Settings → Environment Variables</strong>. Keys required: <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>, <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, <code>TWILIO_PHONE_NUMBER</code>, <code>RESEND_API_KEY</code>.
+        </div>
+
+        <!-- ══ NOTIFICATIONS TOGGLES ══ -->
+        <div class="setting-card">
+          <div class="setting-title">Alert triggers</div>
+          <div class="setting-sub">Which events send notifications to the numbers above</div>
+          <div class="setting-row"><span class="setting-label">New booking</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-row"><span class="setting-label">Mechanic en route</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-row"><span class="setting-label">Job completed</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-row"><span class="setting-label">Payment received</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-row"><span class="setting-label">Booking cancelled</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="setting-row"><span class="setting-label">Monthly reminders</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ NOTIF NUMBER MODAL ══ -->
+    <div id="notif-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px" id="notif-modal-title">Add notification number</div>
+        <input type="hidden" id="notif-modal-id">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Name</div>
+            <input class="inp" id="notif-modal-name" placeholder="e.g. Diego (Manager), Jake (Mechanic 1)">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone number</div>
+            <input class="inp" id="notif-modal-phone" placeholder="+61 4XX XXX XXX" type="tel">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Role</div>
+            <select class="inp" id="notif-modal-role" onchange="updateZoneVisibility()" style="cursor:pointer">
+              <option value="manager">⭐ Manager — receives all zones</option>
+              <option value="mechanic">🔧 Mechanic — receives assigned zone only</option>
+            </select>
+          </div>
+          <div id="notif-modal-zone-wrap">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Assigned zone</div>
+            <select class="inp" id="notif-modal-zone" style="cursor:pointer">
+              <option value="1">🚐 Van 1 — Inner West / Eastern / CBD</option>
+              <option value="2">🚐 Van 2 — North Shore / Manly / Beaches</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Channel</div>
+            <select class="inp" id="notif-modal-channel" style="cursor:pointer">
+              <option value="sms">📱 SMS</option>
+              <option value="whatsapp">💬 WhatsApp</option>
+              <option value="both">📱💬 SMS + WhatsApp</option>
+            </select>
           </div>
         </div>
-        <div class="setting-card" style="grid-column:span 2">
-          <div class="setting-title" style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:22px">💬</span> WhatsApp Business Number
-          </div>
-          <div class="setting-sub">The number clients receive WhatsApp messages from (bookings, status updates, ETAs)</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:4px">
-            <div style="display:flex;flex-direction:column;gap:10px">
-              <div>
-                <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Business WhatsApp number</div>
-                <input id="wa-number-input" class="inp" placeholder="+61 4XX XXX XXX" style="font-size:15px;letter-spacing:0.03em">
-              </div>
-              <div id="wa-status" style="font-size:12px;padding:10px 12px;background:var(--off);border-radius:8px;line-height:1.6;color:var(--mgray)">
-                No number configured — WhatsApp messages are currently disabled.
-              </div>
-              <button class="btn-save" onclick="saveWhatsappNumber()" style="align-self:flex-start">Save number</button>
-            </div>
-            <div style="font-size:12px;color:var(--mgray);line-height:1.7;padding:4px 0">
-              <div style="font-weight:600;color:var(--navy);margin-bottom:8px;font-size:13px">How to activate WhatsApp Business</div>
-              <ol style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:6px">
-                <li>Go to <strong>console.twilio.com → Messaging → Senders → WhatsApp Senders</strong></li>
-                <li>Click <strong>"Connect a Sender"</strong> and follow the Meta Business verification flow</li>
-                <li>Once approved, your Twilio number is WhatsApp-enabled</li>
-                <li>Enter that number here in international format (e.g. <code>+61412345678</code>)</li>
-                <li>The same <code>TWILIO_AUTH_TOKEN</code> and <code>TWILIO_ACCOUNT_SID</code> are used — no extra keys needed</li>
-              </ol>
-              <div style="margin-top:12px;padding:8px 10px;background:rgba(245,158,11,0.1);border-radius:6px;border-left:3px solid #F59E0B;font-size:11px;color:var(--navy)">
-                During Twilio WhatsApp sandbox testing you can use the sandbox number without Meta approval. Production requires Meta Business verification.
-              </div>
-            </div>
-          </div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button onclick="closeNotifModal()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+          <button onclick="saveNotifNumber()" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
         </div>
       </div>
     </div>
@@ -2303,6 +2357,9 @@ async function loadSettings() {
     const twilioEl = document.getElementById('integ-twilio');
     if(twilioEl){ twilioEl.textContent = 'SMS only (no WhatsApp number)'; twilioEl.style.color = '#F59E0B'; }
   }
+
+  // Load notification numbers
+  loadNotifNumbers();
 }
 
 async function saveWhatsappNumber() {
@@ -2341,6 +2398,119 @@ async function saveBusinessDetails() {
   const { error } = await sb.from('van_zones').upsert(rows, { onConflict: 'van_number,suburb' });
   if (error) { showToast('Save failed: ' + error.message); return; }
   showToast('Business details saved ✓');
+}
+
+// ── NOTIFICATION NUMBERS ──────────────────────────────────────────────────────
+// Stored in escalation_contacts with role='manager' or role='mechanic'
+// and a new 'zone' field (1, 2, or 'all') and 'channel' field (sms/whatsapp/both)
+
+async function loadNotifNumbers() {
+  const list = document.getElementById('notif-numbers-list');
+  if(!list) return;
+  list.innerHTML = '<div style="text-align:center;color:var(--mgray);padding:20px;font-size:13px">Loading…</div>';
+
+  const { data, error } = await sb.from('escalation_contacts').select('*').order('role').order('first_name');
+  if(error || !data || data.length === 0){
+    list.innerHTML = '<div style="text-align:center;color:var(--mgray);padding:24px;font-size:13px">No numbers yet — add your first one above.</div>';
+    return;
+  }
+
+  const zoneLabel = { '1':'Van 1', '2':'Van 2', 'all':'All zones', '':'All zones' };
+  const zoneBg    = { '1':'#EEF3FC', '2':'#F0FDF4', 'all':'#FEF9C3', '':'#FEF9C3' };
+  const zoneColor = { '1':'#1848C8', '2':'#15803D', 'all':'#92400E', '':'#92400E' };
+  const channelIcon = { sms:'📱', whatsapp:'💬', both:'📱💬' };
+  const roleIcon = { manager:'⭐', mechanic:'🔧' };
+
+  list.innerHTML = data.map(c => {
+    const zone    = c.zone    || 'all';
+    const channel = c.channel || 'sms';
+    const initials = ((c.first_name||'?')[0] + (c.last_name||'')[0]).toUpperCase();
+    return `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--off);border-radius:10px;border:1px solid var(--border)">
+      <div style="width:38px;height:38px;border-radius:50%;background:${zoneBg[zone]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${zoneColor[zone]};flex-shrink:0">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--navy)">${roleIcon[c.role]||''} ${c.first_name} ${c.last_name}</div>
+        <div style="font-size:12px;color:var(--mgray)">${c.phone} &nbsp;·&nbsp; ${channelIcon[channel]} ${channel.toUpperCase()}</div>
+      </div>
+      <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${zoneBg[zone]};color:${zoneColor[zone]};white-space:nowrap;flex-shrink:0">${zoneLabel[zone]}</span>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="editNotifNumber('${c.id}','${c.first_name}','${c.last_name}','${c.phone}','${c.role}','${zone}','${channel}')"
+          style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
+        <button onclick="deleteNotifNumber('${c.id}')"
+          style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openNotifModal() {
+  document.getElementById('notif-modal-title').textContent = 'Add notification number';
+  document.getElementById('notif-modal-id').value = '';
+  document.getElementById('notif-modal-name').value = '';
+  document.getElementById('notif-modal-phone').value = '';
+  document.getElementById('notif-modal-role').value = 'mechanic';
+  document.getElementById('notif-modal-zone').value = '1';
+  document.getElementById('notif-modal-channel').value = 'sms';
+  updateZoneVisibility();
+  document.getElementById('notif-modal').style.display = 'flex';
+}
+
+function closeNotifModal() {
+  document.getElementById('notif-modal').style.display = 'none';
+}
+
+function updateZoneVisibility() {
+  const role = document.getElementById('notif-modal-role').value;
+  const zoneWrap = document.getElementById('notif-modal-zone-wrap');
+  if(zoneWrap) zoneWrap.style.display = role === 'manager' ? 'none' : 'block';
+}
+
+function editNotifNumber(id, fname, lname, phone, role, zone, channel) {
+  document.getElementById('notif-modal-title').textContent = 'Edit notification number';
+  document.getElementById('notif-modal-id').value = id;
+  document.getElementById('notif-modal-name').value = fname + ' ' + lname;
+  document.getElementById('notif-modal-phone').value = phone;
+  document.getElementById('notif-modal-role').value = role;
+  document.getElementById('notif-modal-zone').value = zone || '1';
+  document.getElementById('notif-modal-channel').value = channel || 'sms';
+  updateZoneVisibility();
+  document.getElementById('notif-modal').style.display = 'flex';
+}
+
+async function saveNotifNumber() {
+  const id      = document.getElementById('notif-modal-id').value;
+  const fullName = document.getElementById('notif-modal-name').value.trim();
+  const phone   = document.getElementById('notif-modal-phone').value.trim();
+  const role    = document.getElementById('notif-modal-role').value;
+  const zone    = role === 'manager' ? 'all' : document.getElementById('notif-modal-zone').value;
+  const channel = document.getElementById('notif-modal-channel').value;
+
+  if(!fullName || !phone) { showToast('Name and phone are required'); return; }
+
+  const parts = fullName.split(' ');
+  const fname = parts[0];
+  const lname = parts.slice(1).join(' ') || '-';
+
+  const payload = { first_name: fname, last_name: lname, phone, role, zone, channel, active: true };
+
+  let error;
+  if(id) {
+    ({ error } = await sb.from('escalation_contacts').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sb.from('escalation_contacts').insert(payload));
+  }
+
+  if(error){ showToast('Save failed: ' + error.message); return; }
+  closeNotifModal();
+  showToast(id ? 'Number updated ✓' : 'Number added ✓');
+  loadNotifNumbers();
+}
+
+async function deleteNotifNumber(id) {
+  if(!confirm('Remove this notification number?')) return;
+  await sb.from('escalation_contacts').delete().eq('id', id);
+  showToast('Number removed');
+  loadNotifNumbers();
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
