@@ -294,10 +294,15 @@ function stopRouteTimer(jobId){
 }
 
 function checklistChanged(){
-  const items = document.querySelectorAll('#service-checklist .chk-item');
-  const allChecked = items.length > 0 && [...items].every(c => c.checked);
+  const requiredItems = document.querySelectorAll('#service-checklist .chk-item[data-required="true"]');
+  const allRequiredDone = requiredItems.length === 0 || [...requiredItems].every(c => c.checked);
   const btn = document.querySelector('#complete-modal button[onclick^="submitComplete"]');
-  if(btn){ btn.disabled = !allChecked; btn.style.opacity = allChecked ? '1' : '0.5'; btn.style.cursor = allChecked ? 'pointer' : 'not-allowed'; }
+  if(btn){
+    btn.disabled = !allRequiredDone;
+    btn.style.opacity = allRequiredDone ? '1' : '0.5';
+    btn.style.cursor = allRequiredDone ? 'pointer' : 'not-allowed';
+    btn.title = allRequiredDone ? '' : '⚠️ Complete the 3 required safety checks first';
+  }
 }
 
 function card(j){
@@ -405,21 +410,52 @@ function openCompleteModal(id){
     </div>`;
   document.body.appendChild(modal);
 
-  // Build service checklist
+  // Build service checklist — required items first, then service-specific
   setTimeout(()=>{
     const chkDiv = document.getElementById('service-checklist');
     if(chkDiv){
-      const base = ['Checked bike for additional issues','Cleaned work area','Explained work done to client'];
+      // MANDATORY safety checks — always required regardless of service type
+      const required = [
+        { label:'🔴 Brake check — front & rear (squeeze test + pad thickness)', required:true },
+        { label:'🔴 Tyre check — pressure, sidewall condition, no cuts or bulges', required:true },
+        { label:'🔴 Chain wear check — measure with chain wear tool', required:true },
+      ];
+      // Optional service-specific items
       const svcLower = (j.service||'').toLowerCase();
-      const extra = [];
-      if(svcLower.includes('tune')) extra.push('Adjusted gears','Adjusted brakes','Lubricated chain','Checked tyre pressure');
-      if(svcLower.includes('brake')) extra.push('Tested brake lever feel','Confirmed adequate stopping power');
-      if(svcLower.includes('chain')||svcLower.includes('cable')) extra.push('Tested under load');
-      if(svcLower.includes('flat')||svcLower.includes('tyre')) extra.push('Checked for sharp objects in tyre');
-      const items = [...base, ...extra];
-      chkDiv.innerHTML = items.map((item,i)=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:4px 0">
-        <input type="checkbox" class="chk-item" data-idx="${i}" style="width:16px;height:16px;accent-color:#059669" onchange="checklistChanged()"> ${item}
-      </label>`).join('');
+      const optional = [
+        { label:'Cleaned work area', required:false },
+        { label:'Explained work done to client', required:false },
+        { label:'Checked bike for additional issues', required:false },
+      ];
+      if(svcLower.includes('tune')) optional.push(
+        { label:'Adjusted gears (front & rear derailleur)', required:false },
+        { label:'Adjusted brake cables & housing', required:false },
+        { label:'Lubricated chain & drivetrain', required:false },
+        { label:'Checked & tightened all bolts', required:false },
+      );
+      if(svcLower.includes('brake')) optional.push(
+        { label:'Tested brake lever feel & modulation', required:false },
+        { label:'Confirmed adequate stopping power', required:false },
+      );
+      if(svcLower.includes('chain')||svcLower.includes('cable')) optional.push(
+        { label:'Tested drivetrain under load', required:false },
+      );
+      if(svcLower.includes('flat')||svcLower.includes('tyre')) optional.push(
+        { label:'Checked for sharp objects inside tyre', required:false },
+        { label:'Rim tape intact', required:false },
+      );
+      if(svcLower.includes('e-bike')||svcLower.includes('ebike')||svcLower.includes('electric')) optional.push(
+        { label:'Battery connections checked', required:false },
+        { label:'Motor assistance tested on all levels', required:false },
+        { label:'Display & controls functional', required:false },
+      );
+
+      const allItems = [...required, ...optional];
+      chkDiv.innerHTML = allItems.map((item,i)=>`
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
+          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required?'#DC2626':'#059669'};flex-shrink:0" onchange="checklistChanged()">
+          <span>${item.label}${item.required?'<span style="color:#DC2626;font-size:10px;font-weight:700;margin-left:4px">REQUIRED</span>':''}</span>
+        </label>`).join('');
       checklistChanged();
     }
   },50);

@@ -2855,8 +2855,31 @@ function fillConfirm(){
   document.getElementById('cf-addr').textContent = [street,suburb].filter(Boolean).join(', ')||'—';
   // Reset discount state
   appliedDiscount = 0; appliedReferralCode = null; appliedDiscountCodeId = null;
-  document.getElementById('cf-price').textContent = '$'+(booking.service?.price||0);
-  document.getElementById('cf-price-original').style.display = 'none';
+
+  // Dynamic pricing surcharge
+  const basePrice = booking.service?.price || 0;
+  const today = new Date().toISOString().split('T')[0];
+  const bookingDate = booking.date || '';
+  const dayOfWeek = bookingDate ? new Date(bookingDate+'T00:00:00').getDay() : -1;
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  const isSameDay = bookingDate === today;
+
+  let surcharge = 0;
+  let surchargeLabel = '';
+  if(isSameDay){ surcharge = 30; surchargeLabel = '⚡ Same-day surcharge'; }
+  else if(isWeekend){ surcharge = 20; surchargeLabel = '📅 Weekend surcharge'; }
+
+  const totalPrice = basePrice + surcharge;
+  booking.surcharge = surcharge;
+
+  if(surcharge > 0){
+    document.getElementById('cf-price-original').style.display = 'block';
+    document.getElementById('cf-price-original').textContent = '$' + basePrice + ' + $' + surcharge + ' ' + surchargeLabel;
+    document.getElementById('cf-price').textContent = '$' + totalPrice;
+  } else {
+    document.getElementById('cf-price').textContent = '$' + basePrice;
+    document.getElementById('cf-price-original').style.display = 'none';
+  }
   document.getElementById('cf-discount-label').style.display = 'none';
   const refInput = document.getElementById('referral-input');
   if(refInput){ refInput.value=''; refInput.disabled=false; }
