@@ -1292,6 +1292,21 @@
           <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark/light mode">
             <span id="themeIcon">🌙</span>
           </button>
+          <!-- Language selector -->
+          <div style="position:relative" id="lang-wrap">
+            <button onclick="document.getElementById('lang-drop').classList.toggle('open')" style="display:flex;align-items:center;gap:5px;padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;background:var(--nav-bg);cursor:pointer;font-size:12px;font-weight:600;color:var(--navy);font-family:Inter,sans-serif" id="lang-btn-landing">
+              🌐 <span id="lang-label-landing">EN</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div id="lang-drop" style="display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:6px;min-width:140px;z-index:200">
+              <button onclick="setLandingLang('en','EN')" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:13px;font-family:Inter,sans-serif;color:#0D1F3C;border-radius:8px;text-align:left" onmouseover="this.style.background='#F7F8FA'" onmouseout="this.style.background='none'">🇦🇺 English</button>
+              <button onclick="setLandingLang('es','ES')" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:13px;font-family:Inter,sans-serif;color:#0D1F3C;border-radius:8px;text-align:left" onmouseover="this.style.background='#F7F8FA'" onmouseout="this.style.background='none'">🇪🇸 Español</button>
+              <button onclick="setLandingLang('zh-CN','中文')" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:13px;font-family:Inter,sans-serif;color:#0D1F3C;border-radius:8px;text-align:left" onmouseover="this.style.background='#F7F8FA'" onmouseout="this.style.background='none'">🇨🇳 中文</button>
+              <button onclick="setLandingLang('ko','한국')" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:13px;font-family:Inter,sans-serif;color:#0D1F3C;border-radius:8px;text-align:left" onmouseover="this.style.background='#F7F8FA'" onmouseout="this.style.background='none'">🇰🇷 한국어</button>
+              <button onclick="setLandingLang('ja','JA')" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:13px;font-family:Inter,sans-serif;color:#0D1F3C;border-radius:8px;text-align:left" onmouseover="this.style.background='#F7F8FA'" onmouseout="this.style.background='none'">🇯🇵 日本語</button>
+              <button onclick="setLandingLang('ar','AR')" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:13px;font-family:Inter,sans-serif;color:#0D1F3C;border-radius:8px;text-align:left" onmouseover="this.style.background='#F7F8FA'" onmouseout="this.style.background='none'">🇸🇦 العربية</button>
+            </div>
+          </div>
           <a href="index.html" class="btn btn-primary btn-sm">Book Now</a>
           <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
             <span></span>
@@ -1630,7 +1645,31 @@
       </div>`).join('');
   }
 
-  function toggleFaq(i, btn){
+  function setLandingLang(lang, label){
+    document.getElementById('lang-label-landing').textContent = label;
+    document.getElementById('lang-drop').classList.remove('open');
+    if(lang === 'en'){ return; }
+    const url = encodeURIComponent(window.location.origin + window.location.pathname);
+    window.location.href = `https://translate.google.com/translate?sl=en&tl=${lang}&u=${url}`;
+  }
+
+  // Close lang dropdown on outside click
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('lang-wrap');
+    if(wrap && !wrap.contains(e.target)){
+      document.getElementById('lang-drop').classList.remove('open');
+    }
+  });
+
+  // Show/hide lang dropdown
+  document.getElementById('lang-drop') && Object.assign(document.getElementById('lang-drop').style, {});
+  const langDrop = document.getElementById('lang-drop');
+  if(langDrop){
+    const observer = new MutationObserver(()=>{
+      langDrop.style.display = langDrop.classList.contains('open') ? 'block' : 'none';
+    });
+    observer.observe(langDrop, {attributes:true, attributeFilter:['class']});
+  }
     const ans = document.getElementById('faq-ans-'+i);
     const icon = document.getElementById('faq-icon-'+i);
     if(!ans) return;
