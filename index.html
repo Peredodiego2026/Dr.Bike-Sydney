@@ -1697,20 +1697,21 @@ async function signInGoogle(){
 }
 
 async function signInEmail(){
-  const email = document.getElementById('auth-email').value;
+  const email = document.getElementById('auth-email').value.trim();
   const pwd = document.getElementById('auth-password').value;
   if(!email||!pwd){ showErr('Please enter email and password'); return; }
   const btn = document.getElementById('signin-btn');
   btn.innerHTML = '<span class="spinner"></span>Signing in...';
   btn.disabled = true;
-  const { data, error } = await sb.auth.signInWithPassword({ email, password:pwd });
-  btn.innerHTML = 'Sign in';
-  btn.disabled = false;
-  if(error){ showErr(error.message); return; }
-  currentUser = data.user;
-  await loadProfile();
-  updateNavAuth();
-  showView('dashboard');
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password:pwd });
+    btn.innerHTML = 'Sign in';
+    btn.disabled = false;
+    if(error){ showErr(error.message); return; }
+    currentUser = data.user;
+    try { await loadProfile(); } catch(pe){ console.warn('loadProfile non-fatal:', pe); }
+    updateNavAuth();
+    showView('dashboard');
   toast('Welcome back! 👋');
 }
 
@@ -1742,30 +1743,40 @@ function showErr(msg){
 // ── PROFILE ──────────────────────────────────────────────────────────────────
 async function loadProfile(){
   if(!currentUser) return;
-  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-  if(error || !data){
-    const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
-    const refCode = 'BIKE' + Math.random().toString(36).substr(2,5).toUpperCase();
-    const { data: newP } = await sb.from('profiles').insert({
-      id: currentUser.id,
-      email: currentUser.email,
-      full_name: name,
-      role: 'client',
-      membership: 'none',
-      referral_code: refCode,
-      referral_count: 0
-    }).select().single();
-    userProfile = newP;
-  } else {
-    // Generate referral code if missing
-    if(!data.referral_code){
+  try {
+    const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    if(error || !data){
+      const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
       const refCode = 'BIKE' + Math.random().toString(36).substr(2,5).toUpperCase();
-      await sb.from('profiles').update({ referral_code: refCode }).eq('id', currentUser.id);
-      data.referral_code = refCode;
+      const { data: newP, error: insertErr } = await sb.from('profiles').insert({
+        id: currentUser.id,
+        email: currentUser.email,
+        full_name: name,
+        role: 'client',
+        membership: 'none',
+        referral_code: refCode,
+        referral_count: 0
+      }).select().single();
+      if(insertErr){ console.warn('Profile insert error:', insertErr); }
+      // Fallback: build minimal profile from auth data
+      userProfile = newP || { id: currentUser.id, email: currentUser.email, full_name: name, membership: 'none', referral_code: refCode };
+    } else {
+      // Generate referral code if missing
+      if(!data.referral_code){
+        const refCode = 'BIKE' + Math.random().toString(36).substr(2,5).toUpperCase();
+        await sb.from('profiles').update({ referral_code: refCode }).eq('id', currentUser.id);
+        data.referral_code = refCode;
+      }
+      userProfile = data;
     }
-    userProfile = data;
+    updateDashboard();
+  } catch(e){
+    console.error('loadProfile exception:', e);
+    // Build minimal profile so dashboard still loads
+    const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+    userProfile = { id: currentUser.id, email: currentUser.email, full_name: name, membership: 'none' };
+    updateDashboard();
   }
-  updateDashboard();
 }
 
 async function updateDashboard(){
