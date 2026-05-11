@@ -849,38 +849,61 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
     <!-- FINANCE -->
     <div id="page-finance" class="page">
       <!-- Period selector -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <select id="fin-month" class="inp" style="width:140px" onchange="loadFinance()">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:20px;box-shadow:var(--shadow)">
+        <!-- Fila 1: mes + año + view pills -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <select id="fin-month" class="inp" style="flex:1;min-width:100px;max-width:150px;font-weight:600" onchange="loadFinance()">
             <option value="1">January</option><option value="2">February</option><option value="3">March</option>
             <option value="4">April</option><option value="5">May</option><option value="6">June</option>
             <option value="7">July</option><option value="8">August</option><option value="9">September</option>
             <option value="10">October</option><option value="11">November</option><option value="12">December</option>
           </select>
-          <select id="fin-year" class="inp" style="width:100px" onchange="loadFinance()">
+          <select id="fin-year" class="inp" style="width:90px;font-weight:600" onchange="loadFinance()">
             <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option>
           </select>
-          <select id="fin-view" class="inp" style="width:120px" onchange="loadFinance()">
+          <select id="fin-view" style="display:none">
             <option value="month">Monthly</option>
             <option value="quarter">Quarterly</option>
             <option value="year">Annual</option>
           </select>
         </div>
-        <div style="display:flex;gap:8px">
-          <button onclick="exportFinancePDF()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export PDF
+        <!-- Fila 2: view pills + export -->
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;background:var(--off);border-radius:8px;padding:3px;gap:2px;flex:1">
+            <button onclick="setFinView('month',this)" id="fv-month" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:var(--blue);color:#fff;transition:all .15s">Monthly</button>
+            <button onclick="setFinView('quarter',this)" id="fv-quarter" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:transparent;color:var(--mgray);transition:all .15s">Quarterly</button>
+            <button onclick="setFinView('year',this)" id="fv-year" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:transparent;color:var(--mgray);transition:all .15s">Annual</button>
+          </div>
+          <button onclick="exportFinancePDF()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF
           </button>
-          <button onclick="exportFinanceCSV()" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">CSV</button>
+          <button onclick="exportFinanceCSV()" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">CSV</button>
         </div>
       </div>
 
       <!-- KPIs reales -->
       <div class="kpis" id="fin-kpis">
-        <div class="kpi-card blue"><div class="kpi-label">Revenue (incl. GST)</div><div class="kpi-value" id="fk-revenue">$—</div><div class="kpi-sub" id="fk-jobs">— jobs</div></div>
-        <div class="kpi-card green"><div class="kpi-label">GST Collected</div><div class="kpi-value" id="fk-gst">$—</div><div class="kpi-sub">10% · payable to ATO</div></div>
-        <div class="kpi-card orange"><div class="kpi-label">Net Revenue (ex GST)</div><div class="kpi-value" id="fk-net">$—</div><div class="kpi-sub" id="fk-avg">avg $— / job</div></div>
-        <div class="kpi-card red"><div class="kpi-label">Est. Net Profit</div><div class="kpi-value" id="fk-profit">$—</div><div class="kpi-sub" id="fk-margin">— margin</div></div>
+        <div class="kpi-card blue" style="text-align:center">
+          <div class="kpi-label">REVENUE (INCL. GST)</div>
+          <div class="kpi-value" id="fk-revenue" style="color:var(--blue)">$0</div>
+          <div class="kpi-sub" id="fk-jobs">0 jobs</div>
+        </div>
+        <div class="kpi-card green" style="text-align:center">
+          <div class="kpi-label">GST COLLECTED</div>
+          <div class="kpi-value" id="fk-gst" style="color:var(--green)">$0</div>
+          <div class="kpi-sub">10% · payable to ATO</div>
+        </div>
+        <div class="kpi-card orange" style="text-align:center">
+          <div class="kpi-label">NET REVENUE (EX GST)</div>
+          <div class="kpi-value" id="fk-net" style="color:#F59E0B">$0</div>
+          <div class="kpi-sub" id="fk-avg">avg $0 / job</div>
+        </div>
+        <div class="kpi-card red" style="text-align:center">
+          <div class="kpi-label">EST. NET PROFIT</div>
+          <div class="kpi-value" id="fk-profit" style="color:var(--red)">$0</div>
+          <div class="kpi-sub" id="fk-margin">0% margin</div>
+        </div>
       </div>
 
       <div class="fin-row">
@@ -1329,6 +1352,25 @@ const FIXED_COSTS = { payroll: 0, fleet: 960, insurance: 360, marketing: 400, so
 // Payroll: Phase 1 solo = $0 salary, Phase 2 = $16,100
 const VAR_COST_PER_JOB = 10; // parts/supplies per job
 
+function setFinView(view, btn) {
+  // Update hidden select (loadFinance lo lee)
+  const sel = document.getElementById('fin-view');
+  if(sel) sel.value = view;
+  // Update pill styles
+  ['month','quarter','year'].forEach(v => {
+    const b = document.getElementById('fv-' + v);
+    if(!b) return;
+    if(v === view) {
+      b.style.background = 'var(--blue)';
+      b.style.color = '#fff';
+    } else {
+      b.style.background = 'transparent';
+      b.style.color = 'var(--mgray)';
+    }
+  });
+  loadFinance();
+}
+
 async function loadFinance() {
   const month = parseInt(document.getElementById('fin-month')?.value || new Date().getMonth()+1);
   const year  = parseInt(document.getElementById('fin-year')?.value  || new Date().getFullYear());
@@ -1368,11 +1410,13 @@ async function loadFinance() {
 
   // KPIs
   document.getElementById('fk-revenue').textContent = '$'+revenue.toLocaleString();
-  document.getElementById('fk-jobs').textContent = jobCount + ' jobs';
+  document.getElementById('fk-jobs').textContent = jobCount + ' job' + (jobCount !== 1 ? 's' : '');
   document.getElementById('fk-gst').textContent = '$'+gst.toLocaleString();
   document.getElementById('fk-net').textContent = '$'+netRevenue.toLocaleString();
   document.getElementById('fk-avg').textContent = 'avg $'+avgJob+' / job';
-  document.getElementById('fk-profit').textContent = '$'+netProfit.toLocaleString();
+  const profitEl = document.getElementById('fk-profit');
+  profitEl.textContent = (netProfit < 0 ? '-$' : '$') + Math.abs(netProfit).toLocaleString();
+  profitEl.style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
   document.getElementById('fk-margin').textContent = margin + '% margin';
 
   // P&L rows

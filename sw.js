@@ -1,4 +1,4 @@
-const CACHE = 'drbike-v5';
+const CACHE = 'drbike-v6';
 
 self.addEventListener('install', e => { self.skipWaiting(); });
 
