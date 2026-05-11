@@ -1,4 +1,4 @@
-const CACHE = 'drbike-v6';
+const CACHE = 'drbike-v7';
 
 self.addEventListener('install', e => { self.skipWaiting(); });
 
@@ -31,10 +31,10 @@ self.addEventListener('push', e => {
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const url = e.notification.data?.url || '/mechanic.html';
+  const url = e.notification.data?.url || '/';
   e.waitUntil(
     clients.matchAll({ type: 'window' }).then(wins => {
-      const match = wins.find(w => w.url.includes('mechanic.html'));
+      const match = wins.find(w => w.url.includes(url));
       if(match) return match.focus();
       return clients.openWindow(url);
     })

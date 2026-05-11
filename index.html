@@ -1481,6 +1481,41 @@ let vanZones = [
 // ── INIT ─────────────────────────────────────────────────────────────────────
 function hideLoading(){ document.getElementById('loading').classList.add('hide'); }
 
+// VAPID public key for Web Push — matches VAPID_PUBLIC_KEY in Vercel env vars
+const VAPID_PUBLIC_KEY = 'BIcq9Cp55X74d4DU_pC3OpDtr4W_5aPhK-LPpQfcTiCUldow8DiJGanocS1fS2b8m9mTK13T3sq6HKhj0T5IDZU';
+
+async function registerClientPush() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (Notification.permission === 'denied') return;
+  if (!currentUser) return;
+
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+
+    if (!sub) {
+      // Convert VAPID key to Uint8Array
+      const keyBytes = Uint8Array.from(atob(VAPID_PUBLIC_KEY.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: keyBytes
+      });
+    }
+
+    // Save subscription to Supabase profile
+    await sb.from('profiles').update({
+      push_subscription: JSON.stringify(sub.toJSON())
+    }).eq('id', currentUser.id);
+
+    console.log('✓ Push notifications registered for client');
+  } catch(e) {
+    console.warn('Push registration failed:', e);
+  }
+}
+
 async function init(){
   // Safety net: always hide loading after 5s no matter what
   const loadingGuard = setTimeout(()=>{ hideLoading(); }, 3000);
@@ -1506,6 +1541,7 @@ async function init(){
           window.history.replaceState({}, document.title, window.location.pathname);
           clearTimeout(loadingGuard);
           setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 500);
+          setTimeout(registerClientPush, 3000);
           return;
         }
       } catch(e){ console.error('OAuth session error:', e); }
@@ -1715,6 +1751,7 @@ async function signInEmail(){
     updateNavAuth();
     showView('dashboard');
   toast('Welcome back! 👋');
+  setTimeout(registerClientPush, 2000);
 }
 
 async function signUpEmail(){

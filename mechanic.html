@@ -349,23 +349,52 @@ async function setStatus(id, status) {
   toast(status === 'enroute' ? '🚐 En route' : 'Updated');
   if (status === 'enroute') {
     startGPS(id);
-    if (j?.phone) notifyClientEnroute(j);
+    notifyClientEnroute(j);
+  } else if (status === 'confirmed') {
+    // Mechanic accepted the job — push notif to client
+    if (j?.client_id) sendClientPush(j.client_id, {
+      title: '🔧 Mechanic assigned — Dr. Bike Sydney',
+      body: `${(mechanic?.first_name||'Your mechanic')} has accepted your ${j.service||'booking'}. We'll notify you when they're on the way.`,
+      url: '/',
+      tag: 'booking-accepted-' + id
+    });
   } else if (status === 'completed' || status === 'cancelled') { stopGPS(); stopRouteTimer(id); }
 }
 
+// Send a push notification to a client via their stored browser subscription
+async function sendClientPush(clientId, { title, body, url, tag }) {
+  try {
+    await fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId, title, body, url: url||'/', tag })
+    });
+  } catch(e) { console.warn('Push to client failed:', e); }
+}
+
 function notifyClientEnroute(j) {
-  const mechName = (mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '');
-  const trackUrl = `https://dr-bike-sydney.vercel.app/track.html?id=${j.id}`;
-  const body = JSON.stringify({
-    to: j.phone,
-    template: 'enroute',
-    data: { name: j.client, mechanic: mechName.trim() || 'Your mechanic', suburb: j.suburb, eta: '20', trackUrl }
-  });
-  Promise.allSettled([
-    fetch('/api/send-sms',       { method:'POST', headers:{'Content-Type':'application/json'}, body }),
-    fetch('/api/send-whatsapp',  { method:'POST', headers:{'Content-Type':'application/json'}, body }),
-  ]).then(results => {
-    results.forEach((r,i) => r.status === 'rejected' && console.warn(`Notify[${i}] failed:`, r.reason));
+  if (!j) return;
+  const mechName = ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+  const trackUrl = `https://dr-bike-sydney.vercel.app/?tracking=${j.id}`;
+
+  // SMS + WhatsApp (works even if app not installed)
+  if (j.phone) {
+    const smsBody = JSON.stringify({
+      to: j.phone, name: j.client, mechName, service: j.service,
+      address: j.suburb, price: j.price, type: 'enroute', bookingId: j.id
+    });
+    Promise.allSettled([
+      fetch('/api/send-sms',      { method:'POST', headers:{'Content-Type':'application/json'}, body: smsBody }),
+      fetch('/api/send-whatsapp', { method:'POST', headers:{'Content-Type':'application/json'}, body: smsBody }),
+    ]);
+  }
+
+  // Push notification to app (if client has it installed + subscribed)
+  if (j.client_id) sendClientPush(j.client_id, {
+    title: '🚐 Your mechanic is on the way! — Dr. Bike Sydney',
+    body: `${mechName} is heading to ${j.suburb||'your address'}. Est. arrival: 10–20 min. Tap to track live.`,
+    url: `/?tracking=${j.id}`,
+    tag: 'mechanic-enroute-' + j.id
   });
 }
 function openCompleteModal(id){

@@ -452,6 +452,14 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
       Finance
     </button>
+    <button class="sb-item" onclick="go('inventory',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      Parts Inventory
+    </button>
+    <button class="sb-item" onclick="go('calendar',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      Calendar
+    </button>
     <button class="sb-item" onclick="go('coupons',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
       Discount Codes
@@ -1177,6 +1185,49 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
       </div>
     </div>
 
+    <!-- ══ INVENTORY ══ -->
+    <div id="page-inventory" class="page">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--navy)">Parts Inventory</div>
+          <div style="font-size:13px;color:var(--mgray)">Track stock, costs and usage per job</div>
+        </div>
+        <button onclick="openPartModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Add part</button>
+      </div>
+      <!-- KPIs -->
+      <div class="kpis" style="margin-bottom:20px">
+        <div class="kpi-card blue" style="text-align:center"><div class="kpi-label">TOTAL PARTS</div><div class="kpi-value" id="inv-total-parts" style="color:var(--blue)">—</div><div class="kpi-sub">in inventory</div></div>
+        <div class="kpi-card orange" style="text-align:center"><div class="kpi-label">LOW STOCK</div><div class="kpi-value" id="inv-low-stock" style="color:#F59E0B">—</div><div class="kpi-sub">below minimum</div></div>
+        <div class="kpi-card green" style="text-align:center"><div class="kpi-label">STOCK VALUE</div><div class="kpi-value" id="inv-stock-value" style="color:var(--green)">$—</div><div class="kpi-sub">at cost price</div></div>
+        <div class="kpi-card red" style="text-align:center"><div class="kpi-label">USED THIS MONTH</div><div class="kpi-value" id="inv-used-month" style="color:var(--red)">$—</div><div class="kpi-sub">parts cost</div></div>
+      </div>
+      <!-- Table -->
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="tbl" id="inv-table">
+            <thead><tr><th>Part name</th><th>Category</th><th>Stock</th><th>Min stock</th><th>Cost ($)</th><th>Stock value</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="inv-tbody"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CALENDAR ══ -->
+    <div id="page-calendar" class="page">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <button onclick="calPrev()" style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)">← Prev</button>
+        <div style="flex:1;text-align:center;font-size:16px;font-weight:700;color:var(--navy)" id="cal-title">Week</div>
+        <button onclick="calNext()" style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)">Next →</button>
+        <div style="display:flex;background:var(--off);border-radius:8px;padding:3px;gap:2px">
+          <button onclick="setCalView('week',this)" id="cv-week" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:var(--blue);color:#fff">Week</button>
+          <button onclick="setCalView('day',this)" id="cv-day" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray)">Day</button>
+        </div>
+      </div>
+      <div id="cal-grid" style="overflow-x:auto">
+        <div style="text-align:center;padding:40px;color:var(--mgray)">Loading calendar...</div>
+      </div>
+    </div>
+
     <!-- ══ NOTIF NUMBER MODAL ══ -->
     <div id="notif-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px">
       <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
@@ -1263,6 +1314,8 @@ function go(page, btn){
   if(page==='dashboard') loadDashboard();
   if(page==='coupons') loadCoupons();
   if(page==='settings') loadSettings();
+  if(page==='inventory') loadInventory();
+  if(page==='calendar') loadCalendar();
   setTimeout(applyDarkModeInline, 100);
 
   // Update mobile bottom nav active state
@@ -2457,6 +2510,271 @@ async function deleteContact(id){
   await sb.from('escalation_contacts').delete().eq('id',id);
   showToast('Contact deleted');
   loadContacts();
+}
+
+
+// ── INVENTORY ─────────────────────────────────────────────────────────────────
+let inventoryData = [];
+
+async function loadInventory() {
+  const tbody = document.getElementById('inv-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr>';
+
+  const { data, error } = await sb.from('parts_inventory').select('*').order('name');
+  if(error){
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red)">Error: ${error.message}<br><small>Run the SQL migration first (see console)</small></td></tr>`;
+    console.log('SQL to create table:\nCREATE TABLE parts_inventory (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  name text NOT NULL,\n  category text DEFAULT 'General',\n  stock integer DEFAULT 0,\n  min_stock integer DEFAULT 5,\n  cost_price numeric(10,2) DEFAULT 0,\n  created_at timestamptz DEFAULT now()\n);\nALTER TABLE parts_inventory ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Allow all" ON parts_inventory FOR ALL USING (true);');
+    return;
+  }
+
+  inventoryData = data || [];
+  renderInventory();
+}
+
+function renderInventory() {
+  const tbody = document.getElementById('inv-tbody');
+  if(!tbody) return;
+
+  const firstOfMonth = new Date(); firstOfMonth.setDate(1);
+
+  const totalParts  = inventoryData.length;
+  const lowStock    = inventoryData.filter(p => p.stock <= p.min_stock).length;
+  const stockValue  = inventoryData.reduce((s,p) => s + (p.stock * (p.cost_price||0)), 0);
+
+  document.getElementById('inv-total-parts').textContent  = totalParts;
+  document.getElementById('inv-low-stock').textContent    = lowStock;
+  document.getElementById('inv-stock-value').textContent  = '$' + stockValue.toFixed(0);
+  document.getElementById('inv-used-month').textContent   = '$0'; // updated from bookings later
+
+  const catColors = { Brakes:'#EEF3FC', Drivetrain:'#ECFDF5', Tyres:'#FEF9C3', Cables:'#FEF3C7', Lubrication:'#F0FDF4', General:'#F3F4F6' };
+  const catText   = { Brakes:'#1848C8', Drivetrain:'#059669', Tyres:'#92400E', Cables:'#D97706', Lubrication:'#15803D', General:'#6B7280' };
+
+  if(!inventoryData.length){
+    tbody.innerHTML = `<tr><td colspan="8"><div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:10px">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <div style="font-size:14px;font-weight:600;color:var(--mgray)">No parts yet</div>
+      <div style="font-size:12px;color:var(--mgray);opacity:.7">Add your first part to start tracking stock</div>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = inventoryData.map(p => {
+    const isLow  = p.stock <= p.min_stock;
+    const isOut  = p.stock === 0;
+    const statusTxt = isOut ? '🔴 Out of stock' : isLow ? '🟡 Low stock' : '🟢 OK';
+    const statusBg  = isOut ? '#FEF2F2' : isLow ? '#FEF9C3' : '#F0FDF4';
+    const statusCl  = isOut ? '#DC2626'  : isLow ? '#92400E'  : '#15803D';
+    const cat = p.category || 'General';
+    const val = (p.stock * (p.cost_price||0)).toFixed(2);
+    return `<tr>
+      <td data-label="Part" style="font-weight:600">${p.name}</td>
+      <td data-label="Category"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${catColors[cat]||'#F3F4F6'};color:${catText[cat]||'#6B7280'}">${cat}</span></td>
+      <td data-label="Stock" style="font-weight:700;font-size:15px;color:${isLow?'#DC2626':'var(--navy)'}">${p.stock}</td>
+      <td data-label="Min" style="color:var(--mgray)">${p.min_stock}</td>
+      <td data-label="Cost">$${parseFloat(p.cost_price||0).toFixed(2)}</td>
+      <td data-label="Value" style="font-weight:600;color:var(--blue)">$${val}</td>
+      <td data-label="Status"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusCl}">${statusTxt}</span></td>
+      <td data-label="Actions">
+        <div style="display:flex;gap:6px">
+          <button onclick="adjustStock('${p.id}',${p.stock},-1)" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:700">−</button>
+          <button onclick="adjustStock('${p.id}',${p.stock},1)"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:700">+</button>
+          <button onclick="openPartModal('${p.id}')" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">Edit</button>
+          <button onclick="deletePart('${p.id}')" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function adjustStock(id, current, delta) {
+  const newStock = Math.max(0, current + delta);
+  await sb.from('parts_inventory').update({ stock: newStock }).eq('id', id);
+  const part = inventoryData.find(p => p.id === id);
+  if(part) part.stock = newStock;
+  renderInventory();
+}
+
+function openPartModal(id) {
+  const p = id ? inventoryData.find(x => x.id === id) : null;
+  const cats = ['Brakes','Drivetrain','Tyres','Cables','Lubrication','General'];
+  let modal = document.getElementById('part-modal');
+  if(modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'part-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">${p ? 'Edit part' : 'Add part'}</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Part name</div>
+        <input class="inp" id="pm-name" value="${p?.name||''}" placeholder="e.g. Brake pads (Shimano B01S)"></div>
+      <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Category</div>
+        <select class="inp" id="pm-cat" style="cursor:pointer">${cats.map(c=>`<option value="${c}"${(p?.category||'General')===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Current stock</div>
+          <input class="inp" id="pm-stock" type="number" min="0" value="${p?.stock||0}"></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Min stock</div>
+          <input class="inp" id="pm-min" type="number" min="0" value="${p?.min_stock||5}"></div>
+      </div>
+      <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Cost price ($)</div>
+        <input class="inp" id="pm-cost" type="number" min="0" step="0.01" value="${p?.cost_price||0}" placeholder="0.00"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="document.getElementById('part-modal').remove()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+      <button onclick="savePart('${p?.id||''}')" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+async function savePart(id) {
+  const name  = document.getElementById('pm-name')?.value?.trim();
+  const cat   = document.getElementById('pm-cat')?.value;
+  const stock = parseInt(document.getElementById('pm-stock')?.value||0);
+  const min   = parseInt(document.getElementById('pm-min')?.value||5);
+  const cost  = parseFloat(document.getElementById('pm-cost')?.value||0);
+  if(!name){ showToast('Part name is required'); return; }
+
+  const payload = { name, category: cat, stock, min_stock: min, cost_price: cost };
+  let error;
+  if(id) {
+    ({ error } = await sb.from('parts_inventory').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sb.from('parts_inventory').insert(payload));
+  }
+  if(error){ showToast('Save failed: ' + error.message); return; }
+  document.getElementById('part-modal').remove();
+  showToast(id ? 'Part updated ✓' : 'Part added ✓');
+  loadInventory();
+}
+
+async function deletePart(id) {
+  if(!confirm('Delete this part from inventory?')) return;
+  await sb.from('parts_inventory').delete().eq('id', id);
+  showToast('Part removed');
+  loadInventory();
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
+let calWeekStart = new Date();
+let calView = 'week';
+
+function startOfWeek(d) {
+  const day = d.getDay(); // 0=Sun
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Mon
+  return new Date(d.setDate(diff));
+}
+
+function setCalView(view, btn) {
+  calView = view;
+  ['week','day'].forEach(v => {
+    const b = document.getElementById('cv-' + v);
+    if(!b) return;
+    b.style.background = v === view ? 'var(--blue)' : 'transparent';
+    b.style.color = v === view ? '#fff' : 'var(--mgray)';
+  });
+  loadCalendar();
+}
+
+function calPrev() {
+  if(calView === 'week') calWeekStart.setDate(calWeekStart.getDate() - 7);
+  else calWeekStart.setDate(calWeekStart.getDate() - 1);
+  calWeekStart = new Date(calWeekStart);
+  loadCalendar();
+}
+
+function calNext() {
+  if(calView === 'week') calWeekStart.setDate(calWeekStart.getDate() + 7);
+  else calWeekStart.setDate(calWeekStart.getDate() + 1);
+  calWeekStart = new Date(calWeekStart);
+  loadCalendar();
+}
+
+async function loadCalendar() {
+  const grid = document.getElementById('cal-grid');
+  if(!grid) return;
+
+  // Set week start to Monday
+  calWeekStart = startOfWeek(new Date(calWeekStart));
+
+  const days = calView === 'week' ? 7 : 1;
+  const dateFrom = calWeekStart.toISOString().split('T')[0];
+  const dateTo   = new Date(new Date(calWeekStart).setDate(calWeekStart.getDate() + days - 1)).toISOString().split('T')[0];
+
+  const title = document.getElementById('cal-title');
+  if(title){
+    if(calView === 'week') {
+      title.textContent = calWeekStart.toLocaleDateString('en-AU',{day:'numeric',month:'short'}) + ' – ' +
+        new Date(new Date(calWeekStart).setDate(calWeekStart.getDate()+6)).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+    } else {
+      title.textContent = calWeekStart.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    }
+  }
+
+  grid.innerHTML = '<div style="text-align:center;padding:30px;color:var(--mgray)">Loading...</div>';
+
+  const { data: bookings } = await sb.from('bookings')
+    .select('*, profiles(full_name)')
+    .gte('scheduled_date', dateFrom)
+    .lte('scheduled_date', dateTo)
+    .neq('status','cancelled')
+    .order('scheduled_time');
+
+  const jobs = bookings || [];
+
+  // Build day columns
+  const dayDates = [];
+  for(let i = 0; i < days; i++){
+    const d = new Date(calWeekStart);
+    d.setDate(d.getDate() + i);
+    dayDates.push(d);
+  }
+
+  const stColors = { pending:'#F59E0B', confirmed:'#1848C8', enroute:'#059669', completed:'#6B7280' };
+  const stBg     = { pending:'#FEF9C3', confirmed:'#EEF3FC', enroute:'#ECFDF5', completed:'#F3F4F6' };
+  const today    = new Date().toISOString().split('T')[0];
+
+  const colWidth = calView === 'week' ? Math.floor(100 / days) : 100;
+
+  let html = `<div style="display:flex;min-width:${calView==='week'?'700px':'300px'};gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden">`;
+
+  dayDates.forEach((d, i) => {
+    const dateStr = d.toISOString().split('T')[0];
+    const isToday = dateStr === today;
+    const dayJobs = jobs.filter(j => j.scheduled_date === dateStr);
+    const dayName = d.toLocaleDateString('en-AU',{weekday:'short'});
+    const dayNum  = d.getDate();
+
+    html += `<div style="flex:1;min-width:0;border-right:${i<days-1?'1px solid var(--border)':'none'}">
+      <!-- Header -->
+      <div style="padding:10px 8px;text-align:center;background:${isToday?'var(--blue)':'var(--off)'};border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;color:${isToday?'rgba(255,255,255,0.8)':'var(--mgray)'};text-transform:uppercase">${dayName}</div>
+        <div style="font-size:18px;font-weight:700;color:${isToday?'#fff':'var(--navy)'}">${dayNum}</div>
+        ${dayJobs.length > 0 ? `<div style="font-size:10px;color:${isToday?'rgba(255,255,255,0.7)':'var(--mgray)'};">${dayJobs.length} job${dayJobs.length>1?'s':''}</div>` : ''}
+      </div>
+      <!-- Jobs -->
+      <div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:120px">
+        ${dayJobs.length === 0
+          ? `<div style="font-size:11px;color:var(--mgray);text-align:center;padding:16px 4px;opacity:.5">Free</div>`
+          : dayJobs.map(j => {
+            const st = j.status || 'pending';
+            const name = j.profiles?.full_name?.split(' ')[0] || 'Client';
+            const time = j.scheduled_time || '';
+            const van  = j.van_number || 1;
+            return `<div style="background:${stBg[st]||'#F3F4F6'};border-left:3px solid ${stColors[st]||'#6B7280'};border-radius:6px;padding:6px 8px;cursor:pointer" onclick="go('bookings')">
+              <div style="font-size:11px;font-weight:700;color:${stColors[st]||'#6B7280'}">${time}</div>
+              <div style="font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+              <div style="font-size:10px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.service_name||''}</div>
+              <div style="font-size:10px;font-weight:600;color:${stColors[st]};margin-top:2px">Van ${van}</div>
+            </div>`;
+          }).join('')
+        }
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  grid.innerHTML = html;
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
