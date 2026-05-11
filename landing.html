@@ -1590,6 +1590,57 @@
   </section>
 
   <!-- ===== FOOTER ===== -->
+  <!-- FAQ SECTION -->
+  <section style="padding:64px 20px;background:var(--bg,#fff)">
+    <div style="max-width:720px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:40px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#1848C8;margin-bottom:12px">FAQ</div>
+        <h2 style="font-size:28px;font-weight:800;margin:0;letter-spacing:-0.02em;color:#0D1F3C">Frequently asked questions</h2>
+      </div>
+      <div id="faq-list" style="display:flex;flex-direction:column;gap:2px">
+        <!-- FAQ items injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <script>
+  const faqs = [
+    { q: 'How does Dr. Bike work?', a: 'You book online, we confirm, and our mechanic arrives at your door with a fully equipped van. No need to visit a shop — we come to your home, office or park.' },
+    { q: 'How much does it cost?', a: 'All prices are fixed and shown upfront — no surprises. Services range from $59 (Gear Adjustment) to $369 (Ultimate Overhaul). The $20 mobile call-out fee is included in all prices. A surcharge of $30 applies for same-day bookings and $20 for weekends.' },
+    { q: 'Which areas do you cover?', a: 'We currently service Inner West, Eastern Suburbs, North Shore, Manly and the CBD. Enter your suburb when booking to confirm availability.' },
+    { q: 'How long does a service take?', a: 'Most services take 45–90 minutes. A Full Overhaul may take 2–3 hours. Your mechanic will give you an accurate estimate on arrival.' },
+    { q: 'Do I need to be home?', a: 'Yes, someone needs to be present to hand over the bike. You can be inside — we work on the footpath, driveway or building entrance.' },
+    { q: 'What if something goes wrong?', a: 'All work is covered by our 30-day satisfaction guarantee. If the same issue returns within 30 days, we fix it free. We also carry $2M Public Liability Insurance for your peace of mind.' },
+    { q: 'Do you service e-bikes?', a: 'Yes! We specialise in e-bikes and have certified mechanics. Our E-Bike Service ($212) includes a full electrical diagnostic, motor and battery check, firmware update if needed, and a complete mechanical service.' },
+    { q: 'Can I book same-day?', a: 'Yes, subject to availability. Same-day slots are shown when you book. A $30 same-day surcharge applies. Weekend bookings have a $20 surcharge. Both are shown clearly before you confirm and pay.' },
+    { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards, Apple Pay and Google Pay through our secure Stripe checkout. No cash needed.' },
+    { q: 'Do you offer subscriptions?', a: 'Yes! Our membership plans (Basic $57/mo, Standard $97/mo, VIP $147/mo) include free tune-ups, discounts on all services and priority booking. Members save $200+ per year on average.' },
+    { q: 'What do your mechanics bring?', a: 'Our mechanics arrive with professional-grade tools — torque wrenches, bleed kits, wheel truing stands, chain wear gauges and more. We carry common parts in stock (brake pads, cables, tubes, chains) so most repairs are done in one visit. No waiting for parts.' },
+  ];
+
+  const list = document.getElementById('faq-list');
+  if(list){
+    list.innerHTML = faqs.map((f,i) => `
+      <div style="border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;margin-bottom:8px">
+        <button onclick="toggleFaq(${i},this)" style="width:100%;text-align:left;padding:16px 20px;background:#fff;border:none;cursor:pointer;font-family:Inter,sans-serif;font-size:14px;font-weight:600;color:#0D1F3C;display:flex;justify-content:space-between;align-items:center;gap:12px">
+          ${f.q}
+          <span id="faq-icon-${i}" style="font-size:18px;font-weight:300;flex-shrink:0;transition:transform .2s;color:#1848C8">+</span>
+        </button>
+        <div id="faq-ans-${i}" style="display:none;padding:0 20px 16px;font-size:14px;color:#6B7280;line-height:1.7">${f.a}</div>
+      </div>`).join('');
+  }
+
+  function toggleFaq(i, btn){
+    const ans = document.getElementById('faq-ans-'+i);
+    const icon = document.getElementById('faq-icon-'+i);
+    if(!ans) return;
+    const open = ans.style.display === 'block';
+    ans.style.display = open ? 'none' : 'block';
+    icon.textContent = open ? '+' : '−';
+    icon.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+  </script>
+
   <!-- INSURANCE & TRUST SECTION -->
   <section style="background:#0D1F3C;padding:64px 20px;color:#fff">
     <div style="max-width:900px;margin:0 auto">
