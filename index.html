@@ -1852,6 +1852,9 @@ async function clientCancelBooking(bookingId, serviceName){
   const confirmed = confirm(`Cancel your ${serviceName} booking?\n\nCancellations made more than 2 hours before your booking are fully refunded.`);
   if(!confirmed) return;
 
+  // Fetch booking details before cancelling (need van_number, date, time, suburb)
+  const { data: bkg } = await sb.from('bookings').select('*').eq('id', bookingId).single();
+
   const { error } = await sb.from('bookings').update({
     status: 'cancelled',
     cancelled_at: new Date().toISOString(),
@@ -1863,20 +1866,45 @@ async function clientCancelBooking(bookingId, serviceName){
   toast('Booking cancelled ✓');
   updateDashboard();
 
-  // Notify admin via email (non-blocking)
+  // Notify admin + mechanic in parallel (non-blocking)
   try {
-    const bkgName = userProfile?.full_name || 'Client';
-    await fetch('/api/send-email', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        to: 'hello@drbike.com.au',
-        name: 'Admin',
-        service: serviceName,
-        type: 'cancellation',
-        bookingId,
-        clientName: bkgName
-      })
+    const clientName = userProfile?.full_name || 'Client';
+    const vanNum     = bkg?.van_number || 1;
+    const dateStr    = bkg?.scheduled_date || '';
+    const timeStr    = bkg?.scheduled_time || '';
+    const suburb     = bkg?.suburb || '';
+
+    // Get mechanic contacts for this zone from escalation_contacts
+    const { data: contacts } = await sb.from('escalation_contacts')
+      .select('phone, first_name, channel, role, zone')
+      .eq('active', true);
+
+    const cancelMsg = `❌ BOOKING CANCELLED\n\nClient: ${clientName}\nService: ${serviceName}\nDate: ${dateStr} at ${timeStr}\nSuburb: ${suburb}\n\nThis slot is now free.`;
+
+    const notifTargets = (contacts || []).filter(c => {
+      if(c.role === 'manager') return true;          // manager siempre recibe
+      if(c.role === 'mechanic' && String(c.zone) === String(vanNum)) return true; // mecánico de esa zona
+      return false;
     });
+
+    await Promise.allSettled(notifTargets.map(c => {
+      const ch = c.channel || 'sms';
+      const calls = [];
+      if(ch === 'sms' || ch === 'both'){
+        calls.push(fetch('/api/send-sms', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ to: c.phone, name: c.first_name, service: serviceName, type: 'cancellation_alert', customMsg: cancelMsg })
+        }));
+      }
+      if(ch === 'whatsapp' || ch === 'both'){
+        calls.push(fetch('/api/send-whatsapp', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ to: c.phone, name: c.first_name, service: serviceName, type: 'cancellation_alert', customMsg: cancelMsg })
+        }));
+      }
+      return Promise.allSettled(calls);
+    }));
+
   } catch(e){ console.log('Cancel notify error', e); }
 }
 
