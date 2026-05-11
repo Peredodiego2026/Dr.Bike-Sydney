@@ -312,7 +312,8 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .toggle.on::after{left:21px}
 .inp{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--navy);font-family:var(--sans);outline:none;transition:border-color .15s;background:var(--white)}
 .inp:focus{border-color:var(--blue)}
-.btn-save{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .15s;margin-top:12px}
+.ham-line{width:14px;height:1.5px;background:var(--navy);border-radius:2px;display:block}
+[data-theme="dark"] .ham-line{background:#F2F2F7}
 .btn-save:hover{background:var(--blue2)}
 
 /* MOBILE TOGGLE */
@@ -500,10 +501,10 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
         <span id="notif-count" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;border:2px solid var(--white)"></span>
       </div>
       <!-- Hamburger — only visible on mobile, inside topbar -->
-      <button class="mob-toggle-inline" onclick="toggleSidebar()" style="width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:none;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-        <span style="width:14px;height:1.5px;background:var(--navy);border-radius:2px;display:block"></span>
-        <span style="width:14px;height:1.5px;background:var(--navy);border-radius:2px;display:block"></span>
-        <span style="width:14px;height:1.5px;background:var(--navy);border-radius:2px;display:block"></span>
+      <button class="mob-toggle-inline" onclick="toggleSidebar()" style="width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:none;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+        <span class="ham-line"></span>
+        <span class="ham-line"></span>
+        <span class="ham-line"></span>
       </button>
     </div>
   </header>
