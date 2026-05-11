@@ -2360,6 +2360,9 @@ async function loadSettings() {
 
   // Load notification numbers
   loadNotifNumbers();
+
+  // Check Twilio status dynamically
+  checkTwilioStatus();
 }
 
 async function saveWhatsappNumber() {
@@ -2400,6 +2403,38 @@ async function saveBusinessDetails() {
   showToast('Business details saved ✓');
 }
 
+async function checkTwilioStatus() {
+  const el = document.getElementById('integ-twilio');
+  if (!el) return;
+  try {
+    // Intentar llamar a la API de SMS — si responde (aunque sea error de params) Twilio está configurado
+    const res = await fetch('/api/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ _ping: true })
+    });
+    const data = await res.json().catch(() => ({}));
+    // Si el error es "Missing phone" y no "Twilio not configured", las keys están ok
+    if (res.status === 400 || res.status === 200) {
+      // Verificar si hay número WhatsApp configurado
+      const { data: waRow } = await sb.from('van_zones').select('postcode').eq('suburb','__whatsapp__').eq('van_number',0).maybeSingle();
+      if (waRow?.postcode) {
+        el.textContent = '✓ SMS + WhatsApp';
+        el.style.color = '#059669';
+      } else {
+        el.textContent = '✓ SMS activo';
+        el.style.color = '#059669';
+      }
+    } else {
+      el.textContent = '⚠ Needs keys';
+      el.style.color = '#F59E0B';
+    }
+  } catch(e) {
+    el.textContent = '⚠ Needs keys';
+    el.style.color = '#F59E0B';
+  }
+}
+
 // ── NOTIFICATION NUMBERS ──────────────────────────────────────────────────────
 // Stored in escalation_contacts with role='manager' or role='mechanic'
 // and a new 'zone' field (1, 2, or 'all') and 'channel' field (sms/whatsapp/both)
@@ -2426,18 +2461,20 @@ async function loadNotifNumbers() {
     const channel = c.channel || 'sms';
     const initials = ((c.first_name||'?')[0] + (c.last_name||'')[0]).toUpperCase();
     return `
-    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--off);border-radius:10px;border:1px solid var(--border)">
-      <div style="width:38px;height:38px;border-radius:50%;background:${zoneBg[zone]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${zoneColor[zone]};flex-shrink:0">${initials}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:var(--navy)">${roleIcon[c.role]||''} ${c.first_name} ${c.last_name}</div>
-        <div style="font-size:12px;color:var(--mgray)">${c.phone} &nbsp;·&nbsp; ${channelIcon[channel]} ${channel.toUpperCase()}</div>
+    <div style="padding:12px 14px;background:var(--off);border-radius:10px;border:1px solid var(--border)">
+      <!-- Fila 1: avatar + nombre + zona badge -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:50%;background:${zoneBg[zone]};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${zoneColor[zone]};flex-shrink:0">${initials}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--navy);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${roleIcon[c.role]||''} ${c.first_name} ${c.last_name}</div>
+        <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${zoneBg[zone]};color:${zoneColor[zone]};white-space:nowrap;flex-shrink:0">${zoneLabel[zone]}</span>
       </div>
-      <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${zoneBg[zone]};color:${zoneColor[zone]};white-space:nowrap;flex-shrink:0">${zoneLabel[zone]}</span>
-      <div style="display:flex;gap:6px;flex-shrink:0">
+      <!-- Fila 2: teléfono + canal + botones -->
+      <div style="display:flex;align-items:center;gap:8px;padding-left:46px">
+        <span style="font-size:12px;color:var(--mgray);flex:1">${c.phone} · ${channelIcon[channel]} ${channel.toUpperCase()}</span>
         <button onclick="editNotifNumber('${c.id}','${c.first_name}','${c.last_name}','${c.phone}','${c.role}','${zone}','${channel}')"
-          style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
+          style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
         <button onclick="deleteNotifNumber('${c.id}')"
-          style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
+          style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
       </div>
     </div>`;
   }).join('');
