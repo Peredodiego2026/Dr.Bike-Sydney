@@ -21,7 +21,8 @@ export default async function handler(req, res) {
   const trackUrl = `https://dr-bike-sydney.vercel.app/track.html?id=${bookingId || ''}`;
 
   const messages = {
-    confirmation: `Hi ${name}! Your Dr. Bike Sydney booking is confirmed ✅\nService: ${service}\nAddress: ${address}\nTotal: $${price} AUD\nTrack: ${trackUrl}`,
+    test: `Dr. Bike Sydney SMS active ✓`,
+    confirmation: `Dr. Bike Sydney ✅ ${service} confirmed at ${address}. Total: $${price}`,
     enroute: `Hi ${name}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${address} 🚐\nEst. arrival: 10-20 min\nTrack live: ${trackUrl}`,
     completed: `Hi ${name}! Your ${service} is complete ✅ Total: $${price} AUD\nBook again: https://dr-bike-sydney.vercel.app — Thanks for choosing Dr. Bike Sydney!`,
     reminder: `Hi ${name}! Time for a bike check-up 🚲 Book your next service at https://dr-bike-sydney.vercel.app — We come to you, Mon–Sat.`,
