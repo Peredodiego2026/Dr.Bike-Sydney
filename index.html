@@ -1558,8 +1558,17 @@ async function init(){
           window.history.replaceState({}, document.title, window.location.pathname);
           clearTimeout(loadingGuard);
           const pendingOAuth = localStorage.getItem('pendingView');
-          if(pendingOAuth){ localStorage.removeItem('pendingView'); setTimeout(()=>{ hideLoading(); showView(pendingOAuth); }, 500); }
-          else { setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 500); }
+          const pendingPlanOAuth = localStorage.getItem('pendingPlanId');
+          if(pendingPlanOAuth){
+            localStorage.removeItem('pendingPlanId');
+            localStorage.removeItem('pendingView');
+            setTimeout(()=>{ hideLoading(); showView('membership'); setTimeout(()=>subscribePlan(pendingPlanOAuth), 800); }, 500);
+          } else if(pendingOAuth){ 
+            localStorage.removeItem('pendingView'); 
+            setTimeout(()=>{ hideLoading(); showView(pendingOAuth); }, 500); 
+          } else { 
+            setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 500); 
+          }
           setTimeout(registerClientPush, 3000);
           return;
         }
@@ -1782,8 +1791,18 @@ async function signInEmail(){
     updateNavAuth();
     // Si había intención de ir a booking, ir directo
     const pending = localStorage.getItem('pendingView');
-    if(pending){ localStorage.removeItem('pendingView'); showView(pending); }
-    else { showView('dashboard'); }
+    const pendingPlan = localStorage.getItem('pendingPlanId');
+    if(pendingPlan){ 
+      localStorage.removeItem('pendingPlanId');
+      localStorage.removeItem('pendingView');
+      showView('membership');
+      setTimeout(()=> subscribePlan(pendingPlan), 800);
+    } else if(pending){ 
+      localStorage.removeItem('pendingView'); 
+      showView(pending); 
+    } else { 
+      showView('dashboard'); 
+    }
     toast('Welcome back! 👋');
     setTimeout(registerClientPush, 2000);
   } catch(e) {
@@ -3050,7 +3069,7 @@ let stripe = null;
 function getStripe(){ if(!stripe && window.Stripe) stripe = Stripe('pk_test_51TUbFqPPGSm5cT7JyoojiAiHFB8isozh1GyIB4DHE8900gSTi74pq9mAJxXpZUp5dGbL8dZRXsPRZw48N3YPCOcw00mJXkKPvQ'); return stripe; }
 
 async function confirmBooking(){
-  if(!currentUser){ showView('auth'); return; }
+  if(!currentUser){ localStorage.setItem('pendingView','book'); showView('auth'); return; }
   const btn = document.getElementById('confirm-btn');
   btn.innerHTML='<span class="spinner"></span>Processing...';
   btn.disabled=true;
@@ -3298,7 +3317,12 @@ const STRIPE_PRICES = {
 const PLAN_NAMES = { b: 'basic', s: 'standard', v: 'vip' };
 
 async function subscribePlan(planId) {
-  if (!currentUser) { showView('auth'); return; }
+  if (!currentUser) {
+    localStorage.setItem('pendingView', 'membership');
+    localStorage.setItem('pendingPlanId', planId);
+    showView('auth');
+    return;
+  }
 
   const planKey = PLAN_NAMES[planId];
   const billingKey = billing === 'a' ? 'annual' : 'monthly';
@@ -3437,7 +3461,7 @@ function showView(v){
   }
 
   if(v==='dashboard'){
-    if(!currentUser){ showView('auth'); return; }
+    if(!currentUser){ localStorage.setItem('pendingView','book'); showView('auth'); return; }
     updateDashboard();
   }
   if(v==='book') renderBookingServices();
