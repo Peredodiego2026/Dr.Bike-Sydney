@@ -1766,8 +1766,14 @@ async function signInEmail(){
     try { await loadProfile(); } catch(pe){ console.warn('loadProfile non-fatal:', pe); }
     updateNavAuth();
     showView('dashboard');
-  toast('Welcome back! 👋');
-  setTimeout(registerClientPush, 2000);
+    toast('Welcome back! 👋');
+    setTimeout(registerClientPush, 2000);
+  } catch(e) {
+    btn.innerHTML = 'Sign in';
+    btn.disabled = false;
+    showErr('Sign in failed. Try again.');
+    console.error(e);
+  }
 }
 
 async function signUpEmail(){
