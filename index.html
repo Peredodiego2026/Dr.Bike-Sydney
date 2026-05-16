@@ -3047,7 +3047,7 @@ function fillConfirm(){
 
 // Stripe - lazy init
 let stripe = null;
-function getStripe(){ if(!stripe && window.Stripe) stripe = Stripe('pk_test_51TUbG9ApfjPBFYNnVe0zpeuO6cuLYiWHkMw6UvRFNsTcN2v4L6a8WimSa7TMLQJDJqh8bV0bGMkVt3tUNhgOvVOf00vJnJjjaN'); return stripe; }
+function getStripe(){ if(!stripe && window.Stripe) stripe = Stripe('pk_test_51TUbFqPPGSm5cT7JyoojiAiHFB8isozh1GyIB4DHE8900gSTi74pq9mAJxXpZUp5dGbL8dZRXsPRZw48N3YPCOcw00mJXkKPvQ'); return stripe; }
 
 async function confirmBooking(){
   if(!currentUser){ showView('auth'); return; }
@@ -3290,9 +3290,9 @@ function setBilling(b){
 
 // ── STRIPE PRICE IDs ─────────────────────────────────────────────────────────
 const STRIPE_PRICES = {
-  basic:    { monthly: 'price_1TUxlvApfjPBFYNnwJuSOilQ', annual: 'price_1TUxKFApfjPBFYNnLKXbvr3v' },
-  standard: { monthly: 'price_1TUxMGApfjPBFYNn4RZ5Iel7', annual: 'price_1TUxMVApfjPBFYNnBz87h0IA' },
-  vip:      { monthly: 'price_1TUxQFApfjPBFYNnvpR8bCRZ', annual:  'price_1TUxQVApfjPBFYNnSKES9AXQ' },
+  basic:    { monthly: 'price_1TXhqjPPGSm5cT7JoIqQhvge', annual: 'price_1TXhrAPPGSm5cT7JRmWioP7D' },
+  standard: { monthly: 'price_1TXhrdPPGSm5cT7Jj9ozBG6i', annual: 'price_1TXhrpPPGSm5cT7Jagajk6en' },
+  vip:      { monthly: 'price_1TXhsKPPGSm5cT7J5NPefGfB', annual:  'price_1TXhsXPPGSm5cT7Jss6h6TVH' },
 };
 
 const PLAN_NAMES = { b: 'basic', s: 'standard', v: 'vip' };
