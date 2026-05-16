@@ -1619,10 +1619,18 @@ async function init(){
       currentUser = session.user;
       try { await loadProfile(); } catch(e){}
       updateNavAuth();
-      // Solo redirigir al dashboard si es un login nuevo, no una restauración de sesión
       if(!wasLoggedIn && event === 'SIGNED_IN'){
+        const pendingPlan = localStorage.getItem('pendingPlanId');
         const pending = localStorage.getItem('pendingView');
-        if(pending){ localStorage.removeItem('pendingView'); showView(pending); }
+        if(pendingPlan){
+          localStorage.removeItem('pendingPlanId');
+          localStorage.removeItem('pendingView');
+          showView('membership');
+          setTimeout(()=> subscribePlan(pendingPlan), 1000);
+        } else if(pending){
+          localStorage.removeItem('pendingView');
+          showView(pending);
+        }
       }
     } else if(event === 'SIGNED_OUT') {
       currentUser = null;
@@ -3317,6 +3325,14 @@ const STRIPE_PRICES = {
 const PLAN_NAMES = { b: 'basic', s: 'standard', v: 'vip' };
 
 async function subscribePlan(planId) {
+  // Si no hay currentUser, intentar restaurar sesión primero
+  if (!currentUser) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      currentUser = session.user;
+      updateNavAuth();
+    }
+  }
   if (!currentUser) {
     localStorage.setItem('pendingView', 'membership');
     localStorage.setItem('pendingPlanId', planId);
