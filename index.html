@@ -3479,22 +3479,6 @@ function showReviewPrompt(booking){
 }
 
 let selectedRating = 0;
-function setRating(n){
-  selectedRating = n;
-  [1,2,3,4,5].forEach(i=>{
-    const s = document.getElementById('star-'+i);
-    if(s) s.style.filter = i<=n ? 'none' : 'grayscale(1)';
-  });
-}
-
-async function submitReview(bookingId){
-  const review = document.getElementById('review-text')?.value || '';
-  if(!selectedRating){ toast('Please select a rating'); return; }
-  await sb.from('bookings').update({ client_rating: selectedRating, client_review: review }).eq('id', bookingId);
-  document.getElementById('review-modal')?.remove();
-  toast('Thanks for your review! ⭐');
-}
-
 // ── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg){
   const t=document.getElementById('toast');
