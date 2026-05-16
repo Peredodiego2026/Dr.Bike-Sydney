@@ -874,7 +874,7 @@ html{scroll-behavior:smooth}
     <div class="hero-sub">No workshop. No waiting. We come to you — same day.</div>
     <p>Professional mobile mechanics across Sydney — home, work or park. Mon–Sat.</p>
     <div class="hero-btns">
-      <button class="btn-primary" onclick="showView('auth')">Book now — takes 60 sec</button>
+      <button class="btn-primary" onclick="goBook()">Book now — takes 60 sec</button>
       <button class="btn-ghost" onclick="showView('services')">View all services</button>
     </div>
     <!-- Trust bar -->
@@ -957,7 +957,7 @@ html{scroll-behavior:smooth}
         </div>
       </div>
       <div style="text-align:center;margin-top:32px">
-        <button class="btn-primary" onclick="showView('auth')">Book your first service →</button>
+        <button class="btn-primary" onclick="goBook()">Book your first service →</button>
       </div>
     </div>
   </div>
@@ -1002,7 +1002,7 @@ html{scroll-behavior:smooth}
     <div class="sec-inner" style="text-align:center">
       <div class="sec-h2" style="color:#fff;margin-bottom:12px">Ready to ride better?</div>
       <p style="color:rgba(255,255,255,0.7);margin-bottom:28px;font-size:16px">Join 500+ Sydney cyclists who never visit a workshop again.</p>
-      <button class="btn-primary" style="background:#fff;color:#0D1F3C;font-size:16px;padding:14px 32px" onclick="showView('auth')">Book your first service →</button>
+      <button class="btn-primary" style="background:#fff;color:#0D1F3C;font-size:16px;padding:14px 32px" onclick="goBook()">Book your first service →</button>
       <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:12px">No account needed to browse · Sign in with Google to book</p>
     </div>
   </div>
@@ -1556,7 +1556,9 @@ async function init(){
           updateNavAuth();
           window.history.replaceState({}, document.title, window.location.pathname);
           clearTimeout(loadingGuard);
-          setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 500);
+          const pendingOAuth = sessionStorage.getItem('pendingView');
+          if(pendingOAuth){ sessionStorage.removeItem('pendingView'); setTimeout(()=>{ hideLoading(); showView(pendingOAuth); }, 500); }
+          else { setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 500); }
           setTimeout(registerClientPush, 3000);
           return;
         }
@@ -1567,7 +1569,8 @@ async function init(){
       const { data: { session } } = await sb.auth.getSession();
       if(session?.user){
         currentUser = session.user;
-        await loadProfile();
+        try { await loadProfile(); } catch(e){ console.warn('loadProfile:', e); }
+        updateNavAuth();
       }
     } catch(e){ console.error('Session/profile error:', e); }
 
@@ -1581,9 +1584,14 @@ async function init(){
 
     // Manejar shortcuts PWA (?action=book, ?action=dashboard)
     const action = new URLSearchParams(window.location.search).get('action');
-    if(action && currentUser){
+    if(action){
       window.history.replaceState({}, '', '/');
-      setTimeout(() => showView(action), 300);
+      // Si necesita auth y no está logueado, ir a auth
+      if(!currentUser && action !== 'home' && action !== 'services'){
+        setTimeout(() => showView('auth'), 300);
+      } else {
+        setTimeout(() => showView(action), 300);
+      }
     }
 
     loadPublicReviews();
@@ -1597,10 +1605,16 @@ async function init(){
 
   sb.auth.onAuthStateChange(async (event, session) => {
     if(session?.user){
+      const wasLoggedIn = !!currentUser;
       currentUser = session.user;
-      await loadProfile();
+      try { await loadProfile(); } catch(e){}
       updateNavAuth();
-    } else {
+      // Solo redirigir al dashboard si es un login nuevo, no una restauración de sesión
+      if(!wasLoggedIn && event === 'SIGNED_IN'){
+        const pending = sessionStorage.getItem('pendingView');
+        if(pending){ sessionStorage.removeItem('pendingView'); showView(pending); }
+      }
+    } else if(event === 'SIGNED_OUT') {
       currentUser = null;
       userProfile = null;
       updateNavAuth();
@@ -1765,7 +1779,10 @@ async function signInEmail(){
     currentUser = data.user;
     try { await loadProfile(); } catch(pe){ console.warn('loadProfile non-fatal:', pe); }
     updateNavAuth();
-    showView('dashboard');
+    // Si había intención de ir a booking, ir directo
+    const pending = sessionStorage.getItem('pendingView');
+    if(pending){ sessionStorage.removeItem('pendingView'); showView(pending); }
+    else { showView('dashboard'); }
     toast('Welcome back! 👋');
     setTimeout(registerClientPush, 2000);
   } catch(e) {
@@ -3386,6 +3403,16 @@ function renderPlans(){
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
+// Ir a booking - si no está logueado, guardar intención y pedir login
+function goBook(){
+  if(currentUser){
+    showView('book');
+  } else {
+    sessionStorage.setItem('pendingView', 'book');
+    showView('auth');
+  }
+}
+
 function showView(v){
   trackEvent('page_view', { page: v });
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
