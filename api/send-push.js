@@ -8,6 +8,7 @@
 
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -19,6 +20,7 @@ webpush.setVapidDetails(
 );
 
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { clientId, title, body, url, tag, icon } = req.body;

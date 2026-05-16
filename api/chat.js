@@ -1,8 +1,16 @@
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min AI endpoints
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { messages, userProfile } = req.body;
-  if (!messages) return res.status(400).json({ error: 'No messages provided' });
+  if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Invalid messages format' });
+  if (messages.length > 20) return res.status(400).json({ error: 'Too many messages in context' });
+  // Limit each message to 2000 chars to prevent prompt injection
+  const safeMessages = messages.map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: String(m.content || '').slice(0, 2000)
+  }));
 
   try {
     const systemPrompt = `You are the Dr. Bike Sydney virtual assistant — friendly, knowledgeable, and concise. Dr. Bike is a premium mobile bicycle repair service in Sydney, Australia. Mechanics come to the client's door, home, work or park, Monday to Saturday 8am–5pm.

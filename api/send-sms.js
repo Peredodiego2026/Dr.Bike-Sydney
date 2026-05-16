@@ -3,6 +3,7 @@
 //   TWILIO_AUTH_TOKEN    → your auth token
 //   TWILIO_PHONE_NUMBER  → +61XXXXXXXXX  (or Messaging Service SID: MGxxxxxxx)
 import twilio from 'twilio';
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
@@ -10,10 +11,16 @@ const client = twilio(
 );
 
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { to, name, service, address, price, type, bookingId, mechName, reviewLink, customMsg } = req.body;
   if (!to) return res.status(400).json({ error: 'Missing phone number' });
+  // Sanitize user-facing text to prevent SMS injection (no newlines in sender fields)
+  const safeName = String(name||'Client').replace(/[\r\n]/g, ' ').slice(0, 50);
+  const safeService = String(service||'').replace(/[\r\n]/g, ' ').slice(0, 100);
+  const safeAddress = String(address||'').replace(/[\r\n]/g, ' ').slice(0, 100);
+  const safeMsg = customMsg ? String(customMsg).replace(/[\r\n]/g, ' ').slice(0, 160) : null;
 
   const phone = normalizeAUPhone(to);
   if (!phone) return res.status(400).json({ error: 'Invalid Australian phone number' });
@@ -22,12 +29,12 @@ export default async function handler(req, res) {
 
   const messages = {
     test: `Dr. Bike Sydney SMS active ✓`,
-    confirmation: `Dr. Bike Sydney ✅ ${service} confirmed at ${address}. Total: $${price}`,
-    enroute: `Hi ${name}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${address} 🚐\nEst. arrival: 10-20 min\nTrack live: ${trackUrl}`,
-    completed: `Hi ${name}! Your ${service} is complete ✅ Total: $${price} AUD\nBook again: https://dr-bike-sydney.vercel.app — Thanks for choosing Dr. Bike Sydney!`,
-    reminder: `Hi ${name}! Time for a bike check-up 🚲 Book your next service at https://dr-bike-sydney.vercel.app — We come to you, Mon–Sat.`,
-    review_request: `Hi ${name}! Your ${service} is done ✅ How did we do? Leave a quick review (30 sec): ${reviewLink || 'https://dr-bike-sydney.vercel.app'} — Thanks! ⭐`,
-    cancellation_alert: customMsg || `CANCELLED: ${name} cancelled their ${service} booking. Slot is now free.`,
+    confirmation: `Dr. Bike Sydney ✅ ${safeService} confirmed at ${safeAddress}. Total: $${price}`,
+    enroute: `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress} 🚐\nEst. arrival: 10-20 min\nTrack live: ${trackUrl}`,
+    completed: `Hi ${safeName}! Your ${safeService} is complete ✅ Total: $${price} AUD\nBook again: https://dr-bike-sydney.vercel.app — Thanks for choosing Dr. Bike Sydney!`,
+    reminder: `Hi ${safeName}! Time for a bike check-up 🚲 Book your next service at https://dr-bike-sydney.vercel.app — We come to you, Mon–Sat.`,
+    review_request: `Hi ${safeName}! Your ${safeService} is done ✅ How did we do? Leave a quick review (30 sec): ${reviewLink || 'https://dr-bike-sydney.vercel.app'} — Thanks! ⭐`,
+    cancellation_alert: safeMsg || `CANCELLED: ${name} cancelled their ${safeService} booking. Slot is now free.`,
   };
 
   const body = messages[type] || messages.confirmation;

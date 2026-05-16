@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
 const sb = createClient(
   'https://tgpipbloisahufaywhqb.supabase.co',
@@ -6,6 +7,7 @@ const sb = createClient(
 );
 
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 30, rateWindow: 60000 })) return; // 30/min default
   // Can be called by a cron job or manually from admin
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

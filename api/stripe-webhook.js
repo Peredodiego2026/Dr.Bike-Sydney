@@ -12,6 +12,7 @@
 //   invoice.payment_action_required
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const sb = createClient(
@@ -61,6 +62,7 @@ async function getRawBody(req) {
 // ---------------------------------------------------------------------------
 
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min payments
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const sig = req.headers['stripe-signature'];

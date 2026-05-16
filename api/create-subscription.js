@@ -2,10 +2,12 @@
 //   STRIPE_SECRET_KEY       → sk_live_...
 //   (webhook secret set in stripe-webhook.js)
 import Stripe from 'stripe';
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min payments
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { priceId, customerId, email, name, plan, billing } = req.body;

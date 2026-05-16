@@ -11,6 +11,7 @@
 // Templates: confirmation | enroute | completed | reminder
 
 import { createClient } from '@supabase/supabase-js';
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
 const sb = createClient(
   process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co',
@@ -46,6 +47,7 @@ function buildMessage(template, data) {
 }
 
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const ct = req.headers['content-type'] || '';

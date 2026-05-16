@@ -1489,6 +1489,7 @@ let vanZones = [
 ];
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
+function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;'); }
 function hideLoading(){ document.getElementById('loading').classList.add('hide'); }
 
 // VAPID public key for Web Push — matches VAPID_PUBLIC_KEY in Vercel env vars

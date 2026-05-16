@@ -1,4 +1,6 @@
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min AI endpoints
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { imageBase64, mimeType } = req.body;

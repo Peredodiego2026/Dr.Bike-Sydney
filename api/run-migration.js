@@ -1,15 +1,14 @@
 // ONE-TIME migration endpoint — adds zone + channel columns to escalation_contacts
 // Call once from browser: POST /api/run-migration  (admin only, delete after use)
 import { createClient } from '@supabase/supabase-js';
+import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
 export default async function handler(req, res) {
+  if(guard(req, res, { rateMax: 3, rateWindow: 300000 })) return; // 3/5min migration
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Simple admin guard
-  const { secret } = req.body;
-  if (secret !== 'drbike-migrate-2026') {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  // DISABLED — migration already ran, endpoint locked
+  return res.status(410).json({ error: 'Migration endpoint disabled. Run SQL directly in Supabase.' });
 
   const supabaseUrl  = process.env.SUPABASE_URL  || 'https://tgpipbloisahufaywhqb.supabase.co';
   const serviceKey   = process.env.SUPABASE_SERVICE_KEY;

@@ -1735,6 +1735,9 @@ function exportFinancePDF() {
 </body></html>`);
   win.document.close();
 }
+function escapeHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
 function showToast(msg){
   let t = document.getElementById('admin-toast');
   if(!t){
@@ -1818,7 +1821,7 @@ async function loadCoupons(){
     }).join('');
   } catch(e) {
     console.error('[loadCoupons] exception:', e);
-    grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--red);grid-column:1/-1">❌ Exception: ${e.message}</div>`;
+    grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--red);grid-column:1/-1">❌ Exception: ${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -2545,7 +2548,7 @@ async function loadInventory() {
 
   const { data, error } = await sb.from('parts_inventory').select('*').order('name');
   if(error){
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red)">Error: ${error.message}<br><small>Run the SQL migration first (see console)</small></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red)">Error: ${escapeHtml(error.message)}<br><small>Run the SQL migration first (see console)</small></td></tr>`;
     console.log(`SQL: CREATE TABLE parts_inventory (id uuid PRIMARY KEY, name text, category text, stock integer, min_stock integer, cost_price numeric, created_at timestamptz)`);
     return;
   }
