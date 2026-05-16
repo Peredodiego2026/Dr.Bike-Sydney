@@ -317,6 +317,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .btn-save:hover{background:var(--blue2)}
 
 /* MOBILE TOGGLE */
+.mob-toggle-inline{display:none}
 .mob-toggle{display:none;position:fixed;top:12px;left:12px;z-index:9999;width:42px;height:42px;background:var(--navy);border-radius:10px;border:none;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;box-shadow:0 2px 12px rgba(0,0,0,0.3)}
 .mob-toggle span{width:18px;height:2px;background:#fff;border-radius:2px;display:block;transition:all .2s}
 @media(max-width:768px){
@@ -510,7 +511,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
         <span id="notif-count" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;border:2px solid var(--white)"></span>
       </div>
       <!-- Hamburger — only visible on mobile, inside topbar -->
-      <button class="mob-toggle-inline" onclick="toggleSidebar()" style="width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:none;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <button class="mob-toggle-inline" onclick="toggleSidebar()" style="width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px">
         <span class="ham-line"></span>
         <span class="ham-line"></span>
         <span class="ham-line"></span>
@@ -2525,7 +2526,7 @@ async function loadInventory() {
   const { data, error } = await sb.from('parts_inventory').select('*').order('name');
   if(error){
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red)">Error: ${error.message}<br><small>Run the SQL migration first (see console)</small></td></tr>`;
-    console.log('SQL to create table:\nCREATE TABLE parts_inventory (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  name text NOT NULL,\n  category text DEFAULT 'General',\n  stock integer DEFAULT 0,\n  min_stock integer DEFAULT 5,\n  cost_price numeric(10,2) DEFAULT 0,\n  created_at timestamptz DEFAULT now()\n);\nALTER TABLE parts_inventory ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Allow all" ON parts_inventory FOR ALL USING (true);');
+    console.log(`SQL: CREATE TABLE parts_inventory (id uuid PRIMARY KEY, name text, category text, stock integer, min_stock integer, cost_price numeric, created_at timestamptz)`);
     return;
   }
 

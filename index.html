@@ -855,7 +855,7 @@ html{scroll-behavior:smooth}
     <div class="nav-links" id="nav-links">
       <button class="nl" onclick="showView('services')">Services</button>
       <button class="nl" onclick="showView('membership')">Membership</button>
-      <button class="nl" onclick="showView('book')">Book</button>
+      <button class="nl" onclick="goBook()">Book</button>
       <button class="nl cta" onclick="showView('auth')" id="nav-auth-btn">Sign in</button>
     </div>
     <div class="nav-right">
@@ -1012,8 +1012,8 @@ html{scroll-behavior:smooth}
     <div class="flinks">
       <span class="fl" onclick="showView('services')">Services</span>
       <span class="fl" onclick="showView('membership')">Membership</span>
-      <span class="fl" onclick="showView('book')">Book</span>
-      <span class="fl" onclick="showView('auth')">Sign in</span>
+      <span class="fl" onclick="goBook()">Book</span>
+      <span class="fl" onclick="currentUser?showView('dashboard'):showView('auth')">Sign in</span>
     </div>
   </footer>
 </div>
