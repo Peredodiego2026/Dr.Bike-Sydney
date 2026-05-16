@@ -1226,6 +1226,30 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
       </div>
     </div>
 
+    <!-- ══ ADMIN CHAT MODAL ══ -->
+    <div id="admin-chat-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:flex-end;justify-content:center;padding:0">
+      <div style="background:var(--white);width:100%;max-width:480px;border-radius:20px 20px 0 0;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+        <!-- Header -->
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;background:#F5F0FF;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">💬</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--navy)" id="admin-chat-title">Job Chat</div>
+            <div style="font-size:11px;color:var(--mgray)">Admin ↔ Mechanic</div>
+          </div>
+          <button onclick="closeAdminChat()" style="background:var(--off);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:var(--sans);font-size:12px;color:var(--navy)">Close</button>
+        </div>
+        <!-- Messages -->
+        <div id="admin-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:200px">
+          <div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">Loading messages...</div>
+        </div>
+        <!-- Input -->
+        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px">
+          <input id="admin-chat-input" class="inp" placeholder="Message to mechanic..." style="flex:1;margin:0" onkeydown="if(event.key==='Enter')sendAdminMsg()">
+          <button onclick="sendAdminMsg()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Send</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ NOTIF NUMBER MODAL ══ -->
     <div id="notif-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px">
       <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
@@ -2084,7 +2108,7 @@ function renderBookingsTable(data){
       <td data-label="Price"><b>$${b.service_price||0}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
         ${isPending?`<button onclick="confirmBookingAdmin('${b.id}')" style="background:#ECFDF5;color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">✅ Confirm</button>`:''}
-        ${!isCancelled?`<button onclick="openReassign('${b.id}')" style="background:#EEF3FC;color:#1848C8;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">🔄</button>`:''}
+        ${!isCancelled?`<button onclick="openAdminChat('${b.id}','${name}')" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">💬</button>`:''}
         ${!isCancelled?`<button onclick="openCancel('${b.id}')" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">❌</button>`:''}
       </td>
     </tr>`;
@@ -2773,6 +2797,87 @@ async function loadCalendar() {
 
   html += '</div>';
   grid.innerHTML = html;
+}
+
+// ── ADMIN CHAT ────────────────────────────────────────────────────────────────
+let adminChatBookingId = null;
+let adminChatChannel = null;
+
+function openAdminChat(bookingId, clientName) {
+  adminChatBookingId = bookingId;
+  document.getElementById('admin-chat-title').textContent = `Job: ${clientName}`;
+  document.getElementById('admin-chat-modal').style.display = 'flex';
+  loadAdminChatMessages(bookingId);
+
+  // Subscribe to realtime new messages
+  if(adminChatChannel) sb.removeChannel(adminChatChannel);
+  adminChatChannel = sb.channel('admin-chat-' + bookingId)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'job_messages', filter:`booking_id=eq.${bookingId}` },
+      payload => appendAdminChatMsg(payload.new))
+    .subscribe();
+}
+
+function closeAdminChat() {
+  document.getElementById('admin-chat-modal').style.display = 'none';
+  if(adminChatChannel){ sb.removeChannel(adminChatChannel); adminChatChannel = null; }
+  adminChatBookingId = null;
+}
+
+async function loadAdminChatMessages(bookingId) {
+  const { data } = await sb.from('job_messages').select('*').eq('booking_id', bookingId).order('created_at', {ascending:true});
+  const msgs = document.getElementById('admin-chat-msgs');
+  if(!data?.length){
+    msgs.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">No messages yet. Send one to start the conversation.</div>';
+    return;
+  }
+  msgs.innerHTML = '';
+  data.forEach(m => appendAdminChatMsg(m, false));
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function appendAdminChatMsg(msg, scroll=true) {
+  const msgs = document.getElementById('admin-chat-msgs');
+  const isAdmin = msg.sender_role === 'admin';
+  const isMech  = msg.sender_role === 'mechanic';
+  const isClient = msg.sender_role === 'client';
+  const time = new Date(msg.created_at).toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+
+  const bubble = document.createElement('div');
+  bubble.style.cssText = `display:flex;flex-direction:column;align-items:${isAdmin?'flex-end':'flex-start'};gap:2px`;
+  
+  const label = isAdmin ? 'You (Admin)' : isMech ? '🔧 Mechanic' : '👤 Client';
+  const bg = isAdmin ? 'var(--blue)' : 'var(--off)';
+  const color = isAdmin ? '#fff' : 'var(--navy)';
+
+  // Photo message
+  const isPhoto = msg.message?.startsWith('[PHOTO:');
+  const photoUrl = isPhoto ? msg.message.replace('[PHOTO:','').replace(']','') : null;
+
+  bubble.innerHTML = `
+    <div style="font-size:10px;color:var(--mgray);font-weight:600">${label}</div>
+    ${isPhoto
+      ? `<img src="${photoUrl}" style="max-width:200px;border-radius:10px;cursor:pointer" onclick="window.open('${photoUrl}','_blank')">`
+      : `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:12px;font-size:13px;max-width:280px;word-break:break-word">${msg.message}</div>`
+    }
+    <div style="font-size:10px;color:var(--mgray)">${time}</div>
+  `;
+  msgs.appendChild(bubble);
+  if(scroll) msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function sendAdminMsg() {
+  if(!adminChatBookingId) return;
+  const input = document.getElementById('admin-chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+
+  await sb.from('job_messages').insert({
+    booking_id: adminChatBookingId,
+    sender_role: 'admin',
+    sender_id: 'admin',
+    message: text
+  });
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────

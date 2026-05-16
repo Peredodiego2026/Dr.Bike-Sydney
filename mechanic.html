@@ -611,19 +611,22 @@ async function submitComplete(id){
       ? `Your next recommended service is on ${new Date(nextDate).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}`
       : 'We recommend a service check every 3–6 months.';
 
-    // Fire all 3 notifications in parallel
+    // Fire all notifications in parallel
     await Promise.allSettled([
-      // 1. Completion email with receipt
-      fetch('/api/send-email', {
+      // 1. Invoice/receipt email
+      clientEmail ? fetch('/api/send-invoice', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          to: clientEmail, name: clientName,
-          service: j?.service, date: j?.date, price: j?.price,
-          type:'completed', bookingId: id,
-          mechNotes: notes||null, nextService: nextSvcMsg
+          bookingId: id, to: clientEmail, clientName,
+          service: j?.service_name || j?.service,
+          date: j?.scheduled_date, time: j?.scheduled_time,
+          address: j?.address || j?.suburb,
+          price: j?.price || 0, discount: j?.discount_applied || 0,
+          mechNotes: notes||null, mechName: ((mechanic?.first_name||'')+ ' '+(mechanic?.last_name||'')).trim(),
+          nextService: nextSvcMsg, bookingRef: id.slice(0,8).toUpperCase()
         })
-      }),
-      // 2. SMS review request (if phone available)
+      }) : Promise.resolve(),
+      // 2. SMS review request
       j?.phone ? fetch('/api/send-sms', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -633,7 +636,7 @@ async function submitComplete(id){
           reviewLink
         })
       }) : Promise.resolve(),
-      // 3. WhatsApp review request (if phone available)
+      // 3. WhatsApp review request
       j?.phone ? fetch('/api/send-whatsapp', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({

@@ -1306,9 +1306,9 @@ html{scroll-behavior:smooth}
 
         <!-- Referral code field -->
         <div style="margin:14px 0;padding:14px;background:var(--off);border-radius:10px;border:1.5px solid var(--border)">
-          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">🎁 Got a referral code?</div>
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">🎁 Promo or referral code?</div>
           <div style="display:flex;gap:8px">
-            <input id="referral-input" class="inp" placeholder="e.g. BIKE5H7F" style="margin-bottom:0;text-transform:uppercase;letter-spacing:0.08em;font-weight:600" oninput="this.value=this.value.toUpperCase()" maxlength="9">
+            <input id="referral-input" class="inp" placeholder="Enter code (e.g. SUMMER20)" style="margin-bottom:0;text-transform:uppercase;letter-spacing:0.08em;font-weight:600" oninput="this.value=this.value.toUpperCase()" maxlength="9">
             <button onclick="applyReferral()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap">Apply</button>
           </div>
           <div id="referral-msg" style="font-size:12px;margin-top:6px;display:none"></div>
@@ -3088,10 +3088,8 @@ async function confirmBooking(){
     }
   }
 
-  // Si se usó un discount code, incrementar uses_count
+  // Incrementar uses_count del discount code
   if(appliedDiscountCodeId){
-    await sb.from('discount_codes').update({ uses_count: sb.rpc ? undefined : undefined }).eq('id', appliedDiscountCodeId);
-    // Use raw increment
     const { data: dc } = await sb.from('discount_codes').select('uses_count').eq('id', appliedDiscountCodeId).single();
     if(dc) await sb.from('discount_codes').update({ uses_count: (dc.uses_count||0) + 1 }).eq('id', appliedDiscountCodeId);
   }
