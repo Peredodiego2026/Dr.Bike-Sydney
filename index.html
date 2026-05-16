@@ -1557,8 +1557,8 @@ async function init(){
           updateNavAuth();
           window.history.replaceState({}, document.title, window.location.pathname);
           clearTimeout(loadingGuard);
-          const pendingOAuth = sessionStorage.getItem('pendingView');
-          if(pendingOAuth){ sessionStorage.removeItem('pendingView'); setTimeout(()=>{ hideLoading(); showView(pendingOAuth); }, 500); }
+          const pendingOAuth = localStorage.getItem('pendingView');
+          if(pendingOAuth){ localStorage.removeItem('pendingView'); setTimeout(()=>{ hideLoading(); showView(pendingOAuth); }, 500); }
           else { setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 500); }
           setTimeout(registerClientPush, 3000);
           return;
@@ -1612,8 +1612,8 @@ async function init(){
       updateNavAuth();
       // Solo redirigir al dashboard si es un login nuevo, no una restauración de sesión
       if(!wasLoggedIn && event === 'SIGNED_IN'){
-        const pending = sessionStorage.getItem('pendingView');
-        if(pending){ sessionStorage.removeItem('pendingView'); showView(pending); }
+        const pending = localStorage.getItem('pendingView');
+        if(pending){ localStorage.removeItem('pendingView'); showView(pending); }
       }
     } else if(event === 'SIGNED_OUT') {
       currentUser = null;
@@ -1781,8 +1781,8 @@ async function signInEmail(){
     try { await loadProfile(); } catch(pe){ console.warn('loadProfile non-fatal:', pe); }
     updateNavAuth();
     // Si había intención de ir a booking, ir directo
-    const pending = sessionStorage.getItem('pendingView');
-    if(pending){ sessionStorage.removeItem('pendingView'); showView(pending); }
+    const pending = localStorage.getItem('pendingView');
+    if(pending){ localStorage.removeItem('pendingView'); showView(pending); }
     else { showView('dashboard'); }
     toast('Welcome back! 👋');
     setTimeout(registerClientPush, 2000);
@@ -1804,6 +1804,7 @@ async function signUpEmail(){
 }
 
 async function signOut(){
+  localStorage.removeItem('pendingView');
   await sb.auth.signOut();
   currentUser = null;
   userProfile = null;
@@ -3407,7 +3408,7 @@ function goBook(){
   if(currentUser){
     showView('book');
   } else {
-    sessionStorage.setItem('pendingView', 'book');
+    localStorage.setItem('pendingView', 'book');
     showView('auth');
   }
 }
