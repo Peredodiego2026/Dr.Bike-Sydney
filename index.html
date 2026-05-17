@@ -1497,6 +1497,30 @@ let vanZones = [
 ];
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
+// Garantiza que currentUser esté cargado antes de cualquier acción de auth
+async function requireAuth(pendingView, pendingPlan) {
+  if(currentUser) return true;
+  // Intentar restaurar sesión
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if(session?.user){
+      currentUser = session.user;
+      try { await loadProfile(); } catch(e){}
+      updateNavAuth();
+      return true;
+    }
+  } catch(e){}
+  // No hay sesión — guardar intención y pedir login
+  if(pendingPlan){
+    localStorage.setItem('pendingPlanId', pendingPlan);
+    localStorage.setItem('pendingView', pendingView || 'membership');
+  } else if(pendingView){
+    localStorage.setItem('pendingView', pendingView);
+  }
+  showView('auth');
+  return false;
+}
+
 function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;'); }
 function hideLoading(){ document.getElementById('loading').classList.add('hide'); }
 
@@ -3085,7 +3109,7 @@ let stripe = null;
 function getStripe(){ if(!stripe && window.Stripe) stripe = Stripe('pk_test_51TUbFqPPGSm5cT7JyoojiAiHFB8isozh1GyIB4DHE8900gSTi74pq9mAJxXpZUp5dGbL8dZRXsPRZw48N3YPCOcw00mJXkKPvQ'); return stripe; }
 
 async function confirmBooking(){
-  if(!currentUser){ localStorage.setItem('pendingView','book'); showView('auth'); return; }
+  if(!await requireAuth('book')) return;
   const btn = document.getElementById('confirm-btn');
   btn.innerHTML='<span class="spinner"></span>Processing...';
   btn.disabled=true;
@@ -3333,20 +3357,7 @@ const STRIPE_PRICES = {
 const PLAN_NAMES = { b: 'basic', s: 'standard', v: 'vip' };
 
 async function subscribePlan(planId) {
-  // Si no hay currentUser, intentar restaurar sesión primero
-  if (!currentUser) {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-      currentUser = session.user;
-      updateNavAuth();
-    }
-  }
-  if (!currentUser) {
-    localStorage.setItem('pendingView', 'membership');
-    localStorage.setItem('pendingPlanId', planId);
-    showView('auth');
-    return;
-  }
+  if(!await requireAuth('membership', planId)) return;
 
   const planKey = PLAN_NAMES[planId];
   const billingKey = billing === 'a' ? 'annual' : 'monthly';
@@ -3452,13 +3463,9 @@ function renderPlans(){
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
 // Ir a booking - si no está logueado, guardar intención y pedir login
-function goBook(){
-  if(currentUser){
-    showView('book');
-  } else {
-    localStorage.setItem('pendingView', 'book');
-    showView('auth');
-  }
+async function goBook(){
+  if(!await requireAuth('book')) return;
+  showView('book');
 }
 
 function showView(v){
