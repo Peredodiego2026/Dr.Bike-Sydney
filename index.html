@@ -1475,8 +1475,6 @@ const SUPABASE_KEY = 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     persistSession: true,
-    storageKey: 'drbike-auth',
-    storage: window.localStorage,
     autoRefreshToken: true,
     detectSessionInUrl: true,
   }
@@ -1560,61 +1558,48 @@ async function registerClientPush() {
 }
 
 async function init(){
-  // Safety net: always hide loading after 5s no matter what
   const loadingGuard = setTimeout(()=>{ 
     hideLoading(); 
-    // Si sigue en loading, mostrar home de todas formas
-    if(!document.querySelector('.view.active')) {
+    if(!document.querySelector('.view.active'))
       document.getElementById('view-home').classList.add('active');
-    }
-  }, 4000);
+  }, 5000);
 
   try {
-    // Handle direct navigation via hash
-    const hash = window.location.hash;
-    if(hash === '#dashboard' && currentUser){
-      window.history.replaceState({}, document.title, window.location.pathname);
-      clearTimeout(loadingGuard);
-      setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 800);
-      return;
-    }
+    // Supabase detectSessionInUrl:true maneja el hash de OAuth automáticamente
+    // Solo necesitamos esperar a que procese
+    await new Promise(r => setTimeout(r, 100));
 
-    // Handle Supabase OAuth redirect (hash contains access_token)
-    if(window.location.hash && window.location.hash.includes('access_token')){
-      try {
-        const { data: { session } } = await sb.auth.getSession();
-        if(session){
-          currentUser = session.user;
-          try { await loadProfile(); } catch(e){ console.warn('OAuth loadProfile:', e); }
-          updateNavAuth();
-          window.history.replaceState({}, document.title, window.location.pathname);
-          clearTimeout(loadingGuard);
-          const pendingOAuth = localStorage.getItem('pendingView');
-          const pendingPlanOAuth = localStorage.getItem('pendingPlanId');
-          if(pendingPlanOAuth){
-            localStorage.removeItem('pendingPlanId');
-            localStorage.removeItem('pendingView');
-            setTimeout(()=>{ hideLoading(); showView('membership'); setTimeout(()=>subscribePlan(pendingPlanOAuth), 800); }, 500);
-          } else if(pendingOAuth){ 
-            localStorage.removeItem('pendingView'); 
-            setTimeout(()=>{ hideLoading(); showView(pendingOAuth); }, 500); 
-          } else { 
-            setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 500); 
-          }
-          setTimeout(registerClientPush, 3000);
-          return;
-        }
-      } catch(e){ console.error('OAuth session error:', e); }
-    }
+    // Restaurar sesión — funciona tanto para carga normal como post-OAuth
+    const { data: { session } } = await sb.auth.getSession();
+    if(session?.user){
+      currentUser = session.user;
+      try { await loadProfile(); } catch(e){ console.warn('loadProfile:', e); }
+      updateNavAuth();
 
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      if(session?.user){
-        currentUser = session.user;
-        try { await loadProfile(); } catch(e){ console.warn('loadProfile:', e); }
-        updateNavAuth();
+      // Limpiar hash de OAuth si existe
+      if(window.location.hash?.includes('access_token'))
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+      // Chequear si había intención pendiente
+      const pendingPlan = localStorage.getItem('pendingPlanId');
+      const pendingView = localStorage.getItem('pendingView');
+      if(pendingPlan){
+        localStorage.removeItem('pendingPlanId');
+        localStorage.removeItem('pendingView');
+        clearTimeout(loadingGuard);
+        setTimeout(()=>{ hideLoading(); showView('membership'); setTimeout(()=>subscribePlan(pendingPlan), 800); }, 400);
+        setTimeout(registerClientPush, 3000);
+        await loadServices(); await loadVanZones(); loadPublicReviews();
+        return;
+      } else if(pendingView){
+        localStorage.removeItem('pendingView');
+        clearTimeout(loadingGuard);
+        setTimeout(()=>{ hideLoading(); showView(pendingView); }, 400);
+        setTimeout(registerClientPush, 3000);
+        await loadServices(); await loadVanZones(); loadPublicReviews();
+        return;
       }
-    } catch(e){ console.error('Session/profile error:', e); }
+    }
 
     try {
       await loadServices();
