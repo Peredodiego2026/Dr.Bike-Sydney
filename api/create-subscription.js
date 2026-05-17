@@ -7,11 +7,13 @@ import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min payments
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return;
 
   const { priceId, customerId, email, name, plan, billing } = req.body;
   if (!priceId || !email) return res.status(400).json({ error: 'Missing required fields' });
+  console.log('create-subscription:', { priceId, plan, billing, email: email?.slice(0,5)+'...' });
+
+  const BASE_URL = 'https://dr-bike-sydney.vercel.app';
 
   try {
     // Get or create Stripe customer
@@ -42,8 +44,8 @@ export default async function handler(req, res) {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `https://dr-bike-sydney.vercel.app/?subscription=success&plan=${plan}&billing=${billing}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://dr-bike-sydney.vercel.app/?subscription=cancelled`,
+      success_url: `${BASE_URL}/?subscription=success&plan=${plan}&billing=${billing}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${BASE_URL}/?subscription=cancelled`,
       subscription_data: {
         metadata: { plan, billing, email }
       },
