@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <!-- Google tag (gtag.js) -->
@@ -922,9 +922,9 @@ html{scroll-behavior:smooth}
           <div class="pp-price">$97<span style="font-size:13px;font-weight:300;color:rgba(255,255,255,0.5)">/mo</span></div>
           <div class="pp-sub">1 bike · 12% off</div>
         </div>
-        <div class="plan-pill" onclick="showView('membership')" style="border-color:#D97706">
-          <div class="pp-price" style="color:#B45309">$147<span style="font-size:13px;font-weight:300;color:var(--mgray)">/mo</span></div>
-          <div class="pp-label" style="color:#B45309">VIP · 3 bikes</div>
+        <div class="plan-pill" onclick="showView('membership')" style="border-color:#0D1F3C;background:#0D1F3C">
+          <div class="pp-price" style="color:#fff">$147<span style="font-size:13px;font-weight:300;color:var(--mgray)">/mo</span></div>
+          <div class="pp-label" style="color:rgba(255,255,255,0.6)">VIP · 3 bikes</div>
         </div>
       </div>
       <div style="margin-top:28px"><button class="btn-primary" onclick="showView('membership')">See full membership details</button></div>
@@ -987,7 +987,7 @@ html{scroll-behavior:smooth}
     <div class="sec-inner">
       <div class="sec-eye" style="justify-content:center;display:flex">Reviews</div>
       <div class="sec-h2" style="text-align:center">Loved by Sydney riders</div>
-      <p class="sec-p" style="text-align:center;margin:0 auto" id="reviews-summary">Loading reviews...</p>
+      <p class="sec-p" style="text-align:center;margin:0 auto" id="reviews-summary"></p>
       <div class="reviews-grid" id="reviews-grid">
         <!-- Loaded from Supabase -->
         <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Booked at 9am and the mechanic was at my door by 1pm. Tuned up my road bike perfectly. Will use every time."</div><div class="review-author"><div class="review-avatar">JM</div><div><div class="review-name">James M.</div><div class="review-suburb">Surry Hills</div></div></div></div>
@@ -1135,7 +1135,7 @@ html{scroll-behavior:smooth}
       </div>
     </div>
     <div class="dash-acts">
-      <button class="da primary" onclick="showView('book')">Book a service</button>
+      <button class="da primary" onclick="showView('book')">Book now</button>
       <button class="da" onclick="showView('services')">All services</button>
       <button class="da blue" onclick="showView('membership')">Membership</button>
     </div>
@@ -1153,7 +1153,7 @@ html{scroll-behavior:smooth}
         </div>
         <div style="text-align:center">
           <div style="font-size:22px;font-weight:800;color:#fff" id="referral-count">0</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em">Friends referred</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">Friends referred</div>
         </div>
       </div>
     </div>
@@ -3402,7 +3402,7 @@ const P3=[
    secs:[{l:'Priority',f:[{t:'Priority booking before non-members',y:true},{t:'SMS reminder when service is due',y:true},{t:'Same-day booking guarantee',y:false}]},{l:'Discounts',f:[{t:'8% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'1 × Tune-Up/year (value $109)',y:true},{t:'Tyre pressure check monthly',y:true},{t:'Brake check every 3 months',y:false}]}]},
   {id:'s',n:'Standard',w:'Best value · most popular',mo:97,pop:true,bikes:'1 bike',bb:'#1848C8',
    secs:[{l:'Priority',f:[{t:'First-access priority — top of the queue',y:true},{t:'2-hour guaranteed arrival window',y:true},{t:'SMS + call 30 min before arrival',y:true}]},{l:'Discounts',f:[{t:'12% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'2 × Tune-Ups/year (value $218)',y:true},{t:'Brake check every 3 months',y:true},{t:'Tyre pressure check monthly',y:true}]}]},
-  {id:'v',n:'VIP',w:'Serious riders & families',mo:147,bikes:'Up to 3 bikes',bb:'#92400E',
+  {id:'v',n:'VIP',w:'Serious riders & families',mo:147,bikes:'Up to 3 bikes',bb:'#0D1F3C',
    secs:[{l:'Priority',f:[{t:'Absolute priority in the schedule',y:true},{t:'Same-day booking on request',y:true},{t:'1-hour arrival window guarantee',y:true}]},{l:'Discounts',f:[{t:'18% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true},{t:'Direct mechanic WhatsApp access',y:true}]},{l:'Free services',f:[{t:'3 × Tune-Ups/year (value $327)',y:true},{t:'Brake & gear check every 2 months',y:true},{t:'Dedicated mechanic — same person always',y:true}]}]},
 ];
 
@@ -4111,3 +4111,4 @@ async function installPWA(){
 </script>
 </body>
 </html>
+
