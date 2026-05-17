@@ -2250,7 +2250,7 @@ async function analyzeBikeText(){
     </div>`;
 
   try {
-    const res = await fetch('/api/diagnose-bike-text', {
+    const res = await fetch('/api/diagnose-bike', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ description: text })
