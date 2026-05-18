@@ -2236,7 +2236,7 @@ async function loadDashboard(){
     sb.from('bookings').select('*, profiles(full_name)').eq('scheduled_date', today),
     sb.from('bookings').select('*').gte('scheduled_date', firstOfMonth).neq('status','cancelled'),
     sb.from('bookings').select('*').eq('status','pending'),
-    fetch('/api/get-bookings').then(r=>r.json()).then(j=>({data:j.bookings?.slice(0,5)||[]})),
+    sb.from('bookings').select('*').order('created_at',{ascending:false}).limit(5),
     sb.from('profiles').select('id')
   ]);
 
