@@ -271,7 +271,7 @@ function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v
 
 async function load(){
   try {
-    const {data, error} = await sb.from('bookings').select('*').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
+    const {data, error} = await sb.from('bookings').select('*, profiles(full_name, phone_number)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
     if(error) throw error;
     const mapped = (data||[]).map(b=>({id:b.id,client:b.client_name||b.client_id?.slice(0,8)||'Client',email:'',phone:'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
     jobs = mapped;
