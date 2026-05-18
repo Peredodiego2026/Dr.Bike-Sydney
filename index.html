@@ -2381,21 +2381,21 @@ function showOnboarding(name) {
     {
       icon: '🚲',
       title: `Welcome, ${firstName}!`,
-      desc: 'Dr. Bike comes to you — at home, work, or the park. Book a service in 60 seconds and we'll be there.',
+      desc: "Dr. Bike comes to you — at home, work, or the park. Book a service in 60 seconds and we'll be there.",
       btnLabel: 'How it works →',
       color: '#0D1F3C'
     },
     {
       icon: '📍',
       title: 'We come to you',
-      desc: 'Pick a service, choose a date and time, and drop your address. A qualified mechanic arrives with all the tools needed.',
-      btnLabel: 'And after? →',
+      desc: "Pick a service, choose a date and time, and drop your address. A qualified mechanic arrives with all the tools needed.",
+      btnLabel: "And after? →",
       color: '#1848C8'
     },
     {
       icon: '⭐',
       title: 'Pay after, rate always',
-      desc: 'You only pay once the job is done. Leave a review so we keep improving. Your bike's full service history is always here.',
+      desc: "You only pay once the job is done. Leave a review so we keep improving. Your bike's full service history is always here.",
       btnLabel: 'Book my first service →',
       color: '#059669'
     }
@@ -2490,9 +2490,9 @@ function showTipModal(bookingId, mechName) {
       <div style="font-size:13px;color:#6B7280;margin-bottom:24px">100% goes directly to your mechanic</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
         ${[5,10,15].map(amt=>`
-          <button onclick="sendTip(${amt},'${bookingId}')" style="padding:16px 8px;border:2px solid #E5E7EB;border-radius:12px;background:#fff;cursor:pointer;font-family:Inter,sans-serif;font-size:16px;font-weight:700;color:#0D1F3C;transition:all .15s" onmouseover="this.style.borderColor='#1848C8';this.style.background='#EEF3FC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#fff'">
+          <button onclick="sendTip(${amt},'${bookingId}')" style="padding:16px 8px;border:2px solid #E5E7EB;border-radius:12px;background:#fff;cursor:pointer;font-family:Inter,sans-serif;font-size:16px;font-weight:700;color:#0D1F3C;transition:all .15s">
             <div>$${amt}</div>
-            <div style="font-size:11px;font-weight:400;color:#6B7280;margin-top:2px">${amt===5?'Nice':'':amt===10?'Great 👍':'Awesome 🙌'}</div>
+            <div style="font-size:11px;font-weight:400;color:#6B7280;margin-top:2px">${amt===5?'Nice':amt===10?'Great':'Awesome'}</div>
           </button>`).join('')}
       </div>
       <button onclick="document.getElementById('tip-modal').remove()" style="width:100%;padding:12px;background:none;border:none;color:#9CA3AF;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">No thanks</button>
@@ -2520,7 +2520,7 @@ async function sendTip(amount, bookingId) {
   } catch(e){}
 }
 
-function joinWaitlist(date, vanNum) {
+async function joinWaitlist(date, vanNum) {
   if(!currentUser){ requireAuth('book'); return; }
   const name = userProfile?.full_name || 'Client';
   const email = currentUser.email;
@@ -4522,7 +4522,7 @@ async function showBikeHistory(bikeId, bikeName){
   // Health score: 100 if serviced < 30 days ago, degrades to 0 at 180 days
   const health = daysSince === null ? 50 : Math.max(0, Math.round(100 - (daysSince/180)*100));
   const healthColor = health>=70?'#059669':health>=40?'#D97706':'#DC2626';
-  const healthLabel = health>=70?'Great shape':'Fair':'Needs attention';
+  const healthLabel = health>=70?'Great shape':health>=40?'Fair':'Needs attention';
 
   statsEl.innerHTML = `
     <div style="padding:16px 20px;background:var(--off);border-bottom:1px solid var(--border)">
@@ -4551,7 +4551,7 @@ async function showBikeHistory(bikeId, bikeName){
 
   const content = document.getElementById('bike-history-content');
   if(!bkgs?.length){
-    content.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:32px">No service history yet.<br><br>Complete your first service to start tracking your bike's health.</div>';
+    content.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:32px">No service history yet.<br><br>Complete your first service to start tracking your bike health.</div>';
     return;
   }
 
