@@ -30,7 +30,7 @@ export default async function handler(req, res) {
               <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 4px">📍 We come to you</p>
               <p style="font-size:12px;color:#1848C8;margin:0;opacity:0.8">Our mechanic will arrive at your address. No need to go anywhere!</p>
             </div>
-            <a href="https://dr-bike-sydney.vercel.app" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:16px">View my booking →</a>
+            <a href="https://drbikesydney.com.au" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:16px">View my booking →</a>
             <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">Questions? WhatsApp us at +61 433 963 250</p>
           </div>
           <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-radius:0 0 16px 16px;border-top:1px solid #E5E7EB">
@@ -67,8 +67,8 @@ export default async function handler(req, res) {
           <div style="padding:32px 28px;text-align:center">
             <h1 style="font-size:20px;font-weight:700;color:#0D1F3C;margin:0 0 12px">Thanks for choosing Dr. Bike, ${name}!</h1>
             <p style="color:#6B7280;font-size:14px;margin:0 0 24px">Your <strong>${service}</strong> has been completed. We hope your bike is running perfectly!</p>
-            <a href="https://dr-bike-sydney.vercel.app" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:16px">Leave a review ⭐</a>
-            <a href="https://dr-bike-sydney.vercel.app/?view=book" style="display:block;background:#F7F8FA;color:#0D1F3C;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:600;font-size:14px;border:1.5px solid #E5E7EB">Book next service</a>
+            <a href="https://drbikesydney.com.au" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:16px">Leave a review ⭐</a>
+            <a href="https://drbikesydney.com.au/?view=book" style="display:block;background:#F7F8FA;color:#0D1F3C;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:600;font-size:14px;border:1.5px solid #E5E7EB">Book next service</a>
           </div>
         </div>`
     }

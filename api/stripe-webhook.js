@@ -4,7 +4,7 @@
 //   SUPABASE_SERVICE_KEY     → service_role key (not anon key)
 //   SUPABASE_URL             → https://tgpipbloisahufaywhqb.supabase.co
 //
-// Webhook URL to register: https://dr-bike-sydney.vercel.app/api/stripe-webhook
+// Webhook URL to register: https://drbikesydney.com.au/api/stripe-webhook
 // Events to enable: checkout.session.completed, customer.subscription.created,
 //   customer.subscription.updated, customer.subscription.deleted,
 //   customer.subscription.trial_will_end, customer.subscription.paused,

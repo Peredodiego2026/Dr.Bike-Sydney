@@ -25,15 +25,15 @@ export default async function handler(req, res) {
   const phone = normalizeAUPhone(to);
   if (!phone) return res.status(400).json({ error: 'Invalid Australian phone number' });
 
-  const trackUrl = `https://dr-bike-sydney.vercel.app/track.html?id=${bookingId || ''}`;
+  const trackUrl = `https://drbikesydney.com.au/track.html?id=${bookingId || ''}`;
 
   const messages = {
     test: `Dr. Bike Sydney SMS active ✓`,
     confirmation: `Dr. Bike Sydney ✅ ${safeService} confirmed at ${safeAddress}. Total: $${price}`,
     enroute: `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress} 🚐\nEst. arrival: 10-20 min\nTrack live: ${trackUrl}`,
-    completed: `Hi ${safeName}! Your ${safeService} is complete ✅ Total: $${price} AUD\nBook again: https://dr-bike-sydney.vercel.app — Thanks for choosing Dr. Bike Sydney!`,
-    reminder: `Hi ${safeName}! Time for a bike check-up 🚲 Book your next service at https://dr-bike-sydney.vercel.app — We come to you, Mon–Sat.`,
-    review_request: `Hi ${safeName}! Your ${safeService} is done ✅ How did we do? Leave a quick review (30 sec): ${reviewLink || 'https://dr-bike-sydney.vercel.app'} — Thanks! ⭐`,
+    completed: `Hi ${safeName}! Your ${safeService} is complete ✅ Total: $${price} AUD\nBook again: https://drbikesydney.com.au — Thanks for choosing Dr. Bike Sydney!`,
+    reminder: `Hi ${safeName}! Time for a bike check-up 🚲 Book your next service at https://drbikesydney.com.au — We come to you, Mon–Sat.`,
+    review_request: `Hi ${safeName}! Your ${safeService} is done ✅ How did we do? Leave a quick review (30 sec): ${reviewLink || 'https://drbikesydney.com.au'} — Thanks! ⭐`,
     cancellation_alert: safeMsg || `CANCELLED: ${name} cancelled their ${safeService} booking. Slot is now free.`,
   };
 

@@ -30,16 +30,16 @@ function buildMessage(template, data) {
   const d = data || {};
   switch (template) {
     case 'confirmation':
-      return `Hi ${d.name || 'there'} 👋\n\nYour Dr. Bike booking is confirmed!\n\n🔧 Service: ${d.service || 'Bike repair'}\n📅 Date: ${d.date || 'TBD'}\n📍 Location: ${d.suburb || 'your area'}\n💰 Price: $${d.price || '—'}\n\nYou'll receive a message when your mechanic is on the way. Track live at ${d.trackUrl || 'https://dr-bike-sydney.vercel.app/track.html'}\n\n— Dr. Bike Sydney 🚲`;
+      return `Hi ${d.name || 'there'} 👋\n\nYour Dr. Bike booking is confirmed!\n\n🔧 Service: ${d.service || 'Bike repair'}\n📅 Date: ${d.date || 'TBD'}\n📍 Location: ${d.suburb || 'your area'}\n💰 Price: $${d.price || '—'}\n\nYou'll receive a message when your mechanic is on the way. Track live at ${d.trackUrl || 'https://drbikesydney.com.au/track.html'}\n\n— Dr. Bike Sydney 🚲`;
 
     case 'enroute':
-      return `Your Dr. Bike mechanic is on the way! 🚐\n\nHi ${d.name || 'there'}, *${d.mechanic || 'your mechanic'}* is heading to you now.\n\n⏱️ ETA: ~${d.eta || '20'} minutes\n📍 Heading to: ${d.suburb || 'your location'}\n\nTrack live: ${d.trackUrl || 'https://dr-bike-sydney.vercel.app/track.html'}\n\n— Dr. Bike Sydney 🚲`;
+      return `Your Dr. Bike mechanic is on the way! 🚐\n\nHi ${d.name || 'there'}, *${d.mechanic || 'your mechanic'}* is heading to you now.\n\n⏱️ ETA: ~${d.eta || '20'} minutes\n📍 Heading to: ${d.suburb || 'your location'}\n\nTrack live: ${d.trackUrl || 'https://drbikesydney.com.au/track.html'}\n\n— Dr. Bike Sydney 🚲`;
 
     case 'completed':
-      return `Job complete! ✅\n\nHi ${d.name || 'there'}, your bike has been serviced by *${d.mechanic || 'your mechanic'}*.\n\n🔧 ${d.service || 'Service'} — done!\n\nWe'd love your feedback — tap the link to rate your experience:\n${d.reviewUrl || 'https://dr-bike-sydney.vercel.app'}\n\nThank you for choosing Dr. Bike Sydney! 🚲`;
+      return `Job complete! ✅\n\nHi ${d.name || 'there'}, your bike has been serviced by *${d.mechanic || 'your mechanic'}*.\n\n🔧 ${d.service || 'Service'} — done!\n\nWe'd love your feedback — tap the link to rate your experience:\n${d.reviewUrl || 'https://drbikesydney.com.au'}\n\nThank you for choosing Dr. Bike Sydney! 🚲`;
 
     case 'reminder':
-      return `Service reminder 🔔\n\nHi ${d.name || 'there'}! Your Dr. Bike service is coming up:\n\n📅 ${d.date || 'soon'} at ${d.time || 'your selected time'}\n📍 ${d.suburb || 'your location'}\n\nNeed to reschedule? Reply to this message or visit:\nhttps://dr-bike-sydney.vercel.app\n\n— Dr. Bike Sydney 🚲`;
+      return `Service reminder 🔔\n\nHi ${d.name || 'there'}! Your Dr. Bike service is coming up:\n\n📅 ${d.date || 'soon'} at ${d.time || 'your selected time'}\n📍 ${d.suburb || 'your location'}\n\nNeed to reschedule? Reply to this message or visit:\nhttps://drbikesydney.com.au\n\n— Dr. Bike Sydney 🚲`;
 
     default:
       return null;

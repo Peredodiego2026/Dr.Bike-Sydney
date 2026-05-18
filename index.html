@@ -26,11 +26,11 @@
 <meta property="og:description" content="Your bike fixed at your front door. Same-day service across Sydney. Book in 60 seconds.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://drbike.com.au">
-<meta property="og:image" content="https://dr-bike-sydney.vercel.app/icon-512.svg">
+<meta property="og:image" content="https://drbikesydney.com.au/icon-512.svg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Dr. Bike Sydney — Mobile Bicycle Repair">
 <meta name="twitter:description" content="Your bike fixed at your front door. Same-day service across Sydney.">
-<meta name="twitter:image" content="https://dr-bike-sydney.vercel.app/icon-512.png">
+<meta name="twitter:image" content="https://drbikesydney.com.au/icon-512.png">
 <meta name="twitter:site" content="@drbikesydney">
 <link rel="canonical" href="https://drbike.com.au">
 <script type="application/ld+json">
@@ -1846,7 +1846,7 @@ async function signInGoogle(){
   const { error } = await sb.auth.signInWithOAuth({
     provider:'google',
     options:{
-      redirectTo: 'https://dr-bike-sydney.vercel.app',
+      redirectTo: 'https://drbikesydney.com.au',
       queryParams: { access_type: 'offline', prompt: 'consent' }
     }
   });
@@ -2543,7 +2543,7 @@ function showReferralMsg(msg, type){
 function copyReferral(){
   const code = userProfile?.referral_code;
   if(!code) return;
-  const text = `Book Dr. Bike Sydney with my code ${code} and we both get $15 off! 🚲 dr-bike-sydney.vercel.app`;
+  const text = `Book Dr. Bike Sydney with my code ${code} and we both get $15 off! 🚲 drbikesydney.com.au`;
   navigator.clipboard?.writeText(text).then(()=>toast('📋 Referral link copied!')).catch(()=>{
     const el = document.createElement('textarea');
     el.value = text; document.body.appendChild(el); el.select();
@@ -3209,7 +3209,7 @@ async function confirmBooking(){
         date: new Date(bkg.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }),
         suburb: bkg.suburb,
         price: bkg.service_price,
-        trackUrl: `https://dr-bike-sydney.vercel.app/track.html?id=${bkg.id}`
+        trackUrl: `https://drbikesydney.com.au/track.html?id=${bkg.id}`
       }
     });
     Promise.allSettled([

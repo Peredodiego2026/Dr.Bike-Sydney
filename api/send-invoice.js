@@ -108,7 +108,7 @@ export default async function handler(req, res) {
       <div style="font-size:14px;font-weight:600;color:#0D1F3C;margin-bottom:8px">Thank you for choosing Dr. Bike Sydney!</div>
       <div style="font-size:13px;color:#6e6e73">We come to you — home, office or park across Sydney.</div>
       <div style="margin-top:16px">
-        <a href="https://dr-bike-sydney.vercel.app" style="background:#1848C8;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Book next service →</a>
+        <a href="https://drbikesydney.com.au" style="background:#1848C8;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Book next service →</a>
       </div>
     </div>
   </div>

@@ -58,7 +58,6 @@ export function sanitizeObj(obj, fields) {
 
 // ── CORS HEADERS — only allow requests from our domain ───────────────────────
 const ALLOWED_ORIGINS = [
-  'https://dr-bike-sydney.vercel.app',
   'https://drbikesydney.com.au',
   'https://www.drbikesydney.com.au',
   'http://localhost:3000',
@@ -70,7 +69,7 @@ export function setCORSHeaders(req, res) {
   if (ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    res.setHeader('Access-Control-Allow-Origin', 'https://dr-bike-sydney.vercel.app');
+    res.setHeader('Access-Control-Allow-Origin', 'https://drbikesydney.com.au');
   }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');

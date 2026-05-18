@@ -37,7 +37,7 @@ MEMBERSHIPS:
 
 COVERAGE: Inner West, Eastern Suburbs, CBD, North Shore, Manly, Northern Beaches, most of Sydney.
 
-BOOKING: Online at dr-bike-sydney.vercel.app — select service, date, time, enter address. Same-day often available.
+BOOKING: Online at drbikesydney.com.au — select service, date, time, enter address. Same-day often available.
 
 PAYMENT: Card online (Stripe). Parts at cost price, no markup.
 
