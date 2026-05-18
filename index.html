@@ -2020,6 +2020,7 @@ async function updateDashboard(){
         <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stColors[st]}20;color:${stColors[st]};font-weight:600">${stLabels[st]||st}</span>
         <span class="hist-date" style="font-size:12px;color:var(--mgray)">${date}</span>
         <span class="hist-price" style="font-size:13px;font-weight:700">$${b.service_price||0}</span>
+        ${canCancel ? `<button onclick="clientReschedule('${b.id}','${b.service_name||'Service'}','${b.scheduled_date||''}','${b.van_number||1}')" style="font-size:11px;color:#1848C8;background:none;border:1px solid #BFDBFE;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">Reschedule</button>` : ''}
         ${canCancel ? `<button onclick="clientCancelBooking('${b.id}','${b.service_name||'Service'}')" style="font-size:11px;color:#DC2626;background:none;border:1px solid #FECACA;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">Cancel</button>` : ''}
       </div>`;
     }).join('');
@@ -2036,6 +2037,150 @@ async function updateDashboard(){
   } else {
     histEl.innerHTML = '<div class="empty-state">No bookings yet.<br>Book your first service below.</div>';
   }
+}
+
+async function clientReschedule(bookingId, serviceName, currentDate, vanNum) {
+  // Remove existing modal
+  document.getElementById('reschedule-modal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'reschedule-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+
+  const today = new Date();
+  const days = [];
+  for(let i=1; i<=14; i++){
+    const d = new Date(today);
+    d.setDate(today.getDate()+i);
+    if(d.getDay()!==0) days.push(d); // excluir domingos
+  }
+
+  let selectedDate = null;
+  let selectedTime = null;
+
+  const fmt = d => d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+  const fmtISO = d => d.toISOString().split('T')[0];
+
+  modal.innerHTML = `
+    <div style="background:var(--white);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;font-family:Inter,sans-serif">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div style="font-size:17px;font-weight:700;color:var(--navy)">Reschedule booking</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${serviceName}</div>
+        </div>
+        <button onclick="document.getElementById('reschedule-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mgray)">✕</button>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px">Select new date</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px" id="rs-days">
+        ${days.map(d=>`
+          <button onclick="rsSelectDay(this,'${fmtISO(d)}','${parseInt(vanNum)}')" data-date="${fmtISO(d)}"
+            style="padding:10px 6px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;font-family:Inter,sans-serif;font-size:12px;color:var(--navy);text-align:center;line-height:1.4">
+            <div style="font-weight:600">${fmt(d).split(',')[0]}</div>
+            <div style="color:var(--mgray)">${fmt(d).split(',')[1]?.trim()}</div>
+          </button>`).join('')}
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px">Select new time</div>
+      <div id="rs-slots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">
+        <div style="grid-column:1/-1;text-align:center;color:var(--mgray);font-size:13px;padding:16px">Select a date first</div>
+      </div>
+
+      <button id="rs-confirm-btn" disabled onclick="rsConfirm('${bookingId}','${serviceName}')"
+        style="width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;opacity:0.4">
+        Confirm reschedule
+      </button>
+    </div>`;
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+}
+
+async function rsSelectDay(el, date, vanNum) {
+  document.querySelectorAll('#rs-days button').forEach(b => {
+    b.style.borderColor = 'var(--border)';
+    b.style.background = 'var(--white)';
+    b.style.color = 'var(--navy)';
+  });
+  el.style.borderColor = '#1848C8';
+  el.style.background = '#EEF3FC';
+  el.style.color = '#1848C8';
+
+  window._rsDate = date;
+  window._rsTime = null;
+  document.getElementById('rs-confirm-btn').disabled = true;
+  document.getElementById('rs-confirm-btn').style.opacity = '0.4';
+
+  const slotsEl = document.getElementById('rs-slots');
+  slotsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--mgray);font-size:13px;padding:16px">Loading slots...</div>';
+
+  const slots = await getAvailableSlots(date, parseInt(vanNum));
+  const available = slots.filter(s=>s.available);
+
+  slotsEl.innerHTML = available.length ? available.map(s=>`
+    <button onclick="rsSelectTime(this,'${s.time}')"
+      style="padding:10px 6px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:var(--navy)">
+      ${s.label}
+    </button>`).join('') :
+    '<div style="grid-column:1/-1;text-align:center;color:var(--mgray);font-size:13px;padding:16px">No available slots — pick another day</div>';
+}
+
+function rsSelectTime(el, time) {
+  document.querySelectorAll('#rs-slots button').forEach(b => {
+    b.style.borderColor = 'var(--border)';
+    b.style.background = 'var(--white)';
+    b.style.color = 'var(--navy)';
+  });
+  el.style.borderColor = '#1848C8';
+  el.style.background = '#EEF3FC';
+  el.style.color = '#1848C8';
+  window._rsTime = time;
+  const btn = document.getElementById('rs-confirm-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+async function rsConfirm(bookingId, serviceName) {
+  const date = window._rsDate;
+  const time = window._rsTime;
+  if(!date || !time) return;
+
+  const btn = document.getElementById('rs-confirm-btn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const { error } = await sb.from('bookings').update({
+    scheduled_date: date,
+    scheduled_time: time,
+    status: 'confirmed'
+  }).eq('id', bookingId).eq('client_id', currentUser.id);
+
+  if(error){
+    toast('Could not reschedule — please try again');
+    btn.textContent = 'Confirm reschedule';
+    btn.disabled = false;
+    return;
+  }
+
+  document.getElementById('reschedule-modal').remove();
+  toast('Booking rescheduled ✓');
+  updateDashboard();
+
+  // Email confirmation
+  try {
+    const d = new Date(date+'T00:00:00');
+    const dateStr = d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+    const timeStr = new Date('2000-01-01T'+time+':00').toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true});
+    fetch('/api/send-email', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type:'confirmation', to:currentUser.email,
+        name: userProfile?.full_name||'Client',
+        service: serviceName, date: dateStr, time: timeStr,
+        bookingId
+      })
+    }).catch(()=>{});
+  } catch(e){}
 }
 
 async function clientCancelBooking(bookingId, serviceName){

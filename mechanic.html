@@ -131,7 +131,44 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
 </div>
 
 <script>
-const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U');
+// ── PERSISTENT STORAGE ADAPTER (IndexedDB + localStorage) ───────────────────
+const _IDB = (() => {
+  const DB='dr-bike-mech-auth', ST='s', VER=1;
+  let _db=null;
+  const open=()=>new Promise((res,rej)=>{
+    if(_db){res(_db);return;}
+    const r=indexedDB.open(DB,VER);
+    r.onerror=()=>rej(r.error);
+    r.onsuccess=()=>{_db=r.result;res(_db);};
+    r.onupgradeneeded=e=>e.target.result.createObjectStore(ST);
+  });
+  return {
+    async get(k){
+      try{
+        const ls=localStorage.getItem(k);
+        if(ls)return ls;
+        const db=await open();
+        return new Promise((res)=>{
+          const req=db.transaction(ST,'readonly').objectStore(ST).get(k);
+          req.onsuccess=()=>{if(req.result)try{localStorage.setItem(k,req.result);}catch(e){}res(req.result??null);};
+          req.onerror=()=>res(null);
+        });
+      }catch{return localStorage.getItem(k);}
+    },
+    async set(k,v){
+      try{localStorage.setItem(k,v);}catch(e){}
+      try{const db=await open();db.transaction(ST,'readwrite').objectStore(ST).put(v,k);}catch{}
+    },
+    async remove(k){
+      try{localStorage.removeItem(k);}catch{}
+      try{const db=await open();db.transaction(ST,'readwrite').objectStore(ST).delete(k);}catch{}
+    }
+  };
+})();
+
+const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U', {
+  auth: { persistSession: true, autoRefreshToken: true, storage: { getItem: k=>_IDB.get(k), setItem: (k,v)=>_IDB.set(k,v), removeItem: k=>_IDB.remove(k) } }
+});
 // Init theme
 (function(){
   const saved = localStorage.getItem('drbike-theme');
@@ -671,23 +708,80 @@ function badges(){
 }
 
 function profile(){
-  const today=new Date().toISOString().split('T')[0];
-  const td=jobs.filter(j=>j.date===today&&j.status==='completed');
-  const all=jobs.filter(j=>j.status==='completed');
+  const today = new Date().toISOString().split('T')[0];
+  const thisWeekStart = new Date(); thisWeekStart.setDate(thisWeekStart.getDate()-thisWeekStart.getDay()+1); const wkStr=thisWeekStart.toISOString().split('T')[0];
+  const thisMonthStr = today.slice(0,7);
+
+  const td   = jobs.filter(j=>j.date===today&&j.status==='completed');
+  const wk   = jobs.filter(j=>j.date>=wkStr&&j.status==='completed');
+  const mo   = jobs.filter(j=>(j.date||'').startsWith(thisMonthStr)&&j.status==='completed');
+  const all  = jobs.filter(j=>j.status==='completed');
+
+  const todayRev  = td.reduce((s,j)=>s+(j.price||0),0);
+  const weekRev   = wk.reduce((s,j)=>s+(j.price||0),0);
+  const monthRev  = mo.reduce((s,j)=>s+(j.price||0),0);
+  const totalRev  = all.reduce((s,j)=>s+(j.price||0),0);
+
+  const rated = all.filter(j=>j.rating);
+  const avgRating = rated.length ? (rated.reduce((s,j)=>s+(j.rating||0),0)/rated.length).toFixed(1) : '—';
+  const stars = rated.length ? '⭐'.repeat(Math.round(parseFloat(avgRating))) : '';
+
+  // Service breakdown
+  const svcMap = {};
+  all.forEach(j=>{ const k=j.service_name||j.service||'Other'; svcMap[k]=(svcMap[k]||0)+1; });
+  const topSvc = Object.entries(svcMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
   document.getElementById('jobs-list').innerHTML=`<div class="profile-wrap">
-    <div style="text-align:center;margin-bottom:24px">
+    <div style="text-align:center;margin-bottom:24px;padding:0 16px">
       <div class="profile-av">${mechanic?.first_name?.[0]||'M'}${mechanic?.last_name?.[0]||''}</div>
-      <div style="font-size:18px;font-weight:700">${mechanic?.first_name} ${mechanic?.last_name}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--navy)">${mechanic?.first_name} ${mechanic?.last_name}</div>
       <div style="font-size:13px;color:var(--mgray);margin-top:4px">Van ${vanNum} · ${mechanic?.role||'Mechanic'}</div>
+      ${rated.length ? `<div style="font-size:20px;margin-top:8px">${stars} <span style="font-size:15px;font-weight:700;color:var(--navy)">${avgRating}</span> <span style="font-size:12px;color:var(--mgray)">(${rated.length} reviews)</span></div>` : ''}
     </div>
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-val">${td.length}</div><div class="kpi-lbl">Today's jobs</div></div>
-      <div class="kpi-card"><div class="kpi-val">$${td.reduce((s,j)=>s+j.price,0)}</div><div class="kpi-lbl">Today's revenue</div></div>
-      <div class="kpi-card"><div class="kpi-val">${all.length}</div><div class="kpi-lbl">Total done</div></div>
-      <div class="kpi-card"><div class="kpi-val">$${all.reduce((s,j)=>s+j.price,0)}</div><div class="kpi-lbl">Total revenue</div></div>
+
+    <!-- Earnings cards -->
+    <div style="padding:0 16px;margin-bottom:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6">Earnings</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:linear-gradient(135deg,#1848C8,#0D1F3C);border-radius:14px;padding:16px;color:#fff">
+          <div style="font-size:11px;opacity:0.7;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Today</div>
+          <div style="font-size:26px;font-weight:800;margin-top:4px">$${todayRev}</div>
+          <div style="font-size:12px;opacity:0.7;margin-top:2px">${td.length} job${td.length!==1?'s':''}</div>
+        </div>
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
+          <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">This week</div>
+          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${weekRev}</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${wk.length} job${wk.length!==1?'s':''}</div>
+        </div>
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
+          <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">This month</div>
+          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${monthRev}</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${mo.length} job${mo.length!==1?'s':''}</div>
+        </div>
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
+          <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">All time</div>
+          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${totalRev}</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${all.length} job${all.length!==1?'s':''}</div>
+        </div>
+      </div>
     </div>
-    ${ratingHTML(jobs)}
-    <button onclick="doLogout()" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
+
+    <!-- Top services -->
+    ${topSvc.length ? `<div style="padding:0 16px;margin-bottom:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6">Top services</div>
+      ${topSvc.map(([name,count])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--navy)">${name}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--blue)">${count} job${count!==1?'s':''}</span>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <!-- Reviews -->
+    <div style="padding:0 16px;margin-bottom:20px">${ratingHTML(jobs)}</div>
+
+    <div style="padding:0 16px">
+      <button onclick="doLogout()" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
+    </div>
   </div>`;
 }
 
