@@ -1476,7 +1476,9 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: true, flowType: 'pkce', storage: window.localStorage,
+        flowType: 'pkce',
+        storage: window.localStorage,
   }
 });
 
@@ -1799,42 +1801,33 @@ async function signInGoogle(){
   if(error){ showErr(error.message); console.error(error); }
 }
 
-async function signInEmail(){
+async async async function signInEmail() {
   const email = document.getElementById('auth-email').value.trim();
-  const pwd = document.getElementById('auth-password').value;
-  if(!email||!pwd){ showErr('Please enter email and password'); return; }
-  const btn = document.getElementById('signin-btn');
-  btn.innerHTML = '<span class="spinner"></span>Signing in...';
-  btn.disabled = true;
+  const password = document.getElementById('auth-password').value;
+  if (!email || !password) { toast('Please enter your email and password', 'error'); return; }
+  const btn = document.querySelector('#login-form button[type="submit"]') || document.querySelector('.login-btn') || document.querySelector('button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
   try {
-    const { data, error } = await sb.auth.signInWithPassword({ email, password:pwd });
-    btn.innerHTML = 'Sign in';
-    btn.disabled = false;
-    if(error){ showErr(error.message); return; }
-    currentUser = data.user;
-    try { await loadProfile(); } catch(pe){ console.warn('loadProfile non-fatal:', pe); }
-    updateNavAuth();
-    // Si había intención de ir a booking, ir directo
-    const pending = localStorage.getItem('pendingView');
-    const pendingPlan = localStorage.getItem('pendingPlanId');
-    if(pendingPlan){ 
-      localStorage.removeItem('pendingPlanId');
-      localStorage.removeItem('pendingView');
-      showView('membership');
-      setTimeout(()=> subscribePlan(pendingPlan), 800);
-    } else if(pending){ 
-      localStorage.removeItem('pendingView'); 
-      showView(pending); 
-    } else { 
-      showView('dashboard'); 
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (data?.session) {
+      await supabase.auth.setSession(data.session);
+      // Force session persist for mobile
+      localStorage.setItem('drbike-session-ts', Date.now());
     }
-    toast('Welcome back! 👋');
-    setTimeout(registerClientPush, 2000);
-  } catch(e) {
-    btn.innerHTML = 'Sign in';
-    btn.disabled = false;
-    showErr('Sign in failed. Try again.');
-    console.error(e);
+    // Wait for auth state to propagate on mobile
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      window.currentUser = session.user;
+      toast('Welcome back! 🚲', 'success');
+      setTimeout(() => { window.location.reload(); }, 400);
+    } else {
+      throw new Error('Session not established. Please try again.');
+    }
+  } catch(err) {
+    toast(err.message || 'Login failed. Check your credentials.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
   }
 }
 
