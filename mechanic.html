@@ -24,11 +24,15 @@
 :root{--blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;--navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;--border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;--red:#DC2626;--red-lt:#FEF2F2;--amber:#D97706;--amber-lt:#FEF3C7;--gold:#F59E0B;--wa:#25D366;--wa-lt:#EDFBF3;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);--shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--sans:'Inter',sans-serif}
 [data-theme="dark"]{
   --white:#1C1C1E;--off:#242426;--mgray:#98989F;--border:#38383A;
+  --navy:#F2F2F7;
   --blue-lt:rgba(24,72,200,0.18);--green-lt:rgba(5,150,105,0.15);
   --amber-lt:rgba(217,119,6,0.15);--red-lt:rgba(220,38,38,0.15);
   --wa-lt:rgba(37,211,102,0.12);
   --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
 }
+[data-theme="dark"] .job-card { background:var(--white) !important; color:var(--navy); }
+[data-theme="dark"] .job-card * { color:inherit; }
+[data-theme="dark"] .notes-inp { background:#2C2C2E; color:#F2F2F7; border-color:#48484A; }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .screen{display:none;min-height:100vh;min-height:-webkit-fill-available;flex-direction:column}.screen.active{display:flex}
@@ -55,7 +59,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
 .tab-badge{background:var(--green);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;display:none}
 .tab-badge.show{display:block}
 .jobs-wrap{flex:1;padding:16px;overflow-y:auto}
-.job-card{background:#fff;border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #F0F0F0}
+.job-card{background:var(--white);border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid var(--border)}
 .job-card.done{opacity:0.6}
 .job-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 .job-client{font-size:16px;font-weight:700;color:var(--navy)}
