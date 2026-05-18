@@ -3419,8 +3419,16 @@ async function deleteNotifNumber(id) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-loadDashboard();
-subscribeToBookings();
+// Asegurar que el DOM esté listo antes de ejecutar
+if(document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    loadDashboard();
+    subscribeToBookings();
+  });
+} else {
+  loadDashboard();
+  subscribeToBookings();
+}
 
 // Inject notification panel into body
 (function(){
