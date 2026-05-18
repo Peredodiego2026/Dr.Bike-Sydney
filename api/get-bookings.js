@@ -14,13 +14,17 @@ export default async function handler(req, res) {
   try {
     const { data, error } = await sb
       .from('bookings')
-      .select('*, profiles(full_name, email, phone_number)')
+      .select('id, client_id, service_name, service_price, scheduled_date, scheduled_time, status, suburb, address, van_number, created_at, notes, mechanic_notes, client_rating, client_review, profiles(full_name, email, phone_number)')
       .order('created_at', { ascending: false })
       .limit(500);
 
-    if(error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ bookings: data || [] });
+    if(error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ error: error.message, details: error });
+    }
+    return res.status(200).json({ bookings: data || [], count: data?.length || 0 });
   } catch(e) {
-    return res.status(500).json({ error: e.message });
+    console.error('Handler error:', e);
+    return res.status(500).json({ error: e.message, stack: e.stack?.slice(0,200) });
   }
 }
