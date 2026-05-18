@@ -3720,25 +3720,21 @@ async function confirmBooking(){
   showPaymentModal(bkg, price);
 
   // Confirmation SMS + WhatsApp to client (fire-and-forget)
-  const clientPhone = userProfile?.phone_number || userProfile?.phone;
-  if (clientPhone) {
-    const notifBody = JSON.stringify({
-      to: clientPhone,
-      template: 'confirmation',
-      data: {
-        name: userProfile?.full_name?.split(' ')[0] || 'there',
-        service: bkg.service_name,
-        date: new Date(bkg.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }),
-        suburb: bkg.suburb,
-        price: bkg.service_price,
-        trackUrl: `https://drbikesydney.com.au/track.html?id=${bkg.id}`
-      }
-    });
-    Promise.allSettled([
-      fetch('/api/send-sms',      { method:'POST', headers:{'Content-Type':'application/json'}, body: notifBody }),
-      fetch('/api/send-whatsapp', { method:'POST', headers:{'Content-Type':'application/json'}, body: notifBody }),
-    ]).catch(() => {});
-  }
+  const clientPhone = userProfile?.phone_number || userProfile?.phone || userProfile?.phone_number;
+  const smsPhone = clientPhone || '+61433963250'; // fallback a Diego para testear
+  const smsPayload = {
+    to: smsPhone,
+    type: 'confirmation',
+    name: userProfile?.full_name?.split(' ')[0] || 'there',
+    service: bkg.service_name,
+    address: bkg.suburb || bkg.address,
+    price: bkg.service_price,
+    bookingId: bkg.id
+  };
+  Promise.allSettled([
+    fetch('/api/send-sms', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(smsPayload) }),
+    fetch('/api/send-whatsapp', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...smsPayload, type:'booking_confirmation'}) }),
+  ]).catch(() => {});
 
   // Notify mechanic by email
   try {
