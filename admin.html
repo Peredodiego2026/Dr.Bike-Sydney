@@ -1945,11 +1945,15 @@ async function loadDashboard(){
   const monthRev = (monthJobs||[]).reduce((s,b)=>s+(b.service_price||0),0);
   const completedToday = (todayJobs||[]).filter(b=>b.status==='completed').length;
 
+  const completedMonth = (monthJobs||[]).filter(b=>b.status==='completed');
+  const avgOrder = completedMonth.length ? Math.round(completedMonth.reduce((s,b)=>s+(b.service_price||0),0)/completedMonth.length) : 0;
+  const cancelRate = (monthJobs||[]).length ? Math.round(((monthJobs||[]).filter(b=>b.status==='cancelled').length/(monthJobs||[]).length)*100) : 0;
+
   const kpis = document.querySelectorAll('#page-dashboard .kpi-value');
-  if(kpis[0]){ kpis[0].textContent = '$'+todayRev.toLocaleString(); kpis[0].nextElementSibling.textContent = (todayJobs||[]).length+' jobs today'; }
-  if(kpis[1]){ kpis[1].textContent = '$'+monthRev.toLocaleString(); kpis[1].nextElementSibling.textContent = (monthJobs||[]).length+' jobs this month'; }
-  if(kpis[2]){ kpis[2].textContent = (pendingJobs||[]).length; kpis[2].nextElementSibling.textContent = 'awaiting confirmation'; }
-  if(kpis[3]){ kpis[3].textContent = (allClients||[]).length; kpis[3].nextElementSibling.textContent = 'total clients'; }
+  if(kpis[0]){ kpis[0].textContent = '$'+todayRev.toLocaleString(); kpis[0].nextElementSibling.textContent = (todayJobs||[]).length+' jobs today · $'+Math.round(todayRev/Math.max((todayJobs||[]).length,1))+' avg'; }
+  if(kpis[1]){ kpis[1].textContent = '$'+monthRev.toLocaleString(); kpis[1].nextElementSibling.textContent = completedMonth.length+' completed · $'+avgOrder+' avg order'; }
+  if(kpis[2]){ kpis[2].textContent = (pendingJobs||[]).length; kpis[2].nextElementSibling.textContent = 'awaiting confirmation · '+cancelRate+'% cancel rate'; }
+  if(kpis[3]){ kpis[3].textContent = (allClients||[]).length; kpis[3].nextElementSibling.textContent = 'total clients registered'; }
 
   // Recent bookings table
   const tbody = document.querySelector('#page-dashboard .tbl tbody');

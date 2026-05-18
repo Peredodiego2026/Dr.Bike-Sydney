@@ -396,7 +396,10 @@ function card(j){
     ${isPending?`<div style="position:absolute;inset:0;background:#059669;display:flex;align-items:center;justify-content:center;font-size:24px;z-index:0;border-radius:14px">✓ Accept</div>`:''}
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
-      <div><div class="job-client">${j.client}</div><div class="job-meta">${j.date===today?'Today':''}${t?' · '+t:''} ${j.date!==today?'· '+d:''}</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:38px;height:38px;border-radius:50%;background:${sc[st]}20;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${sc[st]};flex-shrink:0">${j.client.split(' ').map(n=>n[0]||'').join('').slice(0,2).toUpperCase()}</div>
+        <div><div class="job-client">${j.client}</div><div class="job-meta">${j.date===today?'Today':''}${t?' · '+t:''} ${j.date!==today?'· '+d:''}</div></div>
+      </div>
       <span class="status-badge" style="background:${sc[st]}20;color:${sc[st]}">${sl[st]||st}</span>
     </div>
     ${isEnroute?`<div id="timer-${j.id}" style="font-size:12px;color:var(--amber);font-weight:600;margin-bottom:6px;padding:0 18px">🕐 En route: 00:00</div>`:''}
