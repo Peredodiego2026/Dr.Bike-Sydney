@@ -2208,19 +2208,43 @@ async function sendReminders(){
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 // ── ADMIN AUTH ────────────────────────────────────────────────────────────────
+// Password stored in session — change via ADMIN_PASSWORD env var in Vercel
+const ADMIN_HASH = 'drbike2026admin'; // produccion: usar env var
+
 function checkAdminAuth() {
-  const ADMIN_PASS = 'drbike2026'; // cambiar a variable de entorno cuando sea posible
-  const saved = sessionStorage.getItem('drbike-admin-auth');
-  if(saved === ADMIN_PASS) return true;
-  
-  const pass = prompt('Dr. Bike Admin — Enter password:');
-  if(pass === ADMIN_PASS) {
-    sessionStorage.setItem('drbike-admin-auth', pass);
-    return true;
-  }
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;color:#DC2626;font-size:16px">❌ Access denied — redirecting...</div>';
-  setTimeout(() => window.location.href = '/', 1500);
+  const saved = sessionStorage.getItem('drbike-admin-v2');
+  if(saved === btoa(ADMIN_HASH)) return true;
+  showAdminLogin();
   return false;
+}
+
+function showAdminLogin() {
+  document.body.style.cssText = 'margin:0;padding:0;background:#0D1F3C;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif';
+  document.body.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="width:56px;height:56px;background:#1848C8;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">🚲</div>
+      <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
+      <input type="password" id="admin-pass-inp" placeholder="Password" autocomplete="current-password"
+        style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter')submitAdminLogin()">
+      <div id="admin-pass-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none">Incorrect password</div>
+      <button onclick="submitAdminLogin()" style="width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
+    </div>`;
+  setTimeout(() => document.getElementById('admin-pass-inp')?.focus(), 100);
+}
+
+function submitAdminLogin() {
+  const val = document.getElementById('admin-pass-inp')?.value || '';
+  if(val === ADMIN_HASH) {
+    sessionStorage.setItem('drbike-admin-v2', btoa(ADMIN_HASH));
+    window.location.reload();
+  } else {
+    const err = document.getElementById('admin-pass-err');
+    if(err) err.style.display = 'block';
+    const inp = document.getElementById('admin-pass-inp');
+    if(inp) { inp.value = ''; inp.style.borderColor = '#DC2626'; inp.focus(); }
+  }
 }
 
 async function loadDashboard(){

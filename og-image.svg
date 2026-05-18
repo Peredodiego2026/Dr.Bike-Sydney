@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0D1F3C"/>
+  
+  <!-- Right blue panel -->
+  <rect x="700" y="0" width="500" height="630" fill="#1848C8"/>
+  
+  <!-- Bike icon large -->
+  <g transform="translate(820, 140) scale(2.2)">
+    <circle cx="50" cy="100" r="45" fill="none" stroke="white" stroke-width="10"/>
+    <circle cx="160" cy="100" r="45" fill="none" stroke="white" stroke-width="10"/>
+    <line x1="50" y1="100" x2="105" y2="55" stroke="white" stroke-width="9" stroke-linecap="round"/>
+    <line x1="105" y1="55" x2="95" y2="100" stroke="white" stroke-width="9" stroke-linecap="round"/>
+    <line x1="95" y1="100" x2="50" y2="100" stroke="white" stroke-width="7" stroke-linecap="round"/>
+    <line x1="105" y1="55" x2="130" y2="30" stroke="white" stroke-width="9" stroke-linecap="round"/>
+    <line x1="130" y1="30" x2="160" y2="100" stroke="white" stroke-width="9" stroke-linecap="round"/>
+    <line x1="118" y1="28" x2="146" y2="28" stroke="white" stroke-width="8" stroke-linecap="round"/>
+    <line x1="118" y1="20" x2="118" y2="38" stroke="white" stroke-width="8" stroke-linecap="round"/>
+    <line x1="95" y1="50" x2="95" y2="20" stroke="white" stroke-width="7" stroke-linecap="round"/>
+    <path d="M78 17 Q95 10 112 17" fill="none" stroke="white" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="95" cy="100" r="8" fill="#1848C8" stroke="white" stroke-width="6"/>
+    <circle cx="50" cy="100" r="6" fill="#1848C8" stroke="white" stroke-width="5"/>
+    <circle cx="160" cy="100" r="6" fill="#1848C8" stroke="white" stroke-width="5"/>
+  </g>
+
+  <!-- Left content -->
+  <text x="80" y="160" font-family="Inter,Arial,sans-serif" font-size="22" fill="#60A5FA" font-weight="600" letter-spacing="4">SYDNEY · MOBILE REPAIR</text>
+  
+  <text x="80" y="240" font-family="Inter,Arial,sans-serif" font-size="72" fill="white" font-weight="800" letter-spacing="-2">Dr. Bike</text>
+  <text x="80" y="315" font-family="Inter,Arial,sans-serif" font-size="72" fill="white" font-weight="800" letter-spacing="-2">Sydney</text>
+  
+  <text x="80" y="375" font-family="Inter,Arial,sans-serif" font-size="24" fill="#94A3B8" font-weight="300">We come to you — home, work or park</text>
+  
+  <!-- Stats row -->
+  <rect x="80" y="430" width="160" height="80" rx="12" fill="rgba(255,255,255,0.08)"/>
+  <text x="160" y="465" font-family="Inter,Arial,sans-serif" font-size="28" fill="white" font-weight="800" text-anchor="middle">$109</text>
+  <text x="160" y="490" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94A3B8" text-anchor="middle">Tune-Up</text>
+
+  <rect x="260" y="430" width="160" height="80" rx="12" fill="rgba(255,255,255,0.08)"/>
+  <text x="340" y="465" font-family="Inter,Arial,sans-serif" font-size="28" fill="white" font-weight="800" text-anchor="middle">Same-day</text>
+  <text x="340" y="490" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94A3B8" text-anchor="middle">available</text>
+
+  <rect x="440" y="430" width="160" height="80" rx="12" fill="rgba(255,255,255,0.08)"/>
+  <text x="520" y="465" font-family="Inter,Arial,sans-serif" font-size="28" fill="white" font-weight="800" text-anchor="middle">Mon–Sat</text>
+  <text x="520" y="490" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94A3B8" text-anchor="middle">8am – 5pm</text>
+
+  <!-- URL bottom -->
+  <text x="80" y="590" font-family="Inter,Arial,sans-serif" font-size="18" fill="rgba(255,255,255,0.4)">drbikesydney.com.au</text>
+</svg>

@@ -156,6 +156,29 @@ export default async function handler(req, res) {
           <a href="https://drbikesydney.com.au/?action=dashboard" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View my dashboard →</a>
         </div>${footer()}`
     },
+    waitlist_confirmation: {
+      subject: `🔔 You're on the waitlist — Dr. Bike Sydney`,
+      html: `${header('#1848C8','🔔','On the waitlist!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, you're on the waitlist for <strong>${date}</strong>.</p>
+          <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 4px">What happens next?</p>
+            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6">We'll send you an email the moment a slot opens up on that day. You'll have 30 minutes to complete your booking before it's offered to the next person on the list.</p>
+          </div>
+          <a href="https://drbikesydney.com.au/?action=book" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Check other dates →</a>
+        </div>${footer()}`
+    },
+    tip_received: {
+      subject: `💛 Tip received — $${price} from ${name}`,
+      html: `${header('#059669','💛','Tip received!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6"><strong style="color:#0D1F3C">${name}</strong> left a $${price} tip after their service.</p>
+          <div style="background:#ECFDF5;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
+            <div style="font-size:32px;font-weight:800;color:#059669">$${price}</div>
+            <div style="font-size:13px;color:#059669;margin-top:4px">Goes directly to the mechanic</div>
+          </div>
+        </div>${footer()}`
+    },
     payment_failed: {
       subject: `⚠️ Payment failed — Dr. Bike Sydney membership`,
       html: `${header('#D97706','⚠️','Payment failed')}

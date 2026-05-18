@@ -26,11 +26,11 @@
 <meta property="og:description" content="Your bike fixed at your front door. Same-day service across Sydney. Book in 60 seconds.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://drbike.com.au">
-<meta property="og:image" content="https://drbikesydney.com.au/icon-512.svg">
+<meta property="og:image" content="https://drbikesydney.com.au/og-image.svg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Dr. Bike Sydney — Mobile Bicycle Repair">
 <meta name="twitter:description" content="Your bike fixed at your front door. Same-day service across Sydney.">
-<meta name="twitter:image" content="https://drbikesydney.com.au/icon-512.png">
+<meta name="twitter:image" content="https://drbikesydney.com.au/og-image.svg">
 <meta name="twitter:site" content="@drbikesydney">
 <link rel="canonical" href="https://drbike.com.au">
 <script type="application/ld+json">
@@ -1745,6 +1745,7 @@ async function init(){
         clearTimeout(loadingGuard);
         setTimeout(()=>{ hideLoading(); showView('membership'); setTimeout(()=>subscribePlan(pendingPlan), 800); }, 400);
         setTimeout(registerClientPush, 3000);
+      setTimeout(checkBikeHealthAlerts, 5000);
         await loadServices(); await loadVanZones(); loadPublicReviews();
         return;
       } else if(pendingView){
@@ -1842,6 +1843,10 @@ async function init(){
         updateDashboard();
         if(booking.status === 'enroute' || booking.status === 'completed'){
           sendEmail(booking.status, booking);
+        }
+        if(booking.status === 'completed'){
+          // Mostrar tip modal después de 2 segundos
+          setTimeout(() => showTipModal(booking.id, booking.mechanic_name || 'your mechanic'), 2000);
         }
       }).subscribe();
   }
@@ -2225,7 +2230,10 @@ async function rsSelectDay(el, date, vanNum) {
       style="padding:10px 6px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:var(--navy)">
       ${s.label}
     </button>`).join('') :
-    '<div style="grid-column:1/-1;text-align:center;color:var(--mgray);font-size:13px;padding:16px">No available slots — pick another day</div>';
+    `<div style="grid-column:1/-1;text-align:center;color:var(--mgray);font-size:13px;padding:16px">
+          No slots available for this day<br>
+          <button onclick="joinWaitlist('${date}',${vanNum})" style="margin-top:10px;padding:8px 16px;background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">🔔 Join waitlist</button>
+        </div>`;
 }
 
 function rsSelectTime(el, time) {
@@ -2430,6 +2438,114 @@ function showOnboarding(name) {
   document.body.appendChild(el);
 }
 
+
+
+async 
+
+// ── BIKE HEALTH SCORE CHECK ──────────────────────────────────────────────────
+async function checkBikeHealthAlerts() {
+  if(!currentUser) return;
+  const lastCheck = localStorage.getItem('drbike-health-check');
+  const now = Date.now();
+  // Solo checkear una vez por día
+  if(lastCheck && now - parseInt(lastCheck) < 86400000) return;
+  localStorage.setItem('drbike-health-check', now.toString());
+
+  const { data: lastBooking } = await sb.from('bookings')
+    .select('completed_at,service_name,scheduled_date')
+    .eq('client_id', currentUser.id)
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if(!lastBooking) return;
+  const lastDate = lastBooking.completed_at || lastBooking.scheduled_date;
+  if(!lastDate) return;
+
+  const daysSince = Math.floor((Date.now() - new Date(lastDate)) / (1000*60*60*24));
+  const health = Math.max(0, Math.round(100 - (daysSince/180)*100));
+
+  // Alertar si el health score bajó de 50 (más de 3 meses)
+  if(daysSince >= 90 && health < 50) {
+    const seen = localStorage.getItem('drbike-health-notif-'+lastDate);
+    if(!seen) {
+      localStorage.setItem('drbike-health-notif-'+lastDate, '1');
+      setTimeout(() => {
+        toast(`🚲 Your bike health is ${health}% — time for a service!`);
+      }, 3000);
+    }
+  }
+}
+
+function showTipModal(bookingId, mechName) {
+  document.getElementById('tip-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'tip-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:32px 24px 48px;width:100%;max-width:420px;font-family:Inter,sans-serif;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">⭐</div>
+      <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:6px">Leave a tip for ${mechName||'your mechanic'}?</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:24px">100% goes directly to your mechanic</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+        ${[5,10,15].map(amt=>`
+          <button onclick="sendTip(${amt},'${bookingId}')" style="padding:16px 8px;border:2px solid #E5E7EB;border-radius:12px;background:#fff;cursor:pointer;font-family:Inter,sans-serif;font-size:16px;font-weight:700;color:#0D1F3C;transition:all .15s" onmouseover="this.style.borderColor='#1848C8';this.style.background='#EEF3FC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#fff'">
+            <div>$${amt}</div>
+            <div style="font-size:11px;font-weight:400;color:#6B7280;margin-top:2px">${amt===5?'Nice':'':amt===10?'Great 👍':'Awesome 🙌'}</div>
+          </button>`).join('')}
+      </div>
+      <button onclick="document.getElementById('tip-modal').remove()" style="width:100%;padding:12px;background:none;border:none;color:#9CA3AF;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">No thanks</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function sendTip(amount, bookingId) {
+  document.getElementById('tip-modal').remove();
+  toast(`💛 $${amount} tip sent — thank you!`);
+  // Registrar propina en Supabase
+  try {
+    await sb.from('bookings').update({ tip_amount: amount }).eq('id', bookingId);
+    // Email al admin
+    fetch('/api/send-email', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type: 'tip_received',
+        to: 'peredo.dm@gmail.com',
+        name: userProfile?.full_name || 'Client',
+        price: amount,
+        service: 'Tip'
+      })
+    }).catch(()=>{});
+  } catch(e){}
+}
+
+function joinWaitlist(date, vanNum) {
+  if(!currentUser){ requireAuth('book'); return; }
+  const name = userProfile?.full_name || 'Client';
+  const email = currentUser.email;
+  
+  const confirmed = confirm(`Join the waitlist for ${new Date(date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'})}?\n\nWe'll notify you by email if a slot opens up.`);
+  if(!confirmed) return;
+
+  // Guardar en Supabase
+  await sb.from('availability').insert({
+    date, van_number: vanNum, blocked: false,
+    time_slot: 'waitlist',
+    reason: JSON.stringify({ clientId: currentUser.id, name, email })
+  }).then(() => {
+    toast('✅ Added to waitlist — we'll email you if a slot opens!');
+    // Email al cliente
+    fetch('/api/send-email', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type: 'waitlist_confirmation',
+        to: email, name,
+        date: new Date(date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+      })
+    }).catch(()=>{});
+  }).catch(() => toast('Could not join waitlist — try again'));
+}
 
 function showReceipt(bookingId, serviceName, price, date, time) {
   const net = Math.round(price / 1.1);
@@ -4450,7 +4566,7 @@ async function showBikeHistory(bikeId, bikeName){
       <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">${date}${mechLabel?' · 🔧 '+mechLabel:''}</div>
       ${b.mechanic_notes?`<div style="background:var(--off);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--navy);line-height:1.5;margin-bottom:6px">📝 ${b.mechanic_notes}</div>`:''}
       ${b.parts_used?`<div style="font-size:11px;color:var(--mgray);margin-bottom:4px">🔧 Parts: ${b.parts_used}</div>`:''}
-      ${b.photo_before||b.photo_after?`<div style="display:flex;gap:6px;margin-top:6px">${b.photo_before?`<img src="${b.photo_before}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" alt="Before">`:''}${b.photo_after?`<img src="${b.photo_after}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" alt="After">`:''}${(b.photo_before||b.photo_after)?'<div style="font-size:10px;color:var(--mgray);display:flex;flex-direction:column;justify-content:flex-end;gap:2px">'+(b.photo_before?'<span>Before</span>':'')+(b.photo_after?'<span>After</span>':'')+'</div>':''}</div>`:''}
+      ${b.photo_before||b.photo_after?`<div style="display:flex;gap:6px;margin-top:6px">${b.photo_before?`<img src="${b.photo_before}" loading="lazy" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" alt="Before">`:''}${b.photo_after?`<img src="${b.photo_after}" loading="lazy" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" alt="After">`:''}${(b.photo_before||b.photo_after)?'<div style="font-size:10px;color:var(--mgray);display:flex;flex-direction:column;justify-content:flex-end;gap:2px">'+(b.photo_before?'<span>Before</span>':'')+(b.photo_after?'<span>After</span>':'')+'</div>':''}</div>`:''}
       ${b.next_service_date?`<div style="font-size:11px;color:var(--green);margin-top:6px;font-weight:600">📅 Next service: ${new Date(b.next_service_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
       ${b.client_rating?`<div style="font-size:12px;margin-top:4px">${'⭐'.repeat(b.client_rating)}</div>`:''}
     </div>`;
