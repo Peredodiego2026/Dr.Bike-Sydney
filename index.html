@@ -2054,13 +2054,29 @@ async function clientCancelBooking(bookingId, serviceName){
   toast('Booking cancelled ✓');
   updateDashboard();
 
-  // Notify admin + mechanic in parallel (non-blocking)
+  // Notify via email + SMS/WhatsApp in parallel (non-blocking)
   try {
     const clientName = userProfile?.full_name || 'Client';
+    const clientEmail = currentUser?.email || '';
     const vanNum     = bkg?.van_number || 1;
     const dateStr    = bkg?.scheduled_date || '';
     const timeStr    = bkg?.scheduled_time || '';
     const suburb     = bkg?.suburb || '';
+    const price      = bkg?.service_price || 0;
+
+    // Email al cliente
+    if(clientEmail){
+      fetch('/api/send-email', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ type:'cancellation_client', to:clientEmail, name:clientName, service:serviceName, date:dateStr, time:timeStr, address:suburb, price })
+      }).catch(()=>{});
+    }
+
+    // Email al admin
+    fetch('/api/send-email', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ type:'cancellation_admin', to:'peredo.dm@gmail.com', name:clientName, service:serviceName, date:dateStr, time:timeStr, address:suburb, price })
+    }).catch(()=>{});
 
     // Get mechanic contacts for this zone from escalation_contacts
     const { data: contacts } = await sb.from('escalation_contacts')
@@ -2071,7 +2087,7 @@ async function clientCancelBooking(bookingId, serviceName){
 
     const notifTargets = (contacts || []).filter(c => {
       if(c.role === 'manager') return true;          // manager siempre recibe
-      if(c.role === 'mechanic' && String(c.zone) === String(vanNum)) return true; // mecánico de esa zona
+      if(c.role === 'mechanic' && String(c.zone) === String(vanNum)) return true; // mecanico de esa zona
       return false;
     });
 

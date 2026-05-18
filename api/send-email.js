@@ -113,6 +113,31 @@ export default async function handler(req, res) {
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you — home, work or park · Mon–Sat</p>
         </div>${footer()}`
     },
+    cancellation_client: {
+      subject: `❌ Booking cancelled — ${service} · ${date}`,
+      html: `${header('#DC2626','❌','Booking cancelled')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your booking has been cancelled as requested.</p>
+          ${bookingTable()}
+          <div style="background:#FEF2F2;border-radius:12px;padding:16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#DC2626;font-weight:600;margin:0 0 4px">Refund information</p>
+            <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">If you paid online, your refund will be processed within 5–7 business days. For questions contact hello@drbikesydney.com.au</p>
+          </div>
+          <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book again →</a>
+        </div>${footer()}`
+    },
+    cancellation_admin: {
+      subject: `❌ Booking cancelled — ${name} · ${service} · ${date}`,
+      html: `${header('#DC2626','❌','Booking cancelled by client')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6"><strong style="color:#0D1F3C">${name}</strong> cancelled their booking.</p>
+          ${bookingTable()}
+          <div style="background:#FEF2F2;border-radius:12px;padding:16px;margin-top:16px">
+            <p style="font-size:13px;color:#DC2626;font-weight:600;margin:0 0 4px">Action required</p>
+            <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">This slot is now free. Consider reaching out to waitlisted clients or updating the schedule.</p>
+          </div>
+        </div>${footer()}`
+    },
   };
 
   const template = templates[type] || templates.confirmation;
