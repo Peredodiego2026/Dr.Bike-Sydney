@@ -1604,14 +1604,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 // ── GLOBAL ERROR HANDLER ──────────────────────────────────────────────────────
 window.addEventListener('unhandledrejection', e => {
   const msg = e.reason?.message || '';
-  // No mostrar errores de conexión como pantalla en blanco
-  if(msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('offline')) {
-    console.warn('Network error (offline?):', msg);
+  // Solo mostrar banner si realmente estamos offline
+  if(!navigator.onLine && (msg.includes('Failed to fetch') || msg.includes('NetworkError'))) {
+    console.warn('Network error (offline):', msg);
     showOfflineBanner();
     e.preventDefault();
   }
 });
-window.addEventListener('online', () => { hideOfflineBanner(); if(typeof init === 'function') { try { loadServices(); loadVanZones(); } catch(e){} } });
+window.addEventListener('online', () => { hideOfflineBanner(); try { loadServices(); loadVanZones(); } catch(e){} });
 window.addEventListener('offline', showOfflineBanner);
 
 function showOfflineBanner() {
