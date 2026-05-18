@@ -55,7 +55,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
 .tab-badge{background:var(--green);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;display:none}
 .tab-badge.show{display:block}
 .jobs-wrap{flex:1;padding:16px;overflow-y:auto}
-.job-card{background:#fff;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.job-card{background:#fff;border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #F0F0F0}
 .job-card.done{opacity:0.6}
 .job-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 .job-client{font-size:16px;font-weight:700;color:var(--navy)}
@@ -219,7 +219,25 @@ function ratingHTML(jobs){
 
 async function init(){
   const s = localStorage.getItem('drbike-mech');
-  if(s){ try{ mechanic=JSON.parse(s); vanNum=mechanic.van_number||1; go('s-main'); updateUI(); await load(); sub(); }catch(e){ localStorage.removeItem('drbike-mech'); } }
+  if(s){ 
+    try{ 
+      mechanic=JSON.parse(s); 
+      vanNum=mechanic.van_number||1; 
+      go('s-main'); 
+      updateUI(); 
+      // Timeout de seguridad - si load() tarda más de 8s, mostrar error
+      const loadTimeout = setTimeout(() => {
+        if(document.getElementById('jobs-list')?.innerHTML.includes('Loading')) {
+          document.getElementById('jobs-list').innerHTML = '<div style="text-align:center;padding:40px;color:var(--mgray)"><div style="font-size:32px;margin-bottom:12px">📡</div><div style="font-weight:600;color:var(--navy)">Taking longer than usual</div><div style="font-size:13px;margin-top:8px">Check your connection</div><button onclick="load()" style="margin-top:16px;padding:10px 24px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:var(--sans)">Retry</button></div>';
+        }
+      }, 8000);
+      await load();
+      clearTimeout(loadTimeout);
+      sub(); 
+    }catch(e){ 
+      localStorage.removeItem('drbike-mech'); 
+    } 
+  }
 }
 
 async function doLogin(){
@@ -392,7 +410,7 @@ function card(j){
   const isPending = st==='pending';
   const isEnroute = st==='enroute';
   return `<div class="job-card${done?' done':''}" data-job-id="${j.id}" style="overflow:hidden;position:relative">
-    ${isPending?`<div style="position:absolute;inset:0;background:#059669;display:flex;align-items:center;justify-content:center;font-size:24px;z-index:0;border-radius:14px">✓ Accept</div>`:''}
+    ${isPending?`<div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#059669;border-radius:14px 0 0 14px;z-index:0"></div>`:''}
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
       <div style="display:flex;align-items:center;gap:10px">
