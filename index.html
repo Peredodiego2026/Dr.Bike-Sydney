@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
 <!-- Google tag (gtag.js) -->
@@ -19,16 +19,16 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <script src="https://js.stripe.com/v3/"></script>
-<title>Dr. Bike Sydney — Mobile Bicycle Repair at Your Door</title>
-<meta name="description" content="Sydney's premium mobile bike repair service. We come to you — home, work or park. Same-day availability, qualified mechanics, fixed prices. Book online in 60 seconds.">
+<title>Dr. Bike Sydney â Mobile Bicycle Repair at Your Door</title>
+<meta name="description" content="Sydney's premium mobile bike repair service. We come to you â home, work or park. Same-day availability, qualified mechanics, fixed prices. Book online in 60 seconds.">
 <meta name="keywords" content="mobile bike repair Sydney, bicycle mechanic Sydney, on-demand bike service, bike repair at home Sydney, cycling service Sydney">
-<meta property="og:title" content="Dr. Bike Sydney — Mobile Bicycle Repair">
+<meta property="og:title" content="Dr. Bike Sydney â Mobile Bicycle Repair">
 <meta property="og:description" content="Your bike fixed at your front door. Same-day service across Sydney. Book in 60 seconds.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://drbike.com.au">
 <meta property="og:image" content="https://dr-bike-sydney.vercel.app/icon-512.svg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Dr. Bike Sydney — Mobile Bicycle Repair">
+<meta name="twitter:title" content="Dr. Bike Sydney â Mobile Bicycle Repair">
 <meta name="twitter:description" content="Your bike fixed at your front door. Same-day service across Sydney.">
 <meta name="twitter:image" content="https://dr-bike-sydney.vercel.app/icon-512.png">
 <meta name="twitter:site" content="@drbikesydney">
@@ -72,7 +72,7 @@
   --gold:#F59E0B;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
   --shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--sans:'Inter',sans-serif;
   --orange:#EA580C;
-  /* Semantic tokens — light mode */
+  /* Semantic tokens â light mode */
   --bg:var(--white);
   --bg2:var(--off);
   --bg3:#F0F1F3;
@@ -86,7 +86,7 @@
   --hero-h1:var(--navy);
 }
 
-/* ── DARK MODE ── */
+/* ââ DARK MODE ââ */
 [data-theme="dark"], @media(prefers-color-scheme:dark){
   :root{
     --white:#1C1C1E;
@@ -123,7 +123,7 @@
 html{scroll-behavior:smooth}
 body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-/* ── LOADING ── */
+/* ââ LOADING ââ */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
 #loading.hide{opacity:0;pointer-events:none;visibility:hidden}
 .load-logo{width:64px;height:64px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);margin-bottom:20px;animation:pulse 1.5s infinite}
@@ -131,12 +131,12 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 .load-text{font-size:14px;color:rgba(255,255,255,0.4);font-weight:300}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 
-/* ── VIEWS ── */
+/* ââ VIEWS ââ */
 .view{display:none}.view.active{display:block;animation:fadeSlideIn .22s ease}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes progress{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
 
-/* ── DARK MODE FIXES ── */
+/* ââ DARK MODE FIXES ââ */
 [data-theme="dark"] body{background:#1C1C1E;color:#F2F2F7}
 [data-theme="dark"] .sec-h2{color:#F2F2F7}
 [data-theme="dark"] .sec-p{color:#98989F}
@@ -152,24 +152,24 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 [data-theme="dark"] .feat-title{color:#F2F2F7}
 [data-theme="dark"] .feat-desc{color:#98989F}
 [data-theme="dark"] .feat-num{color:#60A5FA}
-/* Calendar dark - fix días visibles */
+/* Calendar dark - fix dÃ­as visibles */
 [data-theme="dark"] .cday{color:#F2F2F7 !important}
 [data-theme="dark"] .cday.ot,[data-theme="dark"] .cday.pt{color:#48484A !important}
 [data-theme="dark"] .cdow{color:#636366 !important}
 [data-theme="dark"] .cday.avail{color:#F2F2F7 !important;cursor:pointer}
 [data-theme="dark"] .cday.avail:hover{background:rgba(24,72,200,0.3);color:#60A5FA !important}
 [data-theme="dark"] .cday.sel{background:#1848C8 !important;color:#fff !important}
-/* Botón Next/confirm dark */
+/* BotÃ³n Next/confirm dark */
 [data-theme="dark"] .conf-btn{background:#1848C8;color:#fff}
 [data-theme="dark"] .conf-btn:disabled{background:#38383A;color:#636366}
-/* Botón ghost dark */
+/* BotÃ³n ghost dark */
 [data-theme="dark"] .btn-ghost{background:#2C2C2E;border-color:#38383A;color:#F2F2F7}
 [data-theme="dark"] .btn-ghost:hover{border-color:#F2F2F7}
-/* Caja de texto membresía dark */
+/* Caja de texto membresÃ­a dark */
 [data-theme="dark"] [style*="background:var(--navy)"] > div{color:#F2F2F7}
 [data-theme="dark"] .pl > div[style*="background:var(--navy)"]{background:#0D1F3C !important}
 [data-theme="dark"] [style*="background:var(--navy)"] *{color:#F2F2F7 !important}
-/* Fix membresía bottom card */
+/* Fix membresÃ­a bottom card */
 [data-theme="dark"] div[style*="background:var(--navy);border-radius"]{background:#0D1F3C !important}
 [data-theme="dark"] div[style*="background:var(--navy);border-radius"] *{color:rgba(255,255,255,0.75) !important}
 [data-theme="dark"] div[style*="background:var(--navy);border-radius"] strong{color:#fff !important}
@@ -320,11 +320,11 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 [data-theme="dark"] #theme-btn{background:#2C2C2E;border-color:#38383A}
 
 
-/* ── NAV ── */
+/* ââ NAV ââ */
 /* Nav centrado en desktop */
 nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;height:64px;padding:0 32px}
 .nav-brand{display:flex;align-items:center;gap:11px;cursor:pointer;flex:0 0 200px}
-/* ── NAV LOGO ── */
+/* ââ NAV LOGO ââ */
 .nav-logo{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);flex-shrink:0}
 .nav-logo svg{width:22px;height:22px}
 .nav-name{font-size:17px;font-weight:700;color:var(--navy)}
@@ -339,7 +339,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
 .hamburger span{width:20px;height:1.5px;background:var(--navy);display:block;border-radius:2px}
 
-/* ── HERO ── */
+/* ââ HERO ââ */
 .hero{padding:88px 32px 96px;text-align:center;border-bottom:1px solid var(--border)}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px}
 .hero-eyebrow::before,.hero-eyebrow::after{content:'';width:28px;height:1.5px;background:var(--blue);border-radius:2px}
@@ -358,7 +358,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .hs-n{font-size:30px;font-weight:700;color:var(--navy);line-height:1;letter-spacing:-0.02em}
 .hs-l{font-size:10px;color:var(--mgray);margin-top:6px;letter-spacing:0.08em;text-transform:uppercase;font-weight:500}
 
-/* ── SECTION ── */
+/* ââ SECTION ââ */
 .section{padding:80px 32px;border-bottom:1px solid var(--border)}
 .section.off{background:var(--off)}
 .sec-inner{max-width:860px;margin:0 auto}
@@ -372,7 +372,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .feat-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:8px}
 .feat-desc{font-size:13px;color:var(--mgray);line-height:1.6;font-weight:300}
 
-/* ── PLANS PREVIEW ── */
+/* ââ PLANS PREVIEW ââ */
 .plan-pills{display:flex;justify-content:center;gap:16px;margin-top:40px;flex-wrap:wrap}
 .plan-pill{border:1.5px solid var(--border);border-radius:var(--r);padding:22px 24px;text-align:center;min-width:170px;cursor:pointer;transition:all .15s;background:var(--white);position:relative;box-shadow:var(--shadow)}
 .plan-pill:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
@@ -385,13 +385,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .plan-pill.hot .pp-sub{color:rgba(255,255,255,0.5)}
 .pop-ribbon{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:3px 12px;border-radius:20px;white-space:nowrap}
 
-/* ── CARDS / SHARED ── */
+/* ââ CARDS / SHARED ââ */
 .card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
 .card-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-size:14px;font-weight:600;color:var(--navy)}
 .card-sub{font-size:11px;color:var(--mgray);margin-top:2px}
 
-/* ── LOGIN / AUTH ── */
+/* ââ LOGIN / AUTH ââ */
 .auth-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--off)}
 .auth-card{background:var(--white);border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px}
@@ -413,7 +413,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .auth-foot span{color:var(--blue);cursor:pointer;font-weight:500}
 .auth-err{background:var(--red);background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
 
-/* ── DASHBOARD ── */
+/* ââ DASHBOARD ââ */
 .dash-hdr{background:var(--white);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .dash-av{width:40px;height:40px;background:var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff}
 .dash-name{font-size:15px;font-weight:600;color:var(--navy)}
@@ -445,7 +445,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .da.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .da.blue{background:var(--blue);color:#fff;border-color:var(--blue)}
 
-/* ── BOOKING ── */
+/* ââ BOOKING ââ */
 .book-wrap{max-width:720px;margin:0 auto;padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 .steps-row{display:flex;background:var(--white);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px}
 .step-item{flex:1;text-align:center;padding:14px 6px;font-size:11px;color:var(--mgray);border-bottom:2px solid transparent;transition:all .15s;letter-spacing:0.04em;text-transform:uppercase;font-weight:500}
@@ -481,7 +481,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .success-box{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:32px;text-align:center;box-shadow:var(--shadow-lg)}
 .success-icon{width:56px;height:56px;background:var(--green-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
 
-/* ── SERVICES PAGE ── */
+/* ââ SERVICES PAGE ââ */
 .svcs-wrap{max-width:860px;margin:0 auto;padding:24px}
 .filter-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .fp{padding:6px 16px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;background:var(--white);color:var(--mgray);font-family:var(--sans);transition:all .15s}
@@ -489,7 +489,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .cat-label{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.1em;padding:16px 0 10px;display:flex;align-items:center;gap:8px}
 .cat-label::before{content:'';width:14px;height:2px;background:var(--blue);border-radius:2px;display:inline-block}
 
-/* ── MEMBERSHIP ── */
+/* ââ MEMBERSHIP ââ */
 .plans-wrap{max-width:920px;margin:0 auto;padding:24px}
 .bill-tgl{display:inline-flex;background:#F3F4F6;border-radius:10px;padding:4px;margin-bottom:24px}
 .bt{padding:9px 24px;font-size:13px;cursor:pointer;color:var(--mgray);border:none;background:transparent;font-family:var(--sans);transition:all .13s;border-radius:7px;font-weight:500}
@@ -514,7 +514,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .plb:hover{opacity:.9;transform:translateY(-1px)}
 .plb-note{font-size:11px;color:var(--mgray);text-align:center;margin-top:10px;font-weight:300}
 
-/* ── MECHANIC MAP WIDGET ── */
+/* ââ MECHANIC MAP WIDGET ââ */
 .map-widget{background:var(--navy);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:14px}
 .map-dot{width:12px;height:12px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite}
 .map-info{flex:1}
@@ -533,11 +533,11 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .ml{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,0.5)}
 .mld{width:8px;height:8px;border-radius:50%}
 
-/* ── NOTIFICATION TOAST ── */
+/* ââ NOTIFICATION TOAST ââ */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;box-shadow:var(--shadow-lg);white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
-/* ── FOOTER ── */
+/* ââ FOOTER ââ */
 footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
 .fb{font-size:17px;font-weight:700;color:#fff}
 .fb em{color:var(--blue);font-style:normal}
@@ -546,7 +546,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .fl{font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;transition:color .15s}
 .fl:hover{color:#fff}
 
-/* ── SPINNER ── */
+/* ââ SPINNER ââ */
 .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -566,7 +566,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
   .section{padding:56px 20px}
 }
 @keyframes slideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
-/* ── BIKE PROFILE ── */
+/* ââ BIKE PROFILE ââ */
 .bike-card{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
 .bike-card:hover{border-color:var(--blue);transform:translateY(-1px)}
 .bike-icon{width:44px;height:44px;background:var(--blue-lt);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
@@ -581,7 +581,7 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .bike-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .bike-type-opt{padding:10px 8px;border:1.5px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:500;color:var(--navy);transition:all .15s;font-family:var(--sans);background:none}
 .bike-type-opt.sel{border-color:var(--blue);background:var(--blue-lt);color:var(--blue)}
-/* ── CHATBOT FLOTANTE ── */
+/* ââ CHATBOT FLOTANTE ââ */
 #view-book.active ~ #chatbot-btn,
 #view-book.active ~ * #chatbot-btn { display: none !important; visibility: hidden !important; }
 #chatbot-btn{position:fixed;bottom:100px;right:24px;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;z-index:900;box-shadow:0 4px 20px rgba(24,72,200,0.4);display:flex;align-items:center;justify-content:center;transition:all .2s}
@@ -672,7 +672,7 @@ html{scroll-behavior:smooth}
 .trust-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0 4px}
 .trust-item{font-size:12px;font-weight:500;color:var(--mgray);background:var(--white);border:1px solid var(--border);border-radius:20px;padding:5px 12px}
 
-/* ── REVIEWS ── */
+/* ââ REVIEWS ââ */
 .reviews-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
 .review-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px}
 .review-stars{color:#F59E0B;font-size:14px;margin-bottom:8px}
@@ -682,7 +682,7 @@ html{scroll-behavior:smooth}
 .review-name{font-size:13px;font-weight:600;color:var(--navy)}
 .review-suburb{font-size:11px;color:var(--mgray)}
 
-/* ── HOW IT WORKS ── */
+/* ââ HOW IT WORKS ââ */
 .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:32px}
 .step-card{text-align:center;padding:28px 20px;background:var(--white);border-radius:16px;border:1px solid var(--border);position:relative}
 .step-num{width:44px;height:44px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:800;margin:0 auto 16px}
@@ -690,7 +690,7 @@ html{scroll-behavior:smooth}
 .step-desc{font-size:13px;color:var(--mgray);line-height:1.6}
 .step-arrow{position:absolute;right:-20px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--border);z-index:1}
 
-/* ── SERVICE PREVIEW ── */
+/* ââ SERVICE PREVIEW ââ */
 .svc-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
 .svc-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s}
 .svc-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 4px 16px rgba(24,72,200,0.1)}
@@ -708,7 +708,7 @@ html{scroll-behavior:smooth}
 .back-btn:hover{color:var(--navy)}
 .map-real{border-radius:9px;height:160px;margin-top:12px;position:relative;overflow:hidden;background:#1a3a6b}
 .map-real iframe{width:100%;height:100%;border:none;border-radius:9px}
-/* ── ADMIN PANEL ── */
+/* ââ ADMIN PANEL ââ */
 #view-admin{}
 .admin-wrap{max-width:960px;margin:0 auto;padding:24px}
 .zone-van{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
@@ -799,7 +799,7 @@ html{scroll-behavior:smooth}
     </div>
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:700;color:#fff">Add Dr. Bike to home screen</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px">Book repairs in one tap — free</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px">Book repairs in one tap â free</div>
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0;align-items:center">
       <button onclick="installPWA()" id="pwa-install-btn" style="background:#1848C8;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent">Install</button>
@@ -825,8 +825,8 @@ html{scroll-behavior:smooth}
         <div style="font-size:13px;color:#fff">Tap <strong style="color:#60A5FA">"Add to Home Screen"</strong></div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:24px;height:24px;background:#059669;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">✓</div>
-        <div style="font-size:13px;color:#fff">Tap <strong style="color:#4ade80">"Add"</strong> — done! 🎉</div>
+        <div style="width:24px;height:24px;background:#059669;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">â</div>
+        <div style="font-size:13px;color:#fff">Tap <strong style="color:#4ade80">"Add"</strong> â done! ð</div>
       </div>
     </div>
   </div>
@@ -835,7 +835,7 @@ html{scroll-behavior:smooth}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ══ HOME ══ -->
+<!-- ââ HOME ââ -->
 <div id="view-home" class="view active">
   <nav>
     <div class="nav-brand" onclick="showView('home')">
@@ -849,7 +849,7 @@ html{scroll-behavior:smooth}
       </div>
       <div>
         <div class="nav-name">Dr. Bike</div>
-        <div class="nav-tagline">Sydney · Mobile repair</div>
+        <div class="nav-tagline">Sydney Â· Mobile repair</div>
       </div>
     </div>
     <div class="nav-links" id="nav-links">
@@ -859,7 +859,7 @@ html{scroll-behavior:smooth}
       <button class="nl cta" onclick="showView('auth')" id="nav-auth-btn">Sign in</button>
     </div>
     <div class="nav-right">
-      <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s">🌙</button>
+      <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s">ð</button>
       <button id="lang-btn" onclick="toggleLangPanel()" title="Change language">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span id="lang-label">EN</span>
@@ -869,24 +869,24 @@ html{scroll-behavior:smooth}
   </nav>
 
   <div class="hero">
-    <div class="hero-eyebrow">⭐ Sydney's #1 Mobile Bike Repair</div>
+    <div class="hero-eyebrow">â­ Sydney's #1 Mobile Bike Repair</div>
     <h1>Your bike, fixed at<br><span class="accent">your front door</span></h1>
-    <div class="hero-sub">No workshop. No waiting. We come to you — same day.</div>
-    <p>Professional mobile mechanics across Sydney — home, work or park. Mon–Sat.</p>
+    <div class="hero-sub">No workshop. No waiting. We come to you â same day.</div>
+    <p>Professional mobile mechanics across Sydney â home, work or park. MonâSat.</p>
     <div class="hero-btns">
-      <button class="btn-primary" onclick="goBook()">Book now — takes 60 sec</button>
+      <button class="btn-primary" onclick="goBook()">Book now â takes 60 sec</button>
       <button class="btn-ghost" onclick="showView('services')">View all services</button>
     </div>
     <!-- Trust bar -->
     <div class="trust-bar">
-      <div class="trust-item">✅ Fixed prices — no surprises</div>
-      <div class="trust-item">🔧 Qualified mechanics</div>
-      <div class="trust-item">📍 All Sydney suburbs</div>
-      <div class="trust-item">⚡ Same-day available</div>
+      <div class="trust-item">â Fixed prices â no surprises</div>
+      <div class="trust-item">ð§ Qualified mechanics</div>
+      <div class="trust-item">ð All Sydney suburbs</div>
+      <div class="trust-item">â¡ Same-day available</div>
     </div>
     <div class="hero-stats">
       <div class="hs"><div class="hs-n">500+</div><div class="hs-l">Happy riders</div></div>
-      <div class="hs"><div class="hs-n">4.9★</div><div class="hs-l">Average rating</div></div>
+      <div class="hs"><div class="hs-n">4.9â</div><div class="hs-l">Average rating</div></div>
       <div class="hs"><div class="hs-n">Same day</div><div class="hs-l">Availability</div></div>
       <div class="hs"><div class="hs-n">$57</div><div class="hs-l">Membership/mo</div></div>
     </div>
@@ -896,11 +896,11 @@ html{scroll-behavior:smooth}
     <div class="sec-inner">
       <div class="sec-eye">Why Dr. Bike</div>
       <div class="sec-h2">Everything your bike needs,<br>at your doorstep</div>
-      <p class="sec-p">No workshop trips, no loading the car. We bring a fully equipped mobile workshop to you, Mon–Sat across Sydney.</p>
+      <p class="sec-p">No workshop trips, no loading the car. We bring a fully equipped mobile workshop to you, MonâSat across Sydney.</p>
       <div class="feats">
         <div class="feat"><div class="feat-num">01</div><div class="feat-title">Same-day availability</div><div class="feat-desc">Book this morning and we are at your door by afternoon. Six days a week across Sydney.</div></div>
         <div class="feat"><div class="feat-num">02</div><div class="feat-title">Qualified mechanics</div><div class="feat-desc">Road, MTB and e-bikes serviced with professional-grade tools. Experienced hands every time.</div></div>
-        <div class="feat"><div class="feat-num">03</div><div class="feat-title">Transparent pricing</div><div class="feat-desc">Fixed prices, no hidden charges. Members save 8–18% on every service.</div></div>
+        <div class="feat"><div class="feat-num">03</div><div class="feat-title">Transparent pricing</div><div class="feat-desc">Fixed prices, no hidden charges. Members save 8â18% on every service.</div></div>
       </div>
     </div>
   </div>
@@ -909,22 +909,22 @@ html{scroll-behavior:smooth}
     <div class="sec-inner" style="text-align:center">
       <div class="sec-eye" style="justify-content:center">Membership</div>
       <div class="sec-h2">Save more. Ride more.</div>
-      <p class="sec-p" style="margin:0 auto 0">From $57/month — priority booking, discounts and free Tune-Ups.</p>
+      <p class="sec-p" style="margin:0 auto 0">From $57/month â priority booking, discounts and free Tune-Ups.</p>
       <div class="plan-pills">
         <div class="plan-pill" onclick="showView('membership')">
           <div class="pp-label">Basic</div>
           <div class="pp-price">$57<span style="font-size:13px;font-weight:300;color:var(--mgray)">/mo</span></div>
-          <div class="pp-sub">1 bike · 8% off</div>
+          <div class="pp-sub">1 bike Â· 8% off</div>
         </div>
         <div class="plan-pill hot" onclick="showView('membership')">
           <div class="pop-ribbon">Most popular</div>
           <div class="pp-label">Standard</div>
           <div class="pp-price">$97<span style="font-size:13px;font-weight:300;color:rgba(255,255,255,0.5)">/mo</span></div>
-          <div class="pp-sub">1 bike · 12% off</div>
+          <div class="pp-sub">1 bike Â· 12% off</div>
         </div>
         <div class="plan-pill" onclick="showView('membership')" style="border-color:#0D1F3C;background:#0D1F3C">
           <div class="pp-price" style="color:#fff">$147<span style="font-size:13px;font-weight:300;color:var(--mgray)">/mo</span></div>
-          <div class="pp-label" style="color:rgba(255,255,255,0.6)">VIP · 3 bikes</div>
+          <div class="pp-label" style="color:rgba(255,255,255,0.6)">VIP Â· 3 bikes</div>
         </div>
       </div>
       <div style="margin-top:28px"><button class="btn-primary" onclick="showView('membership')">See full membership details</button></div>
@@ -942,13 +942,13 @@ html{scroll-behavior:smooth}
           <div class="step-num">1</div>
           <div class="step-title">Book online</div>
           <div class="step-desc">Choose your service, pick a time that suits you, and enter your address. Takes under 60 seconds.</div>
-          <div class="step-arrow">→</div>
+          <div class="step-arrow">â</div>
         </div>
         <div class="step-card">
           <div class="step-num">2</div>
           <div class="step-title">We come to you</div>
-          <div class="step-desc">Your mechanic arrives on time with a fully equipped mobile workshop — home, work or park.</div>
-          <div class="step-arrow">→</div>
+          <div class="step-desc">Your mechanic arrives on time with a fully equipped mobile workshop â home, work or park.</div>
+          <div class="step-arrow">â</div>
         </div>
         <div class="step-card">
           <div class="step-num">3</div>
@@ -957,7 +957,7 @@ html{scroll-behavior:smooth}
         </div>
       </div>
       <div style="text-align:center;margin-top:32px">
-        <button class="btn-primary" onclick="goBook()">Book your first service →</button>
+        <button class="btn-primary" onclick="goBook()">Book your first service â</button>
       </div>
     </div>
   </div>
@@ -969,7 +969,7 @@ html{scroll-behavior:smooth}
       <div class="sec-h2" style="text-align:center">Everything your bike needs</div>
       <p class="sec-p" style="text-align:center;margin:0 auto">Road, MTB, gravel and e-bikes. All services include mobile call-out.</p>
       <div class="svc-preview">
-        <div class="svc-card" onclick="showView('services')"><div class="svc-name">Tune-Up</div><div class="svc-price">$97</div><div class="svc-time">~60 min · Most popular</div></div>
+        <div class="svc-card" onclick="showView('services')"><div class="svc-name">Tune-Up</div><div class="svc-price">$97</div><div class="svc-time">~60 min Â· Most popular</div></div>
         <div class="svc-card" onclick="showView('services')"><div class="svc-name">Brake Bleed</div><div class="svc-price">$77</div><div class="svc-time">~45 min</div></div>
         <div class="svc-card" onclick="showView('services')"><div class="svc-name">Gear Adjustment</div><div class="svc-price">$57</div><div class="svc-time">~30 min</div></div>
         <div class="svc-card" onclick="showView('services')"><div class="svc-name">Standard Service</div><div class="svc-price">$147</div><div class="svc-time">~90 min</div></div>
@@ -990,9 +990,9 @@ html{scroll-behavior:smooth}
       <p class="sec-p" style="text-align:center;margin:0 auto" id="reviews-summary"></p>
       <div class="reviews-grid" id="reviews-grid">
         <!-- Loaded from Supabase -->
-        <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Booked at 9am and the mechanic was at my door by 1pm. Tuned up my road bike perfectly. Will use every time."</div><div class="review-author"><div class="review-avatar">JM</div><div><div class="review-name">James M.</div><div class="review-suburb">Surry Hills</div></div></div></div>
-        <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"My e-bike had a strange issue no one could fix. Dr. Bike diagnosed it on the spot and sorted it in an hour. Amazing."</div><div class="review-author"><div class="review-avatar">SC</div><div><div class="review-name">Sarah C.</div><div class="review-suburb">Bondi</div></div></div></div>
-        <div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Got the Standard membership — already saved over $200 in the first two months. Mechanics are professional and fast."</div><div class="review-author"><div class="review-avatar">TK</div><div><div class="review-name">Tom K.</div><div class="review-suburb">Newtown</div></div></div></div>
+        <div class="review-card"><div class="review-stars">âââââ</div><div class="review-text">"Booked at 9am and the mechanic was at my door by 1pm. Tuned up my road bike perfectly. Will use every time."</div><div class="review-author"><div class="review-avatar">JM</div><div><div class="review-name">James M.</div><div class="review-suburb">Surry Hills</div></div></div></div>
+        <div class="review-card"><div class="review-stars">âââââ</div><div class="review-text">"My e-bike had a strange issue no one could fix. Dr. Bike diagnosed it on the spot and sorted it in an hour. Amazing."</div><div class="review-author"><div class="review-avatar">SC</div><div><div class="review-name">Sarah C.</div><div class="review-suburb">Bondi</div></div></div></div>
+        <div class="review-card"><div class="review-stars">âââââ</div><div class="review-text">"Got the Standard membership â already saved over $200 in the first two months. Mechanics are professional and fast."</div><div class="review-author"><div class="review-avatar">TK</div><div><div class="review-name">Tom K.</div><div class="review-suburb">Newtown</div></div></div></div>
       </div>
     </div>
   </div>
@@ -1002,13 +1002,13 @@ html{scroll-behavior:smooth}
     <div class="sec-inner" style="text-align:center">
       <div class="sec-h2" style="color:#fff;margin-bottom:12px">Ready to ride better?</div>
       <p style="color:rgba(255,255,255,0.7);margin-bottom:28px;font-size:16px">Join 500+ Sydney cyclists who never visit a workshop again.</p>
-      <button class="btn-primary" style="background:#fff;color:#0D1F3C;font-size:16px;padding:14px 32px" onclick="goBook()">Book your first service →</button>
-      <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:12px">No account needed to browse · Sign in with Google to book</p>
+      <button class="btn-primary" style="background:#fff;color:#0D1F3C;font-size:16px;padding:14px 32px" onclick="goBook()">Book your first service â</button>
+      <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:12px">No account needed to browse Â· Sign in with Google to book</p>
     </div>
   </div>
 
   <footer>
-    <div><div class="fb">Dr. <em>Bike</em> · Sydney</div><div class="fs">drbike.com.au · Mobile bicycle repair</div></div>
+    <div><div class="fb">Dr. <em>Bike</em> Â· Sydney</div><div class="fs">drbike.com.au Â· Mobile bicycle repair</div></div>
     <div class="flinks">
       <span class="fl" onclick="showView('services')">Services</span>
       <span class="fl" onclick="showView('membership')">Membership</span>
@@ -1018,7 +1018,7 @@ html{scroll-behavior:smooth}
   </footer>
 </div>
 
-<!-- ══ AUTH ══ -->
+<!-- ââ AUTH ââ -->
 <div id="view-auth" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" class="back-btn">
@@ -1043,12 +1043,12 @@ html{scroll-behavior:smooth}
       <input class="inp" type="email" placeholder="Email address" id="auth-email">
       <input class="inp" type="password" placeholder="Password" id="auth-password" style="margin-bottom:16px">
       <button class="submit-btn" onclick="signInEmail()" id="signin-btn">Sign in</button>
-      <div class="auth-foot">No account? <span onclick="signUpEmail()">Create one free</span> &nbsp;·&nbsp; <span onclick="showView('home')">Back to home</span></div>
+      <div class="auth-foot">No account? <span onclick="signUpEmail()">Create one free</span> &nbsp;Â·&nbsp; <span onclick="showView('home')">Back to home</span></div>
     </div>
   </div>
 </div>
 
-<!-- ══ DASHBOARD ══ -->
+<!-- ââ DASHBOARD ââ -->
 <div id="view-dashboard" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" class="back-btn">
@@ -1074,17 +1074,17 @@ html{scroll-behavior:smooth}
         <div class="map-info" style="width:100%">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div>
-              <div class="map-title">Your mechanic is on the way 🚐</div>
-              <div class="map-sub" id="map-mech-name">Van 1 · Mechanic 1</div>
+              <div class="map-title">Your mechanic is on the way ð</div>
+              <div class="map-sub" id="map-mech-name">Van 1 Â· Mechanic 1</div>
             </div>
             <div style="text-align:center;flex-shrink:0;margin-left:12px">
-              <div class="map-eta" id="map-eta">—</div>
+              <div class="map-eta" id="map-eta">â</div>
               <div class="map-eta-l">min away</div>
             </div>
           </div>
           <div id="live-map" style="height:160px;border-radius:9px;margin-top:10px;overflow:hidden;background:#1a3a6b;position:relative">
             <div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:13px;z-index:1">
-              📍 Waiting for mechanic location...
+              ð Waiting for mechanic location...
             </div>
           </div>
           <div style="display:flex;gap:16px;margin-top:8px">
@@ -1098,7 +1098,7 @@ html{scroll-behavior:smooth}
       <div class="card" style="margin-top:12px">
         <div class="card-hdr" style="cursor:pointer" onclick="toggleJobChat()">
           <div>
-            <div class="card-title">💬 Chat with your mechanic</div>
+            <div class="card-title">ð¬ Chat with your mechanic</div>
             <div class="card-sub">Ask questions about your service</div>
           </div>
           <svg id="chat-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -1107,17 +1107,17 @@ html{scroll-behavior:smooth}
           <div id="job-chat-msgs" style="height:200px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--off)"></div>
           <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">
             <input id="job-chat-inp" class="inp" style="margin:0;flex:1" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendJobMessage()">
-            <button onclick="sendJobMessage()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;cursor:pointer;font-size:18px">→</button>
+            <button onclick="sendJobMessage()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;cursor:pointer;font-size:18px">â</button>
           </div>
         </div>
       </div>
     </div>
 
     <div class="kpis">
-      <div class="kpi"><div class="kpi-n" id="kpi-jobs">—</div><div class="kpi-l">Total services</div></div>
-      <div class="kpi"><div class="kpi-n blue" id="kpi-spent">—</div><div class="kpi-l">Total spent</div></div>
-      <div class="kpi"><div class="kpi-n" id="kpi-next">—</div><div class="kpi-l">Next booking</div></div>
-      <div class="kpi"><div class="kpi-n" id="kpi-disc">—</div><div class="kpi-l">My discount</div></div>
+      <div class="kpi"><div class="kpi-n" id="kpi-jobs">â</div><div class="kpi-l">Total services</div></div>
+      <div class="kpi"><div class="kpi-n blue" id="kpi-spent">â</div><div class="kpi-l">Total spent</div></div>
+      <div class="kpi"><div class="kpi-n" id="kpi-next">â</div><div class="kpi-l">Next booking</div></div>
+      <div class="kpi"><div class="kpi-n" id="kpi-disc">â</div><div class="kpi-l">My discount</div></div>
     </div>
 
     <div class="two-col">
@@ -1144,10 +1144,10 @@ html{scroll-behavior:smooth}
     <div class="card" style="padding:18px;background:linear-gradient(135deg,#0D1F3C,#1848C8);border:none" id="referral-card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
         <div>
-          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">🎁 Refer a friend — earn $15 each</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">ð Refer a friend â earn $15 each</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:8px">Share your code. When they book, you both get $15 off.</div>
           <div style="background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;display:inline-flex;align-items:center;gap:10px">
-            <span style="font-size:16px;font-weight:800;color:#fff;letter-spacing:0.08em" id="referral-code-display">—</span>
+            <span style="font-size:16px;font-weight:800;color:#fff;letter-spacing:0.08em" id="referral-code-display">â</span>
             <button onclick="copyReferral()" style="background:rgba(255,255,255,0.2);border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;font-family:Inter,sans-serif">Copy</button>
           </div>
         </div>
@@ -1162,7 +1162,7 @@ html{scroll-behavior:smooth}
   </div>
 </div>
 
-<!-- ══ SERVICES ══ -->
+<!-- ââ SERVICES ââ -->
 <div id="view-services" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" class="back-btn">
@@ -1173,18 +1173,18 @@ html{scroll-behavior:smooth}
   <div style="background:var(--white);padding:32px 28px 24px;border-bottom:1px solid var(--border)">
     <div class="sec-eye">Services</div>
     <div style="font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-0.02em">Our services</div>
-    <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">Tap any service to book. Members save 8–18%.</div>
-    <button style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);padding:0;display:inline-flex;align-items:center;gap:4px;margin-top:8px" onclick="showView('home')">← Back to home</button>
+    <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">Tap any service to book. Members save 8â18%.</div>
+    <button style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);padding:0;display:inline-flex;align-items:center;gap:4px;margin-top:8px" onclick="showView('home')">â Back to home</button>
   </div>
   <div class="svcs-wrap">
     <div class="filter-pills" id="filter-pills"></div>
     <div id="services-grid"></div>
   </div>
 
-  <!-- ── PUBLIC REVIEWS ── -->
+  <!-- ââ PUBLIC REVIEWS ââ -->
   <div style="padding:40px 20px;border-top:1px solid var(--border);max-width:900px;margin:0 auto">
     <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:11px;font-weight:600;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">⭐ Client reviews</div>
+      <div style="font-size:11px;font-weight:600;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">â­ Client reviews</div>
       <div style="font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-0.02em">What our clients say</div>
     </div>
     <div id="public-reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
@@ -1193,7 +1193,7 @@ html{scroll-behavior:smooth}
   </div>
 </div>
 
-<!-- ══ BOOKING ══ -->
+<!-- ââ BOOKING ââ -->
 <div id="view-book" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" class="back-btn">
@@ -1204,7 +1204,7 @@ html{scroll-behavior:smooth}
   <div style="background:var(--white);padding:32px 28px 24px;border-bottom:1px solid var(--border)">
     <div class="sec-eye">Booking</div>
     <div style="font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-0.02em">Book a service</div>
-    <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">We come to your door, Mon–Sat.</div>
+    <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">We come to your door, MonâSat.</div>
   </div>
   <div class="book-wrap">
     <div class="steps-row">
@@ -1223,12 +1223,12 @@ html{scroll-behavior:smooth}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:var(--navy)">🤖 AI Bike Diagnosis</div>
-            <div style="font-size:11px;color:var(--mgray)">Photo your bike issue — Claude tells you what's wrong</div>
+            <div style="font-size:13px;font-weight:700;color:var(--navy)">ð¤ AI Bike Diagnosis</div>
+            <div style="font-size:11px;color:var(--mgray)">Photo your bike issue â Claude tells you what's wrong</div>
           </div>
         </div>
         <div id="diag-upload-area" onclick="document.getElementById('diag-photo-input').click()" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="font-size:28px;margin-bottom:6px">📸</div>
+          <div style="font-size:28px;margin-bottom:6px">ð¸</div>
           <div style="font-size:13px;font-weight:600;color:var(--navy)">Take or upload a photo</div>
           <div style="font-size:11px;color:var(--mgray);margin-top:2px">of the problem area</div>
         </div>
@@ -1242,12 +1242,12 @@ html{scroll-behavior:smooth}
         </div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button id="diag-mic-btn" onclick="toggleVoiceDiagnosis()" style="flex:1;background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:var(--sans);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">
-            🎙️ Record noise description
+            ðï¸ Record noise description
           </button>
         </div>
         <div id="diag-voice-status" style="display:none;font-size:12px;text-align:center;margin-top:8px;color:var(--mgray)"></div>
         <textarea id="diag-text-input" placeholder="Or type a description... e.g. 'clicking noise when pedaling on the left side'" style="display:none;width:100%;margin-top:8px;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;color:var(--navy);background:var(--white);resize:none;height:72px;box-sizing:border-box" oninput="this.style.display='block'"></textarea>
-        <button id="diag-text-btn" onclick="analyzeBikeText()" style="display:none;width:100%;margin-top:8px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">🔍 Analyse description</button>
+        <button id="diag-text-btn" onclick="analyzeBikeText()" style="display:none;width:100%;margin-top:8px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">ð Analyse description</button>
         <!-- Result area -->
         <div id="diag-result" style="display:none;margin-top:12px"></div>
       </div>
@@ -1262,7 +1262,7 @@ html{scroll-behavior:smooth}
     <!-- Step 2: Date & Time -->
     <div id="step-2" style="display:none">
       <div class="card" style="padding:18px;margin-bottom:14px">
-        <div class="ct">Selected: <span id="sel-svc-name" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--blue)">—</span></div>
+        <div class="ct">Selected: <span id="sel-svc-name" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--blue)">â</span></div>
         <div class="ct">Choose a date</div>
         <div class="cal-g" style="margin-bottom:16px" id="cal-grid">
           <div class="cdow">Su</div><div class="cdow">Mo</div><div class="cdow">Tu</div><div class="cdow">We</div><div class="cdow">Th</div><div class="cdow">Fr</div><div class="cdow">Sa</div>
@@ -1272,8 +1272,8 @@ html{scroll-behavior:smooth}
           <div class="tg" id="times-grid"></div>
         </div>
         <div style="display:flex;gap:10px;margin-top:16px">
-          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(1)">← Back</button>
-          <button class="conf-btn" style="margin-top:0;flex:1" onclick="goStep(3)" id="step2-next" disabled>Next →</button>
+          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(1)">â Back</button>
+          <button class="conf-btn" style="margin-top:0;flex:1" onclick="goStep(3)" id="step2-next" disabled>Next â</button>
         </div>
       </div>
     </div>
@@ -1286,11 +1286,11 @@ html{scroll-behavior:smooth}
         <input class="inp" type="text" placeholder="Suburb" id="addr-suburb" style="margin-bottom:8px">
         <input class="inp" type="text" placeholder="Postcode" id="addr-postcode" style="margin-bottom:16px">
         <div style="background:var(--blue-lt);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);font-weight:500;margin-bottom:14px">
-          📍 We cover: Inner West, Eastern Suburbs, CBD, North Shore, Manly and Northern Beaches
+          ð We cover: Inner West, Eastern Suburbs, CBD, North Shore, Manly and Northern Beaches
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(2)">← Back</button>
-          <button class="conf-btn" style="margin-top:0;flex:1" onclick="goStep(4)">Next →</button>
+          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(2)">â Back</button>
+          <button class="conf-btn" style="margin-top:0;flex:1" onclick="goStep(4)">Next â</button>
         </div>
       </div>
     </div>
@@ -1299,14 +1299,14 @@ html{scroll-behavior:smooth}
     <div id="step-4" style="display:none">
       <div class="card" style="padding:18px;margin-bottom:14px">
         <div class="ct">Confirm booking</div>
-        <div class="conf-row"><span class="conf-label">Service</span><span id="cf-svc">—</span></div>
-        <div class="conf-row"><span class="conf-label">Date & time</span><span id="cf-dt">—</span></div>
-        <div class="conf-row"><span class="conf-label">Address</span><span id="cf-addr">—</span></div>
+        <div class="conf-row"><span class="conf-label">Service</span><span id="cf-svc">â</span></div>
+        <div class="conf-row"><span class="conf-label">Date & time</span><span id="cf-dt">â</span></div>
+        <div class="conf-row"><span class="conf-label">Address</span><span id="cf-addr">â</span></div>
         <div class="conf-row"><span class="conf-label">Van assigned</span><span id="cf-van">Auto-assigned by zone</span></div>
 
         <!-- Referral code field -->
         <div style="margin:14px 0;padding:14px;background:var(--off);border-radius:10px;border:1.5px solid var(--border)">
-          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">🎁 Promo or referral code?</div>
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">ð Promo or referral code?</div>
           <div style="display:flex;gap:8px">
             <input id="referral-input" class="inp" placeholder="Enter code (e.g. SUMMER20)" style="margin-bottom:0;text-transform:uppercase;letter-spacing:0.08em;font-weight:600" oninput="this.value=this.value.toUpperCase()" maxlength="9">
             <button onclick="applyReferral()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap">Apply</button>
@@ -1318,12 +1318,12 @@ html{scroll-behavior:smooth}
           <span style="font-weight:600;color:var(--navy)">Total</span>
           <div style="text-align:right">
             <div id="cf-price-original" style="font-size:13px;color:var(--mgray);text-decoration:line-through;display:none"></div>
-            <div style="font-size:24px;font-weight:700;color:var(--blue)" id="cf-price">—</div>
-            <div id="cf-discount-label" style="font-size:11px;color:var(--green);font-weight:600;display:none">🎉 Referral discount applied!</div>
+            <div style="font-size:24px;font-weight:700;color:var(--blue)" id="cf-price">â</div>
+            <div id="cf-discount-label" style="font-size:11px;color:var(--green);font-weight:600;display:none">ð Referral discount applied!</div>
           </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:16px">
-          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(3)">← Back</button>
+          <button class="btn-ghost" style="padding:10px 20px;font-size:13px" onclick="goStep(3)">â Back</button>
           <button class="conf-btn" style="margin-top:0;flex:1" onclick="confirmBooking()" id="confirm-btn">Confirm booking</button>
         </div>
       </div>
@@ -1335,7 +1335,7 @@ html{scroll-behavior:smooth}
         <div class="success-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <div style="font-size:24px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:-0.01em">Booking confirmed ✓</div>
+        <div style="font-size:24px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:-0.01em">Booking confirmed â</div>
         <div style="font-size:13px;color:var(--mgray);margin-bottom:20px;font-weight:300;line-height:1.6">We'll send you a confirmation. Your mechanic will contact you 30 minutes before arrival.</div>
         <button class="btn-primary" onclick="showView('dashboard')">View in my account</button>
       </div>
@@ -1343,7 +1343,7 @@ html{scroll-behavior:smooth}
   </div>
 </div>
 
-<!-- ══ MEMBERSHIP ══ -->
+<!-- ââ MEMBERSHIP ââ -->
 <div id="view-membership" class="view">
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
     <button onclick="showView('home')" class="back-btn">
@@ -1357,7 +1357,7 @@ html{scroll-behavior:smooth}
     <div style="font-size:14px;color:var(--mgray);max-width:440px;margin:0 auto 24px;line-height:1.7;font-weight:300">Priority booking, member discounts and free services. 3-month minimum. Parts always extra.</div>
     <div class="bill-tgl">
       <button class="bt on" id="bt-m" onclick="setBilling('m')">Monthly</button>
-      <button class="bt" id="bt-a" onclick="setBilling('a')">Annual — save 20%</button>
+      <button class="bt" id="bt-a" onclick="setBilling('a')">Annual â save 20%</button>
     </div>
   </div>
   <div style="padding:32px 24px;background:var(--off)">
@@ -1371,13 +1371,13 @@ html{scroll-behavior:smooth}
 </div>
 
 
-<!-- ══ ADMIN PANEL ══ -->
+<!-- ââ ADMIN PANEL ââ -->
 <div id="view-admin" class="view">
   <div style="background:var(--white);padding:32px 28px 24px;border-bottom:1px solid var(--border)">
     <div class="sec-eye">Admin</div>
     <div style="font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-0.02em">Zone Manager</div>
     <div style="font-size:14px;color:var(--mgray);font-weight:300;margin-top:6px">Assign suburbs to each van. Jobs auto-route based on the client's suburb.</div>
-    <button style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);padding:0;display:inline-flex;align-items:center;gap:4px;margin-top:8px" onclick="showView('home')">← Back to home</button>
+    <button style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);padding:0;display:inline-flex;align-items:center;gap:4px;margin-top:8px" onclick="showView('home')">â Back to home</button>
   </div>
   <div class="admin-wrap">
     <div id="vans-container"></div>
@@ -1392,22 +1392,22 @@ html{scroll-behavior:smooth}
   </div>
 </div>
 
-<!-- ══ BIKE MODAL ══ -->
+<!-- ââ BIKE MODAL ââ -->
 <div id="bike-modal">
   <div class="bike-modal-inner">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <div style="font-size:18px;font-weight:700;color:var(--navy)" id="bike-modal-title">Add a bike</div>
-      <button onclick="closeBikeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">✕</button>
+      <button onclick="closeBikeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">â</button>
     </div>
     <input type="hidden" id="bike-id">
     <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Bike type</div>
     <div class="bike-type-grid">
-      <button class="bike-type-opt sel" id="bt-road" onclick="setBikeType('road',this)">🚴 Road</button>
-      <button class="bike-type-opt" id="bt-mtb" onclick="setBikeType('mtb',this)">🚵 MTB</button>
-      <button class="bike-type-opt" id="bt-ebike" onclick="setBikeType('ebike',this)">⚡ E-bike</button>
-      <button class="bike-type-opt" id="bt-hybrid" onclick="setBikeType('hybrid',this)">🚲 Hybrid</button>
-      <button class="bike-type-opt" id="bt-bmx" onclick="setBikeType('bmx',this)">🛴 BMX</button>
-      <button class="bike-type-opt" id="bt-kids" onclick="setBikeType('kids',this)">👶 Kids</button>
+      <button class="bike-type-opt sel" id="bt-road" onclick="setBikeType('road',this)">ð´ Road</button>
+      <button class="bike-type-opt" id="bt-mtb" onclick="setBikeType('mtb',this)">ðµ MTB</button>
+      <button class="bike-type-opt" id="bt-ebike" onclick="setBikeType('ebike',this)">â¡ E-bike</button>
+      <button class="bike-type-opt" id="bt-hybrid" onclick="setBikeType('hybrid',this)">ð² Hybrid</button>
+      <button class="bike-type-opt" id="bt-bmx" onclick="setBikeType('bmx',this)">ð´ BMX</button>
+      <button class="bike-type-opt" id="bt-kids" onclick="setBikeType('kids',this)">ð¶ Kids</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
       <div>
@@ -1433,11 +1433,11 @@ html{scroll-behavior:smooth}
       <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Notes (optional)</div>
       <input id="bike-notes" placeholder="e.g. Red frame, Shimano 105" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-family:var(--sans);outline:none">
     </div>
-    <button onclick="saveBike()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Save bike 🚲</button>
+    <button onclick="saveBike()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Save bike ð²</button>
   </div>
 </div>
 
-<!-- ══ CHATBOT FLOTANTE ══ -->
+<!-- ââ CHATBOT FLOTANTE ââ -->
 <button id="chatbot-btn" onclick="toggleChat()">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   <div class="cb-notif" id="cb-notif"></div>
@@ -1445,19 +1445,19 @@ html{scroll-behavior:smooth}
 
 <div id="chatbot-panel">
   <div class="cb-hdr">
-    <div class="cb-hdr-av">🚲</div>
+    <div class="cb-hdr-av">ð²</div>
     <div class="cb-hdr-info">
       <div class="cb-hdr-name">Dr. Bike Assistant</div>
       <div class="cb-hdr-status">Online now</div>
     </div>
-    <button class="cb-close" onclick="toggleChat()">✕</button>
+    <button class="cb-close" onclick="toggleChat()">â</button>
   </div>
   <div class="cb-msgs" id="cb-msgs"></div>
   <div class="cb-quick" id="cb-quick">
-    <button class="cb-quick-btn" onclick="quickMsg('How much does a service cost?')">💰 Pricing</button>
-    <button class="cb-quick-btn" onclick="quickMsg('What areas do you cover?')">📍 Coverage</button>
-    <button class="cb-quick-btn" onclick="quickMsg('How do I book?')">📅 Book</button>
-    <button class="cb-quick-btn" onclick="quickMsg('I need to speak to a mechanic')">🔧 Mechanic</button>
+    <button class="cb-quick-btn" onclick="quickMsg('How much does a service cost?')">ð° Pricing</button>
+    <button class="cb-quick-btn" onclick="quickMsg('What areas do you cover?')">ð Coverage</button>
+    <button class="cb-quick-btn" onclick="quickMsg('How do I book?')">ð Book</button>
+    <button class="cb-quick-btn" onclick="quickMsg('I need to speak to a mechanic')">ð§ Mechanic</button>
   </div>
   <div class="cb-inp-row">
     <input class="cb-inp" id="cb-inp" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendChat()">
@@ -1468,7 +1468,7 @@ html{scroll-behavior:smooth}
 </div>
 
 <script>
-// ── SUPABASE INIT ────────────────────────────────────────────────────────────
+// ââ SUPABASE INIT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 initTheme(); // Apply theme before anything renders
 const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U';
@@ -1477,12 +1477,10 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-        flowType: 'pkce',
-        storage: window.localStorage,
   }
 });
 
-// ── APP STATE ────────────────────────────────────────────────────────────────
+// ââ APP STATE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let currentUser = null;
 let userProfile = null;
 let services = [];
@@ -1490,17 +1488,17 @@ let booking = { service:null, date:null, time:null };
 let billing = 'm';
 let svcFilter = 'all';
 
-// ── VAN ZONES (persisted in Supabase) ───────────────────────────────────────
+// ââ VAN ZONES (persisted in Supabase) âââââââââââââââââââââââââââââââââââââââ
 let vanZones = [
   { id: 1, name: 'Van 1', color: '#1848C8', suburbs: ['newtown','paddington','bondi','surry hills','glebe','balmain','marrickville','rozelle','annandale','leichhardt','cbd','pyrmont','redfern','chippendale','ultimo','haymarket','darlinghurst','potts point','elizabeth bay','kings cross','woolloomooloo','mosman','coogee','randwick','kingsford','maroubra'] },
   { id: 2, name: 'Van 2', color: '#059669', suburbs: ['north sydney','chatswood','lane cove','manly','dee why','brookvale','mona vale','avalon','cronulla','hurstville','kogarah','strathfield','burwood','ashfield','homebush','ryde','meadowbank','gladesville','hunters hill','drummoyne'] }
 ];
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
-// Garantiza que currentUser esté cargado antes de cualquier acción de auth
+// ââ INIT âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// Garantiza que currentUser estÃ© cargado antes de cualquier acciÃ³n de auth
 async function requireAuth(pendingView, pendingPlan) {
   if(currentUser) return true;
-  // Intentar restaurar sesión
+  // Intentar restaurar sesiÃ³n
   try {
     const { data: { session } } = await sb.auth.getSession();
     if(session?.user){
@@ -1510,7 +1508,7 @@ async function requireAuth(pendingView, pendingPlan) {
       return true;
     }
   } catch(e){}
-  // No hay sesión — guardar intención y pedir login
+  // No hay sesiÃ³n â guardar intenciÃ³n y pedir login
   if(pendingPlan){
     localStorage.setItem('pendingPlanId', pendingPlan);
     localStorage.setItem('pendingView', pendingView || 'membership');
@@ -1524,7 +1522,7 @@ async function requireAuth(pendingView, pendingPlan) {
 function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;'); }
 function hideLoading(){ document.getElementById('loading').classList.add('hide'); }
 
-// VAPID public key for Web Push — matches VAPID_PUBLIC_KEY in Vercel env vars
+// VAPID public key for Web Push â matches VAPID_PUBLIC_KEY in Vercel env vars
 const VAPID_PUBLIC_KEY = 'BIcq9Cp55X74d4DU_pC3OpDtr4W_5aPhK-LPpQfcTiCUldow8DiJGanocS1fS2b8m9mTK13T3sq6HKhj0T5IDZU';
 
 async function registerClientPush() {
@@ -1553,7 +1551,7 @@ async function registerClientPush() {
       push_subscription: JSON.stringify(sub.toJSON())
     }).eq('id', currentUser.id);
 
-    console.log('✓ Push notifications registered for client');
+    console.log('â Push notifications registered for client');
   } catch(e) {
     console.warn('Push registration failed:', e);
   }
@@ -1567,11 +1565,11 @@ async function init(){
   }, 5000);
 
   try {
-    // Supabase detectSessionInUrl:true maneja el hash de OAuth automáticamente
+    // Supabase detectSessionInUrl:true maneja el hash de OAuth automÃ¡ticamente
     // Solo necesitamos esperar a que procese
     await new Promise(r => setTimeout(r, 100));
 
-    // Restaurar sesión — funciona tanto para carga normal como post-OAuth
+    // Restaurar sesiÃ³n â funciona tanto para carga normal como post-OAuth
     const { data: { session } } = await sb.auth.getSession();
     if(session?.user){
       currentUser = session.user;
@@ -1582,7 +1580,7 @@ async function init(){
       if(window.location.hash?.includes('access_token'))
         window.history.replaceState({}, document.title, window.location.pathname);
 
-      // Chequear si había intención pendiente
+      // Chequear si habÃ­a intenciÃ³n pendiente
       const pendingPlan = localStorage.getItem('pendingPlanId');
       const pendingView = localStorage.getItem('pendingView');
       if(pendingPlan){
@@ -1615,7 +1613,7 @@ async function init(){
     const action = new URLSearchParams(window.location.search).get('action');
     if(action){
       window.history.replaceState({}, '', '/');
-      // Si necesita auth y no está logueado, ir a auth
+      // Si necesita auth y no estÃ¡ logueado, ir a auth
       if(!currentUser && action !== 'home' && action !== 'services'){
         setTimeout(() => showView('auth'), 300);
       } else {
@@ -1684,11 +1682,11 @@ async function init(){
   setTimeout(()=>{
     document.getElementById('cb-notif').classList.add('show');
     document.getElementById('chatbot-btn').classList.add('has-msg');
-    addBotMsg("👋 Hi! I'm the Dr. Bike assistant. How can I help you today?");
+    addBotMsg("ð Hi! I'm the Dr. Bike assistant. How can I help you today?");
   }, 5000);
 }
 
-// ── VAN ZONES ────────────────────────────────────────────────────────────────
+// ââ VAN ZONES ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function loadVanZones(){
   const { data } = await sb.from('van_zones').select('*').eq('active', true).order('van_number');
   if(data && data.length > 0){
@@ -1715,7 +1713,7 @@ async function saveVanZone(vanId){
     const rows = van.suburbs.map(s=>({ van_number:vanId, suburb:s, postcode:'', active:true }));
     await sb.from('van_zones').insert(rows);
   }
-  toast('Van '+vanId+' zones saved ✓');
+  toast('Van '+vanId+' zones saved â');
 }
 
 function getVanForSuburb(suburb){
@@ -1738,7 +1736,7 @@ function renderVanZones(){
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="saveVanZone(${van.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500">Save changes</button>
-          ${vanZones.length > 1 ? `<button onclick="removeVan(${van.id})" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>` : ''}
+          ${vanZones.length > 1 ? `<button onclick="removeVan(${van.id})" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer">â</button>` : ''}
         </div>
       </div>
       <div class="zone-van-body">
@@ -1746,7 +1744,7 @@ function renderVanZones(){
           ${van.suburbs.map(s=>`
             <span class="suburb-tag">
               ${s}
-              <span class="rm" onclick="removeSuburb(${van.id},'${s}')">×</span>
+              <span class="rm" onclick="removeSuburb(${van.id},'${s}')">Ã</span>
             </span>`).join('')}
         </div>
         <div class="add-suburb-row">
@@ -1788,7 +1786,7 @@ function removeVan(vanId){
   renderVanZones();
 }
 
-// ── AUTH ─────────────────────────────────────────────────────────────────────
+// ââ AUTH âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function signInGoogle(){
   trackEvent('login_attempt', { method: 'google' });
   const { error } = await sb.auth.signInWithOAuth({
@@ -1801,22 +1799,43 @@ async function signInGoogle(){
   if(error){ showErr(error.message); console.error(error); }
 }
 
-async async function signInEmail() {
+async function signInEmail(){
   const email = document.getElementById('auth-email').value.trim();
-  const password = document.getElementById('auth-password').value;
-  if (!email || !password) { toast('Please enter your email and password', 'error'); return; }
-  const btn = document.querySelector('button[onclick*="signInEmail"]') || document.querySelector('.auth-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
-  supabase.auth.signInWithPassword({ email, password }).then(({ data, error }) => {
-    if (error) {
-      toast(error.message || 'Login failed', 'error');
-      if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
-    } else {
-      window.currentUser = data.user;
-      toast('Welcome back! 🚲', 'success');
-      setTimeout(() => window.location.reload(), 400);
+  const pwd = document.getElementById('auth-password').value;
+  if(!email||!pwd){ showErr('Please enter email and password'); return; }
+  const btn = document.getElementById('signin-btn');
+  btn.innerHTML = '<span class="spinner"></span>Signing in...';
+  btn.disabled = true;
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password:pwd });
+    btn.innerHTML = 'Sign in';
+    btn.disabled = false;
+    if(error){ showErr(error.message); return; }
+    currentUser = data.user;
+    try { await loadProfile(); } catch(pe){ console.warn('loadProfile non-fatal:', pe); }
+    updateNavAuth();
+    // Si habÃ­a intenciÃ³n de ir a booking, ir directo
+    const pending = localStorage.getItem('pendingView');
+    const pendingPlan = localStorage.getItem('pendingPlanId');
+    if(pendingPlan){ 
+      localStorage.removeItem('pendingPlanId');
+      localStorage.removeItem('pendingView');
+      showView('membership');
+      setTimeout(()=> subscribePlan(pendingPlan), 800);
+    } else if(pending){ 
+      localStorage.removeItem('pendingView'); 
+      showView(pending); 
+    } else { 
+      showView('dashboard'); 
     }
-  });
+    toast('Welcome back! ð');
+    setTimeout(registerClientPush, 2000);
+  } catch(e) {
+    btn.innerHTML = 'Sign in';
+    btn.disabled = false;
+    showErr('Sign in failed. Try again.');
+    console.error(e);
+  }
 }
 
 async function signUpEmail(){
@@ -1845,7 +1864,7 @@ function showErr(msg){
   setTimeout(()=>el.style.display='none', 4000);
 }
 
-// ── PROFILE ──────────────────────────────────────────────────────────────────
+// ââ PROFILE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function loadProfile(){
   if(!currentUser) return;
   try {
@@ -1896,14 +1915,14 @@ async function updateDashboard(){
   document.getElementById('d-plan').textContent = memLabels[mem] || 'No membership';
   const badgeEl = document.getElementById('d-badge');
   const badgeClass = { none:'mem-none', basic:'mem-basic', std:'mem-std', vip:'mem-vip' };
-  const badgeTxt = { none:'No plan', basic:'⭐ Basic', std:'● Standard', vip:'★ VIP' };
+  const badgeTxt = { none:'No plan', basic:'â­ Basic', std:'â Standard', vip:'â VIP' };
   badgeEl.className = 'mem-badge ' + (badgeClass[mem]||'mem-none');
   badgeEl.textContent = badgeTxt[mem]||'No plan';
   const discounts = { none:'0%', basic:'8%', std:'12%', vip:'18%' };
   document.getElementById('kpi-disc').textContent = discounts[mem]||'0%';
 
   const refEl = document.getElementById('referral-code-display');
-  if(refEl) refEl.textContent = userProfile?.referral_code || '—';
+  if(refEl) refEl.textContent = userProfile?.referral_code || 'â';
   const refCount = document.getElementById('referral-count');
   if(refCount) refCount.textContent = userProfile?.referral_count || 0;
 
@@ -1916,16 +1935,16 @@ async function updateDashboard(){
   document.getElementById('kpi-spent').textContent = total > 0 ? '$'+total : '$0';
 
   const next = bkgs?.find(b=>b.status==='confirmed'||b.status==='pending');
-  document.getElementById('kpi-next').textContent = next ? new Date(next.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'}) : '—';
+  document.getElementById('kpi-next').textContent = next ? new Date(next.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'}) : 'â';
 
   const histEl = document.getElementById('booking-history');
   if(bkgs && bkgs.length > 0){
     const stColors={pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',completed:'#059669',cancelled:'#DC2626'};
     const stLabels2={pending:'Pending',confirmed:'Confirmed',enroute:'En route',completed:'Done',cancelled:'Cancelled'};
-    const stLabels={pending:'Pending',confirmed:'Confirmed',enroute:'🚐 En route',completed:'✅ Done',cancelled:'Cancelled'};
+    const stLabels={pending:'Pending',confirmed:'Confirmed',enroute:'ð En route',completed:'â Done',cancelled:'Cancelled'};
     histEl.innerHTML = bkgs.slice(0,5).map(b=>{
       const st=b.status||'pending';
-      const date=b.scheduled_date?new Date(b.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'}):'—';
+      const date=b.scheduled_date?new Date(b.scheduled_date).toLocaleDateString('en-AU',{month:'short',day:'numeric'}):'â';
       const canCancel = ['pending','confirmed'].includes(st);
       return `<div class="hist-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
         <div style="width:8px;height:8px;border-radius:50%;background:${stColors[st]};flex-shrink:0"></div>
@@ -1964,9 +1983,9 @@ async function clientCancelBooking(bookingId, serviceName){
     cancel_reason: 'Client cancelled via app'
   }).eq('id', bookingId).eq('client_id', currentUser.id);
 
-  if(error){ toast('Could not cancel — please contact us on WhatsApp'); return; }
+  if(error){ toast('Could not cancel â please contact us on WhatsApp'); return; }
 
-  toast('Booking cancelled ✓');
+  toast('Booking cancelled â');
   updateDashboard();
 
   // Notify admin + mechanic in parallel (non-blocking)
@@ -1982,11 +2001,11 @@ async function clientCancelBooking(bookingId, serviceName){
       .select('phone, first_name, channel, role, zone')
       .eq('active', true);
 
-    const cancelMsg = `❌ BOOKING CANCELLED\n\nClient: ${clientName}\nService: ${serviceName}\nDate: ${dateStr} at ${timeStr}\nSuburb: ${suburb}\n\nThis slot is now free.`;
+    const cancelMsg = `â BOOKING CANCELLED\n\nClient: ${clientName}\nService: ${serviceName}\nDate: ${dateStr} at ${timeStr}\nSuburb: ${suburb}\n\nThis slot is now free.`;
 
     const notifTargets = (contacts || []).filter(c => {
       if(c.role === 'manager') return true;          // manager siempre recibe
-      if(c.role === 'mechanic' && String(c.zone) === String(vanNum)) return true; // mecánico de esa zona
+      if(c.role === 'mechanic' && String(c.zone) === String(vanNum)) return true; // mecÃ¡nico de esa zona
       return false;
     });
 
@@ -2022,7 +2041,7 @@ function updateNavAuth(){
   }
 }
 
-// ── PWA INSTALL ───────────────────────────────────────────────────────────────
+// ââ PWA INSTALL âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let deferredPrompt = null;
 
 window.addEventListener('beforeinstallprompt', e => {
@@ -2036,7 +2055,7 @@ window.addEventListener('beforeinstallprompt', e => {
 window.addEventListener('appinstalled', () => {
   hidePWABanner();
   localStorage.setItem('drbike-pwa-dismissed', 'installed');
-  toast('🎉 Dr. Bike added to your home screen!');
+  toast('ð Dr. Bike added to your home screen!');
 });
 
 function showPWABanner(){
@@ -2055,7 +2074,7 @@ function hidePWABanner(){
 async function installPWA(){
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   if(isIOS){
-    // En iOS no hay API — mostrar instrucciones paso a paso
+    // En iOS no hay API â mostrar instrucciones paso a paso
     document.getElementById('pwa-install-btn').style.display = 'none';
     document.getElementById('ios-banner').style.display = 'block';
     return;
@@ -2067,7 +2086,7 @@ async function installPWA(){
     hidePWABanner();
     if(outcome === 'accepted') localStorage.setItem('drbike-pwa-dismissed', 'installed');
   } else {
-    toast('📱 Tap ⋮ menu → "Add to Home Screen"');
+    toast('ð± Tap â® menu â "Add to Home Screen"');
     hidePWABanner();
   }
 }
@@ -2077,7 +2096,7 @@ function dismissPWA(){
   localStorage.setItem('drbike-pwa-dismissed', 'dismissed');
 }
 
-// iOS — mostrar banner después de 5 segundos en primera visita
+// iOS â mostrar banner despuÃ©s de 5 segundos en primera visita
 (function(){
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isStandalone = window.navigator.standalone;
@@ -2094,7 +2113,7 @@ function dismissPWA(){
   }
 })();
 
-// ── DARK MODE ─────────────────────────────────────────────────────────────────
+// ââ DARK MODE âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function initTheme(){
   const saved = localStorage.getItem('drbike-theme');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -2109,7 +2128,7 @@ function initTheme(){
 function setTheme(theme, save=true){
   document.documentElement.setAttribute('data-theme', theme);
   const btn = document.getElementById('theme-btn');
-  if(btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  if(btn) btn.textContent = theme === 'dark' ? 'âï¸' : 'ð';
   if(save) localStorage.setItem('drbike-theme', theme);
 }
 
@@ -2118,7 +2137,7 @@ function toggleTheme(){
   setTheme(current === 'dark' ? 'light' : 'dark');
 }
 
-// ── VOICE & TEXT DIAGNOSIS ────────────────────────────────────────────────────
+// ââ VOICE & TEXT DIAGNOSIS ââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let recognition = null;
 let isRecording = false;
 
@@ -2154,12 +2173,12 @@ function toggleVoiceDiagnosis(){
 
   recognition.onstart = () => {
     isRecording = true;
-    btn.innerHTML = '🔴 Listening... tap to stop';
+    btn.innerHTML = 'ð´ Listening... tap to stop';
     btn.style.background = '#FEF2F2';
     btn.style.borderColor = 'var(--red)';
     btn.style.color = 'var(--red)';
     status.style.display = 'block';
-    status.innerHTML = '🎙️ <em>Speak clearly — describe the noise or problem with your bike</em>';
+    status.innerHTML = 'ðï¸ <em>Speak clearly â describe the noise or problem with your bike</em>';
     textArea.style.display = 'block';
     textArea.value = '';
   };
@@ -2173,15 +2192,15 @@ function toggleVoiceDiagnosis(){
 
   recognition.onend = () => {
     isRecording = false;
-    btn.innerHTML = '🎙️ Record again';
+    btn.innerHTML = 'ðï¸ Record again';
     btn.style.background = 'var(--off)';
     btn.style.borderColor = 'var(--border)';
     btn.style.color = 'var(--navy)';
     if(textArea.value){
-      status.innerHTML = '✅ Got it! Review and tap Analyse.';
+      status.innerHTML = 'â Got it! Review and tap Analyse.';
       analyzeBtn.style.display = 'block';
     } else {
-      status.innerHTML = '⚠️ Nothing recorded. Try again or type below.';
+      status.innerHTML = 'â ï¸ Nothing recorded. Try again or type below.';
       textArea.style.display = 'block';
       textArea.placeholder = "Type your description here...";
     }
@@ -2189,14 +2208,14 @@ function toggleVoiceDiagnosis(){
 
   recognition.onerror = (e) => {
     isRecording = false;
-    btn.innerHTML = '🎙️ Record noise description';
+    btn.innerHTML = 'ðï¸ Record noise description';
     btn.style.background = 'var(--off)';
     btn.style.borderColor = 'var(--border)';
     btn.style.color = 'var(--navy)';
     // Fallback to text
     textArea.style.display = 'block';
     analyzeBtn.style.display = 'block';
-    status.innerHTML = '⚠️ Mic not available — type your description below';
+    status.innerHTML = 'â ï¸ Mic not available â type your description below';
     status.style.display = 'block';
   };
 
@@ -2222,7 +2241,7 @@ async function analyzeBikeText(){
   resultEl.style.display = 'block';
   resultEl.innerHTML = `
     <div style="text-align:center;padding:20px">
-      <div style="font-size:24px;margin-bottom:8px">🔍</div>
+      <div style="font-size:24px;margin-bottom:8px">ð</div>
       <div style="font-size:13px;font-weight:600;color:var(--navy)">Analysing your description...</div>
       <div style="font-size:11px;color:var(--mgray);margin-top:4px">Claude is diagnosing based on your description</div>
       <div style="margin-top:12px;height:3px;background:var(--border);border-radius:2px;overflow:hidden">
@@ -2242,17 +2261,17 @@ async function analyzeBikeText(){
 
     const d = data.diagnosis;
     const urgencyColor = { low: '#059669', medium: '#D97706', high: '#DC2626' }[d.urgency] || '#1848C8';
-    const urgencyLabel = { low: '🟢 Low urgency', medium: '🟡 Moderate urgency', high: '🔴 Urgent' }[d.urgency] || '';
+    const urgencyLabel = { low: 'ð¢ Low urgency', medium: 'ð¡ Moderate urgency', high: 'ð´ Urgent' }[d.urgency] || '';
 
     resultEl.innerHTML = `
       <div style="background:var(--off);border-radius:10px;padding:14px;border:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-size:12px;font-weight:700;color:var(--navy)">🤖 AI Diagnosis</div>
+          <div style="font-size:12px;font-weight:700;color:var(--navy)">ð¤ AI Diagnosis</div>
           <span style="font-size:10px;font-weight:600;color:${urgencyColor};background:${urgencyColor}18;padding:3px 8px;border-radius:10px">${urgencyLabel}</span>
         </div>
         <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">${d.problem}</div>
         <div style="font-size:12px;color:var(--mgray);line-height:1.5;margin-bottom:10px">${d.explanation}</div>
-        ${d.tips ? `<div style="background:var(--blue-lt);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--blue);margin-bottom:10px">💡 <strong>Quick tip:</strong> ${d.tips}</div>` : ''}
+        ${d.tips ? `<div style="background:var(--blue-lt);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--blue);margin-bottom:10px">ð¡ <strong>Quick tip:</strong> ${d.tips}</div>` : ''}
         <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;justify-content:space-between">
           <div>
             <div style="font-size:11px;color:var(--mgray)">Recommended service</div>
@@ -2264,7 +2283,7 @@ async function analyzeBikeText(){
           </div>
         </div>
         <button onclick="autoSelectService('${d.recommended_service}')" style="width:100%;margin-top:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">
-          Book ${d.recommended_service} →
+          Book ${d.recommended_service} â
         </button>
         <button onclick="resetDiagnosis()" style="width:100%;margin-top:6px;background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans)">Try again</button>
       </div>`;
@@ -2272,13 +2291,13 @@ async function analyzeBikeText(){
   } catch(err) {
     resultEl.innerHTML = `
       <div style="background:#FEF2F2;border-radius:10px;padding:12px;text-align:center">
-        <div style="font-size:12px;color:var(--red)">⚠️ Could not analyse. Please try again or select a service manually.</div>
+        <div style="font-size:12px;color:var(--red)">â ï¸ Could not analyse. Please try again or select a service manually.</div>
         <button onclick="resetDiagnosis()" style="margin-top:8px;background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans)">Try again</button>
       </div>`;
   }
 }
 
-// ── AI BIKE DIAGNOSIS ─────────────────────────────────────────────────────────
+// ââ AI BIKE DIAGNOSIS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function analyzeBikePhoto(input){
   const file = input.files?.[0];
   if(!file) return;
@@ -2290,7 +2309,7 @@ async function analyzeBikePhoto(input){
   resultEl.style.display = 'block';
   resultEl.innerHTML = `
     <div style="text-align:center;padding:20px">
-      <div style="font-size:24px;margin-bottom:8px">🔍</div>
+      <div style="font-size:24px;margin-bottom:8px">ð</div>
       <div style="font-size:13px;font-weight:600;color:var(--navy)">Analysing your bike...</div>
       <div style="font-size:11px;color:var(--mgray);margin-top:4px">Claude is inspecting the image</div>
       <div style="margin-top:12px;height:3px;background:var(--border);border-radius:2px;overflow:hidden">
@@ -2322,17 +2341,17 @@ async function analyzeBikePhoto(input){
 
       const d = data.diagnosis;
       const urgencyColor = { low: '#059669', medium: '#D97706', high: '#DC2626' }[d.urgency] || '#1848C8';
-      const urgencyLabel = { low: '🟢 Low urgency', medium: '🟡 Moderate urgency', high: '🔴 Urgent' }[d.urgency] || '';
+      const urgencyLabel = { low: 'ð¢ Low urgency', medium: 'ð¡ Moderate urgency', high: 'ð´ Urgent' }[d.urgency] || '';
 
       resultEl.innerHTML = `
         <div style="background:var(--off);border-radius:10px;padding:14px;border:1px solid var(--border)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:12px;font-weight:700;color:var(--navy)">🤖 AI Diagnosis</div>
+            <div style="font-size:12px;font-weight:700;color:var(--navy)">ð¤ AI Diagnosis</div>
             <span style="font-size:10px;font-weight:600;color:${urgencyColor};background:${urgencyColor}18;padding:3px 8px;border-radius:10px">${urgencyLabel}</span>
           </div>
           <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">${d.problem}</div>
           <div style="font-size:12px;color:var(--mgray);line-height:1.5;margin-bottom:10px">${d.explanation}</div>
-          ${d.tips ? `<div style="background:var(--blue-lt);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--blue);margin-bottom:10px">💡 <strong>Quick tip:</strong> ${d.tips}</div>` : ''}
+          ${d.tips ? `<div style="background:var(--blue-lt);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--blue);margin-bottom:10px">ð¡ <strong>Quick tip:</strong> ${d.tips}</div>` : ''}
           <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;justify-content:space-between">
             <div>
               <div style="font-size:11px;color:var(--mgray)">Recommended service</div>
@@ -2344,7 +2363,7 @@ async function analyzeBikePhoto(input){
             </div>
           </div>
           <button onclick="autoSelectService('${d.recommended_service}')" style="width:100%;margin-top:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">
-            Book ${d.recommended_service} →
+            Book ${d.recommended_service} â
           </button>
           <button onclick="resetDiagnosis()" style="width:100%;margin-top:6px;background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans)">Try another photo</button>
         </div>`;
@@ -2352,7 +2371,7 @@ async function analyzeBikePhoto(input){
     } catch(err) {
       resultEl.innerHTML = `
         <div style="background:#FEF2F2;border-radius:10px;padding:12px;text-align:center">
-          <div style="font-size:12px;color:var(--red)">⚠️ Could not analyse image. Please select a service manually.</div>
+          <div style="font-size:12px;color:var(--red)">â ï¸ Could not analyse image. Please select a service manually.</div>
           <button onclick="resetDiagnosis()" style="margin-top:8px;background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans)">Try again</button>
         </div>`;
     }
@@ -2364,7 +2383,7 @@ function resetDiagnosis(){
   document.getElementById('diag-result').style.display = 'none';
   document.getElementById('diag-photo-input').value = '';
   document.getElementById('diag-upload-area').innerHTML = `
-    <div style="font-size:28px;margin-bottom:6px">📸</div>
+    <div style="font-size:28px;margin-bottom:6px">ð¸</div>
     <div style="font-size:13px;font-weight:600;color:var(--navy)">Take or upload a photo</div>
     <div style="font-size:11px;color:var(--mgray);margin-top:2px">of the problem area</div>`;
   document.getElementById('diag-upload-area').onclick = () => document.getElementById('diag-photo-input').click();
@@ -2379,14 +2398,14 @@ function autoSelectService(serviceName){
   if(match){
     selectService(match.id);
     goStep(2);
-    toast('✅ Service selected: ' + match.name);
+    toast('â Service selected: ' + match.name);
   } else {
     toast('Please select a service from the list below');
     document.getElementById('diag-result').scrollIntoView({ behavior: 'smooth' });
   }
 }
 
-// ── REFERRAL / DISCOUNT CODE ──────────────────────────────────────────────────
+// ââ REFERRAL / DISCOUNT CODE ââââââââââââââââââââââââââââââââââââââââââââââââââ
 let appliedDiscount = 0;
 let appliedReferralCode = null;
 let appliedDiscountCodeId = null;
@@ -2417,10 +2436,10 @@ async function applyReferral(){
     let label = '';
     if(dc.discount_type === 'percent'){
       discountAmt = Math.round(originalPrice * dc.discount_value / 100);
-      label = `🎉 ${dc.discount_value}% discount applied!`;
+      label = `ð ${dc.discount_value}% discount applied!`;
     } else {
       discountAmt = Math.min(dc.discount_value, originalPrice);
-      label = `🎉 $${dc.discount_value} off applied!`;
+      label = `ð $${dc.discount_value} off applied!`;
     }
     appliedDiscount = discountAmt;
     appliedDiscountCodeId = dc.id;
@@ -2432,7 +2451,7 @@ async function applyReferral(){
     document.getElementById('cf-discount-label').style.display = 'block';
     document.getElementById('cf-discount-label').textContent = label;
     document.getElementById('referral-input').disabled = true;
-    document.querySelector('button[onclick="applyReferral()"]').textContent = '✓';
+    document.querySelector('button[onclick="applyReferral()"]').textContent = 'â';
     document.querySelector('button[onclick="applyReferral()"]').style.background = 'var(--green)';
     showReferralMsg(label, 'success');
     return;
@@ -2440,7 +2459,7 @@ async function applyReferral(){
 
   // 2. Check referral codes in profiles
   const { data } = await sb.from('profiles').select('id,full_name,referral_code').eq('referral_code', code).single();
-  if(!data){ showReferralMsg('Invalid code — please check and try again', 'error'); return; }
+  if(!data){ showReferralMsg('Invalid code â please check and try again', 'error'); return; }
 
   appliedDiscount = 15;
   appliedReferralCode = code;
@@ -2451,11 +2470,11 @@ async function applyReferral(){
   document.getElementById('cf-price-original').textContent = '$' + originalPrice;
   document.getElementById('cf-price').textContent = '$' + discountedPrice;
   document.getElementById('cf-discount-label').style.display = 'block';
-  document.getElementById('cf-discount-label').textContent = '🎉 Referral discount applied!';
+  document.getElementById('cf-discount-label').textContent = 'ð Referral discount applied!';
   document.getElementById('referral-input').disabled = true;
-  document.querySelector('button[onclick="applyReferral()"]').textContent = '✓';
+  document.querySelector('button[onclick="applyReferral()"]').textContent = 'â';
   document.querySelector('button[onclick="applyReferral()"]').style.background = 'var(--green)';
-  showReferralMsg(`✅ $15 off applied! Referred by ${data.full_name?.split(' ')[0] || 'a friend'}`, 'success');
+  showReferralMsg(`â $15 off applied! Referred by ${data.full_name?.split(' ')[0] || 'a friend'}`, 'success');
 }
 
 function showReferralMsg(msg, type){
@@ -2466,20 +2485,20 @@ function showReferralMsg(msg, type){
   el.style.color = type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--green)' : 'var(--mgray)';
 }
 
-// ── COPY REFERRAL ─────────────────────────────────────────────────────────────
+// ââ COPY REFERRAL âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function copyReferral(){
   const code = userProfile?.referral_code;
   if(!code) return;
-  const text = `Book Dr. Bike Sydney with my code ${code} and we both get $15 off! 🚲 dr-bike-sydney.vercel.app`;
-  navigator.clipboard?.writeText(text).then(()=>toast('📋 Referral link copied!')).catch(()=>{
+  const text = `Book Dr. Bike Sydney with my code ${code} and we both get $15 off! ð² dr-bike-sydney.vercel.app`;
+  navigator.clipboard?.writeText(text).then(()=>toast('ð Referral link copied!')).catch(()=>{
     const el = document.createElement('textarea');
     el.value = text; document.body.appendChild(el); el.select();
     document.execCommand('copy'); document.body.removeChild(el);
-    toast('📋 Referral link copied!');
+    toast('ð Referral link copied!');
   });
 }
 
-// ── REVIEWS ──────────────────────────────────────────────────────────────────
+// ââ REVIEWS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function loadReviews(){
   // Try to load real reviews from completed bookings with ratings
   const { data } = await sb.from('bookings')
@@ -2495,10 +2514,10 @@ async function loadReviews(){
 
   if(data && data.length >= 3){
     const avg = (data.reduce((s,r)=>s+(r.rating||5),0)/data.length).toFixed(1);
-    if(summary) summary.textContent = `${avg}★ average from ${data.length}+ verified bookings`;
+    if(summary) summary.textContent = `${avg}â average from ${data.length}+ verified bookings`;
     grid.innerHTML = data.slice(0,3).map(r => {
       const initials = (r.review_name||'A').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-      const stars = '★'.repeat(r.rating||5)+'☆'.repeat(5-(r.rating||5));
+      const stars = 'â'.repeat(r.rating||5)+'â'.repeat(5-(r.rating||5));
       return `<div class="review-card">
         <div class="review-stars" style="color:#F59E0B">${stars}</div>
         <div class="review-text">"${r.review_text}"</div>
@@ -2510,7 +2529,7 @@ async function loadReviews(){
     }).join('');
   } else {
     // Keep static fallback reviews
-    if(summary) summary.textContent = '4.9★ average from verified bookings';
+    if(summary) summary.textContent = '4.9â average from verified bookings';
   }
 }
 
@@ -2526,13 +2545,13 @@ function showReviewModal(bookingId, serviceName){
       <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">Rate your service</div>
       <div style="font-size:12px;color:var(--mgray);margin-bottom:20px">${serviceName}</div>
       <div id="star-row" style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;font-size:36px">
-        ${[1,2,3,4,5].map(n=>`<span onclick="setRating(${n})" style="cursor:pointer;transition:transform .1s" id="star-${n}">⭐</span>`).join('')}
+        ${[1,2,3,4,5].map(n=>`<span onclick="setRating(${n})" style="cursor:pointer;transition:transform .1s" id="star-${n}">â­</span>`).join('')}
       </div>
       <textarea id="review-txt" placeholder="Tell us about your experience..." style="width:100%;padding:12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;height:100px;resize:none;margin-bottom:12px;background:var(--white);color:var(--navy)"></textarea>
       <input id="review-name" class="inp" placeholder="Your name (e.g. James M.)" style="margin-bottom:12px">
       <div style="display:flex;gap:8px">
         <button onclick="document.getElementById('review-modal').remove()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;cursor:pointer;font-family:var(--sans)">Skip</button>
-        <button onclick="submitReview('${bookingId}')" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:var(--sans)">Submit review ⭐</button>
+        <button onclick="submitReview('${bookingId}')" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:var(--sans)">Submit review â­</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -2556,11 +2575,11 @@ async function submitReview(bookingId){
     review_name: name || (userProfile?.full_name?.split(' ')[0]+' '+userProfile?.full_name?.split(' ').pop()?.[0]+'.')||'Happy rider'
   }).eq('id', bookingId);
   document.getElementById('review-modal').remove();
-  toast('⭐ Thanks for your review!');
+  toast('â­ Thanks for your review!');
   loadReviews();
 }
 
-// ── JOB CHAT (cliente ↔ mecánico) ────────────────────────────────────────────
+// ââ JOB CHAT (cliente â mecÃ¡nico) ââââââââââââââââââââââââââââââââââââââââââââ
 let jobChatChannel = null;
 let activeChatBookingId = null;
 
@@ -2588,7 +2607,7 @@ async function loadJobMessages(bookingId){
   const c = document.getElementById('job-chat-msgs');
   if(!c) return;
   c.innerHTML = '';
-  if(!data?.length){ c.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:12px;padding:20px">No messages yet — say hi to your mechanic! 👋</div>'; return; }
+  if(!data?.length){ c.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:12px;padding:20px">No messages yet â say hi to your mechanic! ð</div>'; return; }
   data.forEach(m => appendJobMessage(m, false));
   c.scrollTop = c.scrollHeight;
 }
@@ -2620,7 +2639,7 @@ async function sendJobMessage(){
   await sb.from('job_messages').insert({ booking_id: activeChatBookingId, sender_role:'client', sender_id: currentUser.id, message: text });
 }
 
-// ── TRANSITIONS ───────────────────────────────────────────────────────────────
+// ââ TRANSITIONS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let liveMap = null, mechMarker = null, destMarker = null, destLatLng = null, trackingChannel = null;
 
 const GMAP_DARK = [
@@ -2648,7 +2667,7 @@ async function getDriverName(vanNumber){
     .eq('active', true)
     .limit(1);
   const name = data?.[0]?.postcode;
-  return name ? name + ' 🚐' : 'Van '+vanNumber+' · Your Mechanic';
+  return name ? name + ' ð' : 'Van '+vanNumber+' Â· Your Mechanic';
 }
 
 function startTracking(bookingId, mechName, destAddress) {
@@ -2763,7 +2782,7 @@ function stopTracking() {
   document.getElementById('map-widget').style.display = 'none';
 }
 
-// ── SERVICES ─────────────────────────────────────────────────────────────────
+// ââ SERVICES âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function loadPublicReviews(){
   const grid = document.getElementById('public-reviews-grid');
   if(!grid) return;
@@ -2775,16 +2794,16 @@ async function loadPublicReviews(){
     .order('created_at',{ascending:false})
     .limit(6);
   if(!data?.length){
-    grid.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:24px;grid-column:1/-1">No reviews yet — be the first! 🚲</div>';
+    grid.innerHTML = '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:24px;grid-column:1/-1">No reviews yet â be the first! ð²</div>';
     return;
   }
   grid.innerHTML = data.map(r=>{
-    const stars = '⭐'.repeat(r.client_rating||5);
+    const stars = 'â­'.repeat(r.client_rating||5);
     const name = r.profiles?.full_name ? r.profiles.full_name.split(' ')[0]+' '+((r.profiles.full_name.split(' ')[1]||'')[0]||'')+'. ' : 'Happy client';
     return `<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow)">
       <div style="font-size:16px;margin-bottom:8px">${stars}</div>
       <div style="font-size:13px;color:var(--navy);line-height:1.6;margin-bottom:12px">"${r.client_review}"</div>
-      <div style="font-size:11px;font-weight:600;color:var(--mgray)">${name} · ${r.service_name||'Bike service'}</div>
+      <div style="font-size:11px;font-weight:600;color:var(--mgray)">${name} Â· ${r.service_name||'Bike service'}</div>
     </div>`;
   }).join('');
 }
@@ -2808,7 +2827,7 @@ function renderServices(){
     html += `<div class="cat-label">${cat}</div><div class="svc-grid" style="margin-bottom:20px">`;
     html += svcs.map(s=>`<div class="svc-card" onclick="selectService('${s.id}')">
       <div class="svc-name">${s.name}</div>
-      <div class="svc-dur">${s.duration_min === s.duration_max ? s.duration_min+" min" : s.duration_min+"–"+s.duration_max+" min"}</div>
+      <div class="svc-dur">${s.duration_min === s.duration_max ? s.duration_min+" min" : s.duration_min+"â"+s.duration_max+" min"}</div>
       <div class="svc-price">$${s.price}</div>
     </div>`).join('');
     html += '</div>';
@@ -2843,14 +2862,14 @@ async function renderBookingServices(){
     const allPills = ['popular', ...cats];
     pillsEl.innerHTML = allPills.map(c=>`
       <button onclick="setBookCat('${c}')" style="padding:7px 16px;border-radius:20px;border:1.5px solid ${bookCatFilter===c?'var(--blue)':'var(--border)'};background:${bookCatFilter===c?'var(--blue)':'var(--white)'};color:${bookCatFilter===c?'#fff':'var(--navy)'};font-size:12px;font-weight:${bookCatFilter===c?'600':'400'};cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap">
-        ${c==='popular'?'⭐ Popular':c}
+        ${c==='popular'?'â­ Popular':c}
       </button>`).join('');
   }
 
   grid.innerHTML = list.length > 0 ? list.map(s=>`
     <div class="svc-card${booking.service?.id===s.id?' selected':''}" onclick="selectService('${s.id}')">
       <div class="svc-name">${s.name}</div>
-      <div class="svc-dur">${s.duration_min === s.duration_max ? s.duration_min+" min" : s.duration_min+"–"+s.duration_max+" min"}</div>
+      <div class="svc-dur">${s.duration_min === s.duration_max ? s.duration_min+" min" : s.duration_min+"â"+s.duration_max+" min"}</div>
       <div class="svc-price">$${s.price}</div>
     </div>`).join('') : '<div style="color:var(--mgray);font-size:13px;padding:20px;grid-column:1/-1;text-align:center">No services in this category</div>';
 }
@@ -2867,7 +2886,7 @@ function selectService(id){
   goStep(2);
 }
 
-// ── BOOKING FLOW ─────────────────────────────────────────────────────────────
+// ââ BOOKING FLOW âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function goStep(n){
   [1,2,3,4].forEach(i=>{
     document.getElementById('step-'+i).style.display = i===n?'block':'none';
@@ -2875,18 +2894,18 @@ function goStep(n){
     s.className = 'step-item'+(i<n?' done':i===n?' active':'');
   });
   document.getElementById('step-success').style.display='none';
-  // Ocultar chatbot en step 4 para no tapar el botón Confirm
+  // Ocultar chatbot en step 4 para no tapar el botÃ³n Confirm
   const chatBtn = document.getElementById('chatbot-btn');
   if(chatBtn) chatBtn.style.display = n===4 ? 'none' : 'flex';
   if(n===2 && booking.service){
-    document.getElementById('sel-svc-name').textContent = booking.service.name+' — $'+booking.service.price;
+    document.getElementById('sel-svc-name').textContent = booking.service.name+' â $'+booking.service.price;
     renderCalendar();
   }
   if(n===4){ fillConfirm(); }
   window.scrollTo(0,0);
 }
 
-// ── CALENDAR ─────────────────────────────────────────────────────────────────
+// ââ CALENDAR âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function renderCalendar(){
   const cal = document.getElementById('cal-grid');
   if(!cal) return;
@@ -3002,7 +3021,7 @@ async function selDay(el, date){
   const ts = document.getElementById('times-section');
   const tg = document.getElementById('times-grid');
   ts.style.display = 'block';
-  tg.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;color:var(--mgray);font-size:13px">⏳ Checking availability...</div>';
+  tg.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;color:var(--mgray);font-size:13px">â³ Checking availability...</div>';
 
   // Use van from booking context or default to van 1
   const suburb = document.getElementById('addr-suburb')?.value || '';
@@ -3025,12 +3044,12 @@ function selTime(el, t){
 }
 
 function fillConfirm(){
-  document.getElementById('cf-svc').textContent = booking.service?.name||'—';
-  const d = booking.date ? new Date(booking.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'long'}) : '—';
-  document.getElementById('cf-dt').textContent = d + (booking.time?' · '+booking.time:'');
+  document.getElementById('cf-svc').textContent = booking.service?.name||'â';
+  const d = booking.date ? new Date(booking.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'long'}) : 'â';
+  document.getElementById('cf-dt').textContent = d + (booking.time?' Â· '+booking.time:'');
   const suburb = document.getElementById('addr-suburb')?.value||'';
   const street = document.getElementById('addr-street')?.value||'';
-  document.getElementById('cf-addr').textContent = [street,suburb].filter(Boolean).join(', ')||'—';
+  document.getElementById('cf-addr').textContent = [street,suburb].filter(Boolean).join(', ')||'â';
   // Reset discount state
   appliedDiscount = 0; appliedReferralCode = null; appliedDiscountCodeId = null;
 
@@ -3044,8 +3063,8 @@ function fillConfirm(){
 
   let surcharge = 0;
   let surchargeLabel = '';
-  if(isSameDay){ surcharge = 30; surchargeLabel = '⚡ Same-day surcharge'; }
-  else if(isWeekend){ surcharge = 20; surchargeLabel = '📅 Weekend surcharge'; }
+  if(isSameDay){ surcharge = 30; surchargeLabel = 'â¡ Same-day surcharge'; }
+  else if(isWeekend){ surcharge = 20; surchargeLabel = 'ð Weekend surcharge'; }
 
   const totalPrice = basePrice + surcharge;
   booking.surcharge = surcharge;
@@ -3067,7 +3086,7 @@ function fillConfirm(){
   if(applyBtn){ applyBtn.textContent='Apply'; applyBtn.style.background='var(--blue)'; }
   // Auto-assign van using zone manager
   const vanNum = getVanForSuburb(suburb);
-  document.getElementById('cf-van').textContent = 'Van '+vanNum+' · Mechanic '+vanNum;
+  document.getElementById('cf-van').textContent = 'Van '+vanNum+' Â· Mechanic '+vanNum;
 }
 
 // Stripe - lazy init
@@ -3107,7 +3126,7 @@ async function confirmBooking(){
 
   if(error){ toast('Error: '+error.message); return; }
 
-  // Si se usó un código de referido, incrementar el contador del referidor
+  // Si se usÃ³ un cÃ³digo de referido, incrementar el contador del referidor
   if(appliedReferralCode){
     const { data: referrer } = await sb.from('profiles').select('id,referral_count').eq('referral_code', appliedReferralCode).single();
     if(referrer){
@@ -3184,18 +3203,18 @@ function showPaymentModal(bkg, price){
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div>
           <div style="font-size:18px;font-weight:700;color:#0D1F3C">Payment</div>
-          <div style="font-size:13px;color:#6B7280;margin-top:2px">${bkg.service_name} · $${price}</div>
+          <div style="font-size:13px;color:#6B7280;margin-top:2px">${bkg.service_name} Â· $${price}</div>
         </div>
-        <button onclick="document.getElementById('payment-modal').remove()" style="background:#F7F8FA;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer">✕</button>
+        <button onclick="document.getElementById('payment-modal').remove()" style="background:#F7F8FA;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer">â</button>
       </div>
       <div id="stripe-card-element" style="border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px;font-size:16px"></div>
       <div id="stripe-error" style="color:#DC2626;font-size:13px;margin-bottom:12px;display:none"></div>
       <button id="pay-btn" onclick="processPayment('${bkg.id}',${price})" style="width:100%;background:#1848C8;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
         Pay $${price} AUD
       </button>
-      <div style="text-align:center;margin-top:12px;font-size:11px;color:#9CA3AF">🔒 Secured by Stripe · Card charged after service</div>
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:#9CA3AF">ð Secured by Stripe Â· Card charged after service</div>
       <button onclick="skipPayment('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#6B7280;font-size:13px;margin-top:10px;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline">Pay cash on the day instead</button>
-      <button onclick="cancelBookingModal('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#DC2626;font-size:12px;margin-top:6px;cursor:pointer;font-family:Inter,sans-serif">← Cancel and go back</button>
+      <button onclick="cancelBookingModal('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#DC2626;font-size:12px;margin-top:6px;cursor:pointer;font-family:Inter,sans-serif">â Cancel and go back</button>
     </div>`;
   document.body.appendChild(modal);
 
@@ -3239,7 +3258,7 @@ async function processPayment(bookingId, price){
   await sb.from('bookings').update({ status:'confirmed', payment_method_id: paymentMethod.id }).eq('id', bookingId);
   document.getElementById('payment-modal').remove();
 
-  // Email confirmación al cliente
+  // Email confirmaciÃ³n al cliente
   const {data:bkgData} = await sb.from('bookings').select('*').eq('id',bookingId).single();
   if(bkgData){
     await fetch('/api/send-email', {
@@ -3301,11 +3320,11 @@ function showBookingSuccess(){
   [1,2,3,4].forEach(i=>document.getElementById('step-'+i).style.display='none');
   ['bs1','bs2','bs3','bs4'].forEach(id=>document.getElementById(id).className='step-item done');
   document.getElementById('step-success').style.display='block';
-  toast('Booking confirmed! 🎉');
+  toast('Booking confirmed! ð');
   updateDashboard();
 }
 
-// ── MEMBERSHIP ───────────────────────────────────────────────────────────────
+// ââ MEMBERSHIP âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function setBilling(b){
   billing=b;
   document.getElementById('bt-m').classList.toggle('on',b==='m');
@@ -3313,7 +3332,7 @@ function setBilling(b){
   renderPlans();
 }
 
-// ── STRIPE PRICE IDs ─────────────────────────────────────────────────────────
+// ââ STRIPE PRICE IDs âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const STRIPE_PRICES = {
   basic:    { monthly: 'price_1TXhqjPPGSm5cT7JolqQhvge', annual: 'price_1TXhrAPPGSm5cT7JRmWioP7D' },
   standard: { monthly: 'price_1TXhrdPPGSm5cT7Jj9ozBG6i', annual: 'price_1TXhrpPPGSm5cT7Jagajk6en' },
@@ -3330,7 +3349,7 @@ async function subscribePlan(planId) {
   const priceId = STRIPE_PRICES[planKey]?.[billingKey];
 
   if (!priceId) {
-    toast('⚠️ Plan not available — contact us');
+    toast('â ï¸ Plan not available â contact us');
     return;
   }
 
@@ -3358,8 +3377,8 @@ async function subscribePlan(planId) {
       throw new Error(data.error || 'Failed to create session');
     }
   } catch (err) {
-    toast('❌ ' + err.message);
-    if (btn) { btn.textContent = `Get started — ${planKey}`; btn.disabled = false; }
+    toast('â ' + err.message);
+    if (btn) { btn.textContent = `Get started â ${planKey}`; btn.disabled = false; }
   }
 }
 
@@ -3369,22 +3388,22 @@ function handleStripeReturn() {
   const status = params.get('subscription');
   if (status === 'success') {
     const plan = params.get('plan');
-    toast(`🎉 Welcome to Dr. Bike ${plan?.charAt(0).toUpperCase()+plan?.slice(1)}!`);
+    toast(`ð Welcome to Dr. Bike ${plan?.charAt(0).toUpperCase()+plan?.slice(1)}!`);
     window.history.replaceState({}, '', '/');
     setTimeout(() => { if (currentUser) showView('dashboard'); }, 500);
   } else if (status === 'cancelled') {
-    toast('Subscription cancelled — no charge made');
+    toast('Subscription cancelled â no charge made');
     window.history.replaceState({}, '', '/');
   }
 }
 
 const P3=[
   {id:'b',n:'Basic',w:'For occasional riders',mo:57,bikes:'1 bike',bb:'#0D1F3C',
-   secs:[{l:'Priority',f:[{t:'Priority booking before non-members',y:true},{t:'SMS reminder when service is due',y:true},{t:'Same-day booking guarantee',y:false}]},{l:'Discounts',f:[{t:'8% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'1 × Tune-Up/year (value $109)',y:true},{t:'Tyre pressure check monthly',y:true},{t:'Brake check every 3 months',y:false}]}]},
-  {id:'s',n:'Standard',w:'Best value · most popular',mo:97,pop:true,bikes:'1 bike',bb:'#1848C8',
-   secs:[{l:'Priority',f:[{t:'First-access priority — top of the queue',y:true},{t:'2-hour guaranteed arrival window',y:true},{t:'SMS + call 30 min before arrival',y:true}]},{l:'Discounts',f:[{t:'12% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'2 × Tune-Ups/year (value $218)',y:true},{t:'Brake check every 3 months',y:true},{t:'Tyre pressure check monthly',y:true}]}]},
+   secs:[{l:'Priority',f:[{t:'Priority booking before non-members',y:true},{t:'SMS reminder when service is due',y:true},{t:'Same-day booking guarantee',y:false}]},{l:'Discounts',f:[{t:'8% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'1 Ã Tune-Up/year (value $109)',y:true},{t:'Tyre pressure check monthly',y:true},{t:'Brake check every 3 months',y:false}]}]},
+  {id:'s',n:'Standard',w:'Best value Â· most popular',mo:97,pop:true,bikes:'1 bike',bb:'#1848C8',
+   secs:[{l:'Priority',f:[{t:'First-access priority â top of the queue',y:true},{t:'2-hour guaranteed arrival window',y:true},{t:'SMS + call 30 min before arrival',y:true}]},{l:'Discounts',f:[{t:'12% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true}]},{l:'Free services',f:[{t:'2 Ã Tune-Ups/year (value $218)',y:true},{t:'Brake check every 3 months',y:true},{t:'Tyre pressure check monthly',y:true}]}]},
   {id:'v',n:'VIP',w:'Serious riders & families',mo:147,bikes:'Up to 3 bikes',bb:'#0D1F3C',
-   secs:[{l:'Priority',f:[{t:'Absolute priority in the schedule',y:true},{t:'Same-day booking on request',y:true},{t:'1-hour arrival window guarantee',y:true}]},{l:'Discounts',f:[{t:'18% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true},{t:'Direct mechanic WhatsApp access',y:true}]},{l:'Free services',f:[{t:'3 × Tune-Ups/year (value $327)',y:true},{t:'Brake & gear check every 2 months',y:true},{t:'Dedicated mechanic — same person always',y:true}]}]},
+   secs:[{l:'Priority',f:[{t:'Absolute priority in the schedule',y:true},{t:'Same-day booking on request',y:true},{t:'1-hour arrival window guarantee',y:true}]},{l:'Discounts',f:[{t:'18% off all labour every visit',y:true},{t:'$20 call-out fee waived',y:true},{t:'Direct mechanic WhatsApp access',y:true}]},{l:'Free services',f:[{t:'3 Ã Tune-Ups/year (value $327)',y:true},{t:'Brake & gear check every 2 months',y:true},{t:'Dedicated mechanic â same person always',y:true}]}]},
 ];
 
 function renderPlans(){
@@ -3393,7 +3412,7 @@ function renderPlans(){
 
   document.getElementById('plans3').innerHTML=P3.map(p=>{
     const mo=billing==='a'?Math.round(p.mo*0.8):p.mo;
-    const annLine=billing==='a'?`Billed $${mo*12}/year — 20% saved`:`Or $${Math.round(p.mo*0.8)}/mo billed annually`;
+    const annLine=billing==='a'?`Billed $${mo*12}/year â 20% saved`:`Or $${Math.round(p.mo*0.8)}/mo billed annually`;
     const priceCol=p.id==='v'?'#B45309':'var(--navy)';
     const bikeBg=p.id==='v'?'#FEF3C7':p.id==='s'?'#EEF3FC':'#F3F4F6';
     const bikeFc=p.id==='v'?'#B45309':p.id==='s'?'#1848C8':'#4B5563';
@@ -3405,11 +3424,11 @@ function renderPlans(){
 
     let btnHtml;
     if (isActive) {
-      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:#059669;color:#fff" disabled>✅ Your current plan</button>`;
+      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:#059669;color:#fff" disabled>â Your current plan</button>`;
     } else if (isPastDue) {
-      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:#DC2626;color:#fff" onclick="subscribePlan('${p.id}')">⚠️ Payment failed — update card</button>`;
+      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:#DC2626;color:#fff" onclick="subscribePlan('${p.id}')">â ï¸ Payment failed â update card</button>`;
     } else {
-      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:${p.bb};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="subscribePlan('${p.id}')">Get started — ${p.n}</button>`;
+      btnHtml = `<button class="plb" id="plan-btn-${p.id}" style="background:${p.bb};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onclick="subscribePlan('${p.id}')">Get started â ${p.n}</button>`;
     }
 
     return`<div class="pl${p.pop?' pop':''}">
@@ -3417,18 +3436,18 @@ function renderPlans(){
       <div class="pl-name">${p.n}</div><div class="pl-who">${p.w}</div>
       <div class="pl-price" style="color:${priceCol}">$${mo}<span class="pl-mo">/mo</span></div>
       <div class="pl-annual">${annLine}</div>
-      <span class="bikes-tag" style="background:${bikeBg};color:${bikeFc};border-color:${bikeBg}">${p.bikes} · parts extra</span>
+      <span class="bikes-tag" style="background:${bikeBg};color:${bikeFc};border-color:${bikeBg}">${p.bikes} Â· parts extra</span>
       ${feats}
       <div class="pl-btn-wrap">
         ${btnHtml}
-        <div class="plb-note">3-month minimum · cancel anytime after</div>
+        <div class="plb-note">3-month minimum Â· cancel anytime after</div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ── NAVIGATION ───────────────────────────────────────────────────────────────
-// Ir a booking - si no está logueado, guardar intención y pedir login
+// ââ NAVIGATION âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// Ir a booking - si no estÃ¡ logueado, guardar intenciÃ³n y pedir login
 async function goBook(){
   if(!await requireAuth('book')) return;
   showView('book');
@@ -3466,13 +3485,13 @@ function showView(v){
   if(v==='admin') renderVanZones();
 }
 
-// ── REALTIME STATUS UPDATE ───────────────────────────────────────────────────
+// ââ REALTIME STATUS UPDATE âââââââââââââââââââââââââââââââââââââââââââââââââââ
 function showStatusUpdate(booking){
   const statusMessages = {
-    confirmed: { icon:'✅', msg:'Your booking is confirmed!', color:'#1848C8' },
-    enroute:   { icon:'🚐', msg:'Your mechanic is on the way!', color:'#D97706' },
-    completed: { icon:'🎉', msg:'Service completed! How did we do?', color:'#059669' },
-    cancelled: { icon:'❌', msg:'Booking cancelled.', color:'#DC2626' }
+    confirmed: { icon:'â', msg:'Your booking is confirmed!', color:'#1848C8' },
+    enroute:   { icon:'ð', msg:'Your mechanic is on the way!', color:'#D97706' },
+    completed: { icon:'ð', msg:'Service completed! How did we do?', color:'#059669' },
+    cancelled: { icon:'â', msg:'Booking cancelled.', color:'#DC2626' }
   };
   const s = statusMessages[booking.status];
   if(!s) return;
@@ -3487,9 +3506,9 @@ function showStatusUpdate(booking){
     <div style="font-size:28px">${s.icon}</div>
     <div style="flex:1">
       <div style="font-size:14px;font-weight:700;color:#0D1F3C">${s.msg}</div>
-      <div style="font-size:12px;color:#6B7280;margin-top:2px">${booking.service_name} · $${booking.service_price}</div>
+      <div style="font-size:12px;color:#6B7280;margin-top:2px">${booking.service_name} Â· $${booking.service_price}</div>
     </div>
-    <button onclick="document.getElementById('status-notif').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#6B7280;padding:4px">✕</button>`;
+    <button onclick="document.getElementById('status-notif').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#6B7280;padding:4px">â</button>`;
   document.body.appendChild(notif);
 
   // Auto dismiss after 8 seconds
@@ -3518,12 +3537,12 @@ function showReviewPrompt(booking){
   modal.innerHTML = `
     <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px">
       <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:40px;margin-bottom:8px">⭐</div>
+        <div style="font-size:40px;margin-bottom:8px">â­</div>
         <div style="font-size:18px;font-weight:700;color:#0D1F3C">How was your service?</div>
         <div style="font-size:13px;color:#6B7280;margin-top:4px">${booking.service_name}</div>
       </div>
       <div style="display:flex;justify-content:center;gap:12px;margin-bottom:20px" id="star-row">
-        ${[1,2,3,4,5].map(n=>`<button onclick="setRating(${n})" id="star-${n}" style="font-size:36px;background:none;border:none;cursor:pointer;transition:transform .15s;filter:grayscale(1)">⭐</button>`).join('')}
+        ${[1,2,3,4,5].map(n=>`<button onclick="setRating(${n})" id="star-${n}" style="font-size:36px;background:none;border:none;cursor:pointer;transition:transform .15s;filter:grayscale(1)">â­</button>`).join('')}
       </div>
       <textarea id="review-text" placeholder="Tell us about your experience (optional)" style="width:100%;border:1.5px solid #E5E7EB;border-radius:10px;padding:12px;font-size:13px;font-family:Inter,sans-serif;resize:none;height:80px;outline:none;margin-bottom:16px"></textarea>
       <button onclick="submitReview('${booking.id}')" style="width:100%;background:#1848C8;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Submit review</button>
@@ -3533,7 +3552,7 @@ function showReviewPrompt(booking){
 }
 
 let selectedRating = 0;
-// ── TOAST ────────────────────────────────────────────────────────────────────
+// ââ TOAST ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;
@@ -3541,7 +3560,7 @@ function toast(msg){
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-// ── CHATBOT ──────────────────────────────────────────────────────────────────
+// ââ CHATBOT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let chatOpen = false;
 let chatHistory = [];
 let escalated = false;
@@ -3551,7 +3570,7 @@ function toggleChat(){
   document.getElementById('chatbot-panel').classList.toggle('open', chatOpen);
   document.getElementById('cb-notif').classList.remove('show');
   if(chatOpen && chatHistory.length === 0){
-    addBotMsg("👋 G'day! I'm the Dr. Bike assistant. I can help with pricing, bookings, coverage areas, and more. What do you need?");
+    addBotMsg("ð G'day! I'm the Dr. Bike assistant. I can help with pricing, bookings, coverage areas, and more. What do you need?");
   }
 }
 
@@ -3613,7 +3632,7 @@ async function sendChat(){
     showTyping();
     await new Promise(r=>setTimeout(r,700));
     hideTyping();
-    addBotMsg("I'll connect you with our team right away! 🔧", 'escalated');
+    addBotMsg("I'll connect you with our team right away! ð§", 'escalated');
     // Load real contacts from Supabase
     setTimeout(async ()=>{
       try {
@@ -3624,19 +3643,19 @@ async function sendChat(){
             const roleLabel = { manager:'Manager', mechanic:'Mechanic' };
             const div = document.createElement('div');
             div.className = 'cb-msg escalated';
-            div.innerHTML = '📱 <b>'+c.first_name+' '+c.last_name+'</b> — '+(roleLabel[c.role]||c.role)+'<br><a href="tel:'+c.phone.replace(/\s/g,'')+'" style="color:inherit;font-weight:700">'+c.phone+'</a>';
+            div.innerHTML = 'ð± <b>'+c.first_name+' '+c.last_name+'</b> â '+(roleLabel[c.role]||c.role)+'<br><a href="tel:'+c.phone.replace(/\s/g,'')+'" style="color:inherit;font-weight:700">'+c.phone+'</a>';
             msgs.appendChild(div);
           });
           const div2 = document.createElement('div');
           div2.className = 'cb-msg escalated';
-          div2.textContent = "We'll get back to you within 15 minutes! 🙏";
+          div2.textContent = "We'll get back to you within 15 minutes! ð";
           msgs.appendChild(div2);
         } else {
-          addBotMsg("📞 WhatsApp us at +61 433 963 250 — we'll get back to you within 15 minutes!", 'escalated');
+          addBotMsg("ð WhatsApp us at +61 433 963 250 â we'll get back to you within 15 minutes!", 'escalated');
         }
         msgs.scrollTop = msgs.scrollHeight;
       } catch(e){
-        addBotMsg("📞 WhatsApp us at +61 433 963 250 — we'll get back to you within 15 minutes!", 'escalated');
+        addBotMsg("ð WhatsApp us at +61 433 963 250 â we'll get back to you within 15 minutes!", 'escalated');
       }
     }, 900);
     return;
@@ -3656,7 +3675,7 @@ async function sendChat(){
     });
     const data = await res.json();
     hideTyping();
-    const reply = data.reply || "I'm not sure about that — type 'mechanic' to speak with our team! 🔧";
+    const reply = data.reply || "I'm not sure about that â type 'mechanic' to speak with our team! ð§";
     addBotMsg(reply);
 
     // Show escalation button after 3 messages
@@ -3667,7 +3686,7 @@ async function sendChat(){
         const div = document.createElement('div');
         div.className = 'cb-msg bot';
         const btn = document.createElement('button');
-        btn.textContent = '🔧 Talk to a mechanic';
+        btn.textContent = 'ð§ Talk to a mechanic';
         btn.style.cssText = 'background:var(--blue);color:#fff;border:none;border-radius:12px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:4px;width:100%';
         btn.onclick = ()=>quickMsg('I need to speak to a mechanic');
         div.appendChild(btn);
@@ -3678,63 +3697,63 @@ async function sendChat(){
     return;
   } catch(e) {
     hideTyping();
-    addBotMsg("Sorry, I'm having trouble. Type 'mechanic' to reach our team! 🔧");
+    addBotMsg("Sorry, I'm having trouble. Type 'mechanic' to reach our team! ð§");
     return;
   }
 
   // Fallback rule-based (never reached if API works)
   let reply = '';
   if(t.match(/price|cost|how much|charge|fee|expensive|cheap/)){
-    reply = "Our prices include a $20 mobile call-out fee 🚐 Services start from $59 (Gear Adjustment) up to $299+ (Bike Build). Popular ones: Tune-Up $109, Standard Service $149, Major Service $229, Brake Bleed $79. Members get the call-out fee waived!";
+    reply = "Our prices include a $20 mobile call-out fee ð Services start from $59 (Gear Adjustment) up to $299+ (Bike Build). Popular ones: Tune-Up $109, Standard Service $149, Major Service $229, Brake Bleed $79. Members get the call-out fee waived!";
   } else if(t.match(/tune.?up|tuneup/)){
-    reply = "Our Tune-Up is $109 and takes about 45–60 min. It includes brake & gear adjustment, tyre pressure check, and a general safety inspection. Great for bikes that haven't been serviced in a while! 🚲";
+    reply = "Our Tune-Up is $109 and takes about 45â60 min. It includes brake & gear adjustment, tyre pressure check, and a general safety inspection. Great for bikes that haven't been serviced in a while! ð²";
   } else if(t.match(/standard service/)){
-    reply = "The Standard Service is $149 and covers everything in a Tune-Up plus drivetrain cleaning, cable check, and a full safety assessment. Most popular service for regular riders! ✅";
+    reply = "The Standard Service is $149 and covers everything in a Tune-Up plus drivetrain cleaning, cable check, and a full safety assessment. Most popular service for regular riders! â";
   } else if(t.match(/major service/)){
-    reply = "The Major Service is $229 — our most comprehensive service. Includes full drivetrain clean & lube, bearing check, brake bleed (hydraulic), wheel true, and complete safety check. 🔧";
+    reply = "The Major Service is $229 â our most comprehensive service. Includes full drivetrain clean & lube, bearing check, brake bleed (hydraulic), wheel true, and complete safety check. ð§";
   } else if(t.match(/brake/)){
-    reply = "Brake Bleed is $79 for hydraulic brakes. Brake pad install starts at $40. We carry most common brake pads — parts are always extra at cost price. 🛑";
+    reply = "Brake Bleed is $79 for hydraulic brakes. Brake pad install starts at $40. We carry most common brake pads â parts are always extra at cost price. ð";
   } else if(t.match(/gear|derailleur|shift/)){
-    reply = "Gear Adjustment is $59 and usually takes 20–30 min. If your gears are skipping or not shifting cleanly, this is the fix! Cable replacement is extra if needed. ⚙️";
+    reply = "Gear Adjustment is $59 and usually takes 20â30 min. If your gears are skipping or not shifting cleanly, this is the fix! Cable replacement is extra if needed. âï¸";
   } else if(t.match(/ebike|e-bike|electric/)){
-    reply = "We service e-bikes! E-bike Diagnostic is $99. We work on most brands — Bosch, Shimano Steps, Yamaha motors. Battery and motor repairs depend on the issue. ⚡";
+    reply = "We service e-bikes! E-bike Diagnostic is $99. We work on most brands â Bosch, Shimano Steps, Yamaha motors. Battery and motor repairs depend on the issue. â¡";
   } else if(t.match(/build|new bike|assemble/)){
-    reply = "Bike builds start at $299+, depending on complexity. We can assemble bikes from boxes (online purchases) or do full custom builds. Usually takes 1–2 hours. 🏗️";
+    reply = "Bike builds start at $299+, depending on complexity. We can assemble bikes from boxes (online purchases) or do full custom builds. Usually takes 1â2 hours. ðï¸";
   } else if(t.match(/area|suburb|cover|location|where|come to|travel/)){
-    reply = "We cover most of Sydney! 📍 Inner West (Newtown, Glebe, Balmain), Eastern Suburbs (Bondi, Paddington, Randwick), CBD, North Shore (Chatswood, Mosman), Manly & Northern Beaches. Not sure if we cover your area? Just ask!";
+    reply = "We cover most of Sydney! ð Inner West (Newtown, Glebe, Balmain), Eastern Suburbs (Bondi, Paddington, Randwick), CBD, North Shore (Chatswood, Mosman), Manly & Northern Beaches. Not sure if we cover your area? Just ask!";
   } else if(t.match(/hour|open|available|time|when|day/)){
-    reply = "We operate Monday to Saturday, 8am–5pm 🕗 Same-day bookings are available! Book online and we'll confirm your slot within 30 minutes.";
+    reply = "We operate Monday to Saturday, 8amâ5pm ð Same-day bookings are available! Book online and we'll confirm your slot within 30 minutes.";
   } else if(t.match(/book|reserv|appoint|schedul/)){
-    reply = "Booking is easy! 📅 Click 'Book' in the menu, pick your service, choose a date and time, and enter your address. We come to you! Same-day slots are often available.";
+    reply = "Booking is easy! ð Click 'Book' in the menu, pick your service, choose a date and time, and enter your address. We come to you! Same-day slots are often available.";
   } else if(t.match(/member|membership|subscription|plan/)){
-    reply = "We have 3 membership plans 🌟 Basic $57/mo (8% off + call-out waived), Standard $97/mo (12% off + 2 free tune-ups/year), VIP $147/mo (18% off + 3 free tune-ups + priority booking). Annual billing saves 20%!";
+    reply = "We have 3 membership plans ð Basic $57/mo (8% off + call-out waived), Standard $97/mo (12% off + 2 free tune-ups/year), VIP $147/mo (18% off + 3 free tune-ups + priority booking). Annual billing saves 20%!";
   } else if(t.match(/basic|57/)){
-    reply = "Basic membership is $57/mo 🌟 You get 8% off all services, call-out fee waived, 1 free Tune-Up per year, and priority booking. Great value if you service your bike 2+ times a year!";
+    reply = "Basic membership is $57/mo ð You get 8% off all services, call-out fee waived, 1 free Tune-Up per year, and priority booking. Great value if you service your bike 2+ times a year!";
   } else if(t.match(/vip|147/)){
-    reply = "VIP membership is $147/mo 👑 Best for serious riders — 18% off all services, 3 free Tune-Ups/year, same-day booking on request, 1-hour arrival guarantee, and direct WhatsApp access to your mechanic!";
+    reply = "VIP membership is $147/mo ð Best for serious riders â 18% off all services, 3 free Tune-Ups/year, same-day booking on request, 1-hour arrival guarantee, and direct WhatsApp access to your mechanic!";
   } else if(t.match(/part|spare|componen/)){
-    reply = "Parts are always charged at cost price — no markup! 💪 We carry common parts in the van (tubes, brake pads, cables, chains). For specialty parts we'll let you know in advance.";
+    reply = "Parts are always charged at cost price â no markup! ðª We carry common parts in the van (tubes, brake pads, cables, chains). For specialty parts we'll let you know in advance.";
   } else if(t.match(/payment|pay|card|cash|stripe/)){
-    reply = "We accept card payments (Visa, Mastercard, Amex) and bank transfer 💳 Payment is taken after the job is complete. Members are billed monthly automatically.";
+    reply = "We accept card payments (Visa, Mastercard, Amex) and bank transfer ð³ Payment is taken after the job is complete. Members are billed monthly automatically.";
   } else if(t.match(/cancel|reschedule|change/)){
-    reply = "No worries! You can cancel or reschedule up to 2 hours before your booking with no charge. Just reply to your confirmation email or message us on WhatsApp. 📱";
+    reply = "No worries! You can cancel or reschedule up to 2 hours before your booking with no charge. Just reply to your confirmation email or message us on WhatsApp. ð±";
   } else if(t.match(/how long|duration|time take/)){
-    reply = "Most services take 45–90 minutes ⏱️ Simple jobs like gear adjustment are 20–30 min. Major services or bike builds can take 2+ hours. We'll give you an estimate when you book!";
+    reply = "Most services take 45â90 minutes â±ï¸ Simple jobs like gear adjustment are 20â30 min. Major services or bike builds can take 2+ hours. We'll give you an estimate when you book!";
   } else if(t.match(/hello|hi|hey|g'day|gday|howdy/)){
-    reply = "G'day! 👋 I'm the Dr. Bike assistant. I can help with pricing, bookings, what services we offer, and our coverage areas. What can I help you with?";
+    reply = "G'day! ð I'm the Dr. Bike assistant. I can help with pricing, bookings, what services we offer, and our coverage areas. What can I help you with?";
   } else if(t.match(/thank|thanks|cheers|great|awesome|perfect/)){
-    reply = "No worries at all! 😊 Feel free to ask if you need anything else. Happy riding! 🚲";
+    reply = "No worries at all! ð Feel free to ask if you need anything else. Happy riding! ð²";
   } else if(t.match(/warranty|guarantee/)){
-    reply = "All our work comes with a 30-day satisfaction guarantee 💯 If anything isn't right after your service, we'll come back and fix it at no charge!";
+    reply = "All our work comes with a 30-day satisfaction guarantee ð¯ If anything isn't right after your service, we'll come back and fix it at no charge!";
   } else {
-    reply = "Good question! I'm not 100% sure about that one 🤔 For specific questions, I'd recommend chatting with one of our mechanics directly — they'll know exactly what you need!";
+    reply = "Good question! I'm not 100% sure about that one ð¤ For specific questions, I'd recommend chatting with one of our mechanics directly â they'll know exactly what you need!";
     // Show escalation button
     setTimeout(()=>{
       const msgs = document.getElementById('cb-msgs');
       const div = document.createElement('div');
       div.className = 'cb-msg bot';
       const btn = document.createElement('button');
-      btn.textContent = '🔧 Ask a mechanic';
+      btn.textContent = 'ð§ Ask a mechanic';
       btn.style.cssText = 'background:var(--blue);color:#fff;border:none;border-radius:12px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:4px';
       btn.onclick = ()=>quickMsg('I need to speak to a mechanic');
       div.appendChild(btn);
@@ -3753,7 +3772,7 @@ async function sendChat(){
       const div = document.createElement('div');
       div.className = 'cb-msg bot';
       const btn = document.createElement('button');
-      btn.textContent = '🔧 Talk to a mechanic';
+      btn.textContent = 'ð§ Talk to a mechanic';
       btn.style.cssText = 'background:var(--blue);color:#fff;border:none;border-radius:12px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:4px';
       btn.onclick = ()=>quickMsg('I need to speak to a mechanic');
       div.appendChild(btn);
@@ -3763,7 +3782,7 @@ async function sendChat(){
   }
 }
 
-// ── EMAIL ────────────────────────────────────────────────────────────────────
+// ââ EMAIL ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function sendEmail(type, bookingData){
   try {
     const email = currentUser?.email || userProfile?.email;
@@ -3785,7 +3804,7 @@ async function sendEmail(type, bookingData){
   } catch(e){ console.log('Email error:', e); }
 }
 
-// ── BIKE PROFILE ─────────────────────────────────────────────────────────────
+// ââ BIKE PROFILE âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let selectedBikeType = 'road';
 
 function openBikeModal(bikeId){
@@ -3830,10 +3849,10 @@ async function saveBike(){
 
   if(bikeId){
     await sb.from('bikes').update(bikeData).eq('id', bikeId);
-    toast('Bike updated ✓');
+    toast('Bike updated â');
   } else {
     await sb.from('bikes').insert(bikeData);
-    toast('Bike added! 🚲');
+    toast('Bike added! ð²');
     trackEvent('bike_added', { type: selectedBikeType });
   }
   closeBikeModal();
@@ -3846,7 +3865,7 @@ async function loadBikes(){
   const el = document.getElementById('my-bikes-list');
   if(!el) return;
 
-  const typeIcons = { road:'🚴', mtb:'🚵', ebike:'⚡', hybrid:'🚲', bmx:'🛴', kids:'👶' };
+  const typeIcons = { road:'ð´', mtb:'ðµ', ebike:'â¡', hybrid:'ð²', bmx:'ð´', kids:'ð¶' };
   if(!data || data.length === 0){
     el.innerHTML = `<button class="add-bike-btn" onclick="openBikeModal()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -3857,10 +3876,10 @@ async function loadBikes(){
 
   el.innerHTML = data.map(b=>`
     <div class="bike-card" onclick="openBikeModal('${b.id}')">
-      <div class="bike-icon">${typeIcons[b.type]||'🚲'}</div>
+      <div class="bike-icon">${typeIcons[b.type]||'ð²'}</div>
       <div class="bike-info" style="flex:1">
         <div class="bike-name">${b.nickname}</div>
-        <div class="bike-sub">${[b.brand,b.model,b.year].filter(Boolean).join(' · ')||'Tap to add details'}</div>
+        <div class="bike-sub">${[b.brand,b.model,b.year].filter(Boolean).join(' Â· ')||'Tap to add details'}</div>
       </div>
       <button onclick="event.stopPropagation();showBikeHistory('${b.id}','${b.nickname}')" style="background:var(--blue-lt);color:var(--blue);border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);flex-shrink:0">History</button>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -3880,14 +3899,14 @@ async function showBikeHistory(bikeId, bikeName){
     <div style="background:var(--white);border-radius:16px 16px 0 0;width:100%;max-width:540px;max-height:85vh;display:flex;flex-direction:column">
       <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div style="font-size:14px;font-weight:700;color:var(--navy)">🚲 ${bikeName}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">ð² ${bikeName}</div>
           <div style="font-size:11px;color:var(--mgray)">Service history</div>
         </div>
-        <button onclick="document.getElementById('bike-history-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mgray)">×</button>
+        <button onclick="document.getElementById('bike-history-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mgray)">Ã</button>
       </div>
       <div id="bike-history-reminder" style="display:none"></div>
       <div id="bike-history-content" style="overflow-y:auto;padding:16px;flex:1">
-        <div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">⏳ Loading...</div>
+        <div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">â³ Loading...</div>
       </div>
       <div style="padding:14px 16px;border-top:1px solid var(--border)">
         <button onclick="document.getElementById('bike-history-modal').remove();showView('book')" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Book next service</button>
@@ -3908,9 +3927,9 @@ async function showBikeHistory(bikeId, bikeName){
     const diff = Math.ceil((new Date(soonest) - new Date()) / (1000*60*60*24));
     const rem = document.getElementById('bike-history-reminder');
     if(diff <= 30){
-      const msg = diff < 0 ? `⚠️ Service overdue by ${Math.abs(diff)} days` : `📅 Next service due in ${diff} day${diff!==1?'s':''}`;
+      const msg = diff < 0 ? `â ï¸ Service overdue by ${Math.abs(diff)} days` : `ð Next service due in ${diff} day${diff!==1?'s':''}`;
       rem.style.cssText = 'padding:10px 16px;background:'+(diff<0?'#FEF2F2':'#ECFDF5')+';color:'+(diff<0?'#DC2626':'#059669')+';font-size:12px;font-weight:600;display:block;border-bottom:1px solid var(--border)';
-      rem.textContent = msg + ' — ' + new Date(soonest+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+      rem.textContent = msg + ' â ' + new Date(soonest+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
     }
   }
 
@@ -3928,22 +3947,22 @@ async function showBikeHistory(bikeId, bikeName){
         <div style="font-size:13px;font-weight:600;color:var(--navy)">${b.service_name||'Service'}</div>
         <div style="font-size:14px;font-weight:700;color:var(--blue)">$${b.service_price||0}</div>
       </div>
-      <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">${date}${mechLabel?' · 🔧 '+mechLabel:''}</div>
-      ${b.mechanic_notes?`<div style="background:var(--off);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--navy);line-height:1.5;margin-bottom:6px">📝 ${b.mechanic_notes}</div>`:''}
-      ${b.parts_used?`<div style="font-size:11px;color:var(--mgray);margin-bottom:4px">🔧 Parts: ${b.parts_used}</div>`:''}
+      <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">${date}${mechLabel?' Â· ð§ '+mechLabel:''}</div>
+      ${b.mechanic_notes?`<div style="background:var(--off);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--navy);line-height:1.5;margin-bottom:6px">ð ${b.mechanic_notes}</div>`:''}
+      ${b.parts_used?`<div style="font-size:11px;color:var(--mgray);margin-bottom:4px">ð§ Parts: ${b.parts_used}</div>`:''}
       ${b.photo_before||b.photo_after?`<div style="display:flex;gap:6px;margin-top:6px">${b.photo_before?`<img src="${b.photo_before}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" alt="Before">`:''}${b.photo_after?`<img src="${b.photo_after}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" alt="After">`:''}${(b.photo_before||b.photo_after)?'<div style="font-size:10px;color:var(--mgray);display:flex;flex-direction:column;justify-content:flex-end;gap:2px">'+(b.photo_before?'<span>Before</span>':'')+(b.photo_after?'<span>After</span>':'')+'</div>':''}</div>`:''}
-      ${b.next_service_date?`<div style="font-size:11px;color:var(--green);margin-top:6px;font-weight:600">📅 Next service: ${new Date(b.next_service_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
-      ${b.client_rating?`<div style="font-size:12px;margin-top:4px">${'⭐'.repeat(b.client_rating)}</div>`:''}
+      ${b.next_service_date?`<div style="font-size:11px;color:var(--green);margin-top:6px;font-weight:600">ð Next service: ${new Date(b.next_service_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
+      ${b.client_rating?`<div style="font-size:12px;margin-top:4px">${'â­'.repeat(b.client_rating)}</div>`:''}
     </div>`;
   }).join('');
 }
 
-// ── ANALYTICS ────────────────────────────────────────────────────────────────
+// ââ ANALYTICS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function trackEvent(name, params){
   if(typeof gtag !== 'undefined') gtag('event', name, params||{});
 }
 
-// ── START ────────────────────────────────────────────────────────────────────
+// ââ START ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 renderPlans();
 init();
 </script>
@@ -3953,35 +3972,35 @@ init();
 <!-- Language selector button -->
 <div id="lang-panel">
   <div style="font-size:11px;font-weight:600;color:var(--mgray);padding:4px 12px 8px;text-transform:uppercase;letter-spacing:0.06em">Language</div>
-  <button class="lang-opt active" id="lang-en" onclick="setLang('en','🇬🇧','English')">
-    <span class="lang-flag">🇬🇧</span> English
+  <button class="lang-opt active" id="lang-en" onclick="setLang('en','ð¬ð§','English')">
+    <span class="lang-flag">ð¬ð§</span> English
   </button>
-  <button class="lang-opt" id="lang-es" onclick="setLang('es','🇪🇸','Español')">
-    <span class="lang-flag">🇪🇸</span> Español
+  <button class="lang-opt" id="lang-es" onclick="setLang('es','ðªð¸','EspaÃ±ol')">
+    <span class="lang-flag">ðªð¸</span> EspaÃ±ol
   </button>
-  <button class="lang-opt" id="lang-zh" onclick="setLang('zh-CN','🇨🇳','中文')">
-    <span class="lang-flag">🇨🇳</span> 中文
+  <button class="lang-opt" id="lang-zh" onclick="setLang('zh-CN','ð¨ð³','ä¸­æ')">
+    <span class="lang-flag">ð¨ð³</span> ä¸­æ
   </button>
-  <button class="lang-opt" id="lang-pt" onclick="setLang('pt','🇧🇷','Português')">
-    <span class="lang-flag">🇧🇷</span> Português
+  <button class="lang-opt" id="lang-pt" onclick="setLang('pt','ð§ð·','PortuguÃªs')">
+    <span class="lang-flag">ð§ð·</span> PortuguÃªs
   </button>
-  <button class="lang-opt" id="lang-it" onclick="setLang('it','🇮🇹','Italiano')">
-    <span class="lang-flag">🇮🇹</span> Italiano
+  <button class="lang-opt" id="lang-it" onclick="setLang('it','ð®ð¹','Italiano')">
+    <span class="lang-flag">ð®ð¹</span> Italiano
   </button>
-  <button class="lang-opt" id="lang-ko" onclick="setLang('ko','🇰🇷','한국어')">
-    <span class="lang-flag">🇰🇷</span> 한국어
+  <button class="lang-opt" id="lang-ko" onclick="setLang('ko','ð°ð·','íêµ­ì´')">
+    <span class="lang-flag">ð°ð·</span> íêµ­ì´
   </button>
-  <button class="lang-opt" id="lang-fr" onclick="setLang('fr','🇫🇷','Français')">
-    <span class="lang-flag">🇫🇷</span> Français
+  <button class="lang-opt" id="lang-fr" onclick="setLang('fr','ð«ð·','FranÃ§ais')">
+    <span class="lang-flag">ð«ð·</span> FranÃ§ais
   </button>
-  <button class="lang-opt" id="lang-ar" onclick="setLang('ar','🇸🇦','العربية')">
-    <span class="lang-flag">🇸🇦</span> العربية
+  <button class="lang-opt" id="lang-ar" onclick="setLang('ar','ð¸ð¦','Ø§ÙØ¹Ø±Ø¨ÙØ©')">
+    <span class="lang-flag">ð¸ð¦</span> Ø§ÙØ¹Ø±Ø¨ÙØ©
   </button>
-  <button class="lang-opt" id="lang-hi" onclick="setLang('hi','🇮🇳','हिन्दी')">
-    <span class="lang-flag">🇮🇳</span> हिन्दी
+  <button class="lang-opt" id="lang-hi" onclick="setLang('hi','ð®ð³','à¤¹à¤¿à¤¨à¥à¤¦à¥')">
+    <span class="lang-flag">ð®ð³</span> à¤¹à¤¿à¤¨à¥à¤¦à¥
   </button>
-  <button class="lang-opt" id="lang-ja" onclick="setLang('ja','🇯🇵','日本語')">
-    <span class="lang-flag">🇯🇵</span> 日本語
+  <button class="lang-opt" id="lang-ja" onclick="setLang('ja','ð¯ðµ','æ¥æ¬èª')">
+    <span class="lang-flag">ð¯ðµ</span> æ¥æ¬èª
   </button>
 </div>
 
@@ -4004,7 +4023,7 @@ function setLang(lang, flag, name){
   localStorage.setItem('drbike-lang', lang);
 
   // Update button label
-  const langLabels = {en:'EN',es:'ES','zh-CN':'中文',pt:'PT',it:'IT',ko:'한국',fr:'FR',ar:'AR',hi:'HI',ja:'JA'};
+  const langLabels = {en:'EN',es:'ES','zh-CN':'ä¸­æ',pt:'PT',it:'IT',ko:'íêµ­',fr:'FR',ar:'AR',hi:'HI',ja:'JA'};
   const label = langLabels[lang] || lang.toUpperCase().slice(0,2);
   const labelEl = document.getElementById('lang-label');
   if(labelEl) labelEl.textContent = label;
@@ -4029,7 +4048,7 @@ function setLang(lang, flag, name){
     return;
   }
 
-  // Use Google Translate URL approach — no widget script needed
+  // Use Google Translate URL approach â no widget script needed
   const pageUrl = encodeURIComponent(window.location.origin + window.location.pathname);
   window.location.href = `https://translate.google.com/translate?sl=en&tl=${lang}&u=${pageUrl}`;
 }
@@ -4037,7 +4056,7 @@ function setLang(lang, flag, name){
 // Apply saved language on load
 window.addEventListener('load', ()=>{
   if(currentLang && currentLang !== 'en'){
-    const langLabels = {es:'ES','zh-CN':'中文',pt:'PT',it:'IT',ko:'한국',fr:'FR',ar:'AR',hi:'HI',ja:'JA'};
+    const langLabels = {es:'ES','zh-CN':'ä¸­æ',pt:'PT',it:'IT',ko:'íêµ­',fr:'FR',ar:'AR',hi:'HI',ja:'JA'};
     const labelEl = document.getElementById('lang-label');
     if(labelEl) labelEl.textContent = langLabels[currentLang] || currentLang.toUpperCase().slice(0,2);
     document.querySelectorAll('.lang-opt').forEach(b=>b.classList.remove('active'));
@@ -4072,13 +4091,13 @@ function showInstallBanner(){
   banner.id = 'install-banner';
   banner.style.cssText = 'position:fixed;bottom:90px;left:16px;right:16px;background:#0D1F3C;color:#fff;border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.3)';
   banner.innerHTML = `
-    <div style="width:42px;height:42px;background:#1848C8;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">🚲</div>
+    <div style="width:42px;height:42px;background:#1848C8;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">ð²</div>
     <div style="flex:1">
       <div style="font-size:14px;font-weight:600">Add Dr. Bike to your home screen</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px">Install the app for faster access</div>
     </div>
     <button onclick="installPWA()" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">Install</button>
-    <button onclick="document.getElementById('install-banner').remove()" style="background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;cursor:pointer">✕</button>`;
+    <button onclick="document.getElementById('install-banner').remove()" style="background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;cursor:pointer">â</button>`;
   document.body.appendChild(banner);
 }
 
