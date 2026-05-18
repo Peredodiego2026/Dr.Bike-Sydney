@@ -3173,7 +3173,7 @@ function fillConfirm(){
 
 // Stripe - lazy init
 let stripe = null;
-function getStripe(){ if(!stripe && window.Stripe) stripe = Stripe('pk_test_51TUbFqPPGSm5cT7JyoojiAiHFB8isozh1GyIB4DHE8900gSTi74pq9mAJxXpZUp5dGbL8dZRXsPRZw48N3YPCOcw00mJXkKPvQ'); return stripe; }
+function getStripe(){ if(!stripe && window.Stripe) stripe = Stripe('pk_live_51TUbFqPPGSm5cT7JKBDANyRVDmi6Ytia6r31kFxAEWis6xYZuhXlDnoZ3KyB4xUoJWd3nKpzrLxuDzsQEz7X3od3006xPoLzVV'); return stripe; }
 
 async function confirmBooking(){
   if(!await requireAuth('book')) return;
