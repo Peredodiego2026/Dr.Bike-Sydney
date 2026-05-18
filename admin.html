@@ -1216,6 +1216,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
         <button onclick="calPrev()" style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)">← Prev</button>
         <div style="flex:1;text-align:center;font-size:16px;font-weight:700;color:var(--navy)" id="cal-title">Week</div>
         <button onclick="calNext()" style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)">Next →</button>
+        <button onclick="openBlockModal()" style="background:#FEF3C7;color:#D97706;border:1.5px solid #FCD34D;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap">🚫 Block slots</button>
         <div style="display:flex;background:var(--off);border-radius:8px;padding:3px;gap:2px">
           <button onclick="setCalView('week',this)" id="cv-week" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:var(--blue);color:#fff">Week</button>
           <button onclick="setCalView('day',this)" id="cv-day" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray)">Day</button>
@@ -1814,6 +1815,100 @@ function exportFinancePDF() {
 </body></html>`);
   win.document.close();
 }
+
+// ── AVAILABILITY BLOCKING ─────────────────────────────────────────────────────
+function openBlockModal() {
+  document.getElementById('block-modal')?.remove();
+  const today = new Date().toISOString().split('T')[0];
+  const modal = document.createElement('div');
+  modal.id = 'block-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:420px;font-family:var(--sans)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:16px;font-weight:700;color:var(--navy)">🚫 Block availability</div>
+        <button onclick="document.getElementById('block-modal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Van</div>
+          <select id="block-van" class="inp" style="margin:0">
+            <option value="1">Van 1 — Inner West / Eastern / CBD</option>
+            <option value="2">Van 2 — North Shore / Manly / Beaches</option>
+            <option value="0">All vans</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Date</div>
+          <input type="date" id="block-date" class="inp" style="margin:0" min="${today}" value="${today}">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:8px;text-transform:uppercase">Time slots to block</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="block-slots">
+            ${['8:00','8:30','9:00','9:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'].map(t=>
+              `<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:6px;border:1px solid var(--border);border-radius:6px;color:var(--navy)">
+                <input type="checkbox" value="${t}" style="accent-color:var(--blue)"> ${t}
+              </label>`
+            ).join('')}
+          </div>
+          <button onclick="selectAllSlots(true)" style="background:none;border:none;color:var(--blue);font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0">Select all</button>
+          <button onclick="selectAllSlots(false)" style="background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0;margin-left:12px">Clear all</button>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Reason (optional)</div>
+          <input type="text" id="block-reason" class="inp" style="margin:0" placeholder="e.g. Public holiday, mechanic unavailable">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button onclick="saveBlocks()" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
+          <button onclick="unblockDate()" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid #FECACA;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock all</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+}
+
+function selectAllSlots(sel) {
+  document.querySelectorAll('#block-slots input[type=checkbox]').forEach(cb => cb.checked = sel);
+}
+
+async function saveBlocks() {
+  const van = parseInt(document.getElementById('block-van').value);
+  const date = document.getElementById('block-date').value;
+  const reason = document.getElementById('block-reason').value;
+  const slots = [...document.querySelectorAll('#block-slots input:checked')].map(cb => cb.value);
+  
+  if(!date){ showToast('Pick a date'); return; }
+  if(!slots.length){ showToast('Select at least one slot'); return; }
+
+  const rows = slots.map(time => ({
+    date, time_slot: time, van_number: van || null, blocked: true, reason: reason || null
+  }));
+
+  const { error } = await sb.from('availability').upsert(rows, { onConflict: 'date,time_slot,van_number' });
+  if(error){ showToast('Error: ' + error.message); return; }
+  
+  document.getElementById('block-modal').remove();
+  showToast(`✅ ${slots.length} slot${slots.length>1?'s':''} blocked for ${new Date(date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})}`);
+  loadCalendar();
+}
+
+async function unblockDate() {
+  const van = parseInt(document.getElementById('block-van').value);
+  const date = document.getElementById('block-date').value;
+  if(!date){ showToast('Pick a date'); return; }
+  
+  let q = sb.from('availability').delete().eq('date', date).eq('blocked', true);
+  if(van) q = q.eq('van_number', van);
+  
+  const { error } = await q;
+  if(error){ showToast('Error: ' + error.message); return; }
+  
+  document.getElementById('block-modal').remove();
+  showToast(`✅ All slots unblocked for ${new Date(date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})}`);
+  loadCalendar();
+}
+
 function escapeHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 }

@@ -2124,6 +2124,7 @@ async function updateDashboard(){
         <span class="hist-price" style="font-size:13px;font-weight:700">$${b.service_price||0}</span>
         ${canCancel ? `<button onclick="clientReschedule('${b.id}','${b.service_name||'Service'}','${b.scheduled_date||''}','${b.van_number||1}')" style="font-size:12px;color:#1848C8;background:none;border:1px solid #BFDBFE;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;min-height:32px">Reschedule</button>` : ''}
         ${canCancel ? `<button onclick="clientCancelBooking('${b.id}','${b.service_name||'Service'}')" style="font-size:12px;color:#DC2626;background:none;border:1px solid #FECACA;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;min-height:32px">Cancel</button>` : ''}
+        ${st==='completed' ? `<button onclick="showReceipt('${b.id}','${(b.service_name||'Service').replace(/'/g,"\\'")}',${b.service_price||0},'${b.scheduled_date||''}','${b.scheduled_time||''}')" style="font-size:12px;color:#059669;background:none;border:1px solid #BBF7D0;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;min-height:32px">📄 Receipt</button>` : ''}
       </div>`;
     }).join('');
 
@@ -2427,6 +2428,54 @@ function showOnboarding(name) {
 
   render();
   document.body.appendChild(el);
+}
+
+
+function showReceipt(bookingId, serviceName, price, date, time) {
+  const net = Math.round(price / 1.1);
+  const gst = price - net;
+  const dateStr = date ? new Date(date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '—';
+  const clientName = userProfile?.full_name || 'Client';
+  const ref = 'DRBK-' + bookingId.slice(0,8).toUpperCase();
+
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Receipt ${ref}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,'Inter',sans-serif;color:#0D1F3C;background:#fff;padding:40px;max-width:480px;margin:0 auto}
+    .logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+    .logo-icon{width:40px;height:40px;background:#1848C8;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:800}
+    .logo-name{font-size:18px;font-weight:800;color:#0D1F3C}
+    .logo-sub{font-size:11px;color:#6B7280}
+    h1{font-size:22px;font-weight:800;color:#0D1F3C;margin-bottom:4px}
+    .ref{font-size:13px;color:#6B7280;margin-bottom:28px}
+    .info-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F3F4F6;font-size:14px}
+    .info-row .label{color:#6B7280}
+    .info-row .val{font-weight:600;color:#0D1F3C}
+    .total-row{display:flex;justify-content:space-between;padding:14px 0;font-size:18px;font-weight:800;color:#1848C8;border-top:2px solid #E5E7EB;margin-top:8px}
+    .badge{display:inline-block;background:#ECFDF5;color:#059669;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;margin-bottom:28px}
+    .footer{margin-top:32px;font-size:11px;color:#9CA3AF;border-top:1px solid #F3F4F6;padding-top:16px;line-height:1.6}
+    .print-btn{background:#1848C8;color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;margin-top:24px;display:block;width:100%;text-align:center}
+    @media print{.print-btn{display:none}}
+  </style></head>
+  <body>
+    <div class="logo">
+      <div class="logo-icon">🚲</div>
+      <div><div class="logo-name">Dr. Bike Sydney</div><div class="logo-sub">drbikesydney.com.au</div></div>
+    </div>
+    <h1>Tax Invoice</h1>
+    <div class="ref">${ref}</div>
+    <div class="badge">✅ Payment received</div>
+    <div class="info-row"><span class="label">Client</span><span class="val">${clientName}</span></div>
+    <div class="info-row"><span class="label">Service</span><span class="val">${serviceName}</span></div>
+    <div class="info-row"><span class="label">Date</span><span class="val">${dateStr}${time?' · '+time:''}</span></div>
+    <div class="info-row"><span class="label">Subtotal (excl. GST)</span><span class="val">$${net.toFixed(2)}</span></div>
+    <div class="info-row"><span class="label">GST (10%)</span><span class="val">$${gst.toFixed(2)}</span></div>
+    <div class="total-row"><span>Total (AUD)</span><span>$${price.toFixed(2)}</span></div>
+    <div class="footer">Dr. Bike Sydney · ABN 87 654 025 287 · hello@drbikesydney.com.au · drbikesydney.com.au<br>This is a valid tax invoice for GST purposes under Australian law.</div>
+    <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
+  </body></html>`);
+  win.document.close();
 }
 
 function updateNavAuth(){
