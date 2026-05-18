@@ -1816,7 +1816,7 @@ function exportFinancePDF() {
       <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Van</th><th>Amount</th><th>GST</th><th>Net</th></tr></thead>
       <tbody>${(d.jobs||[]).map(j=>{
         const p=j.service_price||0, g=Math.round(p/11);
-        return `<tr><td>${j.scheduled_date||'—'}</td><td class="bold">${j.profiles?.full_name||'Client'}</td><td>${j.service_name||'—'}</td><td>Van ${j.van_number||1}</td><td class="blue">$${p}</td><td>$${g}</td><td>$${p-g}</td></tr>`;
+        return '<tr><td>'+(j.scheduled_date||'—')+'</td><td class="bold">'+(j.profiles?.full_name||'Client')+'</td><td>'+(j.service_name||'—')+'</td><td>Van '+(j.van_number||1)+'</td><td class="blue">$'+p+'</td><td>$'+g+'</td><td>$'+(p-g)+'</td></tr>';
       }).join('')}
       ${!(d.jobs||[]).length ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:#9CA3AF">No completed bookings in this period</td></tr>' : ''}
       </tbody>
@@ -1827,9 +1827,6 @@ function exportFinancePDF() {
       <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
     </div>
   </div></body></html>`);
-  win.document.close();
-}
-</body></html>`);
   win.document.close();
 }
 
