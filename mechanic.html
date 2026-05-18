@@ -288,7 +288,9 @@ async function load(){
     const clientIds = [...new Set((data||[]).map(b=>b.client_id).filter(Boolean))];
     let profileMap = {};
     if(clientIds.length) {
-      const {data: profs} = await sb.from('profiles').select('id, full_name, phone_number').in('id', clientIds);
+      // Usar or() en vez de in() para evitar el 400
+      const orFilter = clientIds.map(id => `id.eq.${id}`).join(',');
+      const {data: profs} = await sb.from('profiles').select('id, full_name, phone_number').or(orFilter);
       (profs||[]).forEach(p => profileMap[p.id] = p);
     }
     const mapped = (data||[]).map(b=>({id:b.id,client:profileMap[b.client_id]?.full_name||'Client',email:'',phone:profileMap[b.client_id]?.phone_number||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
