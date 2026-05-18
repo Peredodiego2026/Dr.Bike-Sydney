@@ -3445,10 +3445,8 @@ async function deleteNotifNumber(id) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-if(checkAdminAuth()) {
-  loadDashboard();
-  subscribeToBookings();
-}
+loadDashboard();
+subscribeToBookings();
 
 // Inject notification panel into body
 (function(){
