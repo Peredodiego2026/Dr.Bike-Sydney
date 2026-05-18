@@ -3431,15 +3431,25 @@ async function deleteNotifNumber(id) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// Asegurar que el DOM esté listo antes de ejecutar
-if(document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() {
+async function initAdmin() {
+  // Asegurar sesión Supabase para queries (RLS necesita auth incluso con anon)
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session) {
+      await sb.auth.signInAnonymously();
+    }
+  } catch(e) { console.warn('Supabase auth:', e.message); }
+  
+  if(checkAdminAuth()) {
     loadDashboard();
     subscribeToBookings();
-  });
+  }
+}
+
+if(document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAdmin);
 } else {
-  loadDashboard();
-  subscribeToBookings();
+  initAdmin();
 }
 
 // Inject notification panel into body
