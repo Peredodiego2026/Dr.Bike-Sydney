@@ -2346,22 +2346,17 @@ async function loadDashboard(){
 let allBookings = [];
 
 async function loadBookings(){
-  // Query directa a Supabase (RLS deshabilitado)
+  console.log('loadBookings: fetching...');
   const { data, error } = await sb
     .from('bookings')
-    .select('id, client_id, service_name, service_price, scheduled_date, scheduled_time, status, suburb, address, van_number, created_at, notes, mechanic_notes, client_rating, client_review, profiles(full_name, email, phone_number)')
+    .select('*')
     .order('created_at', { ascending: false })
     .limit(500);
     
+  console.log('loadBookings result:', data?.length, 'error:', error?.message);
+  
   if(error) {
-    console.error('loadBookings error:', error);
-    showToast('Error: ' + error.message);
-    // Intentar via API como fallback
-    try {
-      const res = await fetch('/api/get-bookings');
-      const json = await res.json();
-      if(json.bookings) { allBookings = json.bookings; applyBookingFilters(); }
-    } catch(e2) { console.error('API fallback failed:', e2); }
+    showToast('Error cargando bookings: ' + error.message);
     return;
   }
   allBookings = data || [];
