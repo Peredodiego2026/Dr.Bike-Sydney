@@ -1,12 +1,10 @@
-const CACHE_STATIC = 'drbike-static-v11';
-const CACHE_PAGES  = 'drbike-pages-v11';
+const CACHE_STATIC = 'drbike-static-v12';
+const CACHE_PAGES  = 'drbike-pages-v12';
 
 const STATIC_ASSETS = [
-  '/mechanic.html',
   '/index.html',
-  '/icon-mech-192.png',
-  '/icon-512.svg',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+  '/mechanic.html',
+  '/icon-512.svg'
 ];
 
 self.addEventListener('install', e => {
@@ -30,85 +28,74 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+
+  // Nunca interceptar: POST, APIs, Supabase, Stripe, extensiones
   if(e.request.method !== 'GET') return;
+  if(url.protocol === 'chrome-extension:' || url.protocol === 'moz-extension:') return;
+  if(url.hostname.includes('supabase.co')) return;
+  if(url.hostname.includes('stripe.com')) return;
+  if(url.hostname.includes('googleapis.com')) return;
+  if(url.hostname.includes('twilio.com')) return;
+  if(url.pathname.startsWith('/api/')) return;
 
-  // APIs — no cache nunca
-  if(url.hostname.includes('supabase.co') || url.hostname.includes('stripe.com') || url.pathname.startsWith('/api/')) return;
-
-  // Páginas HTML — network first, fallback cache
-  if(e.request.headers.get('accept')?.includes('text/html') || url.pathname.endsWith('.html') || url.pathname === '/') {
-    e.respondWith(
-      fetch(e.request).then(res => {
-        caches.open(CACHE_PAGES).then(c => c.put(e.request, res.clone()));
-        return res;
-      }).catch(() => caches.match(e.request) || caches.match('/mechanic.html') || caches.match('/index.html'))
-    );
-    return;
-  }
-
-  // Assets estáticos — cache first
-  if(url.pathname.match(/\.(js|css|png|svg|ico|woff2?|jpg|webp)$/)) {
+  // Solo cachear assets estáticos propios
+  if(url.pathname.match(/\.(js|css|png|svg|ico|woff2?|jpg|webp|gif)$/) && url.hostname === self.location.hostname) {
     e.respondWith(
       caches.match(e.request).then(cached => {
         if(cached) return cached;
         return fetch(e.request).then(res => {
-          caches.open(CACHE_STATIC).then(c => c.put(e.request, res.clone()));
+          if(res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_STATIC).then(c => c.put(e.request, clone)).catch(()=>{});
+          }
           return res;
-        }).catch(() => new Response('', {status:408}));
+        }).catch(() => cached || new Response('', {status: 408}));
       })
     );
     return;
   }
 
-  // CDN — stale while revalidate
-  if(url.hostname.includes('cdn.jsdelivr.net') || url.hostname.includes('cdnjs.cloudflare.com')) {
+  // HTML pages — network first, cache fallback
+  if(e.request.headers.get('accept')?.includes('text/html')) {
     e.respondWith(
-      caches.open(CACHE_STATIC).then(cache =>
-        cache.match(e.request).then(cached => {
-          const fresh = fetch(e.request).then(res => { cache.put(e.request, res.clone()); return res; }).catch(()=>cached);
-          return cached || fresh;
+      fetch(e.request)
+        .then(res => {
+          if(res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_PAGES).then(c => c.put(e.request, clone)).catch(()=>{});
+          }
+          return res;
         })
-      )
+        .catch(() => caches.match(e.request).then(c => c || caches.match('/index.html')))
     );
+    return;
   }
+
+  // Todo lo demás: network directo sin cache
 });
 
+// Push notifications
 self.addEventListener('push', e => {
-  let p = { title:'Dr. Bike', body:'New update', icon:'/icon-mech-192.png', url:'/mechanic.html' };
-  try { p = Object.assign(p, e.data.json()); } catch(err) {}
+  let p = { title:'Dr. Bike', body:'New update', icon:'/icon-512.svg', url:'/' };
+  try { p = Object.assign(p, e.data?.json()); } catch(err) {}
   e.waitUntil(self.registration.showNotification(p.title, {
-    body:p.body, icon:p.icon, badge:'/icon-mech-192.png',
-    vibrate:[200,100,200], tag:p.tag||'drbike', renotify:true, data:{url:p.url}
+    body: p.body,
+    icon: p.icon,
+    badge: '/icon-512.svg',
+    vibrate: [200, 100, 200],
+    tag: p.tag || 'drbike',
+    renotify: true,
+    data: { url: p.url }
   }));
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = e.notification.data?.url || '/';
-  e.waitUntil(clients.matchAll({type:'window'}).then(wins => {
-    const m = wins.find(w => w.url.includes(url));
-    return m ? m.focus() : clients.openWindow(url);
-  }));
+  e.waitUntil(
+    clients.matchAll({ type: 'window' }).then(wins => {
+      const m = wins.find(w => w.url.includes(url));
+      return m ? m.focus() : clients.openWindow(url);
+    })
+  );
 });
-
-// Background sync — reintenta updates cuando vuelve internet
-self.addEventListener('sync', e => {
-  if(e.tag === 'sync-job-updates') e.waitUntil(syncPending());
-});
-
-async function syncPending() {
-  try {
-    const db = await new Promise((res,rej) => {
-      const r = indexedDB.open('drbike-sync',1);
-      r.onerror = ()=>rej(r.error); r.onsuccess = ()=>res(r.result);
-      r.onupgradeneeded = e => e.target.result.createObjectStore('q',{keyPath:'id',autoIncrement:true});
-    });
-    const items = await new Promise(res => { const r=db.transaction('q','readonly').objectStore('q').getAll(); r.onsuccess=()=>res(r.result); });
-    for(const item of items) {
-      try {
-        await fetch(item.url, {method:item.method||'POST', headers:{'Content-Type':'application/json'}, body:item.body});
-        db.transaction('q','readwrite').objectStore('q').delete(item.id);
-      } catch(e) {}
-    }
-  } catch(e) {}
-}
