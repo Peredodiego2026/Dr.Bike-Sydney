@@ -470,10 +470,24 @@ function notifyClientEnroute(j) {
 
   // Push notification to app (if client has it installed + subscribed)
   if (j.client_id) sendClientPush(j.client_id, {
-    title: '🚐 Your mechanic is on the way! — Dr. Bike Sydney',
-    body: `${mechName} is heading to ${j.suburb||'your address'}. Est. arrival: 10–20 min. Tap to track live.`,
-    url: `/?tracking=${j.id}`,
-    tag: 'mechanic-enroute-' + j.id
+    title: `🚐 ${mechName} is on the way!`,
+    body: `Heading to ${j.suburb||'your address'} for your ${j.service}. Est. arrival: 10–20 min. Tap to track live 📍`,
+    url: `/?action=dashboard&tracking=${j.id}`,
+    tag: 'mechanic-enroute-' + j.id,
+    badge: '/icon-mech-192.png',
+    icon: '/icon-512.svg'
+  });
+}
+
+// Push cuando el job es completado
+function notifyClientComplete(j) {
+  if (!j?.client_id) return;
+  const mechName = ((mechanic?.first_name||'')+ ' '+(mechanic?.last_name||'')).trim()||'Your mechanic';
+  sendClientPush(j.client_id, {
+    title: `✅ ${j.service} complete!`,
+    body: `${mechName} has finished your service. Please leave a review — it helps us a lot! ⭐`,
+    url: `/?action=dashboard&review=${j.id}`,
+    tag: 'job-complete-' + j.id
   });
 }
 function openCompleteModal(id){
@@ -678,6 +692,9 @@ async function submitComplete(id){
   render(); badges();
   stopGPS();
   toast('✅ Job completed!' + (photoBeforeUrl||photoAfterUrl ? ' Photos saved.' : ''));
+  // Push al cliente
+  const jDone = jobs.find(x=>x.id===id);
+  if(jDone) notifyClientComplete(jDone);
 
   stopGPS();
 
