@@ -128,7 +128,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'Dr. Bike Sydney <onboarding@resend.dev>',
+        from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: recipients,
         subject: template.subject,
         html: template.html
