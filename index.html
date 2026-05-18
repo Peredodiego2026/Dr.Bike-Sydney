@@ -1518,10 +1518,12 @@ html{scroll-behavior:smooth}
   </div>
   <div class="cb-msgs" id="cb-msgs"></div>
   <div class="cb-quick" id="cb-quick">
-    <button class="cb-quick-btn" onclick="quickMsg('How much does a service cost?')">💰 Pricing</button>
-    <button class="cb-quick-btn" onclick="quickMsg('What areas do you cover?')">📍 Coverage</button>
-    <button class="cb-quick-btn" onclick="quickMsg('How do I book?')">📅 Book</button>
-    <button class="cb-quick-btn" onclick="quickMsg('I need to speak to a mechanic')">🔧 Mechanic</button>
+    <button class="cb-quick-btn" onclick="quickMsg('How much does a Tune-Up cost?')">🔧 Tune-Up price</button>
+    <button class="cb-quick-btn" onclick="quickMsg('What membership plans do you have?')">⭐ Memberships</button>
+    <button class="cb-quick-btn" onclick="quickMsg('What areas do you cover in Sydney?')">📍 Coverage</button>
+    <button class="cb-quick-btn" onclick="quickMsg('My gears are skipping, what do I need?')">⚙️ Gear issue</button>
+    <button class="cb-quick-btn" onclick="quickMsg('My brakes feel spongy, what should I do?')">🛑 Brake issue</button>
+    <button class="cb-quick-btn" onclick="quickMsg('I need to speak to a mechanic')">👨‍🔧 Talk to mechanic</button>
   </div>
   <div class="cb-inp-row">
     <input class="cb-inp" id="cb-inp" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendChat()">
@@ -1848,7 +1850,7 @@ async function init(){
   setTimeout(()=>{
     document.getElementById('cb-notif').classList.add('show');
     document.getElementById('chatbot-btn').classList.add('has-msg');
-    addBotMsg("👋 Hi! I'm the Dr. Bike assistant. How can I help you today?");
+    addBotMsg("👋 G'day! I'm the Dr. Bike assistant. Ask me anything about our services, pricing, or coverage — or describe your bike issue and I'll recommend the right fix! 🚲");
   }, 5000);
 }
 
