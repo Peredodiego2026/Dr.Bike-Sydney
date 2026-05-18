@@ -218,12 +218,6 @@ function ratingHTML(jobs){
 }
 
 async function init(){
-  // Necesita sesion Supabase para queries (aunque RLS este deshabilitado)
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if(!session) await sb.auth.signInAnonymously();
-  } catch(e) {}
-  
   const s = localStorage.getItem('drbike-mech');
   if(s){ try{ mechanic=JSON.parse(s); vanNum=mechanic.van_number||1; go('s-main'); updateUI(); await load(); sub(); }catch(e){ localStorage.removeItem('drbike-mech'); } }
 }
