@@ -86,6 +86,11 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
 <body>
 <div class="toast" id="toast"></div>
 
+<!-- Offline banner -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:#D97706;color:#fff;padding:8px 16px;font-size:12px;font-weight:600;align-items:center;justify-content:center;gap:8px;text-align:center">
+  ⚡ You're offline — showing cached jobs. Changes will sync when back online.
+</div>
+
 <!-- LOGIN -->
 <div class="screen active" id="s-login">
   <div style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px;margin:0 auto">
@@ -177,6 +182,17 @@ const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','eyJ
 })();
 let mechanic=null, vanNum=1, jobs=[], tab='today', online=true;
 let timerIntervals = {};
+let isOffline = !navigator.onLine;
+
+// ── OFFLINE DETECTION ─────────────────────────────────────────────────────────
+function updateOnlineStatus() {
+  isOffline = !navigator.onLine;
+  const banner = document.getElementById('offline-banner');
+  if(banner) banner.style.display = isOffline ? 'flex' : 'none';
+  if(!isOffline && mechanic) { load(); } // auto-sync cuando vuelve internet
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
 
 function ratingHTML(jobs){
   const rated = jobs.filter(j=>j.rating);
@@ -225,9 +241,25 @@ function doLogout(){ if(!confirm('Sign out?')) return; localStorage.removeItem('
 function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v.classList.remove('sel')); document.getElementById('v'+n).classList.add('sel'); }
 
 async function load(){
-  const {data} = await sb.from('bookings').select('*, profiles(full_name,email,phone,phone_number)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
-  jobs=(data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',phone:b.profiles?.phone_number||b.profiles?.phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
-  render(); badges();
+  try {
+    const {data, error} = await sb.from('bookings').select('*, profiles(full_name,email,phone,phone_number)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
+    if(error) throw error;
+    const mapped = (data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',phone:b.profiles?.phone_number||b.profiles?.phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
+    jobs = mapped;
+    // Guardar en cache local para offline
+    try { localStorage.setItem('drbike-jobs-cache', JSON.stringify(jobs)); } catch(e){}
+    render(); badges();
+  } catch(e) {
+    // Sin conexion — usar cache
+    const cached = localStorage.getItem('drbike-jobs-cache');
+    if(cached) {
+      jobs = JSON.parse(cached);
+      render(); badges();
+      toast('⚡ Offline — showing cached jobs');
+    } else {
+      toast('No connection — please check your internet');
+    }
+  }
 }
 
 function sub(){

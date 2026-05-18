@@ -1534,6 +1534,40 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   }
 });
 
+
+// ── GLOBAL ERROR HANDLER ──────────────────────────────────────────────────────
+window.addEventListener('unhandledrejection', e => {
+  const msg = e.reason?.message || '';
+  // No mostrar errores de conexión como pantalla en blanco
+  if(msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('offline')) {
+    console.warn('Network error (offline?):', msg);
+    showOfflineBanner();
+    e.preventDefault();
+  }
+});
+window.addEventListener('online', () => { hideOfflineBanner(); if(typeof init === 'function') { try { loadServices(); loadVanZones(); } catch(e){} } });
+window.addEventListener('offline', showOfflineBanner);
+
+function showOfflineBanner() {
+  let b = document.getElementById('global-offline-banner');
+  if(!b) {
+    b = document.createElement('div');
+    b.id = 'global-offline-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#D97706;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px';
+    b.innerHTML = '⚡ You're offline — some features may not work';
+    document.body.appendChild(b);
+  }
+  b.style.display = 'flex';
+}
+
+function hideOfflineBanner() {
+  const b = document.getElementById('global-offline-banner');
+  if(b) b.style.display = 'none';
+}
+
+// Mostrar banner offline si ya está sin conexión al cargar
+if(!navigator.onLine) showOfflineBanner();
+
 // ── APP STATE ────────────────────────────────────────────────────────────────
 let currentUser = null;
 let userProfile = null;
