@@ -1476,7 +1476,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true, flowType: 'pkce', storage: window.localStorage,
+    detectSessionInUrl: true,
         flowType: 'pkce',
         storage: window.localStorage,
   }
@@ -1801,34 +1801,22 @@ async function signInGoogle(){
   if(error){ showErr(error.message); console.error(error); }
 }
 
-async async async function signInEmail() {
+async async function signInEmail() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   if (!email || !password) { toast('Please enter your email and password', 'error'); return; }
-  const btn = document.querySelector('#login-form button[type="submit"]') || document.querySelector('.login-btn') || document.querySelector('button');
+  const btn = document.querySelector('button[onclick*="signInEmail"]') || document.querySelector('.auth-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    if (data?.session) {
-      await supabase.auth.setSession(data.session);
-      // Force session persist for mobile
-      localStorage.setItem('drbike-session-ts', Date.now());
-    }
-    // Wait for auth state to propagate on mobile
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      window.currentUser = session.user;
-      toast('Welcome back! 🚲', 'success');
-      setTimeout(() => { window.location.reload(); }, 400);
+  supabase.auth.signInWithPassword({ email, password }).then(({ data, error }) => {
+    if (error) {
+      toast(error.message || 'Login failed', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
     } else {
-      throw new Error('Session not established. Please try again.');
+      window.currentUser = data.user;
+      toast('Welcome back! 🚲', 'success');
+      setTimeout(() => window.location.reload(), 400);
     }
-  } catch(err) {
-    toast(err.message || 'Login failed. Check your credentials.', 'error');
-    if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
-  }
+  });
 }
 
 async function signUpEmail(){
