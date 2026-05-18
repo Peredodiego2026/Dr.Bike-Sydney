@@ -19,9 +19,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.map(k => {
-        if(k !== CACHE_STATIC && k !== CACHE_PAGES) return caches.delete(k);
-      }))
+      Promise.all(keys.map(k => caches.delete(k))) // borrar TODO el cache al activar
     ).then(() => self.clients.claim())
   );
 });
