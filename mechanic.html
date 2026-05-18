@@ -30,9 +30,15 @@
   --wa-lt:rgba(37,211,102,0.12);
   --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
 }
-[data-theme="dark"] .job-card { background:var(--white) !important; color:var(--navy); }
-[data-theme="dark"] .job-card * { color:inherit; }
-[data-theme="dark"] .notes-inp { background:#2C2C2E; color:#F2F2F7; border-color:#48484A; }
+[data-theme="dark"] .job-card { background:#2C2C2E !important; color:#F2F2F7; border-color:#48484A; }
+[data-theme="dark"] .job-card .job-client { color:#F2F2F7; }
+[data-theme="dark"] .job-card .job-meta { color:#98989F; }
+[data-theme="dark"] .job-card .job-service { color:#F2F2F7; }
+[data-theme="dark"] .job-card .job-addr { color:#98989F; }
+[data-theme="dark"] .job-card .job-price { color:#34C759; }
+[data-theme="dark"] .notes-inp { background:#3A3A3C; color:#F2F2F7; border-color:#48484A; }
+[data-theme="dark"] .jobs-wrap { background:var(--off); }
+[data-theme="dark"] .status-badge { opacity:0.9; }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .screen{display:none;min-height:100vh;min-height:-webkit-fill-available;flex-direction:column}.screen.active{display:flex}
@@ -271,7 +277,7 @@ function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v
 
 async function load(){
   try {
-    const {data, error} = await sb.from('bookings').select('*, profiles(full_name, phone_number)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
+    const {data, error} = await sb.from('bookings').select('*, profiles!bookings_client_id_fkey(full_name, phone_number)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
     if(error) throw error;
     const mapped = (data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.phone_number||'Client',email:b.profiles?.email||'',phone:b.profiles?.phone_number||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
     jobs = mapped;
