@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       const lastService = new Date(booking.completed_at).toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' });
       const monthsAgo = Math.floor((Date.now() - new Date(booking.completed_at)) / (1000*60*60*24*30));
 
-      await fetch(`${process.env.VERCEL_URL || 'https://dr-bike-sydney.vercel.app'}/api/send-email`, {
+      await fetch(`${process.env.VERCEL_URL || 'https://drbikesydney.com.au'}/api/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -375,7 +375,7 @@ async function sendClientPush(clientId, { title, body, url, tag }) {
 function notifyClientEnroute(j) {
   if (!j) return;
   const mechName = ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
-  const trackUrl = `https://dr-bike-sydney.vercel.app/?tracking=${j.id}`;
+  const trackUrl = `https://drbikesydney.com.au/?tracking=${j.id}`;
 
   // SMS + WhatsApp (works even if app not installed)
   if (j.phone) {
@@ -606,7 +606,7 @@ async function submitComplete(id){
   try {
     const clientEmail = j?.email || '';
     const clientName  = j?.client || 'Client';
-    const reviewLink  = `https://dr-bike-sydney.vercel.app/?review=${id}`;
+    const reviewLink  = `https://drbikesydney.com.au/?review=${id}`;
     const nextSvcMsg  = nextDate
       ? `Your next recommended service is on ${new Date(nextDate).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}`
       : 'We recommend a service check every 3–6 months.';

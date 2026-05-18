@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (!priceId || !email) return res.status(400).json({ error: 'Missing required fields' });
   console.log('create-subscription:', { priceId, plan, billing, email: email?.slice(0,5)+'...' });
 
-  const BASE_URL = 'https://dr-bike-sydney.vercel.app';
+  const BASE_URL = 'https://drbikesydney.com.au';
 
   try {
     // Get or create Stripe customer

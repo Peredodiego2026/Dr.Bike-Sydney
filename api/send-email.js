@@ -84,7 +84,7 @@ export default async function handler(req, res) {
             <p style="font-size:11px;color:#D97706;margin:0;opacity:0.8">You and your friend each get $15 off when they use your code</p>
           </div>` : ''}
 
-          <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View your booking →</a>
+          <a href="https://drbikesydney.com.au/?action=dashboard" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View your booking →</a>
         </div>${footer()}`
     },
     mechanic_new_booking: {
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
             <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 4px">📱 Open your mechanic app</p>
             <p style="font-size:12px;color:#1848C8;margin:0">Log in to accept and see full client details</p>
           </div>
-          <a href="https://dr-bike-sydney.vercel.app/mechanic.html" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
+          <a href="https://drbikesydney.com.au/mechanic.html" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
         </div>${footer()}`
     },
     reminder: {
@@ -109,8 +109,33 @@ export default async function handler(req, res) {
             <p style="font-size:13px;color:#1848C8;font-weight:700;margin:0 0 8px">🔧 Why regular servicing matters</p>
             <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6;opacity:0.8">Worn brake pads, stretched cables and dirty drivetrains reduce performance and can be dangerous. A quick tune-up extends your bike's life significantly.</p>
           </div>
-          <a href="https://dr-bike-sydney.vercel.app" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Book a service now →</a>
+          <a href="https://drbikesydney.com.au" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Book a service now →</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you — home, work or park · Mon–Sat</p>
+        </div>${footer()}`
+    },
+    cancellation_client: {
+      subject: `❌ Booking cancelled — ${service} · ${date}`,
+      html: `${header('#DC2626','❌','Booking cancelled')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your booking has been cancelled as requested.</p>
+          ${bookingTable()}
+          <div style="background:#FEF2F2;border-radius:12px;padding:16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#DC2626;font-weight:600;margin:0 0 4px">Refund information</p>
+            <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">If you paid online, your refund will be processed within 5–7 business days. For questions contact hello@drbikesydney.com.au</p>
+          </div>
+          <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book again →</a>
+        </div>${footer()}`
+    },
+    cancellation_admin: {
+      subject: `❌ Booking cancelled — ${name} · ${service} · ${date}`,
+      html: `${header('#DC2626','❌','Booking cancelled by client')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6"><strong style="color:#0D1F3C">${name}</strong> cancelled their booking.</p>
+          ${bookingTable()}
+          <div style="background:#FEF2F2;border-radius:12px;padding:16px;margin-top:16px">
+            <p style="font-size:13px;color:#DC2626;font-weight:600;margin:0 0 4px">Action required</p>
+            <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">This slot is now free. Consider reaching out to waitlisted clients or updating the schedule.</p>
+          </div>
         </div>${footer()}`
     },
   };
@@ -128,7 +153,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'Dr. Bike Sydney <onboarding@resend.dev>',
+        from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: recipients,
         subject: template.subject,
         html: template.html
