@@ -1619,11 +1619,13 @@ async function init(){
   }, 5000);
 
   try {
-    // Supabase detectSessionInUrl:true maneja el hash de OAuth automáticamente
-    // Solo necesitamos esperar a que procese
-    await new Promise(r => setTimeout(r, 100));
+    // Detectar si venimos de OAuth (hash con access_token en URL)
+    const isOAuthReturn = window.location.hash?.includes('access_token');
 
-    // Restaurar sesión — funciona tanto para carga normal como post-OAuth
+    // En mobile el OAuth redirect necesita mas tiempo para procesar
+    await new Promise(r => setTimeout(r, isOAuthReturn ? 800 : 100));
+
+    // Restaurar sesion — funciona tanto para carga normal como post-OAuth
     const { data: { session } } = await sb.auth.getSession();
     if(session?.user){
       currentUser = session.user;
@@ -1631,10 +1633,10 @@ async function init(){
       updateNavAuth();
 
       // Limpiar hash de OAuth si existe
-      if(window.location.hash?.includes('access_token'))
+      if(isOAuthReturn)
         window.history.replaceState({}, document.title, window.location.pathname);
 
-      // Chequear si había intención pendiente
+      // Chequear si habia intencion pendiente
       const pendingPlan = localStorage.getItem('pendingPlanId');
       const pendingView = localStorage.getItem('pendingView');
       if(pendingPlan){
@@ -1649,6 +1651,13 @@ async function init(){
         localStorage.removeItem('pendingView');
         clearTimeout(loadingGuard);
         setTimeout(()=>{ hideLoading(); showView(pendingView); }, 400);
+        setTimeout(registerClientPush, 3000);
+        await loadServices(); await loadVanZones(); loadPublicReviews();
+        return;
+      } else if(isOAuthReturn){
+        // Vino de Google OAuth — mandar al dashboard
+        clearTimeout(loadingGuard);
+        setTimeout(()=>{ hideLoading(); showView('dashboard'); }, 400);
         setTimeout(registerClientPush, 3000);
         await loadServices(); await loadVanZones(); loadPublicReviews();
         return;
@@ -1701,6 +1710,10 @@ async function init(){
         } else if(pending){
           localStorage.removeItem('pendingView');
           showView(pending);
+        } else {
+          // Google OAuth sin pending — ir al dashboard
+          showView('dashboard');
+          setTimeout(registerClientPush, 2000);
         }
       }
     } else if(event === 'SIGNED_OUT') {
