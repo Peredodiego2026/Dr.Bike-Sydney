@@ -3576,9 +3576,23 @@ async function confirmBooking(){
 
   // Si se usó un código de referido, incrementar el contador del referidor
   if(appliedReferralCode){
-    const { data: referrer } = await sb.from('profiles').select('id,referral_count').eq('referral_code', appliedReferralCode).single();
+    const { data: referrer } = await sb.from('profiles').select('id,referral_count,email,full_name').eq('referral_code', appliedReferralCode).single();
     if(referrer){
       await sb.from('profiles').update({ referral_count: (referrer.referral_count||0) + 1 }).eq('id', referrer.id);
+      // Notificar al referidor por email
+      if(referrer.email){
+        const newCount = (referrer.referral_count||0) + 1;
+        fetch('/api/send-email', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            type: 'referral_success',
+            to: referrer.email,
+            name: referrer.full_name || 'there',
+            referralCount: newCount,
+            friendName: userProfile?.full_name || 'A friend'
+          })
+        }).catch(()=>{});
+      }
     }
   }
 

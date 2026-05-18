@@ -225,13 +225,35 @@ export default async function handler(req, res) {
       case 'invoice.payment_failed': {
         const invoice = event.data.object;
         const customerId = invoice.customer;
+        const amountDue = (invoice.amount_due || 0) / 100;
+        const attemptCount = invoice.attempt_count || 1;
 
         try {
-          await sb.from('profiles').update({ membership_status: 'past_due' })
-            .eq('stripe_customer_id', customerId);
-          console.log(`[invoice.payment_failed] Marked past_due for customer ${customerId}`);
+          // Update membership status
+          const { data: profile } = await sb.from('profiles')
+            .update({ membership: 'past_due' })
+            .eq('stripe_customer_id', customerId)
+            .select('email,full_name,membership')
+            .single();
+
+          // Send payment failed email to client
+          if(profile?.email) {
+            await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://drbikesydney.com.au'}/api/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'payment_failed',
+                to: profile.email,
+                name: profile.full_name || 'Member',
+                price: amountDue,
+                attemptCount
+              })
+            });
+          }
+
+          console.log(`[invoice.payment_failed] Marked past_due for customer ${customerId}, attempt ${attemptCount}`);
         } catch (err) {
-          console.error('[invoice.payment_failed] DB update failed:', err.message);
+          console.error('[invoice.payment_failed] Handler error:', err.message);
         }
         break;
       }
@@ -242,8 +264,25 @@ export default async function handler(req, res) {
         const customerId = invoice.customer;
 
         try {
-          await sb.from('profiles').update({ membership_status: 'past_due' })
-            .eq('stripe_customer_id', customerId);
+          const { data: profile } = await sb.from('profiles')
+            .update({ membership: 'past_due' })
+            .eq('stripe_customer_id', customerId)
+            .select('email,full_name')
+            .single();
+
+          // Send action required email
+          if(profile?.email) {
+            await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://drbikesydney.com.au'}/api/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'payment_action_required',
+                to: profile.email,
+                name: profile.full_name || 'Member'
+              })
+            });
+          }
+
           console.log(`[invoice.payment_action_required] 3DS required for customer ${customerId}`);
         } catch (err) {
           console.error('[invoice.payment_action_required] DB update failed:', err.message);

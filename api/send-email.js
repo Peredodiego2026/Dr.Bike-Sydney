@@ -138,6 +138,49 @@ export default async function handler(req, res) {
           </div>
         </div>${footer()}`
     },
+    referral_success: {
+      subject: `🎉 Your referral worked — $15 credit earned!`,
+      html: `${header('#059669','🎉','Referral successful!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, great news — ${typeof friendName !== 'undefined' ? friendName : 'a friend'} just booked using your referral code!</p>
+          <div style="background:#ECFDF5;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
+            <div style="font-size:32px;margin-bottom:8px">🎁</div>
+            <div style="font-size:20px;font-weight:800;color:#059669">$15 credit earned</div>
+            <div style="font-size:13px;color:#059669;margin-top:4px;opacity:0.8">Applied automatically to your next service</div>
+          </div>
+          <div style="background:#F7F8FA;border-radius:10px;padding:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;color:#6B7280">Total referrals</span>
+            <span style="font-size:18px;font-weight:800;color:#0D1F3C">${typeof referralCount !== 'undefined' ? referralCount : 1}</span>
+          </div>
+          <p style="font-size:13px;color:#6B7280;margin:0 0 20px;line-height:1.6">Keep sharing your code — every referral earns you both $15 off. 🚲</p>
+          <a href="https://drbikesydney.com.au/?action=dashboard" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View my dashboard →</a>
+        </div>${footer()}`
+    },
+    payment_failed: {
+      subject: `⚠️ Payment failed — Dr. Bike Sydney membership`,
+      html: `${header('#D97706','⚠️','Payment failed')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, we couldn't process your membership payment of <strong>$${price}</strong>. This is attempt ${typeof attemptCount !== 'undefined' ? attemptCount : 1}.</p>
+          <div style="background:#FEF9C3;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #FCD34D">
+            <p style="font-size:13px;color:#D97706;font-weight:600;margin:0 0 4px">⚡ Action needed</p>
+            <p style="font-size:12px;color:#D97706;margin:0;line-height:1.6">Please update your payment method to keep your membership active. Your access will be paused if payment fails again.</p>
+          </div>
+          <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#D97706;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Update payment method →</a>
+          <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">Questions? Reply to this email or WhatsApp us at +61 433 963 250</p>
+        </div>${footer()}`
+    },
+    payment_action_required: {
+      subject: `🔐 Action required — verify your Dr. Bike payment`,
+      html: `${header('#1848C8','🔐','Payment verification needed')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your bank requires additional verification for your membership renewal.</p>
+          <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 4px">🔐 One more step</p>
+            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6">Your bank uses 3D Secure authentication. Click below to complete verification and keep your membership active.</p>
+          </div>
+          <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Complete verification →</a>
+        </div>${footer()}`
+    },
   };
 
   const template = templates[type] || templates.confirmation;
