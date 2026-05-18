@@ -249,11 +249,22 @@ function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v
 
 async function load(){
   try {
+    // Usar API server-side para bypass RLS
+    const res = await fetch(`/api/get-jobs?van=${vanNum}`);
+    const json = await res.json();
+    if(json.jobs) {
+      jobs = json.jobs.map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',phone:b.profiles?.phone_number||b.profiles?.phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
+      try { localStorage.setItem('drbike-jobs-cache', JSON.stringify(jobs)); } catch(e){}
+      render(); badges();
+      return;
+    }
+  } catch(e) {}
+
+  try {
     const {data, error} = await sb.from('bookings').select('*, profiles(full_name,email,phone,phone_number)').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
     if(error) throw error;
     const mapped = (data||[]).map(b=>({id:b.id,client:b.profiles?.full_name||b.profiles?.email?.split('@')[0]||'Client',email:b.profiles?.email||'',phone:b.profiles?.phone_number||b.profiles?.phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
     jobs = mapped;
-    // Guardar en cache local para offline
     try { localStorage.setItem('drbike-jobs-cache', JSON.stringify(jobs)); } catch(e){}
     render(); badges();
   } catch(e) {

@@ -2347,15 +2347,25 @@ let allBookings = [];
 
 async function loadBookings(){
   try {
-    // Usar API server-side para bypass RLS y ver todos los bookings
+    // Intentar via API primero
     const res = await fetch('/api/get-bookings');
     const json = await res.json();
-    allBookings = json.bookings || [];
-  } catch(e) {
-    // Fallback a Supabase directo
-    const { data } = await sb.from('bookings').select('*, profiles(full_name, email)').order('created_at',{ascending:false}).limit(200);
-    allBookings = data || [];
-  }
+    if(json.bookings) {
+      allBookings = json.bookings;
+      applyBookingFilters();
+      return;
+    }
+  } catch(e) {}
+  
+  // Fallback: query directa a Supabase (funciona si RLS está deshabilitado)
+  const { data, error } = await sb
+    .from('bookings')
+    .select('*, profiles(full_name, email, phone_number)')
+    .order('created_at', { ascending: false })
+    .limit(500);
+    
+  if(error) { showToast('Error loading bookings: ' + error.message); return; }
+  allBookings = data || [];
   applyBookingFilters();
 }
 
