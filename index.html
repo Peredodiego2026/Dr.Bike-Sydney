@@ -374,7 +374,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 
 /* ── PLANS PREVIEW ── */
 .plan-pills{display:flex;justify-content:center;gap:16px;margin-top:40px;flex-wrap:wrap}
-.plan-pill{border:1.5px solid var(--border);border-radius:var(--r);padding:22px 24px;text-align:center;min-width:170px;cursor:pointer;transition:all .15s;background:var(--white);position:relative;box-shadow:var(--shadow)}
+.plan-pill{border:1.5px solid var(--border);border-radius:var(--r);padding:22px 24px;text-align:center;min-width:clamp(130px,28vw,170px);cursor:pointer;transition:all .15s;background:var(--white);position:relative;box-shadow:var(--shadow)}
 .plan-pill:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .plan-pill.hot{background:var(--navy);border-color:var(--navy)}
 .pp-label{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--mgray);margin-bottom:8px}
@@ -393,7 +393,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 
 /* ── LOGIN / AUTH ── */
 .auth-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--off)}
-.auth-card{background:var(--white);border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
+.auth-card{background:var(--white);border-radius:16px;padding:clamp(20px,5vw,40px);width:100%;max-width:380px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px}
 .auth-badge{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
 .auth-badge svg{width:22px;height:22px}
@@ -550,6 +550,70 @@ footer{background:var(--navy);padding:36px 32px;display:flex;justify-content:spa
 .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+
+/* ── MOBILE FIXES COMPLETOS ──────────────────────────────────────────────── */
+@media(max-width:480px){
+  /* Auth card */
+  .auth-card{ padding:24px 20px; border-radius:20px 20px 0 0; max-width:100%; margin:0; box-shadow:none; border-bottom:none; }
+  #view-auth{ display:flex; align-items:flex-end; justify-content:center; padding:0; background:rgba(0,0,0,0.3); }
+  .auth-title{ font-size:20px; }
+  .auth-sub{ font-size:12px; margin-bottom:20px; }
+
+  /* Booking flow */
+  .book-wrap{ padding:16px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .step-item{ font-size:11px; padding:5px 10px; }
+
+  /* Dashboard */
+  .dash-hdr{ padding:16px; }
+  .dash-name{ font-size:18px; }
+  .dash-body{ padding:0 12px 80px; }
+  .card{ border-radius:12px; }
+  .card-hdr{ padding:14px; }
+
+  /* Botones de acción en booking cards */
+  .hist-row button{ font-size:12px !important; padding:5px 10px !important; }
+
+  /* Services grid */
+  .svc-grid{ grid-template-columns:1fr !important; }
+
+  /* Membership plans */
+  .plans-wrap{ padding:16px; }
+  .plan-pills{ gap:10px; }
+
+  /* Nav safe area */
+  nav{ padding-top:env(safe-area-inset-top,0px); }
+
+  /* Safe area bottom para tab bars */
+  .dash-acts{ padding-bottom:env(safe-area-inset-bottom,0px); }
+
+  /* Chatbot panel en mobile */
+  #chatbot-panel{ width:calc(100vw - 24px); right:12px; bottom:120px; height:380px; }
+
+  /* Hero en mobile */
+  .hero{ padding:40px 16px 56px; }
+  .hero h1{ font-size:clamp(28px,8vw,42px); }
+  .hero p{ font-size:14px; }
+
+  /* Membership en mobile */
+  .mem-badge{ font-size:10px; padding:3px 8px; }
+
+  /* Map widget */
+  #live-map{ height:140px !important; }
+
+  /* Reschedule modal */
+  #reschedule-modal > div{ padding:20px 16px 32px; }
+}
+
+/* Safe area inset bottom para todas las vistas */
+.view{ padding-bottom:env(safe-area-inset-bottom,0px); }
+
+/* Tap targets mínimo 44px en mobile */
+@media(max-width:700px){
+  button, .nav-link, .step-item{ min-height:36px; }
+  .google-btn{ padding:14px; font-size:15px; }
+  .submit-btn{ padding:15px; font-size:15px; }
+  .inp{ padding:14px; font-size:16px !important; } /* 16px evita zoom en iOS */
+}
 @media(max-width:700px){
   nav{padding:0 16px;height:56px}
   .nav-links{display:none;flex-direction:column;position:fixed;top:56px;left:0;right:0;background:var(--white);border-bottom:1px solid var(--border);padding:16px;gap:4px;z-index:99}
@@ -2056,8 +2120,8 @@ async function updateDashboard(){
         <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${stColors[st]}20;color:${stColors[st]};font-weight:600">${stLabels[st]||st}</span>
         <span class="hist-date" style="font-size:12px;color:var(--mgray)">${date}</span>
         <span class="hist-price" style="font-size:13px;font-weight:700">$${b.service_price||0}</span>
-        ${canCancel ? `<button onclick="clientReschedule('${b.id}','${b.service_name||'Service'}','${b.scheduled_date||''}','${b.van_number||1}')" style="font-size:11px;color:#1848C8;background:none;border:1px solid #BFDBFE;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">Reschedule</button>` : ''}
-        ${canCancel ? `<button onclick="clientCancelBooking('${b.id}','${b.service_name||'Service'}')" style="font-size:11px;color:#DC2626;background:none;border:1px solid #FECACA;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">Cancel</button>` : ''}
+        ${canCancel ? `<button onclick="clientReschedule('${b.id}','${b.service_name||'Service'}','${b.scheduled_date||''}','${b.van_number||1}')" style="font-size:12px;color:#1848C8;background:none;border:1px solid #BFDBFE;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;min-height:32px">Reschedule</button>` : ''}
+        ${canCancel ? `<button onclick="clientCancelBooking('${b.id}','${b.service_name||'Service'}')" style="font-size:12px;color:#DC2626;background:none;border:1px solid #FECACA;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;min-height:32px">Cancel</button>` : ''}
       </div>`;
     }).join('');
 

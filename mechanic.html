@@ -81,6 +81,13 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
 .kpi-lbl{font-size:11px;color:var(--mgray);margin-top:4px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1}
+
+@media(max-width:480px){
+  .screen{ padding-bottom:env(safe-area-inset-bottom,0px); }
+  .nav-bar{ padding-bottom:env(safe-area-inset-bottom,0px); height:calc(56px + env(safe-area-inset-bottom,0px)); }
+  .card-job{ border-radius:12px; }
+  #offline-banner{ padding-top:env(safe-area-inset-top,8px); }
+}
 </style>
 </head>
 <body>
