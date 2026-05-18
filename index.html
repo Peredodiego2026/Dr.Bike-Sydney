@@ -2534,7 +2534,7 @@ function joinWaitlist(date, vanNum) {
     time_slot: 'waitlist',
     reason: JSON.stringify({ clientId: currentUser.id, name, email })
   }).then(() => {
-    toast('✅ Added to waitlist — we'll email you if a slot opens!');
+    toast("✅ Added to waitlist — we'll email you if a slot opens!");
     // Email al cliente
     fetch('/api/send-email', {
       method:'POST', headers:{'Content-Type':'application/json'},
