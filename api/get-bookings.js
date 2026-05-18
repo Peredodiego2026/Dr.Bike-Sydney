@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { guard } from './_security.js';
+// security handled inline
 
 const sb = createClient(
   process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co',
@@ -7,8 +7,9 @@ const sb = createClient(
 );
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 60, rateWindow: 60000 })) return;
+  if(req.method === 'OPTIONS') { res.setHeader('Access-Control-Allow-Origin','*'); res.status(200).end(); return; }
   if(req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  res.setHeader('Access-Control-Allow-Origin','*');
 
   try {
     const { data, error } = await sb
