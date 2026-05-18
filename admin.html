@@ -2207,6 +2207,22 @@ async function sendReminders(){
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
+// ── ADMIN AUTH ────────────────────────────────────────────────────────────────
+function checkAdminAuth() {
+  const ADMIN_PASS = 'drbike2026'; // cambiar a variable de entorno cuando sea posible
+  const saved = sessionStorage.getItem('drbike-admin-auth');
+  if(saved === ADMIN_PASS) return true;
+  
+  const pass = prompt('Dr. Bike Admin — Enter password:');
+  if(pass === ADMIN_PASS) {
+    sessionStorage.setItem('drbike-admin-auth', pass);
+    return true;
+  }
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;color:#DC2626;font-size:16px">❌ Access denied — redirecting...</div>';
+  setTimeout(() => window.location.href = '/', 1500);
+  return false;
+}
+
 async function loadDashboard(){
   const today = new Date().toISOString().split('T')[0];
   const firstOfMonth = today.slice(0,8)+'01';
@@ -3404,8 +3420,11 @@ async function deleteNotifNumber(id) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+if(!checkAdminAuth()) { /* access denied */ }
+else {
 loadDashboard();
 subscribeToBookings();
+}
 
 // Inject notification panel into body
 (function(){

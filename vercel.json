@@ -1,6 +1,12 @@
 {
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/admin.html", "destination": "/admin.html" },
+    { "source": "/mechanic.html", "destination": "/mechanic.html" },
+    { "source": "/landing.html", "destination": "/landing.html" },
+    { "source": "/track.html", "destination": "/track.html" },
+    { "source": "/notifications.html", "destination": "/notifications.html" },
+    { "source": "/payments.html", "destination": "/payments.html" },
+    { "source": "/((?!api/|admin\\.html|mechanic\\.html|landing\\.html|track\\.html|notifications\\.html|payments\\.html|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
