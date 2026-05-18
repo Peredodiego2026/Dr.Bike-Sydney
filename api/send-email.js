@@ -84,7 +84,7 @@ export default async function handler(req, res) {
             <p style="font-size:11px;color:#D97706;margin:0;opacity:0.8">You and your friend each get $15 off when they use your code</p>
           </div>` : ''}
 
-          <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View your booking →</a>
+          <a href="https://drbikesydney.com.au/?action=dashboard" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View your booking →</a>
         </div>${footer()}`
     },
     mechanic_new_booking: {

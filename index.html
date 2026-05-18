@@ -1676,8 +1676,9 @@ async function init(){
     const action = new URLSearchParams(window.location.search).get('action');
     if(action){
       window.history.replaceState({}, '', '/');
-      // Si necesita auth y no está logueado, ir a auth
       if(!currentUser && action !== 'home' && action !== 'services'){
+        // Guardar intencion para redirigir despues del login
+        localStorage.setItem('pendingView', action);
         setTimeout(() => showView('auth'), 300);
       } else {
         setTimeout(() => showView(action), 300);
@@ -2045,9 +2046,7 @@ async function clientCancelBooking(bookingId, serviceName){
   const { data: bkg } = await sb.from('bookings').select('*').eq('id', bookingId).single();
 
   const { error } = await sb.from('bookings').update({
-    status: 'cancelled',
-    cancelled_at: new Date().toISOString(),
-    cancel_reason: 'Client cancelled via app'
+    status: 'cancelled'
   }).eq('id', bookingId).eq('client_id', currentUser.id);
 
   if(error){ toast('Could not cancel — please contact us on WhatsApp'); return; }
