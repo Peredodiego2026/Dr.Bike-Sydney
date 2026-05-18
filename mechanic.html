@@ -256,14 +256,14 @@ async function load(){
     try { localStorage.setItem('drbike-jobs-cache', JSON.stringify(jobs)); } catch(e){}
     render(); badges();
   } catch(e) {
-    // Sin conexion — usar cache
+    console.error('load() CATCH ERROR:', e.message, e);
     const cached = localStorage.getItem('drbike-jobs-cache');
     if(cached) {
       jobs = JSON.parse(cached);
       render(); badges();
       toast('⚡ Offline — showing cached jobs');
     } else {
-      toast('No connection — please check your internet');
+      document.getElementById('jobs-list').innerHTML = '<div style="text-align:center;padding:40px;color:red">Error: ' + e.message + '</div>';
     }
   }
 }
