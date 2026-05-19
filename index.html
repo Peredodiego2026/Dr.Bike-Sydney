@@ -1588,11 +1588,19 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    // localStorage puro - sin IDB async que puede causar race condition en iOS
     storage: {
-      getItem: (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } },
-      setItem: (k,v) => { try { localStorage.setItem(k,v); } catch(e) {} },
-      removeItem: (k) => { try { localStorage.removeItem(k); } catch(e) {} }
+      getItem: (k) => {
+        try { const v = sessionStorage.getItem(k); if(v) return v; } catch(e) {}
+        try { return localStorage.getItem(k); } catch(e) { return null; }
+      },
+      setItem: (k,v) => {
+        try { sessionStorage.setItem(k,v); } catch(e) {}
+        try { localStorage.setItem(k,v); } catch(e) {}
+      },
+      removeItem: (k) => {
+        try { sessionStorage.removeItem(k); } catch(e) {}
+        try { localStorage.removeItem(k); } catch(e) {}
+      }
     }
   }
 });
@@ -1973,11 +1981,14 @@ function removeVan(vanId){
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 async function signInGoogle(){
   trackEvent('login_attempt', { method: 'google' });
+  // Guardar flag antes del redirect para detectar retorno en iOS
+  try { sessionStorage.setItem('drbike-google-pending', '1'); } catch(e) {}
+  try { localStorage.setItem('drbike-google-pending', '1'); } catch(e) {}
   const { error } = await sb.auth.signInWithOAuth({
     provider:'google',
     options:{
-      redirectTo: 'https://drbikesydney.com.au',
-      queryParams: { access_type: 'offline', prompt: 'consent' }
+      redirectTo: 'https://drbikesydney.com.au/',
+      queryParams: { access_type: 'offline', prompt: 'select_account' }
     }
   });
   if(error){ showErr(error.message); console.error(error); }
