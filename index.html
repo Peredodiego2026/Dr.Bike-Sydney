@@ -1589,18 +1589,9 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storage: {
-      getItem: (k) => {
-        try { const v = sessionStorage.getItem(k); if(v) return v; } catch(e) {}
-        try { return localStorage.getItem(k); } catch(e) { return null; }
-      },
-      setItem: (k,v) => {
-        try { sessionStorage.setItem(k,v); } catch(e) {}
-        try { localStorage.setItem(k,v); } catch(e) {}
-      },
-      removeItem: (k) => {
-        try { sessionStorage.removeItem(k); } catch(e) {}
-        try { localStorage.removeItem(k); } catch(e) {}
-      }
+      getItem: (k) => _IDB.get(k),
+      setItem: (k,v) => _IDB.set(k,v),
+      removeItem: (k) => _IDB.remove(k),
     }
   }
 });
@@ -1726,34 +1717,12 @@ async function init(){
   try {
     // Detectar si venimos de OAuth (hash con access_token en URL)
     const isOAuthReturn = window.location.hash?.includes('access_token');
-    
-    // DEBUG TEMPORAL — ver qué viene en la URL
-    if(window.location.hash || window.location.search.includes('code=')) {
-      console.log('🔍 OAuth URL hash:', window.location.hash);
-      console.log('🔍 OAuth URL search:', window.location.search);
-      console.log('🔍 isOAuthReturn:', isOAuthReturn);
-    }
-
-    // OAuth return: procesar el hash manualmente para forzar la creación de sesión
-    if(isOAuthReturn) {
-      try {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const access_token = hashParams.get('access_token');
-        const refresh_token = hashParams.get('refresh_token');
-        console.log('🔍 access_token presente:', !!access_token, 'refresh_token presente:', !!refresh_token);
-        if(access_token && refresh_token) {
-          const res = await sb.auth.setSession({ access_token, refresh_token });
-          console.log('🔍 setSession result:', res?.data?.session ? 'OK' : 'FAILED', res?.error?.message);
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      } catch(e) { console.error('OAuth hash processing:', e); }
-    }
 
     // En mobile el OAuth redirect necesita mas tiempo para procesar
-    await new Promise(r => setTimeout(r, isOAuthReturn ? 600 : 0));
+    await new Promise(r => setTimeout(r, isOAuthReturn ? 800 : 600));
 
     // Restaurar sesion — funciona tanto para carga normal como post-OAuth
-    let { data: { session } } = await sb.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
     if(session?.user){
       currentUser = session.user;
       try { await loadProfile(); } catch(e){ console.warn('loadProfile:', e); }
@@ -2006,7 +1975,7 @@ async function signInGoogle(){
   const { error } = await sb.auth.signInWithOAuth({
     provider:'google',
     options:{
-      redirectTo: window.location.origin,
+      redirectTo: 'https://drbikesydney.com.au',
       queryParams: { access_type: 'offline', prompt: 'consent' }
     }
   });
