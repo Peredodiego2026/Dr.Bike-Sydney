@@ -132,7 +132,7 @@ body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-f
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 
 /* ── VIEWS ── */
-.view{display:none}.view.active{display:block;animation:fadeSlideIn .22s ease}
+.view{display:none !important}.view.active{display:block !important;animation:fadeSlideIn .22s ease}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes progress{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
 
@@ -4071,6 +4071,11 @@ async function goBook(){
 }
 
 function showView(v){
+  // CRÍTICO: si hay sesión activa, nunca mostrar la vista auth
+  if(v === 'auth' && currentUser) {
+    console.log('Bloqueado mostrar auth - hay sesión activa');
+    v = 'dashboard';
+  }
   trackEvent('page_view', { page: v });
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
