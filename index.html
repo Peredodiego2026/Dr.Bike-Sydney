@@ -1596,6 +1596,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storageKey: 'dr-bike-client-session',
     storage: {
       getItem: (k) => _IDB.get(k),
       setItem: (k,v) => _IDB.set(k,v),

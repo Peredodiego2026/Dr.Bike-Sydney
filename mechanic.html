@@ -194,7 +194,7 @@ const _IDB = (() => {
 })();
 
 const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U', {
-  auth: { persistSession: true, autoRefreshToken: true, storage: { getItem: k=>_IDB.get(k), setItem: (k,v)=>_IDB.set(k,v), removeItem: k=>_IDB.remove(k) } }
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'dr-bike-mech-session', storage: { getItem: k=>_IDB.get(k), setItem: (k,v)=>_IDB.set(k,v), removeItem: k=>_IDB.remove(k) } }
 });
 // Init theme
 (function(){

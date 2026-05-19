@@ -1350,7 +1350,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 
 const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'dr-bike-admin-session', persistSession: false } });
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
 const titles = { dashboard:'Dashboard', contacts:'Escalation Contacts', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings', coupons:'Discount Codes', reminders:'Service Reminders' };
