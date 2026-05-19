@@ -3669,6 +3669,9 @@ async function confirmBooking(){
   // Save booking first as pending
   const { data: bkg, error } = await sb.from('bookings').insert({
     client_id: currentUser.id,
+    client_name: userProfile?.full_name || currentUser.email?.split('@')[0] || 'Client',
+    client_email: currentUser.email || '',
+    client_phone: userProfile?.phone_number || '',
     service_id: booking.service?.id,
     service_name: booking.service?.name,
     service_price: price,
