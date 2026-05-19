@@ -3008,7 +3008,22 @@
     const btn = document.getElementById('nav-cta-btn');
     if(session && btn) {
       btn.textContent = 'My account';
-      btn.href = 'index.html?action=dashboard';
+      // Guardar el access_token en localStorage para que index.html lo lea
+      const token = session.access_token;
+      const refresh = session.refresh_token;
+      btn.onclick = function(e) {
+        e.preventDefault();
+        // Guardar sesión en localStorage estándar para que index.html la encuentre
+        localStorage.setItem('dr-bike-client-session', JSON.stringify({
+          access_token: token,
+          refresh_token: refresh,
+          expires_at: session.expires_at,
+          token_type: 'bearer',
+          user: session.user
+        }));
+        localStorage.setItem('drbike-oauth-pending', '1');
+        window.location.href = 'index.html?action=dashboard';
+      };
     }
   } catch(e) {}
 })();
