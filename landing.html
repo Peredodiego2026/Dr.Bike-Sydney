@@ -2049,7 +2049,7 @@
             </div>
           </div>
 
-          <a href="index.html" class="btn btn-primary btn-sm nav-cta">Book Now</a>
+          <a href="index.html" class="btn btn-primary btn-sm nav-cta" id="nav-cta-btn">Book Now</a>
 
           <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
             <span></span>
@@ -2925,7 +2925,7 @@
       try {
         if (typeof supabase === 'undefined') throw new Error('Supabase not loaded');
 
-        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'dr-bike-client-session' } });
 
         const { data, error } = await client
           .from('bookings')
@@ -2995,5 +2995,23 @@
     });
   </script>
 
+<script>
+// Detectar sesión y actualizar nav button
+(async function() {
+  try {
+    const sb = supabase.createClient(
+      'https://tgpipbloisahufaywhqb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U',
+      { auth: { storageKey: 'dr-bike-client-session' } }
+    );
+    const { data: { session } } = await sb.auth.getSession();
+    const btn = document.getElementById('nav-cta-btn');
+    if(session && btn) {
+      btn.textContent = 'My account';
+      btn.href = 'index.html?action=dashboard';
+    }
+  } catch(e) {}
+})();
+</script>
 </body>
 </html>
