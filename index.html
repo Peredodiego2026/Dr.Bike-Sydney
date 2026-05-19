@@ -1708,8 +1708,16 @@ async function init(){
     // Detectar si venimos de OAuth (hash con access_token en URL)
     const isOAuthReturn = window.location.hash?.includes('access_token');
 
-    // En mobile el OAuth redirect necesita mas tiempo para procesar
-    await new Promise(r => setTimeout(r, isOAuthReturn ? 800 : 600));
+    // CRÍTICO mobile: esperar polling hasta que Supabase procese el hash
+    if(isOAuthReturn) {
+      for(let i = 0; i < 30; i++) {
+        const { data: { session: s } } = await sb.auth.getSession();
+        if(s?.user) { console.log('✅ OAuth procesado en', i*100, 'ms'); break; }
+        await new Promise(r => setTimeout(r, 100));
+      }
+    } else {
+      await new Promise(r => setTimeout(r, 200));
+    }
 
     // Restaurar sesion — funciona tanto para carga normal como post-OAuth
     const { data: { session } } = await sb.auth.getSession();
