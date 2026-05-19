@@ -60,6 +60,7 @@ export function sanitizeObj(obj, fields) {
 const ALLOWED_ORIGINS = [
   'https://drbikesydney.com.au',
   'https://www.drbikesydney.com.au',
+  'https://js.stripe.com',
   'http://localhost:3000',
   'http://localhost:5173',
 ];
@@ -68,9 +69,10 @@ export function setCORSHeaders(req, res) {
   const origin = req.headers.origin;
   if (ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
+  } else if (!origin) {
     res.setHeader('Access-Control-Allow-Origin', 'https://drbikesydney.com.au');
   }
+  // Si el origin no está en la lista, no agregar el header (evita duplicados)
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('X-Content-Type-Options', 'nosniff');
