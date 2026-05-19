@@ -2996,25 +2996,30 @@
   </script>
 
 <script>
-// Detectar sesión desde localStorage (misma key que usa IDB como fallback)
-(async function() {
+// Detectar sesión Supabase en localStorage
+(function() {
   try {
     const btn = document.getElementById('nav-cta-btn');
     if(!btn) return;
-    // El IDB adapter en index.html también escribe a localStorage como backup
-    // Buscar cualquier clave de sesión de Supabase
+    // Supabase guarda la sesión con key "sb-{ref}-auth-token"
+    // El IDB adapter de index.html también copia a localStorage como backup
     for(let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if(key && key.includes('supabase') || key && key.includes('dr-bike')) {
+      if(!key) continue;
+      // Buscar key de Supabase auth: sb-XXX-auth-token
+      if(key.startsWith('sb-') && key.includes('auth-token')) {
         const val = localStorage.getItem(key);
-        if(val && val.includes('access_token')) {
+        if(val && val.length > 50) {
+          // Hay sesión activa
           btn.textContent = 'My account';
           btn.href = 'index.html?action=dashboard';
-          break;
+          console.log('✅ Sesión detectada en landing');
+          return;
         }
       }
     }
-  } catch(e) {}
+    console.log('No hay sesión activa');
+  } catch(e) { console.error('Session check error:', e); }
 })();
 </script>
 </body>
