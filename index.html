@@ -3818,8 +3818,10 @@ function showPaymentModal(bkg, price){
         Pay $${price} AUD
       </button>
       <div style="text-align:center;margin-top:12px;font-size:11px;color:#9CA3AF">🔒 Secured by Stripe · Card charged after service</div>
-      <button onclick="skipPayment('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#6B7280;font-size:13px;margin-top:10px;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline">Pay cash on the day instead</button>
-      <button onclick="cancelBookingModal('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#DC2626;font-size:12px;margin-top:6px;cursor:pointer;font-family:Inter,sans-serif">← Cancel and go back</button>
+      <div style="position:relative;z-index:100;margin-top:10px">
+        <button onclick="skipPayment('${bkg.id}')" style="display:block;width:100%;background:none;border:1px solid #E5E7EB;border-radius:8px;color:#6B7280;font-size:13px;padding:10px;cursor:pointer;font-family:Inter,sans-serif">💵 Pay cash on the day instead</button>
+        <button onclick="cancelBookingModal('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#DC2626;font-size:12px;margin-top:6px;cursor:pointer;font-family:Inter,sans-serif">← Cancel and go back</button>
+      </div>
     </div>`;
   document.body.appendChild(modal);
 

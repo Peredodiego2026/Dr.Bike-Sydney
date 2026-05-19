@@ -2346,14 +2346,11 @@ async function loadDashboard(){
 let allBookings = [];
 
 async function loadBookings(){
-  console.log('loadBookings: fetching...');
   const { data, error } = await sb
     .from('bookings')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(500);
-    
-  console.log('loadBookings result:', data?.length, 'error:', error?.message);
   
   if(error) {
     showToast('Error cargando bookings: ' + error.message);
