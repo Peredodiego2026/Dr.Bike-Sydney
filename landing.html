@@ -2925,7 +2925,7 @@
       try {
         if (typeof supabase === 'undefined') throw new Error('Supabase not loaded');
 
-        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'dr-bike-client-session' } });
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const { data, error } = await client
           .from('bookings')
@@ -2996,34 +2996,23 @@
   </script>
 
 <script>
-// Detectar sesión y actualizar nav button
+// Detectar sesión desde localStorage (misma key que usa IDB como fallback)
 (async function() {
   try {
-    const sb = supabase.createClient(
-      'https://tgpipbloisahufaywhqb.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U',
-      { auth: { storageKey: 'dr-bike-client-session' } }
-    );
-    const { data: { session } } = await sb.auth.getSession();
     const btn = document.getElementById('nav-cta-btn');
-    if(session && btn) {
-      btn.textContent = 'My account';
-      // Guardar el access_token en localStorage para que index.html lo lea
-      const token = session.access_token;
-      const refresh = session.refresh_token;
-      btn.onclick = function(e) {
-        e.preventDefault();
-        // Guardar sesión en localStorage estándar para que index.html la encuentre
-        localStorage.setItem('dr-bike-client-session', JSON.stringify({
-          access_token: token,
-          refresh_token: refresh,
-          expires_at: session.expires_at,
-          token_type: 'bearer',
-          user: session.user
-        }));
-        localStorage.setItem('drbike-oauth-pending', '1');
-        window.location.href = 'index.html?action=dashboard';
-      };
+    if(!btn) return;
+    // El IDB adapter en index.html también escribe a localStorage como backup
+    // Buscar cualquier clave de sesión de Supabase
+    for(let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if(key && key.includes('supabase') || key && key.includes('dr-bike')) {
+        const val = localStorage.getItem(key);
+        if(val && val.includes('access_token')) {
+          btn.textContent = 'My account';
+          btn.href = 'index.html?action=dashboard';
+          break;
+        }
+      }
     }
   } catch(e) {}
 })();
