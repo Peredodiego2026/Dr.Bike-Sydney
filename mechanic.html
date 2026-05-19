@@ -764,7 +764,18 @@ async function submitComplete(id){
           nextService: nextSvcMsg, bookingRef: id.slice(0,8).toUpperCase()
         })
       }) : Promise.resolve(),
-      // 2. SMS review request
+      // 2. Review request email
+      clientEmail ? fetch('/api/send-email', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          type: 'review_request',
+          to: clientEmail,
+          name: clientName,
+          service: j?.service_name || j?.service,
+          bookingId: id
+        })
+      }) : Promise.resolve(),
+      // 3. SMS review request
       j?.phone ? fetch('/api/send-sms', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({

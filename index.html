@@ -1778,6 +1778,16 @@ async function init(){
 
     handleStripeReturn();
 
+    // Manejar link directo de review (?review=BOOKING_ID)
+    const reviewId = new URLSearchParams(window.location.search).get('review');
+    if(reviewId && currentUser) {
+      window.history.replaceState({}, '', '/');
+      const { data: bkg } = await sb.from('bookings').select('*').eq('id', reviewId).single();
+      if(bkg && !bkg.client_rating) {
+        setTimeout(() => showReviewPrompt(bkg), 1000);
+      }
+    }
+
     // Manejar shortcuts PWA (?action=book, ?action=dashboard)
     const action = new URLSearchParams(window.location.search).get('action');
     if(action){
@@ -1852,6 +1862,10 @@ async function init(){
         if(booking.status === 'completed'){
           // Mostrar tip modal después de 2 segundos
           setTimeout(() => showTipModal(booking.id, booking.mechanic_name || 'your mechanic'), 2000);
+          // Mostrar review modal después de 5 segundos (después del tip)
+          setTimeout(() => {
+            if(!booking.client_rating) showReviewPrompt(booking);
+          }, 6000);
         }
       }).subscribe();
   }

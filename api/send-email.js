@@ -113,6 +113,19 @@ export default async function handler(req, res) {
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you — home, work or park · Mon–Sat</p>
         </div>${footer()}`
     },
+    review_request: {
+      subject: `⭐ How was your ${service} with Dr. Bike?`,
+      html: `${header('#F59E0B','⭐','How was your service?')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your <strong>${service}</strong> is complete! We'd love to hear how it went.</p>
+          <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
+            <p style="font-size:13px;color:#D97706;font-weight:600;margin:0 0 12px">Rate your experience</p>
+            <div style="font-size:32px;letter-spacing:4px">⭐⭐⭐⭐⭐</div>
+          </div>
+          <a href="https://drbikesydney.com.au/?review=${bookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Leave a review →</a>
+          <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">It takes less than 30 seconds and helps other Sydney cyclists find us 🙏</p>
+        </div>${footer()}`
+    },
     cancellation_client: {
       subject: `❌ Booking cancelled — ${service} · ${date}`,
       html: `${header('#DC2626','❌','Booking cancelled')}
