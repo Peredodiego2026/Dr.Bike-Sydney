@@ -1588,6 +1588,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    flowType: 'implicit',
     storage: {
       getItem: (k) => _IDB.get(k),
       setItem: (k,v) => _IDB.set(k,v),
