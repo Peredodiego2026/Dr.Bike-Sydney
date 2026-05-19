@@ -1586,6 +1586,10 @@ const _IDB = (() => {
 // Configuración default de Supabase - localStorage simple (probado funciona en mobile)
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// CRÍTICO: llamar getSession inmediatamente para que detectSessionInUrl procese el #access_token
+// Esto debe ejecutarse ANTES que cualquier otro código que pueda interferir
+const _initialSessionPromise = sb.auth.getSession();
+
 
 // ── GLOBAL ERROR HANDLER ──────────────────────────────────────────────────────
 window.addEventListener('unhandledrejection', e => {
@@ -1719,15 +1723,8 @@ async function init(){
       await new Promise(r => setTimeout(r, 200));
     }
 
-    // Restaurar sesion — funciona tanto para carga normal como post-OAuth
-    // En mobile la primera getSession puede devolver null aun con token valido
-    let { data: { session } } = await sb.auth.getSession();
-    if(!session?.user) {
-      // Reintentar después de 300ms para mobile
-      await new Promise(r => setTimeout(r, 300));
-      const retry = await sb.auth.getSession();
-      session = retry.data.session;
-    }
+    // Restaurar sesion — usar la promesa creada al inicio del script
+    let { data: { session } } = await _initialSessionPromise;
     if(session?.user){
       currentUser = session.user;
       try { await loadProfile(); } catch(e){ console.warn('loadProfile:', e); }
