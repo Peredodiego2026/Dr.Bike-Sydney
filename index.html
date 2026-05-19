@@ -1588,11 +1588,11 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: 'implicit',
+    // localStorage puro - sin IDB async que puede causar race condition en iOS
     storage: {
-      getItem: (k) => _IDB.get(k),
-      setItem: (k,v) => _IDB.set(k,v),
-      removeItem: (k) => _IDB.remove(k),
+      getItem: (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } },
+      setItem: (k,v) => { try { localStorage.setItem(k,v); } catch(e) {} },
+      removeItem: (k) => { try { localStorage.removeItem(k); } catch(e) {} }
     }
   }
 });
