@@ -1729,7 +1729,7 @@ async function init(){
     if(isOAuthReturn) {
       for(let i = 0; i < 30; i++) {
         const { data: { session: s } } = await sb.auth.getSession();
-        if(s?.user) { console.log('✅ OAuth procesado en', i*100, 'ms'); break; }
+        if(s?.user) break;
         await new Promise(r => setTimeout(r, 100));
       }
     } else {
@@ -4088,7 +4088,7 @@ async function goBook(){
 function showView(v){
   // CRÍTICO: si hay sesión activa, nunca mostrar la vista auth
   if(v === 'auth' && currentUser) {
-    console.log('Bloqueado mostrar auth - hay sesión activa');
+
     v = 'dashboard';
   }
   trackEvent('page_view', { page: v });
