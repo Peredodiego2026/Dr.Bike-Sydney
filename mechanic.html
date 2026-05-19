@@ -742,9 +742,21 @@ async function submitComplete(id){
 
   // Send completion email + SMS review request (non-blocking, parallel)
   try {
-    const clientEmail = j?.email || '';
+    let clientEmail = j?.email || '';
+    let clientPhone = j?.phone || '';
     const clientName  = j?.client || 'Client';
     const reviewLink  = `https://drbikesydney.com.au/?review=${id}`;
+    
+    // Si no tenemos email, buscar en el booking directo
+    if(!clientEmail) {
+      const { data: bkgFull } = await sb.from('bookings')
+        .select('client_email, client_phone, client_id')
+        .eq('id', id).single();
+      clientEmail = bkgFull?.client_email || '';
+      clientPhone = bkgFull?.client_phone || clientPhone;
+      // Si aún no hay email, usar peredo.dm@gmail.com como fallback para testear
+      if(!clientEmail) clientEmail = 'peredo.dm@gmail.com';
+    }
     const nextSvcMsg  = nextDate
       ? `Your next recommended service is on ${new Date(nextDate).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}`
       : 'We recommend a service check every 3–6 months.';
@@ -776,20 +788,20 @@ async function submitComplete(id){
         })
       }) : Promise.resolve(),
       // 3. SMS review request
-      j?.phone ? fetch('/api/send-sms', {
+      clientPhone ? fetch('/api/send-sms', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          to: j.phone, name: clientName,
+          to: clientPhone, name: clientName,
           service: j?.service, price: j?.price,
           type:'review_request', bookingId: id,
           reviewLink
         })
       }) : Promise.resolve(),
       // 3. WhatsApp review request
-      j?.phone ? fetch('/api/send-whatsapp', {
+      clientPhone ? fetch('/api/send-whatsapp', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          to: j.phone, name: clientName,
+          to: clientPhone, name: clientName,
           service: j?.service, price: j?.price,
           type:'review_request', bookingId: id,
           reviewLink
