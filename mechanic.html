@@ -752,6 +752,7 @@ async function submitComplete(id){
       ? `Your next recommended service is on ${new Date(nextDate).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}`
       : 'We recommend a service check every 3–6 months.';
 
+    console.log('📧 Sending notifications to:', clientEmail, clientPhone);
     // Fire all notifications in parallel
     await Promise.allSettled([
       // 1. Invoice/receipt email
