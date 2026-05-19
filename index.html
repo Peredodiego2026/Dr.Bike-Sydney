@@ -1583,18 +1583,8 @@ const _IDB = (() => {
   };
 })();
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: {
-      getItem: (k) => _IDB.get(k),
-      setItem: (k,v) => _IDB.set(k,v),
-      removeItem: (k) => _IDB.remove(k),
-    }
-  }
-});
+// Configuración default de Supabase - localStorage simple (probado funciona en mobile)
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
 // ── GLOBAL ERROR HANDLER ──────────────────────────────────────────────────────
