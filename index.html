@@ -1975,7 +1975,7 @@ async function signInGoogle(){
   const { error } = await sb.auth.signInWithOAuth({
     provider:'google',
     options:{
-      redirectTo: 'https://drbikesydney.com.au',
+      redirectTo: window.location.origin,
       queryParams: { access_type: 'offline', prompt: 'consent' }
     }
   });
