@@ -65,63 +65,48 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;
-  --navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;
-  --border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;
-  --red:#DC2626;--amber:#D97706;--amber-lt:#FEF3C7;
-  --gold:#F59E0B;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
-  --shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--sans:'Inter',sans-serif;
+  --blue:#1848C8;--blue2:#1138A8;--blue-lt:rgba(24,72,200,0.2);
+  --navy:#0D1F3C;--white:#111827;--off:#1a2744;--mgray:#94A3B8;
+  --border:#1E3A5F;--green:#059669;--green-lt:rgba(5,150,105,0.15);
+  --red:#DC2626;--amber:#D97706;--amber-lt:rgba(217,119,6,0.15);
+  --gold:#F59E0B;--shadow:0 1px 3px rgba(0,0,0,0.4),0 4px 16px rgba(0,0,0,0.3);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.5);--r:14px;--sans:'Inter',sans-serif;
   --orange:#EA580C;
-  /* Semantic tokens — light mode */
-  --bg:var(--white);
-  --bg2:var(--off);
-  --bg3:#F0F1F3;
-  --text:var(--navy);
-  --text2:var(--mgray);
-  --text3:#9CA3AF;
-  --bdr:var(--border);
-  --card-bg:var(--white);
-  --nav-bg:rgba(255,255,255,0.95);
-  --input-bg:var(--white);
-  --hero-h1:var(--navy);
+  /* Dark navy default */
+  --bg:#0D1F3C;
+  --bg2:#111827;
+  --bg3:#1a2744;
+  --text:#F1F5F9;
+  --text2:#94A3B8;
+  --text3:#64748B;
+  --bdr:#1E3A5F;
+  --card-bg:#111827;
+  --nav-bg:rgba(13,31,60,0.97);
+  --input-bg:#1a2744;
+  --hero-h1:#F1F5F9;
+  --accent-blue:#3B82F6;
 }
 
-/* ── DARK MODE ── */
-[data-theme="dark"], @media(prefers-color-scheme:dark){
-  :root{
-    --white:#1C1C1E;
-    --off:#242426;
-    --bg:#1C1C1E;
-    --bg2:#242426;
-    --bg3:#2C2C2E;
-    --navy:#F2F2F7;
-    --mgray:#98989F;
-    --border:#38383A;
-    --text:#F2F2F7;
-    --text2:#98989F;
-    --text3:#636366;
-    --bdr:#38383A;
-    --card-bg:#242426;
-    --nav-bg:rgba(28,28,30,0.95);
-    --input-bg:#2C2C2E;
-    --hero-h1:#F2F2F7;
-    --blue-lt:rgba(24,72,200,0.18);
-    --green-lt:rgba(5,150,105,0.15);
-    --amber-lt:rgba(217,119,6,0.15);
-    --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
-    --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
-  }
+/* ── LIGHT MODE (override) ── */
+[data-theme="light"]{
+  --bg:#fff;--bg2:#F7F8FA;--bg3:#F0F1F3;
+  --text:#0D1F3C;--text2:#6B7280;--text3:#9CA3AF;
+  --bdr:#E5E7EB;--card-bg:#fff;--nav-bg:rgba(255,255,255,0.95);
+  --input-bg:#fff;--hero-h1:#0D1F3C;--blue-lt:#EEF3FC;--border:#E5E7EB;
+  --white:#fff;--off:#F7F8FA;--mgray:#6B7280;--navy:#0D1F3C;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
 }
+/* ── DARK MODE (same as default) ── */
 [data-theme="dark"]{
-  --white:#1C1C1E;--off:#242426;--navy:#F2F2F7;--mgray:#98989F;
-  --border:#38383A;--blue-lt:rgba(24,72,200,0.18);--green-lt:rgba(5,150,105,0.15);
-  --amber-lt:rgba(217,119,6,0.15);
-  --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
-  --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
+  --bg:#0D1F3C;--bg2:#111827;--bg3:#1a2744;
+  --text:#F1F5F9;--text2:#94A3B8;--text3:#64748B;
+  --bdr:#1E3A5F;--card-bg:#111827;--nav-bg:rgba(13,31,60,0.97);
+  --input-bg:#1a2744;--hero-h1:#F1F5F9;--white:#111827;
+  --off:#1a2744;--mgray:#94A3B8;--navy:#F1F5F9;--border:#1E3A5F;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
@@ -340,13 +325,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .hamburger span{width:20px;height:1.5px;background:var(--navy);display:block;border-radius:2px}
 
 /* ── HERO ── */
-.hero{padding:88px 32px 96px;text-align:center;border-bottom:1px solid var(--border)}
+.hero{padding:88px 32px 96px;text-align:center;border-bottom:1px solid var(--bdr);background:var(--bg)}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px}
 .hero-eyebrow::before,.hero-eyebrow::after{content:'';width:28px;height:1.5px;background:var(--blue);border-radius:2px}
-.hero h1{font-size:clamp(42px,6vw,68px);font-weight:800;color:var(--navy);line-height:1.1;margin-bottom:12px;max-width:620px;margin-left:auto;margin-right:auto;letter-spacing:-0.03em}
+.hero h1{font-size:clamp(42px,6vw,68px);font-weight:800;color:var(--text);line-height:1.1;margin-bottom:12px;max-width:620px;margin-left:auto;margin-right:auto;letter-spacing:-0.03em}
 .accent{color:var(--blue)}
-.hero-sub{font-size:18px;font-weight:300;color:var(--mgray);margin-bottom:16px}
-.hero p{font-size:15px;color:var(--mgray);max-width:420px;margin:0 auto 40px;line-height:1.7;font-weight:300}
+.hero-sub{font-size:18px;font-weight:300;color:var(--text2);margin-bottom:16px}
+.hero p{font-size:15px;color:var(--text2);max-width:420px;margin:0 auto 40px;line-height:1.7;font-weight:300}
 .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .btn-primary{background:var(--blue);color:#fff;border:none;padding:14px 32px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;border-radius:9px;box-shadow:0 4px 14px rgba(24,72,200,0.35)}
 .btn-primary:hover{background:var(--blue2);transform:translateY(-1px)}
@@ -370,7 +355,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .feat{background:var(--white);border-radius:var(--r);padding:28px;box-shadow:var(--shadow);border:1px solid var(--border)}
 .feat-num{font-size:12px;font-weight:700;color:var(--blue);margin-bottom:14px;letter-spacing:0.06em}
 .feat-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:8px}
-.feat-desc{font-size:13px;color:var(--mgray);line-height:1.6;font-weight:300}
+.feat-desc{font-size:13px;color:var(--text2);line-height:1.6;font-weight:300}
 
 /* ── PLANS PREVIEW ── */
 .plan-pills{display:flex;justify-content:center;gap:16px;margin-top:40px;flex-wrap:wrap}
@@ -386,7 +371,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .pop-ribbon{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:3px 12px;border-radius:20px;white-space:nowrap}
 
 /* ── CARDS / SHARED ── */
-.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.card{background:var(--card-bg);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
 .card-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-size:14px;font-weight:600;color:var(--navy)}
 .card-sub{font-size:11px;color:var(--mgray);margin-top:2px}
@@ -432,7 +417,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .ct{font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .ct::before{content:'';width:14px;height:2px;background:var(--blue);border-radius:2px}
-.hist-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F3F4F6;font-size:13px}
+.hist-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px}
 .hist-row:last-child{border-bottom:none}
 .hist-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0}
 .hist-svc{flex:1;color:var(--navy)}
@@ -903,7 +888,7 @@ html{scroll-behavior:smooth}
 <div id="view-home" class="view active">
   <nav>
     <div class="nav-brand" onclick="showView('home')">
-      <div class="nav-logo">
+      <div class="nav-logo" style="background:#1848C8;border-radius:10px">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
           <circle cx="5.5" cy="17" r="3"/>
           <circle cx="18.5" cy="17" r="3"/>
@@ -912,8 +897,8 @@ html{scroll-behavior:smooth}
         </svg>
       </div>
       <div>
-        <div class="nav-name">Dr. Bike</div>
-        <div class="nav-tagline">Sydney · Mobile repair</div>
+        <div class="nav-name" style="color:#F1F5F9">Dr. Bike</div>
+        <div class="nav-tagline" style="color:#64748B">Sydney · Mobile repair</div>
       </div>
     </div>
     <div class="nav-links" id="nav-links">
@@ -923,7 +908,7 @@ html{scroll-behavior:smooth}
       <button class="nl cta" onclick="showView('auth')" id="nav-auth-btn">Sign in</button>
     </div>
     <div class="nav-right">
-      <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s">🌙</button>
+      <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #1E3A5F;background:rgba(255,255,255,0.06);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s">☀️</button>
       <button id="lang-btn" onclick="toggleLangPanel()" title="Change language">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span id="lang-label">EN</span>
@@ -932,27 +917,54 @@ html{scroll-behavior:smooth}
     </div>
   </nav>
 
-  <div class="hero">
-    <div class="hero-eyebrow">⭐ Sydney's #1 Mobile Bike Repair</div>
-    <h1>Your bike, fixed at<br><span class="accent">your front door</span></h1>
-    <div class="hero-sub">No workshop. No waiting. We come to you — same day.</div>
-    <p>Professional mobile mechanics across Sydney — home, work or park. Mon–Sat.</p>
-    <div class="hero-btns">
-      <button class="btn-primary" onclick="goBook()">Book now — takes 60 sec</button>
-      <button class="btn-ghost" onclick="showView('services')">View all services</button>
+  <div class="hero" style="background:linear-gradient(160deg,#0D1F3C 0%,#111827 60%,#0D1F3C 100%);border-bottom:1px solid #1E3A5F;padding:100px 24px 80px">
+    <div class="hero-eyebrow" style="color:#3B82F6;font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <span style="display:inline-block;width:24px;height:1.5px;background:#3B82F6"></span>
+      ★ Sydney's #1 Mobile Bike Repair
+      <span style="display:inline-block;width:24px;height:1.5px;background:#3B82F6"></span>
     </div>
-    <!-- Trust bar -->
-    <div class="trust-bar">
-      <div class="trust-item">✅ Fixed prices — no surprises</div>
-      <div class="trust-item">🔧 Qualified mechanics</div>
-      <div class="trust-item">📍 All Sydney suburbs</div>
-      <div class="trust-item">⚡ Same-day available</div>
+    <h1 style="font-size:clamp(38px,6vw,64px);font-weight:800;color:#F1F5F9;line-height:1.1;margin-bottom:16px;letter-spacing:-0.03em">
+      Professional bike service<br><span style="color:#3B82F6">at your doorstep.</span>
+    </h1>
+    <div style="font-size:16px;color:#94A3B8;margin-bottom:12px;font-weight:400">Mobile bicycle mechanic in Sydney.</div>
+    <div style="font-size:14px;color:#64748B;max-width:380px;margin:0 auto 36px;line-height:1.6">No workshop. No waiting. We come to you — home, work or park. Mon–Sat.</div>
+    <div class="hero-btns" style="gap:12px;margin-bottom:48px">
+      <button class="btn-primary" onclick="goBook()" style="background:#1848C8;color:#fff;border:none;border-radius:10px;padding:15px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);letter-spacing:0.01em">Book a Service</button>
+      <button onclick="window.location.href='tel:+61400123456'" style="background:rgba(255,255,255,0.06);color:#F1F5F9;border:1.5px solid #1E3A5F;border-radius:10px;padding:15px 28px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Call 0400 123 456</button>
     </div>
-    <div class="hero-stats">
-      <div class="hs"><div class="hs-n">500+</div><div class="hs-l">Happy riders</div></div>
-      <div class="hs"><div class="hs-n">4.9★</div><div class="hs-l">Average rating</div></div>
-      <div class="hs"><div class="hs-n">Same day</div><div class="hs-l">Availability</div></div>
-      <div class="hs"><div class="hs-n">$57</div><div class="hs-l">Membership/mo</div></div>
+    <!-- Trust badges -->
+    <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:48px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#94A3B8">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Qualified Mechanic
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#94A3B8">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Fully Equipped Mobile Workshop
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#94A3B8">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        5 Star Rated Service
+      </div>
+    </div>
+    <!-- Stats row -->
+    <div style="display:flex;justify-content:center;gap:0;flex-wrap:wrap;border-top:1px solid #1E3A5F;padding-top:36px">
+      <div class="hs" style="border:none;border-right:1px solid #1E3A5F;padding:0 32px">
+        <div class="hs-n" style="color:#F1F5F9;font-size:28px;font-weight:800">500+</div>
+        <div class="hs-l" style="color:#64748B;font-size:12px;margin-top:4px">Happy Riders</div>
+      </div>
+      <div class="hs" style="border:none;border-right:1px solid #1E3A5F;padding:0 32px">
+        <div class="hs-n" style="color:#F1F5F9;font-size:28px;font-weight:800">4.9★</div>
+        <div class="hs-l" style="color:#64748B;font-size:12px;margin-top:4px">Average Rating</div>
+      </div>
+      <div class="hs" style="border:none;border-right:1px solid #1E3A5F;padding:0 32px">
+        <div class="hs-n" style="color:#F1F5F9;font-size:28px;font-weight:800">Same Day</div>
+        <div class="hs-l" style="color:#64748B;font-size:12px;margin-top:4px">Availability</div>
+      </div>
+      <div class="hs" style="border:none;padding:0 32px">
+        <div class="hs-n" style="color:#F1F5F9;font-size:28px;font-weight:800">$57</div>
+        <div class="hs-l" style="color:#64748B;font-size:12px;margin-top:4px">Membership/mo</div>
+      </div>
     </div>
   </div>
 
@@ -4571,7 +4583,7 @@ async function showBikeHistory(bikeId, bikeName){
   const healthLabel = health>=70?'Great shape':health>=40?'Fair':'Needs attention';
 
   statsEl.innerHTML = `
-    <div style="padding:16px 20px;background:var(--off);border-bottom:1px solid var(--border)">
+    <div style="padding:16px 20px;background:var(--bg2);border-bottom:1px solid var(--bdr)">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
         <div style="text-align:center">
           <div style="font-size:20px;font-weight:800;color:var(--navy)">${totalJobs}</div>
