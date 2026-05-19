@@ -1644,7 +1644,7 @@ async function loadFinance() {
     const price = j.service_price||0;
     const jGst  = Math.round(price/11);
     const jNet  = price - jGst;
-    const name  = j.profiles?.full_name || j.profiles?.email?.split('@')[0] || 'Client';
+    const name  = j.client_name || j.profiles?.full_name || j.profiles?.email?.split('@')[0] || 'Client';
     return `<tr>
       <td data-label="Date">${j.scheduled_date}</td>
       <td data-label="Client">${name}</td>
@@ -2262,7 +2262,7 @@ async function loadDashboard(){
   if(tbody && recentBookings){
     const stClass = {confirmed:'confirmed',pending:'pending',enroute:'enroute',completed:'completed',cancelled:'cancelled'};
     tbody.innerHTML = recentBookings.map(b=>{
-      const name = b.profiles?.full_name || 'Client';
+      const name = b.client_name || b.profiles?.full_name || 'Client';
       const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
       const st = b.status||'pending';
       const stColors = {pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',completed:'#6B7280',cancelled:'#DC2626'};
