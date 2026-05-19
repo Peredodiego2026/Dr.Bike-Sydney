@@ -1625,7 +1625,7 @@ function hideOfflineBanner() {
 if(!navigator.onLine) showOfflineBanner();
 
 // ── APP STATE ────────────────────────────────────────────────────────────────
-let currentUser = null;
+window.currentUser = null; let currentUser = window.currentUser;
 let userProfile = null;
 let services = [];
 let booking = { service:null, date:null, time:null };
@@ -1701,6 +1701,19 @@ async function registerClientPush() {
   }
 }
 
+// MutationObserver - garantiza que auth view nunca esté activa si hay sesión
+const _authObserver = new MutationObserver(() => {
+  const authView = document.getElementById('view-auth');
+  if(authView?.classList.contains('active') && window.currentUser) {
+    authView.classList.remove('active');
+    document.getElementById('view-dashboard')?.classList.add('active');
+  }
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const authView = document.getElementById('view-auth');
+  if(authView) _authObserver.observe(authView, { attributes: true, attributeFilter: ['class'] });
+});
+
 async function init(){
   const loadingGuard = setTimeout(()=>{ 
     hideLoading(); 
@@ -1727,6 +1740,8 @@ async function init(){
     let { data: { session } } = await _initialSessionPromise;
     if(session?.user){
       currentUser = session.user;
+      // CRÍTICO: forzar que auth view NO esté visible si hay sesión
+      document.getElementById('view-auth')?.classList.remove('active');
       try { await loadProfile(); } catch(e){ console.warn('loadProfile:', e); }
       updateNavAuth();
 
