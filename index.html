@@ -1727,11 +1727,24 @@ async function init(){
     // Detectar si venimos de OAuth (hash con access_token en URL)
     const isOAuthReturn = window.location.hash?.includes('access_token');
 
+    // OAuth return: procesar el hash manualmente para forzar la creación de sesión
+    if(isOAuthReturn) {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const access_token = hashParams.get('access_token');
+        const refresh_token = hashParams.get('refresh_token');
+        if(access_token && refresh_token) {
+          await sb.auth.setSession({ access_token, refresh_token });
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch(e) { console.error('OAuth hash processing:', e); }
+    }
+
     // En mobile el OAuth redirect necesita mas tiempo para procesar
     await new Promise(r => setTimeout(r, isOAuthReturn ? 600 : 0));
 
     // Restaurar sesion — funciona tanto para carga normal como post-OAuth
-    const { data: { session } } = await sb.auth.getSession();
+    let { data: { session } } = await sb.auth.getSession();
     if(session?.user){
       currentUser = session.user;
       try { await loadProfile(); } catch(e){ console.warn('loadProfile:', e); }
