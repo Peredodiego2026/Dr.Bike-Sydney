@@ -1327,7 +1327,11 @@ html{scroll-behavior:smooth}
     <div id="step-2" style="display:none">
       <div class="card" style="padding:18px;margin-bottom:14px">
         <div class="ct">Selected: <span id="sel-svc-name" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--blue)">—</span></div>
-        <div class="ct">Choose a date</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <button onclick="calChangeMonth(-1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;color:var(--navy);font-family:var(--sans)">←</button>
+          <div class="ct" style="margin:0" id="cal-month-label">Choose a date</div>
+          <button onclick="calChangeMonth(1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;color:var(--navy);font-family:var(--sans)">→</button>
+        </div>
         <div class="cal-g" style="margin-bottom:16px" id="cal-grid">
           <div class="cdow">Su</div><div class="cdow">Mo</div><div class="cdow">Tu</div><div class="cdow">We</div><div class="cdow">Th</div><div class="cdow">Fr</div><div class="cdow">Sa</div>
         </div>
@@ -3468,13 +3472,33 @@ function goStep(n){
 }
 
 // ── CALENDAR ─────────────────────────────────────────────────────────────────
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function calChangeMonth(dir) {
+  calMonth += dir;
+  if(calMonth > 11) { calMonth = 0; calYear++; }
+  if(calMonth < 0)  { calMonth = 11; calYear--; }
+  // No permitir ir al pasado
+  const now = new Date();
+  if(calYear < now.getFullYear() || (calYear === now.getFullYear() && calMonth < now.getMonth())) {
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+  }
+  renderCalendar();
+}
+
 async function renderCalendar(){
   const cal = document.getElementById('cal-grid');
   if(!cal) return;
 
   const today = new Date(); today.setHours(0,0,0,0);
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const year = calYear;
+  const month = calMonth;
+  
+  // Actualizar label del mes
+  const label = document.getElementById('cal-month-label');
+  if(label) label.textContent = new Date(year, month, 1).toLocaleDateString('en-AU', {month:'long', year:'numeric'});
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const daysInPrev = new Date(year, month, 0).getDate();
@@ -3686,10 +3710,16 @@ async function confirmBooking(){
     status: 'pending'
   }).select().single();
 
+  if(error){ 
+    btn.innerHTML='Confirm booking';
+    btn.disabled=false;
+    toast('Booking error: '+error.message); 
+    console.error('Booking insert error:', error);
+    return; 
+  }
+  
   btn.innerHTML='Confirm booking';
   btn.disabled=false;
-
-  if(error){ toast('Error: '+error.message); return; }
 
   // Si se usó un código de referido, incrementar el contador del referidor
   if(appliedReferralCode){
