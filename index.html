@@ -1084,12 +1084,6 @@ html{scroll-behavior:smooth}
 
 <!-- ══ AUTH ══ -->
 <div id="view-auth" class="view">
-  <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--white)">
-    <button onclick="showView('home')" class="back-btn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      Back to home
-    </button>
-  </div>
   <div class="auth-wrap">
     <div class="auth-card">
       <div class="auth-logo">
@@ -1728,7 +1722,7 @@ async function init(){
     const isOAuthReturn = window.location.hash?.includes('access_token');
 
     // En mobile el OAuth redirect necesita mas tiempo para procesar
-    await new Promise(r => setTimeout(r, isOAuthReturn ? 800 : 600)); // Dar tiempo a IndexedDB para restaurar sesión
+    await new Promise(r => setTimeout(r, isOAuthReturn ? 1500 : 800)); // iOS necesita más tiempo para IDB
 
     // Restaurar sesion — funciona tanto para carga normal como post-OAuth
     const { data: { session } } = await sb.auth.getSession();
