@@ -2236,7 +2236,7 @@ async function loadDashboard(){
     { data: recentBookings },
     { data: allClients }
   ] = await Promise.all([
-    sb.from('bookings').select('*, profiles(full_name)').eq('scheduled_date', today),
+    sb.from('bookings').select('*').eq('scheduled_date', today),
     sb.from('bookings').select('*').gte('scheduled_date', firstOfMonth).neq('status','cancelled'),
     sb.from('bookings').select('*').eq('status','pending'),
     sb.from('bookings').select('*').order('created_at',{ascending:false}).limit(5),
@@ -3451,6 +3451,9 @@ if(document.readyState === 'loading') {
 } else {
   initAdmin();
 }
+
+// Pre-cargar bookings en background para que estén listos al navegar
+setTimeout(() => { try { loadBookings(); } catch(e){} }, 2000);
 
 // Inject notification panel into body
 (function(){
