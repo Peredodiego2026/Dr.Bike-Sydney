@@ -1537,65 +1537,14 @@ initTheme(); // Apply theme before anything renders
 const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U';
 
-// ── PERSISTENT STORAGE ADAPTER (IndexedDB + localStorage) ───────────────────
-// Fix: iOS Safari PWA borra localStorage despues de 7 dias sin actividad.
-// IndexedDB es mas persistente en standalone mode. Usamos ambos como fallback.
-const _IDB = (() => {
-  const DB='dr-bike-auth', ST='s', VER=1;
-  let _db=null;
-  const open=()=>new Promise((res,rej)=>{
-    if(_db){res(_db);return;}
-    const r=indexedDB.open(DB,VER);
-    r.onerror=()=>rej(r.error);
-    r.onsuccess=()=>{_db=r.result;res(_db);};
-    r.onupgradeneeded=e=>e.target.result.createObjectStore(ST);
-  });
-  return {
-    async get(k){
-      try{
-        const ls=localStorage.getItem(k);
-        if(ls)return ls;
-        const db=await open();
-        return new Promise((res)=>{
-          const req=db.transaction(ST,'readonly').objectStore(ST).get(k);
-          req.onsuccess=()=>{
-            if(req.result)try{localStorage.setItem(k,req.result);}catch(e){}
-            res(req.result??null);
-          };
-          req.onerror=()=>res(null);
-        });
-      }catch{return localStorage.getItem(k);}
-    },
-    async set(k,v){
-      try{localStorage.setItem(k,v);}catch(e){}
-      try{
-        const db=await open();
-        const tx=db.transaction(ST,'readwrite');
-        tx.objectStore(ST).put(v,k);
-      }catch{}
-    },
-    async remove(k){
-      try{localStorage.removeItem(k);}catch{}
-      try{
-        const db=await open();
-        const tx=db.transaction(ST,'readwrite');
-        tx.objectStore(ST).delete(k);
-      }catch{}
-    }
-  };
-})();
-
+// Usar localStorage simple — compartido entre landing.html e index.html
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'dr-bike-client-session',
-    storage: {
-      getItem: (k) => _IDB.get(k),
-      setItem: (k,v) => _IDB.set(k,v),
-      removeItem: (k) => _IDB.remove(k),
-    }
+    storage: window.localStorage
   }
 });
 
@@ -1722,7 +1671,7 @@ async function init(){
     const isOAuthReturn = window.location.hash?.includes('access_token');
 
     // En mobile el OAuth redirect necesita mas tiempo para procesar
-    await new Promise(r => setTimeout(r, isOAuthReturn ? 1500 : 800)); // iOS necesita más tiempo para IDB
+    await new Promise(r => setTimeout(r, isOAuthReturn ? 600 : 0));
 
     // Restaurar sesion — funciona tanto para carga normal como post-OAuth
     const { data: { session } } = await sb.auth.getSession();
