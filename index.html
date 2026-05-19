@@ -1981,14 +1981,11 @@ function removeVan(vanId){
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 async function signInGoogle(){
   trackEvent('login_attempt', { method: 'google' });
-  // Guardar flag antes del redirect para detectar retorno en iOS
-  try { sessionStorage.setItem('drbike-google-pending', '1'); } catch(e) {}
-  try { localStorage.setItem('drbike-google-pending', '1'); } catch(e) {}
   const { error } = await sb.auth.signInWithOAuth({
     provider:'google',
     options:{
-      redirectTo: 'https://drbikesydney.com.au/',
-      queryParams: { access_type: 'offline', prompt: 'select_account' }
+      redirectTo: 'https://drbikesydney.com.au',
+      queryParams: { access_type: 'offline', prompt: 'consent' }
     }
   });
   if(error){ showErr(error.message); console.error(error); }
