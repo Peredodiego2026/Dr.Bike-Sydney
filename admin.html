@@ -2376,7 +2376,7 @@ function applyBookingFilters(){
     if(van && String(b.van_number) !== van) return false;
     if(status && b.status !== status) return false;
     if(search){
-      const name = (b.profiles?.full_name || b.profiles?.email || '').toLowerCase();
+      const name = (b.client_name || b.profiles?.full_name || b.profiles?.email || '').toLowerCase();
       if(!name.includes(search)) return false;
     }
     return true;
@@ -2411,7 +2411,7 @@ function renderBookingsTable(data){
   }
 
   tbody.innerHTML = data.map(b=>{
-    const name = b.profiles?.full_name || b.profiles?.email?.split('@')[0] || 'Client';
+    const name = b.client_name || b.profiles?.full_name || b.profiles?.email?.split('@')[0] || 'Client';
     const date = b.scheduled_date ? new Date(b.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '—';
     const st = b.status || 'pending';
     const isPending = st === 'pending';
@@ -2512,7 +2512,7 @@ async function loadRecentNotifications(){
   if(!data?.length){ list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">No new bookings in the last 24h</div>'; return; }
   const stColors = {pending:'#D97706',confirmed:'#059669',enroute:'#1848C8',completed:'#6B7280',cancelled:'#DC2626'};
   list.innerHTML = data.map(b=>{
-    const name = b.profiles?.full_name || b.profiles?.email?.split('@')[0] || 'Client';
+    const name = b.client_name || b.profiles?.full_name || b.profiles?.email?.split('@')[0] || 'Client';
     const time = new Date(b.created_at).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true});
     const st = b.status||'pending';
     return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" onclick="go('bookings',document.querySelector('[onclick*=bookings]'))">
