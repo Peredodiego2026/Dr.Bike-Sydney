@@ -1727,7 +1727,7 @@ async function init(){
     const isOAuthReturn = window.location.hash?.includes('access_token');
 
     // En mobile el OAuth redirect necesita mas tiempo para procesar
-    await new Promise(r => setTimeout(r, isOAuthReturn ? 800 : 100));
+    await new Promise(r => setTimeout(r, isOAuthReturn ? 800 : 600)); // Dar tiempo a IndexedDB para restaurar sesión
 
     // Restaurar sesion — funciona tanto para carga normal como post-OAuth
     const { data: { session } } = await sb.auth.getSession();
