@@ -282,18 +282,9 @@ function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v
 
 async function load(){
   try {
-    const {data, error} = await sb.from('bookings').select('id, client_id, service_name, service_price, scheduled_date, scheduled_time, status, suburb, address, van_number, notes, mechanic_notes, client_rating, client_review').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
+    // Traer todos los campos necesarios incluyendo client_name, client_email, client_phone
+    const {data, error} = await sb.from('bookings').select('id, client_id, client_name, client_email, client_phone, service_name, service_price, scheduled_date, scheduled_time, status, suburb, address, van_number, notes, mechanic_notes, client_rating, client_review').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
     if(error) throw error;
-    // Obtener nombres de clientes por separado
-    const clientIds = [...new Set((data||[]).map(b=>b.client_id).filter(Boolean))];
-    let profileMap = {};
-    if(clientIds.length) {
-      // Usar or() en vez de in() para evitar el 400
-      // Fetch profiles one by one to avoid filter issues with UUIDs
-      const profResults = await Promise.all(clientIds.map(id => sb.from('profiles').select('id, full_name, phone_number').eq('id', id).single()));
-      const profs = profResults.map(r => r.data).filter(Boolean);
-      (profs||[]).forEach(p => profileMap[p.id] = p);
-    }
     const mapped = (data||[]).map(b=>({id:b.id,client:b.client_name||b.client_email?.split('@')[0]||'Client',email:b.client_email||'',phone:b.client_phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
     jobs = mapped;
     try { localStorage.setItem('drbike-jobs-cache', JSON.stringify(jobs)); } catch(e){}
