@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test OAuth</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="font-family: system-ui; padding: 20px; max-width: 500px; margin: auto">
+  <h1>OAuth Test</h1>
+  <button onclick="signIn()" style="padding: 15px 30px; font-size: 18px; background: #1848C8; color: white; border: none; border-radius: 8px; width: 100%; margin-bottom: 20px">
+    Sign in with Google
+  </button>
+  <pre id="log" style="background: #f0f0f0; padding: 15px; border-radius: 8px; font-size: 11px; white-space: pre-wrap; word-break: break-all"></pre>
+  
+  <script>
+    const log = (m) => {
+      document.getElementById('log').textContent += m + '\n';
+      console.log(m);
+    };
+    
+    const sb = supabase.createClient(
+      'https://tgpipbloisahufaywhqb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U'
+    );
+    
+    log('URL: ' + window.location.href);
+    log('Hash: ' + window.location.hash);
+    log('Search: ' + window.location.search);
+    
+    sb.auth.getSession().then(({data: {session}}) => {
+      log('Session: ' + (session?.user?.email || 'NONE'));
+    });
+    
+    async function signIn() {
+      log('Signing in...');
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/test-oauth.html' }
+      });
+      if(error) log('ERROR: ' + error.message);
+    }
+  </script>
+</body>
+</html>
