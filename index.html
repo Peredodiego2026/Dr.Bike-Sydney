@@ -3743,14 +3743,16 @@ async function confirmBooking(){
     }
   }
 
-  // Incrementar uses_count del discount code
-  if(appliedDiscountCodeId){
-    const { data: dc } = await sb.from('discount_codes').select('uses_count').eq('id', appliedDiscountCodeId).single();
-    if(dc) await sb.from('discount_codes').update({ uses_count: (dc.uses_count||0) + 1 }).eq('id', appliedDiscountCodeId);
-  }
-
-  // Show Stripe payment modal
+  // Show Stripe payment modal IMMEDIATELY - no esperar nada más
   showPaymentModal(bkg, price);
+
+  // Incrementar uses_count del discount code (fire-and-forget)
+  if(appliedDiscountCodeId){
+    sb.from('discount_codes').select('uses_count').eq('id', appliedDiscountCodeId).single()
+      .then(({data: dc}) => {
+        if(dc) sb.from('discount_codes').update({ uses_count: (dc.uses_count||0) + 1 }).eq('id', appliedDiscountCodeId);
+      }).catch(()=>{});
+  }
 
   // Confirmation SMS + WhatsApp to client (fire-and-forget)
   const clientPhone = userProfile?.phone_number || userProfile?.phone || userProfile?.phone_number;
