@@ -12,9 +12,10 @@ import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+if (!SUPABASE_KEY) console.error('SUPABASE_KEY missing in send-push.js');
 
 webpush.setVapidDetails(
-  process.env.VAPID_EMAIL || 'mailto:hello@drbike.com.au',
+  process.env.VAPID_EMAIL || 'mailto:hello@drbikesydney.com.au',
   process.env.VAPID_PUBLIC_KEY || '',
   process.env.VAPID_PRIVATE_KEY || ''
 );

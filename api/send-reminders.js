@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
+if (!process.env.SUPABASE_SERVICE_KEY) {
+  console.error('SUPABASE_SERVICE_KEY missing');
+}
+
 const sb = createClient(
   'https://tgpipbloisahufaywhqb.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn'
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 export default async function handler(req, res) {
