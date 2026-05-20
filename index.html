@@ -3747,7 +3747,12 @@ async function confirmBooking(){
   if(error){ 
     btn.innerHTML='Confirm booking';
     btn.disabled=false;
-    toast('Booking error: '+error.message); 
+    // Detectar conflicto de slot duplicado
+    if(error.code === '23505' || error.message?.includes('unique')) {
+      toast('⚠️ This time slot was just booked. Please choose another.');
+    } else {
+      toast('Booking error: '+error.message); 
+    }
     console.error('Booking insert error:', error);
     return; 
   }

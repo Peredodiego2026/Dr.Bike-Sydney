@@ -1607,7 +1607,7 @@ async function loadFinance() {
   document.getElementById('fin-pl-period').textContent = periodStr;
   document.getElementById('fin-pl-rows').innerHTML = plRows.map(r=>`
     <div class="pl-row${r.sub?' subtotal':''}${r.total?' total':''}">
-      <span class="pl-label${r.bold?' dark':''}">${r.label}</span>
+      <span class="pl-label${r.bold?' dark':''}">${esc(r.label)}</span>
       <span style="font-weight:${r.bold?'700':'500'};color:${r.color||(r.neg?'var(--red)':'var(--navy)')}">
         ${r.val>=0?'$':'–$'}${Math.abs(r.val).toLocaleString()}
       </span>
@@ -1648,7 +1648,7 @@ async function loadFinance() {
     return `<tr>
       <td data-label="Date">${j.scheduled_date}</td>
       <td data-label="Client">${name}</td>
-      <td data-label="Service">${j.service_name||'Service'}</td>
+      <td data-label="Service">${esc(j.service_name||'Service')}</td>
       <td data-label="Amount" style="font-weight:600">$${price.toLocaleString()}</td>
       <td data-label="GST" style="color:var(--orange)">$${jGst}</td>
       <td data-label="Net">$${jNet}</td>
@@ -2047,7 +2047,7 @@ async function loadCoupons(){
 
         <!-- Code + status -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;margin-top:4px">
-          <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:0.08em;font-variant-numeric:tabular-nums">${c.code}</div>
+          <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:0.08em;font-variant-numeric:tabular-nums">${esc(c.code)}</div>
           <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive&&!expired?'#DCFCE7':'#FEE2E2'};color:${isActive&&!expired?'#15803D':'#DC2626'}">${expired?'Expired':isActive?'Active':'Inactive'}</span>
         </div>
 
@@ -2074,7 +2074,7 @@ async function loadCoupons(){
           <button onclick="toggleCoupon('${c.id}',${!isActive})" style="flex:1;padding:9px;border:1.5px solid ${isActive?'#FCA5A5':'#86EFAC'};border-radius:8px;background:${isActive?'#FEF2F2':'#F0FDF4'};color:${isActive?'#DC2626':'#16A34A'};font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             ${isActive?'Deactivate':'Activate'}
           </button>
-          <button onclick="deleteCoupon('${c.id}','${c.code}')" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#DC2626;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button onclick="deleteCoupon('${c.id}','${esc(c.code)}')" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#DC2626;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -2272,7 +2272,7 @@ async function loadDashboard(){
       const vanNum = b.van_number||1;
       return `<tr>
         <td data-label="Client" style="font-weight:700">${name}</td>
-        <td data-label="Service">${b.service_name||'—'}</td>
+        <td data-label="Service">${esc(b.service_name||'—')}</td>
         <td data-label="Date">${b.scheduled_date||'—'}</td>
         <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
         <td data-label="Status"><span style="background:${stBg[st]||'#F3F4F6'};color:${stColors[st]||'#6B7280'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${stLabel[st]||st}</span></td>
@@ -2300,7 +2300,7 @@ async function loadDashboard(){
         const timeStr=b.scheduled_time||'—';
         return `<tr>
           <td data-label="Client" style="font-weight:600">${clientName}</td>
-          <td data-label="Service">${b.service_name||'—'}</td>
+          <td data-label="Service">${esc(b.service_name||'—')}</td>
           <td data-label="Time">${timeStr}</td>
           <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
           <td data-label="Status"><span style="background:${stBg2[st]};color:${stColors2[st]};padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600">${stLabel2[st]||st}</span></td>
@@ -2331,7 +2331,7 @@ async function loadDashboard(){
           <div class="sch-dot" style="background:${stDotColors[b.status||'pending']}"></div>
           <div style="flex:1;min-width:0">
             <div class="sch-name">${b.profiles?.full_name||b.client_name||'Client'}</div>
-            <div class="sch-svc">${b.service_name||'Service'} · ${b.suburb||'—'}</div>
+            <div class="sch-svc">${b.service_name||'Service'} · ${esc(b.suburb||'—')}</div>
           </div>
           <div class="sch-price">$${b.service_price||0}</div>
         </div>`).join('');
@@ -2419,8 +2419,8 @@ function renderBookingsTable(data){
     return `<tr>
       <td data-label="Date">${date}</td>
       <td data-label="Client"><b>${name}</b></td>
-      <td data-label="Service">${b.service_name||'—'}</td>
-      <td data-label="Suburb">${b.suburb||'—'}</td>
+      <td data-label="Service">${esc(b.service_name||'—')}</td>
+      <td data-label="Suburb">${esc(b.suburb||'—')}</td>
       <td data-label="Van"><span class="mech-tag v${b.van_number||1}">Van ${b.van_number||1}</span></td>
       <td data-label="Status"><span class="status ${stClass[st]||'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase()+st.slice(1)}</span></td>
       <td data-label="Price"><b>$${b.service_price||0}</b></td>
@@ -2520,7 +2520,7 @@ async function loadRecentNotifications(){
         <div style="font-size:13px;font-weight:600;color:var(--navy)">${name}</div>
         <span style="font-size:10px;color:#fff;background:${stColors[st]||'#6B7280'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
       </div>
-      <div style="font-size:12px;color:var(--mgray)">${b.service_name||'Service'} · ${b.suburb||'—'}</div>
+      <div style="font-size:12px;color:var(--mgray)">${b.service_name||'Service'} · ${esc(b.suburb||'—')}</div>
       <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price||0}</div>
     </div>`;
   }).join('');
@@ -2533,7 +2533,7 @@ function prependNotification(b){
   const div = document.createElement('div');
   div.style.cssText = 'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid #1848C8;animation:fadeSlideIn .3s';
   div.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--navy)">🔔 New booking</div>
-    <div style="font-size:12px;color:var(--mgray)">${b.service_name||'Service'} · ${b.suburb||'—'}</div>
+    <div style="font-size:12px;color:var(--mgray)">${b.service_name||'Service'} · ${esc(b.suburb||'—')}</div>
     <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price||0}</div>`;
   list.prepend(div);
 }

@@ -7,10 +7,16 @@ import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return;
+  if(guard(req, res, { rateMax: 3, rateWindow: 60000 })) return; // 3/min — evitar spam
 
   const { priceId, customerId, email, name, plan, billing } = req.body;
   if (!priceId || !email) return res.status(400).json({ error: 'Missing required fields' });
+  
+  // Validar formato email
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+  if (email.length > 254) return res.status(400).json({ error: 'Email too long' });
   console.log('create-subscription:', { priceId, plan, billing, email: email?.slice(0,5)+'...' });
 
   const BASE_URL = 'https://drbikesydney.com.au';

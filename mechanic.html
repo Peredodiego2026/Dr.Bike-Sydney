@@ -158,6 +158,17 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
 </div>
 
 <script>
+// ── HTML ESCAPE HELPER (XSS protection) ──────────────────────────────────────
+function esc(str) {
+  if(str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── PERSISTENT STORAGE ADAPTER (IndexedDB + localStorage) ───────────────────
 const _IDB = (() => {
   const DB='dr-bike-mech-auth', ST='s', VER=1;
@@ -226,7 +237,7 @@ function ratingHTML(jobs){
     <div style="font-size:20px;margin:4px 0">${stars}</div>
     <div style="font-size:12px;color:var(--mgray)">${rated.length} review${rated.length!==1?'s':''}</div>
     ${rated.slice(-3).reverse().map(j=>`<div style="margin-top:10px;padding:10px;background:var(--off);border-radius:8px;text-align:left">
-      <div style="font-size:11px;font-weight:600;color:var(--navy)">${'⭐'.repeat(j.rating||0)} ${j.client}</div>
+      <div style="font-size:11px;font-weight:600;color:var(--navy)">${'⭐'.repeat(j.rating||0)} ${esc(j.client)}</div>
       ${j.review?`<div style="font-size:11px;color:var(--mgray);margin-top:3px;font-style:italic">"${j.review}"</div>`:''}
     </div>`).join('')}
   </div>`;
@@ -342,7 +353,7 @@ async function sendPushNotif(job){
 function alert2(j){
   const d=document.createElement('div');
   d.style.cssText='position:fixed;top:80px;left:16px;right:16px;background:#059669;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
-  d.innerHTML=`<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${j.service_name} · ${j.suburb} · $${j.service_price}</span>`;
+  d.innerHTML=`<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${j.service_name} · ${esc(j.suburb)} · $${j.service_price}</span>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d); setTimeout(()=>d.remove(),6000);
 }
@@ -431,12 +442,12 @@ function card(j){
     <div class="job-header">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:38px;height:38px;border-radius:50%;background:${sc[st]}20;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${sc[st]};flex-shrink:0">${j.client.split(' ').map(n=>n[0]||'').join('').slice(0,2).toUpperCase()}</div>
-        <div><div class="job-client">${j.client}</div><div class="job-meta">${j.date===today?'Today':''}${t?' · '+t:''} ${j.date!==today?'· '+d:''}</div></div>
+        <div><div class="job-client">${esc(j.client)}</div><div class="job-meta">${j.date===today?'Today':''}${t?' · '+t:''} ${j.date!==today?'· '+d:''}</div></div>
       </div>
       <span class="status-badge" style="background:${sc[st]}20;color:${sc[st]}">${sl[st]||st}</span>
     </div>
     ${isEnroute?`<div id="timer-${j.id}" style="font-size:12px;color:var(--amber);font-weight:600;margin-bottom:6px;padding:0 18px">🕐 En route: 00:00</div>`:''}
-    <div class="job-service">🔧 ${j.service}</div>
+    <div class="job-service">🔧 ${esc(j.service)}</div>
     <div class="job-addr">📍 ${j.address||j.suburb||'—'}</div>
     <div class="job-price">$${j.price}</div>
     <div class="actions">
@@ -504,7 +515,7 @@ function notifyClientEnroute(j) {
   // Push notification to app (if client has it installed + subscribed)
   if (j.client_id) sendClientPush(j.client_id, {
     title: `🚐 ${mechName} is on the way!`,
-    body: `Heading to ${j.suburb||'your address'} for your ${j.service}. Est. arrival: 10–20 min. Tap to track live 📍`,
+    body: `Heading to ${j.suburb||'your address'} for your ${esc(j.service)}. Est. arrival: 10–20 min. Tap to track live 📍`,
     url: `/?action=dashboard&tracking=${j.id}`,
     tag: 'mechanic-enroute-' + j.id,
     badge: '/icon-mech-192.png',
@@ -517,7 +528,7 @@ function notifyClientComplete(j) {
   if (!j?.client_id) return;
   const mechName = ((mechanic?.first_name||'')+ ' '+(mechanic?.last_name||'')).trim()||'Your mechanic';
   sendClientPush(j.client_id, {
-    title: `✅ ${j.service} complete!`,
+    title: `✅ ${esc(j.service)} complete!`,
     body: `${mechName} has finished your service. Please leave a review — it helps us a lot! ⭐`,
     url: `/?action=dashboard&review=${j.id}`,
     tag: 'job-complete-' + j.id
@@ -533,7 +544,7 @@ function openCompleteModal(id){
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
   modal.innerHTML = `
     <div style="background:var(--white);border-radius:16px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
-      <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);font-size:15px">✅ Complete job — ${j.service}</div>
+      <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);font-size:15px">✅ Complete job — ${esc(j.service)}</div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">✅ Service checklist</label>
@@ -541,7 +552,7 @@ function openCompleteModal(id){
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Work completed</label>
-          <textarea id="comp-notes" placeholder="Describe what was done..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;height:80px;resize:none;background:var(--white);color:var(--navy)">${j.mnotes||''}</textarea>
+          <textarea id="comp-notes" placeholder="Describe what was done..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;height:80px;resize:none;background:var(--white);color:var(--navy)">${esc(j.mnotes||'')}</textarea>
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Parts used (optional)</label>
@@ -942,8 +953,8 @@ function renderAgenda(){
         html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
           <div style="width:52px;font-size:11px;color:#9CA3AF;padding-top:10px;flex-shrink:0;text-align:right">${j.time||'—'}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" onclick="openMechChat('${j.id}')">
-            <div style="font-size:13px;font-weight:600;color:#0D1F3C">${j.service}</div>
-            <div style="font-size:12px;color:#6B7280;margin-top:2px">${j.client} · ${j.suburb||j.address||'—'}</div>
+            <div style="font-size:13px;font-weight:600;color:#0D1F3C">${esc(j.service)}</div>
+            <div style="font-size:12px;color:#6B7280;margin-top:2px">${esc(j.client)} · ${j.suburb||j.address||'—'}</div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
               <span style="font-size:11px;font-weight:600;color:${color}">${j.status.toUpperCase()}</span>
               <span style="font-size:13px;font-weight:700;color:#0D1F3C">$${j.price}</span>
