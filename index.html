@@ -3109,10 +3109,10 @@ async function loadReviews(){
       const stars = '★'.repeat(r.rating||5)+'☆'.repeat(5-(r.rating||5));
       return `<div class="review-card">
         <div class="review-stars" style="color:#F59E0B">${stars}</div>
-        <div class="review-text">"${r.review_text}"</div>
+        <div class="review-text">"${esc(r.review_text)}"</div>
         <div class="review-author">
           <div class="review-avatar">${initials}</div>
-          <div><div class="review-name">${r.review_name||'Happy rider'}</div><div class="review-suburb">${r.suburb||'Sydney'}</div></div>
+          <div><div class="review-name">${esc(r.review_name||'Happy rider')}</div><div class="review-suburb">${esc(r.suburb||'Sydney')}</div></div>
         </div>
       </div>`;
     }).join('');
@@ -4280,7 +4280,7 @@ async function sendChat(){
             const roleLabel = { manager:'Manager', mechanic:'Mechanic' };
             const div = document.createElement('div');
             div.className = 'cb-msg escalated';
-            div.innerHTML = '📱 <b>'+c.first_name+' '+c.last_name+'</b> — '+(roleLabel[c.role]||c.role)+'<br><a href="tel:'+c.phone.replace(/\s/g,'')+'" style="color:inherit;font-weight:700">'+c.phone+'</a>';
+            div.innerHTML = '📱 <b>'+esc(c.first_name)+' '+esc(c.last_name)+'</b> — '+esc(roleLabel[c.role]||c.role)+'<br><a href="tel:'+esc(c.phone.replace(/\s/g,''))+'" style="color:inherit;font-weight:700">'+esc(c.phone)+'</a>';
             msgs.appendChild(div);
           });
           const div2 = document.createElement('div');
