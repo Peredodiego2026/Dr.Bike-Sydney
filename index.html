@@ -1532,6 +1532,17 @@ html{scroll-behavior:smooth}
 </div>
 
 <script>
+// ── HTML ESCAPE HELPER (XSS protection) ──────────────────────────────────────
+function esc(str) {
+  if(str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── SUPABASE INIT ────────────────────────────────────────────────────────────
 initTheme(); // Apply theme before anything renders
 const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
