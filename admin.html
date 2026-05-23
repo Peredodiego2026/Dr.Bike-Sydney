@@ -3432,14 +3432,8 @@ async function deleteNotifNumber(id) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function initAdmin() {
-  // Asegurar sesión Supabase para queries (RLS necesita auth incluso con anon)
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if(!session) {
-      await sb.auth.signInAnonymously();
-    }
-  } catch(e) { console.warn('Supabase auth:', e.message); }
-  
+  // Con RLS deshabilitado en bookings/profiles, no necesitamos auth de Supabase
+  // Solo verificar password del admin
   if(checkAdminAuth()) {
     loadDashboard();
     subscribeToBookings();
