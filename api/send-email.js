@@ -1,6 +1,7 @@
-import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
+import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
+  if(guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { to, name, service, date, time, address, price, type, bookingId, mechNotes, nextService, referralCode } = req.body;
