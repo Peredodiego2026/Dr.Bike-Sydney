@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, sid: message.sid });
   } catch (error) {
     console.error('Twilio SMS error:', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 }
 

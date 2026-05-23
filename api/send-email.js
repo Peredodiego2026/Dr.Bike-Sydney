@@ -244,6 +244,6 @@ export default async function handler(req, res) {
     if (!response.ok) throw new Error(data.message || 'Email failed');
     return res.status(200).json({ success: true, id: data.id });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 }

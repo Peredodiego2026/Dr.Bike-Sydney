@@ -5,7 +5,8 @@
 const rateLimitStore = new Map();
 
 export function rateLimit(req, res, { max = 20, windowMs = 60000, key = null } = {}) {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+  const ip = req.headers['x-vercel-forwarded-for']?.split(',')[0]?.trim()
+    || req.headers['x-forwarded-for']?.split(',')[0]?.trim()
     || req.headers['x-real-ip']
     || req.socket?.remoteAddress
     || 'unknown';

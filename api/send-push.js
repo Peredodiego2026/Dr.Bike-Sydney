@@ -74,6 +74,6 @@ export default async function handler(req, res) {
       await sb.from('profiles').update({ push_subscription: null }).eq('id', clientId);
       return res.status(410).json({ error: 'Subscription expired — cleared from DB' });
     }
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 }
