@@ -65,25 +65,25 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --blue:#1848C8;--blue2:#1138A8;--blue-lt:#EEF3FC;
-  --navy:#0D1F3C;--white:#fff;--off:#F7F8FA;--mgray:#6B7280;
-  --border:#E5E7EB;--green:#059669;--green-lt:#ECFDF5;
-  --red:#DC2626;--amber:#D97706;--amber-lt:#FEF3C7;
-  --gold:#F59E0B;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
-  --shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--sans:'Inter',sans-serif;
+  --blue:#1848C8;--blue2:#1138A8;--blue-lt:rgba(24,72,200,0.15);
+  --navy:#0D1F3C;--white:#0B1628;--off:#111D32;--mgray:#8A95A8;
+  --border:#1E2D45;--green:#10B981;--green-lt:rgba(16,185,129,0.12);
+  --red:#EF4444;--amber:#F59E0B;--amber-lt:rgba(245,158,11,0.12);
+  --gold:#F59E0B;--shadow:0 2px 8px rgba(0,0,0,0.25),0 4px 20px rgba(0,0,0,0.2);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.35);--r:14px;--sans:'Inter',sans-serif;
   --orange:#EA580C;
-  /* Semantic tokens — light mode */
-  --bg:var(--white);
-  --bg2:var(--off);
-  --bg3:#F0F1F3;
-  --text:var(--navy);
-  --text2:var(--mgray);
-  --text3:#9CA3AF;
-  --bdr:var(--border);
-  --card-bg:var(--white);
-  --nav-bg:rgba(255,255,255,0.95);
-  --input-bg:var(--white);
-  --hero-h1:var(--navy);
+  /* Dark Navy Theme — inspired by reference design */
+  --bg:#0B1628;
+  --bg2:#111D32;
+  --bg3:#162540;
+  --text:#F0F4F8;
+  --text2:#8A95A8;
+  --text3:#5A6578;
+  --bdr:#1E2D45;
+  --card-bg:#111D32;
+  --nav-bg:rgba(11,22,40,0.95);
+  --input-bg:#162540;
+  --hero-h1:#FFFFFF;
 }
 
 /* ── DARK MODE ── */
@@ -121,7 +121,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--white);color:var(--navy);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:var(--sans);background:#0B1628;color:#F0F4F8;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
@@ -360,7 +360,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop
 
 /* ── SECTION ── */
 .section{padding:80px 32px;border-bottom:1px solid var(--border)}
-.section.off{background:var(--off)}
+.section.off{background:#111D32}
 .sec-inner{max-width:860px;margin:0 auto}
 .sec-eye{font-size:11px;font-weight:600;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .sec-eye::before{content:'';width:18px;height:1.5px;background:var(--blue);border-radius:2px}
@@ -932,27 +932,33 @@ html{scroll-behavior:smooth}
     </div>
   </nav>
 
-  <div class="hero">
-    <div class="hero-eyebrow">⭐ Sydney's #1 Mobile Bike Repair</div>
-    <h1>Your bike, fixed at<br><span class="accent">your front door</span></h1>
-    <div class="hero-sub">No workshop. No waiting. We come to you — same day.</div>
-    <p>Professional mobile mechanics across Sydney — home, work or park. Mon–Sat.</p>
-    <div class="hero-btns">
-      <button class="btn-primary" onclick="goBook()">Book now — takes 60 sec</button>
-      <button class="btn-ghost" onclick="showView('services')">View all services</button>
+  <div class="hero" style="padding:60px 24px 40px;max-width:480px;margin:0 auto">
+    <h1 style="font-size:32px;font-weight:800;line-height:1.2;color:#FFFFFF;margin-bottom:12px">Professional bike service at your doorstep.</h1>
+    <p style="font-size:15px;color:#8A95A8;line-height:1.5;margin-bottom:28px">Mobile bicycle mechanic in Sydney.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px">
+      <button class="btn-primary" onclick="goBook()" style="padding:16px 28px;font-size:15px;border-radius:10px;font-weight:600;background:#1848C8;color:#fff;border:none;cursor:pointer;letter-spacing:0.3px">Book a Service</button>
+      <button onclick="window.location.href='tel:+61480846013'" style="padding:14px 28px;font-size:14px;border-radius:10px;font-weight:500;background:#162540;color:#F0F4F8;border:1px solid #1E2D45;cursor:pointer;font-family:var(--sans);letter-spacing:0.3px">Call 0480 846 013</button>
     </div>
-    <!-- Trust bar -->
-    <div class="trust-bar">
-      <div class="trust-item">✅ Fixed prices — no surprises</div>
-      <div class="trust-item">🔧 Qualified mechanics</div>
-      <div class="trust-item">📍 All Sydney suburbs</div>
-      <div class="trust-item">⚡ Same-day available</div>
-    </div>
-    <div class="hero-stats">
-      <div class="hs"><div class="hs-n">500+</div><div class="hs-l">Happy riders</div></div>
-      <div class="hs"><div class="hs-n">4.9★</div><div class="hs-l">Average rating</div></div>
-      <div class="hs"><div class="hs-n">Same day</div><div class="hs-l">Availability</div></div>
-      <div class="hs"><div class="hs-n">$57</div><div class="hs-l">Membership/mo</div></div>
+    <!-- Trust badges -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="width:40px;height:40px;border-radius:10px;background:#162540;display:flex;align-items:center;justify-content:center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div style="font-size:10px;color:#8A95A8;font-weight:500;line-height:1.3">Qualified<br>Mechanic</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="width:40px;height:40px;border-radius:10px;background:#162540;display:flex;align-items:center;justify-content:center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div style="font-size:10px;color:#8A95A8;font-weight:500;line-height:1.3">Fully Equipped<br>Mobile Workshop</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="width:40px;height:40px;border-radius:10px;background:#162540;display:flex;align-items:center;justify-content:center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div style="font-size:10px;color:#8A95A8;font-weight:500;line-height:1.3">5 Star<br>Rated Service</div>
+      </div>
     </div>
   </div>
 
