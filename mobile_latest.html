@@ -120,7 +120,10 @@
 .sum-total { font-size: 22px !important; font-weight: 900 !important; }
 
 /* Payment methods - 4 columnas */
-
+.pay-methods { 
+  grid-template-columns: repeat(4, 1fr) !important; 
+  gap: 12px !important;
+}
 .pay-method { 
   min-height: 95px !important; 
   padding: 20px 10px !important;
@@ -754,27 +757,10 @@ body {
 
 /* ═══ TOAST ═══ */
 .toast-m {
-  position: fixed !important;
-  top: calc(60px + var(--safe-t)) !important;
-  left: 50% !important;
-  transform: translateX(-50%) translateY(-120px) !important;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 24px;
-  font-size: 14px;
-  z-index: 10000 !important;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-  transition: transform .35s cubic-bezier(0.4, 0, 0.2, 1), opacity .35s ease;
-  white-space: nowrap;
-  font-weight: 600;
-  opacity: 0;
-  pointer-events: none;
-}
-.toast-m.show {
-  transform: translateX(-50%) translateY(0) !important;
-  opacity: 1;
-  pointer-events: auto;
+  position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 20px; font-size: 13px; z-index: 300; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transition: transform .3s ease; white-space: nowrap; font-weight: 500;
 }
 .toast-m.show { transform: translateX(-50%) translateY(0); }
 .toast-m.err { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.1); }
@@ -857,7 +843,7 @@ body {
       <p>Mobile bicycle mechanic in Sydney.</p>
       <div class="home-btns">
         <button class="btn-book" onclick="startBooking()">Book a Service</button>
-        <button class="btn-call" onclick="window.location.href='tel:+61433963250'">Call 0433 963 250</button>
+        <button class="btn-call" onclick="window.location.href='tel:+61480846013'">Call 0433 963 250</button>
       </div>
       <div class="trust">
         <div class="trust-item">
@@ -968,15 +954,6 @@ body {
       </div>
 
       <div class="book-label">Select Date</div>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px">
-  <button onclick="prevMonth()" style="width:32px;height:32px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text)">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-  </button>
-  <div id="cal-month-label" style="font-size:14px;font-weight:700;color:var(--text)">May 2026</div>
-  <button onclick="nextMonth()" style="width:32px;height:32px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text)">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-  </button>
-</div>
       <div class="cal-days" id="cal-days"></div>
 
       <div class="book-label">Select Time</div>
@@ -1180,10 +1157,6 @@ body {
           <div class="pay-method-icon">G</div>
           <div class="pay-method-name">Google Pay</div>
         </div>
-        <div class="pay-method" onclick="selPayMethod(this,'cash')">
-          <div class="pay-method-icon">💵</div>
-          <div class="pay-method-name">Cash</div>
-        </div>
       </div>
 
       <div class="card-form" id="card-form">
@@ -1301,7 +1274,7 @@ body {
         <div class="mech-role">Dr. Bike Sydney · On the way</div>
         <div class="mech-stars">★★★★★ 5.0</div>
       </div>
-      <button onclick="window.location.href='tel:+61433963250'" style="background:var(--blue);border:none;border-radius:10px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+      <button onclick="window.location.href='tel:+61480846013'" style="background:var(--blue);border:none;border-radius:10px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42 2 2 0 0 1 3.6 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 17z"/></svg>
       </button>
     </div>
@@ -1504,58 +1477,6 @@ const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-
-// ═══ ALL SERVICES BY CATEGORY ═══
-const ALL_SERVICES = {
-  maintenance: [
-    {id: 'general', name: 'General Service', emoji: '⚙️', price: 120, desc: 'Full bike inspection, tune-up, lubrication and safety check', duration: '45-60 min'},
-    {id: 'ebike', name: 'E-Bike Service', emoji: '⚡', price: 150, desc: 'Full e-bike check, drivetrain, brakes, motor system and software update', duration: '60-75 min'},
-    {id: 'kids', name: 'Kids Bike Service', emoji: '🚲', price: 95, desc: 'Gentle service for kids bikes, safety check and size adjustment', duration: '30-40 min'},
-    {id: 'safety', name: 'Safety Check', emoji: '✅', price: 50, desc: 'Pre-ride safety inspection for all bike types', duration: '20-30 min'},
-  ],
-  repairs: [
-    {id: 'brake', name: 'Brake Service', emoji: '🛑', price: 80, desc: 'Brake pad replacement, hydraulic bleed and adjustment', duration: '30-45 min'},
-    {id: 'gear', name: 'Gear Tune-Up', emoji: '🔩', price: 70, desc: 'Derailleur adjustment, cable tension and shifting calibration', duration: '25-35 min'},
-    {id: 'flat', name: 'Flat Tyre Repair', emoji: '🛞', price: 60, desc: 'Tube replacement, tyre inspection and sealant top-up', duration: '20-30 min'},
-    {id: 'chain', name: 'Chain & Drivetrain', emoji: '⛓️', price: 90, desc: 'Chain cleaning, degreasing, lubrication and replacement if needed', duration: '35-45 min'},
-    {id: 'puncture', name: 'Puncture Repair', emoji: '🔧', price: 40, desc: 'Quick puncture fix with patch kit', duration: '15-20 min'},
-  ],
-  upgrades: [
-    {id: 'suspension', name: 'Suspension Service', emoji: '🔧', price: 180, desc: 'Fork and rear shock service, oil change and rebound adjustment', duration: '60-90 min'},
-    {id: 'wheel', name: 'Wheel Truing', emoji: '⭕', price: 75, desc: 'Spoke tension adjustment for true, round wheels', duration: '30-40 min'},
-    {id: 'cables', name: 'Cable Replacement', emoji: '🔌', price: 65, desc: 'New brake and gear cables with housing', duration: '25-35 min'},
-    {id: 'bearings', name: 'Bearing Service', emoji: '⚙️', price: 95, desc: 'Headset, bottom bracket, and wheel bearing service', duration: '45-60 min'},
-  ]
-};
-
-function renderAllServices() {
-  const modal = document.getElementById('svc-modal-list');
-  if (!modal) return;
-  
-  let html = '';
-  for (const [category, services] of Object.entries(ALL_SERVICES)) {
-    html += `<div style="padding:12px 24px;background:var(--bg);border-bottom:1px solid var(--border)">
-      <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px">${category}</div>
-    </div>`;
-    services.forEach(s => {
-      html += `<div class="svc-list-item" onclick="selectSvcFromModal('${s.name}',${s.price},'${s.emoji}','${s.desc}')">
-        <div class="svc-list-ico">${s.emoji}</div>
-        <div class="svc-list-info">
-          <div class="svc-list-name">${s.name}</div>
-          <div class="svc-list-desc">${s.desc}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.duration}</div>
-        </div>
-        <div class="svc-list-price">$${s.price}</div>
-      </div>`;
-    });
-  }
-  modal.innerHTML = html;
-}
-
-// Call on load
-window.addEventListener('DOMContentLoaded', () => { setTimeout(renderAllServices, 100); });
-
-
 // ─── STATE ──────────────────────────────────────────────────────────────
 let currentUser = null;
 let booking = {
@@ -1617,65 +1538,7 @@ function tab(t) {
 function openNotif(dest) { go(dest); }
 
 // ─── CALENDAR ───────────────────────────────────────────────────────────
-
-let currentMonth = new Date();
-
-function updateCalendarMonth() {
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const label = document.getElementById('cal-month-label');
-  if (label) label.textContent = months[currentMonth.getMonth()] + ' ' + currentMonth.getFullYear();
-  buildCalendar();
-}
-
-function nextMonth() {
-  currentMonth.setMonth(currentMonth.getMonth() + 1);
-  updateCalendarMonth();
-}
-
-function prevMonth() {
-  const now = new Date();
-  now.setHours(0,0,0,0);
-  currentMonth.setHours(0,0,0,0);
-  if (currentMonth <= now) {
-    toast('Cannot select past dates', 'err');
-    return;
-  }
-  currentMonth.setMonth(currentMonth.getMonth() - 1);
-  updateCalendarMonth();
-}
-
 function buildCalendar() {
-  const cal = document.getElementById('cal-days');
-  cal.innerHTML = '';
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  
-  const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(firstDay);
-    d.setDate(firstDay.getDate() + i);
-    d.setHours(0,0,0,0);
-    
-    const isPast = d < today;
-    const div = document.createElement('div');
-    div.className = 'cal-day' + (i === 0 && !isPast ? ' sel' : '') + (isPast ? ' dis' : '');
-    div.innerHTML = `<div class="cal-dow">${days[d.getDay()]}</div><div class="cal-dn">${d.getDate()} ${months[d.getMonth()]}</div>`;
-    if (!isPast) {
-      div.onclick = function() { selDay(this, d); };
-    }
-    cal.appendChild(div);
-    
-    if (i === 0 && !isPast) {
-      booking.date = d;
-      booking.dateLabel = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-    }
-  }
-}
-
-function buildCalendarOLD() {
   const cal = document.getElementById('cal-days');
   cal.innerHTML = '';
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1846,47 +1709,17 @@ async function processPayment() {
 }
 
 // ─── BOOKINGS LIST ───────────────────────────────────────────────────────
-
 async function loadBookings() {
-  if (!currentUser) return;
-  
-  try {
-    const { data, error } = await sb
-      .from('bookings')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Load bookings error:', error);
-      return;
-    }
-    
-    console.log('Loaded bookings:', data?.length || 0);
-    
-    // Split into upcoming and history
-    const now = new Date();
-    userBookings = {
-      upcoming: [],
-      history: []
-    };
-    
-    (data || []).forEach(b => {
-      const bookingDate = new Date(b.date + ' ' + b.time);
-      if (bookingDate > now && b.status !== 'completed' && b.status !== 'cancelled') {
-        userBookings.upcoming.push(b);
-      } else {
-        userBookings.history.push(b);
-      }
-    });
-    
-    renderBookings();
-    
-  } catch(err) {
-    console.error('Load bookings error:', err);
+  if (!currentUser) {
+    document.getElementById('bk-list').innerHTML = `
+      <div class="bk-empty">
+        <div class="bk-empty-ico">🔐</div>
+        <div class="bk-empty-txt">Sign in to view bookings</div>
+        <div class="bk-empty-sub">Track all your services in one place</div>
+        <button class="btn-continue" style="max-width:200px;margin:0 auto" onclick="go('auth')">Sign In</button>
+      </div>`;
+    return;
   }
-}
-
   const { data, error } = await sb.from('bookings')
     .select('*')
     .eq('user_id', currentUser.id)
@@ -2117,143 +1950,10 @@ function toast(msg, type) {
   el._t = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-
-// ═══ GOOGLE SHEETS TRACKING ═══
-async function trackToSheets(type, data) {
-  try {
-    // You'll need to set up Google Apps Script Web App for this
-    const SHEET_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
-    
-    const payload = {
-      timestamp: new Date().toISOString(),
-      type: type, // 'booking' or 'payment'
-      data: data,
-      user_email: currentUser?.email || 'guest'
-    };
-    
-    await fetch(SHEET_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    
-    console.log('Tracked to sheets:', type, data);
-  } catch(err) {
-    console.error('Sheets tracking error:', err);
-  }
-}
-
-
-
-// ═══ APPLE PAY INTEGRATION ═══
-let paymentRequest = null;
-let prButton = null;
-
-async function initApplePay() {
-  if (!window.Stripe) {
-    console.log('Stripe not loaded yet');
-    return;
-  }
-  
-  const stripe = Stripe(STRIPE_KEY);
-  
-  // Create payment request
-  paymentRequest = stripe.paymentRequest({
-    country: 'AU',
-    currency: 'aud',
-    total: {
-      label: 'Dr. Bike Service',
-      amount: booking.price * 100, // cents
-    },
-    requestPayerName: true,
-    requestPayerEmail: true,
-  });
-  
-  // Check if Apple Pay / Google Pay available
-  const result = await paymentRequest.canMakePayment();
-  
-  if (result) {
-    console.log('Apple/Google Pay available:', result);
-    // Could show/hide buttons based on availability
-  }
-  
-  // Handle payment method
-  paymentRequest.on('paymentmethod', async (ev) => {
-    try {
-      // Send to backend to confirm payment
-      const {error: confirmError} = await stripe.confirmCardPayment(
-        'PAYMENT_INTENT_CLIENT_SECRET', // You need to create this in backend
-        {payment_method: ev.paymentMethod.id},
-        {handleActions: false}
-      );
-      
-      if (confirmError) {
-        ev.complete('fail');
-        toast('Payment failed', 'err');
-      } else {
-        ev.complete('success');
-        toast('Payment successful!');
-        // Continue booking flow
-        await completeBooking();
-      }
-    } catch(err) {
-      ev.complete('fail');
-      toast('Payment error', 'err');
-      console.error(err);
-    }
-  });
-}
-
-
-function selPayMethod(el, type) {
-  document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('sel'));
-  el.classList.add('sel');
-  booking.paymentMethod = type;
-  
-  const form = document.getElementById('card-form');
-  
-  if (type === 'card') {
-    form.style.display = 'block';
-  } else if (type === 'applepay' || type === 'googlepay') {
-    form.style.display = 'none';
-    // BLOCK: Apple/Google Pay not configured yet
-    toast('Apple/Google Pay coming soon. Please use Card or Cash.', 'err');
-    // Reselect card
-    setTimeout(() => {
-      const cardBtn = document.querySelector('.pay-method[onclick*="card"]');
-      if (cardBtn) {
-        cardBtn.click();
-      }
-    }, 1500);
-  } else if (type === 'cash') {
-    form.style.display = 'none';
-  } else {
-    form.style.display = 'none';
-  }
-}
- else if (type === 'applepay' || type === 'googlepay') {
-    form.style.display = 'none';
-    // Initialize payment request if not done
-    if (!paymentRequest) initApplePay();
-  } else if (type === 'cash') {
-    form.style.display = 'none';
-    toast('You will pay cash when the mechanic arrives');
-  } else {
-    form.style.display = 'none';
-  }
-}
-
-// Call on load
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(initApplePay, 1000);
-});
-
-
 // ─── MESSAGING ───────────────────────────────────────────────────────────
 function msgMechanic() {
   toast('Opening chat with mechanic…');
-  setTimeout(() => window.location.href='sms:+61433963250', 600);
+  setTimeout(() => window.location.href='sms:+61480846013', 600);
 }
 
 // ─── REALTIME ────────────────────────────────────────────────────────────
