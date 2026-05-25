@@ -1738,9 +1738,18 @@ async function processPayment() {
     // Refresh active booking on home
     checkActiveBooking();
   } catch(err) {
-    console.error('Booking error:', err);
-    toast('Failed to create booking. Please try again.', 'err');
-    // Do NOT show success if booking failed
+    console.error('❌ Booking error:', err);
+    
+    // Show FULL error on screen
+    let errorMsg = 'Booking failed: ';
+    if (err.message) errorMsg += err.message;
+    else if (err.error_description) errorMsg += err.error_description;
+    else errorMsg += JSON.stringify(err);
+    
+    // Show in alert so Diego can see it
+    alert('ERROR DETAILS:\n\n' + errorMsg + '\n\nUser ID: ' + (currentUser?.id || 'NOT LOGGED IN'));
+    
+    toast(errorMsg, 'err');
     return;
   } finally {
     btn.disabled = false;
