@@ -1743,9 +1743,10 @@ async function loadBookings() {
   console.log('✅ Current user:', currentUser.id);
   
   try {
-    // TEMP FIX: Load all bookings (user_id column doesn't exist yet)
+    // Load bookings for current user
     const { data, error } = await sb.from('bookings')
       .select('*')
+      .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
     
     if (error) {
