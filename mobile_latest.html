@@ -33,6 +33,175 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
 }
+
+
+/* ═══ MEJORAS VISUALES - 5 ESTRELLAS ═══ */
+
+/* HOME HERO - Background image real */
+.home-hero {
+  background: linear-gradient(180deg, rgba(11,22,40,0) 0%, rgba(11,22,40,0.75) 50%, rgba(11,22,40,1) 100%),
+              url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&auto=format&fit=crop&q=80') center/cover !important;
+  min-height: 460px !important;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.home-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(11,22,40,0.2) 0%, rgba(11,22,40,0.95) 100%);
+  z-index: 0;
+}
+.home-hero > * { position: relative; z-index: 1; }
+
+/* Typography improvements */
+.home-hero h1 { 
+  font-size: 35px !important; 
+  font-weight: 900 !important; 
+  text-shadow: 0 3px 20px rgba(0,0,0,0.5) !important; 
+  line-height: 1.08 !important;
+}
+
+/* Buttons más vibrantes */
+.btn-book {
+  box-shadow: 0 10px 32px rgba(24,72,200,0.55) !important;
+  font-weight: 900 !important;
+  padding: 19px !important;
+  font-size: 17px !important;
+}
+
+.btn-call {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  backdrop-filter: blur(12px);
+  font-weight: 700 !important;
+}
+
+/* Trust badges bigger */
+.trust-ico { width: 36px !important; height: 36px !important; }
+.trust-txt { font-size: 12px !important; font-weight: 700 !important; line-height: 1.35 !important; }
+.trust { padding-top: 30px !important; gap: 4px !important; }
+
+/* Service cards - iconos más grandes */
+.svc-opt-ico { font-size: 36px !important; margin-bottom: 10px !important; }
+.svc-opt { padding: 20px 12px !important; border-radius: 16px !important; }
+.svc-opt-name { font-size: 12px !important; font-weight: 800 !important; }
+.svc-opt-price { font-size: 13px !important; font-weight: 800 !important; }
+.svc-opt.sel { 
+  box-shadow: 0 0 0 4px rgba(24,72,200,0.25) !important; 
+  transform: scale(1.03);
+  border-width: 2.5px !important;
+}
+
+/* Calendar más grande */
+.cal-day { padding: 15px 8px !important; border-radius: 14px !important; }
+.cal-dn { font-size: 17px !important; font-weight: 900 !important; }
+.cal-dow { font-size: 11px !important; font-weight: 700 !important; }
+
+/* Time slots */
+.time-slot { 
+  padding: 17px !important; 
+  font-size: 16px !important; 
+  font-weight: 800 !important; 
+  border-radius: 14px !important;
+}
+.time-slot.sel { box-shadow: 0 6px 20px rgba(24,72,200,0.4) !important; }
+
+/* Summary - imagen real de bici */
+.sum-bike-img {
+  background: linear-gradient(180deg, rgba(11,22,40,0.3) 0%, rgba(11,22,40,0.7) 100%),
+              url('https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=700&auto=format&fit=crop&q=80') center/cover !important;
+  height: 250px !important;
+  font-size: 0 !important;
+}
+.sum-svc-name { font-size: 21px !important; font-weight: 900 !important; }
+.sum-total { font-size: 22px !important; font-weight: 900 !important; }
+
+/* Payment methods - 4 columnas */
+.pay-methods { 
+  grid-template-columns: repeat(4, 1fr) !important; 
+  gap: 12px !important;
+}
+.pay-method { 
+  min-height: 95px !important; 
+  padding: 20px 10px !important;
+  border-radius: 16px !important;
+}
+.pay-method-icon { font-size: 28px !important; font-weight: 900 !important; }
+.pay-method-name { font-size: 11px !important; font-weight: 800 !important; }
+.pay-amount { font-size: 40px !important; font-weight: 900 !important; }
+
+/* REVIEW - ESTRELLAS GIGANTES AZULES ⭐ */
+.stars-row { gap: 18px !important; margin-bottom: 32px !important; }
+.star-btn { 
+  font-size: 58px !important; 
+  color: var(--blue) !important; 
+  opacity: 0.18 !important;
+  filter: drop-shadow(0 3px 10px rgba(24,72,200,0.3)) !important;
+  transition: all .25s ease !important;
+}
+.star-btn.on { 
+  opacity: 1 !important; 
+  transform: scale(1.2) !important;
+  filter: drop-shadow(0 6px 16px rgba(24,72,200,0.7)) !important;
+}
+.review-title { font-size: 22px !important; font-weight: 900 !important; }
+.review-bike { 
+  width: 96px !important; 
+  height: 96px !important; 
+  font-size: 46px !important;
+  border-width: 3px !important;
+}
+
+/* Tracking */
+.track-map { height: 250px !important; border-radius: 20px !important; }
+.track-eta { font-size: 34px !important; font-weight: 900 !important; }
+.track-info { border-radius: 18px !important; padding: 22px !important; }
+
+/* Bookings */
+.bk-day { font-size: 30px !important; font-weight: 900 !important; }
+.bk-mon { font-size: 11px !important; font-weight: 900 !important; letter-spacing: 1px !important; }
+.bk-svc { font-size: 16px !important; font-weight: 900 !important; }
+.bk-status { font-weight: 900 !important; padding: 7px 14px !important; font-size: 12px !important; }
+.bk-card { border-radius: 18px !important; padding: 18px 20px !important; }
+
+/* Buttons globales */
+.btn-continue, .btn-login {
+  font-weight: 900 !important;
+  box-shadow: 0 10px 32px rgba(24,72,200,0.5) !important;
+  font-size: 17px !important;
+  padding: 18px !important;
+}
+
+/* Mechanic card */
+.mech-ava { width: 56px !important; height: 56px !important; font-size: 24px !important; }
+.mech-name { font-size: 16px !important; font-weight: 900 !important; }
+
+/* Profile */
+.profile-ava { 
+  width: 72px !important; 
+  height: 72px !important; 
+  font-size: 28px !important; 
+  font-weight: 900 !important;
+}
+.profile-name { font-size: 19px !important; font-weight: 900 !important; }
+
+/* Auth */
+.auth-inf { font-size: 44px !important; }
+.auth-brand { font-size: 24px !important; font-weight: 900 !important; }
+.auth-h { font-size: 24px !important; font-weight: 900 !important; }
+
+/* Headers */
+.int-title { font-size: 18px !important; font-weight: 900 !important; }
+.hdr-name { font-size: 17px !important; font-weight: 900 !important; }
+
+/* Home section */
+.home-section-title { font-size: 13px !important; font-weight: 900 !important; }
+.svc-mini-ico { font-size: 32px !important; }
+.svc-mini-name { font-size: 15px !important; font-weight: 900 !important; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
