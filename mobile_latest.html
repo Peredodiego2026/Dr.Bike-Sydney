@@ -1846,17 +1846,47 @@ async function processPayment() {
 }
 
 // ─── BOOKINGS LIST ───────────────────────────────────────────────────────
+
 async function loadBookings() {
-  if (!currentUser) {
-    document.getElementById('bk-list').innerHTML = `
-      <div class="bk-empty">
-        <div class="bk-empty-ico">🔐</div>
-        <div class="bk-empty-txt">Sign in to view bookings</div>
-        <div class="bk-empty-sub">Track all your services in one place</div>
-        <button class="btn-continue" style="max-width:200px;margin:0 auto" onclick="go('auth')">Sign In</button>
-      </div>`;
-    return;
+  if (!currentUser) return;
+  
+  try {
+    const { data, error } = await sb
+      .from('bookings')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Load bookings error:', error);
+      return;
+    }
+    
+    console.log('Loaded bookings:', data?.length || 0);
+    
+    // Split into upcoming and history
+    const now = new Date();
+    userBookings = {
+      upcoming: [],
+      history: []
+    };
+    
+    (data || []).forEach(b => {
+      const bookingDate = new Date(b.date + ' ' + b.time);
+      if (bookingDate > now && b.status !== 'completed' && b.status !== 'cancelled') {
+        userBookings.upcoming.push(b);
+      } else {
+        userBookings.history.push(b);
+      }
+    });
+    
+    renderBookings();
+    
+  } catch(err) {
+    console.error('Load bookings error:', err);
   }
+}
+
   const { data, error } = await sb.from('bookings')
     .select('*')
     .eq('user_id', currentUser.id)
@@ -2175,16 +2205,34 @@ async function initApplePay() {
   });
 }
 
+
 function selPayMethod(el, type) {
   document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('sel'));
   el.classList.add('sel');
   booking.paymentMethod = type;
   
-  // Show/hide card form
   const form = document.getElementById('card-form');
+  
   if (type === 'card') {
     form.style.display = 'block';
   } else if (type === 'applepay' || type === 'googlepay') {
+    form.style.display = 'none';
+    // BLOCK: Apple/Google Pay not configured yet
+    toast('Apple/Google Pay coming soon. Please use Card or Cash.', 'err');
+    // Reselect card
+    setTimeout(() => {
+      const cardBtn = document.querySelector('.pay-method[onclick*="card"]');
+      if (cardBtn) {
+        cardBtn.click();
+      }
+    }, 1500);
+  } else if (type === 'cash') {
+    form.style.display = 'none';
+  } else {
+    form.style.display = 'none';
+  }
+}
+ else if (type === 'applepay' || type === 'googlepay') {
     form.style.display = 'none';
     // Initialize payment request if not done
     if (!paymentRequest) initApplePay();
