@@ -1698,14 +1698,12 @@ async function processPayment() {
     const bookingData = {
       user_id: currentUser.id,
       service_name: booking.svc,
-      service_price: booking.price,
-      total_amount: total,
-      booking_date: booking.date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-      booking_time: booking.time,
+      price: booking.price,
+      date: booking.date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+      time: booking.time,
       location: booking.loc,
       status: 'confirmed',
-      reference: booking.ref,
-      notes: ''
+      reference: booking.ref
     };
     
     console.log('📤 Inserting booking:', bookingData);
