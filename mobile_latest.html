@@ -1694,18 +1694,30 @@ async function processPayment() {
       notes: ''
     }).select().single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Booking save error:', error);
+      toast('Error creating booking: ' + error.message, 'err');
+      throw error;
+    }
+
+    console.log('Booking saved successfully:', data);
 
     // Show success
     document.getElementById('success-ref').textContent = `#${booking.ref}`;
     go('success');
+    
+    // IMPORTANT: Reload bookings so it appears in history
+    setTimeout(() => {
+      loadBookings();
+    }, 500);
+    
     // Refresh active booking on home
     checkActiveBooking();
   } catch(err) {
-    console.error(err);
-    // Still show success for demo (Stripe not connected yet)
-    document.getElementById('success-ref').textContent = `#${booking.ref}`;
-    go('success');
+    console.error('Booking error:', err);
+    toast('Failed to create booking. Please try again.', 'err');
+    // Do NOT show success if booking failed
+    return;
   } finally {
     btn.disabled = false;
     btnTxt.innerHTML = `Pay <span id="btn-pay-amt">$${booking.price + 20}.00</span>`;
