@@ -1679,10 +1679,24 @@ async function processPayment() {
   btnTxt.innerHTML = '<div class="spin" style="width:20px;height:20px;margin:0 auto"></div>';
 
   try {
+    // VALIDATION: Check if user is logged in
+    if (!currentUser || !currentUser.id) {
+      console.error('❌ No current user');
+      toast('Please login to book a service', 'err');
+      btn.disabled = false;
+      btnTxt.innerHTML = `Pay <span id="btn-pay-amt">$${booking.price + 20}.00</span>`;
+      go('auth');
+      return;
+    }
+    
+    console.log('✅ Current user:', currentUser.id);
+    console.log('📝 Booking data:', booking);
+    
     // Save booking to Supabase
     const total = booking.price + 20;
-    const { data, error } = await sb.from('bookings').insert({
-      user_id: currentUser?.id,
+    
+    const bookingData = {
+      user_id: currentUser.id,
       service_name: booking.svc,
       service_price: booking.price,
       total_amount: total,
@@ -1692,15 +1706,25 @@ async function processPayment() {
       status: 'confirmed',
       reference: booking.ref,
       notes: ''
-    }).select().single();
+    };
+    
+    console.log('📤 Inserting booking:', bookingData);
+    
+    const { data, error } = await sb.from('bookings')
+      .insert(bookingData)
+      .select()
+      .single();
 
     if (error) {
-      console.error('Booking save error:', error);
-      toast('Error creating booking: ' + error.message, 'err');
+      console.error('❌ Booking save error:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error details:', error.details);
+      console.error('❌ Error hint:', error.hint);
+      toast('Error: ' + (error.message || 'Failed to create booking'), 'err');
       throw error;
     }
 
-    console.log('Booking saved successfully:', data);
+    console.log('✅ Booking saved successfully:', data);
 
     // Show success
     document.getElementById('success-ref').textContent = `#${booking.ref}`;
