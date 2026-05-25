@@ -120,10 +120,7 @@
 .sum-total { font-size: 22px !important; font-weight: 900 !important; }
 
 /* Payment methods - 4 columnas */
-.pay-methods { 
-  grid-template-columns: repeat(4, 1fr) !important; 
-  gap: 12px !important;
-}
+
 .pay-method { 
   min-height: 95px !important; 
   padding: 20px 10px !important;
@@ -1182,11 +1179,11 @@ body {
         <div class="pay-method" onclick="selPayMethod(this,'googlepay')">
           <div class="pay-method-icon">G</div>
           <div class="pay-method-name">Google Pay</div>
+        </div>
         <div class="pay-method" onclick="selPayMethod(this,'cash')">
-  <div class="pay-method-icon">💵</div>
-  <div class="pay-method-name">Cash</div>
-</div>
-      </div>
+          <div class="pay-method-icon">💵</div>
+          <div class="pay-method-name">Cash</div>
+        </div>
       </div>
 
       <div class="card-form" id="card-form">
@@ -2116,6 +2113,93 @@ async function trackToSheets(type, data) {
     console.error('Sheets tracking error:', err);
   }
 }
+
+
+
+// ═══ APPLE PAY INTEGRATION ═══
+let paymentRequest = null;
+let prButton = null;
+
+async function initApplePay() {
+  if (!window.Stripe) {
+    console.log('Stripe not loaded yet');
+    return;
+  }
+  
+  const stripe = Stripe(STRIPE_KEY);
+  
+  // Create payment request
+  paymentRequest = stripe.paymentRequest({
+    country: 'AU',
+    currency: 'aud',
+    total: {
+      label: 'Dr. Bike Service',
+      amount: booking.price * 100, // cents
+    },
+    requestPayerName: true,
+    requestPayerEmail: true,
+  });
+  
+  // Check if Apple Pay / Google Pay available
+  const result = await paymentRequest.canMakePayment();
+  
+  if (result) {
+    console.log('Apple/Google Pay available:', result);
+    // Could show/hide buttons based on availability
+  }
+  
+  // Handle payment method
+  paymentRequest.on('paymentmethod', async (ev) => {
+    try {
+      // Send to backend to confirm payment
+      const {error: confirmError} = await stripe.confirmCardPayment(
+        'PAYMENT_INTENT_CLIENT_SECRET', // You need to create this in backend
+        {payment_method: ev.paymentMethod.id},
+        {handleActions: false}
+      );
+      
+      if (confirmError) {
+        ev.complete('fail');
+        toast('Payment failed', 'err');
+      } else {
+        ev.complete('success');
+        toast('Payment successful!');
+        // Continue booking flow
+        await completeBooking();
+      }
+    } catch(err) {
+      ev.complete('fail');
+      toast('Payment error', 'err');
+      console.error(err);
+    }
+  });
+}
+
+function selPayMethod(el, type) {
+  document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('sel'));
+  el.classList.add('sel');
+  booking.paymentMethod = type;
+  
+  // Show/hide card form
+  const form = document.getElementById('card-form');
+  if (type === 'card') {
+    form.style.display = 'block';
+  } else if (type === 'applepay' || type === 'googlepay') {
+    form.style.display = 'none';
+    // Initialize payment request if not done
+    if (!paymentRequest) initApplePay();
+  } else if (type === 'cash') {
+    form.style.display = 'none';
+    toast('You will pay cash when the mechanic arrives');
+  } else {
+    form.style.display = 'none';
+  }
+}
+
+// Call on load
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initApplePay, 1000);
+});
 
 
 // ─── MESSAGING ───────────────────────────────────────────────────────────
