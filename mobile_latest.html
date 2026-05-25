@@ -1726,7 +1726,10 @@ async function processPayment() {
 
 // ─── BOOKINGS LIST ───────────────────────────────────────────────────────
 async function loadBookings() {
+  console.log('🔍 loadBookings called');
+  
   if (!currentUser) {
+    console.log('❌ No current user');
     document.getElementById('bk-list').innerHTML = `
       <div class="bk-empty">
         <div class="bk-empty-ico">🔐</div>
@@ -1736,11 +1739,29 @@ async function loadBookings() {
       </div>`;
     return;
   }
-  const { data, error } = await sb.from('bookings')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('created_at', { ascending: false });
-  renderBookings(data || []);
+  
+  console.log('✅ Current user:', currentUser.id);
+  
+  try {
+    const { data, error } = await sb.from('bookings')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('❌ Supabase error:', error);
+      toast('Error loading bookings: ' + error.message, 'err');
+      return;
+    }
+    
+    console.log('✅ Loaded bookings:', data?.length || 0);
+    console.log('📊 Bookings data:', data);
+    
+    renderBookings(data || []);
+  } catch(err) {
+    console.error('❌ Load bookings exception:', err);
+    toast('Failed to load bookings', 'err');
+  }
 }
 
 function bkTab(el, tab) {
@@ -1751,6 +1772,9 @@ function bkTab(el, tab) {
 }
 
 function renderBookings(rows) {
+  console.log('🎨 renderBookings called with', rows?.length || 0, 'rows');
+  console.log('📑 Current tab:', currentBkTab);
+  
   const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   const statusClass = { confirmed:'green', in_progress:'blue', completed:'green', cancelled:'red', pending:'amber' };
   const statusLabel = { confirmed:'Confirmed', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled', pending:'Pending' };
@@ -1761,6 +1785,8 @@ function renderBookings(rows) {
     if (currentBkTab === 'upcoming') return bDate >= now || b.status === 'in_progress';
     return bDate < now && b.status !== 'in_progress';
   });
+  
+  console.log('✅ Filtered bookings:', filtered.length);
 
   if (!filtered.length) {
     document.getElementById('bk-list').innerHTML = `
