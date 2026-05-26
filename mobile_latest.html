@@ -1592,14 +1592,33 @@ let currentBkTab = 'upcoming';
 
 // ─── INIT ───────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  // Hide loading after max 2 seconds regardless
+  setTimeout(() => {
+    document.getElementById('loading').classList.add('hide');
+  }, 2000);
+  
   buildCalendar();
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
-    renderProfile();
-    subscribeToNotifications();
-    loadNotifications();
+  
+  try {
+    // Add timeout to prevent hanging
+    const sessionPromise = sb.auth.getSession();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Session timeout')), 3000)
+    );
+    
+    const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+    
+    if (session?.user) {
+      currentUser = session.user;
+      renderProfile();
+      subscribeToNotifications();
+      loadNotifications();
+    }
+  } catch (error) {
+    console.log('Session check timed out or failed:', error);
+    // Continue anyway - user can login manually
   }
+  
   // Auth state changes
   sb.auth.onAuthStateChange((_event, session) => {
     currentUser = session?.user || null;
@@ -1610,22 +1629,24 @@ window.addEventListener('DOMContentLoaded', async () => {
       loadNotifications();
     }
   });
+  
   // Handle OAuth redirect
   if (window.location.hash.includes('access_token')) {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-      currentUser = session.user;
-      renderProfile();
-      subscribeToNotifications();
-      loadNotifications();
-      // Go to home after successful OAuth login
-      setTimeout(() => go('home'), 100);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user) {
+        currentUser = session.user;
+        renderProfile();
+        subscribeToNotifications();
+        loadNotifications();
+        // Go to home after successful OAuth login
+        setTimeout(() => go('home'), 100);
+      }
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+      console.log('OAuth handling error:', error);
     }
-    window.history.replaceState({}, document.title, window.location.pathname);
   }
-  setTimeout(() => {
-    document.getElementById('loading').classList.add('hide');
-  }, 800);
 });
 
 // ─── NAVIGATION ─────────────────────────────────────────────────────────
