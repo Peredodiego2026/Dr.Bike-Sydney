@@ -1891,42 +1891,62 @@ async function processApplePay() {
       requestPayerEmail: true,
     });
 
-    // Check availability
+    // Check availability FIRST
     const canMakePayment = await paymentRequest.canMakePayment();
     
     if (!canMakePayment) {
       toast('Apple Pay not available on this device', 'err');
-      return;
+      return; // STOP HERE - no booking saved
     }
 
-    // Show the payment sheet
-    const result = await paymentRequest.show();
+    // Register payment handler BEFORE showing sheet
+    let paymentCompleted = false;
     
-    // Wait for payment method
     paymentRequest.on('paymentmethod', async (ev) => {
-      console.log('✅ Payment method:', ev.paymentMethod);
+      console.log('✅ Payment method received:', ev.paymentMethod.id);
       
       try {
-        // Save booking
+        // CRITICAL: Save booking ONLY here, after payment authorized
         await completeBookingWithPayment(ev.paymentMethod.id, 'apple_pay');
         
-        // Complete payment
+        // Mark as completed
+        paymentCompleted = true;
+        
+        // Tell Apple Pay it succeeded
         ev.complete('success');
         
+        console.log('✅ Booking saved successfully');
+        
       } catch (error) {
-        console.error('❌ Booking failed:', error);
+        console.error('❌ Booking save failed:', error);
+        
+        // Tell Apple Pay it failed
         ev.complete('fail');
-        toast('Payment failed', 'err');
+        
+        toast('Booking failed after payment', 'err');
       }
     });
 
+    // NOW show the payment sheet
+    console.log('📱 Opening Apple Pay sheet...');
+    await paymentRequest.show();
+    
+    console.log('✅ Payment sheet closed');
+
   } catch (error) {
     console.error('❌ Apple Pay error:', error);
-    if (error.message && error.message.includes('not available')) {
-      toast('Apple Pay not available. Please use Card.', 'err');
+    
+    // User cancelled or error occurred
+    if (error.message && error.message.includes('cancelled')) {
+      toast('Payment cancelled', 'err');
+    } else if (error.message && error.message.includes('not available')) {
+      toast('Apple Pay not available', 'err');
     } else {
-      toast('Payment cancelled or failed', 'err');
+      toast('Payment failed: ' + error.message, 'err');
     }
+    
+    // NO booking saved in any of these cases
+    console.log('❌ No booking saved - payment did not complete');
   }
 }
 
