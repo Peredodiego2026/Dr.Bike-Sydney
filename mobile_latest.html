@@ -1592,14 +1592,25 @@ let currentBkTab = 'upcoming';
 
 // ─── INIT ───────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 DOMContentLoaded - Starting...');
+  
   // Hide loading after max 2 seconds regardless
   setTimeout(() => {
-    document.getElementById('loading').classList.add('hide');
+    console.log('⏰ 2 seconds passed - hiding loading');
+    const loadingEl = document.getElementById('loading');
+    if (loadingEl) {
+      loadingEl.classList.add('hide');
+      console.log('✅ Loading hidden');
+    } else {
+      console.log('❌ Loading element not found');
+    }
   }, 2000);
   
+  console.log('📅 Building calendar...');
   buildCalendar();
   
   try {
+    console.log('🔐 Getting session...');
     // Add timeout to prevent hanging
     const sessionPromise = sb.auth.getSession();
     const timeoutPromise = new Promise((_, reject) => 
@@ -1609,13 +1620,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
     
     if (session?.user) {
+      console.log('✅ User logged in:', session.user.email);
       currentUser = session.user;
       renderProfile();
       subscribeToNotifications();
       loadNotifications();
+    } else {
+      console.log('ℹ️ No user session');
     }
   } catch (error) {
-    console.log('Session check timed out or failed:', error);
+    console.log('⚠️ Session check timed out or failed:', error.message);
     // Continue anyway - user can login manually
   }
   
@@ -1632,6 +1646,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   
   // Handle OAuth redirect
   if (window.location.hash.includes('access_token')) {
+    console.log('🔗 OAuth redirect detected');
     try {
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) {
@@ -1644,9 +1659,11 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
       window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
-      console.log('OAuth handling error:', error);
+      console.log('❌ OAuth handling error:', error);
     }
   }
+  
+  console.log('✅ DOMContentLoaded - Complete');
 });
 
 // ─── NAVIGATION ─────────────────────────────────────────────────────────
