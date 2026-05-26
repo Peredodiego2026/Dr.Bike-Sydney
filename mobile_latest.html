@@ -1511,7 +1511,7 @@ body {
       <button class="modal-close" onclick="closeChat()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <div class="modal-title">Chat with Mechanic</div>
+      <div class="modal-title">Dr. Bike</div>
       <div style="width:28px"></div>
     </div>
     <div class="modal-chat-msgs" id="chat-messages">
@@ -1573,7 +1573,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Handle OAuth redirect
   if (window.location.hash.includes('access_token')) {
     const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) { currentUser = session.user; renderProfile(); }
+    if (session?.user) {
+      currentUser = session.user;
+      renderProfile();
+      subscribeToNotifications();
+      loadNotifications();
+      // Go to home after successful OAuth login
+      setTimeout(() => go('home'), 100);
+    }
     window.history.replaceState({}, document.title, window.location.pathname);
   }
   setTimeout(() => {
@@ -1932,6 +1939,7 @@ async function checkActiveBooking() {
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────
 let unreadNotifCount = 0;
+let notificationsChannel = null;
 
 async function loadNotifications() {
   console.log('🔔 loadNotifications called');
@@ -2075,7 +2083,12 @@ function updateNotifBadge(count) {
 function subscribeToNotifications() {
   if (!currentUser) return;
   
-  sb.channel('notifications')
+  // Unsubscribe from previous channel if exists
+  if (notificationsChannel) {
+    sb.removeChannel(notificationsChannel);
+  }
+  
+  notificationsChannel = sb.channel('notifications-' + currentUser.id)
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',
