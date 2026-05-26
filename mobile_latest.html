@@ -435,10 +435,12 @@ body {
   overflow: hidden;
 }
 .sum-bike-img {
-  width: 100%; height: 160px;
-  background: linear-gradient(135deg, #0B1628, #162540);
+  width: 100%; height: 200px;
+  background: linear-gradient(135deg, rgba(11,22,40,0.8), rgba(22,37,64,0.9)), 
+              url('https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=800&q=80') center/cover;
   display: flex; align-items: center; justify-content: center;
   font-size: 60px;
+  border-radius: 0;
 }
 .sum-svc-info { padding: 16px; }
 .sum-svc-name { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
@@ -1143,7 +1145,7 @@ body {
   </div>
   <div class="scroll">
     <div class="sum-hero">
-      <div class="sum-bike-img" id="sum-bike-img">🚲</div>
+      <div class="sum-bike-img" id="sum-bike-img"></div>
       <div class="sum-svc-info">
         <div class="sum-svc-name" id="sum-svc-name">E-Bike Service</div>
         <div class="sum-svc-desc" id="sum-svc-desc">Full e-bike check, drivetrain, brakes, motor system and software update.</div>
@@ -1687,7 +1689,8 @@ function goToSummary() {
   const total = booking.price + 20;
   document.getElementById('sum-svc-name').textContent = booking.svc;
   document.getElementById('sum-svc-desc').textContent = booking.svcDesc || `Professional ${booking.svc} at your location.`;
-  document.getElementById('sum-bike-img').textContent = booking.svcEmoji || '🚲';
+  // Real bike image now shown as background, no emoji needed
+  document.getElementById('sum-bike-img').textContent = '';
   document.getElementById('sum-date').textContent = booking.dateLabel || 'Today';
   document.getElementById('sum-time').textContent = booking.time;
   document.getElementById('sum-loc').textContent = booking.loc;
