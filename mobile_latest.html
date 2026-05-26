@@ -1882,7 +1882,7 @@ function renderBookings(rows) {
 
   const now = new Date();
   const filtered = rows.filter(b => {
-    const bDate = new Date(b.booking_date);
+    const bDate = new Date(b.scheduled_date);
     if (currentBkTab === 'upcoming') return bDate >= now || b.status === 'in_progress';
     return bDate < now && b.status !== 'in_progress';
   });
@@ -1901,7 +1901,7 @@ function renderBookings(rows) {
   }
 
   document.getElementById('bk-list').innerHTML = filtered.map(b => {
-    const d = new Date(b.booking_date + 'T00:00:00');
+    const d = new Date(b.scheduled_date + 'T00:00:00');
     const sc = statusClass[b.status] || 'blue';
     const sl = statusLabel[b.status] || b.status;
     return `<div class="bk-card" onclick="viewBooking('${b.id}')">
@@ -1911,7 +1911,7 @@ function renderBookings(rows) {
       </div>
       <div class="bk-info">
         <div class="bk-svc">${b.service_name || 'Service'}</div>
-        <div class="bk-det">${b.booking_time || ''} · ${b.location || ''}</div>
+        <div class="bk-det">${b.scheduled_time || ''} · ${b.address || ''}</div>
         <div class="bk-status ${sc}">${sl}</div>
       </div>
       <div class="bk-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
@@ -1932,7 +1932,7 @@ async function checkActiveBooking() {
     const b = data[0];
     document.getElementById('home-active-booking').style.display = 'block';
     document.getElementById('home-ab-svc').textContent = b.service_name || 'Service';
-    document.getElementById('home-ab-info').textContent = `${b.booking_date} · ${b.booking_time} · ${b.location}`;
+    document.getElementById('home-ab-info').textContent = `${b.scheduled_date} · ${b.scheduled_time} · ${b.address}`;
     document.getElementById('home-ab-status').textContent = b.status === 'in_progress' ? 'In Progress' : 'Confirmed';
   }
 }
