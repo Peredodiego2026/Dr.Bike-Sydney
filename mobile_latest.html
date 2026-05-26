@@ -1251,6 +1251,8 @@ body {
         </div>
       </div>
 
+      <div id="apple-pay-button-container" style="display:none;margin:20px 0"></div>
+
       <button class="btn-continue" id="btn-pay" onclick="processPayment()">
         <span id="btn-pay-txt">Pay <span id="btn-pay-amt">$150.00</span></span>
       </button>
@@ -1567,6 +1569,13 @@ const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ─── STRIPE ─────────────────────────────────────────────────────────────
+const STRIPE_KEY = 'pk_test_51TUbG9RnLnXK8Z1Q7JZQFjH8kX0wK7YvM0yNq3Wm5LZ1YYh0Ld9L5gH6XJ3Qm2Kw9Zz8Yy7Xx6Ww5Vv4Uu3Tt2Ss1Rr0Q00yNGvQJ8m';
+const stripe = Stripe(STRIPE_KEY);
+let paymentRequest = null;
+let prButton = null;
+let selectedPaymentMethod = 'card';
+
 // ─── STATE ──────────────────────────────────────────────────────────────
 let currentUser = null;
 let booking = {
@@ -1753,14 +1762,85 @@ function goToPayment() {
   document.getElementById('pay-desc').textContent = `${booking.svc} · ${booking.dateLabel} · ${booking.time}`;
   document.getElementById('btn-pay-amt').textContent = `$${total}.00`;
   go('payment');
+  
+  // Initialize Apple Pay button
+  initApplePay();
+}
+
+// Initialize Apple Pay / Google Pay button
+async function initApplePay() {
+  const total = booking.price + 20;
+  
+  // Create payment request
+  paymentRequest = stripe.paymentRequest({
+    country: 'AU',
+    currency: 'aud',
+    total: {
+      label: 'Dr. Bike Sydney',
+      amount: total * 100, // Amount in cents
+    },
+    requestPayerName: true,
+    requestPayerEmail: true,
+  });
+
+  // Check if Apple Pay / Google Pay is available
+  const result = await paymentRequest.canMakePayment();
+  
+  if (result) {
+    // Create and mount the button
+    const elements = stripe.elements();
+    prButton = elements.create('paymentRequestButton', {
+      paymentRequest: paymentRequest,
+    });
+    
+    const container = document.getElementById('apple-pay-button-container');
+    if (container) {
+      container.innerHTML = ''; // Clear any existing content
+      prButton.mount('#apple-pay-button-container');
+    }
+
+    // Handle payment method creation
+    paymentRequest.on('paymentmethod', async (ev) => {
+      console.log('Payment method created:', ev.paymentMethod);
+      
+      // Complete the payment (in real app, create payment intent on server)
+      ev.complete('success');
+      
+      // Save booking with payment method
+      await completeBookingWithPayment(ev.paymentMethod.id, 'apple_pay');
+    });
+  } else {
+    console.log('Apple Pay / Google Pay not available on this device');
+    // Hide the payment method options that aren't available
+    const applePayMethod = document.querySelector('.pay-method[onclick*="applepay"]');
+    const googlePayMethod = document.querySelector('.pay-method[onclick*="googlepay"]');
+    if (applePayMethod) applePayMethod.style.opacity = '0.3';
+    if (googlePayMethod) googlePayMethod.style.opacity = '0.3';
+  }
 }
 
 // ─── PAYMENT ─────────────────────────────────────────────────────────────
 function selPayMethod(el, method) {
   document.querySelectorAll('.pay-method').forEach(e => e.classList.remove('sel'));
   el.classList.add('sel');
+  selectedPaymentMethod = method;
+  
+  // Show/hide card form
   document.getElementById('card-form').style.display = method === 'card' ? 'flex' : 'none';
-  if (method !== 'card') toast('Apple/Google Pay coming soon', 'err');
+  
+  // Show/hide Apple Pay button
+  const applePayBtn = document.getElementById('apple-pay-button-container');
+  if (applePayBtn) {
+    applePayBtn.style.display = (method === 'applepay' || method === 'googlepay') ? 'block' : 'none';
+  }
+  
+  // Show/hide regular pay button
+  const regularBtn = document.getElementById('btn-pay');
+  if (method === 'applepay' || method === 'googlepay') {
+    regularBtn.style.display = 'none';
+  } else {
+    regularBtn.style.display = 'block';
+  }
 }
 
 function fmtCard(inp) {
@@ -1793,6 +1873,19 @@ async function processPayment() {
     console.log('✅ Current user:', currentUser.id);
     console.log('📝 Booking data:', booking);
     
+    // Complete booking with selected payment method
+    await completeBookingWithPayment(null, selectedPaymentMethod);
+    
+  } catch (error) {
+    console.error('❌ Payment error:', error);
+    btn.disabled = false;
+    btnTxt.innerHTML = `Pay <span id="btn-pay-amt">$${booking.price + 20}.00</span>`;
+    toast('Payment failed. Please try again.', 'err');
+  }
+}
+
+async function completeBookingWithPayment(paymentMethodId, paymentType) {
+  try {
     // Save booking to Supabase
     const total = booking.price + 20;
     
@@ -1805,7 +1898,7 @@ async function processPayment() {
       scheduled_time: booking.time,
       address: booking.loc,
       status: 'confirmed',
-      payment_method: 'cash'
+      payment_method: paymentType || 'card'
     };
     
     console.log('📤 Inserting booking:', bookingData);
@@ -1817,9 +1910,6 @@ async function processPayment() {
 
     if (error) {
       console.error('❌ Booking save error:', error);
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Error details:', error.details);
-      console.error('❌ Error hint:', error.hint);
       toast('Error: ' + (error.message || 'Failed to create booking'), 'err');
       throw error;
     }
@@ -1828,6 +1918,22 @@ async function processPayment() {
 
     // Show success
     document.getElementById('success-ref').textContent = `#${booking.ref}`;
+    go('success');
+    
+    // IMPORTANT: Reload bookings so it appears in history
+    setTimeout(() => {
+      loadBookings();
+    }, 500);
+    
+    // Refresh active booking on home
+    checkActiveBooking();
+    
+  } catch(err) {
+    console.error('❌ Booking error:', err);
+    toast('Booking failed: ' + (err.message || 'Unknown error'), 'err');
+    throw err;
+  }
+}
     go('success');
     
     // IMPORTANT: Reload bookings so it appears in history
