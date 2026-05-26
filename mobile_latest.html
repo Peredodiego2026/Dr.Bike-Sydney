@@ -1787,6 +1787,8 @@ async function initApplePay() {
   const result = await paymentRequest.canMakePayment();
   
   if (result) {
+    console.log('✅ Apple Pay / Google Pay available');
+    
     // Create and mount the button
     const elements = stripe.elements();
     prButton = elements.create('paymentRequestButton', {
@@ -1801,21 +1803,47 @@ async function initApplePay() {
 
     // Handle payment method creation
     paymentRequest.on('paymentmethod', async (ev) => {
-      console.log('Payment method created:', ev.paymentMethod);
+      console.log('✅ Payment method created:', ev.paymentMethod);
       
-      // Complete the payment (in real app, create payment intent on server)
-      ev.complete('success');
-      
-      // Save booking with payment method
-      await completeBookingWithPayment(ev.paymentMethod.id, 'apple_pay');
+      try {
+        // Save booking with payment method
+        await completeBookingWithPayment(ev.paymentMethod.id, 'apple_pay');
+        
+        // Only complete as success if booking saved successfully
+        ev.complete('success');
+      } catch (error) {
+        console.error('❌ Booking failed:', error);
+        ev.complete('fail');
+        toast('Payment failed. Please try again.', 'err');
+      }
     });
   } else {
-    console.log('Apple Pay / Google Pay not available on this device');
-    // Hide the payment method options that aren't available
+    console.log('❌ Apple Pay / Google Pay NOT available on this device');
+    
+    // Disable the payment method options that aren't available
     const applePayMethod = document.querySelector('.pay-method[onclick*="applepay"]');
     const googlePayMethod = document.querySelector('.pay-method[onclick*="googlepay"]');
-    if (applePayMethod) applePayMethod.style.opacity = '0.3';
-    if (googlePayMethod) googlePayMethod.style.opacity = '0.3';
+    
+    if (applePayMethod) {
+      applePayMethod.style.opacity = '0.5';
+      applePayMethod.style.pointerEvents = 'none';
+      applePayMethod.onclick = (e) => {
+        e.stopPropagation();
+        toast('Apple Pay not available on this device', 'err');
+      };
+    }
+    
+    if (googlePayMethod) {
+      googlePayMethod.style.opacity = '0.5';
+      googlePayMethod.style.pointerEvents = 'none';
+      googlePayMethod.onclick = (e) => {
+        e.stopPropagation();
+        toast('Google Pay not available on this device', 'err');
+      };
+    }
+    
+    // Show a toast to inform the user
+    toast('Digital wallets not available. Use Card or Cash.', 'err');
   }
 }
 
@@ -1828,17 +1856,29 @@ function selPayMethod(el, method) {
   // Show/hide card form
   document.getElementById('card-form').style.display = method === 'card' ? 'flex' : 'none';
   
-  // Show/hide Apple Pay button
+  // Show/hide Apple Pay button container
   const applePayBtn = document.getElementById('apple-pay-button-container');
-  if (applePayBtn) {
-    applePayBtn.style.display = (method === 'applepay' || method === 'googlepay') ? 'block' : 'none';
-  }
-  
-  // Show/hide regular pay button
   const regularBtn = document.getElementById('btn-pay');
+  
   if (method === 'applepay' || method === 'googlepay') {
-    regularBtn.style.display = 'none';
+    // Check if payment request button was successfully mounted
+    if (prButton && applePayBtn) {
+      applePayBtn.style.display = 'block';
+      regularBtn.style.display = 'none';
+    } else {
+      // Apple/Google Pay not available - show error and switch back to card
+      toast('Digital wallet not available. Please use Card or Cash.', 'err');
+      applePayBtn.style.display = 'none';
+      regularBtn.style.display = 'block';
+      // Switch back to card
+      document.querySelectorAll('.pay-method').forEach(e => e.classList.remove('sel'));
+      document.querySelector('.pay-method[onclick*="card"]').classList.add('sel');
+      document.getElementById('card-form').style.display = 'flex';
+      selectedPaymentMethod = 'card';
+    }
   } else {
+    // Card or Cash selected
+    if (applePayBtn) applePayBtn.style.display = 'none';
     regularBtn.style.display = 'block';
   }
 }
