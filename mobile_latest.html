@@ -12,8 +12,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
 <style>
 :root {
   --bg: #0B1628;
@@ -2742,6 +2740,13 @@ function updateTrackingUI(status) {
   chip.textContent = s.label;
   chip.className = s.cls;
 }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>
+  // Initialize Eruda for mobile debugging
+  if (typeof eruda !== 'undefined') {
+    eruda.init();
+  }
 </script>
 </body>
 </html>
