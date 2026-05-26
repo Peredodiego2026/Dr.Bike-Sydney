@@ -907,6 +907,11 @@ body {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
       <span>Track</span>
     </button>
+    <button class="tab-i" id="tab-notifications" onclick="tab('notifications')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Notif</span>
+      <div class="notif-badge" id="notif-badge" style="display:none;position:absolute;top:4px;right:8px;background:#2563eb;color:#fff;border-radius:10px;padding:2px 6px;font-size:10px;font-weight:700;"></div>
+    </button>
     <button class="tab-i" id="tab-profile" onclick="tab('profile')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>Profile</span>
@@ -1384,57 +1389,19 @@ body {
 </div>
 
 <!-- ══════════════ SCREEN: NOTIFICATIONS ══════════════ -->
-<div class="scr" id="s-notif">
+<div class="scr" id="s-notifications">
   <div class="int-hdr">
-    <button class="int-back" onclick="go('home')">
+    <button class="int-back" onclick="tab('home')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div class="int-title">Notifications</div>
   </div>
-  <div class="scroll">
-    <div class="notif-item unread" onclick="openNotif('track')">
-      <div class="notif-ico blue">📍</div>
-      <div style="flex:1">
-        <div class="notif-title">Your mechanic is on the way</div>
-        <div class="notif-body">Service #DBS-1024 · ETA 10:15 AM</div>
-        <div class="notif-time">10:10 AM</div>
-      </div>
-      <div class="notif-unread-dot"></div>
+  <div class="scroll" id="notifications-list">
+    <div style="padding:60px 24px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">🔔</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">No notifications yet</div>
+      <div style="font-size:13px;color:var(--text2)">We'll notify you when there's an update</div>
     </div>
-    <div class="notif-item unread" onclick="openNotif('track')">
-      <div class="notif-ico blue">🚲</div>
-      <div style="flex:1">
-        <div class="notif-title">Service started</div>
-        <div class="notif-body">Service #DBS-1024 has begun</div>
-        <div class="notif-time">10:16 AM</div>
-      </div>
-      <div class="notif-unread-dot"></div>
-    </div>
-    <div class="notif-item" onclick="openNotif('bookings')">
-      <div class="notif-ico green">✅</div>
-      <div style="flex:1">
-        <div class="notif-title">Service completed</div>
-        <div class="notif-body">Service #DBS-1024 is complete. How was it?</div>
-        <div class="notif-time">11:25 AM</div>
-      </div>
-    </div>
-    <div class="notif-item" onclick="openNotif('bookings')">
-      <div class="notif-ico amber">💰</div>
-      <div style="flex:1">
-        <div class="notif-title">Payment received</div>
-        <div class="notif-body">$150.00 · Service #DBS-1024</div>
-        <div class="notif-time">11:30 AM</div>
-      </div>
-    </div>
-    <div class="notif-item" onclick="openNotif('review')">
-      <div class="notif-ico blue">⭐</div>
-      <div style="flex:1">
-        <div class="notif-title">Thank you for your review!</div>
-        <div class="notif-body">We appreciate your feedback.</div>
-        <div class="notif-time">11:35 AM</div>
-      </div>
-    </div>
-    <div style="height:24px"></div>
   </div>
 </div>
 
@@ -1504,12 +1471,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (session?.user) {
     currentUser = session.user;
     renderProfile();
+    subscribeToNotifications();
+    loadNotifications();
   }
   // Auth state changes
   sb.auth.onAuthStateChange((_event, session) => {
     currentUser = session?.user || null;
     renderProfile();
-    if (currentUser) loadBookings();
+    if (currentUser) {
+      loadBookings();
+      subscribeToNotifications();
+      loadNotifications();
+    }
   });
   // Handle OAuth redirect
   if (window.location.hash.includes('access_token')) {
@@ -1531,11 +1504,12 @@ function go(s) {
 
 function tab(t) {
   // Update tab highlights on Home screen tabs
-  ['home','bookings','track','profile'].forEach(id => {
+  ['home','bookings','track','notifications','profile'].forEach(id => {
     const el = document.getElementById('tab-'+id);
     if (el) el.classList.toggle('on', id === t);
   });
   if (t === 'bookings') loadBookings();
+  if (t === 'notifications') loadNotifications();
   go(t);
 }
 
@@ -1867,6 +1841,170 @@ async function checkActiveBooking() {
     document.getElementById('home-ab-info').textContent = `${b.booking_date} · ${b.booking_time} · ${b.location}`;
     document.getElementById('home-ab-status').textContent = b.status === 'in_progress' ? 'In Progress' : 'Confirmed';
   }
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────────────────
+let unreadNotifCount = 0;
+
+async function loadNotifications() {
+  console.log('🔔 loadNotifications called');
+  
+  const list = document.getElementById('notifications-list');
+  
+  if (!currentUser) {
+    list.innerHTML = `
+      <div style="padding:60px 24px;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">🔐</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Sign in to view notifications</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Get updates on your services</div>
+        <button class="btn-continue" style="max-width:200px;margin:0 auto" onclick="go('auth')">Sign In</button>
+      </div>`;
+    return;
+  }
+  
+  try {
+    const { data, error } = await sb.from('notifications')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('❌ Notifications error:', error);
+      list.innerHTML = `
+        <div style="padding:60px 24px;text-align:center">
+          <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Could not load notifications</div>
+          <div style="font-size:13px;color:var(--text2)">${error.message}</div>
+        </div>`;
+      return;
+    }
+    
+    console.log('✅ Loaded notifications:', data?.length || 0);
+    
+    if (!data || data.length === 0) {
+      list.innerHTML = `
+        <div style="padding:60px 24px;text-align:center">
+          <div style="font-size:48px;margin-bottom:12px">🔔</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">No notifications yet</div>
+          <div style="font-size:13px;color:var(--text2)">We'll notify you when there's an update</div>
+        </div>`;
+      updateNotifBadge(0);
+      return;
+    }
+    
+    renderNotifications(data);
+  } catch(err) {
+    console.error('❌ Load notifications exception:', err);
+  }
+}
+
+function renderNotifications(notifs) {
+  const list = document.getElementById('notifications-list');
+  
+  const iconMap = {
+    'mechanic_on_way': { emoji: '📍', color: 'blue' },
+    'service_started': { emoji: '🚲', color: 'blue' },
+    'service_completed': { emoji: '✅', color: 'green' },
+    'payment_received': { emoji: '💰', color: 'amber' },
+    'review_thanks': { emoji: '⭐', color: 'blue' }
+  };
+  
+  unreadNotifCount = notifs.filter(n => !n.read).length;
+  updateNotifBadge(unreadNotifCount);
+  
+  const html = notifs.map(n => {
+    const icon = iconMap[n.type] || { emoji: '🔔', color: 'blue' };
+    const time = formatNotifTime(n.created_at);
+    const unreadClass = n.read ? '' : 'unread';
+    const unreadDot = n.read ? '' : '<div class="notif-unread-dot"></div>';
+    
+    return `
+      <div class="notif-item ${unreadClass}" onclick="openNotification('${n.id}', '${n.type}')">
+        <div class="notif-ico ${icon.color}">${icon.emoji}</div>
+        <div style="flex:1">
+          <div class="notif-title">${n.title}</div>
+          <div class="notif-body">${n.message}</div>
+          <div class="notif-time">${time}</div>
+        </div>
+        ${unreadDot}
+      </div>
+    `;
+  }).join('');
+  
+  list.innerHTML = html + '<div style="height:24px"></div>';
+}
+
+function formatNotifTime(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString();
+}
+
+async function openNotification(notifId, type) {
+  // Mark as read
+  if (notifId) {
+    await sb.from('notifications')
+      .update({ read: true })
+      .eq('id', notifId);
+    unreadNotifCount = Math.max(0, unreadNotifCount - 1);
+    updateNotifBadge(unreadNotifCount);
+  }
+  
+  // Navigate based on type
+  if (type === 'mechanic_on_way' || type === 'service_started') {
+    go('track');
+  } else if (type === 'service_completed' || type === 'payment_received') {
+    go('bookings');
+  } else if (type === 'review_thanks') {
+    go('home');
+  }
+}
+
+function updateNotifBadge(count) {
+  const badge = document.getElementById('notif-badge');
+  if (badge) {
+    if (count > 0) {
+      badge.textContent = count > 9 ? '9+' : count;
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+// Subscribe to real-time notifications
+function subscribeToNotifications() {
+  if (!currentUser) return;
+  
+  sb.channel('notifications')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: `user_id=eq.${currentUser.id}`
+    }, (payload) => {
+      console.log('🔔 New notification:', payload.new);
+      unreadNotifCount++;
+      updateNotifBadge(unreadNotifCount);
+      toast(payload.new.title, 'ok');
+      // Reload if on notifications screen
+      if (document.getElementById('s-notifications').classList.contains('on')) {
+        loadNotifications();
+      }
+    })
+    .subscribe();
 }
 
 // ─── AUTH ────────────────────────────────────────────────────────────────
