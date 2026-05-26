@@ -1762,9 +1762,6 @@ function goToPayment() {
   document.getElementById('pay-desc').textContent = `${booking.svc} · ${booking.dateLabel} · ${booking.time}`;
   document.getElementById('btn-pay-amt').textContent = `$${total}.00`;
   go('payment');
-  
-  // Initialize Apple Pay button
-  initApplePay();
 }
 
 // Initialize Apple Pay / Google Pay button
@@ -1853,33 +1850,83 @@ function selPayMethod(el, method) {
   el.classList.add('sel');
   selectedPaymentMethod = method;
   
-  // Show/hide card form
-  document.getElementById('card-form').style.display = method === 'card' ? 'flex' : 'none';
-  
-  // Show/hide Apple Pay button container
-  const applePayBtn = document.getElementById('apple-pay-button-container');
+  const cardForm = document.getElementById('card-form');
+  const applePayContainer = document.getElementById('apple-pay-button-container');
   const regularBtn = document.getElementById('btn-pay');
   
-  if (method === 'applepay' || method === 'googlepay') {
-    // Check if payment request button was successfully mounted
-    if (prButton && applePayBtn) {
-      applePayBtn.style.display = 'block';
-      regularBtn.style.display = 'none';
-    } else {
-      // Apple/Google Pay not available - show error and switch back to card
-      toast('Digital wallet not available. Please use Card or Cash.', 'err');
-      applePayBtn.style.display = 'none';
-      regularBtn.style.display = 'block';
-      // Switch back to card
-      document.querySelectorAll('.pay-method').forEach(e => e.classList.remove('sel'));
-      document.querySelector('.pay-method[onclick*="card"]').classList.add('sel');
-      document.getElementById('card-form').style.display = 'flex';
-      selectedPaymentMethod = 'card';
-    }
-  } else {
-    // Card or Cash selected
-    if (applePayBtn) applePayBtn.style.display = 'none';
+  if (method === 'card') {
+    cardForm.style.display = 'flex';
+    applePayContainer.style.display = 'none';
     regularBtn.style.display = 'block';
+  } else if (method === 'applepay' || method === 'googlepay') {
+    cardForm.style.display = 'none';
+    applePayContainer.style.display = 'block';
+    regularBtn.style.display = 'none';
+    // Show simple "Pay with Apple/Google Pay" button
+    applePayContainer.innerHTML = `
+      <button class="btn-continue" onclick="processApplePay()" style="width:100%;margin:20px 0">
+        <span>Pay with ${method === 'applepay' ? 'Apple Pay' : 'Google Pay'}</span>
+      </button>
+    `;
+  } else if (method === 'cash') {
+    cardForm.style.display = 'none';
+    applePayContainer.style.display = 'none';
+    regularBtn.style.display = 'block';
+  }
+}
+
+async function processApplePay() {
+  const total = booking.price + 20;
+  
+  try {
+    // Create payment request
+    const paymentRequest = stripe.paymentRequest({
+      country: 'AU',
+      currency: 'aud',
+      total: {
+        label: 'Dr. Bike Sydney',
+        amount: total * 100,
+      },
+      requestPayerName: true,
+      requestPayerEmail: true,
+    });
+
+    // Check availability
+    const canMakePayment = await paymentRequest.canMakePayment();
+    
+    if (!canMakePayment) {
+      toast('Apple Pay not available on this device', 'err');
+      return;
+    }
+
+    // Show the payment sheet
+    const result = await paymentRequest.show();
+    
+    // Wait for payment method
+    paymentRequest.on('paymentmethod', async (ev) => {
+      console.log('✅ Payment method:', ev.paymentMethod);
+      
+      try {
+        // Save booking
+        await completeBookingWithPayment(ev.paymentMethod.id, 'apple_pay');
+        
+        // Complete payment
+        ev.complete('success');
+        
+      } catch (error) {
+        console.error('❌ Booking failed:', error);
+        ev.complete('fail');
+        toast('Payment failed', 'err');
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Apple Pay error:', error);
+    if (error.message && error.message.includes('not available')) {
+      toast('Apple Pay not available. Please use Card.', 'err');
+    } else {
+      toast('Payment cancelled or failed', 'err');
+    }
   }
 }
 
