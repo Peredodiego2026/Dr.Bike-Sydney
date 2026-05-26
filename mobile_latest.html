@@ -1572,8 +1572,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ─── STRIPE ─────────────────────────────────────────────────────────────
 const STRIPE_KEY = 'pk_test_51TUbFqPPGSm5cT7JyoojiAiHFB8isozh1GyIB4DHE8900gSTi74pq9mAJxXpZUp5dGbL8dZRXsPRZw48N3YPCOcw00mJXkKPvQ';
 const stripe = Stripe(STRIPE_KEY);
-let paymentRequest = null;
-let prButton = null;
 let selectedPaymentMethod = 'card';
 
 // ─── STATE ──────────────────────────────────────────────────────────────
@@ -1765,84 +1763,6 @@ function goToPayment() {
 }
 
 // Initialize Apple Pay / Google Pay button
-async function initApplePay() {
-  const total = booking.price + 20;
-  
-  // Create payment request
-  paymentRequest = stripe.paymentRequest({
-    country: 'AU',
-    currency: 'aud',
-    total: {
-      label: 'Dr. Bike Sydney',
-      amount: total * 100, // Amount in cents
-    },
-    requestPayerName: true,
-    requestPayerEmail: true,
-  });
-
-  // Check if Apple Pay / Google Pay is available
-  const result = await paymentRequest.canMakePayment();
-  
-  if (result) {
-    console.log('✅ Apple Pay / Google Pay available');
-    
-    // Create and mount the button
-    const elements = stripe.elements();
-    prButton = elements.create('paymentRequestButton', {
-      paymentRequest: paymentRequest,
-    });
-    
-    const container = document.getElementById('apple-pay-button-container');
-    if (container) {
-      container.innerHTML = ''; // Clear any existing content
-      prButton.mount('#apple-pay-button-container');
-    }
-
-    // Handle payment method creation
-    paymentRequest.on('paymentmethod', async (ev) => {
-      console.log('✅ Payment method created:', ev.paymentMethod);
-      
-      try {
-        // Save booking with payment method
-        await completeBookingWithPayment(ev.paymentMethod.id, 'apple_pay');
-        
-        // Only complete as success if booking saved successfully
-        ev.complete('success');
-      } catch (error) {
-        console.error('❌ Booking failed:', error);
-        ev.complete('fail');
-        toast('Payment failed. Please try again.', 'err');
-      }
-    });
-  } else {
-    console.log('❌ Apple Pay / Google Pay NOT available on this device');
-    
-    // Disable the payment method options that aren't available
-    const applePayMethod = document.querySelector('.pay-method[onclick*="applepay"]');
-    const googlePayMethod = document.querySelector('.pay-method[onclick*="googlepay"]');
-    
-    if (applePayMethod) {
-      applePayMethod.style.opacity = '0.5';
-      applePayMethod.style.pointerEvents = 'none';
-      applePayMethod.onclick = (e) => {
-        e.stopPropagation();
-        toast('Apple Pay not available on this device', 'err');
-      };
-    }
-    
-    if (googlePayMethod) {
-      googlePayMethod.style.opacity = '0.5';
-      googlePayMethod.style.pointerEvents = 'none';
-      googlePayMethod.onclick = (e) => {
-        e.stopPropagation();
-        toast('Google Pay not available on this device', 'err');
-      };
-    }
-    
-    // Show a toast to inform the user
-    toast('Digital wallets not available. Use Card or Cash.', 'err');
-  }
-}
 
 // ─── PAYMENT ─────────────────────────────────────────────────────────────
 function selPayMethod(el, method) {
