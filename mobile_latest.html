@@ -1528,6 +1528,38 @@ body {
   </div>
 </div>
 
+<!-- ══════════════ ADD BIKE MODAL ══════════════ -->
+<div class="modal-overlay" id="bike-modal" style="display:none">
+  <div class="modal-chat">
+    <div class="modal-hdr">
+      <button class="modal-close" onclick="closeBikeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="modal-title">Add Bike</div>
+      <div style="width:28px"></div>
+    </div>
+    <div style="padding:20px;overflow-y:auto;max-height:60vh">
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">Brand</label>
+        <input type="text" id="bike-brand" placeholder="e.g., Trek, Giant, Specialized" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:14px" />
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">Model</label>
+        <input type="text" id="bike-model" placeholder="e.g., Domane, TCR, Tarmac" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:14px" />
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">Year</label>
+        <input type="number" id="bike-year" placeholder="e.g., 2022" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:14px" />
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">Size</label>
+        <input type="text" id="bike-size" placeholder="e.g., M, 56cm, Large" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:14px" />
+      </div>
+      <button class="btn-continue" onclick="saveBike()" style="width:100%">Save Bike</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── SUPABASE ───────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
@@ -2353,6 +2385,9 @@ function renderProfile() {
     </div>
     <button class="profile-logout" onclick="doLogout()">Sign Out</button>
     <div style="height:20px"></div>`;
+  
+  // Load user bikes after rendering profile
+  loadUserBikes();
 }
 
 async function doLogout() {
@@ -2364,8 +2399,99 @@ async function doLogout() {
 }
 
 function editProfile() { toast('Profile editing coming soon'); }
-function manageBikes() { toast('Bike management coming soon'); }
-function addBike() { toast('Add bike coming soon'); }
+
+// ─── BIKES ──────────────────────────────────────────────────────────────
+let userBikes = [];
+
+async function loadUserBikes() {
+  if (!currentUser) return;
+  const { data, error } = await sb.from('bikes')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error loading bikes:', error);
+    return;
+  }
+  
+  userBikes = data || [];
+  renderBikes();
+}
+
+function renderBikes() {
+  const container = document.querySelector('.profile-section:has(.bike-card)');
+  if (!container) return;
+  
+  const bikesHTML = userBikes.map(bike => `
+    <div class="bike-card" onclick="manageBikes('${bike.id}')">
+      <div class="bike-ico">🚲</div>
+      <div class="bike-info">
+        <div class="bike-name">${bike.brand} ${bike.model}</div>
+        <div class="bike-detail">${bike.brand} · ${bike.year || ''} · ${bike.size || ''}</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  `).join('');
+  
+  const addButton = `
+    <button class="bike-add" onclick="addBike()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add a bike
+    </button>
+  `;
+  
+  const sectionTitle = '<div class="profile-section-title">My Bikes</div>';
+  container.innerHTML = sectionTitle + (bikesHTML || '') + addButton;
+}
+
+function addBike() {
+  document.getElementById('bike-brand').value = '';
+  document.getElementById('bike-model').value = '';
+  document.getElementById('bike-year').value = '';
+  document.getElementById('bike-size').value = '';
+  document.getElementById('bike-modal').style.display = 'flex';
+}
+
+function closeBikeModal() {
+  document.getElementById('bike-modal').style.display = 'none';
+}
+
+async function saveBike() {
+  const brand = document.getElementById('bike-brand').value.trim();
+  const model = document.getElementById('bike-model').value.trim();
+  const year = document.getElementById('bike-year').value.trim();
+  const size = document.getElementById('bike-size').value.trim();
+  
+  if (!brand || !model) {
+    toast('Please enter brand and model', 'err');
+    return;
+  }
+  
+  const { data, error } = await sb.from('bikes').insert([{
+    user_id: currentUser.id,
+    brand,
+    model,
+    year: year || null,
+    size: size || null
+  }]).select();
+  
+  if (error) {
+    console.error('Error saving bike:', error);
+    toast('Error saving bike', 'err');
+    return;
+  }
+  
+  toast('Bike added successfully', 'ok');
+  closeBikeModal();
+  loadUserBikes();
+}
+
+function manageBikes(bikeId) {
+  const bike = userBikes.find(b => b.id === bikeId);
+  if (!bike) return;
+  toast(`${bike.brand} ${bike.model} - Edit coming soon`);
+}
 
 // ─── REVIEW ──────────────────────────────────────────────────────────────
 function rateStar(n) {
