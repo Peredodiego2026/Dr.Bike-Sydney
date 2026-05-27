@@ -2552,7 +2552,7 @@ async function loadUserBikes() {
   if (!currentUser) return;
   const { data, error } = await sb.from('bikes')
     .select('*')
-    .eq('user_id', currentUser.id)
+    .eq('client_id', currentUser.id)
     .order('created_at', { ascending: false });
   
   if (error) {
@@ -2656,7 +2656,7 @@ async function saveBike() {
   } else {
     // Insert new bike
     const { error } = await sb.from('bikes')
-      .insert([{ ...bikeData, user_id: currentUser.id }])
+      .insert([{ ...bikeData, client_id: currentUser.id }])
       .select();
     
     if (error) {
