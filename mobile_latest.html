@@ -759,14 +759,49 @@ body {
 
 /* ═══ TOAST ═══ */
 .toast-m {
-  position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  position: fixed; top: calc(var(--safe-t) + 12px); left: 50%; transform: translateX(-50%) translateY(-120px);
   background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-  padding: 12px 20px; font-size: 13px; z-index: 300; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  transition: transform .3s ease; white-space: nowrap; font-weight: 500;
+  padding: 12px 18px; font-size: 13px; z-index: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transition: transform .3s ease, opacity .3s ease; opacity: 0;
+  white-space: normal; text-align: center; font-weight: 500;
+  max-width: calc(100% - 32px); width: max-content; line-height: 1.35;
 }
-.toast-m.show { transform: translateX(-50%) translateY(0); }
+.toast-m.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast-m.err { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.1); }
 .toast-m.ok { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); color: var(--green); }
+
+/* Cancel booking + policy */
+.track-cancel-btn {
+  width: 100%; padding: 13px; border-radius: 10px; margin-top: 10px;
+  background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.3);
+  color: var(--red); font-family: var(--sans); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.track-cancel-btn:active { background: rgba(239,68,68,0.12); }
+.track-policy-link {
+  display: block; width: 100%; margin-top: 8px; padding: 6px;
+  background: none; border: none; color: var(--text3); font-family: var(--sans);
+  font-size: 12px; text-decoration: underline; cursor: pointer; text-align: center;
+}
+.policy-modal {
+  position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,0.7);
+  display: none; align-items: flex-end;
+}
+.policy-modal.show { display: flex; }
+.policy-sheet {
+  width: 100%; max-width: 430px; margin: 0 auto;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0; padding: 20px 22px calc(28px + var(--safe-b));
+  max-height: 80vh; overflow-y: auto;
+}
+.policy-sheet h3 { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 14px; }
+.policy-sheet p { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 12px; }
+.policy-sheet strong { color: var(--text); }
+.policy-close {
+  width: 100%; padding: 13px; border-radius: 10px; margin-top: 8px;
+  background: var(--blue); color: #fff; border: none; font-family: var(--sans);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
 
 /* ═══ CHAT MODAL ═══ */
 .modal-overlay {
@@ -1337,6 +1372,8 @@ body {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Message Mechanic
       </button>
+      <button class="track-cancel-btn" onclick="cancelBooking()">Cancel booking</button>
+      <button class="track-policy-link" onclick="showCancelPolicy()">View cancellation policy</button>
     </div>
 
     <!-- Mechanic card -->
@@ -1589,6 +1626,7 @@ let booking = {
 };
 let currentRating = 5;
 let currentBkTab = 'upcoming';
+let currentTrackBookingId = null;
 
 // ─── INIT ───────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
@@ -2095,7 +2133,49 @@ function renderBookings(rows) {
   }).join('') + '<div style="height:80px"></div>';
 }
 
-function viewBooking(id) { tab('track'); }
+function viewBooking(id) { currentTrackBookingId = id; tab('track'); }
+
+// ─── CANCEL BOOKING ──────────────────────────────────────────────────────
+async function cancelBooking() {
+  if (!currentUser) { toast('Please sign in to manage bookings', 'err'); return; }
+
+  let bookingId = currentTrackBookingId;
+  // Fallback: most recent active booking if none selected
+  if (!bookingId) {
+    const { data } = await sb.from('bookings')
+      .select('id').eq('client_id', currentUser.id)
+      .in('status', ['confirmed','in_progress'])
+      .order('created_at', { ascending: false }).limit(1);
+    if (data && data.length) bookingId = data[0].id;
+  }
+  if (!bookingId) { toast('No active booking to cancel', 'err'); return; }
+
+  const ok = confirm('Cancel this booking?\n\nFree cancellation up to 2 hours before your scheduled time (full refund). Within 2 hours, the $20 call-out fee may not be refunded. Online refunds take 5–7 business days.');
+  if (!ok) return;
+
+  try {
+    const { error } = await sb.from('bookings')
+      .update({ status: 'cancelled' })
+      .eq('id', bookingId).eq('client_id', currentUser.id);
+    if (error) {
+      console.error('Cancel error:', error);
+      toast('Could not cancel — please contact us on 0433 963 250', 'err');
+      return;
+    }
+    toast('Booking cancelled ✓', 'ok');
+    if (typeof updateTrackingUI === 'function') updateTrackingUI('cancelled');
+    currentTrackBookingId = null;
+    loadBookings();
+    checkActiveBooking();
+    setTimeout(() => tab('bookings'), 900);
+  } catch (err) {
+    console.error('Cancel exception:', err);
+    toast('Could not cancel — please contact us', 'err');
+  }
+}
+
+function showCancelPolicy() { document.getElementById('policy-modal').classList.add('show'); }
+function closeCancelPolicy() { document.getElementById('policy-modal').classList.remove('show'); }
 
 // ─── ACTIVE BOOKING on HOME ──────────────────────────────────────────────
 async function checkActiveBooking() {
@@ -2106,6 +2186,7 @@ async function checkActiveBooking() {
     .order('created_at', { ascending: false }).limit(1);
   if (data && data.length) {
     const b = data[0];
+    currentTrackBookingId = b.id;
     document.getElementById('home-active-booking').style.display = 'block';
     document.getElementById('home-ab-svc').textContent = b.service_name || 'Service';
     document.getElementById('home-ab-info').textContent = `${b.scheduled_date} · ${b.scheduled_time} · ${b.address}`;
@@ -2751,6 +2832,16 @@ function updateTrackingUI(status) {
   chip.className = s.cls;
 }
 </script>
+<div class="policy-modal" id="policy-modal" onclick="if(event.target===this)closeCancelPolicy()">
+  <div class="policy-sheet">
+    <h3>Cancellation Policy</h3>
+    <p><strong>Free cancellation</strong> up to <strong>2 hours</strong> before your scheduled service time — you'll receive a full refund.</p>
+    <p><strong>Within 2 hours</strong> of your scheduled time, the <strong>$20 call-out fee</strong> is non-refundable, as your mechanic may already be on the way.</p>
+    <p>Online and card refunds are processed within <strong>5–7 business days</strong>.</p>
+    <p>To cancel, tap "Cancel booking" above, or contact us on 0433 963 250.</p>
+    <button class="policy-close" onclick="closeCancelPolicy()">Got it</button>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>
   // Initialize Eruda for mobile debugging
