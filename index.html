@@ -2167,6 +2167,7 @@ async function updateDashboard(){
         <span class="hist-price" style="font-size:13px;font-weight:700">$${b.service_price||0}</span>
         ${canCancel ? `<button onclick="clientReschedule('${b.id}','${b.service_name||'Service'}','${b.scheduled_date||''}','${b.van_number||1}')" style="font-size:12px;color:#1848C8;background:none;border:1px solid #BFDBFE;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;min-height:32px">Reschedule</button>` : ''}
         ${canCancel ? `<button onclick="clientCancelBooking('${b.id}','${b.service_name||'Service'}')" style="font-size:12px;color:#DC2626;background:none;border:1px solid #FECACA;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;min-height:32px">Cancel</button>` : ''}
+        ${canCancel ? `<button onclick="showCancelPolicy()" style="font-size:11px;color:var(--mgray);background:none;border:none;text-decoration:underline;cursor:pointer;font-family:Inter,sans-serif;padding:6px 4px;min-height:32px">View cancellation policy</button>` : ''}
         ${st==='completed' ? `<button onclick="showReceipt('${b.id}','${(b.service_name||'Service').replace(/'/g,"\\'")}',${b.service_price||0},'${b.scheduled_date||''}','${b.scheduled_time||''}')" style="font-size:12px;color:#059669;background:none;border:1px solid #BBF7D0;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;min-height:32px">📄 Receipt</button>` : ''}
       </div>`;
     }).join('');
@@ -4791,7 +4792,30 @@ async function installPWA(){
   deferredPrompt = null;
   document.getElementById('install-banner')?.remove();
 }
+
+// Cancellation policy modal
+function showCancelPolicy(){ document.getElementById('policy-modal-web').style.display='flex'; }
+function closeCancelPolicy(){ document.getElementById('policy-modal-web').style.display='none'; }
 </script>
+<style>
+.policy-modal-web{position:fixed;inset:0;background:rgba(13,31,60,0.55);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+.policy-sheet-web{background:#fff;border:1px solid var(--border);border-radius:16px;max-width:480px;width:100%;padding:24px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.2)}
+.policy-sheet-web h3{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 14px}
+.policy-sheet-web p{font-size:13.5px;color:var(--mgray);line-height:1.6;margin-bottom:12px}
+.policy-sheet-web strong{color:var(--navy)}
+.policy-close-web{width:100%;padding:12px;border-radius:10px;margin-top:6px;background:var(--blue);color:#fff;border:none;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.policy-close-web:hover{background:#1138A8}
+</style>
+<div class="policy-modal-web" id="policy-modal-web" onclick="if(event.target===this)closeCancelPolicy()">
+  <div class="policy-sheet-web">
+    <h3>Cancellation Policy</h3>
+    <p><strong>Free cancellation</strong> up to <strong>2 hours</strong> before your scheduled service time — you'll receive a full refund.</p>
+    <p><strong>Within 2 hours</strong> of your scheduled time, the <strong>$20 call-out fee</strong> is non-refundable, as your mechanic may already be on the way.</p>
+    <p>Online and card refunds are processed within <strong>5–7 business days</strong>.</p>
+    <p>To cancel, tap "Cancel" next to your booking, or contact us on <strong>0433 963 250</strong>.</p>
+    <button class="policy-close-web" onclick="closeCancelPolicy()">Got it</button>
+  </div>
+</div>
 </body>
 </html>
 
