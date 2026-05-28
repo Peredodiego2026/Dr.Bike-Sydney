@@ -101,6 +101,24 @@ export default async function handler(req, res) {
           <a href="https://drbikesydney.com.au/mechanic.html" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
         </div>${footer()}`
     },
+    reminder2h: {
+      subject: `⏰ Reminder — your Dr. Bike service is in ~2 hours`,
+      html: `${header('#1848C8','⏰','See you soon!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, just a friendly reminder that your booking is coming up in about <strong style="color:#0D1F3C">2 hours</strong>. Your mechanic will contact you ~30 min before arrival.</p>
+          ${bookingTable()}
+          <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 8px">✅ Quick checklist</p>
+            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.8;opacity:0.9">
+              • Have your bike accessible at the address<br>
+              • Clear a small space for the mechanic to work<br>
+              • Need to change something? Free to cancel up to 2h before
+            </p>
+          </div>
+          <p style="font-size:12px;color:#9CA3AF;margin:0">Questions? Call us on 0433 963 250.</p>
+        </div>
+        ${footer()}`
+    },
     reminder: {
       subject: `🚲 Time for a bike check-up, ${name}!`,
       html: `${header('#059669','🚲','Time for a service!')}
