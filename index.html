@@ -3855,6 +3855,15 @@ function showPaymentModal(bkg, price){
         </div>
         <button onclick="document.getElementById('payment-modal').remove()" style="background:#F7F8FA;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer">✕</button>
       </div>
+      <!-- Apple Pay / Google Pay / Link (Payment Request Button) -->
+      <div id="stripe-wallet-wrap" style="display:none;margin-bottom:14px">
+        <div id="stripe-payment-request-button"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:#9CA3AF;font-size:11px;font-weight:600;letter-spacing:0.5px">
+          <div style="flex:1;height:1px;background:#E5E7EB"></div>
+          <span>OR PAY WITH CARD</span>
+          <div style="flex:1;height:1px;background:#E5E7EB"></div>
+        </div>
+      </div>
       <div id="stripe-card-element" style="border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px;font-size:16px"></div>
       <div id="stripe-error" style="color:#DC2626;font-size:13px;margin-bottom:12px;display:none"></div>
       <button id="pay-btn" onclick="processPayment('${bkg.id}',${price})" style="width:100%;background:#1848C8;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
@@ -3877,6 +3886,74 @@ function showPaymentModal(bkg, price){
         style: { base: { fontSize:'16px', color:'#0D1F3C', fontFamily:'Inter,sans-serif', '::placeholder':{ color:'#9CA3AF' } } }
       });
       window._stripeCard.mount('#stripe-card-element');
+
+      // Apple Pay / Google Pay setup — deferred to next tick + bulletproof error handling
+      // so it CANNOT affect anything else on the page if Stripe misbehaves.
+      setTimeout(() => {
+        try {
+          const priceCents = Math.round(Number(price) * 100);
+          if (!priceCents || priceCents < 50) return; // Stripe requires minimum 50 cents
+          const pr = stripeInstance.paymentRequest({
+            country: 'AU',
+            currency: 'aud',
+            total: { label: 'Dr. Bike Sydney service', amount: priceCents },
+            requestPayerName: true,
+            requestPayerEmail: true
+          });
+          const prBtn = elements.create('paymentRequestButton', {
+            paymentRequest: pr,
+            style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '48px' } }
+          });
+          pr.canMakePayment().then(result => {
+            try {
+              if (result) {
+                prBtn.mount('#stripe-payment-request-button');
+                const wrap = document.getElementById('stripe-wallet-wrap');
+                if (wrap) wrap.style.display = 'block';
+              }
+            } catch (e) { console.warn('Wallet mount skipped:', e); }
+          }).catch(e => console.warn('canMakePayment failed:', e));
+
+          pr.on('paymentmethod', async (ev) => {
+            try {
+              const { error: updErr } = await sb.from('bookings').update({
+                status: 'confirmed',
+                payment_method_id: ev.paymentMethod.id
+              }).eq('id', bkg.id);
+              if (updErr) throw updErr;
+              ev.complete('success');
+              document.getElementById('payment-modal')?.remove();
+              const { data: bkgData } = await sb.from('bookings').select('*').eq('id', bkg.id).single();
+              if (bkgData) {
+                fetch('/api/send-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    to: currentUser?.email,
+                    name: userProfile?.full_name || currentUser?.email?.split('@')[0],
+                    service: bkgData.service_name,
+                    date: new Date(bkgData.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }),
+                    time: bkgData.scheduled_time,
+                    address: bkgData.address,
+                    price: bkgData.service_price,
+                    type: 'confirmation',
+                    bookingId: bkgData.id,
+                    referralCode: userProfile?.referral_code
+                  })
+                }).catch(()=>{});
+              }
+              showBookingSuccess();
+            } catch (err) {
+              try { ev.complete('fail'); } catch(_) {}
+              const errEl = document.getElementById('stripe-error');
+              if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Wallet payment failed. Please try again or use a card.'; }
+            }
+          });
+        } catch (e) {
+          // Wallet setup failed completely — card flow remains intact
+          console.warn('Wallet setup failed silently:', e);
+        }
+      }, 0);
     } else {
       document.getElementById('stripe-card-element').innerHTML = '<div style="padding:12px;color:#DC2626;font-size:13px">Card payment unavailable. Please use cash.</div>';
     }
