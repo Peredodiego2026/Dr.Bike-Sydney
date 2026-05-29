@@ -3919,22 +3919,40 @@ function showPaymentModal(bkg, price){
             style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '48px' } }
           });
           pr.canMakePayment().then(result => {
-            console.log('[WALLET DEBUG] canMakePayment result:', result);
-            console.log('[WALLET DEBUG] User agent:', navigator.userAgent);
-            console.log('[WALLET DEBUG] Apple Pay native available:', typeof window.ApplePaySession !== 'undefined');
-            console.log('[WALLET DEBUG] HTTPS:', window.location.protocol === 'https:');
-            console.log('[WALLET DEBUG] Hostname:', window.location.hostname);
+            const debugMsg = `[Wallet check] result=${JSON.stringify(result)} | UA=${navigator.userAgent.includes('iPhone')?'iPhone':'other'} | ApplePay-native=${typeof window.ApplePaySession!=='undefined'} | host=${window.location.hostname}`;
+            console.log(debugMsg);
+            // Show debug info on screen so user can read it without Mac
+            const errEl = document.getElementById('stripe-error');
+            if (errEl && !result) {
+              errEl.style.display = 'block';
+              errEl.style.color = '#6B7280';
+              errEl.style.fontSize = '10px';
+              errEl.style.background = '#F9FAFB';
+              errEl.style.padding = '8px';
+              errEl.style.borderRadius = '6px';
+              errEl.textContent = 'Wallet not available. Debug: ' + debugMsg;
+            }
             try {
               if (result) {
                 prBtn.mount('#stripe-payment-request-button');
                 const wrap = document.getElementById('stripe-wallet-wrap');
                 if (wrap) wrap.style.display = 'block';
-                console.log('[WALLET DEBUG] Button mounted, wrap shown');
+                console.log('[WALLET] mounted OK, result was:', result);
               } else {
-                console.warn('[WALLET DEBUG] canMakePayment returned null/false — wallet hidden. Likely causes: no card in wallet, wrong browser, domain not verified for THIS specific URL, or Stripe live key restriction.');
+                console.warn('[WALLET] canMakePayment returned:', result, '— button hidden');
               }
-            } catch (e) { console.warn('Wallet mount skipped:', e); }
-          }).catch(e => console.warn('[WALLET DEBUG] canMakePayment failed:', e));
+            } catch (e) {
+              console.warn('Wallet mount error:', e);
+              if (errEl) { errEl.textContent += ' | mount error: '+e.message; }
+            }
+          }).catch(e => {
+            console.warn('canMakePayment rejected:', e);
+            const errEl = document.getElementById('stripe-error');
+            if (errEl) {
+              errEl.style.display='block'; errEl.style.color='#DC2626'; errEl.style.fontSize='10px';
+              errEl.textContent = 'Wallet error: '+(e.message||JSON.stringify(e));
+            }
+          });
 
           pr.on('paymentmethod', async (ev) => {
             try {
