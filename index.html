@@ -3855,15 +3855,6 @@ function showPaymentModal(bkg, price){
         </div>
         <button onclick="document.getElementById('payment-modal').remove()" style="background:#F7F8FA;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer">✕</button>
       </div>
-      <!-- Apple Pay / Google Pay / Link (Payment Request Button) -->
-      <div id="stripe-wallet-wrap" style="display:none;margin-bottom:14px">
-        <div id="stripe-payment-request-button"></div>
-        <div id="stripe-wallet-divider" style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:#9CA3AF;font-size:11px;font-weight:600;letter-spacing:0.5px">
-          <div style="flex:1;height:1px;background:#E5E7EB"></div>
-          <span>OR PAY WITH CARD</span>
-          <div style="flex:1;height:1px;background:#E5E7EB"></div>
-        </div>
-      </div>
       <div id="stripe-card-element" style="border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px;font-size:16px"></div>
       <div id="stripe-error" style="color:#DC2626;font-size:13px;margin-bottom:12px;display:none"></div>
       <button id="pay-btn" onclick="processPayment('${bkg.id}',${price})" style="width:100%;background:#1848C8;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
@@ -3886,69 +3877,6 @@ function showPaymentModal(bkg, price){
         style: { base: { fontSize:'16px', color:'#0D1F3C', fontFamily:'Inter,sans-serif', '::placeholder':{ color:'#9CA3AF' } } }
       });
       window._stripeCard.mount('#stripe-card-element');
-
-      // Apple Pay / Google Pay / Link via Payment Request Button
-      try {
-        const priceCents = Math.round(Number(price) * 100);
-        const paymentRequest = stripeInstance.paymentRequest({
-          country: 'AU',
-          currency: 'aud',
-          total: { label: 'Dr. Bike Sydney service', amount: priceCents },
-          requestPayerName: true,
-          requestPayerEmail: true
-        });
-        const prButton = elements.create('paymentRequestButton', {
-          paymentRequest,
-          style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '48px' } }
-        });
-        // canMakePayment is async — only show the wallet section if the browser supports it
-        paymentRequest.canMakePayment().then(result => {
-          if (result) {
-            prButton.mount('#stripe-payment-request-button');
-            document.getElementById('stripe-wallet-wrap').style.display = 'block';
-          }
-        }).catch(() => { /* silently fall back to card-only */ });
-
-        // When the user authorizes Apple Pay / Google Pay, Stripe gives us a paymentMethod
-        // — we then run the SAME booking-update + email flow as the card path.
-        paymentRequest.on('paymentmethod', async (ev) => {
-          try {
-            await sb.from('bookings').update({
-              status: 'confirmed',
-              payment_method_id: ev.paymentMethod.id
-            }).eq('id', bkg.id);
-            ev.complete('success');
-            document.getElementById('payment-modal')?.remove();
-            const { data: bkgData } = await sb.from('bookings').select('*').eq('id', bkg.id).single();
-            if (bkgData) {
-              await fetch('/api/send-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  to: currentUser?.email,
-                  name: userProfile?.full_name || currentUser?.email?.split('@')[0],
-                  service: bkgData.service_name,
-                  date: new Date(bkgData.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }),
-                  time: bkgData.scheduled_time,
-                  address: bkgData.address,
-                  price: bkgData.service_price,
-                  type: 'confirmation',
-                  bookingId: bkgData.id,
-                  referralCode: userProfile?.referral_code
-                })
-              });
-            }
-            showBookingSuccess();
-          } catch (err) {
-            ev.complete('fail');
-            const errEl = document.getElementById('stripe-error');
-            if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Wallet payment failed. Please try again or use a card.'; }
-          }
-        });
-      } catch (e) {
-        // Wallet setup failed — card flow remains fully functional
-        console.warn('Wallet button setup failed:', e);
-      }
     } else {
       document.getElementById('stripe-card-element').innerHTML = '<div style="padding:12px;color:#DC2626;font-size:13px">Card payment unavailable. Please use cash.</div>';
     }
