@@ -3725,6 +3725,20 @@ async function confirmBooking(){
   const originalPrice = booking.service?.price || 0;
   const price = Math.max(0, originalPrice - (appliedDiscount || 0));
 
+  // Fix: borrar nuestros propios bookings 'pending' (sin pagar) del mismo slot
+  // antes de insertar el nuevo. Evita que el usuario se bloquee a sí mismo
+  // cuando vuelve atrás sin completar el pago.
+  const cleanTime = booking.time?.replace(' am','').replace(' pm','');
+  try {
+    await sb.from('bookings')
+      .delete()
+      .eq('client_id', currentUser.id)
+      .eq('status', 'pending')
+      .eq('scheduled_date', booking.date)
+      .eq('scheduled_time', cleanTime)
+      .eq('van_number', vanNum);
+  } catch (e) { console.warn('Pending cleanup skipped:', e); }
+
   // Save booking first as pending
   const { data: bkg, error } = await sb.from('bookings').insert({
     client_id: currentUser.id,
@@ -3739,7 +3753,7 @@ async function confirmBooking(){
     referral_code_used: appliedReferralCode || null,
     discount_applied: appliedDiscount || 0,
     scheduled_date: booking.date,
-    scheduled_time: booking.time?.replace(' am','').replace(' pm',''),
+    scheduled_time: cleanTime,
     address: [document.getElementById('addr-street').value, suburb, document.getElementById('addr-postcode').value].filter(Boolean).join(', '),
     suburb: suburb,
     van_number: vanNum,
