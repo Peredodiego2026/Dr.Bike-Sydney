@@ -3919,14 +3919,22 @@ function showPaymentModal(bkg, price){
             style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '48px' } }
           });
           pr.canMakePayment().then(result => {
+            console.log('[WALLET DEBUG] canMakePayment result:', result);
+            console.log('[WALLET DEBUG] User agent:', navigator.userAgent);
+            console.log('[WALLET DEBUG] Apple Pay native available:', typeof window.ApplePaySession !== 'undefined');
+            console.log('[WALLET DEBUG] HTTPS:', window.location.protocol === 'https:');
+            console.log('[WALLET DEBUG] Hostname:', window.location.hostname);
             try {
               if (result) {
                 prBtn.mount('#stripe-payment-request-button');
                 const wrap = document.getElementById('stripe-wallet-wrap');
                 if (wrap) wrap.style.display = 'block';
+                console.log('[WALLET DEBUG] Button mounted, wrap shown');
+              } else {
+                console.warn('[WALLET DEBUG] canMakePayment returned null/false — wallet hidden. Likely causes: no card in wallet, wrong browser, domain not verified for THIS specific URL, or Stripe live key restriction.');
               }
             } catch (e) { console.warn('Wallet mount skipped:', e); }
-          }).catch(e => console.warn('canMakePayment failed:', e));
+          }).catch(e => console.warn('[WALLET DEBUG] canMakePayment failed:', e));
 
           pr.on('paymentmethod', async (ev) => {
             try {
