@@ -3,7 +3,7 @@
     { "path": "/api/send-2h-reminders", "schedule": "*/15 * * * *" }
   ],
   "rewrites": [
-    { "source": "/((?!api/|.*\\.html|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml|.*\\.webmanifest).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|\\.well-known/|.*\\.html|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml|.*\\.webmanifest).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
