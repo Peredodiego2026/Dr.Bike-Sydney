@@ -3725,20 +3725,6 @@ async function confirmBooking(){
   const originalPrice = booking.service?.price || 0;
   const price = Math.max(0, originalPrice - (appliedDiscount || 0));
 
-  // Fix: borrar nuestros propios bookings 'pending' (sin pagar) del mismo slot
-  // antes de insertar el nuevo. Evita que el usuario se bloquee a sí mismo
-  // cuando vuelve atrás sin completar el pago.
-  const cleanTime = booking.time?.replace(' am','').replace(' pm','');
-  try {
-    await sb.from('bookings')
-      .delete()
-      .eq('client_id', currentUser.id)
-      .eq('status', 'pending')
-      .eq('scheduled_date', booking.date)
-      .eq('scheduled_time', cleanTime)
-      .eq('van_number', vanNum);
-  } catch (e) { console.warn('Pending cleanup skipped:', e); }
-
   // Save booking first as pending
   const { data: bkg, error } = await sb.from('bookings').insert({
     client_id: currentUser.id,
@@ -3753,7 +3739,7 @@ async function confirmBooking(){
     referral_code_used: appliedReferralCode || null,
     discount_applied: appliedDiscount || 0,
     scheduled_date: booking.date,
-    scheduled_time: cleanTime,
+    scheduled_time: booking.time?.replace(' am','').replace(' pm',''),
     address: [document.getElementById('addr-street').value, suburb, document.getElementById('addr-postcode').value].filter(Boolean).join(', '),
     suburb: suburb,
     van_number: vanNum,
@@ -3869,15 +3855,6 @@ function showPaymentModal(bkg, price){
         </div>
         <button onclick="document.getElementById('payment-modal').remove()" style="background:#F7F8FA;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer">✕</button>
       </div>
-      <!-- Apple Pay / Google Pay / Link (Payment Request Button) -->
-      <div id="stripe-wallet-wrap" style="display:none;margin-bottom:14px">
-        <div id="stripe-payment-request-button"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:#9CA3AF;font-size:11px;font-weight:600;letter-spacing:0.5px">
-          <div style="flex:1;height:1px;background:#E5E7EB"></div>
-          <span>OR PAY WITH CARD</span>
-          <div style="flex:1;height:1px;background:#E5E7EB"></div>
-        </div>
-      </div>
       <div id="stripe-card-element" style="border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px;font-size:16px"></div>
       <div id="stripe-error" style="color:#DC2626;font-size:13px;margin-bottom:12px;display:none"></div>
       <button id="pay-btn" onclick="processPayment('${bkg.id}',${price})" style="width:100%;background:#1848C8;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
@@ -3900,100 +3877,6 @@ function showPaymentModal(bkg, price){
         style: { base: { fontSize:'16px', color:'#0D1F3C', fontFamily:'Inter,sans-serif', '::placeholder':{ color:'#9CA3AF' } } }
       });
       window._stripeCard.mount('#stripe-card-element');
-
-      // Apple Pay / Google Pay setup — deferred to next tick + bulletproof error handling
-      // so it CANNOT affect anything else on the page if Stripe misbehaves.
-      setTimeout(() => {
-        try {
-          const priceCents = Math.round(Number(price) * 100);
-          if (!priceCents || priceCents < 50) return; // Stripe requires minimum 50 cents
-          const pr = stripeInstance.paymentRequest({
-            country: 'AU',
-            currency: 'aud',
-            total: { label: 'Dr. Bike Sydney service', amount: priceCents },
-            requestPayerName: true,
-            requestPayerEmail: true
-          });
-          const prBtn = elements.create('paymentRequestButton', {
-            paymentRequest: pr,
-            style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '48px' } }
-          });
-          pr.canMakePayment().then(result => {
-            const debugMsg = `[Wallet check] result=${JSON.stringify(result)} | UA=${navigator.userAgent.includes('iPhone')?'iPhone':'other'} | ApplePay-native=${typeof window.ApplePaySession!=='undefined'} | host=${window.location.hostname}`;
-            console.log(debugMsg);
-            // Show debug info on screen so user can read it without Mac
-            const errEl = document.getElementById('stripe-error');
-            if (errEl && !result) {
-              errEl.style.display = 'block';
-              errEl.style.color = '#6B7280';
-              errEl.style.fontSize = '10px';
-              errEl.style.background = '#F9FAFB';
-              errEl.style.padding = '8px';
-              errEl.style.borderRadius = '6px';
-              errEl.textContent = 'Wallet not available. Debug: ' + debugMsg;
-            }
-            try {
-              if (result) {
-                prBtn.mount('#stripe-payment-request-button');
-                const wrap = document.getElementById('stripe-wallet-wrap');
-                if (wrap) wrap.style.display = 'block';
-                console.log('[WALLET] mounted OK, result was:', result);
-              } else {
-                console.warn('[WALLET] canMakePayment returned:', result, '— button hidden');
-              }
-            } catch (e) {
-              console.warn('Wallet mount error:', e);
-              if (errEl) { errEl.textContent += ' | mount error: '+e.message; }
-            }
-          }).catch(e => {
-            console.warn('canMakePayment rejected:', e);
-            const errEl = document.getElementById('stripe-error');
-            if (errEl) {
-              errEl.style.display='block'; errEl.style.color='#DC2626'; errEl.style.fontSize='10px';
-              errEl.textContent = 'Wallet error: '+(e.message||JSON.stringify(e));
-            }
-          });
-
-          pr.on('paymentmethod', async (ev) => {
-            try {
-              const { error: updErr } = await sb.from('bookings').update({
-                status: 'confirmed',
-                payment_method_id: ev.paymentMethod.id
-              }).eq('id', bkg.id);
-              if (updErr) throw updErr;
-              ev.complete('success');
-              document.getElementById('payment-modal')?.remove();
-              const { data: bkgData } = await sb.from('bookings').select('*').eq('id', bkg.id).single();
-              if (bkgData) {
-                fetch('/api/send-email', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    to: currentUser?.email,
-                    name: userProfile?.full_name || currentUser?.email?.split('@')[0],
-                    service: bkgData.service_name,
-                    date: new Date(bkgData.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }),
-                    time: bkgData.scheduled_time,
-                    address: bkgData.address,
-                    price: bkgData.service_price,
-                    type: 'confirmation',
-                    bookingId: bkgData.id,
-                    referralCode: userProfile?.referral_code
-                  })
-                }).catch(()=>{});
-              }
-              showBookingSuccess();
-            } catch (err) {
-              try { ev.complete('fail'); } catch(_) {}
-              const errEl = document.getElementById('stripe-error');
-              if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Wallet payment failed. Please try again or use a card.'; }
-            }
-          });
-        } catch (e) {
-          // Wallet setup failed completely — card flow remains intact
-          console.warn('Wallet setup failed silently:', e);
-        }
-      }, 0);
     } else {
       document.getElementById('stripe-card-element').innerHTML = '<div style="padding:12px;color:#DC2626;font-size:13px">Card payment unavailable. Please use cash.</div>';
     }
