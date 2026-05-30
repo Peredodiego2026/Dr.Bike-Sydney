@@ -3,7 +3,7 @@
 //   TWILIO_AUTH_TOKEN    → your auth token
 //   TWILIO_PHONE_NUMBER  → +61XXXXXXXXX  (or Messaging Service SID: MGxxxxxxx)
 import twilio from 'twilio';
-import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
+import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
@@ -11,7 +11,8 @@ const client = twilio(
 );
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
+  if(guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { to, name, service, address, price, type, bookingId, mechName, reviewLink, customMsg } = req.body;
@@ -48,7 +49,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, sid: message.sid });
   } catch (error) {
     console.error('Twilio SMS error:', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 }
 

@@ -3,10 +3,22 @@
 import { guard } from './_security.js';
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return;
+  if(guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
 
   const { image, mediaType, description } = req.body;
   if (!image && !description) return res.status(400).json({ error: 'Provide image or description' });
+
+  // Validar imagen: max 5MB, solo formatos permitidos
+  if (image) {
+    if (image.length > 5 * 1024 * 1024)
+      return res.status(413).json({ error: 'Image too large (max 5MB)' });
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowed.includes(mediaType))
+      return res.status(415).json({ error: 'Only JPEG, PNG, WebP, GIF allowed' });
+  }
+  // Validar descripción
+  if (description && description.length > 2000)
+    return res.status(400).json({ error: 'Description too long (max 2000 chars)' });
 
   const isText = !!description && !image;
 
@@ -42,6 +54,6 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
   } catch(e) {
     console.error('Diagnose error:', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 }

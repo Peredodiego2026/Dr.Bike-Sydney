@@ -1,10 +1,11 @@
 import Stripe from 'stripe';
-import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
+import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min payments
+  if(guard(req, res, { rateMax: 3, rateWindow: 60000 })) return; // 3/min
+  if(verifyInternalAuth(req, res)) return; // Solo nuestra app
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { subscriptionId } = req.body;
@@ -21,6 +22,7 @@ export default async function handler(req, res) {
       cancelAt: new Date(subscription.cancel_at * 1000).toISOString()
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error('cancel-subscription error:', error.message);
+    return res.status(500).json({ error: 'Failed to cancel subscription' });
   }
 }

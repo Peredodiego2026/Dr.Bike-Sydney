@@ -5,7 +5,8 @@
 const rateLimitStore = new Map();
 
 export function rateLimit(req, res, { max = 20, windowMs = 60000, key = null } = {}) {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+  const ip = req.headers['x-vercel-forwarded-for']?.split(',')[0]?.trim()
+    || req.headers['x-forwarded-for']?.split(',')[0]?.trim()
     || req.headers['x-real-ip']
     || req.socket?.remoteAddress
     || 'unknown';
@@ -61,8 +62,9 @@ const ALLOWED_ORIGINS = [
   'https://drbikesydney.com.au',
   'https://www.drbikesydney.com.au',
   'https://js.stripe.com',
-  'http://localhost:3000',
-  'http://localhost:5173',
+  // localhost solo para dev — comentar en producción si es necesario
+  // 'http://localhost:3000',
+  // 'http://localhost:5173',
 ];
 
 export function setCORSHeaders(req, res) {
@@ -130,4 +132,18 @@ export function safeLog(label, obj) {
     });
   });
   console.log(label, JSON.stringify(safe));
+}
+
+
+// ── INTERNAL AUTH — verify requests come from our own domain ─────────────────
+export function verifyInternalAuth(req, res) {
+  const origin = req.headers.origin || '';
+  const referer = req.headers.referer || '';
+  const allowed = ['drbikesydney.com.au', 'dr-bike-sydney.vercel.app', 'localhost'];
+  const isAllowed = allowed.some(d => origin.includes(d) || referer.includes(d));
+  if (!isAllowed && origin) {
+    res.status(403).json({ error: 'Forbidden' });
+    return true; // blocked
+  }
+  return false; // allowed
 }

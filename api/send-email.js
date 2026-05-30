@@ -1,6 +1,7 @@
-import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
+import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
+  if(guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { to, name, service, date, time, address, price, type, bookingId, mechNotes, nextService, referralCode } = req.body;
@@ -99,6 +100,24 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au/mechanic.html" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
         </div>${footer()}`
+    },
+    reminder2h: {
+      subject: `⏰ Reminder — your Dr. Bike service is in ~2 hours`,
+      html: `${header('#1848C8','⏰','See you soon!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, just a friendly reminder that your booking is coming up in about <strong style="color:#0D1F3C">2 hours</strong>. Your mechanic will contact you ~30 min before arrival.</p>
+          ${bookingTable()}
+          <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 8px">✅ Quick checklist</p>
+            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.8;opacity:0.9">
+              • Have your bike accessible at the address<br>
+              • Clear a small space for the mechanic to work<br>
+              • Need to change something? Free to cancel up to 2h before
+            </p>
+          </div>
+          <p style="font-size:12px;color:#9CA3AF;margin:0">Questions? Call us on 0433 963 250.</p>
+        </div>
+        ${footer()}`
     },
     reminder: {
       subject: `🚲 Time for a bike check-up, ${name}!`,
@@ -243,6 +262,6 @@ export default async function handler(req, res) {
     if (!response.ok) throw new Error(data.message || 'Email failed');
     return res.status(200).json({ success: true, id: data.id });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 }

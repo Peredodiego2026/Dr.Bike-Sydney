@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B1628">
+<title>Dr. Bike Sydney</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0B1628;
+  --bg2: #111D32;
+  --bg3: #162540;
+  --card: #111D32;
+  --blue: #1848C8;
+  --blue-g: rgba(24,72,200,0.3);
+  --text: #F0F4F8;
+  --text2: #8A95A8;
+  --text3: #5A6578;
+  --border: #1E2D45;
+  --green: #10B981;
+  --red: #EF4444;
+  --amber: #F59E0B;
+  --r: 14px;
+  --sans: 'Inter', -apple-system, sans-serif;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+/* ═══ APP SHELL ═══ */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ═══ SCREENS ═══ */
+.scr { display: none; flex-direction: column; height: 100%; }
+.scr.on { display: flex; animation: fadeUp .2s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ═══ HEADER BAR ═══ */
+.hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  padding-top: calc(12px + var(--safe-t));
+  flex-shrink: 0;
+}
+.hdr-logo { display: flex; align-items: center; gap: 10px; }
+.hdr-inf {
+  font-size: 24px;
+  font-weight: 200;
+  color: var(--blue);
+  line-height: 1;
+  letter-spacing: -2px;
+}
+.hdr-brand {
+  display: flex;
+  flex-direction: column;
+}
+.hdr-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.hdr-sub {
+  font-size: 8px;
+  color: var(--text3);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.hdr-menu {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text);
+}
+
+/* ═══ SCROLLABLE AREA ═══ */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ═══ HOME ═══ */
+.home-hero {
+  padding: 32px 24px 40px;
+}
+.home-hero h1 {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.home-hero h1 span { color: var(--blue); }
+.home-hero p {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin-bottom: 32px;
+}
+.home-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+.btn-book {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 4px 20px var(--blue-g);
+  transition: transform .15s;
+}
+.btn-book:active { transform: scale(0.97); }
+.btn-call {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s;
+}
+.btn-call:active { background: var(--bg2); }
+
+/* Trust Badges */
+.trust {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+}
+.trust-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 0 8px;
+}
+.trust-ico {
+  width: 28px;
+  height: 28px;
+  color: var(--text2);
+}
+.trust-txt {
+  font-size: 10px;
+  color: var(--text2);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.3px;
+}
+
+/* ═══ INTERNAL SCREENS (with tab bar) ═══ */
+.int-hdr {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  padding-top: calc(14px + var(--safe-t));
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.int-back {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text);
+}
+.int-back:active { background: var(--bg3); }
+.int-title { font-size: 17px; font-weight: 700; }
+
+/* ═══ BOOK A SERVICE ═══ */
+.book-section { padding: 20px 24px; }
+.book-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.book-link {
+  font-size: 13px;
+  color: var(--blue);
+  float: right;
+  border: none;
+  background: none;
+  font-family: var(--sans);
+  cursor: pointer;
+  font-weight: 500;
+}
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.svc-opt {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+}
+.svc-opt:active { transform: scale(0.96); }
+.svc-opt.sel { border-color: var(--blue); background: rgba(24,72,200,0.08); }
+.svc-opt-ico { font-size: 24px; margin-bottom: 6px; }
+.svc-opt-name { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
+.svc-opt-price { font-size: 11px; color: var(--blue); font-weight: 600; }
+
+/* Calendar */
+.cal-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.cal-nav {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2); font-size: 14px;
+}
+.cal-title { font-size: 13px; font-weight: 600; color: var(--text); }
+
+.cal-days {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.cal-day {
+  padding: 10px 4px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--bg2);
+  transition: all .15s;
+}
+.cal-day:active { transform: scale(0.95); }
+.cal-day.sel { border-color: var(--blue); background: var(--blue); }
+.cal-dow { font-size: 10px; color: var(--text3); font-weight: 500; margin-bottom: 2px; }
+.cal-day.sel .cal-dow { color: rgba(255,255,255,0.7); }
+.cal-dn { font-size: 13px; font-weight: 600; color: var(--text); }
+.cal-day.sel .cal-dn { color: #fff; }
+
+/* Time slots */
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.time-slot {
+  padding: 12px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: all .15s;
+}
+.time-slot:active { transform: scale(0.95); }
+.time-slot.sel { border-color: var(--blue); background: var(--blue); color: #fff; }
+.time-slot.off { color: var(--text3); opacity: 0.5; pointer-events: none; }
+
+/* Location */
+.loc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+.loc-ico { color: var(--text2); flex-shrink: 0; }
+.loc-txt { font-size: 14px; color: var(--text); flex: 1; }
+.loc-link { font-size: 13px; color: var(--blue); font-weight: 500; cursor: pointer; }
+
+/* Continue button */
+.btn-continue {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px var(--blue-g);
+}
+.btn-continue:active { transform: scale(0.97); }
+.btn-continue:disabled { opacity: 0.4; pointer-events: none; }
+
+/* ═══ TAB BAR ═══ */
+.tabs {
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 calc(8px + var(--safe-b));
+  border-top: 1px solid var(--border);
+  background: rgba(11,22,40,0.97);
+  backdrop-filter: blur(20px);
+  flex-shrink: 0;
+}
+.tab-i {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 16px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--sans);
+}
+.tab-i svg { color: var(--text3); transition: color .15s; }
+.tab-i span { font-size: 10px; color: var(--text3); font-weight: 500; transition: color .15s; }
+.tab-i.on svg { color: var(--blue); }
+.tab-i.on span { color: var(--blue); font-weight: 600; }
+
+/* ═══ AUTH ═══ */
+.auth-wrap {
+  padding: 48px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.auth-inf { font-size: 36px; font-weight: 200; color: var(--blue); margin-bottom: 4px; letter-spacing: -3px; }
+.auth-brand { font-size: 20px; font-weight: 800; letter-spacing: 3px; color: var(--text); }
+.auth-sub-brand { font-size: 9px; letter-spacing: 4px; color: var(--text3); margin-bottom: 32px; }
+.auth-h { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.auth-p { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+.auth-form { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.auth-inp {
+  width: 100%; padding: 14px 16px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg2); color: var(--text);
+  font-family: var(--sans); font-size: 14px; outline: none;
+}
+.auth-inp::placeholder { color: var(--text3); }
+.auth-inp:focus { border-color: var(--blue); }
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 14px; border-radius: 10px;
+  background: #fff; color: #333; font-family: var(--sans); font-size: 14px;
+  font-weight: 500; border: none; cursor: pointer;
+}
+.btn-google:active { opacity: 0.9; }
+.auth-or {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  font-size: 12px; color: var(--text3); margin: 4px 0;
+}
+.auth-or::before, .auth-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.btn-login {
+  width: 100%; padding: 14px; border-radius: 10px;
+  background: var(--blue); color: #fff; font-family: var(--sans); font-size: 15px;
+  font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 16px var(--blue-g);
+}
+.auth-foot {
+  margin-top: 20px; font-size: 13px; color: var(--text2); text-align: center;
+}
+.auth-foot a { color: var(--blue); text-decoration: none; font-weight: 500; }
+
+/* ═══ BOOKINGS LIST ═══ */
+.bk-tabs {
+  display: flex; gap: 0; margin: 0 24px 16px; background: var(--bg2);
+  border-radius: 10px; border: 1px solid var(--border); overflow: hidden;
+}
+.bk-tab {
+  flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 500;
+  color: var(--text2); cursor: pointer; border: none; background: none; font-family: var(--sans);
+}
+.bk-tab.on { background: var(--blue); color: #fff; }
+
+.bk-card {
+  margin: 0 24px 10px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px 16px; display: flex; gap: 14px;
+}
+.bk-date { width: 44px; text-align: center; flex-shrink: 0; }
+.bk-day { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.bk-mon { font-size: 9px; color: var(--text2); text-transform: uppercase; font-weight: 600; margin-top: 2px; }
+.bk-info { flex: 1; }
+.bk-svc { font-size: 14px; font-weight: 600; color: var(--text); }
+.bk-det { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.bk-status {
+  display: inline-block; padding: 3px 8px; border-radius: 6px;
+  font-size: 10px; font-weight: 600; margin-top: 6px;
+}
+.bk-status.green { background: rgba(16,185,129,0.12); color: var(--green); }
+.bk-status.blue { background: rgba(24,72,200,0.12); color: var(--blue); }
+.bk-status.red { background: rgba(239,68,68,0.12); color: var(--red); }
+
+/* ═══ TOAST ═══ */
+.toast-m {
+  position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 20px; font-size: 13px; z-index: 300; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transition: transform .3s ease;
+}
+.toast-m.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN: HOME (no tab bar — full screen like reference)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="scr on" id="s-home">
+  <div class="hdr">
+    <div class="hdr-logo">
+      <div class="hdr-inf">∞</div>
+      <div class="hdr-brand">
+        <div class="hdr-name">DR BIKE</div>
+        <div class="hdr-sub">Sydney</div>
+      </div>
+    </div>
+    <button class="hdr-menu" onclick="openMenu()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="scroll">
+    <div class="home-hero">
+      <h1>Professional bike service at your <span>doorstep.</span></h1>
+      <p>Mobile bicycle mechanic in Sydney.</p>
+      <div class="home-btns">
+        <button class="btn-book" onclick="go('book')">Book a Service</button>
+        <button class="btn-call" onclick="window.location.href='tel:+61480846013'">Call 0480 846 013</button>
+      </div>
+      <div class="trust">
+        <div class="trust-item">
+          <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div class="trust-txt">Qualified<br>Mechanic</div>
+        </div>
+        <div class="trust-item">
+          <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <div class="trust-txt">Fully Equipped<br>Mobile Workshop</div>
+        </div>
+        <div class="trust-item">
+          <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <div class="trust-txt">5 Star<br>Rated Service</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN: BOOK A SERVICE
+     ══════════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-book">
+  <div class="int-hdr">
+    <button class="int-back" onclick="go('home')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="int-title">Book a Service</div>
+  </div>
+  <div class="scroll">
+    <div class="book-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="book-label" style="margin-bottom:0">Service Type</div>
+        <button class="book-link">See all</button>
+      </div>
+      <div class="svc-grid">
+        <div class="svc-opt" onclick="selSvc(this)" data-svc="general">
+          <div class="svc-opt-ico">⚙️</div>
+          <div class="svc-opt-name">General Service</div>
+          <div class="svc-opt-price">From $120</div>
+        </div>
+        <div class="svc-opt sel" onclick="selSvc(this)" data-svc="ebike">
+          <div class="svc-opt-ico">⚡</div>
+          <div class="svc-opt-name">E-Bike Service</div>
+          <div class="svc-opt-price">From $150</div>
+        </div>
+        <div class="svc-opt" onclick="selSvc(this)" data-svc="suspension">
+          <div class="svc-opt-ico">🔧</div>
+          <div class="svc-opt-name">Suspension Service</div>
+          <div class="svc-opt-price">From $180</div>
+        </div>
+      </div>
+
+      <div class="book-label">Select Date</div>
+      <div class="cal-days">
+        <div class="cal-day" onclick="selDay(this)"><div class="cal-dow">Mon</div><div class="cal-dn">20 May</div></div>
+        <div class="cal-day sel" onclick="selDay(this)"><div class="cal-dow">Tue</div><div class="cal-dn">21 May</div></div>
+        <div class="cal-day" onclick="selDay(this)"><div class="cal-dow">Wed</div><div class="cal-dn">22 May</div></div>
+        <div class="cal-day" onclick="selDay(this)"><div class="cal-dow">Thu</div><div class="cal-dn">23 May</div></div>
+        <div class="cal-day" onclick="selDay(this)"><div class="cal-dow">Fri</div><div class="cal-dn">24 May</div></div>
+      </div>
+
+      <div class="book-label">Select Time</div>
+      <div class="time-grid">
+        <div class="time-slot" onclick="selTime(this)">8:00 AM</div>
+        <div class="time-slot sel" onclick="selTime(this)">10:00 AM</div>
+        <div class="time-slot" onclick="selTime(this)">12:00 PM</div>
+        <div class="time-slot" onclick="selTime(this)">2:00 PM</div>
+        <div class="time-slot" onclick="selTime(this)">4:00 PM</div>
+        <div class="time-slot off">6:00 PM</div>
+      </div>
+
+      <div class="loc-row">
+        <svg class="loc-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
+        <div class="loc-txt">Home</div>
+        <div class="loc-link">Change</div>
+      </div>
+
+      <button class="btn-continue" onclick="go('summary')">Continue</button>
+      <div style="height:24px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN: AUTH (Login)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-auth">
+  <div class="scroll">
+    <div class="auth-wrap">
+      <div class="auth-inf">∞</div>
+      <div class="auth-brand">DR BIKE</div>
+      <div class="auth-sub-brand">SYDNEY</div>
+      <div class="auth-h">Welcome Back!</div>
+      <div class="auth-p">Login to your account</div>
+      <div class="auth-form">
+        <input class="auth-inp" type="email" placeholder="hello@drbike.com.au">
+        <input class="auth-inp" type="password" placeholder="Password">
+        <div style="text-align:right;margin:-4px 0 4px"><a href="#" style="font-size:12px;color:var(--blue);text-decoration:none">Forgot Password?</a></div>
+        <button class="btn-login">Login</button>
+        <div class="auth-foot">Don't have an account? <a href="#">Sign up</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN: BOOKINGS (with tab bar)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-bookings">
+  <div class="int-hdr" style="border-bottom:none">
+    <div class="int-title" style="flex:1">My Bookings</div>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+  </div>
+  <div class="bk-tabs">
+    <button class="bk-tab on">Upcoming</button>
+    <button class="bk-tab">History</button>
+  </div>
+  <div class="scroll">
+    <div class="bk-card">
+      <div class="bk-date"><div class="bk-day">21</div><div class="bk-mon">MAY</div></div>
+      <div class="bk-info">
+        <div class="bk-svc">E-Bike Service</div>
+        <div class="bk-det">10:00 AM · Home</div>
+        <div class="bk-status blue">In Progress</div>
+      </div>
+    </div>
+    <div class="bk-card">
+      <div class="bk-date"><div class="bk-day">05</div><div class="bk-mon">JUN</div></div>
+      <div class="bk-info">
+        <div class="bk-svc">General Service</div>
+        <div class="bk-det">9:00 AM · Home</div>
+        <div class="bk-status green">Confirmed</div>
+      </div>
+    </div>
+    <div class="bk-card">
+      <div class="bk-date"><div class="bk-day">18</div><div class="bk-mon">JUN</div></div>
+      <div class="bk-info">
+        <div class="bk-svc">Suspension Service</div>
+        <div class="bk-det">11:00 AM · Home</div>
+        <div class="bk-status green">Confirmed</div>
+      </div>
+    </div>
+    <div style="height:80px"></div>
+  </div>
+  <!-- Tab bar for internal screens -->
+  <div class="tabs">
+    <button class="tab-i" onclick="tab('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="tab-i on" onclick="tab('bookings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
+    <button class="tab-i" onclick="tab('track')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg><span>Track</span></button>
+    <button class="tab-i" onclick="tab('profile')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PLACEHOLDER SCREENS
+     ══════════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-summary">
+  <div class="int-hdr">
+    <button class="int-back" onclick="go('book')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="int-title">Service Summary</div>
+  </div>
+  <div class="scroll" style="padding:24px;color:var(--text2);text-align:center;padding-top:60px">
+    <div style="font-size:40px;margin-bottom:12px">📋</div>
+    <div style="font-size:15px;font-weight:600;color:var(--text)">Coming next</div>
+  </div>
+</div>
+
+<div class="scr" id="s-track">
+  <div class="int-hdr" style="border-bottom:none"><div class="int-title">Track</div></div>
+  <div class="scroll" style="padding:24px;color:var(--text2);text-align:center;padding-top:60px">
+    <div style="font-size:40px;margin-bottom:12px">📍</div>
+    <div style="font-size:15px;font-weight:600;color:var(--text)">Coming next</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-i" onclick="tab('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="tab-i" onclick="tab('bookings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
+    <button class="tab-i on" onclick="tab('track')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg><span>Track</span></button>
+    <button class="tab-i" onclick="tab('profile')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></button>
+  </div>
+</div>
+
+<div class="scr" id="s-profile">
+  <div class="int-hdr" style="border-bottom:none"><div class="int-title">Profile</div></div>
+  <div class="scroll" style="padding:24px;color:var(--text2);text-align:center;padding-top:60px">
+    <div style="font-size:40px;margin-bottom:12px">👤</div>
+    <div style="font-size:15px;font-weight:600;color:var(--text)">Coming next</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-i" onclick="tab('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="tab-i" onclick="tab('bookings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Bookings</span></button>
+    <button class="tab-i" onclick="tab('track')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg><span>Track</span></button>
+    <button class="tab-i on" onclick="tab('profile')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></button>
+  </div>
+</div>
+
+</div>
+
+<div class="toast-m" id="toast-m"></div>
+
+<script>
+function go(s) {
+  document.querySelectorAll('.scr').forEach(el => el.classList.remove('on'));
+  document.getElementById('s-'+s)?.classList.add('on');
+}
+function tab(t) { go(t); }
+function openMenu() { go('auth'); }
+
+function selSvc(el) {
+  el.parentElement.querySelectorAll('.svc-opt').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function selDay(el) {
+  el.parentElement.querySelectorAll('.cal-day').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function selTime(el) {
+  if(el.classList.contains('off')) return;
+  el.parentElement.querySelectorAll('.time-slot').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+</script>
+</body>
+</html>

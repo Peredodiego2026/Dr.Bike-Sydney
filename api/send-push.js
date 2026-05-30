@@ -8,7 +8,7 @@
 
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
-import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
+import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -21,7 +21,8 @@ webpush.setVapidDetails(
 );
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
+  if(guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { clientId, title, body, url, tag, icon } = req.body;
@@ -73,6 +74,6 @@ export default async function handler(req, res) {
       await sb.from('profiles').update({ push_subscription: null }).eq('id', clientId);
       return res.status(410).json({ error: 'Subscription expired — cleared from DB' });
     }
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 }
