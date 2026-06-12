@@ -44,12 +44,12 @@ One session per chat. Close chat at ~100k tokens.
   - Delete applepay-test.html, admin.html.bak, index-redesign.html (commit b7b902f)
   - Move broken mockups to docs/mockups/ (commit 5e73fcf)
   - Update robots.txt (+Disallow /docs/), .gitignore (+*.bak)
-- [ ] A4 - Bug fixes (~30 min)
-  - stripe-webhook.js: membership_status fix
-  - send-email.js: referral_success scope fix
-  - Move normalizeAUPhone to _security.js
-  - TWILIO_WHATSAPP_FROM env var
-  - Remove @anthropic-ai/sdk from package.json
+- [x] A4 - Bug fixes (~30 min) - DONE 2026-06-12
+  - stripe-webhook.js: membership_status fix (commit 3ff132a)
+  - send-email.js: referral_success scope fix (commit e8f1933)
+  - Move normalizeAUPhone to _security.js (commit 5e747fa)
+  - TWILIO_WHATSAPP_FROM env var (commit 5e26c08)
+  - Remove @anthropic-ai/sdk from package.json (commit 3d438b3)
 - [ ] A5 - Modularizacion frontend (~60 min)
   - Create css/ and js/ directories
   - Extract CSS to css/main.css from index.html
