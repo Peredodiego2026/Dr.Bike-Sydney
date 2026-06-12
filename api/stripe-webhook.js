@@ -231,9 +231,9 @@ export default async function handler(req, res) {
         try {
           // Update membership status
           const { data: profile } = await sb.from('profiles')
-            .update({ membership: 'past_due' })
+            .update({ membership_status: 'past_due' })
             .eq('stripe_customer_id', customerId)
-            .select('email,full_name,membership')
+            .select('email,full_name,membership_status')
             .single();
 
           // Send payment failed email to client
@@ -265,7 +265,7 @@ export default async function handler(req, res) {
 
         try {
           const { data: profile } = await sb.from('profiles')
-            .update({ membership: 'past_due' })
+            .update({ membership_status: 'past_due' })
             .eq('stripe_customer_id', customerId)
             .select('email,full_name')
             .single();
