@@ -56,8 +56,8 @@ export default async function handler(req, res) {
   const toNorm = normalizeAUPhone(to);
   if (!toNorm) return res.status(400).json({ error: 'Invalid Australian phone number' });
 
-  // Fetch WhatsApp business number from Supabase settings
-  let fromNumber = process.env.TWILIO_PHONE_NUMBER;
+  // Prefer dedicated WhatsApp env var; fall back to van_zones hack
+  let fromNumber = process.env.TWILIO_WHATSAPP_FROM;
   if (!fromNumber) {
     const { data: waRow } = await sb.from('van_zones')
       .select('postcode')
