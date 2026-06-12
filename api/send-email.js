@@ -178,7 +178,7 @@ export default async function handler(req, res) {
       subject: `🎉 Your referral worked — $15 credit earned!`,
       html: `${header('#059669','🎉','Referral successful!')}
         <div style="padding:32px 28px">
-          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, great news — ${typeof friendName !== 'undefined' ? friendName : 'a friend'} just booked using your referral code!</p>
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, great news — ${friendName || 'a friend'} just booked using your referral code!</p>
           <div style="background:#ECFDF5;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
             <div style="font-size:32px;margin-bottom:8px">🎁</div>
             <div style="font-size:20px;font-weight:800;color:#059669">$15 credit earned</div>
@@ -186,7 +186,7 @@ export default async function handler(req, res) {
           </div>
           <div style="background:#F7F8FA;border-radius:10px;padding:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-size:13px;color:#6B7280">Total referrals</span>
-            <span style="font-size:18px;font-weight:800;color:#0D1F3C">${typeof referralCount !== 'undefined' ? referralCount : 1}</span>
+            <span style="font-size:18px;font-weight:800;color:#0D1F3C">${referralCount || 1}</span>
           </div>
           <p style="font-size:13px;color:#6B7280;margin:0 0 20px;line-height:1.6">Keep sharing your code — every referral earns you both $15 off. 🚲</p>
           <a href="https://drbikesydney.com.au/?action=dashboard" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View my dashboard →</a>
