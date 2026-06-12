@@ -1,11 +1,15 @@
 {
   "crons": [
     {
-      "path": "/api/send-2h-reminders",
+      "path": "/api/send-reminders?type=2h",
       "schedule": "0 9 * * *"
     }
   ],
   "rewrites": [
+    { "source": "/api/send-sms",       "destination": "/api/send-message?channel=sms" },
+    { "source": "/api/send-whatsapp",  "destination": "/api/send-message?channel=whatsapp" },
+    { "source": "/api/admin-auth",     "destination": "/api/auth?role=admin" },
+    { "source": "/api/mechanic-auth",  "destination": "/api/auth?role=mechanic" },
     {
       "source": "/((?!api/|\\.well-known/|.*\\.html|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml|.*\\.webmanifest|.*\\.ico|.*\\.css|.*\\.woff|.*\\.woff2).*)",
       "destination": "/index.html"

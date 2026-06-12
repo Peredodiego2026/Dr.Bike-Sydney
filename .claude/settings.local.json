@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(gh api *)"
+      "PowerShell(gh api *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git config *)",
+      "Bash(node --check api/send-email.js)",
+      "Bash(node --check api/send-invoice.js)"
     ]
   }
 }
