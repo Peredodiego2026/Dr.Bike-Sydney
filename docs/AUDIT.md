@@ -1,116 +1,101 @@
-# Audit Report - Dr. Bike Sydney
-Date: 30 May 2026
-Scope: full repo audit before next development sessions.
+# Audit Status - Dr. Bike Sydney
+Last updated: Jun 2026
 
-## App surfaces (12 HTML files in repo root)
+## Authoritative audit sources
 
-| File | Size | Purpose | Status |
-|---|---|---|---|
-| index.html | 257k | Client web (PRODUCTION drbikesydney.com.au) | Active, most complete |
-| mobile_latest.html | 123k | Client mobile PWA, dark theme | Active, behind index |
-| admin.html | 209k | Manager/admin dashboard | Active |
-| mechanic.html | 64k | Mechanic app (PIN 3250) | Active |
-| landing.html | 104k | Public marketing landing | Active |
-| track.html | 8k | Public booking tracking | Active |
-| notifications.html | 49k | Notifications standalone | Active |
-| payments.html | 39k | Payments standalone | Active |
-| mobile.html | 28k | Old mobile version | DELETE |
-| mobile_v2.html | 90k | Mobile v2 superseded | DELETE |
-| mobile_v3.html | 90k | Mobile v3 same as v2 | DELETE |
-| index-redesign.html | 258k | Alternative index | DELETE |
-| admin.html.bak | 104k | Backup file | DELETE |
-| applepay-test.html | 8k | Leftover diagnostic | DELETE |
-| applepay.html | 8k | Leftover diagnostic | DELETE |
+The current authoritative audit and work plan come from external
+consultant review (Jun 2026). All work follows these three docs:
 
-## Feature parity matrix
+1. `docs/reporte-inicial-drbike.pdf` - Full audit report
+   - 4 critical security issues
+   - 4 medium-severity issues
+   - 10 low-severity issues
+   - Code quality and bugs inventory
 
-```
-FEATURE                        | IND | MOB | ADM | MEC | LAN
-Login Google OAuth             |  X  |  X  |  X  |  X  |  X
-Cancel booking + politica      |  X  |  X  |  .  |  .  |  .
-Bike profiles                  |  X  |  X  |  .  |  .  |  .
-Apple/Google Pay button code   |  X  |  .  |  .  |  .  |  .
-Stripe checkout                |  X  |  .  |  .  |  .  |  .
-Booking calendar               |  X  |  .  |  .  |  .  |  .
-AI bike diagnosis              |  X  |  .  |  .  |  .  |  .
-Real-time chat                 |  X  |  X  |  X  |  X  |  .
-Mecanico GPS live              |  .  |  .  |  .  |  X  |  .
-Reviews/stars                  |  X  |  X  |  .  |  X  |  X
-```
+2. `docs/plan-saneamiento-drbike.pdf` - Track A: cleanup (6 sessions)
+   - Each session has exact prompt to execute in Claude Code
+   - Total ~3h 45min
 
-## Issues found
+3. `docs/plan-rediseno-ui-drbike.pdf` - Track B: UI redesign (6 sessions)
+   - Mobile-first SPA with electric blue on dark
+   - Each session has exact prompt
+   - Total ~4h 40min
 
-| # | Severity | File | Issue |
-|---|---|---|---|
-| 1 | HIGH | mobile_latest.html | Eruda debug console active in production |
-| 2 | HIGH | index.html | bookings.bike_id never set on INSERT, blocks service history per bike |
-| 3 | MEDIUM | 5 apps | console.log statements left in production |
-| 4 | UNKNOWN | index.html | Apple Pay code present, .well-known/ file present, vercel headers correct, but canMakePayment() returns null in Safari. Needs Stripe Support to verify Apple-side state. |
-| 5 | LOW | repo root | 7 dead/duplicate files (see DELETE list above) |
+## Execution order
 
-## Backend state (DO NOT TOUCH)
+Track A complete FIRST. Track B after.
+One session per chat. Close chat at ~100k tokens.
 
-- 12 Supabase tables active
-- 13 API endpoints (/api/) with security middleware
-- Stripe LIVE keys configured
-- Resend email verified (noreply@drbikesydney.com.au)
-- Google OAuth configured for drbikesydney.com.au
-- Vercel cron: /api/send-2h-reminders every 15min
-- vercel.json security headers correct including Permissions-Policy payment=*
-- /.well-known/apple-developer-merchantid-domain-association exists (9094 bytes)
+## Sessions checklist
 
-## Database schema gaps
+### Track A - Saneamiento
+- [ ] A1 - Seguridad critica (~30 min)
+  - Eliminate Eruda from mobile_latest.html
+  - Sanitize XSS in send-email.js, send-invoice.js
+  - Clean moz-extension artifacts from admin.html
+  - Document Google Maps key HTTP referrer restriction
+- [ ] A2 - Auth + RLS Supabase (~45 min)
+  - Enable RLS on bookings with proper policies
+  - Create api/admin-auth.js (Supabase Auth)
+  - Create api/mechanic-auth.js with PIN check
+  - Update SQL script and HTMLs accordingly
+- [ ] A3 - Limpieza dead code (~20 min)
+  - Consolidate mobile.html (keep mobile_latest, rename, delete v2/v3)
+  - Delete applepay-test.html (duplicate)
+  - Delete admin.html.bak
+  - Consolidate index.html vs index-redesign.html (ASK USER which to keep)
+  - Move broken mockups to docs/mockups/
+  - Update robots.txt, sitemap.xml, .gitignore
+- [ ] A4 - Bug fixes (~30 min)
+  - stripe-webhook.js: membership_status fix
+  - send-email.js: referral_success scope fix
+  - Move normalizeAUPhone to _security.js
+  - TWILIO_WHATSAPP_FROM env var
+  - Remove @anthropic-ai/sdk from package.json
+- [ ] A5 - Modularizacion frontend (~60 min)
+  - Create css/ and js/ directories
+  - Extract CSS to css/main.css from index.html
+  - Extract JS to js/app.js and js/stripe.js
+  - Repeat for admin.html and mechanic.html if monoliths
+  - Optional: css/variables.css shared with landing
+- [ ] A6 - Produccion readiness (~40 min)
+  - sw.js selective cache cleanup
+  - _security.js with Upstash Redis fallback
+  - Apple Pay/Google Pay via Stripe Checkout (remove card restriction)
+  - api/health.js endpoint
+  - DEPLOY.md documentation
 
-| Table | Missing | Impact |
-|---|---|---|
-| bookings | bike_id column | Cannot link bookings to specific bike. Blocks service history per bike feature. |
+### Track B - Rediseno UI
+- [ ] B1 - Design system + SPA shell (~45 min)
+  - css/variables.css with design tokens
+  - js/router.js hash-based SPA navigation
+  - New index.html as SPA shell (backup current as index-legacy.html)
+  - js/components.js with reusable components
+  - css/main.css with base styles
+- [ ] B2 - Home + Service Type (~45 min)
+  - js/supabase.js client with helpers and mock fallback
+  - Home screen with hero, pillars, CTAs
+  - Book a Service screen with service type cards
+- [ ] B3 - Date/Time + Summary (~40 min)
+  - Date carousel (7 days from today)
+  - Time slots grid
+  - Location section
+  - Service Summary screen with Confirm Booking
+- [ ] B4 - Payment + Tracking (~50 min)
+  - js/stripe.js with Payment Request Button
+  - Payment screen with Stripe Elements (dark theme)
+  - Tracking screen with map (Leaflet) and mechanic info
+- [ ] B5 - Review + Auth + My Bookings (~40 min)
+  - Review screen with stars and comment
+  - Login/Register screen
+  - My Bookings with Upcoming/History tabs
+- [ ] B6 - PWA + Unificacion + Polish (~40 min)
+  - Unify landing.html with design system
+  - Update manifest.json, sw.js, icons
+  - Adapt mechanic.html and admin.html to new theme
+  - Final polish: transitions, contrast, loading states
 
-Fix SQL (run once in Supabase SQL editor):
-```sql
-alter table bookings add column if not exists bike_id uuid references bikes(id);
-notify pgrst, 'reload schema';
-```
+## Tracking
 
-## Pending features (ordered by recommended sessions)
-
-### Session A: Technical cleanup (1-2h, low risk)
-1. Delete 7 dead files from repo
-2. Remove Eruda from mobile_latest.html
-3. Remove console.log statements from 5 apps
-4. Verify JS syntax stays valid after each change
-5. Separate commits for safe revert
-
-### Session B: Service history per bike (2-3h, the #1 differentiator)
-1. DB migration: add bookings.bike_id (SQL above)
-2. UI in index.html: "select bike" step in booking flow
-3. UI in mobile_latest.html: same step
-4. UI in mechanic.html: show bike + add service notes
-5. UI in client profile: "Service history" view per bike
-
-### Session C: Apple Pay verification (30min, decision point)
-1. Contact Stripe Support via dashboard chat
-2. Ask them to verify real Apple-side domain status
-3. If they confirm it works: test in production
-4. If not: hire Fiverr Stripe specialist
-
-### Session D: Light theme for mobile app (2h)
-- Trigger phrase to start: "Hey, pasemos la app movil a tema claro"
-- Convert dark :root tokens to light, screen by screen review
-- Remove Eruda + console.logs same time
-
-### Session E: Real-time mechanic map (2h)
-- Currently static "3.2 km away"
-- Use mechanic_locations table + Supabase Realtime
-
-### Session F (deferred to after August 2026): Legal
-- Lawyer review of Privacy + Terms
-- Link in app footers
-- Cookie notice
-- Trademark registration with lawyer
-
-## Working style rules (from CLAUDE.md)
-
-- One task per session, no mixing.
-- When context fills (~100k tokens), close chat and open new one.
-- Read CLAUDE.md before each new session for project context.
-- Diego prefers chat-based Claude over Claude Code unless explicitly directed.
+Track progress by checking off the boxes above as each session completes.
+Update this file at the end of each session in the same commit.
