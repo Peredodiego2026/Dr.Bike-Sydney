@@ -39,13 +39,11 @@ One session per chat. Close chat at ~100k tokens.
   - Create api/admin-auth.js (Supabase Auth) (commit 9138551)
   - Create api/mechanic-auth.js with PIN check (commit 1a36b51)
   - Update SQL script and HTMLs accordingly
-- [ ] A3 - Limpieza dead code (~20 min)
-  - Consolidate mobile.html (keep mobile_latest, rename, delete v2/v3)
-  - Delete applepay-test.html (duplicate)
-  - Delete admin.html.bak
-  - Consolidate index.html vs index-redesign.html (ASK USER which to keep)
-  - Move broken mockups to docs/mockups/
-  - Update robots.txt, sitemap.xml, .gitignore
+- [x] A3 - Limpieza dead code (~20 min) - DONE 2026-06-12
+  - Consolidate mobile.html (keep mobile_latest, rename, delete v2/v3) (commit f454a0c)
+  - Delete applepay-test.html, admin.html.bak, index-redesign.html (commit b7b902f)
+  - Move broken mockups to docs/mockups/ (commit 5e73fcf)
+  - Update robots.txt (+Disallow /docs/), .gitignore (+*.bak)
 - [ ] A4 - Bug fixes (~30 min)
   - stripe-webhook.js: membership_status fix
   - send-email.js: referral_success scope fix
