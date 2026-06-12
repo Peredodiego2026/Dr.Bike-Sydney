@@ -17,9 +17,10 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
+  const keep = new Set([CACHE_STATIC, CACHE_PAGES]);
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.map(k => caches.delete(k))) // borrar TODO el cache al activar
+      Promise.all(keys.filter(k => !keep.has(k)).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
