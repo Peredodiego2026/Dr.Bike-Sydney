@@ -1,4 +1,4 @@
-// PRODUCTION ENV VARS (Vercel):
+﻿// PRODUCTION ENV VARS (Vercel):
 //   STRIPE_SECRET_KEY        → sk_live_...
 //   STRIPE_WEBHOOK_SECRET    → whsec_...  (from Stripe Dashboard → Webhooks)
 //   SUPABASE_SERVICE_KEY     → service_role key (not anon key)
@@ -62,7 +62,7 @@ async function getRawBody(req) {
 // ---------------------------------------------------------------------------
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min payments
+  if(await guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min payments
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const sig = req.headers['stripe-signature'];

@@ -1,4 +1,4 @@
-// PRODUCTION ENV VARS (Vercel):
+﻿// PRODUCTION ENV VARS (Vercel):
 //   TWILIO_ACCOUNT_SID  → ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 //   TWILIO_AUTH_TOKEN   → your_auth_token
 //   TWILIO_PHONE_NUMBER → +61XXXXXXXXX  (WhatsApp-enabled number from Twilio console)
@@ -39,7 +39,7 @@ function buildMessage(template, data) {
 }
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if(await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

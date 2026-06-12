@@ -1,10 +1,10 @@
-import Stripe from 'stripe';
+﻿import Stripe from 'stripe';
 import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 3, rateWindow: 60000 })) return; // 3/min
+  if(await guard(req, res, { rateMax: 3, rateWindow: 60000 })) return; // 3/min
   if(verifyInternalAuth(req, res)) return; // Solo nuestra app
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

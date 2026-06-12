@@ -1,9 +1,9 @@
-// api/diagnose-bike.js — Unified bike diagnosis endpoint
+﻿// api/diagnose-bike.js — Unified bike diagnosis endpoint
 // Handles both image (base64) and text description diagnosis
 import { guard } from './_security.js';
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if(await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
 
   const { image, mediaType, description } = req.body;
   if (!image && !description) return res.status(400).json({ error: 'Provide image or description' });

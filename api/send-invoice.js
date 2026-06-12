@@ -1,4 +1,4 @@
-// api/send-invoice.js — Generate PDF invoice and email to client
+﻿// api/send-invoice.js — Generate PDF invoice and email to client
 // Uses HTML→PDF via @vercel/og or inline base64 approach
 // ENV: RESEND_API_KEY, SUPABASE_URL, SUPABASE_KEY
 
@@ -10,7 +10,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.s
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
+  if(await guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   let { bookingId, to, clientName, service, date, time, address, price, discount, mechNotes, mechName, nextService, bookingRef } = req.body;

@@ -1,4 +1,4 @@
-// api/admin-auth.js - Admin authentication via Supabase Auth
+﻿// api/admin-auth.js - Admin authentication via Supabase Auth
 // Admin user must be created in:
 //   Supabase Dashboard -> Authentication -> Users -> Add User
 //   Use the admin email + a strong password, then share credentials securely.
@@ -8,7 +8,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.s
 const SUPABASE_ANON_KEY = process.env.SUPABASE_KEY;
 
 export default async function handler(req, res) {
-  if (guard(req, res, { method: 'POST', rateMax: 5, rateWindow: 60000 })) return;
+  if (await guard(req, res, { method: 'POST', rateMax: 5, rateWindow: 60000 })) return;
 
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });

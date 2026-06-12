@@ -1,4 +1,4 @@
-// api/send-push.js — Web Push Notifications para clientes
+﻿// api/send-push.js — Web Push Notifications para clientes
 // Sends a push notification to a client's browser via their stored subscription
 //
 // ENV VARS needed in Vercel:
@@ -21,7 +21,7 @@ webpush.setVapidDetails(
 );
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if(await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

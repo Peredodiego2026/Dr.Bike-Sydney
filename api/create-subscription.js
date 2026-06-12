@@ -1,4 +1,4 @@
-// PRODUCTION ENV VARS (Vercel):
+﻿// PRODUCTION ENV VARS (Vercel):
 //   STRIPE_SECRET_KEY       → sk_live_...
 //   (webhook secret set in stripe-webhook.js)
 import Stripe from 'stripe';
@@ -7,7 +7,7 @@ import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
-  if(guard(req, res, { rateMax: 3, rateWindow: 60000 })) return; // 3/min — evitar spam
+  if(await guard(req, res, { rateMax: 3, rateWindow: 60000 })) return; // 3/min — evitar spam
 
   const { priceId, customerId, email, name, plan, billing } = req.body;
   if (!priceId || !email) return res.status(400).json({ error: 'Missing required fields' });

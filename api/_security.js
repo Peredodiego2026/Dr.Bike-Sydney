@@ -1,35 +1,68 @@
 // api/_security.js — Security middleware for all API endpoints
 // Usage: import { guard, sanitize, rateLimit } from './_security.js';
 
-// ── RATE LIMITING (in-memory, per Vercel function instance) ──────────────────
+// ── RATE LIMITING ─────────────────────────────────────────────────────────────
+// Primary: Upstash Redis (cross-instance, persistent) — requires env vars:
+//   UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+// Fallback: in-memory Map (per Vercel function instance)
+
 const rateLimitStore = new Map();
 
-export function rateLimit(req, res, { max = 20, windowMs = 60000, key = null } = {}) {
-  const ip = req.headers['x-vercel-forwarded-for']?.split(',')[0]?.trim()
+function getClientIP(req) {
+  return req.headers['x-vercel-forwarded-for']?.split(',')[0]?.trim()
     || req.headers['x-forwarded-for']?.split(',')[0]?.trim()
     || req.headers['x-real-ip']
     || req.socket?.remoteAddress
     || 'unknown';
+}
 
-  const limitKey = key ? `${ip}:${key}` : ip;
+async function rateLimitRedis(limitKey, max, windowMs) {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null; // not configured — fall through to in-memory
+
+  try {
+    const windowSec = Math.ceil(windowMs / 1000);
+    // Pipeline: INCR + EXPIRE in one round-trip
+    const resp = await fetch(`${url}/pipeline`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify([
+        ['INCR', limitKey],
+        ['EXPIRE', limitKey, windowSec, 'NX'],
+      ]),
+    });
+    if (!resp.ok) return null;
+    const [[, count]] = await resp.json();
+    return count;
+  } catch {
+    return null; // Redis error — fall through to in-memory
+  }
+}
+
+function rateLimitMemory(limitKey, max, windowMs) {
   const now = Date.now();
-
   if (!rateLimitStore.has(limitKey)) {
     rateLimitStore.set(limitKey, { count: 1, resetAt: now + windowMs });
-    return false; // not limited
+    return 1;
   }
-
   const entry = rateLimitStore.get(limitKey);
-
   if (now > entry.resetAt) {
     rateLimitStore.set(limitKey, { count: 1, resetAt: now + windowMs });
-    return false;
+    return 1;
   }
-
   entry.count++;
+  return entry.count;
+}
 
-  if (entry.count > max) {
-    res.setHeader('Retry-After', Math.ceil((entry.resetAt - now) / 1000));
+export async function rateLimit(req, res, { max = 20, windowMs = 60000, key = null } = {}) {
+  const ip = getClientIP(req);
+  const limitKey = key ? `rl:${ip}:${key}` : `rl:${ip}`;
+
+  const count = (await rateLimitRedis(limitKey, max, windowMs)) ?? rateLimitMemory(limitKey, max, windowMs);
+
+  if (count > max) {
+    res.setHeader('Retry-After', Math.ceil(windowMs / 1000));
     res.status(429).json({ error: 'Too many requests. Please slow down.' });
     return true; // limited
   }
@@ -83,7 +116,7 @@ export function setCORSHeaders(req, res) {
 }
 
 // ── GUARD — combined check: CORS + method + rate limit ───────────────────────
-export function guard(req, res, opts = {}) {
+export async function guard(req, res, opts = {}) {
   setCORSHeaders(req, res);
 
   // Handle preflight
@@ -100,7 +133,7 @@ export function guard(req, res, opts = {}) {
   }
 
   // Rate limit
-  const limited = rateLimit(req, res, {
+  const limited = await rateLimit(req, res, {
     max: opts.rateMax || 30,
     windowMs: opts.rateWindow || 60000,
     key: opts.rateKey || null,

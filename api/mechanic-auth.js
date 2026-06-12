@@ -1,4 +1,4 @@
-// api/mechanic-auth.js - Mechanic PIN verification via server-side Supabase query
+﻿// api/mechanic-auth.js - Mechanic PIN verification via server-side Supabase query
 // Verifies PIN against escalation_contacts (last 4 digits of mechanic phone).
 // Uses service_role key so it bypasses RLS.
 import { guard } from './_security.js';
@@ -7,7 +7,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.s
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
 export default async function handler(req, res) {
-  if (guard(req, res, { method: 'POST', rateMax: 10, rateWindow: 60000 })) return;
+  if (await guard(req, res, { method: 'POST', rateMax: 10, rateWindow: 60000 })) return;
 
   const { pin } = req.body;
   if (!pin || String(pin).trim().length < 4) return res.status(400).json({ error: 'PIN required' });
