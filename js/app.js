@@ -2335,157 +2335,46 @@ function showPaymentModal(bkg, price){
         </div>
         <button onclick="document.getElementById('payment-modal').remove()" style="background:#F7F8FA;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer">&#x2715;</button>
       </div>
-      <!-- Apple Pay / Google Pay wallet (shows only if browser supports it) -->
-      <div id="stripe-wallet-wrap" style="display:none;margin-bottom:14px">
-        <div id="stripe-payment-request-button"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 6px;color:#9CA3AF;font-size:11px;font-weight:600;letter-spacing:0.5px">
-          <div style="flex:1;height:1px;background:#E5E7EB"></div>
-          <span>OR PAY WITH CARD</span>
-          <div style="flex:1;height:1px;background:#E5E7EB"></div>
-        </div>
-      </div>
-      <div id="stripe-card-element" style="border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px;font-size:16px"></div>
       <div id="stripe-error" style="color:#DC2626;font-size:13px;margin-bottom:12px;display:none"></div>
-      <button id="pay-btn" onclick="processPayment('${bkg.id}',${price})" style="width:100%;background:#1848C8;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
+      <button id="pay-btn" onclick="processPayment('${bkg.id}',${price},'${esc(bkg.service_name)}')" style="width:100%;background:#1848C8;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
         Pay $${price} AUD
       </button>
-      <div style="text-align:center;margin-top:12px;font-size:11px;color:#9CA3AF">🔒 Secured by Stripe · Card charged after service</div>
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:#9CA3AF">🔒 Card · Apple Pay · Google Pay — secured by Stripe</div>
       <div style="position:relative;z-index:100;margin-top:10px">
         <button onclick="skipPayment('${bkg.id}')" style="display:block;width:100%;background:none;border:1px solid #E5E7EB;border-radius:8px;color:#6B7280;font-size:13px;padding:10px;cursor:pointer;font-family:Inter,sans-serif">Pay cash on the day instead</button>
         <button onclick="cancelBookingModal('${bkg.id}')" style="display:block;width:100%;background:none;border:none;color:#DC2626;font-size:12px;margin-top:6px;cursor:pointer;font-family:Inter,sans-serif">Cancel and go back</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
-
-  // Mount Stripe element
-  try {
-    const stripeInstance = getStripe();
-    if(stripeInstance){
-      const elements = stripeInstance.elements();
-      window._stripeCard = elements.create('card', {
-        style: { base: { fontSize:'16px', color:'#0D1F3C', fontFamily:'Inter,sans-serif', '::placeholder':{ color:'#9CA3AF' } } }
-      });
-      window._stripeCard.mount('#stripe-card-element');
-
-      // Apple Pay / Google Pay — deferred to next tick, fully isolated with triple try/catch
-      // so it CANNOT affect login, calendar, or any other page functionality.
-      setTimeout(() => {
-        try {
-          const priceCents = Math.round(Number(price) * 100);
-          if (!priceCents || priceCents < 50) return;
-          const pr = stripeInstance.paymentRequest({
-            country: 'AU',
-            currency: 'aud',
-            total: { label: 'Dr. Bike Sydney service', amount: priceCents },
-            requestPayerName: true,
-            requestPayerEmail: true
-          });
-          const prBtn = elements.create('paymentRequestButton', {
-            paymentRequest: pr,
-            style: { paymentRequestButton: { type: 'default', theme: 'dark', height: '48px' } }
-          });
-          pr.canMakePayment().then(result => {
-            try {
-              if (result) {
-                prBtn.mount('#stripe-payment-request-button');
-                const wrap = document.getElementById('stripe-wallet-wrap');
-                if (wrap) wrap.style.display = 'block';
-              }
-            } catch (e) { console.warn('[wallet] mount skipped:', e); }
-          }).catch(e => console.warn('[wallet] canMakePayment failed:', e));
-
-          pr.on('paymentmethod', async (ev) => {
-            try {
-              const { error: updErr } = await sb.from('bookings').update({
-                status: 'confirmed',
-                payment_method_id: ev.paymentMethod.id
-              }).eq('id', bkg.id);
-              if (updErr) throw updErr;
-              ev.complete('success');
-              document.getElementById('payment-modal')?.remove();
-              const { data: bkgData } = await sb.from('bookings').select('*').eq('id', bkg.id).single();
-              if (bkgData) {
-                fetch('/api/send-email', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    to: currentUser?.email,
-                    name: userProfile?.full_name || currentUser?.email?.split('@')[0],
-                    service: bkgData.service_name,
-                    date: new Date(bkgData.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }),
-                    time: bkgData.scheduled_time,
-                    address: bkgData.address,
-                    price: bkgData.service_price,
-                    type: 'confirmation',
-                    bookingId: bkgData.id,
-                    referralCode: userProfile?.referral_code
-                  })
-                }).catch(()=>{});
-              }
-              showBookingSuccess();
-            } catch (err) {
-              try { ev.complete('fail'); } catch(_) {}
-              const errEl = document.getElementById('stripe-error');
-              if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Wallet payment failed. Please try card.'; }
-            }
-          });
-        } catch (e) {
-          console.warn('[wallet] setup failed silently:', e);
-        }
-      }, 0);
-    } else {
-      document.getElementById('stripe-card-element').innerHTML = '<div style="padding:12px;color:#DC2626;font-size:13px">Card payment unavailable. Please use cash.</div>';
-    }
-  } catch(e) {
-    document.getElementById('stripe-card-element').innerHTML = '<div style="padding:12px;color:#DC2626;font-size:13px">Card payment unavailable. Please use cash.</div>';
-  }
 }
 
-async function processPayment(bookingId, price){
+async function processPayment(bookingId, price, serviceName){
   const btn = document.getElementById('pay-btn');
-  btn.innerHTML='<span class="spinner"></span>Processing...';
+  btn.innerHTML='<span class="spinner"></span>Redirecting to payment...';
   btn.disabled=true;
 
-  const stripeInst = getStripe(); if(!stripeInst){ toast('Card unavailable, please use cash'); return; }
-  const { paymentMethod, error } = await stripeInst.createPaymentMethod({
-    type: 'card',
-    card: window._stripeCard,
-  });
-
-  if(error){
-    document.getElementById('stripe-error').style.display='block';
-    document.getElementById('stripe-error').textContent = error.message;
-    btn.innerHTML='Pay $'+price+' AUD';
-    btn.disabled=false;
-    return;
-  }
-
-  // Update booking as confirmed with payment method
-  await sb.from('bookings').update({ status:'confirmed', payment_method_id: paymentMethod.id }).eq('id', bookingId);
-  document.getElementById('payment-modal').remove();
-
-  // Email confirmación al cliente
-  const {data:bkgData} = await sb.from('bookings').select('*').eq('id',bookingId).single();
-  if(bkgData){
-    await fetch('/api/send-email', {
+  try {
+    const priceCents = Math.round(Number(price) * 100);
+    const resp = await fetch('/api/create-payment-session', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        to: currentUser?.email,
+        bookingId,
+        priceCents,
+        description: serviceName || 'Dr. Bike Sydney service',
+        email: currentUser?.email,
         name: userProfile?.full_name || currentUser?.email?.split('@')[0],
-        service: bkgData.service_name,
-        date: new Date(bkgData.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}),
-        time: bkgData.scheduled_time,
-        address: bkgData.address,
-        price: bkgData.service_price,
-        type: 'confirmation',
-        bookingId: bkgData.id,
-        referralCode: userProfile?.referral_code
-      })
+      }),
     });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed to create session');
+    window.location.href = data.url;
+  } catch (err) {
+    const errEl = document.getElementById('stripe-error');
+    if (errEl) { errEl.style.display = 'block'; errEl.textContent = err.message; }
+    btn.innerHTML = 'Pay $' + price + ' AUD';
+    btn.disabled = false;
   }
-
-  showBookingSuccess();
 }
 
 async function cancelBookingModal(bookingId){
@@ -2589,12 +2478,48 @@ async function subscribePlan(planId) {
 }
 
 // Handle return from Stripe checkout
-function handleStripeReturn() {
+async function handleStripeReturn() {
   const params = new URLSearchParams(window.location.search);
+
+  // One-time booking payment return
+  const payment = params.get('payment');
+  const bookingId = params.get('booking');
+  if (payment === 'success' && bookingId) {
+    window.history.replaceState({}, '', '/');
+    await sb.from('bookings').update({ status: 'confirmed', payment_method: 'stripe' }).eq('id', bookingId);
+    const { data: bkgData } = await sb.from('bookings').select('*').eq('id', bookingId).single();
+    if (bkgData) {
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: currentUser?.email,
+          name: userProfile?.full_name || currentUser?.email?.split('@')[0],
+          service: bkgData.service_name,
+          date: new Date(bkgData.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }),
+          time: bkgData.scheduled_time,
+          address: bkgData.address,
+          price: bkgData.service_price,
+          type: 'confirmation',
+          bookingId: bkgData.id,
+          referralCode: userProfile?.referral_code,
+        }),
+      }).catch(() => {});
+    }
+    showBookingSuccess();
+    return;
+  }
+  if (payment === 'cancelled' && bookingId) {
+    toast('Payment cancelled — booking not confirmed');
+    window.history.replaceState({}, '', '/');
+    return;
+  }
+
+  // Subscription return
   const status = params.get('subscription');
   if (status === 'success') {
     const plan = params.get('plan');
-    toast(`🎉 Welcome to Dr. Bike ${plan?.charAt(0).toUpperCase()+plan?.slice(1)}!`);
+    toast(`Welcome to Dr. Bike ${plan?.charAt(0).toUpperCase()+plan?.slice(1)}!`);
     window.history.replaceState({}, '', '/');
     setTimeout(() => { if (currentUser) showView('dashboard'); }, 500);
   } else if (status === 'cancelled') {
