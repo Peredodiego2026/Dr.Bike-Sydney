@@ -34,10 +34,10 @@ One session per chat. Close chat at ~100k tokens.
   - Sanitize XSS in send-email.js, send-invoice.js (commit 613a5e8)
   - Clean moz-extension artifacts from admin.html (commit c2ea437)
   - Document Google Maps key HTTP referrer restriction (commit d09223c)
-- [ ] A2 - Auth + RLS Supabase (~45 min)
-  - Enable RLS on bookings with proper policies
-  - Create api/admin-auth.js (Supabase Auth)
-  - Create api/mechanic-auth.js with PIN check
+- [x] A2 - Auth + RLS Supabase (~45 min) - DONE 2026-06-12
+  - Enable RLS on bookings with proper policies (commit 0ecfb9b)
+  - Create api/admin-auth.js (Supabase Auth) (commit 9138551)
+  - Create api/mechanic-auth.js with PIN check (commit 1a36b51)
   - Update SQL script and HTMLs accordingly
 - [ ] A3 - Limpieza dead code (~20 min)
   - Consolidate mobile.html (keep mobile_latest, rename, delete v2/v3)
