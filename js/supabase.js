@@ -88,6 +88,40 @@ export async function signUp(email, password, name) {
   return data;
 }
 
+export function subscribeToMechanicLocation(bookingId, callback) {
+  let mockLat = -33.820, mockLng = 151.180;
+  const targetLat = -33.8688, targetLng = 151.2093;
+  let useRealData = false;
+
+  let channel = null;
+  try {
+    channel = sb.channel(`mechanic-${bookingId || 'demo'}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'mechanic_locations',
+        filter: `booking_id=eq.${bookingId}`,
+      }, payload => {
+        const { latitude, longitude } = payload.new || {};
+        if (latitude && longitude) { useRealData = true; callback({ latitude, longitude }); }
+      })
+      .subscribe();
+  } catch { /* no realtime available */ }
+
+  // Mock: slowly move mechanic toward client (used while no real data)
+  const interval = setInterval(() => {
+    if (useRealData) return;
+    mockLat += (targetLat - mockLat) * 0.08;
+    mockLng += (targetLng - mockLng) * 0.08;
+    callback({ latitude: mockLat, longitude: mockLng });
+  }, 3000);
+
+  return () => {
+    clearInterval(interval);
+    if (channel) try { sb.removeChannel(channel); } catch {}
+  };
+}
+
 export async function getMyBookings() {
   try {
     const { data: { user } } = await sb.auth.getUser();

@@ -15,6 +15,24 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid amount' });
   }
 
+  // PaymentIntent mode: /api/create-payment-intent → here via vercel.json rewrite
+  if (req.query.type === 'intent') {
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: priceCents,
+        currency: 'aud',
+        payment_method_types: ['card'],
+        receipt_email: email,
+        metadata: { bookingId, email },
+      });
+      return res.status(200).json({ clientSecret: paymentIntent.client_secret });
+    } catch (err) {
+      console.error('create-payment-intent error:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  // Checkout Session mode (default)
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

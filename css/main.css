@@ -448,3 +448,144 @@ body {
   font-size: var(--font-size-sm);
   margin-top: var(--space-3);
 }
+
+/* ── Additional Utilities ────────────────────────────────────────────────────── */
+.mb-4 { margin-bottom: var(--space-4); }
+.ml-auto { margin-left: auto; }
+
+/* ── Payment Screen ──────────────────────────────────────────────────────────── */
+.payment-amount {
+  text-align: center;
+  padding: var(--space-5) 0 var(--space-2);
+}
+.payment-amount__total {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: var(--space-2);
+}
+.payment-ref {
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+.payment-methods {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+.payment-request-wrap { margin-bottom: var(--space-3); }
+.payment-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.payment-divider::before,
+.payment-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+.card-element {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  transition: border-color var(--transition-fast);
+  min-height: 44px;
+}
+.card-element:focus-within { border-color: var(--color-primary); }
+.StripeElement { width: 100%; }
+.payment-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  padding: var(--space-3) 0;
+}
+
+/* ── Status Indicator ────────────────────────────────────────────────────────── */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+}
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+}
+.status-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  animation: status-pulse 2s ease-in-out infinite;
+}
+@keyframes status-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 0; transform: scale(2.2); }
+}
+.status-dot--confirmed   { background: var(--color-primary); }
+.status-dot--confirmed::after   { background: var(--color-primary); }
+.status-dot--enroute     { background: var(--color-success); }
+.status-dot--enroute::after     { background: var(--color-success); }
+.status-dot--in-progress { background: var(--color-success); }
+.status-dot--in-progress::after { background: var(--color-success); }
+.status-dot--completed   { background: var(--color-text-secondary); }
+.status-dot--completed::after   { display: none; }
+.status-text { font-weight: 600; font-size: var(--font-size-base); }
+
+/* ── Map Container ───────────────────────────────────────────────────────────── */
+.map-container {
+  height: 280px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.leaflet-tile-container { filter: brightness(0.85) saturate(0.7); }
+.leaflet-control-attribution { display: none !important; }
+.leaflet-control-zoom a {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* ── Estimated Arrival ───────────────────────────────────────────────────────── */
+.estimated-arrival {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.mechanic-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
