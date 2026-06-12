@@ -50,12 +50,11 @@ One session per chat. Close chat at ~100k tokens.
   - Move normalizeAUPhone to _security.js (commit 5e747fa)
   - TWILIO_WHATSAPP_FROM env var (commit 5e26c08)
   - Remove @anthropic-ai/sdk from package.json (commit 3d438b3)
-- [ ] A5 - Modularizacion frontend (~60 min)
-  - Create css/ and js/ directories
-  - Extract CSS to css/main.css from index.html
-  - Extract JS to js/app.js and js/stripe.js
-  - Repeat for admin.html and mechanic.html if monoliths
-  - Optional: css/variables.css shared with landing
+- [x] A5 - Modularizacion frontend (~60 min) - DONE 2026-06-12
+  - Extract index.html -> css/main.css, js/app.js, js/stripe.js (commits a44b637, 786bf48)
+  - Extract admin.html -> css/admin.css, js/admin.js (commits cd16643, 6f41b3b)
+  - Extract mechanic.html -> css/mechanic.css, js/mechanic.js (commits adf7de0, 44c45ff)
+  - index.html: 4902 -> 797 lines | admin.html: 3511 -> 978 lines | mechanic.html: 1156 -> 75 lines
 - [ ] A6 - Produccion readiness (~40 min)
   - sw.js selective cache cleanup
   - _security.js with Upstash Redis fallback
