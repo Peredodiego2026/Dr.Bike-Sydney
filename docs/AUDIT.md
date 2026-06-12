@@ -29,11 +29,11 @@ One session per chat. Close chat at ~100k tokens.
 ## Sessions checklist
 
 ### Track A - Saneamiento
-- [ ] A1 - Seguridad critica (~30 min)
-  - Eliminate Eruda from mobile_latest.html
-  - Sanitize XSS in send-email.js, send-invoice.js
-  - Clean moz-extension artifacts from admin.html
-  - Document Google Maps key HTTP referrer restriction
+- [x] A1 - Seguridad critica (~30 min) - DONE 2026-06-12
+  - Eliminate Eruda from mobile_latest.html (commit 817e47b)
+  - Sanitize XSS in send-email.js, send-invoice.js (commit 613a5e8)
+  - Clean moz-extension artifacts from admin.html (commit c2ea437)
+  - Document Google Maps key HTTP referrer restriction (commit d09223c)
 - [ ] A2 - Auth + RLS Supabase (~45 min)
   - Enable RLS on bookings with proper policies
   - Create api/admin-auth.js (Supabase Auth)
