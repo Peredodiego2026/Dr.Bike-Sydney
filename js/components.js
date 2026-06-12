@@ -71,11 +71,34 @@ export function createServiceCard(service) {
 }
 
 // ── Time Slot ─────────────────────────────────────────────────────────────────
-export function createTimeSlot(time, available = true) {
+export function createTimeSlot(time, available = true, isSelected = false) {
   return `
-<button class="time-slot${available ? '' : ' time-slot--unavailable'}" ${available ? '' : 'disabled aria-disabled="true"'} data-time="${time}">
+<button class="time-slot${available ? '' : ' time-slot--unavailable'}${isSelected ? ' selected' : ''}" ${available ? '' : 'disabled aria-disabled="true"'} data-time="${time}" type="button">
   ${time}
 </button>`;
+}
+
+// ── Date Item ─────────────────────────────────────────────────────────────────
+export function createDateItem(dateStr, isSelected = false) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `
+<button class="date-item${isSelected ? ' selected' : ''}" data-date="${dateStr}" type="button" aria-label="${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]}">
+  <span class="date-item__day">${DAY_NAMES[date.getDay()]}</span>
+  <span class="date-item__num">${date.getDate()}</span>
+  <span class="date-item__month">${MONTH_NAMES[date.getMonth()]}</span>
+</button>`;
+}
+
+// ── Summary Row ───────────────────────────────────────────────────────────────
+export function createSummaryRow(label, value) {
+  return `
+<div class="summary-row">
+  <span class="summary-row__label">${label}</span>
+  <span class="summary-row__value">${value}</span>
+</div>`;
 }
 
 // ── Star Rating ───────────────────────────────────────────────────────────────
