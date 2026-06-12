@@ -38,6 +38,9 @@ Thumbs.db
 npm-debug.log*
 logs/
 
+# Backup files
+*.bak
+
 # Editor
 .vscode/
 .idea/
