@@ -11,20 +11,12 @@
 // Templates: confirmation | enroute | completed | reminder
 
 import { createClient } from '@supabase/supabase-js';
-import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
+import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth, normalizeAUPhone } from './_security.js';
 
 const sb = createClient(
   process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co',
   process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
 );
-
-function normalizeAUPhone(raw) {
-  const digits = String(raw || '').replace(/\D/g, '');
-  if (digits.startsWith('61') && digits.length === 11) return '+' + digits;
-  if (digits.startsWith('0') && digits.length === 10) return '+61' + digits.slice(1);
-  if (digits.length === 9) return '+61' + digits;
-  return null;
-}
 
 function buildMessage(template, data) {
   const d = data || {};

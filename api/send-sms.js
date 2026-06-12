@@ -3,7 +3,7 @@
 //   TWILIO_AUTH_TOKEN    → your auth token
 //   TWILIO_PHONE_NUMBER  → +61XXXXXXXXX  (or Messaging Service SID: MGxxxxxxx)
 import twilio from 'twilio';
-import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
+import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth, normalizeAUPhone } from './_security.js';
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
@@ -53,10 +53,3 @@ export default async function handler(req, res) {
   }
 }
 
-function normalizeAUPhone(raw) {
-  const digits = String(raw).replace(/\D/g, '');
-  if (digits.startsWith('61') && digits.length === 11) return '+' + digits;
-  if (digits.startsWith('0') && digits.length === 10) return '+61' + digits.slice(1);
-  if (digits.length === 9) return '+61' + digits;
-  return null;
-}
