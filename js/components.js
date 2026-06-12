@@ -101,6 +101,65 @@ export function createSummaryRow(label, value) {
 </div>`;
 }
 
+// ── Booking Card ─────────────────────────────────────────────────────────────
+export function createBookingCard(booking) {
+  const { id = '', service_name, scheduled_date, scheduled_time, total_price, status, rating } = booking;
+  const STATUS_MAP = {
+    pending:     { label: 'Pending',     bg: 'rgba(245,158,11,0.15)',  color: '#F59E0B' },
+    confirmed:   { label: 'Confirmed',   bg: 'rgba(10,88,202,0.15)',   color: '#0A58CA' },
+    enroute:     { label: 'En Route',    bg: 'rgba(34,197,94,0.15)',   color: '#22C55E' },
+    in_progress: { label: 'In Progress', bg: 'rgba(34,197,94,0.15)',   color: '#22C55E' },
+    completed:   { label: 'Completed',   bg: 'rgba(160,160,160,0.15)', color: '#A0A0A0' },
+    cancelled:   { label: 'Cancelled',   bg: 'rgba(239,68,68,0.15)',   color: '#EF4444' },
+  };
+  const s = STATUS_MAP[status] || STATUS_MAP.pending;
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  let dateLabel = '--<br>---';
+  if (scheduled_date) {
+    const [, m, d] = scheduled_date.split('-').map(Number);
+    dateLabel = `${d}<br>${MONTHS[m - 1]}`;
+  }
+  return `
+<div class="booking-card" data-booking-id="${id}">
+  <div class="booking-card__date">${dateLabel}</div>
+  <div class="booking-card__info">
+    <div class="booking-card__service">${service_name || 'Service'}</div>
+    <div class="booking-card__time text-secondary text-sm">${scheduled_time || ''}</div>
+    ${rating ? `<div class="booking-card__rating">${createStarRating(rating, false)}</div>` : ''}
+  </div>
+  <div class="booking-card__right">
+    <span class="booking-chip" style="background:${s.bg};color:${s.color}">${s.label}</span>
+    <span class="booking-card__price text-secondary text-sm">$${total_price || 0}</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </div>
+</div>`;
+}
+
+// ── Empty State ───────────────────────────────────────────────────────────────
+export function createEmptyState(iconHtml, title, subtitle = '') {
+  return `
+<div class="empty-state">
+  <div class="empty-state__icon">${iconHtml}</div>
+  <div class="empty-state__title">${title}</div>
+  ${subtitle ? `<p class="empty-state__sub">${subtitle}</p>` : ''}
+</div>`;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+export function showToast(message, type = 'success') {
+  document.querySelector('.toast')?.remove();
+  const toast = Object.assign(document.createElement('div'), {
+    className: `toast toast--${type}`,
+    textContent: message,
+  });
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('toast--visible'));
+  setTimeout(() => {
+    toast.classList.remove('toast--visible');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+  }, 3000);
+}
+
 // ── Star Rating ───────────────────────────────────────────────────────────────
 export function createStarRating(rating = 0, interactive = false) {
   const stars = Array.from({ length: 5 }, (_, i) => {

@@ -15,6 +15,14 @@ const MOCK_SERVICES = [
 
 const MOCK_SLOTS = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'];
 
+const _d0 = new Date();
+const _dateStr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const _daysAgo = n => { const d = new Date(_d0); d.setDate(d.getDate() - n); return _dateStr(d); };
+const MOCK_BOOKINGS = [
+  { id: 'mock-1', service_name: 'Tune-Up',          scheduled_date: _dateStr(_d0), scheduled_time: '10:00 AM', total_price: 109, status: 'confirmed',  rating: null },
+  { id: 'mock-2', service_name: 'Standard Service',  scheduled_date: _daysAgo(7),  scheduled_time: '2:00 PM',  total_price: 149, status: 'completed',  rating: 5    },
+];
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export async function getServices() {
   try {
@@ -125,7 +133,7 @@ export function subscribeToMechanicLocation(bookingId, callback) {
 export async function getMyBookings() {
   try {
     const { data: { user } } = await sb.auth.getUser();
-    if (!user) return [];
+    if (!user) return MOCK_BOOKINGS;
     const { data, error } = await sb
       .from('bookings')
       .select('*')
