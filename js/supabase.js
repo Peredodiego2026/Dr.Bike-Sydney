@@ -1,0 +1,105 @@
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U';
+
+export const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Mock data (fallback when tables don't exist or network fails) ──────────────
+const MOCK_SERVICES = [
+  { id: '1', name: 'Tune-Up',          price: 109, description: 'Gears, brakes, wheels trued + safety check', duration: '~1 hour' },
+  { id: '2', name: 'Standard Service', price: 149, description: 'Full tune-up + drivetrain clean',             duration: '~1.5 hours' },
+  { id: '3', name: 'Major Service',    price: 199, description: 'Comprehensive overhaul + parts check',        duration: '~2.5 hours' },
+  { id: '4', name: 'Ultimate Overhaul',price: 369, description: 'Complete rebuild, all bearings serviced',     duration: '~4 hours' },
+];
+
+const MOCK_SLOTS = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+export async function getServices() {
+  try {
+    const { data, error } = await sb.from('services').select('*').order('price');
+    if (error || !data?.length) return MOCK_SERVICES;
+    return data;
+  } catch {
+    return MOCK_SERVICES;
+  }
+}
+
+export async function getAvailableSlots(date, serviceId) {
+  try {
+    const { data, error } = await sb
+      .from('availability')
+      .select('time_slot, available')
+      .eq('date', date)
+      .eq('service_id', serviceId);
+    if (error || !data?.length) return MOCK_SLOTS.map(t => ({ time: t, available: true }));
+    return data.map(r => ({ time: r.time_slot, available: r.available }));
+  } catch {
+    return MOCK_SLOTS.map(t => ({ time: t, available: true }));
+  }
+}
+
+export async function createBooking(bookingData) {
+  const { data, error } = await sb.from('bookings').insert([bookingData]).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getMechanicInfo(mechanicId) {
+  try {
+    const { data, error } = await sb.from('escalation_contacts').select('*').eq('id', mechanicId).single();
+    if (error) return { name: 'Your Mechanic', phone: '0433 963 250' };
+    return data;
+  } catch {
+    return { name: 'Your Mechanic', phone: '0433 963 250' };
+  }
+}
+
+export async function getBookingStatus(bookingId) {
+  const { data, error } = await sb.from('bookings').select('*').eq('id', bookingId).single();
+  if (error) throw error;
+  return data;
+}
+
+export async function submitReview(bookingId, rating, comment) {
+  const { data, error } = await sb
+    .from('bookings')
+    .update({ rating, review_comment: comment, reviewed_at: new Date().toISOString() })
+    .eq('id', bookingId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function signIn(email, password) {
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+export async function signUp(email, password, name) {
+  const { data, error } = await sb.auth.signUp({
+    email, password,
+    options: { data: { full_name: name } },
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function getMyBookings() {
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await sb
+      .from('bookings')
+      .select('*')
+      .eq('client_id', user.id)
+      .order('scheduled_date', { ascending: false });
+    if (error) return [];
+    return data || [];
+  } catch {
+    return [];
+  }
+}

@@ -16,21 +16,96 @@
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-  <div id="app">
-    <div data-screen="home"            class="screen active"></div>
-    <div data-screen="book-service"    class="screen"></div>
-    <div data-screen="service-summary" class="screen"></div>
-    <div data-screen="payment"         class="screen"></div>
-    <div data-screen="tracking"        class="screen"></div>
-    <div data-screen="review"          class="screen"></div>
-    <div data-screen="login"           class="screen"></div>
-    <div data-screen="my-bookings"     class="screen"></div>
-    <div data-screen="profile"         class="screen"></div>
+<div id="app">
+
+  <!-- HOME ─────────────────────────────────────────────────────────────────── -->
+  <div data-screen="home" class="screen active">
+    <header class="home-header">
+      <div class="home-logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0A58CA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="5.5" cy="17.5" r="3"></circle>
+          <circle cx="18.5" cy="17.5" r="3"></circle>
+          <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path>
+          <circle cx="12" cy="6" r="1.5" fill="#0A58CA" stroke="none"></circle>
+        </svg>
+        <span>DR BIKE SYDNEY</span>
+      </div>
+    </header>
+
+    <section class="hero-section">
+      <h1 class="hero-title">Professional bike service at your doorstep.</h1>
+      <p class="hero-sub">Mobile bicycle mechanic in Sydney.</p>
+      <a href="#book-service" class="btn btn--primary btn--full">Book a Service</a>
+      <a href="tel:+61433963250" class="btn btn--secondary btn--full">Call 0433 963 250</a>
+    </section>
+
+    <section class="pillars-row">
+      <div class="pillar">
+        <div class="pillar-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+        </div>
+        <span>Qualified Mechanic</span>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 3h15v13H1z"></path>
+            <path d="M16 8h4l3 3v5h-7V8z"></path>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+        </div>
+        <span>Fully Equipped Van</span>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+        <span>5 Star Rated</span>
+      </div>
+    </section>
+
+    <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+      <a href="#home"        class="bottom-nav__tab active" aria-label="Home">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Home</span>
+      </a>
+      <a href="#my-bookings" class="bottom-nav__tab" aria-label="Bookings">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>Bookings</span>
+      </a>
+      <a href="#tracking"    class="bottom-nav__tab" aria-label="Track">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span>Track</span>
+      </a>
+      <a href="#profile"     class="bottom-nav__tab" aria-label="Profile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Profile</span>
+      </a>
+    </nav>
   </div>
 
-  <script src="js/router.js"     type="module"></script>
-  <script src="js/supabase.js"   type="module"></script>
-  <script src="js/components.js" type="module"></script>
-  <script src="js/app.js"        type="module"></script>
+  <!-- BOOK A SERVICE ──────────────────────────────────────────────────────── -->
+  <div data-screen="book-service" class="screen"></div>
+
+  <!-- REMAINING SCREENS (populated in B3-B6) ────────────────────────────── -->
+  <div data-screen="service-summary" class="screen"></div>
+  <div data-screen="payment"         class="screen"></div>
+  <div data-screen="tracking"        class="screen"></div>
+  <div data-screen="review"          class="screen"></div>
+  <div data-screen="login"           class="screen"></div>
+  <div data-screen="my-bookings"     class="screen"></div>
+  <div data-screen="profile"         class="screen"></div>
+
+</div><!-- #app -->
+
+<script src="js/router.js"     type="module"></script>
+<script src="js/supabase.js"   type="module"></script>
+<script src="js/components.js" type="module"></script>
+<script src="js/app.js"        type="module"></script>
 </body>
 </html>
