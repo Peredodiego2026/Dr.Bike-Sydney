@@ -13,8 +13,10 @@ export default async function handler(req, res) {
   if(guard(req, res, { rateMax: 20, rateWindow: 60000 })) return; // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { bookingId, to, clientName, service, date, time, address, price, discount, mechNotes, mechName, nextService, bookingRef } = req.body;
+  let { bookingId, to, clientName, service, date, time, address, price, discount, mechNotes, mechName, nextService, bookingRef } = req.body;
   if (!to || !bookingId) return res.status(400).json({ error: 'Missing required fields' });
+  clientName = sanitize(clientName); service = sanitize(service); address = sanitize(address);
+  mechNotes = sanitize(mechNotes); mechName = sanitize(mechName); nextService = sanitize(nextService);
 
   const invoiceNumber = `DRBK-${bookingRef || bookingId.slice(0,8).toUpperCase()}`;
   const invoiceDate = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });

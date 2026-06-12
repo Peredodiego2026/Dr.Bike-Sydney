@@ -4,7 +4,11 @@ export default async function handler(req, res) {
   if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { to, name, service, date, time, address, price, type, bookingId, mechNotes, nextService, referralCode } = req.body;
+  let { to, name, service, date, time, address, price, type, bookingId, mechNotes, nextService, referralCode, friendName, referralCount } = req.body;
+  name = sanitize(name); service = sanitize(service); address = sanitize(address);
+  mechNotes = sanitize(mechNotes); nextService = sanitize(nextService);
+  referralCode = sanitize(referralCode);
+  if (friendName) friendName = sanitize(friendName);
 
   const gst = Math.round((price||0) / 11);
   const net = (price||0) - gst;
