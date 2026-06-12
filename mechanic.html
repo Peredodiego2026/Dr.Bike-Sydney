@@ -126,7 +126,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
         <div class="van-opt" id="v2" onclick="selVan(2)">🚐 Van 2<div style="font-size:11px;opacity:0.6;margin-top:2px">North Shore</div></div>
       </div>
       <label class="lbl">PIN — last 4 digits of your phone</label>
-      <input class="pin-inp" id="pin-inp" type="tel" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <input class="pin-inp" id="pin-inp" type="password" inputmode="numeric" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in →</button>
       <div class="login-err" id="login-err"></div>
     </div>
@@ -273,11 +273,14 @@ async function doLogin(){
   btn.textContent='Signing in...'; btn.disabled=true;
 
   try {
-    const {data, error} = await sb.from('escalation_contacts').select('*');
-    const contacts = data || [];
-    const m = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()]/g,'').slice(-4) === pin);
+    const resp = await fetch('/api/mechanic-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    });
+    const m = await resp.json();
     btn.textContent='Sign in →'; btn.disabled=false;
-    if(!m){ err('Invalid PIN — use last 4 digits of your phone'); return; }
+    if(!resp.ok){ err(m.error || 'Invalid PIN'); return; }
     mechanic={...m, van_number:vanNum};
     localStorage.setItem('drbike-mech',JSON.stringify(mechanic));
     go('s-main'); updateUI(); await load(); sub();
