@@ -7,111 +7,132 @@ Mobile on-demand bicycle repair business in Sydney, Australia.
 - Production URL: https://drbikesydney.com.au (Vercel)
 - Repo: github.com/Peredodiego2026/Dr.Bike-Sydney
 
+## SOURCE OF TRUTH for current work plan
+Three PDFs in docs/ from external consultant (Jun 2026 audit):
+- docs/reporte-inicial-drbike.pdf - Full audit, 14 issues identified
+- docs/plan-saneamiento-drbike.pdf - Track A: 6 sessions, ~3h 45min
+- docs/plan-rediseno-ui-drbike.pdf - Track B: 6 sessions, ~4h 40min
+
+Read these FIRST before any work. Each session has an exact prompt
+inside the PDF that should be executed verbatim.
+
+## Agreed execution order
+1. Track A (Saneamiento) completo PRIMERO
+2. Track B (Rediseno UI) despues
+3. Una sesion = una tarea. Cuando contexto llega a ~100k tokens, cerrar chat.
+
+| Session | Topic | Time |
+|---|---|---|
+| A1 | Seguridad critica (Eruda, XSS emails, admin extension, Google Maps key) | ~30 min |
+| A2 | Auth server-side + RLS Supabase | ~45 min |
+| A3 | Limpieza dead code (mobile v1/v2/v3, .bak, mockups, duplicados) | ~20 min |
+| A4 | Bug fixes (stripe-webhook, send-email referral, normalizeAUPhone, WhatsApp config, anthropic-ai/sdk) | ~30 min |
+| A5 | Modularizacion frontend (extraer CSS/JS de monolitos) | ~60 min |
+| A6 | Produccion readiness (SW cache, rate limit Upstash, Apple Pay/Google Pay, health check, DEPLOY.md) | ~40 min |
+| B1 | Design system + SPA shell | ~45 min |
+| B2 | Home + Service Type | ~45 min |
+| B3 | Date/Time + Summary | ~40 min |
+| B4 | Payment + Tracking | ~50 min |
+| B5 | Review + Auth + My Bookings | ~40 min |
+| B6 | PWA + Unificacion + Polish | ~40 min |
+
 ## Stack
 - Frontend: vanilla HTML/CSS/JS (no framework), multi-page PWA
 - Backend: Supabase (postgres + auth + storage + realtime)
 - Payments: Stripe LIVE keys in production
 - Email: Resend (noreply@drbikesydney.com.au, DNS verified)
-- SMS/WhatsApp: configured via API endpoints
+- SMS/WhatsApp: Twilio
 - Hosting: Vercel with cron jobs
 - Analytics: Google Analytics (G-GXYD68JXZW)
 - Auth: Supabase Auth + Google OAuth
+- AI: Anthropic Claude (fetch directo, no SDK)
 
-## App surfaces (12 HTML files in repo root)
-- `index.html` - Client web (DRBIKESYDNEY.COM.AU - PRODUCTION). Most complete. ~257k chars.
-- `mobile_latest.html` - Client mobile PWA, dark theme. ~123k chars.
-- `admin.html` - Manager/admin dashboard. ~209k chars.
-- `mechanic.html` - Mechanic app, PIN login 3250. ~64k chars.
-- `landing.html` - Public marketing landing. ~104k chars.
-- `track.html` - Public booking tracking (uses ?id=). ~8k chars.
-- `notifications.html`, `payments.html` - Standalone screens.
-- DEAD FILES (to delete in cleanup): `mobile.html`, `mobile_v2.html`, `mobile_v3.html`, `index-redesign.html`, `admin.html.bak`, `applepay-test.html`, `applepay.html`.
+## App surfaces (current state)
+- `index.html` - Client web (PRODUCTION). Monolith 4,898 lines. Most complete.
+- `mobile_latest.html` - Client mobile PWA, dark theme. HAS ERUDA DEBUG IN PROD.
+- `admin.html` - Manager dashboard. Monolith 3,497 lines. Client-side auth only.
+- `mechanic.html` - Mechanic app, PIN login 3250. Weak PIN check.
+- `landing.html` - Public marketing landing. Different CSS system from index.
+- `track.html` - Public booking tracking.
+- DEAD FILES (delete in A3): mobile.html, mobile_v2.html, mobile_v3.html,
+  index-redesign.html, admin.html.bak, applepay-test.html, payments.html,
+  notifications.html (mockups with broken local paths).
 
 ## Database tables (Supabase)
 profiles, bookings, services, bikes, van_zones, escalation_contacts,
 job_messages, mechanic_locations, notifications, discount_codes,
 availability, parts_inventory.
 
+**CRITICAL: RLS NOT ENABLED on bookings.** Script in
+scripts/add-bookings-rls.sql is commented out. Fixed in session A2.
+
 Key column gotchas:
 - `bikes` table uses `client_id` (NOT `user_id`)
-- `bookings` table does NOT yet have `bike_id` column (needed for service history per bike)
-- `bookings.scheduled_time` stored as 24h format string (e.g. "14:30"), no am/pm
+- `bookings.scheduled_time` stored as 24h string (e.g. "14:30")
+- `bookings` lacks `bike_id` column (needed for service history per bike)
 
-## API endpoints (13 files in /api)
-_security.js (middleware), send-email.js (all email templates),
-send-sms.js, send-whatsapp.js, send-push.js, send-invoice.js (PDF),
-send-reminders.js (6+ months re-service), send-2h-reminders.js (cron),
-diagnose-bike.js (Claude Vision), chat.js, create-subscription.js,
+## API endpoints (13 in /api)
+_security.js (middleware with sanitize + rate limit),
+send-email.js, send-sms.js, send-whatsapp.js, send-push.js,
+send-invoice.js, send-reminders.js, send-2h-reminders.js,
+diagnose-bike.js, chat.js, create-subscription.js,
 cancel-subscription.js, stripe-webhook.js.
+
+## Known critical issues (per audit PDFs)
+
+### Security CRITICAL
+- S01: Google Maps API key hardcoded in index.html:55 - needs HTTP referrer restriction
+- S02: Admin auth client-side only, password in JS, no RLS
+- S03: XSS in email templates - user data interpolated without escape
+- S04: Eruda debug console exposed in mobile_latest.html:2845
+
+### Functional bugs
+- B01: stripe-webhook.js:233 uses `membership` instead of `membership_status`
+- B02: send-email.js referral_success template has variables out of scope
+- B03: WhatsApp number stored via van_zones with hack van_number=0
+- B04: @anthropic-ai/sdk in package.json but never imported
+
+### Code quality
+- 4 versions of mobile app (mobile.html, v2, v3, latest)
+- 95% duplicate: index.html vs index-redesign.html
+- 100% duplicate: applepay.html vs applepay-test.html
+- normalizeAUPhone() duplicated in send-sms.js and send-whatsapp.js
+- All CSS inline (0 separate CSS files)
+- Service worker deletes ALL cache on activate
 
 ## Brand
 - Name: Dr. Bike
 - Slogan: "Healthy Bikes, Happy Riders"
-- Logo: figurative bike SVG (two-wheel design, in track.html as reference)
+- New design system (per Track B):
+  - Primary: #0A58CA (electric blue)
+  - Background: #0F0F0F (dark)
+  - Surface: #1A1A1A
+  - Text: #FFFFFF / secondary #A0A0A0
+  - Border: #2A2A2A
 
 ## Pricing
 - 20 services, all include $20 mobile call-out fee
-- Examples: Tune-Up $109, Standard $149, Major $199, Ultimate Overhaul $369
-- Subscriptions: Basic $57/mo, Standard $97/mo, VIP $147/mo (3-month minimum)
+- Tune-Up $109, Standard $149, Major $199, Ultimate Overhaul $369
+- Subscriptions: Basic $57/mo, Standard $97/mo, VIP $147/mo (3-month min)
 - Phone: 0433 963 250 / +61433963250
 - WhatsApp: wa.me/61433963250
 - Mechanic PIN: 3250
 
 ## Trademark status (May 2026)
-- IP Australia search done. Class 37 (bike repair) has no active "Dr/Doctor Bike" registered.
-- "DR BIKE" figurative N.2022263 (Hangzhou Joykie) is Class 12 only (products).
-- Competitor "The Bike Doctor" N.2588953 (Brady Douglas, Melbourne) Class 37 has ADVERSE REPORT, acceptance due 31 Jan 2027 = blocked.
-- Diego monitors The Bike Doctor until July 2026 (Accepted = bad, Lapsed = good).
-- No expansion to Melbourne planned for 7-10 years.
-- Strategy: register figurative LOGO + composite mark "Dr. Bike + slogan". Lawyer review pending.
-
-## Active pending items (priority order)
-
-### Block 1 - Differentiators
-- [DONE] 1.1 Automated 2h appointment reminders (email via Resend, cron every 15min)
-- [TODO] 1.2 Service history per bike (needs bookings.bike_id column + UI on 4 files)
-- [TODO] 1.3 Verified public reviews + post-service review request
-- [TODO] 1.4 Visible referral program in client UI
-- [TODO] 1.5 Subscriber retention (alert on unused plan benefits)
-
-### Block 2 - Technical
-- [PENDING] 2.1 Apple Pay verification - code in index.html, .well-known/ file present, vercel.json correct headers, but button does not appear in Safari iPhone. Diego uses Apple Pay daily on other sites. Stripe dashboard shows domain Enabled. canMakePayment() returns null. Next step: Stripe Support to verify real Apple status, or Fiverr specialist.
-- [TODO] 2.2 Real-time mechanic map (currently static "3.2 km away")
-- [TODO] 2.3 Convert mobile_latest.html dark theme to LIGHT theme. Trigger phrase: "Hey, pasemos la app movil a tema claro".
-- [TODO] 2.4 Remove Eruda console + console.log statements from production
-- [TODO] 2.5 Verify Supabase schema parity across all 4 client-facing apps
-
-### Block 3 - Growth
-- [TODO] 3.1 Google Business Profile + local SEO
-- [TODO] 3.2 Separate landing page with Dr. Bike + slogan lockup
-- [TODO] 3.3 Accessibility + performance pass
-
-### Block 4 - Legal (DEFERRED until after August 2026 per Diego)
-- Privacy Policy + Terms (already drafted in past session, need lawyer review)
-- Link privacy/terms in app footers
-- Cookie/analytics notice
-- Trademark registration (logo + composite mark with slogan)
-
-## What is DONE and should NOT be re-touched
-- All Supabase tables, RLS policies, Stripe webhooks, Resend email templates
-- Vercel config (rewrites correct, security headers, cron schedule)
-- Auth flow + onAuthStateChange handling
-- Booking flow + payment flow in index.html
-- Zone/vans system + escalation contacts
-- AI bike diagnosis endpoint (Claude Vision)
-- Real-time chat (job_messages table)
-- API security middleware (_security.js with rate limiting)
-- Cancel booking + cancellation policy modal (index.html + mobile_latest.html)
-- track.html unified to shared design tokens
-- 2h appointment reminders (cron + email template)
+- IP Australia search done. Class 37 (bike repair): no active competitor registered.
+- "DR BIKE" figurative N.2022263 (Hangzhou) in Class 12 only.
+- "The Bike Doctor" N.2588953 (Brady Douglas, Melbourne) Class 37 has ADVERSE REPORT,
+  acceptance due 31 Jan 2027 - blocked.
+- Diego monitors The Bike Doctor until July 2026.
+- Strategy: register figurative LOGO + composite mark "Dr. Bike + slogan".
+- Lawyer review pending (after August 2026).
 
 ## Critical operational rules
 
-### GitHub deploy pattern (Python)
+### GitHub deploy pattern
 ```python
-# Read SHA, then PUT base64 content with sha. Cache-bust URL with ?v={timestamp}.
-import requests, base64, time
-TOKEN = "<github token>"  # personal access
+import requests, base64
+TOKEN = "<github personal access token>"
 REPO = "Peredodiego2026/Dr.Bike-Sydney"
 h = {"Authorization": f"token {TOKEN}"}
 url = f"https://api.github.com/repos/{REPO}/contents/{FILE}"
@@ -130,12 +151,19 @@ NEVER use bare atob() - corrupts non-ASCII / emoji / Spanish characters.
 
 ### JS validation before deploy
 Always extract inline scripts and run node --check before pushing.
-Skip <script type="application/ld+json"> blocks (those are JSON-LD SEO data, not JS).
+Skip <script type="application/ld+json"> blocks (JSON-LD SEO data, not JS).
 
-### Working style preference (Diego)
-- Diego prefers Claude (chat) to directly advise + make code changes.
-- Claude Code (terminal) used only when Diego explicitly directs it.
-- One task per session. When context fills (~100k tokens), close chat and start fresh.
+### Branching
+- Track A: work in branch `saneamiento-prod`
+- Track B: work in branch `redesign-ui`
+- Separate commit per fix to allow safe revert.
+
+### Apple Pay state (deferred to A6)
+Code present in index.html, .well-known/ file present, vercel.json correct,
+domain Enabled in Stripe dashboard. But canMakePayment() returns null in
+Safari iPhone. The audit recommends switching to Stripe Checkout
+(removing payment_method_types: ['card'] restriction) instead of fighting
+Payment Request Button - this happens in session A6.
 
 ---
 
@@ -174,7 +202,7 @@ Skip <script type="application/ld+json"> blocks (those are JSON-LD SEO data, not
 - If referencing a file or function: read it first, then answer.
 - If unsure: say "I don't know." Never guess confidently.
 - Never invent file paths, function names, or API signatures.
-- If a user corrects a factual claim: accept it as ground truth for the entire session. Never re-assert the original claim.
+- If a user corrects a factual claim: accept it as ground truth for the entire session.
 
 ## Code Output
 - Return the simplest working solution. No over-engineering.
@@ -186,7 +214,7 @@ Skip <script type="application/ld+json"> blocks (those are JSON-LD SEO data, not
 
 ## Warnings and Disclaimers
 - No safety disclaimers unless there is a genuine life-safety or legal risk.
-- No "Note that...", "Keep in mind that...", "It's worth mentioning..." soft warnings.
+- No "Note that...", "Keep in mind that..." soft warnings.
 - No "As an AI, I..." framing.
 
 ## Session Memory
@@ -198,6 +226,11 @@ Skip <script type="application/ld+json"> blocks (those are JSON-LD SEO data, not
 - Do not add features beyond what was asked.
 - Do not refactor surrounding code when fixing a bug.
 - Do not create new files unless strictly necessary.
+
+## Working with the user (Diego)
+- Diego is non-technical. Explain decisions briefly when asked, do not over-explain.
+- Diego communicates in Spanish. Code, client UI, and docs stay in English.
+- One task per session. When context approaches ~100k tokens, recommend new chat.
 
 ## Override Rule
 User instructions always override this file.
