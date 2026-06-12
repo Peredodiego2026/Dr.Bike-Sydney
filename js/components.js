@@ -1,0 +1,93 @@
+// Dr. Bike Sydney — Reusable UI components
+// All components return HTML strings; inject with innerHTML or insertAdjacentHTML.
+// Colors reference CSS variables from variables.css — no hardcoded values.
+
+// ── Header ────────────────────────────────────────────────────────────────────
+export function createHeader(title, showBack = false, backUrl = '#home') {
+  return `
+<header class="app-header">
+  ${showBack ? `
+  <a href="${backUrl}" class="header-back" aria-label="Back">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+  </a>` : '<div class="header-spacer"></div>'}
+  <span class="header-title">${title}</span>
+  <div class="header-spacer"></div>
+</header>`;
+}
+
+// ── Bottom Navigation ─────────────────────────────────────────────────────────
+export function createBottomNav(activeTab = 'home') {
+  const tabs = [
+    {
+      id: 'home', label: 'Home', href: '#home',
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
+    },
+    {
+      id: 'my-bookings', label: 'Bookings', href: '#my-bookings',
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
+    },
+    {
+      id: 'tracking', label: 'Track', href: '#tracking',
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
+    },
+    {
+      id: 'profile', label: 'Profile', href: '#profile',
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+    },
+  ];
+
+  return `
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+  ${tabs.map(t => `
+  <a href="${t.href}" class="bottom-nav__tab${t.id === activeTab ? ' active' : ''}" aria-label="${t.label}">
+    ${t.icon}
+    <span>${t.label}</span>
+  </a>`).join('')}
+</nav>`;
+}
+
+// ── Button ────────────────────────────────────────────────────────────────────
+export function createButton(text, variant = 'primary', fullWidth = false) {
+  return `<button class="btn btn--${variant}${fullWidth ? ' btn--full' : ''}">${text}</button>`;
+}
+
+// ── Service Card ──────────────────────────────────────────────────────────────
+export function createServiceCard(service) {
+  const { id = '', name = '', description = '', price = 0, duration = '' } = service;
+  return `
+<div class="service-card" data-service-id="${id}" role="button" tabindex="0">
+  <div class="service-card__body">
+    <div class="service-card__name">${name}</div>
+    ${description ? `<div class="service-card__desc">${description}</div>` : ''}
+    ${duration ? `<div class="service-card__meta">${duration}</div>` : ''}
+  </div>
+  <div class="service-card__price">
+    <span class="service-card__amount">$${price}</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </div>
+</div>`;
+}
+
+// ── Time Slot ─────────────────────────────────────────────────────────────────
+export function createTimeSlot(time, available = true) {
+  return `
+<button class="time-slot${available ? '' : ' time-slot--unavailable'}" ${available ? '' : 'disabled aria-disabled="true"'} data-time="${time}">
+  ${time}
+</button>`;
+}
+
+// ── Star Rating ───────────────────────────────────────────────────────────────
+export function createStarRating(rating = 0, interactive = false) {
+  const stars = Array.from({ length: 5 }, (_, i) => {
+    const filled = i < rating;
+    return interactive
+      ? `<button class="star${filled ? ' star--filled' : ''}" data-value="${i + 1}" aria-label="${i + 1} star${i > 0 ? 's' : ''}">
+           <svg width="28" height="28" viewBox="0 0 24 24" fill="${filled ? 'var(--color-warning)' : 'none'}" stroke="var(--color-warning)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+         </button>`
+      : `<svg width="20" height="20" viewBox="0 0 24 24" fill="${filled ? 'var(--color-warning)' : 'none'}" stroke="var(--color-warning)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+  });
+
+  return `<div class="star-rating${interactive ? ' star-rating--interactive' : ''}" role="${interactive ? 'group' : 'img'}" aria-label="${rating} out of 5 stars">${stars.join('')}</div>`;
+}
