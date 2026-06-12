@@ -55,12 +55,12 @@ One session per chat. Close chat at ~100k tokens.
   - Extract admin.html -> css/admin.css, js/admin.js (commits cd16643, 6f41b3b)
   - Extract mechanic.html -> css/mechanic.css, js/mechanic.js (commits adf7de0, 44c45ff)
   - index.html: 4902 -> 797 lines | admin.html: 3511 -> 978 lines | mechanic.html: 1156 -> 75 lines
-- [ ] A6 - Produccion readiness (~40 min)
-  - sw.js selective cache cleanup
-  - _security.js with Upstash Redis fallback
-  - Apple Pay/Google Pay via Stripe Checkout (remove card restriction)
-  - api/health.js endpoint
-  - DEPLOY.md documentation
+- [x] A6 - Produccion readiness (~40 min) - DONE 2026-06-12
+  - sw.js: selective cache cleanup on activate (commit 2c39dbe)
+  - _security.js: Upstash Redis rate limiting + guard() now async (commit 07b274f)
+  - Apple Pay/Google Pay: Stripe Checkout for one-time bookings (commit e431531)
+  - api/health.js: GET /api/health endpoint (commit fd501d7)
+  - DEPLOY.md: full deployment documentation (commit 762c551)
 
 ### Track B - Rediseno UI
 - [ ] B1 - Design system + SPA shell (~45 min)
