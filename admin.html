@@ -2190,12 +2190,11 @@ async function sendReminders(){
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 // ── ADMIN AUTH ────────────────────────────────────────────────────────────────
-const ADMIN_HASH = 'drbike2026admin';
+// Admin user must be created in:
+//   Supabase Dashboard -> Authentication -> Users -> Add User
 
 function checkAdminAuth() {
-  const saved = sessionStorage.getItem('drbike-admin-v2');
-  if(saved === btoa(ADMIN_HASH)) return true;
-  // Mostrar overlay de login sin destruir el DOM
+  if(sessionStorage.getItem('drbike-admin-token')) return true;
   const overlay = document.createElement('div');
   overlay.id = 'admin-login-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:#0D1F3C;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
@@ -2204,29 +2203,44 @@ function checkAdminAuth() {
       <div style="width:56px;height:56px;background:#1848C8;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">🚲</div>
       <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
+      <input type="email" id="admin-email-inp" placeholder="Email" autocomplete="username"
+        style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter')document.getElementById('admin-pass-inp').focus()">
       <input type="password" id="admin-pass-inp" placeholder="Password" autocomplete="current-password"
         style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')submitAdminLogin()">
-      <div id="admin-pass-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none">Incorrect password</div>
+      <div id="admin-pass-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none">Invalid credentials</div>
       <button onclick="submitAdminLogin()" style="width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
     </div>`;
   document.body.appendChild(overlay);
-  setTimeout(() => document.getElementById('admin-pass-inp')?.focus(), 100);
+  setTimeout(() => document.getElementById('admin-email-inp')?.focus(), 100);
   return false;
 }
 
-function submitAdminLogin() {
-  const val = document.getElementById('admin-pass-inp')?.value || '';
-  if(val === ADMIN_HASH) {
-    sessionStorage.setItem('drbike-admin-v2', btoa(ADMIN_HASH));
+async function submitAdminLogin() {
+  const email = document.getElementById('admin-email-inp')?.value?.trim() || '';
+  const password = document.getElementById('admin-pass-inp')?.value || '';
+  const errEl = document.getElementById('admin-pass-err');
+  const btn = document.querySelector('#admin-login-overlay button');
+  if (!email || !password) { if(errEl) { errEl.textContent='Email and password required'; errEl.style.display='block'; } return; }
+  if(btn) { btn.textContent='Signing in...'; btn.disabled=true; }
+  try {
+    const resp = await fetch('/api/admin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || 'Invalid credentials');
+    sessionStorage.setItem('drbike-admin-token', data.access_token);
     document.getElementById('admin-login-overlay')?.remove();
     loadDashboard();
     subscribeToBookings();
-  } else {
-    const err = document.getElementById('admin-pass-err');
-    if(err) err.style.display = 'block';
+  } catch(e) {
+    if(errEl) { errEl.textContent = e.message || 'Invalid credentials'; errEl.style.display='block'; }
     const inp = document.getElementById('admin-pass-inp');
-    if(inp) { inp.value = ''; inp.style.borderColor = '#DC2626'; inp.focus(); }
+    if(inp) { inp.value=''; inp.style.borderColor='#DC2626'; inp.focus(); }
+    if(btn) { btn.textContent='Sign in →'; btn.disabled=false; }
   }
 }
 
@@ -3437,8 +3451,7 @@ async function deleteNotifNumber(id) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function initAdmin() {
-  // Con RLS deshabilitado en bookings/profiles, no necesitamos auth de Supabase
-  // Solo verificar password del admin
+  // Auth via Supabase (api/admin-auth.js). Token stored in sessionStorage.
   if(checkAdminAuth()) {
     loadDashboard();
     subscribeToBookings();
