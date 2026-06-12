@@ -26,13 +26,14 @@
 
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <meta name="theme-color" content="#1848C8">
+  <meta name="theme-color" content="#0F0F0F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -335,6 +336,27 @@
 
     .btn-block {
       width: 100%;
+    }
+
+    .btn-open-app {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 52px;
+      padding: 12px 24px;
+      background: #0A58CA;
+      color: #fff;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+      box-shadow: 0 4px 20px rgba(10,88,202,0.35);
+    }
+    .btn-open-app:hover {
+      background: #0848A8;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(10,88,202,0.45);
     }
 
     /* ====================================================
@@ -2049,7 +2071,7 @@
             </div>
           </div>
 
-          <a href="index.html" class="btn btn-primary btn-sm nav-cta" id="nav-cta-btn">Book Now</a>
+          <a href="index.html" class="btn-open-app btn-sm" id="nav-cta-btn" style="min-height:38px;padding:8px 16px;font-size:0.875rem;border-radius:8px">Open App</a>
 
           <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
             <span></span>
@@ -2098,6 +2120,10 @@
         </p>
 
         <div class="hero-ctas fade-in fade-in-delay-3">
+          <a href="index.html" class="btn-open-app">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path><circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none"></circle></svg>
+            Open App
+          </a>
           <a href="index.html" class="btn btn-primary">Book now →</a>
           <a href="#how-it-works" class="btn btn-ghost">How it works</a>
         </div>
