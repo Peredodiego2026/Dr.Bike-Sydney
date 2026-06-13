@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Privacy Policy - Dr. Bike Sydney</title>
+  <meta name="description" content="Privacy Policy for Dr. Bike Sydney. How we collect, use and protect your personal information.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://drbikesydney.com.au/privacy.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue:       #2563eb;
+      --blue-dark:  #1d4ed8;
+      --blue-light: #eff6ff;
+      --dark:       #111827;
+      --gray:       #6b7280;
+      --gray-light: #f9fafb;
+      --border:     #e5e7eb;
+      --white:      #ffffff;
+      --radius:     8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-family: Inter, system-ui, sans-serif; }
+    body { color: var(--dark); background: var(--white); line-height: 1.7; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    a { text-decoration: none; color: inherit; }
+
+    /* Navbar */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--white); border-bottom: 1px solid var(--border); height: 64px;
+    }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; height: 100%; }
+    .nav-logo { display: flex; gap: 10px; align-items: center; }
+    .nav-logo span { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+    .nav-back {
+      font-size: 14px; color: var(--gray); font-weight: 500;
+      display: flex; align-items: center; gap: 6px; transition: color 150ms;
+    }
+    .nav-back:hover { color: var(--blue); }
+
+    /* Page header */
+    .legal-header {
+      background: var(--gray-light); border-bottom: 1px solid var(--border);
+      padding: 48px 0 40px;
+    }
+    .legal-header h1 { font-size: 2rem; font-weight: 800; color: var(--dark); }
+    .legal-header p { color: var(--gray); margin-top: 8px; font-size: 15px; }
+
+    /* Content */
+    .legal-content { max-width: 780px; margin: 0 auto; padding: 48px 24px 80px; }
+    .legal-content h2 {
+      font-size: 1.15rem; font-weight: 700; color: var(--dark);
+      margin-top: 40px; margin-bottom: 12px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .legal-content h2:first-child { margin-top: 0; }
+    .legal-content p { font-size: 15px; color: #374151; margin-bottom: 12px; }
+    .legal-content ul { padding-left: 20px; margin-bottom: 12px; }
+    .legal-content ul li { font-size: 15px; color: #374151; margin-bottom: 6px; }
+    .legal-content a { color: var(--blue); text-decoration: underline; }
+    .highlight-box {
+      background: var(--blue-light); border-left: 3px solid var(--blue);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 14px 18px; margin: 20px 0;
+    }
+    .highlight-box p { margin: 0; font-size: 14px; color: #1e40af; }
+    .third-party-table {
+      width: 100%; border-collapse: collapse; margin: 16px 0 20px; font-size: 14px;
+    }
+    .third-party-table th {
+      background: var(--gray-light); padding: 10px 14px; text-align: left;
+      font-weight: 600; color: var(--dark); border-bottom: 2px solid var(--border);
+    }
+    .third-party-table td {
+      padding: 10px 14px; border-bottom: 1px solid var(--border); color: #374151; vertical-align: top;
+    }
+    .third-party-table tr:last-child td { border-bottom: none; }
+
+    /* Footer */
+    .footer-h4 { font-size: 13px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+    .footer-link { display: block; color: #6b7280; font-size: 14px; margin-bottom: 10px; transition: color 150ms; }
+    .footer-link:hover { color: white; }
+    .footer-contact-item { display: flex; align-items: center; gap: 8px; color: #6b7280; font-size: 14px; margin-bottom: 10px; }
+    .footer-social {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid #374151; display: flex; align-items: center; justify-content: center; transition: border-color 150ms;
+    }
+    .footer-social:hover { border-color: var(--blue); }
+
+    @media(max-width: 640px) {
+      .legal-header h1 { font-size: 1.5rem; }
+      .third-party-table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5.5" cy="17.5" r="3.5"/>
+        <circle cx="18.5" cy="17.5" r="3.5"/>
+        <path d="M15 6a1 1 0 0 0-1-1h-4"/>
+        <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
+        <path d="M18.5 17.5L15 6"/>
+        <path d="M5.5 17.5L9 11l4.5-1"/>
+      </svg>
+      <span>DR BIKE SYDNEY</span>
+    </a>
+    <a href="/" class="nav-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Home
+    </a>
+  </div>
+</nav>
+
+<section class="legal-header">
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p>Effective date: 1 June 2026 &nbsp;&middot;&nbsp; Last updated: 14 June 2026</p>
+  </div>
+</section>
+
+<main>
+  <div class="legal-content">
+
+    <h2>1. Our Commitment to Privacy</h2>
+    <p>Dr. Bike Sydney ("we", "us", "our") is committed to protecting your personal information. This Privacy Policy explains how we collect, use, store and disclose information in accordance with the <strong>Privacy Act 1988 (Cth)</strong> and the Australian Privacy Principles (APPs).</p>
+    <p>By using our website or services, you consent to the practices described in this policy.</p>
+    <div class="highlight-box">
+      <p>We only collect information necessary to provide and improve our services. We do not sell your personal data to third parties.</p>
+    </div>
+
+    <h2>2. Who We Are</h2>
+    <p>Dr. Bike Sydney is a mobile bicycle repair and maintenance business operating in Sydney, NSW, Australia.</p>
+    <p><strong>Privacy Contact:</strong><br>
+    Email: <a href="mailto:hello@drbikesydney.com.au">hello@drbikesydney.com.au</a><br>
+    Phone: <a href="tel:+61433963250">0433 963 250</a><br>
+    Location: Sydney, NSW, Australia</p>
+
+    <h2>3. Information We Collect</h2>
+    <p>We collect the following categories of personal information:</p>
+
+    <p><strong>Information you provide directly:</strong></p>
+    <ul>
+      <li><strong>Name</strong> - to identify you and address communications</li>
+      <li><strong>Email address</strong> - for booking confirmations, receipts and service updates</li>
+      <li><strong>Phone number</strong> - for booking reminders, scheduling and mechanic coordination</li>
+      <li><strong>Service address</strong> - to dispatch our mechanic to your location</li>
+      <li><strong>Bicycle details</strong> (brand, model, type) - to prepare appropriate tools and parts</li>
+      <li><strong>Service history</strong> - records of work performed on your bicycle</li>
+      <li><strong>Communication content</strong> - messages sent through our chat or email</li>
+    </ul>
+
+    <p><strong>Payment information:</strong></p>
+    <p>Payments are processed by Stripe, Inc. We do not collect, store or process your card number, CVV or full payment credentials. Stripe handles all payment data in compliance with PCI DSS standards. We receive only transaction confirmation details (amount, status, last 4 digits of card).</p>
+
+    <p><strong>Information collected automatically:</strong></p>
+    <ul>
+      <li>Browser type and version</li>
+      <li>Operating system</li>
+      <li>IP address (anonymised for analytics)</li>
+      <li>Pages visited and time spent on site</li>
+      <li>Referring URL</li>
+      <li>Device type (mobile, desktop)</li>
+    </ul>
+    <p>This information is collected via Google Analytics and our hosting infrastructure (Vercel).</p>
+
+    <h2>4. How We Use Your Information</h2>
+    <p>We use your personal information to:</p>
+    <ul>
+      <li>Process and confirm your bookings</li>
+      <li>Dispatch and coordinate our mechanics</li>
+      <li>Send booking reminders, service updates and receipts via email and SMS</li>
+      <li>Process payments through Stripe</li>
+      <li>Respond to your questions and support requests</li>
+      <li>Maintain a record of services performed on your bicycle</li>
+      <li>Improve our services and website based on usage patterns</li>
+      <li>Send marketing communications (only with your consent - you may unsubscribe at any time)</li>
+      <li>Comply with our legal obligations</li>
+    </ul>
+    <p>We will not use your information for purposes that are incompatible with the original purpose of collection, except where required by law or with your consent.</p>
+
+    <h2>5. Third-Party Service Providers</h2>
+    <p>We share your information only with the service providers necessary to operate our business. Each is bound by their own privacy policies and applicable law.</p>
+
+    <table class="third-party-table">
+      <thead>
+        <tr>
+          <th>Provider</th>
+          <th>Purpose</th>
+          <th>Data Shared</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Stripe, Inc.</strong> (USA)</td>
+          <td>Payment processing</td>
+          <td>Name, email, payment card (direct to Stripe - not stored by us)</td>
+        </tr>
+        <tr>
+          <td><strong>Supabase, Inc.</strong> (USA)</td>
+          <td>Database and authentication</td>
+          <td>Name, email, phone, address, booking details, service history</td>
+        </tr>
+        <tr>
+          <td><strong>Resend, Inc.</strong> (USA)</td>
+          <td>Transactional email delivery</td>
+          <td>Name, email address</td>
+        </tr>
+        <tr>
+          <td><strong>Twilio, Inc.</strong> (USA)</td>
+          <td>SMS and WhatsApp notifications</td>
+          <td>Phone number, booking details</td>
+        </tr>
+        <tr>
+          <td><strong>Google LLC</strong> (USA)</td>
+          <td>Analytics (Google Analytics) and Maps</td>
+          <td>Anonymised usage data, approximate location</td>
+        </tr>
+        <tr>
+          <td><strong>Vercel, Inc.</strong> (USA)</td>
+          <td>Website hosting and serverless functions</td>
+          <td>IP address, request logs (retained per Vercel policy)</td>
+        </tr>
+        <tr>
+          <td><strong>Anthropic, PBC</strong> (USA)</td>
+          <td>AI-powered bike diagnosis feature</td>
+          <td>Bike description and issue details provided in chat</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Some of these providers are located in the United States. Where personal information is transferred overseas, we take reasonable steps to ensure it receives comparable protection to that required under the Privacy Act 1988 (Cth), including through contractual protections.</p>
+
+    <h2>6. Cookies and Tracking</h2>
+    <p>Our website uses cookies and similar tracking technologies to:</p>
+    <ul>
+      <li>Maintain your session and booking progress</li>
+      <li>Analyse website traffic (Google Analytics)</li>
+      <li>Remember your preferences</li>
+    </ul>
+    <p>Google Analytics is configured with IP anonymisation. You can opt out of Google Analytics tracking by installing the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics Opt-out Browser Add-on</a>.</p>
+    <p>You can disable cookies in your browser settings. This may affect some functionality of our website.</p>
+
+    <h2>7. Data Retention</h2>
+    <p>We retain your personal information for as long as necessary to provide our services and meet our legal obligations:</p>
+    <ul>
+      <li><strong>Booking and service records</strong> - 7 years (required for tax and financial compliance under Australian law)</li>
+      <li><strong>Account information</strong> - for the duration of your account plus 2 years after last activity</li>
+      <li><strong>Marketing consent records</strong> - until you withdraw consent</li>
+      <li><strong>Website logs</strong> - 90 days (Vercel default)</li>
+    </ul>
+    <p>When data is no longer required, it is securely deleted or anonymised.</p>
+
+    <h2>8. Security</h2>
+    <p>We take reasonable steps to protect your personal information from misuse, interference, loss, unauthorised access, modification and disclosure. These steps include:</p>
+    <ul>
+      <li>Encrypted connections (HTTPS/TLS) for all data in transit</li>
+      <li>Database access controls and row-level security via Supabase</li>
+      <li>Payment data handled exclusively by Stripe (PCI DSS compliant)</li>
+      <li>Access limited to authorised personnel only</li>
+    </ul>
+    <p>No data transmission over the internet is 100% secure. If you have reason to believe your interaction with us is no longer secure, please contact us immediately at <a href="mailto:hello@drbikesydney.com.au">hello@drbikesydney.com.au</a>.</p>
+
+    <h2>9. Notifiable Data Breaches</h2>
+    <p>We comply with the Notifiable Data Breaches (NDB) scheme under Part IIIC of the Privacy Act 1988 (Cth). If we become aware of an eligible data breach that is likely to result in serious harm to individuals whose information is involved, we will:</p>
+    <ul>
+      <li>Notify the Office of the Australian Information Commissioner (OAIC) as soon as practicable</li>
+      <li>Notify affected individuals directly where required</li>
+      <li>Take immediate steps to contain and remediate the breach</li>
+    </ul>
+
+    <h2>10. Your Rights</h2>
+    <p>Under the Privacy Act 1988 (Cth), you have the right to:</p>
+    <ul>
+      <li><strong>Access</strong> the personal information we hold about you</li>
+      <li><strong>Correct</strong> inaccurate, out-of-date or incomplete personal information</li>
+      <li><strong>Request deletion</strong> of your personal information (subject to our legal retention obligations)</li>
+      <li><strong>Withdraw consent</strong> for marketing communications at any time</li>
+      <li><strong>Complain</strong> about a breach of the APPs</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a href="mailto:hello@drbikesydney.com.au">hello@drbikesydney.com.au</a>. We will respond within 30 days. There is no fee for making a request, though we may charge a reasonable fee for providing access if the request involves substantial effort.</p>
+
+    <h2>11. Children's Privacy</h2>
+    <p>Our services are not directed at children under 16. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information without parental consent, please contact us and we will delete it promptly.</p>
+
+    <h2>12. Marketing Communications</h2>
+    <p>We may send you promotional emails or SMS messages about our services only if you have opted in. Each marketing communication includes an unsubscribe option. You can also opt out at any time by emailing <a href="mailto:hello@drbikesydney.com.au">hello@drbikesydney.com.au</a> with "Unsubscribe" in the subject line.</p>
+    <p>We comply with the <strong>Spam Act 2003 (Cth)</strong> for all electronic marketing.</p>
+
+    <h2>13. Links to Other Websites</h2>
+    <p>Our website may contain links to third-party websites. We are not responsible for the privacy practices of those sites and encourage you to read their privacy policies.</p>
+
+    <h2>14. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. The current version will always be available on this page with the effective date noted at the top. We will notify you of material changes via email if you have an account with us.</p>
+
+    <h2>15. Complaints</h2>
+    <p>If you believe we have breached the Privacy Act 1988 (Cth) or the Australian Privacy Principles, please contact us first:</p>
+    <ul>
+      <li>Email: <a href="mailto:hello@drbikesydney.com.au">hello@drbikesydney.com.au</a></li>
+      <li>Phone: <a href="tel:+61433963250">0433 963 250</a></li>
+    </ul>
+    <p>We will acknowledge your complaint within 5 business days and aim to resolve it within 30 days. If you are not satisfied with our response, you may lodge a complaint with the <strong>Office of the Australian Information Commissioner (OAIC)</strong> at <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>.</p>
+
+    <h2>16. Contact Us</h2>
+    <p>For any privacy questions or requests:</p>
+    <ul>
+      <li>Email: <a href="mailto:hello@drbikesydney.com.au">hello@drbikesydney.com.au</a></li>
+      <li>Phone: <a href="tel:+61433963250">0433 963 250</a></li>
+      <li>Hours: Monday - Sunday, 7:00 AM - 7:00 PM AEST</li>
+    </ul>
+
+  </div>
+</main>
+
+<footer style="background:#0d1117;padding:64px 0 32px">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1.5fr;gap:32px;margin-bottom:48px">
+
+      <div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/>
+            <circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
+            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
+            <path d="M18.5 17.5L15 6"/>
+            <path d="M5.5 17.5L9 11l4.5-1"/>
+          </svg>
+          <span style="font-weight:700;font-size:15px;color:white;letter-spacing:0.5px">DR BIKE SYDNEY</span>
+        </div>
+        <p style="color:#6b7280;font-size:14px;margin-top:12px;line-height:1.6">Professional bike service at your doorstep.</p>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <a href="#" class="footer-social" aria-label="Facebook">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="#" class="footer-social" aria-label="Instagram">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </a>
+          <a href="#" class="footer-social" aria-label="YouTube">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="footer-h4">Services</h4>
+        <a href="/#services" class="footer-link">Tune-Up</a>
+        <a href="/#services" class="footer-link">Standard Service</a>
+        <a href="/#services" class="footer-link">Major Service</a>
+        <a href="/#services" class="footer-link">Ultimate Overhaul</a>
+        <a href="/#memberships" class="footer-link">Subscriptions</a>
+      </div>
+
+      <div>
+        <h4 class="footer-h4">Company</h4>
+        <a href="/#about" class="footer-link">About Us</a>
+        <a href="/#reviews" class="footer-link">Reviews</a>
+        <a href="/#faq" class="footer-link">FAQ</a>
+        <a href="mailto:hello@drbikesydney.com.au" class="footer-link">Contact</a>
+      </div>
+
+      <div>
+        <h4 class="footer-h4">Legal</h4>
+        <a href="/terms.html" class="footer-link">Terms &amp; Conditions</a>
+        <a href="/privacy.html" class="footer-link" style="color:white">Privacy Policy</a>
+      </div>
+
+      <div>
+        <h4 class="footer-h4">Contact</h4>
+        <div class="footer-contact-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          0433 963 250
+        </div>
+        <div class="footer-contact-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          hello@drbikesydney.com.au
+        </div>
+        <div class="footer-contact-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Sydney, NSW
+        </div>
+        <div class="footer-contact-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Mon - Sun: 7AM - 7PM
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid #1f2937;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <p style="color:#4b5563;font-size:13px">&copy; 2026 Dr. Bike Sydney. All rights reserved.</p>
+      <div style="display:flex;gap:20px">
+        <a href="/terms.html" style="color:#4b5563;font-size:13px">Terms</a>
+        <a href="/privacy.html" style="color:#4b5563;font-size:13px">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
