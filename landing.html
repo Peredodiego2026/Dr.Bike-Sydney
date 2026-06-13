@@ -502,6 +502,26 @@
     .summary-total { display:flex; justify-content:space-between; align-items:center; padding:16px; background:#f9fafb; border-radius:10px; margin-top:16px; }
     .summary-total .st-label { font-weight:700; color:#111827; font-size:16px; }
     .summary-total .st-amount { font-weight:800; color:#2563eb; font-size:24px; }
+  /* ── All Services section ─────────────────────────────────────────────────── */
+  .svc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  @media(max-width:768px){ .svc-grid { grid-template-columns:1fr; } }
+  .svc-card {
+    border:1.5px solid #E5E7EB; border-radius:12px; padding:20px; cursor:pointer;
+    display:flex; flex-direction:column; gap:6px;
+    transition:border-color 200ms,box-shadow 200ms; background:#fff;
+  }
+  .svc-card:hover { border-color:#2563EB; box-shadow:0 4px 16px rgba(37,99,235,0.12); }
+  .svc-icon { width:40px; height:40px; background:#eff6ff; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
+  .svc-name { font-weight:700; font-size:15px; color:#111827; }
+  .svc-price { font-weight:800; font-size:18px; color:#2563eb; }
+  .svc-desc { font-size:13px; color:#6B7280; flex:1; }
+  .svc-btn {
+    margin-top:10px; padding:9px 0; background:#2563eb; color:#fff; border:none;
+    border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; width:100%;
+    transition:background 150ms;
+  }
+  .svc-btn:hover { background:#1d4ed8; }
+
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus {
@@ -531,6 +551,7 @@
 
     <div class="nav-links">
       <a href="#services">Services</a>
+      <a href="#all-services">All Services</a>
       <a href="#memberships">Memberships</a>
       <a href="#about">About</a>
       <a href="#reviews">Reviews</a>
@@ -695,6 +716,184 @@
     <div style="text-align:center">
       <button class="btn-outline-blue" onclick="window.location.href='/index.html?from=landing&section=services'">View All Services</button>
     </div>
+  </div>
+</section>
+
+<!-- ── ALL SERVICES ─────────────────────────────────────────────────────────── -->
+<section id="all-services" style="padding:80px 0;background:#fff">
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px">
+    <h2 style="text-align:center;font-size:2rem;font-weight:700;margin-bottom:8px;color:#111827">All Services</h2>
+    <p style="text-align:center;color:#6B7280;margin-bottom:48px">All prices include $20 mobile call-out fee. We come to you.</p>
+
+    <!-- Esenciales -->
+    <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Essentials</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-4"/><path d="M12 6l1 5.5-6.5 2 2-7.5"/><path d="M18.5 17.5L15 6"/><path d="M5.5 17.5L9 11l4.5-1"/></svg></div>
+        <div class="svc-name">Basic Tune-Up</div>
+        <div class="svc-price">$109</div>
+        <p class="svc-desc">Adjust brakes &amp; gears, lube chain, safety check</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+        <div class="svc-name">Standard Service</div>
+        <div class="svc-price">$149</div>
+        <p class="svc-desc">Full tune-up + wheel true + drivetrain clean</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+        <div class="svc-name">Major Service</div>
+        <div class="svc-price">$199</div>
+        <p class="svc-desc">Complete overhaul: bearings, cables, full clean</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <div class="svc-name">Ultimate Overhaul</div>
+        <div class="svc-price">$369</div>
+        <p class="svc-desc">Strip &amp; rebuild, all consumables replaced</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+    </div>
+
+    <!-- Tyres & Wheels -->
+    <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Tyres &amp; Wheels</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="svc-name">Flat Tyre Repair</div>
+        <div class="svc-price">$59</div>
+        <p class="svc-desc">Tube replace or patch, remount &amp; inflate</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></div>
+        <div class="svc-name">Tyre Replacement</div>
+        <div class="svc-price">$79</div>
+        <p class="svc-desc">New tyre fitted (tyre cost extra)</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg></div>
+        <div class="svc-name">Wheel True</div>
+        <div class="svc-price">$69</div>
+        <p class="svc-desc">Spoke tension adjusted, rim aligned</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="svc-name">Spoke Replacement</div>
+        <div class="svc-price">$79</div>
+        <p class="svc-desc">Per spoke, includes re-true</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+    </div>
+
+    <!-- Brakes -->
+    <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Brakes</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="svc-name">Brake Adjustment</div>
+        <div class="svc-price">$59</div>
+        <p class="svc-desc">Pad align, cable tension, lever reach</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg></div>
+        <div class="svc-name">Brake Pad Replacement</div>
+        <div class="svc-price">$69</div>
+        <p class="svc-desc">Both wheels, pads included</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></div>
+        <div class="svc-name">Hydraulic Bleed</div>
+        <div class="svc-price">$99</div>
+        <p class="svc-desc">Full bleed with fresh fluid</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+    </div>
+
+    <!-- Drivetrain -->
+    <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Drivetrain</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M3 12H1M23 12h-2M19.07 19.07l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg></div>
+        <div class="svc-name">Gear Adjustment</div>
+        <div class="svc-price">$59</div>
+        <p class="svc-desc">Front &amp; rear derailleur indexed</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+        <div class="svc-name">Chain Replacement</div>
+        <div class="svc-price">$69</div>
+        <p class="svc-desc">KMC or SRAM chain fitted</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <div class="svc-name">Cassette/Freewheel Swap</div>
+        <div class="svc-price">$89</div>
+        <p class="svc-desc">Remove &amp; fit (part cost extra)</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="svc-name">Cable &amp; Housing</div>
+        <div class="svc-price">$89</div>
+        <p class="svc-desc">Full replace front &amp; rear</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+    </div>
+
+    <!-- Cables & Accessories -->
+    <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Cables &amp; Accessories</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="svc-name">Handlebar Tape</div>
+        <div class="svc-price">$59</div>
+        <p class="svc-desc">Cork or EVA wrap, bar ends included</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <div class="svc-name">Saddle Fitting</div>
+        <div class="svc-price">$59</div>
+        <p class="svc-desc">Height, fore-aft, tilt optimised</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="svc-name">Bottom Bracket Service</div>
+        <div class="svc-price">$89</div>
+        <p class="svc-desc">Clean, regrease or replace BB</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="svc-name">Headset Service</div>
+        <div class="svc-price">$79</div>
+        <p class="svc-desc">Clean, adjust, regrease</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+      <div class="svc-card" onclick="openBooking()">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="svc-name">Custom Quote</div>
+        <div class="svc-price">Contact</div>
+        <p class="svc-desc">E-bikes, carbon, vintage, insurance claims</p>
+        <button class="svc-btn" onclick="event.stopPropagation();openBooking()">Book Now</button>
+      </div>
+    </div>
+
+    <p style="text-align:center;margin-top:40px;color:#6B7280;font-size:0.9rem">
+      All prices include $20 mobile call-out. Parts charged separately unless stated.<br>
+      Same-day booking +$30. Weekend +$20.
+    </p>
   </div>
 </section>
 
