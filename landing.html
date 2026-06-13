@@ -1,3052 +1,1257 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Dr. Bike Sydney | Mobile Bicycle Repair — We Come to You | Same-Day Service</title>
-  <meta name="description" content="Sydney's #1 mobile bicycle repair service. Expert mechanics come to you — home, office or park across Bondi, Newtown, CBD, North Shore & more. Same-day available. Fixed prices from $49. Book online in 60 seconds.">
-  <meta name="keywords" content="mobile bike repair Sydney, bicycle mechanic Sydney, bike service at home, mobile bicycle repair, Dr Bike Sydney, bike tune-up Sydney">
-  <meta name="robots" content="index, follow">
-  <!-- Google Search Console verification: replace content with your verification code -->
-  <!-- <meta name="google-site-verification" content="REPLACE_WITH_YOUR_CODE"> -->
-  <link rel="canonical" href="https://drbikesydney.com.au/">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dr. Bike Sydney - Professional Mobile Bicycle Mechanic</title>
+  <meta name="description" content="Professional mobile bicycle repair in Sydney. Dr. Bike Sydney comes to you - Inner West, Eastern Suburbs, CBD, North Shore, Manly & Northern Beaches. Book online in minutes.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://drbikesydney.com.au">
+  <meta property="og:title" content="Dr. Bike Sydney - Mobile Bicycle Mechanic">
+  <meta property="og:description" content="We come to you, fully equipped. Book in minutes.">
+  <meta property="og:url" content="https://drbikesydney.com.au">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://drbikesydney.com.au/">
-  <meta property="og:title" content="Dr. Bike Sydney — Mobile Bicycle Repair at Your Door">
-  <meta property="og:description" content="Expert mechanics come to you — home, office or park. Same-day service, fixed prices across Sydney.">
   <meta property="og:image" content="https://drbikesydney.com.au/og-image.svg">
   <meta property="og:locale" content="en_AU">
   <meta property="og:site_name" content="Dr. Bike Sydney">
-
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Dr. Bike Sydney — Mobile Bicycle Repair at Your Door">
-  <meta name="twitter:description" content="Expert mechanics come to you — home, office or park. Same-day service, fixed prices across Sydney.">
+  <meta name="twitter:title" content="Dr. Bike Sydney - Mobile Bicycle Mechanic">
+  <meta name="twitter:description" content="We come to you, fully equipped. Book in minutes.">
   <meta name="twitter:image" content="https://drbikesydney.com.au/og-image.svg">
-
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <meta name="theme-color" content="#0F0F0F">
+  <meta name="theme-color" content="#2563eb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/variables.css">
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "Dr. Bike Sydney",
-    "description": "Sydney's #1 mobile bicycle repair service. Expert mechanics come to your home, office or park.",
-    "url": "https://drbikesydney.com.au",
-    "telephone": "+61-433-963-250",
-    "email": "hello@drbikesydney.com.au",
-    "address": {"@type":"PostalAddress","addressLocality":"Sydney","addressRegion":"NSW","addressCountry":"AU"},
-    "openingHoursSpecification": [{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"opens":"08:00","closes":"17:00"}],
-    "aggregateRating": {"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"127"},
-    "priceRange": "$$",
-    "areaServed": {"@type":"City","name":"Sydney"},
-    "sameAs": ["https://www.instagram.com/drbikesydney","https://www.facebook.com/drbikesydney"]
-  }
+  {"@context":"https://schema.org","@type":"LocalBusiness","name":"Dr. Bike Sydney","telephone":"+61433963250","email":"hello@drbikesydney.com.au","address":{"@type":"PostalAddress","addressLocality":"Sydney","addressRegion":"NSW","addressCountry":"AU"},"priceRange":"$$","openingHours":"Mo-Su 07:00-19:00","url":"https://drbikesydney.com.au","description":"Professional mobile bicycle repair service in Sydney.","serviceArea":{"@type":"City","name":"Sydney"}}
   </script>
 
   <style>
-    /* ====================================================
-       DESIGN TOKENS - Blue / White / Black
-       ==================================================== */
+    /* ── Variables ────────────────────────────────────────────────────────────── */
     :root {
-      --blue: #1848C8;
-      --blue-hover: #1138A8;
-      --blue-dark: #0D2E80;
-      --blue-tint: #EEF3FC;
-      --blue-tint-2: #DCE6F8;
-
-      --black: #0A0A0A;
-      --navy: #0D1F3C;
-      --ink: #1A2235;
-
-      --white: #FFFFFF;
-      --off: #F7F8FA;
-      --off-2: #F0F2F5;
-
-      --gray-900: #111827;
-      --gray-700: #374151;
-      --gray-500: #6B7280;
-      --gray-400: #9CA3AF;
-      --gray-300: #D1D5DB;
-      --gray-200: #E5E7EB;
-      --gray-100: #F3F4F6;
-
-      --shadow-sm: 0 1px 2px rgba(13,31,60,0.04);
-      --shadow: 0 1px 3px rgba(13,31,60,0.06), 0 4px 12px rgba(13,31,60,0.05);
-      --shadow-lg: 0 8px 28px rgba(13,31,60,0.10);
-      --shadow-blue: 0 8px 24px rgba(24,72,200,0.22);
-
-      --r-sm: 8px;
-      --r: 12px;
-      --r-lg: 16px;
-      --r-xl: 24px;
-
-      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-
-      /* Semantic light tokens */
-      --bg: var(--white);
-      --bg-off: var(--off);
-      --bg-tint: var(--blue-tint);
-      --text: var(--navy);
-      --text-strong: var(--black);
-      --text-muted: var(--gray-500);
-      --text-soft: var(--gray-700);
-      --card-bg: var(--white);
-      --card-border: var(--gray-200);
-      --divider: var(--gray-200);
-      --nav-bg: rgba(255,255,255,0.85);
-      --nav-border: var(--gray-200);
+      --blue:        #2563eb;
+      --blue-dark:   #1d4ed8;
+      --blue-light:  #eff6ff;
+      --dark:        #111827;
+      --gray:        #6b7280;
+      --gray-light:  #f9fafb;
+      --border:      #e5e7eb;
+      --white:       #ffffff;
+      --radius:      8px;
+      --radius-lg:   12px;
+      --radius-full: 9999px;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md:   0 4px 16px rgba(0,0,0,0.10);
+      --transition:  all 200ms ease;
     }
 
-    [data-theme="dark"] {
-      --bg: #0A0F1E;
-      --bg-off: #111827;
-      --bg-tint: #1A2650;
-      --text: #F0F4FF;
-      --text-strong: #FFFFFF;
-      --text-muted: #9CA3AF;
-      --text-soft: #CBD5E1;
-      --card-bg: #1A2235;
-      --card-border: #2D3A52;
-      --divider: #2D3A52;
-      --nav-bg: rgba(10,15,30,0.85);
-      --nav-border: #2D3A52;
-      --blue-tint: #1A2650;
-      --blue-tint-2: #213065;
-      --off: #111827;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      html:not([data-theme="light"]) {
-        --bg: #0A0F1E;
-        --bg-off: #111827;
-        --bg-tint: #1A2650;
-        --text: #F0F4FF;
-        --text-strong: #FFFFFF;
-        --text-muted: #9CA3AF;
-        --text-soft: #CBD5E1;
-        --card-bg: #1A2235;
-        --card-border: #2D3A52;
-        --divider: #2D3A52;
-        --nav-bg: rgba(10,15,30,0.85);
-        --nav-border: #2D3A52;
-        --blue-tint: #1A2650;
-        --blue-tint-2: #213065;
-        --off: #111827;
-      }
-    }
-
-    /* ====================================================
-       RESET
-       ==================================================== */
+    /* ── Base ─────────────────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html {
-      scroll-behavior: smooth;
-      -webkit-text-size-adjust: 100%;
-      text-size-adjust: 100%;
-    }
-
-    body {
-      font-family: var(--sans);
-      font-size: 16px;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      transition: background 0.3s ease, color 0.3s ease;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      padding-bottom: 76px; /* room for mobile sticky CTA */
-    }
-
-    img, svg { max-width: 100%; display: block; }
+    html { scroll-behavior: smooth; font-family: Inter, system-ui, sans-serif; }
+    body { color: var(--dark); background: var(--white); line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
     a { text-decoration: none; color: inherit; }
-    ul { list-style: none; }
-    button { font-family: inherit; }
+    img { max-width: 100%; }
 
-    :focus-visible {
-      outline: 2px solid var(--blue);
-      outline-offset: 2px;
-      border-radius: 4px;
+    /* ── Navbar ───────────────────────────────────────────────────────────────── */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      height: 64px;
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
+    .navbar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
     }
-
-    /* ====================================================
-       LAYOUT
-       ==================================================== */
-    .container {
-      width: 100%;
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 0 20px;
+    .nav-logo {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
-
-    @media (min-width: 768px) {
-      .container { padding: 0 32px; }
+    .nav-logo span {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.5px;
     }
-
-    .section {
-      padding: 56px 0;
+    .nav-links {
+      display: flex;
+      gap: 32px;
     }
-
-    @media (min-width: 768px) { .section { padding: 80px 0; } }
-    @media (min-width: 1024px) { .section { padding: 96px 0; } }
-
-    .section-header {
-      text-align: center;
-      margin-bottom: 40px;
-      max-width: 640px;
-      margin-left: auto;
-      margin-right: auto;
+    .nav-links a {
+      font-size: 14px;
+      color: #374151;
+      transition: color 150ms;
     }
+    .nav-links a:hover { color: var(--blue); }
+    .nav-book {
+      background: var(--blue);
+      color: var(--white);
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: background 150ms;
+    }
+    .nav-book:hover { background: var(--blue-dark); }
 
-    @media (min-width: 768px) { .section-header { margin-bottom: 56px; } }
-
-    /* ====================================================
-       TYPOGRAPHY
-       ==================================================== */
-    h1, h2, h3, h4 {
-      color: var(--text-strong);
+    /* ── Hero ─────────────────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 88vh;
+      display: flex;
+      align-items: center;
+    }
+    .hero .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      padding-top: 48px;
+      padding-bottom: 48px;
+    }
+    .hero-badge {
+      background: var(--blue-light);
+      color: var(--blue);
+      padding: 4px 14px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .hero-h1 {
+      font-size: clamp(2.2rem, 4vw, 3.5rem);
       font-weight: 800;
-      letter-spacing: -0.02em;
+      color: var(--dark);
       line-height: 1.15;
     }
-
-    .section-title {
-      font-size: clamp(1.75rem, 4.5vw, 2.5rem);
-      font-weight: 800;
-      color: var(--text-strong);
-      letter-spacing: -0.025em;
+    .hero-p {
+      font-size: 18px;
+      color: var(--gray);
+      margin-top: 16px;
     }
-
-    .section-sub {
-      font-size: 1rem;
-      color: var(--text-muted);
-      margin-top: 12px;
-      line-height: 1.6;
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
     }
-
-    @media (min-width: 768px) {
-      .section-sub { font-size: 1.0625rem; }
-    }
-
-    .eyebrow {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--blue);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--blue-tint);
-      color: var(--blue);
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 6px 12px;
-      border-radius: 999px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    /* ====================================================
-       BUTTONS
-       ==================================================== */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      min-height: 48px;
-      padding: 12px 22px;
-      border-radius: var(--r);
-      font-family: var(--sans);
-      font-size: 0.9375rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-      border: 1.5px solid transparent;
-      white-space: nowrap;
-      letter-spacing: -0.01em;
-    }
-
     .btn-primary {
       background: var(--blue);
       color: var(--white);
-      border-color: var(--blue);
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 16px;
+      transition: var(--transition);
     }
-
-    .btn-primary:hover {
-      background: var(--blue-hover);
-      border-color: var(--blue-hover);
-      box-shadow: var(--shadow-blue);
-    }
-
-    .btn-ghost {
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-outline {
       background: transparent;
-      color: var(--text-strong);
-      border-color: var(--card-border);
+      border: 2px solid var(--border);
+      color: #374151;
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 16px;
+      transition: var(--transition);
     }
-
-    .btn-ghost:hover {
-      background: var(--bg-off);
-      border-color: var(--blue);
-      color: var(--blue);
+    .btn-outline:hover { border-color: #9ca3af; background: var(--gray-light); }
+    .hero-stats {
+      display: flex;
+      gap: 28px;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
     }
-
-    .btn-dark {
-      background: var(--black);
+    .hero-stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #374151;
+    }
+    .hero-image {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #1e40af 100%);
+      border-radius: 16px;
+      aspect-ratio: 4/5;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: 24px;
+    }
+    .hero-image-text {
       color: var(--white);
-      border-color: var(--black);
-    }
-
-    .btn-dark:hover {
-      background: var(--navy);
-      border-color: var(--navy);
-    }
-
-    .btn-sm {
-      min-height: 40px;
-      padding: 8px 16px;
-      font-size: 0.875rem;
-    }
-
-    .btn-block {
-      width: 100%;
-    }
-
-    .btn-open-app {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 52px;
-      padding: 12px 24px;
-      background: #0A58CA;
-      color: #fff;
-      border-radius: 12px;
-      font-size: 1rem;
       font-weight: 700;
-      text-decoration: none;
-      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
-      box-shadow: 0 4px 20px rgba(10,88,202,0.35);
+      font-size: 18px;
+      line-height: 1.5;
     }
-    .btn-open-app:hover {
-      background: #0848A8;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 28px rgba(10,88,202,0.45);
-    }
-
-    /* ====================================================
-       FADE-IN
-       ==================================================== */
-    .fade-in {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-    .fade-in.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .fade-in-delay-1 { transition-delay: 0.08s; }
-    .fade-in-delay-2 { transition-delay: 0.16s; }
-    .fade-in-delay-3 { transition-delay: 0.24s; }
-    .fade-in-delay-4 { transition-delay: 0.32s; }
-
-    /* ====================================================
-       NAV
-       ==================================================== */
-    #nav {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: var(--nav-bg);
-      border-bottom: 1px solid var(--nav-border);
-      backdrop-filter: saturate(180%) blur(16px);
-      -webkit-backdrop-filter: saturate(180%) blur(16px);
+    .hero-image-sub {
+      color: rgba(255,255,255,0.75);
+      font-size: 13px;
+      font-weight: 400;
     }
 
-    .nav-inner {
+    /* ── Trust Bar ────────────────────────────────────────────────────────────── */
+    .trust-bar {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+    .trust-bar .container {
       display: flex;
       align-items: center;
-      gap: 12px;
-      height: 60px;
+      gap: 40px;
     }
-
-    @media (min-width: 1024px) {
-      .nav-inner { height: 68px; gap: 24px; }
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .logo-mark {
-      width: 36px;
-      height: 36px;
-      background: var(--blue);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: transform 0.2s;
-    }
-
-    .nav-logo:hover .logo-mark { transform: rotate(-6deg); }
-
-    .logo-mark svg { width: 20px; height: 20px; color: var(--white); }
-
-    .logo-text {
-      font-size: 0.9375rem;
-      font-weight: 800;
-      color: var(--text-strong);
-      letter-spacing: -0.02em;
-      line-height: 1.15;
-    }
-
-    .logo-text span {
-      display: block;
-      font-size: 0.625rem;
+    .trust-label {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: #9ca3af;
       font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-top: 1px;
+      white-space: nowrap;
     }
-
-    @media (min-width: 1024px) {
-      .logo-mark { width: 40px; height: 40px; }
-      .logo-mark svg { width: 22px; height: 22px; }
-      .logo-text { font-size: 1rem; }
-      .logo-text span { font-size: 0.6875rem; }
-    }
-
-    .nav-links {
-      display: none;
+    .trust-brands {
+      display: flex;
+      gap: 32px;
       align-items: center;
-      gap: 4px;
       margin-left: auto;
     }
-
-    @media (min-width: 1024px) {
-      .nav-links { display: flex; }
-    }
-
-    .nav-links a {
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--text-soft);
-      padding: 8px 14px;
-      border-radius: var(--r-sm);
-      transition: color 0.15s, background-color 0.15s;
-    }
-
-    .nav-links a:hover {
-      color: var(--blue);
-      background: var(--blue-tint);
-    }
-
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-    }
-
-    @media (min-width: 1024px) {
-      .nav-actions { margin-left: 0; gap: 10px; }
-    }
-
-    .icon-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      border: 1px solid var(--card-border);
-      background: var(--card-bg);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-strong);
-      transition: border-color 0.15s, color 0.15s, background-color 0.15s;
-    }
-
-    .icon-btn:hover {
-      border-color: var(--blue);
-      color: var(--blue);
-      background: var(--blue-tint);
-    }
-
-    .icon-btn svg { width: 18px; height: 18px; }
-
-    .nav-cta {
-      display: none;
-    }
-
-    @media (min-width: 640px) {
-      .nav-cta { display: inline-flex; }
-    }
-
-    .nav-hamburger {
-      display: flex;
-      width: 40px;
-      height: 40px;
-      border: 1px solid var(--card-border);
-      background: var(--card-bg);
-      border-radius: 10px;
-      cursor: pointer;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      padding: 0;
-    }
-
-    @media (min-width: 1024px) {
-      .nav-hamburger { display: none; }
-    }
-
-    .nav-hamburger span {
-      display: block;
-      width: 16px;
-      height: 2px;
-      background: var(--text-strong);
-      border-radius: 2px;
-      transition: transform 0.2s, opacity 0.2s;
-    }
-
-    .mobile-nav {
-      display: none;
-      flex-direction: column;
-      gap: 2px;
-      padding: 12px 20px 20px;
-      border-top: 1px solid var(--card-border);
-      background: var(--nav-bg);
-    }
-
-    .mobile-nav.open { display: flex; }
-
-    .mobile-nav a {
-      font-size: 0.9375rem;
-      font-weight: 500;
-      color: var(--text-soft);
-      padding: 12px 14px;
-      border-radius: var(--r-sm);
-      transition: color 0.15s, background-color 0.15s;
-    }
-
-    .mobile-nav a:hover {
-      color: var(--blue);
-      background: var(--blue-tint);
-    }
-
-    /* Language selector */
-    .lang-wrap { position: relative; display: none; }
-    @media (min-width: 1024px) { .lang-wrap { display: block; } }
-
-    .lang-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      border: 1px solid var(--card-border);
-      border-radius: 999px;
-      background: var(--card-bg);
-      cursor: pointer;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--text-strong);
-      font-family: var(--sans);
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .lang-btn:hover { border-color: var(--blue); color: var(--blue); }
-    .lang-btn svg { width: 12px; height: 12px; }
-
-    .lang-drop {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: calc(100% + 8px);
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--r);
-      box-shadow: var(--shadow-lg);
-      padding: 6px;
-      min-width: 160px;
-      z-index: 60;
-    }
-    .lang-drop.open { display: block; }
-
-    .lang-drop button {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      padding: 9px 12px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      font-size: 0.8125rem;
-      font-family: var(--sans);
-      color: var(--text-strong);
-      border-radius: var(--r-sm);
-      text-align: left;
-      transition: background-color 0.15s;
-    }
-    .lang-drop button:hover { background: var(--bg-off); }
-
-    .mobile-lang {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 14px 4px;
-      flex-wrap: wrap;
-      margin-top: 6px;
-      border-top: 1px solid var(--card-border);
-    }
-    .mobile-lang-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin-right: 4px;
-    }
-    .mobile-lang button {
-      font-size: 0.75rem;
-      padding: 6px 12px;
-      border: 1px solid var(--card-border);
-      border-radius: 999px;
-      background: var(--card-bg);
-      cursor: pointer;
-      color: var(--text-strong);
-      font-family: var(--sans);
-      font-weight: 500;
-    }
-
-    /* ====================================================
-       HERO
-       ==================================================== */
-    #hero {
-      position: relative;
-      padding: 48px 0 32px;
-      background: var(--bg);
-      overflow: hidden;
-    }
-
-    #hero::before {
-      content: '';
-      position: absolute;
-      top: -30%;
-      right: -20%;
-      width: 70vw;
-      max-width: 700px;
-      aspect-ratio: 1;
-      background: radial-gradient(circle, rgba(24,72,200,0.10) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    [data-theme="dark"] #hero::before {
-      background: radial-gradient(circle, rgba(24,72,200,0.18) 0%, transparent 60%);
-    }
-
-    @media (min-width: 768px) {
-      #hero { padding: 72px 0 56px; }
-    }
-
-    @media (min-width: 1024px) {
-      #hero { padding: 96px 0 72px; }
-    }
-
-    .hero-inner {
-      position: relative;
-      z-index: 1;
-      max-width: 820px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--blue-tint);
-      color: var(--blue);
-      font-size: 0.75rem;
+    .trust-brand {
+      font-size: 14px;
       font-weight: 700;
-      padding: 6px 14px;
-      border-radius: 999px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-bottom: 20px;
+      color: #374151;
+    }
+    .trust-sep {
+      color: var(--border);
+      font-size: 16px;
     }
 
-    .hero-eyebrow svg { width: 12px; height: 12px; }
-
-    h1 {
-      font-size: clamp(2rem, 8vw, 4rem);
-      font-weight: 900;
-      line-height: 1.05;
-      letter-spacing: -0.035em;
-      color: var(--text-strong);
-      margin-bottom: 16px;
-    }
-
-    h1 .accent { color: var(--blue); }
-
-    .hero-sub {
-      font-size: 1.0625rem;
-      font-weight: 600;
-      color: var(--text-strong);
-      margin-bottom: 12px;
-    }
-
-    @media (min-width: 768px) {
-      .hero-sub { font-size: 1.1875rem; }
-    }
-
-    .hero-para {
-      font-size: 0.9375rem;
-      color: var(--text-muted);
-      max-width: 540px;
-      margin: 0 auto 28px;
-      line-height: 1.65;
-    }
-
-    @media (min-width: 768px) {
-      .hero-para { font-size: 1rem; margin-bottom: 36px; }
-    }
-
-    .hero-ctas {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 360px;
-      margin: 0 auto 36px;
-    }
-
-    @media (min-width: 640px) {
-      .hero-ctas {
-        flex-direction: row;
-        justify-content: center;
-        max-width: none;
-      }
-    }
-
-    .stats-bar {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--r-lg);
-      padding: 16px 8px;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0;
-      box-shadow: var(--shadow);
-      max-width: 720px;
-      margin: 0 auto;
-    }
-
-    @media (min-width: 640px) {
-      .stats-bar { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 8px;
-      position: relative;
-    }
-
-    .stat-item:nth-child(odd)::after {
-      content: '';
-      position: absolute;
-      right: 0;
-      top: 20%;
-      height: 60%;
-      width: 1px;
-      background: var(--divider);
-    }
-
-    .stat-item:nth-child(1)::before,
-    .stat-item:nth-child(2)::before {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 10%;
-      right: 10%;
-      height: 1px;
-      background: var(--divider);
-    }
-
-    @media (min-width: 640px) {
-      .stat-item:nth-child(odd)::after,
-      .stat-item:nth-child(even)::after {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 20%;
-        height: 60%;
-        width: 1px;
-        background: var(--divider);
-      }
-      .stat-item:last-child::after { display: none; }
-      .stat-item::before { display: none; }
-    }
-
-    .stat-value {
-      font-size: 1.125rem;
-      font-weight: 800;
-      color: var(--blue);
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-weight: 500;
-      margin-top: 4px;
-    }
-
-    /* ====================================================
-       HOW IT WORKS
-       ==================================================== */
-    #how-it-works {
-      padding: 56px 0;
-      background: var(--bg-off);
-    }
-
-    @media (min-width: 768px) { #how-it-works { padding: 80px 0; } }
-    @media (min-width: 1024px) { #how-it-works { padding: 96px 0; } }
-
-    .steps-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-
-    @media (min-width: 768px) {
-      .steps-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    }
-
-    .step-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--r-lg);
-      padding: 28px 24px;
-      text-align: left;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    @media (min-width: 768px) {
-      .step-card { text-align: center; padding: 32px 24px; }
-    }
-
-    .step-card:hover {
-      border-color: var(--blue);
-      box-shadow: var(--shadow);
-    }
-
-    .step-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--blue);
-    }
-
-    @media (min-width: 768px) {
-      .step-card::before {
-        width: 100%;
-        height: 4px;
-      }
-    }
-
-    .step-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 12px;
-    }
-
-    @media (min-width: 768px) {
-      .step-row { flex-direction: column; gap: 12px; align-items: center; }
-    }
-
-    .step-number {
-      flex-shrink: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      background: var(--blue-tint);
-      color: var(--blue);
-      font-size: 1.125rem;
-      font-weight: 800;
-      border-radius: 12px;
-    }
-
-    .step-icon {
-      width: 36px;
-      height: 36px;
-      color: var(--blue);
-      flex-shrink: 0;
-    }
-
-    .step-icon svg { width: 100%; height: 100%; }
-
-    .step-title {
-      font-size: 1.0625rem;
-      font-weight: 700;
-      color: var(--text-strong);
-      margin-bottom: 8px;
-      letter-spacing: -0.015em;
-    }
-
-    .step-desc {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-    }
-
-    /* ====================================================
-       SERVICES
-       ==================================================== */
-    #services {
-      padding: 56px 0;
-      background: var(--bg);
-    }
-
-    @media (min-width: 768px) { #services { padding: 80px 0; } }
-    @media (min-width: 1024px) { #services { padding: 96px 0; } }
-
+    /* ── Services ─────────────────────────────────────────────────────────────── */
     .services-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
     }
-
-    @media (min-width: 768px) {
-      .services-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    }
-
-    @media (min-width: 1024px) {
-      .services-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    }
-
     .service-card {
-      background: var(--card-bg);
-      border: 1.5px solid var(--card-border);
-      border-radius: var(--r-lg);
-      padding: 18px 16px;
-      position: relative;
-      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-      display: flex;
-      flex-direction: column;
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      transition: var(--transition);
     }
-
-    @media (min-width: 768px) {
-      .service-card { padding: 22px 20px; }
-    }
-
     .service-card:hover {
-      border-color: var(--blue);
-      box-shadow: var(--shadow);
+      box-shadow: 0 8px 24px rgba(37,99,235,0.12);
+      border-color: #bfdbfe;
       transform: translateY(-2px);
     }
-
-    .service-card.featured {
-      border-color: var(--blue);
-      background: linear-gradient(180deg, var(--blue-tint) 0%, var(--card-bg) 35%);
-    }
-
-    .popular-badge {
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--blue);
-      color: var(--white);
-      font-size: 0.625rem;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 999px;
-      white-space: nowrap;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .service-name {
-      font-size: 0.9375rem;
-      font-weight: 700;
-      color: var(--text-strong);
-      margin-bottom: 6px;
-      letter-spacing: -0.015em;
-    }
-
-    .service-duration {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-
-    .service-duration svg { width: 12px; height: 12px; }
-
-    .service-price {
-      font-size: 1.625rem;
-      font-weight: 800;
-      color: var(--text-strong);
-      line-height: 1;
-      margin-bottom: 6px;
-      letter-spacing: -0.03em;
-    }
-
-    @media (min-width: 768px) {
-      .service-price { font-size: 1.875rem; }
-    }
-
-    .service-price sup {
-      font-size: 0.875rem;
-      font-weight: 700;
-      vertical-align: top;
-      margin-top: 4px;
-      color: var(--text-muted);
-    }
-
-    .service-card .btn {
-      margin-top: auto;
-    }
-
-    .services-note {
-      text-align: center;
-      font-size: 0.8125rem;
-      color: var(--text-muted);
-      padding: 14px 20px;
-      background: var(--bg-off);
-      border: 1px solid var(--card-border);
-      border-radius: var(--r);
-      line-height: 1.5;
-    }
-
-    .services-note strong { color: var(--text-strong); }
-
-    /* ====================================================
-       PLANS
-       ==================================================== */
-    #plans {
-      padding: 56px 0;
-      background: var(--bg-off);
-    }
-
-    @media (min-width: 768px) { #plans { padding: 80px 0; } }
-    @media (min-width: 1024px) { #plans { padding: 96px 0; } }
-
-    .billing-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin: 24px 0 36px;
-      flex-wrap: wrap;
-    }
-
-    .billing-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-muted);
-    }
-
-    .billing-label.active {
-      color: var(--text-strong);
-      font-weight: 700;
-    }
-
-    .toggle-switch {
-      position: relative;
+    .service-icon {
       width: 48px;
-      height: 26px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-      position: absolute;
-    }
-
-    .toggle-track {
-      position: absolute;
-      inset: 0;
-      background: var(--gray-300);
-      border-radius: 999px;
-      transition: background 0.2s;
-    }
-
-    .toggle-switch input:checked + .toggle-track {
-      background: var(--blue);
-    }
-
-    .toggle-thumb {
-      position: absolute;
-      left: 3px;
-      top: 3px;
-      width: 20px;
-      height: 20px;
-      background: var(--white);
-      border-radius: 50%;
-      transition: transform 0.2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-      pointer-events: none;
-    }
-
-    .toggle-switch input:checked ~ .toggle-thumb {
-      transform: translateX(22px);
-    }
-
-    .annual-badge {
-      background: var(--blue-tint);
-      color: var(--blue);
-      font-size: 0.6875rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 999px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .plans-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      align-items: stretch;
-    }
-
-    @media (min-width: 768px) {
-      .plans-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    }
-
-    .plan-card {
-      background: var(--card-bg);
-      border: 1.5px solid var(--card-border);
-      border-radius: var(--r-lg);
-      padding: 28px 24px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .plan-card.popular {
-      border-color: var(--blue);
-      background: var(--card-bg);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .plan-card:hover {
-      border-color: var(--blue);
-      box-shadow: var(--shadow);
-    }
-
-    .popular-ribbon {
-      position: absolute;
-      top: -1px;
-      right: 20px;
-      background: var(--blue);
-      color: var(--white);
-      font-size: 0.625rem;
-      font-weight: 800;
-      padding: 6px 14px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      border-radius: 0 0 8px 8px;
-    }
-
-    .plan-name {
-      font-size: 1.0625rem;
-      font-weight: 800;
-      color: var(--text-strong);
-      margin-bottom: 4px;
-      letter-spacing: -0.015em;
-    }
-
-    .plan-tagline {
-      font-size: 0.8125rem;
-      color: var(--text-muted);
-    }
-
-    .plan-price {
-      font-size: 2.5rem;
-      font-weight: 900;
-      color: var(--text-strong);
-      line-height: 1;
-      margin: 16px 0 4px;
-      letter-spacing: -0.035em;
-    }
-
-    .plan-price sup {
-      font-size: 1.125rem;
-      font-weight: 700;
-      vertical-align: top;
-      margin-top: 6px;
-      color: var(--text-muted);
-    }
-
-    .plan-price sub {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      vertical-align: baseline;
-    }
-
-    .plan-billed {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 22px;
-    }
-
-    .plan-features {
-      list-style: none;
-      margin-bottom: 24px;
-      flex-grow: 1;
-    }
-
-    .plan-features li {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      font-size: 0.875rem;
-      color: var(--text-soft);
-      padding: 8px 0;
-      border-bottom: 1px solid var(--divider);
-      line-height: 1.5;
-    }
-
-    .plan-features li:last-child { border-bottom: none; }
-    .plan-features li strong { color: var(--text-strong); }
-
-    .plan-features li::before {
-      content: '';
-      flex-shrink: 0;
-      width: 18px;
-      height: 18px;
-      margin-top: 1px;
-      background-color: var(--blue);
-      mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/contain no-repeat;
-      -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/contain no-repeat;
-    }
-
-    /* ====================================================
-       REVIEWS
-       ==================================================== */
-    #reviews {
-      padding: 56px 0;
-      background: var(--bg);
-    }
-
-    @media (min-width: 768px) { #reviews { padding: 80px 0; } }
-    @media (min-width: 1024px) { #reviews { padding: 96px 0; } }
-
-    .reviews-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-
-    @media (min-width: 768px) {
-      .reviews-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-    }
-
-    @media (min-width: 1024px) {
-      .reviews-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    .review-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--r-lg);
-      padding: 24px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .review-card:hover {
-      border-color: var(--blue);
-      box-shadow: var(--shadow);
-    }
-
-    .review-stars {
-      display: inline-flex;
-      align-items: center;
-      gap: 2px;
-      color: var(--blue);
-      font-size: 0.875rem;
-      letter-spacing: 1px;
-      margin-bottom: 14px;
-    }
-
-    .review-text {
-      font-size: 0.9375rem;
-      color: var(--text-soft);
-      line-height: 1.65;
-      margin-bottom: 20px;
-    }
-
-    .review-text::before { content: '"'; color: var(--blue); font-weight: 800; }
-    .review-text::after { content: '"'; color: var(--blue); font-weight: 800; }
-
-    .review-author {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .review-avatar {
-      width: 40px;
-      height: 40px;
-      background: var(--blue);
-      color: var(--white);
-      border-radius: 50%;
+      height: 48px;
+      background: var(--blue-light);
+      border-radius: var(--radius);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.8125rem;
+      margin-bottom: 16px;
+    }
+    .service-name {
+      font-size: 16px;
       font-weight: 700;
-      flex-shrink: 0;
-      letter-spacing: 0.02em;
+      color: var(--dark);
+      margin-bottom: 4px;
     }
-
-    .review-name {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--text-strong);
+    .service-price {
+      color: var(--blue);
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 8px;
     }
-
-    .review-suburb {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 1px;
+    .service-desc {
+      font-size: 14px;
+      color: var(--gray);
+      line-height: 1.5;
     }
-
-    /* Skeleton */
-    .skeleton {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--r-lg);
-      padding: 24px;
-    }
-
-    .skel-line {
-      height: 12px;
-      background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.6s infinite;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
-
-    [data-theme="dark"] .skel-line {
-      background: linear-gradient(90deg, var(--card-border) 25%, var(--bg-off) 50%, var(--card-border) 75%);
-      background-size: 200% 100%;
-    }
-
-    .skel-line.short { width: 40%; }
-    .skel-line.medium { width: 70%; }
-    .skel-line.full { width: 100%; }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    /* ====================================================
-       FAQ
-       ==================================================== */
-    #faq {
-      padding: 56px 0;
-      background: var(--bg-off);
-    }
-
-    @media (min-width: 768px) { #faq { padding: 80px 0; } }
-
-    .faq-wrap {
-      max-width: 720px;
+    .section-center {
+      text-align: center;
+      max-width: 600px;
       margin: 0 auto;
     }
+    .section-badge {
+      background: var(--blue-light);
+      color: var(--blue);
+      padding: 4px 14px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .section-h2 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-top: 12px;
+      color: var(--dark);
+    }
+    .section-sub {
+      color: var(--gray);
+      font-size: 18px;
+      margin: 16px auto 48px;
+      max-width: 600px;
+    }
+    .btn-outline-blue {
+      display: inline-block;
+      margin-top: 48px;
+      border: 2px solid var(--blue);
+      color: var(--blue);
+      background: transparent;
+      padding: 12px 32px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-outline-blue:hover {
+      background: var(--blue);
+      color: var(--white);
+    }
 
-    .faq-list {
+    /* ── About ────────────────────────────────────────────────────────────────── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .about-h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-top: 12px;
+      color: var(--dark);
+    }
+    .about-p {
+      color: var(--gray);
+      margin: 16px 0 24px;
+    }
+    .check-list {
+      list-style: none;
       display: flex;
       flex-direction: column;
+      gap: 12px;
+    }
+    .check-item {
+      display: flex;
       gap: 10px;
+      align-items: flex-start;
+      font-size: 15px;
+      color: var(--dark);
+    }
+    .about-sig {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .stats-mini {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .stat-mini {
+      text-align: center;
+      padding: 16px;
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-mini-n {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+    .stat-mini-l {
+      font-size: 11px;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+    .about-image {
+      background: linear-gradient(160deg, #1e3a5f, #2563eb);
+      border-radius: 16px;
+      aspect-ratio: 3/4;
+      display: flex;
+      align-items: flex-end;
+      padding: 24px;
     }
 
-    .faq-item {
-      border: 1px solid var(--card-border);
-      border-radius: var(--r);
-      overflow: hidden;
-      background: var(--card-bg);
-      transition: border-color 0.15s;
+    /* ── Reviews ──────────────────────────────────────────────────────────────── */
+    .review-card {
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 48px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .faq-item:hover { border-color: var(--blue); }
+    /* ── Section fade-in ──────────────────────────────────────────────────────── */
+    section.visible { opacity: 1 !important; transform: none !important; }
 
-    .faq-question {
+    /* ── FAQ ──────────────────────────────────────────────────────────────────── */
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
       width: 100%;
       text-align: left;
-      padding: 16px 20px;
-      background: transparent;
+      padding: 20px 0;
+      background: none;
       border: none;
       cursor: pointer;
-      font-family: var(--sans);
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: var(--text-strong);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      line-height: 1.4;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--dark);
+      font-family: inherit;
     }
+    .faq-q:hover { color: var(--blue); }
+    .faq-icon { transition: transform 300ms ease; flex-shrink: 0; }
+    .faq-a { display: none; padding-bottom: 20px; color: var(--gray); font-size: 15px; line-height: 1.7; }
 
-    .faq-icon {
-      flex-shrink: 0;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--blue-tint);
-      color: var(--blue);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.875rem;
-      font-weight: 800;
-      transition: transform 0.2s, background 0.2s;
-    }
-
-    .faq-item.open .faq-icon {
-      background: var(--blue);
-      color: var(--white);
-      transform: rotate(45deg);
-    }
-
-    .faq-answer {
-      display: none;
-      padding: 0 20px 18px;
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      line-height: 1.7;
-    }
-
-    /* ====================================================
-       TRUST STRIP
-       ==================================================== */
-    #trust {
-      padding: 28px 0;
-      background: var(--bg);
-      border-top: 1px solid var(--divider);
-      border-bottom: 1px solid var(--divider);
-    }
-
-    .trust-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0;
-    }
-
-    @media (min-width: 768px) {
-      .trust-grid { grid-template-columns: repeat(5, 1fr); }
-    }
-
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 12px;
-      justify-content: center;
-      border-right: 1px solid var(--divider);
-      border-bottom: 1px solid var(--divider);
-    }
-
-    .trust-item:nth-child(2n) { border-right: none; }
-    .trust-item:nth-last-child(-n+2) { border-bottom: none; }
-    .trust-item:nth-child(5) { grid-column: span 2; border-right: none; }
-
-    @media (min-width: 768px) {
-      .trust-item { border-bottom: none; padding: 8px 12px; }
-      .trust-item:nth-child(2n) { border-right: 1px solid var(--divider); }
-      .trust-item:nth-child(5) { grid-column: auto; border-right: none; }
-      .trust-item:last-child { border-right: none; }
-    }
-
-    .trust-icon {
-      width: 24px;
-      height: 24px;
-      color: var(--blue);
-      flex-shrink: 0;
-    }
-
-    .trust-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--text-strong);
-      line-height: 1.2;
-    }
-
-    .trust-sub {
-      font-size: 0.6875rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    /* ====================================================
-       FLEET
-       ==================================================== */
-    #fleet {
-      padding: 56px 0;
-      background: var(--bg);
-    }
-
-    @media (min-width: 768px) { #fleet { padding: 80px 0; } }
-    @media (min-width: 1024px) { #fleet { padding: 96px 0; } }
-
-    .fleet-wrap {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 32px;
-      align-items: center;
-      max-width: 1080px;
-      margin: 0 auto;
-    }
-
-    @media (min-width: 1024px) {
-      .fleet-wrap { grid-template-columns: 1.1fr 1fr; gap: 56px; }
-    }
-
-    .fleet-content .eyebrow { display: flex; align-items: center; gap: 8px; }
-    .fleet-content .eyebrow svg { width: 14px; height: 14px; }
-
-    .fleet-title {
-      font-size: clamp(1.625rem, 4vw, 2rem);
-      font-weight: 800;
-      color: var(--text-strong);
-      letter-spacing: -0.025em;
-      line-height: 1.15;
-      margin-bottom: 14px;
-    }
-
-    .fleet-desc {
-      font-size: 0.9375rem;
-      color: var(--text-muted);
-      line-height: 1.65;
-      margin-bottom: 24px;
-    }
-
-    .fleet-features {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .fleet-features li {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      font-size: 0.875rem;
-      color: var(--text-soft);
-      line-height: 1.55;
-    }
-
-    .fleet-features li strong { color: var(--text-strong); font-weight: 700; }
-
-    .fleet-check {
-      flex-shrink: 0;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--blue);
-      color: var(--white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 1px;
-    }
-
-    .fleet-check svg { width: 12px; height: 12px; }
-
-    .fleet-stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .fleet-stat {
-      background: var(--bg-off);
-      border: 1px solid var(--card-border);
-      border-radius: var(--r-lg);
-      padding: 22px 16px;
-      text-align: center;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-
-    .fleet-stat:hover {
-      border-color: var(--blue);
-      transform: translateY(-2px);
-    }
-
-    .fleet-stat-value {
-      font-size: 2rem;
-      font-weight: 900;
-      color: var(--blue);
-      letter-spacing: -0.03em;
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-
-    .fleet-stat-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
-    /* ====================================================
-       INSURANCE (dark)
-       ==================================================== */
-    #insurance {
-      background: var(--navy);
-      color: var(--white);
-      padding: 56px 0;
-    }
-
-    @media (min-width: 768px) { #insurance { padding: 80px 0; } }
-    @media (min-width: 1024px) { #insurance { padding: 96px 0; } }
-
-    #insurance .eyebrow {
-      color: #93B4FF;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    #insurance .eyebrow svg { width: 14px; height: 14px; }
-
-    #insurance .section-title {
-      color: var(--white);
-    }
-
-    #insurance .section-sub {
-      color: rgba(255,255,255,0.65);
-    }
-
-    .insurance-cards {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-      margin-bottom: 32px;
-    }
-
-    @media (min-width: 768px) {
-      .insurance-cards { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    }
-
-    .ins-card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: var(--r-lg);
-      padding: 24px;
-    }
-
-    .ins-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: rgba(24,72,200,0.25);
-      color: #93B4FF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 14px;
-    }
-
-    .ins-icon svg { width: 22px; height: 22px; }
-
-    .ins-title {
-      font-size: 0.9375rem;
-      font-weight: 700;
-      color: var(--white);
-      margin-bottom: 6px;
-      letter-spacing: -0.01em;
-    }
-
-    .ins-desc {
-      font-size: 0.8125rem;
-      color: rgba(255,255,255,0.65);
-      line-height: 1.65;
-    }
-
-    .coverage-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin-bottom: 36px;
-    }
-
-    @media (min-width: 768px) {
-      .coverage-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
-    }
-
-    .coverage-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: var(--r);
-      padding: 18px 20px;
-    }
-
-    .coverage-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: var(--white);
-      margin-bottom: 12px;
+    /* ── Footer ───────────────────────────────────────────────────────────────── */
+    .footer-h4 {
+      color: white;
+      font-size: 12px;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 16px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
-
-    .coverage-title svg { width: 16px; height: 16px; }
-
-    .coverage-title.covered { color: #93B4FF; }
-    .coverage-title.not-covered { color: rgba(255,255,255,0.55); }
-
-    .coverage-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .footer-link {
+      display: block;
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 10px;
+      transition: color 150ms;
+    }
+    .footer-link:hover { color: white; }
+    .footer-contact-item {
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 8px;
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 12px;
     }
-
-    .coverage-list li {
-      font-size: 0.8125rem;
-      color: rgba(255,255,255,0.78);
-      padding-left: 16px;
-      position: relative;
-      line-height: 1.5;
-    }
-
-    .coverage-list li::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 9px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
-      opacity: 0.5;
-    }
-
-    .cert-row {
-      border-top: 1px solid rgba(255,255,255,0.1);
-      padding-top: 24px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .cert-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .cert-item svg {
-      width: 22px;
-      height: 22px;
-      color: rgba(255,255,255,0.55);
-    }
-
-    .cert-label {
-      font-size: 0.6875rem;
-      color: rgba(255,255,255,0.45);
-      letter-spacing: 0.04em;
-    }
-
-    /* ====================================================
-       FOOTER
-       ==================================================== */
-    #footer {
-      background: var(--black);
-      color: rgba(255,255,255,0.5);
-      padding: 48px 0 24px;
-    }
-
-    [data-theme="dark"] #footer {
-      background: #050a14;
-    }
-
-    .footer-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 32px;
-      margin-bottom: 36px;
-    }
-
-    @media (min-width: 640px) {
-      .footer-grid { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (min-width: 1024px) {
-      .footer-grid { grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 48px; }
-    }
-
-    .footer-brand .logo-mark { margin-bottom: 12px; }
-    .footer-brand .logo-text { color: rgba(255,255,255,0.95); }
-    .footer-brand .logo-text span { color: rgba(255,255,255,0.4); }
-
-    .footer-tagline {
-      font-size: 0.875rem;
-      color: rgba(255,255,255,0.45);
-      margin-top: 12px;
-      line-height: 1.65;
-      max-width: 320px;
-    }
-
     .footer-social {
-      display: flex;
-      gap: 8px;
-      margin-top: 20px;
-    }
-
-    .social-link {
       width: 36px;
       height: 36px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
+      border-radius: 50%;
+      border: 1px solid #374151;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-      color: rgba(255,255,255,0.6);
+      transition: var(--transition);
     }
-
-    .social-link:hover {
-      background: var(--blue);
-      border-color: var(--blue);
-      color: var(--white);
-    }
-
-    .footer-heading {
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: rgba(255,255,255,0.9);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    .footer-links {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .footer-links a {
-      font-size: 0.875rem;
-      color: rgba(255,255,255,0.5);
-      transition: color 0.15s;
-    }
-
-    .footer-links a:hover { color: var(--white); }
-
-    .footer-contact p {
-      font-size: 0.875rem;
-      color: rgba(255,255,255,0.5);
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .footer-contact svg { width: 14px; height: 14px; flex-shrink: 0; }
-    .footer-contact a { color: rgba(255,255,255,0.7); transition: color 0.15s; }
-    .footer-contact a:hover { color: var(--white); }
-
-    .footer-bottom {
-      border-top: 1px solid rgba(255,255,255,0.08);
-      padding-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-      text-align: center;
-    }
-
-    @media (min-width: 640px) {
-      .footer-bottom {
-        flex-direction: row;
-        justify-content: space-between;
-        text-align: left;
-      }
-    }
-
-    .footer-copyright {
-      font-size: 0.8125rem;
-      color: rgba(255,255,255,0.35);
-    }
-
-    .footer-legal {
-      display: flex;
-      gap: 20px;
-    }
-
-    .footer-legal a {
-      font-size: 0.8125rem;
-      color: rgba(255,255,255,0.35);
-      transition: color 0.15s;
-    }
-
-    .footer-legal a:hover { color: rgba(255,255,255,0.7); }
-
-    /* ====================================================
-       MOBILE STICKY CTA
-       ==================================================== */
-    .mobile-cta {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 40;
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-      background: var(--card-bg);
-      border-top: 1px solid var(--card-border);
-      box-shadow: 0 -8px 24px rgba(13,31,60,0.08);
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    @media (min-width: 1024px) {
-      .mobile-cta { display: none; }
-      body { padding-bottom: 0; }
-    }
-
-    .mobile-cta-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .mobile-cta-label {
-      font-size: 0.6875rem;
-      color: var(--text-muted);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .mobile-cta-price {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--text-strong);
-      letter-spacing: -0.01em;
-    }
-
-    .mobile-cta .btn {
-      flex-shrink: 0;
-      min-height: 44px;
-      padding: 10px 20px;
-    }
+    .footer-social:hover { border-color: var(--blue); }
   </style>
-
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {"@type":"Question","name":"How does Dr. Bike work?","acceptedAnswer":{"@type":"Answer","text":"You book online in 60 seconds, we confirm, and our mechanic arrives at your door with a fully equipped van. We come to your home, office or park — no shop visit needed."}},
-      {"@type":"Question","name":"How much does mobile bike repair cost in Sydney?","acceptedAnswer":{"@type":"Answer","text":"Services start from $49 (Flat Tyre Repair) up to $229 (Major Service). The $20 mobile call-out fee is already included in all prices. Fixed pricing — no surprises."}},
-      {"@type":"Question","name":"Which Sydney suburbs do you cover?","acceptedAnswer":{"@type":"Answer","text":"We cover Inner West (Newtown, Glebe, Balmain), Eastern Suburbs (Bondi, Paddington, Randwick), CBD, North Shore (Chatswood, Mosman), Manly and Northern Beaches."}},
-      {"@type":"Question","name":"Can I get same-day bike repair in Sydney?","acceptedAnswer":{"@type":"Answer","text":"Yes! Same-day slots are available subject to mechanic availability. A $30 same-day surcharge applies and is shown clearly before you confirm."}},
-      {"@type":"Question","name":"Do you service e-bikes?","acceptedAnswer":{"@type":"Answer","text":"Yes, we specialise in e-bikes. Our E-Bike Diagnostic is $99 and covers electrical systems, motor, battery and mechanical components."}},
-      {"@type":"Question","name":"What is your satisfaction guarantee?","acceptedAnswer":{"@type":"Answer","text":"All work is covered by a 30-day satisfaction guarantee. If the same issue returns within 30 days, we fix it free of charge."}}
-    ]
-  }
-  </script>
 </head>
 <body>
 
-  <!-- ===== NAV ===== -->
-  <header id="nav" role="banner">
-    <div class="container">
-      <nav class="nav-inner" aria-label="Main navigation">
-        <a href="landing.html" class="nav-logo" aria-label="Dr. Bike Sydney home">
-          <div class="logo-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="6" cy="15" r="4"/>
-              <circle cx="18" cy="15" r="4"/>
-              <path d="M6 15l4-7h5l3 7"/>
-              <path d="M10 8l3 7"/>
-            </svg>
-          </div>
-          <div class="logo-text">
-            Dr. Bike Sydney
-            <span>Mobile Repair</span>
-          </div>
-        </a>
+<!-- ── NAVBAR ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="container">
+    <div class="nav-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5.5" cy="17.5" r="3.5"/>
+        <circle cx="18.5" cy="17.5" r="3.5"/>
+        <path d="M15 6a1 1 0 0 0-1-1h-4"/>
+        <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
+        <path d="M18.5 17.5L15 6"/>
+        <path d="M5.5 17.5L9 11l4.5-1"/>
+      </svg>
+      <span>DR BIKE SYDNEY</span>
+    </div>
 
-        <ul class="nav-links" role="list">
-          <li><a href="#services">Services</a></li>
-          <li><a href="#plans">Plans</a></li>
-          <li><a href="#reviews">Reviews</a></li>
-          <li><a href="#faq">FAQ</a></li>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#memberships">Memberships</a>
+      <a href="#about">About</a>
+      <a href="#reviews">Reviews</a>
+    </div>
+
+    <button class="nav-book" onclick="window.location.href='/index.html?from=landing'">Book Now</button>
+  </div>
+</nav>
+
+<!-- ── HERO ────────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-left">
+      <span class="hero-badge">Mobile Service &middot; Sydney Wide</span>
+      <h1 class="hero-h1">Professional Bike Service at Your Doorstep</h1>
+      <p class="hero-p">Mobile bicycle mechanic in Sydney. We come to you, fully equipped.</p>
+
+      <div class="hero-btns">
+        <a href="/index.html?from=landing" class="btn-primary">Book a Service</a>
+        <a href="#services" class="btn-outline">View Services</a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          Qualified Mechanic
+        </div>
+        <div class="hero-stat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round">
+            <rect x="1" y="3" width="15" height="13"/>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+          Fully Equipped Van
+        </div>
+        <div class="hero-stat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          5 Star Rated
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-image">
+      <div>
+        <div class="hero-image-text">DR BIKE SYDNEY</div>
+        <div class="hero-image-sub">Professional Mobile Mechanic</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRUST BAR ────────────────────────────────────────────────────────────── -->
+<div class="trust-bar">
+  <div class="container">
+    <span class="trust-label">TRUSTED BY CYCLISTS ACROSS SYDNEY</span>
+    <div class="trust-brands">
+      <span class="trust-brand">Specialized</span>
+      <span class="trust-sep">|</span>
+      <span class="trust-brand">Trek</span>
+      <span class="trust-sep">|</span>
+      <span class="trust-brand">Giant</span>
+      <span class="trust-sep">|</span>
+      <span class="trust-brand">Cannondale</span>
+      <span class="trust-sep">|</span>
+      <span class="trust-brand">BMC</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── SERVICES ─────────────────────────────────────────────────────────────── -->
+<section id="services" style="padding:96px 0;background:white">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge">OUR SERVICES</span>
+      <h2 class="section-h2">Complete Bike Care at Your Location</h2>
+      <p class="section-sub">We bring a fully equipped mobile workshop to your door — no bike shop queues, no expensive tow-ins.</p>
+    </div>
+
+    <div class="services-grid">
+      <!-- Basic Service -->
+      <div class="service-card">
+        <div class="service-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <div class="service-name">Basic Service</div>
+        <div class="service-price">$99</div>
+        <p class="service-desc">Perfect for regular maintenance and safety checks.</p>
+      </div>
+
+      <!-- Standard Service -->
+      <div class="service-card">
+        <div class="service-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+          </svg>
+        </div>
+        <div class="service-name">Standard Service</div>
+        <div class="service-price">$149</div>
+        <p class="service-desc">Comprehensive service with detailed adjustment.</p>
+      </div>
+
+      <!-- Premium Service -->
+      <div class="service-card">
+        <div class="service-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
+        <div class="service-name">Premium Service</div>
+        <div class="service-price">$189</div>
+        <p class="service-desc">Complete overhaul and performance optimization.</p>
+      </div>
+
+      <!-- Repairs -->
+      <div class="service-card">
+        <div class="service-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+            <path d="M13 13l6 6"/>
+          </svg>
+        </div>
+        <div class="service-name">Repairs</div>
+        <div class="service-price">From $60</div>
+        <p class="service-desc">Fast and reliable repair at your doorstep.</p>
+      </div>
+
+      <!-- E-Bike Service -->
+      <div class="service-card">
+        <div class="service-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+        <div class="service-name">E-Bike Service</div>
+        <div class="service-price">$129</div>
+        <p class="service-desc">Specialized service for electric bikes.</p>
+      </div>
+
+      <!-- Bike Assembly -->
+      <div class="service-card">
+        <div class="service-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/>
+            <circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
+            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
+            <path d="M18.5 17.5L15 6"/>
+            <path d="M5.5 17.5L9 11l4.5-1"/>
+          </svg>
+        </div>
+        <div class="service-name">Bike Assembly</div>
+        <div class="service-price">$80</div>
+        <p class="service-desc">Professional assembly of your new bike.</p>
+      </div>
+    </div>
+
+    <div style="text-align:center">
+      <button class="btn-outline-blue" onclick="window.location.href='/index.html?from=landing&section=services'">View All Services</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── MEMBERSHIPS placeholder ──────────────────────────────────────────────── -->
+<div id="memberships"></div>
+
+<!-- ── ABOUT ────────────────────────────────────────────────────────────────── -->
+<section id="about" style="padding:96px 0;background:var(--gray-light)">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <span class="section-badge">OUR STORY</span>
+        <h2 class="about-h2">Passion for Bikes, Commitment to Service</h2>
+        <p class="about-p">Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.</p>
+
+        <ul class="check-list">
+          <li class="check-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+              <circle cx="12" cy="12" r="12" fill="#2563eb"/>
+              <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Certified &amp; experienced mechanic
+          </li>
+          <li class="check-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+              <circle cx="12" cy="12" r="12" fill="#2563eb"/>
+              <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Fully equipped mobile workshop
+          </li>
+          <li class="check-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+              <circle cx="12" cy="12" r="12" fill="#2563eb"/>
+              <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Premium tools and quality parts
+          </li>
+          <li class="check-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+              <circle cx="12" cy="12" r="12" fill="#2563eb"/>
+              <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Satisfaction guaranteed
+          </li>
         </ul>
 
-        <div class="nav-actions">
-          <button class="icon-btn theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">
-            <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-            <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          </button>
-
-          <div class="lang-wrap" id="lang-wrap">
-            <button class="lang-btn" onclick="document.getElementById('lang-drop').classList.toggle('open')" id="lang-btn-landing">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              <span id="lang-label-landing">EN</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div id="lang-drop" class="lang-drop">
-              <button onclick="setLandingLang('en','EN')">English</button>
-              <button onclick="setLandingLang('es','ES')">Español</button>
-              <button onclick="setLandingLang('zh-CN','中文')">中文</button>
-              <button onclick="setLandingLang('ko','한국')">한국어</button>
-              <button onclick="setLandingLang('ja','JA')">日本語</button>
-              <button onclick="setLandingLang('ar','AR')">العربية</button>
-            </div>
-          </div>
-
-          <a href="index.html" class="btn-open-app btn-sm" id="nav-cta-btn" style="min-height:38px;padding:8px 16px;font-size:0.875rem;border-radius:8px">Open App</a>
-
-          <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
+        <div class="about-sig">
+          <p><em style="font-style:italic;font-weight:700">Diego Peredo</em><br>
+          <span style="color:var(--gray);font-size:14px">Founder &amp; Head Mechanic</span></p>
         </div>
-      </nav>
-    </div>
 
-    <nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation">
-      <a href="#services" onclick="closeMobileNav()">Services</a>
-      <a href="#plans" onclick="closeMobileNav()">Plans</a>
-      <a href="#reviews" onclick="closeMobileNav()">Reviews</a>
-      <a href="#faq" onclick="closeMobileNav()">FAQ</a>
-      <a href="index.html" style="color: var(--blue); font-weight: 700; margin-top: 4px;">Book Now →</a>
-      <div class="mobile-lang">
-        <span class="mobile-lang-label">Language</span>
-        <button onclick="setLandingLang('en','EN');closeMobileNav()">EN</button>
-        <button onclick="setLandingLang('es','ES');closeMobileNav()">ES</button>
-        <button onclick="setLandingLang('zh-CN','中文');closeMobileNav()">中文</button>
-        <button onclick="setLandingLang('ko','한국');closeMobileNav()">KO</button>
-        <button onclick="setLandingLang('ja','JA');closeMobileNav()">JA</button>
+        <div class="stats-mini">
+          <div class="stat-mini">
+            <div class="stat-mini-n">500+</div>
+            <div class="stat-mini-l">Happy Customers</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-n">1,000+</div>
+            <div class="stat-mini-l">Bikes Serviced</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-n">5.0&#9733;</div>
+            <div class="stat-mini-l">Avg Rating</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-n">100%</div>
+            <div class="stat-mini-l">Satisfaction</div>
+          </div>
+        </div>
       </div>
-    </nav>
-  </header>
 
-  <!-- ===== HERO ===== -->
-  <section id="hero" aria-labelledby="heroHeading">
-    <div class="container">
-      <div class="hero-inner">
-        <div class="hero-eyebrow fade-in">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-          Sydney's #1 Mobile Bike Repair
-        </div>
-
-        <h1 id="heroHeading" class="fade-in fade-in-delay-1">
-          Your bike fixed at<br>
-          <span class="accent">your front door.</span>
-        </h1>
-
-        <p class="hero-sub fade-in fade-in-delay-2">Expert mechanics. Same-day service. Fixed prices.</p>
-
-        <p class="hero-para fade-in fade-in-delay-2">
-          We come to you — home, office or park. No bike shop queues. No expensive call-outs. Just fast, professional repairs across Sydney.
-        </p>
-
-        <div class="hero-ctas fade-in fade-in-delay-3">
-          <a href="index.html" class="btn-open-app">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path><circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none"></circle></svg>
-            Open App
-          </a>
-          <a href="index.html" class="btn btn-primary">Book now →</a>
-          <a href="#how-it-works" class="btn btn-ghost">How it works</a>
-        </div>
-
-        <div class="stats-bar fade-in fade-in-delay-4" role="list" aria-label="Key statistics">
-          <div class="stat-item" role="listitem">
-            <span class="stat-value">4.9★</span>
-            <span class="stat-label">Rating</span>
-          </div>
-          <div class="stat-item" role="listitem">
-            <span class="stat-value">127+</span>
-            <span class="stat-label">Reviews</span>
-          </div>
-          <div class="stat-item" role="listitem">
-            <span class="stat-value">2</span>
-            <span class="stat-label">Vans</span>
-          </div>
-          <div class="stat-item" role="listitem">
-            <span class="stat-value" style="font-size:0.875rem">Mon–Sat</span>
-            <span class="stat-label">8am–5pm</span>
-          </div>
+      <div class="about-image">
+        <div>
+          <p style="color:white;font-weight:700;font-size:18px">DR BIKE SYDNEY</p>
+          <span style="color:rgba(255,255,255,0.7);font-size:13px">Professional Mobile Mechanic</span>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ===== HOW IT WORKS ===== -->
-  <section id="how-it-works" aria-labelledby="howItWorksTitle">
-    <div class="container">
-      <div class="section-header">
-        <div class="badge" style="margin-bottom: 14px;">Simple Process</div>
-        <h2 class="section-title fade-in" id="howItWorksTitle">How it works</h2>
-        <p class="section-sub fade-in">Get your bike fixed without leaving home in three easy steps.</p>
-      </div>
-
-      <div class="steps-grid">
-        <article class="step-card fade-in">
-          <div class="step-row">
-            <div class="step-number" aria-label="Step 1">1</div>
-            <div class="step-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            </div>
-          </div>
-          <h3 class="step-title">Book in 60 seconds</h3>
-          <p class="step-desc">Choose your service, pick a time that works for you. We'll send a confirmation and reminder before arrival.</p>
-        </article>
-
-        <article class="step-card fade-in fade-in-delay-1">
-          <div class="step-row">
-            <div class="step-number" aria-label="Step 2">2</div>
-            <div class="step-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            </div>
-          </div>
-          <h3 class="step-title">Mechanic arrives</h3>
-          <p class="step-desc">Your qualified mechanic arrives in a fully-equipped van — all tools and parts on board, ready to fix your ride.</p>
-        </article>
-
-        <article class="step-card fade-in fade-in-delay-2">
-          <div class="step-row">
-            <div class="step-number" aria-label="Step 3">3</div>
-            <div class="step-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="15" r="4"/><circle cx="18" cy="15" r="4"/><path d="M6 15l4-7h5l3 7M10 8l3 7"/></svg>
-            </div>
-          </div>
-          <h3 class="step-title">Ride away</h3>
-          <p class="step-desc">Job done, payment processed securely online. You're back on the road — no waiting, no hassle.</p>
-        </article>
-      </div>
+<!-- ── TESTIMONIALS ──────────────────────────────────────────────────────────── -->
+<section id="reviews" style="padding:96px 0;background:white">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge">TESTIMONIALS</span>
+      <h2 class="section-h2" style="font-size:2rem">What Our Customers Say</h2>
+      <p class="section-sub">Real reviews from Sydney cyclists who've used Dr. Bike Sydney.</p>
     </div>
-  </section>
 
-  <!-- ===== SERVICES ===== -->
-  <section id="services" aria-labelledby="servicesTitle">
-    <div class="container">
-      <div class="section-header">
-        <div class="badge" style="margin-bottom: 14px;">All Services</div>
-        <h2 class="section-title fade-in" id="servicesTitle">What we fix</h2>
-        <p class="section-sub fade-in">Every service includes the $20 mobile call-out fee. Fixed pricing, no surprises.</p>
-      </div>
+    <div id="reviews-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;min-height:200px">
+      <div style="grid-column:1/-1"><div class="spinner"></div></div>
+    </div>
 
-      <div class="services-grid" id="servicesGrid" role="list">
-
-        <article class="service-card featured fade-in" role="listitem" style="padding-top: 30px;">
-          <span class="popular-badge" aria-label="Most popular">Most Popular</span>
-          <h3 class="service-name">Tune-Up</h3>
-          <p class="service-duration">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            45–60 min
-          </p>
-          <div class="service-price"><sup>$</sup>109</div>
-          <a href="index.html" class="btn btn-primary btn-sm btn-block" style="margin-top: 16px;">Book →</a>
-        </article>
-
-        <article class="service-card fade-in fade-in-delay-1" role="listitem">
-          <h3 class="service-name">Gear Adjustment</h3>
-          <p class="service-duration">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            20–30 min
-          </p>
-          <div class="service-price"><sup>$</sup>59</div>
-          <a href="index.html" class="btn btn-ghost btn-sm btn-block" style="margin-top: 16px;">Book →</a>
-        </article>
-
-        <article class="service-card fade-in fade-in-delay-2" role="listitem">
-          <h3 class="service-name">Flat Tyre Repair</h3>
-          <p class="service-duration">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            15–20 min
-          </p>
-          <div class="service-price"><sup>$</sup>49</div>
-          <a href="index.html" class="btn btn-ghost btn-sm btn-block" style="margin-top: 16px;">Book →</a>
-        </article>
-
-        <article class="service-card fade-in fade-in-delay-3" role="listitem">
-          <h3 class="service-name">Brake Service</h3>
-          <p class="service-duration">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            20–30 min
-          </p>
-          <div class="service-price"><sup>$</sup>49</div>
-          <a href="index.html" class="btn btn-ghost btn-sm btn-block" style="margin-top: 16px;">Book →</a>
-        </article>
-
-        <article class="service-card fade-in" role="listitem">
-          <h3 class="service-name">Chain Replace</h3>
-          <p class="service-duration">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            20 min
-          </p>
-          <div class="service-price"><sup>$</sup>55</div>
-          <a href="index.html" class="btn btn-ghost btn-sm btn-block" style="margin-top: 16px;">Book →</a>
-        </article>
-
-        <article class="service-card fade-in fade-in-delay-1" role="listitem">
-          <h3 class="service-name">Standard Service</h3>
-          <p class="service-duration">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            60–90 min
-          </p>
-          <div class="service-price"><sup>$</sup>149</div>
-          <a href="index.html" class="btn btn-ghost btn-sm btn-block" style="margin-top: 16px;">Book →</a>
-        </article>
-
-        <article class="service-card fade-in fade-in-delay-2" role="listitem">
-          <h3 class="service-name">E-Bike Diagnostic</h3>
-          <p class="service-duration">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            45–60 min
-          </p>
-          <div class="service-price"><sup>$</sup>97</div>
-          <a href="index.html" class="btn btn-ghost btn-sm btn-block" style="margin-top: 16px;">Book →</a>
-        </article>
-
-        <article class="service-card fade-in fade-in-delay-3" role="listitem">
-          <h3 class="service-name">Full Overhaul</h3>
-          <p class="service-duration">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            90–120 min
-          </p>
-          <div class="service-price"><sup>$</sup>229</div>
-          <a href="index.html" class="btn btn-ghost btn-sm btn-block" style="margin-top: 16px;">Book →</a>
-        </article>
-
-      </div>
-
-      <p class="services-note fade-in">
-        <strong>All prices include the $20 mobile call-out fee.</strong> Fixed pricing — no surprises. Parts charged separately if required.
+    <div id="reviews-empty" style="display:none;text-align:center;padding:48px;color:var(--gray)">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e5e7eb" stroke-width="1.5" style="margin:0 auto">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+      <p style="margin-top:16px">No reviews yet. Be the first to share your experience!<br>
+        <a href="/index.html?from=landing" style="color:var(--blue)">Book a service</a>
       </p>
     </div>
-  </section>
 
-  <!-- ===== PLANS ===== -->
-  <section id="plans" aria-labelledby="plansTitle">
-    <div class="container">
-      <div class="section-header">
-        <div class="badge" style="margin-bottom: 14px;">Save More</div>
-        <h2 class="section-title fade-in" id="plansTitle">Subscription Plans</h2>
-        <p class="section-sub fade-in">Become a member and save on every service. Pause or cancel anytime.</p>
-      </div>
-
-      <div class="billing-toggle" role="group" aria-label="Billing frequency">
-        <span class="billing-label active" id="monthlyLabel">Monthly</span>
-        <label class="toggle-switch" aria-label="Switch to annual billing">
-          <input type="checkbox" id="billingToggle" aria-describedby="annualSavings">
-          <div class="toggle-track"></div>
-          <div class="toggle-thumb"></div>
-        </label>
-        <span class="billing-label" id="annualLabel">Annual</span>
-        <span class="annual-badge" id="annualSavings">Save 20%</span>
-      </div>
-
-      <div class="plans-grid">
-
-        <article class="plan-card fade-in" id="planBasic">
-          <h3 class="plan-name">Basic</h3>
-          <p class="plan-tagline">For the occasional rider</p>
-          <div class="plan-price" id="basicPrice"><sup>$</sup>57<sub>/mo</sub></div>
-          <p class="plan-billed" id="basicBilled">Billed monthly</p>
-          <ul class="plan-features" role="list">
-            <li><span>8% off all services</span></li>
-            <li><span>Call-out fee waived</span></li>
-            <li><span><strong>1</strong> free Tune-Up per year</span></li>
-            <li><span>Online booking priority</span></li>
-          </ul>
-          <a href="index.html?plan=basic" class="btn btn-ghost btn-block">Get started →</a>
-        </article>
-
-        <article class="plan-card popular fade-in fade-in-delay-1" id="planStandard" aria-label="Most popular plan">
-          <div class="popular-ribbon" aria-label="Most popular">Most Popular</div>
-          <h3 class="plan-name">Standard</h3>
-          <p class="plan-tagline">For the regular commuter</p>
-          <div class="plan-price" id="standardPrice"><sup>$</sup>97<sub>/mo</sub></div>
-          <p class="plan-billed" id="standardBilled">Billed monthly</p>
-          <ul class="plan-features" role="list">
-            <li><span>12% off all services</span></li>
-            <li><span>Call-out fee waived</span></li>
-            <li><span><strong>2</strong> free Tune-Ups per year</span></li>
-            <li><span>Priority booking (24h notice)</span></li>
-            <li><span>Service history record</span></li>
-          </ul>
-          <a href="index.html?plan=standard" class="btn btn-primary btn-block">Get started →</a>
-        </article>
-
-        <article class="plan-card fade-in fade-in-delay-2" id="planVip">
-          <h3 class="plan-name">VIP</h3>
-          <p class="plan-tagline">For the serious cyclist</p>
-          <div class="plan-price" id="vipPrice"><sup>$</sup>147<sub>/mo</sub></div>
-          <p class="plan-billed" id="vipBilled">Billed monthly</p>
-          <ul class="plan-features" role="list">
-            <li><span>18% off all services</span></li>
-            <li><span>Call-out fee waived</span></li>
-            <li><span><strong>3</strong> free Tune-Ups per year</span></li>
-            <li><span>Same-day guarantee</span></li>
-            <li><span>Dedicated mechanic assigned</span></li>
-            <li><span>Parts at cost price</span></li>
-          </ul>
-          <a href="index.html?plan=vip" class="btn btn-ghost btn-block">Get started →</a>
-        </article>
-
-      </div>
+    <div id="reviews-error" style="display:none;text-align:center;padding:48px;color:var(--gray)">
+      <p>Unable to load reviews right now.</p>
     </div>
-  </section>
 
-  <!-- ===== REVIEWS ===== -->
-  <section id="reviews" aria-labelledby="reviewsTitle">
-    <div class="container">
-      <div class="section-header">
-        <div class="badge" style="margin-bottom: 14px;">4.9★ Average</div>
-        <h2 class="section-title fade-in" id="reviewsTitle">What our riders say</h2>
-        <p class="section-sub fade-in">Real reviews from real Sydney cyclists.</p>
+    <div style="margin-top:48px;background:var(--blue);border-radius:var(--radius-lg);padding:32px;display:flex;justify-content:space-between;align-items:center;gap:24px">
+      <div>
+        <p style="color:white;font-weight:700;font-size:18px">See Our Service In Action</p>
+        <p style="color:rgba(255,255,255,0.85);font-size:14px;margin-top:4px">Watch how we service bikes on location.</p>
       </div>
-
-      <div class="reviews-grid" id="reviewsGrid" role="list" aria-live="polite" aria-busy="true">
-        <div class="skeleton fade-in" aria-hidden="true">
-          <div class="skel-line short" style="margin-bottom:16px;"></div>
-          <div class="skel-line full"></div>
-          <div class="skel-line full"></div>
-          <div class="skel-line medium" style="margin-bottom:20px;"></div>
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div class="skel-line" style="width:40px;height:40px;border-radius:50%;margin-bottom:0;flex-shrink:0;"></div>
-            <div style="flex:1;">
-              <div class="skel-line short" style="margin-bottom:6px;"></div>
-              <div class="skel-line" style="width:30%;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="skeleton fade-in fade-in-delay-1" aria-hidden="true">
-          <div class="skel-line short" style="margin-bottom:16px;"></div>
-          <div class="skel-line full"></div>
-          <div class="skel-line full"></div>
-          <div class="skel-line medium" style="margin-bottom:20px;"></div>
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div class="skel-line" style="width:40px;height:40px;border-radius:50%;margin-bottom:0;flex-shrink:0;"></div>
-            <div style="flex:1;">
-              <div class="skel-line short" style="margin-bottom:6px;"></div>
-              <div class="skel-line" style="width:30%;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="skeleton fade-in fade-in-delay-2" aria-hidden="true">
-          <div class="skel-line short" style="margin-bottom:16px;"></div>
-          <div class="skel-line full"></div>
-          <div class="skel-line full"></div>
-          <div class="skel-line medium" style="margin-bottom:20px;"></div>
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div class="skel-line" style="width:40px;height:40px;border-radius:50%;margin-bottom:0;flex-shrink:0;"></div>
-            <div style="flex:1;">
-              <div class="skel-line short" style="margin-bottom:6px;"></div>
-              <div class="skel-line" style="width:30%;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <button onclick="alert('Video coming soon!')" style="background:white;color:var(--blue);padding:10px 24px;border-radius:var(--radius);font-weight:600;border:none;cursor:pointer;white-space:nowrap;font-size:14px">Watch Video</button>
     </div>
-  </section>
-
-  <!-- ===== TRUST STRIP ===== -->
-  <section id="trust" aria-label="Trust and credentials">
-    <div class="container">
-      <div class="trust-grid">
-        <div class="trust-item">
-          <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <div>
-            <div class="trust-title">$2M Insured</div>
-            <div class="trust-sub">Public liability</div>
-          </div>
-        </div>
-        <div class="trust-item">
-          <svg class="trust-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-          <div>
-            <div class="trust-title">4.9★ Rating</div>
-            <div class="trust-sub">200+ happy riders</div>
-          </div>
-        </div>
-        <div class="trust-item">
-          <svg class="trust-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
-          <div>
-            <div class="trust-title">Same-day service</div>
-            <div class="trust-sub">Available 7 days</div>
-          </div>
-        </div>
-        <div class="trust-item">
-          <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <div>
-            <div class="trust-title">Fixed prices</div>
-            <div class="trust-sub">No hidden fees</div>
-          </div>
-        </div>
-        <div class="trust-item">
-          <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-          <div>
-            <div class="trust-title">30-day guarantee</div>
-            <div class="trust-sub">We fix it free</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== FAQ ===== -->
-  <section id="faq" aria-labelledby="faqTitle">
-    <div class="container">
-      <div class="faq-wrap">
-        <div class="section-header">
-          <div class="eyebrow">FAQ</div>
-          <h2 class="section-title" id="faqTitle">Frequently asked questions</h2>
-        </div>
-        <div id="faq-list" class="faq-list"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== FLEET ===== -->
-  <section id="fleet">
-    <div class="container">
-      <div class="fleet-wrap">
-        <div class="fleet-content">
-          <div class="eyebrow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 22V12h6v10M3 9h18"/></svg>
-            Corporate & Fleet
-          </div>
-          <h2 class="fleet-title">Keep your team's bikes rolling</h2>
-          <p class="fleet-desc">We partner with businesses, cycling clubs, strata buildings and Citi Bike operators across Sydney. One call — we service your whole fleet on-site, no disruption, no downtime.</p>
-          <ul class="fleet-features">
-            <li>
-              <span class="fleet-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-              <span><strong>Scheduled fleet servicing</strong> — monthly or quarterly visits, invoiced to your business</span>
-            </li>
-            <li>
-              <span class="fleet-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-              <span><strong>End-of-trip facility servicing</strong> — we work at your building's bike parking, no employee drop-off needed</span>
-            </li>
-            <li>
-              <span class="fleet-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-              <span><strong>Corporate accounts &amp; invoicing</strong> — net-30 terms, monthly consolidated invoices, GST receipts</span>
-            </li>
-            <li>
-              <span class="fleet-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-              <span><strong>Staff ride-to-work programme</strong> — subsidised repairs for employees</span>
-            </li>
-          </ul>
-          <a href="mailto:fleet@drbikesydney.com.au?subject=Fleet%20enquiry" class="btn btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            Get a fleet quote
-          </a>
-        </div>
-
-        <div class="fleet-stats">
-          <div class="fleet-stat">
-            <div class="fleet-stat-value">10+</div>
-            <div class="fleet-stat-label">bikes minimum<br>fleet contract</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-value">20%</div>
-            <div class="fleet-stat-label">fleet discount<br>on all services</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-value">48h</div>
-            <div class="fleet-stat-label">turnaround on<br>fleet bookings</div>
-          </div>
-          <div class="fleet-stat">
-            <div class="fleet-stat-value">∞</div>
-            <div class="fleet-stat-label">no cap on<br>fleet size</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== INSURANCE ===== -->
-  <section id="insurance">
-    <div class="container">
-      <div class="section-header">
-        <div class="eyebrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Your protection
-        </div>
-        <h2 class="section-title">You're covered. Every visit.</h2>
-        <p class="section-sub">We carry full Public Liability Insurance so you can book with complete peace of mind.</p>
-      </div>
-
-      <div class="insurance-cards">
-        <div class="ins-card">
-          <div class="ins-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>
-          </div>
-          <div class="ins-title">Public Liability — $2M</div>
-          <div class="ins-desc">We hold a $2M Public Liability Insurance policy. If anything goes wrong at your property during our visit — damage or injury — you're covered.</div>
-        </div>
-        <div class="ins-card">
-          <div class="ins-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4M21 12c0 5-4 9-9 9s-9-4-9-9 4-9 9-9c2.4 0 4.6.9 6.3 2.5"/></svg>
-          </div>
-          <div class="ins-title">Verified mechanics</div>
-          <div class="ins-desc">All Dr. Bike mechanics are background-checked and trained. You'll always know who's coming — name, photo and rating shown before arrival.</div>
-        </div>
-        <div class="ins-card">
-          <div class="ins-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-          </div>
-          <div class="ins-title">30-day guarantee</div>
-          <div class="ins-desc">Not happy with the work? We'll come back and fix it for free within 30 days. No questions asked.</div>
-        </div>
-      </div>
-
-      <div class="coverage-grid">
-        <div class="coverage-card">
-          <div class="coverage-title covered">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            What's covered
-          </div>
-          <ul class="coverage-list">
-            <li>Property damage during service</li>
-            <li>Injury to third parties at your location</li>
-            <li>Workmanship errors (30-day fix guarantee)</li>
-            <li>Parts installed by our mechanics</li>
-          </ul>
-        </div>
-        <div class="coverage-card">
-          <div class="coverage-title not-covered">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            Not covered
-          </div>
-          <ul class="coverage-list">
-            <li>Pre-existing damage to your bike</li>
-            <li>Parts supplied by the client</li>
-            <li>Bike theft (we recommend a separate policy)</li>
-            <li>Wear &amp; tear from normal use</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="cert-row">
-        <div class="cert-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18"/></svg>
-          <div class="cert-label">ABN Registered</div>
-        </div>
-        <div class="cert-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <div class="cert-label">$2M Public Liability</div>
-        </div>
-        <div class="cert-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <div class="cert-label">Secure Payments</div>
-        </div>
-        <div class="cert-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4M21 12c0 5-4 9-9 9s-9-4-9-9 4-9 9-9c2.4 0 4.6.9 6.3 2.5"/></svg>
-          <div class="cert-label">Verified Mechanics</div>
-        </div>
-        <div class="cert-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-          <div class="cert-label">30-Day Guarantee</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== FOOTER ===== -->
-    <!-- ===== COVERAGE MAP ===== -->
-  <section id="coverage" style="padding:80px 0;background:#F7F8FA">
-    <div style="max-width:860px;margin:0 auto;padding:0 24px">
-      <div style="text-align:center;margin-bottom:48px">
-        <div style="display:inline-block;font-size:11px;font-weight:700;color:#1848C8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">Coverage</div>
-        <h2 style="font-size:clamp(28px,4vw,40px);font-weight:800;color:#0D1F3C;margin:0 0 12px;letter-spacing:-0.02em">We cover most of Sydney</h2>
-        <p style="font-size:15px;color:#6B7280;margin:0">Two vans operating 6 days a week across greater Sydney</p>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div style="background:#fff;border-radius:16px;padding:28px;border:1px solid #E5E7EB">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-            <div style="width:40px;height:40px;background:#EEF3FC;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">🚐</div>
-            <div>
-              <div style="font-size:14px;font-weight:700;color:#0D1F3C">Van 1</div>
-              <div style="font-size:11px;color:#6B7280">Inner city & east</div>
-            </div>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${['Newtown','Glebe','Balmain','Leichhardt','Surry Hills','Pyrmont','Chippendale','Redfern','CBD','Bondi','Paddington','Randwick','Coogee','Maroubra','Mascot','Zetland'].map(s=>`<span style="background:#EEF3FC;color:#1848C8;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">${s}</span>`).join('')}
-          </div>
-        </div>
-        <div style="background:#fff;border-radius:16px;padding:28px;border:1px solid #E5E7EB">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-            <div style="width:40px;height:40px;background:#ECFDF5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">🚐</div>
-            <div>
-              <div style="font-size:14px;font-weight:700;color:#0D1F3C">Van 2</div>
-              <div style="font-size:11px;color:#6B7280">North & beaches</div>
-            </div>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${['Chatswood','Mosman','Neutral Bay','Cremorne','Manly','Dee Why','Collaroy','Narrabeen','Crows Nest','St Leonards','Lane Cove','Willoughby','Brookvale','Freshwater'].map(s=>`<span style="background:#ECFDF5;color:#059669;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">${s}</span>`).join('')}
-          </div>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:24px;font-size:14px;color:#6B7280">
-        Not sure if we cover your area? 
-        <a href="index.html" style="color:#1848C8;font-weight:600">Enter your suburb when booking</a> — we'll confirm immediately.
-      </div>
-    </div>
-  </section>
-
-  <footer id="footer" role="contentinfo">
-    <div class="container">
-      <div class="footer-grid">
-
-        <div class="footer-brand">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            <div class="logo-mark">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="6" cy="15" r="4"/>
-                <circle cx="18" cy="15" r="4"/>
-                <path d="M6 15l4-7h5l3 7M10 8l3 7"/>
-              </svg>
-            </div>
-            <div class="logo-text">
-              Dr. Bike Sydney
-              <span>Mobile Repair</span>
-            </div>
-          </div>
-          <p class="footer-tagline">Sydney's #1 mobile bicycle repair service. Expert mechanics come to you — home, office or park across greater Sydney.</p>
-          <div class="footer-social" role="list" aria-label="Social media links">
-            <a href="https://www.instagram.com/drbikesydney" class="social-link" role="listitem" aria-label="Instagram" rel="noopener noreferrer" target="_blank">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-            </a>
-            <a href="https://www.facebook.com/drbikesydney" class="social-link" role="listitem" aria-label="Facebook" rel="noopener noreferrer" target="_blank">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            </a>
-          </div>
-        </div>
-
-        <div>
-          <h3 class="footer-heading">Navigate</h3>
-          <nav class="footer-links" aria-label="Footer navigation">
-            <a href="landing.html">Home</a>
-            <a href="index.html">Book Now</a>
-            <a href="#services">Services</a>
-            <a href="#plans">Plans</a>
-          </nav>
-        </div>
-
-        <div>
-          <h3 class="footer-heading">Account</h3>
-          <nav class="footer-links" aria-label="Account navigation">
-            <a href="admin.html">Admin</a>
-            <a href="mechanic.html">Mechanic App</a>
-          </nav>
-        </div>
-
-        <div class="footer-contact">
-          <h3 class="footer-heading">Contact</h3>
-          <p>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <a href="mailto:hello@drbikesydney.com.au">hello@drbikesydney.com.au</a>
-          </p>
-          <p>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Mon–Sat, 8am–5pm
-          </p>
-          <p>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Greater Sydney, NSW
-          </p>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <p class="footer-copyright">© 2025 Dr. Bike Sydney. All rights reserved.</p>
-        <nav class="footer-legal" aria-label="Legal links">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-        </nav>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ===== MOBILE STICKY CTA ===== -->
-  <div class="mobile-cta" role="region" aria-label="Quick book">
-    <div class="mobile-cta-info">
-      <div class="mobile-cta-label">From</div>
-      <div class="mobile-cta-price">$37 · Same-day available</div>
-    </div>
-    <a href="index.html" class="btn btn-primary">Book now</a>
   </div>
-
-  <!-- ===== JAVASCRIPT ===== -->
-  <script>
-    'use strict';
-
-    // ===== DARK MODE =====
-    const THEME_KEY = 'drbike-theme';
-
-    function getStoredTheme() { return localStorage.getItem(THEME_KEY); }
-
-    function applyTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      const sun = document.getElementById('themeIconSun');
-      const moon = document.getElementById('themeIconMoon');
-      if (sun && moon) {
-        sun.style.display = theme === 'dark' ? 'block' : 'none';
-        moon.style.display = theme === 'dark' ? 'none' : 'block';
-      }
-    }
-
-    function initTheme() {
-      const stored = getStoredTheme();
-      if (stored) applyTheme(stored);
-      else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        applyTheme(prefersDark ? 'dark' : 'light');
-      }
-    }
-
-    function toggleTheme() {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      localStorage.setItem(THEME_KEY, next);
-      applyTheme(next);
-    }
-
-    initTheme();
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!getStoredTheme()) applyTheme(e.matches ? 'dark' : 'light');
-    });
-
-    // ===== MOBILE NAV =====
-    const hamburger = document.getElementById('hamburger');
-    const mobileNav = document.getElementById('mobileNav');
-
-    hamburger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = mobileNav.classList.toggle('open');
-      hamburger.setAttribute('aria-expanded', isOpen.toString());
-    });
-
-    function closeMobileNav() {
-      mobileNav.classList.remove('open');
-      hamburger.setAttribute('aria-expanded', 'false');
-    }
-
-    document.addEventListener('click', (e) => {
-      if (!hamburger.contains(e.target) && !mobileNav.contains(e.target)) closeMobileNav();
-    });
-
-    // ===== BILLING TOGGLE =====
-    const billingToggle = document.getElementById('billingToggle');
-    const monthlyLabel = document.getElementById('monthlyLabel');
-    const annualLabel = document.getElementById('annualLabel');
-
-    const plans = {
-      basic:    { monthly: 57,  annual: Math.round(57  * 12 * 0.8 / 12) },
-      standard: { monthly: 97,  annual: Math.round(97  * 12 * 0.8 / 12) },
-      vip:      { monthly: 147, annual: Math.round(147 * 12 * 0.8 / 12) }
-    };
-
-    function updatePlanPrices(isAnnual) {
-      ['basic', 'standard', 'vip'].forEach(plan => {
-        const priceEl = document.getElementById(`${plan}Price`);
-        const billedEl = document.getElementById(`${plan}Billed`);
-        if (priceEl && billedEl) {
-          const amount = isAnnual ? plans[plan].annual : plans[plan].monthly;
-          priceEl.innerHTML = `<sup>$</sup>${amount}<sub>/mo</sub>`;
-          billedEl.textContent = isAnnual ? `Billed $${amount * 12}/year (save 20%)` : 'Billed monthly';
-        }
-      });
-      monthlyLabel.classList.toggle('active', !isAnnual);
-      annualLabel.classList.toggle('active', isAnnual);
-    }
-
-    billingToggle.addEventListener('change', () => updatePlanPrices(billingToggle.checked));
-
-    // ===== FADE IN =====
-    const fadeObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          fadeObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-
-    document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
-
-    // ===== LANGUAGE =====
-    function setLandingLang(lang, label) {
-      document.getElementById('lang-label-landing').textContent = label;
-      document.getElementById('lang-drop').classList.remove('open');
-      if (lang === 'en') return;
-      const url = encodeURIComponent(window.location.origin + window.location.pathname);
-      window.location.href = `https://translate.google.com/translate?sl=en&tl=${lang}&u=${url}`;
-    }
-
-    document.addEventListener('click', e => {
-      const wrap = document.getElementById('lang-wrap');
-      if (wrap && !wrap.contains(e.target)) document.getElementById('lang-drop').classList.remove('open');
-    });
-
-    // ===== FAQ =====
-    const faqs = [
-      { q: 'How does Dr. Bike work?', a: 'You book online, we confirm, and our mechanic arrives at your door with a fully equipped van. No need to visit a shop — we come to your home, office or park.' },
-      { q: 'How much does it cost?', a: 'All prices are fixed and shown upfront — no surprises. Services range from $59 (Gear Adjustment) to $369 (Ultimate Overhaul). The $20 mobile call-out fee is included in all prices. A surcharge of $30 applies for same-day bookings and $20 for weekends.' },
-      { q: 'Which areas do you cover?', a: 'We currently service Inner West, Eastern Suburbs, North Shore, Manly and the CBD. Enter your suburb when booking to confirm availability.' },
-      { q: 'How long does a service take?', a: 'Most services take 45–90 minutes. A Full Overhaul may take 2–3 hours. Your mechanic will give you an accurate estimate on arrival.' },
-      { q: 'Do I need to be home?', a: 'Yes, someone needs to be present to hand over the bike. You can be inside — we work on the footpath, driveway or building entrance.' },
-      { q: 'What if something goes wrong?', a: 'All work is covered by our 30-day satisfaction guarantee. If the same issue returns within 30 days, we fix it free. We also carry $2M Public Liability Insurance for your peace of mind.' },
-      { q: 'Do you service e-bikes?', a: 'Yes! We specialise in e-bikes and have certified mechanics. Our E-Bike Service ($212) includes a full electrical diagnostic, motor and battery check, firmware update if needed, and a complete mechanical service.' },
-      { q: 'Can I book same-day?', a: 'Yes, subject to availability. Same-day slots are shown when you book. A $30 same-day surcharge applies. Weekend bookings have a $20 surcharge. Both are shown clearly before you confirm and pay.' },
-      { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards, Apple Pay and Google Pay through our secure Stripe checkout. No cash needed.' },
-      { q: 'Do you offer subscriptions?', a: 'Yes! Our membership plans (Basic $57/mo, Standard $97/mo, VIP $147/mo) include free tune-ups, discounts on all services and priority booking. Members save $200+ per year on average.' },
-      { q: 'What do your mechanics bring?', a: 'Our mechanics arrive with professional-grade tools — torque wrenches, bleed kits, wheel truing stands, chain wear gauges and more. We carry common parts in stock (brake pads, cables, tubes, chains) so most repairs are done in one visit. No waiting for parts.' },
-    ];
-
-    const faqList = document.getElementById('faq-list');
-    if (faqList) {
-      faqList.innerHTML = faqs.map((f, i) => `
-        <div class="faq-item" id="faq-${i}">
-          <button class="faq-question" onclick="toggleFaq(${i})" aria-expanded="false">
-            ${f.q}
-            <span class="faq-icon">+</span>
-          </button>
-          <div class="faq-answer" id="faq-ans-${i}">${f.a}</div>
-        </div>
-      `).join('');
-    }
-
-    function toggleFaq(i) {
-      const item = document.getElementById('faq-' + i);
-      const ans = document.getElementById('faq-ans-' + i);
-      if (!item || !ans) return;
-      const open = item.classList.toggle('open');
-      ans.style.display = open ? 'block' : 'none';
-      item.querySelector('.faq-question').setAttribute('aria-expanded', open.toString());
-    }
-
-    // ===== REVIEWS =====
-    const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_zL6EV0_qG2SccuRYBm6BZQ_psf806jn';
-
-    const FALLBACK_REVIEWS = [
-      { rating: 5, text: "Absolutely incredible service. The mechanic arrived right on time, fixed my gears and brakes in under an hour, and my bike rides like new. Worth every cent — won't go to a bike shop again!", name: "Sarah M.", suburb: "Surry Hills" },
-      { rating: 5, text: "I was skeptical at first but Dr. Bike completely won me over. Super professional, explained everything clearly, and the fixed pricing meant no nasty surprises. Booked again already.", name: "James T.", suburb: "Newtown" },
-      { rating: 5, text: "Had a flat tyre on a Friday morning right before work. Dr. Bike came within 2 hours, fixed it in 15 minutes. Saved my day. The convenience is unmatched in Sydney.", name: "Priya K.", suburb: "Bondi" },
-      { rating: 5, text: "The mechanic was friendly, knowledgeable and incredibly efficient. My e-bike needed a full diagnostic and he sorted it all out on the spot. Highly recommend the subscription plan!", name: "Michael R.", suburb: "Glebe" },
-      { rating: 5, text: "Best decision ever getting the Standard plan. Two free tune-ups already saved me more than the subscription cost. Plus the priority booking is a game-changer in summer.", name: "Emma L.", suburb: "Manly" },
-      { rating: 4, text: "Really happy with the service overall. Quick booking, punctual arrival, quality work. My road bike hasn't felt this good in years. Minor wait on one part but they came back same day.", name: "David C.", suburb: "Paddington" }
-    ];
-
-    function renderStars(rating) {
-      const full = Math.floor(rating);
-      return '★'.repeat(full) + '☆'.repeat(5 - full);
-    }
-
-    function getInitials(name) {
-      if (!name) return '?';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-
-    function renderReviewCard(review, delay = 0) {
-      const name = review.name || review.client_name || 'Anonymous';
-      const suburb = review.suburb || review.client_suburb || 'Sydney';
-      const text = review.text || review.client_review || '';
-      const rating = review.rating || review.client_rating || 5;
-
-      const card = document.createElement('article');
-      card.className = `review-card fade-in${delay ? ` fade-in-delay-${delay}` : ''}`;
-      card.setAttribute('role', 'listitem');
-      card.innerHTML = `
-        <div class="review-stars" aria-label="${rating} out of 5 stars">${renderStars(rating)}</div>
-        <p class="review-text">${text}</p>
-        <div class="review-author">
-          <div class="review-avatar" aria-hidden="true">${getInitials(name)}</div>
-          <div>
-            <div class="review-name">${name}</div>
-            <div class="review-suburb">${suburb}</div>
-          </div>
-        </div>
-      `;
-      return card;
-    }
-
-    async function loadReviews() {
-      const grid = document.getElementById('reviewsGrid');
-      grid.setAttribute('aria-busy', 'true');
-
-      try {
-        if (typeof supabase === 'undefined') throw new Error('Supabase not loaded');
-
-        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const { data, error } = await client
-          .from('bookings')
-          .select(`
-            client_review,
-            client_rating,
-            completed_at,
-            profiles:client_id (full_name, suburb)
-          `)
-          .not('client_review', 'is', null)
-          .gte('client_rating', 4)
-          .order('completed_at', { ascending: false })
-          .limit(6);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          grid.innerHTML = '';
-          grid.setAttribute('aria-busy', 'false');
-          data.forEach((booking, i) => {
-            const review = {
-              rating: booking.client_rating,
-              text: booking.client_review,
-              name: booking.profiles?.full_name || 'Happy Rider',
-              suburb: booking.profiles?.suburb || 'Sydney'
-            };
-            const card = renderReviewCard(review, i % 3);
-            grid.appendChild(card);
-            fadeObserver.observe(card);
-          });
-        } else {
-          renderFallbackReviews();
-        }
-      } catch (err) {
-        console.warn('Could not load reviews from Supabase:', err.message);
-        renderFallbackReviews();
-      }
-    }
-
-    function renderFallbackReviews() {
-      const grid = document.getElementById('reviewsGrid');
-      grid.innerHTML = '';
-      grid.setAttribute('aria-busy', 'false');
-      FALLBACK_REVIEWS.forEach((review, i) => {
-        const card = renderReviewCard(review, i % 3);
-        grid.appendChild(card);
-        fadeObserver.observe(card);
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadReviews();
-    });
-
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
-        const href = this.getAttribute('href');
-        if (href === '#') return;
-        const target = document.querySelector(href);
-        if (target) {
-          e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          closeMobileNav();
-        }
-      });
-    });
-  </script>
+</section>
 
 <script>
-// Detectar sesión Supabase en localStorage
-(function() {
+async function loadReviews() {
+  const grid = document.getElementById('reviews-grid');
+  const empty = document.getElementById('reviews-empty');
+  const errDiv = document.getElementById('reviews-error');
+
   try {
-    const btn = document.getElementById('nav-cta-btn');
-    if(!btn) return;
-    // Supabase guarda la sesión con key "sb-{ref}-auth-token"
-    // El IDB adapter de index.html también copia a localStorage como backup
-    for(let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if(!key) continue;
-      // Buscar key de Supabase auth: sb-XXX-auth-token
-      if(key.startsWith('sb-') && key.includes('auth-token')) {
-        const val = localStorage.getItem(key);
-        if(val && val.length > 50) {
-          // Hay sesión activa
-          btn.textContent = 'My account';
-          btn.href = 'index.html?action=dashboard';
-          console.log('✅ Sesión detectada en landing');
-          return;
-        }
-      }
+    const res = await fetch('/api/get-reviews');
+    if (!res.ok) throw new Error('fetch failed');
+    const { reviews } = await res.json();
+
+    if (!reviews || reviews.length === 0) {
+      grid.style.display = 'none';
+      empty.style.display = 'block';
+      return;
     }
-    console.log('No hay sesión activa');
-  } catch(e) { console.error('Session check error:', e); }
-})();
+
+    grid.innerHTML = reviews.map(function(r) {
+      var rating = r.review_rating || 5;
+      var stars = '&#9733;'.repeat(rating) + '&#9734;'.repeat(5 - rating);
+      var name = r.client_name || 'Sydney Cyclist';
+      var initials = name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
+      var service = r.service_type || 'Bike Service';
+      var comment = r.review_comment || '';
+      return '<div class="review-card">'
+        + '<div style="color:#fbbf24;font-size:18px;letter-spacing:2px">' + stars + '</div>'
+        + '<p style="color:#374151;font-size:15px;line-height:1.6;flex:1">&ldquo;' + comment + '&rdquo;</p>'
+        + '<div style="display:flex;align-items:center;gap:12px;margin-top:8px">'
+        +   '<div style="width:40px;height:40px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">' + initials + '</div>'
+        +   '<div>'
+        +     '<p style="font-weight:600;color:var(--dark);font-size:14px">' + name + '</p>'
+        +     '<p style="color:var(--gray);font-size:13px">' + service + '</p>'
+        +   '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+  } catch(e) {
+    grid.style.display = 'none';
+    errDiv.style.display = 'block';
+  }
+}
+loadReviews();
+
+/* ── Memberships toggle ─────────────────────────────────────────────────── */
+var isAnnual = false;
+var mp = [29, 49, 79];
+var ap = [23, 39, 63];
+function toggleBilling() {
+  isAnnual = !isAnnual;
+  document.getElementById('tdot').style.transform = isAnnual ? 'translateX(22px)' : 'none';
+  document.getElementById('lbl-m').style.color = isAnnual ? 'var(--gray)' : 'var(--dark)';
+  document.getElementById('lbl-a').style.color = isAnnual ? 'var(--dark)' : 'var(--gray)';
+  var p = isAnnual ? ap : mp;
+  document.getElementById('p-basic').textContent = '$' + p[0];
+  document.getElementById('p-pro').textContent = '$' + p[1];
+  document.getElementById('p-premium').textContent = '$' + p[2];
+}
+
+/* ── Date input min ─────────────────────────────────────────────────────── */
+var ldate = document.getElementById('lform-date');
+if (ldate) ldate.min = new Date().toISOString().split('T')[0];
 </script>
+
+<!-- ── MEMBERSHIPS ───────────────────────────────────────────────────────────── -->
+<section id="memberships" style="padding:96px 0;background:var(--gray-light)">
+  <div class="container" style="text-align:center">
+    <span class="section-badge">MEMBERSHIPS</span>
+    <h2 class="section-h2" style="font-size:2rem">Choose Your Plan</h2>
+    <p style="color:var(--gray);font-size:18px;margin-top:12px">Save more with our membership plans. Designed for regular cyclists.</p>
+
+    <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin:24px 0 48px">
+      <span id="lbl-m" style="font-weight:600;color:var(--dark)">Monthly</span>
+      <div onclick="toggleBilling()" style="width:48px;height:26px;background:var(--blue);border-radius:13px;cursor:pointer;position:relative;transition:background 200ms">
+        <div id="tdot" style="width:20px;height:20px;background:white;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform 200ms"></div>
+      </div>
+      <span id="lbl-a" style="color:var(--gray)">Annual</span>
+      <span style="background:#dcfce7;color:#16a34a;font-size:12px;font-weight:600;padding:2px 10px;border-radius:var(--radius-full)">Save 20%</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto">
+
+      <!-- Basic -->
+      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
+        <h3 style="font-weight:700;font-size:18px">Basic</h3>
+        <div style="margin:16px 0">
+          <span id="p-basic" style="font-size:2.5rem;font-weight:800">$29</span>
+          <span style="color:var(--gray);font-size:15px">/month</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>1 Basic Service</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
+        </ul>
+        <button onclick="window.location.href='/index.html?from=landing&plan=basic'" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--blue)'">Get Started</button>
+      </div>
+
+      <!-- Pro -->
+      <div style="background:white;border:2px solid var(--blue);border-radius:var(--radius-lg);padding:32px;text-align:left;position:relative">
+        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:4px 16px;border-radius:var(--radius-full);font-size:12px;font-weight:600;white-space:nowrap">Popular</div>
+        <h3 style="font-weight:700;font-size:18px">Pro</h3>
+        <div style="margin:16px 0">
+          <span id="p-pro" style="font-size:2.5rem;font-weight:800">$49</span>
+          <span style="color:var(--gray);font-size:15px">/month</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>2 Standard Services</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+        </ul>
+        <button onclick="window.location.href='/index.html?from=landing&plan=pro'" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Get Started</button>
+      </div>
+
+      <!-- Premium -->
+      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
+        <h3 style="font-weight:700;font-size:18px">Premium</h3>
+        <div style="margin:16px 0">
+          <span id="p-premium" style="font-size:2.5rem;font-weight:800">$79</span>
+          <span style="color:var(--gray);font-size:15px">/month</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Unlimited Services</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>20% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Annual tune-up</li>
+        </ul>
+        <button onclick="window.location.href='/index.html?from=landing&plan=premium'" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--blue)'">Get Started</button>
+      </div>
+    </div>
+
+    <p style="color:var(--gray);font-size:13px;margin-top:24px">All plans include mobile service within Sydney metro area</p>
+  </div>
+</section>
+
+<!-- ── BOOK A SERVICE ────────────────────────────────────────────────────────── -->
+<section style="padding:96px 0;background:#111827">
+  <div class="container" style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
+    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:16px;aspect-ratio:4/5"></div>
+
+    <div>
+      <span style="background:rgba(37,99,235,0.25);color:#93c5fd;padding:4px 14px;border-radius:var(--radius-full);font-size:13px;font-weight:600;display:inline-block">BOOK A SERVICE</span>
+      <h2 style="color:white;font-size:1.75rem;font-weight:800;margin-top:12px">Schedule Your Service Today</h2>
+      <p style="color:#9ca3af;margin:12px 0 24px;font-size:15px">Choose a service, pick a time, and we'll come to you.</p>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <select class="lform-input">
+          <option value="" disabled selected>Service Type</option>
+          <option>Basic Service - $99</option>
+          <option>Standard Service - $149</option>
+          <option>Premium Service - $189</option>
+          <option>Repairs - from $60</option>
+          <option>E-Bike Service - $129</option>
+          <option>Bike Assembly - $80</option>
+        </select>
+        <input type="date" class="lform-input" id="lform-date">
+        <select class="lform-input">
+          <option value="" disabled selected>Preferred Time</option>
+          <option>Morning (8am - 12pm)</option>
+          <option>Afternoon (12pm - 4pm)</option>
+          <option>Evening (4pm - 7pm)</option>
+        </select>
+        <input type="text" class="lform-input" placeholder="Enter your address">
+      </div>
+
+      <button onclick="window.location.href='/index.html?from=landing'" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
+
+      <div style="display:flex;gap:24px;margin-top:12px">
+        <span style="color:#6b7280;font-size:13px">&#10003; Confirmation in minutes</span>
+        <span style="color:#6b7280;font-size:13px">&#10003; Free cancellation</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ──────────────────────────────────────────────────────────── -->
+<section style="padding:96px 0;background:white">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge">HOW IT WORKS</span>
+      <h2 class="section-h2" style="font-size:2rem">Simple 4-Step Process</h2>
+      <p class="section-sub" style="margin-bottom:48px">Getting your bike serviced has never been easier.</p>
+    </div>
+
+    <div class="steps-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:32px;position:relative">
+      <style>.steps-grid::before{content:'';position:absolute;top:32px;left:12%;right:12%;height:2px;background:repeating-linear-gradient(90deg,var(--border) 0,var(--border) 8px,transparent 8px,transparent 16px);z-index:0}</style>
+
+      <!-- Step 1 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">1</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Book Online</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Choose your service and preferred time</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <rect x="1" y="3" width="15" height="13"/>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">We Come to You</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Our mechanic arrives at your location</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">3</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Service Your Bike</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Professional service on the spot</p>
+      </div>
+
+      <!-- Step 4 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/>
+            <circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
+            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
+            <path d="M18.5 17.5L15 6"/>
+            <path d="M5.5 17.5L9 11l4.5-1"/>
+          </svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">4</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Ride Happy</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Your bike is ready to go!</p>
+      </div>
+    </div>
+
+    <div style="margin-top:64px;background:#111827;border-radius:16px;height:180px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+      <p style="color:white;font-size:22px;font-weight:800">DR BIKE SYDNEY</p>
+      <p style="color:#9ca3af;font-size:14px">Professional Mobile Bike Service &middot; Sydney Wide</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .lform-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 15px;
+    font-family: inherit;
+  }
+  .lform-input:focus { outline: none; border-color: var(--blue); }
+  .lform-input option { background: #1f2937; }
+</style>
+
+<!-- ── FAQ ──────────────────────────────────────────────────────────────────── -->
+<section id="faq" style="padding:96px 0;background:var(--gray-light)">
+  <div class="container" style="display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:start">
+    <div>
+      <span class="section-badge">FAQ</span>
+      <h2 style="font-size:2rem;font-weight:800;margin:12px 0 32px;color:var(--dark)">Frequently Asked Questions</h2>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="faq(this)">
+          What areas do you service?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="faq(this)">
+          What if I need to reschedule?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">You can reschedule or cancel up to 2 hours before your appointment at no charge.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="faq(this)">
+          Do you bring spare parts?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">Yes, our van is fully stocked with common parts. For specialty parts we'll advise you before the service.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="faq(this)">
+          How long does a service take?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="faq(this)">
+          What payment methods do you accept?
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">We accept all major credit cards, debit cards, Apple Pay, and Google Pay. Payment is taken after service completion.</div>
+      </div>
+    </div>
+
+    <div style="background:var(--blue);border-radius:var(--radius-lg);padding:40px 32px;color:white;position:sticky;top:80px">
+      <h3 style="font-size:20px;font-weight:800">Still have questions?</h3>
+      <p style="color:rgba(255,255,255,0.85);margin:12px 0 28px;font-size:15px">We're here to help! Contact us and we'll get back to you within the hour.</p>
+      <button onclick="window.location.href='mailto:hello@drbikesydney.com.au'" style="background:white;color:var(--blue);padding:12px 28px;border-radius:var(--radius);font-weight:600;border:none;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Contact Us</button>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.2);margin:28px 0">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.9);font-size:14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          0433 963 250
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.9);font-size:14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          hello@drbikesydney.com.au
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ─────────────────────────────────────────────────────────────── -->
+<section style="padding:96px 0;background:#111827">
+  <div class="container" style="text-align:center;max-width:700px">
+    <h2 style="color:white;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:800">Ready to Experience Premium Bike Service?</h2>
+    <p style="color:#9ca3af;font-size:18px;margin:16px 0 32px">Book your service today and join hundreds of satisfied cyclists across Sydney.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <button onclick="window.location.href='/index.html?from=landing'" style="background:var(--blue);color:white;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:16px;border:none;cursor:pointer;font-family:inherit;transition:var(--transition)" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Book Now</button>
+      <a href="tel:+61433963250" style="border:2px solid #6b7280;color:white;background:transparent;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:16px;display:inline-block">Call 0433 963 250</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
+<footer style="background:#0d1117;padding:64px 0 32px">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1.5fr;gap:32px;margin-bottom:48px">
+
+      <!-- Col 1: Brand -->
+      <div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/>
+            <circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
+            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
+            <path d="M18.5 17.5L15 6"/>
+            <path d="M5.5 17.5L9 11l4.5-1"/>
+          </svg>
+          <span style="font-weight:700;font-size:15px;color:white;letter-spacing:0.5px">DR BIKE SYDNEY</span>
+        </div>
+        <p style="color:#6b7280;font-size:14px;margin-top:12px;line-height:1.6">Professional bike service at your doorstep.</p>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <a href="#" class="footer-social" aria-label="Facebook">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="#" class="footer-social" aria-label="Instagram">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </a>
+          <a href="#" class="footer-social" aria-label="YouTube">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Col 2: Services -->
+      <div>
+        <h4 class="footer-h4">Services</h4>
+        <a href="/index.html?from=landing" class="footer-link">Basic Service</a>
+        <a href="/index.html?from=landing" class="footer-link">Standard Service</a>
+        <a href="/index.html?from=landing" class="footer-link">Premium Service</a>
+        <a href="/index.html?from=landing" class="footer-link">Repairs</a>
+        <a href="/index.html?from=landing" class="footer-link">E-Bike Service</a>
+      </div>
+
+      <!-- Col 3: Company -->
+      <div>
+        <h4 class="footer-h4">Company</h4>
+        <a href="#about" class="footer-link">About Us</a>
+        <a href="#about" class="footer-link">Our Story</a>
+        <a href="#reviews" class="footer-link">Reviews</a>
+        <a href="mailto:hello@drbikesydney.com.au" class="footer-link">Contact</a>
+      </div>
+
+      <!-- Col 4: Support -->
+      <div>
+        <h4 class="footer-h4">Support</h4>
+        <a href="#faq" class="footer-link">FAQ</a>
+        <a href="/index.html?from=landing" class="footer-link">Booking Help</a>
+        <a href="#" class="footer-link">Terms &amp; Conditions</a>
+        <a href="#" class="footer-link">Privacy Policy</a>
+      </div>
+
+      <!-- Col 5: Contact -->
+      <div>
+        <h4 class="footer-h4">Contact</h4>
+        <div class="footer-contact-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          0433 963 250
+        </div>
+        <div class="footer-contact-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          hello@drbikesydney.com.au
+        </div>
+        <div class="footer-contact-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Sydney, NSW
+        </div>
+        <div class="footer-contact-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Mon - Sun: 7AM - 7PM
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid #1f2937;padding-top:24px;text-align:center">
+      <p style="color:#4b5563;font-size:13px">&copy; 2024 Dr. Bike Sydney. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+function faq(btn) {
+  var a = btn.nextElementSibling;
+  var icon = btn.querySelector('.faq-icon');
+  var open = a.style.display === 'block';
+  document.querySelectorAll('.faq-a').forEach(function(x) { x.style.display = 'none'; });
+  document.querySelectorAll('.faq-icon').forEach(function(x) { x.style.transform = ''; });
+  if (!open) { a.style.display = 'block'; icon.style.transform = 'rotate(180deg)'; }
+}
+
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.08 });
+document.querySelectorAll('section').forEach(function(s) {
+  s.style.opacity = '0';
+  s.style.transform = 'translateY(20px)';
+  s.style.transition = 'opacity 500ms ease, transform 500ms ease';
+  observer.observe(s);
+});
+
+var secs = document.querySelectorAll('section[id]');
+var nls = document.querySelectorAll('nav a[href^="#"]');
+window.addEventListener('scroll', function() {
+  var cur = '';
+  secs.forEach(function(s) { if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
+  nls.forEach(function(a) {
+    a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--blue)' : '#374151';
+  });
+}, { passive: true });
+</script>
+
 </body>
 </html>

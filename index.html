@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (window.innerWidth >= 768 && !sessionStorage.getItem('forceApp')) {
+      window.location.replace('/landing.html');
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dr. Bike Sydney</title>
