@@ -691,6 +691,10 @@ async function renderProfile() {
       <div class="fw-600 text-center">${name}</div>
       <div class="text-secondary text-sm text-center">${user.email}</div>
       <button class="btn btn--secondary btn--full mt-5" id="signout-btn">Sign Out</button>
+      <div style="display:flex;gap:24px;justify-content:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border)">
+        <a href="/terms.html" style="font-size:13px;color:var(--color-text-secondary);text-decoration:none">Terms &amp; Conditions</a>
+        <a href="/privacy.html" style="font-size:13px;color:var(--color-text-secondary);text-decoration:none">Privacy Policy</a>
+      </div>
     </div>
     ${createBottomNav('profile')}
   `;
