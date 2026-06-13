@@ -789,7 +789,7 @@ async function loadReviews() {
   const errDiv = document.getElementById('reviews-error');
 
   try {
-    const res = await fetch('/api/get-reviews');
+    const res = await fetch('/api/chat?type=reviews');
     if (!res.ok) throw new Error('fetch failed');
     const { reviews } = await res.json();
 

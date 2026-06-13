@@ -1,5 +1,28 @@
 ﻿import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 export default async function handler(req, res) {
+  // GET ?type=reviews - merged from get-reviews.js to stay under Vercel 12-function limit
+  if (req.method === 'GET' && req.query.type === 'reviews') {
+    res.setHeader('Cache-Control', 's-maxage=300');
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('rating, review_comment, client_name, service_name, created_at, profiles(full_name)')
+      .not('rating', 'is', null)
+      .not('review_comment', 'is', null)
+      .gte('rating', 4)
+      .order('created_at', { ascending: false })
+      .limit(9);
+    if (error) return res.status(500).json({ error: error.message });
+    const reviews = (data || []).map(r => ({
+      review_rating: r.rating,
+      review_comment: r.review_comment,
+      client_name: r.client_name || r.profiles?.full_name || null,
+      service_type: r.service_name || null,
+    }));
+    return res.status(200).json({ reviews });
+  }
+
   if(await guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min AI endpoints
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
