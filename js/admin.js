@@ -1678,7 +1678,8 @@ async function deletePart(id) {
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────────
 let calWeekStart = new Date();
-let calView = 'week';
+let calView = 'month';
+let calMonthDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
 function startOfWeek(d) {
   const day = d.getDay(); // 0=Sun
@@ -1688,7 +1689,7 @@ function startOfWeek(d) {
 
 function setCalView(view, btn) {
   calView = view;
-  ['week','day'].forEach(v => {
+  ['month','week','day'].forEach(v => {
     const b = document.getElementById('cv-' + v);
     if(!b) return;
     b.style.background = v === view ? 'var(--blue)' : 'transparent';
@@ -1698,22 +1699,81 @@ function setCalView(view, btn) {
 }
 
 function calPrev() {
-  if(calView === 'week') calWeekStart.setDate(calWeekStart.getDate() - 7);
-  else calWeekStart.setDate(calWeekStart.getDate() - 1);
-  calWeekStart = new Date(calWeekStart);
+  if(calView === 'month') {
+    calMonthDate = new Date(calMonthDate.getFullYear(), calMonthDate.getMonth() - 1, 1);
+  } else if(calView === 'week') {
+    calWeekStart.setDate(calWeekStart.getDate() - 7);
+    calWeekStart = new Date(calWeekStart);
+  } else {
+    calWeekStart.setDate(calWeekStart.getDate() - 1);
+    calWeekStart = new Date(calWeekStart);
+  }
   loadCalendar();
 }
 
 function calNext() {
-  if(calView === 'week') calWeekStart.setDate(calWeekStart.getDate() + 7);
-  else calWeekStart.setDate(calWeekStart.getDate() + 1);
-  calWeekStart = new Date(calWeekStart);
+  if(calView === 'month') {
+    calMonthDate = new Date(calMonthDate.getFullYear(), calMonthDate.getMonth() + 1, 1);
+  } else if(calView === 'week') {
+    calWeekStart.setDate(calWeekStart.getDate() + 7);
+    calWeekStart = new Date(calWeekStart);
+  } else {
+    calWeekStart.setDate(calWeekStart.getDate() + 1);
+    calWeekStart = new Date(calWeekStart);
+  }
   loadCalendar();
 }
 
 async function loadCalendar() {
   const grid = document.getElementById('cal-grid');
   if(!grid) return;
+
+  if(calView === 'month') {
+    const year = calMonthDate.getFullYear();
+    const month = calMonthDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay  = new Date(year, month + 1, 0);
+    const dateFrom = firstDay.toISOString().split('T')[0];
+    const dateTo   = lastDay.toISOString().split('T')[0];
+    const title = document.getElementById('cal-title');
+    if(title) title.textContent = firstDay.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+    grid.innerHTML = '<div style="text-align:center;padding:30px;color:var(--mgray)">Loading...</div>';
+    const { data: bookings } = await sb.from('bookings')
+      .select('*, profiles(full_name)')
+      .gte('scheduled_date', dateFrom)
+      .lte('scheduled_date', dateTo)
+      .neq('status','cancelled')
+      .order('scheduled_time');
+    const jobs = bookings || [];
+    const stColors = { pending:'#F59E0B', confirmed:'#1848C8', enroute:'#059669', completed:'#6B7280' };
+    const stBg     = { pending:'#FEF9C3', confirmed:'#EEF3FC', enroute:'#ECFDF5', completed:'#F3F4F6' };
+    const today    = new Date().toISOString().split('T')[0];
+    const startDate = new Date(firstDay);
+    const dow = startDate.getDay();
+    startDate.setDate(startDate.getDate() - (dow === 0 ? 6 : dow - 1));
+    let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-width:560px">';
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => {
+      html += `<div style="padding:8px 4px;text-align:center;background:var(--off);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--mgray);text-transform:uppercase">${d}</div>`;
+    });
+    let cur = new Date(startDate);
+    let cells = 0;
+    while(cur <= lastDay || cells % 7 !== 0) {
+      const dateStr = cur.toISOString().split('T')[0];
+      const isToday = dateStr === today;
+      const isCurMonth = cur.getMonth() === month;
+      const dayJobs = jobs.filter(j => j.scheduled_date === dateStr);
+      html += `<div style="min-height:80px;padding:6px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)${isToday?';background:rgba(24,72,200,0.06)':''}">
+        <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:4px;font-size:13px;font-weight:${isToday?'700':'400'};background:${isToday?'var(--blue)':'transparent'};color:${isToday?'#fff':isCurMonth?'var(--navy)':'var(--mgray)'}">${cur.getDate()}</div>
+        ${dayJobs.slice(0,3).map(j => { const st=j.status||'pending'; const nm=j.profiles?.full_name?.split(' ')[0]||'Client'; const tm=j.scheduled_time||''; return `<div style="font-size:10px;background:${stBg[st]||'#F3F4F6'};border-left:2px solid ${stColors[st]||'#6B7280'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="go('bookings')">${tm} ${nm}</div>`; }).join('')}
+        ${dayJobs.length > 3 ? `<div style="font-size:10px;color:var(--mgray)">+${dayJobs.length-3} more</div>` : ''}
+      </div>`;
+      cur.setDate(cur.getDate() + 1);
+      cells++;
+    }
+    html += '</div>';
+    grid.innerHTML = html;
+    return;
+  }
 
   // Set week start to Monday
   calWeekStart = startOfWeek(new Date(calWeekStart));
