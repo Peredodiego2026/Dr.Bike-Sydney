@@ -3,14 +3,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { guard } from './_security.js';
 
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 async function handleAdmin(req, res) {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
 
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_KEY
-  );
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
