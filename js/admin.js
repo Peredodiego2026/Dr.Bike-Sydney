@@ -887,10 +887,10 @@ async function submitAdminLogin() {
   if (!email || !password) { if(errEl) { errEl.textContent='Email and password required'; errEl.style.display='block'; } return; }
   if(btn) { btn.textContent='Signing in...'; btn.disabled=true; }
   try {
-    const resp = await fetch('/api/admin-auth', {
+    const resp = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ type: 'admin', email, password }),
     });
     const data = await resp.json();
     if(!resp.ok) throw new Error(data.error || 'Invalid credentials');
