@@ -502,6 +502,13 @@
     .summary-total { display:flex; justify-content:space-between; align-items:center; padding:16px; background:#f9fafb; border-radius:10px; margin-top:16px; }
     .summary-total .st-label { font-weight:700; color:#111827; font-size:16px; }
     .summary-total .st-amount { font-weight:800; color:#2563eb; font-size:24px; }
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+    box-shadow: 0 0 0px 1000px white inset !important;
+    -webkit-text-fill-color: #111827 !important;
+  }
   </style>
   <script src="https://js.stripe.com/v3/"></script>
 </head>
@@ -1263,9 +1270,9 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         <span id="membership-plan-price" style="font-size:20px;font-weight:800;color:#2563eb">$57/month</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
-        <input id="membership-name" type="text" placeholder="Full Name" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
-        <input id="membership-email" type="email" placeholder="Email Address" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
-        <input id="membership-phone" type="tel" placeholder="Phone Number (04XX XXX XXX)" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
+        <input id="membership-name" type="text" placeholder="Full Name" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box;background-color:white !important" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
+        <input id="membership-email" type="email" placeholder="Email Address" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box;background-color:white !important" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
+        <input id="membership-phone" type="tel" placeholder="Phone Number (04XX XXX XXX)" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box;background-color:white !important" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
         <div>
           <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">Card Details</div>
           <div id="membership-card-element" style="padding:14px;background:white;border:2px solid #e5e7eb;border-radius:8px;min-height:44px"></div>
