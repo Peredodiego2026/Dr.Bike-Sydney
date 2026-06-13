@@ -774,7 +774,235 @@ async function loadReviews() {
   }
 }
 loadReviews();
+
+/* ── Memberships toggle ─────────────────────────────────────────────────── */
+var isAnnual = false;
+var mp = [29, 49, 79];
+var ap = [23, 39, 63];
+function toggleBilling() {
+  isAnnual = !isAnnual;
+  document.getElementById('tdot').style.transform = isAnnual ? 'translateX(22px)' : 'none';
+  document.getElementById('lbl-m').style.color = isAnnual ? 'var(--gray)' : 'var(--dark)';
+  document.getElementById('lbl-a').style.color = isAnnual ? 'var(--dark)' : 'var(--gray)';
+  var p = isAnnual ? ap : mp;
+  document.getElementById('p-basic').textContent = '$' + p[0];
+  document.getElementById('p-pro').textContent = '$' + p[1];
+  document.getElementById('p-premium').textContent = '$' + p[2];
+}
+
+/* ── Date input min ─────────────────────────────────────────────────────── */
+var ldate = document.getElementById('lform-date');
+if (ldate) ldate.min = new Date().toISOString().split('T')[0];
 </script>
+
+<!-- ── MEMBERSHIPS ───────────────────────────────────────────────────────────── -->
+<section id="memberships" style="padding:96px 0;background:var(--gray-light)">
+  <div class="container" style="text-align:center">
+    <span class="section-badge">MEMBERSHIPS</span>
+    <h2 class="section-h2" style="font-size:2rem">Choose Your Plan</h2>
+    <p style="color:var(--gray);font-size:18px;margin-top:12px">Save more with our membership plans. Designed for regular cyclists.</p>
+
+    <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin:24px 0 48px">
+      <span id="lbl-m" style="font-weight:600;color:var(--dark)">Monthly</span>
+      <div onclick="toggleBilling()" style="width:48px;height:26px;background:var(--blue);border-radius:13px;cursor:pointer;position:relative;transition:background 200ms">
+        <div id="tdot" style="width:20px;height:20px;background:white;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform 200ms"></div>
+      </div>
+      <span id="lbl-a" style="color:var(--gray)">Annual</span>
+      <span style="background:#dcfce7;color:#16a34a;font-size:12px;font-weight:600;padding:2px 10px;border-radius:var(--radius-full)">Save 20%</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto">
+
+      <!-- Basic -->
+      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
+        <h3 style="font-weight:700;font-size:18px">Basic</h3>
+        <div style="margin:16px 0">
+          <span id="p-basic" style="font-size:2.5rem;font-weight:800">$29</span>
+          <span style="color:var(--gray);font-size:15px">/month</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>1 Basic Service</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
+        </ul>
+        <button onclick="window.location.href='/index.html?from=landing&plan=basic'" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--blue)'">Get Started</button>
+      </div>
+
+      <!-- Pro -->
+      <div style="background:white;border:2px solid var(--blue);border-radius:var(--radius-lg);padding:32px;text-align:left;position:relative">
+        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:4px 16px;border-radius:var(--radius-full);font-size:12px;font-weight:600;white-space:nowrap">Popular</div>
+        <h3 style="font-weight:700;font-size:18px">Pro</h3>
+        <div style="margin:16px 0">
+          <span id="p-pro" style="font-size:2.5rem;font-weight:800">$49</span>
+          <span style="color:var(--gray);font-size:15px">/month</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>2 Standard Services</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+        </ul>
+        <button onclick="window.location.href='/index.html?from=landing&plan=pro'" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Get Started</button>
+      </div>
+
+      <!-- Premium -->
+      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
+        <h3 style="font-weight:700;font-size:18px">Premium</h3>
+        <div style="margin:16px 0">
+          <span id="p-premium" style="font-size:2.5rem;font-weight:800">$79</span>
+          <span style="color:var(--gray);font-size:15px">/month</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Unlimited Services</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>20% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Annual tune-up</li>
+        </ul>
+        <button onclick="window.location.href='/index.html?from=landing&plan=premium'" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--blue)'">Get Started</button>
+      </div>
+    </div>
+
+    <p style="color:var(--gray);font-size:13px;margin-top:24px">All plans include mobile service within Sydney metro area</p>
+  </div>
+</section>
+
+<!-- ── BOOK A SERVICE ────────────────────────────────────────────────────────── -->
+<section style="padding:96px 0;background:#111827">
+  <div class="container" style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
+    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:16px;aspect-ratio:4/5"></div>
+
+    <div>
+      <span style="background:rgba(37,99,235,0.25);color:#93c5fd;padding:4px 14px;border-radius:var(--radius-full);font-size:13px;font-weight:600;display:inline-block">BOOK A SERVICE</span>
+      <h2 style="color:white;font-size:1.75rem;font-weight:800;margin-top:12px">Schedule Your Service Today</h2>
+      <p style="color:#9ca3af;margin:12px 0 24px;font-size:15px">Choose a service, pick a time, and we'll come to you.</p>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <select class="lform-input">
+          <option value="" disabled selected>Service Type</option>
+          <option>Basic Service - $99</option>
+          <option>Standard Service - $149</option>
+          <option>Premium Service - $189</option>
+          <option>Repairs - from $60</option>
+          <option>E-Bike Service - $129</option>
+          <option>Bike Assembly - $80</option>
+        </select>
+        <input type="date" class="lform-input" id="lform-date">
+        <select class="lform-input">
+          <option value="" disabled selected>Preferred Time</option>
+          <option>Morning (8am - 12pm)</option>
+          <option>Afternoon (12pm - 4pm)</option>
+          <option>Evening (4pm - 7pm)</option>
+        </select>
+        <input type="text" class="lform-input" placeholder="Enter your address">
+      </div>
+
+      <button onclick="window.location.href='/index.html?from=landing'" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
+
+      <div style="display:flex;gap:24px;margin-top:12px">
+        <span style="color:#6b7280;font-size:13px">&#10003; Confirmation in minutes</span>
+        <span style="color:#6b7280;font-size:13px">&#10003; Free cancellation</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ──────────────────────────────────────────────────────────── -->
+<section style="padding:96px 0;background:white">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge">HOW IT WORKS</span>
+      <h2 class="section-h2" style="font-size:2rem">Simple 4-Step Process</h2>
+      <p class="section-sub" style="margin-bottom:48px">Getting your bike serviced has never been easier.</p>
+    </div>
+
+    <div class="steps-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:32px;position:relative">
+      <style>.steps-grid::before{content:'';position:absolute;top:32px;left:12%;right:12%;height:2px;background:repeating-linear-gradient(90deg,var(--border) 0,var(--border) 8px,transparent 8px,transparent 16px);z-index:0}</style>
+
+      <!-- Step 1 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">1</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Book Online</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Choose your service and preferred time</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <rect x="1" y="3" width="15" height="13"/>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">We Come to You</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Our mechanic arrives at your location</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">3</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Service Your Bike</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Professional service on the spot</p>
+      </div>
+
+      <!-- Step 4 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/>
+            <circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
+            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
+            <path d="M18.5 17.5L15 6"/>
+            <path d="M5.5 17.5L9 11l4.5-1"/>
+          </svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">4</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Ride Happy</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Your bike is ready to go!</p>
+      </div>
+    </div>
+
+    <div style="margin-top:64px;background:#111827;border-radius:16px;height:180px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+      <p style="color:white;font-size:22px;font-weight:800">DR BIKE SYDNEY</p>
+      <p style="color:#9ca3af;font-size:14px">Professional Mobile Bike Service &middot; Sydney Wide</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .lform-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 15px;
+    font-family: inherit;
+  }
+  .lform-input:focus { outline: none; border-color: var(--blue); }
+  .lform-input option { background: #1f2937; }
+</style>
 
 </body>
 </html>
