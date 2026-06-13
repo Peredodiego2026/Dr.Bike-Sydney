@@ -551,7 +551,7 @@
 
     <div class="nav-links">
       <a href="#services">Services</a>
-      <a href="#" onclick="document.getElementById('services-modal').style.display='flex';return false;">All Services</a>
+      <a href="#" onclick="openServicesModal();return false;">All Services</a>
       <a href="#memberships">Memberships</a>
       <a href="#about">About</a>
       <a href="#reviews">Reviews</a>
@@ -714,7 +714,7 @@
     </div>
 
     <div style="text-align:center">
-      <button class="btn-outline-blue" onclick="document.getElementById('services-modal').style.display='flex'">View All Services</button>
+      <button class="btn-outline-blue" onclick="openServicesModal()">View All Services</button>
     </div>
   </div>
 </section>
@@ -1153,7 +1153,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         <input type="text" class="lform-input" placeholder="Enter your address">
       </div>
 
-      <button onclick="openBooking()" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
+      <button onclick="if(window.gtag)gtag('event','generate_lead',{form_name:'quick_booking'});openBooking()" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
 
       <div style="display:flex;gap:24px;margin-top:12px">
         <span style="color:#6b7280;font-size:13px">&#10003; Confirmation in minutes</span>
@@ -1529,6 +1529,7 @@ var bkServices = [
 ];
 
 function openBooking(serviceId) {
+  if (window.gtag) gtag('event', 'begin_checkout');
   bookingState = { step:1, service:null, date:null, time:null, address:'', name:'', phone:'', paymentMethod:null };
   if (serviceId) {
     bookingState.service = bkServices.find(function(s) { return s.id === serviceId; }) || null;
@@ -1929,6 +1930,22 @@ document.getElementById('services-modal').addEventListener('click', function(e) 
 });
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') document.getElementById('services-modal').style.display = 'none';
+});
+
+// ── GA4 helpers ───────────────────────────────────────────────────────────────
+function openServicesModal() {
+  if (window.gtag) gtag('event', 'view_item_list', { item_list_name: 'All Services' });
+  document.getElementById('services-modal').style.display = 'flex';
+}
+
+document.querySelectorAll('.svc-card').forEach(function(card) {
+  card.addEventListener('click', function() {
+    var nameEl = card.querySelector('.svc-name');
+    var priceEl = card.querySelector('.svc-price');
+    if (window.gtag) gtag('event', 'select_item', {
+      items: [{ item_name: nameEl ? nameEl.textContent : 'Service', price: priceEl ? priceEl.textContent : '' }]
+    });
+  });
 });
 </script>
 

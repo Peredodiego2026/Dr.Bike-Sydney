@@ -87,6 +87,7 @@ async function loadLeaflet() {
 async function renderBookService() {
   const screen = document.querySelector('[data-screen="book-service"]');
   if (!screen) return;
+  if (window.gtag) gtag('event', 'begin_checkout');
 
   window.appState.time = null;
 
@@ -151,6 +152,7 @@ async function renderBookService() {
       list.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       window.appState.service = services.find(s => String(s.id) === card.dataset.serviceId);
+      if (window.gtag) gtag('event', 'add_to_cart', { currency: 'AUD', items: [{ item_name: window.appState.service?.name, price: window.appState.service?.price }] });
       window.appState.time = null;
       updateContinueBtn(screen);
       loadTimeSlots(screen, window.appState.date, window.appState.service?.id);
@@ -175,6 +177,7 @@ async function renderBookService() {
 
   screen.querySelector('#continue-btn').addEventListener('click', () => {
     if (window.appState.service && window.appState.date && window.appState.time) {
+      if (window.gtag) gtag('event', 'checkout_progress', { step: 2 });
       router.navigate('service-summary');
     }
   });
@@ -187,6 +190,7 @@ async function renderServiceSummary() {
 
   const { service, date, time, location } = window.appState;
   if (!service) { router.navigate('book-service'); return; }
+  if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
 
   screen.innerHTML = `
     ${createHeader('Service Summary', true, '#book-service')}
@@ -298,6 +302,7 @@ async function renderPayment() {
     onPayment: async (paymentMethodId) => {
       const email = await getEmail();
       await processPayment(amountCents, bookingId, email, paymentMethodId);
+      if (window.gtag) gtag('event', 'purchase', { transaction_id: bookingId, value: price, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
       router.navigate('tracking');
     },
   });
@@ -316,6 +321,7 @@ async function renderPayment() {
     try {
       const email = await getEmail();
       await processPayment(amountCents, bookingId, email);
+      if (window.gtag) gtag('event', 'purchase', { transaction_id: bookingId, value: price, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
       router.navigate('tracking');
     } catch (err) {
       errEl.textContent = err.message || 'Payment failed. Please try again.';
@@ -589,9 +595,11 @@ async function renderLogin() {
     try {
       if (isSignup) {
         await signUp(email, password, name);
+        if (window.gtag) gtag('event', 'sign_up', { method: 'email' });
         showToast('Account created! Check your email to verify.', 'success');
       } else {
         await signIn(email, password);
+        if (window.gtag) gtag('event', 'login', { method: 'email' });
         showToast('Welcome back!', 'success');
       }
       _loginMode = 'signin';
