@@ -80,7 +80,7 @@
       <div class="topbar-van" id="van-label">Van 1</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <button id="theme-btn-mech" onclick="(function(){const c=document.documentElement.getAttribute('data-theme')||'light';const n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('drbike-theme',n);document.getElementById('theme-btn-mech').textContent=n==='dark'?'☀️':'🌙';})()" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:34px;height:34px;font-size:15px;cursor:pointer">🌙</button>
+      <button id="theme-btn-mech" onclick="toggleMechTheme()" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:34px;height:34px;font-size:15px;cursor:pointer">🌙</button>
       <button class="status-btn" id="status-btn" onclick="toggleStatus()">● Online</button>
     </div>
   </div>

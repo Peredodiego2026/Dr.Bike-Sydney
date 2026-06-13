@@ -991,6 +991,15 @@ init();
 // Fix theme button icon
 const _t = localStorage.getItem('drbike-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 const _tb = document.getElementById('theme-btn-mech');
-if(_tb) _tb.textContent = _t === 'dark' ? '☀️' : '🌙';
+if(_tb) _tb.textContent = _t === 'dark' ? '🌙' : '☀️';
 // Resume GPS after jobs load
-setTimeout(() => { if (jobs.length) resumeTrackingIfNeeded(); }, 2000);
+setTimeout(() => { if (jobs.length) resumeTrackingIfNeeded(); }, 2000);
+
+function toggleMechTheme() {
+  const curr = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = curr === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('drbike-theme', next);
+  const btn = document.getElementById('theme-btn-mech');
+  if(btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
+}
