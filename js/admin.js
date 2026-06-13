@@ -15,7 +15,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'dr-bike-admin-session', persistSession: false } });
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
-const titles = { dashboard:'Dashboard', contacts:'Escalation Contacts', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings', coupons:'Discount Codes', reminders:'Service Reminders' };
+const titles = { dashboard:'Dashboard', contacts:'Escalation Contacts', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings', coupons:'Discount Codes', reminders:'Service Reminders', inventory:'Parts Inventory', calendar:'Calendar' };
 const subs = { dashboard:'Live operations · Sydney', contacts:'Manage who receives escalated chats', bookings:'Live bookings from Supabase', vans:'2 vans online · both active', clients:'Client database', finance:'Financial overview', zones:'Assign suburbs to each van', settings:'System settings' };
 
 function go(page, btn){
@@ -1356,7 +1356,7 @@ async function loadVanZones(){
         grouped[row.van_number].suburbs.push(row.suburb);
       }
     });
-    vanZones = Object.values(grouped).sort((a,b)=>a.id-b.id);
+    vanZones = Object.values(grouped).filter(v => v.id !== 0 && !v.suburbs.every(s => s === '__whatsapp__')).sort((a,b)=>a.id-b.id);
   }
   renderVanZones();
 }

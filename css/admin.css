@@ -88,6 +88,24 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 [data-theme="dark"] .mobile-bottom-nav a.active{color:#60A5FA}
 [data-theme="dark"] .sb-overlay{background:rgba(0,0,0,0.7)}
 [data-theme="dark"] #fin-chart div{opacity:0.9}
+/* P2: Client card stats - dark mode legibility */
+[data-theme="dark"] .cl-stat-n { color: #F2F2F7; }
+[data-theme="dark"] .cl-stat-l { color: #9CA3AF; }
+
+/* P3: Inventory/table alternating rows - prevent white bg on dark mode */
+[data-theme="dark"] .tbl tbody tr:nth-child(even) td { background: rgba(255,255,255,0.03) !important; }
+[data-theme="dark"] tbody tr:nth-child(even) { background: transparent !important; }
+
+/* P4: Sections with persistent white background in dark mode */
+[data-theme="dark"] .content { background: #1C1C1E; }
+[data-theme="dark"] #page-coupons { background: #1C1C1E; color: #F2F2F7; }
+[data-theme="dark"] #page-inventory { background: #1C1C1E; color: #F2F2F7; }
+
+/* P7: Finance view toggle buttons - dark mode legibility */
+[data-theme="dark"] #fv-month,
+[data-theme="dark"] #fv-quarter,
+[data-theme="dark"] #fv-year { color: #F2F2F7 !important; }
+
 /* Settings, Vans, Reminders text fixes */
 [data-theme="dark"] .setting-card{background:#242426;border-color:#38383A}
 [data-theme="dark"] .setting-title{color:#F2F2F7}
@@ -239,7 +257,8 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 .progress-fill{height:100%;border-radius:3px;transition:width .6s}
 
 /* CLIENTS PAGE */
-.clients-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;overflow-x:hidden}
+#page-clients{overflow-x:hidden}
 .client-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:18px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
 .client-card:hover{border-color:var(--blue);transform:translateY(-1px)}
 .cl-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
