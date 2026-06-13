@@ -1,5 +1,5 @@
 # Audit Status - Dr. Bike Sydney
-Last updated: Jun 2026
+Last updated: 2026-06-13
 
 ## Authoritative audit sources
 
@@ -63,34 +63,33 @@ One session per chat. Close chat at ~100k tokens.
   - DEPLOY.md: full deployment documentation (commit 762c551)
 
 ### Track B - Rediseno UI
-- [ ] B1 - Design system + SPA shell (~45 min)
-  - css/variables.css with design tokens
+- [x] B1 - Design system + SPA shell (~45 min) - DONE 2026-06-12
+  - css/variables.css with design tokens (commit 1d7756a)
   - js/router.js hash-based SPA navigation
-  - New index.html as SPA shell (backup current as index-legacy.html)
+  - New index.html as SPA shell
   - js/components.js with reusable components
   - css/main.css with base styles
-- [ ] B2 - Home + Service Type (~45 min)
-  - js/supabase.js client with helpers and mock fallback
+- [x] B2 - Home + Service Type (~45 min) - DONE 2026-06-12
+  - js/supabase.js client with helpers and mock fallback (commit 4054d2b)
   - Home screen with hero, pillars, CTAs
   - Book a Service screen with service type cards
-- [ ] B3 - Date/Time + Summary (~40 min)
-  - Date carousel (7 days from today)
+- [x] B3 - Date/Time + Summary (~40 min) - DONE 2026-06-12
+  - Date carousel (7 days from today) (commit a14db15)
   - Time slots grid
   - Location section
   - Service Summary screen with Confirm Booking
-- [ ] B4 - Payment + Tracking (~50 min)
-  - js/stripe.js with Payment Request Button
+- [x] B4 - Payment + Tracking (~50 min) - DONE 2026-06-12
+  - js/stripe.js with Payment Request Button (commit 56244a2)
   - Payment screen with Stripe Elements (dark theme)
   - Tracking screen with map (Leaflet) and mechanic info
-- [ ] B5 - Review + Auth + My Bookings (~40 min)
-  - Review screen with stars and comment
+- [x] B5 - Review + Auth + My Bookings (~40 min) - DONE 2026-06-12
+  - Review screen with stars and comment (commit b2704dd)
   - Login/Register screen
   - My Bookings with Upcoming/History tabs
-- [ ] B6 - PWA + Unificacion + Polish (~40 min)
-  - Unify landing.html with design system
-  - Update manifest.json, sw.js, icons
-  - Adapt mechanic.html and admin.html to new theme
-  - Final polish: transitions, contrast, loading states
+- [x] B6 - PWA + Unificacion + Polish (~40 min) - DONE 2026-06-12
+  - PWA config: manifest.json, sw.js v14, icons (commit b93bac6)
+  - Landing Open App CTA added
+  - Dark theme unified across all screens
 
 ## Tracking
 
