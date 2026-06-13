@@ -477,6 +477,31 @@
       transition: var(--transition);
     }
     .footer-social:hover { border-color: var(--blue); }
+
+    /* ── Booking Modal ───────────────────────────────────────────────────────── */
+    .service-option { padding:16px; border:2px solid #e5e7eb; border-radius:10px; cursor:pointer; transition:all 200ms ease; display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+    .service-option:hover { border-color:#93c5fd; background:#eff6ff; }
+    .service-option.selected { border-color:#2563eb; background:#eff6ff; }
+    .service-option .so-name { font-weight:700; color:#111827; font-size:15px; }
+    .service-option .so-price { font-weight:800; color:#2563eb; font-size:16px; }
+    .service-option .so-desc { color:#6b7280; font-size:13px; margin-top:2px; }
+    .date-pill { padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; cursor:pointer; text-align:center; transition:all 200ms ease; min-width:64px; }
+    .date-pill:hover { border-color:#93c5fd; }
+    .date-pill.selected { border-color:#2563eb; background:#2563eb; color:white; }
+    .date-pill .dp-day { font-size:11px; font-weight:600; text-transform:uppercase; }
+    .date-pill .dp-num { font-size:22px; font-weight:800; line-height:1; }
+    .date-pill .dp-mon { font-size:11px; }
+    .time-slot { padding:12px; border:2px solid #e5e7eb; border-radius:8px; cursor:pointer; text-align:center; font-weight:600; font-size:14px; transition:all 200ms ease; }
+    .time-slot:hover { border-color:#93c5fd; }
+    .time-slot.selected { border-color:#2563eb; background:#2563eb; color:white; }
+    .time-slot.unavailable { opacity:0.4; cursor:not-allowed; }
+    .summary-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f3f4f6; font-size:15px; }
+    .summary-row:last-child { border-bottom:none; }
+    .summary-row .sr-label { color:#6b7280; }
+    .summary-row .sr-value { font-weight:600; color:#111827; }
+    .summary-total { display:flex; justify-content:space-between; align-items:center; padding:16px; background:#f9fafb; border-radius:10px; margin-top:16px; }
+    .summary-total .st-label { font-weight:700; color:#111827; font-size:16px; }
+    .summary-total .st-amount { font-weight:800; color:#2563eb; font-size:24px; }
   </style>
 </head>
 <body>
@@ -503,7 +528,7 @@
       <a href="#reviews">Reviews</a>
     </div>
 
-    <button class="nav-book" onclick="window.location.href='/index.html?from=landing'">Book Now</button>
+    <button class="nav-book" onclick="openBooking()">Book Now</button>
   </div>
 </nav>
 
@@ -516,7 +541,7 @@
       <p class="hero-p">Mobile bicycle mechanic in Sydney. We come to you, fully equipped.</p>
 
       <div class="hero-btns">
-        <a href="/index.html?from=landing" class="btn-primary">Book a Service</a>
+        <a href="#" onclick="openBooking();return false;" class="btn-primary">Book a Service</a>
         <a href="#services" class="btn-outline">View Services</a>
       </div>
 
@@ -764,7 +789,7 @@
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
       <p style="margin-top:16px">No reviews yet. Be the first to share your experience!<br>
-        <a href="/index.html?from=landing" style="color:var(--blue)">Book a service</a>
+        <a href="#" onclick="openBooking();return false;" style="color:var(--blue)">Book a service</a>
       </p>
     </div>
 
@@ -951,7 +976,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         <input type="text" class="lform-input" placeholder="Enter your address">
       </div>
 
-      <button onclick="window.location.href='/index.html?from=landing'" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
+      <button onclick="openBooking()" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
 
       <div style="display:flex;gap:24px;margin-top:12px">
         <span style="color:#6b7280;font-size:13px">&#10003; Confirmation in minutes</span>
@@ -1128,7 +1153,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
     <h2 style="color:white;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:800">Ready to Experience Premium Bike Service?</h2>
     <p style="color:#9ca3af;font-size:18px;margin:16px 0 32px">Book your service today and join hundreds of satisfied cyclists across Sydney.</p>
     <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
-      <button onclick="window.location.href='/index.html?from=landing'" style="background:var(--blue);color:white;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:16px;border:none;cursor:pointer;font-family:inherit;transition:var(--transition)" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Book Now</button>
+      <button onclick="openBooking()" style="background:var(--blue);color:white;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:16px;border:none;cursor:pointer;font-family:inherit;transition:var(--transition)" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Book Now</button>
       <a href="tel:+61433963250" style="border:2px solid #6b7280;color:white;background:transparent;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:16px;display:inline-block">Call 0433 963 250</a>
     </div>
   </div>
@@ -1169,11 +1194,11 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       <!-- Col 2: Services -->
       <div>
         <h4 class="footer-h4">Services</h4>
-        <a href="/index.html?from=landing" class="footer-link">Basic Service</a>
-        <a href="/index.html?from=landing" class="footer-link">Standard Service</a>
-        <a href="/index.html?from=landing" class="footer-link">Premium Service</a>
-        <a href="/index.html?from=landing" class="footer-link">Repairs</a>
-        <a href="/index.html?from=landing" class="footer-link">E-Bike Service</a>
+        <a href="#" onclick="openBooking();return false;" class="footer-link">Basic Service</a>
+        <a href="#" onclick="openBooking();return false;" class="footer-link">Standard Service</a>
+        <a href="#" onclick="openBooking();return false;" class="footer-link">Premium Service</a>
+        <a href="#" onclick="openBooking();return false;" class="footer-link">Repairs</a>
+        <a href="#" onclick="openBooking();return false;" class="footer-link">E-Bike Service</a>
       </div>
 
       <!-- Col 3: Company -->
@@ -1189,7 +1214,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       <div>
         <h4 class="footer-h4">Support</h4>
         <a href="#faq" class="footer-link">FAQ</a>
-        <a href="/index.html?from=landing" class="footer-link">Booking Help</a>
+        <a href="#" onclick="openBooking();return false;" class="footer-link">Booking Help</a>
         <a href="#" class="footer-link">Terms &amp; Conditions</a>
         <a href="#" class="footer-link">Privacy Policy</a>
       </div>
@@ -1222,6 +1247,27 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
   </div>
 </footer>
 
+<!-- ── BOOKING MODAL ─────────────────────────────────────────────────────────── -->
+<div id="booking-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);overflow-y:auto;padding:24px 16px">
+  <div id="booking-box" style="background:white;border-radius:16px;max-width:560px;margin:0 auto;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.2)">
+    <div style="padding:24px 28px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div id="modal-step-label" style="font-size:12px;color:#6b7280;font-weight:600;letter-spacing:1px;text-transform:uppercase">Step 1 of 4</div>
+        <h2 id="modal-title" style="font-size:20px;font-weight:800;color:#111827;margin-top:4px">Choose Your Service</h2>
+      </div>
+      <button onclick="closeBooking()" style="width:36px;height:36px;border-radius:50%;border:1px solid #e5e7eb;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7280">&#215;</button>
+    </div>
+    <div style="height:3px;background:#f3f4f6">
+      <div id="modal-progress" style="height:100%;background:#2563eb;transition:width 300ms ease;width:25%"></div>
+    </div>
+    <div id="modal-content" style="padding:28px"></div>
+    <div style="padding:20px 28px;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">
+      <button id="modal-back" onclick="bookingBack()" style="padding:10px 20px;border:1px solid #e5e7eb;border-radius:8px;background:white;color:#374151;font-size:14px;font-weight:600;cursor:pointer;display:none">&#8592; Back</button>
+      <button id="modal-next" onclick="bookingNext()" style="margin-left:auto;padding:12px 28px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">Continue &#8594;</button>
+    </div>
+  </div>
+</div>
+
 <script>
 function faq(btn) {
   var a = btn.nextElementSibling;
@@ -1251,6 +1297,172 @@ window.addEventListener('scroll', function() {
     a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--blue)' : '#374151';
   });
 }, { passive: true });
+
+// ── Booking Modal ─────────────────────────────────────────────────────────────
+var bookingState = { step:1, service:null, date:null, time:null, address:'', name:'', phone:'' };
+var bkServices = [
+  { id:1, name:'Basic Service',    price:99,  desc:'Regular maintenance and safety check' },
+  { id:2, name:'Standard Service', price:149, desc:'Comprehensive service with detailed adjustment' },
+  { id:3, name:'Premium Service',  price:189, desc:'Complete overhaul and performance optimization' },
+  { id:4, name:'Repairs',          price:60,  desc:'Fast and reliable repair at your doorstep', pricePrefix:'From $' },
+  { id:5, name:'E-Bike Service',   price:129, desc:'Specialized service for electric bikes' },
+  { id:6, name:'Bike Assembly',    price:80,  desc:'Professional assembly of your new bike' }
+];
+
+function openBooking(serviceId) {
+  bookingState = { step:1, service:null, date:null, time:null, address:'', name:'', phone:'' };
+  if (serviceId) {
+    bookingState.service = bkServices.find(function(s) { return s.id === serviceId; }) || null;
+    if (bookingState.service) bookingState.step = 2;
+  }
+  document.getElementById('booking-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  renderStep();
+}
+function closeBooking() {
+  document.getElementById('booking-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.getElementById('booking-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeBooking();
+});
+
+function renderStep() {
+  var s = bookingState.step;
+  var titles = ['','Choose Your Service','Select Date & Time','Your Details','Confirm Booking'];
+  var progresses = ['','25%','50%','75%','100%'];
+  document.getElementById('modal-step-label').textContent = 'Step ' + s + ' of 4';
+  document.getElementById('modal-title').textContent = titles[s];
+  document.getElementById('modal-progress').style.width = progresses[s];
+  document.getElementById('modal-back').style.display = s > 1 ? 'block' : 'none';
+  document.getElementById('modal-next').textContent = s === 4 ? 'Confirm Booking' : 'Continue →';
+
+  var content = document.getElementById('modal-content');
+
+  if (s === 1) {
+    content.innerHTML = bkServices.map(function(sv) {
+      return '<div class="service-option ' + (bookingState.service && bookingState.service.id === sv.id ? 'selected' : '') + '" onclick="selectService(' + sv.id + ')">' +
+        '<div style="flex:1"><div class="so-name">' + sv.name + '</div><div class="so-desc">' + sv.desc + '</div></div>' +
+        '<div class="so-price">' + (sv.pricePrefix || '$') + sv.price + '</div></div>';
+    }).join('');
+  }
+
+  if (s === 2) {
+    var days = [];
+    var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var monNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for (var i = 0; i < 7; i++) {
+      var d = new Date();
+      d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+    var times = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM'];
+    content.innerHTML =
+      '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Select Date</p>' +
+      '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:24px">' +
+      days.map(function(d) {
+        return '<div class="date-pill ' + (bookingState.date === d.toDateString() ? 'selected' : '') + '" onclick="selectDate(\'' + d.toDateString() + '\')">' +
+          '<div class="dp-day">' + dayNames[d.getDay()] + '</div>' +
+          '<div class="dp-num">' + d.getDate() + '</div>' +
+          '<div class="dp-mon">' + monNames[d.getMonth()] + '</div></div>';
+      }).join('') + '</div>' +
+      '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Select Time</p>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
+      times.map(function(t) {
+        return '<div class="time-slot ' + (bookingState.time === t ? 'selected' : '') + '" onclick="selectTime(\'' + t + '\')">' + t + '</div>';
+      }).join('') + '</div>';
+  }
+
+  if (s === 3) {
+    content.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:16px">' +
+      '<div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Full Name *</label>' +
+      '<input id="b-name" type="text" value="' + bookingState.name + '" placeholder="Your full name" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box" oninput="bookingState.name=this.value" onfocus="this.style.borderColor=\'#2563eb\'" onblur="this.style.borderColor=\'#e5e7eb\'"></div>' +
+      '<div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Phone Number *</label>' +
+      '<input id="b-phone" type="tel" value="' + bookingState.phone + '" placeholder="04XX XXX XXX" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box" oninput="bookingState.phone=this.value" onfocus="this.style.borderColor=\'#2563eb\'" onblur="this.style.borderColor=\'#e5e7eb\'"></div>' +
+      '<div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Service Address *</label>' +
+      '<input id="b-address" type="text" value="' + bookingState.address + '" placeholder="Street address, Sydney" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box" oninput="bookingState.address=this.value" onfocus="this.style.borderColor=\'#2563eb\'" onblur="this.style.borderColor=\'#e5e7eb\'"></div>' +
+      '</div>';
+  }
+
+  if (s === 4) {
+    var sv = bookingState.service;
+    var dateObj = bookingState.date ? new Date(bookingState.date) : null;
+    var dateStr = dateObj ? dateObj.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }) : '-';
+    content.innerHTML =
+      '<div style="background:#f9fafb;border-radius:12px;padding:20px;margin-bottom:20px">' +
+      '<div class="summary-row"><span class="sr-label">Service</span><span class="sr-value">' + (sv ? sv.name : '-') + '</span></div>' +
+      '<div class="summary-row"><span class="sr-label">Date</span><span class="sr-value">' + dateStr + '</span></div>' +
+      '<div class="summary-row"><span class="sr-label">Time</span><span class="sr-value">' + (bookingState.time || '-') + '</span></div>' +
+      '<div class="summary-row"><span class="sr-label">Address</span><span class="sr-value">' + (bookingState.address || '-') + '</span></div>' +
+      '<div class="summary-row"><span class="sr-label">Name</span><span class="sr-value">' + (bookingState.name || '-') + '</span></div>' +
+      '<div class="summary-row"><span class="sr-label">Phone</span><span class="sr-value">' + (bookingState.phone || '-') + '</span></div></div>' +
+      '<div class="summary-total"><span class="st-label">Total</span><span class="st-amount">$' + (sv ? sv.price : 0) + '</span></div>' +
+      '<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">By confirming you agree to our Terms &amp; Conditions. Payment is taken after service completion.</p>' +
+      '<div id="booking-result"></div>';
+  }
+}
+
+function selectService(id) {
+  bookingState.service = bkServices.find(function(s) { return s.id === id; });
+  renderStep();
+}
+function selectDate(d) { bookingState.date = d; renderStep(); }
+function selectTime(t) { bookingState.time = t; renderStep(); }
+function bookingBack() { if (bookingState.step > 1) { bookingState.step--; renderStep(); } }
+
+async function bookingNext() {
+  var s = bookingState.step;
+  if (s === 1 && !bookingState.service) { alert('Please select a service to continue.'); return; }
+  if (s === 2 && (!bookingState.date || !bookingState.time)) { alert('Please select a date and time to continue.'); return; }
+  if (s === 3) {
+    if (!bookingState.name.trim()) { alert('Please enter your name.'); return; }
+    if (!bookingState.phone.trim()) { alert('Please enter your phone number.'); return; }
+    if (!bookingState.address.trim()) { alert('Please enter your address.'); return; }
+  }
+  if (s === 4) { await submitBooking(); return; }
+  bookingState.step++;
+  renderStep();
+}
+
+async function submitBooking() {
+  var btn = document.getElementById('modal-next');
+  btn.textContent = 'Confirming...';
+  btn.disabled = true;
+  try {
+    await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'booking_confirmation',
+        clientName: bookingState.name,
+        phone: bookingState.phone,
+        address: bookingState.address,
+        service: bookingState.service ? bookingState.service.name : '',
+        price: bookingState.service ? bookingState.service.price : 0,
+        date: bookingState.date,
+        time: bookingState.time
+      })
+    });
+    var sv = bookingState.service;
+    var dateStr = bookingState.date ? new Date(bookingState.date).toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }) : '';
+    document.getElementById('modal-content').innerHTML =
+      '<div style="text-align:center;padding:32px 0">' +
+      '<div style="width:64px;height:64px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">' +
+      '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+      '<h3 style="font-size:22px;font-weight:800;color:#111827;margin-bottom:8px">Booking Confirmed!</h3>' +
+      '<p style="color:#6b7280;font-size:15px;margin-bottom:8px">Thanks ' + bookingState.name + '! We\'ll contact you shortly to confirm your appointment.</p>' +
+      '<p style="color:#6b7280;font-size:14px"><strong>' + (sv ? sv.name : '') + '</strong> on ' + dateStr + ' at ' + bookingState.time + '</p>' +
+      '<p style="color:#2563eb;font-size:14px;font-weight:600;margin-top:12px">&#128242; We\'ll call you at ' + bookingState.phone + '</p>' +
+      '<button onclick="closeBooking()" style="margin-top:28px;padding:12px 32px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">Done</button></div>';
+    document.getElementById('modal-progress').style.width = '100%';
+    document.querySelector('#booking-box > div:last-child').style.display = 'none';
+  } catch(e) {
+    btn.textContent = 'Confirm Booking';
+    btn.disabled = false;
+    document.getElementById('booking-result').innerHTML = '<p style="color:#ef4444;font-size:14px;margin-top:12px;text-align:center">Something went wrong. Please call us at 0433 963 250.</p>';
+  }
+}
 </script>
 
 </body>
