@@ -4,11 +4,13 @@ export default async function handler(req, res) {
   if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  let { to, name, service, date, time, address, price, type, bookingId, mechNotes, nextService, referralCode, friendName, referralCount } = req.body;
+  let { to, name, clientName, phone, service, date, time, address, price, type, bookingId, mechNotes, nextService, referralCode, friendName, referralCount } = req.body;
   name = sanitize(name); service = sanitize(service); address = sanitize(address);
   mechNotes = sanitize(mechNotes); nextService = sanitize(nextService);
   referralCode = sanitize(referralCode);
   if (friendName) friendName = sanitize(friendName);
+  if (clientName) clientName = sanitize(clientName);
+  if (phone) phone = sanitize(phone);
 
   const gst = Math.round((price||0) / 11);
   const net = (price||0) - gst;
@@ -240,12 +242,30 @@ export default async function handler(req, res) {
           <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Complete verification →</a>
         </div>${footer()}`
     },
+    booking_confirmation: {
+      to: 'hello@drbikesydney.com.au',
+      subject: `New Booking - ${service} - ${clientName || name}`,
+      html: `${header('#0D1F3C','📋','New Booking Request')}
+        <div style="padding:32px 28px">
+          <div style="background:#F7F8FA;border-radius:12px;padding:20px;margin-bottom:24px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:8px 0;color:#6B7280;font-size:13px">Client</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right">${clientName || name}</td></tr>
+              <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Phone</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${phone || '—'}</td></tr>
+              <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Service</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${service}</td></tr>
+              <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Date</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${date}${time ? ' at ' + time : ''}</td></tr>
+              <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Address</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${address || '—'}</td></tr>
+              <tr><td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px;border-top:2px solid #E5E7EB">Price</td><td style="padding:10px 0 0;font-weight:800;color:#1848C8;font-size:18px;text-align:right;border-top:2px solid #E5E7EB">$${price} AUD</td></tr>
+            </table>
+          </div>
+          <a href="https://drbikesydney.com.au/admin.html" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open admin panel →</a>
+        </div>${footer()}`
+    },
   };
 
   const template = templates[type] || templates.confirmation;
 
   // Recipients
-  const recipients = [to];
+  const recipients = [template.to || to];
   
   try {
     const response = await fetch('https://api.resend.com/emails', {

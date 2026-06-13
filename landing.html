@@ -1327,6 +1327,8 @@ document.getElementById('booking-modal').addEventListener('click', function(e) {
   if (e.target === this) closeBooking();
 });
 
+let discountAmount = 0;
+
 function renderStep() {
   var s = bookingState.step;
   var titles = ['','Choose Your Service','Select Date & Time','Your Details','Confirm Booking'];
@@ -1386,6 +1388,7 @@ function renderStep() {
   }
 
   if (s === 4) {
+    discountAmount = 0;
     var sv = bookingState.service;
     var dateObj = bookingState.date ? new Date(bookingState.date) : null;
     var dateStr = dateObj ? dateObj.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' }) : '-';
@@ -1397,6 +1400,13 @@ function renderStep() {
       '<div class="summary-row"><span class="sr-label">Address</span><span class="sr-value">' + (bookingState.address || '-') + '</span></div>' +
       '<div class="summary-row"><span class="sr-label">Name</span><span class="sr-value">' + (bookingState.name || '-') + '</span></div>' +
       '<div class="summary-row"><span class="sr-label">Phone</span><span class="sr-value">' + (bookingState.phone || '-') + '</span></div></div>' +
+      '<div style="margin-bottom:16px">' +
+      '<div style="display:flex;gap:8px">' +
+      '<input id="discount-input" type="text" placeholder="Discount code (optional)" style="flex:1;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;outline:none;font-family:inherit;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">' +
+      '<button onclick="applyDiscount()" style="padding:10px 16px;background:#111827;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap">Apply</button>' +
+      '</div>' +
+      '<div id="discount-msg" style="font-size:13px;margin-top:6px"></div>' +
+      '</div>' +
       '<div class="summary-total"><span class="st-label">Total</span><span class="st-amount">$' + (sv ? sv.price : 0) + '</span></div>' +
       '<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">By confirming you agree to our Terms &amp; Conditions. Payment is taken after service completion.</p>' +
       '<div id="booking-result"></div>';
@@ -1423,6 +1433,46 @@ async function bookingNext() {
   if (s === 4) { await submitBooking(); return; }
   bookingState.step++;
   renderStep();
+}
+
+async function applyDiscount() {
+  const code = document.getElementById('discount-input').value.trim();
+  const msg = document.getElementById('discount-msg');
+  if (!code) return;
+  msg.textContent = 'Checking...';
+  msg.style.color = '#6b7280';
+  try {
+    const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U';
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/discount_codes?code=eq.${encodeURIComponent(code)}&select=*`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY
+      }
+    });
+    const data = await res.json();
+    if (!data || data.length === 0) {
+      msg.textContent = 'Invalid discount code.';
+      msg.style.color = '#ef4444';
+      discountAmount = 0;
+    } else {
+      const dc = data[0];
+      const price = bookingState.service ? bookingState.service.price : 0;
+      if (dc.type === 'percentage') {
+        discountAmount = Math.round(price * dc.value / 100);
+      } else {
+        discountAmount = dc.value;
+      }
+      discountAmount = Math.min(discountAmount, price);
+      msg.textContent = '✓ Code applied! You save $' + discountAmount;
+      msg.style.color = '#16a34a';
+      const totalEl = document.querySelector('.st-amount');
+      if (totalEl) totalEl.textContent = '$' + (price - discountAmount);
+    }
+  } catch(e) {
+    msg.textContent = 'Could not validate code. Try again.';
+    msg.style.color = '#ef4444';
+  }
 }
 
 async function submitBooking() {
