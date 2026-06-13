@@ -503,6 +503,7 @@
     .summary-total .st-label { font-weight:700; color:#111827; font-size:16px; }
     .summary-total .st-amount { font-weight:800; color:#2563eb; font-size:24px; }
   </style>
+  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
 
@@ -1299,7 +1300,7 @@ window.addEventListener('scroll', function() {
 }, { passive: true });
 
 // ── Booking Modal ─────────────────────────────────────────────────────────────
-var bookingState = { step:1, service:null, date:null, time:null, address:'', name:'', phone:'' };
+var bookingState = { step:1, service:null, date:null, time:null, address:'', name:'', phone:'', paymentMethod:null };
 var bkServices = [
   { id:1, name:'Basic Service',    price:99,  desc:'Regular maintenance and safety check' },
   { id:2, name:'Standard Service', price:149, desc:'Comprehensive service with detailed adjustment' },
@@ -1310,7 +1311,7 @@ var bkServices = [
 ];
 
 function openBooking(serviceId) {
-  bookingState = { step:1, service:null, date:null, time:null, address:'', name:'', phone:'' };
+  bookingState = { step:1, service:null, date:null, time:null, address:'', name:'', phone:'', paymentMethod:null };
   if (serviceId) {
     bookingState.service = bkServices.find(function(s) { return s.id === serviceId; }) || null;
     if (bookingState.service) bookingState.step = 2;
@@ -1331,13 +1332,13 @@ let discountAmount = 0;
 
 function renderStep() {
   var s = bookingState.step;
-  var titles = ['','Choose Your Service','Select Date & Time','Your Details','Confirm Booking'];
-  var progresses = ['','25%','50%','75%','100%'];
-  document.getElementById('modal-step-label').textContent = 'Step ' + s + ' of 4';
+  var titles = ['','Choose Your Service','Select Date & Time','Your Details','Review Booking','Payment'];
+  var progresses = ['','20%','40%','60%','80%','100%'];
+  document.getElementById('modal-step-label').textContent = 'Step ' + s + ' of 5';
   document.getElementById('modal-title').textContent = titles[s];
   document.getElementById('modal-progress').style.width = progresses[s];
   document.getElementById('modal-back').style.display = s > 1 ? 'block' : 'none';
-  document.getElementById('modal-next').textContent = s === 4 ? 'Confirm Booking' : 'Continue →';
+  document.getElementById('modal-next').textContent = s === 5 ? 'Confirm Booking' : 'Continue →';
 
   var content = document.getElementById('modal-content');
 
@@ -1408,8 +1409,36 @@ function renderStep() {
       '<div id="discount-msg" style="font-size:13px;margin-top:6px"></div>' +
       '</div>' +
       '<div class="summary-total"><span class="st-label">Total</span><span class="st-amount">$' + (sv ? sv.price : 0) + '</span></div>' +
-      '<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">By confirming you agree to our Terms &amp; Conditions. Payment is taken after service completion.</p>' +
+      '<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:16px">By confirming you agree to our Terms &amp; Conditions.</p>' +
       '<div id="booking-result"></div>';
+  }
+
+  if (s === 5) {
+    window.stripeCard = null;
+    content.innerHTML =
+      '<p style="font-size:14px;color:#6b7280;margin-bottom:24px">Choose how you\'d like to pay. You can also pay cash after the service is completed.</p>' +
+      '<div id="pay-stripe" onclick="selectPayment(\'stripe\')" style="padding:20px;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;margin-bottom:12px;transition:all 200ms ease;display:flex;align-items:center;gap:16px">' +
+      '<div style="width:48px;height:48px;background:#f0f9ff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>' +
+      '<div style="flex:1"><div style="font-weight:700;color:#111827;font-size:15px">Pay Now</div><div style="color:#6b7280;font-size:13px;margin-top:2px">Credit card, Apple Pay, Google Pay</div></div>' +
+      '<div id="check-stripe" style="display:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#2563eb"/><polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>' +
+      '</div>' +
+      '<div id="pay-cash" onclick="selectPayment(\'cash\')" style="padding:20px;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;transition:all 200ms ease;display:flex;align-items:center;gap:16px">' +
+      '<div style="width:48px;height:48px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg></div>' +
+      '<div style="flex:1"><div style="font-weight:700;color:#111827;font-size:15px">Pay Cash on Completion</div><div style="color:#6b7280;font-size:13px;margin-top:2px">Pay after your bike is serviced</div></div>' +
+      '<div id="check-cash" style="display:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#16a34a"/><polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>' +
+      '</div>' +
+      '<div id="stripe-form" style="display:none;margin-top:20px;padding:20px;background:#f9fafb;border-radius:12px">' +
+      '<p style="font-size:13px;color:#6b7280;margin-bottom:16px">Enter your card details below. Payment will be processed securely via Stripe.</p>' +
+      '<div id="card-element" style="padding:14px;background:white;border:2px solid #e5e7eb;border-radius:8px;min-height:44px"></div>' +
+      '<div id="card-error" style="color:#ef4444;font-size:13px;margin-top:8px"></div>' +
+      '<p style="font-size:11px;color:#9ca3af;margin-top:12px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secured by Stripe. Your card details are encrypted.</p>' +
+      '</div>' +
+      '<p id="payment-required-msg" style="display:none;color:#ef4444;font-size:13px;margin-top:16px;text-align:center">Please select a payment method to continue.</p>';
+
+    if (typeof Stripe !== 'undefined' && !window.stripeInstance) {
+      window.stripeInstance = Stripe('pk_live_51TUbFqPPGSm5cT7JKBDANyRVDmi6Ytia6r31kFxAEWis6xYZuhXlDnoZ3KyB4xUoJWd3nKpzrLxuDzsQEz7X3od3006xPoLzVV');
+      window.stripeElements = window.stripeInstance.elements();
+    }
   }
 }
 
@@ -1430,7 +1459,12 @@ async function bookingNext() {
     if (!bookingState.phone.trim()) { alert('Please enter your phone number.'); return; }
     if (!bookingState.address.trim()) { alert('Please enter your address.'); return; }
   }
-  if (s === 4) { await submitBooking(); return; }
+  if (s === 5) {
+    const pmMsg = document.getElementById('payment-required-msg');
+    if (!bookingState.paymentMethod) { if (pmMsg) pmMsg.style.display = 'block'; return; }
+    if (bookingState.paymentMethod === 'cash') { await submitBooking(); return; }
+    if (bookingState.paymentMethod === 'stripe') { await submitStripePayment(); return; }
+  }
   bookingState.step++;
   renderStep();
 }
@@ -1472,6 +1506,72 @@ async function applyDiscount() {
   } catch(e) {
     msg.textContent = 'Could not validate code. Try again.';
     msg.style.color = '#ef4444';
+  }
+}
+
+function selectPayment(method) {
+  bookingState.paymentMethod = method;
+  ['stripe','cash'].forEach(function(m) {
+    var el = document.getElementById('pay-' + m);
+    var check = document.getElementById('check-' + m);
+    if (el) el.style.borderColor = '#e5e7eb';
+    if (check) check.style.display = 'none';
+  });
+  var selected = document.getElementById('pay-' + method);
+  var check = document.getElementById('check-' + method);
+  if (selected) selected.style.borderColor = method === 'stripe' ? '#2563eb' : '#16a34a';
+  if (check) check.style.display = 'block';
+  var stripeForm = document.getElementById('stripe-form');
+  if (stripeForm) stripeForm.style.display = method === 'stripe' ? 'block' : 'none';
+  var msg = document.getElementById('payment-required-msg');
+  if (msg) msg.style.display = 'none';
+  if (method === 'stripe' && typeof Stripe !== 'undefined') {
+    setTimeout(function() {
+      if (!window.stripeCard) {
+        window.stripeInstance = window.stripeInstance || Stripe('pk_live_51TUbFqPPGSm5cT7JKBDANyRVDmi6Ytia6r31kFxAEWis6xYZuhXlDnoZ3KyB4xUoJWd3nKpzrLxuDzsQEz7X3od3006xPoLzVV');
+        window.stripeElements = window.stripeElements || window.stripeInstance.elements();
+        window.stripeCard = window.stripeElements.create('card', {
+          style: { base: { fontSize: '16px', color: '#111827', '::placeholder': { color: '#9ca3af' } } }
+        });
+        window.stripeCard.mount('#card-element');
+      }
+    }, 100);
+  }
+}
+
+async function submitStripePayment() {
+  var btn = document.getElementById('modal-next');
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
+  try {
+    var price = (bookingState.service ? bookingState.service.price : 0) - discountAmount;
+    var intentRes = await fetch('/api/create-payment-session?type=intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bookingId: 'bk_' + Date.now(),
+        priceCents: price * 100,
+        email: 'hello@drbikesydney.com.au',
+        description: (bookingState.service ? bookingState.service.name : 'Service') + ' - ' + bookingState.name
+      })
+    });
+    var intentData = await intentRes.json();
+    if (!intentData.clientSecret) throw new Error('No client secret');
+    var result = await window.stripeInstance.confirmCardPayment(intentData.clientSecret, {
+      payment_method: { card: window.stripeCard }
+    });
+    if (result.error) {
+      document.getElementById('card-error').textContent = result.error.message;
+      btn.textContent = 'Confirm Booking';
+      btn.disabled = false;
+    } else {
+      await submitBooking();
+    }
+  } catch(e) {
+    var errEl = document.getElementById('card-error');
+    if (errEl) errEl.textContent = 'Payment failed. Please try again or choose cash.';
+    btn.textContent = 'Confirm Booking';
+    btn.disabled = false;
   }
 }
 
