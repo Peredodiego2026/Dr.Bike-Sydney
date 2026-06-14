@@ -7,7 +7,17 @@
 <title>Track your Dr. Bike service</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+function copyTrackingLink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ Link copied!';
+    setTimeout(() => btn.textContent = '🔗 Share tracking link', 2000);
+  }).catch(() => {
+    prompt('Copy this tracking link:', url);
+  });
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -70,14 +80,22 @@ const stLabels={pending:'⏳ Pending confirmation',confirmed:'✅ Confirmed',enr
 async function init(){
   const params = new URLSearchParams(window.location.search);
   const bookingId = params.get('id');
+  const trackingToken = params.get('token');
   const content = document.getElementById('content');
 
-  if(!bookingId){
-    content.innerHTML = '<div class="card"><div class="err">No booking ID provided.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>';
+  if(!bookingId && !trackingToken){
+    content.innerHTML = '<div class="card"><div class="err">No booking ID or tracking link provided.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>';
     return;
   }
 
-  const { data: bkg, error } = await sb.from('bookings').select('*').eq('id', bookingId).single();
+  // Support both ?id=UUID (authenticated) and ?token=UUID (shareable, public)
+  let bkgQuery;
+  if (trackingToken) {
+    bkgQuery = sb.from('bookings').select('id,status,scheduled_date,scheduled_time,service_type,mechanic_lat,mechanic_lng,eta_minutes,started_at,completed_at,tracking_token').eq('tracking_token', trackingToken).single();
+  } else {
+    bkgQuery = sb.from('bookings').select('*').eq('id', bookingId).single();
+  }
+  const { data: bkg, error } = await bkgQuery;
   if(error || !bkg){
     content.innerHTML = '<div class="card"><div class="err">Booking not found.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>';
     return;
