@@ -2081,5 +2081,47 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
 });
 </script>
 
+
+  <!-- Newsletter Signup (7.1) -->
+  <section style="background:linear-gradient(135deg,#0D1F3C,#1848C8);padding:64px 24px;text-align:center">
+    <div style="max-width:480px;margin:0 auto">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:10px">STAY IN THE LOOP</div>
+      <h2 style="font-size:26px;font-weight:900;color:#fff;margin-bottom:10px">Cycling Tips & Offers</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,.75);line-height:1.7;margin-bottom:24px">
+        Monthly bike maintenance tips, seasonal safety advice and exclusive offers for Dr. Bike subscribers. Use code <strong>WELCOME10</strong> for 10% off your first booking.
+      </p>
+      <div style="display:flex;gap:10px;max-width:400px;margin:0 auto" id="newsletter-form">
+        <input type="email" id="nl-email" placeholder="your@email.com.au"
+          style="flex:1;padding:14px;border:none;border-radius:8px;font-size:14px;outline:none">
+        <button onclick="subscribeNewsletter()" 
+          style="background:#059669;color:#fff;border:none;border-radius:8px;padding:14px 20px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap">
+          Subscribe
+        </button>
+      </div>
+      <div id="nl-success" style="display:none;color:#fff;font-weight:600;font-size:15px;padding:16px">
+        ✅ Subscribed! Check your inbox for a 10% off code.
+      </div>
+      <p style="font-size:11px;color:rgba(255,255,255,.4);margin-top:12px">No spam. Unsubscribe anytime.</p>
+    </div>
+  </section>
+  <script>
+  async function subscribeNewsletter() {
+    const email = document.getElementById('nl-email').value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Please enter a valid email address.'); return;
+    }
+    try {
+      await fetch('/api/subscribe-newsletter', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, source: 'landing_page' })
+      });
+    } catch(e) {}
+    document.getElementById('newsletter-form').style.display = 'none';
+    document.getElementById('nl-success').style.display = 'block';
+    if(window.gtag) gtag('event','newsletter_subscribe',{page:'landing'});
+  }
+  </script>
+
 </body>
 </html>
