@@ -268,13 +268,8 @@ export default async function handler(req, res) {
             ${date ? `<div style="font-size:13px;color:#1848C8;margin-bottom:12px">${date}${time ? ' at ' + time : ''}</div>` : ''}
             <div style="font-size:24px;font-weight:900;color:#1848C8">$${price}</div>
           </div>
-          <div style="background:#FFFBEB;border-radius:12px;padding:16px;margin-bottom:24px;text-align:center;border:1px solid #FCD34D">
-            <div style="font-size:12px;color:#D97706;font-weight:700;margin-bottom:4px">🎁 Special offer for you</div>
-            <div style="font-size:18px;font-weight:900;color:#D97706;margin-bottom:4px">$10 OFF with code</div>
-            <div style="font-size:22px;font-weight:900;color:#0D1F3C;letter-spacing:0.14em">COMEBACK10</div>
-          </div>
-          <a href="https://drbikesydney.com.au/?coupon=COMEBACK10" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Complete my booking &rarr;</a>
-          <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">Offer valid 48 hours. We come to you &mdash; home, work or park &middot; 0433 963 250</p>
+          <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Complete my booking &rarr;</a>
+          <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; 0433 963 250</p>
         </div>${footer()}\`
     },
     birthday_promo: {
