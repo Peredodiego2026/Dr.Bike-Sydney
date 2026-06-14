@@ -1192,6 +1192,161 @@ window.deleteBike = async function(id) {
   renderMyBikes();
 };
 
+
+// ── My Bikes screen (task 1.3) ───────────────────────────────────────────────
+async function renderMyBikes() {
+  const screen = document.querySelector('[data-screen="my-bikes"]');
+  if (!screen) return;
+
+  let user = null;
+  try { const { data } = await sb.auth.getUser(); user = data?.user || null; } catch {}
+  if (!user) { router.navigate('login'); return; }
+
+  screen.innerHTML = `
+    ${createHeader('My Bikes', false)}
+    <div class="profile-wrap">
+      <div id="bikes-list" style="margin-bottom:16px">
+        <div style="text-align:center;padding:40px 0;color:var(--color-text-secondary)">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"></path><circle cx="12" cy="5" r="2" fill="currentColor" stroke="none"></circle></svg>
+          <div style="margin-top:12px;font-size:14px">Loading bikes...</div>
+        </div>
+      </div>
+      <button class="btn btn--primary btn--full" id="add-bike-btn">+ Add a Bike</button>
+
+      <!-- Add bike form (hidden by default) -->
+      <div id="add-bike-form" style="display:none;margin-top:20px;background:var(--color-surface);border-radius:16px;padding:20px;border:1px solid var(--color-border)">
+        <div style="font-size:15px;font-weight:700;margin-bottom:16px">New Bike</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <input id="bike-nickname" type="text" placeholder="Nickname (e.g. Red Trek)*" maxlength="60"
+            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <input id="bike-brand" type="text" placeholder="Brand" maxlength="40"
+              style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+            <input id="bike-model" type="text" placeholder="Model" maxlength="40"
+              style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <input id="bike-color" type="text" placeholder="Color" maxlength="30"
+              style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+            <input id="bike-year" type="number" placeholder="Year" min="1990" max="2030"
+              style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+          </div>
+          <select id="bike-type"
+            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none;appearance:none">
+            <option value="">Type (optional)</option>
+            <option value="road">Road</option>
+            <option value="mtb">Mountain Bike</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="ebike">E-Bike</option>
+            <option value="cargo">Cargo</option>
+            <option value="folding">Folding</option>
+          </select>
+          <div id="bike-form-error" style="font-size:12px;color:var(--color-error);min-height:16px"></div>
+          <div style="display:flex;gap:10px">
+            <button id="cancel-bike-btn" class="btn btn--secondary" style="flex:1">Cancel</button>
+            <button id="save-bike-btn" class="btn btn--primary" style="flex:1">Save Bike</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${createBottomNav('my-bikes')}
+  `;
+
+  // Load bikes
+  async function loadBikes() {
+    const list = screen.querySelector('#bikes-list');
+    try {
+      const { data, error } = await sb.from('bikes')
+        .select('id, nickname, brand, model, color, year, bike_type, created_at')
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--color-text-secondary)">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"></path><circle cx="12" cy="5" r="2" fill="currentColor" stroke="none"></circle></svg>
+          <div style="margin-top:12px;font-size:14px">No bikes added yet</div>
+          <div style="font-size:12px;margin-top:4px;opacity:0.7">Add your first bike below</div>
+        </div>`;
+        return;
+      }
+      const TYPE_LABELS = { road:'Road', mtb:'MTB', hybrid:'Hybrid', ebike:'E-Bike', cargo:'Cargo', folding:'Folding' };
+      list.innerHTML = data.map(bike => `
+        <div style="background:var(--color-surface);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border-radius:12px;background:var(--color-primary-alpha,rgba(10,88,202,0.12));display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"></path><circle cx="12" cy="5" r="2" fill="currentColor" stroke="none"></circle></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:15px">${bike.nickname}</div>
+            <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">
+              ${[bike.brand, bike.model, bike.color, bike.year, TYPE_LABELS[bike.bike_type]].filter(Boolean).join(' · ') || 'No details'}
+            </div>
+          </div>
+          <button data-bike-id="${bike.id}" class="delete-bike-btn" style="background:none;border:none;padding:8px;cursor:pointer;color:var(--color-error);opacity:0.7">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+          </button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.delete-bike-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.bikeId;
+          if (!confirm('Remove this bike?')) return;
+          await sb.from('bikes').delete().eq('id', id).eq('client_id', user.id);
+          loadBikes();
+        });
+      });
+    } catch (e) {
+      list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--color-error);font-size:13px">Failed to load bikes</div>`;
+    }
+  }
+
+  loadBikes();
+
+  // Add bike form toggle
+  screen.querySelector('#add-bike-btn').addEventListener('click', () => {
+    screen.querySelector('#add-bike-form').style.display = 'block';
+    screen.querySelector('#add-bike-btn').style.display = 'none';
+    screen.querySelector('#bike-nickname').focus();
+  });
+  screen.querySelector('#cancel-bike-btn').addEventListener('click', () => {
+    screen.querySelector('#add-bike-form').style.display = 'none';
+    screen.querySelector('#add-bike-btn').style.display = 'block';
+  });
+
+  screen.querySelector('#save-bike-btn').addEventListener('click', async () => {
+    const errEl = screen.querySelector('#bike-form-error');
+    const nickname = (screen.querySelector('#bike-nickname').value || '').trim();
+    if (!nickname) { errEl.textContent = 'Nickname is required'; return; }
+    errEl.textContent = '';
+    const btn = screen.querySelector('#save-bike-btn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const { error } = await sb.from('bikes').insert({
+        client_id: user.id,
+        nickname: nickname.slice(0, 60),
+        brand: (screen.querySelector('#bike-brand').value || '').trim().slice(0, 40) || null,
+        model: (screen.querySelector('#bike-model').value || '').trim().slice(0, 40) || null,
+        color: (screen.querySelector('#bike-color').value || '').trim().slice(0, 30) || null,
+        year: parseInt(screen.querySelector('#bike-year').value) || null,
+        bike_type: screen.querySelector('#bike-type').value || null
+      });
+      if (error) throw error;
+      showToast('Bike added!', 'success');
+      screen.querySelector('#add-bike-form').style.display = 'none';
+      screen.querySelector('#add-bike-btn').style.display = 'block';
+      // Reset form
+      ['bike-nickname','bike-brand','bike-model','bike-color','bike-year'].forEach(id => {
+        screen.querySelector('#' + id).value = '';
+      });
+      screen.querySelector('#bike-type').value = '';
+      loadBikes();
+    } catch (e) {
+      errEl.textContent = 'Could not save bike. Try again.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Bike';
+    }
+  });
+}
+
 // ── Screen event router ───────────────────────────────────────────────────────
 document.addEventListener('screenchange', ({ detail }) => {
   if (window.gtag) gtag('event', 'page_view', { page_title: detail.route, page_location: '/#' + detail.route });
