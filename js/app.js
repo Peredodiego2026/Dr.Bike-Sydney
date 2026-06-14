@@ -1,9 +1,24 @@
 import router from './router.js';
 import { sb, getServices, getAvailableSlots, createBooking, subscribeToMechanicLocation, submitReview, signIn, signUp, getMyBookings } from './supabase.js';
 import { createHeader, createBottomNav, createServiceCard, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
-import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm } from './stripe.js';
+import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm, createCheckoutSession } from './stripe.js';
 
 window.appState = { service: null, date: null, time: null, location: 'Home', bookingId: null };
+
+// Handle return from Stripe Checkout
+(function handleCheckoutReturn() {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('payment') === 'success') {
+    const bookingId = p.get('booking');
+    if (bookingId) window.appState.bookingId = bookingId;
+    history.replaceState({}, '', '/');
+    // Navigate to tracking after router initialises
+    document.addEventListener('routerinit', () => router.navigate('tracking'), { once: true });
+  }
+  if (p.get('payment') === 'cancelled') {
+    history.replaceState({}, '', '/');
+  }
+})();
 
 let _trackingMap = null;
 let _mechanicMarker = null;
@@ -272,8 +287,12 @@ async function renderPayment() {
     </div>
     <div class="payment-ref text-secondary text-sm">Booking ${ref}</div>
     <div class="payment-methods">${cardIcons}<span class="text-secondary text-xs" style="margin-left:auto">Apple Pay &bull; Google Pay</span></div>
+    <button class="btn btn--checkout btn--full" id="checkout-btn" style="background:#0A58CA;color:#fff;border:none;border-radius:12px;height:52px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6zm10 0h2v2h-2zm0-4h2v2h-2zm-6 0h4v2h-4z"/></svg>
+      Pay with Apple Pay / Google Pay / Card
+    </button>
+    <div class="payment-divider" id="card-divider"><span>or pay by entering card details</span></div>
     <div id="payment-request-btn" hidden></div>
-    <div class="payment-divider" id="card-divider" hidden><span>or pay with card</span></div>
     <div class="section-label">Card Details</div>
     <div id="card-element" class="card-element"></div>
     <div id="payment-error" class="booking-error" hidden></div>
@@ -290,6 +309,28 @@ async function renderPayment() {
   `;
 
   await createPaymentForm('card-element');
+
+  screen.querySelector('#checkout-btn').addEventListener('click', async () => {
+    const btn = screen.querySelector('#checkout-btn');
+    const errEl = screen.querySelector('#payment-error');
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to secure checkout...';
+    errEl.hidden = true;
+    try {
+      const email = await getEmail();
+      await createCheckoutSession({
+        amountCents,
+        description: service?.name || 'Dr. Bike Sydney service',
+        bookingId,
+        email,
+      });
+    } catch (e) {
+      errEl.textContent = e.message || 'Checkout failed. Please use card below.';
+      errEl.hidden = false;
+      btn.disabled = false;
+      btn.textContent = 'Pay with Apple Pay / Google Pay / Card';
+    }
+  });
 
   const getEmail = async () => {
     try { const { data: { user } } = await sb.auth.getUser(); return user?.email || 'guest@drbikesydney.com.au'; }
@@ -729,3 +770,4 @@ document.addEventListener('screenchange', ({ detail }) => {
 });
 
 router.init();
+document.dispatchEvent(new Event('routerinit'));
