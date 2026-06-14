@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Meta Pixel - replace PIXEL_ID_HERE with your actual Pixel ID from Meta Business Manager -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window,document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', 'PIXEL_ID_HERE');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=PIXEL_ID_HERE&ev=PageView&noscript=1"/></noscript>
+  <!-- End Meta Pixel -->
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
@@ -1536,6 +1551,7 @@ var bkServices = [
 
 function openBooking(serviceId) {
   if (window.gtag) gtag('event', 'begin_checkout');
+  if (window.fbq) fbq('track', 'InitiateCheckout');
   bookingState = { step:1, service:null, date:null, time:null, address:'', name:'', phone:'', paymentMethod:null };
   if (serviceId) {
     bookingState.service = bkServices.find(function(s) { return s.id === serviceId; }) || null;
@@ -1926,6 +1942,7 @@ async function submitBooking() {
   var btn = document.getElementById('modal-next');
   btn.textContent = 'Confirming...';
   btn.disabled = true;
+  if (window.fbq && bookingState.service) fbq('track', 'Purchase', { value: bookingState.service.price || 0, currency: 'AUD' });
   if (window.gtag && bookingState.service) gtag('event', 'purchase', {
     transaction_id: 'L' + Date.now(),
     value: bookingState.service.price || 0,
