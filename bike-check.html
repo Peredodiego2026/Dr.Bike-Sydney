@@ -318,5 +318,31 @@ function restart(){
   document.getElementById('progressLabel').textContent='Question 1 of 5';
 }
 </script>
+
+  <!-- Newsletter mini inline (7.1) -->
+  <div style="background:#0D1F3C;padding:32px 24px;text-align:center">
+    <p style="color:#fff;font-weight:700;font-size:16px;margin-bottom:8px">📧 Get monthly maintenance tips</p>
+    <p style="color:rgba(255,255,255,.7);font-size:13px;margin-bottom:16px">Subscribe for seasonal bike care guides + WELCOME10 discount code.</p>
+    <div style="display:flex;gap:8px;max-width:360px;margin:0 auto" id="bcc-nl-form">
+      <input type="email" id="bcc-nl-email" placeholder="Email address"
+        style="flex:1;padding:12px;border:none;border-radius:8px;font-size:14px">
+      <button onclick="bcNL()"
+        style="background:#059669;color:#fff;border:none;border-radius:8px;padding:12px 16px;font-weight:700;cursor:pointer;font-size:13px">
+        Join
+      </button>
+    </div>
+    <div id="bcc-nl-ok" style="display:none;color:#fff;font-weight:600;padding:12px">✅ You're subscribed!</div>
+  </div>
+  <script>
+  async function bcNL(){
+    const e=document.getElementById('bcc-nl-email').value.trim();
+    if(!e)return;
+    try{await fetch('/api/subscribe-newsletter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,source:'bike_check'})})}catch(ex){}
+    document.getElementById('bcc-nl-form').style.display='none';
+    document.getElementById('bcc-nl-ok').style.display='block';
+    if(window.gtag)gtag('event','newsletter_subscribe',{page:'bike_check'});
+  }
+  </script>
+
 </body>
 </html>
