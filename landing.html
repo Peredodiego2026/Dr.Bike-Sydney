@@ -1062,7 +1062,10 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
     <h2 class="section-h2" style="font-size:2rem">Choose Your Plan</h2>
     <p style="color:var(--gray);font-size:18px;margin-top:12px">Save more with our membership plans. Designed for regular cyclists.</p>
 
-    <p style="color:var(--gray);font-size:15px;margin:12px 0 48px">Monthly billing &middot; 3-month minimum &middot; Cancel anytime</p>
+    <div style="display:inline-flex;align-items:center;gap:0;background:#e5e7eb;border-radius:9999px;padding:4px;margin:16px 0 48px">
+      <button id="toggle-monthly" onclick="setBilling('monthly')" style="padding:8px 24px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:#2563eb;color:white;font-family:inherit;transition:all 200ms">Monthly</button>
+      <button id="toggle-annual" onclick="setBilling('annual')" style="padding:8px 24px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:#6b7280;font-family:inherit;transition:all 200ms">Annual <span style="background:#dcfce7;color:#16a34a;font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:4px">Save 20%</span></button>
+    </div>
 
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto">
 
@@ -1070,8 +1073,9 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
         <h3 style="font-weight:700;font-size:18px">Basic</h3>
         <div style="margin:16px 0">
-          <span style="font-size:2.5rem;font-weight:800">$57</span>
-          <span style="color:var(--gray);font-size:15px">/month</span>
+          <span id="price-basic" style="font-size:2.5rem;font-weight:800">$57</span>
+          <span id="period-basic" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-basic" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$548/yr - save $136</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>1 Basic Service</li>
@@ -1087,8 +1091,9 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:4px 16px;border-radius:var(--radius-full);font-size:12px;font-weight:600;white-space:nowrap">Popular</div>
         <h3 style="font-weight:700;font-size:18px">Standard</h3>
         <div style="margin:16px 0">
-          <span style="font-size:2.5rem;font-weight:800">$97</span>
-          <span style="color:var(--gray);font-size:15px">/month</span>
+          <span id="price-standard" style="font-size:2.5rem;font-weight:800">$97</span>
+          <span id="period-standard" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-standard" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$931/yr - save $233</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>2 Standard Services</li>
@@ -1104,8 +1109,9 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
         <h3 style="font-weight:700;font-size:18px">VIP</h3>
         <div style="margin:16px 0">
-          <span style="font-size:2.5rem;font-weight:800">$147</span>
-          <span style="color:var(--gray);font-size:15px">/month</span>
+          <span id="price-vip" style="font-size:2.5rem;font-weight:800">$147</span>
+          <span id="period-vip" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-vip" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$1,411/yr - save $353</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Unlimited Services</li>
@@ -1796,9 +1802,37 @@ async function submitStripePayment() {
 
 /* ── Membership modal ───────────────────────────────────────────────────── */
 var _membershipPlan = null;
+var _membershipBilling = 'monthly';
 var _membershipCard = null;
-var _membershipPrices = { basic: 57, standard: 97, vip: 147 };
+var _membershipPrices = {
+  basic:    { monthly: 57,  annual: 548  },
+  standard: { monthly: 97,  annual: 931  },
+  vip:      { monthly: 147, annual: 1411 }
+};
+var _membershipPriceIds = {
+  basic:    { monthly: 'price_1Ti1YFPPGSm5cT7JsoTZQFJh', annual: 'price_1Ti1YsPPGSm5cT7JrTHai1NV' },
+  standard: { monthly: 'price_1Ti1ZMPPGSm5cT7Ju9HPXs4s', annual: 'price_1Ti1ZhPPGSm5cT7JSQk0D4W0' },
+  vip:      { monthly: 'price_1Ti1aIPPGSm5cT7JC75QU0gL', annual: 'price_1Ti1aePPGSm5cT7J5lPHrkps' }
+};
 var _membershipLabels = { basic: 'Basic', standard: 'Standard', vip: 'VIP' };
+
+function setBilling(type) {
+  _membershipBilling = type;
+  var isAnnual = type === 'annual';
+  document.getElementById('toggle-monthly').style.background = isAnnual ? 'transparent' : '#2563eb';
+  document.getElementById('toggle-monthly').style.color = isAnnual ? '#6b7280' : 'white';
+  document.getElementById('toggle-annual').style.background = isAnnual ? '#2563eb' : 'transparent';
+  document.getElementById('toggle-annual').style.color = isAnnual ? 'white' : '#6b7280';
+  ['basic','standard','vip'].forEach(function(plan) {
+    var price = _membershipPrices[plan][type];
+    var priceEl = document.getElementById('price-' + plan);
+    var periodEl = document.getElementById('period-' + plan);
+    var noteEl = document.getElementById('annual-note-' + plan);
+    if (priceEl) priceEl.textContent = '$' + (isAnnual ? Math.round(price/12) : price);
+    if (periodEl) periodEl.textContent = '/month';
+    if (noteEl) noteEl.style.display = isAnnual ? 'block' : 'none';
+  });
+}
 
 function openMembershipModal(plan) {
   _membershipPlan = plan;
@@ -1812,7 +1846,9 @@ function openMembershipModal(plan) {
   document.getElementById('membership-submit').textContent = 'Start Membership';
   document.getElementById('membership-submit').disabled = false;
   document.getElementById('membership-plan-name').textContent = _membershipLabels[plan] + ' Plan';
-  document.getElementById('membership-plan-price').textContent = '$' + _membershipPrices[plan] + '/month';
+  var price = _membershipPrices[plan][_membershipBilling];
+  var priceLabel = _membershipBilling === 'annual' ? '$' + price + '/year' : '$' + price + '/month';
+  document.getElementById('membership-plan-price').textContent = priceLabel;
   document.getElementById('membership-modal').style.display = 'block';
   document.body.style.overflow = 'hidden';
   var STRIPE_KEY = 'pk_live_51TUbFqPPGSm5cT7JKBDANyRVDmi6Ytia6r31kFxAEWis6xYZuhXlDnoZ3KyB4xUoJWd3nKpzrLxuDzsQEz7X3od3006xPoLzVV';
@@ -1868,7 +1904,7 @@ async function submitMembership() {
     var res = await fetch('/api/create-subscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: _membershipPlan, name: name, email: email, phone: phone })
+      body: JSON.stringify({ plan: _membershipPlan, billing: _membershipBilling, priceId: _membershipPriceIds[_membershipPlan][_membershipBilling], name: name, email: email, phone: phone })
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Subscription failed. Please try again.');
