@@ -271,10 +271,16 @@ async function renderServiceSummary() {
     </div>
     <div class="summary-card">
       ${createSummaryRow('Service', service.name)}
+      ${(() => { const dur = getServiceDuration(service.name); return createSummaryRow('Est. Duration', formatDuration(dur)); })()}
       ${createSummaryRow('Date', formatDate(date))}
       ${createSummaryRow('Time', time || '-')}
       ${createSummaryRow('Location', location || 'Home')}
     </div>
+    ${(() => {
+      const adj = applyPricingAdjustments(Number(service.price||0), date);
+      if (!adj.label) return '';
+      return '<div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 14px;font-size:13px;color:var(--color-text-secondary);margin-bottom:12px">' + adj.label + '</div>';
+    })()}
     <div style="margin-bottom:16px">
       <div class="text-secondary text-sm" style="margin-bottom:6px">Referral or promo code</div>
       <div style="display:flex;gap:8px">
@@ -286,7 +292,7 @@ async function renderServiceSummary() {
     </div>
     <div class="summary-total">
       <span class="text-secondary">Total</span>
-      <span class="summary-total__amount" id="summary-total-amount">$${Number(service.price || 0).toFixed(2)}</span>
+      <span class="summary-total__amount" id="summary-total-amount">$${(() => { const adj = applyPricingAdjustments(Number(service.price||0), date); return adj.total.toFixed(2); })()}</span>
     </div>
     <div id="booking-error" class="booking-error" hidden></div>
     <div class="sticky-bottom">
