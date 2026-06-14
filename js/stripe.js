@@ -111,3 +111,16 @@ export function destroyPaymentForm() {
   if (_card) { try { _card.destroy(); } catch {} _card = null; }
   if (_prEl) { try { _prEl.destroy(); } catch {} _prEl = null; }
 }
+
+export async function createCheckoutSession({ amountCents, description, bookingId, email }) {
+  const res = await fetch('/api/create-payment-session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bookingId, priceCents: amountCents, description, email }),
+  });
+  if (!res.ok) throw new Error('Checkout session failed');
+  const { url } = await res.json();
+  if (!url) throw new Error('No checkout URL returned');
+  window.location.href = url;
+}
+
