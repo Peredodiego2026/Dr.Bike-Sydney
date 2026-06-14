@@ -31,6 +31,24 @@ function applyPricingAdjustments(basePrice, dateStr) {
 }
 // ───────────────────────────────────────────────────────────────────────────
 
+// ── Service Duration Estimates (6.4) ──────────────────────────────────────
+const SERVICE_DURATION = {
+  'Tune-Up': 60, 'Standard': 90, 'Major': 150, 'Ultimate': 240
+};
+function getServiceDuration(serviceType) {
+  if (!serviceType) return 60;
+  for (const [key, mins] of Object.entries(SERVICE_DURATION)) {
+    if (serviceType.includes(key)) return mins;
+  }
+  return 60;
+}
+function formatDuration(mins) {
+  if (mins < 60) return mins + ' min';
+  const h = Math.floor(mins/60), m = mins%60;
+  return h + 'h' + (m ? ' '+m+'min' : '');
+}
+// ─────────────────────────────────────────────────────────────────────────
+
 import router from './router.js';
 import { sb, getServices, getAvailableSlots, createBooking, subscribeToMechanicLocation, submitReview, signIn, signUp, getMyBookings } from './supabase.js';
 import { createHeader, createBottomNav, createServiceCard, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
