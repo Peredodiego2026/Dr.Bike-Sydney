@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   const footer = () => `
     <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E5E7EB">
       <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
-      <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · hello@drbikesydney.com.au</p>
+      <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
     </div></div>`;
 
   const bookingTable = () => `
@@ -159,7 +159,7 @@ export default async function handler(req, res) {
           ${bookingTable()}
           <div style="background:#FEF2F2;border-radius:12px;padding:16px;margin-bottom:20px">
             <p style="font-size:13px;color:#DC2626;font-weight:600;margin:0 0 4px">Refund information</p>
-            <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">If you paid online, your refund will be processed within 5–7 business days. For questions contact hello@drbikesydney.com.au</p>
+            <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">If you paid online, your refund will be processed within 5–7 business days. For questions contact contact@drbikesydney.com.au</p>
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book again →</a>
         </div>${footer()}`
@@ -311,7 +311,7 @@ export default async function handler(req, res) {
         </div>${footer()}`
     },
     booking_confirmation: {
-      to: 'hello@drbikesydney.com.au',
+      to: 'contact@drbikesydney.com.au',
       subject: `New Booking - ${service} - ${clientName || name}`,
       html: `${header('#0D1F3C','📋','New Booking Request')}
         <div style="padding:32px 28px">
