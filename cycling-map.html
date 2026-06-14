@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Best Cycling Routes in Sydney 2026 | Dr. Bike Sydney</title>
+  <meta name="description" content="Explore the best cycling routes in Sydney — Bay Run, Cooks River, Centennial Park, Bondi to Coogee, Manly Scenic Walkway and more. Interactive map with distance, difficulty and tips.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://drbikesydney.com.au/cycling-map">
+  <meta property="og:title" content="Best Cycling Routes in Sydney 2026 | Dr. Bike Sydney">
+  <meta property="og:description" content="Interactive map of Sydney's best bike routes — Bay Run, Cooks River, Centennial Park, Manly Scenic and more.">
+  <meta property="og:url" content="https://drbikesydney.com.au/cycling-map">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://drbikesydney.com.au/images/hero-van.png">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="/css/variables.css">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#0D1F3C}
+    header{background:#0D1F3C;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000}
+    .logo{color:#fff;font-weight:800;font-size:18px;text-decoration:none}
+    .cta-h{background:#0A58CA;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px}
+    .hero{background:linear-gradient(135deg,#0D1F3C,#1848C8);color:#fff;padding:48px 24px 36px;text-align:center}
+    .hero h1{font-size:clamp(22px,4vw,38px);font-weight:900;margin-bottom:10px}
+    .hero p{font-size:15px;opacity:.85;max-width:540px;margin:0 auto}
+    .layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 130px);min-height:500px}
+    @media(max-width:700px){.layout{grid-template-columns:1fr;grid-template-rows:auto 300px}}
+    .sidebar{overflow-y:auto;border-right:1px solid #E5E7EB;background:#fff}
+    .route-card{padding:16px;border-bottom:1px solid #F0F0F0;cursor:pointer;transition:.15s}
+    .route-card:hover,.route-card.active{background:#EEF3FC}
+    .route-card.active{border-left:3px solid #0A58CA}
+    .route-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .route-icon{font-size:22px}
+    .route-name{font-size:14px;font-weight:700;color:#0D1F3C}
+    .route-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+    .badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;text-transform:uppercase}
+    .badge-easy{background:#ECFDF5;color:#059669}
+    .badge-moderate{background:#FFFBEB;color:#D97706}
+    .badge-hard{background:#FEF2F2;color:#DC2626}
+    .badge-dist{background:#EEF3FC;color:#1848C8}
+    .route-desc{font-size:12px;color:#6B7280;line-height:1.5}
+    #map{width:100%;height:100%;z-index:1}
+    .floating-cta{position:fixed;bottom:24px;right:24px;background:#0A58CA;color:#fff;padding:14px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;box-shadow:0 4px 20px rgba(10,88,202,.4);z-index:999;display:flex;align-items:center;gap:8px}
+    .floating-cta:hover{background:#0D1F3C}
+    footer{background:#0D1F3C;color:rgba(255,255,255,.6);text-align:center;padding:24px;font-size:13px}
+    footer a{color:rgba(255,255,255,.8);text-decoration:none;margin:0 10px}
+  </style>
+</head>
+<body>
+<header>
+  <a href="/" class="logo">DR BIKE SYDNEY</a>
+  <a href="/" class="cta-h">Book Service</a>
+</header>
+<div class="hero">
+  <h1>🗺️ Sydney Cycling Routes</h1>
+  <p>10 of Sydney's best bike routes — click any route to see it on the map.</p>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div id="map"></div>
+</div>
+<a href="/" class="floating-cta" onclick="if(window.gtag)gtag('event','generate_lead',{page:'cycling_map'})">🔧 Book a Service</a>
+<footer>
+  <p style="margin-bottom:10px"><a href="/">Home</a><a href="/bike-check">Bike Safety Check</a><a href="/business">For Business</a><a href="/cycling-map">Cycling Map</a></p>
+  <p>© 2026 Dr. Bike Sydney · <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> · <a href="tel:+61433963250">0433 963 250</a></p>
+</footer>
+<script>
+const ROUTES = [
+  {
+    name:"Bay Run", icon:"🌊", dist:"7 km", diff:"easy",
+    desc:"A flat loop around Iron Cove linking Drummoyne and Leichhardt. Perfect for beginners, prams and fitness riders. Mostly off-road path.",
+    tips:"Best in the morning before foot traffic. Free parking at Henley Reserve.",
+    lat:-33.862, lng:151.139, zoom:14
+  },
+  {
+    name:"Cooks River Trail", icon:"🌿", dist:"11 km", diff:"easy",
+    desc:"Follows the Cooks River from Tempe to Strathfield through parklands. Mostly flat, sealed path. Popular with commuters and casual riders.",
+    tips:"Start at Tempe Reserve. Connects to Airport Bike Path for commuters.",
+    lat:-33.912, lng:151.146, zoom:13
+  },
+  {
+    name:"Centennial Park Loop", icon:"🌳", dist:"3.8 km", diff:"easy",
+    desc:"The classic Sydney road cycling loop inside Centennial Park. Car-free circuit on smooth tarmac. Great for road bikes and training rides.",
+    tips:"$7/hr bike hire on-site. Busiest on weekend mornings — go early.",
+    lat:-33.901, lng:151.232, zoom:15
+  },
+  {
+    name:"Bondi to Coogee Coastal Walk", icon:"🏖️", dist:"6 km", diff:"moderate",
+    desc:"Iconic coastal path from Bondi Beach south to Coogee. Some sections are path, some road. Stunning ocean views — very popular, expect foot traffic.",
+    tips:"Best on a weekday morning. Carry a lock — some sections require dismounting.",
+    lat:-33.889, lng:151.274, zoom:14
+  },
+  {
+    name:"Manly Scenic Walkway", icon:"⛴️", dist:"10 km", diff:"hard",
+    desc:"From Manly to Spit Bridge through Sydney Harbour National Park. Rocky fire trails and gravel — best on a hardtail MTB or gravel bike.",
+    tips:"Carry 2L water. Trail is exposed with no services. Best April–October.",
+    lat:-33.798, lng:151.285, zoom:13
+  },
+  {
+    name:"Parramatta Valley Cycleway", icon:"🏙️", dist:"12 km", diff:"easy",
+    desc:"Follows the Parramatta River from Parramatta CBD to Meadowbank. Flat, sealed, family-friendly. Connects ferry stops and light rail.",
+    tips:"Connect to the Olympic Park path for a 20km round trip.",
+    lat:-33.814, lng:151.012, zoom:13
+  },
+  {
+    name:"Lane Cove River Trail", icon:"🦅", dist:"8 km", diff:"moderate",
+    desc:"Winding riverside trail through Lane Cove National Park. Some technical single-track sections. Perfect for MTB riders on the North Shore.",
+    tips:"Trail can be muddy after rain. Parking at Lane Cove National Park.",
+    lat:-33.793, lng:151.158, zoom:14
+  },
+  {
+    name:"Olympic Park Circuit", icon:"🏅", dist:"9 km", diff:"easy",
+    desc:"A mostly flat circuit around Sydney Olympic Park at Homebush. Well-signposted, paved, no cars. Great for families and beginner road cyclists.",
+    tips:"Combine with a walk to the aquatic centre. Busy on event days.",
+    lat:-33.845, lng:151.070, zoom:14
+  },
+  {
+    name:"Northern Beaches Pathway", icon:"🌴", dist:"15 km", diff:"moderate",
+    desc:"Runs from Manly Vale up to Narrabeen Lagoon along Pittwater Road. Mix of separated bike lane and shared path. Great ocean views heading north.",
+    tips:"Flat but long — bring snacks. Strong headwinds heading north in the afternoon.",
+    lat:-33.748, lng:151.266, zoom:13
+  },
+  {
+    name:"Anzac Bridge to Fish Market", icon:"🌉", dist:"5 km", diff:"easy",
+    desc:"A scenic urban commuter route across the iconic Anzac Bridge into the CBD via Pyrmont. Excellent bike infrastructure with protected lanes.",
+    tips:"Peak-hour commuters — watch for pedestrians on the bridge walkway.",
+    lat:-33.873, lng:151.193, zoom:15
+  }
+];
+
+const DIFF_CLASS = {easy:'badge-easy', moderate:'badge-moderate', hard:'badge-hard'};
+
+const map = L.map('map').setView([-33.868, 151.209], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution:'© OpenStreetMap contributors', maxZoom:18
+}).addTo(map);
+
+const markers = [];
+let activeIdx = -1;
+
+function selectRoute(i) {
+  activeIdx = i;
+  document.querySelectorAll('.route-card').forEach((c,j)=>c.classList.toggle('active', j===i));
+  const r = ROUTES[i];
+  map.setView([r.lat, r.lng], r.zoom, {animate:true});
+  markers[i].openPopup();
+  if(window.gtag) gtag('event','cycling_map_route',{route:r.name});
+}
+
+const sidebar = document.getElementById('sidebar');
+ROUTES.forEach((r, i) => {
+  // sidebar card
+  const card = document.createElement('div');
+  card.className = 'route-card';
+  card.innerHTML = `
+    <div class="route-header"><span class="route-icon">${r.icon}</span><span class="route-name">${r.name}</span></div>
+    <div class="route-meta">
+      <span class="badge badge-dist">${r.dist}</span>
+      <span class="badge ${DIFF_CLASS[r.diff]}">${r.diff}</span>
+    </div>
+    <div class="route-desc">${r.desc}</div>`;
+  card.onclick = () => selectRoute(i);
+  sidebar.appendChild(card);
+
+  // map marker
+  const color = r.diff==='easy'?'#059669': r.diff==='moderate'?'#D97706':'#DC2626';
+  const icon = L.divIcon({
+    className:'',
+    html:`<div style="background:${color};color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff">${r.icon}</div>`,
+    iconSize:[32,32], iconAnchor:[16,16]
+  });
+  const marker = L.marker([r.lat, r.lng], {icon}).addTo(map);
+  marker.bindPopup(`<b>${r.name}</b><br>${r.dist} · ${r.diff}<br><small>${r.tips}</small><br><br><a href="/" style="color:#0A58CA;font-weight:700">Book a service →</a>`);
+  marker.on('click', () => selectRoute(i));
+  markers.push(marker);
+});
+</script>
+</body>
+</html>
