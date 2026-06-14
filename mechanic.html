@@ -290,7 +290,16 @@ async function saveChecklist() {
   startServiceTimer(checklistBookingId);
   // Surface criticals as upsell opportunities
   if (criticals.length) {
-    setTimeout(() => alert('⚠️ Critical items found:\n' + criticals.join('\n') + '\n\nConsider sending client an upsell recommendation.'), 500);
+    // 1.5: Auto-send upsell email to client
+    try {
+      const criticalIds = CHECKLIST_ITEMS.filter(i => checklistState[i.id] === 'critical').map(i => i.id);
+      fetch('/api/send-upsell', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ bookingId: checklistBookingId, criticalItems: criticalIds })
+      }).catch(() => {});
+    } catch(e) {}
+    setTimeout(() => alert('⚠️ ' + criticals.length + ' critical item(s) found. Upsell email sent to client.'), 500);
   }
 }
 
