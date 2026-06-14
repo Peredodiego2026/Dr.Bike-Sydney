@@ -230,6 +230,33 @@ export default async function handler(req, res) {
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">Questions? Reply to this email or WhatsApp us at +61 433 963 250</p>
         </div>${footer()}`
     },
+    reengagement: {
+      subject: `🚲 We miss you, ${name} — here's $15 to come back`,
+      html: `${header('#0A58CA','🚲','We miss you!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, it's been a while since your last service with us${typeof monthsAgo !== 'undefined' && monthsAgo ? ' (' + monthsAgo + ' months ago)' : ''}. Your bike misses the open road!</p>
+          <div style="background:#EEF3FC;border-radius:16px;padding:28px;margin-bottom:24px;text-align:center">
+            <div style="font-size:42px;margin-bottom:8px">🎁</div>
+            <div style="font-size:13px;color:#1848C8;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">Welcome back offer</div>
+            <div style="font-size:32px;font-weight:900;color:#1848C8;margin-bottom:4px">$15 OFF</div>
+            <div style="font-size:13px;color:#1848C8;margin-bottom:16px;opacity:0.8">your next service — valid 14 days</div>
+            <div style="background:#fff;border-radius:10px;padding:10px 20px;display:inline-block;border:2px solid #1848C8">
+              <span style="font-size:20px;font-weight:900;color:#0D1F3C;letter-spacing:0.16em">BACK15</span>
+            </div>
+          </div>
+          <div style="background:#F7F8FA;border-radius:12px;padding:16px;margin-bottom:24px">
+            <p style="font-size:13px;color:#0D1F3C;font-weight:600;margin:0 0 8px">🔧 Your bike may need some love after ${typeof monthsAgo !== 'undefined' && monthsAgo ? monthsAgo + ' months' : 'this time'}</p>
+            <p style="font-size:12px;color:#6B7280;margin:0;line-height:1.8">
+              &bull; Brake pads wear out and can become unsafe<br>
+              &bull; Cables stretch and affect shifting precision<br>
+              &bull; Chain wear accelerates drivetrain damage<br>
+              &bull; A Tune-Up takes ~1h and keeps you safe
+            </p>
+          </div>
+          <a href="https://drbikesydney.com.au/?coupon=BACK15" style="display:block;background:#0A58CA;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Book now — use BACK15 &rarr;</a>
+          <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; 0433 963 250</p>
+        </div>${footer()}\`
+    },
     birthday_promo: {
       subject: `🎂 Happy Birthday, ${name}! A gift from Dr. Bike Sydney`,
       html: `${header('#F59E0B','🎂','Happy Birthday!')}
