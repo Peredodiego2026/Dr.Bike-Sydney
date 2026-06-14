@@ -634,9 +634,33 @@ async function renderTracking() {
       if (booking.mechanic_id) {
         const { data: mech } = await sb.from('escalation_contacts')
           .select('name, phone').eq('id', booking.mechanic_id).single();
+        // 1.1: Also fetch mechanic profile (avatar, bio, years_experience)
+        let mechProfile = null;
+        if (booking.mechanic_id) {
+          const { data: mp } = await sb.from('profiles')
+            .select('avatar_url, bio, years_experience, full_name')
+            .eq('id', booking.mechanic_id).single();
+          mechProfile = mp;
+        }
         if (mech) {
           const nameEl = screen.querySelector('#mechanic-name');
-          if (nameEl) nameEl.textContent = mech.name || 'Your mechanic';
+          const mechName = mechProfile?.full_name || mech.name || 'Your mechanic';
+          if (nameEl) nameEl.textContent = mechName;
+          // Update mechanic avatar if available
+          const avatarEl = screen.querySelector('.mechanic-avatar');
+          if (avatarEl && mechProfile?.avatar_url) {
+            avatarEl.innerHTML = '<img src="' + mechProfile.avatar_url + '" alt="' + mechName + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover">';
+          }
+          // Show bio/experience below ETA
+          if (mechProfile?.bio || mechProfile?.years_experience) {
+            const etaEl = screen.querySelector('#eta-text');
+            if (etaEl && etaEl.parentElement) {
+              const bioEl = document.createElement('div');
+              bioEl.style.cssText = 'font-size:12px;color:var(--color-text-secondary);margin-top:2px';
+              bioEl.textContent = (mechProfile.years_experience ? mechProfile.years_experience + 'yrs exp · ' : '') + (mechProfile.bio || '');
+              etaEl.parentElement.appendChild(bioEl);
+            }
+          }
           screen.querySelector('#message-btn')?.addEventListener('click', () => {
             const phone = (mech.phone || '61433963250').replace(/[^0-9]/g, '');
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent('Hi, tracking booking ' + ref)}`, '_blank');
