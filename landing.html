@@ -47,7 +47,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"LocalBusiness","name":"Dr. Bike Sydney","telephone":"+61433963250","email":"hello@drbikesydney.com.au","address":{"@type":"PostalAddress","addressLocality":"Sydney","addressRegion":"NSW","addressCountry":"AU"},"priceRange":"$$","openingHours":"Mo-Su 07:00-19:00","url":"https://drbikesydney.com.au","description":"Professional mobile bicycle repair service in Sydney.","serviceArea":{"@type":"City","name":"Sydney"}}
+  {"@context":"https://schema.org","@type":"LocalBusiness","name":"Dr. Bike Sydney","telephone":"+61433963250","email":"contact@drbikesydney.com.au","address":{"@type":"PostalAddress","addressLocality":"Sydney","addressRegion":"NSW","addressCountry":"AU"},"priceRange":"$$","openingHours":"Mo-Su 07:00-19:00","url":"https://drbikesydney.com.au","description":"Professional mobile bicycle repair service in Sydney.","serviceArea":{"@type":"City","name":"Sydney"}}
   </script>
 
   <style>
@@ -1329,7 +1329,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
     <div style="background:var(--blue);border-radius:var(--radius-lg);padding:40px 32px;color:white;position:sticky;top:80px">
       <h3 style="font-size:20px;font-weight:800">Still have questions?</h3>
       <p style="color:rgba(255,255,255,0.85);margin:12px 0 28px;font-size:15px">We're here to help! Contact us and we'll get back to you within the hour.</p>
-      <button onclick="window.location.href='mailto:hello@drbikesydney.com.au'" style="background:white;color:var(--blue);padding:12px 28px;border-radius:var(--radius);font-weight:600;border:none;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Contact Us</button>
+      <button onclick="window.location.href='mailto:contact@drbikesydney.com.au'" style="background:white;color:var(--blue);padding:12px 28px;border-radius:var(--radius);font-weight:600;border:none;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Contact Us</button>
       <hr style="border:none;border-top:1px solid rgba(255,255,255,0.2);margin:28px 0">
       <div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.9);font-size:14px">
@@ -1338,7 +1338,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         </div>
         <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.9);font-size:14px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          hello@drbikesydney.com.au
+          contact@drbikesydney.com.au
         </div>
       </div>
     </div>
@@ -1405,7 +1405,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         <a href="#about" class="footer-link">About Us</a>
         <a href="#about" class="footer-link">Our Story</a>
         <a href="#reviews" class="footer-link">Reviews</a>
-        <a href="mailto:hello@drbikesydney.com.au" class="footer-link">Contact</a>
+        <a href="mailto:contact@drbikesydney.com.au" class="footer-link">Contact</a>
       </div>
 
       <!-- Col 4: Support -->
@@ -1426,7 +1426,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         </div>
         <div class="footer-contact-item">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          hello@drbikesydney.com.au
+          contact@drbikesydney.com.au
         </div>
         <div class="footer-contact-item">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -1792,7 +1792,7 @@ async function submitStripePayment() {
       body: JSON.stringify({
         bookingId: 'bk_' + Date.now(),
         priceCents: price * 100,
-        email: 'hello@drbikesydney.com.au',
+        email: 'contact@drbikesydney.com.au',
         description: (bookingState.service ? bookingState.service.name : 'Service') + ' - ' + bookingState.name
       })
     });
