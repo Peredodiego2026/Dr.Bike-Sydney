@@ -302,6 +302,7 @@ function card(j){
       <button class="abtn nav" onclick="openMaps('${addr}')">📍 Navigate</button>
       <button class="abtn" onclick="openMechChat('${j.id}')" style="background:rgba(24,72,200,0.1);color:#1848C8">💬 Chat</button>
       <button class="abtn chat" onclick="openWA('${j.phone||j.email||""}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
+      <button class="abtn" onclick="openClientHistory('${j.id}','${j.client.replace(/'/g,"\\'")}',${\'\'+j.client_id+\'\' || null})" style="background:rgba(5,150,105,0.1);color:#059669">📋 History</button>
       ${!done?`${st!=='enroute'?`<button class="abtn go" onclick="setStatus('${j.id}','enroute')">🚐 En route</button>`:''}
       <button class="abtn done" onclick="completeJob('${j.id}')">✅ Complete</button>`
       :`<button class="abtn undo" onclick="setStatus('${j.id}','confirmed')">↩ Undo</button>`}
@@ -666,6 +667,89 @@ async function completeJob(id){
   openCompleteModal(id);
 }
 async function saveNotes(id,notes){ await sb.from('bookings').update({mechanic_notes:notes}).eq('id',id); }
+
+async function openClientHistory(bookingId, clientName, clientId) {
+  // Remove existing modal
+  document.getElementById('history-modal')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'history-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <div style="font-size:17px;font-weight:700;color:var(--navy)">${esc(clientName)}</div>
+          <div style="font-size:12px;color:var(--mgray)">Service history</div>
+        </div>
+        <button onclick="document.getElementById('history-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mgray)">✕</button>
+      </div>
+      <div id="history-content" style="min-height:80px;display:flex;align-items:center;justify-content:center">
+        <div style="color:var(--mgray);font-size:13px">Loading history...</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+  try {
+    // Query by client_id if available, otherwise by name
+    let query = sb.from('bookings')
+      .select('id, service_name, service_price, scheduled_date, status, client_rating, client_review, mechanic_notes')
+      .eq('status', 'completed')
+      .order('scheduled_date', { ascending: false })
+      .limit(10);
+    if (clientId && clientId !== 'null') {
+      query = query.eq('client_id', clientId);
+    } else {
+      // Find current booking to get client_email as fallback
+      const currentJob = jobs.find(j => j.id === bookingId);
+      if (currentJob?.email) query = query.eq('client_email', currentJob.email);
+      else query = query.eq('id', bookingId); // fallback: just show this booking
+    }
+    const { data: history, error } = await query;
+    const el = document.getElementById('history-content');
+    if (!el) return;
+    if (error || !history?.length) {
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mgray);font-size:13px">No previous services found</div>';
+      return;
+    }
+    const totalSpent = history.reduce((s, b) => s + (b.service_price || 0), 0);
+    el.innerHTML = `
+      <div style="background:#EEF3FC;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between">
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--navy)">${history.length}</div>
+          <div style="font-size:11px;color:var(--mgray)">Services</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#059669">$${totalSpent}</div>
+          <div style="font-size:11px;color:var(--mgray)">Total spent</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#F59E0B">${history.filter(b=>b.client_rating).length > 0 ? (history.filter(b=>b.client_rating).reduce((s,b)=>s+(b.client_rating||0),0)/history.filter(b=>b.client_rating).length).toFixed(1) : '—'}</div>
+          <div style="font-size:11px;color:var(--mgray)">Avg rating</div>
+        </div>
+      </div>
+      ${history.map(b => {
+        const d = b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'}) : '—';
+        const stars = b.client_rating ? '⭐'.repeat(b.client_rating) : '';
+        return `<div style="border-bottom:1px solid #F3F4F6;padding:12px 0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+            <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(b.service_name||'Service')}</div>
+            <div style="font-size:13px;font-weight:700;color:#059669">$${b.service_price||0}</div>
+          </div>
+          <div style="font-size:11px;color:var(--mgray);margin-bottom:4px">${d} ${stars ? '· ' + stars : ''}</div>
+          ${b.client_review ? `<div style="font-size:12px;color:#6B7280;font-style:italic">&ldquo;${esc(b.client_review)}&rdquo;</div>` : ''}
+          ${b.mechanic_notes ? `<div style="font-size:11px;color:#1848C8;margin-top:4px">📝 ${esc(b.mechanic_notes)}</div>` : ''}
+        </div>`;
+      }).join('')}
+    `;
+  } catch(e) {
+    const el = document.getElementById('history-content');
+    if (el) el.innerHTML = '<div style="text-align:center;padding:24px;color:#DC2626;font-size:13px">Error loading history</div>';
+  }
+}
 
 function openMaps(a){ window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a+', Sydney NSW')}`, '_blank'); }
 function openWA(phone,name){ const num=(phone||'').replace(/[^\d]/g,''); window.open(`https://wa.me/${num}?text=${encodeURIComponent('Hi '+name+'! This is your Dr. Bike mechanic. I am on my way! 🚲')}`, '_blank'); }
