@@ -982,8 +982,9 @@
 </nav>
 
 
-<script src="js/admin.js">
-// 4.3 Average service time KPI
+<script src="js/admin.js"></script>
+<script>
+// T02 fix: loadAvgServiceTime wired after admin.js loads
 async function loadAvgServiceTime() {
   try {
     const { data } = await supabase
@@ -1012,5 +1013,9 @@ async function loadAvgServiceTime() {
     }
   } catch(e) { console.warn('avg time error', e); }
 }
+// Auto-call on dashboard load
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => loadAvgServiceTime(), 1200); // after admin.js inits supabase
+});
 </script>
 </body></html>
