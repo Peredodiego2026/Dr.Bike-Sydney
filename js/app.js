@@ -542,6 +542,11 @@ async function renderTracking() {
       </svg>
       Message Mechanic
     </button>
+    <div style="padding:0 0 12px;text-align:center">
+      <button onclick="shareTrackingLink()" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+        🔗 Share tracking link
+      </button>
+    </div>
     ${createBottomNav('tracking')}
   `;
 
@@ -674,6 +679,26 @@ async function renderTracking() {
 }
 
 // ── Review ────────────────────────────────────────────────────────────────────
+async function shareTrackingLink() {
+  const bookingId = window.appState.bookingId;
+  if (!bookingId) return;
+  try {
+    const { data } = await sb.from('bookings').select('tracking_token').eq('id', bookingId).single();
+    const token = data?.tracking_token;
+    if (!token) { alert('Tracking link not available yet.'); return; }
+    const url = window.location.origin + '/track?token=' + token;
+    if (navigator.share) {
+      await navigator.share({ title: 'Track my Dr. Bike service', url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      showToast('Tracking link copied to clipboard!');
+    }
+  } catch(e) {
+    console.warn('shareTrackingLink error:', e);
+    showToast('Could not share tracking link.');
+  }
+}
+
 async function renderReview() {
   const screen = document.querySelector('[data-screen="review"]');
   if (!screen) return;
