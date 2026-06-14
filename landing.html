@@ -1926,6 +1926,12 @@ async function submitBooking() {
   var btn = document.getElementById('modal-next');
   btn.textContent = 'Confirming...';
   btn.disabled = true;
+  if (window.gtag && bookingState.service) gtag('event', 'purchase', {
+    transaction_id: 'L' + Date.now(),
+    value: bookingState.service.price || 0,
+    currency: 'AUD',
+    items: [{ item_name: bookingState.service.name }]
+  });
   try {
     await fetch('/api/send-email', {
       method: 'POST',
