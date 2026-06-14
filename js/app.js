@@ -1,3 +1,36 @@
+
+// ── Surge & Early Bird Pricing ─────────────────────────────────────────────
+const AU_PUBLIC_HOLIDAYS_2026 = [
+  '2026-01-01','2026-01-26','2026-04-03','2026-04-04','2026-04-05','2026-04-06',
+  '2026-04-25','2026-06-08','2026-08-03','2026-10-05','2026-12-25','2026-12-26','2026-12-28'
+];
+
+function getSurcharge(dateStr) {
+  // dateStr: 'YYYY-MM-DD'
+  if (!dateStr) return { surge: 0, earlyBird: 0, label: '' };
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay(); // 0=Sun,6=Sat
+  const isWeekend = day === 0 || day === 6;
+  const isHoliday = AU_PUBLIC_HOLIDAYS_2026.includes(dateStr);
+  const surge = (isWeekend || isHoliday) ? 15 : 0;
+  // Early bird: booking made 48h+ before scheduled date
+  const now = new Date();
+  const scheduled = new Date(dateStr + 'T08:00:00');
+  const hoursAhead = (scheduled - now) / 36e5;
+  const earlyBird = hoursAhead >= 48 ? -10 : 0;
+  const labels = [];
+  if (isHoliday) labels.push('Public holiday surcharge +$15');
+  else if (isWeekend) labels.push('Weekend surcharge +$15');
+  if (earlyBird) labels.push('Early bird discount -$10');
+  return { surge, earlyBird, label: labels.join(' · ') };
+}
+
+function applyPricingAdjustments(basePrice, dateStr) {
+  const { surge, earlyBird, label } = getSurcharge(dateStr);
+  return { total: basePrice + surge + earlyBird, surge, earlyBird, label };
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 import router from './router.js';
 import { sb, getServices, getAvailableSlots, createBooking, subscribeToMechanicLocation, submitReview, signIn, signUp, getMyBookings } from './supabase.js';
 import { createHeader, createBottomNav, createServiceCard, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
