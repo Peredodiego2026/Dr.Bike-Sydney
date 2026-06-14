@@ -103,6 +103,7 @@ async function renderBookService() {
   const screen = document.querySelector('[data-screen="book-service"]');
   if (!screen) return;
   if (window.gtag) gtag('event', 'begin_checkout');
+  if (window.fbq) fbq('track', 'InitiateCheckout');
 
   window.appState.time = null;
 
@@ -796,6 +797,7 @@ async function renderLogin() {
       if (isSignup) {
         await signUp(email, password, name);
         if (window.gtag) gtag('event', 'sign_up', { method: 'email' });
+    if (window.fbq) fbq('track', 'Lead');
         showToast('Account created! Check your email to verify.', 'success');
       } else {
         await signIn(email, password);
