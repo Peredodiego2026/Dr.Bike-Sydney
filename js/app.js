@@ -374,6 +374,36 @@ async function renderPayment() {
 }
 
 // ── Tracking ──────────────────────────────────────────────────────────────────
+// ── Haversine distance (km) ───────────────────────────────────────────────────
+function haversineKm([lat1, lng1], [lat2, lng2]) {
+  const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ── Geocode address via Nominatim (free, no key needed) ───────────────────────
+async function geocodeAddress(address) {
+  if (!address) return null;
+  try {
+    const q = encodeURIComponent(address + ', Sydney, NSW, Australia');
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
+      headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' },
+    });
+    const data = await r.json();
+    if (data?.[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+  } catch {}
+  return null;
+}
+
+// ── Status config ─────────────────────────────────────────────────────────────
+const STATUS_CONFIG = {
+  pending:   { dot: '#F59E0B', label: 'Booking confirmed — assigning mechanic...' },
+  confirmed: { dot: '#0A58CA', label: 'Mechanic assigned — preparing to depart' },
+  en_route:  { dot: '#22C55E', label: 'Mechanic is on the way!' },
+  arrived:   { dot: '#22C55E', label: 'Mechanic has arrived!' },
+  completed: { dot: '#6B7280', label: 'Service completed' },
+};
+
 async function renderTracking() {
   const screen = document.querySelector('[data-screen="tracking"]');
   if (!screen) return;
@@ -384,22 +414,25 @@ async function renderTracking() {
   const ref = bookingRef(bookingId);
 
   screen.innerHTML = `
-    ${createHeader('Tracking ' + ref, false)}
-    <div class="status-indicator">
-      <div class="status-dot status-dot--enroute"></div>
-      <span class="status-text">Mechanic is on the way!</span>
+    ${createHeader('Live Tracking', false)}
+    <div class="status-indicator" id="status-indicator">
+      <div class="status-dot" id="status-dot" style="background:#0A58CA"></div>
+      <span class="status-text" id="status-text">Loading booking...</span>
     </div>
     <div class="map-container" id="tracking-map"></div>
-    <div class="estimated-arrival">
+    <div class="estimated-arrival" id="mechanic-card">
       <div class="mechanic-avatar">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
         </svg>
       </div>
       <div>
-        <div class="fw-600">Diego, your mechanic</div>
-        <div class="text-secondary text-sm" id="eta-text">Calculating arrival time...</div>
+        <div class="fw-600" id="mechanic-name">Your mechanic</div>
+        <div class="text-secondary text-sm" id="eta-text">Calculating ETA...</div>
       </div>
+    </div>
+    <div id="tracking-progress" style="display:flex;gap:0;margin:0 0 20px;border-radius:8px;overflow:hidden">
+      ${['Confirmed','En Route','Arrived','Done'].map((s,i) => `<div style="flex:1;padding:6px 4px;text-align:center;font-size:10px;font-weight:600;background:var(--color-surface);color:var(--color-text-secondary);border-right:1px solid var(--color-border)" id="step-${i}">${s}</div>`).join('')}
     </div>
     <button class="btn btn--secondary btn--full mb-4" id="message-btn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -413,46 +446,128 @@ async function renderTracking() {
   await loadLeaflet();
   if (!screen.classList.contains('active')) return;
 
-  const sydneyCenter = [-33.8688, 151.2093];
-  const mechanicStart = [-33.820, 151.180];
+  const SYDNEY_DEFAULT = [-33.8688, 151.2093];
+  const MECH_DEFAULT   = [-33.820,  151.180];
+  const CITY_SPEED_KMH = 30; // average van speed in Sydney
 
+  // ── Init map ──────────────────────────────────────────────────────────────
   const map = window.L.map('tracking-map', { zoomControl: true, attributionControl: false, scrollWheelZoom: false });
-  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  map.setView(sydneyCenter, 13);
+  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+  }).addTo(map);
+  map.setView(SYDNEY_DEFAULT, 13);
+  _trackingMap = map;
 
   const clientIcon = window.L.divIcon({
     className: '',
     html: `<div style="width:32px;height:32px;background:#0A58CA;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>`,
     iconSize: [32, 32], iconAnchor: [16, 32],
   });
-  window.L.marker(sydneyCenter, { icon: clientIcon }).bindPopup('Your location').addTo(map);
-
   const mechIcon = window.L.divIcon({
     className: '',
     html: `<div style="width:40px;height:40px;background:#22C55E;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)"><svg width="20" height="14" viewBox="0 0 24 16" fill="white"><rect x="0" y="3" width="16" height="13" rx="1"/><path d="M16 6h5l3 4v6h-8V6z"/><circle cx="5" cy="16" r="3" fill="white"/><circle cx="19" cy="16" r="3" fill="white"/></svg></div>`,
     iconSize: [40, 40], iconAnchor: [20, 20],
   });
-  _mechanicMarker = window.L.marker(mechanicStart, { icon: mechIcon }).bindPopup('Your mechanic').addTo(map);
-  _trackingMap = map;
 
-  function updateETA(lat, lng) {
-    const distKm = Math.sqrt(Math.pow((lat - sydneyCenter[0]) * 111, 2) + Math.pow((lng - sydneyCenter[1]) * 85, 2));
-    const mins = Math.max(1, Math.round(distKm * 4));
-    const eta = new Date(Date.now() + mins * 60000);
+  let clientCoords = SYDNEY_DEFAULT;
+  let clientMarker = window.L.marker(clientCoords, { icon: clientIcon }).bindPopup('Your location').addTo(map);
+  _mechanicMarker  = window.L.marker(MECH_DEFAULT,  { icon: mechIcon  }).bindPopup('Your mechanic').addTo(map);
+
+  // ── ETA updater ───────────────────────────────────────────────────────────
+  function updateETA(mechCoords) {
+    const distKm = haversineKm(mechCoords, clientCoords);
+    const mins   = Math.max(1, Math.round((distKm / CITY_SPEED_KMH) * 60));
+    const eta    = new Date(Date.now() + mins * 60000);
     const etaStr = eta.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
     const el = screen.querySelector('#eta-text');
-    if (el) el.textContent = `Estimated arrival: ${etaStr} (${mins} min)`;
+    if (el) el.textContent = distKm < 0.1
+      ? 'Mechanic is right outside!'
+      : `ETA: ${etaStr} (~${mins} min · ${distKm.toFixed(1)} km away)`;
   }
 
-  updateETA(mechanicStart[0], mechanicStart[1]);
+  // ── Status updater ────────────────────────────────────────────────────────
+  function applyStatus(status) {
+    const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.confirmed;
+    const dot  = screen.querySelector('#status-dot');
+    const text = screen.querySelector('#status-text');
+    if (dot)  dot.style.background  = cfg.dot;
+    if (text) text.textContent = cfg.label;
+    // Progress bar highlight
+    const stepMap = { pending: -1, confirmed: 0, en_route: 1, arrived: 2, completed: 3 };
+    const activeStep = stepMap[status] ?? 0;
+    for (let i = 0; i <= 3; i++) {
+      const el = screen.querySelector(`#step-${i}`);
+      if (!el) continue;
+      el.style.background = i <= activeStep ? 'var(--color-primary)' : 'var(--color-surface)';
+      el.style.color = i <= activeStep ? '#fff' : 'var(--color-text-secondary)';
+    }
+  }
+
+  // ── Load booking from Supabase ────────────────────────────────────────────
+  try {
+    const { data: booking } = await sb.from('bookings')
+      .select('status, address, client_name, mechanic_id')
+      .eq('id', bookingId || '')
+      .single();
+
+    if (booking) {
+      applyStatus(booking.status || 'confirmed');
+
+      // Geocode client address
+      if (booking.address) {
+        const coords = await geocodeAddress(booking.address);
+        if (coords) {
+          clientCoords = coords;
+          clientMarker.setLatLng(coords);
+          map.setView(coords, 13);
+        }
+      }
+
+      // Load mechanic name
+      if (booking.mechanic_id) {
+        const { data: mech } = await sb.from('escalation_contacts')
+          .select('name, phone').eq('id', booking.mechanic_id).single();
+        if (mech) {
+          const nameEl = screen.querySelector('#mechanic-name');
+          if (nameEl) nameEl.textContent = mech.name || 'Your mechanic';
+          screen.querySelector('#message-btn')?.addEventListener('click', () => {
+            const phone = (mech.phone || '61433963250').replace(/[^0-9]/g, '');
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent('Hi, tracking booking ' + ref)}`, '_blank');
+          });
+          return; // skip default message btn below
+        }
+      }
+
+      // Real-time booking status updates
+      const bookingChannel = sb.channel('booking-status-' + bookingId)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bookings', filter: 'id=eq.' + bookingId },
+          payload => { if (payload.new?.status) applyStatus(payload.new.status); })
+        .subscribe();
+      const origCleanup = _unsubTracking;
+      _unsubTracking = () => {
+        if (origCleanup) origCleanup();
+        try { sb.removeChannel(bookingChannel); } catch {}
+      };
+    } else {
+      applyStatus('confirmed');
+    }
+  } catch {
+    applyStatus('confirmed');
+  }
+
+  updateETA(MECH_DEFAULT);
+
+  // ── Realtime mechanic location ────────────────────────────────────────────
   _unsubTracking = subscribeToMechanicLocation(bookingId, ({ latitude, longitude }) => {
-    if (_mechanicMarker) { _mechanicMarker.setLatLng([latitude, longitude]); updateETA(latitude, longitude); }
+    const coords = [latitude, longitude];
+    if (_mechanicMarker) { _mechanicMarker.setLatLng(coords); updateETA(coords); }
+    if (_trackingMap) _trackingMap.panTo(coords, { animate: true, duration: 1 });
   });
 
   requestAnimationFrame(() => { setTimeout(() => { if (_trackingMap) _trackingMap.invalidateSize(); }, 350); });
 
-  screen.querySelector('#message-btn').addEventListener('click', () => {
-    window.open(`https://wa.me/61433963250?text=${encodeURIComponent(`Hi Dr. Bike, tracking booking ${ref}`)}`, '_blank');
+  screen.querySelector('#message-btn')?.addEventListener('click', () => {
+    window.open(`https://wa.me/61433963250?text=${encodeURIComponent('Hi Dr. Bike, tracking booking ' + ref)}`, '_blank');
   });
 }
 
