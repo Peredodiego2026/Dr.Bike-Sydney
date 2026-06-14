@@ -116,7 +116,7 @@ export default async function handler(req, res) {
   </div>
 
   <div class="footer">
-    Dr. Bike Sydney · ABN 87 654 025 287 · <a href="mailto:hello@drbikesydney.com.au">hello@drbikesydney.com.au</a><br>
+    Dr. Bike Sydney · ABN 87 654 025 287 · <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a><br>
     <a href="https://drbikesydney.com.au">drbikesydney.com.au</a>
   </div>
 </div>
