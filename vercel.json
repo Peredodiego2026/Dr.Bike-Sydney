@@ -11,6 +11,10 @@
     {
       "path": "/api/send-reengagement",
       "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/send-abandoned",
+      "schedule": "0 * * * *"
     }
   ],
   "rewrites": [
