@@ -1630,25 +1630,19 @@ let currentTrackBookingId = null;
 
 // ─── INIT ───────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  console.log('🚀 DOMContentLoaded - Starting...');
   
   // Hide loading after max 2 seconds regardless
   setTimeout(() => {
-    console.log('⏰ 2 seconds passed - hiding loading');
     const loadingEl = document.getElementById('loading');
     if (loadingEl) {
       loadingEl.classList.add('hide');
-      console.log('✅ Loading hidden');
     } else {
-      console.log('❌ Loading element not found');
     }
   }, 2000);
   
-  console.log('📅 Building calendar...');
   buildCalendar();
   
   try {
-    console.log('🔐 Getting session...');
     // Add timeout to prevent hanging
     const sessionPromise = sb.auth.getSession();
     const timeoutPromise = new Promise((_, reject) => 
@@ -1658,16 +1652,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
     
     if (session?.user) {
-      console.log('✅ User logged in:', session.user.email);
       currentUser = session.user;
       renderProfile();
       subscribeToNotifications();
       loadNotifications();
     } else {
-      console.log('ℹ️ No user session');
     }
   } catch (error) {
-    console.log('⚠️ Session check timed out or failed:', error.message);
     // Continue anyway - user can login manually
   }
   
@@ -1684,7 +1675,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   
   // Handle OAuth redirect
   if (window.location.hash.includes('access_token')) {
-    console.log('🔗 OAuth redirect detected');
     try {
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) {
@@ -1697,11 +1687,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
       window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
-      console.log('❌ OAuth handling error:', error);
     }
   }
   
-  console.log('✅ DOMContentLoaded - Complete');
 });
 
 // ─── NAVIGATION ─────────────────────────────────────────────────────────
@@ -1899,7 +1887,6 @@ async function processApplePay() {
     let paymentCompleted = false;
     
     paymentRequest.on('paymentmethod', async (ev) => {
-      console.log('✅ Payment method received:', ev.paymentMethod.id);
       
       try {
         // CRITICAL: Save booking ONLY here, after payment authorized
@@ -1911,7 +1898,6 @@ async function processApplePay() {
         // Tell Apple Pay it succeeded
         ev.complete('success');
         
-        console.log('✅ Booking saved successfully');
         
       } catch (error) {
         console.error('❌ Booking save failed:', error);
@@ -1924,10 +1910,8 @@ async function processApplePay() {
     });
 
     // NOW show the payment sheet
-    console.log('📱 Opening Apple Pay sheet...');
     await paymentRequest.show();
     
-    console.log('✅ Payment sheet closed');
 
   } catch (error) {
     console.error('❌ Apple Pay error:', error);
@@ -1942,7 +1926,6 @@ async function processApplePay() {
     }
     
     // NO booking saved in any of these cases
-    console.log('❌ No booking saved - payment did not complete');
   }
 }
 
@@ -1973,8 +1956,6 @@ async function processPayment() {
       return;
     }
     
-    console.log('✅ Current user:', currentUser.id);
-    console.log('📝 Booking data:', booking);
     
     // Complete booking with selected payment method
     await completeBookingWithPayment(null, selectedPaymentMethod);
@@ -2004,7 +1985,6 @@ async function completeBookingWithPayment(paymentMethodId, paymentType) {
       payment_method: paymentType || 'card'
     };
     
-    console.log('📤 Inserting booking:', bookingData);
     
     const { data, error } = await sb.from('bookings')
       .insert(bookingData)
@@ -2017,7 +1997,6 @@ async function completeBookingWithPayment(paymentMethodId, paymentType) {
       throw error;
     }
 
-    console.log('✅ Booking saved successfully:', data);
 
     // Show success
     document.getElementById('success-ref').textContent = `#${booking.ref}`;
@@ -2040,10 +2019,8 @@ async function completeBookingWithPayment(paymentMethodId, paymentType) {
 
 // ─── BOOKINGS LIST ───────────────────────────────────────────────────────
 async function loadBookings() {
-  console.log('🔍 loadBookings called');
   
   if (!currentUser) {
-    console.log('❌ No current user');
     document.getElementById('bk-list').innerHTML = `
       <div class="bk-empty">
         <div class="bk-empty-ico">🔐</div>
@@ -2054,7 +2031,6 @@ async function loadBookings() {
     return;
   }
   
-  console.log('✅ Current user:', currentUser.id);
   
   try {
     // Load bookings for current user
@@ -2069,8 +2045,6 @@ async function loadBookings() {
       return;
     }
     
-    console.log('✅ Loaded bookings:', data?.length || 0);
-    console.log('📊 Bookings data:', data);
     
     renderBookings(data || []);
   } catch(err) {
@@ -2087,8 +2061,6 @@ function bkTab(el, tab) {
 }
 
 function renderBookings(rows) {
-  console.log('🎨 renderBookings called with', rows?.length || 0, 'rows');
-  console.log('📑 Current tab:', currentBkTab);
   
   const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   const statusClass = { confirmed:'green', in_progress:'blue', completed:'green', cancelled:'red', pending:'amber' };
@@ -2101,7 +2073,6 @@ function renderBookings(rows) {
     return bDate < now && b.status !== 'in_progress';
   });
   
-  console.log('✅ Filtered bookings:', filtered.length);
 
   if (!filtered.length) {
     document.getElementById('bk-list').innerHTML = `
@@ -2199,7 +2170,6 @@ let unreadNotifCount = 0;
 let notificationsChannel = null;
 
 async function loadNotifications() {
-  console.log('🔔 loadNotifications called');
   
   const list = document.getElementById('notifications-list');
   
@@ -2231,7 +2201,6 @@ async function loadNotifications() {
       return;
     }
     
-    console.log('✅ Loaded notifications:', data?.length || 0);
     
     if (!data || data.length === 0) {
       list.innerHTML = `
@@ -2352,7 +2321,6 @@ function subscribeToNotifications() {
       table: 'notifications',
       filter: `user_id=eq.${currentUser.id}`
     }, (payload) => {
-      console.log('🔔 New notification:', payload.new);
       unreadNotifCount++;
       updateNotifBadge(unreadNotifCount);
       toast(payload.new.title, 'ok');
