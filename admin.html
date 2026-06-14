@@ -151,6 +151,12 @@
           <div class="kpi-value">—</div>
           <div class="kpi-sub">total clients</div>
         </div>
+        <div class="kpi-card" style="background:#F5F3FF;border-color:#7C3AED">
+          <div class="kpi-label" style="color:#7C3AED">Avg service time</div>
+          <div class="kpi-value" id="kpi-avg-time" style="color:#7C3AED">—</div>
+          <div class="kpi-sub" id="kpi-avg-time-sub">by service type below</div>
+        </div>
+        </div>
       </div>
 
       <div class="quick-actions">
@@ -976,5 +982,35 @@
 </nav>
 
 
-<script src="js/admin.js"></script>
+<script src="js/admin.js">
+// 4.3 Average service time KPI
+async function loadAvgServiceTime() {
+  try {
+    const { data } = await supabase
+      .from('bookings')
+      .select('service_type, service_duration_seconds')
+      .not('service_duration_seconds', 'is', null)
+      .eq('status', 'completed');
+    if (!data?.length) return;
+    const byType = {};
+    data.forEach(b => {
+      const t = (b.service_type || 'Other').replace(/\s+/g,'_');
+      if (!byType[t]) byType[t] = [];
+      byType[t].push(b.service_duration_seconds);
+    });
+    const overall = data.reduce((a,b) => a + b.service_duration_seconds, 0) / data.length;
+    const mins = Math.round(overall / 60);
+    const el = document.getElementById('kpi-avg-time');
+    const sub = document.getElementById('kpi-avg-time-sub');
+    if (el) el.textContent = mins + ' min';
+    if (sub) {
+      const lines = Object.entries(byType).map(([t, arr]) => {
+        const avg = Math.round(arr.reduce((a,b)=>a+b,0)/arr.length/60);
+        return t.replace(/_/g,' ') + ': ' + avg + 'min';
+      });
+      sub.textContent = lines.join(' · ');
+    }
+  } catch(e) { console.warn('avg time error', e); }
+}
+</script>
 </body></html>
