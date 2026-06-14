@@ -165,6 +165,7 @@ async function renderBookService() {
   list.querySelectorAll('.service-card').forEach(card => {
     card.addEventListener('click', () => {
       list.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+      if (window.gtag) gtag('event', 'view_item', { currency: 'AUD', items: [{ item_name: s.name, price: s.price }] });
       card.classList.add('selected');
       window.appState.service = services.find(s => String(s.id) === card.dataset.serviceId);
       if (window.gtag) gtag('event', 'add_to_cart', { currency: 'AUD', items: [{ item_name: window.appState.service?.name, price: window.appState.service?.price }] });
@@ -968,8 +969,14 @@ async function renderProfile() {
 
 // ── Screen event router ───────────────────────────────────────────────────────
 document.addEventListener('screenchange', ({ detail }) => {
+  if (window.gtag) gtag('event', 'page_view', { page_title: detail.route, page_location: '/#' + detail.route });
   if (detail.prev === 'tracking' && detail.route !== 'tracking') cleanupTracking();
-  if (detail.prev === 'payment'  && detail.route !== 'payment')  destroyPaymentForm();
+  if (detail.prev === 'payment'  && detail.route !== 'payment') {
+    destroyPaymentForm();
+    if (window.appState.bookingId && detail.route !== 'tracking') {
+      if (window.gtag) gtag('event', 'booking_abandoned', { currency: 'AUD', value: window.appState.service?.price || 0, items: [{ item_name: window.appState.service?.name }] });
+    }
+  }
   if (detail.route === 'book-service')    renderBookService();
   if (detail.route === 'service-summary') renderServiceSummary();
   if (detail.route === 'payment')         renderPayment();
