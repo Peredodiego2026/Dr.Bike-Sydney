@@ -222,9 +222,18 @@ async function renderServiceSummary() {
       ${createSummaryRow('Time', time || '-')}
       ${createSummaryRow('Location', location || 'Home')}
     </div>
+    <div style="margin-bottom:16px">
+      <div class="text-secondary text-sm" style="margin-bottom:6px">Referral or promo code</div>
+      <div style="display:flex;gap:8px">
+        <input id="referral-input" type="text" placeholder="Enter code (optional)"
+          style="flex:1;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 14px;color:var(--color-text);font-size:14px;outline:none;text-transform:uppercase" />
+        <button id="referral-apply-btn" class="btn btn--secondary" style="padding:10px 16px;font-size:13px;white-space:nowrap">Apply</button>
+      </div>
+      <div id="referral-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
+    </div>
     <div class="summary-total">
       <span class="text-secondary">Total</span>
-      <span class="summary-total__amount">$${Number(service.price || 0).toFixed(2)}</span>
+      <span class="summary-total__amount" id="summary-total-amount">$${Number(service.price || 0).toFixed(2)}</span>
     </div>
     <div id="booking-error" class="booking-error" hidden></div>
     <div class="sticky-bottom">
@@ -232,6 +241,40 @@ async function renderServiceSummary() {
     </div>
     ${createBottomNav('home')}
   `;
+
+  let _appliedDiscount = 0;
+  screen.querySelector('#referral-apply-btn').addEventListener('click', async () => {
+    const input = screen.querySelector('#referral-input');
+    const msg   = screen.querySelector('#referral-msg');
+    const code  = (input.value || '').trim().toUpperCase();
+    if (!code) return;
+    msg.style.color = 'var(--color-text-secondary)';
+    msg.textContent = 'Checking...';
+    try {
+      const { data, error } = await sb.from('discount_codes')
+        .select('discount_amount, discount_type, max_uses, uses_count, active')
+        .eq('code', code).single();
+      if (error || !data || !data.active) throw new Error('Invalid or expired code');
+      if (data.max_uses && data.uses_count >= data.max_uses) throw new Error('Code has reached its limit');
+      const base = service.price || 0;
+      const disc = data.discount_type === 'percentage'
+        ? Math.round(base * data.discount_amount / 100 * 100) / 100
+        : Math.min(data.discount_amount, base);
+      _appliedDiscount = disc;
+      window.appState.discountCode   = code;
+      window.appState.discountAmount = disc;
+      const el = screen.querySelector('#summary-total-amount');
+      if (el) el.textContent = '$' + Math.max(0, base - disc).toFixed(2);
+      msg.style.color = 'var(--color-success)';
+      msg.textContent = 'Code applied! -$' + disc.toFixed(2) + ' off';
+      input.disabled = true;
+      screen.querySelector('#referral-apply-btn').disabled = true;
+    } catch (e) {
+      _appliedDiscount = 0;
+      msg.style.color = 'var(--color-error)';
+      msg.textContent = e.message || 'Invalid code';
+    }
+  });
 
   screen.querySelector('#proceed-btn').addEventListener('click', async () => {
     const btn = screen.querySelector('#proceed-btn');
@@ -832,17 +875,32 @@ async function renderMyBookings() {
   });
 }
 
-// ── Profile ───────────────────────────────────────────────────────────────────
+// ── Profile + Referral ────────────────────────────────────────────────
 async function renderProfile() {
   const screen = document.querySelector('[data-screen="profile"]');
   if (!screen) return;
 
   let user = null;
   try { const { data } = await sb.auth.getUser(); user = data?.user || null; } catch {}
-
   if (!user) { router.navigate('login'); return; }
 
   const name = user.user_metadata?.full_name || user.email;
+  const refCode = 'DBK' + (user.id || '').replace(/-/g, '').slice(0, 5).toUpperCase();
+
+  let credits = 0, referralCount = 0;
+  try {
+    const { data: profile } = await sb.from('profiles')
+      .select('referral_code, referral_credits, referral_count')
+      .eq('id', user.id).single();
+    if (profile) {
+      credits = profile.referral_credits || 0;
+      referralCount = profile.referral_count || 0;
+      if (!profile.referral_code)
+        await sb.from('profiles').update({ referral_code: refCode }).eq('id', user.id).catch(() => {});
+    }
+  } catch {}
+
+  const shareMsg = encodeURIComponent('Get $15 off your first Dr. Bike Sydney service! Use my code ' + refCode + ' at checkout. Book at https://drbikesydney.com.au');
 
   screen.innerHTML = `
     ${createHeader('Profile', false)}
@@ -854,7 +912,38 @@ async function renderProfile() {
       </div>
       <div class="fw-600 text-center">${name}</div>
       <div class="text-secondary text-sm text-center">${user.email}</div>
-      <button class="btn btn--secondary btn--full mt-5" id="signout-btn">Sign Out</button>
+
+      <div style="background:linear-gradient(135deg,#0A58CA,#1848C8);border-radius:16px;padding:20px;margin:20px 0;text-align:center">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Your referral code</div>
+        <div id="ref-code-display" style="font-size:28px;font-weight:900;color:#fff;letter-spacing:0.18em;margin-bottom:4px">${refCode}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:16px">You and your friend each get $15 off</div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Copy code</button>
+          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px">📱 Share</a>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div style="background:var(--color-surface);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--color-border)">
+          <div style="font-size:24px;font-weight:800;color:var(--color-primary)">${referralCount}</div>
+          <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Friends referred</div>
+        </div>
+        <div style="background:var(--color-surface);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--color-border)">
+          <div style="font-size:24px;font-weight:800;color:var(--color-success)">$${credits}</div>
+          <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Credits earned</div>
+        </div>
+      </div>
+
+      <div style="background:var(--color-surface);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid var(--color-border)">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">How it works</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.8">
+          1. Share your code with friends<br>
+          2. They get $15 off their first service<br>
+          3. You get $15 credit when they book
+        </div>
+      </div>
+
+      <button class="btn btn--secondary btn--full" id="signout-btn">Sign Out</button>
       <div style="display:flex;gap:24px;justify-content:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border)">
         <a href="/terms.html" style="font-size:13px;color:var(--color-text-secondary);text-decoration:none">Terms &amp; Conditions</a>
         <a href="/privacy.html" style="font-size:13px;color:var(--color-text-secondary);text-decoration:none">Privacy Policy</a>
@@ -863,12 +952,19 @@ async function renderProfile() {
     ${createBottomNav('profile')}
   `;
 
+  screen.querySelector('#copy-code-btn').addEventListener('click', () => {
+    navigator.clipboard.writeText(refCode)
+      .then(() => showToast('Code copied!', 'success'))
+      .catch(() => showToast(refCode + ' - copy manually', 'success'));
+  });
+
   screen.querySelector('#signout-btn').addEventListener('click', async () => {
     await sb.auth.signOut().catch(() => {});
     showToast('Signed out successfully', 'success');
     router.navigate('home');
   });
 }
+
 
 // ── Screen event router ───────────────────────────────────────────────────────
 document.addEventListener('screenchange', ({ detail }) => {
