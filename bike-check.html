@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Is My Bike Safe to Ride? Free Bike Safety Check | Dr. Bike Sydney</title>
+  <meta name="description" content="Take our free 5-question bike safety check. Find out if your bike is safe to ride in Sydney. Instant diagnosis — Green, Yellow or Red. Book a mobile mechanic if needed.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://drbikesydney.com.au/bike-check">
+  <meta property="og:title" content="Is My Bike Safe to Ride? Free Bike Safety Check | Dr. Bike Sydney">
+  <meta property="og:description" content="Take our free 5-question bike safety check. Find out if your bike is safe to ride in Sydney. Instant diagnosis — Green, Yellow or Red.">
+  <meta property="og:url" content="https://drbikesydney.com.au/bike-check">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://drbikesydney.com.au/images/hero-van.png">
+  <script type="application/ld+json">{
+    "@context":"https://schema.org",
+    "@type":"HowTo",
+    "name":"Is My Bike Safe to Ride? 5-Step Safety Check",
+    "description":"A quick 5-step checklist to assess whether your bicycle is safe to ride. Check brakes, tyres, chain, gears and lights before every ride in Sydney.",
+    "totalTime":"PT2M",
+    "estimatedCost":{"@type":"MonetaryAmount","currency":"AUD","value":"0"},
+    "step":[
+      {"@type":"HowToStep","name":"Brakes","text":"Squeeze both brake levers. Bike should stop within 1 bike length. Levers should not touch the handlebar."},
+      {"@type":"HowToStep","name":"Tyres","text":"Check tyre pressure and inspect for cuts, bulges or embedded glass. Tyres should feel firm, not soft."},
+      {"@type":"HowToStep","name":"Chain","text":"Check chain for rust, stiff links or excessive wear. A clean, lubricated chain runs smoothly and quietly."},
+      {"@type":"HowToStep","name":"Gears","text":"Shift through all gears while pedalling. Each gear should engage cleanly without skipping or chain drop."},
+      {"@type":"HowToStep","name":"Lights","text":"Front white light and rear red light are legally required at night in NSW. Check batteries and mounting."}
+    ]
+  }</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
+  <link rel="stylesheet" href="/css/variables.css">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#0D1F3C}
+    header{background:#0D1F3C;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+    .logo{color:#fff;font-weight:800;font-size:18px;text-decoration:none}
+    .cta-header{background:#0A58CA;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px}
+    .hero{background:linear-gradient(135deg,#0D1F3C,#1848C8);color:#fff;padding:52px 24px 40px;text-align:center}
+    .hero h1{font-size:clamp(24px,5vw,40px);font-weight:900;margin-bottom:10px;line-height:1.2}
+    .hero p{font-size:15px;opacity:.85;max-width:520px;margin:0 auto}
+    /* Progress bar */
+    .progress-wrap{max-width:600px;margin:32px auto 0;padding:0 24px}
+    .progress-bar{height:6px;background:rgba(255,255,255,.25);border-radius:3px;overflow:hidden}
+    .progress-fill{height:100%;background:#059669;border-radius:3px;transition:width .4s}
+    .progress-label{font-size:12px;opacity:.7;margin-top:6px;text-align:right}
+    /* Quiz */
+    .quiz-section{max-width:640px;margin:0 auto;padding:40px 24px}
+    .question-card{background:#fff;border:2px solid #E5E7EB;border-radius:16px;padding:28px;margin-bottom:24px;display:none}
+    .question-card.active{display:block;animation:fadeIn .3s}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .q-icon{font-size:40px;margin-bottom:12px;display:block}
+    .q-number{font-size:12px;font-weight:700;color:#0A58CA;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .q-title{font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:8px}
+    .q-desc{font-size:14px;color:#4B5563;line-height:1.6;margin-bottom:24px}
+    .options{display:grid;gap:10px}
+    .opt-btn{width:100%;padding:14px 16px;border-radius:10px;border:2px solid #E5E7EB;background:#F9FAFB;cursor:pointer;text-align:left;font-size:14px;font-weight:600;color:#0D1F3C;transition:.2s;display:flex;align-items:center;gap:10px}
+    .opt-btn:hover{border-color:#0A58CA;background:#EEF3FC}
+    .opt-btn .opt-icon{font-size:18px;width:24px;flex-shrink:0}
+    /* Result */
+    .result-card{border-radius:16px;padding:32px;text-align:center;display:none}
+    .result-card.active{display:block;animation:fadeIn .4s}
+    .result-icon{font-size:64px;margin-bottom:16px}
+    .result-title{font-size:28px;font-weight:900;margin-bottom:10px}
+    .result-desc{font-size:15px;line-height:1.7;max-width:480px;margin:0 auto 28px;opacity:.85}
+    .result-green{background:#ECFDF5;border:2px solid #059669;color:#065F46}
+    .result-yellow{background:#FFFBEB;border:2px solid #D97706;color:#92400E}
+    .result-red{background:#FEF2F2;border:2px solid #DC2626;color:#991B1B}
+    .cta-book{display:inline-block;background:#0A58CA;color:#fff;padding:16px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;margin:8px}
+    .cta-call{display:inline-block;background:#0D1F3C;color:#fff;padding:16px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;margin:8px}
+    .issues-list{background:rgba(255,255,255,.6);border-radius:10px;padding:16px;margin:20px auto;max-width:400px;text-align:left}
+    .issues-list h4{font-size:13px;font-weight:700;text-transform:uppercase;margin-bottom:10px;opacity:.7}
+    .issues-list li{font-size:14px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.08);list-style:none;display:flex;align-items:center;gap:8px}
+    .restart-btn{background:transparent;border:none;font-size:13px;color:#6B7280;cursor:pointer;margin-top:16px;text-decoration:underline}
+    /* Info section */
+    .info-section{background:#F7F8FA;padding:56px 24px}
+    .info-inner{max-width:860px;margin:0 auto}
+    .info-inner h2{font-size:26px;font-weight:800;margin-bottom:16px}
+    .tips-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:24px}
+    .tip-card{background:#fff;border-radius:12px;padding:20px;border-top:4px solid #0A58CA}
+    .tip-card .tip-icon{font-size:28px;margin-bottom:10px}
+    .tip-card h3{font-size:15px;font-weight:700;margin-bottom:6px}
+    .tip-card p{font-size:13px;color:#4B5563;line-height:1.6}
+    footer{background:#0D1F3C;color:rgba(255,255,255,.6);text-align:center;padding:32px 24px;font-size:13px}
+    footer a{color:rgba(255,255,255,.8);text-decoration:none;margin:0 12px}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">DR BIKE SYDNEY</a>
+  <a href="/" class="cta-header">Book Now</a>
+</header>
+
+<div class="hero">
+  <h1>🚲 Is My Bike Safe to Ride?</h1>
+  <p>Answer 5 quick questions to get an instant safety diagnosis. Takes less than 2 minutes.</p>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">Question 1 of 5</div>
+  </div>
+</div>
+
+<div class="quiz-section">
+
+  <!-- Q1: BRAKES -->
+  <div class="question-card active" id="q1">
+    <span class="q-icon">🛑</span>
+    <div class="q-number">Question 1 of 5</div>
+    <div class="q-title">How are your brakes?</div>
+    <div class="q-desc">Squeeze both brake levers firmly. Does the bike stop quickly and cleanly? Do the levers feel firm, not spongy?</div>
+    <div class="options">
+      <button class="opt-btn" onclick="answer(1,'good')"><span class="opt-icon">✅</span> Brakes are sharp and responsive</button>
+      <button class="opt-btn" onclick="answer(1,'warn')"><span class="opt-icon">⚠️</span> A bit spongy or slow to stop</button>
+      <button class="opt-btn" onclick="answer(1,'bad')"><span class="opt-icon">🔴</span> Barely working or lever touches handlebar</button>
+    </div>
+  </div>
+
+  <!-- Q2: TYRES -->
+  <div class="question-card" id="q2">
+    <span class="q-icon">🔵</span>
+    <div class="q-number">Question 2 of 5</div>
+    <div class="q-title">What about your tyres?</div>
+    <div class="q-desc">Squeeze each tyre — does it feel firm? Look for cuts, bulges, embedded glass, or worn-down tread.</div>
+    <div class="options">
+      <button class="opt-btn" onclick="answer(2,'good')"><span class="opt-icon">✅</span> Firm, no visible damage</button>
+      <button class="opt-btn" onclick="answer(2,'warn')"><span class="opt-icon">⚠️</span> Slightly soft or minor wear</button>
+      <button class="opt-btn" onclick="answer(2,'bad')"><span class="opt-icon">🔴</span> Flat, cuts, bulge or very worn</button>
+    </div>
+  </div>
+
+  <!-- Q3: CHAIN -->
+  <div class="question-card" id="q3">
+    <span class="q-icon">⛓️</span>
+    <div class="q-number">Question 3 of 5</div>
+    <div class="q-title">How's your chain?</div>
+    <div class="q-desc">Lift the rear wheel and spin the pedals slowly. Does the chain run smoothly? Is it clean, or rusty and dry?</div>
+    <div class="options">
+      <button class="opt-btn" onclick="answer(3,'good')"><span class="opt-icon">✅</span> Smooth, lubricated, no rust</button>
+      <button class="opt-btn" onclick="answer(3,'warn')"><span class="opt-icon">⚠️</span> A little dry or starting to rust</button>
+      <button class="opt-btn" onclick="answer(3,'bad')"><span class="opt-icon">🔴</span> Very rusty, stiff links or skipping</button>
+    </div>
+  </div>
+
+  <!-- Q4: GEARS -->
+  <div class="question-card" id="q4">
+    <span class="q-icon">⚙️</span>
+    <div class="q-number">Question 4 of 5</div>
+    <div class="q-title">Do your gears shift cleanly?</div>
+    <div class="q-desc">Ride or spin the pedals and shift through all gears. Do they engage without skipping, hesitation or chain drop?</div>
+    <div class="options">
+      <button class="opt-btn" onclick="answer(4,'good')"><span class="opt-icon">✅</span> All gears shift clean and fast</button>
+      <button class="opt-btn" onclick="answer(4,'warn')"><span class="opt-icon">⚠️</span> Occasional slip or slow to engage</button>
+      <button class="opt-btn" onclick="answer(4,'bad')"><span class="opt-icon">🔴</span> Skipping, dropping chain or stuck</button>
+    </div>
+  </div>
+
+  <!-- Q5: LIGHTS -->
+  <div class="question-card" id="q5">
+    <span class="q-icon">💡</span>
+    <div class="q-number">Question 5 of 5</div>
+    <div class="q-title">Lights and visibility?</div>
+    <div class="q-desc">NSW law requires a white front light and red rear light when riding at night. Are yours working and mounted securely?</div>
+    <div class="options">
+      <button class="opt-btn" onclick="answer(5,'good')"><span class="opt-icon">✅</span> Both lights working fine</button>
+      <button class="opt-btn" onclick="answer(5,'warn')"><span class="opt-icon">⚠️</span> One light missing or low battery</button>
+      <button class="opt-btn" onclick="answer(5,'bad')"><span class="opt-icon">🔴</span> No lights at all</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-card" id="result">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-desc" id="resultDesc"></div>
+    <div class="issues-list" id="issuesList" style="display:none">
+      <h4>Issues detected</h4>
+      <ul id="issuesUl"></ul>
+    </div>
+    <div id="resultCTAs"></div>
+    <br>
+    <button class="restart-btn" onclick="restart()">↩ Start over</button>
+  </div>
+
+</div>
+
+<!-- Tips -->
+<div class="info-section">
+  <div class="info-inner">
+    <h2>5 Safety Checks Every Sydney Rider Should Know</h2>
+    <p style="color:#4B5563;font-size:15px;line-height:1.7;margin-bottom:8px">Before every ride, run through this quick routine — the <strong>ABC Quick Check</strong>. It takes under 2 minutes and can prevent accidents.</p>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-icon">🛑</div>
+        <h3>Brakes — most critical</h3>
+        <p>Worn brake pads can double your stopping distance. Replace when pad material is below 1mm or if you hear metal-on-metal grinding.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">🔵</div>
+        <h3>Tyres — check weekly</h3>
+        <p>Road bike: 90–120 PSI. Hybrid: 50–70 PSI. MTB: 25–35 PSI. A soft tyre increases puncture risk and rolling resistance.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">⛓️</div>
+        <h3>Chain — lube monthly</h3>
+        <p>A dry chain wears out your cassette 3–5x faster. Wipe with a rag and apply a quality wet or dry lube every 200–300 km.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">⚙️</div>
+        <h3>Gears — tune annually</h3>
+        <p>Cables stretch over time. A proper gear tune takes 15 minutes but prevents chain drops, especially on hills like Anzac Bridge or Military Road.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">💡</div>
+        <h3>Lights — NSW law</h3>
+        <p>You must have a white front light and red rear light when riding between sunset and sunrise. Fines up to $106 for non-compliance.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p style="margin-bottom:12px">
+    <a href="/">Home</a>
+    <a href="/bike-check">Bike Safety Check</a>
+    <a href="/cycling-map">Sydney Cycling Map</a>
+    <a href="/business">For Business</a>
+  </p>
+  <p>© 2026 Dr. Bike Sydney · ABN 87 654 025 287 · <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> · <a href="tel:+61433963250">0433 963 250</a></p>
+  <p style="margin-top:8px"><a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms</a></p>
+</footer>
+
+<script>
+const answers = {};
+const labels = {
+  1: {bad:'Brakes failing', warn:'Brakes marginal'},
+  2: {bad:'Flat/damaged tyre', warn:'Tyre pressure low'},
+  3: {bad:'Chain needs replacing', warn:'Chain needs lube'},
+  4: {bad:'Gears need tuning', warn:'Gears slipping'},
+  5: {bad:'No lights (illegal)', warn:'Lights need attention'}
+};
+
+function answer(q, val) {
+  answers[q] = val;
+  if(window.gtag) gtag('event','bike_check_answer',{question:q, value:val});
+  const cur = document.getElementById('q'+q);
+  cur.classList.remove('active');
+  if(q < 5){
+    document.getElementById('q'+(q+1)).classList.add('active');
+    const pct = (q/5)*100;
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('progressLabel').textContent = 'Question '+(q+1)+' of 5';
+  } else {
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressLabel').textContent = 'Complete!';
+    showResult();
+  }
+}
+
+function showResult(){
+  const vals = Object.values(answers);
+  const bads = vals.filter(v=>v==='bad').length;
+  const warns = vals.filter(v=>v==='warn').length;
+  const res = document.getElementById('result');
+  res.classList.add('active');
+
+  let level, icon, title, desc, ctaHtml, className;
+
+  if(bads >= 1){
+    level='red'; icon='🔴'; className='result-red';
+    title='Not Safe to Ride';
+    desc='Your bike has one or more critical safety issues. Riding in this condition puts you at risk of injury and could result in a fine. We recommend a professional service before your next ride.';
+    ctaHtml='<a href="/" class="cta-book" onclick="if(window.gtag)gtag(\'event\',\'lead\',{source:\'bike_check_red\'})">Book a Safety Service →</a><a href="tel:+61433963250" class="cta-call">Call 0433 963 250</a>';
+  } else if(warns >= 2){
+    level='yellow'; icon='⚠️'; className='result-yellow';
+    title='Needs Attention Soon';
+    desc='Your bike is rideable but has a few issues that should be fixed soon. Left unattended, these can develop into costly repairs or cause you to get stranded mid-ride.';
+    ctaHtml='<a href="/" class="cta-book" onclick="if(window.gtag)gtag(\'event\',\'lead\',{source:\'bike_check_yellow\'})">Book a Tune-Up ($109) →</a><a href="tel:+61433963250" class="cta-call">Call Us</a>';
+  } else if(warns === 1){
+    level='yellow'; icon='⚠️'; className='result-yellow';
+    title='Mostly Good — Minor Fix Needed';
+    desc='Your bike is generally safe but has one minor issue. A quick service call can resolve it before it becomes a bigger problem.';
+    ctaHtml='<a href="/" class="cta-book" onclick="if(window.gtag)gtag(\'event\',\'lead\',{source:\'bike_check_yellow1\'})">Book a Tune-Up ($109) →</a>';
+  } else {
+    level='green'; icon='✅'; className='result-green';
+    title='Your Bike is Safe to Ride!';
+    desc='Great news — your bike passed all 5 safety checks. Keep it that way with a professional service every 6 months or every 500 km.';
+    ctaHtml='<a href="/" class="cta-book" onclick="if(window.gtag)gtag(\'event\',\'lead\',{source:\'bike_check_green\'})">Schedule Next Service →</a>';
+  }
+
+  res.className = 'result-card active '+className;
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultDesc').textContent = desc;
+  document.getElementById('resultCTAs').innerHTML = ctaHtml;
+
+  // Issues list
+  const issues = [];
+  for(let q=1; q<=5; q++){
+    if(answers[q]==='bad') issues.push({t:labels[q].bad, s:'bad'});
+    else if(answers[q]==='warn') issues.push({t:labels[q].warn, s:'warn'});
+  }
+  if(issues.length){
+    const ul = document.getElementById('issuesUl');
+    ul.innerHTML = issues.map(i=>`<li>${i.s==='bad'?'🔴':'⚠️'} ${i.t}</li>`).join('');
+    document.getElementById('issuesList').style.display='block';
+  }
+
+  if(window.gtag) gtag('event','bike_check_complete',{result:level, bads:bads, warns:warns});
+}
+
+function restart(){
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  document.querySelectorAll('.question-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('q1').classList.add('active');
+  document.getElementById('result').className='result-card';
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('progressLabel').textContent='Question 1 of 5';
+}
+</script>
+</body>
+</html>
