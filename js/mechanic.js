@@ -754,7 +754,196 @@ async function openClientHistory(bookingId, clientName, clientId) {
 function openMaps(a){ window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a+', Sydney NSW')}`, '_blank'); }
 function openWA(phone,name){ const num=(phone||'').replace(/[^\d]/g,''); window.open(`https://wa.me/${num}?text=${encodeURIComponent('Hi '+name+'! This is your Dr. Bike mechanic. I am on my way! 🚲')}`, '_blank'); }
 
-function goTab(t, btn){ tab=t; document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('on')); if(btn) btn.classList.add('on'); render(); }
+function goTab(t, btn) {
+  tab = t;
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  // Panel switching
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  const panel = document.getElementById('tab-' + t);
+  if (panel) panel.style.display = 'block';
+  if (t === 'inventory') loadInventory();
+  render();
+}
+
+// ── Inventory (4.2) ──────────────────────────────────────────────────────────
+async function loadInventory() {
+  const loadingEl = document.getElementById('inventory-loading');
+  const listEl    = document.getElementById('inventory-list');
+  const emptyEl   = document.getElementById('inventory-empty');
+  if (!loadingEl) return;
+  loadingEl.style.display = 'block';
+  if (listEl)  listEl.style.display  = 'none';
+  if (emptyEl) emptyEl.style.display = 'none';
+  try {
+    if (!window._supabase) throw new Error('Supabase not initialized');
+    const { data, error } = await window._supabase.from('van_inventory').select('*').order('category').order('part_name');
+    if (error || !data?.length) {
+      loadingEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+      return;
+    }
+    const byCategory = {};
+    data.forEach(item => { if (!byCategory[item.category]) byCategory[item.category] = []; byCategory[item.category].push(item); });
+    let html = '';
+    for (const [cat, items] of Object.entries(byCategory)) {
+      html += `<div style="margin-bottom:20px"><h3 style="font-size:12px;font-weight:700;text-transform:uppercase;color:#6B7280;margin-bottom:8px">${cat}</h3>`;
+      items.forEach(item => {
+        const low = item.quantity <= item.min_quantity;
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:${low?'#FEF2F2':'#F7F8FA'};margin-bottom:6px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#0D1F3C">${item.part_name}</div>
+            ${low ? '<div style="font-size:11px;color:#DC2626;font-weight:600">⚠️ Low stock — reorder</div>' : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button onclick="updateQty('${item.id}',-1,this)" style="background:#E5E7EB;border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700">−</button>
+            <span style="font-size:15px;font-weight:700;min-width:28px;text-align:center" id="qty-${item.id}">${item.quantity}</span>
+            <button onclick="updateQty('${item.id}',1,this)" style="background:#E5E7EB;border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700">+</button>
+            <span style="font-size:11px;color:#9CA3AF">${item.unit}</span>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+    if (listEl) { listEl.innerHTML = html; listEl.style.display = 'block'; }
+    loadingEl.style.display = 'none';
+  } catch(e) {
+    if (loadingEl) loadingEl.textContent = 'Error loading inventory';
+  }
+}
+
+async function updateQty(id, delta, btn) {
+  const el = document.getElementById('qty-' + id);
+  if (!el) return;
+  const current = parseInt(el.textContent);
+  const newQty = Math.max(0, current + delta);
+  el.textContent = newQty;
+  try {
+    await window._supabase.from('van_inventory').update({ quantity: newQty }).eq('id', id);
+  } catch(e) { el.textContent = current; }
+}
+
+// ── Service Timer (4.3) ──────────────────────────────────────────────────────
+let timerInterval = null;
+let serviceStartTime = null;
+let activeTimerBookingId = null;
+
+function startServiceTimer(bookingId) {
+  activeTimerBookingId = bookingId;
+  serviceStartTime = Date.now();
+  const bar = document.getElementById('service-timer-bar');
+  if (bar) bar.style.display = 'flex';
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - serviceStartTime) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const s = (elapsed % 60).toString().padStart(2, '0');
+    const el = document.getElementById('timer-display');
+    if (el) el.textContent = m + ':' + s;
+  }, 1000);
+}
+
+async function completeService() {
+  clearInterval(timerInterval);
+  const bar = document.getElementById('service-timer-bar');
+  if (bar) bar.style.display = 'none';
+  const duration = serviceStartTime ? Math.floor((Date.now() - serviceStartTime) / 1000) : null;
+  if (activeTimerBookingId && window._supabase) {
+    await window._supabase.from('bookings').update({
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+      service_duration_seconds: duration
+    }).eq('id', activeTimerBookingId);
+  }
+  activeTimerBookingId = null; serviceStartTime = null;
+  if (typeof loadJobs === 'function') loadJobs();
+}
+
+// ── Pre-Service Checklist (4.1) ──────────────────────────────────────────────
+const CHECKLIST_ITEMS = [
+  {id:'brakes_front',label:'Front brakes',cat:'Brakes'},
+  {id:'brakes_rear',label:'Rear brakes',cat:'Brakes'},
+  {id:'chain',label:'Chain condition',cat:'Drivetrain'},
+  {id:'cassette',label:'Cassette / cogs',cat:'Drivetrain'},
+  {id:'chainring',label:'Chainrings / crankset',cat:'Drivetrain'},
+  {id:'cables',label:'Gear & brake cables',cat:'Cables'},
+  {id:'wheels',label:'Wheels true & tight',cat:'Wheels'},
+  {id:'tyres',label:'Tyre condition & pressure',cat:'Wheels'},
+  {id:'handlebar',label:'Handlebar & stem',cat:'Safety'},
+  {id:'seatpost',label:'Seat & seatpost',cat:'Safety'},
+  {id:'headset',label:'Headset play',cat:'Safety'},
+  {id:'bb',label:'Bottom bracket',cat:'Drivetrain'},
+  {id:'lights',label:'Lights (if fitted)',cat:'Accessories'},
+  {id:'general',label:'General frame condition',cat:'Safety'}
+];
+
+let checklistBookingId = null;
+const checklistState = {};
+
+function openChecklist(bookingId) {
+  checklistBookingId = bookingId;
+  const container = document.getElementById('checklist-items');
+  if (!container) return;
+  const bycat = {};
+  CHECKLIST_ITEMS.forEach(i => { if (!bycat[i.cat]) bycat[i.cat] = []; bycat[i.cat].push(i); });
+  let html = '';
+  for (const [cat, items] of Object.entries(bycat)) {
+    html += `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#6B7280;margin-bottom:6px">${cat}</div>`;
+    items.forEach(item => {
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;background:#F7F8FA;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:500">${item.label}</span>
+        <div style="display:flex;gap:4px">
+          ${['ok','warn','critical'].map(s => `<button onclick="setCheck('${item.id}','${s}',this)"
+            style="padding:4px 8px;border-radius:6px;border:1px solid #E5E7EB;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#374151"
+            id="cb-${item.id}-${s}">${s==='ok'?'✅ OK':s==='warn'?'⚠️ Warn':'🔴 Critical'}</button>`).join('')}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  container.innerHTML = html;
+  const modal = document.getElementById('checklist-modal');
+  if (modal) modal.style.display = 'block';
+}
+
+function setCheck(itemId, status) {
+  checklistState[itemId] = status;
+  ['ok','warn','critical'].forEach(s => {
+    const b = document.getElementById(`cb-${itemId}-${s}`);
+    if (!b) return;
+    b.style.background = s === status ? (s==='ok'?'#059669':s==='warn'?'#D97706':'#DC2626') : '#fff';
+    b.style.color = s === status ? '#fff' : '#374151';
+  });
+}
+
+function closeChecklist() {
+  const modal = document.getElementById('checklist-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function saveChecklist() {
+  const notesEl = document.getElementById('checklist-notes');
+  const notes = notesEl ? notesEl.value : '';
+  const criticals = CHECKLIST_ITEMS.filter(i => checklistState[i.id] === 'critical').map(i => i.label);
+  if (checklistBookingId && window._supabase) {
+    await window._supabase.from('bookings').update({
+      started_at: new Date().toISOString(),
+      pre_service_checklist: JSON.stringify(checklistState),
+      pre_service_notes: notes
+    }).eq('id', checklistBookingId);
+  }
+  closeChecklist();
+  startServiceTimer(checklistBookingId);
+  if (criticals.length) {
+    try {
+      fetch('/api/send-upsell', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ bookingId: checklistBookingId, criticalItems: CHECKLIST_ITEMS.filter(i => checklistState[i.id] === 'critical').map(i => i.id) })
+      }).catch(() => {});
+    } catch(e) {}
+    setTimeout(() => alert('⚠️ ' + criticals.length + ' critical item(s) found. Upsell email sent to client.'), 500);
+  }
+}
 function toggleStatus(){ online=!online; const b=document.getElementById('status-btn'); b.textContent=online?'● Online':'○ Offline'; b.style.color=online?'var(--green)':'var(--mgray)'; }
 
 function badges(){
