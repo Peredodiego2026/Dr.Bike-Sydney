@@ -4,7 +4,9 @@
   <script>
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const params = new URLSearchParams(window.location.search);
-    if (!isMobile && !params.get('from') && !sessionStorage.getItem('forceApp')) {
+    const hash = window.location.hash.replace('#','');
+    const allowedHashes = ['login','book-service','my-bookings','profile','tracking','my-bikes'];
+    if (!isMobile && !params.get('from') && !sessionStorage.getItem('forceApp') && !allowedHashes.includes(hash)) {
       window.location.replace('/landing.html');
     }
   </script>
