@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/send-cron?type=abandoned",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/send-cron?type=service",
