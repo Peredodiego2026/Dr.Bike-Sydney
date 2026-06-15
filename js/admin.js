@@ -1339,6 +1339,10 @@ async function loadClients(){
         <div class="cl-stat"><div class="cl-stat-n">${c.role||'client'}</div><div class="cl-stat-l">Role</div></div>
         <div class="cl-stat"><div class="cl-stat-n">${new Date(c.created_at).toLocaleDateString('en-AU',{month:'short',day:'numeric'})}</div><div class="cl-stat-l">Joined</div></div>
       </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px">
+        <button onclick="viewClientBikes('${c.id}','${esc(name)}')" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">&#x1F6B2; Bikes</button>
+        <button onclick="openAdminChat('${c.id}','${esc(name)}')" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">&#x1F4AC; Chat</button>
+      </div>
     </div>`;
   }).join('');
   const kpis = document.querySelectorAll('#page-clients .kpi-value');
