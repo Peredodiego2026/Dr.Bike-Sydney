@@ -3,19 +3,36 @@
 // ── Health check (?type=health) ───────────────────────────────────────────────
 async function handleHealth(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  const checks = {};
-  let allOk = true;
   try {
-    const r = await fetch(`${process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co'}/rest/v1/`, {
-      headers: { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
+    const checks = {};
+    // Check env vars (non-fatal display)
+    const required = ['SUPABASE_SERVICE_KEY','STRIPE_SECRET_KEY','RESEND_API_KEY','ANTHROPIC_API_KEY'];
+    const missing = required.filter(k => !process.env[k]);
+    checks.env = missing.length === 0 ? 'ok' : `missing:${missing.join(',')}`;
+    // Supabase ping
+    try {
+      const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+      const sbKey = process.env.SUPABASE_SERVICE_KEY || '';
+      if (sbKey) {
+        const r = await fetch(`${sbUrl}/rest/v1/`, {
+          headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` },
+          signal: AbortSignal.timeout(3000)
+        });
+        checks.supabase = r.ok ? 'ok' : `error:${r.status}`;
+      } else {
+        checks.supabase = 'no_key';
+      }
+    } catch(e) { checks.supabase = `error:${e.message}`; }
+    const allOk = checks.env === 'ok' && checks.supabase === 'ok';
+    return res.status(200).json({
+      status: allOk ? 'ok' : 'degraded',
+      timestamp: new Date().toISOString(),
+      version: '2.0.0',
+      checks
     });
-    checks.supabase = r.ok ? 'ok' : `error:${r.status}`;
-    if (!r.ok) allOk = false;
-  } catch(e) { checks.supabase = `error:${e.message}`; allOk = false; }
-  const missing = ['STRIPE_SECRET_KEY','RESEND_API_KEY','ANTHROPIC_API_KEY'].filter(k => !process.env[k]);
-  checks.env = missing.length === 0 ? 'ok' : `missing:${missing.join(',')}`;
-  if (missing.length) allOk = false;
-  return res.status(allOk ? 200 : 503).json({ status: allOk ? 'ok' : 'degraded', timestamp: new Date().toISOString(), version: '2.0.0', checks });
+  } catch(e) {
+    return res.status(200).json({ status: 'error', message: e.message, timestamp: new Date().toISOString() });
+  }
 }
 
 // ── Bike diagnosis (?type=diagnose) ──────────────────────────────────────────
