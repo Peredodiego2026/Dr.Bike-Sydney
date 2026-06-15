@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/mechanic.css">
 <style>
-/* B6: PIN login modernization */
+/* PIN login */
 #s-login { background: var(--color-bg); }
 .login-card {
   background: var(--color-surface);
@@ -42,13 +42,64 @@
   background: var(--color-primary-light);
   color: var(--color-text);
 }
+/* Inventory tab inside jobs-wrap */
+#tab-inventory {
+  padding: 16px;
+  background: var(--color-bg);
+  min-height: 100%;
+  color: var(--color-text);
+}
+#tab-inventory h2 { color: var(--color-text); }
+#inventory-list .inv-row {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#inventory-list .inv-row.low { background: var(--color-error-bg, #FEF2F2); border-color: var(--color-error, #DC2626); }
+/* Checklist modal — theme-aware */
+#checklist-modal .modal-inner {
+  background: var(--color-surface);
+  color: var(--color-text);
+  max-width: 500px;
+  margin: 24px auto;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+}
+#checklist-modal .cl-row {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  margin-bottom: 4px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#checklist-notes {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  height: 80px;
+  resize: vertical;
+  color: var(--color-text);
+  font-family: inherit;
+}
 </style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
 
 <!-- Offline banner -->
-<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:#D97706;color:#fff;padding:8px 16px;font-size:12px;font-weight:600;align-items:center;justify-content:center;gap:8px;text-align:center">
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:#D97706;color:#fff;padding:8px 16px;font-size:12px;font-weight:600;text-align:center">
   ⚡ You're offline — showing cached jobs. Changes will sync when back online.
 </div>
 
@@ -92,23 +143,24 @@
     <button class="nav-tab" onclick="goTab('profile',this)">Profile</button>
     <button class="nav-tab" onclick="goTab('inventory',this)">📦 Stock</button>
   </div>
+  <!-- jobs-list is the main content area — all tabs render here -->
   <div class="jobs-wrap" id="jobs-list">
     <div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:32px;margin-bottom:12px">⏳</div><div>Loading...</div></div>
   </div>
+
+  <!-- INVENTORY TAB — rendered inside jobs-list by goTab() -->
+  <!-- Hidden template; JS clones this content into jobs-list -->
+  <template id="tpl-inventory">
+    <div id="tab-inventory">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:12px">📦 Van Stock</h2>
+      <div id="inventory-loading" style="text-align:center;padding:40px;color:var(--mgray)">Loading inventory...</div>
+      <div id="inventory-list" style="display:none"></div>
+      <div id="inventory-empty" style="display:none;text-align:center;padding:40px;color:var(--mgray)">No inventory data. Run the SQL migration first.</div>
+    </div>
+  </template>
 </div>
 
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/mechanic.js"></script>
-
-<!-- INVENTORY TAB (task 4.2) -->
-<div id="tab-inventory" style="display:none;padding:16px">
-  <h2 style="font-size:16px;font-weight:700;margin-bottom:12px">📦 Van Stock</h2>
-  <div id="inventory-loading" style="text-align:center;padding:40px;color:#9CA3AF">Loading inventory...</div>
-  <div id="inventory-list" style="display:none"></div>
-  <div id="inventory-empty" style="display:none;text-align:center;padding:40px;color:#9CA3AF">No inventory data. Run the SQL migration first.</div>
-</div>
-
-<!-- SERVICE TIMER (task 4.3) — shown on active job cards via JS -->
+<!-- SERVICE TIMER — fixed bottom bar -->
 <div id="service-timer-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#0D1F3C;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:999">
   <div>
     <div style="font-size:11px;opacity:.6;text-transform:uppercase">Service in progress</div>
@@ -117,20 +169,22 @@
   <button onclick="completeService()" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;font-size:14px;cursor:pointer">✅ Complete</button>
 </div>
 
-<!-- PRE-SERVICE CHECKLIST MODAL (task 4.1) -->
+<!-- PRE-SERVICE CHECKLIST MODAL — theme-aware -->
 <div id="checklist-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;overflow-y:auto">
-  <div style="background:#fff;max-width:500px;margin:24px auto;border-radius:16px;padding:24px">
+  <div class="modal-inner">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <h2 style="font-size:18px;font-weight:800">Pre-Service Checklist</h2>
-      <button onclick="closeChecklist()" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button>
+      <h2 style="font-size:18px;font-weight:800;color:var(--color-text)">Pre-Service Checklist</h2>
+      <button onclick="closeChecklist()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--color-text)">✕</button>
     </div>
     <div id="checklist-items"></div>
     <div style="margin-top:20px">
-      <textarea id="checklist-notes" placeholder="Additional notes..." style="width:100%;border:1px solid #E5E7EB;border-radius:8px;padding:10px;font-size:13px;height:80px;resize:vertical"></textarea>
+      <textarea id="checklist-notes" placeholder="Additional notes..."></textarea>
     </div>
     <button onclick="saveChecklist()" style="width:100%;background:#0A58CA;color:#fff;border:none;border-radius:8px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;margin-top:12px">Save & Start Service ⏱️</button>
   </div>
 </div>
 
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+<script src="js/mechanic.js"></script>
 </body>
 </html>
