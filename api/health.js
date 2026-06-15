@@ -1,4 +1,4 @@
-// api/health.js — Health check endpoint for monitoring
+// api/health.js v2 — Health check endpoint for monitoring
 // GET /api/health → { status: 'ok', timestamp, version }
 
 export default async function handler(req, res) {
