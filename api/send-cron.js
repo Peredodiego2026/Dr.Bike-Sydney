@@ -187,6 +187,105 @@ async function handleServiceReminders(req, res) {
   return res.status(200).json({ success: true, ...results });
 }
 
+
+// ── Upsell email (?type=upsell) ──────────────────────────────────────────────
+async function handleUpsell(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const { bookingId, criticalItems } = req.body || {};
+  if (!bookingId || !Array.isArray(criticalItems) || !criticalItems.length)
+    return res.status(400).json({ error: 'bookingId and criticalItems required' });
+
+  const ITEMS = {
+    brakes_front:{label:'Front brake pads',price:45,desc:'Worn front brake pads — replacing now prevents rotor damage.'},
+    brakes_rear: {label:'Rear brake pads', price:45,desc:'Rear brake pads are due for replacement.'},
+    chain:       {label:'Chain replacement',price:55,desc:'Chain is stretched and will damage cassette soon.'},
+    cassette:    {label:'Cassette replacement',price:95,desc:'Cassette cogs are worn — best replaced with new chain.'},
+    cables:      {label:'Cable set (gear + brake)',price:65,desc:'Cables are frayed — replacing improves shifting and braking.'},
+    tyres:       {label:'Tyre replacement (pair)',price:120,desc:'Tyres cracked or worn — safety concern.'},
+    wheels:      {label:'Wheel true & tension',price:40,desc:'Wheels out of true — affects handling.'},
+    bb:          {label:'Bottom bracket service',price:70,desc:'Bottom bracket has play — replace before it seizes.'},
+    headset:     {label:'Headset overhaul',price:55,desc:'Headset has play — affects steering safety.'},
+  };
+
+  const sb = makeSb();
+  const { data: booking } = await sb.from('bookings')
+    .select('service_name, profiles(email, full_name)').eq('id', bookingId).single();
+  if (!booking?.profiles?.email) return res.status(404).json({ error: 'Booking not found' });
+
+  const email = booking.profiles.email;
+  const name  = (booking.profiles.full_name?.split(' ')[0] || 'there').replace(/[<>&"']/g,'');
+  const rows  = criticalItems.filter(i => ITEMS[i]).map(i => {
+    const u = ITEMS[i];
+    return `<tr><td style="padding:10px 12px;border-bottom:1px solid #E5E7EB"><strong>${u.label}</strong><br><span style="font-size:12px;color:#6B7280">${u.desc}</span></td><td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:700;color:#0A58CA">$${u.price}</td></tr>`;
+  }).join('');
+  if (!rows) return res.status(200).json({ success: true, sent: false });
+
+  const resp = await fetch('https://api.resend.com/emails', {
+    method:'POST',
+    headers:{'Authorization':`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},
+    body: JSON.stringify({
+      from:'Dr. Bike Sydney <noreply@drbikesydney.com.au>', to: email,
+      subject:`Your mechanic found items needing attention — ${booking.service_name||'your service'}`,
+      html:`<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto">
+        <div style="background:#0D1F3C;padding:24px;text-align:center"><h1 style="color:#fff;font-size:20px;margin:0">DR BIKE SYDNEY</h1></div>
+        <div style="padding:32px 24px">
+          <h2 style="color:#0D1F3C">Hi ${name}, your mechanic found some things that need attention 🔧</h2>
+          <table style="width:100%;border-collapse:collapse;margin:20px 0;border:1px solid #E5E7EB"><thead><tr style="background:#F7F8FA"><th style="padding:10px 12px;text-align:left;font-size:13px;color:#6B7280">Recommended Service</th><th style="padding:10px 12px;text-align:right;font-size:13px;color:#6B7280">Price</th></tr></thead><tbody>${rows}</tbody></table>
+          <p style="color:#374151;line-height:1.7;font-size:14px">Call <a href="tel:+61433963250">0433 963 250</a> to add these to your current service.</p>
+          <a href="https://drbikesydney.com.au" style="display:inline-block;background:#0A58CA;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700">Book Follow-Up →</a>
+        </div>
+        <div style="padding:16px;background:#F7F8FA;font-size:12px;color:#9CA3AF;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
+      </div>`
+    })
+  });
+  return res.status(resp.ok ? 200 : 500).json({ success: resp.ok, sent: resp.ok });
+}
+
+// ── B2B fleet enquiry (?type=b2b) ────────────────────────────────────────────
+async function handleB2B(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  let { businessName, contactName, email, phone, fleetSize, frequency, notes } = req.body || {};
+  if (!businessName || !contactName || !email || !fleetSize)
+    return res.status(400).json({ error: 'Missing required fields' });
+
+  const esc = s => String(s||'').replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+  businessName=esc(businessName); contactName=esc(contactName);
+  phone=esc(phone); fleetSize=esc(fleetSize); frequency=esc(frequency||''); notes=esc(notes||'');
+
+  const send = async payload => fetch('https://api.resend.com/emails', {
+    method:'POST',
+    headers:{'Authorization':`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+
+  try {
+    await send({
+      from:'Dr. Bike Sydney <noreply@drbikesydney.com.au>', to:'contact@drbikesydney.com.au',
+      subject:`New B2B Fleet Enquiry — ${businessName} (${fleetSize} bikes)`,
+      html:`<h2>New B2B Fleet Enquiry</h2><table style="border-collapse:collapse;width:100%">
+        <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600">Business</td><td style="padding:8px;border-bottom:1px solid #eee">${businessName}</td></tr>
+        <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600">Contact</td><td style="padding:8px;border-bottom:1px solid #eee">${contactName}</td></tr>
+        <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600">Email</td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
+        <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600">Fleet / Frequency</td><td style="padding:8px;border-bottom:1px solid #eee">${fleetSize} bikes · ${frequency||'N/A'}</td></tr>
+        <tr><td style="padding:8px;font-weight:600">Notes</td><td style="padding:8px">${notes||'N/A'}</td></tr>
+      </table><p style="color:#666;margin-top:16px">Reply within 2 business hours.</p>`
+    });
+    await send({
+      from:'Dr. Bike Sydney <noreply@drbikesydney.com.au>', to: email,
+      subject:`We received your fleet enquiry — Dr. Bike Sydney`,
+      html:`<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto">
+        <div style="background:#0D1F3C;padding:24px;text-align:center"><h1 style="color:#fff;font-size:20px;margin:0">DR BIKE SYDNEY</h1></div>
+        <div style="padding:32px 24px">
+          <h2>Thanks for your enquiry, ${contactName}!</h2>
+          <p style="color:#374151;line-height:1.7">We received your fleet enquiry for <strong>${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong>2 business hours</strong> (Mon–Sat 8am–6pm AEST).</p>
+        </div>
+        <div style="padding:16px;background:#F7F8FA;font-size:12px;color:#9CA3AF;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
+      </div>`
+    });
+  } catch(e) { console.error('[b2b]', e.message); }
+  return res.status(200).json({ success: true });
+}
+
 // ── Router ────────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST')
@@ -198,5 +297,7 @@ export default async function handler(req, res) {
   if (type === 'reengagement') return handleReengagement(req, res);
   if (type === 'abandoned')    return handleAbandoned(req, res);
   if (type === 'service')      return handleServiceReminders(req, res);
-  return res.status(400).json({ error: 'Missing ?type= (birthday|reengagement|abandoned|service)' });
+  if (type === 'upsell') return handleUpsell(req, res);
+  if (type === 'b2b')    return handleB2B(req, res);
+  return res.status(400).json({ error: 'Missing ?type= (birthday|reengagement|abandoned|service|upsell|b2b)' });
 }
