@@ -21,6 +21,13 @@
       "schedule": "0 9 1 * *"
     }
   ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/landing.html",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/create-payment-intent",
@@ -44,7 +51,7 @@
     },
     {
       "source": "/((?!api/|\\.well-known/|.*\\.html|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml|.*\\.webmanifest|.*\\.ico|.*\\.css|.*\\.woff|.*\\.woff2).*)",
-      "destination": "/index.html"
+      "destination": "/landing.html"
     }
   ],
   "headers": [
