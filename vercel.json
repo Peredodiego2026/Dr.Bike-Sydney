@@ -1,34 +1,55 @@
 {
   "crons": [
     {
-      "path": "/api/send-reminders?type=2h",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/send-birthday",
+      "path": "/api/send-cron?type=birthday",
       "schedule": "0 8 * * *"
     },
     {
-      "path": "/api/send-reengagement",
+      "path": "/api/send-cron?type=reengagement",
       "schedule": "0 10 * * 1"
     },
     {
-      "path": "/api/send-abandoned",
+      "path": "/api/send-cron?type=abandoned",
       "schedule": "0 * * * *"
     },
     {
-      "path": "/api/send-service-reminders",
+      "path": "/api/send-cron?type=service",
       "schedule": "0 9 1 * *"
-    }
-  ],
-  "redirects": [
+    },
     {
-      "source": "/",
-      "destination": "/landing.html",
-      "permanent": false
+      "path": "/api/send-reminders?type=2h",
+      "schedule": "0 9 * * *"
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/send-birthday",
+      "destination": "/api/send-cron?type=birthday"
+    },
+    {
+      "source": "/api/send-reengagement",
+      "destination": "/api/send-cron?type=reengagement"
+    },
+    {
+      "source": "/api/send-abandoned",
+      "destination": "/api/send-cron?type=abandoned"
+    },
+    {
+      "source": "/api/send-service-reminders",
+      "destination": "/api/send-cron?type=service"
+    },
+    {
+      "source": "/api/cancel-subscription",
+      "destination": "/api/create-payment-session?type=cancel-subscription"
+    },
+    {
+      "source": "/api/diagnose-bike",
+      "destination": "/api/chat?type=diagnose"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/chat?type=health"
+    },
     {
       "source": "/api/create-payment-intent",
       "destination": "/api/create-payment-session?type=intent"
@@ -52,6 +73,13 @@
     {
       "source": "/((?!api/|\\.well-known/|.*\\.html|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml|.*\\.webmanifest|.*\\.ico|.*\\.css|.*\\.woff|.*\\.woff2).*)",
       "destination": "/landing.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/landing.html",
+      "permanent": false
     }
   ],
   "headers": [
