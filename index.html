@@ -6,7 +6,8 @@
     const params = new URLSearchParams(window.location.search);
     const hash = window.location.hash.replace('#','');
     const allowedHashes = ['login','book-service','my-bookings','profile','tracking','my-bikes'];
-    if (!isMobile && !params.get('from') && !sessionStorage.getItem('forceApp') && !allowedHashes.includes(hash)) {
+    const isOAuthCallback = hash.startsWith('access_token=') || hash.startsWith('error=') || !!params.get('code');
+    if (!isMobile && !params.get('from') && !sessionStorage.getItem('forceApp') && !allowedHashes.includes(hash) && !isOAuthCallback) {
       window.location.replace('/landing.html');
     }
   </script>
