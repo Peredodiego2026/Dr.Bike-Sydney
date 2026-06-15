@@ -43,7 +43,7 @@ function go(page, btn){
   if(page==='settings') loadSettings();
   if(page==='inventory') loadInventory();
   if(page==='calendar') loadCalendar();
-  if(page==='reminders'){ loadTriggers(); loadReferralLeaderboard(); }
+  if(page==='reminders'){ loadTriggers(); loadReferralLeaderboard(); loadNewsletter(); }
   setTimeout(applyDarkModeInline, 100);
 
   // Update mobile bottom nav active state
@@ -921,7 +921,9 @@ async function loadDashboard(){
     sb.from('bookings').select('*').gte('scheduled_date', firstOfMonth).neq('status','cancelled'),
     sb.from('bookings').select('*').eq('status','pending'),
     sb.from('bookings').select('*').order('created_at',{ascending:false}).limit(5),
-    sb.from('profiles').select('id')
+    sb.from('profiles').select('id'),
+    sb.from('newsletter_subscribers').select('*', {count:'exact',head:true}).eq('active',true),
+    sb.from('bikes').select('*', {count:'exact',head:true})
   ]);
 
   const todayRev = (todayJobs||[]).reduce((s,b)=>s+(b.service_price||0),0);
