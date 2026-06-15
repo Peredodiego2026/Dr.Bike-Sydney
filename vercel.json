@@ -23,6 +23,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/send-b2b-inquiry",
+      "destination": "/api/send-cron?type=b2b"
+    },
+    {
+      "source": "/api/send-upsell",
+      "destination": "/api/send-cron?type=upsell"
+    },
+    {
       "source": "/api/send-birthday",
       "destination": "/api/send-cron?type=birthday"
     },
