@@ -47,25 +47,18 @@ async function handleDiagnose(req, res) {
   }
   if (description && description.length > 2000) return res.status(400).json({ error: 'Description too long' });
   const isText = !!description && !image;
-  const jsonSchema = '{"diagnosis":"brief","severity":"low|medium|high","services":["service"],"estimatedCost":"$X-$Y","urgency":"Can wait|Book soon|Urgent","details":"explanation"}';
-  const systemPrompt = 'You are an expert bicycle mechanic at Dr. Bike Sydney. Analyse the ' + (isText ? 'client description' : 'bike image') + ' and respond ONLY with valid JSON, no other text.';
-  const userContent = isText
-    ? 'Client description: "' + description + '"
-
-Respond ONLY with JSON:
-' + jsonSchema
-    : [
-        { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image } },
-        { type: 'text', text: 'Analyse this bike image and respond ONLY with JSON:
-' + jsonSchema }
-      ];
+  const schema = '{"diagnosis":"brief","severity":"low|medium|high","services":["service 1"],"estimatedCost":"$X-$Y","urgency":"Can wait|Book soon|Urgent","details":"explanation"}';
+  const sys = 'You are an expert bicycle mechanic at Dr. Bike Sydney. Analyse the ' + (isText ? 'description' : 'image') + ' and respond ONLY with valid JSON.';
+  const userMsg = isText
+    ? 'Diagnose this bike issue: ' + description + ' Reply ONLY with JSON: ' + schema
+    : [{ type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image } }, { type: 'text', text: 'Analyse this bike. Reply ONLY with JSON: ' + schema }];
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1024, system: systemPrompt, messages: [{ role: 'user', content: userContent }] })
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1024, system: sys, messages: [{ role: 'user', content: userMsg }] })
     });
-    const data = await response.json();
+    const data = await resp.json();
     const result = JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim());
     return res.status(200).json(result);
   } catch(e) { return res.status(500).json({ error: 'Diagnosis failed' }); }
