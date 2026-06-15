@@ -1,6 +1,61 @@
 ﻿import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
+
+// ── Health check (?type=health) ───────────────────────────────────────────────
+async function handleHealth(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  const checks = {};
+  let allOk = true;
+  try {
+    const r = await fetch(`${process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co'}/rest/v1/`, {
+      headers: { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
+    });
+    checks.supabase = r.ok ? 'ok' : `error:${r.status}`;
+    if (!r.ok) allOk = false;
+  } catch(e) { checks.supabase = `error:${e.message}`; allOk = false; }
+  const missing = ['STRIPE_SECRET_KEY','RESEND_API_KEY','ANTHROPIC_API_KEY'].filter(k => !process.env[k]);
+  checks.env = missing.length === 0 ? 'ok' : `missing:${missing.join(',')}`;
+  if (missing.length) allOk = false;
+  return res.status(allOk ? 200 : 503).json({ status: allOk ? 'ok' : 'degraded', timestamp: new Date().toISOString(), version: '2.0.0', checks });
+}
+
+// ── Bike diagnosis (?type=diagnose) ──────────────────────────────────────────
+async function handleDiagnose(req, res) {
+  if(await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  const { image, mediaType, description } = req.body;
+  if (!image && !description) return res.status(400).json({ error: 'Provide image or description' });
+  if (image) {
+    if (image.length > 5*1024*1024) return res.status(413).json({ error: 'Image too large (max 5MB)' });
+    if (!['image/jpeg','image/png','image/webp','image/gif'].includes(mediaType))
+      return res.status(415).json({ error: 'Only JPEG, PNG, WebP, GIF allowed' });
+  }
+  if (description && description.length > 2000) return res.status(400).json({ error: 'Description too long' });
+  const isText = !!description && !image;
+  const systemPrompt = `You are an expert bicycle mechanic at Dr. Bike Sydney. ${isText ? 'Analyse the client description' : 'Analyse the bike image'} and respond ONLY with valid JSON, no other text.`;
+  const userContent = isText
+    ? `Client description: "${description}"
+
+Respond ONLY with JSON:
+{"diagnosis":"brief diagnosis","severity":"low|medium|high","services":["service"],"estimatedCost":"$X–$Y","urgency":"Can wait|Book soon|Urgent","details":"explanation"}`
+    : [{ type:'image', source:{ type:'base64', media_type: mediaType||'image/jpeg', data: image }},{ type:'text', text:'Analyse this bike image and respond ONLY with JSON:
+{"diagnosis":"brief","severity":"low|medium|high","services":["service"],"estimatedCost":"$X–$Y","urgency":"Can wait|Book soon|Urgent","details":"explanation"}'}];
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version':'2023-06-01', 'content-type':'application/json' },
+      body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:1024, system: systemPrompt, messages:[{ role:'user', content: userContent }] })
+    });
+    const data = await response.json();
+    const result = JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g,'').trim());
+    return res.status(200).json(result);
+  } catch(e) { return res.status(500).json({ error: 'Diagnosis failed' }); }
+}
+
 export default async function handler(req, res) {
   // GET ?type=reviews - merged from get-reviews.js to stay under Vercel 12-function limit
+  // Route to sub-handlers
+  if (req.method === 'GET' && req.query.type === 'health') return handleHealth(req, res);
+  if (req.method === 'POST' && req.query.type === 'diagnose') return handleDiagnose(req, res);
+
   if (req.method === 'GET' && req.query.type === 'reviews') {
     res.setHeader('Cache-Control', 's-maxage=300');
     const { createClient } = await import('@supabase/supabase-js');
