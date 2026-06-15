@@ -937,6 +937,14 @@ async function loadDashboard(){
   if(kpis[1]){ kpis[1].textContent = '$'+monthRev.toLocaleString(); kpis[1].nextElementSibling.textContent = completedMonth.length+' completed · $'+avgOrder+' avg order'; }
   if(kpis[2]){ kpis[2].textContent = (pendingJobs||[]).length; kpis[2].nextElementSibling.textContent = 'awaiting confirmation · '+cancelRate+'% cancel rate'; }
   if(kpis[3]){ kpis[3].textContent = (allClients||[]).length; kpis[3].nextElementSibling.textContent = 'total clients registered'; }
+  const newsletterEl = document.getElementById('kpi-newsletter');
+  const newsletterSub = document.getElementById('kpi-newsletter-sub');
+  if(newsletterEl) newsletterEl.textContent = newsletterCount || 0;
+  if(newsletterSub) newsletterSub.textContent = 'active subscribers';
+  const bikesEl = document.getElementById('kpi-bikes');
+  const bikesSub = document.getElementById('kpi-bikes-sub');
+  if(bikesEl) bikesEl.textContent = bikesCount || 0;
+  if(bikesSub) bikesSub.textContent = 'client bikes on file';
 
   // Recent bookings table
   const tbody = document.querySelector('#page-dashboard .tbl tbody');
@@ -2172,6 +2180,79 @@ async function deleteNotifNumber(id) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+// ── View client bikes modal ───────────────────────────────────────────────────
+async function viewClientBikes(clientId, clientName) {
+  const { data: bikes } = await sb.from('bikes')
+    .select('*')
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: false });
+
+  const TYPE_LABELS = { road:'Road', mtb:'MTB', hybrid:'Hybrid', ebike:'E-Bike', cargo:'Cargo', folding:'Folding' };
+  const bikeRows = (bikes||[]).length === 0
+    ? '<p style="color:var(--mgray);font-size:14px;text-align:center;padding:20px">No bikes registered yet.</p>'
+    : (bikes||[]).map(b => `
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px">
+          <div style="font-weight:700;font-size:14px">${esc(b.nickname)}</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:3px">
+            ${[b.year,b.brand,b.model,b.color,TYPE_LABELS[b.bike_type]].filter(Boolean).join(' · ') || 'No details'}
+          </div>
+        </div>`).join('');
+
+  // Reuse reassign-modal as generic modal
+  const modal = document.getElementById('reassign-modal');
+  if (!modal) return;
+  modal.querySelector('div').innerHTML = `
+    <div style="background:var(--white);border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:700;color:var(--navy)">🚲 ${esc(clientName)}'s Bikes</div>
+        <button onclick="document.getElementById('reassign-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button>
+      </div>
+      ${bikeRows}
+    </div>`;
+  modal.style.display = 'flex';
+}
+
+// ── Newsletter subscribers ────────────────────────────────────────────────────
+async function loadNewsletter() {
+  const { data } = await sb.from('newsletter_subscribers')
+    .select('email, name, source, subscribed_at, active')
+    .order('subscribed_at', { ascending: false })
+    .limit(50);
+
+  const el = document.getElementById('newsletter-list');
+  if (!el) return;
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mgray);font-size:13px">No subscribers yet.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div style="font-size:12px;color:var(--mgray);margin-bottom:10px">${data.filter(s=>s.active).length} active · ${data.filter(s=>!s.active).length} unsubscribed</div>
+    <table class="tbl">
+      <thead><tr><th>Email</th><th>Name</th><th>Source</th><th>Subscribed</th><th>Status</th></tr></thead>
+      <tbody>${data.map(s=>`<tr>
+        <td style="font-size:13px">${esc(s.email)}</td>
+        <td style="font-size:13px">${esc(s.name||'—')}</td>
+        <td style="font-size:12px">${esc(s.source||'website')}</td>
+        <td style="font-size:12px">${new Date(s.subscribed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</td>
+        <td><span style="background:${s.active?'#ECFDF5':'#FEF2F2'};color:${s.active?'#059669':'#DC2626'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active?'Active':'Unsub'}</span></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+function exportNewsletterCSV() {
+  const rows = document.querySelectorAll('#newsletter-list tbody tr');
+  if (!rows.length) { showToast('No data to export'); return; }
+  const headers = ['Email','Name','Source','Subscribed','Status'];
+  const csv = [headers.join(','), ...Array.from(rows).map(r =>
+    Array.from(r.querySelectorAll('td')).map(td => '"' + td.textContent.trim().replace(/"/g,'""') + '"').join(',')
+  )].join('
+');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'newsletter-subscribers-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+
 async function initAdmin() {
   // Auth via Supabase (api/admin-auth.js). Token stored in sessionStorage.
   if(checkAdminAuth()) {
