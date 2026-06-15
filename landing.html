@@ -1653,7 +1653,25 @@ function renderStep() {
   var content = document.getElementById('modal-content');
 
   if (s === 1) {
-    content.innerHTML = bkServices.map(function(sv) {
+    // AI Diagnose section — shown before services
+    content.innerHTML =
+      '<div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #C7D9F8">' +
+      '<div style="font-size:13px;font-weight:700;color:#1848C8;margin-bottom:8px">🔍 Not sure what your bike needs?</div>' +
+      '<div style="font-size:12px;color:#374151;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service for you.</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      '<label style="flex:1;min-width:120px;cursor:pointer">' +
+        '<input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none" onchange="runAIDiagnosis()">' +
+        '<div style="background:white;border:2px solid #C7D9F8;border-radius:8px;padding:10px;text-align:center;font-size:12px;font-weight:600;color:#1848C8;cursor:pointer" onclick="document.getElementById('diag-photo').click()">📷 Take a Photo</div>' +
+      '</label>' +
+      '<div style="flex:1;min-width:120px">' +
+        '<textarea id="diag-text" placeholder="Describe the problem... (e.g. clicking noise when pedalling)" style="width:100%;border:2px solid #C7D9F8;border-radius:8px;padding:8px;font-size:12px;height:42px;resize:none;outline:none;box-sizing:border-box;font-family:inherit" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runAIDiagnosisText()}"></textarea>' +
+      '</div>' +
+      '<button onclick="runAIDiagnosisText()" style="background:#1848C8;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;align-self:flex-end">Ask AI →</button>' +
+      '</div>' +
+      '<div id="diag-result" style="margin-top:10px;display:none"></div>' +
+      '</div>';
+    content.innerHTML += '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Or choose a service:</p>';
+    content.innerHTML += '<div id="services-list">' + bkServices.map(function(sv) {
       return '<div class="service-option ' + (bookingState.service && bookingState.service.id === sv.id ? 'selected' : '') + '" onclick="selectService(' + sv.id + ')">' +
         '<div style="flex:1"><div class="so-name">' + sv.name + '</div><div class="so-desc">' + sv.desc + '</div></div>' +
         '<div class="so-price">' + (sv.pricePrefix || '$') + sv.price + '</div></div>';
@@ -2066,6 +2084,77 @@ async function submitBooking() {
     btn.disabled = false;
     document.getElementById('booking-result').innerHTML = '<p style="color:#ef4444;font-size:14px;margin-top:12px;text-align:center">Something went wrong. Please call us at 0433 963 250.</p>';
   }
+}
+
+
+// ── AI Diagnosis functions ─────────────────────────────────────────────────
+async function runAIDiagnosis() {
+  var input = document.getElementById('diag-photo');
+  if (!input || !input.files[0]) return;
+  var file = input.files[0];
+  var resultEl = document.getElementById('diag-result');
+  if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = '<div style="font-size:12px;color:#6b7280">🔍 Analysing your photo...</div>'; }
+  try {
+    var reader = new FileReader();
+    reader.onload = async function(e) {
+      var base64 = e.target.result.split(',')[1];
+      var mediaType = file.type || 'image/jpeg';
+      var resp = await fetch('/api/chat?type=diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64, mediaType: mediaType })
+      });
+      var data = await resp.json();
+      showDiagResult(data);
+    };
+    reader.readAsDataURL(file);
+  } catch(e) {
+    if (resultEl) resultEl.innerHTML = '<div style="font-size:12px;color:#ef4444">Could not analyse photo. Please describe the problem instead.</div>';
+  }
+}
+
+async function runAIDiagnosisText() {
+  var text = (document.getElementById('diag-text') || {}).value || '';
+  if (!text.trim()) return;
+  var resultEl = document.getElementById('diag-result');
+  if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = '<div style="font-size:12px;color:#6b7280">🔍 Analysing...</div>'; }
+  try {
+    var resp = await fetch('/api/chat?type=diagnose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: text.trim() })
+    });
+    var data = await resp.json();
+    showDiagResult(data);
+  } catch(e) {
+    if (resultEl) resultEl.innerHTML = '<div style="font-size:12px;color:#ef4444">Could not process. Please select a service manually.</div>';
+  }
+}
+
+function showDiagResult(data) {
+  var resultEl = document.getElementById('diag-result');
+  if (!resultEl) return;
+  var sev = data.severity || 'medium';
+  var sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
+  var urgColor = data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
+  resultEl.innerHTML =
+    '<div style="background:white;border-radius:8px;padding:12px;border:1px solid #E5E7EB">' +
+    '<div style="font-size:12px;font-weight:700;color:#0D1F3C;margin-bottom:6px">🤖 AI Recommendation</div>' +
+    '<div style="font-size:12px;color:#374151;margin-bottom:8px">' + (data.diagnosis || 'Bike issue detected') + '</div>' +
+    (data.services && data.services.length ? '<div style="margin-bottom:8px">' + data.services.map(function(s) {
+      return '<span style="background:#EEF3FC;color:#1848C8;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px;cursor:pointer" onclick="autoSelectService('' + s + '')">' + s + '</span>';
+    }).join('') + '</div>' : '') +
+    '<div style="display:flex;gap:8px;align-items:center">' +
+    '<span style="font-size:11px;color:' + sevColor + ';font-weight:600">' + (sev.charAt(0).toUpperCase()+sev.slice(1)) + ' severity</span>' +
+    '<span style="color:#d1d5db">·</span>' +
+    '<span style="font-size:11px;color:' + urgColor + ';font-weight:600">' + (data.urgency || 'Book soon') + '</span>' +
+    (data.estimatedCost ? '<span style="color:#d1d5db">·</span><span style="font-size:11px;color:#6b7280">' + data.estimatedCost + '</span>' : '') +
+    '</div></div>';
+}
+
+function autoSelectService(serviceName) {
+  var found = bkServices.find(function(s) { return s.name.toLowerCase().includes(serviceName.toLowerCase()) || serviceName.toLowerCase().includes(s.name.toLowerCase()); });
+  if (found) { selectService(found.id); }
 }
 
 document.getElementById('services-modal').addEventListener('click', function(e) {
