@@ -35,7 +35,7 @@ async function handleHealth(req, res) {
   }
 }
 
-// ── Bike diagnosis (?type=diagnose) ──────────────────────────────────────────
+// -- Bike diagnosis (?type=diagnose) --
 async function handleDiagnose(req, res) {
   if(await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   const { image, mediaType, description } = req.body;
@@ -47,22 +47,26 @@ async function handleDiagnose(req, res) {
   }
   if (description && description.length > 2000) return res.status(400).json({ error: 'Description too long' });
   const isText = !!description && !image;
-  const systemPrompt = `You are an expert bicycle mechanic at Dr. Bike Sydney. ${isText ? 'Analyse the client description' : 'Analyse the bike image'} and respond ONLY with valid JSON, no other text.`;
+  const jsonSchema = '{"diagnosis":"brief","severity":"low|medium|high","services":["service"],"estimatedCost":"$X-$Y","urgency":"Can wait|Book soon|Urgent","details":"explanation"}';
+  const systemPrompt = 'You are an expert bicycle mechanic at Dr. Bike Sydney. Analyse the ' + (isText ? 'client description' : 'bike image') + ' and respond ONLY with valid JSON, no other text.';
   const userContent = isText
-    ? `Client description: "${description}"
+    ? 'Client description: "' + description + '"
 
 Respond ONLY with JSON:
-{"diagnosis":"brief diagnosis","severity":"low|medium|high","services":["service"],"estimatedCost":"$X–$Y","urgency":"Can wait|Book soon|Urgent","details":"explanation"}`
-    : [{ type:'image', source:{ type:'base64', media_type: mediaType||'image/jpeg', data: image }},{ type:'text', text:'Analyse this bike image and respond ONLY with JSON:
-{"diagnosis":"brief","severity":"low|medium|high","services":["service"],"estimatedCost":"$X–$Y","urgency":"Can wait|Book soon|Urgent","details":"explanation"}'}];
+' + jsonSchema
+    : [
+        { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image } },
+        { type: 'text', text: 'Analyse this bike image and respond ONLY with JSON:
+' + jsonSchema }
+      ];
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{ 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version':'2023-06-01', 'content-type':'application/json' },
-      body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:1024, system: systemPrompt, messages:[{ role:'user', content: userContent }] })
+      method: 'POST',
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1024, system: systemPrompt, messages: [{ role: 'user', content: userContent }] })
     });
     const data = await response.json();
-    const result = JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g,'').trim());
+    const result = JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim());
     return res.status(200).json(result);
   } catch(e) { return res.status(500).json({ error: 'Diagnosis failed' }); }
 }
