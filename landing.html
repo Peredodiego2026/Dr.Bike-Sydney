@@ -1240,7 +1240,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         <input type="date" class="lform-input" id="lform-date">
         <select class="lform-input">
           <option value="" disabled selected>Preferred Time</option>
-          <option>Morning (8am - 12pm)</option>
+          <option>Morning (8:30am - 12pm)</option>
           <option>Afternoon (12pm - 4pm)</option>
           <option>Evening (4pm - 7pm)</option>
         </select>
@@ -1379,7 +1379,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
           Do you bring spare parts?
           <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="faq-a">Yes, our van is fully stocked with common parts. For specialty parts we'll advise you before the service.</div>
+        <div class="faq-a">Yes, we carry common parts in the van, but they are not included in the service price — they're charged separately at cost price with no markup.</div>
       </div>
 
       <div class="faq-item">
@@ -1402,7 +1402,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
     <div style="background:var(--blue);border-radius:var(--radius-lg);padding:40px 32px;color:white;position:sticky;top:80px">
       <h3 style="font-size:20px;font-weight:800">Still have questions?</h3>
       <p style="color:rgba(255,255,255,0.85);margin:12px 0 28px;font-size:15px">We're here to help! Contact us and we'll get back to you within the hour.</p>
-      <button onclick="window.location.href='mailto:contact@drbikesydney.com.au'" style="background:white;color:var(--blue);padding:12px 28px;border-radius:var(--radius);font-weight:600;border:none;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Contact Us</button>
+      <button onclick="window.open('mailto:contact@drbikesydney.com.au','_blank')" style="background:white;color:var(--blue);padding:12px 28px;border-radius:var(--radius);font-weight:600;border:none;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Contact Us</button>
       <hr style="border:none;border-top:1px solid rgba(255,255,255,0.2);margin:28px 0">
       <div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.9);font-size:14px">
@@ -1507,7 +1507,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         </div>
         <div class="footer-contact-item">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Mon - Sun: 7AM - 7PM
+          Mon - Sun: 8:30AM - 4:00PM
         </div>
       </div>
     </div>
@@ -1665,29 +1665,44 @@ function renderStep() {
   }
 
   if (s === 2) {
-    var days = [];
+    if (typeof bookingWeekOffset === 'undefined') window.bookingWeekOffset = 0;
     var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     var monNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    for (var i = 0; i < 7; i++) {
-      var d = new Date();
-      d.setDate(d.getDate() + i);
-      days.push(d);
-    }
-    var times = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM'];
-    content.innerHTML =
-      '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Select Date</p>' +
-      '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:24px">' +
-      days.map(function(d) {
-        return '<div class="date-pill ' + (bookingState.date === d.toDateString() ? 'selected' : '') + '" onclick="selectDate(\'' + d.toDateString() + '\')">' +
+    function renderWeek() {
+      var days = [];
+      for (var i = 0; i < 7; i++) {
+        var d = new Date();
+        d.setDate(d.getDate() + i + (window.bookingWeekOffset * 7));
+        days.push(d);
+      }
+      var weekLabel = monNames[days[0].getMonth()] + ' ' + days[0].getDate() + ' – ' + monNames[days[6].getMonth()] + ' ' + days[6].getDate();
+      document.getElementById('week-label').textContent = weekLabel;
+      // renderWeek inline
+    document.getElementById('week-prev').style.opacity = window.bookingWeekOffset <= 0 ? '0.3' : '1';
+      document.getElementById('week-prev').style.pointerEvents = window.bookingWeekOffset <= 0 ? 'none' : 'auto';
+      document.getElementById('dates-row').innerHTML = days.map(function(d) {
+        return '<div class="date-pill ' + (bookingState.date === d.toDateString() ? 'selected' : '') + '" onclick="selectDate(\'' + d.toDateString() + '\')" style="min-width:56px;flex-shrink:0">' +
           '<div class="dp-day">' + dayNames[d.getDay()] + '</div>' +
           '<div class="dp-num">' + d.getDate() + '</div>' +
           '<div class="dp-mon">' + monNames[d.getMonth()] + '</div></div>';
-      }).join('') + '</div>' +
+      }).join('');
+    }
+    var times = ['8:30 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'];
+    content.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+      '<p style="font-size:13px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:0.5px;margin:0">Select Date</p>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+      '<button id="week-prev" onclick="window.bookingWeekOffset=Math.max(0,window.bookingWeekOffset-1);renderWeek()" style="background:#f3f4f6;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px">‹</button>' +
+      '<span id="week-label" style="font-size:12px;color:#6b7280;min-width:120px;text-align:center"></span>' +
+      '<button id="week-next" onclick="window.bookingWeekOffset=(window.bookingWeekOffset||0)+1;renderWeek()" style="background:#f3f4f6;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px">›</button>' +
+      '</div></div>' +
+      '<div id="dates-row" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:24px"></div>' +
       '<p style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Select Time</p>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
       times.map(function(t) {
         return '<div class="time-slot ' + (bookingState.time === t ? 'selected' : '') + '" onclick="selectTime(\'' + t + '\')">' + t + '</div>';
       }).join('') + '</div>';
+    if (typeof renderWeek === 'function') renderWeek();
   }
 
   if (s === 3) {
