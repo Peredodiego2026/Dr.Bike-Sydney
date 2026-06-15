@@ -758,11 +758,17 @@ function goTab(t, btn) {
   tab = t;
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('on'));
   if (btn) btn.classList.add('on');
-  // Panel switching
-  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
-  const panel = document.getElementById('tab-' + t);
-  if (panel) panel.style.display = 'block';
-  if (t === 'inventory') loadInventory();
+  if (t === 'inventory') {
+    // Render inventory inside jobs-list using the template
+    const c = document.getElementById('jobs-list');
+    const tpl = document.getElementById('tpl-inventory');
+    if (c && tpl) {
+      c.innerHTML = '';
+      c.appendChild(tpl.content.cloneNode(true));
+    }
+    loadInventory();
+    return;
+  }
   render();
 }
 
@@ -790,16 +796,16 @@ async function loadInventory() {
       html += `<div style="margin-bottom:20px"><h3 style="font-size:12px;font-weight:700;text-transform:uppercase;color:#6B7280;margin-bottom:8px">${cat}</h3>`;
       items.forEach(item => {
         const low = item.quantity <= item.min_quantity;
-        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:${low?'#FEF2F2':'#F7F8FA'};margin-bottom:6px">
+        html += `<div class="inv-row${low?' low':''}">
           <div>
-            <div style="font-size:13px;font-weight:600;color:#0D1F3C">${item.part_name}</div>
+            <div style="font-size:13px;font-weight:600">${item.part_name}</div>
             ${low ? '<div style="font-size:11px;color:#DC2626;font-weight:600">⚠️ Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <button onclick="updateQty('${item.id}',-1,this)" style="background:#E5E7EB;border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700">−</button>
-            <span style="font-size:15px;font-weight:700;min-width:28px;text-align:center" id="qty-${item.id}">${item.quantity}</span>
-            <button onclick="updateQty('${item.id}',1,this)" style="background:#E5E7EB;border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700">+</button>
-            <span style="font-size:11px;color:#9CA3AF">${item.unit}</span>
+            <button onclick="updateQty('${item.id}',-1,this)" style="background:var(--color-border);border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;color:var(--color-text)">−</button>
+            <span style="font-size:15px;font-weight:700;min-width:28px;text-align:center;color:var(--color-text)" id="qty-${item.id}">${item.quantity}</span>
+            <button onclick="updateQty('${item.id}',1,this)" style="background:var(--color-border);border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;color:var(--color-text)">+</button>
+            <span style="font-size:11px;color:var(--color-text-secondary)">${item.unit}</span>
           </div>
         </div>`;
       });
@@ -847,15 +853,61 @@ async function completeService() {
   const bar = document.getElementById('service-timer-bar');
   if (bar) bar.style.display = 'none';
   const duration = serviceStartTime ? Math.floor((Date.now() - serviceStartTime) / 1000) : null;
-  if (activeTimerBookingId && window._supabase) {
+  const bookingId = activeTimerBookingId;
+  if (bookingId && window._supabase) {
     await window._supabase.from('bookings').update({
       status: 'completed',
       completed_at: new Date().toISOString(),
       service_duration_seconds: duration
-    }).eq('id', activeTimerBookingId);
+    }).eq('id', bookingId);
+    // Notify client — same as submitComplete()
+    const j = jobs.find(x => x.id === bookingId);
+    if (j) {
+      notifyClientComplete(j);
+      // Send invoice + review request (non-blocking)
+      try {
+        let clientEmail = j.email || '';
+        let clientPhone = j.phone || '';
+        if (!clientEmail) {
+          const { data: bkg } = await window._supabase.from('bookings')
+            .select('client_email, client_phone').eq('id', bookingId).single();
+          clientEmail = bkg?.client_email || '';
+          clientPhone = bkg?.client_phone || clientPhone;
+        }
+        if (clientEmail) {
+          const mechName = ((mechanic?.first_name||'')+ ' '+(mechanic?.last_name||'')).trim();
+          await Promise.allSettled([
+            fetch('/api/send-invoice', {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({
+                bookingId, to: clientEmail,
+                clientName: j.client || 'Client',
+                service: j.service_name || j.service,
+                date: j.scheduled_date, time: j.scheduled_time,
+                address: j.address || j.suburb,
+                price: j.price || 0, discount: j.discount_applied || 0,
+                mechNotes: null, mechName,
+                nextService: 'We recommend a service check every 3–6 months.',
+                bookingRef: bookingId.slice(0,8).toUpperCase()
+              })
+            }),
+            fetch('/api/send-email', {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({
+                type:'review_request', to: clientEmail,
+                name: j.client || 'Client',
+                service: j.service_name || j.service,
+                bookingId
+              })
+            })
+          ]);
+        }
+      } catch(e) { /* non-fatal */ }
+    }
   }
   activeTimerBookingId = null; serviceStartTime = null;
-  if (typeof loadJobs === 'function') loadJobs();
+  if (typeof load === 'function') load();
+  render();
 }
 
 // ── Pre-Service Checklist (4.1) ──────────────────────────────────────────────
@@ -889,8 +941,8 @@ function openChecklist(bookingId) {
   for (const [cat, items] of Object.entries(bycat)) {
     html += `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#6B7280;margin-bottom:6px">${cat}</div>`;
     items.forEach(item => {
-      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;background:#F7F8FA;margin-bottom:4px">
-        <span style="font-size:13px;font-weight:500">${item.label}</span>
+      html += `<div class="cl-row">
+        <span style="font-size:13px;font-weight:500;color:var(--color-text)">${item.label}</span>
         <div style="display:flex;gap:4px">
           ${['ok','warn','critical'].map(s => `<button onclick="setCheck('${item.id}','${s}',this)"
             style="padding:4px 8px;border-radius:6px;border:1px solid #E5E7EB;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#374151"
