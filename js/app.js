@@ -166,6 +166,21 @@ async function renderBookService() {
 
   screen.innerHTML = `
     ${createHeader('Book a Service', true, '#home')}
+    <div id="diag-block" style="background:#EEF3FC;border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #C7D9F8">
+      <div style="font-size:13px;font-weight:700;color:#1848C8;margin-bottom:8px">&#128269; Not sure what your bike needs?</div>
+      <div style="font-size:12px;color:#374151;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <label style="flex:1;min-width:120px;cursor:pointer">
+          <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
+          <div id="diag-photo-btn" style="background:white;border:2px solid #C7D9F8;border-radius:8px;padding:10px;text-align:center;font-size:12px;font-weight:600;color:#1848C8;cursor:pointer">&#128247; Take a Photo</div>
+        </label>
+        <div style="flex:2;min-width:140px">
+          <textarea id="diag-text" placeholder="Describe the problem... (e.g. clicking noise when pedalling)" style="width:100%;border:2px solid #C7D9F8;border-radius:8px;padding:8px;font-size:12px;height:42px;resize:none;outline:none;box-sizing:border-box;font-family:inherit"></textarea>
+        </div>
+        <button id="diag-ask-btn" style="background:#1848C8;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Ask AI &#8594;</button>
+      </div>
+      <div id="diag-result" style="margin-top:10px;display:none"></div>
+    </div>
     <div class="section-label">Service Type</div>
     <div class="services-list" id="services-list">
       <div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
@@ -200,6 +215,14 @@ async function renderBookService() {
   `;
 
   window.appState.location = 'Home';
+
+  const diagPhoto = screen.querySelector('#diag-photo');
+  screen.querySelector('#diag-photo-btn').addEventListener('click', () => diagPhoto.click());
+  diagPhoto.addEventListener('change', () => runAIDiagnosis(screen));
+  screen.querySelector('#diag-ask-btn').addEventListener('click', () => runAIDiagnosisText(screen));
+  screen.querySelector('#diag-text').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runAIDiagnosisText(screen); }
+  });
 
   const [services] = await Promise.all([
     getServices(),
@@ -1279,6 +1302,87 @@ document.addEventListener('screenchange', ({ detail }) => {
   if (detail.route === 'profile')         renderProfile();
   if (detail.route === 'my-bikes')         renderMyBikes();
 });
+
+// ── AI Bike Diagnosis ────────────────────────────────────────────────────────
+async function runAIDiagnosis(screen) {
+  const input = screen.querySelector('#diag-photo');
+  if (!input || !input.files[0]) return;
+  const file = input.files[0];
+  const resultEl = screen.querySelector('#diag-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="font-size:12px;color:#6b7280">&#128269; Analysing your photo...</div>';
+  try {
+    const reader = new FileReader();
+    reader.onload = async e => {
+      const base64 = e.target.result.split(',')[1];
+      const resp = await fetch('/api/chat?type=diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64, mediaType: file.type || 'image/jpeg' })
+      });
+      showDiagResult(screen, await resp.json());
+    };
+    reader.readAsDataURL(file);
+  } catch {
+    resultEl.innerHTML = '<div style="font-size:12px;color:#ef4444">Could not analyse photo. Please describe the problem instead.</div>';
+  }
+}
+
+async function runAIDiagnosisText(screen) {
+  const text = screen.querySelector('#diag-text')?.value?.trim() || '';
+  if (!text) return;
+  const resultEl = screen.querySelector('#diag-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="font-size:12px;color:#6b7280">&#128269; Analysing...</div>';
+  try {
+    const resp = await fetch('/api/chat?type=diagnose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: text })
+    });
+    showDiagResult(screen, await resp.json());
+  } catch {
+    resultEl.innerHTML = '<div style="font-size:12px;color:#ef4444">Could not process. Please select a service manually.</div>';
+  }
+}
+
+function showDiagResult(screen, data) {
+  const resultEl = screen.querySelector('#diag-result');
+  if (!resultEl) return;
+  const sev = data.severity || 'medium';
+  const sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
+  const urgColor = data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
+  const chips = (data.services || []).map(s =>
+    `<span class="diag-chip" data-svc="${s.replace(/"/g, '&quot;')}" style="background:#EEF3FC;color:#1848C8;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px;cursor:pointer">${s}</span>`
+  ).join('');
+  resultEl.innerHTML = `
+    <div style="background:white;border-radius:8px;padding:12px;border:1px solid #E5E7EB">
+      <div style="font-size:12px;font-weight:700;color:#0D1F3C;margin-bottom:6px">&#129302; AI Recommendation</div>
+      <div style="font-size:12px;color:#374151;margin-bottom:8px">${data.diagnosis || 'Bike issue detected'}</div>
+      ${chips ? `<div style="margin-bottom:8px">${chips}</div>` : ''}
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:11px;color:${sevColor};font-weight:600">${sev.charAt(0).toUpperCase() + sev.slice(1)} severity</span>
+        <span style="color:#d1d5db">&#183;</span>
+        <span style="font-size:11px;color:${urgColor};font-weight:600">${data.urgency || 'Book soon'}</span>
+        ${data.details ? `<span style="color:#d1d5db">&#183;</span><span style="font-size:11px;color:#6b7280">${data.details}</span>` : ''}
+      </div>
+    </div>`;
+  resultEl.querySelectorAll('.diag-chip').forEach(chip => {
+    chip.addEventListener('click', () => autoSelectService(screen, chip.dataset.svc));
+  });
+}
+
+function autoSelectService(screen, serviceName) {
+  const list = screen.querySelector('#services-list');
+  if (!list) return;
+  list.querySelectorAll('.service-card').forEach(card => {
+    const name = card.querySelector('.service-card__name')?.textContent || '';
+    if (name.toLowerCase().includes(serviceName.toLowerCase()) || serviceName.toLowerCase().includes(name.toLowerCase())) {
+      card.click();
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+}
 
 router.init();
 document.dispatchEvent(new Event('routerinit'));
