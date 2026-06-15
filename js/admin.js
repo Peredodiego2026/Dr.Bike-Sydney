@@ -2200,4 +2200,31 @@ setTimeout(() => { try { loadBookings(); } catch(e){} }, 2000);
   </div>
   <div id="notif-list" style="padding:8px"><div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">Loading...</div></div>`;
   document.body.appendChild(panel);
-})();
+})();
+
+// ── Avg Service Time KPI (T02) ────────────────────────────────────────────────
+async function loadAvgServiceTime() {
+  try {
+    const { data } = await sb.from('bookings')
+      .select('service_type, service_duration_seconds')
+      .not('service_duration_seconds', 'is', null)
+      .eq('status', 'completed');
+    if (!data?.length) return;
+    const byType = {};
+    data.forEach(b => {
+      const t = (b.service_type || 'Other').replace(/\s+/g,'_');
+      if (!byType[t]) byType[t] = [];
+      byType[t].push(b.service_duration_seconds);
+    });
+    const overall = data.reduce((a,b) => a + b.service_duration_seconds, 0) / data.length;
+    const el  = document.getElementById('kpi-avg-time');
+    const sub = document.getElementById('kpi-avg-time-sub');
+    if (el)  el.textContent  = Math.round(overall / 60) + ' min';
+    if (sub) sub.textContent = Object.entries(byType)
+      .map(([t, arr]) => t.replace(/_/g,' ') + ': ' + Math.round(arr.reduce((a,b)=>a+b,0)/arr.length/60) + 'min')
+      .join(' · ');
+  } catch(e) { /* non-fatal */ }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => loadAvgServiceTime(), 1200);
+});
