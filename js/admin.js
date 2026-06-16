@@ -895,6 +895,8 @@ async function submitAdminLogin() {
     const data = await resp.json();
     if(!resp.ok) throw new Error(data.error || 'Invalid credentials');
     sessionStorage.setItem('drbike-admin-token', data.access_token);
+    sessionStorage.setItem('drbike-admin-refresh', data.refresh_token);
+    await sb.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
     document.getElementById('admin-login-overlay')?.remove();
     loadDashboard();
     subscribeToBookings();
@@ -2258,9 +2260,17 @@ function exportNewsletterCSV() {
   a.click();
 }
 
+async function restoreAdminSession() {
+  const access_token = sessionStorage.getItem('drbike-admin-token');
+  const refresh_token = sessionStorage.getItem('drbike-admin-refresh');
+  if(!access_token || !refresh_token) return;
+  await sb.auth.setSession({ access_token, refresh_token });
+}
+
 async function initAdmin() {
   // Auth via Supabase (api/admin-auth.js). Token stored in sessionStorage.
   if(checkAdminAuth()) {
+    await restoreAdminSession();
     loadDashboard();
     subscribeToBookings();
   }

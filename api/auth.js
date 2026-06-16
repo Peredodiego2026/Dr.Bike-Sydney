@@ -21,7 +21,7 @@ async function handleAdmin(req, res) {
     return res.status(401).json({ error: error.message });
   }
 
-  return res.status(200).json({ access_token: data.session.access_token });
+  return res.status(200).json({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
 }
 
 async function handleMechanic(req, res) {
