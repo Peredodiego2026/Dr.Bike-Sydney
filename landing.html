@@ -2411,7 +2411,7 @@ async function bkProceed() {
       service_id: _bkState.service.id,
       scheduled_date: _bkState.date,
       scheduled_time: _bkState.time,
-      location: addr || 'Home',
+      address: addr || 'Home',
       status: 'pending',
       total_price: _bkState.service.price,
     }]).select().single();

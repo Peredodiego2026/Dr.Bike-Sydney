@@ -369,7 +369,7 @@ async function renderServiceSummary() {
         service_id: service.id,
         scheduled_date: date,
         scheduled_time: time,
-        location: location || 'Home',
+        address: location || 'Home',
         status: 'pending',
         total_price: service.price,
       });
