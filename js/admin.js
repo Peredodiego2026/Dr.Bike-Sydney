@@ -2251,8 +2251,7 @@ function exportNewsletterCSV() {
   const headers = ['Email','Name','Source','Subscribed','Status'];
   const csv = [headers.join(','), ...Array.from(rows).map(r =>
     Array.from(r.querySelectorAll('td')).map(td => '"' + td.textContent.trim().replace(/"/g,'""') + '"').join(',')
-  )].join('
-');
+  )].join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   a.download = 'newsletter-subscribers-' + new Date().toISOString().split('T')[0] + '.csv';
