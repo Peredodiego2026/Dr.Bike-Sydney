@@ -54,6 +54,20 @@ export async function createBooking(bookingData) {
   return data;
 }
 
+const DEFAULT_CALLOUT_FEE = 20;
+
+export async function getCalloutFee(address) {
+  try {
+    const { data, error } = await sb.from('callout_zones').select('callout_fee, suburbs');
+    if (error || !data?.length) return DEFAULT_CALLOUT_FEE;
+    const addr = (address || '').toLowerCase();
+    const zone = data.find(z => (z.suburbs || []).some(s => addr.includes(String(s).toLowerCase())));
+    return zone ? Number(zone.callout_fee) : DEFAULT_CALLOUT_FEE;
+  } catch {
+    return DEFAULT_CALLOUT_FEE;
+  }
+}
+
 export async function getMechanicInfo(mechanicId) {
   try {
     const { data, error } = await sb.from('escalation_contacts').select('*').eq('id', mechanicId).single();

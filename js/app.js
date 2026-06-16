@@ -32,9 +32,9 @@ function applyPricingAdjustments(basePrice, dateStr) {
 // ───────────────────────────────────────────────────────────────────────────
 
 import router from './router.js';
-import { sb, getServices, getAvailableSlots, createBooking, subscribeToMechanicLocation, submitReview, signIn, signUp, getMyBookings } from './supabase.js';
+import { sb, getServices, getAvailableSlots, createBooking, getCalloutFee, subscribeToMechanicLocation, submitReview, signIn, signUp, getMyBookings } from './supabase.js';
 import { createHeader, createBottomNav, createServiceCard, formatServiceDuration, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
-import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm, createCheckoutSession } from './stripe.js';
+import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm } from './stripe.js';
 
 window.appState = { service: null, date: null, time: null, location: 'Home', bookingId: null };
 
@@ -349,24 +349,10 @@ async function renderServiceSummary() {
     try {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) throw new Error('Please sign in to complete your booking.');
-      const meta = user.user_metadata || {};
-      const booking = await createBooking({
-        user_id: user.id,
-        client_id: user.id,
-        client_name: meta.full_name || meta.name || '',
-        client_email: user.email || '',
-        service_name: service.name,
-        scheduled_date: date,
-        scheduled_time: time,
-        address: location || 'Home',
-        status: 'pending',
-        service_price: service.price,
-      });
-      window.appState.bookingId = booking.id;
+      window.appState.bookingId = null;
       router.navigate('payment');
     } catch (e) {
-      window.appState.bookingId = null;
-      errEl.textContent = e.message || 'Could not save booking. Please try again.';
+      errEl.textContent = e.message || 'Please try again.';
       errEl.hidden = false;
       btn.disabled = false;
       btn.textContent = 'Proceed to Payment';
@@ -381,10 +367,11 @@ async function renderPayment() {
 
   destroyPaymentForm();
 
-  const { service, bookingId } = window.appState;
-  const price = service?.price || 0;
-  const amountCents = Math.round(price * 100);
-  const ref = bookingRef(bookingId);
+  const { service, date, time, location } = window.appState;
+  if (!service) { router.navigate('book-service'); return; }
+  const servicePrice = service?.price || 0;
+  const calloutFee = await getCalloutFee(location);
+  const amountCents = Math.round(calloutFee * 100);
 
   const cardIcons = `
     <svg width="38" height="24" viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg" style="border-radius:3px">
@@ -400,17 +387,15 @@ async function renderPayment() {
   screen.innerHTML = `
     ${createHeader('Payment', true, '#service-summary')}
     <div class="payment-amount">
-      <div class="text-secondary text-sm">Total Amount</div>
-      <div class="payment-amount__total">$${Number(price).toFixed(2)}</div>
+      <div class="text-secondary text-sm">Call-out Fee (pay now)</div>
+      <div class="payment-amount__total">$${calloutFee.toFixed(2)}</div>
     </div>
-    <div class="payment-ref text-secondary text-sm">Booking ${ref}</div>
+    <div class="payment-explainer" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px;font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;line-height:1.5">
+      This $${calloutFee.toFixed(2)} call-out fee covers the mechanic's trip to your location — it's the only payment taken online now. The service cost ($${Number(servicePrice).toFixed(2)}) is paid directly to the mechanic by card (EFTPOS) when they arrive.
+    </div>
     <div class="payment-methods">${cardIcons}<span class="text-secondary text-xs" style="margin-left:auto">Apple Pay &bull; Google Pay</span></div>
-    <button class="btn btn--checkout btn--full" id="checkout-btn" style="background:#0A58CA;color:#fff;border:none;border-radius:12px;height:52px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:0">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6zm10 0h2v2h-2zm0-4h2v2h-2zm-6 0h4v2h-4z"/></svg>
-      Pay with Apple Pay / Google Pay / Card
-    </button>
-    <div class="payment-divider" id="card-divider"><span>or pay by entering card details</span></div>
     <div id="payment-request-btn" hidden></div>
+    <div class="payment-divider" id="card-divider"><span>or pay by entering card details</span></div>
     <div class="section-label">Card Details</div>
     <div id="card-element" class="card-element"></div>
     <div id="payment-error" class="booking-error" hidden></div>
@@ -421,48 +406,56 @@ async function renderPayment() {
       <span>Secure payment powered by Stripe. Encrypted and safe.</span>
     </div>
     <div class="sticky-bottom">
-      <button class="btn btn--primary btn--full" id="pay-btn">Pay $${Number(price).toFixed(2)}</button>
+      <button class="btn btn--primary btn--full" id="pay-btn">Pay $${calloutFee.toFixed(2)} Call-out Fee</button>
     </div>
     ${createBottomNav('home')}
   `;
 
   await createPaymentForm('card-element');
 
-  screen.querySelector('#checkout-btn').addEventListener('click', async () => {
-    const btn = screen.querySelector('#checkout-btn');
-    const errEl = screen.querySelector('#payment-error');
-    btn.disabled = true;
-    btn.textContent = 'Redirecting to secure checkout...';
-    errEl.hidden = true;
-    try {
-      const email = await getEmail();
-      await createCheckoutSession({
-        amountCents,
-        description: service?.name || 'Dr. Bike Sydney service',
-        bookingId,
-        email,
-      });
-    } catch (e) {
-      errEl.textContent = e.message || 'Checkout failed. Please use card below.';
-      errEl.hidden = false;
-      btn.disabled = false;
-      btn.textContent = 'Pay with Apple Pay / Google Pay / Card';
-    }
-  });
-
   const getEmail = async () => {
     try { const { data: { user } } = await sb.auth.getUser(); return user?.email || 'guest@drbikesydney.com.au'; }
     catch { return 'guest@drbikesydney.com.au'; }
   };
 
+  let paidIntent = null;
+
+  async function chargeIfNeeded(paymentMethodId) {
+    if (paidIntent) return paidIntent;
+    const email = await getEmail();
+    paidIntent = await processPayment(amountCents, null, email, paymentMethodId);
+    return paidIntent;
+  }
+
+  async function finalizeBooking(paymentIntent) {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) throw new Error('Please sign in to complete your booking.');
+    const meta = user.user_metadata || {};
+    const booking = await createBooking({
+      user_id: user.id,
+      client_id: user.id,
+      client_name: meta.full_name || meta.name || '',
+      client_email: user.email || '',
+      service_name: service.name,
+      scheduled_date: date,
+      scheduled_time: time,
+      address: location || 'Home',
+      status: 'pending',
+      service_price: service.price,
+      callout_fee: calloutFee,
+      stripe_payment_intent_id: paymentIntent.id,
+    });
+    window.appState.bookingId = booking.id;
+    if (window.gtag) gtag('event', 'purchase', { transaction_id: booking.id, value: calloutFee, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
+    router.navigate('tracking');
+  }
+
   const prSupported = await createPaymentRequestButton('payment-request-btn', {
     amountCents,
-    label: service?.name || 'Dr. Bike Sydney',
+    label: 'Dr. Bike Sydney - Call-out fee',
     onPayment: async (paymentMethodId) => {
-      const email = await getEmail();
-      await processPayment(amountCents, bookingId, email, paymentMethodId);
-      if (window.gtag) gtag('event', 'purchase', { transaction_id: bookingId, value: price, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
-      router.navigate('tracking');
+      const pi = await chargeIfNeeded(paymentMethodId);
+      await finalizeBooking(pi);
     },
   });
 
@@ -478,15 +471,15 @@ async function renderPayment() {
     btn.textContent = 'Processing...';
     errEl.hidden = true;
     try {
-      const email = await getEmail();
-      await processPayment(amountCents, bookingId, email);
-      if (window.gtag) gtag('event', 'purchase', { transaction_id: bookingId, value: price, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
-      router.navigate('tracking');
+      const pi = await chargeIfNeeded();
+      await finalizeBooking(pi);
     } catch (err) {
-      errEl.textContent = err.message || 'Payment failed. Please try again.';
+      errEl.textContent = paidIntent
+        ? 'Payment received but booking could not be saved. Tap Pay again to retry, or contact us.'
+        : (err.message || 'Payment failed. Please try again.');
       errEl.hidden = false;
       btn.disabled = false;
-      btn.textContent = `Pay $${Number(price).toFixed(2)}`;
+      btn.textContent = `Pay $${calloutFee.toFixed(2)} Call-out Fee`;
     }
   });
 }
