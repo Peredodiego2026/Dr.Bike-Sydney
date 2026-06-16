@@ -127,7 +127,7 @@
 
     /* ── Hero ─────────────────────────────────────────────────────────────────── */
     .hero {
-      min-height: 88vh;
+      min-height: 0;
       display: flex;
       align-items: center;
     }
@@ -135,9 +135,9 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 64px;
-      align-items: center;
-      padding-top: 48px;
-      padding-bottom: 48px;
+      align-items: start;
+      padding-top: 20px;
+      padding-bottom: 20px;
     }
     .hero-badge {
       background: var(--blue-light);
@@ -575,7 +575,7 @@
   </div>
 </nav>
   <!-- 6.1 + 6.2 Trust Badges -->
-  <div style="background:#F7F8FA;border-bottom:1px solid #E5E7EB;padding:14px 24px">
+  <div style="background:#F7F8FA;border-bottom:1px solid #E5E7EB;padding:8px 24px">
     <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:20px">
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#065F46">
         <span style="background:#ECFDF5;border:1px solid #059669;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px">
@@ -2408,12 +2408,12 @@ async function bkProceed() {
     var userId = (userRes.data && userRes.data.user) ? userRes.data.user.id : null;
     var ins = await _sb.from('bookings').insert([{
       client_id: userId,
-      service_id: _bkState.service.id,
+      service_name: _bkState.service.name,
       scheduled_date: _bkState.date,
       scheduled_time: _bkState.time,
       address: addr || 'Home',
       status: 'pending',
-      total_price: _bkState.service.price,
+      service_price: _bkState.service.price,
     }]).select().single();
     if (ins.error) throw ins.error;
     _bkState.bookingId = ins.data.id;

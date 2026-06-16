@@ -366,12 +366,12 @@ async function renderServiceSummary() {
       const { data: { user } } = await sb.auth.getUser();
       const booking = await createBooking({
         client_id: user?.id || null,
-        service_id: service.id,
+        service_name: service.name,
         scheduled_date: date,
         scheduled_time: time,
         address: location || 'Home',
         status: 'pending',
-        total_price: service.price,
+        service_price: service.price,
       });
       window.appState.bookingId = booking.id;
     } catch {

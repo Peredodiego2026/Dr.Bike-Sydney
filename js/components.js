@@ -107,7 +107,7 @@ export function createSummaryRow(label, value) {
 
 // ── Booking Card ─────────────────────────────────────────────────────────────
 export function createBookingCard(booking) {
-  const { id = '', service_name, scheduled_date, scheduled_time, total_price, status, rating } = booking;
+  const { id = '', service_name, scheduled_date, scheduled_time, service_price, status, rating } = booking;
   const STATUS_MAP = {
     pending:     { label: 'Pending',     bg: 'rgba(245,158,11,0.15)',  color: '#F59E0B' },
     confirmed:   { label: 'Confirmed',   bg: 'rgba(10,88,202,0.15)',   color: '#0A58CA' },
@@ -133,7 +133,7 @@ export function createBookingCard(booking) {
   </div>
   <div class="booking-card__right">
     <span class="booking-chip" style="background:${s.bg};color:${s.color}">${s.label}</span>
-    <span class="booking-card__price text-secondary text-sm">$${total_price || 0}</span>
+    <span class="booking-card__price text-secondary text-sm">$${service_price || 0}</span>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
   </div>
 </div>`;
