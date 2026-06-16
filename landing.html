@@ -614,7 +614,7 @@
       <p class="hero-p">Mobile bicycle mechanic in Sydney. We come to you, fully equipped.</p>
 
       <div class="hero-btns">
-        <a href="/index.html" class="btn-primary">Book a Service</a>
+        <button id="hero-book-btn" class="btn-primary" type="button">Book a Service</button>
         <a href="#services" class="btn-outline">View Services</a>
       </div>
 
@@ -653,14 +653,14 @@
 <div style="background:#0D1F3C;padding:16px 24px;text-align:center">
   <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">
     <span style="color:rgba(255,255,255,0.85);font-size:14px">Already a customer? Sign in to view your bookings, bikes and more.</span>
-    <a href="/index.html#login" style="background:#1848C8;color:white;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:6px">
+    <button id="login-cta-google" style="background:#1848C8;color:white;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;font-family:inherit">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Sign In with Google
-    </a>
+    </button>
     <span style="color:rgba(255,255,255,0.4);font-size:13px">or</span>
-    <a href="/index.html#login" style="background:transparent;color:white;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,0.3);white-space:nowrap">
+    <button id="login-cta-create" style="background:transparent;color:white;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.3);cursor:pointer;white-space:nowrap;font-family:inherit">
       Create Account
-    </a>
+    </button>
   </div>
 </div>
 
@@ -788,165 +788,165 @@
     <!-- Esenciales -->
     <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Essentials</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-4"/><path d="M12 6l1 5.5-6.5 2 2-7.5"/><path d="M18.5 17.5L15 6"/><path d="M5.5 17.5L9 11l4.5-1"/></svg></div>
         <div class="svc-name">Basic Tune-Up</div>
         <div class="svc-price">$109</div>
         <p class="svc-desc">Adjust brakes &amp; gears, lube chain, safety check</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
         <div class="svc-name">Standard Service</div>
         <div class="svc-price">$149</div>
         <p class="svc-desc">Full tune-up + wheel true + drivetrain clean</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
         <div class="svc-name">Major Service</div>
         <div class="svc-price">$199</div>
         <p class="svc-desc">Complete overhaul: bearings, cables, full clean</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
         <div class="svc-name">Ultimate Overhaul</div>
         <div class="svc-price">$369</div>
         <p class="svc-desc">Strip &amp; rebuild, all consumables replaced</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
     </div>
 
     <!-- Tyres & Wheels -->
     <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Tyres &amp; Wheels</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div>
         <div class="svc-name">Flat Tyre Repair</div>
         <div class="svc-price">$59</div>
         <p class="svc-desc">Tube replace or patch, remount &amp; inflate</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></div>
         <div class="svc-name">Tyre Replacement</div>
         <div class="svc-price">$79</div>
         <p class="svc-desc">New tyre fitted (tyre cost extra)</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg></div>
         <div class="svc-name">Wheel True</div>
         <div class="svc-price">$69</div>
         <p class="svc-desc">Spoke tension adjusted, rim aligned</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
         <div class="svc-name">Spoke Replacement</div>
         <div class="svc-price">$79</div>
         <p class="svc-desc">Per spoke, includes re-true</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
     </div>
 
     <!-- Brakes -->
     <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Brakes</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <div class="svc-name">Brake Adjustment</div>
         <div class="svc-price">$59</div>
         <p class="svc-desc">Pad align, cable tension, lever reach</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg></div>
         <div class="svc-name">Brake Pad Replacement</div>
         <div class="svc-price">$69</div>
         <p class="svc-desc">Both wheels, pads included</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></div>
         <div class="svc-name">Hydraulic Bleed</div>
         <div class="svc-price">$99</div>
         <p class="svc-desc">Full bleed with fresh fluid</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
     </div>
 
     <!-- Drivetrain -->
     <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Drivetrain</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M3 12H1M23 12h-2M19.07 19.07l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg></div>
         <div class="svc-name">Gear Adjustment</div>
         <div class="svc-price">$59</div>
         <p class="svc-desc">Front &amp; rear derailleur indexed</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
         <div class="svc-name">Chain Replacement</div>
         <div class="svc-price">$69</div>
         <p class="svc-desc">KMC or SRAM chain fitted</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
         <div class="svc-name">Cassette/Freewheel Swap</div>
         <div class="svc-price">$89</div>
         <p class="svc-desc">Remove &amp; fit (part cost extra)</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="svc-name">Cable &amp; Housing</div>
         <div class="svc-price">$89</div>
         <p class="svc-desc">Full replace front &amp; rear</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
     </div>
 
     <!-- Cables & Accessories -->
     <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Cables &amp; Accessories</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
         <div class="svc-name">Handlebar Tape</div>
         <div class="svc-price">$59</div>
         <p class="svc-desc">Cork or EVA wrap, bar ends included</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         <div class="svc-name">Saddle Fitting</div>
         <div class="svc-price">$59</div>
         <p class="svc-desc">Height, fore-aft, tilt optimised</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="svc-name">Bottom Bracket Service</div>
         <div class="svc-price">$89</div>
         <p class="svc-desc">Clean, regrease or replace BB</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <div class="svc-name">Headset Service</div>
         <div class="svc-price">$79</div>
         <p class="svc-desc">Clean, adjust, regrease</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
-      <div class="svc-card" onclick="window.location='/index.html'">
+      <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <div class="svc-name">Custom Quote</div>
         <div class="svc-price">Contact</div>
         <p class="svc-desc">E-bikes, carbon, vintage, insurance claims</p>
-        <button class="svc-btn" onclick="event.stopPropagation();window.location='/index.html'">Book Now</button>
+        <button class="svc-btn">Book Now</button>
       </div>
     </div>
 
@@ -1258,7 +1258,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         <input type="text" class="lform-input" placeholder="Enter your address">
       </div>
 
-      <button onclick="window.location='/index.html'" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
+      <button style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
 
       <div style="display:flex;gap:24px;margin-top:12px">
         <span style="color:#6b7280;font-size:13px">&#10003; Confirmation in minutes</span>
@@ -1435,7 +1435,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
     <h2 style="color:white;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:800">Ready to Experience Premium Bike Service?</h2>
     <p style="color:#9ca3af;font-size:18px;margin:16px 0 32px">Book your service today and join hundreds of satisfied cyclists across Sydney.</p>
     <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
-      <button onclick="window.location='/index.html'" style="background:var(--blue);color:white;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:16px;border:none;cursor:pointer;font-family:inherit;transition:var(--transition)" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Book Now</button>
+      <button style="background:var(--blue);color:white;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:16px;border:none;cursor:pointer;font-family:inherit;transition:var(--transition)" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Book Now</button>
       <a href="tel:+61433963250" style="border:2px solid #6b7280;color:white;background:transparent;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:16px;display:inline-block">Call 0433 963 250</a>
     </div>
   </div>
@@ -1945,6 +1945,30 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
   </div>
 </div>
 
+<!-- ── BOOKING PANEL ───────────────────────────────────────────────────────── -->
+<style>
+.bk-svc-card:hover { border-color:#93AADC !important; }
+.bk-svc-card:focus { outline:2px solid #0A58CA; outline-offset:2px; }
+.bk-time-slot:hover:not([disabled]) { border-color:#0A58CA !important; background:#F5F8FF !important; }
+</style>
+<div id="booking-panel" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.55);overflow-y:auto">
+  <div style="min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden">
+      <div style="border-bottom:1px solid #E5E7EB;padding:18px 24px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#111827">Book a Service</div>
+          <div style="font-size:12px;color:#6B7280;margin-top:2px" id="bk-step-label">Step 1 of 3 - Select Service</div>
+        </div>
+        <button id="bk-close-btn" style="background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:22px;line-height:1;padding:4px">&#x2715;</button>
+      </div>
+      <div style="height:3px;background:#F3F4F6">
+        <div id="bk-progress" style="height:100%;background:#0A58CA;transition:width .3s ease;width:33.3%"></div>
+      </div>
+      <div id="bk-content" style="padding:24px"></div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var _sb = window.supabase.createClient(
@@ -2057,6 +2081,472 @@ async function signInGoogle() {
     errEl.style.display = 'block';
   }
 }
+</script>
+
+<script>
+// ── Booking Panel ─────────────────────────────────────────────────────────────
+var _bkState = { service: null, date: null, time: null, services: [], bookingId: null, preselect: null };
+
+var BK_MOCK_SERVICES = [
+  { id: '1', name: 'Tune-Up',          price: 109, description: 'Gears, brakes, wheels trued + safety check', duration: '~1 hour' },
+  { id: '2', name: 'Standard Service', price: 149, description: 'Full tune-up + drivetrain clean',             duration: '~1.5 hours' },
+  { id: '3', name: 'Major Service',    price: 199, description: 'Comprehensive overhaul + parts check',        duration: '~2.5 hours' },
+  { id: '4', name: 'Ultimate Overhaul',price: 369, description: 'Complete rebuild, all bearings serviced',     duration: '~4 hours' },
+];
+var BK_MOCK_SLOTS = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'];
+var BK_DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var BK_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function bkGenerateDates() {
+  var dates = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date();
+    d.setDate(d.getDate() + i);
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    dates.push(y + '-' + m + '-' + day);
+  }
+  return dates;
+}
+
+function bkFormatDate(dateStr) {
+  if (!dateStr) return '-';
+  var parts = dateStr.split('-').map(Number);
+  var d = new Date(parts[0], parts[1] - 1, parts[2]);
+  return BK_DAY_NAMES[d.getDay()] + ' ' + d.getDate() + ' ' + BK_MONTH_NAMES[d.getMonth()] + ' ' + parts[0];
+}
+
+function openBooking(preselect) {
+  _bkState.preselect = preselect || null;
+  document.getElementById('booking-panel').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  bkShowStep(1);
+}
+
+function closeBooking() {
+  document.getElementById('booking-panel').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function bkSetProgress(step) {
+  var pcts = { 1: '33.3%', 2: '66.6%', 3: '100%' };
+  var labels = {
+    1: 'Step 1 of 3 – Select Service',
+    2: 'Step 2 of 3 – Date & Time',
+    3: 'Step 3 of 3 – Summary'
+  };
+  document.getElementById('bk-progress').style.width = pcts[step];
+  document.getElementById('bk-step-label').textContent = labels[step];
+}
+
+function bkShowStep(n) {
+  bkSetProgress(n);
+  if (n === 1) bkRenderStep1();
+  else if (n === 2) bkRenderStep2();
+  else if (n === 3) bkRenderStep3();
+}
+
+// ── Step 1: AI Diagnosis + Service Selection ──────────────────────────────────
+async function bkRenderStep1() {
+  document.getElementById('bk-content').innerHTML = bkStep1HTML();
+
+  document.getElementById('bk-photo-btn').addEventListener('click', function() {
+    document.getElementById('bk-diag-photo').click();
+  });
+  document.getElementById('bk-diag-photo').addEventListener('change', bkRunAIDiagnosis);
+  document.getElementById('bk-diag-ask-btn').addEventListener('click', bkRunAIDiagnosisText);
+  document.getElementById('bk-diag-text').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); bkRunAIDiagnosisText(); }
+  });
+
+  if (!_bkState.services.length) {
+    try {
+      var res = await _sb.from('services').select('*').order('price');
+      _bkState.services = (res.error || !res.data || !res.data.length) ? BK_MOCK_SERVICES : res.data;
+    } catch(e) {
+      _bkState.services = BK_MOCK_SERVICES;
+    }
+  }
+
+  var list = document.getElementById('bk-services-list');
+  list.innerHTML = _bkState.services.map(function(s) {
+    var sel = _bkState.service && String(_bkState.service.id) === String(s.id);
+    return bkServiceCardHTML(s, sel);
+  }).join('');
+
+  list.querySelectorAll('.bk-svc-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      _bkState.service = null;
+      _bkState.services.forEach(function(s) {
+        if (String(s.id) === card.dataset.serviceId) _bkState.service = s;
+      });
+      list.querySelectorAll('.bk-svc-card').forEach(function(c) {
+        c.style.borderColor = '#E5E7EB'; c.style.background = '#fff';
+      });
+      card.style.borderColor = '#0A58CA'; card.style.background = '#EEF3FC';
+      var btn = document.getElementById('bk-step1-continue');
+      btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+    });
+    card.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') card.click();
+    });
+  });
+
+  if (_bkState.preselect) { bkAutoSelectService(_bkState.preselect); }
+
+  var continueBtn = document.getElementById('bk-step1-continue');
+  if (_bkState.service) {
+    continueBtn.disabled = false; continueBtn.style.opacity = '1'; continueBtn.style.cursor = 'pointer';
+  }
+  continueBtn.addEventListener('click', function() { if (_bkState.service) bkShowStep(2); });
+}
+
+function bkServiceCardHTML(s, selected) {
+  var bc = selected ? '#0A58CA' : '#E5E7EB';
+  var bg = selected ? '#EEF3FC' : '#fff';
+  return '<div class="bk-svc-card" data-service-id="' + s.id + '" tabindex="0" role="button"' +
+    ' style="display:flex;align-items:center;justify-content:space-between;border:2px solid ' + bc + ';border-radius:12px;padding:14px 16px;cursor:pointer;background:' + bg + ';transition:border-color .15s">' +
+    '<div style="flex:1">' +
+      '<div style="font-weight:700;font-size:15px;color:#111827">' + s.name + '</div>' +
+      (s.description ? '<div style="font-size:13px;color:#6B7280;margin-top:3px">' + s.description + '</div>' : '') +
+      (s.duration ? '<div style="font-size:12px;color:#9CA3AF;margin-top:2px">' + s.duration + '</div>' : '') +
+    '</div>' +
+    '<div style="text-align:right;margin-left:12px;flex-shrink:0">' +
+      '<div style="font-size:18px;font-weight:800;color:#0A58CA">$' + s.price + '</div>' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>' +
+    '</div>' +
+  '</div>';
+}
+
+function bkStep1HTML() {
+  return '<div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #C7D9F8">' +
+    '<div style="font-size:13px;font-weight:700;color:#1848C8;margin-bottom:8px">Not sure what your bike needs?</div>' +
+    '<div style="font-size:12px;color:#374151;margin-bottom:12px">Upload a photo or describe the problem — our AI will recommend the right service.</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">' +
+      '<label style="flex:1;min-width:120px;cursor:pointer">' +
+        '<input type="file" accept="image/*" id="bk-diag-photo" style="display:none">' +
+        '<div id="bk-photo-btn" style="background:white;border:2px solid #C7D9F8;border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:600;color:#1848C8;cursor:pointer">&#128247; Upload Photo</div>' +
+      '</label>' +
+      '<div style="flex:2;min-width:140px">' +
+        '<textarea id="bk-diag-text" placeholder="Describe the problem... e.g. clicking noise when pedalling" style="width:100%;border:2px solid #C7D9F8;border-radius:8px;padding:8px;font-size:13px;height:42px;resize:none;outline:none;box-sizing:border-box;font-family:inherit"></textarea>' +
+      '</div>' +
+      '<button id="bk-diag-ask-btn" style="background:#1848C8;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Ask AI &#8594;</button>' +
+    '</div>' +
+    '<div id="bk-diag-result" style="display:none;margin-top:10px"></div>' +
+  '</div>' +
+  '<div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:12px">Select a Service</div>' +
+  '<div id="bk-services-list" style="display:flex;flex-direction:column;gap:10px">' +
+    '<div style="height:72px;background:#F3F4F6;border-radius:10px"></div>' +
+    '<div style="height:72px;background:#F3F4F6;border-radius:10px"></div>' +
+    '<div style="height:72px;background:#F3F4F6;border-radius:10px"></div>' +
+    '<div style="height:72px;background:#F3F4F6;border-radius:10px"></div>' +
+  '</div>' +
+  '<div style="margin-top:20px">' +
+    '<button id="bk-step1-continue" style="width:100%;padding:14px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;font-family:inherit;opacity:.5;cursor:not-allowed" disabled>' +
+      'Continue to Date &amp; Time &#8594;' +
+    '</button>' +
+  '</div>';
+}
+
+// ── Step 2: Date + Time ───────────────────────────────────────────────────────
+async function bkRenderStep2() {
+  var dates = bkGenerateDates();
+  if (!_bkState.date) _bkState.date = dates[0];
+  document.getElementById('bk-content').innerHTML = bkStep2HTML(dates);
+
+  document.getElementById('bk-step2-back').addEventListener('click', function() { bkShowStep(1); });
+
+  var continueBtn = document.getElementById('bk-step2-continue');
+  if (_bkState.time) {
+    continueBtn.disabled = false; continueBtn.style.opacity = '1'; continueBtn.style.cursor = 'pointer';
+  }
+  continueBtn.addEventListener('click', function() { if (_bkState.date && _bkState.time) bkShowStep(3); });
+
+  document.getElementById('bk-date-carousel').querySelectorAll('.bk-date-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      _bkState.date = item.dataset.date;
+      _bkState.time = null;
+      var carousel = document.getElementById('bk-date-carousel');
+      carousel.querySelectorAll('.bk-date-item').forEach(function(d) { bkDateItemDeselect(d); });
+      bkDateItemSelect(item);
+      var cont = document.getElementById('bk-step2-continue');
+      cont.disabled = true; cont.style.opacity = '.5'; cont.style.cursor = 'not-allowed';
+      bkLoadAndRenderSlots();
+    });
+  });
+
+  await bkLoadAndRenderSlots();
+}
+
+function bkDateItemSelect(el) {
+  el.style.borderColor = '#0A58CA'; el.style.background = '#0A58CA';
+  el.querySelectorAll('span').forEach(function(s) { s.style.color = '#fff'; });
+}
+
+function bkDateItemDeselect(el) {
+  el.style.borderColor = '#E5E7EB'; el.style.background = '#fff';
+  el.querySelectorAll('span').forEach(function(s) { s.style.color = ''; });
+}
+
+function bkStep2HTML(dates) {
+  var html = '<div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:12px">Select a Date</div>';
+  html += '<div id="bk-date-carousel" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:24px">';
+  dates.forEach(function(d) {
+    var parts = d.split('-').map(Number);
+    var dt = new Date(parts[0], parts[1] - 1, parts[2]);
+    var today = new Date(); today.setHours(0,0,0,0); dt.setHours(0,0,0,0);
+    var isToday = dt.getTime() === today.getTime();
+    var sel = d === _bkState.date;
+    var bc = sel ? '#0A58CA' : '#E5E7EB';
+    var bg = sel ? '#0A58CA' : '#fff';
+    html += '<button class="bk-date-item" data-date="' + d + '" type="button"' +
+      ' style="min-width:56px;padding:8px 6px;border:2px solid ' + bc + ';border-radius:10px;background:' + bg + ';cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">' +
+      '<span style="font-size:11px;font-weight:600;color:' + (sel ? '#fff' : '#9CA3AF') + '">' + (isToday ? 'Today' : BK_DAY_NAMES[dt.getDay()]) + '</span>' +
+      '<span style="font-size:20px;font-weight:800;color:' + (sel ? '#fff' : '#111827') + '">' + dt.getDate() + '</span>' +
+      '<span style="font-size:11px;color:' + (sel ? 'rgba(255,255,255,.8)' : '#9CA3AF') + '">' + BK_MONTH_NAMES[dt.getMonth()] + '</span>' +
+    '</button>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:12px">Select a Time</div>';
+  html += '<div id="bk-time-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px">';
+  html += '<div style="height:42px;background:#F3F4F6;border-radius:8px;grid-column:1/-1"></div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:10px">';
+  html += '<button id="bk-step2-back" style="flex:1;padding:13px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">&#8592; Back</button>';
+  html += '<button id="bk-step2-continue" style="flex:2;padding:13px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;font-family:inherit;opacity:.5;cursor:not-allowed" disabled>Summary &#8594;</button>';
+  html += '</div>';
+  return html;
+}
+
+async function bkLoadAndRenderSlots() {
+  var grid = document.getElementById('bk-time-grid');
+  if (!grid) return;
+  grid.innerHTML = '<div style="height:42px;background:#F3F4F6;border-radius:8px;grid-column:1/-1"></div>';
+  var slots;
+  try {
+    var svcId = _bkState.service ? _bkState.service.id : null;
+    var res = await _sb.from('availability').select('time_slot, available').eq('date', _bkState.date).eq('service_id', svcId);
+    slots = (res.error || !res.data || !res.data.length)
+      ? BK_MOCK_SLOTS.map(function(t) { return { time: t, available: true }; })
+      : res.data.map(function(r) { return { time: r.time_slot, available: r.available }; });
+  } catch(e) {
+    slots = BK_MOCK_SLOTS.map(function(t) { return { time: t, available: true }; });
+  }
+  grid.innerHTML = slots.map(function(s) {
+    var sel = s.time === _bkState.time;
+    var bc = sel ? '#0A58CA' : (s.available ? '#E5E7EB' : '#F3F4F6');
+    var bg = sel ? '#0A58CA' : (s.available ? '#fff' : '#F9FAFB');
+    var col = sel ? '#fff' : (s.available ? '#374151' : '#D1D5DB');
+    return '<button class="bk-time-slot" type="button" data-time="' + s.time + '"' +
+      (s.available ? '' : ' disabled') +
+      ' style="padding:10px 8px;border:2px solid ' + bc + ';border-radius:8px;background:' + bg + ';color:' + col + ';font-size:13px;font-weight:600;cursor:' + (s.available ? 'pointer' : 'not-allowed') + ';font-family:inherit">' +
+      s.time + '</button>';
+  }).join('');
+  grid.querySelectorAll('.bk-time-slot:not([disabled])').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _bkState.time = btn.dataset.time;
+      grid.querySelectorAll('.bk-time-slot').forEach(function(s) {
+        s.style.borderColor = '#E5E7EB'; s.style.background = '#fff'; s.style.color = '#374151';
+      });
+      btn.style.borderColor = '#0A58CA'; btn.style.background = '#0A58CA'; btn.style.color = '#fff';
+      var cont = document.getElementById('bk-step2-continue');
+      if (cont) { cont.disabled = false; cont.style.opacity = '1'; cont.style.cursor = 'pointer'; }
+    });
+  });
+}
+
+// ── Step 3: Summary ───────────────────────────────────────────────────────────
+function bkRenderStep3() {
+  document.getElementById('bk-content').innerHTML = bkStep3HTML();
+  document.getElementById('bk-step3-back').addEventListener('click', function() { bkShowStep(2); });
+  document.getElementById('bk-step3-proceed').addEventListener('click', bkProceed);
+}
+
+function bkSummaryRow(label, value) {
+  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid #F3F4F6">' +
+    '<span style="font-size:14px;color:#6B7280">' + label + '</span>' +
+    '<span style="font-size:14px;font-weight:600;color:#111827">' + value + '</span>' +
+  '</div>';
+}
+
+function bkStep3HTML() {
+  var s = _bkState.service || {};
+  var html = '<div style="border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;margin-bottom:20px">';
+  html += bkSummaryRow('Service', s.name || '-');
+  html += bkSummaryRow('Date', bkFormatDate(_bkState.date));
+  html += bkSummaryRow('Time', _bkState.time || '-');
+  html += bkSummaryRow('Est. Duration', s.duration || '-');
+  html += '</div>';
+  html += '<div style="margin-bottom:20px">';
+  html += '<label style="font-size:14px;font-weight:600;color:#374151;display:block;margin-bottom:8px">Your Address</label>';
+  html += '<input id="bk-address" type="text" placeholder="123 Example St, Suburb NSW 2000" autocomplete="street-address"' +
+    ' style="width:100%;padding:11px 14px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit">';
+  html += '<div style="font-size:12px;color:#9CA3AF;margin-top:4px">Where should we come? (Sydney area only)</div>';
+  html += '</div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-top:2px solid #111827;border-bottom:2px solid #111827;margin-bottom:20px">';
+  html += '<span style="font-size:16px;font-weight:700;color:#111827">Total</span>';
+  html += '<span style="font-size:22px;font-weight:800;color:#0A58CA">$' + (s.price || 0) + '</span>';
+  html += '</div>';
+  html += '<div id="bk-booking-error" style="display:none;color:#DC2626;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px;border:1px solid #FECACA"></div>';
+  html += '<div style="display:flex;gap:10px">';
+  html += '<button id="bk-step3-back" style="flex:1;padding:13px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">&#8592; Back</button>';
+  html += '<button id="bk-step3-proceed" style="flex:2;padding:13px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Confirm &amp; Pay &#8594;</button>';
+  html += '</div>';
+  return html;
+}
+
+async function bkProceed() {
+  var btn = document.getElementById('bk-step3-proceed');
+  var errEl = document.getElementById('bk-booking-error');
+  var addrEl = document.getElementById('bk-address');
+  var addr = addrEl ? addrEl.value.trim() : '';
+  btn.disabled = true; btn.textContent = 'Saving...';
+  errEl.style.display = 'none';
+  try {
+    var userRes = await _sb.auth.getUser();
+    var userId = (userRes.data && userRes.data.user) ? userRes.data.user.id : null;
+    var ins = await _sb.from('bookings').insert([{
+      client_id: userId,
+      service_id: _bkState.service.id,
+      scheduled_date: _bkState.date,
+      scheduled_time: _bkState.time,
+      location: addr || 'Home',
+      status: 'pending',
+      total_price: _bkState.service.price,
+    }]).select().single();
+    if (ins.error) throw ins.error;
+    _bkState.bookingId = ins.data.id;
+    document.getElementById('bk-content').innerHTML = bkConfirmedHTML(ins.data.id);
+    document.getElementById('bk-done-btn').addEventListener('click', function() {
+      closeBooking();
+      _bkState.service = null; _bkState.date = null; _bkState.time = null; _bkState.bookingId = null;
+    });
+  } catch(e) {
+    errEl.textContent = e.message || 'Could not save booking. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Confirm & Pay →';
+  }
+}
+
+function bkConfirmedHTML(bookingId) {
+  var ref = bookingId ? '#DBS-' + String(bookingId).replace(/-/g, '').substring(0, 6).toUpperCase() : '';
+  return '<div style="text-align:center;padding:32px 16px">' +
+    '<div style="font-size:48px;margin-bottom:16px">&#9989;</div>' +
+    '<div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px">Booking Received!</div>' +
+    (ref ? '<div style="font-size:14px;color:#6B7280;margin-bottom:16px">Reference: <strong style="color:#0A58CA">' + ref + '</strong></div>' : '') +
+    '<div style="font-size:14px;color:#374151;margin-bottom:24px">We\'ll contact you within 1 hour to confirm your appointment. Payment is arranged separately.</div>' +
+    '<button id="bk-done-btn" style="width:100%;padding:13px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Done</button>' +
+  '</div>';
+}
+
+// ── AI Diagnosis ──────────────────────────────────────────────────────────────
+function bkRunAIDiagnosis() {
+  var input = document.getElementById('bk-diag-photo');
+  if (!input || !input.files[0]) return;
+  var file = input.files[0];
+  var resultEl = document.getElementById('bk-diag-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="font-size:12px;color:#6B7280">&#128269; Analysing your photo...</div>';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var base64 = e.target.result.split(',')[1];
+    fetch('/api/chat?type=diagnose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64, mediaType: file.type || 'image/jpeg' })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      bkShowDiagResult(data);
+    }).catch(function() {
+      var el = document.getElementById('bk-diag-result');
+      if (el) el.innerHTML = '<div style="font-size:12px;color:#EF4444">Could not analyse photo. Please describe the problem instead.</div>';
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+async function bkRunAIDiagnosisText() {
+  var textEl = document.getElementById('bk-diag-text');
+  if (!textEl || !textEl.value.trim()) return;
+  var text = textEl.value.trim();
+  var resultEl = document.getElementById('bk-diag-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="font-size:12px;color:#6B7280">&#128269; Analysing...</div>';
+  try {
+    var r = await fetch('/api/chat?type=diagnose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: text })
+    });
+    bkShowDiagResult(await r.json());
+  } catch(e) {
+    var el = document.getElementById('bk-diag-result');
+    if (el) el.innerHTML = '<div style="font-size:12px;color:#EF4444">Could not process. Please select a service manually.</div>';
+  }
+}
+
+function bkShowDiagResult(data) {
+  var resultEl = document.getElementById('bk-diag-result');
+  if (!resultEl) return;
+  var sev = data.severity || 'medium';
+  var sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
+  var urgColor = data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
+  var chips = (data.services || []).map(function(s) {
+    return '<span class="bk-diag-chip" data-svc="' + s.replace(/"/g, '&quot;') + '"' +
+      ' style="background:#EEF3FC;color:#1848C8;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px;margin-bottom:4px;cursor:pointer;display:inline-block">' + s + '</span>';
+  }).join('');
+  resultEl.innerHTML = '<div style="background:white;border-radius:8px;padding:12px;border:1px solid #E5E7EB">' +
+    '<div style="font-size:12px;font-weight:700;color:#0D1F3C;margin-bottom:6px">&#129302; AI Recommendation</div>' +
+    '<div style="font-size:12px;color:#374151;margin-bottom:8px">' + (data.diagnosis || 'Bike issue detected') + '</div>' +
+    (chips ? '<div style="margin-bottom:8px">' + chips + '</div>' : '') +
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+      '<span style="font-size:11px;color:' + sevColor + ';font-weight:600">' + sev.charAt(0).toUpperCase() + sev.slice(1) + ' severity</span>' +
+      '<span style="color:#D1D5DB">&#183;</span>' +
+      '<span style="font-size:11px;color:' + urgColor + ';font-weight:600">' + (data.urgency || 'Book soon') + '</span>' +
+      (data.details ? '<span style="color:#D1D5DB">&#183;</span><span style="font-size:11px;color:#6B7280">' + data.details + '</span>' : '') +
+    '</div>' +
+  '</div>';
+  resultEl.querySelectorAll('.bk-diag-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() { bkAutoSelectService(chip.dataset.svc); });
+  });
+}
+
+function bkAutoSelectService(name) {
+  var list = document.getElementById('bk-services-list');
+  if (!list || !_bkState.services.length) return;
+  _bkState.services.forEach(function(s) {
+    if (s.name.toLowerCase().indexOf(name.toLowerCase()) !== -1 || name.toLowerCase().indexOf(s.name.toLowerCase()) !== -1) {
+      var card = list.querySelector('[data-service-id="' + s.id + '"]');
+      if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    }
+  });
+}
+
+// ── Wire all booking triggers on DOM ready ────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var bkPanel = document.getElementById('booking-panel');
+
+  document.getElementById('bk-close-btn').addEventListener('click', closeBooking);
+  bkPanel.addEventListener('click', function(e) {
+    if (e.target === bkPanel) closeBooking();
+  });
+
+  var heroBk = document.getElementById('hero-book-btn');
+  if (heroBk) heroBk.addEventListener('click', function() { openBooking(); });
+
+  document.querySelectorAll('.svc-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var svcName = card.querySelector('.svc-name');
+      openBooking(svcName ? svcName.textContent.trim() : null);
+    });
+  });
+
+  var lcGoogle = document.getElementById('login-cta-google');
+  if (lcGoogle) lcGoogle.addEventListener('click', signInGoogle);
+
+  var lcCreate = document.getElementById('login-cta-create');
+  if (lcCreate) lcCreate.addEventListener('click', function() { openAuthModal(); showAuthTab('signup'); });
+});
 </script>
 
 </body>
