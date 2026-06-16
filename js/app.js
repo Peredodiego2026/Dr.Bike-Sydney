@@ -31,27 +31,9 @@ function applyPricingAdjustments(basePrice, dateStr) {
 }
 // ───────────────────────────────────────────────────────────────────────────
 
-// ── Service Duration Estimates (6.4) ──────────────────────────────────────
-const SERVICE_DURATION = {
-  'Tune-Up': 60, 'Standard': 90, 'Major': 150, 'Ultimate': 240
-};
-function getServiceDuration(serviceType) {
-  if (!serviceType) return 60;
-  for (const [key, mins] of Object.entries(SERVICE_DURATION)) {
-    if (serviceType.includes(key)) return mins;
-  }
-  return 60;
-}
-function formatDuration(mins) {
-  if (mins < 60) return mins + ' min';
-  const h = Math.floor(mins/60), m = mins%60;
-  return h + 'h' + (m ? ' '+m+'min' : '');
-}
-// ─────────────────────────────────────────────────────────────────────────
-
 import router from './router.js';
 import { sb, getServices, getAvailableSlots, createBooking, subscribeToMechanicLocation, submitReview, signIn, signUp, getMyBookings } from './supabase.js';
-import { createHeader, createBottomNav, createServiceCard, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
+import { createHeader, createBottomNav, createServiceCard, formatServiceDuration, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
 import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm, createCheckoutSession } from './stripe.js';
 
 window.appState = { service: null, date: null, time: null, location: 'Home', bookingId: null };
@@ -294,7 +276,7 @@ async function renderServiceSummary() {
     </div>
     <div class="summary-card">
       ${createSummaryRow('Service', service.name)}
-      ${(() => { const dur = getServiceDuration(service.name); return createSummaryRow('Est. Duration', formatDuration(dur)); })()}
+      ${(() => { const dur = formatServiceDuration(service); return dur ? createSummaryRow('Est. Duration', dur) : ''; })()}
       ${createSummaryRow('Date', formatDate(date))}
       ${createSummaryRow('Time', time || '-')}
       ${createSummaryRow('Location', location || 'Home')}
@@ -360,12 +342,19 @@ async function renderServiceSummary() {
 
   screen.querySelector('#proceed-btn').addEventListener('click', async () => {
     const btn = screen.querySelector('#proceed-btn');
+    const errEl = screen.querySelector('#booking-error');
     btn.disabled = true;
     btn.textContent = 'Confirming...';
+    errEl.hidden = true;
     try {
       const { data: { user } } = await sb.auth.getUser();
+      if (!user) throw new Error('Please sign in to complete your booking.');
+      const meta = user.user_metadata || {};
       const booking = await createBooking({
-        client_id: user?.id || null,
+        user_id: user.id,
+        client_id: user.id,
+        client_name: meta.full_name || meta.name || '',
+        client_email: user.email || '',
         service_name: service.name,
         scheduled_date: date,
         scheduled_time: time,
@@ -374,10 +363,14 @@ async function renderServiceSummary() {
         service_price: service.price,
       });
       window.appState.bookingId = booking.id;
-    } catch {
+      router.navigate('payment');
+    } catch (e) {
       window.appState.bookingId = null;
+      errEl.textContent = e.message || 'Could not save booking. Please try again.';
+      errEl.hidden = false;
+      btn.disabled = false;
+      btn.textContent = 'Proceed to Payment';
     }
-    router.navigate('payment');
   });
 }
 
@@ -809,7 +802,15 @@ async function renderReview() {
     btn.disabled = true;
     btn.textContent = 'Submitting...';
     errEl.hidden = true;
-    try { await submitReview(bookingId || 'demo', currentRating, textarea.value.trim()); } catch {}
+    try {
+      await submitReview(bookingId || 'demo', currentRating, textarea.value.trim());
+    } catch (e) {
+      errEl.textContent = e.message || 'Could not submit review. Please try again.';
+      errEl.hidden = false;
+      btn.disabled = false;
+      btn.textContent = 'Submit Review';
+      return;
+    }
     showToast('Thanks for your feedback!', 'success');
     // 2.3: If 5-star review, show social share nudge before navigating home
     if (currentRating === 5) {
@@ -1375,13 +1376,17 @@ function showDiagResult(screen, data) {
 function autoSelectService(screen, serviceName) {
   const list = screen.querySelector('#services-list');
   if (!list) return;
+  const target = serviceName.toLowerCase();
+  let best = null;
   list.querySelectorAll('.service-card').forEach(card => {
-    const name = card.querySelector('.service-card__name')?.textContent || '';
-    if (name.toLowerCase().includes(serviceName.toLowerCase()) || serviceName.toLowerCase().includes(name.toLowerCase())) {
-      card.click();
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    const name = (card.querySelector('.service-card__name')?.textContent || '').toLowerCase();
+    if (name === target) { best = card; return; }
+    if (!best && (name.includes(target) || target.includes(name))) best = card;
   });
+  if (best) {
+    best.click();
+    best.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 router.init();

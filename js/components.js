@@ -58,8 +58,19 @@ export function createButton(text, variant = 'primary', fullWidth = false) {
 }
 
 // ── Service Card ──────────────────────────────────────────────────────────────
+export function formatServiceDuration(service) {
+  if (!service) return '';
+  if (service.duration) return service.duration;
+  const fmt = m => m < 60 ? m + ' min' : Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'min' : '');
+  const { duration_min: min, duration_max: max } = service;
+  if (!min && !max) return '';
+  if (min && max && min !== max) return fmt(min) + ' - ' + fmt(max);
+  return fmt(min || max);
+}
+
 export function createServiceCard(service) {
-  const { id = '', name = '', description = '', price = 0, duration = '' } = service;
+  const { id = '', name = '', description = '', price = 0 } = service;
+  const duration = formatServiceDuration(service);
   return `
 <div class="service-card" data-service-id="${id}" role="button" tabindex="0">
   <div class="service-card__body">

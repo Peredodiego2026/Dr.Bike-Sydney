@@ -1827,7 +1827,7 @@ function showDiagResult(data) {
     '<div style="font-size:12px;font-weight:700;color:#0D1F3C;margin-bottom:6px">🤖 AI Recommendation</div>' +
     '<div style="font-size:12px;color:#374151;margin-bottom:8px">' + (data.diagnosis || 'Bike issue detected') + '</div>' +
     (data.services && data.services.length ? '<div style="margin-bottom:8px">' + data.services.map(function(s) {
-      return '<span style="background:#EEF3FC;color:#1848C8;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px;cursor:pointer" onclick="autoSelectService('' + s + '')">' + s + '</span>';
+      return '<span class="diag-chip" data-svc="' + s.replace(/"/g, '&quot;') + '" style="background:#EEF3FC;color:#1848C8;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px;cursor:pointer">' + s + '</span>';
     }).join('') + '</div>' : '') +
     '<div style="display:flex;gap:8px;align-items:center">' +
     '<span style="font-size:11px;color:' + sevColor + ';font-weight:600">' + (sev.charAt(0).toUpperCase()+sev.slice(1)) + ' severity</span>' +
@@ -1835,6 +1835,9 @@ function showDiagResult(data) {
     '<span style="font-size:11px;color:' + urgColor + ';font-weight:600">' + (data.urgency || 'Book soon') + '</span>' +
     (data.estimatedCost ? '<span style="color:#d1d5db">·</span><span style="font-size:11px;color:#6b7280">' + data.estimatedCost + '</span>' : '') +
     '</div></div>';
+  resultEl.querySelectorAll('.diag-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() { autoSelectService(chip.dataset.svc); });
+  });
 }
 
 function autoSelectService(serviceName) {
@@ -1886,6 +1889,9 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
       <div id="nl-success" style="display:none;color:#fff;font-weight:600;font-size:15px;padding:16px">
         ✅ Subscribed! Check your inbox for a 10% off code.
       </div>
+      <div id="nl-error" style="display:none;color:#FCA5A5;font-weight:600;font-size:13px;padding:10px">
+        Could not subscribe. Please try again.
+      </div>
       <p style="font-size:11px;color:rgba(255,255,255,.4);margin-top:12px">No spam. Unsubscribe anytime.</p>
     </div>
   </section>
@@ -1896,12 +1902,17 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
       alert('Please enter a valid email address.'); return;
     }
     try {
-      await fetch('/api/subscribe-newsletter', {
+      var r = await fetch('/api/subscribe-newsletter', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ email, source: 'landing_page' })
       });
-    } catch(e) {}
+      if (!r.ok) throw new Error('Subscription failed');
+    } catch(e) {
+      var nlErr = document.getElementById('nl-error');
+      if (nlErr) nlErr.style.display = 'block';
+      return;
+    }
     document.getElementById('newsletter-form').style.display = 'none';
     document.getElementById('nl-success').style.display = 'block';
     if(window.gtag) gtag('event','newsletter_subscribe',{page:'landing'});
@@ -2110,6 +2121,16 @@ function bkGenerateDates() {
   return dates;
 }
 
+function bkFormatDuration(s) {
+  if (!s) return '';
+  if (s.duration) return s.duration;
+  var min = s.duration_min, max = s.duration_max;
+  if (!min && !max) return '';
+  function fmt(m) { return m < 60 ? m + ' min' : (Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'min' : '')); }
+  if (min && max && min !== max) return fmt(min) + ' - ' + fmt(max);
+  return fmt(min || max);
+}
+
 function bkFormatDate(dateStr) {
   if (!dateStr) return '-';
   var parts = dateStr.split('-').map(Number);
@@ -2210,7 +2231,7 @@ function bkServiceCardHTML(s, selected) {
     '<div style="flex:1">' +
       '<div style="font-weight:700;font-size:15px;color:#111827">' + s.name + '</div>' +
       (s.description ? '<div style="font-size:13px;color:#6B7280;margin-top:3px">' + s.description + '</div>' : '') +
-      (s.duration ? '<div style="font-size:12px;color:#9CA3AF;margin-top:2px">' + s.duration + '</div>' : '') +
+      (bkFormatDuration(s) ? '<div style="font-size:12px;color:#9CA3AF;margin-top:2px">' + bkFormatDuration(s) + '</div>' : '') +
     '</div>' +
     '<div style="text-align:right;margin-left:12px;flex-shrink:0">' +
       '<div style="font-size:18px;font-weight:800;color:#0A58CA">$' + s.price + '</div>' +
@@ -2376,7 +2397,7 @@ function bkStep3HTML() {
   html += bkSummaryRow('Service', s.name || '-');
   html += bkSummaryRow('Date', bkFormatDate(_bkState.date));
   html += bkSummaryRow('Time', _bkState.time || '-');
-  html += bkSummaryRow('Est. Duration', s.duration || '-');
+  html += bkSummaryRow('Est. Duration', bkFormatDuration(s) || '-');
   html += '</div>';
   html += '<div style="margin-bottom:20px">';
   html += '<label style="font-size:14px;font-weight:600;color:#374151;display:block;margin-bottom:8px">Your Address</label>';
@@ -2405,9 +2426,14 @@ async function bkProceed() {
   errEl.style.display = 'none';
   try {
     var userRes = await _sb.auth.getUser();
-    var userId = (userRes.data && userRes.data.user) ? userRes.data.user.id : null;
+    var u = (userRes.data && userRes.data.user) ? userRes.data.user : null;
+    if (!u) { throw new Error('Please sign in to complete your booking.'); }
+    var meta = u.user_metadata || {};
     var ins = await _sb.from('bookings').insert([{
-      client_id: userId,
+      user_id: u.id,
+      client_id: u.id,
+      client_name: meta.full_name || meta.name || '',
+      client_email: u.email || '',
       service_name: _bkState.service.name,
       scheduled_date: _bkState.date,
       scheduled_time: _bkState.time,
@@ -2514,12 +2540,17 @@ function bkShowDiagResult(data) {
 function bkAutoSelectService(name) {
   var list = document.getElementById('bk-services-list');
   if (!list || !_bkState.services.length) return;
+  var target = name.toLowerCase();
+  var best = null;
   _bkState.services.forEach(function(s) {
-    if (s.name.toLowerCase().indexOf(name.toLowerCase()) !== -1 || name.toLowerCase().indexOf(s.name.toLowerCase()) !== -1) {
-      var card = list.querySelector('[data-service-id="' + s.id + '"]');
-      if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-    }
+    var sn = s.name.toLowerCase();
+    if (sn === target) { best = s; return; }
+    if (!best && (sn.indexOf(target) !== -1 || target.indexOf(sn) !== -1)) best = s;
   });
+  if (best) {
+    var card = list.querySelector('[data-service-id="' + best.id + '"]');
+    if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  }
 }
 
 // ── Wire all booking triggers on DOM ready ────────────────────────────────────
