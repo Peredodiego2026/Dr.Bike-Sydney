@@ -164,127 +164,264 @@ async function loadLeaflet() {
   });
 }
 
-// ── Book a Service ────────────────────────────────────────────────────────────
+// ── Book a Service (3-step wizard) ───────────────────────────────────────────
 async function renderBookService() {
   const screen = document.querySelector('[data-screen="book-service"]');
   if (!screen) return;
   if (window.gtag) gtag('event', 'begin_checkout');
   if (window.fbq) fbq('track', 'InitiateCheckout');
-
-  window.appState.time = null;
-
-  const dates = generateDates(7);
-  const todayStr = dates[0];
-  const initialDate = (window.appState.date && dates.includes(window.appState.date))
-    ? window.appState.date : todayStr;
-  window.appState.date = initialDate;
-
-  screen.innerHTML = `
-    ${createHeader('Book a Service', true, '#home')}
-    <div id="diag-block" style="background:#EEF3FC;border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #C7D9F8">
-      <div style="font-size:13px;font-weight:700;color:#1848C8;margin-bottom:8px">&#128269; Not sure what your bike needs?</div>
-      <div style="font-size:12px;color:#374151;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-        <label style="flex:1;min-width:120px;cursor:pointer">
-          <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
-          <div id="diag-photo-btn" style="background:white;border:2px solid #C7D9F8;border-radius:8px;padding:10px;text-align:center;font-size:12px;font-weight:600;color:#1848C8;cursor:pointer">&#128247; Take a Photo</div>
-        </label>
-        <div style="flex:2;min-width:140px">
-          <textarea id="diag-text" placeholder="Describe the problem... (e.g. clicking noise when pedalling)" style="width:100%;border:2px solid #C7D9F8;border-radius:8px;padding:8px;font-size:12px;height:42px;resize:none;outline:none;box-sizing:border-box;font-family:inherit"></textarea>
-        </div>
-        <button id="diag-ask-btn" style="background:#1848C8;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Ask AI &#8594;</button>
-      </div>
-      <div id="diag-result" style="margin-top:10px;display:none"></div>
-    </div>
-    <div class="section-label">Service Type</div>
-    <div class="services-list" id="services-list">
-      <div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-    </div>
-    <div class="section-label mt-5">Select Date</div>
-    <div class="date-carousel" id="date-carousel">
-      ${dates.map(d => createDateItem(d, d === initialDate)).join('')}
-    </div>
-    <div class="section-label mt-5">Select Time</div>
-    <div class="time-grid" id="time-grid">
-      <div class="skeleton" style="height:44px;grid-column:1/-1"></div>
-      <div class="skeleton" style="height:44px;grid-column:1/-1"></div>
-    </div>
-    <div class="section-label mt-5">Location</div>
-    <div class="location-row">
-      <div class="location-info" style="flex:1">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-          <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>
-        <div style="flex:1">
-          <input type="text" id="location-input" value="${(window.appState.location || 'Home').replace(/"/g, '&quot;')}" placeholder="Enter your address" style="width:100%;border:none;outline:none;background:transparent;font-weight:600;font-size:15px;color:var(--color-text);padding:0;font-family:inherit">
-          <div class="text-secondary text-sm">Service at your location</div>
-        </div>
-      </div>
-    </div>
-    <div class="sticky-bottom">
-      <button class="btn btn--primary btn--full" id="continue-btn" disabled>Continue</button>
-    </div>
-    ${createBottomNav('home')}
-  `;
-
   if (!window.appState.location) window.appState.location = 'Home';
 
-  const diagPhoto = screen.querySelector('#diag-photo');
-  screen.querySelector('#diag-photo-btn').addEventListener('click', () => diagPhoto.click());
-  diagPhoto.addEventListener('change', () => runAIDiagnosis(screen));
-  screen.querySelector('#diag-ask-btn').addEventListener('click', () => runAIDiagnosisText(screen));
-  screen.querySelector('#diag-text').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runAIDiagnosisText(screen); }
-  });
+  let _services = null;
 
-  const [services] = await Promise.all([
-    getServices(),
-    loadTimeSlots(screen, initialDate, window.appState.service?.id),
-  ]);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let _calYear = today.getFullYear();
+  let _calMonth = today.getMonth();
 
-  const list = screen.querySelector('#services-list');
-  list.innerHTML = services.map(s => createServiceCard(s)).join('');
+  const CAT_ORDER = [
+    'Scheduled services', 'Brakes', 'Cockpit & levers', 'Drivetrain',
+    'Gears & cables', 'Wheels & tyres', 'Electronic & e-bike', 'Suspension', 'General & assembly',
+  ];
+  const CAT_ICON = {
+    'Scheduled services': '🔧', 'Brakes': '🛑', 'Cockpit & levers': '🎛️',
+    'Drivetrain': '⚙️', 'Gears & cables': '🔩', 'Wheels & tyres': '🔄',
+    'Electronic & e-bike': '⚡', 'Suspension': '🏔️', 'General & assembly': '🔨',
+  };
 
-  if (window.appState.service) {
-    const pre = list.querySelector(`[data-service-id="${window.appState.service.id}"]`);
-    if (pre) { pre.classList.add('selected'); updateContinueBtn(screen); }
+  // ── Step 1: Choose Service ────────────────────────────────────────────────
+  function renderStep1() {
+    const groups = {};
+    CAT_ORDER.forEach(c => { groups[c] = []; });
+    (_services || []).forEach(s => {
+      const c = s.category || 'General & assembly';
+      if (!groups[c]) groups[c] = [];
+      groups[c].push(s);
+    });
+
+    const categoriesHtml = _services
+      ? CAT_ORDER.filter(cat => groups[cat].length > 0).map(cat => `
+          <div class="category-section">
+            <div class="category-header">${CAT_ICON[cat] || ''} ${cat}</div>
+            <div class="services-list">${groups[cat].map(s => createServiceCard(s)).join('')}</div>
+          </div>`).join('')
+      : '<div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
+
+    screen.innerHTML = `
+      ${createHeader('Book a Service', true, '#home')}
+      <div id="diag-block" style="background:#EEF3FC;border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #C7D9F8">
+        <div style="font-size:13px;font-weight:700;color:#1848C8;margin-bottom:8px">&#128269; Not sure what your bike needs?</div>
+        <div style="font-size:12px;color:#374151;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <label style="flex:1;min-width:120px;cursor:pointer">
+            <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
+            <div id="diag-photo-btn" style="background:white;border:2px solid #C7D9F8;border-radius:8px;padding:10px;text-align:center;font-size:12px;font-weight:600;color:#1848C8;cursor:pointer">&#128247; Take a Photo</div>
+          </label>
+          <div style="flex:2;min-width:140px">
+            <textarea id="diag-text" placeholder="Describe the problem... (e.g. clicking noise when pedalling)" style="width:100%;border:2px solid #C7D9F8;border-radius:8px;padding:8px;font-size:12px;height:42px;resize:none;outline:none;box-sizing:border-box;font-family:inherit"></textarea>
+          </div>
+          <button id="diag-ask-btn" style="background:#1848C8;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Ask AI &#8594;</button>
+        </div>
+        <div id="diag-result" style="margin-top:10px;display:none"></div>
+      </div>
+      <div class="section-label">Select Service</div>
+      <div id="step1-services">${categoriesHtml}</div>
+      <div class="sticky-bottom">
+        <button class="btn btn--primary btn--full" id="s1-continue" disabled>Continue</button>
+      </div>
+      ${createBottomNav('home')}
+    `;
+
+    const diagPhoto = screen.querySelector('#diag-photo');
+    screen.querySelector('#diag-photo-btn').addEventListener('click', () => diagPhoto.click());
+    diagPhoto.addEventListener('change', () => runAIDiagnosis(screen));
+    screen.querySelector('#diag-ask-btn').addEventListener('click', () => runAIDiagnosisText(screen));
+    screen.querySelector('#diag-text').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runAIDiagnosisText(screen); }
+    });
+
+    const continueBtn = screen.querySelector('#s1-continue');
+
+    if (window.appState.service) {
+      const pre = screen.querySelector(`[data-service-id="${window.appState.service.id}"]`);
+      if (pre) { pre.classList.add('selected'); continueBtn.disabled = false; }
+    }
+
+    screen.querySelectorAll('.service-card').forEach(card => {
+      card.addEventListener('click', () => {
+        screen.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        const prev = window.appState.service;
+        window.appState.service = (_services || []).find(s => String(s.id) === card.dataset.serviceId);
+        if (!prev || prev.id !== window.appState.service?.id) {
+          window.appState.date = null;
+          window.appState.time = null;
+        }
+        if (window.gtag) gtag('event', 'add_to_cart', { currency: 'AUD', items: [{ item_name: window.appState.service?.name, price: window.appState.service?.price }] });
+        continueBtn.disabled = false;
+      });
+      card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') card.click(); });
+    });
+
+    continueBtn.addEventListener('click', () => {
+      if (window.appState.service) renderStep2();
+    });
   }
 
-  list.querySelectorAll('.service-card').forEach(card => {
-    card.addEventListener('click', () => {
-      list.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      window.appState.service = services.find(s => String(s.id) === card.dataset.serviceId);
-      if (window.gtag) gtag('event', 'add_to_cart', { currency: 'AUD', items: [{ item_name: window.appState.service?.name, price: window.appState.service?.price }] });
-      window.appState.time = null;
-      updateContinueBtn(screen);
-      loadTimeSlots(screen, window.appState.date, window.appState.service?.id);
+  // ── Step 2: Date & Time ───────────────────────────────────────────────────
+  async function renderStep2() {
+    if (!document.getElementById('cal-styles')) {
+      const s = document.createElement('style');
+      s.id = 'cal-styles';
+      s.textContent = `
+        .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+        .cal-month{font-weight:700;font-size:15px;color:var(--color-text)}
+        .cal-arrow{background:none;border:1px solid var(--color-border);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:20px;color:var(--color-text);display:flex;align-items:center;justify-content:center;line-height:1}
+        .cal-arrow:disabled{opacity:0.3;cursor:default}
+        .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+        .cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--color-text-secondary);padding:4px 0}
+        .cal-day{background:none;border:none;border-radius:8px;padding:9px 2px;font-size:14px;cursor:pointer;color:var(--color-text);text-align:center;width:100%;transition:background 120ms}
+        .cal-day:hover:not(:disabled){background:var(--color-surface)}
+        .cal-day.cal-today{font-weight:700;color:var(--color-primary)}
+        .cal-day.cal-sel{background:var(--color-primary)!important;color:#fff;font-weight:700}
+        .cal-day.cal-dis,.cal-day:disabled{color:var(--color-text-secondary);opacity:0.3;cursor:default}
+        .category-header{font-size:12px;font-weight:700;color:var(--color-text-secondary);padding:14px 0 8px;letter-spacing:0.3px;text-transform:uppercase}
+        .category-section{margin-bottom:4px}
+      `;
+      document.head.appendChild(s);
+    }
+
+    const maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + 90);
+    const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+    function buildCal() {
+      const firstDow = new Date(_calYear, _calMonth, 1).getDay();
+      const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+      const prevOk = new Date(_calYear, _calMonth - 1, 1) >= new Date(today.getFullYear(), today.getMonth(), 1);
+      const nextOk = new Date(_calYear, _calMonth + 1, 1) <= new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+      let cells = '';
+      for (let i = 0; i < firstDow; i++) cells += '<div></div>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const ds = `${_calYear}-${String(_calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dt = new Date(_calYear, _calMonth, d);
+        const disabled = dt < today || dt > maxDate;
+        const isSel = ds === window.appState.date;
+        const isToday = dt.getTime() === today.getTime();
+        cells += `<button type="button" class="cal-day${isSel ? ' cal-sel' : ''}${isToday ? ' cal-today' : ''}${disabled ? ' cal-dis' : ''}" ${disabled ? 'disabled' : ''} data-date="${ds}">${d}</button>`;
+      }
+      return `
+        <div class="cal-nav">
+          <button type="button" id="cal-prev" class="cal-arrow" ${prevOk ? '' : 'disabled'}>&#8249;</button>
+          <span class="cal-month">${MONTH_NAMES[_calMonth]} ${_calYear}</span>
+          <button type="button" id="cal-next" class="cal-arrow" ${nextOk ? '' : 'disabled'}>&#8250;</button>
+        </div>
+        <div class="cal-grid">
+          ${DOW.map(d => `<div class="cal-dow">${d}</div>`).join('')}
+          ${cells}
+        </div>`;
+    }
+
+    screen.innerHTML = `
+      ${createHeader('Choose Date & Time', true, '#book-service')}
+      <div class="section-label">Select Date</div>
+      <div id="cal-wrap" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px;padding:16px;margin-bottom:20px">${buildCal()}</div>
+      <div class="section-label">Select Time</div>
+      <div class="time-grid" id="time-grid">
+        <div class="skeleton" style="height:44px;grid-column:1/-1"></div>
+        <div class="skeleton" style="height:44px;grid-column:1/-1"></div>
+      </div>
+      <div class="sticky-bottom">
+        <button class="btn btn--primary btn--full" id="continue-btn" disabled>Continue</button>
+      </div>
+      ${createBottomNav('home')}
+    `;
+
+    function wireCal() {
+      const wrap = screen.querySelector('#cal-wrap');
+      wrap.querySelector('#cal-prev')?.addEventListener('click', () => {
+        _calMonth--; if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+        wrap.innerHTML = buildCal(); wireCal();
+      });
+      wrap.querySelector('#cal-next')?.addEventListener('click', () => {
+        _calMonth++; if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+        wrap.innerHTML = buildCal(); wireCal();
+      });
+      wrap.querySelectorAll('.cal-day:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', () => {
+          window.appState.date = btn.dataset.date;
+          window.appState.time = null;
+          screen.querySelector('#continue-btn').disabled = true;
+          wrap.innerHTML = buildCal(); wireCal();
+          loadTimeSlots(screen, window.appState.date, window.appState.service?.id);
+        });
+      });
+    }
+    wireCal();
+
+    // Back: override header link to go to Step 1 (not hash nav)
+    screen.querySelector('.header-back')?.addEventListener('click', e => {
+      e.preventDefault(); renderStep1();
     });
-    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') card.click(); });
-  });
 
-  screen.querySelectorAll('.date-item').forEach(item => {
-    item.addEventListener('click', () => {
-      screen.querySelectorAll('.date-item').forEach(d => d.classList.remove('selected'));
-      item.classList.add('selected');
-      window.appState.date = item.dataset.date;
-      window.appState.time = null;
-      updateContinueBtn(screen);
-      loadTimeSlots(screen, window.appState.date, window.appState.service?.id);
+    screen.querySelector('#continue-btn').addEventListener('click', () => {
+      if (window.appState.date && window.appState.time) renderStep3();
     });
-  });
 
-  screen.querySelector('#location-input').addEventListener('input', e => {
-    window.appState.location = e.target.value;
-  });
+    if (window.appState.date) {
+      await loadTimeSlots(screen, window.appState.date, window.appState.service?.id);
+    }
+  }
 
-  screen.querySelector('#continue-btn').addEventListener('click', () => {
-    if (window.appState.service && window.appState.date && window.appState.time) {
+  // ── Step 3: Address ───────────────────────────────────────────────────────
+  function renderStep3() {
+    const saved = window.appState.location !== 'Home' ? window.appState.location : '';
+    screen.innerHTML = `
+      ${createHeader('Your Address', true, '#book-service')}
+      <div style="padding-top:8px">
+        <div class="section-label">Where should we come?</div>
+        <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px;padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:14px">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <div style="flex:1">
+              <label style="font-size:12px;color:var(--color-text-secondary);font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Address</label>
+              <input id="location-input" type="text" placeholder="e.g. 14 Smith St, Surry Hills NSW 2010"
+                value="${saved.replace(/"/g, '&quot;')}"
+                style="width:100%;border:none;outline:none;background:transparent;font-size:16px;color:var(--color-text);padding:0;font-family:inherit;box-sizing:border-box">
+              <div style="height:1px;background:var(--color-border);margin-top:8px"></div>
+              <div style="margin-top:6px;font-size:12px;color:var(--color-text-secondary)">Your mechanic will come to this address</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--color-text-secondary);padding:0 4px;line-height:1.5">The $20 call-out fee covers the mechanic's trip. Most areas in Sydney are covered.</div>
+      </div>
+      <div class="sticky-bottom">
+        <button class="btn btn--primary btn--full" id="s3-continue">Continue to Summary</button>
+      </div>
+      ${createBottomNav('home')}
+    `;
+
+    const input = screen.querySelector('#location-input');
+    input.addEventListener('input', e => { window.appState.location = e.target.value; });
+
+    // Back: go to Step 2
+    screen.querySelector('.header-back')?.addEventListener('click', e => {
+      e.preventDefault(); renderStep2();
+    });
+
+    screen.querySelector('#s3-continue').addEventListener('click', () => {
+      window.appState.location = input.value.trim() || 'Home';
       if (window.gtag) gtag('event', 'checkout_progress', { step: 2 });
       router.navigate('service-summary');
-    }
-  });
+    });
+  }
+
+  // ── Init: render Step 1 immediately (skeleton), then load services ─────────
+  renderStep1();
+  _services = await getServices();
+  renderStep1();
 }
 
 // ── Service Summary ───────────────────────────────────────────────────────────
