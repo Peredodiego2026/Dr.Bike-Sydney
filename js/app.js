@@ -258,6 +258,7 @@ async function renderBookService() {
         }
         if (window.gtag) gtag('event', 'add_to_cart', { currency: 'AUD', items: [{ item_name: window.appState.service?.name, price: window.appState.service?.price }] });
         continueBtn.disabled = false;
+        renderStep2();
       });
       card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') card.click(); });
     });
@@ -277,7 +278,7 @@ async function renderBookService() {
         .cal-month{font-weight:700;font-size:15px;color:var(--color-text)}
         .cal-arrow{background:none;border:1px solid var(--color-border);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:20px;color:var(--color-text);display:flex;align-items:center;justify-content:center;line-height:1}
         .cal-arrow:disabled{opacity:0.3;cursor:default}
-        .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+
         .cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--color-text-secondary);padding:4px 0}
         .cal-day{background:none;border:none;border-radius:8px;padding:9px 2px;font-size:14px;cursor:pointer;color:var(--color-text);text-align:center;width:100%;transition:background 120ms}
         .cal-day:hover:not(:disabled){background:var(--color-surface)}
@@ -315,7 +316,7 @@ async function renderBookService() {
           <span class="cal-month">${MONTH_NAMES[_calMonth]} ${_calYear}</span>
           <button type="button" id="cal-next" class="cal-arrow" ${nextOk ? '' : 'disabled'}>&#8250;</button>
         </div>
-        <div class="cal-grid">
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
           ${DOW.map(d => `<div class="cal-dow">${d}</div>`).join('')}
           ${cells}
         </div>`;
