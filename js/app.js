@@ -201,10 +201,22 @@ async function renderBookService() {
     const categoriesHtml = _services
       ? CAT_ORDER.filter(cat => groups[cat].length > 0).map(cat => `
           <div class="category-section">
-            <div class="category-header">${CAT_ICON[cat] || ''} ${cat}</div>
+            <div class="category-header" data-cat="${cat}">${CAT_ICON[cat] || ''} ${cat}</div>
             <div class="services-list">${groups[cat].map(s => createServiceCard(s)).join('')}</div>
           </div>`).join('')
       : '<div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
+
+    if (!document.getElementById('chip-styles')) {
+      const s = document.createElement('style');
+      s.id = 'chip-styles';
+      s.textContent = `.cat-chip:hover{background:var(--color-primary)!important;color:#fff!important;border-color:var(--color-primary)!important}`;
+      document.head.appendChild(s);
+    }
+    const CAT_SHORT = {
+      'Scheduled services':'Scheduled','Brakes':'Brakes','Cockpit & levers':'Cockpit',
+      'Drivetrain':'Drivetrain','Gears & cables':'Gears','Wheels & tyres':'Wheels',
+      'Electronic & e-bike':'E-Bike','Suspension':'Suspension','General & assembly':'General',
+    };
 
     screen.innerHTML = `
       ${createHeader('Book a Service', true, '#home')}
@@ -222,6 +234,10 @@ async function renderBookService() {
           <button id="diag-ask-btn" style="background:#1848C8;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Ask AI &#8594;</button>
         </div>
         <div id="diag-result" style="margin-top:10px;display:none"></div>
+      </div>
+      <div style="text-align:center;color:var(--color-text-secondary);font-size:14px;margin:0 0 12px">All services include a $20 mobile call-out fee — your mechanic comes to you.</div>
+      <div id="cat-chips" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none">
+        ${CAT_ORDER.map(cat => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;background:none;border:1px solid var(--color-border);border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--color-text);font-family:inherit;white-space:nowrap">${CAT_SHORT[cat]}</button>`).join('')}
       </div>
       <div class="section-label">Select Service</div>
       <div id="step1-services">${categoriesHtml}</div>
@@ -265,6 +281,13 @@ async function renderBookService() {
 
     continueBtn.addEventListener('click', () => {
       if (window.appState.service) renderStep2();
+    });
+
+    screen.querySelectorAll('.cat-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const header = screen.querySelector(`.category-header[data-cat="${chip.dataset.cat}"]`);
+        if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     });
   }
 
