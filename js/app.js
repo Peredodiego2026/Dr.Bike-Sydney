@@ -1254,22 +1254,22 @@ async function renderMyBikes() {
       <div id="add-bike-form" style="display:none;margin-top:20px;background:var(--color-surface);border-radius:16px;padding:20px;border:1px solid var(--color-border)">
         <div style="font-size:15px;font-weight:700;margin-bottom:16px">New Bike</div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <input id="bike-nickname" type="text" placeholder="Nickname (e.g. Red Trek)*" maxlength="60"
-            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+          <input id="bike-nickname" type="text" placeholder="Name (e.g. Red Trek)*" maxlength="60"
+            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <input id="bike-brand" type="text" placeholder="Brand" maxlength="40"
-              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
             <input id="bike-model" type="text" placeholder="Model" maxlength="40"
-              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <input id="bike-color" type="text" placeholder="Color" maxlength="30"
-              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
             <input id="bike-year" type="number" placeholder="Year" min="1990" max="2030"
-              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
           </div>
           <select id="bike-type"
-            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none;appearance:none">
+            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none;appearance:none">
             <option value="">Type (optional)</option>
             <option value="road">Road</option>
             <option value="mtb">Mountain Bike</option>
@@ -1294,7 +1294,7 @@ async function renderMyBikes() {
     const list = screen.querySelector('#bikes-list');
     try {
       const { data, error } = await sb.from('bikes')
-        .select('id, nickname, brand, model, color, year, bike_type, created_at')
+        .select('id, name, brand, model, color, year, type, created_at')
         .eq('client_id', user.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -1313,9 +1313,9 @@ async function renderMyBikes() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"></path><circle cx="12" cy="5" r="2" fill="currentColor" stroke="none"></circle></svg>
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:15px">${bike.nickname}</div>
+            <div style="font-weight:700;font-size:15px">${bike.name}</div>
             <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">
-              ${[bike.brand, bike.model, bike.color, bike.year, TYPE_LABELS[bike.bike_type]].filter(Boolean).join(' · ') || 'No details'}
+              ${[bike.brand, bike.model, bike.color, bike.year, TYPE_LABELS[bike.type]].filter(Boolean).join(' · ') || 'No details'}
             </div>
           </div>
           <button data-bike-id="${bike.id}" class="delete-bike-btn" style="background:none;border:none;padding:8px;cursor:pointer;color:var(--color-error);opacity:0.7">
@@ -1359,12 +1359,12 @@ async function renderMyBikes() {
     try {
       const { error } = await sb.from('bikes').insert({
         client_id: user.id,
-        nickname: nickname.slice(0, 60),
+        name: nickname.slice(0, 60),
         brand: (screen.querySelector('#bike-brand').value || '').trim().slice(0, 40) || null,
         model: (screen.querySelector('#bike-model').value || '').trim().slice(0, 40) || null,
         color: (screen.querySelector('#bike-color').value || '').trim().slice(0, 30) || null,
         year: parseInt(screen.querySelector('#bike-year').value) || null,
-        bike_type: screen.querySelector('#bike-type').value || null
+        type: screen.querySelector('#bike-type').value || null
       });
       if (error) throw error;
       showToast('Bike added!', 'success');
