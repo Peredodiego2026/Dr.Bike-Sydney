@@ -1966,7 +1966,7 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
 .bk-svc-card:focus { outline:2px solid #0A58CA; outline-offset:2px; }
 .bk-time-slot:hover:not([disabled]) { border-color:#0A58CA !important; background:#F5F8FF !important; }
 </style>
-<div id="booking-panel" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.55);overflow-y:auto">
+<div id="booking-panel" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);overflow-y:auto">
   <div style="min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px">
     <div style="background:#fff;border-radius:16px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden">
       <div style="border-bottom:1px solid #E5E7EB;padding:18px 24px;display:flex;align-items:center;justify-content:space-between">
@@ -2596,6 +2596,17 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.svc-btn').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
+      _sb.auth.getUser().then(function(res) {
+        if (res && res.data && res.data.user && res.data.user.email === 'peredo.dm@gmail.com') {
+          openBooking();
+        }
+      });
+    });
+  });
+
+  document.querySelectorAll('.services-grid .service-card').forEach(function(card) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', function() {
       _sb.auth.getUser().then(function(res) {
         if (res && res.data && res.data.user && res.data.user.email === 'peredo.dm@gmail.com') {
           openBooking();
