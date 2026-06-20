@@ -797,7 +797,7 @@ async function renderTracking() {
       Message Mechanic
     </button>
     <div style="padding:0 0 12px;text-align:center">
-      <button onclick="shareTrackingLink()" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+      <button id="share-tracking-btn" style="background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
         🔗 Share tracking link
       </button>
     </div>
@@ -954,6 +954,7 @@ async function renderTracking() {
   screen.querySelector('#message-btn')?.addEventListener('click', () => {
     window.open(`https://wa.me/61433963250?text=${encodeURIComponent('Hi Dr. Bike, tracking booking ' + ref)}`, '_blank');
   });
+  screen.querySelector('#share-tracking-btn')?.addEventListener('click', shareTrackingLink);
 }
 
 // ── Review ────────────────────────────────────────────────────────────────────
