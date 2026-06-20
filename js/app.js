@@ -34,21 +34,54 @@ function applyPricingAdjustments(basePrice, dateStr) {
 import router from './router.js';
 import { sb, getServices, getAvailableSlots, createBooking, getCalloutFee, subscribeToMechanicLocation, submitReview, signIn, signUp, getMyBookings } from './supabase.js';
 import { createHeader, createBottomNav, createServiceCard, formatServiceDuration, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
-import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm } from './stripe.js';
+import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm, createCheckoutSession, verifyCheckoutSession } from './stripe.js';
 
 window.appState = { service: null, date: null, time: null, location: 'Home', bookingId: null };
 
-// Handle return from Stripe Checkout
+const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
+
+// Handle return from Stripe Checkout (Apple Pay / Google Pay / card via hosted page)
 (function handleCheckoutReturn() {
   const p = new URLSearchParams(window.location.search);
-  if (p.get('payment') === 'success') {
-    const bookingId = p.get('booking');
-    if (bookingId) window.appState.bookingId = bookingId;
+  const sessionId = p.get('session_id');
+
+  if (p.get('payment') === 'success' && sessionId) {
     history.replaceState({}, '', '/');
-    // Navigate to tracking after router initialises
-    document.addEventListener('routerinit', () => router.navigate('tracking'), { once: true });
+    document.addEventListener('routerinit', async () => {
+      const draftRaw = sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
+      sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+      try {
+        const { paid, paymentIntentId } = await verifyCheckoutSession(sessionId);
+        if (!paid || !draftRaw) throw new Error('Payment not confirmed');
+        const draft = JSON.parse(draftRaw);
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) throw new Error('Please sign in to complete your booking.');
+        const meta = user.user_metadata || {};
+        const booking = await createBooking({
+          user_id: user.id,
+          client_id: user.id,
+          client_name: meta.full_name || meta.name || '',
+          client_email: user.email || '',
+          service_name: draft.serviceName,
+          scheduled_date: draft.date,
+          scheduled_time: draft.time,
+          address: draft.location || 'Home',
+          status: 'pending',
+          service_price: draft.servicePrice,
+          callout_fee: draft.calloutFee,
+          stripe_payment_intent_id: paymentIntentId,
+        });
+        window.appState.bookingId = booking.id;
+        if (window.gtag) gtag('event', 'purchase', { transaction_id: booking.id, value: draft.calloutFee, currency: 'AUD', items: [{ item_name: draft.serviceName }] });
+        router.navigate('tracking');
+      } catch (e) {
+        showToast(e.message || 'Payment could not be confirmed. Please contact us if you were charged.');
+        router.navigate('book-service');
+      }
+    }, { once: true });
   }
   if (p.get('payment') === 'cancelled') {
+    sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
     history.replaceState({}, '', '/');
   }
 })();
@@ -178,17 +211,16 @@ async function renderBookService() {
     </div>
     <div class="section-label mt-5">Location</div>
     <div class="location-row">
-      <div class="location-info">
+      <div class="location-info" style="flex:1">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
-        <div>
-          <div class="fw-600">Home</div>
+        <div style="flex:1">
+          <input type="text" id="location-input" value="${(window.appState.location || 'Home').replace(/"/g, '&quot;')}" placeholder="Enter your address" style="width:100%;border:none;outline:none;background:transparent;font-weight:600;font-size:15px;color:var(--color-text);padding:0;font-family:inherit">
           <div class="text-secondary text-sm">Service at your location</div>
         </div>
       </div>
-      <button class="btn btn--ghost" id="change-location-btn">Change</button>
     </div>
     <div class="sticky-bottom">
       <button class="btn btn--primary btn--full" id="continue-btn" disabled>Continue</button>
@@ -196,7 +228,7 @@ async function renderBookService() {
     ${createBottomNav('home')}
   `;
 
-  window.appState.location = 'Home';
+  if (!window.appState.location) window.appState.location = 'Home';
 
   const diagPhoto = screen.querySelector('#diag-photo');
   screen.querySelector('#diag-photo-btn').addEventListener('click', () => diagPhoto.click());
@@ -222,7 +254,6 @@ async function renderBookService() {
   list.querySelectorAll('.service-card').forEach(card => {
     card.addEventListener('click', () => {
       list.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-      if (window.gtag) gtag('event', 'view_item', { currency: 'AUD', items: [{ item_name: s.name, price: s.price }] });
       card.classList.add('selected');
       window.appState.service = services.find(s => String(s.id) === card.dataset.serviceId);
       if (window.gtag) gtag('event', 'add_to_cart', { currency: 'AUD', items: [{ item_name: window.appState.service?.name, price: window.appState.service?.price }] });
@@ -244,8 +275,8 @@ async function renderBookService() {
     });
   });
 
-  screen.querySelector('#change-location-btn').addEventListener('click', () => {
-    alert('Location change coming soon');
+  screen.querySelector('#location-input').addEventListener('input', e => {
+    window.appState.location = e.target.value;
   });
 
   screen.querySelector('#continue-btn').addEventListener('click', () => {
@@ -373,6 +404,9 @@ async function renderPayment() {
   const calloutFee = await getCalloutFee(location);
   const amountCents = Math.round(calloutFee * 100);
 
+  const { data: { user: currentUser } } = await sb.auth.getUser();
+  const isTestAdmin = currentUser?.email === 'peredo.dm@gmail.com';
+
   const cardIcons = `
     <svg width="38" height="24" viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg" style="border-radius:3px">
       <rect width="38" height="24" fill="#1A1F71"/><text x="5" y="17" font-family="system-ui" font-weight="900" font-size="12" fill="white">VISA</text>
@@ -394,6 +428,10 @@ async function renderPayment() {
       This $${calloutFee.toFixed(2)} call-out fee covers the mechanic's trip to your location — it's the only payment taken online now. The service cost ($${Number(servicePrice).toFixed(2)}) is paid directly to the mechanic by card (EFTPOS) when they arrive.
     </div>
     <div class="payment-methods">${cardIcons}<span class="text-secondary text-xs" style="margin-left:auto">Apple Pay &bull; Google Pay</span></div>
+    <button class="btn btn--checkout btn--full" id="checkout-btn" style="background:var(--color-primary);color:#fff;border:none;border-radius:12px;height:52px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6zm10 0h2v2h-2zm0-4h2v2h-2zm-6 0h4v2h-4z"/></svg>
+      Pay with Apple Pay / Google Pay / Card
+    </button>
     <div id="payment-request-btn" hidden></div>
     <div class="payment-divider" id="card-divider"><span>or pay by entering card details</span></div>
     <div class="section-label">Card Details</div>
@@ -405,6 +443,10 @@ async function renderPayment() {
       </svg>
       <span>Secure payment powered by Stripe. Encrypted and safe.</span>
     </div>
+    ${isTestAdmin ? `
+    <button class="btn btn--secondary btn--full" id="test-booking-btn" style="margin-top:8px;border-style:dashed">
+      Test booking - no charge (admin only)
+    </button>` : ''}
     <div class="sticky-bottom">
       <button class="btn btn--primary btn--full" id="pay-btn">Pay $${calloutFee.toFixed(2)} Call-out Fee</button>
     </div>
@@ -418,6 +460,34 @@ async function renderPayment() {
     catch { return 'guest@drbikesydney.com.au'; }
   };
 
+  screen.querySelector('#checkout-btn').addEventListener('click', async () => {
+    const btn = screen.querySelector('#checkout-btn');
+    const errEl = screen.querySelector('#payment-error');
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to secure checkout...';
+    errEl.hidden = true;
+    try {
+      const email = await getEmail();
+      sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify({
+        serviceName: service.name,
+        servicePrice: service.price,
+        date, time, location, calloutFee,
+      }));
+      await createCheckoutSession({
+        amountCents,
+        description: `${service.name} - Call-out fee`,
+        bookingId: 'pending',
+        email,
+      });
+    } catch (e) {
+      sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+      errEl.textContent = e.message || 'Checkout failed. Please use card below.';
+      errEl.hidden = false;
+      btn.disabled = false;
+      btn.textContent = 'Pay with Apple Pay / Google Pay / Card';
+    }
+  });
+
   let paidIntent = null;
 
   async function chargeIfNeeded(paymentMethodId) {
@@ -427,10 +497,11 @@ async function renderPayment() {
     return paidIntent;
   }
 
-  async function finalizeBooking(paymentIntent) {
+  async function finalizeBooking(paymentIntent, { feeOverride = null, isTest = false } = {}) {
     const { data: { user } } = await sb.auth.getUser();
     if (!user) throw new Error('Please sign in to complete your booking.');
     const meta = user.user_metadata || {};
+    const fee = feeOverride !== null ? feeOverride : calloutFee;
     const booking = await createBooking({
       user_id: user.id,
       client_id: user.id,
@@ -442,12 +513,49 @@ async function renderPayment() {
       address: location || 'Home',
       status: 'pending',
       service_price: service.price,
-      callout_fee: calloutFee,
+      callout_fee: fee,
       stripe_payment_intent_id: paymentIntent.id,
     });
     window.appState.bookingId = booking.id;
-    if (window.gtag) gtag('event', 'purchase', { transaction_id: booking.id, value: calloutFee, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
+    if (!isTest && window.gtag) gtag('event', 'purchase', { transaction_id: booking.id, value: fee, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
+    const _bId = booking.id;
+    const _clientName = meta.full_name || meta.name || '';
+    const _total = fee + service.price;
+    Promise.allSettled([
+      fetch('/api/send-message?channel=whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: '0433963250', template: 'new_booking', data: { service: service.name, date, time, address: location || 'Home', clientName: _clientName, price: _total, trackUrl: 'https://drbikesydney.com.au/index.html#tracking' } }),
+      }),
+      fetch('/api/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: '0433963250', name: _clientName, service: service.name, address: location || 'Home', time, price: _total, type: 'new_booking', bookingId: _bId }),
+      }),
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: user.email, name: _clientName, service: service.name, date, time, address: location || 'Home', price: _total, bookingId: _bId, type: 'confirmation' }),
+      }),
+    ]).then(results => results.forEach((r, i) => {
+      if (r.status === 'rejected') console.error(`[booking-notif ${i}] failed:`, r.reason);
+    }));
     router.navigate('tracking');
+  }
+
+  if (isTestAdmin) {
+    screen.querySelector('#test-booking-btn')?.addEventListener('click', async () => {
+      const btn = screen.querySelector('#test-booking-btn');
+      btn.disabled = true;
+      btn.textContent = 'Creating test booking...';
+      try {
+        await finalizeBooking({ id: `test_${Date.now()}` }, { feeOverride: 0, isTest: true });
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'Test booking - no charge (admin only)';
+        showToast(e.message || 'Test booking failed');
+      }
+    });
   }
 
   const prSupported = await createPaymentRequestButton('payment-request-btn', {
@@ -509,7 +617,7 @@ async function geocodeAddress(address) {
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   pending:   { dot: '#F59E0B', label: 'Booking confirmed — assigning mechanic...' },
-  confirmed: { dot: '#0A58CA', label: 'Mechanic assigned — preparing to depart' },
+  confirmed: { dot: 'var(--color-primary)', label: 'Mechanic assigned — preparing to depart' },
   en_route:  { dot: '#22C55E', label: 'Mechanic is on the way!' },
   arrived:   { dot: '#22C55E', label: 'Mechanic has arrived!' },
   completed: { dot: '#6B7280', label: 'Service completed' },
@@ -527,7 +635,7 @@ async function renderTracking() {
   screen.innerHTML = `
     ${createHeader('Live Tracking', false)}
     <div class="status-indicator" id="status-indicator">
-      <div class="status-dot" id="status-dot" style="background:#0A58CA"></div>
+      <div class="status-dot" id="status-dot" style="background:var(--color-primary)"></div>
       <span class="status-text" id="status-text">Loading booking...</span>
     </div>
     <div class="map-container" id="tracking-map"></div>
@@ -1150,15 +1258,15 @@ async function renderMyBikes() {
             style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <input id="bike-brand" type="text" placeholder="Brand" maxlength="40"
-              style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
             <input id="bike-model" type="text" placeholder="Model" maxlength="40"
-              style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <input id="bike-color" type="text" placeholder="Color" maxlength="30"
-              style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
             <input id="bike-year" type="number" placeholder="Year" min="1990" max="2030"
-              style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none"/>
           </div>
           <select id="bike-type"
             style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:14px;outline:none;appearance:none">
@@ -1269,7 +1377,7 @@ async function renderMyBikes() {
       screen.querySelector('#bike-type').value = '';
       loadBikes();
     } catch (e) {
-      errEl.textContent = 'Could not save bike. Try again.';
+      errEl.textContent = e?.message || 'Could not save bike. Try again.';
     } finally {
       btn.disabled = false; btn.textContent = 'Save Bike';
     }
