@@ -805,6 +805,8 @@ async function renderTracking() {
     ${createBottomNav('tracking')}
   `;
 
+  screen.querySelector('#share-tracking-btn')?.addEventListener('click', shareTrackingLink);
+
   await loadLeaflet();
   if (!screen.classList.contains('active')) return;
 
@@ -955,7 +957,6 @@ async function renderTracking() {
   screen.querySelector('#message-btn')?.addEventListener('click', () => {
     window.open(`https://wa.me/61433963250?text=${encodeURIComponent('Hi Dr. Bike, tracking booking ' + ref)}`, '_blank');
   });
-  screen.querySelector('#share-tracking-btn')?.addEventListener('click', shareTrackingLink);
 }
 
 // ── Review ────────────────────────────────────────────────────────────────────
