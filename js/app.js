@@ -1253,6 +1253,47 @@ async function renderMyBookings() {
 
     list.innerHTML = filtered.map(b => createBookingCard(b)).join('');
 
+    list.querySelectorAll('.booking-card').forEach(card => {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', () => {
+        const booking = allBookings.find(b => String(b.id) === card.dataset.bookingId);
+        if (!booking) return;
+        const STATUS_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#A0A0A0', cancelled:'#EF4444' };
+        const STATUS_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'En Route', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
+        const canCancel = booking.status === 'pending' || booking.status === 'confirmed';
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
+        overlay.innerHTML = `
+          <div style="background:var(--color-bg);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto">
+            <div style="font-size:17px;font-weight:700;margin-bottom:20px">${booking.service_name || 'Service'}</div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Date</span><span>${booking.scheduled_date || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Time</span><span>${booking.scheduled_time || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Address</span><span style="text-align:right;max-width:60%">${booking.address || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Status</span><span style="color:${STATUS_COLORS[booking.status] || '#A0A0A0'};font-weight:600">${STATUS_LABELS[booking.status] || booking.status}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Call-out fee</span><span>$${booking.callout_fee ?? 20}</span></div>
+            </div>
+            ${canCancel ? '<button id="cancel-booking-btn" class="btn btn--secondary btn--full" style="margin-bottom:10px;color:var(--color-error);border-color:var(--color-error)">Cancel booking</button>' : ''}
+            <button id="close-detail-btn" class="btn btn--secondary btn--full">Close</button>
+          </div>
+        `;
+        screen.appendChild(overlay);
+        overlay.querySelector('#close-detail-btn').addEventListener('click', () => overlay.remove());
+        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+        if (canCancel) {
+          overlay.querySelector('#cancel-booking-btn').addEventListener('click', async () => {
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) return;
+            const { error } = await sb.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id).eq('client_id', user.id);
+            if (error) { showToast('Could not cancel booking. Try again.', 'error'); return; }
+            booking.status = 'cancelled';
+            overlay.remove();
+            renderList(tab);
+          });
+        }
+      });
+    });
+
     if (tab === 'history') {
       list.querySelectorAll('.booking-card').forEach(card => {
         const booking = filtered.find(b => String(b.id) === card.dataset.bookingId);
@@ -1448,7 +1489,7 @@ async function renderMyBikes() {
       }
       const TYPE_LABELS = { road:'Road', mtb:'MTB', hybrid:'Hybrid', ebike:'E-Bike', cargo:'Cargo', folding:'Folding' };
       list.innerHTML = data.map(bike => `
-        <div style="background:var(--color-surface);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
+        <div data-bike-id="${bike.id}" style="cursor:pointer;background:var(--color-surface);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
           <div style="width:44px;height:44px;border-radius:12px;background:var(--color-primary-alpha,rgba(10,88,202,0.12));display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"></path><circle cx="12" cy="5" r="2" fill="currentColor" stroke="none"></circle></svg>
           </div>
@@ -1458,17 +1499,40 @@ async function renderMyBikes() {
               ${[bike.brand, bike.model, bike.color, bike.year, TYPE_LABELS[bike.type]].filter(Boolean).join(' · ') || 'No details'}
             </div>
           </div>
-          <button data-bike-id="${bike.id}" class="delete-bike-btn" style="background:none;border:none;padding:8px;cursor:pointer;color:var(--color-error);opacity:0.7">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
-          </button>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </div>
       `).join('');
-      list.querySelectorAll('.delete-bike-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.dataset.bikeId;
-          if (!confirm('Remove this bike?')) return;
-          await sb.from('bikes').delete().eq('id', id).eq('client_id', user.id);
-          loadBikes();
+      list.querySelectorAll('[data-bike-id]').forEach(card => {
+        card.addEventListener('click', () => {
+          const bikeId = card.dataset.bikeId;
+          const bike = data.find(b => String(b.id) === bikeId);
+          if (!bike) return;
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
+          overlay.innerHTML = `
+            <div style="background:var(--color-bg);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px">
+              <div style="font-size:17px;font-weight:700;margin-bottom:20px">${bike.name}</div>
+              <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+                <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Brand</span><span>${bike.brand || '--'}</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Model</span><span>${bike.model || '--'}</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Color</span><span>${bike.color || '--'}</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Year</span><span>${bike.year || '--'}</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Type</span><span>${TYPE_LABELS[bike.type] || '--'}</span></div>
+              </div>
+              <button id="delete-bike-btn" class="btn btn--secondary btn--full" style="margin-bottom:10px;color:var(--color-error);border-color:var(--color-error)">Delete bike</button>
+              <button id="close-bike-btn" class="btn btn--secondary btn--full">Close</button>
+            </div>
+          `;
+          screen.appendChild(overlay);
+          overlay.querySelector('#close-bike-btn').addEventListener('click', () => overlay.remove());
+          overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+          overlay.querySelector('#delete-bike-btn').addEventListener('click', async () => {
+            if (!confirm('Delete this bike?')) return;
+            const { error } = await sb.from('bikes').delete().eq('id', bikeId).eq('client_id', user.id);
+            if (error) { showToast('Could not delete bike. Try again.', 'error'); return; }
+            overlay.remove();
+            loadBikes();
+          });
         });
       });
     } catch (e) {
