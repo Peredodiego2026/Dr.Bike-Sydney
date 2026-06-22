@@ -373,7 +373,7 @@ async function handlePublicTrack(req, res) {
 
 export default async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';
-  const rateMax = role === 'mechanic-location' ? 30 : role === 'public-track' ? 20 : 5;
+  const rateMax = role.startsWith('mechanic-') ? 30 : role === 'public-track' ? 20 : 5;
   if (await guard(req, res, { method: 'POST', rateMax, rateWindow: 60000 })) return;
 
   if (role === 'public-track') return handlePublicTrack(req, res);
