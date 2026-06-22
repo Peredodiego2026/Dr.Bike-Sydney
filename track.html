@@ -149,8 +149,9 @@ async function init(){
       const mapEl = document.getElementById('track-map');
       if(!mapEl) return;
       const map = L.map('track-map', { zoomControl:false, attributionControl:false });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
       map.setView([-33.8688, 151.2093], 13);
+      map.invalidateSize();
 
       let mechMarker = null;
       function placeMarker(lat, lng) {
