@@ -322,7 +322,22 @@ function card(j){
 }
 
 async function setStatus(id, status) {
-  await sb.from('bookings').update({status}).eq('id', id);
+  const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-update-status', pin: stored.pin || '', booking_id: id, status }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      toast('Error: ' + (err.error || 'Could not update status'));
+      return;
+    }
+  } catch(e) {
+    toast('Error: ' + e.message);
+    return;
+  }
   const j = jobs.find(x => x.id === id);
   if (j) j.status = status;
   render(); badges();

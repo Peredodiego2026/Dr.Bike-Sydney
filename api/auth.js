@@ -148,6 +148,36 @@ async function handleClientHistory(req, res) {
   return res.status(200).json(data || []);
 }
 
+async function handleMechanicUpdateStatus(req, res) {
+  const { pin, booking_id, status } = req.body;
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
+  if (!booking_id || !status) return res.status(400).json({ error: 'booking_id and status required' });
+
+  const ALLOWED = ['pending', 'confirmed', 'enroute', 'in_progress', 'completed', 'cancelled'];
+  if (!ALLOWED.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const contactsResp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+  });
+  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const contacts = await contactsResp.json();
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim());
+  if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
+
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    {
+      method: 'PATCH',
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ status }),
+    }
+  );
+  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to update booking' });
+  return res.status(200).json({ ok: true });
+}
+
 async function handlePublicTrack(req, res) {
   const { tracking_token, booking_id } = req.body;
   if (!tracking_token && !booking_id) return res.status(400).json({ error: 'tracking_token or booking_id required' });
@@ -174,6 +204,7 @@ export default async function handler(req, res) {
   if (await guard(req, res, { method: 'POST', rateMax, rateWindow: 60000 })) return;
 
   if (role === 'public-track') return handlePublicTrack(req, res);
+  if (role === 'mechanic-update-status') return handleMechanicUpdateStatus(req, res);
   if (role === 'mechanic') return handleMechanic(req, res);
   if (role === 'mechanic-jobs') return handleMechanicJobs(req, res);
   if (role === 'mechanic-location') return handleMechanicLocation(req, res);
