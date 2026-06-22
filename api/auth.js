@@ -119,6 +119,69 @@ async function handleClientBookings(req, res) {
   return res.status(200).json(data || []);
 }
 
+async function handleMechanicAccept(req, res) {
+  const { pin, booking_id } = req.body;
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
+  if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const contactsResp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
+  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const contacts = await contactsResp.json();
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim());
+  if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    { method: 'PATCH', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ mechanic_id: mechanic.id }) }
+  );
+  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to accept booking' });
+  return res.status(200).json({ ok: true, mechanic_name: mechanic.name });
+}
+
+async function handleMechanicReject(req, res) {
+  const { pin, booking_id } = req.body;
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
+  if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const contactsResp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
+  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const contacts = await contactsResp.json();
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim());
+  if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    { method: 'PATCH', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ status: 'pending', mechanic_id: null }) }
+  );
+  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to reject booking' });
+  return res.status(200).json({ ok: true });
+}
+
+async function handleMechanicArrived(req, res) {
+  const { pin, booking_id } = req.body;
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
+  if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const contactsResp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
+  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const contacts = await contactsResp.json();
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim());
+  if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    { method: 'PATCH', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ status: 'in_progress', arrived_at: new Date().toISOString() }) }
+  );
+  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to mark arrived' });
+  return res.status(200).json({ ok: true });
+}
+
 async function handleClientCancel(req, res) {
   const { access_token, booking_id, client_id } = req.body;
   if (!access_token || !booking_id || !client_id)
@@ -312,6 +375,9 @@ export default async function handler(req, res) {
 
   if (role === 'public-track') return handlePublicTrack(req, res);
   if (role === 'mechanic-update-status') return handleMechanicUpdateStatus(req, res);
+  if (role === 'mechanic-accept') return handleMechanicAccept(req, res);
+  if (role === 'mechanic-reject') return handleMechanicReject(req, res);
+  if (role === 'mechanic-arrived') return handleMechanicArrived(req, res);
   if (role === 'mechanic') return handleMechanic(req, res);
   if (role === 'mechanic-jobs') return handleMechanicJobs(req, res);
   if (role === 'mechanic-location') return handleMechanicLocation(req, res);
