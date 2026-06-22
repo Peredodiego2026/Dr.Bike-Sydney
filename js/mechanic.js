@@ -1290,7 +1290,7 @@ function startGPS(bookingId) {
   // Also use watchPosition for smoother updates
   watchId = navigator.geolocation.watchPosition(
     pos => upsertLocation(pos.coords.latitude, pos.coords.longitude),
-    err => console.warn('GPS error:', err),
+    err => toast('GPS: ' + (err.code === 1 ? 'Location permission denied - enable in browser settings' : err.message)),
     { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
   );
 }
@@ -1298,20 +1298,28 @@ function startGPS(bookingId) {
 function sendLocation(bookingId) {
   navigator.geolocation.getCurrentPosition(
     pos => upsertLocation(pos.coords.latitude, pos.coords.longitude),
-    err => console.warn('GPS error:', err),
+    err => toast('GPS: ' + (err.code === 1 ? 'Location permission denied - enable in browser settings' : err.message)),
     { enableHighAccuracy: true, timeout: 8000 }
   );
 }
 
+let _gpsOk = false;
 async function upsertLocation(lat, lng) {
-  if (!mechanic?.pin) return;
+  if (!mechanic?.pin) { toast('GPS: mechanic session not loaded - please log in again'); return; }
   try {
-    await fetch('/api/auth', {
+    const resp = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role: 'mechanic-location', pin: mechanic.pin, van_number: vanNum, lat, lng })
     });
-  } catch(e) { console.warn('Location update failed:', e.message); }
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      toast('GPS send failed: ' + (err.error || resp.status));
+    } else if (!_gpsOk) {
+      _gpsOk = true;
+      toast('📍 Location shared: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
+    }
+  } catch(e) { toast('GPS send error: ' + e.message); }
 }
 
 function stopGPS() {

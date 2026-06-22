@@ -201,7 +201,7 @@ async function handlePublicTrack(req, res) {
   let mechanic_location = null;
   if (booking.mechanic_id) {
     const locResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/mechanic_locations?select=lat,lng&mechanic_id=eq.${encodeURIComponent(booking.mechanic_id)}&is_online=eq.true&limit=1`,
+      `${SUPABASE_URL}/rest/v1/mechanic_locations?select=lat,lng,updated_at&mechanic_id=eq.${encodeURIComponent(booking.mechanic_id)}&order=updated_at.desc&limit=1`,
       { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
     );
     if (locResp.ok) {
