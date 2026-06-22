@@ -284,8 +284,8 @@ function card(j){
   const t=j.time?j.time.substring(0,5):'';
   const d=j.date?new Date(j.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}):'';
   const done=j.status==='completed';
-  const sc={pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',in_progress:'#059669',completed:'#059669',cancelled:'#DC2626'};
-  const sl={pending:'Pending',confirmed:'Confirmed',enroute:'🚐 En route',in_progress:'🔧 In progress',completed:'✅ Done',cancelled:'Cancelled'};
+  const sc={pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',inprogress:'#059669',completed:'#059669',cancelled:'#DC2626'};
+  const sl={pending:'Pending',confirmed:'Confirmed',enroute:'🚐 En route',inprogress:'🔧 In progress',completed:'✅ Done',cancelled:'Cancelled'};
   const st=j.status||'pending';
   const addr=(j.address||j.suburb||'Sydney').replace(/\\/g,'').replace(/'/g,"\\'");
   const isPending = st==='pending';
@@ -312,7 +312,7 @@ function card(j){
       <button class="abtn" onclick="openMechChat('${j.id}')" style="background:rgba(24,72,200,0.1);color:#1848C8">💬 Chat</button>
       <button class="abtn chat" onclick="openWA('${j.phone||j.email||""}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
       <button class="abtn" onclick="openClientHistory('${j.id}','${j.client.replace(/'/g,"\\'")}','${j.client_id||""}')" style="background:rgba(5,150,105,0.1);color:#059669">📋 History</button>
-      ${!done?`${isConfirmedNoMechanic?`<button class="abtn" data-action="accept" data-id="${j.id}" style="background:rgba(5,150,105,0.15);color:#059669;font-weight:700">✅ Accept</button><button class="abtn" data-action="reject" data-id="${j.id}" style="background:rgba(220,38,38,0.1);color:#DC2626">✗ Reject</button>`:`${st!=='enroute'&&st!=='in_progress'?`<button class="abtn go" data-action="enroute" data-id="${j.id}">🚐 En route</button>`:``}${isEnroute?`<button class="abtn" data-action="arrived" data-id="${j.id}" style="background:rgba(5,150,105,0.15);color:#059669">📍 Arrived</button>`:``}<button class="abtn done" data-action="complete" data-id="${j.id}">✅ Complete</button>`}`:`<button class="abtn undo" data-action="undo" data-id="${j.id}">↩ Undo</button>`}
+      ${!done?`${isConfirmedNoMechanic?`<button class="abtn" data-action="accept" data-id="${j.id}" style="background:rgba(5,150,105,0.15);color:#059669;font-weight:700">✅ Accept</button><button class="abtn" data-action="reject" data-id="${j.id}" style="background:rgba(220,38,38,0.1);color:#DC2626">✗ Reject</button>`:`${st!=='enroute'&&st!=='inprogress'?`<button class="abtn go" data-action="enroute" data-id="${j.id}">🚐 En route</button>`:``}${isEnroute?`<button class="abtn" data-action="arrived" data-id="${j.id}" style="background:rgba(5,150,105,0.15);color:#059669">📍 Arrived</button>`:``}<button class="abtn done" data-action="complete" data-id="${j.id}">✅ Complete</button>`}`:`<button class="abtn undo" data-action="undo" data-id="${j.id}">↩ Undo</button>`}
     </div>
     ${!done?`<input class="notes-inp" placeholder="Mechanic notes..." value="${j.mnotes}" onblur="saveNotes('${j.id}',this.value)">`:''}
     ${isPending?`<div style="text-align:center;font-size:11px;color:#059669;padding:6px 0;font-weight:600">→ Swipe right to accept</div>`:''}
@@ -397,7 +397,7 @@ async function markArrived(id) {
     });
     if (!resp.ok) { const err = await resp.json().catch(() => ({})); toast('Error: ' + (err.error || 'Could not mark arrived')); return; }
     const j = jobs.find(x => x.id === id);
-    if (j) j.status = 'in_progress';
+    if (j) j.status = 'inprogress';
     render(); badges();
     toast('📍 Arrived at location!');
   } catch(e) { toast('Error: ' + e.message); }

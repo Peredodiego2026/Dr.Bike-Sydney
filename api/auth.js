@@ -184,7 +184,7 @@ async function handleMechanicArrived(req, res) {
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
     { method: 'PATCH', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`,
       'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ status: 'in_progress', arrived_at: new Date().toISOString() }) }
+      body: JSON.stringify({ status: 'inprogress', arrived_at: new Date().toISOString() }) }
   );
   if (!updateResp.ok) {
     const errText = await updateResp.text();
