@@ -36,7 +36,7 @@ import { sb, getServices, getAvailableSlots, createBooking, getCalloutFee, subsc
 import { createHeader, createBottomNav, createServiceCard, formatServiceDuration, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
 import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm, createCheckoutSession, verifyCheckoutSession } from './stripe.js';
 
-window.appState = { service: null, date: null, time: null, location: 'Home', bookingId: null };
+window.appState = { service: null, date: null, time: null, location: 'Home', bookingId: null, bikeId: null };
 
 const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
 
@@ -171,6 +171,7 @@ async function renderBookService() {
   if (window.gtag) gtag('event', 'begin_checkout');
   if (window.fbq) fbq('track', 'InitiateCheckout');
   if (!window.appState.location) window.appState.location = 'Home';
+  window.appState.bikeId = null;
 
   let _services = null;
 
@@ -238,6 +239,7 @@ async function renderBookService() {
       </div>
       <div class="section-label">Select Service</div>
       <div id="step1-services">${categoriesHtml}</div>
+      <div id="bike-selector-wrap"></div>
       <div class="sticky-bottom">
         <button class="btn btn--primary btn--full" id="s1-continue" disabled>Continue</button>
       </div>
@@ -286,6 +288,40 @@ async function renderBookService() {
         if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
+
+    // Load user bikes async and render selector chips if any exist
+    (async () => {
+      const wrap = screen.querySelector('#bike-selector-wrap');
+      if (!wrap) return;
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) return;
+        const { data: bikes, error } = await sb.from('bikes')
+          .select('id, name, brand, model')
+          .eq('client_id', session.user.id)
+          .order('created_at', { ascending: false });
+        if (error || !bikes || bikes.length === 0) return;
+        wrap.innerHTML = `
+          <div class="section-label" style="margin-top:8px">Which bike?</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0" id="bike-chips">
+            <button class="bike-chip active" data-bike-id="" style="flex-shrink:0;display:inline-flex;align-items:center;height:28px;background:var(--color-primary);color:#fff;border:1px solid var(--color-primary);border-radius:14px;padding:0 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap">Skip</button>
+            ${bikes.map(b => `<button class="bike-chip" data-bike-id="${b.id}" style="flex-shrink:0;display:inline-flex;align-items:center;height:28px;background:none;border:1px solid var(--color-border);border-radius:14px;padding:0 12px;font-size:12px;cursor:pointer;color:var(--color-text);font-family:inherit;white-space:nowrap">${b.name}${b.brand ? ' · ' + b.brand : ''}</button>`).join('')}
+          </div>`;
+        wrap.querySelectorAll('.bike-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            wrap.querySelectorAll('.bike-chip').forEach(c => {
+              c.style.background = 'none';
+              c.style.color = 'var(--color-text)';
+              c.style.borderColor = 'var(--color-border)';
+            });
+            chip.style.background = 'var(--color-primary)';
+            chip.style.color = '#fff';
+            chip.style.borderColor = 'var(--color-primary)';
+            window.appState.bikeId = chip.dataset.bikeId || null;
+          });
+        });
+      } catch {}
+    })();
   }
 
   // ── Step 2: Date & Time ───────────────────────────────────────────────────
@@ -674,6 +710,7 @@ async function renderPayment() {
       service_price: service.price,
       callout_fee: fee,
       stripe_payment_intent_id: paymentIntent.id,
+      bike_id: window.appState.bikeId || null,
     });
     window.appState.bookingId = booking.id;
     if (!isTest && window.gtag) gtag('event', 'purchase', { transaction_id: booking.id, value: fee, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
