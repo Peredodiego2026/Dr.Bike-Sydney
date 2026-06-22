@@ -195,7 +195,23 @@ async function handlePublicTrack(req, res) {
   if (!resp.ok) return res.status(500).json({ error: 'Database error' });
   const data = await resp.json();
   if (!data?.length) return res.status(404).json({ error: 'Booking not found' });
-  return res.status(200).json(data[0]);
+  const booking = data[0];
+
+  // Also fetch mechanic location server-side (bypasses RLS on mechanic_locations)
+  let mechanic_location = null;
+  if (booking.mechanic_id) {
+    const locResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/mechanic_locations?select=lat,lng&mechanic_id=eq.${encodeURIComponent(booking.mechanic_id)}&is_online=eq.true&limit=1`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (locResp.ok) {
+      const locData = await locResp.json();
+      if (locData?.length && locData[0].lat && locData[0].lng) {
+        mechanic_location = { lat: locData[0].lat, lng: locData[0].lng };
+      }
+    }
+  }
+  return res.status(200).json({ ...booking, mechanic_location });
 }
 
 export default async function handler(req, res) {

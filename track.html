@@ -144,47 +144,34 @@ async function init(){
     </div>`;
 
   // Live map if enroute or in_progress
+  let trackMap = null, mechMarker = null;
   if(bkg.status === 'enroute' || bkg.status === 'in_progress'){
-    setTimeout(async () => {
+    setTimeout(() => {
       const mapEl = document.getElementById('track-map');
       if(!mapEl) return;
-      const map = L.map('track-map', { zoomControl:false, attributionControl:false });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
-      map.setView([-33.8688, 151.2093], 13);
-      map.invalidateSize();
+      trackMap = L.map('track-map', { zoomControl:false, attributionControl:false });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(trackMap);
+      trackMap.setView([-33.8688, 151.2093], 13);
+      trackMap.invalidateSize();
 
-      let mechMarker = null;
-      function placeMarker(lat, lng) {
-        if(mechMarker) {
-          mechMarker.setLatLng([lat, lng]);
-        } else {
-          mechMarker = L.marker([lat, lng], {icon: L.divIcon({html:'🚐', className:'', iconSize:[24,24]})}).addTo(map);
-        }
-        map.setView([lat, lng], 15);
-      }
-
-      // Show current position immediately on load
-      if(bkg.mechanic_id) {
-        const { data: loc } = await sb.from('mechanic_locations')
-          .select('lat,lng')
-          .eq('mechanic_id', bkg.mechanic_id)
-          .eq('is_online', true)
-          .maybeSingle();
-        if(loc?.lat && loc?.lng) placeMarker(loc.lat, loc.lng);
-
-        // Realtime: update marker as mechanic moves
-        sb.channel('mech-loc-' + bkg.mechanic_id)
-          .on('postgres_changes', {event:'UPDATE', schema:'public', table:'mechanic_locations', filter:`mechanic_id=eq.${bkg.mechanic_id}`},
-            p => {
-              const { lat, lng } = p.new;
-              if(lat && lng) placeMarker(lat, lng);
-            })
-          .subscribe();
+      // Initial position from API response (already fetched server-side, no RLS issue)
+      if(bkg.mechanic_location?.lat && bkg.mechanic_location?.lng) {
+        placeMarker(bkg.mechanic_location.lat, bkg.mechanic_location.lng);
       }
     }, 300);
   }
 
-  // Auto-refresh status every 30 seconds
+  function placeMarker(lat, lng) {
+    if(!trackMap) return;
+    if(mechMarker) {
+      mechMarker.setLatLng([lat, lng]);
+    } else {
+      mechMarker = L.marker([lat, lng], {icon: L.divIcon({html:'🚐', className:'', iconSize:[24,24]})}).addTo(trackMap);
+    }
+    trackMap.setView([lat, lng], 15);
+  }
+
+  // Poll every 15s: update status + mechanic position (server-side, bypasses RLS)
   setInterval(async () => {
     try {
       const resp = await fetch('/api/auth', {
@@ -194,9 +181,12 @@ async function init(){
       });
       if(!resp.ok) return;
       const updated = await resp.json();
-      if(updated && updated.status !== bkg.status) window.location.reload();
+      if(updated.status !== bkg.status) { window.location.reload(); return; }
+      if(updated.mechanic_location?.lat && updated.mechanic_location?.lng) {
+        placeMarker(updated.mechanic_location.lat, updated.mechanic_location.lng);
+      }
     } catch {}
-  }, 30000);
+  }, 15000);
 }
 
 init();
