@@ -36,7 +36,7 @@ import { sb, getServices, getAvailableSlots, createBooking, getCalloutFee, subsc
 import { createHeader, createBottomNav, createServiceCard, formatServiceDuration, createTimeSlot, createDateItem, createSummaryRow, createBookingCard, createEmptyState, showToast } from './components.js';
 import { createPaymentForm, createPaymentRequestButton, processPayment, destroyPaymentForm, createCheckoutSession, verifyCheckoutSession } from './stripe.js';
 
-window.appState = { service: null, date: null, time: null, location: 'Home', bookingId: null, bikeId: null };
+window.appState = { service: null, date: null, time: null, location: 'Home', bookingId: null, bikeId: null, trackingToken: null };
 
 const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
 
@@ -89,6 +89,7 @@ const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
 let _trackingMap = null;
 let _mechanicMarker = null;
 let _unsubTracking = null;
+let _trackingMechId = null;
 let _loginMode = 'signin';
 let _bookingsTab = 'upcoming';
 
@@ -142,6 +143,7 @@ async function loadTimeSlots(screen, date, serviceId) {
 function cleanupTracking() {
   if (_unsubTracking) { _unsubTracking(); _unsubTracking = null; }
   if (_trackingMap) { _trackingMap.remove(); _trackingMap = null; _mechanicMarker = null; }
+  _trackingMechId = null;
 }
 
 async function loadLeaflet() {
@@ -713,6 +715,7 @@ async function renderPayment() {
       bike_id: window.appState.bikeId || null,
     });
     window.appState.bookingId = booking.id;
+    window.appState.trackingToken = booking.tracking_token || null;
     if (!isTest && window.gtag) gtag('event', 'purchase', { transaction_id: booking.id, value: fee, currency: 'AUD', items: [{ item_name: service?.name || 'Service' }] });
     const _bId = booking.id;
     const _clientName = meta.full_name || meta.name || '';
@@ -980,7 +983,7 @@ async function renderTracking() {
             const phone = (mech.phone || '61433963250').replace(/[^0-9]/g, '');
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent('Hi, tracking booking ' + ref)}`, '_blank');
           });
-          return; // skip default message btn below
+          _trackingMechId = booking.mechanic_id;
         }
       }
 
@@ -1003,35 +1006,57 @@ async function renderTracking() {
 
   updateETA(MECH_DEFAULT);
 
-  // ── Realtime mechanic location ────────────────────────────────────────────
-  _unsubTracking = subscribeToMechanicLocation(bookingId, ({ latitude, longitude }) => {
-    const coords = [latitude, longitude];
-    if (_mechanicMarker) { _mechanicMarker.setLatLng(coords); updateETA(coords); }
-    if (_trackingMap) _trackingMap.panTo(coords, { animate: true, duration: 1 });
-  });
+  // ── Realtime mechanic location (real GPS via mechanic_id) ─────────────────
+  if (_trackingMechId) {
+    (async () => {
+      const { data: loc } = await sb.from('mechanic_locations')
+        .select('lat,lng').eq('mechanic_id', _trackingMechId).eq('is_online', true).maybeSingle();
+      if (loc?.lat && loc?.lng) {
+        const coords = [loc.lat, loc.lng];
+        if (_mechanicMarker) _mechanicMarker.setLatLng(coords);
+        updateETA(coords);
+        if (_trackingMap) _trackingMap.panTo(coords, { animate: true, duration: 1 });
+      }
+      const locChannel = sb.channel('mech-gps-' + _trackingMechId)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'mechanic_locations', filter: 'mechanic_id=eq.' + _trackingMechId },
+          p => {
+            const { lat, lng } = p.new;
+            if (!lat || !lng) return;
+            const coords = [lat, lng];
+            if (_mechanicMarker) _mechanicMarker.setLatLng(coords);
+            updateETA(coords);
+            if (_trackingMap) _trackingMap.panTo(coords, { animate: true, duration: 1 });
+          })
+        .subscribe();
+      const prev = _unsubTracking;
+      _unsubTracking = () => { if (prev) prev(); try { sb.removeChannel(locChannel); } catch {} };
+    })();
+  } else {
+    screen.querySelector('#message-btn')?.addEventListener('click', () => {
+      window.open(`https://wa.me/61433963250?text=${encodeURIComponent('Hi Dr. Bike, tracking booking ' + ref)}`, '_blank');
+    });
+  }
 
   requestAnimationFrame(() => { setTimeout(() => { if (_trackingMap) _trackingMap.invalidateSize(); }, 350); });
-
-  screen.querySelector('#message-btn')?.addEventListener('click', () => {
-    window.open(`https://wa.me/61433963250?text=${encodeURIComponent('Hi Dr. Bike, tracking booking ' + ref)}`, '_blank');
-  });
 }
 
 // ── Review ────────────────────────────────────────────────────────────────────
 async function shareTrackingLink() {
   const bookingId = window.appState.bookingId;
-  if (!bookingId) return;
+  if (!bookingId) { showToast('No active booking.'); return; }
+  let token = window.appState.trackingToken;
+  if (!token) {
+    try {
+      const { data } = await sb.from('bookings').select('tracking_token').eq('id', bookingId).single();
+      token = data?.tracking_token || null;
+    } catch {}
+  }
+  const url = window.location.origin + '/track.html' + (token ? '?token=' + token : '?id=' + bookingId);
   try {
-    const url = window.location.origin + '/track.html?id=' + bookingId;
-    if (navigator.share) {
-      await navigator.share({ title: 'Track my Dr. Bike service', url });
-    } else {
-      await navigator.clipboard.writeText(url);
-      showToast('Tracking link copied to clipboard!');
-    }
+    if (navigator.share) { await navigator.share({ title: 'Track my Dr. Bike service', url }); }
+    else { await navigator.clipboard.writeText(url); showToast('Tracking link copied!'); }
   } catch(e) {
-    console.warn('shareTrackingLink error:', e);
-    showToast('Could not share tracking link.');
+    try { await navigator.clipboard.writeText(url); showToast('Tracking link copied!'); } catch {}
   }
 }
 
@@ -1332,6 +1357,8 @@ async function renderMyBookings() {
               <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Status</span><span style="color:${STATUS_COLORS[booking.status] || '#A0A0A0'};font-weight:600">${STATUS_LABELS[booking.status] || booking.status}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Call-out fee</span><span>$${booking.callout_fee ?? 20}</span></div>
             </div>
+            ${(booking.status === 'enroute' || booking.status === 'in_progress') ? '<button id="track-live-btn" class="btn btn--primary btn--full" style="margin-bottom:10px">📍 Track Live</button>' : ''}
+            ${booking.tracking_token ? '<button id="share-track-btn" class="btn btn--secondary btn--full" style="margin-bottom:10px">🔗 Share tracking link</button>' : ''}
             ${canCancel ? '<button id="cancel-booking-btn" class="btn btn--secondary btn--full" style="margin-bottom:10px;color:var(--color-error);border-color:var(--color-error)">Cancel booking</button>' : ''}
             <button id="close-detail-btn" class="btn btn--secondary btn--full">Close</button>
           </div>
@@ -1339,6 +1366,19 @@ async function renderMyBookings() {
         screen.appendChild(overlay);
         overlay.querySelector('#close-detail-btn').addEventListener('click', () => overlay.remove());
         overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+        overlay.querySelector('#track-live-btn')?.addEventListener('click', () => {
+          window.appState.bookingId = booking.id;
+          window.appState.trackingToken = booking.tracking_token || null;
+          overlay.remove();
+          router.navigate('tracking');
+        });
+        overlay.querySelector('#share-track-btn')?.addEventListener('click', async () => {
+          const url = window.location.origin + '/track.html?token=' + booking.tracking_token;
+          try {
+            if (navigator.share) { await navigator.share({ title: 'Track my Dr. Bike service', url }); }
+            else { await navigator.clipboard.writeText(url); showToast('Tracking link copied!'); }
+          } catch { try { await navigator.clipboard.writeText(url); showToast('Tracking link copied!'); } catch {} }
+        });
         if (canCancel) {
           overlay.querySelector('#cancel-booking-btn').addEventListener('click', async () => {
             const { data: { user } } = await sb.auth.getUser();

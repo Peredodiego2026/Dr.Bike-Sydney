@@ -1123,10 +1123,16 @@ function renderBookingsTable(data){
       <td data-label="Actions" style="white-space:nowrap">
         ${isPending?`<button onclick="confirmBookingAdmin('${b.id}')" style="background:#ECFDF5;color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">✅ Confirm</button>`:''}
         ${!isCancelled?`<button onclick="openAdminChat('${b.id}','${name}')" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">💬</button>`:''}
+        ${b.tracking_token?`<button onclick="copyTrackLink('${b.tracking_token}')" style="background:#EFF6FF;color:#1848C8;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">🔗</button>`:''}
         ${!isCancelled?`<button onclick="openCancel('${b.id}')" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">❌</button>`:''}
       </td>
     </tr>`;
   }).join('');
+}
+
+function copyTrackLink(token) {
+  const url = 'https://drbikesydney.com.au/track.html?token=' + token;
+  navigator.clipboard.writeText(url).then(() => showToast('🔗 Tracking link copied!')).catch(() => prompt('Copy this link:', url));
 }
 
 async function confirmBookingAdmin(id){
