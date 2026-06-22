@@ -136,7 +136,11 @@ async function handleMechanicAccept(req, res) {
       'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ mechanic_id: mechanic.id }) }
   );
-  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to accept booking' });
+  if (!updateResp.ok) {
+    const errText = await updateResp.text();
+    console.error('accept patch error:', updateResp.status, errText);
+    return res.status(500).json({ error: 'Failed to accept booking', detail: errText });
+  }
   return res.status(200).json({ ok: true, mechanic_name: mechanic.name });
 }
 
@@ -157,7 +161,11 @@ async function handleMechanicReject(req, res) {
       'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ status: 'pending', mechanic_id: null }) }
   );
-  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to reject booking' });
+  if (!updateResp.ok) {
+    const errText = await updateResp.text();
+    console.error('reject patch error:', updateResp.status, errText);
+    return res.status(500).json({ error: 'Failed to reject booking', detail: errText });
+  }
   return res.status(200).json({ ok: true });
 }
 
@@ -178,7 +186,11 @@ async function handleMechanicArrived(req, res) {
       'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ status: 'in_progress', arrived_at: new Date().toISOString() }) }
   );
-  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to mark arrived' });
+  if (!updateResp.ok) {
+    const errText = await updateResp.text();
+    console.error('arrived patch error:', updateResp.status, errText);
+    return res.status(500).json({ error: 'Failed to mark arrived', detail: errText });
+  }
   return res.status(200).json({ ok: true });
 }
 
