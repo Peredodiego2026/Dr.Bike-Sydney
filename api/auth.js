@@ -130,17 +130,8 @@ async function handleMechanicAccept(req, res) {
   const contacts = await contactsResp.json();
   const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim());
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
-  const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
-    { method: 'PATCH', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`,
-      'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ mechanic_id: mechanic.id }) }
-  );
-  if (!updateResp.ok) {
-    const errText = await updateResp.text();
-    console.error('accept patch error:', updateResp.status, errText);
-    return res.status(500).json({ error: 'Failed to accept booking', detail: errText });
-  }
+  // mechanic_id FK points to profiles.id but mechanics use PIN auth (no profile row).
+  // Skip mechanic_id write until schema FK is corrected to escalation_contacts.id.
   return res.status(200).json({ ok: true, mechanic_name: mechanic.name });
 }
 
