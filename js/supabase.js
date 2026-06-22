@@ -146,15 +146,19 @@ export function subscribeToMechanicLocation(bookingId, callback) {
 
 export async function getMyBookings() {
   try {
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return MOCK_BOOKINGS;
-    const { data, error } = await sb
-      .from('bookings')
-      .select('*')
-      .eq('client_id', user.id)
-      .order('scheduled_date', { ascending: false });
-    if (error) return [];
-    return data || [];
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return MOCK_BOOKINGS;
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'client-bookings',
+        access_token: session.access_token,
+        client_id: session.user.id,
+      }),
+    });
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }

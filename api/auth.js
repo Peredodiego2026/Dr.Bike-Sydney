@@ -95,6 +95,30 @@ async function handleMechanicLocation(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+async function handleClientBookings(req, res) {
+  const { access_token, client_id } = req.body;
+  if (!access_token || !client_id) return res.status(400).json({ error: 'access_token and client_id required' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  // Verify token server-side — confirms the token is valid and belongs to this user
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid or expired session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const cols = 'id,service_name,service_price,callout_fee,scheduled_date,scheduled_time,address,status,client_rating,client_review,tracking_token,mechanic_id,notes';
+  const bookingsResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&client_id=eq.${client_id}&order=scheduled_date.desc`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!bookingsResp.ok) return res.status(500).json({ error: 'Failed to fetch bookings' });
+  const data = await bookingsResp.json();
+  return res.status(200).json(data || []);
+}
+
 async function handleClientHistory(req, res) {
   const { pin, client_id, client_email, booking_id } = req.body;
   if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
@@ -133,5 +157,6 @@ export default async function handler(req, res) {
   if (role === 'mechanic-jobs') return handleMechanicJobs(req, res);
   if (role === 'mechanic-location') return handleMechanicLocation(req, res);
   if (role === 'client-history') return handleClientHistory(req, res);
+  if (role === 'client-bookings') return handleClientBookings(req, res);
   return handleAdmin(req, res);
 }
