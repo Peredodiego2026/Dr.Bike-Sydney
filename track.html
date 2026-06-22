@@ -91,7 +91,7 @@ async function init(){
   // Support both ?id=UUID (authenticated) and ?token=UUID (shareable, public)
   let bkgQuery;
   if (trackingToken) {
-    bkgQuery = sb.from('bookings').select('id,status,scheduled_date,scheduled_time,service_type,mechanic_lat,mechanic_lng,eta_minutes,started_at,completed_at,tracking_token').eq('tracking_token', trackingToken).single();
+    bkgQuery = sb.from('bookings').select('id,status,scheduled_date,scheduled_time,service_name,service_price,address,van_number,mechanic_id,mechanic_lat,mechanic_lng,eta_minutes,started_at,completed_at,tracking_token').eq('tracking_token', trackingToken).single();
   } else {
     bkgQuery = sb.from('bookings').select('*').eq('id', bookingId).single();
   }
@@ -117,13 +117,13 @@ async function init(){
       <div class="row"><span class="lbl">Address</span><span>${bkg.address||'—'}</span></div>
       <div class="row"><span class="lbl">Van</span><span>Van ${bkg.van_number||1} · Mechanic ${bkg.van_number||1}</span></div>
       <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue)">$${bkg.service_price}</span></div>
-      ${bkg.status==='enroute'?'<div id="track-map"></div>':''}
+      ${(bkg.status==='enroute'||bkg.status==='in_progress')?'<div id="track-map"></div>':''}
     </div>
 
-    ${bkg.status==='enroute'?`
+    ${(bkg.status==='enroute'||bkg.status==='in_progress')?`
     <div class="card" style="text-align:center;background:var(--green-lt);border-color:#6EE7B7">
       <div style="font-size:24px;margin-bottom:8px">🚐</div>
-      <div style="font-size:14px;font-weight:700;color:#065F46">Your mechanic is on the way!</div>
+      <div style="font-size:14px;font-weight:700;color:#065F46">${bkg.status==='enroute'?'Your mechanic is on the way!':'Your mechanic has arrived!'}</div>
       <div style="font-size:12px;color:var(--green);margin-top:4px">This page updates automatically</div>
     </div>`:''}
 
@@ -141,8 +141,8 @@ async function init(){
       <a href="https://wa.me/61433963250" style="display:block;background:#25D366;color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px">💬 WhatsApp</a>
     </div>`;
 
-  // Live map if enroute
-  if(bkg.status === 'enroute'){
+  // Live map if enroute or in_progress
+  if(bkg.status === 'enroute' || bkg.status === 'in_progress'){
     setTimeout(async () => {
       const mapEl = document.getElementById('track-map');
       if(!mapEl) return;
@@ -150,22 +150,43 @@ async function init(){
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
       map.setView([-33.8688, 151.2093], 13);
 
-      // Subscribe to mechanic location
-      sb.channel('mech-loc-'+bookingId)
-        .on('postgres_changes',{event:'*',schema:'public',table:'mechanic_locations',filter:`van_number=eq.${bkg.van_number||1}`},
-          p => {
-            const { lat, lng } = p.new;
-            if(!lat||!lng) return;
-            map.setView([lat,lng], 15);
-            L.marker([lat,lng], {icon: L.divIcon({html:'🚐', className:'', iconSize:[24,24]})}).addTo(map);
-          })
-        .subscribe();
+      let mechMarker = null;
+      function placeMarker(lat, lng) {
+        if(mechMarker) {
+          mechMarker.setLatLng([lat, lng]);
+        } else {
+          mechMarker = L.marker([lat, lng], {icon: L.divIcon({html:'🚐', className:'', iconSize:[24,24]})}).addTo(map);
+        }
+        map.setView([lat, lng], 15);
+      }
+
+      // Show current position immediately on load
+      if(bkg.mechanic_id) {
+        const { data: loc } = await sb.from('mechanic_locations')
+          .select('lat,lng')
+          .eq('mechanic_id', bkg.mechanic_id)
+          .eq('is_online', true)
+          .maybeSingle();
+        if(loc?.lat && loc?.lng) placeMarker(loc.lat, loc.lng);
+
+        // Realtime: update marker as mechanic moves
+        sb.channel('mech-loc-' + bkg.mechanic_id)
+          .on('postgres_changes', {event:'UPDATE', schema:'public', table:'mechanic_locations', filter:`mechanic_id=eq.${bkg.mechanic_id}`},
+            p => {
+              const { lat, lng } = p.new;
+              if(lat && lng) placeMarker(lat, lng);
+            })
+          .subscribe();
+      }
     }, 300);
   }
 
-  // Auto-refresh status every 30 seconds
+  // Auto-refresh status every 30 seconds (works for both ?id= and ?token= links)
   setInterval(async () => {
-    const { data: updated } = await sb.from('bookings').select('status,mechanic_notes,parts_used').eq('id',bookingId).single();
+    let q = sb.from('bookings').select('status,mechanic_notes,parts_used');
+    if(bookingId) q = q.eq('id', bookingId);
+    else q = q.eq('tracking_token', trackingToken);
+    const { data: updated } = await q.single();
     if(updated && updated.status !== bkg.status) window.location.reload();
   }, 30000);
 }
