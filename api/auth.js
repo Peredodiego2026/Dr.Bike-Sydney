@@ -55,7 +55,7 @@ async function handleMechanicJobs(req, res) {
   const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim());
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
 
-  const cols = 'id,client_id,client_name,client_email,client_phone,service_name,service_price,scheduled_date,scheduled_time,status,suburb,address,van_number,notes,mechanic_notes,client_rating,client_review';
+  const cols = 'id,client_id,client_name,client_email,client_phone,service_name,service_price,scheduled_date,scheduled_time,status,suburb,address,van_number,notes,mechanic_notes,mechanic_id,client_rating,client_review';
   const jobsResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&or=(van_number.eq.${van},van_number.is.null)&order=scheduled_date.asc,scheduled_time.asc`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' } }

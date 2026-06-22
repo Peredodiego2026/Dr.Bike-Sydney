@@ -284,12 +284,13 @@ function card(j){
   const t=j.time?j.time.substring(0,5):'';
   const d=j.date?new Date(j.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}):'';
   const done=j.status==='completed';
-  const sc={pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',completed:'#059669',cancelled:'#DC2626'};
-  const sl={pending:'Pending',confirmed:'Confirmed',enroute:'🚐 En route',completed:'✅ Done',cancelled:'Cancelled'};
+  const sc={pending:'#D97706',confirmed:'#1848C8',enroute:'#059669',in_progress:'#059669',completed:'#059669',cancelled:'#DC2626'};
+  const sl={pending:'Pending',confirmed:'Confirmed',enroute:'🚐 En route',in_progress:'🔧 In progress',completed:'✅ Done',cancelled:'Cancelled'};
   const st=j.status||'pending';
   const addr=(j.address||j.suburb||'Sydney').replace(/\\/g,'').replace(/'/g,"\\'");
   const isPending = st==='pending';
   const isEnroute = st==='enroute';
+  const isConfirmedNoMechanic = st==='confirmed' && !j.mechanic_id;
   return `<div class="job-card${done?' done':''}" data-job-id="${j.id}" style="overflow:hidden;position:relative">
     ${isPending?`<div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#059669;border-radius:14px 0 0 14px;z-index:0"></div>`:''}
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
@@ -311,9 +312,7 @@ function card(j){
       <button class="abtn" onclick="openMechChat('${j.id}')" style="background:rgba(24,72,200,0.1);color:#1848C8">💬 Chat</button>
       <button class="abtn chat" onclick="openWA('${j.phone||j.email||""}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
       <button class="abtn" onclick="openClientHistory('${j.id}','${j.client.replace(/'/g,"\\'")}','${j.client_id||""}')" style="background:rgba(5,150,105,0.1);color:#059669">📋 History</button>
-      ${!done?`${st!=='enroute'?`<button class="abtn go" onclick="setStatus('${j.id}','enroute')">🚐 En route</button>`:''}
-      <button class="abtn done" onclick="completeJob('${j.id}')">✅ Complete</button>`
-      :`<button class="abtn undo" onclick="setStatus('${j.id}','confirmed')">↩ Undo</button>`}
+      ${!done?`${isConfirmedNoMechanic?`<button class="abtn" data-action="accept" data-id="${j.id}" style="background:rgba(5,150,105,0.15);color:#059669;font-weight:700">✅ Accept</button><button class="abtn" data-action="reject" data-id="${j.id}" style="background:rgba(220,38,38,0.1);color:#DC2626">✗ Reject</button>`:`${st!=='enroute'&&st!=='in_progress'?`<button class="abtn go" data-action="enroute" data-id="${j.id}">🚐 En route</button>`:``}${isEnroute?`<button class="abtn" data-action="arrived" data-id="${j.id}" style="background:rgba(5,150,105,0.15);color:#059669">📍 Arrived</button>`:``}<button class="abtn done" data-action="complete" data-id="${j.id}">✅ Complete</button>`}`:`<button class="abtn undo" data-action="undo" data-id="${j.id}">↩ Undo</button>`}
     </div>
     ${!done?`<input class="notes-inp" placeholder="Mechanic notes..." value="${j.mnotes}" onblur="saveNotes('${j.id}',this.value)">`:''}
     ${isPending?`<div style="text-align:center;font-size:11px;color:#059669;padding:6px 0;font-weight:600">→ Swipe right to accept</div>`:''}
@@ -354,6 +353,54 @@ async function setStatus(id, status) {
       tag: 'booking-accepted-' + id
     });
   } else if (status === 'completed' || status === 'cancelled') { stopGPS(); stopRouteTimer(id); }
+}
+
+async function acceptJob(id) {
+  const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-accept', pin: stored.pin || '', booking_id: id }),
+    });
+    if (!resp.ok) { const err = await resp.json().catch(() => ({})); toast('Error: ' + (err.error || 'Could not accept')); return; }
+    const j = jobs.find(x => x.id === id);
+    if (j) j.mechanic_id = stored.id || 'accepted';
+    render(); badges();
+    toast('✅ Job accepted!');
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+async function rejectJob(id) {
+  const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-reject', pin: stored.pin || '', booking_id: id }),
+    });
+    if (!resp.ok) { const err = await resp.json().catch(() => ({})); toast('Error: ' + (err.error || 'Could not reject')); return; }
+    const j = jobs.find(x => x.id === id);
+    if (j) { j.status = 'pending'; j.mechanic_id = null; }
+    render(); badges();
+    toast('Job returned to pending');
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+async function markArrived(id) {
+  const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-arrived', pin: stored.pin || '', booking_id: id }),
+    });
+    if (!resp.ok) { const err = await resp.json().catch(() => ({})); toast('Error: ' + (err.error || 'Could not mark arrived')); return; }
+    const j = jobs.find(x => x.id === id);
+    if (j) j.status = 'in_progress';
+    render(); badges();
+    toast('📍 Arrived at location!');
+  } catch(e) { toast('Error: ' + e.message); }
 }
 
 // Send a push notification to a client via their stored browser subscription
@@ -1350,4 +1397,17 @@ function toggleMechTheme() {
   localStorage.setItem('drbike-theme', next);
   const btn = document.getElementById('theme-btn-mech');
   if(btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
-}
+}
+
+document.getElementById('jobs-list').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if (action === 'accept') acceptJob(id);
+  else if (action === 'reject') rejectJob(id);
+  else if (action === 'arrived') markArrived(id);
+  else if (action === 'enroute') setStatus(id, 'enroute');
+  else if (action === 'complete') completeJob(id);
+  else if (action === 'undo') setStatus(id, 'confirmed');
+});
