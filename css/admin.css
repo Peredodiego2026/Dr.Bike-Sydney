@@ -348,8 +348,9 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
   .content,.page{overflow-x:hidden;max-width:100vw}
   /* KPIs */
   .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
-  .kpi-card{padding:12px}
-  .kpi-value{font-size:20px}
+  .kpi-card{padding:12px 10px;min-width:0}
+  .kpi-value{font-size:18px;word-break:break-word;line-height:1.1}
+  .kpi-sub{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kpi-trend{display:none}
   /* All grids single column */
   .row2,.fin-row,.vans,.settings-grid,.clients-grid{grid-template-columns:1fr !important}
