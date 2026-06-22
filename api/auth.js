@@ -148,11 +148,32 @@ async function handleClientHistory(req, res) {
   return res.status(200).json(data || []);
 }
 
+async function handlePublicTrack(req, res) {
+  const { tracking_token, booking_id } = req.body;
+  if (!tracking_token && !booking_id) return res.status(400).json({ error: 'tracking_token or booking_id required' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const cols = 'id,status,scheduled_date,scheduled_time,service_name,service_price,address,van_number,mechanic_id,mechanic_notes,parts_used,next_service_date,tracking_token';
+  const filter = tracking_token
+    ? `tracking_token=eq.${encodeURIComponent(tracking_token)}`
+    : `id=eq.${encodeURIComponent(booking_id)}`;
+
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&${filter}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!resp.ok) return res.status(500).json({ error: 'Database error' });
+  const data = await resp.json();
+  if (!data?.length) return res.status(404).json({ error: 'Booking not found' });
+  return res.status(200).json(data[0]);
+}
+
 export default async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';
-  const rateMax = role === 'mechanic-location' ? 30 : 5;
+  const rateMax = role === 'mechanic-location' ? 30 : role === 'public-track' ? 20 : 5;
   if (await guard(req, res, { method: 'POST', rateMax, rateWindow: 60000 })) return;
 
+  if (role === 'public-track') return handlePublicTrack(req, res);
   if (role === 'mechanic') return handleMechanic(req, res);
   if (role === 'mechanic-jobs') return handleMechanicJobs(req, res);
   if (role === 'mechanic-location') return handleMechanicLocation(req, res);

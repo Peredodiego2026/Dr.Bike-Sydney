@@ -88,15 +88,17 @@ async function init(){
     return;
   }
 
-  // Support both ?id=UUID (authenticated) and ?token=UUID (shareable, public)
-  let bkgQuery;
-  if (trackingToken) {
-    bkgQuery = sb.from('bookings').select('id,status,scheduled_date,scheduled_time,service_name,service_price,address,van_number,mechanic_id,mechanic_lat,mechanic_lng,eta_minutes,started_at,completed_at,tracking_token').eq('tracking_token', trackingToken).single();
-  } else {
-    bkgQuery = sb.from('bookings').select('*').eq('id', bookingId).single();
-  }
-  const { data: bkg, error } = await bkgQuery;
-  if(error || !bkg){
+  // Fetch via server-side handler (bypasses RLS, works for both ?token= and ?id= paths)
+  let bkg = null;
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'public-track', ...(trackingToken ? { tracking_token: trackingToken } : { booking_id: bookingId }) }),
+    });
+    if(resp.ok) bkg = await resp.json();
+  } catch {}
+  if(!bkg){
     content.innerHTML = '<div class="card"><div class="err">Booking not found.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>';
     return;
   }
@@ -181,13 +183,18 @@ async function init(){
     }, 300);
   }
 
-  // Auto-refresh status every 30 seconds (works for both ?id= and ?token= links)
+  // Auto-refresh status every 30 seconds
   setInterval(async () => {
-    let q = sb.from('bookings').select('status,mechanic_notes,parts_used');
-    if(bookingId) q = q.eq('id', bookingId);
-    else q = q.eq('tracking_token', trackingToken);
-    const { data: updated } = await q.single();
-    if(updated && updated.status !== bkg.status) window.location.reload();
+    try {
+      const resp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'public-track', ...(trackingToken ? { tracking_token: trackingToken } : { booking_id: bookingId }) }),
+      });
+      if(!resp.ok) return;
+      const updated = await resp.json();
+      if(updated && updated.status !== bkg.status) window.location.reload();
+    } catch {}
   }, 30000);
 }
 
