@@ -79,4 +79,5 @@ html,body{height:100%;font-family:var(--sans);background:var(--off);color:var(--
   .nav-bar{ padding-bottom:env(safe-area-inset-bottom,0px); height:calc(56px + env(safe-area-inset-bottom,0px)); }
   .card-job{ border-radius:12px; }
   #offline-banner{ padding-top:env(safe-area-inset-top,8px); }
+  .actions{ display:grid; grid-template-columns:1fr 1fr; }
 }

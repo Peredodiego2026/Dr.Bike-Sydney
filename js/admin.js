@@ -2344,7 +2344,7 @@ async function initAdmin() {
   // Auth via Supabase (api/admin-auth.js). Token stored in sessionStorage.
   if(checkAdminAuth()) {
     await restoreAdminSession();
-    loadDashboard();
+    await loadDashboard();
     subscribeToBookings();
   }
 }

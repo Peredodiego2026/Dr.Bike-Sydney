@@ -787,8 +787,8 @@ async function loadInventory() {
   if (listEl)  listEl.style.display  = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   try {
-    if (!window._supabase) throw new Error('Supabase not initialized');
-    const { data, error } = await window._supabase.from('van_inventory').select('*').order('category').order('part_name');
+    if (!sb) throw new Error('Supabase not initialized');
+    const { data, error } = await sb.from('van_inventory').select('*').order('category').order('part_name');
     if (error || !data?.length) {
       loadingEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'block';
@@ -830,7 +830,7 @@ async function updateQty(id, delta, btn) {
   const newQty = Math.max(0, current + delta);
   el.textContent = newQty;
   try {
-    await window._supabase.from('van_inventory').update({ quantity: newQty }).eq('id', id);
+    await sb.from('van_inventory').update({ quantity: newQty }).eq('id', id);
   } catch(e) { el.textContent = current; }
 }
 
@@ -859,8 +859,8 @@ async function completeService() {
   if (bar) bar.style.display = 'none';
   const duration = serviceStartTime ? Math.floor((Date.now() - serviceStartTime) / 1000) : null;
   const bookingId = activeTimerBookingId;
-  if (bookingId && window._supabase) {
-    await window._supabase.from('bookings').update({
+  if (bookingId && sb) {
+    await sb.from('bookings').update({
       status: 'completed',
       completed_at: new Date().toISOString(),
       service_duration_seconds: duration
@@ -874,7 +874,7 @@ async function completeService() {
         let clientEmail = j.email || '';
         let clientPhone = j.phone || '';
         if (!clientEmail) {
-          const { data: bkg } = await window._supabase.from('bookings')
+          const { data: bkg } = await sb.from('bookings')
             .select('client_email, client_phone').eq('id', bookingId).single();
           clientEmail = bkg?.client_email || '';
           clientPhone = bkg?.client_phone || clientPhone;
@@ -981,8 +981,8 @@ async function saveChecklist() {
   const notesEl = document.getElementById('checklist-notes');
   const notes = notesEl ? notesEl.value : '';
   const criticals = CHECKLIST_ITEMS.filter(i => checklistState[i.id] === 'critical').map(i => i.label);
-  if (checklistBookingId && window._supabase) {
-    await window._supabase.from('bookings').update({
+  if (checklistBookingId && sb) {
+    await sb.from('bookings').update({
       started_at: new Date().toISOString(),
       pre_service_checklist: JSON.stringify(checklistState),
       pre_service_notes: notes
