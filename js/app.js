@@ -1348,7 +1348,7 @@ async function renderMyBookings() {
         const overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
         overlay.innerHTML = `
-          <div style="background:var(--color-bg);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto">
+          <div id="detail-panel" style="background:var(--color-bg);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto">
             <div style="font-size:17px;font-weight:700;margin-bottom:20px">${booking.service_name || 'Service'}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
               <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">Date</span><span>${booking.scheduled_date || '--'}</span></div>
@@ -1359,6 +1359,7 @@ async function renderMyBookings() {
             </div>
             ${(booking.status === 'enroute' || booking.status === 'in_progress') ? '<button id="track-live-btn" class="btn btn--primary btn--full" style="margin-bottom:10px">📍 Track Live</button>' : ''}
             ${booking.tracking_token ? '<button id="share-track-btn" class="btn btn--secondary btn--full" style="margin-bottom:10px">🔗 Share tracking link</button>' : ''}
+            ${canCancel ? '<button id="reschedule-btn" class="btn btn--secondary btn--full" style="margin-bottom:10px">📅 Reschedule</button>' : ''}
             ${canCancel ? '<button id="cancel-booking-btn" class="btn btn--secondary btn--full" style="margin-bottom:10px;color:var(--color-error);border-color:var(--color-error)">Cancel booking</button>' : ''}
             <button id="close-detail-btn" class="btn btn--secondary btn--full">Close</button>
           </div>
@@ -1383,11 +1384,80 @@ async function renderMyBookings() {
           overlay.querySelector('#cancel-booking-btn').addEventListener('click', async () => {
             const { data: { user } } = await sb.auth.getUser();
             if (!user) return;
-            const { error } = await sb.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id).eq('client_id', user.id);
-            if (error) { showToast('Could not cancel booking. Try again.', 'error'); return; }
+            const session = (await sb.auth.getSession()).data.session;
+            if (!session) return;
+            const btn = overlay.querySelector('#cancel-booking-btn');
+            btn.textContent = 'Cancelling...';
+            btn.disabled = true;
+            const resp = await fetch('/api/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ role: 'client-cancel', access_token: session.access_token, booking_id: booking.id, client_id: user.id }),
+            });
+            if (!resp.ok) {
+              const err = await resp.json().catch(() => ({}));
+              showToast(err.error || 'Could not cancel booking.', 'error');
+              btn.textContent = 'Cancel booking';
+              btn.disabled = false;
+              return;
+            }
             booking.status = 'cancelled';
             overlay.remove();
             renderList(tab);
+            showToast('Booking cancelled.');
+          });
+
+          overlay.querySelector('#reschedule-btn').addEventListener('click', () => {
+            const panel = document.getElementById('detail-panel');
+            const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+            panel.innerHTML = `
+              <div style="font-size:17px;font-weight:700;margin-bottom:20px">📅 Reschedule</div>
+              <div style="margin-bottom:16px">
+                <label style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New date</label>
+                <input id="resched-date" type="date" min="${tomorrow}" value="${booking.scheduled_date || ''}"
+                  style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
+              </div>
+              <div style="margin-bottom:24px">
+                <label style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New time</label>
+                <select id="resched-time" style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
+                  ${['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00'].map(t =>
+                    `<option value="${t}" ${booking.scheduled_time === t ? 'selected' : ''}>${t.replace(':00', '') + (parseInt(t) < 12 ? 'am' : 'pm')}</option>`
+                  ).join('')}
+                </select>
+              </div>
+              <button id="confirm-resched-btn" class="btn btn--primary btn--full" style="margin-bottom:10px">Confirm reschedule</button>
+              <button id="back-detail-btn" class="btn btn--secondary btn--full">Back</button>
+            `;
+            panel.querySelector('#back-detail-btn').addEventListener('click', () => overlay.remove());
+            panel.querySelector('#confirm-resched-btn').addEventListener('click', async () => {
+              const newDate = panel.querySelector('#resched-date').value;
+              const newTime = panel.querySelector('#resched-time').value;
+              if (!newDate) { showToast('Select a date.', 'error'); return; }
+              const { data: { user } } = await sb.auth.getUser();
+              if (!user) return;
+              const session = (await sb.auth.getSession()).data.session;
+              if (!session) return;
+              const btn = panel.querySelector('#confirm-resched-btn');
+              btn.textContent = 'Saving...';
+              btn.disabled = true;
+              const resp = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: 'client-reschedule', access_token: session.access_token, booking_id: booking.id, client_id: user.id, scheduled_date: newDate, scheduled_time: newTime }),
+              });
+              if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                showToast(err.error || 'Could not reschedule.', 'error');
+                btn.textContent = 'Confirm reschedule';
+                btn.disabled = false;
+                return;
+              }
+              booking.scheduled_date = newDate;
+              booking.scheduled_time = newTime;
+              overlay.remove();
+              renderList(tab);
+              showToast('Booking rescheduled!');
+            });
           });
         }
       });

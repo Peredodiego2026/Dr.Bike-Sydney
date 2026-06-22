@@ -119,6 +119,97 @@ async function handleClientBookings(req, res) {
   return res.status(200).json(data || []);
 }
 
+async function handleClientCancel(req, res) {
+  const { access_token, booking_id, client_id } = req.body;
+  if (!access_token || !booking_id || !client_id)
+    return res.status(400).json({ error: 'access_token, booking_id, client_id required' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const bkResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
+  const bkData = await bkResp.json();
+  if (!bkData?.length) return res.status(404).json({ error: 'Booking not found' });
+  const bk = bkData[0];
+  if (bk.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+  if (!['pending', 'confirmed'].includes(bk.status))
+    return res.status(400).json({ error: 'Booking cannot be cancelled' });
+
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ status: 'cancelled' }),
+    }
+  );
+  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to cancel booking' });
+  return res.status(200).json({ ok: true });
+}
+
+async function handleClientReschedule(req, res) {
+  const { access_token, booking_id, client_id, scheduled_date, scheduled_time } = req.body;
+  if (!access_token || !booking_id || !client_id || !scheduled_date || !scheduled_time)
+    return res.status(400).json({ error: 'access_token, booking_id, client_id, scheduled_date, scheduled_time required' });
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduled_date))
+    return res.status(400).json({ error: 'Invalid date format (YYYY-MM-DD)' });
+  if (!/^\d{2}:\d{2}$/.test(scheduled_time))
+    return res.status(400).json({ error: 'Invalid time format (HH:MM)' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const bkResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
+  const bkData = await bkResp.json();
+  if (!bkData?.length) return res.status(404).json({ error: 'Booking not found' });
+  const bk = bkData[0];
+  if (bk.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+  if (!['pending', 'confirmed'].includes(bk.status))
+    return res.status(400).json({ error: 'Booking cannot be rescheduled' });
+
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ scheduled_date, scheduled_time }),
+    }
+  );
+  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to reschedule booking' });
+  return res.status(200).json({ ok: true });
+}
+
 async function handleClientHistory(req, res) {
   const { pin, client_id, client_email, booking_id } = req.body;
   if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
@@ -224,6 +315,8 @@ export default async function handler(req, res) {
   if (role === 'mechanic') return handleMechanic(req, res);
   if (role === 'mechanic-jobs') return handleMechanicJobs(req, res);
   if (role === 'mechanic-location') return handleMechanicLocation(req, res);
+  if (role === 'client-cancel') return handleClientCancel(req, res);
+  if (role === 'client-reschedule') return handleClientReschedule(req, res);
   if (role === 'client-history') return handleClientHistory(req, res);
   if (role === 'client-bookings') return handleClientBookings(req, res);
   return handleAdmin(req, res);
