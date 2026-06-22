@@ -255,7 +255,7 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au/?coupon=BACK15" style="display:block;background:#0A58CA;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Book now — use BACK15 &rarr;</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; 0433 963 250</p>
-        </div>${footer()}\`
+        </div>${footer()}`
     },
     abandoned_recovery: {
       subject: `🚲 You left something behind, ${name}!`,
@@ -270,7 +270,7 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Complete my booking &rarr;</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; 0433 963 250</p>
-        </div>${footer()}\`
+        </div>${footer()}`
     },
     birthday_promo: {
       subject: `🎂 Happy Birthday, ${name}! A gift from Dr. Bike Sydney`,
@@ -296,7 +296,7 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au/?coupon=BDAY20" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Redeem my birthday gift &rarr;</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; Mon&ndash;Sat</p>
-        </div>${footer()}\`
+        </div>${footer()}`
     },
     payment_action_required: {
       subject: `🔐 Action required — verify your Dr. Bike payment`,

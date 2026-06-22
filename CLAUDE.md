@@ -7,34 +7,36 @@ Mobile on-demand bicycle repair business in Sydney, Australia.
 - Production URL: https://drbikesydney.com.au (Vercel)
 - Repo: github.com/Peredodiego2026/Dr.Bike-Sydney
 
-## SOURCE OF TRUTH for current work plan
-Three PDFs in docs/ from external consultant (Jun 2026 audit):
-- docs/reporte-inicial-drbike.pdf - Full audit, 14 issues identified
-- docs/plan-saneamiento-drbike.pdf - Track A: 6 sessions, ~3h 45min
-- docs/plan-rediseno-ui-drbike.pdf - Track B: 6 sessions, ~4h 40min
+## Architecture (current state - Jun 2026)
 
-Read these FIRST before any work. Each session has an exact prompt
-inside the PDF that should be executed verbatim.
+Two-page bifurcation via `middleware.js` (Vercel Edge Function):
+- Desktop users -> `landing.html` (marketing + booking modal, light theme)
+- Mobile users -> `index.html` (SPA with hash router, light theme)
 
-## Agreed execution order
-1. Track A (Saneamiento) completo PRIMERO
-2. Track B (Rediseno UI) despues
-3. Una sesion = una tarea. Cuando contexto llega a ~100k tokens, cerrar chat.
+Both pages use the same light/white design system:
+- Primary: #2563eb (electric blue)
+- Background: #ffffff
+- Text: #111827
+- Border: #e5e7eb
+- Font: Inter (Google Fonts)
 
-| Session | Topic | Time |
-|---|---|---|
-| A1 | Seguridad critica (Eruda, XSS emails, admin extension, Google Maps key) | ~30 min |
-| A2 | Auth server-side + RLS Supabase | ~45 min |
-| A3 | Limpieza dead code (mobile v1/v2/v3, .bak, mockups, duplicados) | ~20 min |
-| A4 | Bug fixes (stripe-webhook, send-email referral, normalizeAUPhone, WhatsApp config, anthropic-ai/sdk) | ~30 min |
-| A5 | Modularizacion frontend (extraer CSS/JS de monolitos) | ~60 min |
-| A6 | Produccion readiness (SW cache, rate limit Upstash, Apple Pay/Google Pay, health check, DEPLOY.md) | ~40 min |
-| B1 | Design system + SPA shell | ~45 min |
-| B2 | Home + Service Type | ~45 min |
-| B3 | Date/Time + Summary | ~40 min |
-| B4 | Payment + Tracking | ~50 min |
-| B5 | Review + Auth + My Bookings | ~40 min |
-| B6 | PWA + Unificacion + Polish | ~40 min |
+### App surfaces
+- `index.html` - Mobile SPA (PRODUCTION). Hash router. ~450 lines HTML + js/app.js.
+- `landing.html` - Desktop marketing + booking modal (PRODUCTION). ~2600 lines.
+- `admin.html` - Manager dashboard. Server-side auth via /api/auth.
+- `mechanic.html` - Mechanic app, PIN login 3250.
+- `track.html` - Public booking tracking (shareable link).
+- `middleware.js` - Vercel Edge Function. Matcher: '/'. Routes mobile->index.html, desktop->landing.html.
+
+### CSS/JS files (SPA)
+- `css/variables.css` - Design tokens
+- `css/main.css` - Base styles + desktop overrides (bottom-nav hide, booking screens max-width 680px)
+- `css/home.css` - Home screen styles. Includes desktop navbar (#home-desktop-nav, display:none on mobile, sticky on 768px+)
+- `js/app.js` - Main SPA logic (~1740 lines)
+- `js/router.js` - Hash-based router
+- `js/supabase.js` - Supabase client + helpers
+- `js/stripe.js` - Stripe payment helpers
+- `js/components.js` - UI component factories
 
 ## Stack
 - Frontend: vanilla HTML/CSS/JS (no framework), multi-page PWA
@@ -45,75 +47,72 @@ inside the PDF that should be executed verbatim.
 - Hosting: Vercel with cron jobs
 - Analytics: Google Analytics (G-GXYD68JXZW)
 - Auth: Supabase Auth + Google OAuth
-- AI: Anthropic Claude (fetch directo, no SDK)
+- AI: Anthropic Claude (fetch directo, no SDK - @anthropic-ai/sdk in package.json but unused)
 
-## App surfaces (current state)
-- `index.html` - Client web (PRODUCTION). Monolith 4,898 lines. Most complete.
-- `mobile_latest.html` - Client mobile PWA, dark theme. HAS ERUDA DEBUG IN PROD.
-- `admin.html` - Manager dashboard. Monolith 3,497 lines. Client-side auth only.
-- `mechanic.html` - Mechanic app, PIN login 3250. Weak PIN check.
-- `landing.html` - Public marketing landing. Different CSS system from index.
-- `track.html` - Public booking tracking.
-- DEAD FILES (delete in A3): mobile.html, mobile_v2.html, mobile_v3.html,
-  index-redesign.html, admin.html.bak, applepay-test.html, payments.html,
-  notifications.html (mockups with broken local paths).
+## Payments
+- Stripe LIVE keys active in production
+- Mobile (index.html): $20 call-out fee charged via Stripe at booking step 3 (PaymentIntent)
+- Desktop (landing.html): NO Stripe charge - bkProceed() creates booking in Supabase and Diego contacts client manually
+- Subscriptions: Basic $57/mo, Standard $97/mo, VIP $147/mo (3-month min). stripe-webhook.js handles events.
+
+## Notifications (working as of Jun 2026)
+When a booking is created via mobile SPA (finalizeBooking()):
+- WhatsApp to Diego (admin) via Twilio
+- SMS to assigned mechanic via Twilio
+- Email confirmation to client via Resend
+
+Desktop booking (landing.html bkProceed()) does NOT trigger notifications - manual process.
 
 ## Database tables (Supabase)
 profiles, bookings, services, bikes, van_zones, escalation_contacts,
 job_messages, mechanic_locations, notifications, discount_codes,
 availability, parts_inventory.
 
-**CRITICAL: RLS NOT ENABLED on bookings.** Script in
-scripts/add-bookings-rls.sql is commented out. Fixed in session A2.
+RLS is ENABLED on bookings (fixed Jun 2026).
 
 Key column gotchas:
 - `bikes` table uses `client_id` (NOT `user_id`)
 - `bookings.scheduled_time` stored as 24h string (e.g. "14:30")
 - `bookings` lacks `bike_id` column (needed for service history per bike)
+- WhatsApp admin number stored in van_zones with van_number=0 (hack)
 
-## API endpoints (13 in /api)
-_security.js (middleware with sanitize + rate limit),
-send-email.js, send-sms.js, send-whatsapp.js, send-push.js,
-send-invoice.js, send-reminders.js, send-2h-reminders.js,
-diagnose-bike.js, chat.js, create-subscription.js,
-cancel-subscription.js, stripe-webhook.js.
+## API endpoints (/api directory)
+_security.js (middleware: sanitize + rate limit),
+auth.js (server-side admin/mechanic auth),
+chat.js (AI chatbot + bike diagnosis + health check + reviews),
+send-email.js, send-message.js (unified SMS/WhatsApp), send-push.js,
+send-invoice.js, send-cron.js (reminders, birthday, reengagement, abandoned, upsell),
+create-payment-session.js (Stripe PaymentIntent + subscription),
+stripe-webhook.js.
 
-## Known critical issues (per audit PDFs)
+## Known issues (post-audit state Jun 2026)
 
-### Security CRITICAL
-- S01: Google Maps API key hardcoded in index.html:55 - needs HTTP referrer restriction
-- S02: Admin auth client-side only, password in JS, no RLS
-- S03: XSS in email templates - user data interpolated without escape
-- S04: Eruda debug console exposed in mobile_latest.html:2845
+### Resolved
+- S04: Eruda debug console - removed from mobile_latest.html
+- S02: Admin auth - server-side via /api/auth (but admin.html still has weak PIN)
+- RLS on bookings - enabled
+- Dead files (mobile.html v1/v2/v3, index-redesign.html, admin.html.bak) - deleted
 
-### Functional bugs
-- B01: stripe-webhook.js:233 uses `membership` instead of `membership_status`
-- B02: send-email.js referral_success template has variables out of scope
-- B03: WhatsApp number stored via van_zones with hack van_number=0
-- B04: @anthropic-ai/sdk in package.json but never imported
+### Still open
+- S01: Google Maps API key - hardcoded, no HTTP referrer restriction set
+- S03: XSS in email templates - user data not escaped in some templates
+- B01: stripe-webhook.js uses `membership` field instead of `membership_status`
+- B02: send-email.js referral_success template has out-of-scope variables
+- Apple Pay/Google Pay: canMakePayment() returns null on Safari iPhone
 
-### Code quality
-- 4 versions of mobile app (mobile.html, v2, v3, latest)
-- 95% duplicate: index.html vs index-redesign.html
-- 100% duplicate: applepay.html vs applepay-test.html
-- normalizeAUPhone() duplicated in send-sms.js and send-whatsapp.js
-- All CSS inline (0 separate CSS files)
-- Service worker deletes ALL cache on activate
+### Session 5 (routing unification) - PENDING - 2 bugs to fix
+Attempt to unify routing (one page for all devices) failed. Two visible bugs in index.html when served to desktop via the root URL:
+1. Hero text invisible (root cause unknown - works fine at /index.html directly)
+2. Bottom nav visible on desktop despite @media (min-width: 768px) { display:none !important }
 
-## Brand
-- Name: Dr. Bike
-- Slogan: "Healthy Bikes, Happy Riders"
-- New design system (per Track B):
-  - Primary: #0A58CA (electric blue)
-  - Background: #0F0F0F (dark)
-  - Surface: #1A1A1A
-  - Text: #FFFFFF / secondary #A0A0A0
-  - Border: #2A2A2A
+Before retrying Session 5: reproduce bugs at /index.html to isolate whether the issue is routing or CSS specificity.
 
 ## Pricing
-- 20 services, all include $20 mobile call-out fee
 - Tune-Up $109, Standard $149, Major $199, Ultimate Overhaul $369
-- Subscriptions: Basic $57/mo, Standard $97/mo, VIP $147/mo (3-month min)
+- Safety Check $59, Flat Tyre $49, Gear Adjustment $59, Brake Pad $49
+- Brake Bleed $79, Cable Replace $65, Chain Replace $55, Wheel True $75
+- E-Bike Diagnostic $99, Bike Build $299+, Custom Build $399+
+- All prices include $20 mobile call-out fee
 - Phone: 0433 963 250 / +61433963250
 - WhatsApp: wa.me/61433963250
 - Mechanic PIN: 3250
@@ -127,43 +126,26 @@ cancel-subscription.js, stripe-webhook.js.
 - Strategy: register figurative LOGO + composite mark "Dr. Bike + slogan".
 - Lawyer review pending (after August 2026).
 
-## Critical operational rules
+## Deploy
+- MANUAL ONLY: `npx vercel --prod` from local working directory
+- Auto-deploy via GitHub push is BROKEN (do not rely on it)
+- Changes are NOT committed to git before deploying - Vercel CLI deploys working directory
+- node --check js/app.js before every deploy
+- Skip `<script type="application/ld+json">` blocks in node --check (JSON-LD, not JS)
 
-### GitHub deploy pattern
-```python
-import requests, base64
-TOKEN = "<github personal access token>"
-REPO = "Peredodiego2026/Dr.Bike-Sydney"
-h = {"Authorization": f"token {TOKEN}"}
-url = f"https://api.github.com/repos/{REPO}/contents/{FILE}"
-sha = requests.get(url, headers=h).json()['sha']
-content = base64.b64encode(open(LOCAL_FILE,'rb').read()).decode()
-r = requests.put(url, headers=h, json={
-  "message": "commit message",
-  "content": content,
-  "sha": sha
-})
-```
+## Critical coding rules
 
-### UTF-8 encoding rule
-GitHub API file edits MUST use TextDecoder('utf-8') or full bytes.
-NEVER use bare atob() - corrupts non-ASCII / emoji / Spanish characters.
+### No inline event handlers
+NEVER onclick inline -> always addEventListener + data attributes.
 
-### JS validation before deploy
-Always extract inline scripts and run node --check before pushing.
-Skip <script type="application/ld+json"> blocks (JSON-LD SEO data, not JS).
+### No silent errors
+NEVER catch{} empty -> always show e.message to user or log it.
 
-### Branching
-- Track A: work in branch `saneamiento-prod`
-- Track B: work in branch `redesign-ui`
-- Separate commit per fix to allow safe revert.
+### No blind DB writes
+NEVER reference columns that don't exist -> verify with SELECT before INSERT/UPDATE.
 
-### Apple Pay state (deferred to A6)
-Code present in index.html, .well-known/ file present, vercel.json correct,
-domain Enabled in Stripe dashboard. But canMakePayment() returns null in
-Safari iPhone. The audit recommends switching to Stripe Checkout
-(removing payment_method_types: ['card'] restriction) instead of fighting
-Payment Request Button - this happens in session A6.
+### No deletes without confirmation
+NEVER DELETE without confirming with Diego first.
 
 ---
 
@@ -234,11 +216,3 @@ Payment Request Button - this happens in session A6.
 
 ## Override Rule
 User instructions always override this file.
-
-<!-- deploy trigger: 2026-06-15T05:33:22.982054 -->
-
-<!-- redeploy: 2026-06-15T05:35:59.796070 -->
-
-<!-- webhook-test: 2026-06-15T05:39:09.919682 -->
-
-<!-- force: 2026-06-15T05:41:32.666564 -->

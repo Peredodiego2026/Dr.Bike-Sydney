@@ -256,51 +256,6 @@
       font-size: 16px;
     }
 
-    /* ── Services ─────────────────────────────────────────────────────────────── */
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-    }
-    .service-card {
-      padding: 28px;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
-      transition: var(--transition);
-    }
-    .service-card:hover {
-      box-shadow: 0 8px 24px rgba(37,99,235,0.12);
-      border-color: #bfdbfe;
-      transform: translateY(-2px);
-    }
-    .service-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--blue-light);
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-    }
-    .service-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--dark);
-      margin-bottom: 4px;
-    }
-    .service-price {
-      color: var(--blue);
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-    .service-desc {
-      font-size: 14px;
-      color: var(--gray);
-      line-height: 1.5;
-    }
     .section-center {
       text-align: center;
       max-width: 600px;
@@ -692,90 +647,10 @@
       <p class="section-sub">We bring a fully equipped mobile workshop to your door — no bike shop queues, no expensive tow-ins.</p>
     </div>
 
-    <div class="services-grid">
-      <!-- Basic Service -->
-      <div class="service-card">
-        <div class="service-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-          </svg>
-        </div>
-        <div class="service-name">Tune-Up</div>
-        <div class="service-price">$109</div>
-        <p class="service-desc">Perfect for regular maintenance and safety checks.</p>
-      </div>
-
-      <!-- Standard Service -->
-      <div class="service-card">
-        <div class="service-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-          </svg>
-        </div>
-        <div class="service-name">Standard Service</div>
-        <div class="service-price">$149</div>
-        <p class="service-desc">Comprehensive service with detailed adjustment.</p>
-      </div>
-
-      <!-- Premium Service -->
-      <div class="service-card">
-        <div class="service-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-        </div>
-        <div class="service-name">Major Service</div>
-        <div class="service-price">$199</div>
-        <p class="service-desc">Complete overhaul and performance optimization.</p>
-      </div>
-
-      <!-- Repairs -->
-      <div class="service-card">
-        <div class="service-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
-            <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
-            <path d="M13 13l6 6"/>
-          </svg>
-        </div>
-        <div class="service-name">Repairs</div>
-        <div class="service-price">From $60</div>
-        <p class="service-desc">Fast and reliable repair at your doorstep.</p>
-      </div>
-
-      <!-- E-Bike Service -->
-      <div class="service-card">
-        <div class="service-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-        </div>
-        <div class="service-name">E-Bike Service</div>
-        <div class="service-price">$129</div>
-        <p class="service-desc">Specialized service for electric bikes.</p>
-      </div>
-
-      <!-- Bike Assembly -->
-      <div class="service-card">
-        <div class="service-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="5.5" cy="17.5" r="3.5"/>
-            <circle cx="18.5" cy="17.5" r="3.5"/>
-            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
-            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
-            <path d="M18.5 17.5L15 6"/>
-            <path d="M5.5 17.5L9 11l4.5-1"/>
-          </svg>
-        </div>
-        <div class="service-name">Bike Assembly</div>
-        <div class="service-price">$80</div>
-        <p class="service-desc">Professional assembly of your new bike.</p>
-      </div>
+    <div style="text-align:center;padding:12px 0">
+      <button id="home-view-all-btn" class="btn-outline-blue">View All Services &rarr;</button>
     </div>
 
-    <div style="text-align:center">
-      <button class="btn-outline-blue" onclick="openServicesModal()">View All Services</button>
-    </div>
   </div>
 </section>
 
@@ -1826,27 +1701,36 @@ function showDiagResult(data) {
   var sev = data.severity || 'medium';
   var sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
   var urgColor = data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
+  var bookLabel = data.recommended_service_name
+    ? 'Book ' + data.recommended_service_name + (data.recommended_service_price ? ' - $' + data.recommended_service_price : '') + ' →'
+    : '';
+  var bookHtml = (data.recommended_service_id && bookLabel)
+    ? '<button id="diag-book-btn" style="width:100%;margin-top:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;text-align:left;font-family:inherit">' + bookLabel + '</button>'
+    : '';
   resultEl.innerHTML =
     '<div style="background:white;border-radius:8px;padding:12px;border:1px solid #E5E7EB">' +
-    '<div style="font-size:12px;font-weight:700;color:#0D1F3C;margin-bottom:6px">🤖 AI Recommendation</div>' +
-    '<div style="font-size:12px;color:#374151;margin-bottom:8px">' + (data.diagnosis || 'Bike issue detected') + '</div>' +
-    (data.services && data.services.length ? '<div style="margin-bottom:8px">' + data.services.map(function(s) {
-      return '<span class="diag-chip" data-svc="' + s.replace(/"/g, '&quot;') + '" style="background:#EEF3FC;color:#1848C8;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px;cursor:pointer">' + s + '</span>';
-    }).join('') + '</div>' : '') +
-    '<div style="display:flex;gap:8px;align-items:center">' +
+    '<div style="font-size:12px;font-weight:700;color:#111827;margin-bottom:6px">&#129302; AI Recommendation</div>' +
+    '<div style="font-size:12px;color:#111827;margin-bottom:8px">' + (data.diagnosis || 'Bike issue detected') + '</div>' +
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
     '<span style="font-size:11px;color:' + sevColor + ';font-weight:600">' + (sev.charAt(0).toUpperCase()+sev.slice(1)) + ' severity</span>' +
-    '<span style="color:#d1d5db">·</span>' +
+    '<span style="color:#E5E7EB">&#183;</span>' +
     '<span style="font-size:11px;color:' + urgColor + ';font-weight:600">' + (data.urgency || 'Book soon') + '</span>' +
-    (data.estimatedCost ? '<span style="color:#d1d5db">·</span><span style="font-size:11px;color:#6b7280">' + data.estimatedCost + '</span>' : '') +
-    '</div></div>';
-  resultEl.querySelectorAll('.diag-chip').forEach(function(chip) {
-    chip.addEventListener('click', function() { autoSelectService(chip.dataset.svc); });
-  });
+    (data.details ? '<span style="color:#E5E7EB">&#183;</span><span style="font-size:11px;color:#6B7280">' + data.details + '</span>' : '') +
+    '</div>' + bookHtml + '</div>';
+  if (data.recommended_service_id) {
+    var btn = resultEl.querySelector('#diag-book-btn');
+    if (btn) btn.addEventListener('click', function() {
+      openBooking();
+      _bkState.preselect = data.recommended_service_id;
+    });
+  }
 }
 
-function autoSelectService(serviceName) {
-  var found = bkServices.find(function(s) { return s.name.toLowerCase().includes(serviceName.toLowerCase()) || serviceName.toLowerCase().includes(s.name.toLowerCase()); });
-  if (found) { selectService(found.id); }
+function autoSelectService(serviceId) {
+  var list = document.getElementById('bk-services-list');
+  if (!list) return;
+  var card = list.querySelector('[data-service-id="' + serviceId + '"]');
+  if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
 
 document.getElementById('services-modal').addEventListener('click', function(e) {
@@ -1979,7 +1863,7 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
       <div style="height:3px;background:#F3F4F6">
         <div id="bk-progress" style="height:100%;background:#0A58CA;transition:width .3s ease;width:33.3%"></div>
       </div>
-      <div id="bk-content" style="padding:24px"></div>
+      <div id="bk-content" style="padding:16px"></div>
     </div>
   </div>
 </div>
@@ -2118,14 +2002,18 @@ async function signInGoogle() {
 var _bkState = { service: null, date: null, time: null, services: [], bookingId: null, preselect: null };
 
 var BK_MOCK_SERVICES = [
-  { id: '1', name: 'Tune-Up',          price: 109, description: 'Gears, brakes, wheels trued + safety check', duration: '~1 hour' },
-  { id: '2', name: 'Standard Service', price: 149, description: 'Full tune-up + drivetrain clean',             duration: '~1.5 hours' },
-  { id: '3', name: 'Major Service',    price: 199, description: 'Comprehensive overhaul + parts check',        duration: '~2.5 hours' },
-  { id: '4', name: 'Ultimate Overhaul',price: 369, description: 'Complete rebuild, all bearings serviced',     duration: '~4 hours' },
+  { id: '1', name: 'Tune-Up',          category: 'Scheduled services', price: 109, description: 'Gears, brakes, wheels trued + safety check', duration: '~1 hour' },
+  { id: '2', name: 'Standard Service', category: 'Scheduled services', price: 149, description: 'Full tune-up + drivetrain clean',             duration: '~1.5 hours' },
+  { id: '3', name: 'Major Service',    category: 'Scheduled services', price: 199, description: 'Comprehensive overhaul + parts check',        duration: '~2.5 hours' },
+  { id: '4', name: 'Ultimate Overhaul',category: 'Scheduled services', price: 369, description: 'Complete rebuild, all bearings serviced',     duration: '~4 hours' },
 ];
-var BK_MOCK_SLOTS = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'];
+var BK_MOCK_SLOTS  = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'];
 var BK_DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var BK_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var BK_CAT_ORDER   = ['Scheduled services','Brakes','Cockpit & levers','Drivetrain','Gears & cables','Wheels & tyres','Electronic & e-bike','Suspension','General & assembly'];
+var BK_CAT_SHORT   = { 'Scheduled services':'Scheduled','Brakes':'Brakes','Cockpit & levers':'Cockpit','Drivetrain':'Drivetrain','Gears & cables':'Gears','Wheels & tyres':'Wheels','Electronic & e-bike':'E-Bike','Suspension':'Suspension','General & assembly':'General' };
+var BK_CAT_ICON    = { 'Scheduled services':'🔧','Brakes':'🛑','Cockpit & levers':'🎛️','Drivetrain':'⚙️','Gears & cables':'🔩','Wheels & tyres':'🔄','Electronic & e-bike':'⚡','Suspension':'🏔️','General & assembly':'🔨' };
+var _bkCalYear = null, _bkCalMonth = null;
 
 function bkGenerateDates() {
   var dates = [];
@@ -2209,11 +2097,49 @@ async function bkRenderStep1() {
     }
   }
 
-  var list = document.getElementById('bk-services-list');
-  list.innerHTML = _bkState.services.map(function(s) {
-    var sel = _bkState.service && String(_bkState.service.id) === String(s.id);
-    return bkServiceCardHTML(s, sel);
+  // inject chip styles once
+  if (!document.getElementById('bk-chip-styles')) {
+    var st = document.createElement('style');
+    st.id = 'bk-chip-styles';
+    st.textContent = '.bk-cat-chip{flex-shrink:0;display:inline-flex;align-items:center;height:28px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:0 12px;font-size:12px;cursor:pointer;color:#374151;font-family:inherit;white-space:nowrap;transition:border-color .15s,background .15s}.bk-cat-chip:hover{border-color:#0A58CA;color:#0A58CA}';
+    document.head.appendChild(st);
+  }
+
+  // group services by category
+  var grouped = {};
+  BK_CAT_ORDER.forEach(function(cat) { grouped[cat] = []; });
+  _bkState.services.forEach(function(s) {
+    var cat = s.category || 'General & assembly';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(s);
+  });
+
+  // render ALL chips (same as mobile — always show all 9, chip clicks no-op if empty category)
+  var chipsEl = document.getElementById('bk-cat-chips');
+  chipsEl.innerHTML = BK_CAT_ORDER.map(function(cat) {
+    return '<button class="bk-cat-chip" data-cat="' + cat + '">' + BK_CAT_ICON[cat] + ' ' + BK_CAT_SHORT[cat] + '</button>';
   }).join('');
+
+  // render services grouped with headers
+  var list = document.getElementById('bk-services-list');
+  var listHTML = '';
+  BK_CAT_ORDER.forEach(function(cat) {
+    if (!grouped[cat] || !grouped[cat].length) return;
+    listHTML += '<div class="bk-cat-header" data-cat="' + cat + '" style="font-size:12px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;padding:8px 0 4px">' + BK_CAT_ICON[cat] + ' ' + cat + '</div>';
+    grouped[cat].forEach(function(s) {
+      var sel = _bkState.service && String(_bkState.service.id) === String(s.id);
+      listHTML += bkServiceCardHTML(s, sel);
+    });
+  });
+  list.innerHTML = listHTML;
+
+  // wire chip clicks → scroll to category header
+  chipsEl.querySelectorAll('.bk-cat-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      var header = list.querySelector('.bk-cat-header[data-cat="' + chip.dataset.cat + '"]');
+      if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
 
   list.querySelectorAll('.bk-svc-card').forEach(function(card) {
     card.addEventListener('click', function() {
@@ -2225,8 +2151,7 @@ async function bkRenderStep1() {
         c.style.borderColor = '#E5E7EB'; c.style.background = '#fff';
       });
       card.style.borderColor = '#0A58CA'; card.style.background = '#EEF3FC';
-      var btn = document.getElementById('bk-step1-continue');
-      btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+      bkShowStep(2);
     });
     card.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' || e.key === ' ') card.click();
@@ -2263,18 +2188,17 @@ function bkStep1HTML() {
   return '<div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #C7D9F8">' +
     '<div style="font-size:13px;font-weight:700;color:#1848C8;margin-bottom:8px">Not sure what your bike needs?</div>' +
     '<div style="font-size:12px;color:#374151;margin-bottom:12px">Upload a photo or describe the problem — our AI will recommend the right service.</div>' +
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">' +
-      '<label style="flex:1;min-width:120px;cursor:pointer">' +
+    '<div style="display:flex;align-items:center;gap:8px;width:100%">' +
+      '<label style="flex-shrink:0;cursor:pointer">' +
         '<input type="file" accept="image/*" id="bk-diag-photo" style="display:none">' +
-        '<div id="bk-photo-btn" style="background:white;border:2px solid #C7D9F8;border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:600;color:#1848C8;cursor:pointer">&#128247; Upload Photo</div>' +
+        '<div id="bk-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:2px solid #C7D9F8;border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:#1848C8;cursor:pointer;white-space:nowrap">&#128247; Upload Photo</div>' +
       '</label>' +
-      '<div style="flex:2;min-width:140px">' +
-        '<textarea id="bk-diag-text" placeholder="Describe the problem... e.g. clicking noise when pedalling" style="width:100%;border:2px solid #C7D9F8;border-radius:8px;padding:8px;font-size:13px;height:42px;resize:none;outline:none;box-sizing:border-box;font-family:inherit"></textarea>' +
-      '</div>' +
-      '<button id="bk-diag-ask-btn" style="background:#1848C8;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Ask AI &#8594;</button>' +
+      '<input type="text" id="bk-diag-text" placeholder="Describe the problem..." style="flex:1;min-width:0;height:44px;border:2px solid #C7D9F8;border-radius:8px;padding:0 10px;font-size:16px;outline:none;box-sizing:border-box;font-family:inherit">' +
+      '<button id="bk-diag-ask-btn" style="flex-shrink:0;height:44px;background:#1848C8;color:white;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Ask AI &#8594;</button>' +
     '</div>' +
     '<div id="bk-diag-result" style="display:none;margin-top:10px"></div>' +
   '</div>' +
+  '<div id="bk-cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0"></div>' +
   '<div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:12px">Select a Service</div>' +
   '<div id="bk-services-list" style="display:flex;flex-direction:column;gap:10px">' +
     '<div style="height:72px;background:#F3F4F6;border-radius:10px"></div>' +
@@ -2291,9 +2215,9 @@ function bkStep1HTML() {
 
 // ── Step 2: Date + Time ───────────────────────────────────────────────────────
 async function bkRenderStep2() {
-  var dates = bkGenerateDates();
-  if (!_bkState.date) _bkState.date = dates[0];
-  document.getElementById('bk-content').innerHTML = bkStep2HTML(dates);
+  var now = new Date();
+  if (_bkCalYear === null) { _bkCalYear = now.getFullYear(); _bkCalMonth = now.getMonth(); }
+  document.getElementById('bk-content').innerHTML = bkStep2HTML();
 
   document.getElementById('bk-step2-back').addEventListener('click', function() { bkShowStep(1); });
 
@@ -2303,66 +2227,107 @@ async function bkRenderStep2() {
   }
   continueBtn.addEventListener('click', function() { if (_bkState.date && _bkState.time) bkShowStep(3); });
 
-  document.getElementById('bk-date-carousel').querySelectorAll('.bk-date-item').forEach(function(item) {
-    item.addEventListener('click', function() {
-      _bkState.date = item.dataset.date;
+  bkBuildCal();
+  bkWireCal();
+  if (_bkState.date) { await bkLoadAndRenderSlots(); }
+}
+
+function bkStep2HTML() {
+  var html = '<div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">Select a Date</div>';
+  html += '<div id="bk-cal-container" style="margin-bottom:12px"></div>';
+  html += '<div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">Select a Time</div>';
+  html += '<div id="bk-time-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">';
+  html += '<div style="height:36px;background:#F3F4F6;border-radius:8px;grid-column:1/-1"></div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:8px">';
+  html += '<button id="bk-step2-back" style="flex:1;padding:11px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">&#8592; Back</button>';
+  html += '<button id="bk-step2-continue" style="flex:2;padding:11px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;opacity:.5;cursor:not-allowed" disabled>Summary &#8594;</button>';
+  html += '</div>';
+  return html;
+}
+
+function bkBuildCal() {
+  var container = document.getElementById('bk-cal-container');
+  if (!container) return;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var firstDay = new Date(_bkCalYear, _bkCalMonth, 1).getDay();
+  var daysInMonth = new Date(_bkCalYear, _bkCalMonth + 1, 0).getDate();
+  var DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var monthLabel = BK_MONTH_NAMES[_bkCalMonth] + ' ' + _bkCalYear;
+
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
+  html += '<button id="bk-cal-prev" type="button" style="background:none;border:1px solid #E5E7EB;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px;font-family:inherit">&#8592;</button>';
+  html += '<span style="font-weight:700;font-size:14px;color:#111827">' + monthLabel + '</span>';
+  html += '<button id="bk-cal-next" type="button" style="background:none;border:1px solid #E5E7EB;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px;font-family:inherit">&#8594;</button>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px">';
+  DOW.forEach(function(d) {
+    html += '<div style="text-align:center;font-size:10px;font-weight:700;color:#9CA3AF;padding:2px 0">' + d + '</div>';
+  });
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">';
+  for (var i = 0; i < firstDay; i++) {
+    html += '<div></div>';
+  }
+  for (var day = 1; day <= daysInMonth; day++) {
+    var cellDate = new Date(_bkCalYear, _bkCalMonth, day);
+    var dateStr = _bkCalYear + '-' + String(_bkCalMonth + 1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+    var isPast = cellDate < today;
+    var isToday = cellDate.getTime() === today.getTime();
+    var isSel = dateStr === _bkState.date;
+    var bg = isSel ? '#0A58CA' : (isToday ? '#EEF3FC' : '#fff');
+    var col = isSel ? '#fff' : (isPast ? '#D1D5DB' : '#111827');
+    var border = isSel ? '2px solid #0A58CA' : (isToday ? '2px solid #0A58CA' : '2px solid #E5E7EB');
+    var cursor = isPast ? 'not-allowed' : 'pointer';
+    html += '<button class="bk-cal-day" type="button" data-date="' + dateStr + '"' +
+      (isPast ? ' disabled' : '') +
+      ' style="height:36px;border:' + border + ';border-radius:6px;background:' + bg + ';color:' + col + ';font-size:12px;font-weight:600;cursor:' + cursor + ';font-family:inherit;padding:0;width:100%">' +
+      day + '</button>';
+  }
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function bkWireCal() {
+  var prev = document.getElementById('bk-cal-prev');
+  var next = document.getElementById('bk-cal-next');
+  var today = new Date(); today.setHours(0,0,0,0);
+  var prevMonth = new Date(_bkCalYear, _bkCalMonth - 1, 1);
+  if (prev) {
+    if (prevMonth < today) { prev.disabled = true; prev.style.opacity = '.4'; prev.style.cursor = 'not-allowed'; }
+    prev.addEventListener('click', function() {
+      if (prev.disabled) return;
+      _bkCalMonth--;
+      if (_bkCalMonth < 0) { _bkCalMonth = 11; _bkCalYear--; }
+      bkBuildCal(); bkWireCal();
+    });
+  }
+  if (next) {
+    next.addEventListener('click', function() {
+      _bkCalMonth++;
+      if (_bkCalMonth > 11) { _bkCalMonth = 0; _bkCalYear++; }
+      bkBuildCal(); bkWireCal();
+    });
+  }
+  document.querySelectorAll('.bk-cal-day:not([disabled])').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _bkState.date = btn.dataset.date;
       _bkState.time = null;
-      var carousel = document.getElementById('bk-date-carousel');
-      carousel.querySelectorAll('.bk-date-item').forEach(function(d) { bkDateItemDeselect(d); });
-      bkDateItemSelect(item);
       var cont = document.getElementById('bk-step2-continue');
-      cont.disabled = true; cont.style.opacity = '.5'; cont.style.cursor = 'not-allowed';
+      if (cont) { cont.disabled = true; cont.style.opacity = '.5'; cont.style.cursor = 'not-allowed'; }
+      bkBuildCal(); bkWireCal();
       bkLoadAndRenderSlots();
     });
   });
-
-  await bkLoadAndRenderSlots();
-}
-
-function bkDateItemSelect(el) {
-  el.style.borderColor = '#0A58CA'; el.style.background = '#0A58CA';
-  el.querySelectorAll('span').forEach(function(s) { s.style.color = '#fff'; });
-}
-
-function bkDateItemDeselect(el) {
-  el.style.borderColor = '#E5E7EB'; el.style.background = '#fff';
-  el.querySelectorAll('span').forEach(function(s) { s.style.color = ''; });
-}
-
-function bkStep2HTML(dates) {
-  var html = '<div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:12px">Select a Date</div>';
-  html += '<div id="bk-date-carousel" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:24px">';
-  dates.forEach(function(d) {
-    var parts = d.split('-').map(Number);
-    var dt = new Date(parts[0], parts[1] - 1, parts[2]);
-    var today = new Date(); today.setHours(0,0,0,0); dt.setHours(0,0,0,0);
-    var isToday = dt.getTime() === today.getTime();
-    var sel = d === _bkState.date;
-    var bc = sel ? '#0A58CA' : '#E5E7EB';
-    var bg = sel ? '#0A58CA' : '#fff';
-    html += '<button class="bk-date-item" data-date="' + d + '" type="button"' +
-      ' style="min-width:56px;padding:8px 6px;border:2px solid ' + bc + ';border-radius:10px;background:' + bg + ';cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">' +
-      '<span style="font-size:11px;font-weight:600;color:' + (sel ? '#fff' : '#9CA3AF') + '">' + (isToday ? 'Today' : BK_DAY_NAMES[dt.getDay()]) + '</span>' +
-      '<span style="font-size:20px;font-weight:800;color:' + (sel ? '#fff' : '#111827') + '">' + dt.getDate() + '</span>' +
-      '<span style="font-size:11px;color:' + (sel ? 'rgba(255,255,255,.8)' : '#9CA3AF') + '">' + BK_MONTH_NAMES[dt.getMonth()] + '</span>' +
-    '</button>';
-  });
-  html += '</div>';
-  html += '<div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:12px">Select a Time</div>';
-  html += '<div id="bk-time-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px">';
-  html += '<div style="height:42px;background:#F3F4F6;border-radius:8px;grid-column:1/-1"></div>';
-  html += '</div>';
-  html += '<div style="display:flex;gap:10px">';
-  html += '<button id="bk-step2-back" style="flex:1;padding:13px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">&#8592; Back</button>';
-  html += '<button id="bk-step2-continue" style="flex:2;padding:13px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;font-family:inherit;opacity:.5;cursor:not-allowed" disabled>Summary &#8594;</button>';
-  html += '</div>';
-  return html;
 }
 
 async function bkLoadAndRenderSlots() {
   var grid = document.getElementById('bk-time-grid');
   if (!grid) return;
-  grid.innerHTML = '<div style="height:42px;background:#F3F4F6;border-radius:8px;grid-column:1/-1"></div>';
+  grid.innerHTML = '<div style="height:34px;background:#F3F4F6;border-radius:8px;grid-column:1/-1"></div>';
   var slots;
   try {
     var svcId = _bkState.service ? _bkState.service.id : null;
@@ -2380,7 +2345,7 @@ async function bkLoadAndRenderSlots() {
     var col = sel ? '#fff' : (s.available ? '#374151' : '#D1D5DB');
     return '<button class="bk-time-slot" type="button" data-time="' + s.time + '"' +
       (s.available ? '' : ' disabled') +
-      ' style="padding:10px 8px;border:2px solid ' + bc + ';border-radius:8px;background:' + bg + ';color:' + col + ';font-size:13px;font-weight:600;cursor:' + (s.available ? 'pointer' : 'not-allowed') + ';font-family:inherit">' +
+      ' style="padding:7px 4px;border:2px solid ' + bc + ';border-radius:8px;background:' + bg + ';color:' + col + ';font-size:12px;font-weight:600;cursor:' + (s.available ? 'pointer' : 'not-allowed') + ';font-family:inherit">' +
       s.time + '</button>';
   }).join('');
   grid.querySelectorAll('.bk-time-slot:not([disabled])').forEach(function(btn) {
@@ -2404,34 +2369,35 @@ function bkRenderStep3() {
 }
 
 function bkSummaryRow(label, value) {
-  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid #F3F4F6">' +
-    '<span style="font-size:14px;color:#6B7280">' + label + '</span>' +
-    '<span style="font-size:14px;font-weight:600;color:#111827">' + value + '</span>' +
+  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #F3F4F6">' +
+    '<span style="font-size:13px;color:#6B7280">' + label + '</span>' +
+    '<span style="font-size:13px;font-weight:600;color:#111827">' + value + '</span>' +
   '</div>';
 }
 
 function bkStep3HTML() {
   var s = _bkState.service || {};
-  var html = '<div style="border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;margin-bottom:20px">';
+  var html = '<div style="border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;margin-bottom:14px">';
   html += bkSummaryRow('Service', s.name || '-');
   html += bkSummaryRow('Date', bkFormatDate(_bkState.date));
   html += bkSummaryRow('Time', _bkState.time || '-');
   html += bkSummaryRow('Est. Duration', bkFormatDuration(s) || '-');
   html += '</div>';
-  html += '<div style="margin-bottom:20px">';
-  html += '<label style="font-size:14px;font-weight:600;color:#374151;display:block;margin-bottom:8px">Your Address</label>';
+  html += '<div style="margin-bottom:14px">';
+  html += '<label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Your Address</label>';
   html += '<input id="bk-address" type="text" placeholder="123 Example St, Suburb NSW 2000" autocomplete="street-address"' +
-    ' style="width:100%;padding:11px 14px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit">';
-  html += '<div style="font-size:12px;color:#9CA3AF;margin-top:4px">Where should we come? (Sydney area only)</div>';
+    ' style="width:100%;padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box;font-family:inherit">';
+  html += '<div style="font-size:11px;color:#9CA3AF;margin-top:3px">Where should we come? (Sydney area only)</div>';
   html += '</div>';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-top:2px solid #111827;border-bottom:2px solid #111827;margin-bottom:20px">';
-  html += '<span style="font-size:16px;font-weight:700;color:#111827">Total</span>';
-  html += '<span style="font-size:22px;font-weight:800;color:#0A58CA">$' + (s.price || 0) + '</span>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid #111827;border-bottom:2px solid #111827;margin-bottom:14px">';
+  html += '<span style="font-size:15px;font-weight:700;color:#111827">Total</span>';
+  html += '<span style="font-size:18px;font-weight:800;color:#0A58CA">$' + (s.price || 0) + '</span>';
   html += '</div>';
-  html += '<div id="bk-booking-error" style="display:none;color:#DC2626;font-size:13px;margin-bottom:12px;padding:10px;background:#FEF2F2;border-radius:6px;border:1px solid #FECACA"></div>';
-  html += '<div style="display:flex;gap:10px">';
-  html += '<button id="bk-step3-back" style="flex:1;padding:13px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">&#8592; Back</button>';
-  html += '<button id="bk-step3-proceed" style="flex:2;padding:13px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Confirm &amp; Pay &#8594;</button>';
+  html += '<div id="bk-booking-error" style="display:none;color:#DC2626;font-size:12px;margin-bottom:10px;padding:8px;background:#FEF2F2;border-radius:6px;border:1px solid #FECACA"></div>';
+  html += '<div style="background:#FEE2E2;color:#991B1B;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:600;margin-bottom:12px;text-align:center">All services include a $20 mobile call-out fee. We\'ll arrange payment when we contact you to confirm.</div>';
+  html += '<div style="display:flex;gap:8px">';
+  html += '<button id="bk-step3-back" style="flex:1;padding:11px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">&#8592; Back</button>';
+  html += '<button id="bk-step3-proceed" style="flex:2;padding:11px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Confirm &amp; Pay &#8594;</button>';
   html += '</div>';
   return html;
 }
@@ -2536,40 +2502,33 @@ function bkShowDiagResult(data) {
   var sev = data.severity || 'medium';
   var sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
   var urgColor = data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
-  var chips = (data.services || []).map(function(s) {
-    return '<span class="bk-diag-chip" data-svc="' + s.replace(/"/g, '&quot;') + '"' +
-      ' style="background:#EEF3FC;color:#1848C8;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px;margin-bottom:4px;cursor:pointer;display:inline-block">' + s + '</span>';
-  }).join('');
+  var bookLabel = data.recommended_service_name
+    ? 'Book ' + data.recommended_service_name + (data.recommended_service_price ? ' - $' + data.recommended_service_price : '') + ' →'
+    : '';
+  var bookHtml = (data.recommended_service_id && bookLabel)
+    ? '<button id="bk-diag-book-btn" style="width:100%;margin-top:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;text-align:left;font-family:inherit">' + bookLabel + '</button>'
+    : '';
   resultEl.innerHTML = '<div style="background:white;border-radius:8px;padding:12px;border:1px solid #E5E7EB">' +
-    '<div style="font-size:12px;font-weight:700;color:#0D1F3C;margin-bottom:6px">&#129302; AI Recommendation</div>' +
-    '<div style="font-size:12px;color:#374151;margin-bottom:8px">' + (data.diagnosis || 'Bike issue detected') + '</div>' +
-    (chips ? '<div style="margin-bottom:8px">' + chips + '</div>' : '') +
+    '<div style="font-size:12px;font-weight:700;color:#111827;margin-bottom:6px">&#129302; AI Recommendation</div>' +
+    '<div style="font-size:12px;color:#111827;margin-bottom:8px">' + (data.diagnosis || 'Bike issue detected') + '</div>' +
     '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
       '<span style="font-size:11px;color:' + sevColor + ';font-weight:600">' + sev.charAt(0).toUpperCase() + sev.slice(1) + ' severity</span>' +
-      '<span style="color:#D1D5DB">&#183;</span>' +
+      '<span style="color:#E5E7EB">&#183;</span>' +
       '<span style="font-size:11px;color:' + urgColor + ';font-weight:600">' + (data.urgency || 'Book soon') + '</span>' +
-      (data.details ? '<span style="color:#D1D5DB">&#183;</span><span style="font-size:11px;color:#6B7280">' + data.details + '</span>' : '') +
-    '</div>' +
+      (data.details ? '<span style="color:#E5E7EB">&#183;</span><span style="font-size:11px;color:#6B7280">' + data.details + '</span>' : '') +
+    '</div>' + bookHtml +
   '</div>';
-  resultEl.querySelectorAll('.bk-diag-chip').forEach(function(chip) {
-    chip.addEventListener('click', function() { bkAutoSelectService(chip.dataset.svc); });
-  });
+  if (data.recommended_service_id) {
+    var btn = resultEl.querySelector('#bk-diag-book-btn');
+    if (btn) btn.addEventListener('click', function() { bkAutoSelectService(data.recommended_service_id); });
+  }
 }
 
-function bkAutoSelectService(name) {
+function bkAutoSelectService(serviceId) {
   var list = document.getElementById('bk-services-list');
-  if (!list || !_bkState.services.length) return;
-  var target = name.toLowerCase();
-  var best = null;
-  _bkState.services.forEach(function(s) {
-    var sn = s.name.toLowerCase();
-    if (sn === target) { best = s; return; }
-    if (!best && (sn.indexOf(target) !== -1 || target.indexOf(sn) !== -1)) best = s;
-  });
-  if (best) {
-    var card = list.querySelector('[data-service-id="' + best.id + '"]');
-    if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-  }
+  if (!list) return;
+  var card = list.querySelector('[data-service-id="' + serviceId + '"]');
+  if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
 
 // ── Wire all booking triggers on DOM ready ────────────────────────────────────
@@ -2580,6 +2539,9 @@ document.addEventListener('DOMContentLoaded', function() {
   bkPanel.addEventListener('click', function(e) {
     if (e.target === bkPanel) closeBooking();
   });
+
+  var homeViewAllBtn = document.getElementById('home-view-all-btn');
+  if (homeViewAllBtn) homeViewAllBtn.addEventListener('click', openServicesModal);
 
   // Booking temporarily disabled on landing (desktop) until visual unification —
   // see docs/PENDIENTES.md item 1. Modal code below kept intact for reuse.

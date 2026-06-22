@@ -30,12 +30,12 @@ export async function createPaymentForm(containerId) {
     hidePostalCode: true,
     style: {
       base: {
-        color: '#FFFFFF',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: '#111827',
+        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
         fontSize: '15px',
         fontSmoothing: 'antialiased',
-        '::placeholder': { color: '#A0A0A0' },
-        iconColor: '#A0A0A0',
+        '::placeholder': { color: '#9ca3af' },
+        iconColor: '#6b7280',
       },
       invalid: { color: '#EF4444', iconColor: '#EF4444' },
     },
@@ -122,5 +122,15 @@ export async function createCheckoutSession({ amountCents, description, bookingI
   const { url } = await res.json();
   if (!url) throw new Error('No checkout URL returned');
   window.location.href = url;
+}
+
+export async function verifyCheckoutSession(sessionId) {
+  const resp = await fetch('/api/create-payment-session?type=verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId }),
+  });
+  if (!resp.ok) throw new Error('Could not verify payment');
+  return resp.json();
 }
 

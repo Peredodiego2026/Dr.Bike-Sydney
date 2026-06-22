@@ -126,7 +126,8 @@ async function doLogin(){
     const m = await resp.json();
     btn.textContent='Sign in →'; btn.disabled=false;
     if(!resp.ok){ err(m.error || 'Invalid PIN'); return; }
-    mechanic={...m, van_number:vanNum};
+    mechanic={...m, van_number:vanNum, pin: String(pin).trim()};
+    console.log('[mechanic-auth] storing pin:', String(pin).trim(), 'object keys:', Object.keys(mechanic));
     localStorage.setItem('drbike-mech',JSON.stringify(mechanic));
     go('s-main'); updateUI(); await load(); sub();
   } catch(e) {
@@ -141,10 +142,15 @@ function selVan(n){ vanNum=n; document.querySelectorAll('.van-opt').forEach(v=>v
 
 async function load(){
   try {
-    // Traer todos los campos necesarios incluyendo client_name, client_email, client_phone
-    const {data, error} = await sb.from('bookings').select('id, client_id, client_name, client_email, client_phone, service_name, service_price, scheduled_date, scheduled_time, status, suburb, address, van_number, notes, mechanic_notes, client_rating, client_review').eq('van_number',vanNum).order('scheduled_date').order('scheduled_time');
-    if(error) throw error;
-    const mapped = (data||[]).map(b=>({id:b.id,client:b.client_name||b.client_email?.split('@')[0]||'Client',email:b.client_email||'',phone:b.client_phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
+    const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-jobs', van: vanNum, pin: stored.pin || '' })
+    });
+    if(!resp.ok){ const e=await resp.json(); throw new Error(e.error||'Failed to load jobs'); }
+    const data = await resp.json();
+    const mapped = (data||[]).map(b=>({id:b.id,client_id:b.client_id||null,client:b.client_name||b.client_email?.split('@')[0]||'Client',email:b.client_email||'',phone:b.client_phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
     jobs = mapped;
     try { localStorage.setItem('drbike-jobs-cache', JSON.stringify(jobs)); } catch(e){}
     render(); badges();
@@ -297,12 +303,14 @@ function card(j){
     ${isEnroute?`<div id="timer-${j.id}" style="font-size:12px;color:var(--amber);font-weight:600;margin-bottom:6px;padding:0 18px">🕐 En route: 00:00</div>`:''}
     <div class="job-service">🔧 ${esc(j.service)}</div>
     <div class="job-addr">📍 ${j.address||j.suburb||'—'}</div>
+    ${j.phone ? `<div class="job-addr">📞 ${esc(j.phone)}</div>` : ''}
+    ${j.notes ? `<div class="job-notes">📝 Cliente: ${esc(j.notes)}</div>` : ''}
     <div class="job-price">$${j.price}</div>
     <div class="actions">
       <button class="abtn nav" onclick="openMaps('${addr}')">📍 Navigate</button>
       <button class="abtn" onclick="openMechChat('${j.id}')" style="background:rgba(24,72,200,0.1);color:#1848C8">💬 Chat</button>
       <button class="abtn chat" onclick="openWA('${j.phone||j.email||""}','${j.client.replace(/'/g,"\\'")}')">💬 WhatsApp</button>
-      <button class="abtn" onclick="openClientHistory('${j.id}','${j.client.replace(/'/g,"\\'")}',${\'\'+j.client_id+\'\' || null})" style="background:rgba(5,150,105,0.1);color:#059669">📋 History</button>
+      <button class="abtn" onclick="openClientHistory('${j.id}','${j.client.replace(/'/g,"\\'")}','${j.client_id||""}')" style="background:rgba(5,150,105,0.1);color:#059669">📋 History</button>
       ${!done?`${st!=='enroute'?`<button class="abtn go" onclick="setStatus('${j.id}','enroute')">🚐 En route</button>`:''}
       <button class="abtn done" onclick="completeJob('${j.id}')">✅ Complete</button>`
       :`<button class="abtn undo" onclick="setStatus('${j.id}','confirmed')">↩ Undo</button>`}
@@ -694,24 +702,21 @@ async function openClientHistory(bookingId, clientName, clientId) {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 
   try {
-    // Query by client_id if available, otherwise by name
-    let query = sb.from('bookings')
-      .select('id, service_name, service_price, scheduled_date, status, client_rating, client_review, mechanic_notes')
-      .eq('status', 'completed')
-      .order('scheduled_date', { ascending: false })
-      .limit(10);
-    if (clientId && clientId !== 'null') {
-      query = query.eq('client_id', clientId);
-    } else {
-      // Find current booking to get client_email as fallback
-      const currentJob = jobs.find(j => j.id === bookingId);
-      if (currentJob?.email) query = query.eq('client_email', currentJob.email);
-      else query = query.eq('id', bookingId); // fallback: just show this booking
-    }
-    const { data: history, error } = await query;
+    const currentJob = jobs.find(j => j.id === bookingId);
+    const body = { role: 'client-history', pin: mechanic.pin };
+    if (clientId && clientId !== 'null' && clientId !== '') body.client_id = clientId;
+    else if (currentJob?.email) body.client_email = currentJob.email;
+    else body.booking_id = bookingId;
+
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const history = await resp.json();
     const el = document.getElementById('history-content');
     if (!el) return;
-    if (error || !history?.length) {
+    if (!resp.ok || !Array.isArray(history) || !history.length) {
       el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mgray);font-size:13px">No previous services found</div>';
       return;
     }
@@ -752,7 +757,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
 }
 
 function openMaps(a){ window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a+', Sydney NSW')}`, '_blank'); }
-function openWA(phone,name){ const num=(phone||'').replace(/[^\d]/g,''); window.open(`https://wa.me/${num}?text=${encodeURIComponent('Hi '+name+'! This is your Dr. Bike mechanic. I am on my way! 🚲')}`, '_blank'); }
+function openWA(phone,name){ let num=(phone||'').replace(/[^\d]/g,''); if(num.startsWith('0'))num='61'+num.slice(1); window.open(`https://wa.me/${num}?text=${encodeURIComponent('Hi '+name+'! This is your Dr. Bike mechanic. I am on my way! 🚲')}`, '_blank'); }
 
 function goTab(t, btn) {
   tab = t;
@@ -1086,7 +1091,7 @@ function profile(){
 }
 
 function go(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id)?.classList.add('active'); }
-function updateUI(){ document.getElementById('mech-name').textContent=(mechanic?.first_name||'')+' '+(mechanic?.last_name||''); document.getElementById('van-label').textContent='Van '+vanNum; }
+function updateUI(){ document.getElementById('mech-name').textContent=mechanic?.name||'Mechanic'; document.getElementById('van-label').textContent='Van '+vanNum; }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
 function renderAgenda(){
@@ -1269,7 +1274,7 @@ function startGPS(bookingId) {
 
   // Also use watchPosition for smoother updates
   watchId = navigator.geolocation.watchPosition(
-    pos => upsertLocation(bookingId, pos.coords.latitude, pos.coords.longitude, pos.coords.heading || 0),
+    pos => upsertLocation(pos.coords.latitude, pos.coords.longitude),
     err => console.warn('GPS error:', err),
     { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
   );
@@ -1277,26 +1282,21 @@ function startGPS(bookingId) {
 
 function sendLocation(bookingId) {
   navigator.geolocation.getCurrentPosition(
-    pos => upsertLocation(bookingId, pos.coords.latitude, pos.coords.longitude, pos.coords.heading || 0),
+    pos => upsertLocation(pos.coords.latitude, pos.coords.longitude),
     err => console.warn('GPS error:', err),
     { enableHighAccuracy: true, timeout: 8000 }
   );
 }
 
-async function upsertLocation(bookingId, lat, lng, heading) {
-  const mechanicId = mechanic?.id || 'unknown';
-  // Check if record exists
-  const { data } = await sb.from('mechanic_locations')
-    .select('id').eq('booking_id', bookingId).limit(1);
-
-  if (data && data[0]) {
-    await sb.from('mechanic_locations')
-      .update({ lat, lng, heading, updated_at: new Date().toISOString() })
-      .eq('booking_id', bookingId);
-  } else {
-    await sb.from('mechanic_locations')
-      .insert({ mechanic_id: mechanicId, booking_id: bookingId, lat, lng, heading });
-  }
+async function upsertLocation(lat, lng) {
+  if (!mechanic?.pin) return;
+  try {
+    await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-location', pin: mechanic.pin, van_number: vanNum, lat, lng })
+    });
+  } catch(e) { console.warn('Location update failed:', e.message); }
 }
 
 function stopGPS() {

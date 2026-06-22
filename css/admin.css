@@ -161,7 +161,7 @@ body{font-family:var(--sans);background:var(--off);color:var(--navy);-webkit-fon
 [data-theme="dark"] .mech-tag.v2{background:rgba(217,119,6,0.2);color:#FCD34D}
 
 /* SIDEBAR */
-.sidebar{width:240px;background:var(--navy);min-height:100vh;display:flex;flex-direction:column;flex-shrink:0;position:fixed;left:0;top:0;bottom:0;z-index:50}
+.sidebar{width:240px;background:var(--navy);min-height:100vh;display:flex;flex-direction:column;flex-shrink:0;position:fixed;left:0;top:0;bottom:0;z-index:1000}
 .sb-brand{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:11px}
 .sb-logo{width:36px;height:36px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%);flex-shrink:0}
 .sb-logo svg{width:22px;height:22px}

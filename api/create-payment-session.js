@@ -21,6 +21,20 @@ async function handleCancelSubscription(req, res) {
 export default async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
 
+  // Verify Checkout Session (client calls this after redirect back from Stripe)
+  if (req.query.type === 'verify') {
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
+    try {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status !== 'paid') return res.status(200).json({ paid: false });
+      return res.status(200).json({ paid: true, paymentIntentId: session.payment_intent });
+    } catch (err) {
+      console.error('verify-checkout-session error:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
   const { bookingId, priceCents, description, email, name } = req.body;
   if (!bookingId || !priceCents || !email) {
     return res.status(400).json({ error: 'Missing required fields' });

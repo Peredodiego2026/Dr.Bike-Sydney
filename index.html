@@ -10,15 +10,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dr. Bike Sydney</title>
   <meta name="description" content="Mobile on-demand bicycle repair in Sydney. We come to you.">
-  <meta name="theme-color" content="#0F0F0F">
+  <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <meta name="apple-mobile-web-app-title" content="Dr. Bike">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="icon" href="/icon-512.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/home.css">
   <!-- Google Analytics -->
   <!-- Meta Pixel - replace PIXEL_ID_HERE with your actual Pixel ID from Meta Business Manager -->
   <script>
@@ -43,54 +47,388 @@
 
   <!-- HOME ─────────────────────────────────────────────────────────────────── -->
   <div data-screen="home" class="screen active">
-    <header class="home-header">
-      <div class="home-logo">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0A58CA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="5.5" cy="17.5" r="3"></circle>
-          <circle cx="18.5" cy="17.5" r="3"></circle>
-          <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path>
-          <circle cx="12" cy="6" r="1.5" fill="#0A58CA" stroke="none"></circle>
-        </svg>
-        <span>DR BIKE SYDNEY</span>
+
+    <header id="home-desktop-nav" aria-label="Site navigation">
+      <div class="home-nav-inner">
+        <a href="#home" class="home-nav-logo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/>
+            <circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
+            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
+            <path d="M18.5 17.5L15 6"/>
+            <path d="M5.5 17.5L9 11l4.5-1"/>
+          </svg>
+          <span>DR BIKE SYDNEY</span>
+        </a>
+        <div class="home-nav-links">
+          <a href="#services">Services</a>
+          <a href="#memberships">Memberships</a>
+          <a href="#about">About</a>
+        </div>
+        <a href="#login" id="home-nav-auth-btn" class="home-nav-book">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Sign In</span>
+        </a>
       </div>
     </header>
 
-    <section class="hero-section">
-      <h1 class="hero-title">Professional bike service at your doorstep.</h1>
-      <p class="hero-sub">Mobile bicycle mechanic in Sydney.</p>
-      <a href="#book-service" class="btn btn--primary btn--full">Book a Service</a>
-      <a href="tel:+61433963250" class="btn btn--secondary btn--full">Call 0433 963 250</a>
+    <!-- Trust badges -->
+    <div style="background:#F7F8FA;border-bottom:1px solid #E5E7EB;padding:8px 20px">
+      <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#065F46">
+          <span style="background:#ECFDF5;border:1px solid #059669;border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            100% Satisfaction Guarantee
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#1e40af">
+          <span style="background:#EEF3FC;border:1px solid #0A58CA;border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A58CA" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><polyline points="16 3 18 5 22 1"/></svg>
+            Verified Mechanic
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#92400e">
+          <span style="background:#FFFBEB;border:1px solid #D97706;border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Background Checked
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#5b21b6">
+          <span style="background:#F5F3FF;border:1px solid #7C3AED;border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Fully Insured
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="lp-container">
+        <div class="hero-left">
+          <span class="hero-badge">Mobile Service &middot; Sydney Wide</span>
+          <h1 class="hero-h1">Professional Bike Service at Your Doorstep</h1>
+          <p class="hero-p">Mobile bicycle mechanic in Sydney. We come to you, fully equipped.</p>
+          <div class="hero-btns">
+            <a href="#book-service" class="btn-primary">Book a Service</a>
+            <a href="tel:+61433963250" class="btn-outline">Call 0433 963 250</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              Qualified Mechanic
+            </div>
+            <div class="hero-stat">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              Fully Equipped Van
+            </div>
+            <div class="hero-stat">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              5 Star Rated
+            </div>
+          </div>
+        </div>
+        <div class="hero-image">
+          <img src="images/hero-van.png" alt="Dr. Bike Sydney mobile van" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+        </div>
+      </div>
     </section>
 
-    <section class="pillars-row">
-      <div class="pillar">
-        <div class="pillar-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-          </svg>
+    <!-- Trust bar: bike brands -->
+    <div class="trust-bar">
+      <div class="lp-container">
+        <span class="trust-label">Trusted by cyclists across Sydney</span>
+        <div class="trust-brands">
+          <span class="trust-brand">Specialized</span>
+          <span class="trust-sep">|</span>
+          <span class="trust-brand">Trek</span>
+          <span class="trust-sep">|</span>
+          <span class="trust-brand">Giant</span>
+          <span class="trust-sep">|</span>
+          <span class="trust-brand">Cannondale</span>
+          <span class="trust-sep">|</span>
+          <span class="trust-brand">BMC</span>
         </div>
-        <span>Qualified Mechanic</span>
       </div>
-      <div class="pillar">
-        <div class="pillar-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 3h15v13H1z"></path>
-            <path d="M16 8h4l3 3v5h-7V8z"></path>
-            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-          </svg>
+    </div>
+
+    <!-- Services -->
+    <section id="services" style="padding:64px 0;background:#fff">
+      <div class="lp-container">
+        <div class="section-center">
+          <span class="section-badge">OUR SERVICES</span>
+          <h2 class="section-h2">Complete Bike Care at Your Location</h2>
+          <p class="section-sub">We bring a fully equipped mobile workshop to your door &mdash; no bike shop queues, no expensive tow-ins.</p>
         </div>
-        <span>Fully Equipped Van</span>
-      </div>
-      <div class="pillar">
-        <div class="pillar-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+            <div class="service-name">Tune-Up</div>
+            <div class="service-price">$109</div>
+            <p class="service-desc">Perfect for regular maintenance and safety checks.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+            <div class="service-name">Standard Service</div>
+            <div class="service-price">$149</div>
+            <p class="service-desc">Comprehensive service with detailed adjustment.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="service-name">Major Service</div>
+            <div class="service-price">$199</div>
+            <p class="service-desc">Complete overhaul and performance optimization.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></div>
+            <div class="service-name">Repairs</div>
+            <div class="service-price">From $60</div>
+            <p class="service-desc">Fast and reliable repair at your doorstep.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+            <div class="service-name">E-Bike Service</div>
+            <div class="service-price">$129</div>
+            <p class="service-desc">Specialized service for electric bikes.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-4"/><path d="M12 6l1 5.5-6.5 2 2-7.5"/><path d="M18.5 17.5L15 6"/><path d="M5.5 17.5L9 11l4.5-1"/></svg></div>
+            <div class="service-name">Bike Assembly</div>
+            <div class="service-price">$80</div>
+            <p class="service-desc">Professional assembly of your new bike.</p>
+          </div>
         </div>
-        <span>5 Star Rated</span>
+        <div style="text-align:center">
+          <a href="#book-service" class="btn-outline-blue">Book a Service &rarr;</a>
+        </div>
       </div>
     </section>
+
+    <!-- About -->
+    <section id="about" style="padding:64px 0;background:var(--gray-light)">
+      <div class="lp-container">
+        <div class="about-grid">
+          <div>
+            <span class="section-badge">OUR STORY</span>
+            <h2 class="about-h2">Passion for Bikes, Commitment to Service</h2>
+            <p class="about-p">Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.</p>
+            <ul class="check-list">
+              <li class="check-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="12" fill="#2563eb"/><polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Certified &amp; experienced mechanic
+              </li>
+              <li class="check-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="12" fill="#2563eb"/><polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Fully equipped mobile workshop
+              </li>
+              <li class="check-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="12" fill="#2563eb"/><polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Premium tools and quality parts
+              </li>
+              <li class="check-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="12" fill="#2563eb"/><polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Satisfaction guaranteed
+              </li>
+            </ul>
+            <div class="about-sig">
+              <p><em style="font-style:italic;font-weight:700">Diego Peredo</em><br>
+              <span style="color:var(--gray);font-size:13px">Founder &amp; Head Mechanic</span></p>
+            </div>
+            <div class="stats-mini">
+              <div class="stat-mini"><div class="stat-mini-n">500+</div><div class="stat-mini-l">Happy Customers</div></div>
+              <div class="stat-mini"><div class="stat-mini-n">1,000+</div><div class="stat-mini-l">Bikes Serviced</div></div>
+              <div class="stat-mini"><div class="stat-mini-n">5.0&#9733;</div><div class="stat-mini-l">Avg Rating</div></div>
+              <div class="stat-mini"><div class="stat-mini-n">100%</div><div class="stat-mini-l">Satisfaction</div></div>
+            </div>
+          </div>
+          <div class="about-image">
+            <img src="images/mechanic-working.png" alt="Dr. Bike Sydney mechanic servicing a bike" style="width:100%;height:100%;object-fit:cover">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Memberships -->
+    <section id="memberships" style="padding:64px 0;background:#fff">
+      <div class="lp-container" style="text-align:center">
+        <span class="section-badge">MEMBERSHIPS</span>
+        <h2 class="section-h2">Choose Your Plan</h2>
+        <p class="section-sub">Save more with our membership plans. Designed for regular cyclists.</p>
+        <div class="membership-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:860px;margin:40px auto 0;text-align:left">
+          <!-- Basic -->
+          <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px">
+            <h3 style="font-weight:700;font-size:17px;color:var(--dark)">Basic</h3>
+            <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$57</span><span style="color:var(--gray);font-size:14px">/month</span></div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>1 Tune-Up per month</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>10% off parts</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (48hs)</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
+            </ul>
+            <button class="btn-get-started" data-plan="basic" style="display:block;width:100%;margin-top:20px;padding:11px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit">Get Started</button>
+            <button class="btn-learn-more" data-plan="basic" style="display:block;width:100%;margin-top:8px;padding:7px;border:none;color:var(--gray);background:transparent;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+          </div>
+          <!-- Standard (popular) -->
+          <div style="background:#fff;border:2px solid var(--blue);border-radius:12px;padding:28px;position:relative">
+            <div style="position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:3px 14px;border-radius:9999px;font-size:11px;font-weight:600;white-space:nowrap">Most Popular</div>
+            <h3 style="font-weight:700;font-size:17px;color:var(--dark)">Standard</h3>
+            <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$97</span><span style="color:var(--gray);font-size:14px">/month</span></div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>2 services per month (any type)</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>15% off parts</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (24hs)</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>1 emergency callout/month</li>
+            </ul>
+            <button class="btn-get-started" data-plan="standard" style="display:block;width:100%;margin-top:20px;padding:11px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit">Get Started</button>
+            <button class="btn-learn-more" data-plan="standard" style="display:block;width:100%;margin-top:8px;padding:7px;border:none;color:var(--gray);background:transparent;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+          </div>
+          <!-- VIP -->
+          <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px">
+            <h3 style="font-weight:700;font-size:17px;color:var(--dark)">VIP</h3>
+            <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$147</span><span style="color:var(--gray);font-size:14px">/month</span></div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Unlimited services per month</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>20% off parts</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Same-day priority</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Unlimited emergency callouts</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Dedicated mechanic</li>
+            </ul>
+            <button class="btn-get-started" data-plan="vip" style="display:block;width:100%;margin-top:20px;padding:11px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit">Get Started</button>
+            <button class="btn-learn-more" data-plan="vip" style="display:block;width:100%;margin-top:8px;padding:7px;border:none;color:var(--gray);background:transparent;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+          </div>
+        </div>
+        <p style="color:var(--gray);font-size:12px;margin-top:20px">All plans include mobile service within Sydney metro area &middot; 3-month minimum</p>
+      </div>
+    </section>
+
+    <!-- Membership payment modal -->
+    <div id="ms-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);overflow-y:auto;padding:24px 16px">
+      <div style="background:white;border-radius:16px;max-width:480px;margin:0 auto;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.2)">
+        <div style="padding:24px 28px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div id="ms-plan-name" style="font-size:12px;color:#6b7280;font-weight:600;letter-spacing:1px;text-transform:uppercase">Basic Plan</div>
+            <h2 style="font-size:20px;font-weight:800;color:#111827;margin-top:4px">Start Your Membership</h2>
+          </div>
+          <button id="ms-close" style="width:36px;height:36px;border-radius:50%;border:1px solid #e5e7eb;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7280">&#215;</button>
+        </div>
+        <div id="ms-form" style="padding:28px">
+          <div style="background:#f0f9ff;border-radius:10px;padding:14px 18px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-weight:600;color:#111827">Monthly Total</span>
+            <span id="ms-price" style="font-size:20px;font-weight:800;color:#2563eb">$57/month</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <input id="ms-name" type="text" placeholder="Full Name" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+            <input id="ms-email" type="email" placeholder="Email Address" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+            <input id="ms-phone" type="tel" placeholder="Phone Number (04XX XXX XXX)" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+            <div id="ms-error" style="display:none;color:#ef4444;font-size:13px"></div>
+            <button id="ms-submit" style="width:100%;padding:14px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Start Membership</button>
+            <p style="font-size:11px;color:#9ca3af;text-align:center;margin:0;display:flex;align-items:center;justify-content:center;gap:6px">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Secured by Stripe &middot; 3-month minimum &middot; Cancel anytime after
+            </p>
+          </div>
+        </div>
+        <div id="ms-success" style="display:none;padding:48px 28px;text-align:center">
+          <div style="width:64px;height:64px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h3 style="font-size:22px;font-weight:800;color:#111827;margin-bottom:8px">You're all set!</h3>
+          <p style="color:#6b7280;font-size:15px;margin-bottom:24px">We'll be in touch shortly to confirm your membership and schedule your first service.</p>
+          <button id="ms-done" style="padding:12px 32px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan info modal -->
+    <div id="pi-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);overflow-y:auto;padding:24px 16px">
+      <div style="background:white;border-radius:16px;max-width:480px;margin:0 auto;box-shadow:0 24px 64px rgba(0,0,0,0.2)">
+        <div style="padding:24px 28px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div id="pi-plan-label" style="font-size:12px;color:#6b7280;font-weight:600;letter-spacing:1px;text-transform:uppercase">Basic Plan</div>
+            <div id="pi-price" style="font-size:24px;font-weight:800;color:#2563eb;margin-top:4px">$57/month</div>
+          </div>
+          <button id="pi-close" style="width:36px;height:36px;border-radius:50%;border:1px solid #e5e7eb;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7280">&#215;</button>
+        </div>
+        <div style="padding:28px">
+          <div style="margin-bottom:20px">
+            <div style="font-size:11px;font-weight:700;color:#16a34a;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">INCLUDES</div>
+            <ul id="pi-includes-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;color:#374151"></ul>
+          </div>
+          <div style="margin-bottom:20px;padding:14px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa">
+            <div style="font-size:11px;font-weight:700;color:#c2410c;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">DOES NOT INCLUDE</div>
+            <p id="pi-excludes-text" style="font-size:13px;color:#7c2d12;margin:0"></p>
+          </div>
+          <div style="padding:14px;background:#eff6ff;border-radius:8px;border:1px solid #bfdbfe;margin-bottom:24px">
+            <div style="font-size:11px;font-weight:700;color:#1d4ed8;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">SAVINGS EXAMPLE</div>
+            <p id="pi-savings" style="font-size:13px;color:#1e3a8a;margin:0"></p>
+          </div>
+          <button id="pi-get-started" class="btn-get-started" data-plan="basic" style="width:100%;padding:13px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Get Started - $57/month</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="lp-footer">
+      <div class="lp-container">
+        <div class="footer-cols">
+          <!-- Brand -->
+          <div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-4"/><path d="M12 6l1 5.5-6.5 2 2-7.5"/><path d="M18.5 17.5L15 6"/><path d="M5.5 17.5L9 11l4.5-1"/></svg>
+              <span style="font-weight:700;font-size:14px;color:white;letter-spacing:0.5px">DR BIKE SYDNEY</span>
+            </div>
+            <p style="color:#6b7280;font-size:13px;line-height:1.6;margin-bottom:16px">Professional bike service at your doorstep. Sydney&rsquo;s mobile bicycle mechanic.</p>
+            <div style="display:flex;gap:10px">
+              <a href="#" class="footer-social" aria-label="Facebook"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+              <a href="#" class="footer-social" aria-label="Instagram"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+            </div>
+          </div>
+          <!-- Services -->
+          <div>
+            <h4 class="footer-h4">Services</h4>
+            <a href="#book-service" class="footer-link">Tune-Up</a>
+            <a href="#book-service" class="footer-link">Standard Service</a>
+            <a href="#book-service" class="footer-link">Major Service</a>
+            <a href="#book-service" class="footer-link">E-Bike Service</a>
+            <a href="#book-service" class="footer-link">Repairs</a>
+          </div>
+          <!-- Company -->
+          <div>
+            <h4 class="footer-h4">Company</h4>
+            <a href="#home" class="footer-link">About Us</a>
+            <a href="#memberships" class="footer-link">Memberships</a>
+            <a href="#my-bookings" class="footer-link">My Bookings</a>
+            <a href="#profile" class="footer-link">My Account</a>
+          </div>
+          <!-- Contact -->
+          <div>
+            <h4 class="footer-h4">Contact</h4>
+            <div class="footer-contact-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <a href="tel:+61433963250" style="color:#6b7280;text-decoration:none">0433 963 250</a>
+            </div>
+            <div class="footer-contact-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <a href="mailto:contact@drbikesydney.com.au" style="color:#6b7280;text-decoration:none">contact@drbikesydney.com.au</a>
+            </div>
+            <div class="footer-contact-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Sydney, NSW
+            </div>
+            <div class="footer-contact-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Mon &ndash; Sun: 8:30AM &ndash; 4:00PM
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid #1f2937;padding-top:20px;text-align:center">
+          <p style="color:#4b5563;font-size:12px">&copy; 2026 Dr. Bike Sydney. All rights reserved. &middot; ABN: 87 654 025 287</p>
+        </div>
+      </div>
+    </footer>
 
     <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
       <a href="#home"        class="bottom-nav__tab active" aria-label="Home">
@@ -136,5 +474,176 @@
 <script src="js/supabase.js"   type="module"></script>
 <script src="js/components.js" type="module"></script>
 <script src="js/app.js"        type="module"></script>
+
+<script>
+(function () {
+  var _msPlan = null;
+  var _msPrices = { basic: 57, standard: 97, vip: 147 };
+  var _msPriceIds = {
+    basic:    'price_1Ti1YFPPGSm5cT7JsoTZQFJh',
+    standard: 'price_1Ti1ZMPPGSm5cT7Ju9HPXs4s',
+    vip:      'price_1Ti1aIPPGSm5cT7JC75QU0gL'
+  };
+  var _msLabels = { basic: 'Basic Plan', standard: 'Standard Plan', vip: 'VIP Plan' };
+
+  var _piContent = {
+    basic: {
+      label: 'Basic Plan', price: '$57/month',
+      includes: [
+        '1 maintenance service per month (Tune-Up)',
+        'Priority scheduling (48hs)',
+        '10% discount on parts',
+        'Digital bike history log'
+      ],
+      excludes: 'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      savings: 'A regular Tune-Up costs $109. With Basic you save $52/month.'
+    },
+    standard: {
+      label: 'Standard Plan', price: '$97/month',
+      includes: [
+        '2 services per month (any type)',
+        'Priority scheduling (24hs)',
+        '15% discount on parts',
+        'Digital bike history log',
+        '1 emergency callout per month'
+      ],
+      excludes: 'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      savings: '2 services/month = $218 value. With Standard you save $121/month.'
+    },
+    vip: {
+      label: 'VIP Plan', price: '$147/month',
+      includes: [
+        'Unlimited services per month',
+        'Same-day priority',
+        '20% discount on parts',
+        'Digital bike history log',
+        'Unlimited emergency callouts',
+        'Dedicated mechanic'
+      ],
+      excludes: 'High-end parts (charged at cost). Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      savings: 'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.'
+    }
+  };
+
+  function openMembershipModal(plan) {
+    _msPlan = plan;
+    document.getElementById('ms-plan-name').textContent = _msLabels[plan];
+    document.getElementById('ms-price').textContent = '$' + _msPrices[plan] + '/month';
+    document.getElementById('ms-name').value = '';
+    document.getElementById('ms-email').value = '';
+    document.getElementById('ms-phone').value = '';
+    document.getElementById('ms-error').style.display = 'none';
+    document.getElementById('ms-form').style.display = 'block';
+    document.getElementById('ms-success').style.display = 'none';
+    var btn = document.getElementById('ms-submit');
+    btn.textContent = 'Start Membership';
+    btn.disabled = false;
+    document.getElementById('ms-modal').style.display = 'block';
+  }
+
+  function closeMembershipModal() {
+    document.getElementById('ms-modal').style.display = 'none';
+  }
+
+  async function submitMembership() {
+    var btn = document.getElementById('ms-submit');
+    var errEl = document.getElementById('ms-error');
+    var name = document.getElementById('ms-name').value.trim();
+    var email = document.getElementById('ms-email').value.trim();
+    var phone = document.getElementById('ms-phone').value.trim();
+
+    errEl.style.display = 'none';
+    if (!name || !email || !phone) {
+      errEl.textContent = 'Please fill in all fields.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.textContent = 'Processing...';
+    btn.disabled = true;
+
+    try {
+      var res = await fetch('/api/create-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: _msPlan,
+          billing: 'monthly',
+          priceId: _msPriceIds[_msPlan],
+          name: name,
+          email: email,
+          phone: phone
+        })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Subscription failed. Please try again.');
+      if (data.url) { window.location.href = data.url; return; }
+      document.getElementById('ms-form').style.display = 'none';
+      document.getElementById('ms-success').style.display = 'block';
+    } catch (e) {
+      errEl.textContent = e.message || 'Something went wrong. Please try again.';
+      errEl.style.display = 'block';
+      btn.textContent = 'Start Membership';
+      btn.disabled = false;
+    }
+  }
+
+  function openPlanInfo(plan) {
+    var c = _piContent[plan];
+    document.getElementById('pi-plan-label').textContent = c.label;
+    document.getElementById('pi-price').textContent = c.price;
+    var list = document.getElementById('pi-includes-list');
+    list.innerHTML = c.includes.map(function (item) {
+      return '<li style="display:flex;gap:8px;align-items:flex-start">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px">' +
+        '<circle cx="12" cy="12" r="12" fill="#16a34a"/>' +
+        '<polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>' + item + '</li>';
+    }).join('');
+    document.getElementById('pi-excludes-text').textContent = c.excludes;
+    document.getElementById('pi-savings').textContent = c.savings;
+    var gsBtn = document.getElementById('pi-get-started');
+    gsBtn.dataset.plan = plan;
+    gsBtn.textContent = 'Get Started - ' + c.price;
+    document.getElementById('pi-modal').style.display = 'block';
+  }
+
+  function closePlanInfo() {
+    document.getElementById('pi-modal').style.display = 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-get-started').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closePlanInfo();
+        openMembershipModal(btn.dataset.plan);
+      });
+    });
+
+    document.querySelectorAll('.btn-learn-more').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        openPlanInfo(btn.dataset.plan);
+      });
+    });
+
+    document.getElementById('ms-close').addEventListener('click', closeMembershipModal);
+    document.getElementById('ms-done').addEventListener('click', closeMembershipModal);
+    document.getElementById('ms-modal').addEventListener('click', function (e) {
+      if (e.target === this) closeMembershipModal();
+    });
+    document.getElementById('ms-submit').addEventListener('click', submitMembership);
+
+    document.getElementById('pi-close').addEventListener('click', closePlanInfo);
+    document.getElementById('pi-modal').addEventListener('click', function (e) {
+      if (e.target === this) closePlanInfo();
+    });
+  });
+}());
+</script>
 </body>
 </html>

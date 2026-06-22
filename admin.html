@@ -61,6 +61,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
       Finance
     </button>
+    <button class="sb-item" onclick="go('memberships',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Memberships
+    </button>
     <button class="sb-item" onclick="go('inventory',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
       Parts Inventory
@@ -903,6 +907,46 @@
       </div>
       <div id="cal-grid" style="overflow-x:auto">
         <div style="text-align:center;padding:40px;color:var(--mgray)">Loading calendar...</div>
+      </div>
+    </div>
+
+    <!-- ══ MEMBERSHIPS ══ -->
+    <div id="page-memberships" class="page">
+      <div class="kpis" id="mem-kpis">
+        <div class="kpi-card green"><div class="kpi-label">Active members</div><div class="kpi-value" id="mem-kpi-active">—</div><div class="kpi-sub">Paying subscribers</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Past due</div><div class="kpi-value" id="mem-kpi-pastdue">—</div><div class="kpi-sub">Payment failed</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">MRR</div><div class="kpi-value" id="mem-kpi-mrr">—</div><div class="kpi-sub">Monthly recurring</div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <select id="mem-filter-plan" onchange="loadMemberships()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);cursor:pointer">
+          <option value="">All plans</option>
+          <option value="basic">Basic ($57/mo)</option>
+          <option value="standard">Standard ($97/mo)</option>
+          <option value="vip">VIP ($147/mo)</option>
+        </select>
+        <select id="mem-filter-status" onchange="loadMemberships()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);cursor:pointer">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="past_due">Past Due</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="paused">Paused</option>
+        </select>
+      </div>
+      <div class="card" style="overflow-x:auto;padding:0">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:12px 16px;color:var(--mgray);font-weight:600;white-space:nowrap">Client</th>
+              <th style="text-align:left;padding:12px 16px;color:var(--mgray);font-weight:600">Email</th>
+              <th style="text-align:left;padding:12px 16px;color:var(--mgray);font-weight:600">Plan</th>
+              <th style="text-align:left;padding:12px 16px;color:var(--mgray);font-weight:600">Status</th>
+              <th style="text-align:left;padding:12px 16px;color:var(--mgray);font-weight:600;white-space:nowrap">Started</th>
+              <th style="text-align:left;padding:12px 16px;color:var(--mgray);font-weight:600;white-space:nowrap">Renewed</th>
+              <th style="text-align:left;padding:12px 16px;color:var(--mgray);font-weight:600">Stripe ID</th>
+            </tr>
+          </thead>
+          <tbody id="mem-tbody"></tbody>
+        </table>
       </div>
     </div>
 

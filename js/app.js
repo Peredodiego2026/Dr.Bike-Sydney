@@ -223,21 +223,18 @@ async function renderBookService() {
       <div id="diag-block" style="background:#EEF3FC;border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #C7D9F8">
         <div style="font-size:13px;font-weight:700;color:#1848C8;margin-bottom:8px">&#128269; Not sure what your bike needs?</div>
         <div style="font-size:12px;color:#374151;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-          <label style="flex:1;min-width:120px;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <label style="flex-shrink:0;cursor:pointer">
             <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
-            <div id="diag-photo-btn" style="background:white;border:2px solid #C7D9F8;border-radius:8px;padding:10px;text-align:center;font-size:12px;font-weight:600;color:#1848C8;cursor:pointer">&#128247; Take a Photo</div>
+            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:2px solid #C7D9F8;border-radius:8px;padding:0 12px;font-size:12px;font-weight:600;color:#1848C8;cursor:pointer;white-space:nowrap">&#128247; Photo</div>
           </label>
-          <div style="flex:2;min-width:140px">
-            <textarea id="diag-text" placeholder="Describe the problem... (e.g. clicking noise when pedalling)" style="width:100%;border:2px solid #C7D9F8;border-radius:8px;padding:8px;font-size:12px;height:42px;resize:none;outline:none;box-sizing:border-box;font-family:inherit"></textarea>
-          </div>
-          <button id="diag-ask-btn" style="background:#1848C8;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Ask AI &#8594;</button>
+          <input type="text" id="diag-text" placeholder="Describe the problem..." style="flex:1;min-width:0;height:44px;border:2px solid #C7D9F8;border-radius:8px;padding:0 10px;font-size:16px;outline:none;box-sizing:border-box;font-family:inherit">
+          <button id="diag-ask-btn" style="flex-shrink:0;height:44px;background:#1848C8;color:white;border:none;border-radius:8px;padding:0 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Ask AI &#8594;</button>
         </div>
         <div id="diag-result" style="margin-top:10px;display:none"></div>
       </div>
-      <div style="text-align:center;color:var(--color-text-secondary);font-size:14px;margin:0 0 12px">All services include a $20 mobile call-out fee — your mechanic comes to you.</div>
-      <div id="cat-chips" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none">
-        ${CAT_ORDER.map(cat => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;background:none;border:1px solid var(--color-border);border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--color-text);font-family:inherit;white-space:nowrap">${CAT_SHORT[cat]}</button>`).join('')}
+      <div id="cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0">
+        ${CAT_ORDER.map(cat => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;height:28px;background:none;border:1px solid var(--color-border);border-radius:14px;padding:0 12px;font-size:12px;cursor:pointer;color:var(--color-text);font-family:inherit;white-space:nowrap">${CAT_SHORT[cat]}</button>`).join('')}
       </div>
       <div class="section-label">Select Service</div>
       <div id="step1-services">${categoriesHtml}</div>
@@ -482,7 +479,7 @@ async function renderServiceSummary() {
       <div class="text-secondary text-sm" style="margin-bottom:6px">Referral or promo code</div>
       <div style="display:flex;gap:8px">
         <input id="referral-input" type="text" placeholder="Enter code (optional)"
-          style="flex:1;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 14px;color:var(--color-text);font-size:14px;outline:none;text-transform:uppercase" />
+          style="flex:1;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 14px;color:var(--color-text);font-size:16px;outline:none;text-transform:uppercase" />
         <button id="referral-apply-btn" class="btn btn--secondary" style="padding:10px 16px;font-size:13px;white-space:nowrap">Apply</button>
       </div>
       <div id="referral-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
@@ -585,7 +582,7 @@ async function renderPayment() {
       <div class="text-secondary text-sm">Call-out Fee (pay now)</div>
       <div class="payment-amount__total">$${calloutFee.toFixed(2)}</div>
     </div>
-    <div class="payment-explainer" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px;font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;line-height:1.5">
+    <div class="payment-explainer" style="background:#FEE2E2;border:1px solid #FECACA;border-radius:var(--radius-md);padding:14px;font-size:13px;color:#991B1B;margin-bottom:16px;line-height:1.5;font-weight:600">
       This $${calloutFee.toFixed(2)} call-out fee covers the mechanic's trip to your location — it's the only payment taken online now. The service cost ($${Number(servicePrice).toFixed(2)}) is paid directly to the mechanic by card (EFTPOS) when they arrive.
     </div>
     <div class="payment-methods">${cardIcons}<span class="text-secondary text-xs" style="margin-left:auto">Apple Pay &bull; Google Pay</span></div>
@@ -673,6 +670,7 @@ async function renderPayment() {
       scheduled_time: time,
       address: location || 'Home',
       status: 'pending',
+      van_number: 1,
       service_price: service.price,
       callout_fee: fee,
       stripe_payment_intent_id: paymentIntent.id,
@@ -987,10 +985,7 @@ async function shareTrackingLink() {
   const bookingId = window.appState.bookingId;
   if (!bookingId) return;
   try {
-    const { data } = await sb.from('bookings').select('tracking_token').eq('id', bookingId).single();
-    const token = data?.tracking_token;
-    if (!token) { alert('Tracking link not available yet.'); return; }
-    const url = window.location.origin + '/track?token=' + token;
+    const url = window.location.origin + '/track.html?id=' + bookingId;
     if (navigator.share) {
       await navigator.share({ title: 'Track my Dr. Bike service', url });
     } else {
@@ -1133,7 +1128,7 @@ async function renderLogin() {
       </div>
       <h2 class="login-title">${isSignup ? 'Create Account' : 'Welcome Back!'}</h2>
       <p class="login-sub text-secondary text-center">${isSignup ? 'Join Dr. Bike Sydney' : 'Login to your account'}</p>
-      <button type="button" id="google-btn" style="width:100%;padding:14px;background:#1a1a1a;border:2px solid #2a2a2a;border-radius:10px;color:white;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;transition:all 200ms ease" onmouseover="this.style.borderColor='#4285f4'" onmouseout="this.style.borderColor='#2a2a2a'">
+      <button type="button" id="google-btn" style="width:100%;padding:14px;background:var(--color-bg);border:2px solid var(--color-border);border-radius:10px;color:var(--color-text);font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;transition:all 200ms ease">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -1143,9 +1138,9 @@ async function renderLogin() {
         Continue with Google
       </button>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <div style="flex:1;height:1px;background:#2a2a2a"></div>
-        <span style="color:#a0a0a0;font-size:13px">or</span>
-        <div style="flex:1;height:1px;background:#2a2a2a"></div>
+        <div style="flex:1;height:1px;background:var(--color-border)"></div>
+        <span style="color:var(--color-text-secondary);font-size:13px">or</span>
+        <div style="flex:1;height:1px;background:var(--color-border)"></div>
       </div>
       <form class="login-form" id="login-form" novalidate>
         ${isSignup ? `<div class="form-field"><input type="text" id="login-name" class="form-input" placeholder="Full Name" autocomplete="name"></div>` : ''}
@@ -1170,6 +1165,10 @@ async function renderLogin() {
     </div>
     ${createBottomNav('profile')}
   `;
+
+  const googleBtn = screen.querySelector('#google-btn');
+  googleBtn.addEventListener('mouseover', () => { googleBtn.style.borderColor = '#4285f4'; });
+  googleBtn.addEventListener('mouseout', () => { googleBtn.style.borderColor = ''; });
 
   const pwdInput = screen.querySelector('#login-password');
   const eyeEl = screen.querySelector('#eye-icon');
@@ -1611,6 +1610,23 @@ async function renderMyBikes() {
   });
 }
 
+async function updateHomeNav() {
+  const btn = document.getElementById('home-nav-auth-btn');
+  if (!btn) return;
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    const label = btn.querySelector('span');
+    if (user) {
+      const name = (user.user_metadata?.full_name || user.email || '').split('@')[0].split(' ')[0];
+      if (label) label.textContent = 'Hi, ' + name;
+      btn.href = '#profile';
+    } else {
+      if (label) label.textContent = 'Sign In';
+      btn.href = '#login';
+    }
+  } catch {}
+}
+
 // ── Screen event router ───────────────────────────────────────────────────────
 document.addEventListener('screenchange', ({ detail }) => {
   if (window.gtag) gtag('event', 'page_view', { page_title: detail.route, page_location: '/#' + detail.route });
@@ -1630,6 +1646,7 @@ document.addEventListener('screenchange', ({ detail }) => {
   if (detail.route === 'my-bookings')     renderMyBookings();
   if (detail.route === 'profile')         renderProfile();
   if (detail.route === 'my-bikes')         renderMyBikes();
+  if (detail.route === 'home') updateHomeNav();
 });
 
 // ── AI Bike Diagnosis ────────────────────────────────────────────────────────
@@ -1639,7 +1656,7 @@ async function runAIDiagnosis(screen) {
   const file = input.files[0];
   const resultEl = screen.querySelector('#diag-result');
   resultEl.style.display = 'block';
-  resultEl.innerHTML = '<div style="font-size:12px;color:#6b7280">&#128269; Analysing your photo...</div>';
+  resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-secondary)">&#128269; Analysing your photo...</div>';
   try {
     const reader = new FileReader();
     reader.onload = async e => {
@@ -1653,7 +1670,7 @@ async function runAIDiagnosis(screen) {
     };
     reader.readAsDataURL(file);
   } catch {
-    resultEl.innerHTML = '<div style="font-size:12px;color:#ef4444">Could not analyse photo. Please describe the problem instead.</div>';
+    resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-error)">Could not analyse photo. Please describe the problem instead.</div>';
   }
 }
 
@@ -1662,7 +1679,7 @@ async function runAIDiagnosisText(screen) {
   if (!text) return;
   const resultEl = screen.querySelector('#diag-result');
   resultEl.style.display = 'block';
-  resultEl.innerHTML = '<div style="font-size:12px;color:#6b7280">&#128269; Analysing...</div>';
+  resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-secondary)">&#128269; Analysing...</div>';
   try {
     const resp = await fetch('/api/chat?type=diagnose', {
       method: 'POST',
@@ -1671,7 +1688,7 @@ async function runAIDiagnosisText(screen) {
     });
     showDiagResult(screen, await resp.json());
   } catch {
-    resultEl.innerHTML = '<div style="font-size:12px;color:#ef4444">Could not process. Please select a service manually.</div>';
+    resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-error)">Could not process. Please select a service manually.</div>';
   }
 }
 
@@ -1681,41 +1698,38 @@ function showDiagResult(screen, data) {
   const sev = data.severity || 'medium';
   const sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
   const urgColor = data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
-  const chips = (data.services || []).map(s =>
-    `<span class="diag-chip" data-svc="${s.replace(/"/g, '&quot;')}" style="background:#EEF3FC;color:#1848C8;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px;cursor:pointer">${s}</span>`
-  ).join('');
+  const bookLabel = data.recommended_service_name
+    ? 'Book ' + data.recommended_service_name + (data.recommended_service_price ? ' - $' + data.recommended_service_price : '') + ' →'
+    : '';
+  const bookHtml = (data.recommended_service_id && bookLabel)
+    ? `<button id="diag-book-btn" style="width:100%;margin-top:10px;background:var(--color-primary);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;text-align:left">${bookLabel}</button>`
+    : '';
   resultEl.innerHTML = `
-    <div style="background:white;border-radius:8px;padding:12px;border:1px solid #E5E7EB">
-      <div style="font-size:12px;font-weight:700;color:#0D1F3C;margin-bottom:6px">&#129302; AI Recommendation</div>
-      <div style="font-size:12px;color:#374151;margin-bottom:8px">${data.diagnosis || 'Bike issue detected'}</div>
-      ${chips ? `<div style="margin-bottom:8px">${chips}</div>` : ''}
+    <div style="background:var(--color-bg);border-radius:8px;padding:12px;border:1px solid var(--color-border)">
+      <div style="font-size:12px;font-weight:700;color:var(--color-text);margin-bottom:6px">&#129302; AI Recommendation</div>
+      <div style="font-size:12px;color:var(--color-text);margin-bottom:8px">${data.diagnosis || 'Bike issue detected'}</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span style="font-size:11px;color:${sevColor};font-weight:600">${sev.charAt(0).toUpperCase() + sev.slice(1)} severity</span>
-        <span style="color:#d1d5db">&#183;</span>
+        <span style="color:var(--color-border)">&#183;</span>
         <span style="font-size:11px;color:${urgColor};font-weight:600">${data.urgency || 'Book soon'}</span>
-        ${data.details ? `<span style="color:#d1d5db">&#183;</span><span style="font-size:11px;color:#6b7280">${data.details}</span>` : ''}
+        ${data.details ? `<span style="color:var(--color-border)">&#183;</span><span style="font-size:11px;color:var(--color-text-secondary)">${data.details}</span>` : ''}
       </div>
+      ${bookHtml}
     </div>`;
-  resultEl.querySelectorAll('.diag-chip').forEach(chip => {
-    chip.addEventListener('click', () => autoSelectService(screen, chip.dataset.svc));
-  });
+  const bookBtn = resultEl.querySelector('#diag-book-btn');
+  if (bookBtn) {
+    bookBtn.addEventListener('click', () => {
+      const card = screen.querySelector(`.service-card[data-service-id="${data.recommended_service_id}"]`);
+      if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    });
+  }
 }
 
-function autoSelectService(screen, serviceName) {
-  const list = screen.querySelector('#services-list');
-  if (!list) return;
-  const target = serviceName.toLowerCase();
-  let best = null;
-  list.querySelectorAll('.service-card').forEach(card => {
-    const name = (card.querySelector('.service-card__name')?.textContent || '').toLowerCase();
-    if (name === target) { best = card; return; }
-    if (!best && (name.includes(target) || target.includes(name))) best = card;
-  });
-  if (best) {
-    best.click();
-    best.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+function autoSelectService(screen, serviceId) {
+  const card = screen.querySelector(`.service-card[data-service-id="${serviceId}"]`);
+  if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
 
 router.init();
 document.dispatchEvent(new Event('routerinit'));
+updateHomeNav();

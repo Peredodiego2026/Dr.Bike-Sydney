@@ -1,6 +1,6 @@
 const ROUTES = [
   'home', 'book-service', 'service-summary', 'payment',
-  'tracking', 'review', 'login', 'my-bookings', 'profile',
+  'tracking', 'review', 'login', 'my-bookings', 'profile', 'my-bikes',
 ];
 
 const router = {

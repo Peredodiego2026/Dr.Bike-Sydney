@@ -46,12 +46,29 @@ async function handleDiagnose(req, res) {
       return res.status(415).json({ error: 'Only JPEG, PNG, WebP, GIF allowed' });
   }
   if (description && description.length > 2000) return res.status(400).json({ error: 'Description too long' });
+
+  // Fetch real services from Supabase to ground Claude's recommendation
+  let servicesList = '';
+  try {
+    const { createClient } = await import('@supabase/supabase-js');
+    const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+    const supabase = createClient(sbUrl, process.env.SUPABASE_SERVICE_KEY);
+    const { data: svcs } = await supabase.from('services').select('id,name,price').order('price');
+    if (svcs?.length) {
+      servicesList = svcs.map(s => `- id:${s.id} | ${s.name} | $${s.price}`).join('\n');
+    }
+  } catch {}
+
   const isText = !!description && !image;
-  const schema = '{"diagnosis":"brief","severity":"low|medium|high","services":["service 1"],"estimatedCost":"$X-$Y","urgency":"Can wait|Book soon|Urgent","details":"explanation"}';
+  const schema = '{"diagnosis":"brief description","severity":"low|medium|high","urgency":"Can wait|Book soon|Urgent","recommended_service_id":"<exact id from list>","recommended_service_name":"<exact name from list>","recommended_service_price":<number>,"details":"optional explanation"}';
+  const svcPrompt = servicesList
+    ? '\n\nAVAILABLE SERVICES — pick the single most relevant one and return its exact id and name:\n' + servicesList + '\n'
+    : '';
   const sys = 'You are an expert bicycle mechanic at Dr. Bike Sydney. Analyse the ' + (isText ? 'description' : 'image') + ' and respond ONLY with valid JSON.';
   const userMsg = isText
-    ? 'Diagnose this bike issue: ' + description + ' Reply ONLY with JSON: ' + schema
-    : [{ type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image } }, { type: 'text', text: 'Analyse this bike. Reply ONLY with JSON: ' + schema }];
+    ? 'Diagnose this bike issue: ' + description + svcPrompt + ' Reply ONLY with JSON: ' + schema
+    : [{ type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image } }, { type: 'text', text: 'Analyse this bike.' + svcPrompt + ' Reply ONLY with JSON: ' + schema }];
+
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

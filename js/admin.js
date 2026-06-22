@@ -15,8 +15,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'dr-bike-admin-session', persistSession: false } });
 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
-const titles = { dashboard:'Dashboard', contacts:'Escalation Contacts', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings', coupons:'Discount Codes', reminders:'Service Reminders', inventory:'Parts Inventory', calendar:'Calendar' };
-const subs = { dashboard:'Live operations · Sydney', contacts:'Manage who receives escalated chats', bookings:'Live bookings from Supabase', vans:'2 vans online · both active', clients:'Client database', finance:'Financial overview', zones:'Assign suburbs to each van', settings:'System settings' };
+const titles = { dashboard:'Dashboard', contacts:'Escalation Contacts', bookings:'Bookings', vans:'Vans & Mechanics', clients:'Clients', finance:'Finance', zones:'Zone Manager', settings:'Settings', coupons:'Discount Codes', reminders:'Service Reminders', inventory:'Parts Inventory', calendar:'Calendar', memberships:'Memberships' };
+const subs = { dashboard:'Live operations · Sydney', contacts:'Manage who receives escalated chats', bookings:'Live bookings from Supabase', vans:'2 vans online · both active', clients:'Client database', finance:'Financial overview', zones:'Assign suburbs to each van', settings:'System settings', memberships:'Active plans · Stripe subscriptions' };
 
 function go(page, btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -44,6 +44,7 @@ function go(page, btn){
   if(page==='inventory') loadInventory();
   if(page==='calendar') loadCalendar();
   if(page==='reminders'){ loadTriggers(); loadReferralLeaderboard(); loadNewsletter(); }
+  if(page==='memberships') loadMemberships();
   setTimeout(applyDarkModeInline, 100);
 
   // Update mobile bottom nav active state
@@ -631,7 +632,7 @@ async function loadReferralLeaderboard() {
   if(!el) return;
 
   const { data } = await sb.from('profiles')
-    .select('full_name,email,referral_code,referral_count,membership')
+    .select('full_name,email,referral_code,referral_count,membership_plan')
     .gt('referral_count', 0)
     .order('referral_count', { ascending: false })
     .limit(10);
@@ -648,7 +649,7 @@ async function loadReferralLeaderboard() {
       <div style="font-size:18px;min-width:28px;text-align:center">${medal||'#'+(i+1)}</div>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600;color:var(--navy)">${p.full_name||p.email?.split('@')[0]||'Client'}</div>
-        <div style="font-size:11px;color:var(--mgray)">Code: ${p.referral_code||'—'} · ${p.membership||'No plan'}</div>
+        <div style="font-size:11px;color:var(--mgray)">Code: ${p.referral_code||'—'} · ${p.membership_plan||'No plan'}</div>
       </div>
       <div style="text-align:right">
         <div style="font-size:14px;font-weight:700;color:var(--blue)">${p.referral_count} referral${p.referral_count!==1?'s':''}</div>
@@ -917,7 +918,9 @@ async function loadDashboard(){
     { data: monthJobs },
     { data: pendingJobs },
     { data: recentBookings },
-    { data: allClients }
+    { data: allClients },
+    { count: newsletterCount },
+    { count: bikesCount }
   ] = await Promise.all([
     sb.from('bookings').select('*').eq('scheduled_date', today),
     sb.from('bookings').select('*').gte('scheduled_date', firstOfMonth).neq('status','cancelled'),
@@ -1327,7 +1330,7 @@ async function loadClients(){
   grid.innerHTML = data.map((c,i)=>{
     const name = c.full_name || c.email?.split('@')[0] || 'Client';
     const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const mem = c.membership||'none';
+    const mem = c.membership_plan||'none';
     const segClass = {vip:'seg-vip',basic:'seg-reg',std:'seg-reg',none:'seg-new'}[mem]||'seg-new';
     const segLabel = {vip:'VIP',basic:'Basic',std:'Standard',none:'No plan'}[mem]||'No plan';
     return `<div class="client-card">
@@ -1349,7 +1352,7 @@ async function loadClients(){
   }).join('');
   const kpis = document.querySelectorAll('#page-clients .kpi-value');
   if(kpis[0]) kpis[0].textContent = data.length;
-  if(kpis[1]) kpis[1].textContent = data.filter(c=>c.membership==='vip').length;
+  if(kpis[1]) kpis[1].textContent = data.filter(c=>c.membership_plan==='vip').length;
   const thisMonth = new Date(); thisMonth.setDate(1);
   if(kpis[2]) kpis[2].textContent = data.filter(c=>new Date(c.created_at)>thisMonth).length;
 }
@@ -2070,6 +2073,76 @@ async function checkTwilioStatus() {
     el.textContent = '⚠ Needs keys';
     el.style.color = '#F59E0B';
   }
+}
+
+// ── MEMBERSHIPS ───────────────────────────────────────────────────────────────
+async function loadMemberships() {
+  const tbody = document.getElementById('mem-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr>';
+
+  const planFilter = document.getElementById('mem-filter-plan')?.value || '';
+  const statusFilter = document.getElementById('mem-filter-status')?.value || '';
+
+  let query = sb.from('profiles')
+    .select('full_name,email,membership_plan,membership_status,membership_started_at,membership_renewed_at,stripe_subscription_id')
+    .not('membership_status', 'is', null)
+    .neq('membership_status', 'none');
+
+  if (planFilter) query = query.eq('membership_plan', planFilter);
+  if (statusFilter) query = query.eq('membership_status', statusFilter);
+
+  const { data, error } = await query.order('membership_started_at', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:red">Error: ' + error.message + '</td></tr>';
+    return;
+  }
+
+  const active = (data||[]).filter(m => m.membership_status === 'active').length;
+  const pastDue = (data||[]).filter(m => m.membership_status === 'past_due').length;
+  const prices = { basic: 57, standard: 97, vip: 147 };
+  const mrr = (data||[]).filter(m => m.membership_status === 'active').reduce((s, m) => s + (prices[m.membership_plan] || 0), 0);
+
+  const kpiActive = document.getElementById('mem-kpi-active');
+  const kpiPastdue = document.getElementById('mem-kpi-pastdue');
+  const kpiMrr = document.getElementById('mem-kpi-mrr');
+  if (kpiActive) kpiActive.textContent = active;
+  if (kpiPastdue) kpiPastdue.textContent = pastDue;
+  if (kpiMrr) kpiMrr.textContent = '$' + mrr + '/mo';
+
+  if (!data?.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--mgray);font-size:14px">No active memberships yet</td></tr>';
+    return;
+  }
+
+  const planLabel = { basic: 'Basic $57', standard: 'Standard $97', vip: 'VIP $147' };
+  const statusBadge = {
+    active:    '<span style="background:#ECFDF5;color:#059669;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
+    past_due:  '<span style="background:#FEF3C7;color:#D97706;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
+    cancelled: '<span style="background:#FEE2E2;color:#DC2626;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
+    paused:    '<span style="background:#F3F4F6;color:#6B7280;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
+  };
+
+  tbody.innerHTML = data.map(m => {
+    const name = m.full_name || m.email?.split('@')[0] || '—';
+    const plan = planLabel[m.membership_plan] || m.membership_plan || '—';
+    const badge = statusBadge[m.membership_status] || m.membership_status || '—';
+    const started = m.membership_started_at ? new Date(m.membership_started_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }) : '—';
+    const renewed = m.membership_renewed_at ? new Date(m.membership_renewed_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }) : '—';
+    const subId = m.stripe_subscription_id
+      ? '<span style="font-size:10px;color:var(--mgray);font-family:monospace">' + m.stripe_subscription_id + '</span>'
+      : '—';
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:12px 16px;font-weight:600;color:var(--navy)">' + name + '</td>'
+      + '<td style="padding:12px 16px;font-size:12px;color:var(--mgray)">' + (m.email||'—') + '</td>'
+      + '<td style="padding:12px 16px">' + plan + '</td>'
+      + '<td style="padding:12px 16px">' + badge + '</td>'
+      + '<td style="padding:12px 16px;font-size:12px;white-space:nowrap">' + started + '</td>'
+      + '<td style="padding:12px 16px;font-size:12px;white-space:nowrap">' + renewed + '</td>'
+      + '<td style="padding:12px 16px">' + subId + '</td>'
+      + '</tr>';
+  }).join('');
 }
 
 // ── NOTIFICATION NUMBERS ──────────────────────────────────────────────────────

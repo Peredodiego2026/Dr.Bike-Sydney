@@ -7,7 +7,15 @@
       "Bash(git commit -m ' *)",
       "Bash(git config *)",
       "Bash(node --check api/send-email.js)",
-      "Bash(node --check api/send-invoice.js)"
+      "Bash(node --check api/send-invoice.js)",
+      "Bash(git push *)",
+      "Bash(node --check js/app.js)",
+      "Bash(node --check js/app.js js/router.js js/components.js js/supabase.js js/stripe.js)",
+      "Bash(node --check middleware.js)",
+      "Bash(npx vercel *)",
+      "Bash(node *)",
+      "Bash(awk 'NR>=80 && NR<=110')",
+      "Bash(awk 'NF && $1+0 >= 805 && $1+0 <= 960')"
     ]
   }
 }

@@ -11,7 +11,7 @@ const sb = createClient(
 
 // ── SMS ───────────────────────────────────────────────────────────────────────
 async function handleSMS(req, res) {
-  const { to, name, service, address, price, type, bookingId, mechName, reviewLink, customMsg } = req.body;
+  const { to, name, service, address, price, type, bookingId, mechName, reviewLink, customMsg, time } = req.body;
   if (!to) return res.status(400).json({ error: 'Missing phone number' });
 
   const safeName    = String(name    || 'Client').replace(/[\r\n]/g, ' ').slice(0, 50);
@@ -31,6 +31,7 @@ async function handleSMS(req, res) {
     reminder:            `Hi ${safeName}! Time for a bike check-up. Book your next service at https://drbikesydney.com.au`,
     review_request:      `Hi ${safeName}! Your ${safeService} is done. How did we do? ${reviewLink || 'https://drbikesydney.com.au'}`,
     cancellation_alert:  safeMsg || `CANCELLED: ${name} cancelled their ${safeService} booking.`,
+    new_booking:         `NUEVA RESERVA: ${safeService} a las ${time || ''} - ${safeAddress}`,
   };
   const body = messages[type] || messages.confirmation;
 
@@ -56,6 +57,8 @@ function buildWAMessage(template, data) {
       return `Job complete! ✅\n\nHi ${d.name || 'there'}, your bike has been serviced by *${d.mechanic || 'your mechanic'}*.\n\n🔧 ${d.service || 'Service'} — done!\n\nRate your experience: ${d.reviewUrl || 'https://drbikesydney.com.au'}\n\nThank you for choosing Dr. Bike Sydney! 🚲`;
     case 'reminder':
       return `Service reminder 🔔\n\nHi ${d.name || 'there'}! Your Dr. Bike service is coming up:\n\n📅 ${d.date || 'soon'} at ${d.time || 'your selected time'}\n📍 ${d.suburb || 'your location'}\n\nNeed to reschedule? https://drbikesydney.com.au\n\n— Dr. Bike Sydney 🚲`;
+    case 'new_booking':
+      return `Nueva reserva recibida 🚲\n\n🔧 ${d.service || 'Bike repair'}\n📅 ${d.date || ''} a las ${d.time || ''}\n📍 ${d.address || ''}\n👤 ${d.clientName || 'Cliente'}\n💰 $${d.price || '—'}\n\nVer: ${d.trackUrl || 'https://drbikesydney.com.au'}`;
     default:
       return null;
   }
@@ -67,7 +70,7 @@ async function handleWhatsApp(req, res) {
 
   const { to, template, data } = req.body || {};
   if (!to || !template) return res.status(400).json({ error: 'Missing required fields: to, template' });
-  if (!['confirmation','enroute','completed','reminder'].includes(template)) {
+  if (!['confirmation','enroute','completed','reminder','new_booking'].includes(template)) {
     return res.status(400).json({ error: 'Invalid template' });
   }
 

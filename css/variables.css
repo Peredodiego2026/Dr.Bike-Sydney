@@ -3,18 +3,18 @@
 
 :root {
   /* ── Colors ──────────────────────────────────────────────────────────────── */
-  --color-primary:         #0A58CA;
-  --color-primary-hover:   #0848A8;
-  --color-primary-light:   rgba(10, 88, 202, 0.15);
+  --color-primary:         #2563eb;
+  --color-primary-hover:   #1d4ed8;
+  --color-primary-light:   #eff6ff;
 
-  --color-bg:              #0F0F0F;
-  --color-surface:         #1A1A1A;
-  --color-surface-hover:   #222222;
+  --color-bg:              #ffffff;
+  --color-surface:         #f9fafb;
+  --color-surface-hover:   #f3f4f6;
 
-  --color-border:          #2A2A2A;
+  --color-border:          #e5e7eb;
 
-  --color-text:            #FFFFFF;
-  --color-text-secondary:  #A0A0A0;
+  --color-text:            #111827;
+  --color-text-secondary:  #6b7280;
 
   --color-success:         #22C55E;
   --color-success-light:   rgba(34, 197, 94, 0.15);
@@ -24,7 +24,7 @@
   --color-warning-light:   rgba(245, 158, 11, 0.15);
 
   /* ── Typography ──────────────────────────────────────────────────────────── */
-  --font-family:     system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family:     Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --font-size-xs:    0.6875rem;   /* 11px */
   --font-size-sm:    0.8125rem;   /* 13px */
@@ -53,9 +53,9 @@
   --radius-full: 9999px;
 
   /* ── Shadows ─────────────────────────────────────────────────────────────── */
-  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.15);
 
   /* ── Transitions ─────────────────────────────────────────────────────────── */
   --transition-fast: 150ms ease;
