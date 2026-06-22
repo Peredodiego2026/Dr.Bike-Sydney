@@ -171,7 +171,7 @@ async function handleMechanicUpdateStatus(req, res) {
     {
       method: 'PATCH',
       headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...(status === 'enroute' ? { mechanic_id: mechanic.id } : {}) }),
     }
   );
   if (!updateResp.ok) return res.status(500).json({ error: 'Failed to update booking' });
