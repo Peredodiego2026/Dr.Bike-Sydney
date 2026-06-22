@@ -42,7 +42,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
       Dashboard
     </button>
-    <button class="sb-item" onclick="go('bookings',this)">
+    <button class="sb-item" id="sb-btn-bookings" onclick="go('bookings',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
       Bookings
       <span class="sb-badge">4</span>
@@ -200,7 +200,7 @@
         <div class="card">
           <div class="card-hdr">
             <div><div class="card-title">Today's bookings</div><div class="card-sub" id="dash-today-sub">Loading...</div></div>
-            <span class="card-action" onclick="go('bookings',document.querySelector('[onclick*=bookings]'))">View all →</span>
+            <span class="card-action" onclick="go('bookings',document.getElementById('sb-btn-bookings'))">View all →</span>
           </div>
           <table class="tbl">
             <thead><tr><th>Client</th><th>Service</th><th>Time</th><th>Van</th><th>Status</th><th>Total</th></tr></thead>
