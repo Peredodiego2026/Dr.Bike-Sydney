@@ -328,7 +328,7 @@ async function handleMechanicUpdateStatus(req, res) {
     {
       method: 'PATCH',
       headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ status, ...(status === 'enroute' ? { mechanic_id: mechanic.id } : {}) }),
+      body: JSON.stringify({ status }),
     }
   );
   if (!updateResp.ok) {
