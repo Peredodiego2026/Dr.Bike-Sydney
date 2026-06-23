@@ -150,7 +150,7 @@ async function load(){
     });
     if(!resp.ok){ const e=await resp.json(); throw new Error(e.error||'Failed to load jobs'); }
     const data = await resp.json();
-    const mapped = (data||[]).map(b=>({id:b.id,client_id:b.client_id||null,client:b.client_name||b.client_email?.split('@')[0]||'Client',email:b.client_email||'',phone:b.client_phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',rating:b.client_rating,review:b.client_review}));
+    const mapped = (data||[]).map(b=>({id:b.id,client_id:b.client_id||null,client:b.client_name||b.client_email?.split('@')[0]||'Client',email:b.client_email||'',phone:b.client_phone||'',service:b.service_name||'Service',price:b.service_price||0,date:b.scheduled_date,time:b.scheduled_time||'',address:b.address||'',suburb:b.suburb||'',status:b.status||'pending',notes:b.notes||'',mnotes:b.mechanic_notes||'',mechanic_id:b.mechanic_id||null,rating:b.client_rating,review:b.client_review}));
     jobs = mapped;
     try { localStorage.setItem('drbike-jobs-cache', JSON.stringify(jobs)); } catch(e){}
     render(); badges();
@@ -1154,7 +1154,7 @@ function profile(){
 
 function go(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id)?.classList.add('active'); }
 function updateUI(){ document.getElementById('mech-name').textContent=mechanic?.name||'Mechanic'; document.getElementById('van-label').textContent='Van '+vanNum; }
-function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.cssText='background:#1e293b;color:#ffffff;border-radius:12px;padding:12px 20px;font-weight:600;font-size:13px;'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
 function renderAgenda(){
   const c = document.getElementById('jobs-list');
