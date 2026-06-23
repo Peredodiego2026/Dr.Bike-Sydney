@@ -331,7 +331,11 @@ async function handleMechanicUpdateStatus(req, res) {
       body: JSON.stringify({ status, ...(status === 'enroute' ? { mechanic_id: mechanic.id } : {}) }),
     }
   );
-  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to update booking' });
+  if (!updateResp.ok) {
+    const errText = await updateResp.text();
+    console.error('update-status error:', updateResp.status, errText);
+    return res.status(500).json({ error: 'Failed to update booking', detail: errText });
+  }
   return res.status(200).json({ ok: true });
 }
 
