@@ -822,6 +822,54 @@ const STATUS_CONFIG = {
   completed: { dot: '#6B7280', label: 'Service completed' },
 };
 
+async function renderTrackingPicker(screen) {
+  screen.innerHTML = `
+    ${createHeader('Track a Booking', false)}
+    <div style="padding:20px 16px">
+      <div id="booking-picker-list" style="min-height:80px;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);font-size:14px">Loading your bookings...</div>
+    </div>
+    ${createBottomNav('tracking')}
+  `;
+  const listEl = screen.querySelector('#booking-picker-list');
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      listEl.innerHTML = '<div style="text-align:center"><div style="margin-bottom:12px">Sign in to see your bookings</div><button class="btn btn--primary" onclick="router.navigate(\'login\')">Sign in</button></div>';
+      return;
+    }
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'client-bookings', access_token: session.access_token, client_id: session.user.id })
+    });
+    const bookings = await resp.json();
+    const active = (bookings || []).filter(b => !['cancelled'].includes(b.status));
+    if (!active.length) {
+      listEl.innerHTML = '<div style="text-align:center;color:var(--color-text-secondary)">No active bookings found.</div>';
+      return;
+    }
+    const ST_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#6B7280' };
+    const ST_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'🚐 En Route', in_progress:'🔧 In Progress', completed:'Completed' };
+    listEl.innerHTML = active.map(b => `
+      <div class="booking-pick-item" data-id="${b.id}" data-token="${b.tracking_token||''}" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--color-text)">${b.service_name||'Service'}</div>
+          <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${b.scheduled_date||''}${b.scheduled_time?' · '+b.scheduled_time:''}</div>
+        </div>
+        <span style="font-size:12px;font-weight:600;color:${ST_COLORS[b.status]||'#6B7280'};white-space:nowrap;margin-left:12px">${ST_LABELS[b.status]||b.status}</span>
+      </div>`).join('');
+    listEl.querySelectorAll('.booking-pick-item').forEach(item => {
+      item.addEventListener('click', () => {
+        window.appState.bookingId = item.dataset.id;
+        window.appState.trackingToken = item.dataset.token || null;
+        renderTracking();
+      });
+    });
+  } catch(e) {
+    listEl.innerHTML = '<div style="color:var(--color-error)">Could not load bookings. Try again.</div>';
+  }
+}
+
 async function renderTracking() {
   const screen = document.querySelector('[data-screen="tracking"]');
   if (!screen) return;
@@ -829,10 +877,18 @@ async function renderTracking() {
   cleanupTracking();
 
   const { bookingId } = window.appState;
+
+  if (!bookingId) {
+    return renderTrackingPicker(screen);
+  }
+
   const ref = bookingRef(bookingId);
 
   screen.innerHTML = `
     ${createHeader('Live Tracking', false)}
+    <div style="padding:0 16px 4px;text-align:right">
+      <button id="change-booking-btn" style="background:none;border:none;font-size:12px;color:var(--color-primary);cursor:pointer;font-family:var(--font-sans);font-weight:600">↩ Change booking</button>
+    </div>
     <div class="status-indicator" id="status-indicator">
       <div class="status-dot" id="status-dot" style="background:var(--color-primary)"></div>
       <span class="status-text" id="status-text">Loading booking...</span>
@@ -867,6 +923,11 @@ async function renderTracking() {
   `;
 
   screen.querySelector('#share-tracking-btn')?.addEventListener('click', shareTrackingLink);
+  screen.querySelector('#change-booking-btn')?.addEventListener('click', () => {
+    window.appState.bookingId = null;
+    window.appState.trackingToken = null;
+    renderTrackingPicker(screen);
+  });
 
   await loadLeaflet();
   if (!screen.classList.contains('active')) return;
