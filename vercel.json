@@ -1,22 +1,6 @@
 {
   "crons": [
     {
-      "path": "/api/send-cron?type=birthday",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/send-cron?type=reengagement",
-      "schedule": "0 10 * * 1"
-    },
-    {
-      "path": "/api/send-cron?type=abandoned",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/send-cron?type=service",
-      "schedule": "0 9 1 * *"
-    },
-    {
       "path": "/api/send-reminders?type=2h",
       "schedule": "0 9 * * *"
     }
