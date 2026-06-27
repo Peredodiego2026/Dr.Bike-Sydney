@@ -1933,11 +1933,16 @@ function openAccountPanel(session) {
   var meta = user.user_metadata || {};
   var name = meta.full_name || meta.name || user.email || '';
 
+  var btn = document.getElementById('nav-auth-btn');
+  var btnRect = btn ? btn.getBoundingClientRect() : { right: window.innerWidth - 16, top: 60 };
+  var panelRight = Math.max(16, window.innerWidth - btnRect.right);
+  var panelTop = btnRect.top + (btn ? btn.offsetHeight : 0) + 8;
+
   var panel = document.createElement('div');
   panel.id = 'account-panel';
-  panel.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5)';
+  panel.style.cssText = 'position:fixed;inset:0;z-index:9999;background:transparent';
   panel.innerHTML = [
-    '<div id="account-panel-inner" style="position:absolute;right:0;top:0;bottom:0;width:min(420px,100vw);background:#fff;display:flex;flex-direction:column;overflow:hidden">',
+    '<div id="account-panel-inner" style="position:absolute;right:' + panelRight + 'px;top:' + panelTop + 'px;width:min(380px,calc(100vw-32px));max-height:calc(100vh-' + (panelTop + 16) + 'px);background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden">',
       '<div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">',
         '<div>',
           '<div style="font-size:16px;font-weight:700;color:#111827">' + esc(name) + '</div>',
