@@ -210,6 +210,45 @@ async function handleMechanicChecklist(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+async function handleMechanicComplete(req, res) {
+  const { pin, booking_id, mechanic_notes, parts_used, photo_before_url, photo_after_url, client_signature_url, next_service_date, duration_seconds } = req.body;
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
+  if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const contactsResp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
+  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const contacts = await contactsResp.json();
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim());
+  if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
+
+  const payload = {
+    status: 'completed',
+    completed_at: new Date().toISOString(),
+    mechanic_notes: mechanic_notes || null,
+    parts_used: parts_used || null,
+    next_service_date: next_service_date || null,
+  };
+  if (photo_before_url) payload.photo_before_url = photo_before_url;
+  if (photo_after_url) payload.photo_after_url = photo_after_url;
+  if (client_signature_url) payload.client_signature_url = client_signature_url;
+  if (duration_seconds) payload.service_duration_seconds = duration_seconds;
+
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    { method: 'PATCH', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify(payload) }
+  );
+  if (!updateResp.ok) {
+    const errText = await updateResp.text();
+    console.error('complete patch error:', updateResp.status, errText);
+    return res.status(500).json({ error: 'Failed to complete booking', detail: errText });
+  }
+  return res.status(200).json({ ok: true });
+}
+
 async function handleClientCancel(req, res) {
   const { access_token, booking_id, client_id } = req.body;
   if (!access_token || !booking_id || !client_id)
@@ -331,7 +370,7 @@ async function handleClientHistory(req, res) {
 }
 
 async function handleMechanicUpdateStatus(req, res) {
-  const { pin, booking_id, status } = req.body;
+  const { pin, booking_id, status, mechanic_notes } = req.body;
   if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
   if (!booking_id || !status) return res.status(400).json({ error: 'booking_id and status required' });
 
@@ -353,7 +392,7 @@ async function handleMechanicUpdateStatus(req, res) {
     {
       method: 'PATCH',
       headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...(mechanic_notes !== undefined ? { mechanic_notes } : {}) }),
     }
   );
   if (!updateResp.ok) {
@@ -408,6 +447,7 @@ export default async function handler(req, res) {
   if (role === 'public-track') return handlePublicTrack(req, res);
   if (role === 'mechanic-update-status') return handleMechanicUpdateStatus(req, res);
   if (role === 'mechanic-checklist') return handleMechanicChecklist(req, res);
+  if (role === 'mechanic-complete') return handleMechanicComplete(req, res);
   if (role === 'mechanic-accept') return handleMechanicAccept(req, res);
   if (role === 'mechanic-reject') return handleMechanicReject(req, res);
   if (role === 'mechanic-arrived') return handleMechanicArrived(req, res);

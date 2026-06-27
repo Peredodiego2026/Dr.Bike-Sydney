@@ -636,18 +636,32 @@ async function submitComplete(id){
     uploadPhoto(id, afterFile, 'after')
   ]);
 
-  const updateData = {
-    status:'completed',
-    mechanic_notes: notes,
-    parts_used: parts,
-    next_service_date: nextDate,
-    client_signature: signature,
-    completed_at: new Date().toISOString()
-  };
-  if(photoBeforeUrl) updateData.photo_before = photoBeforeUrl;
-  if(photoAfterUrl) updateData.photo_after = photoAfterUrl;
+  const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  const duration = activeTimerBookingId === id && serviceStartTime
+    ? Math.floor((Date.now() - serviceStartTime) / 1000) : null;
 
-  await sb.from('bookings').update(updateData).eq('id',id);
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      role: 'mechanic-complete',
+      pin: stored.pin || '',
+      booking_id: id,
+      mechanic_notes: notes || null,
+      parts_used: parts || null,
+      photo_before_url: photoBeforeUrl || null,
+      photo_after_url: photoAfterUrl || null,
+      client_signature_url: signature || null,
+      next_service_date: nextDate || null,
+      duration_seconds: duration,
+    }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    if (btn) { btn.textContent = '✅ Complete job'; btn.disabled = false; }
+    toast('Error: ' + (err.error || 'Could not complete job'));
+    return;
+  }
 
   document.getElementById('complete-modal').remove();
   const j = jobs.find(x=>x.id===id);
@@ -736,7 +750,19 @@ async function submitComplete(id){
 async function completeJob(id){
   openCompleteModal(id);
 }
-async function saveNotes(id,notes){ await sb.from('bookings').update({mechanic_notes:notes}).eq('id',id); }
+async function saveNotes(id, notes) {
+  const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  const j = jobs.find(x => x.id === id);
+  if (!j) return;
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-update-status', pin: stored.pin || '', booking_id: id, status: j.status, mechanic_notes: notes }),
+    });
+    if (!resp.ok) toast('Could not save notes');
+  } catch(e) { toast('Notes error: ' + e.message); }
+}
 
 async function openClientHistory(bookingId, clientName, clientId) {
   // Remove existing modal
@@ -921,12 +947,16 @@ async function completeService() {
   if (bar) bar.style.display = 'none';
   const duration = serviceStartTime ? Math.floor((Date.now() - serviceStartTime) / 1000) : null;
   const bookingId = activeTimerBookingId;
-  if (bookingId && sb) {
-    await sb.from('bookings').update({
-      status: 'completed',
-      completed_at: new Date().toISOString(),
-      service_duration_seconds: duration
-    }).eq('id', bookingId);
+  if (bookingId) {
+    const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+    try {
+      const resp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'mechanic-complete', pin: stored.pin || '', booking_id: bookingId, duration_seconds: duration }),
+      });
+      if (!resp.ok) toast('Could not complete job via timer');
+    } catch(e) { toast('Timer complete error: ' + e.message); }
     // Notify client — same as submitComplete()
     const j = jobs.find(x => x.id === bookingId);
     if (j) {
