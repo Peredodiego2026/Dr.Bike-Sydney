@@ -2016,35 +2016,34 @@ function openAccountPanel(session) {
       }
       el.innerHTML = html;
 
-      el.querySelectorAll('.acct-cancel-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var bookingId = btn.dataset.id;
+      el.addEventListener('click', function(e) {
+        var cancelBtn = e.target.closest('.acct-cancel-btn');
+        var reschedBtn = e.target.closest('.acct-resched-btn');
+
+        if (cancelBtn) {
+          var bookingId = cancelBtn.dataset.id;
           if (!confirm('Cancel this booking?')) return;
+          cancelBtn.textContent = '...'; cancelBtn.disabled = true;
           _sb.auth.getSession().then(function(s) {
             var sess = s.data && s.data.session ? s.data.session : null;
-            if (!sess) return;
-            btn.textContent = '...';
+            if (!sess) { cancelBtn.textContent = 'Cancel'; cancelBtn.disabled = false; return; }
             fetch('/api/auth', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ role: 'client-cancel', access_token: sess.access_token, booking_id: bookingId, client_id: sess.user.id })
             }).then(function(r) {
               if (r.ok) { openAccountPanel(sess); }
-              else { btn.textContent = 'Cancel'; alert('Could not cancel. Please call us.'); }
+              else { cancelBtn.textContent = 'Cancel'; cancelBtn.disabled = false; alert('Could not cancel. Please call us.'); }
             });
           });
-        });
-      });
+        }
 
-      el.querySelectorAll('.acct-resched-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var bookingId = btn.dataset.id;
-          var currentDate = btn.dataset.date;
-          var currentTime = btn.dataset.time;
-          var newDate = prompt('New date (YYYY-MM-DD):', currentDate);
+        if (reschedBtn) {
+          var bookingId = reschedBtn.dataset.id;
+          var newDate = prompt('New date (YYYY-MM-DD):', reschedBtn.dataset.date);
           if (!newDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDate)) return;
           var timeOpts = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00'];
-          var newTime = prompt('New time:\n' + timeOpts.join(' / '), currentTime);
+          var newTime = prompt('New time:\n' + timeOpts.join(' / '), reschedBtn.dataset.time);
           if (!newTime || !timeOpts.includes(newTime)) return;
           _sb.auth.getSession().then(function(s) {
             var sess = s.data && s.data.session ? s.data.session : null;
@@ -2058,7 +2057,7 @@ function openAccountPanel(session) {
               else { alert('Could not reschedule. Please call us.'); }
             });
           });
-        });
+        }
       });
 
     }).catch(function() {
