@@ -439,12 +439,28 @@ async function handlePublicTrack(req, res) {
   return res.status(200).json({ ...booking, mechanic_location });
 }
 
+async function handlePublicBookingList(req, res) {
+  const { email } = req.body;
+  if (!email || !email.includes('@')) return res.status(400).json({ error: 'Email required' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const cols = 'id,service_name,scheduled_date,scheduled_time,status,tracking_token';
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&client_email=eq.${encodeURIComponent(email)}&status=neq.cancelled&order=scheduled_date.desc&limit=10`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!resp.ok) return res.status(500).json({ error: 'Database error' });
+  const data = await resp.json();
+  return res.status(200).json(data || []);
+}
+
 export default async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';
   const rateMax = role.startsWith('mechanic-') ? 30 : role === 'public-track' ? 20 : 5;
   if (await guard(req, res, { method: 'POST', rateMax, rateWindow: 60000 })) return;
 
   if (role === 'public-track') return handlePublicTrack(req, res);
+  if (role === 'public-booking-list') return handlePublicBookingList(req, res);
   if (role === 'mechanic-update-status') return handleMechanicUpdateStatus(req, res);
   if (role === 'mechanic-checklist') return handleMechanicChecklist(req, res);
   if (role === 'mechanic-complete') return handleMechanicComplete(req, res);

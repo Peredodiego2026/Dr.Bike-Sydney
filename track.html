@@ -84,7 +84,7 @@ async function init(){
   const content = document.getElementById('content');
 
   if(!bookingId && !trackingToken){
-    content.innerHTML = '<div class="card"><div class="err">No booking ID or tracking link provided.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>';
+    showEmailForm(content);
     return;
   }
 
@@ -191,6 +191,61 @@ async function init(){
       }
     } catch {}
   }, 15000);
+}
+
+function showEmailForm(content) {
+  const ST_LABELS = {pending:'⏳ Pending',confirmed:'✅ Confirmed',enroute:'🚐 En route',in_progress:'🔧 In progress',completed:'✅ Completed'};
+  content.innerHTML = `
+    <div class="card">
+      <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">Track your booking</div>
+      <div style="font-size:13px;color:var(--mgray);margin-bottom:16px">Enter the email you used to book</div>
+      <input id="track-email" type="email" placeholder="your@email.com" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);outline:none;margin-bottom:10px">
+      <button id="track-email-btn" style="width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Find my bookings →</button>
+      <div id="track-email-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px;text-align:center"></div>
+    </div>`;
+
+  document.getElementById('track-email-btn').addEventListener('click', async function() {
+    const email = document.getElementById('track-email').value.trim();
+    const errEl = document.getElementById('track-email-err');
+    const btn = document.getElementById('track-email-btn');
+    if (!email || !email.includes('@')) { errEl.textContent = 'Enter a valid email'; errEl.style.display = 'block'; return; }
+    btn.textContent = 'Searching...'; btn.disabled = true; errEl.style.display = 'none';
+    try {
+      const resp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'public-booking-list', email })
+      });
+      const bookings = await resp.json();
+      if (!bookings.length) {
+        errEl.textContent = 'No bookings found for that email.';
+        errEl.style.display = 'block';
+        btn.textContent = 'Find my bookings →'; btn.disabled = false;
+        return;
+      }
+      let html = '<div class="card"><div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px">Your bookings</div>';
+      bookings.forEach(function(b) {
+        const label = ST_LABELS[b.status] || b.status;
+        const isActive = ['enroute','in_progress'].includes(b.status);
+        const url = b.tracking_token ? '/track?token=' + b.tracking_token : '/track?id=' + b.id;
+        html += '<a href="' + url + '" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-lt);text-decoration:none;color:inherit">';
+        html += '<div><div style="font-size:14px;font-weight:600;color:var(--navy)">' + (b.service_name||'Service') + '</div>';
+        html += '<div style="font-size:12px;color:var(--mgray);margin-top:2px">' + (b.scheduled_date||'') + (b.scheduled_time?' · '+b.scheduled_time:'') + '</div></div>';
+        html += '<span style="font-size:12px;font-weight:600;color:' + (isActive?'var(--green)':'var(--mgray)') + ';white-space:nowrap;margin-left:12px">' + label + '</span>';
+        html += '</a>';
+      });
+      html += '</div>';
+      content.innerHTML = html;
+    } catch(e) {
+      errEl.textContent = 'Connection error. Try again.';
+      errEl.style.display = 'block';
+      btn.textContent = 'Find my bookings →'; btn.disabled = false;
+    }
+  });
+
+  document.getElementById('track-email').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('track-email-btn').click();
+  });
 }
 
 init();
