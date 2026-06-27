@@ -1898,8 +1898,8 @@ function updateNavForSession(session) {
     var meta = session.user.user_metadata || {};
     var name = meta.full_name || meta.name || session.user.email || '';
     var first = name.split('@')[0].split(' ')[0];
-    btn.textContent = 'Hi, ' + first;
-    btn.onclick = function() { if (confirm('Sign out?')) _sb.auth.signOut(); };
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + first;
+    btn.onclick = function() { openAccountPanel(session); };
     if (session.user.email === 'peredo.dm@gmail.com') {
       var heroBtn = document.getElementById('hero-book-btn');
       if (heroBtn) {
@@ -1919,6 +1919,148 @@ function updateNavForSession(session) {
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Sign In';
     btn.onclick = openAuthModal;
   }
+}
+
+function esc(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function openAccountPanel(session) {
+  document.getElementById('account-panel')?.remove();
+  var user = session && session.user ? session.user : null;
+  if (!user) { openAuthModal(); return; }
+  var meta = user.user_metadata || {};
+  var name = meta.full_name || meta.name || user.email || '';
+
+  var panel = document.createElement('div');
+  panel.id = 'account-panel';
+  panel.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5)';
+  panel.innerHTML = [
+    '<div id="account-panel-inner" style="position:absolute;right:0;top:0;bottom:0;width:min(420px,100vw);background:#fff;display:flex;flex-direction:column;overflow:hidden">',
+      '<div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">',
+        '<div>',
+          '<div style="font-size:16px;font-weight:700;color:#111827">' + esc(name) + '</div>',
+          '<div style="font-size:12px;color:#6b7280">' + esc(user.email || '') + '</div>',
+        '</div>',
+        '<button id="account-panel-close" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280">&#215;</button>',
+      '</div>',
+      '<div style="flex:1;overflow-y:auto;padding:20px 24px">',
+        '<div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px">My Bookings</div>',
+        '<div id="account-bookings" style="min-height:60px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:13px">Loading...</div>',
+      '</div>',
+      '<div style="padding:16px 24px;border-top:1px solid #e5e7eb">',
+        '<button id="account-signout-btn" style="width:100%;padding:11px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>',
+      '</div>',
+    '</div>'
+  ].join('');
+  document.body.appendChild(panel);
+
+  document.getElementById('account-panel-close').addEventListener('click', function() { panel.remove(); });
+  panel.addEventListener('click', function(e) { if (e.target === panel) panel.remove(); });
+  document.getElementById('account-signout-btn').addEventListener('click', function() {
+    if (confirm('Sign out?')) { _sb.auth.signOut(); panel.remove(); }
+  });
+
+  _sb.auth.getSession().then(function(res) {
+    var sess = res.data && res.data.session ? res.data.session : null;
+    if (!sess) return;
+    fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'client-bookings', access_token: sess.access_token, client_id: sess.user.id })
+    }).then(function(r) { return r.json(); }).then(function(bookings) {
+      var el = document.getElementById('account-bookings');
+      if (!el) return;
+      var STATUS_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#6B7280', cancelled:'#EF4444' };
+      var STATUS_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'En Route', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
+      if (!bookings || !bookings.length) { el.textContent = 'No bookings yet.'; return; }
+      var upcoming = bookings.filter(function(b) { return ['pending','confirmed','enroute','in_progress'].includes(b.status); });
+      var past = bookings.filter(function(b) { return ['completed','cancelled'].includes(b.status); });
+      var html = '';
+      if (upcoming.length) {
+        html += '<div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;margin-bottom:8px">Upcoming (' + upcoming.length + ')</div>';
+        upcoming.forEach(function(b) {
+          var canEdit = b.status === 'pending' || b.status === 'confirmed';
+          html += '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:8px">';
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+          html += '<div style="font-size:13px;font-weight:600;color:#111827">' + esc(b.service_name || 'Service') + '</div>';
+          html += '<span style="font-size:11px;font-weight:600;color:' + (STATUS_COLORS[b.status]||'#6B7280') + '">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
+          html += '</div>';
+          html += '<div style="font-size:12px;color:#6b7280">' + esc(b.scheduled_date||'') + (b.scheduled_time ? ' · ' + esc(b.scheduled_time) : '') + '</div>';
+          if (canEdit) {
+            html += '<div style="display:flex;gap:6px;margin-top:8px">';
+            html += '<button class="acct-resched-btn" data-id="' + esc(b.id) + '" data-date="' + esc(b.scheduled_date||'') + '" data-time="' + esc(b.scheduled_time||'08:00') + '" style="flex:1;padding:6px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;font-family:inherit">📅 Reschedule</button>';
+            html += '<button class="acct-cancel-btn" data-id="' + esc(b.id) + '" style="flex:1;padding:6px;border:1px solid #fee2e2;border-radius:6px;background:#fff;color:#dc2626;font-size:12px;cursor:pointer;font-family:inherit">Cancel</button>';
+            html += '</div>';
+          }
+          html += '</div>';
+        });
+      }
+      if (past.length) {
+        html += '<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-top:16px;margin-bottom:8px">History (' + past.length + ')</div>';
+        past.slice(0, 5).forEach(function(b) {
+          html += '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:8px">';
+          html += '<div style="display:flex;justify-content:space-between">';
+          html += '<div style="font-size:13px;font-weight:600;color:#111827">' + esc(b.service_name||'Service') + '</div>';
+          html += '<span style="font-size:11px;color:' + (STATUS_COLORS[b.status]||'#6B7280') + '">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
+          html += '</div>';
+          html += '<div style="font-size:12px;color:#6b7280">' + esc(b.scheduled_date||'') + '</div>';
+          html += '</div>';
+        });
+      }
+      el.innerHTML = html;
+
+      el.querySelectorAll('.acct-cancel-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var bookingId = btn.dataset.id;
+          if (!confirm('Cancel this booking?')) return;
+          _sb.auth.getSession().then(function(s) {
+            var sess = s.data && s.data.session ? s.data.session : null;
+            if (!sess) return;
+            btn.textContent = '...';
+            fetch('/api/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ role: 'client-cancel', access_token: sess.access_token, booking_id: bookingId, client_id: sess.user.id })
+            }).then(function(r) {
+              if (r.ok) { openAccountPanel(sess); }
+              else { btn.textContent = 'Cancel'; alert('Could not cancel. Please call us.'); }
+            });
+          });
+        });
+      });
+
+      el.querySelectorAll('.acct-resched-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var bookingId = btn.dataset.id;
+          var currentDate = btn.dataset.date;
+          var currentTime = btn.dataset.time;
+          var newDate = prompt('New date (YYYY-MM-DD):', currentDate);
+          if (!newDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDate)) return;
+          var timeOpts = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00'];
+          var newTime = prompt('New time:\n' + timeOpts.join(' / '), currentTime);
+          if (!newTime || !timeOpts.includes(newTime)) return;
+          _sb.auth.getSession().then(function(s) {
+            var sess = s.data && s.data.session ? s.data.session : null;
+            if (!sess) return;
+            fetch('/api/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ role: 'client-reschedule', access_token: sess.access_token, booking_id: bookingId, client_id: sess.user.id, scheduled_date: newDate, scheduled_time: newTime })
+            }).then(function(r) {
+              if (r.ok) { openAccountPanel(sess); }
+              else { alert('Could not reschedule. Please call us.'); }
+            });
+          });
+        });
+      });
+
+    }).catch(function() {
+      var el = document.getElementById('account-bookings');
+      if (el) el.textContent = 'Could not load bookings.';
+    });
+  });
 }
 
 function openAuthModal() {
