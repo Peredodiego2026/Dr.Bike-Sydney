@@ -823,41 +823,96 @@ const STATUS_CONFIG = {
 };
 
 async function renderTrackingPicker(screen) {
+  const ST_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#6B7280', cancelled:'#EF4444' };
+  const ST_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'En Route', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
+
   screen.innerHTML = `
-    ${createHeader('Track a Booking', false)}
-    <div style="padding:20px 16px">
-      <div id="booking-picker-list" style="min-height:80px;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);font-size:14px">Loading your bookings...</div>
+    ${createHeader('My Bookings', false)}
+    <div style="padding:16px;overflow-y:auto;max-height:calc(100vh - 112px)">
+      <div id="booking-picker-list">
+        <div style="display:flex;align-items:center;justify-content:center;height:120px;color:var(--color-text-secondary);font-size:14px">Loading...</div>
+      </div>
     </div>
     ${createBottomNav('tracking')}
   `;
+
   const listEl = screen.querySelector('#booking-picker-list');
+
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
-      listEl.innerHTML = '<div style="text-align:center"><div style="margin-bottom:12px">Sign in to see your bookings</div><button class="btn btn--primary" onclick="router.navigate(\'login\')">Sign in</button></div>';
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:40px 0">
+          <div style="font-size:40px;margin-bottom:12px">🔒</div>
+          <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:6px">Sign in to track bookings</div>
+          <div style="font-size:13px;color:#6B7280;margin-bottom:20px">Your bookings will appear here</div>
+          <button class="btn btn--primary" id="picker-signin-btn" style="padding:12px 28px;font-size:14px;font-weight:700">Sign in</button>
+        </div>`;
+      listEl.querySelector('#picker-signin-btn')?.addEventListener('click', () => router.navigate('login'));
       return;
     }
+
     const resp = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role: 'client-bookings', access_token: session.access_token, client_id: session.user.id })
     });
     const bookings = await resp.json();
-    const active = (bookings || []).filter(b => !['cancelled'].includes(b.status));
+    const active = (bookings || []).filter(b => b.status !== 'cancelled');
+
     if (!active.length) {
-      listEl.innerHTML = '<div style="text-align:center;color:var(--color-text-secondary)">No active bookings found.</div>';
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:40px 0">
+          <div style="font-size:40px;margin-bottom:12px">📋</div>
+          <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:6px">No bookings yet</div>
+          <div style="font-size:13px;color:#6B7280">Book a service to track it here</div>
+        </div>`;
       return;
     }
-    const ST_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#6B7280' };
-    const ST_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'🚐 En Route', in_progress:'🔧 In Progress', completed:'Completed' };
-    listEl.innerHTML = active.map(b => `
-      <div class="booking-pick-item" data-id="${b.id}" data-token="${b.tracking_token||''}" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:14px;font-weight:600;color:var(--color-text)">${b.service_name||'Service'}</div>
-          <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${b.scheduled_date||''}${b.scheduled_time?' · '+b.scheduled_time:''}</div>
-        </div>
-        <span style="font-size:12px;font-weight:600;color:${ST_COLORS[b.status]||'#6B7280'};white-space:nowrap;margin-left:12px">${ST_LABELS[b.status]||b.status}</span>
-      </div>`).join('');
+
+    const upcoming = active.filter(b => !['completed'].includes(b.status));
+    const past = active.filter(b => b.status === 'completed');
+
+    let html = '';
+    if (upcoming.length) {
+      html += `<div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Active</div>`;
+      upcoming.forEach(b => {
+        const color = ST_COLORS[b.status] || '#6B7280';
+        html += `
+          <div class="booking-pick-item" data-id="${b.id}" data-token="${b.tracking_token||''}"
+            style="background:#fff;border:1px solid #E5E7EB;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name||'Service'}</div>
+              <div style="font-size:12px;color:#6B7280">${b.scheduled_date||''}${b.scheduled_time?' · '+b.scheduled_time:''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
+              <span style="font-size:11px;font-weight:600;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;white-space:nowrap">${ST_LABELS[b.status]||b.status}</span>
+              <span style="font-size:18px;color:#D1D5DB;font-weight:300">›</span>
+            </div>
+          </div>`;
+      });
+    }
+
+    if (past.length) {
+      html += `<div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px">History</div>`;
+      past.slice(0, 5).forEach(b => {
+        const color = ST_COLORS[b.status] || '#6B7280';
+        html += `
+          <div class="booking-pick-item" data-id="${b.id}" data-token="${b.tracking_token||''}"
+            style="background:#F9FAFB;border:1px solid #E5E7EB;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;color:#0D1F3C;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name||'Service'}</div>
+              <div style="font-size:12px;color:#6B7280">${b.scheduled_date||''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
+              <span style="font-size:11px;font-weight:600;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;white-space:nowrap">${ST_LABELS[b.status]||b.status}</span>
+              <span style="font-size:18px;color:#D1D5DB;font-weight:300">›</span>
+            </div>
+          </div>`;
+      });
+    }
+
+    listEl.innerHTML = html;
     listEl.querySelectorAll('.booking-pick-item').forEach(item => {
       item.addEventListener('click', () => {
         window.appState.bookingId = item.dataset.id;
@@ -866,7 +921,7 @@ async function renderTrackingPicker(screen) {
       });
     });
   } catch(e) {
-    listEl.innerHTML = '<div style="color:var(--color-error)">Could not load bookings. Try again.</div>';
+    listEl.innerHTML = `<div style="text-align:center;padding:32px 0;color:#DC2626;font-size:13px">Could not load bookings. Try again.</div>`;
   }
 }
 

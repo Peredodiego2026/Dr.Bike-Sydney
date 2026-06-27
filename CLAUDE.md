@@ -214,5 +214,18 @@ NEVER DELETE without confirming with Diego first.
 - Diego communicates in Spanish. Code, client UI, and docs stay in English.
 - One task per session. When context approaches ~100k tokens, recommend new chat.
 
+## UI Design — Regla obligatoria
+
+SIEMPRE que escribas o modifiques HTML/CSS inline en este proyecto, invocar el skill `drbike-design` ANTES de escribir el codigo. El skill esta en `.claude/skills/drbike-design/SKILL.md`.
+
+Aplica a: js/app.js, landing.html, mechanic.html, js/mechanic.js, track.html, admin.html.
+
+Principios minimos sin leer el skill:
+- Cards de lista: borde izquierdo de color segun status, flecha derecha, cursor:pointer
+- Jerarquia: titulo 15px bold navy, subtitulo 12px gray — nunca igual peso
+- Listas: siempre overflow-y:auto, nunca ocultar scroll
+- Touch targets: minimo 44px alto en mobile
+- Badges: background [color]15 (8% opacity) + color solido, border-radius:20px
+
 ## Override Rule
 User instructions always override this file.
