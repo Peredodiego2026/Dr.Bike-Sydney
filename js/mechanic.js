@@ -1043,12 +1043,16 @@ async function saveChecklist() {
   const notesEl = document.getElementById('checklist-notes');
   const notes = notesEl ? notesEl.value : '';
   const criticals = CHECKLIST_ITEMS.filter(i => checklistState[i.id] === 'critical').map(i => i.label);
-  if (checklistBookingId && sb) {
-    await sb.from('bookings').update({
-      started_at: new Date().toISOString(),
-      pre_service_checklist: JSON.stringify(checklistState),
-      pre_service_notes: notes
-    }).eq('id', checklistBookingId);
+  if (checklistBookingId) {
+    const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+    try {
+      const resp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'mechanic-checklist', pin: stored.pin || '', booking_id: checklistBookingId, started_at: new Date().toISOString(), pre_service_checklist: JSON.stringify(checklistState), pre_service_notes: notes }),
+      });
+      if (!resp.ok) { const err = await resp.json().catch(() => ({})); toast('Error saving checklist: ' + (err.error || 'try again')); return; }
+    } catch(e) { toast('Error: ' + e.message); return; }
   }
   closeChecklist();
   startServiceTimer(checklistBookingId);

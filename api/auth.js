@@ -185,6 +185,31 @@ async function handleMechanicArrived(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+async function handleMechanicChecklist(req, res) {
+  const { pin, booking_id, started_at, pre_service_checklist, pre_service_notes } = req.body;
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
+  if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const contactsResp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
+  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const contacts = await contactsResp.json();
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim());
+  if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    { method: 'PATCH', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ started_at, pre_service_checklist, pre_service_notes }) }
+  );
+  if (!updateResp.ok) {
+    const errText = await updateResp.text();
+    console.error('checklist patch error:', updateResp.status, errText);
+    return res.status(500).json({ error: 'Failed to save checklist', detail: errText });
+  }
+  return res.status(200).json({ ok: true });
+}
+
 async function handleClientCancel(req, res) {
   const { access_token, booking_id, client_id } = req.body;
   if (!access_token || !booking_id || !client_id)
@@ -382,6 +407,7 @@ export default async function handler(req, res) {
 
   if (role === 'public-track') return handlePublicTrack(req, res);
   if (role === 'mechanic-update-status') return handleMechanicUpdateStatus(req, res);
+  if (role === 'mechanic-checklist') return handleMechanicChecklist(req, res);
   if (role === 'mechanic-accept') return handleMechanicAccept(req, res);
   if (role === 'mechanic-reject') return handleMechanicReject(req, res);
   if (role === 'mechanic-arrived') return handleMechanicArrived(req, res);
