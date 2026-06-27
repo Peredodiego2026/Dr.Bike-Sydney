@@ -815,11 +815,14 @@ async function geocodeAddress(address) {
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  pending:   { dot: '#F59E0B', label: 'Booking confirmed — assigning mechanic...' },
-  confirmed: { dot: 'var(--color-primary)', label: 'Mechanic assigned — preparing to depart' },
-  en_route:  { dot: '#22C55E', label: 'Mechanic is on the way!' },
-  arrived:   { dot: '#22C55E', label: 'Mechanic has arrived!' },
-  completed: { dot: '#6B7280', label: 'Service completed' },
+  pending:     { dot: '#F59E0B', label: 'Booking received — assigning mechanic...' },
+  confirmed:   { dot: 'var(--color-primary)', label: 'Mechanic assigned — preparing to depart' },
+  enroute:     { dot: '#22C55E', label: 'Mechanic is on the way!' },
+  en_route:    { dot: '#22C55E', label: 'Mechanic is on the way!' },
+  in_progress: { dot: '#22C55E', label: 'Mechanic has arrived!' },
+  inprogress:  { dot: '#22C55E', label: 'Mechanic has arrived!' },
+  arrived:     { dot: '#22C55E', label: 'Mechanic has arrived!' },
+  completed:   { dot: '#6B7280', label: 'Service completed' },
 };
 
 async function renderTrackingPicker(screen) {
@@ -1034,7 +1037,7 @@ async function renderTracking() {
     if (dot)  dot.style.background  = cfg.dot;
     if (text) text.textContent = cfg.label;
     // Progress bar highlight
-    const stepMap = { pending: -1, confirmed: 0, en_route: 1, arrived: 2, completed: 3 };
+    const stepMap = { pending: -1, confirmed: 0, enroute: 1, en_route: 1, in_progress: 2, inprogress: 2, arrived: 2, completed: 3 };
     const activeStep = stepMap[status] ?? 0;
     for (let i = 0; i <= 3; i++) {
       const el = screen.querySelector(`#step-${i}`);
@@ -1044,114 +1047,69 @@ async function renderTracking() {
     }
   }
 
-  // ── Load booking from Supabase ────────────────────────────────────────────
-  try {
-    const { data: booking } = await sb.from('bookings')
-      .select('status, address, client_name, mechanic_id')
-      .eq('id', bookingId || '')
-      .single();
+  // ── Load booking via server-side API (bypasses RLS, includes mechanic_location) ──
+  const trackingToken = window.appState.trackingToken;
 
-    if (booking) {
-      applyStatus(booking.status || 'confirmed');
-
-      // Geocode client address
-      if (booking.address) {
-        const coords = await geocodeAddress(booking.address);
-        if (coords) {
-          clientCoords = coords;
-          clientMarker.setLatLng(coords);
-          map.setView(coords, 13);
-        }
-      }
-
-      // Load mechanic name
-      if (booking.mechanic_id) {
-        const { data: mech } = await sb.from('escalation_contacts')
-          .select('name, phone').eq('id', booking.mechanic_id).single();
-        // 1.1: Also fetch mechanic profile (avatar, bio, years_experience)
-        let mechProfile = null;
-        if (booking.mechanic_id) {
-          const { data: mp } = await sb.from('profiles')
-            .select('avatar_url, bio, years_experience, full_name')
-            .eq('id', booking.mechanic_id).single();
-          mechProfile = mp;
-        }
-        if (mech) {
-          const nameEl = screen.querySelector('#mechanic-name');
-          const mechName = mechProfile?.full_name || mech.name || 'Your mechanic';
-          if (nameEl) nameEl.textContent = mechName;
-          // Update mechanic avatar if available
-          const avatarEl = screen.querySelector('.mechanic-avatar');
-          if (avatarEl && mechProfile?.avatar_url) {
-            avatarEl.innerHTML = '<img src="' + mechProfile.avatar_url + '" alt="' + mechName + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover">';
-          }
-          // Show bio/experience below ETA
-          if (mechProfile?.bio || mechProfile?.years_experience) {
-            const etaEl = screen.querySelector('#eta-text');
-            if (etaEl && etaEl.parentElement) {
-              const bioEl = document.createElement('div');
-              bioEl.style.cssText = 'font-size:12px;color:var(--color-text-secondary);margin-top:2px';
-              bioEl.textContent = (mechProfile.years_experience ? mechProfile.years_experience + 'yrs exp · ' : '') + (mechProfile.bio || '');
-              etaEl.parentElement.appendChild(bioEl);
-            }
-          }
-          screen.querySelector('#message-btn')?.addEventListener('click', () => {
-            const phone = (mech.phone || '61433963250').replace(/[^0-9]/g, '');
-            window.open(`https://wa.me/${phone}?text=${encodeURIComponent('Hi, tracking booking ' + ref)}`, '_blank');
-          });
-          _trackingMechId = booking.mechanic_id;
-        }
-      }
-
-      // Real-time booking status updates
-      const bookingChannel = sb.channel('booking-status-' + bookingId)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bookings', filter: 'id=eq.' + bookingId },
-          payload => { if (payload.new?.status) applyStatus(payload.new.status); })
-        .subscribe();
-      const origCleanup = _unsubTracking;
-      _unsubTracking = () => {
-        if (origCleanup) origCleanup();
-        try { sb.removeChannel(bookingChannel); } catch {}
-      };
-    } else {
-      applyStatus('confirmed');
-    }
-  } catch {
-    applyStatus('confirmed');
+  async function pollBooking() {
+    try {
+      const resp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'public-track', ...(trackingToken ? { tracking_token: trackingToken } : { booking_id: bookingId }) }),
+      });
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch { return null; }
   }
 
-  updateETA(MECH_DEFAULT);
+  const booking = await pollBooking();
 
-  // ── Realtime mechanic location (real GPS via mechanic_id) ─────────────────
-  if (_trackingMechId) {
-    (async () => {
-      const { data: loc } = await sb.from('mechanic_locations')
-        .select('lat,lng').eq('mechanic_id', _trackingMechId).eq('is_online', true).maybeSingle();
-      if (loc?.lat && loc?.lng) {
-        const coords = [loc.lat, loc.lng];
-        if (_mechanicMarker) _mechanicMarker.setLatLng(coords);
-        updateETA(coords);
-        if (_trackingMap) _trackingMap.panTo(coords, { animate: true, duration: 1 });
+  if (booking) {
+    applyStatus(booking.status || 'confirmed');
+
+    if (booking.address) {
+      const coords = await geocodeAddress(booking.address);
+      if (coords) {
+        clientCoords = coords;
+        clientMarker.setLatLng(coords);
+        map.setView(coords, 13);
       }
-      const locChannel = sb.channel('mech-gps-' + _trackingMechId)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'mechanic_locations', filter: 'mechanic_id=eq.' + _trackingMechId },
-          p => {
-            const { lat, lng } = p.new;
-            if (!lat || !lng) return;
-            const coords = [lat, lng];
-            if (_mechanicMarker) _mechanicMarker.setLatLng(coords);
-            updateETA(coords);
-            if (_trackingMap) _trackingMap.panTo(coords, { animate: true, duration: 1 });
-          })
-        .subscribe();
-      const prev = _unsubTracking;
-      _unsubTracking = () => { if (prev) prev(); try { sb.removeChannel(locChannel); } catch {} };
-    })();
+    }
+
+    // Place mechanic marker if location available
+    if (booking.mechanic_location?.lat && booking.mechanic_location?.lng) {
+      const mc = [booking.mechanic_location.lat, booking.mechanic_location.lng];
+      if (_mechanicMarker) _mechanicMarker.setLatLng(mc);
+      updateETA(mc);
+      if (_trackingMap) _trackingMap.panTo(mc, { animate: true, duration: 1 });
+    }
+
+    screen.querySelector('#message-btn')?.addEventListener('click', () => {
+      window.open(`https://wa.me/61433963250?text=${encodeURIComponent('Hi Dr. Bike, tracking booking ' + ref)}`, '_blank');
+    });
   } else {
+    applyStatus('confirmed');
     screen.querySelector('#message-btn')?.addEventListener('click', () => {
       window.open(`https://wa.me/61433963250?text=${encodeURIComponent('Hi Dr. Bike, tracking booking ' + ref)}`, '_blank');
     });
   }
+
+  updateETA(MECH_DEFAULT);
+
+  // ── Poll every 15s: status + mechanic location (server-side, no RLS) ────────
+  const pollInterval = setInterval(async () => {
+    if (!screen.classList.contains('active')) { clearInterval(pollInterval); return; }
+    const updated = await pollBooking();
+    if (!updated) return;
+    if (updated.status !== (booking?.status)) applyStatus(updated.status);
+    if (updated.mechanic_location?.lat && updated.mechanic_location?.lng) {
+      const mc = [updated.mechanic_location.lat, updated.mechanic_location.lng];
+      if (_mechanicMarker) _mechanicMarker.setLatLng(mc);
+      updateETA(mc);
+    }
+  }, 15000);
+  const prev = _unsubTracking;
+  _unsubTracking = () => { if (prev) prev(); clearInterval(pollInterval); };
 
   requestAnimationFrame(() => { setTimeout(() => { if (_trackingMap) _trackingMap.invalidateSize(); }, 350); });
 }
