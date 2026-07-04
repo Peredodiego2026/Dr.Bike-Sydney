@@ -26,7 +26,7 @@ async function handleAdmin(req, res) {
 
 async function handleMechanic(req, res) {
   const { pin } = req.body;
-  if (!pin || String(pin).trim().length < 6) return res.status(400).json({ error: 'PIN required' });
+  if (!pin || String(pin).trim().length < 4) return res.status(400).json({ error: 'PIN required' });
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`, {
@@ -35,7 +35,7 @@ async function handleMechanic(req, res) {
   if (!resp.ok) return res.status(500).json({ error: 'Database error' });
 
   const contacts = await resp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
   return res.status(200).json({ id: mechanic.id, name: mechanic.name, phone: mechanic.phone, role: mechanic.role || 'mechanic' });
 }
@@ -52,7 +52,7 @@ async function handleMechanicJobs(req, res) {
   });
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
 
   const cols = 'id,client_id,client_name,client_email,client_phone,service_name,service_price,scheduled_date,scheduled_time,status,suburb,address,van_number,notes,mechanic_notes,mechanic_id,client_rating,client_review';
@@ -67,7 +67,7 @@ async function handleMechanicJobs(req, res) {
 
 async function handleMechanicLocation(req, res) {
   const { pin, van_number, lat, lng } = req.body;
-  if (!pin || String(pin).trim().length < 6) return res.status(401).json({ error: 'PIN required' });
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
   if (lat == null || lng == null) return res.status(400).json({ error: 'Location required' });
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -77,7 +77,7 @@ async function handleMechanicLocation(req, res) {
   });
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -121,14 +121,14 @@ async function handleClientBookings(req, res) {
 
 async function handleMechanicAccept(req, res) {
   const { pin, booking_id } = req.body;
-  if (!pin || String(pin).trim().length < 6) return res.status(401).json({ error: 'PIN required' });
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
   if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const contactsResp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
   // mechanic_id FK points to profiles.id but mechanics use PIN auth (no profile row).
   // Skip mechanic_id write until schema FK is corrected to escalation_contacts.id.
@@ -137,14 +137,14 @@ async function handleMechanicAccept(req, res) {
 
 async function handleMechanicReject(req, res) {
   const { pin, booking_id } = req.body;
-  if (!pin || String(pin).trim().length < 6) return res.status(401).json({ error: 'PIN required' });
+  if (!pin || String(pin).trim().length < 4) return res.status(401).json({ error: 'PIN required' });
   if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const contactsResp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
@@ -169,7 +169,7 @@ async function handleMechanicArrived(req, res) {
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
@@ -194,7 +194,7 @@ async function handleMechanicChecklist(req, res) {
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
@@ -220,7 +220,7 @@ async function handleMechanicComplete(req, res) {
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
 
   const payload = {
@@ -352,7 +352,7 @@ async function handleClientHistory(req, res) {
   });
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
-  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-6) === String(pin).trim());
+  const mechanic = contacts.find(c => c.phone && c.phone.replace(/[\s+\-()\s]/g, '').slice(-4) === String(pin).trim().slice(-4));
   if (!mechanic) return res.status(401).json({ error: 'Invalid PIN' });
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);

@@ -111,7 +111,7 @@ async function init(){
 
 async function doLogin(){
   const pin = document.getElementById('pin-inp').value.trim();
-  if(pin.length<6){ err('Enter your 6-digit PIN'); return; }
+  if(pin.length<4){ err('Enter your 4-digit PIN'); return; }
   const btn=document.getElementById('login-btn');
   btn.textContent='Signing in...'; btn.disabled=true;
 
@@ -1354,57 +1354,90 @@ async function sendMechMessage(){
 let gpsInterval = null;
 let activeJobId = null;
 let watchId = null;
+let gpsPermissionState = 'unknown';
+
+async function checkGPSPermission() {
+  if (!navigator.geolocation) { toast('GPS not available'); return false; }
+  if (navigator.permissions) {
+    try {
+      const perm = await navigator.permissions.query({ name: 'geolocation' });
+      gpsPermissionState = perm.state;
+      if (perm.state === 'denied') {
+        toast('📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)');
+        return false;
+      }
+      if (perm.state === 'granted') return true;
+      // prompt - will ask when we call getCurrentPosition
+      return true;
+    } catch {}
+  }
+  return true;
+}
+
+async function requestGPSPermission() {
+  if (!navigator.geolocation) { toast('GPS not available'); return false; }
+  try {
+    // This will trigger the browser permission prompt
+    const pos = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+    });
+    gpsPermissionState = 'granted';
+    return true;
+  } catch (err) {
+    if (err.code === 1) {
+      gpsPermissionState = 'denied';
+      toast('📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)');
+    } else {
+      toast('GPS error: ' + err.message);
+    }
+    return false;
+  }
+}
 
 function startGPS(bookingId) {
   activeJobId = bookingId;
   if (!navigator.geolocation) { toast('GPS not available'); return; }
-  toast('📍 Location sharing started');
-
-  // Send immediately
-  sendLocation(bookingId);
-
-  // Then every 10 seconds
-  gpsInterval = setInterval(() => sendLocation(bookingId), 10000);
-
-  // Also use watchPosition for smoother updates
-  watchId = navigator.geolocation.watchPosition(
-    pos => upsertLocation(pos.coords.latitude, pos.coords.longitude),
-    err => toast('GPS: ' + (err.code === 1 ? 'Location permission denied - enable in browser settings' : err.message)),
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-  );
+  toast('📍 Starting location sharing...');
+  
+  // Check/request permission first
+  requestGPSPermission().then(granted => {
+    if (!granted) return;
+    
+    // Send immediately
+    sendLocation(bookingId);
+    
+    // Then every 10 seconds
+    gpsInterval = setInterval(() => sendLocation(bookingId), 10000);
+    
+    // Also use watchPosition for smoother updates
+    watchId = navigator.geolocation.watchPosition(
+      pos => upsertLocation(pos.coords.latitude, pos.coords.longitude),
+      err => {
+        if (err.code === 1) {
+          toast('📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)');
+          stopGPS();
+        } else {
+          toast('GPS: ' + err.message);
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
+  });
 }
 
 function sendLocation(bookingId) {
   navigator.geolocation.getCurrentPosition(
     pos => upsertLocation(pos.coords.latitude, pos.coords.longitude),
-    err => toast('GPS: ' + (err.code === 1 ? 'Location permission denied - enable in browser settings' : err.message)),
+    err => {
+      if (err.code === 1) {
+        toast('📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)');
+        stopGPS();
+      } else {
+        toast('GPS: ' + err.message);
+      }
+    },
     { enableHighAccuracy: true, timeout: 8000 }
   );
-}
-
-let _gpsOk = false;
-async function upsertLocation(lat, lng) {
-  if (!mechanic?.pin) { toast('GPS: mechanic session not loaded - please log in again'); return; }
-  try {
-    const resp = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'mechanic-location', pin: mechanic.pin, van_number: vanNum, lat, lng })
-    });
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      toast('GPS send failed: ' + (err.error || resp.status));
-    } else if (!_gpsOk) {
-      _gpsOk = true;
-      toast('📍 Location shared: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
-    }
-  } catch(e) { toast('GPS send error: ' + e.message); }
-}
-
-function stopGPS() {
-  if (gpsInterval) { clearInterval(gpsInterval); gpsInterval = null; }
-  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-  activeJobId = null;
 }
 
 // Resume tracking if there's an active enroute job on page load
