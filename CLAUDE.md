@@ -94,11 +94,13 @@ stripe-webhook.js.
 - Dead files (mobile.html v1/v2/v3, index-redesign.html, admin.html.bak) - deleted
 
 ### Still open
-- S01: Google Maps API key - hardcoded, no HTTP referrer restriction set
-- S03: XSS in email templates - user data not escaped in some templates
-- B01: stripe-webhook.js uses `membership` field instead of `membership_status`
-- B02: send-email.js referral_success template has out-of-scope variables
+- S03: XSS in email templates - FIXED Jun 2026: date, time, bookingId, price now sanitized in send-email.js
 - Apple Pay/Google Pay: canMakePayment() returns null on Safari iPhone
+
+### Resolved (no longer open)
+- S01: Google Maps API key - app uses Leaflet (no API key), not Google Maps. Non-issue.
+- B01: stripe-webhook.js - already uses membership_status correctly. Non-issue.
+- B02: send-email.js referral_success - variables are in scope. Non-issue.
 
 ### Session 5 (routing unification) - PENDING - 2 bugs to fix
 Attempt to unify routing (one page for all devices) failed. Two visible bugs in index.html when served to desktop via the root URL:
