@@ -706,13 +706,14 @@ async function renderBookService() {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
               <circle cx="12" cy="10" r="3"></circle>
             </svg>
-            <div style="flex:1">
-              <label style="font-size:11px;color:#94A3B8;font-weight:700;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em">Address</label>
+            <div style="flex:1;position:relative">
+              <label style="font-size:12px;color:var(--color-text-secondary);font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Address</label>
               <input id="location-input" type="text" placeholder="e.g. 14 Smith St, Surry Hills NSW 2010"
-                value="${saved.replace(/"/g, '&quot;')}"
-                style="width:100%;border:none;outline:none;background:transparent;font-size:16px;color:#0F172A;padding:0;font-family:inherit;box-sizing:border-box">
-              <div style="height:1px;background:#E2E8F0;margin-top:8px"></div>
-              <div style="margin-top:6px;font-size:12px;color:#475569">Your mechanic will come to this address</div>
+                value="${saved.replace(/"/g, '"')}"
+                style="width:100%;border:none;outline:none;background:transparent;font-size:16px;color:var(--color-text);padding:0;font-family:inherit;box-sizing:border-box" autocomplete="off">
+              <div id="address-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--color-border);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;z-index:10;box-shadow:var(--shadow-md)"></div>
+              <div style="height:1px;background:var(--color-border);margin-top:8px"></div>
+              <div style="margin-top:6px;font-size:12px;color:var(--color-text-secondary)">Your mechanic will come to this address</div>
             </div>
           </div>
         </div>
@@ -725,8 +726,63 @@ async function renderBookService() {
     `;
 
     const input = screen.querySelector('#location-input');
+    const suggestionsBox = screen.querySelector('#address-suggestions');
+    let debounceTimer = null;
+
+    async function fetchSuggestions(query) {
+      if (query.length < 3) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+      try {
+        const q = encodeURIComponent(query + ', Sydney, NSW, Australia');
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=5&addressdetails=1`,
+          {
+            headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' },
+          }
+        );
+        const data = await res.json();
+        if (!data.length) {
+          suggestionsBox.style.display = 'none';
+          return;
+        }
+        suggestionsBox.innerHTML = data
+          .map(
+            (item) => `
+          <button type="button" class="address-suggestion" data-address="${item.display_name.replace(/"/g, '"')}"
+            style="display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--color-text);font-family:inherit;border-bottom:1px solid var(--color-border)">
+            ${item.display_name.split(',')[0]}<br>
+            <span style="font-size:12px;color:var(--color-text-secondary)">${item.display_name.split(',').slice(1).join(',')}</span>
+          </button>
+        `
+          )
+          .join('');
+        suggestionsBox.style.display = 'block';
+
+        suggestionsBox.querySelectorAll('.address-suggestion').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            input.value = btn.dataset.address;
+            window.appState.location = btn.dataset.address;
+            suggestionsBox.style.display = 'none';
+            input.focus();
+          });
+        });
+      } catch {
+        suggestionsBox.style.display = 'none';
+      }
+    }
+
     input.addEventListener('input', (e) => {
       window.appState.location = e.target.value;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchSuggestions(e.target.value), 250);
+    });
+
+    input.addEventListener('blur', () => {
+      setTimeout(() => {
+        suggestionsBox.style.display = 'none';
+      }, 200);
     });
 
     // Back: go to Step 2
@@ -999,8 +1055,10 @@ async function renderServiceSummary() {
       const {
         data: { user },
       } = await sb.auth.getUser();
-      if (!user) throw new Error('Please sign in to complete your booking.');
+      // Allow guest checkout - no login required for $20 call-out
+      // If logged in, associate booking with user; if not, create as guest
       window.appState.bookingId = null;
+      window.appState.isGuest = !user;
       router.navigate('payment');
     } catch (e) {
       errEl.textContent = e.message || 'Please try again.';
@@ -1088,6 +1146,7 @@ async function renderPayment() {
     if (!session?.user) throw new Error('Please sign in to complete your booking.');
     const user = session.user;
     const meta = user.user_metadata || {};
+    const _clientName = meta.full_name || meta.name || '';
     const fee = feeOverride !== null ? feeOverride : calloutFee;
     // Real Stripe payment id only (admin test passes a fake "test_" id → no payment).
     const realPI =
@@ -1125,7 +1184,6 @@ async function renderPayment() {
         items: [{ item_name: service?.name || 'Service' }],
       });
     const _bId = booking.id;
-    const _clientName = meta.full_name || meta.name || '';
     const _total = fee + service.price;
     Promise.allSettled([
       fetch('/api/send-message?channel=whatsapp', {

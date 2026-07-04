@@ -15,21 +15,43 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="css/variables.css?v=20260628">
-<link rel="stylesheet" href="css/mechanic.css?v=20260628">
+<link rel="stylesheet" href="css/mechanic.css?v=20260705">
 <style>
-/* Login screen always dark regardless of theme */
-#s-login { background: #0D1F3C; }
+/* PIN login - use mechanic.css variables for dark theme */
+#s-login { background: var(--navy); }
+.login-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--r);
+}
+.pin-inp {
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  color: #fff;
+}
+.pin-inp:focus { border-color: var(--green); }
+.login-btn {
+  background: var(--green);
+  border-radius: 10px;
+  font-weight: 700;
+}
+.van-opt.sel {
+  border-color: var(--green);
+  background: rgba(5,150,105,0.2);
+  color: #fff;
+}
 /* Inventory tab inside jobs-wrap */
 #tab-inventory {
   padding: 16px;
-  background: #F4F6F9;
+  background: var(--off);
   min-height: 100%;
-  color: #0D1F3C;
+  color: var(--navy);
 }
-#tab-inventory h2 { color: #0D1F3C; }
+#tab-inventory h2 { color: var(--navy); }
 #inventory-list .inv-row {
-  background: #fff;
-  border: 1px solid #E8ECF0;
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 6px;
   padding: 10px 12px;
@@ -37,20 +59,20 @@
   align-items: center;
   justify-content: space-between;
 }
-#inventory-list .inv-row.low { background: #FEF2F2; border-color: #DC2626; }
+#inventory-list .inv-row.low { background: var(--red-lt); border-color: var(--red); }
 /* Checklist modal — theme-aware */
 #checklist-modal .modal-inner {
-  background: #fff;
-  color: #0D1F3C;
+  background: var(--white);
+  color: var(--navy);
   max-width: 500px;
   margin: 24px auto;
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid #E8ECF0;
+  border: 1px solid var(--border);
 }
 #checklist-modal .cl-row {
-  background: #F4F6F9;
-  border: 1px solid #E8ECF0;
+  background: var(--off);
+  border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 4px;
   padding: 8px 10px;
@@ -60,24 +82,23 @@
 }
 #checklist-notes {
   width: 100%;
-  background: #F4F6F9;
-  border: 1px solid #E8ECF0;
+  background: var(--off);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px;
   font-size: 13px;
   height: 80px;
   resize: vertical;
-  color: #0D1F3C;
+  color: var(--navy);
   font-family: inherit;
 }
-/* Dark mode overrides for inline styles */
-[data-theme="dark"] #tab-inventory { background: #1A2740; color: #F2F2F7; }
-[data-theme="dark"] #tab-inventory h2 { color: #F2F2F7; }
-[data-theme="dark"] #inventory-list .inv-row { background: #152035; border-color: rgba(255,255,255,0.1); }
-[data-theme="dark"] #inventory-list .inv-row.low { background: rgba(220,38,38,0.15); border-color: #DC2626; }
-[data-theme="dark"] #checklist-modal .modal-inner { background: #152035; color: #F2F2F7; border-color: rgba(255,255,255,0.1); }
-[data-theme="dark"] #checklist-modal .cl-row { background: #1A2740; border-color: rgba(255,255,255,0.08); }
-[data-theme="dark"] #checklist-notes { background: #1A2740; border-color: rgba(255,255,255,0.1); color: #F2F2F7; }
+[data-theme="dark"] #tab-inventory { background: var(--off); color: var(--navy); }
+[data-theme="dark"] #tab-inventory h2 { color: var(--navy); }
+[data-theme="dark"] #inventory-list .inv-row { background: #2C2C2E; border-color: #48484A; }
+[data-theme="dark"] #inventory-list .inv-row.low { background: var(--red-lt); border-color: var(--red); }
+[data-theme="dark"] #checklist-modal .modal-inner { background: #2C2C2E; color: #F2F2F7; border-color: #48484A; }
+[data-theme="dark"] #checklist-modal .cl-row { background: var(--off); border-color: #48484A; }
+[data-theme="dark"] #checklist-notes { background: var(--off); border-color: #48484A; color: var(--navy); }
 </style>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
   <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>

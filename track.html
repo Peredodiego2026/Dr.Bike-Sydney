@@ -105,26 +105,38 @@ async function init(){
   const statusLabel = stLabels[bkg.status]||bkg.status;
 
   content.innerHTML = `
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div>
-          <div style="font-size:15px;font-weight:700;color:var(--navy)">${bkg.service_name}</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${date}${bkg.scheduled_time?' · '+bkg.scheduled_time:''}</div>
-        </div>
-        <span class="status-chip ${statusClass}">${statusLabel}</span>
-      </div>
-      <div class="row"><span class="lbl">Address</span><span>${bkg.address||'—'}</span></div>
-      <div class="row"><span class="lbl">Van</span><span>Van ${bkg.van_number||1} · Mechanic ${bkg.van_number||1}</span></div>
-      <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue)">$${bkg.service_price}</span></div>
-      ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div>`:''}
-    </div>
+<div class="card">
+       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+         <div>
+           <div style="font-size:15px;font-weight:700;color:var(--navy)">${bkg.service_name}</div>
+           <div style="font-size:12px;color:var(--mgray);margin-top:2px">${date}${bkg.scheduled_time?' · '+bkg.scheduled_time:''}</div>
+         </div>
+         <span class="status-chip ${statusClass}">${statusLabel}</span>
+       </div>
+       <div class="row"><span class="lbl">Address</span><span>${bkg.address||'—'}</span></div>
+       <div class="row"><span class="lbl">Van</span><span>Van ${bkg.van_number||1} · Mechanic ${bkg.van_number||1}</span></div>
+       <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue)">$${bkg.service_price}</span></div>
+       ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div>`:''}
+     </div>
 
-    ${(bkg.status==='enroute'||bkg.status==='in_progress')?`
-    <div class="card" style="text-align:center;background:var(--green-lt);border-color:#6EE7B7">
-      <div style="font-size:24px;margin-bottom:8px">🚐</div>
-      <div style="font-size:14px;font-weight:700;color:#065F46">${bkg.status==='enroute'?'Your mechanic is on the way!':'Your mechanic has arrived!'}</div>
-      <div style="font-size:12px;color:var(--green);margin-top:4px">This page updates automatically</div>
-    </div>`:''}
+     ${(bkg.status==='enroute'||bkg.status==='in_progress')?`
+     <div class="card mechanic-card" style="background:var(--card-bg);border-color:var(--border);display:flex;align-items:center;gap:14px;padding:16px">
+       <div class="mechanic-avatar" style="width:56px;height:56px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:700;flex-shrink:0">${(bkg.mechanic_name||'D').charAt(0)}</div>
+       <div style="flex:1;min-width:0">
+         <div style="font-size:15px;font-weight:700;color:var(--navy)">${bkg.mechanic_name||'Diego Peredo'}</div>
+         <div style="font-size:12px;color:var(--mgray);margin-top:2px">Head Mechanic · ${bkg.mechanic_rating || '5.0'}★ · ${bkg.mechanic_jobs || '500+'} jobs</div>
+         <div style="font-size:11px;color:var(--blue);margin-top:4px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green)"></span> Live location sharing</div>
+       </div>
+       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+         <a href="tel:+61433963250" style="background:var(--blue);color:white;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">📞 Call</a>
+         <a href="https://wa.me/61433963250" style="background:#25D366;color:white;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">💬 Chat</a>
+       </div>
+     </div>
+     <div class="card" style="background:var(--green-lt);border-color:#6EE7B7">
+       <div style="font-size:24px;margin-bottom:8px">🚐</div>
+       <div style="font-size:14px;font-weight:700;color:#065F46">${bkg.status==='enroute'?'Your mechanic is on the way!':'Your mechanic has arrived!'}</div>
+       <div style="font-size:12px;color:var(--green);margin-top:4px">This page updates automatically</div>
+     </div>`:''}
 
     ${bkg.status==='completed'?`
     <div class="card">

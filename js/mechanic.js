@@ -94,11 +94,9 @@ const sb = supabase.createClient(
     },
   }
 );
-// Init theme
+// Init theme - FORCE dark for mechanic app
 (function () {
-  const saved = localStorage.getItem('drbike-theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+  document.documentElement.setAttribute('data-theme', 'dark');
 })();
 let mechanic = null,
   vanNum = 1,
@@ -2250,6 +2248,35 @@ let activeJobId = null;
 let watchId = null;
 let _bgGpsInterval = null;
 let _gpsOk = false;
+let gpsPermissionState = 'unknown';
+
+async function requestGPSPermission() {
+  if (!navigator.geolocation) {
+    toast('GPS not available');
+    return false;
+  }
+  try {
+    // This will trigger the browser permission prompt
+    await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
+    });
+    gpsPermissionState = 'granted';
+    return true;
+  } catch (err) {
+    if (err.code === 1) {
+      gpsPermissionState = 'denied';
+      toast(
+        '📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)'
+      );
+    } else {
+      toast('GPS error: ' + err.message);
+    }
+    return false;
+  }
+}
 
 // Always-on background GPS: starts on login, sends every 15s so mechanic is always visible on map
 function startBackgroundGPS() {
@@ -2277,29 +2304,43 @@ function startGPS(bookingId) {
     toast('GPS not available');
     return;
   }
-  stopBackgroundGPS(); // upgrade from 15s to 5s
-  toast('Location sharing started');
-  sendLocation(bookingId);
-  gpsInterval = setInterval(() => sendLocation(bookingId), 5000);
-  watchId = navigator.geolocation.watchPosition(
-    (pos) => upsertLocation(pos.coords.latitude, pos.coords.longitude),
-    (err) =>
-      toast(
-        'GPS: ' +
-          (err.code === 1 ? 'Permission denied - enable location in browser settings' : err.message)
-      ),
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-  );
+  toast('📍 Starting location sharing...');
+
+  requestGPSPermission().then((granted) => {
+    if (!granted) return;
+    stopBackgroundGPS(); // upgrade from 15s to 5s
+    sendLocation(bookingId);
+    gpsInterval = setInterval(() => sendLocation(bookingId), 5000);
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => upsertLocation(pos.coords.latitude, pos.coords.longitude),
+      (err) => {
+        if (err.code === 1) {
+          toast(
+            '📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)'
+          );
+          stopGPS();
+        } else {
+          toast('GPS: ' + err.message);
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
+  });
 }
 
 function sendLocation(bookingId) {
   navigator.geolocation.getCurrentPosition(
     (pos) => upsertLocation(pos.coords.latitude, pos.coords.longitude),
-    (err) =>
-      toast(
-        'GPS: ' +
-          (err.code === 1 ? 'Permission denied - enable location in browser settings' : err.message)
-      ),
+    (err) => {
+      if (err.code === 1) {
+        toast(
+          '📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)'
+        );
+        stopGPS();
+      } else {
+        toast('GPS: ' + err.message);
+      }
+    },
     { enableHighAccuracy: true, timeout: 8000 }
   );
 }
