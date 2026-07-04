@@ -113,7 +113,7 @@ async function init(){
 
 async function doLogin(){
   const pin = document.getElementById('pin-inp').value.trim();
-  if(pin.length<4){ err('Enter your 4-digit PIN'); return; }
+  if(pin.length<6){ err('Enter your 6-digit PIN'); return; }
   const btn=document.getElementById('login-btn');
   btn.textContent='Signing in...'; btn.disabled=true;
 
