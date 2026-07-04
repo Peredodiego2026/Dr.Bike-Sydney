@@ -52,11 +52,9 @@ const _IDB = (() => {
 const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U', {
   auth: { persistSession: true, autoRefreshToken: true, storageKey: 'dr-bike-mech-session', storage: { getItem: k=>_IDB.get(k), setItem: (k,v)=>_IDB.set(k,v), removeItem: k=>_IDB.remove(k) } }
 });
-// Init theme
+// Init theme - FORCE dark for mechanic app
 (function(){
-  const saved = localStorage.getItem('drbike-theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+  document.documentElement.setAttribute('data-theme', 'dark');
 })();
 let mechanic=null, vanNum=1, jobs=[], tab='today', online=true;
 let timerIntervals = {};
