@@ -9,40 +9,93 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
 );
 
+// Retry a send up to `attempts` times with linear backoff. Returns {ok,result,attempts,error}.
+async function sendWithRetry(fn, { attempts = 3, delayMs = 500 } = {}) {
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return { ok: true, result: await fn(), attempts: i };
+    } catch (e) {
+      lastErr = e;
+      if (i < attempts) await new Promise((r) => setTimeout(r, delayMs * i));
+    }
+  }
+  return { ok: false, error: lastErr, attempts };
+}
+
+// Best-effort log to notification_log (no-op if the table doesn't exist yet).
+async function logNotification(row) {
+  try {
+    await sb.from('notification_log').insert(row);
+  } catch {}
+}
+
 // ── SMS ───────────────────────────────────────────────────────────────────────
 async function handleSMS(req, res) {
-  const { to, name, service, address, price, type, bookingId, mechName, reviewLink, customMsg, time } = req.body;
+  const {
+    to,
+    name,
+    service,
+    address,
+    price,
+    type,
+    bookingId,
+    mechName,
+    reviewLink,
+    customMsg,
+    time,
+  } = req.body;
   if (!to) return res.status(400).json({ error: 'Missing phone number' });
 
-  const safeName    = String(name    || 'Client').replace(/[\r\n]/g, ' ').slice(0, 50);
-  const safeService = String(service || '').replace(/[\r\n]/g, ' ').slice(0, 100);
-  const safeAddress = String(address || '').replace(/[\r\n]/g, ' ').slice(0, 100);
-  const safeMsg     = customMsg ? String(customMsg).replace(/[\r\n]/g, ' ').slice(0, 160) : null;
+  const safeName = String(name || 'Client')
+    .replace(/[\r\n]/g, ' ')
+    .slice(0, 50);
+  const safeService = String(service || '')
+    .replace(/[\r\n]/g, ' ')
+    .slice(0, 100);
+  const safeAddress = String(address || '')
+    .replace(/[\r\n]/g, ' ')
+    .slice(0, 100);
+  const safeMsg = customMsg
+    ? String(customMsg)
+        .replace(/[\r\n]/g, ' ')
+        .slice(0, 160)
+    : null;
 
   const phone = normalizeAUPhone(to);
   if (!phone) return res.status(400).json({ error: 'Invalid Australian phone number' });
 
   const trackUrl = `https://drbikesydney.com.au/track.html?id=${bookingId || ''}`;
   const messages = {
-    test:                `Dr. Bike Sydney SMS active`,
-    confirmation:        `Dr. Bike Sydney ${safeService} confirmed at ${safeAddress}. Total: $${price}`,
-    enroute:             `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress}. Est. arrival: 10-20 min. Track live: ${trackUrl}`,
-    completed:           `Hi ${safeName}! Your ${safeService} is complete. Total: $${price} AUD. Book again: https://drbikesydney.com.au`,
-    reminder:            `Hi ${safeName}! Time for a bike check-up. Book your next service at https://drbikesydney.com.au`,
-    review_request:      `Hi ${safeName}! Your ${safeService} is done. How did we do? ${reviewLink || 'https://drbikesydney.com.au'}`,
-    cancellation_alert:  safeMsg || `CANCELLED: ${name} cancelled their ${safeService} booking.`,
-    new_booking:         `NUEVA RESERVA: ${safeService} a las ${time || ''} - ${safeAddress}`,
+    test: `Dr. Bike Sydney SMS active`,
+    confirmation: `Dr. Bike Sydney ${safeService} confirmed at ${safeAddress}. Total: $${price}`,
+    enroute: `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress}. Est. arrival: 10-20 min. Track live: ${trackUrl}`,
+    completed: `Hi ${safeName}! Your ${safeService} is complete. Total: $${price} AUD. Book again: https://drbikesydney.com.au`,
+    reminder: `Hi ${safeName}! Time for a bike check-up. Book your next service at https://drbikesydney.com.au`,
+    review_request: `Hi ${safeName}! Your ${safeService} is done. How did we do? ${reviewLink || 'https://drbikesydney.com.au'}`,
+    cancellation_alert: safeMsg || `CANCELLED: ${name} cancelled their ${safeService} booking.`,
+    new_booking: `NUEVA RESERVA: ${safeService} a las ${time || ''} - ${safeAddress}`,
   };
   const body = messages[type] || messages.confirmation;
 
-  try {
-    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-    const message = await client.messages.create({ body, from: process.env.TWILIO_PHONE_NUMBER, to: phone });
-    return res.status(200).json({ success: true, sid: message.sid });
-  } catch (err) {
-    console.error('[send-sms] error:', err);
+  const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+  const r = await sendWithRetry(() =>
+    client.messages.create({ body, from: process.env.TWILIO_PHONE_NUMBER, to: phone })
+  );
+  await logNotification({
+    channel: 'sms',
+    recipient: phone,
+    type: type || 'confirmation',
+    status: r.ok ? 'sent' : 'failed',
+    attempts: r.attempts,
+    error: r.ok ? null : String(r.error?.message || r.error).slice(0, 300),
+    booking_id: bookingId ? String(bookingId) : null,
+  });
+  if (!r.ok) {
+    console.error('[send-sms] error after retries:', r.error);
     return res.status(500).json({ error: 'SMS send failed' });
   }
+  return res.status(200).json({ success: true, sid: r.result.sid });
 }
 
 // ── WhatsApp ──────────────────────────────────────────────────────────────────
@@ -66,11 +119,13 @@ function buildWAMessage(template, data) {
 
 async function handleWhatsApp(req, res) {
   const ct = req.headers['content-type'] || '';
-  if (!ct.includes('application/json')) return res.status(415).json({ error: 'Content-Type must be application/json' });
+  if (!ct.includes('application/json'))
+    return res.status(415).json({ error: 'Content-Type must be application/json' });
 
   const { to, template, data } = req.body || {};
-  if (!to || !template) return res.status(400).json({ error: 'Missing required fields: to, template' });
-  if (!['confirmation','enroute','completed','reminder','new_booking'].includes(template)) {
+  if (!to || !template)
+    return res.status(400).json({ error: 'Missing required fields: to, template' });
+  if (!['confirmation', 'enroute', 'completed', 'reminder', 'new_booking'].includes(template)) {
     return res.status(400).json({ error: 'Invalid template' });
   }
 
@@ -79,8 +134,12 @@ async function handleWhatsApp(req, res) {
 
   let fromNumber = process.env.TWILIO_WHATSAPP_FROM;
   if (!fromNumber) {
-    const { data: waRow } = await sb.from('van_zones')
-      .select('postcode').eq('van_number', 0).eq('suburb', '__whatsapp__').maybeSingle();
+    const { data: waRow } = await sb
+      .from('van_zones')
+      .select('postcode')
+      .eq('van_number', 0)
+      .eq('suburb', '__whatsapp__')
+      .maybeSingle();
     fromNumber = waRow?.postcode;
   }
   if (!fromNumber) return res.status(503).json({ error: 'WhatsApp not configured' });
@@ -91,8 +150,12 @@ async function handleWhatsApp(req, res) {
   const { TWILIO_ACCOUNT_SID: sid, TWILIO_AUTH_TOKEN: token } = process.env;
   if (!sid || !token) return res.status(503).json({ error: 'Twilio not configured' });
 
-  try {
-    const params = new URLSearchParams({ From: `whatsapp:${fromNumber}`, To: `whatsapp:${toNorm}`, Body: body });
+  const params = new URLSearchParams({
+    From: `whatsapp:${fromNumber}`,
+    To: `whatsapp:${toNorm}`,
+    Body: body,
+  });
+  const send = async () => {
     const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
       method: 'POST',
       headers: {
@@ -102,12 +165,24 @@ async function handleWhatsApp(req, res) {
       body: params.toString(),
     });
     const result = await resp.json();
-    if (!resp.ok) return res.status(502).json({ error: result.message || 'Twilio API error' });
-    return res.status(200).json({ success: true, sid: result.sid });
-  } catch (err) {
-    console.error('[send-whatsapp] error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    if (!resp.ok) throw new Error(result.message || 'Twilio API error');
+    return result;
+  };
+  const r = await sendWithRetry(send);
+  await logNotification({
+    channel: 'whatsapp',
+    recipient: toNorm,
+    type: template,
+    status: r.ok ? 'sent' : 'failed',
+    attempts: r.attempts,
+    error: r.ok ? null : String(r.error?.message || r.error).slice(0, 300),
+    booking_id: data?.bookingId ? String(data.bookingId) : null,
+  });
+  if (!r.ok) {
+    console.error('[send-whatsapp] error after retries:', r.error);
+    return res.status(502).json({ error: r.error?.message || 'WhatsApp send failed' });
   }
+  return res.status(200).json({ success: true, sid: r.result.sid });
 }
 
 // ── Router ────────────────────────────────────────────────────────────────────
