@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark"><head>
+<html lang="en"><head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
 <meta charset="UTF-8">
@@ -16,8 +16,48 @@
 <link rel="apple-touch-icon" href="/icon-admin-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="css/variables.css">
-<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<link rel="stylesheet" href="css/variables.css?v=20260628">
+<link rel="stylesheet" href="css/admin.css?v=20260628">
+<style>
+@media(max-width:768px){
+  .content{padding:12px 10px !important}
+  .kpis{grid-template-columns:repeat(2,1fr) !important;gap:8px !important}
+  .kpi-card{padding:14px 12px;min-width:0}
+  .kpi-label{font-size:10px;margin-bottom:8px}
+  .kpi-value{font-size:20px !important}
+  .kpi-sub{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
+}
+</style>
+  <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
+  <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
+  <script>
+  Sentry.onLoad(function() {
+    Sentry.init({
+      dsn: "https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488",
+      environment: "production",
+      release: "drbike@1.0.0",
+      tracesSampleRate: 0.2,
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+      integrations: [
+        Sentry.replayIntegration(),
+        Sentry.browserTracingIntegration(),
+      ],
+    });
+  });
+  </script>
+  <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
+  <script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.people.toString()+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
+    api_host: 'https://eu.i.posthog.com',
+    person_profiles: 'identified_only',
+    capture_pageview: true,
+    capture_pageleave: true,
+  });
+  </script>
 
 </head>
 <body>
@@ -26,15 +66,13 @@
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
-    <div class="sb-logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round">
-        <circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle>
-        <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"></path>
-        <circle cx="12" cy="6" r="1.5" fill="#fff" stroke="none"></circle>
-      </svg>
+    <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block">
+    <div>
+      <div class="sb-name" style="font-size:17px;letter-spacing:-0.2px">Dr. <span style="color:#60A5FA">Bike</span> Sydney</div>
+      <div class="sb-role">Admin Panel</div>
     </div>
-    <div><div class="sb-name">Dr. Bike</div><div class="sb-role">Admin Panel</div></div>
   </div>
+  <div style="padding:0 18px 10px;font-size:11px;font-weight:600;color:#60A5FA;letter-spacing:0.01em">Healthy bikes, happy riders</div>
 
   <nav class="sb-nav">
     <div class="sb-section">Operations</div>
@@ -60,6 +98,10 @@
     <button class="sb-item" onclick="go('finance',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
       Finance
+    </button>
+    <button class="sb-item" onclick="go('analytics',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      Analytics
     </button>
     <button class="sb-item" onclick="go('memberships',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -114,7 +156,9 @@
       <div class="topbar-sub" id="page-sub">Assign suburbs to each van</div>
     </div>
     <div class="topbar-right">
-      <button id="theme-btn-admin" onclick="toggleAdminTheme()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px">🌙</button>
+      <button id="theme-btn-admin" onclick="toggleAdminTheme()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center" title="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <div class="date-badge" id="admin-date-badge">Mon 4 May 2026</div>
       <div class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" style="cursor:pointer">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -155,21 +199,20 @@
           <div class="kpi-value">—</div>
           <div class="kpi-sub">total clients</div>
         </div>
-        <div class="kpi-card" style="background:#F5F3FF;border-color:#7C3AED">
-          <div class="kpi-label" style="color:#7C3AED">Avg service time</div>
-          <div class="kpi-value" id="kpi-avg-time" style="color:#7C3AED">—</div>
+        <div class="kpi-card purple">
+          <div class="kpi-label">Avg service time</div>
+          <div class="kpi-value" id="kpi-avg-time">—</div>
           <div class="kpi-sub" id="kpi-avg-time-sub">by service type below</div>
         </div>
-        <div class="kpi-card" style="background:#F0FDF4;border-color:#059669">
-          <div class="kpi-label" style="color:#059669">Newsletter</div>
-          <div class="kpi-value" id="kpi-newsletter" style="color:#059669">—</div>
+        <div class="kpi-card teal">
+          <div class="kpi-label">Newsletter</div>
+          <div class="kpi-value" id="kpi-newsletter">—</div>
           <div class="kpi-sub" id="kpi-newsletter-sub">subscribers</div>
         </div>
-        <div class="kpi-card" style="background:#EEF3FC;border-color:#1848C8">
-          <div class="kpi-label" style="color:#1848C8">Bikes registered</div>
-          <div class="kpi-value" id="kpi-bikes" style="color:#1848C8">—</div>
+        <div class="kpi-card indigo">
+          <div class="kpi-label">Bikes registered</div>
+          <div class="kpi-value" id="kpi-bikes">—</div>
           <div class="kpi-sub" id="kpi-bikes-sub">client bikes on file</div>
-        </div>
         </div>
       </div>
 
@@ -242,7 +285,7 @@
           </div>
           <div>
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Van</div>
-            <select id="bk-f-van" class="inp" style="width:110px">
+            <select id="bk-f-van" class="inp" style="width:110px" onchange="applyBookingFilters()">
               <option value="">All vans</option>
               <option value="1">Van 1</option>
               <option value="2">Van 2</option>
@@ -250,7 +293,7 @@
           </div>
           <div>
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Status</div>
-            <select id="bk-f-status" class="inp" style="width:130px">
+            <select id="bk-f-status" class="inp" style="width:130px" onchange="applyBookingFilters()">
               <option value="">All statuses</option>
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
@@ -310,8 +353,8 @@
         <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Reassign to van</div>
         <input type="hidden" id="reassign-booking-id">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          <button onclick="doReassign(1)" style="padding:16px;border:2px solid #1848C8;border-radius:10px;background:#EEF3FC;color:#1848C8;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">🚐 Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
-          <button onclick="doReassign(2)" style="padding:16px;border:2px solid #D97706;border-radius:10px;background:#FEF3C7;color:#D97706;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">🚐 Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
+          <button onclick="doReassign(1)" style="padding:16px;border:2px solid #1848C8;border-radius:10px;background:#EEF3FC;color:#1848C8;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
+          <button onclick="doReassign(2)" style="padding:16px;border:2px solid #D97706;border-radius:10px;background:#FEF3C7;color:#D97706;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
         </div>
         <button onclick="document.getElementById('reassign-modal').style.display='none'" style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
       </div>
@@ -319,6 +362,24 @@
 
     <!-- VANS -->
     <div id="page-vans" class="page">
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-hdr" style="flex-wrap:wrap;gap:10px">
+          <div>
+            <div class="card-title">Today's optimised route</div>
+            <div class="card-sub" id="route-sub">Loading today's jobs...</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="route-van" onchange="renderRouteMap()" class="inp" style="margin:0;width:auto;padding:7px 10px;font-size:13px">
+              <option value="">All vans</option>
+              <option value="1">Van 1</option>
+              <option value="2">Van 2</option>
+            </select>
+            <button onclick="toggleRouteMode()" id="route-mode-btn" style="padding:7px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Optimise by distance</button>
+          </div>
+        </div>
+        <div id="route-map" style="height:340px;border-radius:10px;overflow:hidden;background:#EEF2F6;margin-bottom:14px"></div>
+        <div id="route-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
       <div class="vans">
         <div class="van-card">
           <div class="van-hdr">
@@ -333,15 +394,7 @@
           </div>
           <div style="margin-top:14px;font-size:12px;color:var(--mgray);margin-bottom:6px;font-weight:500">Daily target: $1,000</div>
           <div class="progress-bar"><div class="progress-fill" style="width:81%;background:var(--blue)"></div></div>
-          <div style="margin-top:14px">
-            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Today's route</div>
-            <div style="font-size:12px;color:var(--navy);display:flex;flex-direction:column;gap:5px">
-              <div style="display:flex;gap:8px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:#059669"></div>9:00 am · Paddington</div>
-              <div style="display:flex;gap:8px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:#1848C8"></div>11:30 am · Bondi</div>
-              <div style="display:flex;gap:8px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:#F59E0B"></div>2:00 pm · Newtown</div>
-              <div style="display:flex;gap:8px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:#1848C8"></div>3:30 pm · Marrickville</div>
-            </div>
-          </div>
+          <div style="margin-top:14px;font-size:11px;color:var(--mgray)">Live route shown in the map above</div>
         </div>
         <div class="van-card">
           <div class="van-hdr">
@@ -356,14 +409,7 @@
           </div>
           <div style="margin-top:14px;font-size:12px;color:var(--mgray);margin-bottom:6px;font-weight:500">Daily target: $1,000</div>
           <div class="progress-bar"><div class="progress-fill" style="width:63%;background:#D97706"></div></div>
-          <div style="margin-top:14px">
-            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Today's route</div>
-            <div style="font-size:12px;color:var(--navy);display:flex;flex-direction:column;gap:5px">
-              <div style="display:flex;gap:8px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:#059669"></div>9:00 am · Manly</div>
-              <div style="display:flex;gap:8px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:#D97706"></div>11:00 am · Mosman</div>
-              <div style="display:flex;gap:8px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:#1848C8"></div>2:30 pm · Chatswood</div>
-            </div>
-          </div>
+          <div style="margin-top:14px;font-size:11px;color:var(--mgray)">Live route shown in the map above</div>
         </div>
       </div>
       <div class="card">
@@ -652,6 +698,30 @@
       </div>
     </div>
 
+    <!-- ANALYTICS -->
+    <div id="page-analytics" class="page">
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-hdr"><div><div class="card-title">Conversion funnel</div><div class="card-sub">All bookings · lifetime</div></div></div>
+        <div id="an-funnel" style="padding:18px;display:flex;flex-direction:column;gap:10px"><div style="color:var(--mgray);font-size:13px">Loading...</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-hdr"><div><div class="card-title">Geographic heatmap</div><div class="card-sub">Booking volume by suburb</div></div></div>
+        <div id="an-heatmap" style="height:360px;border-radius:10px;overflow:hidden;background:#EEF2F6;margin:0 16px 16px"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-hdr"><div><div class="card-title">Margins per service</div><div class="card-sub">Revenue, est. cost & margin by service type</div></div></div>
+        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Service</th><th>Jobs</th><th>Revenue</th><th>Avg ticket</th><th>Est. cost</th><th>Margin</th></tr></thead><tbody id="an-margins"></tbody></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">Customer LTV & churn</div><div class="card-sub" id="an-churn-sub">Lifetime value and retention</div></div></div>
+        <div id="an-ltv-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding:16px"></div>
+        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Client</th><th>Jobs</th><th>LTV</th><th>Last service</th><th>Status</th></tr></thead><tbody id="an-ltv-rows"></tbody></table></div>
+      </div>
+    </div>
+
     <!-- DISCOUNT CODES -->
     <div id="page-coupons" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
@@ -718,7 +788,7 @@
           <div style="font-size:12px;color:var(--mgray);line-height:1.6">Finds all clients whose last completed service was 6+ months ago and sends a friendly reminder email with a booking link.</div>
         </div>
         <button onclick="sendReminders()" id="reminder-btn" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
-          🚲 Send reminders now
+          Send reminders now
         </button>
         <div id="reminder-result" style="margin-top:12px;font-size:13px;display:none"></div>
       </div>
@@ -966,10 +1036,10 @@
         <div id="admin-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:200px">
           <div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">Loading messages...</div>
         </div>
-        <!-- Input -->
-        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px">
-          <input id="admin-chat-input" class="inp" placeholder="Message to mechanic..." style="flex:1;margin:0" onkeydown="if(event.key==='Enter')sendAdminMsg()">
-          <button onclick="sendAdminMsg()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Send</button>
+        <!-- Read-only footer (admin reviews the chat; replies happen in the mechanic app) -->
+        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;color:var(--mgray);font-size:12px">
+          <span style="font-size:14px">👁️</span>
+          <span>View only — the mechanic replies from the mechanic app</span>
         </div>
       </div>
     </div>
@@ -1048,5 +1118,5 @@
 </nav>
 
 
-<script src="js/admin.js"></script>
+<script src="js/admin.js?v=20260629h"></script>
 </body></html>

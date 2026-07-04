@@ -5,7 +5,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#059669">
+<meta name="theme-color" content="#0D1F3C">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,45 +14,22 @@
 <title>Dr. Bike — Mechanic</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="css/variables.css?v=20260623">
-<link rel="stylesheet" href="css/mechanic.css?v=20260623">
+<link rel="stylesheet" href="css/variables.css?v=20260628">
+<link rel="stylesheet" href="css/mechanic.css?v=20260628">
 <style>
-/* PIN login */
-#s-login { background: var(--navy); }
-.login-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-.pin-inp {
-  background: rgba(255,255,255,0.04);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-}
-.pin-inp:focus { border-color: var(--color-primary); }
-.login-btn {
-  background: var(--color-primary);
-  border-radius: var(--radius-md);
-  font-weight: 700;
-}
-.login-btn:hover { background: var(--color-primary-hover); }
-.van-opt.sel {
-  border-color: var(--color-primary);
-  background: var(--color-primary-light);
-  color: var(--color-text);
-}
+/* Login screen always dark regardless of theme */
+#s-login { background: #0D1F3C; }
 /* Inventory tab inside jobs-wrap */
 #tab-inventory {
   padding: 16px;
-  background: var(--color-bg);
+  background: #F4F6F9;
   min-height: 100%;
-  color: var(--color-text);
+  color: #0D1F3C;
 }
-#tab-inventory h2 { color: var(--color-text); }
+#tab-inventory h2 { color: #0D1F3C; }
 #inventory-list .inv-row {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: #fff;
+  border: 1px solid #E8ECF0;
   border-radius: 8px;
   margin-bottom: 6px;
   padding: 10px 12px;
@@ -60,20 +37,20 @@
   align-items: center;
   justify-content: space-between;
 }
-#inventory-list .inv-row.low { background: var(--color-error-bg, #FEF2F2); border-color: var(--color-error, #DC2626); }
+#inventory-list .inv-row.low { background: #FEF2F2; border-color: #DC2626; }
 /* Checklist modal — theme-aware */
 #checklist-modal .modal-inner {
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: #fff;
+  color: #0D1F3C;
   max-width: 500px;
   margin: 24px auto;
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid var(--color-border);
+  border: 1px solid #E8ECF0;
 }
 #checklist-modal .cl-row {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: #F4F6F9;
+  border: 1px solid #E8ECF0;
   border-radius: 8px;
   margin-bottom: 4px;
   padding: 8px 10px;
@@ -83,17 +60,53 @@
 }
 #checklist-notes {
   width: 100%;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: #F4F6F9;
+  border: 1px solid #E8ECF0;
   border-radius: 8px;
   padding: 10px;
   font-size: 13px;
   height: 80px;
   resize: vertical;
-  color: var(--color-text);
+  color: #0D1F3C;
   font-family: inherit;
 }
+/* Dark mode overrides for inline styles */
+[data-theme="dark"] #tab-inventory { background: #1A2740; color: #F2F2F7; }
+[data-theme="dark"] #tab-inventory h2 { color: #F2F2F7; }
+[data-theme="dark"] #inventory-list .inv-row { background: #152035; border-color: rgba(255,255,255,0.1); }
+[data-theme="dark"] #inventory-list .inv-row.low { background: rgba(220,38,38,0.15); border-color: #DC2626; }
+[data-theme="dark"] #checklist-modal .modal-inner { background: #152035; color: #F2F2F7; border-color: rgba(255,255,255,0.1); }
+[data-theme="dark"] #checklist-modal .cl-row { background: #1A2740; border-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] #checklist-notes { background: #1A2740; border-color: rgba(255,255,255,0.1); color: #F2F2F7; }
 </style>
+  <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
+  <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
+  <script>
+  Sentry.onLoad(function() {
+    Sentry.init({
+      dsn: "https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488",
+      environment: "production",
+      release: "drbike@1.0.0",
+      tracesSampleRate: 0.2,
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+      integrations: [
+        Sentry.replayIntegration(),
+        Sentry.browserTracingIntegration(),
+      ],
+    });
+  });
+  </script>
+  <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
+  <script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.people.toString()+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
+    api_host: 'https://eu.i.posthog.com',
+    person_profiles: 'identified_only',
+    capture_pageview: true,
+    capture_pageleave: true,
+  });
+  </script>
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -106,17 +119,21 @@
 <!-- LOGIN -->
 <div class="screen active" id="s-login">
   <div style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px;margin:0 auto">
-    <div class="login-logo">🔧</div>
-    <div class="login-title">Dr. Bike Mechanic</div>
+    <div class="login-logo" style="background:none;box-shadow:none;width:auto;height:auto;margin-bottom:8px;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="42" style="width:auto;display:block">
+      <span style="font-weight:700;font-size:22px;letter-spacing:-0.3px;color:#fff">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
+    </div>
+    <div class="login-title">Mechanic App</div>
+    <div style="font-size:13px;font-weight:600;color:#60A5FA;margin:4px 0 2px">Healthy bikes, happy riders</div>
     <div class="login-sub">Sign in to see your jobs</div>
     <div class="login-card">
       <label class="lbl">Select your van</label>
       <div class="van-grid">
-        <div class="van-opt sel" id="v1" onclick="selVan(1)">🚐 Van 1<div style="font-size:11px;opacity:0.6;margin-top:2px">Inner West</div></div>
-        <div class="van-opt" id="v2" onclick="selVan(2)">🚐 Van 2<div style="font-size:11px;opacity:0.6;margin-top:2px">North Shore</div></div>
+        <div class="van-opt sel" id="v1" onclick="selVan(1)">Van 1<div style="font-size:11px;opacity:0.6;margin-top:2px">Inner West</div></div>
+        <div class="van-opt" id="v2" onclick="selVan(2)">Van 2<div style="font-size:11px;opacity:0.6;margin-top:2px">North Shore</div></div>
       </div>
-      <label class="lbl">PIN — last 4 digits of your phone</label>
-      <input class="pin-inp" id="pin-inp" type="password" inputmode="numeric" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <label class="lbl">Enter your PIN</label>
+      <input class="pin-inp" id="pin-inp" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in →</button>
       <div class="login-err" id="login-err"></div>
     </div>
@@ -131,28 +148,30 @@
       <div class="topbar-van" id="van-label">Van 1</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <button id="theme-btn-mech" onclick="toggleMechTheme()" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:34px;height:34px;font-size:15px;cursor:pointer">🌙</button>
+      <button id="theme-btn-mech" onclick="toggleMechTheme()" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <button class="status-btn" id="status-btn" onclick="toggleStatus()">● Online</button>
     </div>
   </div>
   <div class="nav-tabs">
     <button class="nav-tab on" onclick="goTab('today',this)">Today<span class="tab-badge" id="b-today"></span></button>
     <button class="nav-tab" onclick="goTab('upcoming',this)">Upcoming<span class="tab-badge" id="b-upcoming"></span></button>
-    <button class="nav-tab" onclick="goTab('agenda',this)">📅 Agenda</button>
+    <button class="nav-tab" onclick="goTab('agenda',this)">Agenda</button>
     <button class="nav-tab" onclick="goTab('done',this)">Done<span class="tab-badge" id="b-done"></span></button>
     <button class="nav-tab" onclick="goTab('profile',this)">Profile</button>
-    <button class="nav-tab" onclick="goTab('inventory',this)">📦 Stock</button>
+    <button class="nav-tab" onclick="goTab('inventory',this)">Stock</button>
   </div>
   <!-- jobs-list is the main content area — all tabs render here -->
   <div class="jobs-wrap" id="jobs-list">
-    <div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:32px;margin-bottom:12px">⏳</div><div>Loading...</div></div>
+    <div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="margin-bottom:12px;opacity:0.4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/><circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg></div><div>Loading...</div></div>
   </div>
 
   <!-- INVENTORY TAB — rendered inside jobs-list by goTab() -->
   <!-- Hidden template; JS clones this content into jobs-list -->
   <template id="tpl-inventory">
     <div id="tab-inventory">
-      <h2 style="font-size:16px;font-weight:700;margin-bottom:12px">📦 Van Stock</h2>
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:12px">Van Stock</h2>
       <div id="inventory-loading" style="text-align:center;padding:40px;color:var(--mgray)">Loading inventory...</div>
       <div id="inventory-list" style="display:none"></div>
       <div id="inventory-empty" style="display:none;text-align:center;padding:40px;color:var(--mgray)">No inventory data. Run the SQL migration first.</div>
@@ -166,7 +185,7 @@
     <div style="font-size:11px;opacity:.6;text-transform:uppercase">Service in progress</div>
     <div id="timer-display" style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">00:00</div>
   </div>
-  <button onclick="completeService()" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;font-size:14px;cursor:pointer">✅ Complete</button>
+  <button onclick="completeService()" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;font-size:14px;cursor:pointer">Complete</button>
 </div>
 
 <!-- PRE-SERVICE CHECKLIST MODAL — theme-aware -->
@@ -185,6 +204,6 @@
 </div>
 
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/mechanic.js?v=20260627"></script>
+<script src="js/mechanic.js?v=20260629l"></script>
 </body>
 </html>
