@@ -431,7 +431,7 @@ async function renderBookService() {
     }
   }
 
-  // ── Step 3: Address ───────────────────────────────────────────────────────
+// ── Step 3: Address ───────────────────────────────────────────────────────
   function renderStep3() {
     const saved = window.appState.location !== 'Home' ? window.appState.location : '';
     screen.innerHTML = `
@@ -444,11 +444,12 @@ async function renderBookService() {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
               <circle cx="12" cy="10" r="3"></circle>
             </svg>
-            <div style="flex:1">
+            <div style="flex:1;position:relative">
               <label style="font-size:12px;color:var(--color-text-secondary);font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Address</label>
               <input id="location-input" type="text" placeholder="e.g. 14 Smith St, Surry Hills NSW 2010"
-                value="${saved.replace(/"/g, '&quot;')}"
-                style="width:100%;border:none;outline:none;background:transparent;font-size:16px;color:var(--color-text);padding:0;font-family:inherit;box-sizing:border-box">
+                value="${saved.replace(/"/g, '"')}"
+                style="width:100%;border:none;outline:none;background:transparent;font-size:16px;color:var(--color-text);padding:0;font-family:inherit;box-sizing:border-box" autocomplete="off">
+              <div id="address-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--color-border);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;z-index:10;box-shadow:var(--shadow-md)"></div>
               <div style="height:1px;background:var(--color-border);margin-top:8px"></div>
               <div style="margin-top:6px;font-size:12px;color:var(--color-text-secondary)">Your mechanic will come to this address</div>
             </div>
@@ -463,7 +464,49 @@ async function renderBookService() {
     `;
 
     const input = screen.querySelector('#location-input');
-    input.addEventListener('input', e => { window.appState.location = e.target.value; });
+    const suggestionsBox = screen.querySelector('#address-suggestions');
+    let debounceTimer = null;
+
+    async function fetchSuggestions(query) {
+      if (query.length < 3) { suggestionsBox.style.display = 'none'; return; }
+      try {
+        const q = encodeURIComponent(query + ', Sydney, NSW, Australia');
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=5&addressdetails=1`, {
+          headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' },
+        });
+        const data = await res.json();
+        if (!data.length) { suggestionsBox.style.display = 'none'; return; }
+        suggestionsBox.innerHTML = data.map(item => `
+          <button type="button" class="address-suggestion" data-address="${item.display_name.replace(/"/g, '"')}"
+            style="display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--color-text);font-family:inherit;border-bottom:1px solid var(--color-border)">
+            ${item.display_name.split(',')[0]}<br>
+            <span style="font-size:12px;color:var(--color-text-secondary)">${item.display_name.split(',').slice(1).join(',')}</span>
+          </button>
+        `).join('');
+        suggestionsBox.style.display = 'block';
+
+        suggestionsBox.querySelectorAll('.address-suggestion').forEach(btn => {
+          btn.addEventListener('click', () => {
+            input.value = btn.dataset.address;
+            window.appState.location = btn.dataset.address;
+            suggestionsBox.style.display = 'none';
+            input.focus();
+          });
+        });
+      } catch {
+        suggestionsBox.style.display = 'none';
+      }
+    }
+
+    input.addEventListener('input', e => {
+      window.appState.location = e.target.value;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchSuggestions(e.target.value), 250);
+    });
+
+    input.addEventListener('blur', () => {
+      setTimeout(() => { suggestionsBox.style.display = 'none'; }, 200);
+    });
 
     // Back: go to Step 2
     screen.querySelector('.header-back')?.addEventListener('click', e => {
@@ -575,8 +618,10 @@ async function renderServiceSummary() {
     errEl.hidden = true;
     try {
       const { data: { user } } = await sb.auth.getUser();
-      if (!user) throw new Error('Please sign in to complete your booking.');
+      // Allow guest checkout - no login required for $20 call-out
+      // If logged in, associate booking with user; if not, create as guest
       window.appState.bookingId = null;
+      window.appState.isGuest = !user;
       router.navigate('payment');
     } catch (e) {
       errEl.textContent = e.message || 'Please try again.';
@@ -695,14 +740,28 @@ async function renderPayment() {
 
   async function finalizeBooking(paymentIntent, { feeOverride = null, isTest = false } = {}) {
     const { data: { user } } = await sb.auth.getUser();
-    if (!user) throw new Error('Please sign in to complete your booking.');
-    const meta = user.user_metadata || {};
+    const isGuest = window.appState.isGuest || !user;
+    
+    let clientName, clientEmail, userId, meta;
+    if (isGuest) {
+      // Guest user_id = `guest_${Date.now()}`;
+      clientName = 'Guest Customer';
+      clientEmail = await getEmail();
+      userId = null;
+      meta = {};
+    } else {
+      userId = user.id;
+      meta = user.user_metadata || {};
+      clientName = meta.full_name || meta.name || '';
+      clientEmail = user.email || '';
+    }
+    
     const fee = feeOverride !== null ? feeOverride : calloutFee;
     const booking = await createBooking({
-      user_id: user.id,
-      client_id: user.id,
-      client_name: meta.full_name || meta.name || '',
-      client_email: user.email || '',
+      user_id: userId,
+      client_id: userId,
+      client_name: clientName,
+      client_email: clientEmail,
       service_name: service.name,
       scheduled_date: date,
       scheduled_time: time,
@@ -724,17 +783,17 @@ async function renderPayment() {
       fetch('/api/send-message?channel=whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: '0433963250', template: 'new_booking', data: { service: service.name, date, time, address: location || 'Home', clientName: _clientName, price: _total, trackUrl: 'https://drbikesydney.com.au/index.html#tracking' } }),
+        body: JSON.stringify({ to: '0433963250', template: 'new_booking', data: { service: service.name, date, time, address: location || 'Home', clientName, price: _total, trackUrl: 'https://drbikesydney.com.au/index.html#tracking' } }),
       }),
       fetch('/api/send-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: '0433963250', name: _clientName, service: service.name, address: location || 'Home', time, price: _total, type: 'new_booking', bookingId: _bId }),
+        body: JSON.stringify({ to: '0433963250', name: clientName, service: service.name, address: location || 'Home', time, price: _total, type: 'new_booking', bookingId: _bId }),
       }),
       fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: user.email, name: _clientName, service: service.name, date, time, address: location || 'Home', price: _total, bookingId: _bId, type: 'confirmation' }),
+        body: JSON.stringify({ to: clientEmail, name: clientName, service: service.name, date, time, address: location || 'Home', price: _total, bookingId: _bId, type: 'confirmation' }),
       }),
     ]).then(results => results.forEach((r, i) => {
       if (r.status === 'rejected') console.error(`[booking-notif ${i}] failed:`, r.reason);
