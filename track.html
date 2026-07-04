@@ -6,8 +6,10 @@
 <meta name="theme-color" content="#1848C8">
 <title>Track your Dr. Bike service</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 function copyTrackingLink(url) {
   navigator.clipboard.writeText(url).then(() => {
     const btn = event.target;
@@ -18,7 +20,6 @@ function copyTrackingLink(url) {
   });
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --sans:'Inter',-apple-system,sans-serif;
@@ -40,8 +41,9 @@ function copyTrackingLink(url) {
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--bg);color:var(--navy);min-height:100vh}
 .top{background:var(--card-bg);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px}
-.logo{width:34px;height:34px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
-.brand{font-size:16px;font-weight:700;color:var(--navy)}
+.logo{display:flex;align-items:center}
+.brand{font-size:17px;font-weight:700;color:var(--navy);letter-spacing:-0.2px}
+.brand span{color:var(--blue)}
 .wrap{max-width:520px;margin:0 auto;padding:20px}
 .card{background:var(--card-bg);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
 .status-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
@@ -58,13 +60,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--navy);min-height:1
 </head>
 <body>
 <div class="top">
-  <div class="logo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20">
-      <circle cx="5.5" cy="17" r="3"/><circle cx="18.5" cy="17" r="3"/>
-      <path d="M5.5 17L9 8h6l3.5 9"/><path d="M9 8l3.5 9"/>
-    </svg>
-  </div>
-  <div class="brand">Dr. Bike Sydney</div>
+  <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="32" style="width:auto;display:block;margin-right:2px">
+  <div class="brand">Dr. <span>Bike</span> Sydney</div>
 </div>
 
 <div class="wrap">
@@ -227,7 +224,7 @@ function showEmailForm(content) {
       bookings.forEach(function(b) {
         const label = ST_LABELS[b.status] || b.status;
         const isActive = ['enroute','in_progress'].includes(b.status);
-        const url = b.tracking_token ? '/track?token=' + b.tracking_token : '/track?id=' + b.id;
+        const url = b.tracking_token ? '/track.html?token=' + b.tracking_token : '/track.html?id=' + b.id;
         html += '<a href="' + url + '" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-lt);text-decoration:none;color:inherit">';
         html += '<div><div style="font-size:14px;font-weight:600;color:var(--navy)">' + (b.service_name||'Service') + '</div>';
         html += '<div style="font-size:12px;color:var(--mgray);margin-top:2px">' + (b.scheduled_date||'') + (b.scheduled_time?' · '+b.scheduled_time:'') + '</div></div>';

@@ -6,12 +6,16 @@
 export function createHeader(title, showBack = false, backUrl = '#home') {
   return `
 <header class="app-header">
-  ${showBack ? `
+  ${
+    showBack
+      ? `
   <a href="${backUrl}" class="header-back" aria-label="Back">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="15 18 9 12 15 6"></polyline>
     </svg>
-  </a>` : '<div class="header-spacer"></div>'}
+  </a>`
+      : '<div class="header-spacer"></div>'
+  }
   <span class="header-title">${title}</span>
   <div class="header-spacer"></div>
 </header>`;
@@ -21,34 +25,48 @@ export function createHeader(title, showBack = false, backUrl = '#home') {
 export function createBottomNav(activeTab = 'home') {
   const tabs = [
     {
-      id: 'home', label: 'Home', href: '#home',
+      id: 'home',
+      label: 'Home',
+      href: '#home',
       icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
     },
     {
-      id: 'my-bookings', label: 'Bookings', href: '#my-bookings',
+      id: 'my-bookings',
+      label: 'Bookings',
+      href: '#my-bookings',
       icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
     },
     {
-      id: 'tracking', label: 'Track', href: '#tracking',
+      id: 'tracking',
+      label: 'Track',
+      href: '#tracking',
       icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
     },
     {
-      id: 'my-bikes', label: 'My Bikes', href: '#my-bikes',
+      id: 'my-bikes',
+      label: 'My Bikes',
+      href: '#my-bikes',
       icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"></path><circle cx="12" cy="5" r="2" fill="currentColor" stroke="none"></circle></svg>`,
     },
     {
-      id: 'profile', label: 'Profile', href: '#profile',
+      id: 'profile',
+      label: 'Profile',
+      href: '#profile',
       icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
     },
   ];
 
   return `
 <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
-  ${tabs.map(t => `
+  ${tabs
+    .map(
+      (t) => `
   <a href="${t.href}" class="bottom-nav__tab${t.id === activeTab ? ' active' : ''}" aria-label="${t.label}">
     ${t.icon}
     <span>${t.label}</span>
-  </a>`).join('')}
+  </a>`
+    )
+    .join('')}
 </nav>`;
 }
 
@@ -61,7 +79,8 @@ export function createButton(text, variant = 'primary', fullWidth = false) {
 export function formatServiceDuration(service) {
   if (!service) return '';
   if (service.duration) return service.duration;
-  const fmt = m => m < 60 ? m + ' min' : Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'min' : '');
+  const fmt = (m) =>
+    m < 60 ? m + ' min' : Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'min' : '');
   const { duration_min: min, duration_max: max } = service;
   if (!min && !max) return '';
   if (min && max && min !== max) return fmt(min) + ' - ' + fmt(max);
@@ -97,8 +116,21 @@ export function createTimeSlot(time, available = true, isSelected = false) {
 export function createDateItem(dateStr, isSelected = false) {
   const [y, m, d] = dateStr.split('-').map(Number);
   const date = new Date(y, m - 1, d);
-  const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const MONTH_NAMES = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return `
 <button class="date-item${isSelected ? ' selected' : ''}" data-date="${dateStr}" type="button" aria-label="${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]}">
   <span class="date-item__day">${DAY_NAMES[date.getDay()]}</span>
@@ -118,34 +150,58 @@ export function createSummaryRow(label, value) {
 
 // ── Booking Card ─────────────────────────────────────────────────────────────
 export function createBookingCard(booking) {
-  const { id = '', service_name, scheduled_date, scheduled_time, service_price, status, rating } = booking;
+  const {
+    id = '',
+    service_name,
+    scheduled_date,
+    scheduled_time,
+    service_price,
+    status,
+    rating,
+  } = booking;
   const STATUS_MAP = {
-    pending:     { label: 'Pending',     bg: 'rgba(245,158,11,0.15)',  color: '#F59E0B' },
-    confirmed:   { label: 'Confirmed',   bg: 'rgba(10,88,202,0.15)',   color: '#0A58CA' },
-    enroute:     { label: 'En Route',    bg: 'rgba(34,197,94,0.15)',   color: '#22C55E' },
-    in_progress: { label: 'In Progress', bg: 'rgba(34,197,94,0.15)',   color: '#22C55E' },
-    completed:   { label: 'Completed',   bg: 'rgba(160,160,160,0.15)', color: '#A0A0A0' },
-    cancelled:   { label: 'Cancelled',   bg: 'rgba(239,68,68,0.15)',   color: '#EF4444' },
+    pending: { label: 'Pending', bg: '#D977061A', color: '#D97706', border: '#D97706' },
+    confirmed: { label: 'Confirmed', bg: '#1E40AF1A', color: '#1E40AF', border: '#1E40AF' },
+    enroute: { label: 'En Route', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
+    en_route: { label: 'En Route', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
+    in_progress: { label: 'In Progress', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
+    inprogress: { label: 'In Progress', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
+    arrived: { label: 'Arrived', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
+    completed: { label: 'Completed', bg: '#64748B1A', color: '#64748B', border: '#64748B' },
+    cancelled: { label: 'Cancelled', bg: '#DC26261A', color: '#DC2626', border: '#DC2626' },
   };
   const s = STATUS_MAP[status] || STATUS_MAP.pending;
-  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const MONTHS = [
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
+  ];
   let dateLabel = '--<br>---';
   if (scheduled_date) {
     const [, m, d] = scheduled_date.split('-').map(Number);
     dateLabel = `${d}<br>${MONTHS[m - 1]}`;
   }
   return `
-<div class="booking-card" data-booking-id="${id}">
-  <div class="booking-card__date">${dateLabel}</div>
+<div class="booking-card" data-booking-id="${id}" style="border-left:4px solid ${s.border}">
+  <div class="booking-card__date" style="font-size:18px;font-weight:800;color:#0F172A;text-align:center;line-height:1.1;flex-shrink:0;width:44px">${dateLabel}</div>
   <div class="booking-card__info">
     <div class="booking-card__service">${service_name || 'Service'}</div>
-    <div class="booking-card__time text-secondary text-sm">${scheduled_time || ''}</div>
-    ${rating ? `<div class="booking-card__rating">${createStarRating(rating, false)}</div>` : ''}
+    <div style="font-size:12px;color:#475569;margin-top:2px">${scheduled_time || ''}</div>
+    ${rating ? `<div class="booking-card__rating" style="margin-top:4px">${createStarRating(rating, false)}</div>` : ''}
   </div>
   <div class="booking-card__right">
     <span class="booking-chip" style="background:${s.bg};color:${s.color}">${s.label}</span>
-    <span class="booking-card__price text-secondary text-sm">$${service_price || 0}</span>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    <span style="font-size:13px;color:#475569;font-weight:600">$${service_price || 0}</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
   </div>
 </div>`;
 }

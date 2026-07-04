@@ -96,11 +96,22 @@
       display: flex;
       gap: 10px;
       align-items: center;
+      text-decoration: none;
     }
-    .nav-logo span {
+    .nav-logo .wm-text {
       font-weight: 700;
-      font-size: 15px;
-      letter-spacing: 0.5px;
+      font-size: 17px;
+      letter-spacing: -0.2px;
+      color: #0D1F3C;
+    }
+    .nav-logo .wm-blue { color: #2563EB; }
+    .nav-logo .wm-tag {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: #2563EB;
+      letter-spacing: 0;
+      margin-top: -2px;
     }
     .nav-links {
       display: flex;
@@ -476,6 +487,12 @@
   /* ── All Services section ─────────────────────────────────────────────────── */
   .svc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
   @media(max-width:768px){ .svc-grid { grid-template-columns:1fr; } }
+  @media(max-width:640px){
+    .steps-grid { grid-template-columns:1fr 1fr !important; gap:20px !important; }
+    .steps-grid::before { display:none; }
+    .memberships-grid { grid-template-columns:1fr !important; }
+    #nav-auth-sub { display:none; }
+  }
   .svc-card {
     border:1.5px solid #E5E7EB; border-radius:12px; padding:20px; cursor:pointer;
     display:flex; flex-direction:column; gap:6px;
@@ -502,31 +519,68 @@
   }
   </style>
   <script src="https://js.stripe.com/v3/"></script>
+  <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
+  <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
+  <script>
+  Sentry.onLoad(function() {
+    Sentry.init({
+      dsn: "https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488",
+      environment: "production",
+      release: "drbike@1.0.0",
+      tracesSampleRate: 0.2,
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+      integrations: [
+        Sentry.replayIntegration(),
+        Sentry.browserTracingIntegration(),
+      ],
+      beforeSend: function(event) {
+        var url = (event.request && event.request.url) || '';
+        if (url.startsWith('data:')) return null;
+        return event;
+      },
+    });
+  });
+  </script>
+  <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
+  <script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.people.toString()+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
+    api_host: 'https://eu.i.posthog.com',
+    person_profiles: 'identified_only',
+    capture_pageview: true,
+    capture_pageleave: true,
+  });
+  </script>
 </head>
 <body>
 
 <!-- ── NAVBAR ──────────────────────────────────────────────────────────────── -->
 <nav class="navbar">
   <div class="container">
-    <div class="nav-logo">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="5.5" cy="17.5" r="3.5"/>
-        <circle cx="18.5" cy="17.5" r="3.5"/>
-        <path d="M15 6a1 1 0 0 0-1-1h-4"/>
-        <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
-        <path d="M18.5 17.5L15 6"/>
-        <path d="M5.5 17.5L9 11l4.5-1"/>
-      </svg>
-      <span>DR BIKE SYDNEY</span>
-    </div>
+    <a href="#" class="nav-logo">
+      <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="36" style="width:auto;display:block">
+      <div>
+        <span class="wm-text">Dr. <span class="wm-blue">Bike</span> Sydney</span>
+        <span class="wm-tag">Healthy bikes, happy riders</span>
+      </div>
+    </a>
 
     <div class="nav-links">
       <a href="#services">Services</a>
       <a href="#memberships">Memberships</a>
+      <a href="#fleet" style="color:#2563EB;font-weight:700">Fleet &#x2192;</a>
       <a href="#about">About</a>
     </div>
 
-    <button id="nav-auth-btn" onclick="openAuthModal()" class="nav-book" style="display:inline-flex;align-items:center;gap:8px;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Sign In</button>
+    <button id="nav-auth-btn" onclick="openAuthModal()" class="nav-book" style="display:inline-flex;align-items:center;gap:8px;font-family:inherit;padding:8px 16px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2">
+        <span style="font-size:13px;font-weight:700">My Account</span>
+        <span id="nav-auth-sub" style="font-size:10px;font-weight:500;opacity:0.7">Sign in to manage bookings</span>
+      </span>
+      <svg id="nav-auth-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
   </div>
 </nav>
   <!-- 6.1 + 6.2 Trust Badges -->
@@ -566,13 +620,14 @@
     <div class="hero-left">
       <span class="hero-badge">Mobile Service &middot; Sydney Wide</span>
       <h1 class="hero-h1">Professional Bike Service at Your Doorstep</h1>
+      <p style="font-size:17px;font-weight:600;color:#2563eb;margin:0 0 12px;letter-spacing:0.01em">Healthy bikes, happy riders</p>
       <p class="hero-p">Mobile bicycle mechanic in Sydney. We come to you, fully equipped.</p>
 
       <div class="hero-btns">
-        <button id="hero-book-btn" class="btn-primary" type="button" style="opacity:.55;cursor:default" disabled>Booking Coming Soon</button>
+        <button id="hero-book-btn" class="btn-primary" type="button">Book a Service</button>
         <a href="#services" class="btn-outline">View Services</a>
       </div>
-      <p style="margin-top:12px;font-size:14px;color:#6B7280">Booking coming soon &mdash; call <a href="tel:+61433963250" style="color:#0A58CA;font-weight:600">0433 963 250</a> or <a href="https://wa.me/61433963250" target="_blank" rel="noopener" style="color:#0A58CA;font-weight:600">WhatsApp us</a></p>
+      <p style="margin-top:12px;font-size:14px;color:#6B7280">Or call <a href="tel:+61433963250" style="color:#0A58CA;font-weight:600">0433 963 250</a> / <a href="https://wa.me/61433963250" target="_blank" rel="noopener" style="color:#0A58CA;font-weight:600">WhatsApp</a></p>
 
       <div class="hero-stats">
         <div class="hero-stat">
@@ -605,20 +660,144 @@
   </div>
 </section>
 
-<!-- ── LOGIN CTA ─────────────────────────────────────────────────────────── -->
-<div style="background:#0D1F3C;padding:16px 24px;text-align:center">
-  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">
-    <span style="color:rgba(255,255,255,0.85);font-size:14px">Already a customer? Sign in to view your bookings, bikes and more.</span>
-    <button id="login-cta-google" style="background:#1848C8;color:white;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;font-family:inherit">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Sign In with Google
-    </button>
-    <span style="color:rgba(255,255,255,0.4);font-size:13px">or</span>
-    <button id="login-cta-create" style="background:transparent;color:white;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.3);cursor:pointer;white-space:nowrap;font-family:inherit">
-      Create Account
-    </button>
+<!-- ── HOW IT WORKS ──────────────────────────────────────────────────────────── -->
+<section style="padding:80px 0;background:white">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge">HOW IT WORKS</span>
+      <h2 class="section-h2" style="font-size:2rem">Simple 4-Step Process</h2>
+      <p class="section-sub" style="margin-bottom:48px">Getting your bike serviced has never been easier.</p>
+    </div>
+
+    <div class="steps-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:32px;position:relative">
+      <style>.steps-grid::before{content:'';position:absolute;top:32px;left:12%;right:12%;height:2px;background:repeating-linear-gradient(90deg,var(--border) 0,var(--border) 8px,transparent 8px,transparent 16px);z-index:0}</style>
+
+      <!-- Step 1 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">1</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Book Online</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Choose your service and preferred time</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">We Come to You</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Our mechanic arrives at your location</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">3</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Service Your Bike</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Professional service on the spot</p>
+      </div>
+
+      <!-- Step 4 -->
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-4"/><path d="M12 6l1 5.5-6.5 2 2-7.5"/><path d="M18.5 17.5L15 6"/><path d="M5.5 17.5L9 11l4.5-1"/></svg>
+          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">4</div>
+        </div>
+        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Ride Happy</p>
+        <p style="color:var(--gray);font-size:14px;line-height:1.5">Your bike is ready to go!</p>
+      </div>
+    </div>
   </div>
-</div>
+</section>
+
+<!-- ── MEMBERSHIPS ────────────────────────────────────────────────────────────── -->
+<section id="memberships" style="padding:80px 0;background:var(--gray-light)">
+  <div class="container" style="text-align:center">
+    <span class="section-badge">MEMBERSHIPS</span>
+    <h2 class="section-h2" style="font-size:2rem">Choose Your Plan</h2>
+    <p style="color:var(--gray);font-size:18px;margin-top:12px">Save more with our membership plans. Designed for regular cyclists.</p>
+
+    <div style="display:inline-flex;align-items:center;gap:0;background:#e5e7eb;border-radius:9999px;padding:4px;margin:16px 0 48px">
+      <button id="toggle-monthly" onclick="setBilling('monthly')" style="padding:8px 24px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:#2563eb;color:white;font-family:inherit;transition:all 200ms">Monthly</button>
+      <button id="toggle-annual" onclick="setBilling('annual')" style="padding:8px 24px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:#6b7280;font-family:inherit;transition:all 200ms">Annual <span style="background:#dcfce7;color:#16a34a;font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:4px">Save 20%</span></button>
+    </div>
+
+    <div class="memberships-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto">
+      <!-- Basic -->
+      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
+        <h3 style="font-weight:700;font-size:18px">Basic</h3>
+        <div style="margin:16px 0">
+          <span id="price-basic" style="font-size:2.5rem;font-weight:800">$57</span>
+          <span id="period-basic" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-basic" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$548/yr - save $136</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>1 Basic Service</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
+        </ul>
+        <button onclick="openMembershipModal('basic')" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--blue)'">Get Started</button>
+        <button class="lp-learn-more" data-plan="basic" style="width:100%;margin-top:8px;padding:8px;border:none;color:#6b7280;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+      </div>
+      <!-- Standard -->
+      <div style="background:white;border:2px solid var(--blue);border-radius:var(--radius-lg);padding:32px;text-align:left;position:relative">
+        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:4px 16px;border-radius:var(--radius-full);font-size:12px;font-weight:600;white-space:nowrap">Popular</div>
+        <h3 style="font-weight:700;font-size:18px">Standard</h3>
+        <div style="margin:16px 0">
+          <span id="price-standard" style="font-size:2.5rem;font-weight:800">$97</span>
+          <span id="period-standard" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-standard" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$931/yr - save $233</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>2 Standard Services</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+        </ul>
+        <button onclick="openMembershipModal('standard')" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Get Started</button>
+        <button class="lp-learn-more" data-plan="standard" style="width:100%;margin-top:8px;padding:8px;border:none;color:#6b7280;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+      </div>
+      <!-- VIP -->
+      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
+        <h3 style="font-weight:700;font-size:18px">VIP</h3>
+        <div style="margin:16px 0">
+          <span id="price-vip" style="font-size:2.5rem;font-weight:800">$147</span>
+          <span id="period-vip" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-vip" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$1,411/yr - save $353</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Unlimited Services</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>20% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Annual tune-up</li>
+        </ul>
+        <button onclick="openMembershipModal('vip')" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--blue)'">Get Started</button>
+        <button class="lp-learn-more" data-plan="vip" style="width:100%;margin-top:8px;padding:8px;border:none;color:#6b7280;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+      </div>
+    </div>
+    <p style="color:var(--gray);font-size:13px;margin-top:24px">All plans include mobile service within Sydney metro area</p>
+
+    <div style="max-width:900px;margin:40px auto 0;background:linear-gradient(135deg,#7C3AED,#1848C8);border-radius:var(--radius-lg);padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;text-align:left">
+      <div style="display:flex;align-items:center;gap:18px">
+        <div style="font-size:40px">🎁</div>
+        <div>
+          <div style="font-size:20px;font-weight:800;color:#fff">Gift a service</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.8);margin-top:2px">Send a Dr. Bike gift card by email - perfect for any cyclist</div>
+        </div>
+      </div>
+      <button onclick="openGiftCardModal()" style="padding:13px 28px;background:#fff;color:#7C3AED;border:none;border-radius:var(--radius);font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;white-space:nowrap">Buy a gift card</button>
+    </div>
+  </div>
+</section>
 
 <!-- ── TRUST BAR ────────────────────────────────────────────────────────────── -->
 <div class="trust-bar">
@@ -1031,81 +1210,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
 </script>
 
 <!-- ── MEMBERSHIPS ───────────────────────────────────────────────────────────── -->
-<section id="memberships" style="padding:96px 0;background:var(--gray-light)">
-  <div class="container" style="text-align:center">
-    <span class="section-badge">MEMBERSHIPS</span>
-    <h2 class="section-h2" style="font-size:2rem">Choose Your Plan</h2>
-    <p style="color:var(--gray);font-size:18px;margin-top:12px">Save more with our membership plans. Designed for regular cyclists.</p>
-
-    <div style="display:inline-flex;align-items:center;gap:0;background:#e5e7eb;border-radius:9999px;padding:4px;margin:16px 0 48px">
-      <button id="toggle-monthly" onclick="setBilling('monthly')" style="padding:8px 24px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:#2563eb;color:white;font-family:inherit;transition:all 200ms">Monthly</button>
-      <button id="toggle-annual" onclick="setBilling('annual')" style="padding:8px 24px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:#6b7280;font-family:inherit;transition:all 200ms">Annual <span style="background:#dcfce7;color:#16a34a;font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:4px">Save 20%</span></button>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto">
-
-      <!-- Basic -->
-      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
-        <h3 style="font-weight:700;font-size:18px">Basic</h3>
-        <div style="margin:16px 0">
-          <span id="price-basic" style="font-size:2.5rem;font-weight:800">$57</span>
-          <span id="period-basic" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-basic" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$548/yr - save $136</div>
-        </div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>1 Basic Service</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
-        </ul>
-        <button onclick="openMembershipModal('basic')" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--blue)'">Get Started</button>
-        <button class="lp-learn-more" data-plan="basic" style="width:100%;margin-top:8px;padding:8px;border:none;color:#6b7280;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
-      </div>
-
-      <!-- Standard -->
-      <div style="background:white;border:2px solid var(--blue);border-radius:var(--radius-lg);padding:32px;text-align:left;position:relative">
-        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:4px 16px;border-radius:var(--radius-full);font-size:12px;font-weight:600;white-space:nowrap">Popular</div>
-        <h3 style="font-weight:700;font-size:18px">Standard</h3>
-        <div style="margin:16px 0">
-          <span id="price-standard" style="font-size:2.5rem;font-weight:800">$97</span>
-          <span id="period-standard" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-standard" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$931/yr - save $233</div>
-        </div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>2 Standard Services</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
-        </ul>
-        <button onclick="openMembershipModal('standard')" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Get Started</button>
-        <button class="lp-learn-more" data-plan="standard" style="width:100%;margin-top:8px;padding:8px;border:none;color:#6b7280;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
-      </div>
-
-      <!-- VIP -->
-      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
-        <h3 style="font-weight:700;font-size:18px">VIP</h3>
-        <div style="margin:16px 0">
-          <span id="price-vip" style="font-size:2.5rem;font-weight:800">$147</span>
-          <span id="period-vip" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-vip" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$1,411/yr - save $353</div>
-        </div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Unlimited Services</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>20% off repairs</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Annual tune-up</li>
-        </ul>
-        <button onclick="openMembershipModal('vip')" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:14px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--blue)'">Get Started</button>
-        <button class="lp-learn-more" data-plan="vip" style="width:100%;margin-top:8px;padding:8px;border:none;color:#6b7280;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
-      </div>
-    </div>
-
-    <p style="color:var(--gray);font-size:13px;margin-top:24px">All plans include mobile service within Sydney metro area</p>
-  </div>
-</section>
+<!-- Memberships moved to after How It Works -->
 
 <!-- ── BOOK A SERVICE ────────────────────────────────────────────────────────── -->
 <section style="padding:96px 0;background:#111827">
@@ -1147,84 +1252,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
   </div>
 </section>
 
-<!-- ── HOW IT WORKS ──────────────────────────────────────────────────────────── -->
-<section style="padding:96px 0;background:white">
-  <div class="container">
-    <div class="section-center">
-      <span class="section-badge">HOW IT WORKS</span>
-      <h2 class="section-h2" style="font-size:2rem">Simple 4-Step Process</h2>
-      <p class="section-sub" style="margin-bottom:48px">Getting your bike serviced has never been easier.</p>
-    </div>
-
-    <div class="steps-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:32px;position:relative">
-      <style>.steps-grid::before{content:'';position:absolute;top:32px;left:12%;right:12%;height:2px;background:repeating-linear-gradient(90deg,var(--border) 0,var(--border) 8px,transparent 8px,transparent 16px);z-index:0}</style>
-
-      <!-- Step 1 -->
-      <div style="text-align:center;position:relative;z-index:1">
-        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
-            <rect x="3" y="4" width="18" height="18" rx="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">1</div>
-        </div>
-        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Book Online</p>
-        <p style="color:var(--gray);font-size:14px;line-height:1.5">Choose your service and preferred time</p>
-      </div>
-
-      <!-- Step 2 -->
-      <div style="text-align:center;position:relative;z-index:1">
-        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
-            <rect x="1" y="3" width="15" height="13"/>
-            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-            <circle cx="5.5" cy="18.5" r="2.5"/>
-            <circle cx="18.5" cy="18.5" r="2.5"/>
-          </svg>
-          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div>
-        </div>
-        <p style="font-weight:700;font-size:16px;margin-bottom:8px">We Come to You</p>
-        <p style="color:var(--gray);font-size:14px;line-height:1.5">Our mechanic arrives at your location</p>
-      </div>
-
-      <!-- Step 3 -->
-      <div style="text-align:center;position:relative;z-index:1">
-        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-          </svg>
-          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">3</div>
-        </div>
-        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Service Your Bike</p>
-        <p style="color:var(--gray);font-size:14px;line-height:1.5">Professional service on the spot</p>
-      </div>
-
-      <!-- Step 4 -->
-      <div style="text-align:center;position:relative;z-index:1">
-        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="5.5" cy="17.5" r="3.5"/>
-            <circle cx="18.5" cy="17.5" r="3.5"/>
-            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
-            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
-            <path d="M18.5 17.5L15 6"/>
-            <path d="M5.5 17.5L9 11l4.5-1"/>
-          </svg>
-          <div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:var(--blue);border-radius:50%;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">4</div>
-        </div>
-        <p style="font-weight:700;font-size:16px;margin-bottom:8px">Ride Happy</p>
-        <p style="color:var(--gray);font-size:14px;line-height:1.5">Your bike is ready to go!</p>
-      </div>
-    </div>
-
-    <div style="margin-top:64px;background:#111827;border-radius:16px;height:180px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
-      <p style="color:white;font-size:22px;font-weight:800">DR BIKE SYDNEY</p>
-      <p style="color:#9ca3af;font-size:14px">Professional Mobile Bike Service &middot; Sydney Wide</p>
-    </div>
-  </div>
-</section>
+<!-- HOW IT WORKS moved to after Hero -->
 
 <style>
   .lform-input {
@@ -1308,6 +1336,178 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
   </div>
 </section>
 
+<!-- ── FLEET / CORPORATE ─────────────────────────────────────────────────────── -->
+<section id="fleet" style="padding:96px 0;background:#0D1F3C">
+  <div class="container" style="max-width:1100px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start">
+
+      <!-- Left: pitch -->
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.25);border:1px solid rgba(37,99,235,0.4);border-radius:99px;padding:6px 16px;margin-bottom:24px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+          <span style="font-size:12px;font-weight:700;color:#93C5FD;letter-spacing:0.06em;text-transform:uppercase">For businesses</span>
+        </div>
+        <h2 style="color:#fff;font-size:clamp(1.8rem,2.5vw,2.8rem);font-weight:800;line-height:1.15;margin:0 0 20px">Keep your whole fleet rolling</h2>
+        <p style="color:#94A3B8;font-size:16px;line-height:1.7;margin:0 0 36px">One mechanic, your entire team. We come to your office or depot and service all bikes in a single visit — no downtime, no logistics hassle.</p>
+
+        <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:40px">
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(37,99,235,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;color:#fff;font-size:14px;margin-bottom:2px">On-site service</div>
+              <div style="font-size:13px;color:#94A3B8">We come to your office, warehouse or depot. Zero travel time for your team.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(5,150,105,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;color:#fff;font-size:14px;margin-bottom:2px">Volume pricing</div>
+              <div style="font-size:13px;color:#94A3B8">Custom rates for 5+ bikes. The more bikes, the better the deal.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(217,119,6,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;color:#fff;font-size:14px;margin-bottom:2px">Priority scheduling</div>
+              <div style="font-size:13px;color:#94A3B8">Fleet clients get first access to bookings and a dedicated point of contact.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;color:#fff;font-size:14px;margin-bottom:2px">Service reports</div>
+              <div style="font-size:13px;color:#94A3B8">Full PDF report per bike after every visit. Track the health of your entire fleet.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:32px">
+          <div style="text-align:center">
+            <div style="font-size:2rem;font-weight:900;color:#2563EB">50+</div>
+            <div style="font-size:12px;color:#94A3B8;font-weight:600">bikes serviced</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:2rem;font-weight:900;color:#059669">2h</div>
+            <div style="font-size:12px;color:#94A3B8;font-weight:600">response time</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:2rem;font-weight:900;color:#D97706">$0</div>
+            <div style="font-size:12px;color:#94A3B8;font-weight:600">call-out for fleets</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: form -->
+      <div style="background:#fff;border-radius:20px;padding:36px">
+        <div style="font-size:18px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Get a fleet quote</div>
+        <div style="font-size:13px;color:#6B7280;margin-bottom:24px">We'll reply within 2 business hours</div>
+
+        <form id="fleet-form" style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Business name *</label>
+              <input name="businessName" required placeholder="Acme Co." style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Your name *</label>
+              <input name="contactName" required placeholder="Jane Smith" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Work email *</label>
+              <input name="email" type="email" required placeholder="jane@acme.com" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Phone</label>
+              <input name="phone" type="tel" placeholder="04XX XXX XXX" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Fleet size *</label>
+              <select name="fleetSize" required style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
+                <option value="">Select...</option>
+                <option>2-5 bikes</option>
+                <option>6-15 bikes</option>
+                <option>16-30 bikes</option>
+                <option>31-50 bikes</option>
+                <option>50+ bikes</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Service frequency</label>
+              <select name="frequency" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
+                <option value="">Not sure yet</option>
+                <option>Monthly</option>
+                <option>Quarterly</option>
+                <option>Bi-annually</option>
+                <option>One-off</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Notes</label>
+            <textarea name="notes" rows="3" placeholder="Types of bikes, location, any specific issues..." style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'"></textarea>
+          </div>
+          <div id="fleet-msg" style="display:none;font-size:13px;padding:10px 14px;border-radius:8px"></div>
+          <button type="submit" id="fleet-submit" style="width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 150ms" onmouseover="this.style.background='#1848C8'" onmouseout="this.style.background='#2563EB'">
+            Request Fleet Quote
+          </button>
+          <p style="font-size:11px;color:#9CA3AF;text-align:center;margin:0">No commitment required. We'll build a custom plan for your team.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+(function() {
+  var form = document.getElementById('fleet-form');
+  if (!form) return;
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('fleet-submit');
+    var msg = document.getElementById('fleet-msg');
+    var data = Object.fromEntries(new FormData(form).entries());
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    msg.style.display = 'none';
+    try {
+      var resp = await fetch('/api/send-b2b-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      var result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Submission failed');
+      form.reset();
+      msg.style.background = '#F0FDF4';
+      msg.style.color = '#059669';
+      msg.style.border = '1px solid #BBF7D0';
+      msg.innerHTML = '<strong>Thanks! We\'ll be in touch within 2 business hours.</strong> Check your inbox for a confirmation.';
+      msg.style.display = 'block';
+      btn.textContent = 'Quote Requested';
+    } catch(err) {
+      msg.style.background = '#FEF2F2';
+      msg.style.color = '#DC2626';
+      msg.style.border = '1px solid #FECACA';
+      msg.textContent = err.message || 'Something went wrong. Please email us directly.';
+      msg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Request Fleet Quote';
+    }
+  });
+}());
+</script>
+
 <!-- ── FINAL CTA ─────────────────────────────────────────────────────────────── -->
 <section style="padding:96px 0;background:#111827">
   <div class="container" style="text-align:center;max-width:700px">
@@ -1328,17 +1528,11 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       <!-- Col 1: Brand -->
       <div>
         <div style="display:flex;gap:10px;align-items:center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="5.5" cy="17.5" r="3.5"/>
-            <circle cx="18.5" cy="17.5" r="3.5"/>
-            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
-            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
-            <path d="M18.5 17.5L15 6"/>
-            <path d="M5.5 17.5L9 11l4.5-1"/>
-          </svg>
-          <span style="font-weight:700;font-size:15px;color:white;letter-spacing:0.5px">DR BIKE SYDNEY</span>
+          <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block">
+          <span style="font-weight:700;font-size:18px;letter-spacing:-0.2px;color:#fff">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
         </div>
-        <p style="color:#6b7280;font-size:14px;margin-top:12px;line-height:1.6">Professional bike service at your doorstep.</p>
+        <p style="color:#60A5FA;font-size:14px;font-weight:600;margin-top:12px">Healthy bikes, happy riders</p>
+        <p style="color:#6b7280;font-size:14px;margin-top:6px;line-height:1.6">Professional bike service at your doorstep.</p>
         <div style="display:flex;gap:12px;margin-top:20px">
           <a href="#" class="footer-social" aria-label="Facebook">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
@@ -1451,6 +1645,42 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
   </div>
 </div>
 
+<!-- Gift Card Modal -->
+<div id="giftcard-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);overflow-y:auto;padding:24px 16px" onclick="if(event.target===this)closeGiftCardModal()">
+  <div style="background:white;border-radius:16px;max-width:460px;margin:0 auto;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.2)">
+    <div style="background:linear-gradient(135deg,#7C3AED,#1848C8);padding:24px 28px;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-size:32px;margin-bottom:4px">🎁</div>
+        <h2 style="font-size:20px;font-weight:800;color:#fff;margin:0">Gift a service</h2>
+        <p style="font-size:13px;color:rgba(255,255,255,0.8);margin:4px 0 0">Send a Dr. Bike gift card by email</p>
+      </div>
+      <button onclick="closeGiftCardModal()" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);cursor:pointer;color:#fff;font-size:18px;flex-shrink:0">&#215;</button>
+    </div>
+    <div id="giftcard-form" style="padding:28px">
+      <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">Amount</div>
+      <div id="gift-amount-options" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
+        <button type="button" class="gift-amt-btn" data-amt="50" style="padding:12px 0;border:2px solid #e5e7eb;border-radius:8px;background:#fff;font-size:15px;font-weight:700;color:#111827;cursor:pointer;font-family:inherit">$50</button>
+        <button type="button" class="gift-amt-btn" data-amt="100" style="padding:12px 0;border:2px solid #e5e7eb;border-radius:8px;background:#fff;font-size:15px;font-weight:700;color:#111827;cursor:pointer;font-family:inherit">$100</button>
+        <button type="button" class="gift-amt-btn" data-amt="150" style="padding:12px 0;border:2px solid #e5e7eb;border-radius:8px;background:#fff;font-size:15px;font-weight:700;color:#111827;cursor:pointer;font-family:inherit">$150</button>
+        <button type="button" class="gift-amt-btn" data-amt="200" style="padding:12px 0;border:2px solid #e5e7eb;border-radius:8px;background:#fff;font-size:15px;font-weight:700;color:#111827;cursor:pointer;font-family:inherit">$200</button>
+      </div>
+      <input id="gift-amount-custom" type="number" min="20" max="1000" placeholder="Or enter a custom amount ($20-$1000)" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box;margin-bottom:18px" oninput="clearGiftPreset()">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <input id="gift-recipient-name" type="text" placeholder="Recipient's name" maxlength="80" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+        <input id="gift-recipient-email" type="email" placeholder="Recipient's email *" maxlength="120" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+        <input id="gift-sender-name" type="text" placeholder="Your name" maxlength="80" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+        <textarea id="gift-message" placeholder="Personal message (optional)" maxlength="200" rows="2" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+      <div id="gift-error" style="display:none;color:#ef4444;font-size:13px;margin-top:12px"></div>
+      <button id="gift-submit" onclick="submitGiftCard()" style="width:100%;padding:14px;background:#7C3AED;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:18px">Continue to payment →</button>
+      <p style="font-size:11px;color:#9ca3af;text-align:center;margin:12px 0 0;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Secured by Stripe &middot; Delivered instantly by email
+      </p>
+    </div>
+  </div>
+</div>
+
 <script>
 function faq(btn) {
   var a = btn.nextElementSibling;
@@ -1559,6 +1789,69 @@ function closeMembershipModal() {
     _membershipCard = null;
   }
 }
+
+// ── Gift Cards ──────────────────────────────────────────────────────────────
+var _giftAmount = 100;
+function openGiftCardModal() {
+  document.getElementById('giftcard-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  selectGiftAmount(100);
+}
+function closeGiftCardModal() {
+  document.getElementById('giftcard-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function selectGiftAmount(amt) {
+  _giftAmount = amt;
+  document.getElementById('gift-amount-custom').value = '';
+  document.querySelectorAll('.gift-amt-btn').forEach(function(b) {
+    var on = Number(b.dataset.amt) === amt;
+    b.style.borderColor = on ? '#7C3AED' : '#e5e7eb';
+    b.style.background = on ? '#F5F3FF' : '#fff';
+    b.style.color = on ? '#7C3AED' : '#111827';
+  });
+}
+function clearGiftPreset() {
+  _giftAmount = null;
+  document.querySelectorAll('.gift-amt-btn').forEach(function(b) {
+    b.style.borderColor = '#e5e7eb'; b.style.background = '#fff'; b.style.color = '#111827';
+  });
+}
+async function submitGiftCard() {
+  var btn = document.getElementById('gift-submit');
+  var errEl = document.getElementById('gift-error');
+  errEl.style.display = 'none';
+  var custom = document.getElementById('gift-amount-custom').value.trim();
+  var amount = custom ? Number(custom) : _giftAmount;
+  var recipientEmail = document.getElementById('gift-recipient-email').value.trim();
+  var recipientName = document.getElementById('gift-recipient-name').value.trim();
+  var senderName = document.getElementById('gift-sender-name').value.trim();
+  var message = document.getElementById('gift-message').value.trim();
+
+  if (!amount || amount < 20 || amount > 1000) { errEl.textContent = 'Choose an amount between $20 and $1000.'; errEl.style.display = 'block'; return; }
+  if (!recipientEmail || recipientEmail.indexOf('@') < 0) { errEl.textContent = "Enter the recipient's email."; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Redirecting to payment...';
+  try {
+    var r = await fetch('/api/buy-gift-card', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amount, recipientEmail: recipientEmail, recipientName: recipientName, senderName: senderName, message: message })
+    });
+    var d = await r.json();
+    if (!r.ok || !d.url) throw new Error(d.error || 'Could not start checkout');
+    window.location.href = d.url;
+  } catch(e) {
+    errEl.textContent = e.message || 'Something went wrong';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Continue to payment →';
+  }
+}
+document.addEventListener('click', function(e) {
+  var b = e.target.closest && e.target.closest('.gift-amt-btn');
+  if (b) selectGiftAmount(Number(b.dataset.amt));
+});
 
 async function submitMembership() {
   var btn = document.getElementById('membership-submit');
@@ -1812,7 +2105,8 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
   <div style="background:#fff;border-radius:16px;padding:32px 28px;width:100%;max-width:400px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.15)">
     <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#9CA3AF;line-height:1">&#x2715;</button>
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:15px;font-weight:800;color:#0D1F3C;letter-spacing:1px">DR BIKE SYDNEY</div>
+      <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="34" style="width:auto;display:inline-block;margin-bottom:8px">
+      <div style="font-size:17px;font-weight:700;color:#0D1F3C;letter-spacing:-0.2px">Dr. <span style="color:#2563EB">Bike</span> Sydney</div>
       <div id="auth-title" style="font-size:14px;color:#6B7280;margin-top:4px">Sign in to your account</div>
     </div>
     <div style="display:flex;background:#F3F4F6;border-radius:8px;padding:3px;margin-bottom:20px">
@@ -1898,23 +2192,9 @@ function updateNavForSession(session) {
     var meta = session.user.user_metadata || {};
     var name = meta.full_name || meta.name || session.user.email || '';
     var first = name.split('@')[0].split(' ')[0];
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + first;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2"><span style="font-size:13px;font-weight:700">' + esc(first) + '</span><span style="font-size:10px;font-weight:500;opacity:0.7">Bookings · Bikes · Membership</span></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+    btn.style.padding = '8px 16px';
     btn.onclick = function() { openAccountPanel(session); };
-    if (session.user.email === 'peredo.dm@gmail.com') {
-      var heroBtn = document.getElementById('hero-book-btn');
-      if (heroBtn) {
-        var newBtn = heroBtn.cloneNode(true);
-        newBtn.disabled = false;
-        newBtn.style.opacity = '1';
-        newBtn.style.cursor = 'pointer';
-        newBtn.textContent = 'Test booking (admin only)';
-        newBtn.style.background = 'transparent';
-        newBtn.style.border = '2px dashed var(--blue)';
-        newBtn.style.color = 'var(--blue)';
-        newBtn.addEventListener('click', function() { openBooking(); });
-        heroBtn.parentNode.replaceChild(newBtn, heroBtn);
-      }
-    }
   } else {
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Sign In';
     btn.onclick = openAuthModal;
@@ -1932,34 +2212,71 @@ function openAccountPanel(session) {
   if (!user) { openAuthModal(); return; }
   var meta = user.user_metadata || {};
   var name = meta.full_name || meta.name || user.email || '';
+  var initials = name.split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase() || '?';
 
   var btn = document.getElementById('nav-auth-btn');
   var btnRect = btn ? btn.getBoundingClientRect() : { right: window.innerWidth - 16, top: 60 };
   var panelRight = Math.max(16, window.innerWidth - btnRect.right);
   var panelTop = btnRect.top + (btn ? btn.offsetHeight : 0) + 8;
+  var maxH = Math.max(300, window.innerHeight - panelTop - 24);
+
+  var STATUS_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#6B7280', cancelled:'#EF4444' };
+  var STATUS_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'En Route', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
+
+  var tabStyle = 'flex:1;padding:10px 4px;border:none;border-bottom:2.5px solid transparent;background:none;font-size:12px;font-weight:700;color:#94A3B8;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.05em;transition:all .15s';
+  var tabActiveStyle = tabStyle + ';color:#2563EB;border-bottom-color:#2563EB';
 
   var panel = document.createElement('div');
   panel.id = 'account-panel';
   panel.style.cssText = 'position:fixed;inset:0;z-index:9999;background:transparent';
   panel.innerHTML = [
-    '<div id="account-panel-inner" style="position:absolute;right:' + panelRight + 'px;top:' + panelTop + 'px;width:min(380px,calc(100vw-32px));max-height:calc(100vh-' + (panelTop + 16) + 'px);background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden">',
-      '<div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">',
-        '<div>',
-          '<div style="font-size:16px;font-weight:700;color:#111827">' + esc(name) + '</div>',
-          '<div style="font-size:12px;color:#6b7280">' + esc(user.email || '') + '</div>',
+    '<div id="account-panel-inner" style="position:absolute;right:' + panelRight + 'px;top:' + panelTop + 'px;width:min(400px,calc(100vw-32px));background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid #E8ECF0;display:flex;flex-direction:column;overflow:hidden;max-height:' + maxH + 'px">',
+      /* Header */
+      '<div style="padding:16px 20px;border-bottom:1px solid #E8ECF0;display:flex;align-items:center;gap:12px;flex-shrink:0">',
+        '<div style="width:40px;height:40px;border-radius:50%;background:#2563EB;color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + initials + '</div>',
+        '<div style="flex:1;min-width:0">',
+          '<div style="font-size:15px;font-weight:700;color:#0D1F3C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(name) + '</div>',
+          '<div style="font-size:12px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(user.email || '') + '</div>',
         '</div>',
-        '<button id="account-panel-close" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280">&#215;</button>',
+        '<button id="account-panel-close" style="background:none;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:#94A3B8;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#215;</button>',
       '</div>',
-      '<div style="flex:1;overflow-y:auto;padding:20px 24px">',
-        '<div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px">My Bookings</div>',
-        '<div id="account-bookings" style="min-height:60px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:13px">Loading...</div>',
+      /* Tabs */
+      '<div style="display:flex;border-bottom:1px solid #E8ECF0;flex-shrink:0;padding:0 8px">',
+        '<button id="acct-tab-bookings" style="' + tabActiveStyle + '" data-acct-tab="bookings">Bookings</button>',
+        '<button id="acct-tab-bikes" style="' + tabStyle + '" data-acct-tab="bikes">My Bikes</button>',
+        '<button id="acct-tab-membership" style="' + tabStyle + '" data-acct-tab="membership">Membership</button>',
       '</div>',
-      '<div style="padding:16px 24px;border-top:1px solid #e5e7eb">',
-        '<button id="account-signout-btn" style="width:100%;padding:11px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>',
+      /* Tab content */
+      '<div style="overflow-y:auto;flex:1">',
+        '<div id="acct-pane-bookings" style="padding:16px 20px">',
+          '<div id="account-bookings" style="min-height:60px;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:13px">Loading...</div>',
+        '</div>',
+        '<div id="acct-pane-bikes" style="padding:16px 20px;display:none">',
+          '<div id="account-bikes" style="min-height:60px;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:13px">Loading...</div>',
+        '</div>',
+        '<div id="acct-pane-membership" style="padding:16px 20px;display:none">',
+          '<div id="account-membership" style="min-height:60px;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:13px">Loading...</div>',
+        '</div>',
+      '</div>',
+      /* Footer */
+      '<div style="padding:12px 20px;border-top:1px solid #E8ECF0;flex-shrink:0">',
+        '<button id="account-signout-btn" style="width:100%;padding:10px;border:1.5px solid #E8ECF0;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>',
       '</div>',
     '</div>'
   ].join('');
   document.body.appendChild(panel);
+
+  /* Tab switching */
+  panel.querySelectorAll('[data-acct-tab]').forEach(function(tabBtn) {
+    tabBtn.addEventListener('click', function() {
+      var target = tabBtn.dataset.acctTab;
+      panel.querySelectorAll('[data-acct-tab]').forEach(function(b) { b.style.cssText = tabStyle; });
+      tabBtn.style.cssText = tabActiveStyle;
+      ['bookings','bikes','membership'].forEach(function(t) {
+        document.getElementById('acct-pane-' + t).style.display = t === target ? 'block' : 'none';
+      });
+    });
+  });
 
   document.getElementById('account-panel-close').addEventListener('click', function() { panel.remove(); });
   panel.addEventListener('click', function(e) { if (e.target === panel) panel.remove(); });
@@ -1967,9 +2284,12 @@ function openAccountPanel(session) {
     if (confirm('Sign out?')) { _sb.auth.signOut(); panel.remove(); }
   });
 
+  /* Load all data */
   _sb.auth.getSession().then(function(res) {
     var sess = res.data && res.data.session ? res.data.session : null;
     if (!sess) return;
+
+    /* --- BOOKINGS --- */
     fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1977,67 +2297,65 @@ function openAccountPanel(session) {
     }).then(function(r) { return r.json(); }).then(function(bookings) {
       var el = document.getElementById('account-bookings');
       if (!el) return;
-      var STATUS_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#6B7280', cancelled:'#EF4444' };
-      var STATUS_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'En Route', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
-      if (!bookings || !bookings.length) { el.textContent = 'No bookings yet.'; return; }
+      if (!bookings || !bookings.length) {
+        el.innerHTML = '<div style="text-align:center;padding:24px 0"><div style="font-size:32px;margin-bottom:8px">📅</div><div style="font-size:14px;font-weight:600;color:#0D1F3C;margin-bottom:4px">No bookings yet</div><div style="font-size:12px;color:#94A3B8">Book a service to get started</div></div>';
+        return;
+      }
       var upcoming = bookings.filter(function(b) { return ['pending','confirmed','enroute','in_progress'].includes(b.status); });
       var past = bookings.filter(function(b) { return ['completed','cancelled'].includes(b.status); });
       var html = '';
       if (upcoming.length) {
-        html += '<div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;margin-bottom:8px">Upcoming (' + upcoming.length + ')</div>';
+        html += '<div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Upcoming (' + upcoming.length + ')</div>';
         upcoming.forEach(function(b) {
           var canEdit = b.status === 'pending' || b.status === 'confirmed';
-          html += '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:8px">';
-          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-          html += '<div style="font-size:13px;font-weight:600;color:#111827">' + esc(b.service_name || 'Service') + '</div>';
-          html += '<span style="font-size:11px;font-weight:600;color:' + (STATUS_COLORS[b.status]||'#6B7280') + '">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
+          var sc = STATUS_COLORS[b.status]||'#6B7280';
+          html += '<div style="background:#F8FAFC;border:1px solid #E8ECF0;border-left:3px solid ' + sc + ';border-radius:10px;padding:12px;margin-bottom:8px">';
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+          html += '<div style="font-size:13px;font-weight:700;color:#0D1F3C">' + esc(b.service_name || 'Service') + '</div>';
+          html += '<span style="font-size:11px;font-weight:600;color:' + sc + ';background:' + sc + '18;padding:2px 8px;border-radius:20px">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
           html += '</div>';
-          html += '<div style="font-size:12px;color:#6b7280">' + esc(b.scheduled_date||'') + (b.scheduled_time ? ' · ' + esc(b.scheduled_time) : '') + '</div>';
+          html += '<div style="font-size:12px;color:#94A3B8">' + esc(b.scheduled_date||'') + (b.scheduled_time ? ' · ' + esc(b.scheduled_time) : '') + '</div>';
           if (canEdit) {
             html += '<div style="display:flex;gap:6px;margin-top:8px">';
-            html += '<button class="acct-resched-btn" data-id="' + esc(b.id) + '" data-date="' + esc(b.scheduled_date||'') + '" data-time="' + esc(b.scheduled_time||'08:00') + '" style="flex:1;padding:6px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;font-family:inherit">📅 Reschedule</button>';
-            html += '<button class="acct-cancel-btn" data-id="' + esc(b.id) + '" style="flex:1;padding:6px;border:1px solid #fee2e2;border-radius:6px;background:#fff;color:#dc2626;font-size:12px;cursor:pointer;font-family:inherit">Cancel</button>';
+            html += '<button class="acct-resched-btn" data-id="' + esc(b.id) + '" data-date="' + esc(b.scheduled_date||'') + '" data-time="' + esc(b.scheduled_time||'08:00') + '" style="flex:1;padding:7px;border:1px solid #E8ECF0;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;color:#0D1F3C">Reschedule</button>';
+            html += '<button class="acct-cancel-btn" data-id="' + esc(b.id) + '" style="flex:1;padding:7px;border:1px solid #fee2e2;border-radius:6px;background:#fff;color:#dc2626;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">Cancel</button>';
             html += '</div>';
+          }
+          if (['confirmed','enroute','in_progress'].includes(b.status)) {
+            html += '<button class="acct-chat-btn" data-id="' + esc(b.id) + '" style="width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;background:#2563EB;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">&#128172; Message mechanic</button>';
           }
           html += '</div>';
         });
       }
       if (past.length) {
-        html += '<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-top:16px;margin-bottom:8px">History (' + past.length + ')</div>';
+        html += '<div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px">History</div>';
         past.slice(0, 5).forEach(function(b) {
-          html += '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:8px">';
-          html += '<div style="display:flex;justify-content:space-between">';
-          html += '<div style="font-size:13px;font-weight:600;color:#111827">' + esc(b.service_name||'Service') + '</div>';
-          html += '<span style="font-size:11px;color:' + (STATUS_COLORS[b.status]||'#6B7280') + '">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
-          html += '</div>';
-          html += '<div style="font-size:12px;color:#6b7280">' + esc(b.scheduled_date||'') + '</div>';
+          var sc = STATUS_COLORS[b.status]||'#6B7280';
+          html += '<div style="background:#F8FAFC;border:1px solid #E8ECF0;border-left:3px solid ' + sc + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">';
+          html += '<div><div style="font-size:13px;font-weight:600;color:#0D1F3C">' + esc(b.service_name||'Service') + '</div><div style="font-size:11px;color:#94A3B8;margin-top:2px">' + esc(b.scheduled_date||'') + '</div></div>';
+          html += '<span style="font-size:11px;font-weight:600;color:' + sc + '">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
           html += '</div>';
         });
       }
+      el.style.display = 'block'; el.style.alignItems = ''; el.style.justifyContent = '';
       el.innerHTML = html;
 
       el.addEventListener('click', function(e) {
         var cancelBtn = e.target.closest('.acct-cancel-btn');
         var reschedBtn = e.target.closest('.acct-resched-btn');
-
+        var chatBtn = e.target.closest('.acct-chat-btn');
+        if (chatBtn) { openLandingChat(chatBtn.dataset.id); return; }
         if (cancelBtn) {
           var bookingId = cancelBtn.dataset.id;
           if (!confirm('Cancel this booking?')) return;
           cancelBtn.textContent = '...'; cancelBtn.disabled = true;
           _sb.auth.getSession().then(function(s) {
-            var sess = s.data && s.data.session ? s.data.session : null;
-            if (!sess) { cancelBtn.textContent = 'Cancel'; cancelBtn.disabled = false; return; }
-            fetch('/api/auth', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ role: 'client-cancel', access_token: sess.access_token, booking_id: bookingId, client_id: sess.user.id })
-            }).then(function(r) {
-              if (r.ok) { openAccountPanel(sess); }
-              else { cancelBtn.textContent = 'Cancel'; cancelBtn.disabled = false; alert('Could not cancel. Please call us.'); }
-            });
+            var ss = s.data && s.data.session ? s.data.session : null;
+            if (!ss) { cancelBtn.textContent = 'Cancel'; cancelBtn.disabled = false; return; }
+            fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ role:'client-cancel', access_token:ss.access_token, booking_id:bookingId, client_id:ss.user.id }) })
+              .then(function(r) { if (r.ok) { openAccountPanel(ss); } else { cancelBtn.textContent = 'Cancel'; cancelBtn.disabled = false; alert('Could not cancel. Please call us.'); } });
           });
         }
-
         if (reschedBtn) {
           var bookingId = reschedBtn.dataset.id;
           var newDate = prompt('New date (YYYY-MM-DD):', reschedBtn.dataset.date);
@@ -2046,24 +2364,102 @@ function openAccountPanel(session) {
           var newTime = prompt('New time:\n' + timeOpts.join(' / '), reschedBtn.dataset.time);
           if (!newTime || !timeOpts.includes(newTime)) return;
           _sb.auth.getSession().then(function(s) {
-            var sess = s.data && s.data.session ? s.data.session : null;
-            if (!sess) return;
-            fetch('/api/auth', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ role: 'client-reschedule', access_token: sess.access_token, booking_id: bookingId, client_id: sess.user.id, scheduled_date: newDate, scheduled_time: newTime })
-            }).then(function(r) {
-              if (r.ok) { openAccountPanel(sess); }
-              else { alert('Could not reschedule. Please call us.'); }
-            });
+            var ss = s.data && s.data.session ? s.data.session : null;
+            if (!ss) return;
+            fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ role:'client-reschedule', access_token:ss.access_token, booking_id:bookingId, client_id:ss.user.id, scheduled_date:newDate, scheduled_time:newTime }) })
+              .then(function(r) { if (r.ok) { openAccountPanel(ss); } else { alert('Could not reschedule. Please call us.'); } });
           });
         }
       });
-
     }).catch(function() {
       var el = document.getElementById('account-bookings');
       if (el) el.textContent = 'Could not load bookings.';
     });
+
+    /* --- MY BIKES --- */
+    _sb.from('bikes').select('id,brand,model,type,year,color').eq('client_id', sess.user.id).order('created_at', { ascending: false })
+      .then(function(res) {
+        var el = document.getElementById('account-bikes');
+        if (!el) return;
+        if (res.error || !res.data || !res.data.length) {
+          el.innerHTML = '<div style="text-align:center;padding:24px 0"><div style="font-size:32px;margin-bottom:8px">🚲</div><div style="font-size:14px;font-weight:600;color:#0D1F3C;margin-bottom:4px">No bikes registered</div><div style="font-size:12px;color:#94A3B8">Your bikes appear here after your first service</div></div>';
+          return;
+        }
+        var html = '';
+        res.data.forEach(function(bike) {
+          html += '<div style="background:#F8FAFC;border:1px solid #E8ECF0;border-left:3px solid #2563EB;border-radius:10px;padding:12px;margin-bottom:8px">';
+          html += '<div style="font-size:13px;font-weight:700;color:#0D1F3C">' + esc((bike.brand||'') + ' ' + (bike.model||'Bike')) + '</div>';
+          var details = [bike.type, bike.year, bike.color].filter(Boolean).join(' · ');
+          if (details) html += '<div style="font-size:12px;color:#94A3B8;margin-top:3px">' + esc(details) + '</div>';
+          html += '</div>';
+        });
+        el.style.display = 'block'; el.style.alignItems = ''; el.style.justifyContent = '';
+        el.innerHTML = html;
+      });
+
+    /* --- MEMBERSHIP --- */
+    _sb.from('profiles').select('membership_status,membership_plan,membership_started_at').eq('id', sess.user.id).single()
+      .then(function(res) {
+        var el = document.getElementById('account-membership');
+        if (!el) return;
+        var p = res.data || {};
+        var status = p.membership_status || 'none';
+        if (status === 'none' || status === 'inactive' || status === 'cancelled' || !p.membership_plan) {
+          el.innerHTML = '<div style="text-align:center;padding:24px 0"><div style="font-size:32px;margin-bottom:8px">⭐</div><div style="font-size:14px;font-weight:600;color:#0D1F3C;margin-bottom:4px">No active membership</div><div style="font-size:12px;color:#94A3B8;margin-bottom:16px">Save money with a recurring plan</div><a href="#memberships" id="acct-view-plans" style="display:inline-block;padding:9px 20px;background:#2563EB;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">View Plans</a></div>';
+          var vp = el.querySelector('#acct-view-plans');
+          if (vp) vp.addEventListener('click', function() { panel.remove(); });
+          return;
+        }
+        var planColors = { basic:'#0A58CA', standard:'#2563EB', vip:'#7C3AED' };
+        var planColor = planColors[p.membership_plan] || '#2563EB';
+        var planLabel = (p.membership_plan||'').charAt(0).toUpperCase() + (p.membership_plan||'').slice(1);
+        var startDate = p.membership_started_at ? new Date(p.membership_started_at).toLocaleDateString('en-AU', { month:'short', year:'numeric' }) : '';
+        var isPaused = status === 'paused';
+        var statusBadge = isPaused
+          ? '<span style="background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">Paused</span>'
+          : '<span style="background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block"></span>Active</span>';
+        el.style.display = 'block'; el.style.alignItems = ''; el.style.justifyContent = '';
+        el.innerHTML = '<div style="background:linear-gradient(135deg,' + planColor + ',#1848C8);border-radius:12px;padding:20px;color:#fff;margin-bottom:12px">' +
+          '<div style="font-size:11px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Current Plan</div>' +
+          '<div style="font-size:24px;font-weight:800;letter-spacing:-0.02em">' + esc(planLabel) + ' Membership</div>' +
+          (startDate ? '<div style="font-size:12px;opacity:0.7;margin-top:4px">Member since ' + startDate + '</div>' : '') +
+          '<div style="margin-top:12px">' + statusBadge + '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px">' +
+          '<button id="acct-membership-toggle" data-paused="' + (isPaused?'1':'0') + '" style="flex:1;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ' + (isPaused?'#059669':'#D97706') + ';color:' + (isPaused?'#059669':'#D97706') + ';background:#fff">' + (isPaused?'Resume':'Pause') + '</button>' +
+          '<button id="acct-membership-cancel" style="flex:1;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:#fff">Cancel</button>' +
+          '</div>';
+        // Wire up buttons after HTML is set
+        setTimeout(function() {
+          var toggleBtn = document.getElementById('acct-membership-toggle');
+          var cancelMBtn = document.getElementById('acct-membership-cancel');
+          if (toggleBtn) toggleBtn.addEventListener('click', async function() {
+            toggleBtn.disabled = true;
+            toggleBtn.textContent = isPaused ? 'Resuming...' : 'Pausing...';
+            try {
+              var session = (await _sb.auth.getSession()).data.session;
+              var endpoint = isPaused ? '/api/resume-subscription' : '/api/pause-subscription';
+              var r = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ access_token: session?.access_token }) });
+              var d = await r.json();
+              if (!r.ok) throw new Error(d.error || 'Failed');
+              alert(isPaused ? 'Membership resumed!' : 'Membership paused. No charges until you resume.');
+              openAccountPanel();
+            } catch(e) { alert(e.message || 'Something went wrong'); toggleBtn.disabled = false; toggleBtn.textContent = isPaused ? 'Resume' : 'Pause'; }
+          });
+          if (cancelMBtn) cancelMBtn.addEventListener('click', async function() {
+            if (!confirm('Cancel your membership? It will stay active until the end of the billing period.')) return;
+            cancelMBtn.disabled = true; cancelMBtn.textContent = 'Cancelling...';
+            try {
+              var session = (await _sb.auth.getSession()).data.session;
+              var r = await fetch('/api/cancel-subscription', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ access_token: session?.access_token }) });
+              var d = await r.json();
+              if (!r.ok) throw new Error(d.error || 'Failed');
+              alert('Membership will cancel at end of current period.');
+              openAccountPanel();
+            } catch(e) { alert(e.message || 'Something went wrong'); cancelMBtn.disabled = false; cancelMBtn.textContent = 'Cancel'; }
+          });
+        }, 50);
+      });
   });
 }
 
@@ -2476,13 +2872,75 @@ async function bkLoadAndRenderSlots() {
   grid.innerHTML = '<div style="height:34px;background:#F3F4F6;border-radius:8px;grid-column:1/-1"></div>';
   var slots;
   try {
-    var svcId = _bkState.service ? _bkState.service.id : null;
-    var res = await _sb.from('availability').select('time_slot, available').eq('date', _bkState.date).eq('service_id', svcId);
-    slots = (res.error || !res.data || !res.data.length)
-      ? BK_MOCK_SLOTS.map(function(t) { return { time: t, available: true }; })
-      : res.data.map(function(r) { return { time: r.time_slot, available: r.available }; });
+    var res = await fetch('/api/auth?role=get-availability&date=' + encodeURIComponent(_bkState.date));
+    slots = res.ok ? await res.json() : BK_MOCK_SLOTS.map(function(t) { return { time: t, available: true }; });
   } catch(e) {
     slots = BK_MOCK_SLOTS.map(function(t) { return { time: t, available: true }; });
+  }
+  var allBooked = slots.length > 0 && slots.every(function(s) { return !s.available; });
+  if (allBooked) {
+    var wlDate = _bkState.date || '';
+    var wlSvc = (_bkState.service && _bkState.service.name) ? _bkState.service.name : '';
+    var wlTimesHtml = slots.map(function(s) {
+      return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;cursor:pointer">' +
+        '<input type="checkbox" value="' + s.time + '" style="accent-color:#2563EB"> ' + s.time + '</label>';
+    }).join('');
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:12px 0">' +
+      '<div style="text-align:center;margin-bottom:12px">' +
+      '<div style="font-size:20px;margin-bottom:4px">&#128536;</div>' +
+      '<div style="font-weight:700;color:#374151;font-size:13px;margin-bottom:2px">Fully booked on this date</div>' +
+      '<div style="font-size:12px;color:#6B7280">Choose another day or join the waitlist</div></div>' +
+      '<button id="bk-waitlist-btn" style="width:100%;padding:10px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Join Waitlist</button>' +
+      '<div id="bk-waitlist-form" style="display:none;margin-top:12px;background:#F8FAFF;border:1px solid #DBEAFE;border-radius:10px;padding:14px">' +
+      '<div style="font-weight:700;color:#0D1F3C;font-size:13px;margin-bottom:8px">Which times work for you?</div>' +
+      '<div id="bk-waitlist-times" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">' + wlTimesHtml + '</div>' +
+      '<div id="bk-waitlist-msg" style="font-size:12px;color:#DC2626;margin-bottom:8px;display:none"></div>' +
+      '<button id="bk-waitlist-submit" style="width:100%;padding:10px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
+      '</div></div>';
+
+    document.getElementById('bk-waitlist-btn').addEventListener('click', function() {
+      var f = document.getElementById('bk-waitlist-form');
+      f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('bk-waitlist-submit').addEventListener('click', async function() {
+      var btn = document.getElementById('bk-waitlist-submit');
+      var msg = document.getElementById('bk-waitlist-msg');
+      var times = Array.from(document.querySelectorAll('#bk-waitlist-times input:checked')).map(function(i) { return i.value; });
+      if (!times.length) { msg.textContent = 'Select at least one time.'; msg.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Joining...'; msg.style.display = 'none';
+      try {
+        var sessionRes = await _sb.auth.getSession();
+        var session = sessionRes.data && sessionRes.data.session;
+        if (!session) throw new Error('Please sign in first to join the waitlist.');
+        var u = session.user;
+        var resp = await fetch('/api/auth?role=join-waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: session.access_token,
+            client_id: u.id,
+            email: u.email,
+            name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || '',
+            date: wlDate,
+            preferred_times: times,
+            service_name: wlSvc,
+          }),
+        });
+        var data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Failed to join waitlist');
+        document.getElementById('bk-waitlist-form').innerHTML =
+          '<div style="text-align:center;padding:6px 0">' +
+          '<div style="font-size:18px;margin-bottom:6px">&#9989;</div>' +
+          '<div style="font-weight:700;color:#059669;font-size:13px">You\'re on the waitlist!</div>' +
+          '<div style="font-size:12px;color:#6B7280;margin-top:3px">We\'ll email ' + u.email + ' if a slot opens on ' + wlDate + '.</div>' +
+          '</div>';
+      } catch(e) {
+        msg.textContent = e.message; msg.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Notify Me When a Slot Opens';
+      }
+    });
+    return;
   }
   grid.innerHTML = slots.map(function(s) {
     var sel = s.time === _bkState.time;
@@ -2511,7 +2969,57 @@ async function bkLoadAndRenderSlots() {
 function bkRenderStep3() {
   document.getElementById('bk-content').innerHTML = bkStep3HTML();
   document.getElementById('bk-step3-back').addEventListener('click', function() { bkShowStep(2); });
-  document.getElementById('bk-step3-proceed').addEventListener('click', bkProceed);
+  var _bkProceedBtn = document.getElementById('bk-step3-proceed');
+  _bkProceedBtn.addEventListener('click', bkShowPaymentComingSoon);
+  // Admin (peredo.dm@gmail.com): create real bookings without payment, to test all apps end-to-end.
+  _sb.auth.getUser().then(function(r) {
+    var email = (r && r.data && r.data.user) ? r.data.user.email : '';
+    if (email !== 'peredo.dm@gmail.com') return;
+    _bkProceedBtn.removeEventListener('click', bkShowPaymentComingSoon);
+    _bkProceedBtn.addEventListener('click', bkProceed);
+    _bkProceedBtn.textContent = 'Create test booking (admin - no charge) →';
+    var badge = document.createElement('div');
+    badge.style.cssText = 'border:1px dashed #2563EB;color:#1848C8;background:#EFF6FF;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:600;margin-bottom:10px;text-align:center';
+    badge.textContent = 'Admin test mode - this booking is created without payment';
+    _bkProceedBtn.parentNode.parentNode.insertBefore(badge, _bkProceedBtn.parentNode);
+  }).catch(function() {});
+
+  var _bkDiscount = 0;
+  document.getElementById('bk-promo-btn').addEventListener('click', function() {
+    var code = (document.getElementById('bk-promo').value || '').trim().toUpperCase();
+    var msg = document.getElementById('bk-promo-msg');
+    if (!code) return;
+    msg.style.color = '#6B7280'; msg.textContent = 'Checking...';
+    _sb.from('discount_codes')
+      .select('discount_amount, discount_type, max_uses, uses_count, active')
+      .eq('code', code).single()
+      .then(function(res) {
+        var data = res.data, error = res.error;
+        if (error || !data || !data.active) throw new Error('Invalid or expired code');
+        if (data.max_uses && data.uses_count >= data.max_uses) throw new Error('Code has reached its limit');
+        var base = Number((_bkState.service || {}).price || 0);
+        var disc = data.discount_type === 'percentage'
+          ? Math.round(base * data.discount_amount / 100 * 100) / 100
+          : Math.min(data.discount_amount, base);
+        _bkDiscount = disc;
+        _bkState.discountAmount = disc;
+        _bkState.discountCode   = code;
+        var svcEl = document.getElementById('bk-svc-price');
+        var totalEl = document.getElementById('bk-total-amount');
+        var discRow = document.getElementById('bk-discount-row');
+        var discAmt = document.getElementById('bk-discount-amt');
+        if (svcEl)   svcEl.textContent   = '$' + Math.max(0, base - disc).toFixed(2);
+        if (totalEl) totalEl.textContent = '$' + (Math.max(0, base - disc) + 20).toFixed(2);
+        if (discRow) discRow.style.display = 'flex';
+        if (discAmt) discAmt.textContent = '-$' + disc.toFixed(2);
+        msg.style.color = '#059669'; msg.textContent = 'Code applied! -$' + disc.toFixed(2) + ' off';
+        document.getElementById('bk-promo').disabled = true;
+        document.getElementById('bk-promo-btn').disabled = true;
+      }).catch(function(e) {
+        _bkDiscount = 0;
+        msg.style.color = '#DC2626'; msg.textContent = e.message || 'Invalid code';
+      });
+  });
 }
 
 function bkSummaryRow(label, value) {
@@ -2521,31 +3029,133 @@ function bkSummaryRow(label, value) {
   '</div>';
 }
 
+var BK_INCLUSIONS = {
+  tune:     ['Gear adjustment & cable tension','Brake check & pad inspection','Wheel true & tyre pressure','Chain lube & basic clean','Safety inspection'],
+  standard: ['Everything in Tune-Up','Full drivetrain clean & degrease','Cable check & replace if worn','Bearing check (BB, headset, hubs)'],
+  major:    ['Everything in Standard Service','Bottom bracket service','Headset adjustment & grease','Comprehensive component report'],
+  ultimate: ['Full bike rebuild','All bearings serviced or replaced','Before & after photos','Detailed parts condition report'],
+  safety:   ['Brake pad check','Tyre & wheel inspection','Drivetrain check','Headset & stem safety check'],
+  flat:     ['Tube replacement','Tyre inspection','Pressure set to spec'],
+  gear:     ['Derailleur alignment','Cable tension adjustment','Limit screw set','Test ride'],
+  brake:    ['Pad replacement','Cable tension & rotor/rim check','Bedding in if disc brakes'],
+  chain:    ['Remove, clean & replace chain','Check cassette wear'],
+  wheel:    ['True wheel (spoke tension)','Rim or rotor inspection'],
+};
+function bkGetInclusions(name) {
+  var n = (name || '').toLowerCase();
+  if (n.includes('ultimate') || n.includes('overhaul')) return BK_INCLUSIONS.ultimate;
+  if (n.includes('major'))    return BK_INCLUSIONS.major;
+  if (n.includes('standard')) return BK_INCLUSIONS.standard;
+  if (n.includes('tune'))     return BK_INCLUSIONS.tune;
+  if (n.includes('safety'))   return BK_INCLUSIONS.safety;
+  if (n.includes('flat') || n.includes('tyre')) return BK_INCLUSIONS.flat;
+  if (n.includes('gear'))     return BK_INCLUSIONS.gear;
+  if (n.includes('brake') || n.includes('bleed')) return BK_INCLUSIONS.brake;
+  if (n.includes('chain'))    return BK_INCLUSIONS.chain;
+  if (n.includes('wheel') || n.includes('true')) return BK_INCLUSIONS.wheel;
+  return null;
+}
+
 function bkStep3HTML() {
   var s = _bkState.service || {};
-  var html = '<div style="border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;margin-bottom:14px">';
-  html += bkSummaryRow('Service', s.name || '-');
+  var callout = 20;
+  var svcPrice = Number(s.price || 0);
+  var total = svcPrice + callout;
+  var dur = bkFormatDuration(s);
+  var inclusions = bkGetInclusions(s.name);
+
+  var html = '';
+
+  // Service header card
+  html += '<div style="background:#0D1F3C;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">';
+  html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/></svg>';
+  html += '<div><div style="color:#fff;font-size:14px;font-weight:700">' + (s.name || '-') + '</div>';
+  if (dur) html += '<div style="color:rgba(255,255,255,0.65);font-size:11px;margin-top:1px">Est. ' + dur + '</div>';
+  html += '</div></div>';
+
+  // Appointment details
+  html += '<div style="border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;margin-bottom:12px">';
   html += bkSummaryRow('Date', bkFormatDate(_bkState.date));
   html += bkSummaryRow('Time', _bkState.time || '-');
-  html += bkSummaryRow('Est. Duration', bkFormatDuration(s) || '-');
   html += '</div>';
-  html += '<div style="margin-bottom:14px">';
-  html += '<label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Your Address</label>';
+
+  // What's included
+  if (inclusions) {
+    html += '<div style="border:1px solid #E5E7EB;border-radius:10px;padding:12px 14px;margin-bottom:12px">';
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;margin-bottom:8px">What\'s included</div>';
+    inclusions.forEach(function(item) {
+      html += '<div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:6px">';
+      html += '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><polyline points="20 6 9 17 4 12"/></svg>';
+      html += '<span style="font-size:12px;color:#374151;line-height:1.4">' + item + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Address
+  html += '<div style="margin-bottom:12px">';
+  html += '<label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;display:block;margin-bottom:6px">Your Address</label>';
   html += '<input id="bk-address" type="text" placeholder="123 Example St, Suburb NSW 2000" autocomplete="street-address"' +
-    ' style="width:100%;padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box;font-family:inherit">';
-  html += '<div style="font-size:11px;color:#9CA3AF;margin-top:3px">Where should we come? (Sydney area only)</div>';
+    ' style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box;font-family:inherit;color:#111827">';
+  html += '<div style="font-size:11px;color:#9CA3AF;margin-top:3px">We come to you anywhere in the Sydney area</div>';
   html += '</div>';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid #111827;border-bottom:2px solid #111827;margin-bottom:14px">';
+
+  // Promo code
+  html += '<div style="margin-bottom:12px">';
+  html += '<label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;display:block;margin-bottom:6px">Promo code <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>';
+  html += '<div style="display:flex;gap:8px">';
+  html += '<input id="bk-promo" type="text" placeholder="e.g. WELCOME10" style="flex:1;padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:13px;outline:none;text-transform:uppercase;font-family:inherit;color:#111827">';
+  html += '<button id="bk-promo-btn" style="padding:9px 14px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Apply</button>';
+  html += '</div>';
+  html += '<div id="bk-promo-msg" style="font-size:11px;min-height:16px;margin-top:4px"></div>';
+  html += '</div>';
+
+  // Pricing breakdown
+  html += '<div style="border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;margin-bottom:12px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F3F4F6">';
+  html += '<span style="font-size:13px;color:#6B7280">Service fee</span><span style="font-size:13px;font-weight:600;color:#111827" id="bk-svc-price">$' + svcPrice.toFixed(2) + '</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F3F4F6">';
+  html += '<div><span style="font-size:13px;color:#6B7280">Mobile call-out fee</span><div style="font-size:10px;color:#9CA3AF;margin-top:1px">We\'ll arrange payment on confirmation</div></div>';
+  html += '<span style="font-size:13px;font-weight:600;color:#111827">$' + callout.toFixed(2) + '</span></div>';
+  html += '<div id="bk-discount-row" style="display:none;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F3F4F6">';
+  html += '<span style="font-size:13px;color:#059669">Promo discount</span><span style="font-size:13px;font-weight:600;color:#059669" id="bk-discount-amt"></span></div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#F9FAFB">';
   html += '<span style="font-size:15px;font-weight:700;color:#111827">Total</span>';
-  html += '<span style="font-size:18px;font-weight:800;color:#0A58CA">$' + (s.price || 0) + '</span>';
+  html += '<span style="font-size:19px;font-weight:800;color:#0A58CA" id="bk-total-amount">$' + total.toFixed(2) + '</span></div>';
   html += '</div>';
+
   html += '<div id="bk-booking-error" style="display:none;color:#DC2626;font-size:12px;margin-bottom:10px;padding:8px;background:#FEF2F2;border-radius:6px;border:1px solid #FECACA"></div>';
-  html += '<div style="background:#FEE2E2;color:#991B1B;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:600;margin-bottom:12px;text-align:center">All services include a $20 mobile call-out fee. We\'ll arrange payment when we contact you to confirm.</div>';
+
   html += '<div style="display:flex;gap:8px">';
   html += '<button id="bk-step3-back" style="flex:1;padding:11px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">&#8592; Back</button>';
-  html += '<button id="bk-step3-proceed" style="flex:2;padding:11px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Confirm &amp; Pay &#8594;</button>';
+  html += '<button id="bk-step3-proceed" style="flex:2;padding:11px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Confirm Booking &#8594;</button>';
   html += '</div>';
   return html;
+}
+
+function bkShowPaymentComingSoon() {
+  var svcName = (_bkState.service && _bkState.service.name) ? _bkState.service.name : 'service';
+  var date = _bkState.date || '';
+  var time = _bkState.time || '';
+  var waMsg = encodeURIComponent('Hi Dr. Bike! I\'d like to book a ' + svcName + (date ? ' on ' + date : '') + (time ? ' at ' + time : '') + '. Can you confirm my slot?');
+  var overlay = document.createElement('div');
+  overlay.id = 'bk-coming-soon-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(13,31,60,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = '<div style="background:#fff;border-radius:20px;padding:32px 28px;max-width:380px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.18)">' +
+    '<div style="width:56px;height:56px;background:#FEF3C7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' +
+    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>' +
+    '<div style="font-weight:800;font-size:19px;color:#0D1F3C;margin-bottom:10px">Online payments coming soon</div>' +
+    '<div style="font-size:14px;color:#6B7280;line-height:1.6;margin-bottom:24px">We\'re finalising our business setup. Contact us now to lock in your <strong>' + svcName + '</strong>' + (date ? ' on <strong>' + date + '</strong>' : '') + (time ? ' at <strong>' + time + '</strong>' : '') + ' - same price, same service.</div>' +
+    '<a href="https://wa.me/61433963250?text=' + waMsg + '" target="_blank" ' +
+    'style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:#25D366;color:#fff;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:10px;box-sizing:border-box">' +
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>' +
+    'Book via WhatsApp</a>' +
+    '<a href="tel:+61433963250" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:#fff;color:#2563EB;border:2px solid #2563EB;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:14px;box-sizing:border-box">' +
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+    'Call 0433 963 250</a>' +
+    '<button onclick="document.getElementById(\'bk-coming-soon-overlay\').remove()" style="background:none;border:none;color:#6B7280;font-size:13px;cursor:pointer;font-family:inherit">Go back</button>' +
+    '</div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 async function bkProceed() {
@@ -2558,29 +3168,37 @@ async function bkProceed() {
   try {
     var userRes = await _sb.auth.getUser();
     var u = (userRes.data && userRes.data.user) ? userRes.data.user : null;
-    if (!u) { throw new Error('Please sign in to complete your booking.'); }
-    var meta = u.user_metadata || {};
-    var ins = await _sb.from('bookings').insert([{
-      user_id: u.id,
-      client_id: u.id,
-      client_name: meta.full_name || meta.name || '',
-      client_email: u.email || '',
-      service_name: _bkState.service.name,
-      scheduled_date: _bkState.date,
-      scheduled_time: _bkState.time,
-      address: addr || 'Home',
-      status: 'pending',
-      service_price: _bkState.service.price,
-    }]).select().single();
-    if (ins.error) throw ins.error;
-    _bkState.bookingId = ins.data.id;
-    document.getElementById('bk-content').innerHTML = bkConfirmedHTML(ins.data.id);
+    if (!u) {
+      btn.disabled = false; btn.textContent = 'Confirm & Pay →';
+      errEl.textContent = 'Please sign in to confirm your booking.';
+      errEl.style.display = 'block';
+      setTimeout(function() { openAuthModal(); }, 600);
+      return;
+    }
+    var sessRes = await _sb.auth.getSession();
+    var sess = (sessRes.data && sessRes.data.session) ? sessRes.data.session : null;
+    if (!sess) throw new Error('Please sign in to confirm your booking.');
+    // Server is authoritative: looks up the price and inserts (admin test = no payment).
+    var resp = await fetch('/api/auth', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'create-booking', access_token: sess.access_token,
+        service_id: _bkState.service.id || null, service_name: _bkState.service.name,
+        scheduled_date: _bkState.date, scheduled_time: _bkState.time,
+        address: addr || 'Home', discount_code: _bkState.discountCode || null,
+      }),
+    });
+    var d = await resp.json();
+    if (!resp.ok) throw new Error(d.error || 'Could not save booking. Please try again.');
+    _bkState.bookingId = d.id;
+    document.getElementById('bk-content').innerHTML = bkConfirmedHTML(d.id);
     document.getElementById('bk-done-btn').addEventListener('click', function() {
       closeBooking();
       _bkState.service = null; _bkState.date = null; _bkState.time = null; _bkState.bookingId = null;
     });
   } catch(e) {
-    errEl.textContent = e.message || 'Could not save booking. Please try again.';
+    var dup = e && (e.code === '23505' || /unique|duplicate key/i.test(e.message || ''));
+    errEl.textContent = dup ? 'That time slot was just booked. Please choose another time.' : (e.message || 'Could not save booking. Please try again.');
     errEl.style.display = 'block';
     btn.disabled = false; btn.textContent = 'Confirm & Pay →';
   }
@@ -2689,47 +3307,28 @@ document.addEventListener('DOMContentLoaded', function() {
   var homeViewAllBtn = document.getElementById('home-view-all-btn');
   if (homeViewAllBtn) homeViewAllBtn.addEventListener('click', openServicesModal);
 
-  // Booking temporarily disabled on landing (desktop) until visual unification —
-  // see docs/PENDIENTES.md item 1. Modal code below kept intact for reuse.
-  // var heroBk = document.getElementById('hero-book-btn');
-  // if (heroBk) heroBk.addEventListener('click', function() { openBooking(); });
-
-  // document.querySelectorAll('.svc-card').forEach(function(card) {
-  //   card.addEventListener('click', function() {
-  //     var svcName = card.querySelector('.svc-name');
-  //     openBooking(svcName ? svcName.textContent.trim() : null);
-  //   });
-  // });
+  var heroBk = document.getElementById('hero-book-btn');
+  if (heroBk) heroBk.addEventListener('click', function() { openBooking(); });
 
   document.querySelectorAll('.svc-btn').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
-      _sb.auth.getUser().then(function(res) {
-        if (res && res.data && res.data.user && res.data.user.email === 'peredo.dm@gmail.com') {
-          document.getElementById('services-modal').style.display = 'none';
-          openBooking();
-        }
-      });
+      var modal = document.getElementById('services-modal');
+      if (modal) modal.style.display = 'none';
+      var svcName = btn.closest('.service-card') && btn.closest('.service-card').querySelector('.svc-name');
+      openBooking(svcName ? svcName.textContent.trim() : null);
     });
   });
 
   document.querySelectorAll('.services-grid .service-card').forEach(function(card) {
     card.style.cursor = 'pointer';
     card.addEventListener('click', function() {
-      _sb.auth.getUser().then(function(res) {
-        if (res && res.data && res.data.user && res.data.user.email === 'peredo.dm@gmail.com') {
-          document.getElementById('services-modal').style.display = 'none';
-          openBooking();
-        }
-      });
+      var svcName = card.querySelector('.svc-name');
+      openBooking(svcName ? svcName.textContent.trim() : null);
     });
   });
 
-  var lcGoogle = document.getElementById('login-cta-google');
-  if (lcGoogle) lcGoogle.addEventListener('click', signInGoogle);
-
-  var lcCreate = document.getElementById('login-cta-create');
-  if (lcCreate) lcCreate.addEventListener('click', function() { openAuthModal(); showAuthTab('signup'); });
+  /* login-cta buttons removed — auth via nav My Account button */
 });
 </script>
 
@@ -2843,6 +3442,369 @@ document.addEventListener('DOMContentLoaded', function() {
       openMembershipModal(plan);
     });
   });
+}());
+
+// ── Gift card purchase result: /?gift=success | cancelled ─────────────────────
+(function() {
+  var p = new URLSearchParams(window.location.search);
+  var gift = p.get('gift');
+  if (!gift) return;
+  history.replaceState({}, '', '/');
+  if (gift === 'success') {
+    alert('🎁 Gift card purchased! It has been emailed to the recipient with their unique code.');
+  }
+}());
+
+// ── Review link handler: /?review=bookingId ───────────────────────────────────
+(function() {
+  var p = new URLSearchParams(window.location.search);
+  var reviewId = p.get('review');
+  if (!reviewId) return;
+  history.replaceState({}, '', '/');
+
+  var currentRating = 0;
+  var reviewPhotoFile = null;
+
+  function compressImageToBase64(file, maxPx, quality) {
+    return new Promise(function(resolve, reject) {
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function() {
+        URL.revokeObjectURL(url);
+        var w = img.naturalWidth, h = img.naturalHeight;
+        if (w > maxPx || h > maxPx) {
+          if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  function starHTML(n) {
+    return [1,2,3,4,5].map(function(i) {
+      var active = i <= n;
+      return '<button data-val="'+i+'" style="background:none;border:none;font-size:38px;cursor:pointer;padding:3px;line-height:1;color:'+(active?'#D97706':'#E5E7EB')+';transition:color .1s,transform .1s;transform:'+(active?'scale(1.08)':'scale(1)')+'">'+(active?'★':'★')+'</button>';
+    }).join('');
+  }
+
+  var LABELS = ['','Terrible','Poor','OK','Good','Excellent'];
+
+  var modal = document.createElement('div');
+  modal.id = 'review-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,-apple-system,sans-serif';
+  modal.innerHTML = [
+    '<div id="rv-card" style="background:#fff;border-radius:16px;width:100%;max-width:420px;overflow:hidden">',
+      '<div style="padding:24px 24px 0">',
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">',
+          '<div style="width:44px;height:44px;flex-shrink:0;background:#EEF3FC;border-radius:50%;display:flex;align-items:center;justify-content:center">',
+            '<svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/><circle cx="12" cy="6" r="1.5" fill="#2563EB" stroke="none"/></svg>',
+          '</div>',
+          '<div>',
+            '<div style="font-size:16px;font-weight:700;color:#0D1F3C">How was your service?</div>',
+            '<div style="font-size:12px;color:#6B7280;margin-top:2px">Your feedback helps us improve</div>',
+          '</div>',
+        '</div>',
+        '<div style="height:1px;background:#F3F4F6;margin:0 -24px 20px"></div>',
+        '<div style="text-align:center;margin-bottom:4px">',
+          '<div id="rv-stars" style="display:inline-flex;gap:2px">'+starHTML(0)+'</div>',
+          '<div id="rv-label" style="font-size:13px;font-weight:600;min-height:20px;margin-top:6px;color:#D97706"></div>',
+        '</div>',
+      '</div>',
+      '<div style="padding:16px 24px 24px;display:flex;flex-direction:column;gap:14px">',
+        '<div>',
+          '<div style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Your comments</div>',
+          '<textarea id="rv-comment" maxlength="500" placeholder="Tell us what you loved or what we can improve..." style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:13px;font-family:inherit;height:80px;resize:none;outline:none;color:#111827;background:#fff"></textarea>',
+          '<div style="display:flex;justify-content:flex-end;font-size:11px;color:#9CA3AF;margin-top:3px"><span id="rv-ct">0</span>/500</div>',
+        '</div>',
+        '<div>',
+          '<div style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Add a photo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9CA3AF">(optional)</span></div>',
+          '<div style="display:flex;gap:10px;align-items:flex-start">',
+            '<label id="rv-photo-lbl" style="flex:1;display:flex;align-items:center;gap:10px;height:52px;padding:0 14px;border:1.5px dashed #E5E7EB;border-radius:10px;cursor:pointer;background:#F9FAFB">',
+              '<svg viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" width="20" height="20"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+              '<span id="rv-photo-txt" style="font-size:13px;color:#6B7280">Tap to add a photo</span>',
+              '<input type="file" accept="image/*" id="rv-photo-inp" style="display:none">',
+            '</label>',
+            '<div id="rv-preview" style="display:none;width:52px;height:52px;flex-shrink:0;position:relative">',
+              '<img id="rv-preview-img" style="width:52px;height:52px;object-fit:cover;border-radius:8px;display:block" alt="">',
+              '<button id="rv-remove" type="button" aria-label="Remove photo" style="position:absolute;top:-6px;right:-6px;background:#DC2626;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">',
+                '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" width="9" height="9"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+              '</button>',
+            '</div>',
+          '</div>',
+        '</div>',
+        '<div id="rv-err" style="display:none;font-size:13px;color:#DC2626;padding:8px 10px;background:#FEF2F2;border-radius:8px;text-align:center"></div>',
+        '<button id="rv-submit" style="width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Submit review</button>',
+        '<button id="rv-skip" style="width:100%;padding:8px;background:none;border:none;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit">Maybe later</button>',
+      '</div>',
+    '</div>'
+  ].join('');
+
+  document.body.appendChild(modal);
+
+  // Stars
+  document.getElementById('rv-stars').addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-val]');
+    if (!btn) return;
+    currentRating = Number(btn.dataset.val);
+    document.getElementById('rv-stars').innerHTML = starHTML(currentRating);
+    var lbl = document.getElementById('rv-label');
+    lbl.textContent = LABELS[currentRating];
+    lbl.style.color = currentRating === 5 ? '#059669' : currentRating >= 3 ? '#D97706' : '#DC2626';
+  });
+
+  // Char counter
+  document.getElementById('rv-comment').addEventListener('input', function() {
+    document.getElementById('rv-ct').textContent = this.value.length;
+  });
+
+  // Photo pick
+  document.getElementById('rv-photo-inp').addEventListener('change', function() {
+    if (!this.files[0]) return;
+    reviewPhotoFile = this.files[0];
+    document.getElementById('rv-preview-img').src = URL.createObjectURL(reviewPhotoFile);
+    document.getElementById('rv-preview').style.display = 'block';
+    document.getElementById('rv-photo-txt').textContent = 'Change photo';
+    var lbl = document.getElementById('rv-photo-lbl');
+    lbl.style.borderColor = '#2563EB';
+    lbl.style.background = '#EEF3FC';
+  });
+
+  // Photo remove
+  document.getElementById('rv-remove').addEventListener('click', function(e) {
+    e.preventDefault();
+    reviewPhotoFile = null;
+    document.getElementById('rv-preview').style.display = 'none';
+    document.getElementById('rv-photo-inp').value = '';
+    document.getElementById('rv-photo-txt').textContent = 'Tap to add a photo';
+    var lbl = document.getElementById('rv-photo-lbl');
+    lbl.style.borderColor = '#E5E7EB';
+    lbl.style.background = '#F9FAFB';
+  });
+
+  // Submit
+  document.getElementById('rv-submit').addEventListener('click', function() {
+    var btn = document.getElementById('rv-submit');
+    var errEl = document.getElementById('rv-err');
+    if (!currentRating) { errEl.textContent = 'Please select a star rating first'; errEl.style.display = 'block'; return; }
+    btn.disabled = true; btn.textContent = 'Submitting...'; errEl.style.display = 'none';
+    var comment = (document.getElementById('rv-comment').value || '').trim();
+
+    var doSubmit = function(photoBase64) {
+      fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'client-review', booking_id: reviewId, rating: currentRating, comment: comment, photo_base64: photoBase64 || null })
+      })
+      .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+      .then(function(res) {
+        if (!res.ok) { errEl.textContent = res.d.error || 'Could not submit review'; errEl.style.display = 'block'; btn.textContent = 'Submit review'; btn.disabled = false; return; }
+        document.getElementById('rv-card').innerHTML = [
+          '<div style="padding:40px 28px;text-align:center">',
+            '<div style="width:64px;height:64px;margin:0 auto 16px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center">',
+              '<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" width="28" height="28"><polyline points="20 6 9 17 4 12"/></svg>',
+            '</div>',
+            '<div style="font-size:20px;font-weight:700;color:#0D1F3C;margin-bottom:8px">Thank you!</div>',
+            '<div style="font-size:14px;color:#6B7280;margin-bottom:24px">Your review has been submitted</div>',
+            '<a href="https://g.page/r/drbikesydney/review" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;text-decoration:none;margin-bottom:14px">',
+              '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>',
+              '<div style="text-align:left;flex:1"><div style="font-size:13px;font-weight:600;color:#111827">Also leave a Google review?</div><div style="font-size:11px;color:#6B7280">Helps cyclists find us</div></div>',
+              '<svg viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+            '</a>',
+            '<button onclick="document.getElementById(\'review-modal\').remove()" style="background:none;border:none;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit">Close</button>',
+          '</div>'
+        ].join('');
+      })
+      .catch(function() { errEl.textContent = 'Connection error — try again'; errEl.style.display = 'block'; btn.textContent = 'Submit review'; btn.disabled = false; });
+    };
+
+    if (reviewPhotoFile) {
+      btn.textContent = 'Uploading photo...';
+      compressImageToBase64(reviewPhotoFile, 1920, 0.82)
+        .then(function(b64) { doSubmit(b64); })
+        .catch(function() { doSubmit(null); });
+    } else {
+      doSubmit(null);
+    }
+  });
+
+  document.getElementById('rv-skip').addEventListener('click', function() { modal.remove(); });
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+}());
+</script>
+
+<!-- ── Client ↔ mechanic chat modal (account panel, logged-in only) ─────────── -->
+<script>
+var _landingChatChannel = null;
+function openLandingChat(bookingId) {
+  var existing = document.getElementById('landing-chat-modal');
+  if (existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'landing-chat-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(13,31,60,0.45);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = ''
+    + '<div style="width:100%;max-width:420px;height:min(620px,90vh);background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.25);display:flex;flex-direction:column;overflow:hidden">'
+    +   '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #E5E7EB;flex-shrink:0">'
+    +     '<div style="width:38px;height:38px;border-radius:50%;background:#1E40AF;display:flex;align-items:center;justify-content:center;font-size:18px">&#128295;</div>'
+    +     '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:#0D1F3C">Your mechanic</div><div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#059669"><span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block"></span>Online now</div></div>'
+    +     '<button id="landing-chat-close" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94A3B8;width:32px;height:32px;border-radius:50%">&#215;</button>'
+    +   '</div>'
+    +   '<div id="landing-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:#F9FAFB"></div>'
+    +   '<div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #E5E7EB;flex-shrink:0;background:#fff">'
+    +     '<input id="landing-chat-inp" maxlength="500" placeholder="Type a message..." style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:14px;outline:none;color:#0D1F3C">'
+    +     '<button id="landing-chat-send" style="background:#2563EB;color:#fff;border:none;border-radius:50%;width:42px;height:42px;flex-shrink:0;cursor:pointer;font-size:18px">&#10148;</button>'
+    +   '</div>'
+    + '</div>';
+  document.body.appendChild(modal);
+
+  var msgs = document.getElementById('landing-chat-msgs');
+  var inp = document.getElementById('landing-chat-inp');
+  function close() { modal.remove(); if (_landingChatChannel) { _sb.removeChannel(_landingChatChannel); _landingChatChannel = null; } }
+  document.getElementById('landing-chat-close').addEventListener('click', close);
+  modal.addEventListener('click', function(e) { if (e.target === modal) close(); });
+
+  function append(m) {
+    var isClient = m.sender_role === 'client';
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;justify-content:' + (isClient ? 'flex-end' : 'flex-start');
+    var bubble = document.createElement('div');
+    bubble.style.cssText = 'max-width:75%;padding:9px 13px;border-radius:' + (isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:14px;line-height:1.4;word-break:break-word;background:' + (isClient ? '#2563EB' : '#fff') + ';color:' + (isClient ? '#fff' : '#0D1F3C') + ';border:' + (isClient ? 'none' : '1px solid #E5E7EB');
+    var pm = (m.message || '').match(/^\[PHOTO:(.*)\]$/);
+    if (pm) { var img = document.createElement('img'); img.src = pm[1]; img.style.cssText = 'max-width:200px;border-radius:10px;display:block;cursor:pointer'; img.addEventListener('click', function() { window.open(pm[1], '_blank'); }); bubble.style.padding = '4px'; bubble.appendChild(img); }
+    else bubble.textContent = m.message;
+    wrap.appendChild(bubble); msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  async function sendMsg() {
+    var text = inp.value.trim(); if (!text) return; inp.value = '';
+    var sess = (await _sb.auth.getSession()).data.session;
+    var uid = sess && sess.user ? sess.user.id : 'client';
+    var r = await _sb.from('job_messages').insert({ booking_id: bookingId, sender_role: 'client', sender_id: uid, message: text });
+    if (r.error) { alert('Message failed to send'); inp.value = text; }
+  }
+  document.getElementById('landing-chat-send').addEventListener('click', sendMsg);
+  inp.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } });
+
+  (async function() {
+    msgs.innerHTML = '<div style="text-align:center;font-size:12px;color:#6B7280;padding:20px">Loading messages...</div>';
+    var res = await _sb.from('job_messages').select('*').eq('booking_id', bookingId).order('created_at', { ascending: true });
+    msgs.innerHTML = '';
+    if (!res.data || !res.data.length) { msgs.innerHTML = '<div data-empty style="text-align:center;padding:40px 20px;color:#6B7280;margin:auto"><div style="font-size:40px;margin-bottom:10px">&#128172;</div><div style="font-size:14px;font-weight:600;color:#0D1F3C">No messages yet</div><div style="font-size:12px;margin-top:4px">Send a message to your mechanic</div></div>'; }
+    else res.data.forEach(append);
+  }());
+
+  if (_landingChatChannel) _sb.removeChannel(_landingChatChannel);
+  _landingChatChannel = _sb.channel('landing-chat-' + bookingId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_messages', filter: 'booking_id=eq.' + bookingId }, function(payload) {
+      var empty = msgs.querySelector('[data-empty]'); if (empty) empty.remove();
+      append(payload.new);
+    })
+    .subscribe();
+}
+</script>
+
+<!-- ── Floating FAQ chatbot (AI, /api/chat) ─────────────────────────────────── -->
+<script>
+(function() {
+  var open = false, busy = false;
+  var history = [];
+
+  var fab = document.createElement('button');
+  fab.id = 'faqbot-fab';
+  fab.setAttribute('aria-label', 'Chat with Dr. Bike');
+  fab.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9998;width:58px;height:58px;border-radius:50%;background:#2563EB;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(37,99,235,0.4);display:flex;align-items:center;justify-content:center;transition:transform 0.15s';
+  fab.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
+  fab.addEventListener('mouseenter', function(){ fab.style.transform = 'scale(1.06)'; });
+  fab.addEventListener('mouseleave', function(){ fab.style.transform = 'scale(1)'; });
+  document.body.appendChild(fab);
+
+  var win = document.createElement('div');
+  win.id = 'faqbot-win';
+  win.style.cssText = 'position:fixed;bottom:88px;right:20px;z-index:9998;width:min(380px,calc(100vw-32px));height:min(560px,calc(100vh-130px));background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,0.22);border:1px solid #E5E7EB;display:none;flex-direction:column;overflow:hidden';
+  win.innerHTML = ''
+    + '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#0D1F3C;flex-shrink:0">'
+    +   '<div style="width:38px;height:38px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:18px">&#128692;</div>'
+    +   '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:#fff">Dr. Bike Assistant</div><div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#9CC2FF"><span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block"></span>Ask me anything</div></div>'
+    +   '<button id="faqbot-close" style="background:none;border:none;font-size:22px;cursor:pointer;color:#9CA3AF;width:30px;height:30px">&#215;</button>'
+    + '</div>'
+    + '<div id="faqbot-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#F9FAFB"></div>'
+    + '<div id="faqbot-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#fff;border-top:1px solid #F3F4F6"></div>'
+    + '<div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #E5E7EB;flex-shrink:0;background:#fff">'
+    +   '<input id="faqbot-inp" maxlength="500" placeholder="Type your question..." style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:14px;outline:none;color:#0D1F3C">'
+    +   '<button id="faqbot-send" style="background:#2563EB;color:#fff;border:none;border-radius:50%;width:42px;height:42px;flex-shrink:0;cursor:pointer;font-size:18px">&#10148;</button>'
+    + '</div>';
+  document.body.appendChild(win);
+
+  var msgs = win.querySelector('#faqbot-msgs');
+  var inp = win.querySelector('#faqbot-inp');
+  var chipsBar = win.querySelector('#faqbot-chips');
+  var FAQS = ['What does a Tune-Up include?', 'Which areas do you cover?', 'How do memberships work?', 'Do you fix e-bikes?'];
+
+  function bubble(role, text) {
+    var isUser = role === 'user';
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;justify-content:' + (isUser ? 'flex-end' : 'flex-start');
+    var b = document.createElement('div');
+    b.style.cssText = 'max-width:80%;padding:10px 14px;border-radius:' + (isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:14px;line-height:1.45;word-break:break-word;background:' + (isUser ? '#2563EB' : '#fff') + ';color:' + (isUser ? '#fff' : '#0D1F3C') + ';border:' + (isUser ? 'none' : '1px solid #E5E7EB');
+    b.textContent = text;
+    wrap.appendChild(b); msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
+    return b;
+  }
+
+  function renderChips() {
+    chipsBar.innerHTML = '';
+    if (history.length) { chipsBar.style.display = 'none'; return; }
+    chipsBar.style.display = 'flex';
+    FAQS.forEach(function(q) {
+      var c = document.createElement('button');
+      c.textContent = q;
+      c.style.cssText = 'padding:7px 11px;border:1px solid #E5E7EB;border-radius:16px;background:#fff;color:#1E40AF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
+      c.addEventListener('click', function() { send(q); });
+      chipsBar.appendChild(c);
+    });
+  }
+
+  async function send(text) {
+    text = (text || inp.value).trim();
+    if (!text || busy) return;
+    inp.value = '';
+    bubble('user', text);
+    history.push({ role: 'user', content: text });
+    renderChips();
+    busy = true;
+    var typing = bubble('assistant', '...');
+    try {
+      var up = null;
+      try { var s = (await _sb.auth.getSession()).data.session; if (s && s.user) { var mt = s.user.user_metadata || {}; up = { full_name: mt.full_name || mt.name || '' }; } } catch (e) {}
+      var resp = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: history.slice(-10), userProfile: up }) });
+      var data = await resp.json();
+      typing.textContent = data.reply || "Sorry, I couldn't process that. Call us on 0433 963 250.";
+      history.push({ role: 'assistant', content: typing.textContent });
+    } catch (e) {
+      typing.textContent = "Sorry, I'm having trouble right now. Call us on 0433 963 250. 🔧";
+    } finally {
+      busy = false; msgs.scrollTop = msgs.scrollHeight;
+    }
+  }
+
+  function toggle() {
+    open = !open;
+    win.style.display = open ? 'flex' : 'none';
+    if (open) {
+      if (!msgs.children.length) bubble('assistant', "G'day! I'm the Dr. Bike assistant. Ask me about services, prices, coverage areas or memberships. 🚲");
+      renderChips();
+      setTimeout(function(){ inp.focus(); }, 50);
+    }
+  }
+  fab.addEventListener('click', toggle);
+  win.querySelector('#faqbot-close').addEventListener('click', toggle);
+  win.querySelector('#faqbot-send').addEventListener('click', function() { send(); });
+  inp.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
 }());
 </script>
 
