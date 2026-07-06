@@ -55,7 +55,6 @@ function buildPDF({
   mechName,
   bikeName,
   durationSecs,
-  subtotal,
   discountAmt,
   finalPrice,
   gst,
@@ -63,6 +62,11 @@ function buildPDF({
   nextService,
   checklist,
   checklistNotes,
+  calloutFeeVal,
+  partsRows,
+  mechDiscount,
+  mechDiscountCode,
+  grandTotal,
 }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
@@ -152,34 +156,47 @@ function buildPDF({
       y += 16;
     });
 
-    // Totals box
+    // Totals box — itemized: call-out fee (info only) + service + parts + discounts + GST + grand total
+    const totalRows = [
+      { label: 'Call-out fee (paid at booking)', value: calloutFeeVal, muted: true },
+      { label: 'Service', value: finalPrice },
+      ...(partsRows || []).map((p) => ({ ...p, sub: true })),
+      ...(discountAmt > 0
+        ? [{ label: 'Discount (at booking)', value: -discountAmt, green: true }]
+        : []),
+      ...(mechDiscount > 0
+        ? [
+            {
+              label: `Discount${mechDiscountCode ? ' (' + mechDiscountCode + ')' : ''}`,
+              value: -mechDiscount,
+              green: true,
+            },
+          ]
+        : []),
+      { label: 'GST included', value: gst, muted: true },
+    ];
+
     y += 8;
-    doc.rect(50, y, W, discountAmt > 0 ? 80 : 64).fill('#F7F8FA');
-    doc
-      .fontSize(10)
-      .fillColor(GRAY)
-      .text('Service fee', 66, y + 12);
-    doc
-      .fontSize(10)
-      .fillColor(NAVY)
-      .text(`$${subtotal.toFixed(2)}`, 66, y + 12, { width: W - 32, align: 'right' });
-    if (discountAmt > 0) {
+    const boxH = 20 + totalRows.length * 16 + 26;
+    doc.rect(50, y, W, boxH).fill('#F7F8FA');
+    let rowY = y + 12;
+    totalRows.forEach((r) => {
+      const color = r.green ? GREEN : r.muted ? GRAY : NAVY;
+      const sign = r.value < 0 ? '−$' : '$';
       doc
-        .fontSize(10)
-        .fillColor(GREEN)
-        .text('Discount', 66, y + 28);
+        .fontSize(r.muted ? 9 : 10)
+        .fillColor(color)
+        .text(r.label, r.sub ? 78 : 66, rowY, { width: 300 });
       doc
-        .fontSize(10)
-        .fillColor(GREEN)
-        .text(`−$${discountAmt.toFixed(2)}`, 66, y + 28, { width: W - 32, align: 'right' });
-    }
-    const gstY = y + (discountAmt > 0 ? 44 : 28);
-    doc.fontSize(9).fillColor(GRAY).text('GST included', 66, gstY);
-    doc
-      .fontSize(9)
-      .fillColor(GRAY)
-      .text(`$${gst.toFixed(2)}`, 66, gstY, { width: W - 32, align: 'right' });
-    const totalY = y + (discountAmt > 0 ? 60 : 44);
+        .fontSize(r.muted ? 9 : 10)
+        .fillColor(color)
+        .text(`${sign}${Math.abs(r.value).toFixed(2)}`, 66, rowY, {
+          width: W - 32,
+          align: 'right',
+        });
+      rowY += 16;
+    });
+    const totalY = rowY + 2;
     doc
       .moveTo(66, totalY - 2)
       .lineTo(529, totalY - 2)
@@ -188,11 +205,11 @@ function buildPDF({
       .fontSize(13)
       .fillColor(NAVY)
       .font('Helvetica-Bold')
-      .text('Total paid (AUD)', 66, totalY + 2);
+      .text('Total general (AUD)', 66, totalY + 2);
     doc
       .fontSize(13)
       .fillColor(NAVY)
-      .text(`$${finalPrice.toFixed(2)}`, 66, totalY + 2, { width: W - 32, align: 'right' });
+      .text(`$${grandTotal.toFixed(2)}`, 66, totalY + 2, { width: W - 32, align: 'right' });
     doc.font('Helvetica');
     y = totalY + 28;
 
@@ -297,8 +314,20 @@ export default async function handler(req, res) {
   if (await guard(req, res, { rateMax: 20, rateWindow: 60000 })) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { bookingId, to, date, time, price, discount, bookingRef } = req.body;
-  let { clientName, service, address, mechNotes, mechName, nextService } = req.body;
+  const {
+    bookingId,
+    to,
+    date,
+    time,
+    price,
+    discount,
+    bookingRef,
+    calloutFee,
+    partsCharged,
+    mechDiscountAmount,
+  } = req.body;
+  let { clientName, service, address, mechNotes, mechName, nextService, mechDiscountCode } =
+    req.body;
 
   if (!to || !bookingId) return res.status(400).json({ error: 'Missing required fields' });
 
@@ -308,6 +337,7 @@ export default async function handler(req, res) {
   mechNotes = sanitize(mechNotes || '');
   mechName = sanitize(mechName || 'Dr. Bike Sydney');
   nextService = sanitize(nextService || '');
+  mechDiscountCode = sanitize(mechDiscountCode || '');
 
   const invoiceNumber = `DRBK-${bookingRef || bookingId.slice(0, 8).toUpperCase()}`;
   const invoiceDate = new Date().toLocaleDateString('en-AU', {
@@ -317,8 +347,20 @@ export default async function handler(req, res) {
   });
   const finalPrice = Number(price) || 0;
   const discountAmt = Number(discount) || 0;
-  const subtotal = finalPrice + discountAmt;
-  const gst = finalPrice / 11;
+
+  // Itemized parts + call-out fee + completion-time discount (EFTPOS flow)
+  const calloutFeeVal = Number(calloutFee) || 20;
+  const partsRows = (Array.isArray(partsCharged) ? partsCharged : [])
+    .filter((p) => Number(p?.qty) > 0)
+    .map((p) => ({
+      label: `${p.qty}× ${sanitize(String(p.name || ''))}`,
+      value: Number(p.total) || Number(p.qty) * Number(p.unit_price || 0),
+    }));
+  const partsTotal = partsRows.reduce((s, p) => s + p.value, 0);
+  const mechDiscount = Number(mechDiscountAmount) || 0;
+  const chargeNow = Math.max(0, finalPrice + partsTotal - mechDiscount); // EFTPOS amount — never includes the call-out fee
+  const grandTotal = calloutFeeVal + chargeNow;
+  const gst = grandTotal / 11;
 
   // Fetch extra booking data for service report
   let checklist = null,
@@ -373,7 +415,7 @@ export default async function handler(req, res) {
       <!-- Service Report Header -->
       <div style="background:#0D1F3C;padding:24px 40px;margin:0 -0px">
         <div style="display:flex;align-items:center;gap:12px">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/></svg>
+          <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="28" style="width:auto;display:block">
           <div>
             <div style="color:rgba(255,255,255,0.6);font-size:11px;text-transform:uppercase;letter-spacing:0.1em">Dr. Bike Sydney</div>
             <div style="color:#fff;font-size:20px;font-weight:700">Service Report — ${invoiceNumber}</div>
@@ -517,9 +559,7 @@ export default async function handler(req, res) {
     <div class="logo">
       <div class="logo-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/>
-          <path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/>
-        </svg>
+          <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="24" style="width:auto;display:block">
       </div>
       <div class="logo-name">Dr. Bike Sydney</div>
     </div>
@@ -554,10 +594,13 @@ export default async function handler(req, res) {
     </div>
 
     <div class="total-box">
-      <div class="total-row"><span>Service fee</span><span>$${subtotal.toFixed(2)}</span></div>
-      ${discountAmt > 0 ? `<div class="total-row"><span style="color:#059669">Discount</span><span style="color:#059669">−$${discountAmt.toFixed(2)}</span></div>` : ''}
+      <div class="total-row"><span style="color:#9CA3AF;text-decoration:line-through">Call-out fee (paid at booking)</span><span style="color:#9CA3AF;text-decoration:line-through">$${calloutFeeVal.toFixed(2)}</span></div>
+      <div class="total-row"><span>Service</span><span>$${finalPrice.toFixed(2)}</span></div>
+      ${partsRows.map((p) => `<div class="total-row"><span style="padding-left:12px">${p.label}</span><span>$${p.value.toFixed(2)}</span></div>`).join('')}
+      ${discountAmt > 0 ? `<div class="total-row"><span style="color:#059669">Discount (at booking)</span><span style="color:#059669">−$${discountAmt.toFixed(2)}</span></div>` : ''}
+      ${mechDiscount > 0 ? `<div class="total-row"><span style="color:#059669">Discount${mechDiscountCode ? ' (' + mechDiscountCode + ')' : ''}</span><span style="color:#059669">−$${mechDiscount.toFixed(2)}</span></div>` : ''}
       <div class="total-row"><span style="color:#6e6e73">GST included</span><span style="color:#6e6e73">$${gst.toFixed(2)}</span></div>
-      <div class="total-final"><span>Total paid (AUD)</span><span>$${finalPrice.toFixed(2)}</span></div>
+      <div class="total-final"><span>Total general (AUD)</span><span>$${grandTotal.toFixed(2)}</span></div>
     </div>
 
     ${nextService ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#1848C8;margin-bottom:24px">🔧 <strong>Next service reminder:</strong> ${nextService}</div>` : ''}
@@ -596,7 +639,6 @@ export default async function handler(req, res) {
       mechName,
       bikeName,
       durationSecs,
-      subtotal,
       discountAmt,
       finalPrice,
       gst,
@@ -604,6 +646,11 @@ export default async function handler(req, res) {
       nextService,
       checklist,
       checklistNotes,
+      calloutFeeVal,
+      partsRows,
+      mechDiscount,
+      mechDiscountCode,
+      grandTotal,
     });
   } catch (e) {
     console.warn('[send-invoice] PDF generation failed:', e.message);
