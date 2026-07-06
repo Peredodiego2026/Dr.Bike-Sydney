@@ -110,14 +110,29 @@ async function init(){
   const mech = bkg.mechanic_profile || {};
   const mechName = escHtml(mech.name || 'Diego Peredo');
   const mechAvatarHTML = mech.photo_url
-    ? `<img src="${mech.photo_url}" alt="${mechName}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-    : `<div class="mechanic-avatar" style="width:56px;height:56px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:700;flex-shrink:0">${mechName.charAt(0)}</div>`;
-  const mechStatsHTML = mech.jobs_completed
-    ? `<div style="font-size:12px;color:var(--mgray);margin-top:2px">${mech.rating ? mech.rating + '★ · ' : ''}${mech.jobs_completed} job${mech.jobs_completed === 1 ? '' : 's'} completed</div>`
-    : '';
+    ? `<img src="${mech.photo_url}" alt="${mechName}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--card-bg);display:block">`
+    : `<div style="width:68px;height:68px;border-radius:50%;background:var(--blue);border:3px solid var(--card-bg);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:700">${mechName.charAt(0)}</div>`;
   const mechBioHTML = mech.bio
-    ? `<div style="font-size:12px;color:var(--mgray);margin-top:4px;line-height:1.4">${escHtml(mech.bio)}</div>`
+    ? `<div style="font-size:12px;color:var(--mgray);margin-top:6px;line-height:1.4;padding:0 8px">${escHtml(mech.bio)}</div>`
     : '';
+  const mechStatDivider = '<div style="width:1px;height:32px;background:var(--border)"></div>';
+  const mechStatsRowHTML = `
+    <div style="display:flex;align-items:center;margin:16px 20px 0;border:1px solid var(--border);border-radius:10px;padding:10px 0">
+      <div style="flex:1;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">${mech.rating ? '★ ' + mech.rating : '—'}</div>
+        <div style="font-size:10px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">Rating</div>
+      </div>
+      ${mechStatDivider}
+      <div style="flex:1;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">${mech.jobs_completed || 0}</div>
+        <div style="font-size:10px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">Jobs done</div>
+      </div>
+      ${mechStatDivider}
+      <div style="flex:1;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--green);display:flex;align-items:center;justify-content:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:var(--green)"></span>Live</div>
+        <div style="font-size:10px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">Location</div>
+      </div>
+    </div>`;
 
   content.innerHTML = `
 <div class="card">
@@ -135,17 +150,22 @@ async function init(){
      </div>
 
      ${(bkg.status==='enroute'||bkg.status==='in_progress')?`
-     <div class="card mechanic-card" style="background:var(--card-bg);border-color:var(--border);display:flex;align-items:center;gap:14px;padding:16px">
-       ${mechAvatarHTML}
-       <div style="flex:1;min-width:0">
-         <div style="font-size:15px;font-weight:700;color:var(--navy)">${mechName}</div>
-         ${mechStatsHTML}
-         ${mechBioHTML}
-         <div style="font-size:11px;color:var(--blue);margin-top:4px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green)"></span> Live location sharing</div>
+     <div class="card mechanic-card" style="padding:0;overflow:hidden">
+       <div style="height:84px;width:100%;overflow:hidden">
+         <img src="images/mechanic-working.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
        </div>
-       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-         <a href="tel:+61433963250" style="background:var(--blue);color:white;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">📞 Call</a>
-         <a href="https://wa.me/61433963250" style="background:#25D366;color:white;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">💬 Chat</a>
+       <div style="display:flex;justify-content:center;margin-top:-34px">
+         ${mechAvatarHTML}
+       </div>
+       <div style="text-align:center;padding:8px 20px 0">
+         <div style="font-size:16px;font-weight:700;color:var(--navy)">${mechName}</div>
+         <div style="font-size:12px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
+         ${mechBioHTML}
+       </div>
+       ${mechStatsRowHTML}
+       <div style="display:flex;gap:8px;padding:16px 20px 20px">
+         <a href="tel:+61433963250" style="flex:1;text-align:center;background:var(--blue);color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+         <a href="https://wa.me/61433963250" style="flex:1;text-align:center;background:#25D366;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
        </div>
      </div>
      <div class="card" style="background:var(--green-lt);border-color:#6EE7B7">
