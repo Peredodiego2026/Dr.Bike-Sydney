@@ -226,7 +226,7 @@ async function handleServiceReminders(req, res) {
         subject,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#fff">
           <div style="background:#0D1F3C;padding:28px 32px;display:flex;align-items:center;gap:12px">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/></svg>
+            <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="28" style="width:auto;display:block">
             <span style="color:#fff;font-size:18px;font-weight:700">Dr. Bike Sydney</span>
           </div>
           <div style="padding:32px">

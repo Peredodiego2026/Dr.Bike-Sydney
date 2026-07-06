@@ -46,7 +46,7 @@ export function createBottomNav(activeTab = 'home') {
       id: 'my-bikes',
       label: 'My Bikes',
       href: '#my-bikes',
-      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"></path><circle cx="12" cy="5" r="2" fill="currentColor" stroke="none"></circle></svg>`,
+      icon: `<span style="display:inline-block;width:28px;height:28px;background-color:currentColor;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>`,
     },
     {
       id: 'profile',
