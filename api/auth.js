@@ -254,13 +254,11 @@ async function handleCreateBooking(req, res) {
           });
         } catch {}
       }
-      return res
-        .status(409)
-        .json({
-          error:
-            'That time slot was just booked.' +
-            (verifiedPI ? ' Your payment has been refunded.' : ' Please pick another time.'),
-        });
+      return res.status(409).json({
+        error:
+          'That time slot was just booked.' +
+          (verifiedPI ? ' Your payment has been refunded.' : ' Please pick another time.'),
+      });
     }
     return res.status(500).json({ error: 'Could not create booking', detail: insErr.message });
   }
@@ -467,7 +465,7 @@ async function handleMechanicJobs(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
   const baseCols =
-    'id,client_id,client_name,client_email,client_phone,service_name,service_price,scheduled_date,scheduled_time,status,suburb,address,van_number,notes,mechanic_notes,mechanic_id,client_rating,client_review';
+    'id,client_id,client_name,client_email,client_phone,service_name,service_price,callout_fee,scheduled_date,scheduled_time,status,suburb,address,van_number,notes,mechanic_notes,mechanic_id,client_rating,client_review';
   const hdrs = {
     apikey: SERVICE_KEY,
     Authorization: `Bearer ${SERVICE_KEY}`,
@@ -714,6 +712,9 @@ async function handleMechanicComplete(req, res) {
     booking_id,
     mechanic_notes,
     parts_used,
+    parts_charged,
+    final_charge_amount,
+    final_charge_status,
     photo_before_url,
     photo_after_url,
     client_signature_url,
@@ -767,12 +768,40 @@ async function handleMechanicComplete(req, res) {
     completed_at: new Date().toISOString(),
     mechanic_notes: mechanic_notes || null,
     parts_used: partsText,
+    parts_charged: parts_charged || null,
+    final_charge_amount:
+      final_charge_amount !== null && final_charge_amount !== undefined
+        ? Number(final_charge_amount)
+        : null,
+    final_charge_status: final_charge_status || null,
     next_service_date: next_service_date || null,
   };
   if (photo_before_url) payload.photo_before_url = photo_before_url;
   if (photo_after_url) payload.photo_after_url = photo_after_url;
   if (client_signature_url) payload.client_signature_url = client_signature_url;
   if (duration_seconds) payload.service_duration_seconds = duration_seconds;
+
+  // If a discount code was applied at completion time, record its use server-side
+  const mechDiscCode = parts_charged?.discount_code;
+  if (mechDiscCode) {
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/discount_codes?code=eq.${encodeURIComponent(mechDiscCode)}&select=id,max_uses,uses_count`,
+        { headers: sbHdr }
+      );
+      const row = r.ok ? (await r.json())[0] : null;
+      if (row) {
+        const newCount = (row.uses_count || 0) + 1;
+        const update = { uses_count: newCount };
+        if (row.max_uses && newCount >= row.max_uses) update.active = false;
+        await fetch(`${SUPABASE_URL}/rest/v1/discount_codes?id=eq.${encodeURIComponent(row.id)}`, {
+          method: 'PATCH',
+          headers: { ...sbHdr, Prefer: 'return=minimal' },
+          body: JSON.stringify(update),
+        });
+      }
+    } catch {}
+  }
 
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
@@ -990,11 +1019,9 @@ async function handleApplyReferral(req, res) {
 async function handleClientReschedule(req, res) {
   const { access_token, booking_id, client_id, scheduled_date, scheduled_time } = req.body;
   if (!access_token || !booking_id || !client_id || !scheduled_date || !scheduled_time)
-    return res
-      .status(400)
-      .json({
-        error: 'access_token, booking_id, client_id, scheduled_date, scheduled_time required',
-      });
+    return res.status(400).json({
+      error: 'access_token, booking_id, client_id, scheduled_date, scheduled_time required',
+    });
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduled_date))
     return res.status(400).json({ error: 'Invalid date format (YYYY-MM-DD)' });
@@ -1264,13 +1291,51 @@ async function handlePublicTrack(req, res) {
     }
   }
 
-  return res
-    .status(200)
-    .json({
-      ...booking,
-      mechanic_location,
-      _dbg: { van: booking.van_number, mechId: booking.mechanic_id, active: isActive },
-    });
+  // Real mechanic profile (photo/bio) + real stats (rating/completed jobs) - no fabricated numbers
+  let mechanic_profile = null;
+  if (booking.van_number) {
+    const profResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/escalation_contacts?select=first_name,last_name,photo_url,bio&role=eq.mechanic&zone=eq.${booking.van_number}&active=eq.true&limit=1`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (profResp.ok) {
+      const profData = await profResp.json();
+      if (profData?.length) {
+        const p = profData[0];
+        const statsResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/bookings?select=client_rating&van_number=eq.${booking.van_number}&status=eq.completed`,
+          { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+        );
+        let jobs_completed = 0,
+          rating = null;
+        if (statsResp.ok) {
+          const jobs = await statsResp.json();
+          jobs_completed = jobs.length;
+          const rated = jobs.filter(
+            (j) => j.client_rating !== null && j.client_rating !== undefined
+          );
+          if (rated.length) {
+            rating =
+              Math.round((rated.reduce((s, j) => s + j.client_rating, 0) / rated.length) * 10) / 10;
+          }
+        }
+        mechanic_profile = {
+          name: [p.first_name, p.last_name].filter(Boolean).join(' ') || null,
+          photo_url: p.photo_url || null,
+          bio: p.bio || null,
+          jobs_completed,
+          rating,
+        };
+      }
+    }
+  }
+
+  return res.status(200).json({
+    ...booking,
+    mechanic_location,
+    mechanic_profile,
+    _dbg: { van: booking.van_number, mechId: booking.mechanic_id, active: isActive },
+  });
 }
 
 // Increment uses_count on a discount/gift code after it is actually used in a booking.

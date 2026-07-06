@@ -12,13 +12,14 @@
 <meta name="apple-mobile-web-app-title" content="DrBike Mech">
 <link rel="manifest" href="/mechanic-manifest.json">
 <title>Dr. Bike — Mechanic</title>
+<link rel="preconnect" href="https://tgpipbloisahufaywhqb.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="css/variables.css?v=20260628">
 <link rel="stylesheet" href="css/mechanic.css?v=20260705">
 <style>
 /* PIN login - use mechanic.css variables for dark theme */
-#s-login { background: var(--navy); }
 .login-card {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
@@ -182,10 +183,11 @@
     <button class="nav-tab" onclick="goTab('done',this)">Done<span class="tab-badge" id="b-done"></span></button>
     <button class="nav-tab" onclick="goTab('profile',this)">Profile</button>
     <button class="nav-tab" onclick="goTab('inventory',this)">Stock</button>
+    <button class="nav-tab" onclick="goTab('spareparts',this)">Spare Parts</button>
   </div>
   <!-- jobs-list is the main content area — all tabs render here -->
   <div class="jobs-wrap" id="jobs-list">
-    <div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="margin-bottom:12px;opacity:0.4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/><circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg></div><div>Loading...</div></div>
+    <div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="margin-bottom:12px;opacity:0.4"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="36" style="width:auto;display:block"></div><div>Loading...</div></div>
   </div>
 
   <!-- INVENTORY TAB — rendered inside jobs-list by goTab() -->
@@ -196,6 +198,20 @@
       <div id="inventory-loading" style="text-align:center;padding:40px;color:var(--mgray)">Loading inventory...</div>
       <div id="inventory-list" style="display:none"></div>
       <div id="inventory-empty" style="display:none;text-align:center;padding:40px;color:var(--mgray)">No inventory data. Run the SQL migration first.</div>
+    </div>
+  </template>
+
+  <!-- SPARE PARTS TAB — rendered inside jobs-list by goTab() -->
+  <template id="tpl-spareparts">
+    <div id="tab-spareparts">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:12px">Spare Parts</h2>
+      <div style="position:relative;margin-bottom:14px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="sp-search" placeholder="Search parts..." oninput="renderSpareParts()" style="width:100%;padding:11px 12px 11px 36px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--sans);background:var(--white);color:var(--navy);box-sizing:border-box">
+      </div>
+      <div id="spareparts-loading" style="text-align:center;padding:40px;color:var(--mgray)">Loading parts...</div>
+      <div id="spareparts-list" style="display:none"></div>
+      <div id="spareparts-empty" style="display:none;text-align:center;padding:40px;color:var(--mgray)">No parts in the catalog yet.</div>
     </div>
   </template>
 </div>
@@ -225,6 +241,6 @@
 </div>
 
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/mechanic.js?v=20260629l"></script>
+<script src="js/mechanic.js?v=20260705b"></script>
 </body>
 </html>

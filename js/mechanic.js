@@ -287,6 +287,7 @@ async function load() {
       phone: b.client_phone || '',
       service: b.service_name || 'Service',
       price: b.service_price || 0,
+      callout_fee: b.callout_fee ?? 20,
       date: b.scheduled_date,
       time: b.scheduled_time || '',
       address: b.address || '',
@@ -779,13 +780,17 @@ function notifyClientComplete(j) {
   });
 }
 let _sigDrawn = false;
-let _partsUsed = {}; // { [partId]: { id, name, qty, stock, min_stock, category } }
+let _partsUsed = {}; // { [partId]: { id, name, qty, category, sell_price } }
 let _partsConfirmed = false; // true once parts chosen OR "no parts used" confirmed
+let _completeJobId = null;
+let _mechDiscount = null; // { code, type, value, amount } - discount applied at completion time (separate from any booking-time discount)
 function openCompleteModal(id) {
   const j = jobs.find((x) => x.id === id);
   if (!j) return;
   _partsUsed = {};
   _partsConfirmed = false;
+  _completeJobId = id;
+  _mechDiscount = null;
   let modal = document.getElementById('complete-modal');
   if (modal) modal.remove();
   modal = document.createElement('div');
@@ -824,6 +829,15 @@ function openCompleteModal(id) {
           <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
         </div>
         <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">💳 Payment breakdown</label>
+          <div id="charge-breakdown" style="background:var(--off);border:1px solid var(--border);border-radius:12px;padding:14px 16px"></div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="mech-disc-code" placeholder="Discount code (optional)" style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);text-transform:uppercase" />
+            <button type="button" onclick="applyMechDiscount()" id="mech-disc-btn" style="flex-shrink:0;padding:0 16px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Apply</button>
+          </div>
+          <div id="mech-disc-msg" style="display:none;font-size:12px;font-weight:600;margin-top:6px"></div>
+        </div>
+        <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">📸 Before & after photos</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <div>
@@ -854,11 +868,12 @@ function openCompleteModal(id) {
         <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button onclick="document.getElementById('complete-modal').remove()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--sans);cursor:pointer;font-size:13px;color:var(--navy)">Cancel</button>
-          <button onclick="submitComplete('${id}')" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">✅ Complete job</button>
+          <button onclick="submitComplete('${id}')" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">💳 Marcar como cobrado (EFTPOS) y completar</button>
         </div>
       </div>
     </div>`;
   document.body.appendChild(modal);
+  renderChargeBreakdown();
 
   // Build service checklist — required items first, then service-specific
   setTimeout(() => {
@@ -982,9 +997,13 @@ function openCompleteModal(id) {
 const CATEGORY_META = {
   cockpit: { label: 'Cockpit', icon: '🎯', color: '#2563EB' },
   wheels: { label: 'Wheels', icon: '🛞', color: '#059669' },
+  'wheels & tyres': { label: 'Wheels & Tyres', icon: '🛞', color: '#059669' },
   cables: { label: 'Cables', icon: '🔗', color: '#D97706' },
   drivetrain: { label: 'Drivetrain', icon: '⚙️', color: '#7C3AED' },
   brakes: { label: 'Brakes', icon: '🛑', color: '#DC2626' },
+  suspension: { label: 'Suspension', icon: '🏔️', color: '#0891B2' },
+  lubrication: { label: 'Lubrication', icon: '🧴', color: '#15803D' },
+  general: { label: 'General', icon: '🔨', color: '#6B7280' },
 };
 function catMeta(cat) {
   const key = String(cat || '')
@@ -1085,7 +1104,14 @@ function partsStep(id, delta) {
   const cur = _partsUsed[id]?.qty || 0;
   const next = Math.max(0, Math.min(p.stock || 0, cur + delta));
   if (next === 0) delete _partsUsed[id];
-  else _partsUsed[id] = { id: p.id, name: p.name, qty: next, category: p.category };
+  else
+    _partsUsed[id] = {
+      id: p.id,
+      name: p.name,
+      qty: next,
+      category: p.category,
+      sell_price: p.sell_price != null ? Number(p.sell_price) : 0,
+    };
   const m = catMeta(p.category);
   const qtyEl = document.getElementById('pp-qty-' + id);
   if (qtyEl) {
@@ -1143,6 +1169,81 @@ function updatePartsSummary() {
     count.textContent = totalQty;
   }
   if (btn) btn.style.borderColor = _partsConfirmed ? '#059669' : 'var(--border)';
+  renderChargeBreakdown();
+}
+
+// ── Payment breakdown + completion-time discount code (EFTPOS flow) ──────────
+function calcChargeBreakdown() {
+  const j = jobs.find((x) => x.id === _completeJobId);
+  if (!j) return null;
+  const calloutFee = Number(j.callout_fee ?? 20);
+  const bookingDiscount = Number(j.discount_applied || 0);
+  const service = Math.max(0, Number(j.price || 0) - bookingDiscount);
+  const partsItems = Object.values(_partsUsed).filter((p) => p.qty > 0);
+  const partsTotal = partsItems.reduce((s, p) => s + p.qty * (p.sell_price || 0), 0);
+  const mechDiscountAmount = _mechDiscount ? Number(_mechDiscount.amount || 0) : 0;
+  const chargeNow = Math.max(0, service + partsTotal - mechDiscountAmount);
+  return { j, calloutFee, service, partsItems, partsTotal, mechDiscountAmount, chargeNow };
+}
+
+function renderChargeBreakdown() {
+  const el = document.getElementById('charge-breakdown');
+  if (!el) return;
+  const b = calcChargeBreakdown();
+  if (!b) return;
+  let rows = '';
+  rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#9CA3AF;text-decoration:line-through;margin-bottom:6px"><span>Call-out fee (paid at booking)</span><span>$${b.calloutFee.toFixed(2)}</span></div>`;
+  rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--navy);margin-bottom:6px"><span>Service</span><span>$${b.service.toFixed(2)}</span></div>`;
+  if (b.partsItems.length) {
+    b.partsItems.forEach((p) => {
+      rows += `<div style="display:flex;justify-content:space-between;font-size:12px;color:#6B7280;margin-bottom:4px;padding-left:8px"><span>${p.qty}× ${esc(p.name)}</span><span>$${(p.qty * (p.sell_price || 0)).toFixed(2)}</span></div>`;
+    });
+  }
+  if (b.mechDiscountAmount > 0) {
+    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#059669;font-weight:600;margin-bottom:6px"><span>Discount (${esc(_mechDiscount.code)})</span><span>−$${b.mechDiscountAmount.toFixed(2)}</span></div>`;
+  }
+  rows += `<div style="height:1px;background:var(--border);margin:8px 0"></div>`;
+  rows += `<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--navy)">TOTAL TO CHARGE (EFTPOS)</span><span style="font-size:20px;font-weight:800;color:#059669">$${b.chargeNow.toFixed(2)}</span></div>`;
+  el.innerHTML = rows;
+}
+
+async function applyMechDiscount() {
+  const input = document.getElementById('mech-disc-code');
+  const msg = document.getElementById('mech-disc-msg');
+  const code = (input?.value || '').trim().toUpperCase();
+  if (!code) return;
+  msg.style.display = 'block';
+  msg.style.color = '#6B7280';
+  msg.textContent = 'Checking...';
+  try {
+    const { data, error } = await sb
+      .from('discount_codes')
+      .select('discount_type, discount_value, max_uses, uses_count, active, expires_at')
+      .eq('code', code)
+      .single();
+    if (error || !data || !data.active) throw new Error('Invalid or expired code');
+    if (data.expires_at && new Date(data.expires_at) < new Date())
+      throw new Error('Code has expired');
+    if (data.max_uses && data.uses_count >= data.max_uses)
+      throw new Error('Code has reached its limit');
+    const b = calcChargeBreakdown();
+    const base = b.service + b.partsTotal;
+    const amount =
+      data.discount_type === 'percent'
+        ? Math.round(((base * data.discount_value) / 100) * 100) / 100
+        : Math.min(data.discount_value, base);
+    _mechDiscount = { code, type: data.discount_type, value: data.discount_value, amount };
+    msg.style.color = '#059669';
+    msg.textContent = `Code applied! −$${amount.toFixed(2)} off`;
+    input.disabled = true;
+    document.getElementById('mech-disc-btn').disabled = true;
+    renderChargeBreakdown();
+  } catch (e) {
+    _mechDiscount = null;
+    msg.style.color = '#DC2626';
+    msg.textContent = e.message || 'Invalid code';
+    renderChargeBreakdown();
+  }
 }
 
 function previewPhoto(type) {
@@ -1187,6 +1288,16 @@ async function submitComplete(id) {
   const partsArr = Object.values(_partsUsed)
     .filter((p) => p.qty > 0)
     .map((p) => ({ id: p.id, name: p.name, qty: p.qty }));
+  const partsCharged = Object.values(_partsUsed)
+    .filter((p) => p.qty > 0)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      qty: p.qty,
+      unit_price: p.sell_price || 0,
+      total: p.qty * (p.sell_price || 0),
+    }));
+  const breakdown = calcChargeBreakdown();
   const nextDate = document.getElementById('comp-next')?.value || null;
   const canvas = document.getElementById('sig-canvas');
   const signature = canvas ? canvas.toDataURL('image/png') : null;
@@ -1240,6 +1351,13 @@ async function submitComplete(id) {
       booking_id: id,
       mechanic_notes: notes || null,
       parts_used: partsArr,
+      parts_charged: {
+        items: partsCharged,
+        discount_code: _mechDiscount?.code || null,
+        discount_amount: _mechDiscount?.amount || null,
+      },
+      final_charge_amount: breakdown ? breakdown.chargeNow : null,
+      final_charge_status: 'charged_manual',
       photo_before_url: photoBeforeUrl || null,
       photo_after_url: photoAfterUrl || null,
       client_signature_url: signature || null,
@@ -1250,7 +1368,7 @@ async function submitComplete(id) {
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
     if (btn) {
-      btn.textContent = '✅ Complete job';
+      btn.textContent = '💳 Marcar como cobrado (EFTPOS) y completar';
       btn.disabled = false;
     }
     toast('Error: ' + (err.error || 'Could not complete job'));
@@ -1318,6 +1436,11 @@ async function submitComplete(id) {
               address: j?.address || j?.suburb,
               price: Math.max(0, (j?.price || 0) - (j?.discount_applied || 0)),
               discount: j?.discount_applied || 0,
+              calloutFee: breakdown?.calloutFee ?? 20,
+              partsCharged: partsCharged,
+              mechDiscountCode: _mechDiscount?.code || null,
+              mechDiscountAmount: _mechDiscount?.amount || 0,
+              finalChargeAmount: breakdown?.chargeNow ?? null,
               mechNotes: notes || null,
               mechName: ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim(),
               nextService: nextSvcMsg,
@@ -1526,6 +1649,16 @@ function goTab(t, btn) {
     loadInventory();
     return;
   }
+  if (t === 'spareparts') {
+    const c = document.getElementById('jobs-list');
+    const tpl = document.getElementById('tpl-spareparts');
+    if (c && tpl) {
+      c.innerHTML = '';
+      c.appendChild(tpl.content.cloneNode(true));
+    }
+    loadSpareParts();
+    return;
+  }
   render();
 }
 
@@ -1610,6 +1743,87 @@ async function updateQty(id, delta, btn) {
   }
 }
 
+// ── Spare Parts (client-facing price catalog, mechanic reference only) ───────
+let sparePartsData = [];
+
+async function loadSpareParts() {
+  const loadingEl = document.getElementById('spareparts-loading');
+  const listEl = document.getElementById('spareparts-list');
+  const emptyEl = document.getElementById('spareparts-empty');
+  if (!loadingEl) return;
+  loadingEl.style.display = 'block';
+  if (listEl) listEl.style.display = 'none';
+  if (emptyEl) emptyEl.style.display = 'none';
+  try {
+    const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-parts', token: stored.token || '' }),
+    });
+    sparePartsData = resp.ok ? await resp.json() : [];
+    loadingEl.style.display = 'none';
+    if (!sparePartsData.length) {
+      if (emptyEl) emptyEl.style.display = 'block';
+      return;
+    }
+    renderSpareParts();
+  } catch (e) {
+    loadingEl.textContent = 'Error loading parts';
+  }
+}
+
+function renderSpareParts() {
+  const listEl = document.getElementById('spareparts-list');
+  const emptyEl = document.getElementById('spareparts-empty');
+  if (!listEl) return;
+  const q = (document.getElementById('sp-search')?.value || '').trim().toLowerCase();
+  const filtered = q
+    ? sparePartsData.filter((p) => p.name.toLowerCase().includes(q))
+    : sparePartsData;
+
+  if (!filtered.length) {
+    listEl.style.display = 'none';
+    if (emptyEl) {
+      emptyEl.style.display = 'block';
+      emptyEl.textContent = q ? `No parts match "${q}"` : 'No parts in the catalog yet.';
+    }
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const byCat = {};
+  filtered.forEach((p) => {
+    const key = String(p.category || 'general')
+      .toLowerCase()
+      .trim();
+    (byCat[key] = byCat[key] || []).push(p);
+  });
+
+  let html = '';
+  Object.keys(byCat)
+    .sort()
+    .forEach((cat) => {
+      const m = catMeta(cat);
+      html += `<div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+          <span style="font-size:15px">${m.icon}</span>
+          <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${m.color}">${esc(m.label)}</span>
+        </div>`;
+      byCat[cat].forEach((p) => {
+        const price =
+          p.sell_price != null ? '$' + parseFloat(p.sell_price).toFixed(2) : 'No price set';
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--white);border:1px solid var(--border);border-left:3px solid ${m.color};border-radius:10px;padding:12px 14px;margin-bottom:7px">
+          <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.name)}</div>
+          <div style="font-size:16px;font-weight:800;color:${p.sell_price != null ? m.color : 'var(--mgray)'};flex-shrink:0">${price}</div>
+        </div>`;
+      });
+      html += '</div>';
+    });
+  listEl.innerHTML = html;
+  listEl.style.display = 'block';
+}
+
 // ── Service Timer (4.3) ──────────────────────────────────────────────────────
 let timerInterval = null;
 let serviceStartTime = null;
@@ -1691,6 +1905,7 @@ async function completeService() {
                 address: j.address || j.suburb,
                 price: Math.max(0, (j.price || 0) - (j.discount_applied || 0)),
                 discount: j.discount_applied || 0,
+                calloutFee: j.callout_fee ?? 20,
                 mechNotes: null,
                 mechName,
                 nextService: 'We recommend a service check every 3–6 months.',
