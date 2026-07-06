@@ -448,7 +448,7 @@ async function renderBookService() {
         <div id="diag-result" style="margin-top:10px;display:none"></div>
       </div>
       <div id="cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0">
-        ${CAT_ORDER.map((cat) => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap;transition:all 150ms ease">${CAT_SHORT[cat]}</button>`).join('')}
+        ${CAT_ORDER.map((cat) => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;height:32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap;transition:all 150ms ease"><span aria-hidden="true">${CAT_ICON[cat] || ''}</span>${CAT_SHORT[cat]}</button>`).join('')}
       </div>
       <div class="section-label">Select Service</div>
       <div id="step1-services">${categoriesHtml}</div>
@@ -460,7 +460,6 @@ async function renderBookService() {
     `;
 
     const diagPhoto = screen.querySelector('#diag-photo');
-    screen.querySelector('#diag-photo-btn').addEventListener('click', () => diagPhoto.click());
     diagPhoto.addEventListener('change', () => runAIDiagnosis(screen));
     screen
       .querySelector('#diag-ask-btn')
@@ -883,7 +882,7 @@ async function renderServiceSummary() {
       <!-- Quote card -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
         <div style="background:#0D1F3C;padding:14px 16px;display:flex;align-items:center;gap:10px">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/></svg>
+          <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="20" style="width:auto;display:block">
           <div>
             <div style="color:#fff;font-size:14px;font-weight:700">${service.name}</div>
             ${dur ? `<div style="color:rgba(255,255,255,0.65);font-size:11px;margin-top:1px">Est. ${dur}</div>` : ''}
@@ -1007,7 +1006,7 @@ async function renderServiceSummary() {
       // 1. Try discount_codes table first
       const { data, error } = await sb
         .from('discount_codes')
-        .select('discount_amount, discount_type, max_uses, uses_count, active')
+        .select('discount_value, discount_type, max_uses, uses_count, active')
         .eq('code', code)
         .single();
       if (!error && data && data.active) {
@@ -1015,9 +1014,9 @@ async function renderServiceSummary() {
           throw new Error('Code has reached its limit');
         const base = service.price || 0;
         const disc =
-          data.discount_type === 'percentage'
-            ? Math.round(((base * data.discount_amount) / 100) * 100) / 100
-            : Math.min(data.discount_amount, base);
+          data.discount_type === 'percent'
+            ? Math.round(((base * data.discount_value) / 100) * 100) / 100
+            : Math.min(data.discount_value, base);
         applyDiscount(disc, 'Promo code applied! -$' + disc.toFixed(2) + ' off service fee');
         return;
       }
@@ -1320,7 +1319,7 @@ async function renderTrackingPicker(screen) {
     ${createHeader('My Bookings', false)}
     <div style="padding:16px;overflow-y:auto;max-height:calc(100vh - 112px)">
       <div id="booking-picker-list">
-        <div style="display:flex;align-items:center;justify-content:center;height:120px;color:var(--color-text-secondary);font-size:14px">Loading...</div>
+        <div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div></div>
       </div>
     </div>
     ${createBottomNav('tracking')}
@@ -1990,11 +1989,7 @@ async function renderReview() {
     ${createHeader('Review Service', true, '#home')}
     <div class="review-prompt">
       <div class="review-icon">
-        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle>
-          <path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"></path>
-          <circle cx="12" cy="5" r="2" fill="var(--color-primary)" stroke="none"></circle>
-        </svg>
+        <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="40" style="width:auto;display:block;margin:0 auto">
       </div>
       <p class="review-question">How was your experience?<br>We'd love to hear your feedback.</p>
     </div>
@@ -2383,6 +2378,7 @@ async function renderMyBookings() {
             </div>
             ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#DC2626;margin-bottom:4px">Cancellation reason</div><div style="font-size:14px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
             <div style="display:flex;flex-direction:column;gap:8px">
+              ${booking.status === 'completed' ? '<button id="book-again-btn" class="btn btn--primary btn--full">↻ Book Again</button>' : ''}
               ${booking.status === 'enroute' || booking.status === 'en_route' || booking.status === 'in_progress' ? '<button id="track-live-btn" class="btn btn--primary btn--full">Track Live</button>' : ''}
               ${booking.tracking_token ? '<button id="share-track-btn" class="btn btn--secondary btn--full">Share tracking link</button>' : ''}
               ${canCancel ? '<button id="reschedule-btn" class="btn btn--secondary btn--full">Reschedule</button>' : ''}
@@ -2397,6 +2393,26 @@ async function renderMyBookings() {
           .addEventListener('click', () => overlay.remove());
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) overlay.remove();
+        });
+        overlay.querySelector('#book-again-btn')?.addEventListener('click', async () => {
+          const btn = overlay.querySelector('#book-again-btn');
+          btn.textContent = 'Loading...';
+          btn.disabled = true;
+          const services = await getServices();
+          const match = (services || []).find((s) => s.name === booking.service_name);
+          if (!match) {
+            showToast('That service is no longer available. Please pick a new one.', 'error');
+            btn.textContent = '↻ Book Again';
+            btn.disabled = false;
+            return;
+          }
+          window.appState.service = match;
+          window.appState.location = booking.address || 'Home';
+          window.appState.bikeId = null;
+          window.appState.date = null;
+          window.appState.time = null;
+          overlay.remove();
+          router.navigate('book-service');
         });
         overlay.querySelector('#track-live-btn')?.addEventListener('click', () => {
           window.appState.bookingId = booking.id;
@@ -2781,7 +2797,7 @@ async function renderMyBikes() {
       <div id="bikes-list" style="margin-bottom:16px">
         <div style="text-align:center;padding:40px 0;color:var(--color-text-secondary)">
           <div style="width:88px;height:88px;border-radius:20px;background:#2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5">
-            <svg width="56" height="38" viewBox="0 0 84 56" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="40" r="13.5"></circle><circle cx="66" cy="40" r="13.5"></circle><circle cx="18" cy="40" r="2" fill="#fff" stroke="none"></circle><circle cx="66" cy="40" r="2" fill="#fff" stroke="none"></circle><path d="M18 40 L40 40 L33 15"></path><path d="M18 40 L33 15"></path><path d="M40 40 L59 26"></path><path d="M33 15 L56 15 L59 26"></path><path d="M59 26 L66 40"></path><path d="M27 15 L38 15"></path><path d="M55 14 Q62 12 62 18"></path><path d="M40 40 L45 47"></path></svg>
+            <span style="display:inline-block;width:56px;height:38px;background-color:#fff;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
           <div style="margin-top:12px;font-size:14px">Loading bikes...</div>
         </div>
@@ -2840,7 +2856,7 @@ async function renderMyBikes() {
       if (!data || data.length === 0) {
         list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--color-text-secondary)">
           <div style="width:88px;height:88px;border-radius:20px;background:#2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto">
-            <svg width="56" height="38" viewBox="0 0 84 56" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="40" r="13.5"></circle><circle cx="66" cy="40" r="13.5"></circle><circle cx="18" cy="40" r="2" fill="#fff" stroke="none"></circle><circle cx="66" cy="40" r="2" fill="#fff" stroke="none"></circle><path d="M18 40 L40 40 L33 15"></path><path d="M18 40 L33 15"></path><path d="M40 40 L59 26"></path><path d="M33 15 L56 15 L59 26"></path><path d="M59 26 L66 40"></path><path d="M27 15 L38 15"></path><path d="M55 14 Q62 12 62 18"></path><path d="M40 40 L45 47"></path></svg>
+            <span style="display:inline-block;width:56px;height:38px;background-color:#fff;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
           <div style="margin-top:14px;font-size:14px">No bikes added yet</div>
           <div style="font-size:12px;margin-top:4px;opacity:0.7">Add your first bike below</div>
@@ -2860,7 +2876,7 @@ async function renderMyBikes() {
           (bike) => `
         <div data-bike-id="${bike.id}" style="cursor:pointer;background:var(--color-surface);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
           <div style="width:44px;height:44px;border-radius:12px;background:var(--color-primary-alpha,rgba(10,88,202,0.12));display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="26" height="18" viewBox="0 0 84 56" fill="none" stroke="var(--color-primary)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="40" r="13.5"></circle><circle cx="66" cy="40" r="13.5"></circle><path d="M18 40 L40 40 L33 15"></path><path d="M18 40 L33 15"></path><path d="M40 40 L59 26"></path><path d="M33 15 L56 15 L59 26"></path><path d="M59 26 L66 40"></path><path d="M27 15 L38 15"></path><path d="M55 14 Q62 12 62 18"></path><path d="M40 40 L45 47"></path></svg>
+            <span style="display:inline-block;width:26px;height:18px;background-color:var(--color-primary);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:15px">${bike.name}</div>
@@ -2904,12 +2920,12 @@ async function renderMyBikes() {
               <div id="health-section" style="margin-bottom:20px">
                 <div style="height:1px;background:var(--color-border);margin-bottom:16px"></div>
                 <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-secondary);margin-bottom:12px">Bike Health Score</div>
-                <div style="text-align:center;padding:16px 0;color:var(--color-text-secondary);font-size:13px">Checking last service...</div>
+                <div class="skeleton" style="height:44px"></div>
               </div>
               <div id="history-section" style="margin-bottom:20px">
                 <div style="height:1px;background:var(--color-border);margin-bottom:16px"></div>
                 <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-secondary);margin-bottom:12px">Service history</div>
-                <div id="history-list" style="color:var(--color-text-secondary);font-size:13px;text-align:center;padding:8px 0">Loading...</div>
+                <div id="history-list"><div class="skeleton" style="height:36px;margin-bottom:6px"></div><div class="skeleton" style="height:36px"></div></div>
               </div>
               <button id="delete-bike-btn" class="btn btn--secondary btn--full" style="margin-bottom:10px;color:var(--color-error);border-color:var(--color-error)">Delete bike</button>
               <button id="close-bike-btn" class="btn btn--secondary btn--full">Close</button>
@@ -3202,17 +3218,14 @@ async function runAIDiagnosis(screen) {
   resultEl.innerHTML =
     '<div style="font-size:12px;color:var(--color-text-secondary)">&#128269; Analysing your photo...</div>';
   try {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64 = e.target.result.split(',')[1];
-      const resp = await fetch('/api/chat?type=diagnose', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64, mediaType: file.type || 'image/jpeg' }),
-      });
-      showDiagResult(screen, await resp.json());
-    };
-    reader.readAsDataURL(file);
+    const dataUrl = await compressImageToBase64(file);
+    const base64 = dataUrl.split(',')[1];
+    const resp = await fetch('/api/chat?type=diagnose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64, mediaType: 'image/jpeg' }),
+    });
+    showDiagResult(screen, await resp.json());
   } catch {
     resultEl.innerHTML =
       '<div style="font-size:12px;color:var(--color-error)">Could not analyse photo. Please describe the problem instead.</div>';

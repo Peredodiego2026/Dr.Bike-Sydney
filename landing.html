@@ -44,6 +44,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://tgpipbloisahufaywhqb.supabase.co">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://js.stripe.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Booking wizard styles (from index.html CSS) -->
@@ -1088,7 +1091,7 @@
       </div>
 
       <div class="about-image" style="padding:0;overflow:hidden">
-        <img src="images/mechanic-working.png" alt="Dr. Bike Sydney mechanic servicing a bike" style="width:100%;height:100%;object-fit:cover;border-radius:16px">
+        <img src="images/mechanic-working.webp" alt="Dr. Bike Sydney mechanic servicing a bike" style="width:100%;height:100%;object-fit:cover;border-radius:16px" loading="lazy">
       </div>
     </div>
   </div>
@@ -3001,16 +3004,16 @@ function bkRenderStep3() {
     if (!code) return;
     msg.style.color = '#6B7280'; msg.textContent = 'Checking...';
     _sb.from('discount_codes')
-      .select('discount_amount, discount_type, max_uses, uses_count, active')
+      .select('discount_value, discount_type, max_uses, uses_count, active')
       .eq('code', code).single()
       .then(function(res) {
         var data = res.data, error = res.error;
         if (error || !data || !data.active) throw new Error('Invalid or expired code');
         if (data.max_uses && data.uses_count >= data.max_uses) throw new Error('Code has reached its limit');
         var base = Number((_bkState.service || {}).price || 0);
-        var disc = data.discount_type === 'percentage'
-          ? Math.round(base * data.discount_amount / 100 * 100) / 100
-          : Math.min(data.discount_amount, base);
+        var disc = data.discount_type === 'percent'
+          ? Math.round(base * data.discount_value / 100 * 100) / 100
+          : Math.min(data.discount_value, base);
         _bkDiscount = disc;
         _bkState.discountAmount = disc;
         _bkState.discountCode   = code;
@@ -3029,6 +3032,43 @@ function bkRenderStep3() {
         _bkDiscount = 0;
         msg.style.color = '#DC2626'; msg.textContent = e.message || 'Invalid code';
       });
+  });
+
+  // Address autocomplete (Nominatim), same pattern as the mobile app
+  var _addrInput = document.getElementById('bk-address');
+  var _addrBox = document.getElementById('bk-address-suggestions');
+  var _addrDebounce = null;
+  function bkFetchAddressSuggestions(query) {
+    if (query.length < 3) { _addrBox.style.display = 'none'; return; }
+    var q = encodeURIComponent(query + ', Sydney, NSW, Australia');
+    fetch('https://nominatim.openstreetmap.org/search?q=' + q + '&format=json&limit=5&addressdetails=1', {
+      headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' }
+    }).then(function(res) { return res.json(); }).then(function(data) {
+      if (!data.length) { _addrBox.style.display = 'none'; return; }
+      _addrBox.innerHTML = data.map(function(item) {
+        var main = item.display_name.split(',')[0];
+        var rest = item.display_name.split(',').slice(1).join(',');
+        return '<button type="button" class="bk-address-suggestion" data-address="' + item.display_name.replace(/"/g, '&quot;') + '"' +
+          ' style="display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:#111827;font-family:inherit;border-bottom:1px solid #F3F4F6">' +
+          main + '<br><span style="font-size:12px;color:#6B7280">' + rest + '</span></button>';
+      }).join('');
+      _addrBox.style.display = 'block';
+      _addrBox.querySelectorAll('.bk-address-suggestion').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          _addrInput.value = btn.dataset.address;
+          _addrBox.style.display = 'none';
+          _addrInput.focus();
+        });
+      });
+    }).catch(function() { _addrBox.style.display = 'none'; });
+  }
+  _addrInput.addEventListener('input', function(e) {
+    clearTimeout(_addrDebounce);
+    var val = e.target.value;
+    _addrDebounce = setTimeout(function() { bkFetchAddressSuggestions(val); }, 250);
+  });
+  document.addEventListener('click', function(e) {
+    if (!_addrBox.contains(e.target) && e.target !== _addrInput) _addrBox.style.display = 'none';
   });
 }
 
@@ -3078,7 +3118,7 @@ function bkStep3HTML() {
 
   // Service header card
   html += '<div style="background:#0D1F3C;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">';
-  html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/></svg>';
+  html += '<img src="images/logo-db.png" alt="Dr. Bike Sydney" height="20" style="width:auto;display:block">';
   html += '<div><div style="color:#fff;font-size:14px;font-weight:700">' + (s.name || '-') + '</div>';
   if (dur) html += '<div style="color:rgba(255,255,255,0.65);font-size:11px;margin-top:1px">Est. ' + dur + '</div>';
   html += '</div></div>';
@@ -3102,10 +3142,11 @@ function bkStep3HTML() {
   }
 
   // Address
-  html += '<div style="margin-bottom:12px">';
+  html += '<div style="margin-bottom:12px;position:relative">';
   html += '<label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;display:block;margin-bottom:6px">Your Address</label>';
-  html += '<input id="bk-address" type="text" placeholder="123 Example St, Suburb NSW 2000" autocomplete="street-address"' +
+  html += '<input id="bk-address" type="text" placeholder="123 Example St, Suburb NSW 2000" autocomplete="off"' +
     ' style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box;font-family:inherit;color:#111827">';
+  html += '<div id="bk-address-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #E5E7EB;border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,0.12)"></div>';
   html += '<div style="font-size:11px;color:#9CA3AF;margin-top:3px">We come to you anywhere in the Sydney area</div>';
   html += '</div>';
 
@@ -3513,7 +3554,7 @@ document.addEventListener('DOMContentLoaded', function() {
       '<div style="padding:24px 24px 0">',
         '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">',
           '<div style="width:44px;height:44px;flex-shrink:0;background:#EEF3FC;border-radius:50%;display:flex;align-items:center;justify-content:center">',
-            '<svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/><circle cx="12" cy="6" r="1.5" fill="#2563EB" stroke="none"/></svg>',
+            '<img src="images/logo-db.png" alt="Dr. Bike Sydney" height="22" style="width:auto;display:block">',
           '</div>',
           '<div>',
             '<div style="font-size:16px;font-weight:700;color:#0D1F3C">How was your service?</div>',
@@ -3834,9 +3875,9 @@ function openLandingChat(bookingId) {
 <!-- App JS Modules -->
 <script src="js/router.js?v=20260704" type="module"></script>
 <script src="js/supabase.js?v=20260704" type="module"></script>
-<script src="js/components.js?v=20260704" type="module"></script>
+<script src="js/components.js?v=20260704c" type="module"></script>
 <script src="js/stripe.js?v=20260704" type="module"></script>
-<script src="js/app.js?v=20260704" type="module"></script>
+<script src="js/app.js?v=20260705c" type="module"></script>
 
 </body>
 </html>
