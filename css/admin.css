@@ -299,6 +299,34 @@ body {
   background: #1a2740;
   border-color: rgba(255, 255, 255, 0.06);
 }
+/* P5: client-card and quick-action cards keep white bg + light forced text -> invisible */
+[data-theme='dark'] .client-card {
+  background: #152035;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme='dark'] .qa {
+  background: #152035;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme='dark'] .cl-suburb {
+  color: #98989f;
+}
+[data-theme='dark'] .seg-vip {
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+}
+[data-theme='dark'] .seg-reg {
+  background: rgba(22, 163, 74, 0.15);
+  color: #34d399;
+}
+[data-theme='dark'] .seg-new {
+  background: rgba(37, 99, 235, 0.18);
+  color: #60a5fa;
+}
+[data-theme='dark'] .seg-risk {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
 
 /* P3: Inventory/table alternating rows - prevent white bg on dark mode */
 [data-theme='dark'] .tbl tbody tr:nth-child(even) td {
@@ -1245,11 +1273,20 @@ body {
   background: #f8fafc;
   font-weight: 600;
 }
+[data-theme='dark'] .pl-row.total {
+  background: rgba(37, 99, 235, 0.15);
+}
+[data-theme='dark'] .pl-row.subtotal {
+  background: rgba(255, 255, 255, 0.04);
+}
 .pl-label {
   color: #94a3b8;
 }
 .pl-label.dark {
   color: #0d1f3c;
+}
+[data-theme='dark'] .pl-label.dark {
+  color: #f2f2f7;
 }
 .pl-val.pos {
   color: #16a34a;
@@ -1262,6 +1299,104 @@ body {
   color: #2563eb;
   font-weight: 700;
   font-size: 15px;
+}
+
+/* BAS SUMMARY GRID */
+.bas-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 4px;
+}
+.bas-cell {
+  border-radius: 10px;
+  padding: 14px;
+}
+.bas-cell-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.bas-cell-value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+.bas-cell--sales {
+  background: var(--off);
+}
+.bas-cell--sales .bas-cell-label {
+  color: var(--mgray);
+}
+.bas-cell--sales .bas-cell-value {
+  color: var(--navy);
+}
+.bas-cell--gst-sales {
+  background: #fff7ed;
+}
+.bas-cell--gst-sales .bas-cell-label {
+  color: #92400e;
+}
+.bas-cell--gst-sales .bas-cell-value {
+  color: #b45309;
+}
+.bas-cell--gst-purchases {
+  background: #f0fdf4;
+}
+.bas-cell--gst-purchases .bas-cell-label {
+  color: #065f46;
+}
+.bas-cell--gst-purchases .bas-cell-value {
+  color: #059669;
+}
+.bas-cell--net {
+  background: #eef3fc;
+}
+.bas-cell--net .bas-cell-label {
+  color: #1848c8;
+}
+.bas-cell--net .bas-cell-value {
+  color: #1848c8;
+}
+.bas-warn {
+  margin-top: 12px;
+  padding: 10px;
+  background: #fef3c7;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #92400e;
+}
+[data-theme='dark'] .bas-cell--sales {
+  background: #152035;
+}
+[data-theme='dark'] .bas-cell--sales .bas-cell-value {
+  color: #f2f2f7;
+}
+[data-theme='dark'] .bas-cell--gst-sales {
+  background: rgba(245, 158, 11, 0.12);
+}
+[data-theme='dark'] .bas-cell--gst-sales .bas-cell-label,
+[data-theme='dark'] .bas-cell--gst-sales .bas-cell-value {
+  color: #fbbf24;
+}
+[data-theme='dark'] .bas-cell--gst-purchases {
+  background: rgba(5, 150, 105, 0.15);
+}
+[data-theme='dark'] .bas-cell--gst-purchases .bas-cell-label,
+[data-theme='dark'] .bas-cell--gst-purchases .bas-cell-value {
+  color: #34d399;
+}
+[data-theme='dark'] .bas-cell--net {
+  background: rgba(24, 72, 200, 0.18);
+}
+[data-theme='dark'] .bas-cell--net .bas-cell-label,
+[data-theme='dark'] .bas-cell--net .bas-cell-value {
+  color: #60a5fa;
+}
+[data-theme='dark'] .bas-warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
 }
 
 /* CHART */

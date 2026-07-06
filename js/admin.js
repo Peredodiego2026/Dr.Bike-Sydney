@@ -31,7 +31,7 @@ const titles = {
   settings: 'Settings',
   coupons: 'Discount Codes',
   reminders: 'Service Reminders',
-  inventory: 'Parts Inventory',
+  inventory: 'Spare Parts',
   calendar: 'Calendar',
   memberships: 'Memberships',
 };
@@ -46,6 +46,7 @@ const subs = {
   zones: 'Assign suburbs to each van',
   settings: 'System settings',
   memberships: 'Active plans · Stripe subscriptions',
+  inventory: 'Stock, internal cost and client price per part',
 };
 
 function go(page, btn) {
@@ -428,7 +429,7 @@ async function loadFinance() {
           const v = dailyMap[d];
           const h = Math.max(8, Math.round((v / maxVal) * 140));
           const label = new Date(d + 'T00:00:00').getDate();
-          return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:3px" title="${d}: $${v}">
+          return `<div style="display:flex;flex-direction:column;align-items:center;flex:1 1 0;max-width:32px;gap:3px" title="${d}: $${v}">
       <div style="width:100%;background:#1848C8;border-radius:3px 3px 0 0;height:${h}px;min-height:4px"></div>
       <div style="font-size:9px;color:var(--mgray)">${label}</div>
     </div>`;
@@ -1199,7 +1200,7 @@ function checkAdminAuth() {
     'position:fixed;inset:0;background:#0D1F3C;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-      <div style="width:56px;height:56px;background:#1848C8;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/><circle cx="12" cy="6" r="1.5" fill="#fff" stroke="none"/></svg></div>
+      <div style="width:56px;height:56px;background:#1848C8;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
       <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" autocomplete="username"
@@ -1421,7 +1422,7 @@ function _showLoginCard(innerHtml) {
 }
 
 function _loginCardHeader() {
-  return '<div style="width:56px;height:56px;background:#1848C8;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l3.5 6h-5l-2-3.5"/><circle cx="12" cy="6" r="1.5" fill="#fff" stroke="none"/></svg></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
+  return '<div style="width:56px;height:56px;background:#1848C8;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
 }
 
 const _inp =
@@ -2822,8 +2823,18 @@ async function deleteContact(id) {
   loadContacts();
 }
 
-// ── INVENTORY ─────────────────────────────────────────────────────────────────
+// ── INVENTORY / SPARE PARTS ────────────────────────────────────────────────────
 let inventoryData = [];
+const PART_CATEGORIES = [
+  'Brakes',
+  'Drivetrain',
+  'Wheels & Tyres',
+  'Cockpit',
+  'Cables',
+  'Suspension',
+  'Lubrication',
+  'General',
+];
 
 async function loadInventory() {
   const tbody = document.getElementById('inv-tbody');
@@ -2860,25 +2871,8 @@ function renderInventory() {
   document.getElementById('inv-stock-value').textContent = '$' + stockValue.toFixed(0);
   document.getElementById('inv-used-month').textContent = '$0'; // updated from bookings later
 
-  const catColors = {
-    Brakes: '#EEF3FC',
-    Drivetrain: '#ECFDF5',
-    Tyres: '#FEF9C3',
-    Cables: '#FEF3C7',
-    Lubrication: '#F0FDF4',
-    General: '#F3F4F6',
-  };
-  const catText = {
-    Brakes: '#1848C8',
-    Drivetrain: '#059669',
-    Tyres: '#92400E',
-    Cables: '#D97706',
-    Lubrication: '#15803D',
-    General: '#6B7280',
-  };
-
   if (!inventoryData.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:10px">
+    tbody.innerHTML = `<tr><td colspan="7"><div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:10px">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
       <div style="font-size:14px;font-weight:600;color:var(--mgray)">No parts yet</div>
       <div style="font-size:12px;color:var(--mgray);opacity:.7">Add your first part to start tracking stock</div>
@@ -2886,22 +2880,34 @@ function renderInventory() {
     return;
   }
 
-  tbody.innerHTML = inventoryData
-    .map((p) => {
-      const isLow = p.stock <= p.min_stock;
-      const isOut = p.stock === 0;
-      const statusTxt = isOut ? '🔴 Out of stock' : isLow ? '🟡 Low stock' : '🟢 OK';
-      const statusBg = isOut ? '#FEF2F2' : isLow ? '#FEF9C3' : '#F0FDF4';
-      const statusCl = isOut ? '#DC2626' : isLow ? '#92400E' : '#15803D';
-      const cat = p.category || 'General';
-      const val = (p.stock * (p.cost_price || 0)).toFixed(2);
-      return `<tr>
-      <td data-label="Part" style="font-weight:600">${p.name}</td>
-      <td data-label="Category"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${catColors[cat] || '#F3F4F6'};color:${catText[cat] || '#6B7280'}">${cat}</span></td>
+  const q = (document.getElementById('inv-search')?.value || '').trim().toLowerCase();
+  const filtered = q
+    ? inventoryData.filter((p) => p.name.toLowerCase().includes(q))
+    : inventoryData;
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mgray)">No parts match "${escapeHtml(q)}"</td></tr>`;
+    return;
+  }
+
+  const byCat = {};
+  filtered.forEach((p) => {
+    const cat = PART_CATEGORIES.includes(p.category) ? p.category : 'General';
+    (byCat[cat] = byCat[cat] || []).push(p);
+  });
+
+  function partRow(p) {
+    const isLow = p.stock <= p.min_stock;
+    const isOut = p.stock === 0;
+    const statusTxt = isOut ? '🔴 Out of stock' : isLow ? '🟡 Low stock' : '🟢 OK';
+    const statusBg = isOut ? '#FEF2F2' : isLow ? '#FEF9C3' : '#F0FDF4';
+    const statusCl = isOut ? '#DC2626' : isLow ? '#92400E' : '#15803D';
+    return `<tr>
+      <td data-label="Part" style="font-weight:600">${escapeHtml(p.name)}</td>
       <td data-label="Stock" style="font-weight:700;font-size:15px;color:${isLow ? '#DC2626' : 'var(--navy)'}">${p.stock}</td>
       <td data-label="Min" style="color:var(--mgray)">${p.min_stock}</td>
       <td data-label="Cost">$${parseFloat(p.cost_price || 0).toFixed(2)}</td>
-      <td data-label="Value" style="font-weight:600;color:var(--blue)">$${val}</td>
+      <td data-label="Client price" style="font-weight:700;color:var(--blue)">${p.sell_price != null ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
       <td data-label="Status"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusCl}">${statusTxt}</span></td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
@@ -2912,7 +2918,14 @@ function renderInventory() {
         </div>
       </td>
     </tr>`;
-    })
+  }
+
+  tbody.innerHTML = PART_CATEGORIES.filter((cat) => byCat[cat]?.length)
+    .map(
+      (cat) =>
+        `<tr><td colspan="7" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">${cat}</td></tr>` +
+        byCat[cat].map(partRow).join('')
+    )
     .join('');
 }
 
@@ -2926,7 +2939,7 @@ async function adjustStock(id, current, delta) {
 
 function openPartModal(id) {
   const p = id ? inventoryData.find((x) => x.id === id) : null;
-  const cats = ['Brakes', 'Drivetrain', 'Tyres', 'Cables', 'Lubrication', 'General'];
+  const cats = PART_CATEGORIES;
   let modal = document.getElementById('part-modal');
   if (modal) modal.remove();
   modal = document.createElement('div');
@@ -2946,8 +2959,12 @@ function openPartModal(id) {
         <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Min stock</div>
           <input class="inp" id="pm-min" type="number" min="0" value="${p?.min_stock || 5}"></div>
       </div>
-      <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Cost price ($)</div>
-        <input class="inp" id="pm-cost" type="number" min="0" step="0.01" value="${p?.cost_price || 0}" placeholder="0.00"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Cost price ($)</div>
+          <input class="inp" id="pm-cost" type="number" min="0" step="0.01" value="${p?.cost_price || 0}" placeholder="0.00"></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Client price ($)</div>
+          <input class="inp" id="pm-sell" type="number" min="0" step="0.01" value="${p?.sell_price ?? ''}" placeholder="0.00"></div>
+      </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button onclick="document.getElementById('part-modal').remove()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
@@ -2963,12 +2980,21 @@ async function savePart(id) {
   const stock = parseInt(document.getElementById('pm-stock')?.value || 0);
   const min = parseInt(document.getElementById('pm-min')?.value || 5);
   const cost = parseFloat(document.getElementById('pm-cost')?.value || 0);
+  const sellRaw = document.getElementById('pm-sell')?.value;
+  const sell = sellRaw === '' ? null : parseFloat(sellRaw);
   if (!name) {
     showToast('Part name is required');
     return;
   }
 
-  const payload = { name, category: cat, stock, min_stock: min, cost_price: cost };
+  const payload = {
+    name,
+    category: cat,
+    stock,
+    min_stock: min,
+    cost_price: cost,
+    sell_price: sell,
+  };
   let error;
   if (id) {
     ({ error } = await sb.from('parts_inventory').update(payload).eq('id', id));
@@ -3652,7 +3678,7 @@ async function loadNotifNumbers() {
       <!-- Fila 2: teléfono + canal + botones -->
       <div style="display:flex;align-items:center;gap:8px;padding-left:46px">
         <span style="font-size:12px;color:var(--mgray);flex:1">${c.phone} · ${channelIcon[channel]} ${channel.toUpperCase()}</span>
-        <button onclick="editNotifNumber('${c.id}','${c.first_name}','${c.last_name}','${c.phone}','${c.role}','${zone}','${channel}')"
+        <button onclick="editNotifNumber('${c.id}')"
           style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
         <button onclick="deleteNotifNumber('${c.id}')"
           style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
@@ -3670,6 +3696,10 @@ function openNotifModal() {
   document.getElementById('notif-modal-role').value = 'mechanic';
   document.getElementById('notif-modal-zone').value = '1';
   document.getElementById('notif-modal-channel').value = 'sms';
+  document.getElementById('notif-modal-photo-url').value = '';
+  document.getElementById('notif-modal-photo-file').value = '';
+  document.getElementById('notif-modal-photo-preview').style.display = 'none';
+  document.getElementById('notif-modal-bio').value = '';
   updateZoneVisibility();
   document.getElementById('notif-modal').style.display = 'flex';
 }
@@ -3681,19 +3711,55 @@ function closeNotifModal() {
 function updateZoneVisibility() {
   const role = document.getElementById('notif-modal-role').value;
   const zoneWrap = document.getElementById('notif-modal-zone-wrap');
+  const profileWrap = document.getElementById('notif-modal-profile-wrap');
   if (zoneWrap) zoneWrap.style.display = role === 'manager' ? 'none' : 'block';
+  if (profileWrap) profileWrap.style.display = role === 'manager' ? 'none' : 'block';
 }
 
-function editNotifNumber(id, fname, lname, phone, role, zone, channel) {
+async function editNotifNumber(id) {
+  const { data: c, error } = await sb.from('escalation_contacts').select('*').eq('id', id).single();
+  if (error || !c) {
+    showToast('Could not load contact: ' + (error?.message || 'not found'));
+    return;
+  }
   document.getElementById('notif-modal-title').textContent = 'Edit notification number';
-  document.getElementById('notif-modal-id').value = id;
-  document.getElementById('notif-modal-name').value = fname + ' ' + lname;
-  document.getElementById('notif-modal-phone').value = phone;
-  document.getElementById('notif-modal-role').value = role;
-  document.getElementById('notif-modal-zone').value = zone || '1';
-  document.getElementById('notif-modal-channel').value = channel || 'sms';
+  document.getElementById('notif-modal-id').value = c.id;
+  document.getElementById('notif-modal-name').value = [c.first_name, c.last_name]
+    .filter(Boolean)
+    .join(' ');
+  document.getElementById('notif-modal-phone').value = c.phone || '';
+  document.getElementById('notif-modal-role').value = c.role || 'mechanic';
+  document.getElementById('notif-modal-zone').value = c.zone || '1';
+  document.getElementById('notif-modal-channel').value = c.channel || 'sms';
+  document.getElementById('notif-modal-photo-file').value = '';
+  document.getElementById('notif-modal-photo-url').value = c.photo_url || '';
+  const preview = document.getElementById('notif-modal-photo-preview');
+  if (c.photo_url) {
+    preview.src = c.photo_url;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+  document.getElementById('notif-modal-bio').value = c.bio || '';
   updateZoneVisibility();
   document.getElementById('notif-modal').style.display = 'flex';
+}
+
+function previewMechanicPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('notif-modal-photo-preview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+}
+
+async function uploadMechanicPhoto(file, contactId) {
+  const ext = file.name.split('.').pop() || 'jpg';
+  const path = `profiles/${contactId || 'new'}_${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('job-photos').upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data: urlData } = sb.storage.from('job-photos').getPublicUrl(path);
+  return urlData?.publicUrl || null;
 }
 
 async function saveNotifNumber() {
@@ -3703,6 +3769,8 @@ async function saveNotifNumber() {
   const role = document.getElementById('notif-modal-role').value;
   const zone = role === 'manager' ? 'all' : document.getElementById('notif-modal-zone').value;
   const channel = document.getElementById('notif-modal-channel').value;
+  const bio = document.getElementById('notif-modal-bio').value.trim();
+  const photoFile = document.getElementById('notif-modal-photo-file').files[0];
 
   if (!fullName || !phone) {
     showToast('Name and phone are required');
@@ -3713,7 +3781,21 @@ async function saveNotifNumber() {
   const fname = parts[0];
   const lname = parts.slice(1).join(' ') || '-';
 
+  let photo_url = document.getElementById('notif-modal-photo-url').value || null;
+  if (photoFile) {
+    try {
+      photo_url = await uploadMechanicPhoto(photoFile, id);
+    } catch (e) {
+      showToast('Photo upload failed: ' + e.message);
+      return;
+    }
+  }
+
   const payload = { first_name: fname, last_name: lname, phone, role, zone, channel, active: true };
+  if (role === 'mechanic') {
+    payload.photo_url = photo_url;
+    payload.bio = bio || null;
+  }
 
   let error;
   if (id) {

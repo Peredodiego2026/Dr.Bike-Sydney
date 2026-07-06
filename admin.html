@@ -14,12 +14,14 @@
 <meta name="apple-mobile-web-app-title" content="DrBike Admin">
 <link rel="manifest" href="/admin-manifest.json">
 <link rel="apple-touch-icon" href="/icon-admin-192.png">
+<link rel="preconnect" href="https://tgpipbloisahufaywhqb.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <link rel="stylesheet" href="css/variables.css?v=20260628">
-<link rel="stylesheet" href="css/admin.css?v=20260628">
+<link rel="stylesheet" href="css/admin.css?v=20260704">
 <style>
 @media(max-width:768px){
   .content{padding:12px 10px !important}
@@ -109,7 +111,7 @@
     </button>
     <button class="sb-item" onclick="go('inventory',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-      Parts Inventory
+      Spare Parts
     </button>
     <button class="sb-item" onclick="go('calendar',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -602,25 +604,25 @@
           <div><div class="card-title">🇦🇺 BAS Summary — ATO Reporting</div><div class="card-sub">Business Activity Statement · GST quarterly obligations</div></div>
           <button onclick="exportBAS()" style="background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Export BAS</button>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px" id="bas-grid" class="bas-grid">
-          <div style="background:var(--off);border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em">G1 Total Sales</div>
-            <div style="font-size:20px;font-weight:700;color:var(--navy);margin-top:6px" id="bas-g1">$—</div>
+        <div class="bas-grid" id="bas-grid">
+          <div class="bas-cell bas-cell--sales">
+            <div class="bas-cell-label">G1 Total Sales</div>
+            <div class="bas-cell-value" id="bas-g1">$—</div>
           </div>
-          <div style="background:#FFF7ED;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:600;color:#92400E;text-transform:uppercase;letter-spacing:0.04em">1A GST on Sales</div>
-            <div style="font-size:20px;font-weight:700;color:#B45309;margin-top:6px" id="bas-1a">$—</div>
+          <div class="bas-cell bas-cell--gst-sales">
+            <div class="bas-cell-label">1A GST on Sales</div>
+            <div class="bas-cell-value" id="bas-1a">$—</div>
           </div>
-          <div style="background:#F0FDF4;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:0.04em">1B GST on Purchases</div>
-            <div style="font-size:20px;font-weight:700;color:#059669;margin-top:6px" id="bas-1b">$—</div>
+          <div class="bas-cell bas-cell--gst-purchases">
+            <div class="bas-cell-label">1B GST on Purchases</div>
+            <div class="bas-cell-value" id="bas-1b">$—</div>
           </div>
-          <div style="background:#EEF3FC;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:600;color:#1848C8;text-transform:uppercase;letter-spacing:0.04em">Net GST Payable</div>
-            <div style="font-size:20px;font-weight:700;color:#1848C8;margin-top:6px" id="bas-net">$—</div>
+          <div class="bas-cell bas-cell--net">
+            <div class="bas-cell-label">Net GST Payable</div>
+            <div class="bas-cell-value" id="bas-net">$—</div>
           </div>
         </div>
-        <div style="margin-top:12px;padding:10px;background:#FEF3C7;border-radius:8px;font-size:12px;color:#92400E">
+        <div class="bas-warn">
           ⚠️ <strong>BAS due dates:</strong> Q1 (Jul–Sep) → 28 Oct · Q2 (Oct–Dec) → 28 Feb · Q3 (Jan–Mar) → 28 Apr · Q4 (Apr–Jun) → 28 Jul
         </div>
       </div>
@@ -935,12 +937,12 @@
       </div>
     </div>
 
-    <!-- ══ INVENTORY ══ -->
+    <!-- ══ INVENTORY / SPARE PARTS ══ -->
     <div id="page-inventory" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
         <div>
-          <div style="font-size:18px;font-weight:700;color:var(--navy)">Parts Inventory</div>
-          <div style="font-size:13px;color:var(--mgray)">Track stock, costs and usage per job</div>
+          <div style="font-size:18px;font-weight:700;color:var(--navy)">Spare Parts</div>
+          <div style="font-size:13px;color:var(--mgray)">Stock, internal cost and client price per part</div>
         </div>
         <button onclick="openPartModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Add part</button>
       </div>
@@ -951,12 +953,17 @@
         <div class="kpi-card green" style="text-align:center"><div class="kpi-label">STOCK VALUE</div><div class="kpi-value" id="inv-stock-value" style="color:var(--green)">$—</div><div class="kpi-sub">at cost price</div></div>
         <div class="kpi-card red" style="text-align:center"><div class="kpi-label">USED THIS MONTH</div><div class="kpi-value" id="inv-used-month" style="color:var(--red)">$—</div><div class="kpi-sub">parts cost</div></div>
       </div>
-      <!-- Table -->
+      <!-- Search -->
+      <div style="position:relative;margin-bottom:16px;max-width:360px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="inv-search" class="inp" placeholder="Search parts..." style="padding-left:36px" oninput="renderInventory()">
+      </div>
+      <!-- Grouped table -->
       <div class="card">
         <div style="overflow-x:auto">
           <table class="tbl" id="inv-table">
-            <thead><tr><th>Part name</th><th>Category</th><th>Stock</th><th>Min stock</th><th>Cost ($)</th><th>Stock value</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="inv-tbody"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr></tbody>
+            <thead><tr><th>Part name</th><th>Stock</th><th>Min stock</th><th>Cost ($)</th><th>Client price ($)</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="inv-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1080,6 +1087,16 @@
               <option value="both">📱💬 SMS + WhatsApp</option>
             </select>
           </div>
+          <div id="notif-modal-profile-wrap" style="border-top:1px solid var(--border);padding-top:12px;margin-top:2px">
+            <div style="font-size:11px;font-weight:700;color:var(--mgray);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em">Client-facing profile (shown on tracking page)</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+              <img id="notif-modal-photo-preview" style="width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--off);border:1px solid var(--border);display:none">
+              <input type="file" id="notif-modal-photo-file" accept="image/*" style="font-size:12px" onchange="previewMechanicPhoto(this)">
+            </div>
+            <input type="hidden" id="notif-modal-photo-url">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Short bio</div>
+            <textarea class="inp" id="notif-modal-bio" rows="3" placeholder="e.g. 8 years fixing bikes across Sydney. Specialises in e-bikes and road bike tune-ups." style="resize:vertical;font-family:var(--sans)"></textarea>
+          </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <button onclick="closeNotifModal()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
@@ -1118,5 +1135,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=20260629h"></script>
+<script src="js/admin.js?v=20260705b"></script>
 </body></html>
