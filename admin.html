@@ -718,6 +718,12 @@
 
     <!-- ANALYTICS -->
     <div id="page-analytics" class="page">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+        <button onclick="exportAnalyticsCSV()" style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export CSV
+        </button>
+      </div>
       <div class="card" style="margin-bottom:18px">
         <div class="card-hdr"><div><div class="card-title">Conversion funnel</div><div class="card-sub">All bookings · lifetime</div></div></div>
         <div id="an-funnel" style="padding:18px;display:flex;flex-direction:column;gap:10px"><div style="color:var(--mgray);font-size:13px">Loading...</div></div>

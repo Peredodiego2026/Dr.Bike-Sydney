@@ -2252,6 +2252,8 @@ async function renderRouteMap(useCache) {
 let _heatMap = null,
   _heatLayer = null;
 
+let _analyticsData = null;
+
 async function loadAnalytics() {
   const [{ data, error }, { data: catalog }] = await Promise.all([
     sb
@@ -2267,12 +2269,122 @@ async function loadAnalytics() {
     return;
   }
   const all = data || [];
+  _analyticsData = { all, catalog: catalog || [] };
 
   renderFunnel(all);
   renderHeatmap(all);
   renderServicePopularity(all, catalog || []);
   renderMargins(all);
   renderLTV(all);
+}
+
+// Exports every Analytics section into one CSV - conversion funnel, service
+// popularity, suburb breakdown, margins, and client LTV, each as its own
+// section so it opens cleanly in Excel/Sheets.
+function exportAnalyticsCSV() {
+  if (!_analyticsData) {
+    showToast('Analytics still loading - try again in a moment');
+    return;
+  }
+  const { all, catalog } = _analyticsData;
+  const completed = all.filter((b) => b.status === 'completed');
+  const rows = [];
+
+  rows.push(['DR. BIKE SYDNEY - ANALYTICS EXPORT']);
+  rows.push(['Generated', new Date().toISOString().slice(0, 10)]);
+  rows.push([]);
+
+  rows.push(['CONVERSION FUNNEL']);
+  rows.push(['Stage', 'Count']);
+  rows.push(['Bookings created', all.length]);
+  rows.push([
+    'Confirmed / assigned',
+    all.filter((b) =>
+      ['confirmed', 'enroute', 'en_route', 'in_progress', 'arrived', 'completed'].includes(b.status)
+    ).length,
+  ]);
+  rows.push(['Completed', completed.length]);
+  rows.push(['Cancelled', all.filter((b) => b.status === 'cancelled').length]);
+  rows.push([]);
+
+  rows.push(['SERVICE POPULARITY (most to least requested)']);
+  rows.push(['Service', 'Completed jobs']);
+  const popCounts = {};
+  catalog.forEach((s) => {
+    popCounts[s.name] = 0;
+  });
+  completed.forEach((b) => {
+    const n = b.service_name || 'Other';
+    popCounts[n] = (popCounts[n] || 0) + 1;
+  });
+  Object.entries(popCounts)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([name, n]) => rows.push([name, n]));
+  rows.push([]);
+
+  rows.push(['BOOKINGS BY SUBURB']);
+  rows.push(['Suburb', 'Bookings', 'Revenue']);
+  const bySuburb = {};
+  completed.forEach((b) => {
+    const key = (b.suburb || 'Unknown').trim();
+    if (!bySuburb[key]) bySuburb[key] = { n: 0, rev: 0 };
+    bySuburb[key].n++;
+    bySuburb[key].rev += b.service_price || 0;
+  });
+  Object.entries(bySuburb)
+    .sort((a, b) => b[1].n - a[1].n)
+    .forEach(([name, d]) => rows.push([name, d.n, d.rev]));
+  rows.push([]);
+
+  rows.push(['MARGINS PER SERVICE']);
+  rows.push(['Service', 'Jobs', 'Revenue', 'Avg ticket', 'Est. cost', 'Margin %']);
+  const byService = {};
+  completed.forEach((b) => {
+    const name = b.service_name || 'Other';
+    if (!byService[name]) byService[name] = { jobs: 0, rev: 0 };
+    byService[name].jobs++;
+    byService[name].rev += b.service_price || 0;
+  });
+  Object.entries(byService)
+    .sort((a, b) => b[1].rev - a[1].rev)
+    .forEach(([name, d]) => {
+      const avg = Math.round(d.rev / d.jobs);
+      const cost = d.jobs * VAR_COST_PER_JOB;
+      const net = d.rev - Math.round(d.rev / 11);
+      const margin = net > 0 ? Math.round(((net - cost) / net) * 100) : 0;
+      rows.push([name, d.jobs, d.rev, avg, cost, margin]);
+    });
+  rows.push([]);
+
+  rows.push(['CLIENT LIFETIME VALUE']);
+  rows.push(['Client', 'Jobs', 'LTV', 'Last service']);
+  const byClient = {};
+  completed.forEach((b) => {
+    const key = b.client_id || b.client_email || b.profiles?.email || b.client_name || 'unknown';
+    if (!byClient[key])
+      byClient[key] = {
+        name: b.client_name || b.profiles?.full_name || b.profiles?.email || 'Client',
+        jobs: 0,
+        ltv: 0,
+        last: '',
+      };
+    byClient[key].jobs++;
+    byClient[key].ltv += b.service_price || 0;
+    if (!byClient[key].last || b.scheduled_date > byClient[key].last)
+      byClient[key].last = b.scheduled_date;
+  });
+  Object.values(byClient)
+    .sort((a, b) => b.ltv - a.ltv)
+    .forEach((c) => rows.push([c.name, c.jobs, c.ltv, c.last]));
+
+  const csv = rows
+    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `DrBike_Analytics_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
 }
 
 // #24 Service popularity - most to least requested, including zero-demand services
