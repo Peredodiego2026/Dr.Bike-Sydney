@@ -24,7 +24,7 @@ const MOCK_SERVICES = [
   },
   {
     id: '3',
-    name: 'Major Service',
+    name: 'Standard+ Service',
     price: 199,
     description: 'Comprehensive overhaul + parts check',
     duration: '~2.5 hours',
