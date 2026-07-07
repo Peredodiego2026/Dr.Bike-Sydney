@@ -1469,6 +1469,11 @@ async function renderTracking() {
         <div id="eta-badge" style="margin-left:auto;flex-shrink:0;text-align:right">
           <div id="eta-text" style="font-size:12px;color:#6B7280">On the way to you</div>
         </div>
+        <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:#EFF6FF;border-bottom:1px solid #F3F4F6">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div style="font-size:12px;color:#1848C8"><b>Your code: <span id="arrival-pin-value" style="font-size:14px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
       </div>
       <div style="display:flex;gap:4px;padding:10px 16px">
         ${['Confirmed', 'En Route', 'Arrived', 'Done']
@@ -1628,39 +1633,51 @@ async function renderTracking() {
   if (booking) {
     applyStatus(booking.status || 'confirmed');
 
-    // Load mechanic profile (name, job count, rating) non-blocking
-    if (booking.mechanic_id) {
-      fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'mechanic-profile', mechanic_id: booking.mechanic_id }),
-      })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((p) => {
-          if (!p?.name) return;
-          const nameEl = screen.querySelector('#mechanic-name');
-          const metaEl = screen.querySelector('#mechanic-meta');
-          const avatarEl = screen.querySelector('#mechanic-avatar');
-          if (nameEl) nameEl.textContent = p.name.split(' ')[0];
-          if (metaEl) {
-            const parts = [];
-            if (p.job_count > 0) parts.push(`${p.job_count} services`);
-            if (p.avg_rating) parts.push(`★ ${p.avg_rating}`);
-            metaEl.textContent = parts.join('  ·  ') || 'Dr. Bike Sydney';
-          }
-          if (avatarEl) {
-            const initials = p.name
-              .split(' ')
-              .slice(0, 2)
-              .map((w) => w[0])
-              .join('')
-              .toUpperCase();
-            avatarEl.innerHTML = '';
-            avatarEl.textContent = initials;
-            avatarEl.style.fontSize = '15px';
-          }
-        })
-        .catch(() => {});
+    // Show assigned mechanic as soon as one has accepted the job (mechanic_id set)
+    if (booking.mechanic_id && booking.mechanic_profile?.name) {
+      const p = booking.mechanic_profile;
+      const nameEl = screen.querySelector('#mechanic-name');
+      const metaEl = screen.querySelector('#mechanic-meta');
+      const avatarEl = screen.querySelector('#mechanic-avatar');
+      if (nameEl) nameEl.textContent = p.name.split(' ')[0];
+      if (metaEl) {
+        const parts = [];
+        if (p.jobs_completed > 0) parts.push(`${p.jobs_completed} services`);
+        if (p.rating) parts.push(`★ ${p.rating}`);
+        metaEl.textContent = parts.join('  ·  ') || 'Dr. Bike Sydney';
+      }
+      if (avatarEl) {
+        if (p.photo_url) {
+          avatarEl.innerHTML = `<img src="${p.photo_url}" alt="${p.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+          avatarEl.style.background = 'transparent';
+        } else {
+          const initials = p.name
+            .split(' ')
+            .slice(0, 2)
+            .map((w) => w[0])
+            .join('')
+            .toUpperCase();
+          avatarEl.innerHTML = '';
+          avatarEl.textContent = initials;
+          avatarEl.style.fontSize = '15px';
+        }
+      }
+      const cardEl = screen.querySelector('#mechanic-card');
+      const chevronEl = screen.querySelector('#mechanic-card-chevron');
+      if (chevronEl) chevronEl.style.display = 'block';
+      if (cardEl) {
+        cardEl.style.cursor = 'pointer';
+        cardEl.addEventListener('click', () => openMechanicProfile(p, booking, screen));
+      }
+      // Show the arrival PIN only before the mechanic has arrived - once they're
+      // in progress/done, it's already served its purpose.
+      const preArrival = ['confirmed', 'enroute', 'en_route'].includes(booking.status);
+      if (booking.arrival_pin && preArrival) {
+        const pinBadge = screen.querySelector('#arrival-pin-badge');
+        const pinValue = screen.querySelector('#arrival-pin-value');
+        if (pinValue) pinValue.textContent = booking.arrival_pin;
+        if (pinBadge) pinBadge.style.display = 'flex';
+      }
     }
 
     // Place mechanic marker only if coordinates are valid (within 150km of Sydney)
@@ -1761,6 +1778,135 @@ async function renderTracking() {
     clearInterval(pollInterval);
     if (realtimeChannel) sb.removeChannel(realtimeChannel);
   };
+}
+
+// ── Mechanic profile panel (tap "Your Mechanic" bar for details) ────────────
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderMiniStars(rating) {
+  return Array.from({ length: 5 }, (_, i) => (i < rating ? '★' : '☆')).join('');
+}
+
+function renderReviewSection(booking) {
+  if (booking.status !== 'completed') return '';
+  if (booking.client_rating) {
+    return `
+    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
+      <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Your review</div>
+      <div style="font-size:18px;color:#F59E0B;letter-spacing:2px">${renderMiniStars(booking.client_rating)}</div>
+      ${booking.client_review ? `<div style="font-size:13px;color:#374151;margin-top:6px;line-height:1.5">"${escapeHtml(booking.client_review)}"</div>` : ''}
+    </div>`;
+  }
+  return `
+    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
+      <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:#F59E0B;color:#fff;border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
+    </div>`;
+}
+
+function renderMechanicTrackRecord(p) {
+  if (!p.reviews || !p.reviews.length) return '';
+  return `
+    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Client reviews</div>
+        ${p.rating ? `<div style="font-size:13px;color:#F59E0B;font-weight:700">★ ${p.rating}</div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${p.reviews
+          .map(
+            (r) => `
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+              <span style="font-size:12px;font-weight:600;color:#0D1F3C">${escapeHtml(r.client_name)}</span>
+              ${r.rating ? `<span style="color:#F59E0B;font-size:12px">${renderMiniStars(r.rating)}</span>` : ''}
+            </div>
+            <p style="font-size:13px;color:#374151;line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
+          </div>`
+          )
+          .join('')}
+      </div>
+    </div>`;
+}
+
+function wireRateMechanicButtons(root) {
+  root.querySelectorAll('.rate-mechanic-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      window.appState.bookingId = btn.dataset.rateBookingId;
+      router.navigate('review');
+    });
+  });
+}
+
+function openMechanicProfile(p, booking, screen) {
+  screen.querySelector('#mechanic-profile-panel')?.remove();
+
+  const initials = p.name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+  const avatarHTML = p.photo_url
+    ? `<img src="${p.photo_url}" alt="${p.name}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
+    : `<div style="width:88px;height:88px;border-radius:50%;background:#EFF6FF;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#2563EB">${initials}</div>`;
+
+  const statParts = [];
+  if (p.jobs_completed > 0)
+    statParts.push(
+      `<div style="text-align:center"><div style="font-size:17px;font-weight:800;color:#0D1F3C">${p.jobs_completed}</div><div style="font-size:11px;color:#6B7280">Jobs done</div></div>`
+    );
+  if (p.rating)
+    statParts.push(
+      `<div style="text-align:center"><div style="font-size:17px;font-weight:800;color:#0D1F3C">★ ${p.rating}</div><div style="font-size:11px;color:#6B7280">Rating</div></div>`
+    );
+
+  const panel = document.createElement('div');
+  panel.id = 'mechanic-profile-panel';
+  panel.style.cssText =
+    'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:#fff">
+      <button id="close-mech-profile-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span style="font-size:15px;font-weight:700;color:#0D1F3C">Mechanic profile</span>
+    </div>
+    <div style="flex:1;overflow-y:auto">
+      <div style="height:84px;width:100%;overflow:hidden;background:#EFF6FF">
+        <img src="images/mechanic-working.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:-44px">${avatarHTML}</div>
+      <div style="text-align:center;padding:10px 20px 0">
+        <div style="font-size:17px;font-weight:700;color:#0D1F3C">${p.name}</div>
+        <div style="font-size:12px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
+        ${p.bio ? `<div style="font-size:13px;color:#374151;margin-top:10px;line-height:1.5">${p.bio}</div>` : ''}
+      </div>
+      ${statParts.length ? `<div style="display:flex;justify-content:center;gap:32px;padding:16px 20px">${statParts.join('')}</div>` : ''}
+      <div style="display:flex;gap:8px;padding:16px 20px">
+        <a href="tel:+61433963250" style="flex:1;text-align:center;background:#2563EB;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+        <a href="https://wa.me/61433963250" style="flex:1;text-align:center;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
+      </div>
+      ${renderMechanicTrackRecord(p)}
+      ${renderReviewSection(booking)}
+    </div>
+  `;
+  screen.style.position = 'relative';
+  screen.appendChild(panel);
+  wireRateMechanicButtons(panel);
+
+  // Leaflet's panes use a high z-index and bleed through overlays - hide the map while open
+  const trackMapEl = screen.querySelector('#tracking-map');
+  if (trackMapEl) trackMapEl.style.visibility = 'hidden';
+
+  panel.querySelector('#close-mech-profile-btn').addEventListener('click', () => {
+    panel.remove();
+    if (trackMapEl) trackMapEl.style.visibility = 'visible';
+    _trackingMap?.invalidateSize?.({ animate: false });
+  });
 }
 
 // ── Client Chat (in-app, writes to job_messages) ─────────────────────────────
@@ -2383,6 +2529,9 @@ async function renderMyBookings() {
               ${booking.tracking_token ? '<button id="share-track-btn" class="btn btn--secondary btn--full">Share tracking link</button>' : ''}
               ${canCancel ? '<button id="reschedule-btn" class="btn btn--secondary btn--full">Reschedule</button>' : ''}
               ${canCancel ? '<button id="cancel-booking-btn" class="btn btn--danger btn--full">Cancel booking</button>' : ''}
+            </div>
+            ${booking.mechanic_id ? '<div id="detail-mechanic-section"></div>' : ''}
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
               <button id="close-detail-btn" class="btn btn--secondary btn--full">Close</button>
             </div>
           </div>
@@ -2394,6 +2543,46 @@ async function renderMyBookings() {
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) overlay.remove();
         });
+        if (booking.mechanic_id) {
+          fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: 'public-track', booking_id: booking.id }),
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+              const p = data?.mechanic_profile;
+              const sectionEl = overlay.querySelector('#detail-mechanic-section');
+              if (!p?.name || !sectionEl) return;
+              const initials = p.name
+                .split(' ')
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join('')
+                .toUpperCase();
+              const avatarHTML = p.photo_url
+                ? `<img src="${p.photo_url}" alt="${p.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
+                : `<div style="width:44px;height:44px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#2563EB">${initials}</div>`;
+              const metaParts = [];
+              if (p.jobs_completed > 0) metaParts.push(`${p.jobs_completed} services`);
+              if (p.rating) metaParts.push(`★ ${p.rating}`);
+              sectionEl.style.cssText =
+                'margin-top:16px;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden';
+              sectionEl.innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
+                  ${avatarHTML}
+                  <div style="min-width:0">
+                    <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Your mechanic</div>
+                    <div style="font-size:14px;font-weight:700;color:#0F172A">${p.name}</div>
+                    ${metaParts.length ? `<div style="font-size:12px;color:#6B7280">${metaParts.join('  ·  ')}</div>` : ''}
+                  </div>
+                </div>
+                ${renderReviewSection(booking)}
+              `;
+              wireRateMechanicButtons(sectionEl);
+            })
+            .catch(() => {});
+        }
         overlay.querySelector('#book-again-btn')?.addEventListener('click', async () => {
           const btn = overlay.querySelector('#book-again-btn');
           btn.textContent = 'Loading...';
