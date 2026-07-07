@@ -2253,12 +2253,15 @@ let _heatMap = null,
   _heatLayer = null;
 
 async function loadAnalytics() {
-  const { data, error } = await sb
-    .from('bookings')
-    .select(
-      'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,profiles(full_name,email)'
-    )
-    .limit(5000);
+  const [{ data, error }, { data: catalog }] = await Promise.all([
+    sb
+      .from('bookings')
+      .select(
+        'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,profiles(full_name,email)'
+      )
+      .limit(5000),
+    sb.from('services').select('name'),
+  ]);
   if (error) {
     showToast('Analytics load error: ' + error.message);
     return;
@@ -2267,8 +2270,45 @@ async function loadAnalytics() {
 
   renderFunnel(all);
   renderHeatmap(all);
+  renderServicePopularity(all, catalog || []);
   renderMargins(all);
   renderLTV(all);
+}
+
+// #24 Service popularity - most to least requested, including zero-demand services
+function renderServicePopularity(all, catalog) {
+  const el = document.getElementById('an-popularity');
+  if (!el) return;
+  const completed = all.filter((b) => b.status === 'completed');
+  const counts = {};
+  catalog.forEach((s) => {
+    counts[s.name] = 0;
+  });
+  completed.forEach((b) => {
+    const name = b.service_name || 'Other';
+    counts[name] = (counts[name] || 0) + 1;
+  });
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (!rows.length) {
+    el.innerHTML =
+      '<div style="color:var(--mgray);font-size:13px">No services in the catalog yet</div>';
+    return;
+  }
+  const max = Math.max(1, rows[0][1]);
+  el.innerHTML = rows
+    .map(([name, n]) => {
+      const pct = Math.round((n / max) * 100);
+      const color = n === 0 ? 'var(--mgray)' : n === rows[0][1] ? 'var(--green)' : 'var(--blue)';
+      return `
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="font-weight:600;color:var(--navy)">${escapeHtml(name)}</span>
+        <span style="color:var(--mgray)">${n} job${n !== 1 ? 's' : ''}</span>
+      </div>
+      <div style="height:10px;background:var(--off);border-radius:5px;overflow:hidden"><div style="height:100%;width:${Math.max(pct, n > 0 ? 2 : 0)}%;background:${color};border-radius:5px"></div></div>
+    </div>`;
+    })
+    .join('');
 }
 
 // #20 Conversion funnel
