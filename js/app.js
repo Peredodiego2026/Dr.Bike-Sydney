@@ -67,6 +67,7 @@ import {
   showToast,
 } from './components.js';
 import { getRiderTier } from './rider-tier.js';
+import { getLang, setLang, translateScreen, LANGUAGES } from './i18n.js';
 import {
   createPaymentForm,
   createPaymentRequestButton,
@@ -2906,6 +2907,16 @@ async function renderProfile() {
           : ''
       }
 
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Language</div>
+        <div style="display:flex;gap:8px" id="lang-switcher">
+          ${LANGUAGES.map(
+            (l) =>
+              `<button data-lang="${l.code}" class="lang-btn" style="flex:1;padding:10px 8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${l.code === getLang() ? '#2563EB' : '#E5E7EB'};background:${l.code === getLang() ? '#EFF6FF' : '#fff'};color:${l.code === getLang() ? '#2563EB' : '#374151'}">${l.label}</button>`
+          ).join('')}
+        </div>
+      </div>
+
       <button class="btn btn--secondary btn--full" id="signout-btn">Sign Out</button>
       <div style="display:flex;gap:24px;justify-content:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border)">
         <a href="/terms.html" style="font-size:13px;color:var(--color-text-secondary);text-decoration:none">Terms &amp; Conditions</a>
@@ -2914,6 +2925,13 @@ async function renderProfile() {
     </div>
     ${createBottomNav('profile')}
   `;
+
+  screen.querySelectorAll('.lang-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setLang(btn.dataset.lang);
+      renderProfile();
+    });
+  });
 
   screen.querySelector('#copy-code-btn').addEventListener('click', () => {
     navigator.clipboard
@@ -3594,3 +3612,15 @@ updateHomeNav();
 if (window._pendingReview) {
   setTimeout(() => router.navigate('review'), 200);
 }
+
+// i18n: translate every screen whenever its content changes, instead of
+// threading a translateScreen() call through every render function. Also
+// re-translates all screens immediately when the user switches language.
+document.querySelectorAll('[data-screen]').forEach((screen) => {
+  translateScreen(screen);
+  const observer = new MutationObserver(() => translateScreen(screen));
+  observer.observe(screen, { childList: true, subtree: true });
+});
+document.addEventListener('langchange', () => {
+  document.querySelectorAll('[data-screen]').forEach((screen) => translateScreen(screen));
+});
