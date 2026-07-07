@@ -13,6 +13,10 @@ import {
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
+// Only these emails may hold an admin session (see handleAdmin). Add more
+// here if other staff need admin access later.
+const ADMIN_ALLOWED_EMAILS = [ADMIN_TEST_EMAIL];
+
 // HMAC-SHA256 of a PIN keyed on the service key. No new env var needed.
 // Used to store/verify escalation_contacts.pin_hash without keeping the PIN in plaintext.
 function hashPin(pin) {
@@ -414,6 +418,13 @@ async function handleAdmin(req, res) {
 
   // ── Step 1: Email + password (same path as before) ───────────────────────────
   if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
+
+  // Any successfully-authenticated Supabase user (including regular clients who
+  // signed up in the mobile app) could otherwise reach this far and be treated
+  // as admin. Only emails on this list may hold an admin session.
+  if (!ADMIN_ALLOWED_EMAILS.includes(String(email).toLowerCase().trim())) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
