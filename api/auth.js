@@ -112,6 +112,34 @@ function mechanicName(m) {
   return [m.first_name, m.last_name].filter(Boolean).join(' ').trim() || m.name || '';
 }
 
+// Privacy-safe display name for a client's review shown publicly (e.g. "Sarah M.")
+export function shortClientName(name) {
+  const parts = String(name || '')
+    .trim()
+    .split(/\s+/);
+  if (!parts[0]) return 'Dr. Bike client';
+  return parts.length > 1 ? `${parts[0]} ${parts[1][0]}.` : parts[0];
+}
+
+// Aggregates a mechanic's completed-job rows (client_rating/client_review/client_name)
+// into { jobs_completed, rating, reviews } - shared by handlePublicTrack (one mechanic)
+// and handlePublicMechanics (all mechanics), so the two never drift out of sync.
+export function aggregateMechanicStats(jobs, { maxReviews = 8 } = {}) {
+  const rated = jobs.filter((j) => j.client_rating !== null && j.client_rating !== undefined);
+  const rating = rated.length
+    ? Math.round((rated.reduce((s, j) => s + j.client_rating, 0) / rated.length) * 10) / 10
+    : null;
+  const reviews = jobs
+    .filter((j) => j.client_review)
+    .slice(0, maxReviews)
+    .map((j) => ({
+      rating: j.client_rating || null,
+      comment: j.client_review,
+      client_name: shortClientName(j.client_name),
+    }));
+  return { jobs_completed: jobs.length, rating, reviews };
+}
+
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
@@ -598,6 +626,9 @@ async function handleMechanicAccept(req, res) {
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const mechanic = auth.mechanic;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  // Arrival PIN: client sees this in-app and reads it aloud when the mechanic arrives,
+  // proving the right person is at the door - same pattern as Uber's rider PIN.
+  const arrivalPin = String(crypto.randomInt(1000, 10000));
   // Atomic accept: only assign if no mechanic has taken it yet (mechanic_id is null).
   // A concurrent second accept matches 0 rows → 409, so two mechanics can't take one job.
   const acceptResp = await fetch(
@@ -610,7 +641,11 @@ async function handleMechanicAccept(req, res) {
         'Content-Type': 'application/json',
         Prefer: 'return=representation',
       },
-      body: JSON.stringify({ status: 'confirmed', mechanic_id: mechanic.id }),
+      body: JSON.stringify({
+        status: 'confirmed',
+        mechanic_id: mechanic.id,
+        arrival_pin: arrivalPin,
+      }),
     }
   );
   if (!acceptResp.ok) {
@@ -653,12 +688,24 @@ async function handleMechanicReject(req, res) {
 }
 
 async function handleMechanicArrived(req, res) {
-  const { booking_id } = req.body;
+  const { booking_id, pin } = req.body;
   if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
+  if (!pin) return res.status(400).json({ error: 'Ask the client for their 4-digit code' });
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
-  const mechanic = auth.mechanic;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const bookingResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=arrival_pin&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!bookingResp.ok) return res.status(500).json({ error: 'Database error' });
+  const bookingRows = await bookingResp.json();
+  const storedPin = bookingRows?.[0]?.arrival_pin;
+  if (storedPin && String(pin).trim() !== String(storedPin)) {
+    return res.status(403).json({ error: 'Incorrect code - ask the client to read it again' });
+  }
+
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
     {
@@ -715,6 +762,7 @@ async function handleMechanicComplete(req, res) {
     parts_charged,
     final_charge_amount,
     final_charge_status,
+    tip_amount,
     photo_before_url,
     photo_after_url,
     client_signature_url,
@@ -774,6 +822,7 @@ async function handleMechanicComplete(req, res) {
         ? Number(final_charge_amount)
         : null,
     final_charge_status: final_charge_status || null,
+    tip_amount: Number(tip_amount) || 0,
     next_service_date: next_service_date || null,
   };
   if (photo_before_url) payload.photo_before_url = photo_before_url;
@@ -1217,7 +1266,7 @@ async function handlePublicTrack(req, res) {
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const cols =
-    'id,status,scheduled_date,scheduled_time,service_name,service_price,address,van_number,mechanic_id,mechanic_notes,parts_used,next_service_date,tracking_token';
+    'id,status,scheduled_date,scheduled_time,service_name,service_price,address,van_number,mechanic_id,mechanic_notes,parts_used,next_service_date,tracking_token,client_rating,client_review,arrival_pin';
   const filter = tracking_token
     ? `tracking_token=eq.${encodeURIComponent(tracking_token)}`
     : `id=eq.${encodeURIComponent(booking_id)}`;
@@ -1291,11 +1340,13 @@ async function handlePublicTrack(req, res) {
     }
   }
 
-  // Real mechanic profile (photo/bio) + real stats (rating/completed jobs) - no fabricated numbers
+  // Real mechanic profile (photo/bio) + real stats (rating/completed jobs) - no fabricated numbers.
+  // Looked up directly by mechanic_id (the exact contact who accepted) - not by zone/role, since
+  // a solo operator's escalation_contacts row may be labelled role='manager' rather than 'mechanic'.
   let mechanic_profile = null;
-  if (booking.van_number) {
+  if (booking.mechanic_id) {
     const profResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/escalation_contacts?select=first_name,last_name,photo_url,bio&role=eq.mechanic&zone=eq.${booking.van_number}&active=eq.true&limit=1`,
+      `${SUPABASE_URL}/rest/v1/escalation_contacts?select=first_name,last_name,photo_url,bio&id=eq.${encodeURIComponent(booking.mechanic_id)}&limit=1`,
       { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
     );
     if (profResp.ok) {
@@ -1303,21 +1354,15 @@ async function handlePublicTrack(req, res) {
       if (profData?.length) {
         const p = profData[0];
         const statsResp = await fetch(
-          `${SUPABASE_URL}/rest/v1/bookings?select=client_rating&van_number=eq.${booking.van_number}&status=eq.completed`,
+          `${SUPABASE_URL}/rest/v1/bookings?select=client_rating,client_review,client_name&mechanic_id=eq.${encodeURIComponent(booking.mechanic_id)}&status=eq.completed`,
           { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
         );
         let jobs_completed = 0,
-          rating = null;
+          rating = null,
+          reviews = [];
         if (statsResp.ok) {
           const jobs = await statsResp.json();
-          jobs_completed = jobs.length;
-          const rated = jobs.filter(
-            (j) => j.client_rating !== null && j.client_rating !== undefined
-          );
-          if (rated.length) {
-            rating =
-              Math.round((rated.reduce((s, j) => s + j.client_rating, 0) / rated.length) * 10) / 10;
-          }
+          ({ jobs_completed, rating, reviews } = aggregateMechanicStats(jobs));
         }
         mechanic_profile = {
           name: [p.first_name, p.last_name].filter(Boolean).join(' ') || null,
@@ -1325,6 +1370,7 @@ async function handlePublicTrack(req, res) {
           bio: p.bio || null,
           jobs_completed,
           rating,
+          reviews,
         };
       }
     }
@@ -1380,41 +1426,6 @@ async function handleConsumeCode(req, res) {
     .json({ ok: true, remaining: row.max_uses ? Math.max(0, row.max_uses - newCount) : null });
 }
 
-async function handlePublicMechanicProfile(req, res) {
-  const mechanic_id = req.body?.mechanic_id || req.query?.id;
-  if (!mechanic_id) return res.status(400).json({ error: 'mechanic_id required' });
-
-  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-
-  const contactsResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/escalation_contacts?select=id,name&id=eq.${encodeURIComponent(mechanic_id)}&limit=1`,
-    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
-  );
-  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
-  const contacts = await contactsResp.json();
-  if (!contacts?.length) return res.status(404).json({ error: 'Mechanic not found' });
-
-  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-  const { data: stats } = await sb
-    .from('bookings')
-    .select('id,client_rating')
-    .eq('mechanic_id', mechanic_id)
-    .eq('status', 'completed');
-
-  const jobCount = stats?.length || 0;
-  const ratings = (stats || []).filter((b) => b.client_rating).map((b) => b.client_rating);
-  const avgRating = ratings.length
-    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
-    : null;
-
-  return res.status(200).json({
-    name: contacts[0].name,
-    job_count: jobCount,
-    avg_rating: avgRating,
-    rating_count: ratings.length,
-  });
-}
-
 async function handlePublicBookingList(req, res) {
   const { email } = req.body;
   if (!email || !email.includes('@')) return res.status(400).json({ error: 'Email required' });
@@ -1428,6 +1439,46 @@ async function handlePublicBookingList(req, res) {
   if (!resp.ok) return res.status(500).json({ error: 'Database error' });
   const data = await resp.json();
   return res.status(200).json(data || []);
+}
+
+// Public, aggregated roster for the landing page: every mechanic who has
+// completed at least one job, with their average rating and client reviews.
+async function handlePublicMechanics(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const hdrs = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+
+  const bookingsResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=mechanic_id,client_rating,client_review,client_name&status=eq.completed&mechanic_id=not.is.null`,
+    { headers: hdrs }
+  );
+  if (!bookingsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const bookings = await bookingsResp.json();
+  const mechIds = [...new Set(bookings.map((b) => b.mechanic_id))];
+  if (!mechIds.length) return res.status(200).json([]);
+
+  const contactsResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/escalation_contacts?select=id,first_name,last_name,photo_url,bio&active=eq.true&id=in.(${mechIds.map(encodeURIComponent).join(',')})`,
+    { headers: hdrs }
+  );
+  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const contacts = await contactsResp.json();
+
+  const mechanics = contacts
+    .map((c) => {
+      const jobs = bookings.filter((b) => b.mechanic_id === c.id);
+      const { jobs_completed, rating, reviews } = aggregateMechanicStats(jobs, { maxReviews: 12 });
+      return {
+        name: [c.first_name, c.last_name].filter(Boolean).join(' ').trim(),
+        photo_url: c.photo_url || null,
+        bio: c.bio || null,
+        jobs_completed,
+        rating,
+        reviews,
+      };
+    })
+    .filter((m) => m.name);
+
+  return res.status(200).json(mechanics);
 }
 
 async function handleClientReview(req, res) {
@@ -1585,7 +1636,7 @@ async function handler(req, res) {
       ? 20
       : role === 'public-track' ||
           role === 'public-booking-list' ||
-          role === 'mechanic-profile' ||
+          role === 'public-mechanics' ||
           role === 'consume-code' ||
           role === 'join-waitlist' ||
           role === 'apply-referral' ||
@@ -1599,7 +1650,7 @@ async function handler(req, res) {
 
   if (role === 'public-track') return handlePublicTrack(req, res);
   if (role === 'public-booking-list') return handlePublicBookingList(req, res);
-  if (role === 'mechanic-profile') return handlePublicMechanicProfile(req, res);
+  if (role === 'public-mechanics') return handlePublicMechanics(req, res);
   if (role === 'consume-code') return handleConsumeCode(req, res);
   if (role === 'client-review') return handleClientReview(req, res);
   if (role === 'mechanic-update-status') return handleMechanicUpdateStatus(req, res);
