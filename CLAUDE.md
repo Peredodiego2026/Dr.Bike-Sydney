@@ -128,10 +128,13 @@ Before retrying Session 5: reproduce bugs at /index.html to isolate whether the 
 - Lawyer review pending (after August 2026).
 
 ## Deploy
-- MANUAL ONLY: `npx vercel --prod` from local working directory
-- Auto-deploy via GitHub push is BROKEN (do not rely on it)
-- Changes are NOT committed to git before deploying - Vercel CLI deploys working directory
-- node --check js/app.js before every deploy
+- Auto-deploy: pushing to `main` on GitHub triggers an automatic Vercel production
+  deploy within seconds (confirmed via Vercel API Jul 2026) - no separate command
+  needed. Every commit pushed to main goes live immediately.
+- Always commit before pushing - never deploy an uncommitted working directory
+  via `npx vercel --prod`, it silently diverges from what's in the repo.
+- node --check js/app.js (or `npm run check`) before pushing to main, since it
+  goes live immediately.
 - Skip `<script type="application/ld+json">` blocks in node --check (JSON-LD, not JS)
 
 ## Critical coding rules
