@@ -66,6 +66,7 @@ import {
   createEmptyState,
   showToast,
 } from './components.js';
+import { getRiderTier } from './rider-tier.js';
 import {
   createPaymentForm,
   createPaymentRequestButton,
@@ -2810,6 +2811,13 @@ async function renderProfile() {
       ' at checkout. Book at https://drbikesydney.com.au'
   );
 
+  let completedJobs = 0;
+  try {
+    const myBookings = await getMyBookings();
+    completedJobs = (myBookings || []).filter((b) => b.status === 'completed').length;
+  } catch {}
+  const riderTier = getRiderTier(completedJobs);
+
   screen.innerHTML = `
     ${createHeader('Profile', false)}
     <div class="profile-wrap">
@@ -2820,6 +2828,24 @@ async function renderProfile() {
       </div>
       <div class="fw-600 text-center">${name}</div>
       <div class="text-secondary text-sm text-center">${user.email}</div>
+
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-top:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:26px">${riderTier.emoji}</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#0D1F3C">${riderTier.label}</div>
+            <div style="font-size:12px;color:#6B7280">${completedJobs} service${completedJobs === 1 ? '' : 's'} completed</div>
+          </div>
+        </div>
+        ${
+          riderTier.nextAt
+            ? `<div style="height:6px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:6px">
+                 <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px"></div>
+               </div>
+               <div style="font-size:12px;color:#6B7280">${riderTier.nextAt - completedJobs} more service${riderTier.nextAt - completedJobs === 1 ? '' : 's'} to reach ${riderTier.nextLabel}</div>`
+            : `<div style="font-size:12px;color:#6B7280">You've reached our highest tier — thank you for riding with us!</div>`
+        }
+      </div>
 
       <div style="background:linear-gradient(135deg,#1E40AF,#1E3A8A);border-radius:16px;padding:20px;margin:20px 0;text-align:center">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Your referral code</div>
@@ -2983,6 +3009,7 @@ async function renderMyBikes() {
   screen.innerHTML = `
     ${createHeader('My Bikes', false)}
     <div class="profile-wrap">
+      <div id="predicted-service-card" style="margin-bottom:16px"></div>
       <div id="bikes-list" style="margin-bottom:16px">
         <div style="text-align:center;padding:40px 0;color:var(--color-text-secondary)">
           <div style="width:88px;height:88px;border-radius:20px;background:#2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5">
@@ -3297,7 +3324,58 @@ async function renderMyBikes() {
     }
   }
 
+  // Predictive maintenance: estimate the next service date from the client's own
+  // history (average gap between past completed services) rather than relying
+  // only on whatever the mechanic manually noted on the last job.
+  async function loadPredictedService() {
+    const card = screen.querySelector('#predicted-service-card');
+    if (!card) return;
+    let bookings = [];
+    try {
+      bookings = await getMyBookings();
+    } catch {
+      return;
+    }
+    const completedDates = (bookings || [])
+      .filter((b) => b.status === 'completed' && b.scheduled_date)
+      .map((b) => new Date(b.scheduled_date))
+      .sort((a, b) => a - b);
+
+    if (completedDates.length < 2) return; // not enough history to predict yet
+
+    let totalDays = 0;
+    for (let i = 1; i < completedDates.length; i++) {
+      totalDays += (completedDates[i] - completedDates[i - 1]) / 86400000;
+    }
+    const avgDays = Math.round(totalDays / (completedDates.length - 1));
+    const lastDate = completedDates[completedDates.length - 1];
+    const predicted = new Date(lastDate.getTime() + avgDays * 86400000);
+    const daysUntil = Math.round((predicted - new Date()) / 86400000);
+    const dateLabel = predicted.toLocaleDateString('en-AU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const overdue = daysUntil < 0;
+    card.innerHTML = `
+      <div style="background:${overdue ? '#FFFBEB' : '#EFF6FF'};border:1px solid ${overdue ? '#FCD34D' : '#BFDBFE'};border-radius:14px;padding:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:18px">${overdue ? '⚠️' : '📊'}</span>
+          <span style="font-size:13px;font-weight:700;color:#0D1F3C">${overdue ? "You're likely due for a service" : 'Predicted next service'}</span>
+        </div>
+        <div style="font-size:13px;color:#374151;line-height:1.5">
+          ${
+            overdue
+              ? `Based on your history (services roughly every ${avgDays} days), you were due around <b>${dateLabel}</b>.`
+              : `Based on your history (services roughly every ${avgDays} days), you'll likely need your next service around <b>${dateLabel}</b>.`
+          }
+        </div>
+      </div>`;
+  }
+
   loadBikes();
+  loadPredictedService();
 
   // Add bike form toggle
   screen.querySelector('#add-bike-btn').addEventListener('click', () => {
