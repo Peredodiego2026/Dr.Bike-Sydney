@@ -7,7 +7,7 @@ gtag('config', 'G-GXYD68JXZW');
 
 // ── HTML ESCAPE HELPER (XSS protection) ──────────────────────────────────────
 function esc(str) {
-  if (str == null) return '';
+  if (str === null || str === undefined) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -687,27 +687,89 @@ async function rejectJob(id) {
   }
 }
 
-async function markArrived(id) {
+async function markArrived(id, pin) {
   const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
   try {
     const resp = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'mechanic-arrived', token: stored.token || '', booking_id: id }),
+      body: JSON.stringify({
+        role: 'mechanic-arrived',
+        token: stored.token || '',
+        booking_id: id,
+        pin,
+      }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       toast('Error: ' + (err.error || 'Could not mark arrived'));
-      return;
+      return false;
     }
     const j = jobs.find((x) => x.id === id);
     if (j) j.status = 'inprogress';
     render();
     badges();
     toast('📍 Arrived at location!');
+    return true;
   } catch (e) {
     toast('Error: ' + e.message);
+    return false;
   }
+}
+
+function promptArrivalPin(id) {
+  document.getElementById('pin-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'pin-modal';
+  modal.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--white);border-radius:16px;width:100%;max-width:340px;padding:20px">
+      <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">Confirm arrival</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Ask the client for their 4-digit code and enter it below.</div>
+      <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000"
+        style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy)">
+      <div id="pin-error" style="display:none;color:#DC2626;font-size:12px;margin-top:8px"></div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button id="pin-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+        <button id="pin-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirm arrival</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  const input = modal.querySelector('#pin-input');
+  input.focus();
+
+  modal.querySelector('#pin-cancel-btn').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  async function submit() {
+    const pin = input.value.trim();
+    const errEl = modal.querySelector('#pin-error');
+    if (pin.length !== 4) {
+      errEl.textContent = 'Enter the 4-digit code the client gives you.';
+      errEl.style.display = 'block';
+      return;
+    }
+    const btn = modal.querySelector('#pin-confirm-btn');
+    btn.disabled = true;
+    btn.textContent = 'Checking...';
+    const ok = await markArrived(id, pin);
+    if (ok) {
+      modal.remove();
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Confirm arrival';
+      errEl.textContent = 'Incorrect code - ask the client to read it again.';
+      errEl.style.display = 'block';
+    }
+  }
+  modal.querySelector('#pin-confirm-btn').addEventListener('click', submit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submit();
+  });
 }
 
 // Send a push notification to a client via their stored browser subscription
@@ -784,6 +846,12 @@ let _partsUsed = {}; // { [partId]: { id, name, qty, category, sell_price } }
 let _partsConfirmed = false; // true once parts chosen OR "no parts used" confirmed
 let _completeJobId = null;
 let _mechDiscount = null; // { code, type, value, amount } - discount applied at completion time (separate from any booking-time discount)
+let _tipAmount = 0; // Optional tip, 100% to the mechanic, kept out of GST-taxable totals
+
+function setMechTip(value) {
+  _tipAmount = Math.max(0, Number(value) || 0);
+  renderChargeBreakdown();
+}
 function openCompleteModal(id) {
   const j = jobs.find((x) => x.id === id);
   if (!j) return;
@@ -791,6 +859,7 @@ function openCompleteModal(id) {
   _partsConfirmed = false;
   _completeJobId = id;
   _mechDiscount = null;
+  _tipAmount = 0;
   let modal = document.getElementById('complete-modal');
   if (modal) modal.remove();
   modal = document.createElement('div');
@@ -836,6 +905,15 @@ function openCompleteModal(id) {
             <button type="button" onclick="applyMechDiscount()" id="mech-disc-btn" style="flex-shrink:0;padding:0 16px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Apply</button>
           </div>
           <div id="mech-disc-msg" style="display:none;font-size:12px;font-weight:600;margin-top:6px"></div>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">💚 Tip (optional, 100% goes to you)</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:15px;font-weight:700;color:var(--navy)">$</span>
+            <input id="mech-tip-input" type="number" min="0" step="1" placeholder="0" inputmode="decimal"
+              style="flex:1;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);background:var(--white);color:var(--navy)"
+              oninput="setMechTip(this.value)">
+          </div>
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">📸 Before & after photos</label>
@@ -1110,7 +1188,7 @@ function partsStep(id, delta) {
       name: p.name,
       qty: next,
       category: p.category,
-      sell_price: p.sell_price != null ? Number(p.sell_price) : 0,
+      sell_price: p.sell_price !== null && p.sell_price !== undefined ? Number(p.sell_price) : 0,
     };
   const m = catMeta(p.category);
   const qtyEl = document.getElementById('pp-qty-' + id);
@@ -1182,8 +1260,22 @@ function calcChargeBreakdown() {
   const partsItems = Object.values(_partsUsed).filter((p) => p.qty > 0);
   const partsTotal = partsItems.reduce((s, p) => s + p.qty * (p.sell_price || 0), 0);
   const mechDiscountAmount = _mechDiscount ? Number(_mechDiscount.amount || 0) : 0;
+  const tip = Number(_tipAmount) || 0;
+  // chargeNow stays GST-taxable revenue only (service+parts-discount) - the tip is
+  // 100% the mechanic's and reported separately, never folded into taxable totals.
   const chargeNow = Math.max(0, service + partsTotal - mechDiscountAmount);
-  return { j, calloutFee, service, partsItems, partsTotal, mechDiscountAmount, chargeNow };
+  const totalToCollect = chargeNow + tip;
+  return {
+    j,
+    calloutFee,
+    service,
+    partsItems,
+    partsTotal,
+    mechDiscountAmount,
+    tip,
+    chargeNow,
+    totalToCollect,
+  };
 }
 
 function renderChargeBreakdown() {
@@ -1202,8 +1294,11 @@ function renderChargeBreakdown() {
   if (b.mechDiscountAmount > 0) {
     rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#059669;font-weight:600;margin-bottom:6px"><span>Discount (${esc(_mechDiscount.code)})</span><span>−$${b.mechDiscountAmount.toFixed(2)}</span></div>`;
   }
+  if (b.tip > 0) {
+    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#059669;margin-bottom:6px"><span>💚 Tip (yours, 100%)</span><span>$${b.tip.toFixed(2)}</span></div>`;
+  }
   rows += `<div style="height:1px;background:var(--border);margin:8px 0"></div>`;
-  rows += `<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--navy)">TOTAL TO CHARGE (EFTPOS)</span><span style="font-size:20px;font-weight:800;color:#059669">$${b.chargeNow.toFixed(2)}</span></div>`;
+  rows += `<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--navy)">TOTAL TO CHARGE (EFTPOS)</span><span style="font-size:20px;font-weight:800;color:#059669">$${b.totalToCollect.toFixed(2)}</span></div>`;
   el.innerHTML = rows;
 }
 
@@ -1357,6 +1452,7 @@ async function submitComplete(id) {
         discount_amount: _mechDiscount?.amount || null,
       },
       final_charge_amount: breakdown ? breakdown.chargeNow : null,
+      tip_amount: breakdown?.tip || 0,
       final_charge_status: 'charged_manual',
       photo_before_url: photoBeforeUrl || null,
       photo_after_url: photoAfterUrl || null,
@@ -1441,6 +1537,7 @@ async function submitComplete(id) {
               mechDiscountCode: _mechDiscount?.code || null,
               mechDiscountAmount: _mechDiscount?.amount || 0,
               finalChargeAmount: breakdown?.chargeNow ?? null,
+              tipAmount: breakdown?.tip || 0,
               mechNotes: notes || null,
               mechName: ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim(),
               nextService: nextSvcMsg,
@@ -1811,11 +1908,11 @@ function renderSpareParts() {
           <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${m.color}">${esc(m.label)}</span>
         </div>`;
       byCat[cat].forEach((p) => {
-        const price =
-          p.sell_price != null ? '$' + parseFloat(p.sell_price).toFixed(2) : 'No price set';
+        const hasPrice = p.sell_price !== null && p.sell_price !== undefined;
+        const price = hasPrice ? '$' + parseFloat(p.sell_price).toFixed(2) : 'No price set';
         html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--white);border:1px solid var(--border);border-left:3px solid ${m.color};border-radius:10px;padding:12px 14px;margin-bottom:7px">
           <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.name)}</div>
-          <div style="font-size:16px;font-weight:800;color:${p.sell_price != null ? m.color : 'var(--mgray)'};flex-shrink:0">${price}</div>
+          <div style="font-size:16px;font-weight:800;color:${hasPrice ? m.color : 'var(--mgray)'};flex-shrink:0">${price}</div>
         </div>`;
       });
       html += '</div>';
@@ -2644,7 +2741,7 @@ document.getElementById('jobs-list').addEventListener('click', (e) => {
   const action = btn.dataset.action;
   if (action === 'accept') acceptJob(id);
   else if (action === 'reject') rejectJob(id);
-  else if (action === 'arrived') markArrived(id);
+  else if (action === 'arrived') promptArrivalPin(id);
   else if (action === 'enroute') setStatus(id, 'enroute');
   else if (action === 'complete') completeJob(id);
   else if (action === 'undo') setStatus(id, 'confirmed');
