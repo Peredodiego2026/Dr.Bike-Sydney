@@ -3,13 +3,14 @@
 
 import { describe, it, expect } from 'vitest';
 
-// Prices from CLAUDE.md
-const SERVICES = {
+// Arbitrary sample prices for exercising the arithmetic below - NOT real
+// service prices, and not read from anywhere. See Supabase's `services`
+// table (or Admin > Services & Prices) for actual current prices.
+const SAMPLE_PRICES = {
   'tune-up': 109,
   standard: 149,
   major: 199,
   ultimate: 369,
-  'safety-check': 59,
   'flat-tyre': 49,
   'gear-adjustment': 59,
   'brake-pad': 49,
@@ -19,7 +20,6 @@ const SERVICES = {
   'wheel-true': 75,
   'ebike-diagnostic': 99,
   'bike-build': 299,
-  'custom-build': 399,
 };
 
 const CALLOUT_FEE = 20;
@@ -31,7 +31,7 @@ const MEMBERSHIP_PRICES = {
 };
 
 function totalWithCallout(serviceKey) {
-  return (SERVICES[serviceKey] || 0) + CALLOUT_FEE;
+  return (SAMPLE_PRICES[serviceKey] || 0) + CALLOUT_FEE;
 }
 
 function annualSavings(plan) {
@@ -46,7 +46,7 @@ describe('Service pricing', () => {
   });
 
   it('all services have positive price', () => {
-    Object.values(SERVICES).forEach((price) => {
+    Object.values(SAMPLE_PRICES).forEach((price) => {
       expect(price).toBeGreaterThan(0);
     });
   });

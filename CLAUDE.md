@@ -110,10 +110,9 @@ Attempt to unify routing (one page for all devices) failed. Two visible bugs in 
 Before retrying Session 5: reproduce bugs at /index.html to isolate whether the issue is routing or CSS specificity.
 
 ## Pricing
-- Tune-Up $109, Standard $149, Major $199, Ultimate Overhaul $369
-- Safety Check $59, Flat Tyre $49, Gear Adjustment $59, Brake Pad $49
-- Brake Bleed $79, Cable Replace $65, Chain Replace $55, Wheel True $75
-- E-Bike Diagnostic $99, Bike Build $299+, Custom Build $399+
+- Prices live in Supabase's `services` table (name, price, category) - do not hardcode
+  a price list here, it drifts constantly. To check current prices, query it live or
+  see Admin > Services & Prices. js/live-prices.js and api/chat.js read it the same way.
 - All prices include $20 mobile call-out fee
 - Phone: 0433 963 250 / +61433963250
 - WhatsApp: wa.me/61433963250
