@@ -581,6 +581,7 @@
 
     <div class="nav-links">
       <a href="#services">Services</a>
+      <a href="#mechanics">Mechanics</a>
       <a href="#memberships">Memberships</a>
       <a href="#fleet" style="color:#2563EB;font-weight:700">Fleet &#x2192;</a>
       <a href="#about">About</a>
@@ -727,6 +728,273 @@
     </div>
   </div>
 </section>
+
+<!-- ── MECHANICS 3D CAROUSEL ────────────────────────────────────────────────────── -->
+<style>
+.mech-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 240px;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  cursor: pointer;
+  transition: transform 0.45s cubic-bezier(.22,.61,.36,1), opacity 0.45s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.mech-card__banner { height: 70px; background: #EFF6FF; overflow: hidden; }
+.mech-card__banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mech-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: background 0.2s, transform 0.2s; }
+.mech-dot.active { background: #fff; transform: scale(1.3); }
+#mech-carousel-viewport { touch-action: pan-y; }
+</style>
+<section id="mechanics" style="padding:80px 0 96px;background:#0D1F3C;overflow:hidden">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge" style="background:rgba(255,255,255,0.1);color:#93C5FD">OUR TEAM</span>
+      <h2 class="section-h2" style="font-size:2rem;color:#fff">Meet Your Mechanics</h2>
+      <p class="section-sub" style="color:#9CA3AF">Qualified, background-checked mechanics rated by real Sydney riders.</p>
+    </div>
+
+    <div id="mech-carousel-wrap" style="position:relative;margin-top:48px">
+      <div id="mech-carousel-viewport" style="height:420px;perspective:1400px;position:relative">
+        <div id="mech-carousel-track" style="position:relative;width:100%;height:100%;transform-style:preserve-3d"></div>
+      </div>
+      <button id="mech-prev-btn" aria-label="Previous mechanic" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button id="mech-next-btn" aria-label="Next mechanic" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div id="mech-carousel-dots" style="display:flex;justify-content:center;gap:8px;margin-top:24px"></div>
+    </div>
+
+    <div id="mech-carousel-empty" style="display:none;text-align:center;color:#9CA3AF;padding:40px">
+      <p>Our mechanic profiles are coming soon.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Mechanic detail modal -->
+<div id="mech-detail-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:3000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;position:relative">
+    <button id="mech-detail-close-btn" aria-label="Close" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:32px;height:32px;color:#fff;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="mech-detail-body"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  let mechanics = [];
+  let activeIndex = 0;
+  let mechDragging = false;
+  let mechDragStartX = 0;
+  let mechDragMoved = 0;
+
+  function mechInitials(name) {
+    return name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  }
+
+  function escapeMechHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  async function loadMechanics() {
+    const wrap = document.getElementById('mech-carousel-wrap');
+    const emptyEl = document.getElementById('mech-carousel-empty');
+    if (!wrap) return;
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'public-mechanics' }),
+      });
+      if (!res.ok) throw new Error('fetch failed');
+      mechanics = await res.json();
+    } catch {
+      mechanics = [];
+    }
+    if (!mechanics || !mechanics.length) {
+      wrap.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+      return;
+    }
+    renderMechCards();
+    renderMechDots();
+    updateMechCarousel();
+  }
+
+  function renderMechCards() {
+    const track = document.getElementById('mech-carousel-track');
+    track.innerHTML = mechanics
+      .map((m, i) => {
+        const avatarHTML = m.photo_url
+          ? `<img src="${m.photo_url}" alt="${escapeMechHtml(m.name)}" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
+          : `<div style="width:76px;height:76px;border-radius:50%;background:#EFF6FF;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#2563EB">${mechInitials(m.name)}</div>`;
+        const roundedRating = m.rating ? Math.round(m.rating) : 0;
+        const stars = m.rating ? '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating) : '';
+        return `
+      <div class="mech-card" data-index="${i}">
+        <div class="mech-card__banner"><img src="images/mechanic-working.webp" alt=""></div>
+        <div style="display:flex;justify-content:center;margin-top:-36px">${avatarHTML}</div>
+        <div style="text-align:center;padding:8px 16px 20px">
+          <div style="font-size:16px;font-weight:700;color:#0D1F3C">${escapeMechHtml(m.name)}</div>
+          <div style="font-size:12px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
+          ${m.rating ? `<div style="color:#F59E0B;font-size:14px;margin-top:8px">${stars} <span style="color:#6B7280;font-size:12px">${m.rating}</span></div>` : ''}
+          <div style="font-size:12px;color:#6B7280;margin-top:4px">${m.jobs_completed} service${m.jobs_completed === 1 ? '' : 's'} completed</div>
+        </div>
+      </div>`;
+      })
+      .join('');
+
+    track.querySelectorAll('.mech-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const i = Number(card.dataset.index);
+        if (i === activeIndex) {
+          openMechDetail(mechanics[i]);
+        } else {
+          activeIndex = i;
+          updateMechCarousel();
+        }
+      });
+    });
+  }
+
+  function renderMechDots() {
+    const dotsEl = document.getElementById('mech-carousel-dots');
+    dotsEl.innerHTML = mechanics
+      .map((_, i) => `<div class="mech-dot" data-index="${i}"></div>`)
+      .join('');
+    dotsEl.querySelectorAll('.mech-dot').forEach((dot) => {
+      dot.addEventListener('click', () => {
+        activeIndex = Number(dot.dataset.index);
+        updateMechCarousel();
+      });
+    });
+  }
+
+  function updateMechCarousel() {
+    const track = document.getElementById('mech-carousel-track');
+    const n = mechanics.length;
+    track.querySelectorAll('.mech-card').forEach((card) => {
+      const i = Number(card.dataset.index);
+      let offset = i - activeIndex;
+      if (offset > n / 2) offset -= n;
+      if (offset < -n / 2) offset += n;
+      const abs = Math.abs(offset);
+      const tx = offset * 190;
+      const tz = -abs * 140;
+      const ry = -offset * 38;
+      const scale = abs === 0 ? 1 : 0.82;
+      const opacity = abs > 2 ? 0 : 1 - abs * 0.28;
+      card.style.transform = `translate(-50%,-50%) translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) scale(${scale})`;
+      card.style.opacity = String(opacity);
+      card.style.zIndex = String(100 - abs);
+      card.style.pointerEvents = abs > 2 ? 'none' : 'auto';
+    });
+    document.querySelectorAll('#mech-carousel-dots .mech-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === activeIndex);
+    });
+  }
+
+  function goMechPrev() {
+    activeIndex = (activeIndex - 1 + mechanics.length) % mechanics.length;
+    updateMechCarousel();
+  }
+  function goMechNext() {
+    activeIndex = (activeIndex + 1) % mechanics.length;
+    updateMechCarousel();
+  }
+
+  function openMechDetail(m) {
+    const body = document.getElementById('mech-detail-body');
+    const avatarHTML = m.photo_url
+      ? `<img src="${m.photo_url}" alt="${escapeMechHtml(m.name)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
+      : `<div style="width:96px;height:96px;border-radius:50%;background:#EFF6FF;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#2563EB">${mechInitials(m.name)}</div>`;
+    body.innerHTML = `
+      <div style="height:110px;background:#EFF6FF;overflow:hidden"><img src="images/mechanic-working.webp" style="width:100%;height:100%;object-fit:cover" alt=""></div>
+      <div style="display:flex;justify-content:center;margin-top:-48px">${avatarHTML}</div>
+      <div style="text-align:center;padding:12px 28px 4px">
+        <div style="font-size:19px;font-weight:700;color:#0D1F3C">${escapeMechHtml(m.name)}</div>
+        <div style="font-size:13px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
+        ${m.bio ? `<div style="font-size:14px;color:#374151;margin-top:12px;line-height:1.6">${escapeMechHtml(m.bio)}</div>` : ''}
+      </div>
+      <div style="display:flex;justify-content:center;gap:32px;padding:18px 20px;margin-top:8px;border-top:1px solid #F3F4F6">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:#0D1F3C">${m.jobs_completed}</div><div style="font-size:11px;color:#6B7280">Jobs done</div></div>
+        ${m.rating ? `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:#0D1F3C">★ ${m.rating}</div><div style="font-size:11px;color:#6B7280">Rating</div></div>` : ''}
+      </div>
+      ${
+        m.reviews && m.reviews.length
+          ? `
+      <div style="padding:4px 20px 24px">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px">Client reviews</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          ${m.reviews
+            .map(
+              (r) => `
+            <div style="border-bottom:1px solid #F3F4F6;padding-bottom:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="font-size:13px;font-weight:600;color:#0D1F3C">${escapeMechHtml(r.client_name)}</span>
+                ${r.rating ? `<span style="color:#F59E0B;font-size:13px">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>` : ''}
+              </div>
+              <p style="font-size:13px;color:#374151;line-height:1.5;margin:0">"${escapeMechHtml(r.comment)}"</p>
+            </div>`
+            )
+            .join('')}
+        </div>
+      </div>`
+          : ''
+      }
+    `;
+    document.getElementById('mech-detail-modal').style.display = 'flex';
+  }
+
+  document.getElementById('mech-prev-btn')?.addEventListener('click', goMechPrev);
+  document.getElementById('mech-next-btn')?.addEventListener('click', goMechNext);
+  document.getElementById('mech-detail-close-btn')?.addEventListener('click', () => {
+    document.getElementById('mech-detail-modal').style.display = 'none';
+  });
+  document.getElementById('mech-detail-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'mech-detail-modal') e.currentTarget.style.display = 'none';
+  });
+
+  const mechViewport = document.getElementById('mech-carousel-viewport');
+  if (mechViewport) {
+    mechViewport.addEventListener('pointerdown', (e) => {
+      mechDragging = true;
+      mechDragStartX = e.clientX;
+      mechDragMoved = 0;
+      mechViewport.setPointerCapture(e.pointerId);
+    });
+    mechViewport.addEventListener('pointermove', (e) => {
+      if (!mechDragging) return;
+      mechDragMoved = e.clientX - mechDragStartX;
+    });
+    mechViewport.addEventListener('pointerup', () => {
+      if (!mechDragging) return;
+      mechDragging = false;
+      if (mechDragMoved > 50) goMechPrev();
+      else if (mechDragMoved < -50) goMechNext();
+    });
+    mechViewport.addEventListener('pointerleave', () => {
+      mechDragging = false;
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMechanics);
+  } else {
+    loadMechanics();
+  }
+})();
+</script>
 
 <!-- ── MEMBERSHIPS ────────────────────────────────────────────────────────────── -->
 <section id="memberships" style="padding:80px 0;background:var(--gray-light)">
@@ -1159,10 +1427,6 @@
       </a>
     </div>
 
-    <div id="reviews-error" style="display:none;text-align:center;padding:48px;color:var(--gray)">
-      <p>Unable to load reviews right now.</p>
-    </div>
-
     <div style="margin-top:48px;background:var(--blue);border-radius:var(--radius-lg);padding:32px;display:flex;justify-content:space-between;align-items:center;gap:24px">
       <div>
         <p style="color:white;font-weight:700;font-size:18px">See Our Service In Action</p>
@@ -1174,49 +1438,6 @@
 </section>
 
 <script>
-async function loadReviews() {
-  const grid = document.getElementById('reviews-grid');
-  const empty = document.getElementById('reviews-empty');
-  const errDiv = document.getElementById('reviews-error');
-
-  try {
-    const res = await fetch('/api/chat?type=reviews');
-    if (!res.ok) throw new Error('fetch failed');
-    const { reviews } = await res.json();
-
-    if (!reviews || reviews.length === 0) {
-      grid.style.display = 'none';
-      empty.style.display = 'block';
-      return;
-    }
-
-    grid.innerHTML = reviews.map(function(r) {
-      var rating = r.review_rating || 5;
-      var stars = '&#9733;'.repeat(rating) + '&#9734;'.repeat(5 - rating);
-      var name = r.client_name || 'Sydney Cyclist';
-      var initials = name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
-      var service = r.service_type || 'Bike Service';
-      var comment = r.review_comment || '';
-      return '<div class="review-card">'
-        + '<div style="color:#fbbf24;font-size:18px;letter-spacing:2px">' + stars + '</div>'
-        + '<p style="color:#374151;font-size:15px;line-height:1.6;flex:1">&ldquo;' + comment + '&rdquo;</p>'
-        + '<div style="display:flex;align-items:center;gap:12px;margin-top:8px">'
-        +   '<div style="width:40px;height:40px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">' + initials + '</div>'
-        +   '<div>'
-        +     '<p style="font-weight:600;color:var(--dark);font-size:14px">' + name + '</p>'
-        +     '<p style="color:var(--gray);font-size:13px">' + service + '</p>'
-        +   '</div>'
-        + '</div>'
-        + '</div>';
-    }).join('');
-
-  } catch(e) {
-    grid.style.display = 'none';
-    errDiv.style.display = 'block';
-  }
-}
-loadReviews();
-
 /* ── Date input min ─────────────────────────────────────────────────────── */
 var ldate = document.getElementById('lform-date');
 if (ldate) ldate.min = new Date().toISOString().split('T')[0];
@@ -3877,7 +4098,7 @@ function openLandingChat(bookingId) {
 <script src="js/supabase.js?v=20260704" type="module"></script>
 <script src="js/components.js?v=20260704c" type="module"></script>
 <script src="js/stripe.js?v=20260704" type="module"></script>
-<script src="js/app.js?v=20260705c" type="module"></script>
+<script src="js/app.js?v=20260707c" type="module"></script>
 
 </body>
 </html>
