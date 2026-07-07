@@ -143,6 +143,12 @@ const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
               currency: 'AUD',
               items: [{ item_name: draft.serviceName }],
             });
+          if (window.posthog)
+            posthog.capture('booking_completed', {
+              value: draft.calloutFee,
+              currency: 'AUD',
+              service: draft.serviceName,
+            });
           router.navigate('tracking');
         } catch (e) {
           showToast(
@@ -1183,6 +1189,12 @@ async function renderPayment() {
         value: fee,
         currency: 'AUD',
         items: [{ item_name: service?.name || 'Service' }],
+      });
+    if (!isTest && window.posthog)
+      posthog.capture('booking_completed', {
+        value: fee,
+        currency: 'AUD',
+        service: service?.name || 'Service',
       });
     const _bId = booking.id;
     const _total = fee + service.price;
