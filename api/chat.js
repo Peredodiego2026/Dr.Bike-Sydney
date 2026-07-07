@@ -130,7 +130,8 @@ async function handler(req, res) {
   if (req.method === 'GET' && req.query.type === 'reviews') {
     res.setHeader('Cache-Control', 's-maxage=300');
     const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+    const supabase = createClient(sbUrl, process.env.SUPABASE_SERVICE_KEY);
     const { data, error } = await supabase
       .from('bookings')
       .select(
@@ -249,11 +250,9 @@ SECURITY RULES - ALWAYS FOLLOW:
     return res.status(200).json({ reply });
   } catch (error) {
     console.error('Chat error:', error);
-    return res
-      .status(500)
-      .json({
-        reply:
-          "Sorry, I'm having trouble right now. Type 'mechanic' to speak with our team directly! 🔧",
-      });
+    return res.status(500).json({
+      reply:
+        "Sorry, I'm having trouble right now. Type 'mechanic' to speak with our team directly! 🔧",
+    });
   }
 }
