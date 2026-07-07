@@ -92,9 +92,9 @@ stripe-webhook.js.
 - S02: Admin auth - server-side via /api/auth (but admin.html still has weak PIN)
 - RLS on bookings - enabled
 - Dead files (mobile.html v1/v2/v3, index-redesign.html, admin.html.bak) - deleted
+- S03: XSS in email templates - FIXED Jun 2026: date, time, bookingId, price now sanitized in send-email.js
 
 ### Still open
-- S03: XSS in email templates - FIXED Jun 2026: date, time, bookingId, price now sanitized in send-email.js
 - Apple Pay/Google Pay: canMakePayment() returns null on Safari iPhone
 
 ### Resolved (no longer open)
