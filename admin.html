@@ -1007,10 +1007,12 @@
         <div class="kpi-card orange" style="text-align:center"><div class="kpi-label">PRICE RANGE</div><div class="kpi-value" id="svc-range" style="color:#D97706;font-size:18px">$—</div><div class="kpi-sub">lowest - highest</div></div>
       </div>
       <!-- Search -->
-      <div style="position:relative;margin-bottom:16px;max-width:360px">
+      <div style="position:relative;margin-bottom:12px;max-width:360px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="svc-search" class="inp" placeholder="Search services..." style="padding-left:36px" oninput="renderServices()">
       </div>
+      <!-- Category filter chips -->
+      <div id="svc-cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
       <!-- Grouped table -->
       <div class="card">
         <div style="overflow-x:auto">

@@ -3097,6 +3097,26 @@ async function loadServices() {
   renderServices();
 }
 
+let _svcCategoryFilter = null;
+
+function setServiceCategoryFilter(cat) {
+  _svcCategoryFilter = _svcCategoryFilter === cat ? null : cat;
+  renderServices();
+}
+
+function renderServiceCatChips() {
+  const wrap = document.getElementById('svc-cat-chips');
+  if (!wrap) return;
+  const present = SERVICE_CATEGORIES.filter((cat) =>
+    servicesData.some((s) => (s.category || 'General & assembly') === cat)
+  );
+  const chip = (label, cat, active) =>
+    `<button onclick="setServiceCategoryFilter(${cat === null ? 'null' : `'${cat}'`})" style="height:30px;padding:0 14px;border-radius:15px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;border:1.5px solid ${active ? 'var(--blue)' : 'var(--border)'};background:${active ? 'var(--blue)' : 'var(--white)'};color:${active ? '#fff' : 'var(--navy)'}">${escapeHtml(label)}</button>`;
+  wrap.innerHTML =
+    chip('All', null, _svcCategoryFilter === null) +
+    present.map((cat) => chip(cat, cat, _svcCategoryFilter === cat)).join('');
+}
+
 function renderServices() {
   const tbody = document.getElementById('svc-tbody');
   if (!tbody) return;
@@ -3113,23 +3133,30 @@ function renderServices() {
     ? '$' + Math.min(...prices) + ' - $' + Math.max(...prices)
     : '$—';
 
+  renderServiceCatChips();
+
   if (!total) {
     tbody.innerHTML = `<tr><td colspan="5"><div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:10px">
       <div style="font-size:14px;font-weight:600;color:var(--mgray)">No services yet</div>
       <div style="font-size:12px;color:var(--mgray);opacity:.7">Add your first service to start the catalog</div>
     </div></td></tr>`;
+    applyDarkModeInline();
     return;
   }
 
   const q = (document.getElementById('svc-search')?.value || '').trim().toLowerCase();
-  const filtered = q
+  let filtered = q
     ? servicesData.filter(
         (s) => s.name.toLowerCase().includes(q) || (s.category || '').toLowerCase().includes(q)
       )
     : servicesData;
+  if (_svcCategoryFilter) {
+    filtered = filtered.filter((s) => (s.category || 'General & assembly') === _svcCategoryFilter);
+  }
 
   if (!filtered.length) {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mgray)">No services match "${escapeHtml(q)}"</td></tr>`;
+    applyDarkModeInline();
     return;
   }
 
@@ -3147,7 +3174,7 @@ function renderServices() {
 
   function svcRow(s) {
     return `<tr>
-      <td data-label="Service" style="font-weight:600">${escapeHtml(s.name)}</td>
+      <td data-label="Service" style="font-weight:600;color:var(--navy)">${escapeHtml(s.name)}</td>
       <td data-label="Category" style="color:var(--mgray)">${escapeHtml(s.category || '')}</td>
       <td data-label="Price" style="font-weight:700;font-size:15px;color:var(--blue)">$${parseFloat(s.price || 0).toFixed(0)}</td>
       <td data-label="Duration" style="color:var(--mgray)">${durationLabel(s)}</td>
@@ -3163,10 +3190,12 @@ function renderServices() {
   tbody.innerHTML = SERVICE_CATEGORIES.filter((cat) => byCat[cat]?.length)
     .map(
       (cat) =>
-        `<tr><td colspan="5" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">${escapeHtml(cat)}</td></tr>` +
+        `<tr><td colspan="5" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--navy);padding:8px 12px">${escapeHtml(cat)}</td></tr>` +
         byCat[cat].map(svcRow).join('')
     )
     .join('');
+
+  applyDarkModeInline();
 }
 
 function openServiceModal(id) {
@@ -3201,6 +3230,7 @@ function openServiceModal(id) {
     </div>
   </div>`;
   document.body.appendChild(modal);
+  applyDarkModeInline();
 }
 
 async function saveService(id) {
