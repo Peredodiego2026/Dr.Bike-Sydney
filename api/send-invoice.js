@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize } from './_security.js';
 import PDFDocument from 'pdfkit';
+import { computeInvoiceTotals } from './_invoice-math.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const sb = createClient(
@@ -67,6 +68,8 @@ function buildPDF({
   mechDiscount,
   mechDiscountCode,
   grandTotal,
+  tip,
+  totalCollected,
 }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
@@ -213,6 +216,24 @@ function buildPDF({
     doc.font('Helvetica');
     y = totalY + 28;
 
+    if (tip > 0) {
+      doc
+        .fontSize(10)
+        .fillColor('#059669')
+        .font('Helvetica')
+        .text('Tip for your mechanic', 66, y)
+        .text(`$${tip.toFixed(2)}`, 66, y, { width: W - 32, align: 'right' });
+      y += 16;
+      doc
+        .fontSize(12)
+        .fillColor(NAVY)
+        .font('Helvetica-Bold')
+        .text('Total charged (AUD)', 66, y)
+        .text(`$${totalCollected.toFixed(2)}`, 66, y, { width: W - 32, align: 'right' });
+      doc.font('Helvetica');
+      y += 24;
+    }
+
     // Next service
     if (nextService) {
       y += 8;
@@ -325,11 +346,15 @@ export default async function handler(req, res) {
     calloutFee,
     partsCharged,
     mechDiscountAmount,
+    tipAmount,
   } = req.body;
   let { clientName, service, address, mechNotes, mechName, nextService, mechDiscountCode } =
     req.body;
 
   if (!to || !bookingId) return res.status(400).json({ error: 'Missing required fields' });
+
+  // bookingId is embedded in a review link URL below — whitelist only alphanumeric and dashes
+  const safeBookingId = String(bookingId).replace(/[^a-zA-Z0-9-]/g, '');
 
   clientName = sanitize(clientName || 'Client');
   service = sanitize(service || '—');
@@ -358,9 +383,16 @@ export default async function handler(req, res) {
     }));
   const partsTotal = partsRows.reduce((s, p) => s + p.value, 0);
   const mechDiscount = Number(mechDiscountAmount) || 0;
-  const chargeNow = Math.max(0, finalPrice + partsTotal - mechDiscount); // EFTPOS amount — never includes the call-out fee
-  const grandTotal = calloutFeeVal + chargeNow;
-  const gst = grandTotal / 11;
+  const { chargeNow, grandTotal, gst } = computeInvoiceTotals({
+    calloutFeeVal,
+    finalPrice,
+    partsTotal,
+    mechDiscount,
+  });
+  // Tip is 100% the mechanic's - kept out of GST-taxable totals entirely, added on
+  // top only in the final "amount collected" figure shown to the client.
+  const tip = Number(tipAmount) || 0;
+  const totalCollected = grandTotal + tip;
 
   // Fetch extra booking data for service report
   let checklist = null,
@@ -601,9 +633,16 @@ export default async function handler(req, res) {
       ${mechDiscount > 0 ? `<div class="total-row"><span style="color:#059669">Discount${mechDiscountCode ? ' (' + mechDiscountCode + ')' : ''}</span><span style="color:#059669">−$${mechDiscount.toFixed(2)}</span></div>` : ''}
       <div class="total-row"><span style="color:#6e6e73">GST included</span><span style="color:#6e6e73">$${gst.toFixed(2)}</span></div>
       <div class="total-final"><span>Total general (AUD)</span><span>$${grandTotal.toFixed(2)}</span></div>
+      ${tip > 0 ? `<div class="total-row" style="margin-top:8px"><span>💚 Tip for your mechanic</span><span>$${tip.toFixed(2)}</span></div><div class="total-final"><span>Total charged (AUD)</span><span>$${totalCollected.toFixed(2)}</span></div>` : ''}
     </div>
 
     ${nextService ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#1848C8;margin-bottom:24px">🔧 <strong>Next service reminder:</strong> ${nextService}</div>` : ''}
+
+    <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
+      <p style="font-size:13px;color:#D97706;font-weight:600;margin:0 0 10px">How was your service?</p>
+      <div style="font-size:24px;letter-spacing:4px;margin-bottom:12px">⭐⭐⭐⭐⭐</div>
+      <a href="https://drbikesydney.com.au/?review=${safeBookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:12px;border-radius:8px;font-weight:700;font-size:13px">Rate your mechanic →</a>
+    </div>
 
     <div style="text-align:center;padding:24px 0;border-top:1px solid #f0f0f0">
       <div style="font-size:14px;font-weight:600;color:#0D1F3C;margin-bottom:8px">Thank you for choosing Dr. Bike Sydney!</div>
@@ -651,6 +690,8 @@ export default async function handler(req, res) {
       mechDiscount,
       mechDiscountCode,
       grandTotal,
+      tip,
+      totalCollected,
     });
   } catch (e) {
     console.warn('[send-invoice] PDF generation failed:', e.message);
