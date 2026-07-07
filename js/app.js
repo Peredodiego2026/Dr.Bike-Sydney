@@ -409,7 +409,7 @@ async function renderBookService() {
           .map(
             (cat) => `
           <div class="category-section">
-            <div class="category-header" data-cat="${cat}">${CAT_ICON[cat] || ''} ${cat}</div>
+            <div class="category-header" data-cat="${cat}"><span aria-hidden="true">${CAT_ICON[cat] || ''}</span> ${cat}</div>
             <div class="services-list">${groups[cat].map((s) => createServiceCard(s)).join('')}</div>
           </div>`
           )
@@ -622,7 +622,7 @@ async function renderBookService() {
       return `
         <div class="cal-nav">
           <button type="button" id="cal-prev" class="cal-arrow" ${prevOk ? '' : 'disabled'}>&#8249;</button>
-          <span class="cal-month">${MONTH_NAMES[_calMonth]} ${_calYear}</span>
+          <span class="cal-month"><span>${MONTH_NAMES[_calMonth]}</span> ${_calYear}</span>
           <button type="button" id="cal-next" class="cal-arrow" ${nextOk ? '' : 'disabled'}>&#8250;</button>
         </div>
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
