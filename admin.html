@@ -91,6 +91,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
       Vans &amp; Mechanics
     </button>
+    <button class="sb-item" onclick="go('mechanic-profile',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle><path d="M16 11l1.5 1.5L21 9"></path></svg>
+      Mechanic Profile
+    </button>
 
     <div class="sb-section">Business</div>
     <button class="sb-item" onclick="go('clients',this)">
@@ -438,6 +442,14 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- MECHANIC PROFILE -->
+    <div id="page-mechanic-profile" class="page">
+      <div style="background:#EFF6FF;border:1px solid #DBEAFE;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--navy)">
+        This is what clients see in the app once a mechanic accepts their job. Separate from <b>Notification Numbers</b> (which controls who gets SMS/WhatsApp alerts) — editing here never changes phone or alert settings.
+      </div>
+      <div id="mech-profile-list" style="display:flex;flex-wrap:wrap;gap:18px"></div>
     </div>
 
     <!-- CLIENTS -->
@@ -1087,20 +1099,57 @@
               <option value="both">📱💬 SMS + WhatsApp</option>
             </select>
           </div>
-          <div id="notif-modal-profile-wrap" style="border-top:1px solid var(--border);padding-top:12px;margin-top:2px">
-            <div style="font-size:11px;font-weight:700;color:var(--mgray);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em">Client-facing profile (shown on tracking page)</div>
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-              <img id="notif-modal-photo-preview" style="width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--off);border:1px solid var(--border);display:none">
-              <input type="file" id="notif-modal-photo-file" accept="image/*" style="font-size:12px" onchange="previewMechanicPhoto(this)">
-            </div>
-            <input type="hidden" id="notif-modal-photo-url">
-            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Short bio</div>
-            <textarea class="inp" id="notif-modal-bio" rows="3" placeholder="e.g. 8 years fixing bikes across Sydney. Specialises in e-bikes and road bike tune-ups." style="resize:vertical;font-family:var(--sans)"></textarea>
-          </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <button onclick="closeNotifModal()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
           <button onclick="saveNotifNumber()" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MECHANIC PROFILE EDIT MODAL -->
+    <div id="mech-profile-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Edit mechanic profile</div>
+        <input type="hidden" id="mech-profile-modal-id">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Name</div>
+            <input class="inp" id="mech-profile-modal-name" placeholder="e.g. Diego Peredo">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Photo</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <img id="mech-profile-modal-photo-preview" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--off);border:1px solid var(--border);display:none">
+              <input type="file" id="mech-profile-modal-photo-file" accept="image/*" style="font-size:12px" onchange="previewMechProfilePhoto(this)">
+            </div>
+            <input type="hidden" id="mech-profile-modal-photo-url">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Short bio</div>
+            <textarea class="inp" id="mech-profile-modal-bio" rows="3" placeholder="e.g. 8 years fixing bikes across Sydney. Specialises in e-bikes and road bike tune-ups." style="resize:vertical;font-family:var(--sans)"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button onclick="closeMechProfileModal()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+          <button onclick="saveMechProfile()" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHOTO CROP MODAL -->
+    <div id="photo-crop-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.35)">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">Position your photo</div>
+        <div style="font-size:12px;color:var(--mgray);margin-bottom:16px">Drag to reposition · scroll or use the slider to zoom</div>
+        <div id="crop-viewport" style="position:relative;width:280px;height:280px;margin:0 auto;overflow:hidden;border-radius:8px;background:#111;cursor:grab;touch-action:none">
+          <img id="crop-img" draggable="false" style="position:absolute;left:50%;top:50%;user-select:none;pointer-events:none">
+          <div style="position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 9999px rgba(0,0,0,0.55);pointer-events:none"></div>
+        </div>
+        <input type="range" id="crop-zoom-slider" min="0" max="100" value="0" style="width:280px;display:block;margin:16px auto 0">
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button id="crop-cancel-btn" onclick="closePhotoCropModal()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+          <button id="crop-confirm-btn" onclick="confirmPhotoCrop()" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Use this photo</button>
         </div>
       </div>
     </div>
@@ -1135,5 +1184,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=20260705b"></script>
+<script src="js/admin.js?v=20260707c"></script>
 </body></html>

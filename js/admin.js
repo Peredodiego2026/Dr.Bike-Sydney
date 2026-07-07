@@ -25,6 +25,7 @@ const titles = {
   contacts: 'Escalation Contacts',
   bookings: 'Bookings',
   vans: 'Vans & Mechanics',
+  'mechanic-profile': 'Mechanic Profile',
   clients: 'Clients',
   finance: 'Finance',
   zones: 'Zone Manager',
@@ -40,6 +41,7 @@ const subs = {
   contacts: 'Manage who receives escalated chats',
   bookings: 'Live bookings from Supabase',
   vans: '2 vans online · both active',
+  'mechanic-profile': 'What clients see when a mechanic accepts their job',
   clients: 'Client database',
   finance: 'Financial overview',
   analytics: 'Funnel · heatmap · LTV · margins',
@@ -69,6 +71,7 @@ function go(page, btn) {
     renderMechStats();
     renderRouteMap();
   }
+  if (page === 'mechanic-profile') loadMechanicProfiles();
   if (page === 'analytics') loadAnalytics();
   if (page === 'contacts') loadContacts();
   if (page === 'bookings') loadBookings();
@@ -933,7 +936,7 @@ async function loadReferralLeaderboard() {
 }
 
 function esc(str) {
-  if (str == null) return '';
+  if (str === null || str === undefined) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -2174,7 +2177,7 @@ async function renderRouteMap(useCache) {
 
   // Init / reset map
   if (!_routeMap) {
-    _routeMap = L.map(mapEl, { zoomControl: true, attributionControl: false }).setView(
+    _routeMap = L.map(mapEl, { zoomControl: false, attributionControl: false }).setView(
       [-33.8688, 151.2093],
       12
     );
@@ -2312,7 +2315,7 @@ function renderHeatmap(all) {
   });
   const points = Object.values(counts);
   if (!_heatMap) {
-    _heatMap = L.map(mapEl, { zoomControl: true, attributionControl: false }).setView(
+    _heatMap = L.map(mapEl, { zoomControl: false, attributionControl: false }).setView(
       [-33.8688, 151.2093],
       11
     );
@@ -2907,7 +2910,7 @@ function renderInventory() {
       <td data-label="Stock" style="font-weight:700;font-size:15px;color:${isLow ? '#DC2626' : 'var(--navy)'}">${p.stock}</td>
       <td data-label="Min" style="color:var(--mgray)">${p.min_stock}</td>
       <td data-label="Cost">$${parseFloat(p.cost_price || 0).toFixed(2)}</td>
-      <td data-label="Client price" style="font-weight:700;color:var(--blue)">${p.sell_price != null ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
+      <td data-label="Client price" style="font-weight:700;color:var(--blue)">${p.sell_price !== null && p.sell_price !== undefined ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
       <td data-label="Status"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusCl}">${statusTxt}</span></td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
@@ -3696,10 +3699,6 @@ function openNotifModal() {
   document.getElementById('notif-modal-role').value = 'mechanic';
   document.getElementById('notif-modal-zone').value = '1';
   document.getElementById('notif-modal-channel').value = 'sms';
-  document.getElementById('notif-modal-photo-url').value = '';
-  document.getElementById('notif-modal-photo-file').value = '';
-  document.getElementById('notif-modal-photo-preview').style.display = 'none';
-  document.getElementById('notif-modal-bio').value = '';
   updateZoneVisibility();
   document.getElementById('notif-modal').style.display = 'flex';
 }
@@ -3711,9 +3710,7 @@ function closeNotifModal() {
 function updateZoneVisibility() {
   const role = document.getElementById('notif-modal-role').value;
   const zoneWrap = document.getElementById('notif-modal-zone-wrap');
-  const profileWrap = document.getElementById('notif-modal-profile-wrap');
   if (zoneWrap) zoneWrap.style.display = role === 'manager' ? 'none' : 'block';
-  if (profileWrap) profileWrap.style.display = role === 'manager' ? 'none' : 'block';
 }
 
 async function editNotifNumber(id) {
@@ -3731,26 +3728,8 @@ async function editNotifNumber(id) {
   document.getElementById('notif-modal-role').value = c.role || 'mechanic';
   document.getElementById('notif-modal-zone').value = c.zone || '1';
   document.getElementById('notif-modal-channel').value = c.channel || 'sms';
-  document.getElementById('notif-modal-photo-file').value = '';
-  document.getElementById('notif-modal-photo-url').value = c.photo_url || '';
-  const preview = document.getElementById('notif-modal-photo-preview');
-  if (c.photo_url) {
-    preview.src = c.photo_url;
-    preview.style.display = 'block';
-  } else {
-    preview.style.display = 'none';
-  }
-  document.getElementById('notif-modal-bio').value = c.bio || '';
   updateZoneVisibility();
   document.getElementById('notif-modal').style.display = 'flex';
-}
-
-function previewMechanicPhoto(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const preview = document.getElementById('notif-modal-photo-preview');
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = 'block';
 }
 
 async function uploadMechanicPhoto(file, contactId) {
@@ -3769,8 +3748,6 @@ async function saveNotifNumber() {
   const role = document.getElementById('notif-modal-role').value;
   const zone = role === 'manager' ? 'all' : document.getElementById('notif-modal-zone').value;
   const channel = document.getElementById('notif-modal-channel').value;
-  const bio = document.getElementById('notif-modal-bio').value.trim();
-  const photoFile = document.getElementById('notif-modal-photo-file').files[0];
 
   if (!fullName || !phone) {
     showToast('Name and phone are required');
@@ -3781,21 +3758,7 @@ async function saveNotifNumber() {
   const fname = parts[0];
   const lname = parts.slice(1).join(' ') || '-';
 
-  let photo_url = document.getElementById('notif-modal-photo-url').value || null;
-  if (photoFile) {
-    try {
-      photo_url = await uploadMechanicPhoto(photoFile, id);
-    } catch (e) {
-      showToast('Photo upload failed: ' + e.message);
-      return;
-    }
-  }
-
   const payload = { first_name: fname, last_name: lname, phone, role, zone, channel, active: true };
-  if (role === 'mechanic') {
-    payload.photo_url = photo_url;
-    payload.bio = bio || null;
-  }
 
   let error;
   if (id) {
@@ -3819,6 +3782,283 @@ async function deleteNotifNumber(id) {
   showToast('Number removed');
   loadNotifNumbers();
 }
+
+// ── MECHANIC PROFILE (client-facing photo/bio, separate from notification role) ─────
+async function loadMechanicProfiles() {
+  const list = document.getElementById('mech-profile-list');
+  if (!list) return;
+  list.innerHTML =
+    '<div style="text-align:center;color:var(--mgray);padding:20px;font-size:13px">Loading…</div>';
+
+  const { data: contacts, error } = await sb
+    .from('escalation_contacts')
+    .select('*')
+    .order('first_name');
+  if (error || !contacts || contacts.length === 0) {
+    list.innerHTML =
+      '<div style="text-align:center;color:var(--mgray);padding:24px;font-size:13px">No contacts yet — add one in Notification Numbers first.</div>';
+    return;
+  }
+
+  const { data: bookings } = await sb
+    .from('bookings')
+    .select('mechanic_id,status,client_rating')
+    .not('mechanic_id', 'is', null);
+
+  list.innerHTML = contacts
+    .map((c) => {
+      const jobs = (bookings || []).filter(
+        (b) => b.mechanic_id === c.id && b.status === 'completed'
+      );
+      const rated = jobs.filter((b) => b.client_rating !== null && b.client_rating !== undefined);
+      const rating = rated.length
+        ? Math.round((rated.reduce((s, b) => s + b.client_rating, 0) / rated.length) * 10) / 10
+        : null;
+      const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unnamed contact';
+      const initials = ((c.first_name || '?')[0] + (c.last_name || '')[0]).toUpperCase();
+      const avatarHTML = c.photo_url
+        ? `<img src="${c.photo_url}" alt="${name}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
+        : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--blue)">${initials}</div>`;
+      const roleTag =
+        c.role === 'manager'
+          ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ Manager</span>'
+          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#ECFDF5;color:#059669">🔧 Mechanic</span>';
+
+      return `
+    <div class="card" style="padding:0;overflow:hidden;width:300px;position:relative">
+      ${roleTag}
+      <div style="height:90px;width:100%;overflow:hidden;background:#EFF6FF">
+        <img src="images/mechanic-working.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:-40px">${avatarHTML}</div>
+      <div style="text-align:center;padding:10px 20px 0">
+        <div style="font-size:16px;font-weight:700;color:var(--navy)">${name}</div>
+        <div style="font-size:12px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
+        <div style="font-size:13px;color:#374151;margin-top:8px;min-height:20px">${c.bio || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:24px;padding:14px 20px;margin-top:8px;border-top:1px solid var(--border)">
+        <div style="text-align:center"><div style="font-weight:800;font-size:15px;color:var(--navy)">${jobs.length}</div><div style="font-size:11px;color:var(--mgray)">Jobs done</div></div>
+        <div style="width:1px;background:var(--border)"></div>
+        <div style="text-align:center"><div style="font-weight:800;font-size:15px;color:var(--navy)">${rating ? '★ ' + rating : '—'}</div><div style="font-size:11px;color:var(--mgray)">Rating</div></div>
+      </div>
+      <div style="padding:14px 20px">
+        <button onclick="openMechProfileModal('${c.id}')" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--sans)">Edit profile</button>
+      </div>
+    </div>`;
+    })
+    .join('');
+}
+
+function openMechProfileModal(id) {
+  sb.from('escalation_contacts')
+    .select('*')
+    .eq('id', id)
+    .single()
+    .then(({ data: c, error }) => {
+      if (error || !c) {
+        showToast('Could not load contact: ' + (error?.message || 'not found'));
+        return;
+      }
+      _pendingCroppedPhotoBlob = null;
+      document.getElementById('mech-profile-modal-id').value = c.id;
+      document.getElementById('mech-profile-modal-name').value = [c.first_name, c.last_name]
+        .filter(Boolean)
+        .join(' ');
+      document.getElementById('mech-profile-modal-photo-file').value = '';
+      document.getElementById('mech-profile-modal-photo-url').value = c.photo_url || '';
+      const preview = document.getElementById('mech-profile-modal-photo-preview');
+      if (c.photo_url) {
+        preview.src = c.photo_url;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+      document.getElementById('mech-profile-modal-bio').value = c.bio || '';
+      document.getElementById('mech-profile-modal').style.display = 'flex';
+    });
+}
+
+function closeMechProfileModal() {
+  document.getElementById('mech-profile-modal').style.display = 'none';
+}
+
+function previewMechProfilePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  openPhotoCropModal(file);
+}
+
+async function saveMechProfile() {
+  const id = document.getElementById('mech-profile-modal-id').value;
+  const fullName = document.getElementById('mech-profile-modal-name').value.trim();
+  const bio = document.getElementById('mech-profile-modal-bio').value.trim();
+
+  if (!fullName) {
+    showToast('Name is required');
+    return;
+  }
+  const parts = fullName.split(' ');
+  const first_name = parts[0];
+  const last_name = parts.slice(1).join(' ') || '-';
+
+  let photo_url = document.getElementById('mech-profile-modal-photo-url').value || null;
+  if (_pendingCroppedPhotoBlob) {
+    try {
+      const file = new File([_pendingCroppedPhotoBlob], 'profile.jpg', { type: 'image/jpeg' });
+      photo_url = await uploadMechanicPhoto(file, id);
+    } catch (e) {
+      showToast('Photo upload failed: ' + e.message);
+      return;
+    }
+  }
+
+  const { error } = await sb
+    .from('escalation_contacts')
+    .update({ first_name, last_name, photo_url, bio: bio || null })
+    .eq('id', id);
+
+  if (error) {
+    showToast('Save failed: ' + error.message);
+    return;
+  }
+  _pendingCroppedPhotoBlob = null;
+  closeMechProfileModal();
+  showToast('Mechanic profile updated ✓');
+  loadMechanicProfiles();
+}
+
+// ── Photo crop tool (drag to reposition, scroll/slider to zoom, matches the
+// circular avatar clients will see) ──────────────────────────────────────────
+const CROP_SIZE = 280;
+const CROP_OUTPUT_SIZE = 400;
+let _pendingCroppedPhotoBlob = null;
+const _cropState = {
+  naturalW: 0,
+  naturalH: 0,
+  baseScale: 1,
+  zoom: 1,
+  panX: 0,
+  panY: 0,
+  dragging: false,
+  startX: 0,
+  startY: 0,
+  startPanX: 0,
+  startPanY: 0,
+};
+let _cropObjectUrl = null;
+
+function openPhotoCropModal(file) {
+  const img = document.getElementById('crop-img');
+  if (_cropObjectUrl) URL.revokeObjectURL(_cropObjectUrl);
+  _cropObjectUrl = URL.createObjectURL(file);
+  img.onload = () => {
+    _cropState.naturalW = img.naturalWidth;
+    _cropState.naturalH = img.naturalHeight;
+    _cropState.baseScale = Math.max(CROP_SIZE / img.naturalWidth, CROP_SIZE / img.naturalHeight);
+    _cropState.zoom = 1;
+    _cropState.panX = 0;
+    _cropState.panY = 0;
+    document.getElementById('crop-zoom-slider').value = 0;
+    applyCropTransform();
+    document.getElementById('photo-crop-modal').style.display = 'flex';
+  };
+  img.src = _cropObjectUrl;
+}
+
+function closePhotoCropModal() {
+  document.getElementById('photo-crop-modal').style.display = 'none';
+  document.getElementById('mech-profile-modal-photo-file').value = '';
+}
+
+function applyCropTransform() {
+  const img = document.getElementById('crop-img');
+  const scale = _cropState.baseScale * _cropState.zoom;
+  img.style.width = _cropState.naturalW * scale + 'px';
+  img.style.height = _cropState.naturalH * scale + 'px';
+  img.style.transform = `translate(calc(-50% + ${_cropState.panX}px), calc(-50% + ${_cropState.panY}px))`;
+}
+
+function clampCropPan() {
+  const scale = _cropState.baseScale * _cropState.zoom;
+  const dispW = _cropState.naturalW * scale;
+  const dispH = _cropState.naturalH * scale;
+  const maxPanX = Math.max(0, (dispW - CROP_SIZE) / 2);
+  const maxPanY = Math.max(0, (dispH - CROP_SIZE) / 2);
+  _cropState.panX = Math.max(-maxPanX, Math.min(maxPanX, _cropState.panX));
+  _cropState.panY = Math.max(-maxPanY, Math.min(maxPanY, _cropState.panY));
+}
+
+function confirmPhotoCrop() {
+  const img = document.getElementById('crop-img');
+  const canvas = document.createElement('canvas');
+  canvas.width = CROP_OUTPUT_SIZE;
+  canvas.height = CROP_OUTPUT_SIZE;
+  const ctx = canvas.getContext('2d');
+  const ratio = CROP_OUTPUT_SIZE / CROP_SIZE;
+  const scale = _cropState.baseScale * _cropState.zoom;
+  const dispW = _cropState.naturalW * scale * ratio;
+  const dispH = _cropState.naturalH * scale * ratio;
+  const dx = CROP_OUTPUT_SIZE / 2 + _cropState.panX * ratio - dispW / 2;
+  const dy = CROP_OUTPUT_SIZE / 2 + _cropState.panY * ratio - dispH / 2;
+  ctx.drawImage(img, dx, dy, dispW, dispH);
+  canvas.toBlob(
+    (blob) => {
+      _pendingCroppedPhotoBlob = blob;
+      const previewUrl = URL.createObjectURL(blob);
+      const preview = document.getElementById('mech-profile-modal-photo-preview');
+      preview.src = previewUrl;
+      preview.style.display = 'block';
+      document.getElementById('photo-crop-modal').style.display = 'none';
+    },
+    'image/jpeg',
+    0.9
+  );
+}
+
+(function initCropViewportEvents() {
+  const viewport = document.getElementById('crop-viewport');
+  if (!viewport) return;
+
+  viewport.addEventListener('pointerdown', (e) => {
+    _cropState.dragging = true;
+    _cropState.startX = e.clientX;
+    _cropState.startY = e.clientY;
+    _cropState.startPanX = _cropState.panX;
+    _cropState.startPanY = _cropState.panY;
+    viewport.setPointerCapture(e.pointerId);
+    viewport.style.cursor = 'grabbing';
+  });
+  viewport.addEventListener('pointermove', (e) => {
+    if (!_cropState.dragging) return;
+    _cropState.panX = _cropState.startPanX + (e.clientX - _cropState.startX);
+    _cropState.panY = _cropState.startPanY + (e.clientY - _cropState.startY);
+    clampCropPan();
+    applyCropTransform();
+  });
+  const endCropDrag = () => {
+    _cropState.dragging = false;
+    viewport.style.cursor = 'grab';
+  };
+  viewport.addEventListener('pointerup', endCropDrag);
+  viewport.addEventListener('pointerleave', endCropDrag);
+  viewport.addEventListener(
+    'wheel',
+    (e) => {
+      e.preventDefault();
+      const slider = document.getElementById('crop-zoom-slider');
+      const v = Math.max(0, Math.min(100, Number(slider.value) - Math.sign(e.deltaY) * 5));
+      slider.value = v;
+      slider.dispatchEvent(new Event('input'));
+    },
+    { passive: false }
+  );
+
+  document.getElementById('crop-zoom-slider').addEventListener('input', (e) => {
+    _cropState.zoom = 1 + (Number(e.target.value) / 100) * 2;
+    clampCropPan();
+    applyCropTransform();
+  });
+})();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 // ── View client bikes modal ───────────────────────────────────────────────────
