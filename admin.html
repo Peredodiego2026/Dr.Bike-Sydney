@@ -117,6 +117,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
       Spare Parts
     </button>
+    <button class="sb-item" onclick="go('services',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+      Services &amp; Prices
+    </button>
     <button class="sb-item" onclick="go('calendar',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
       Calendar
@@ -976,6 +980,38 @@
           <table class="tbl" id="inv-table">
             <thead><tr><th>Part name</th><th>Stock</th><th>Min stock</th><th>Cost ($)</th><th>Client price ($)</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="inv-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SERVICES & PRICES ══ -->
+    <div id="page-services" class="page">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--navy)">Services &amp; Prices</div>
+          <div style="font-size:13px;color:var(--mgray)">One catalog for the whole site - edit a price here and it updates everywhere</div>
+        </div>
+        <button onclick="openServiceModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Add service</button>
+      </div>
+      <!-- KPIs -->
+      <div class="kpis" style="margin-bottom:20px">
+        <div class="kpi-card blue" style="text-align:center"><div class="kpi-label">TOTAL SERVICES</div><div class="kpi-value" id="svc-total" style="color:var(--blue)">—</div><div class="kpi-sub">in the catalog</div></div>
+        <div class="kpi-card purple" style="text-align:center"><div class="kpi-label">CATEGORIES</div><div class="kpi-value" id="svc-cats" style="color:#7C3AED">—</div><div class="kpi-sub">service groups</div></div>
+        <div class="kpi-card green" style="text-align:center"><div class="kpi-label">AVG PRICE</div><div class="kpi-value" id="svc-avg" style="color:var(--green)">$—</div><div class="kpi-sub">across all services</div></div>
+        <div class="kpi-card orange" style="text-align:center"><div class="kpi-label">PRICE RANGE</div><div class="kpi-value" id="svc-range" style="color:#D97706;font-size:18px">$—</div><div class="kpi-sub">lowest - highest</div></div>
+      </div>
+      <!-- Search -->
+      <div style="position:relative;margin-bottom:16px;max-width:360px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="svc-search" class="inp" placeholder="Search services..." style="padding-left:36px" oninput="renderServices()">
+      </div>
+      <!-- Grouped table -->
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="tbl" id="svc-table">
+            <thead><tr><th>Service name</th><th>Category</th><th>Price ($)</th><th>Duration</th><th>Actions</th></tr></thead>
+            <tbody id="svc-tbody"><tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>

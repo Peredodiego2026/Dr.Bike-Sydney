@@ -35,6 +35,7 @@ const titles = {
   inventory: 'Spare Parts',
   calendar: 'Calendar',
   memberships: 'Memberships',
+  services: 'Services & Prices',
 };
 const subs = {
   dashboard: 'Live operations · Sydney',
@@ -49,6 +50,7 @@ const subs = {
   settings: 'System settings',
   memberships: 'Active plans · Stripe subscriptions',
   inventory: 'Stock, internal cost and client price per part',
+  services: 'One catalog for the whole site - edit a price here and it updates everywhere',
 };
 
 function go(page, btn) {
@@ -80,6 +82,7 @@ function go(page, btn) {
   if (page === 'coupons') loadCoupons();
   if (page === 'settings') loadSettings();
   if (page === 'inventory') loadInventory();
+  if (page === 'services') loadServices();
   if (page === 'calendar') loadCalendar();
   if (page === 'reminders') {
     loadTriggers();
@@ -3018,6 +3021,196 @@ async function deletePart(id) {
   await sb.from('parts_inventory').delete().eq('id', id);
   showToast('Part removed');
   loadInventory();
+}
+
+// ── SERVICES & PRICES ───────────────────────────────────────────────────────
+// Single source of truth for every price shown on the site: PC (landing +
+// suburb pages), the mobile SPA, the mechanic app and the chatbot all read
+// this same `services` table. Editing here is the only place a price should
+// ever be changed.
+let servicesData = [];
+const SERVICE_CATEGORIES = [
+  'Scheduled services',
+  'Brakes',
+  'Cockpit & levers',
+  'Drivetrain',
+  'Gears & cables',
+  'Wheels & tyres',
+  'Electronic & e-bike',
+  'Suspension',
+  'General & assembly',
+];
+
+async function loadServices() {
+  const tbody = document.getElementById('svc-tbody');
+  if (!tbody) return;
+  tbody.innerHTML =
+    '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr>';
+
+  const { data, error } = await sb.from('services').select('*').order('name');
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--red)">Error: ${escapeHtml(error.message)}</td></tr>`;
+    return;
+  }
+
+  servicesData = data || [];
+  renderServices();
+}
+
+function renderServices() {
+  const tbody = document.getElementById('svc-tbody');
+  if (!tbody) return;
+
+  const total = servicesData.length;
+  const cats = new Set(servicesData.map((s) => s.category)).size;
+  const avg = total ? servicesData.reduce((sum, s) => sum + (s.price || 0), 0) / total : 0;
+  const prices = servicesData.map((s) => s.price || 0);
+
+  document.getElementById('svc-total').textContent = total;
+  document.getElementById('svc-cats').textContent = cats;
+  document.getElementById('svc-avg').textContent = '$' + avg.toFixed(0);
+  document.getElementById('svc-range').textContent = total
+    ? '$' + Math.min(...prices) + ' - $' + Math.max(...prices)
+    : '$—';
+
+  if (!total) {
+    tbody.innerHTML = `<tr><td colspan="5"><div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:10px">
+      <div style="font-size:14px;font-weight:600;color:var(--mgray)">No services yet</div>
+      <div style="font-size:12px;color:var(--mgray);opacity:.7">Add your first service to start the catalog</div>
+    </div></td></tr>`;
+    return;
+  }
+
+  const q = (document.getElementById('svc-search')?.value || '').trim().toLowerCase();
+  const filtered = q
+    ? servicesData.filter(
+        (s) => s.name.toLowerCase().includes(q) || (s.category || '').toLowerCase().includes(q)
+      )
+    : servicesData;
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mgray)">No services match "${escapeHtml(q)}"</td></tr>`;
+    return;
+  }
+
+  const byCat = {};
+  filtered.forEach((s) => {
+    const cat = s.category || 'General & assembly';
+    (byCat[cat] = byCat[cat] || []).push(s);
+  });
+
+  function durationLabel(s) {
+    if (!s.duration_min && !s.duration_max) return '—';
+    if (s.duration_min === s.duration_max) return s.duration_min + ' min';
+    return `${s.duration_min || 0}-${s.duration_max || 0} min`;
+  }
+
+  function svcRow(s) {
+    return `<tr>
+      <td data-label="Service" style="font-weight:600">${escapeHtml(s.name)}</td>
+      <td data-label="Category" style="color:var(--mgray)">${escapeHtml(s.category || '')}</td>
+      <td data-label="Price" style="font-weight:700;font-size:15px;color:var(--blue)">$${parseFloat(s.price || 0).toFixed(0)}</td>
+      <td data-label="Duration" style="color:var(--mgray)">${durationLabel(s)}</td>
+      <td data-label="Actions">
+        <div style="display:flex;gap:6px">
+          <button onclick="openServiceModal('${s.id}')" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">Edit</button>
+          <button onclick="deleteService('${s.id}')" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }
+
+  tbody.innerHTML = SERVICE_CATEGORIES.filter((cat) => byCat[cat]?.length)
+    .map(
+      (cat) =>
+        `<tr><td colspan="5" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">${escapeHtml(cat)}</td></tr>` +
+        byCat[cat].map(svcRow).join('')
+    )
+    .join('');
+}
+
+function openServiceModal(id) {
+  const s = id ? servicesData.find((x) => x.id === id) : null;
+  let modal = document.getElementById('service-modal');
+  if (modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'service-modal';
+  modal.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto">
+    <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">${s ? 'Edit service' : 'Add service'}</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Service name</div>
+        <input class="inp" id="sm-name" value="${s?.name ? escapeHtml(s.name) : ''}" placeholder="e.g. Chain Install"></div>
+      <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Category</div>
+        <select class="inp" id="sm-cat" style="cursor:pointer">${SERVICE_CATEGORIES.map((c) => `<option value="${c}"${(s?.category || SERVICE_CATEGORIES[0]) === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
+      <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Price ($)</div>
+        <input class="inp" id="sm-price" type="number" min="0" step="1" value="${s?.price ?? ''}" placeholder="0"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Min duration (min)</div>
+          <input class="inp" id="sm-dmin" type="number" min="0" value="${s?.duration_min ?? ''}"></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Max duration (min)</div>
+          <input class="inp" id="sm-dmax" type="number" min="0" value="${s?.duration_max ?? ''}"></div>
+      </div>
+      <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Description</div>
+        <input class="inp" id="sm-desc" value="${s?.description ? escapeHtml(s.description) : ''}" placeholder="Shown to clients when booking"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="document.getElementById('service-modal').remove()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+      <button onclick="saveService('${s?.id || ''}')" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveService(id) {
+  const name = document.getElementById('sm-name')?.value?.trim();
+  const category = document.getElementById('sm-cat')?.value;
+  const priceRaw = document.getElementById('sm-price')?.value;
+  const price = priceRaw === '' ? null : parseFloat(priceRaw);
+  const dminRaw = document.getElementById('sm-dmin')?.value;
+  const dmaxRaw = document.getElementById('sm-dmax')?.value;
+  const description = document.getElementById('sm-desc')?.value?.trim();
+
+  if (!name) {
+    showToast('Service name is required');
+    return;
+  }
+  if (price === null || Number.isNaN(price)) {
+    showToast('Price is required');
+    return;
+  }
+
+  const payload = {
+    name,
+    category,
+    price,
+    duration_min: dminRaw === '' ? null : parseInt(dminRaw),
+    duration_max: dmaxRaw === '' ? null : parseInt(dmaxRaw),
+    description: description || null,
+  };
+  let error;
+  if (id) {
+    ({ error } = await sb.from('services').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sb.from('services').insert(payload));
+  }
+  if (error) {
+    showToast('Save failed: ' + error.message);
+    return;
+  }
+  document.getElementById('service-modal').remove();
+  showToast(id ? 'Service updated ✓' : 'Service added ✓');
+  loadServices();
+}
+
+async function deleteService(id) {
+  const s = servicesData.find((x) => x.id === id);
+  if (!confirm(`Delete "${s?.name || 'this service'}"? It will disappear from booking everywhere.`))
+    return;
+  await sb.from('services').delete().eq('id', id);
+  showToast('Service removed');
+  loadServices();
 }
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────────
