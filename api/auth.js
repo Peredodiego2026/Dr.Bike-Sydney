@@ -1623,6 +1623,61 @@ async function handleGetAvailability(req, res) {
   return res.status(200).json(slots);
 }
 
+// ── Admin: Services CRUD (server-authoritative, bypasses RLS via service key) ──
+// The admin client uses the anon key for reads; writes go through here instead
+// of direct sb.from('services') calls so they don't silently no-op under RLS.
+async function verifyAdminSession(access_token, SERVICE_KEY) {
+  if (!access_token) return { error: 'Sign in required', status: 401 };
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const {
+    data: { user },
+    error: uErr,
+  } = await sb.auth.getUser(access_token);
+  if (uErr || !user) return { error: 'Invalid session', status: 401 };
+  return { sb, user };
+}
+
+async function handleAdminServicesSave(req, res) {
+  const { access_token, id, name, category, price, duration_min, duration_max, description } =
+    req.body;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const cleanName = String(name || '').trim();
+  if (!cleanName) return res.status(400).json({ error: 'Service name is required' });
+  const cleanPrice = Number(price);
+  if (!Number.isFinite(cleanPrice) || cleanPrice < 0)
+    return res.status(400).json({ error: 'Valid price is required' });
+
+  const payload = {
+    name: cleanName,
+    category: category || 'General & assembly',
+    price: cleanPrice,
+    duration_min: duration_min === '' || duration_min === null ? null : parseInt(duration_min),
+    duration_max: duration_max === '' || duration_max === null ? null : parseInt(duration_max),
+    description: description ? String(description).trim() : null,
+  };
+
+  const { data, error } = id
+    ? await auth.sb.from('services').update(payload).eq('id', id).select().maybeSingle()
+    : await auth.sb.from('services').insert(payload).select().maybeSingle();
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ service: data });
+}
+
+async function handleAdminServicesDelete(req, res) {
+  const { access_token, id } = req.body;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!id) return res.status(400).json({ error: 'Service id is required' });
+
+  const { error } = await auth.sb.from('services').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ success: true });
+}
+
 import { withSentry } from './_sentry.js';
 export default withSentry(handler, 'auth');
 async function handler(req, res) {
@@ -1673,5 +1728,7 @@ async function handler(req, res) {
   if (role === 'client-history') return handleClientHistory(req, res);
   if (role === 'client-bookings') return handleClientBookings(req, res);
   if (role === 'create-booking') return handleCreateBooking(req, res);
+  if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
+  if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
   return handleAdmin(req, res);
 }

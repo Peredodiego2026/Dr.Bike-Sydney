@@ -3181,22 +3181,32 @@ async function saveService(id) {
     return;
   }
 
-  const payload = {
-    name,
-    category,
-    price,
-    duration_min: dminRaw === '' ? null : parseInt(dminRaw),
-    duration_max: dmaxRaw === '' ? null : parseInt(dmaxRaw),
-    description: description || null,
-  };
-  let error;
-  if (id) {
-    ({ error } = await sb.from('services').update(payload).eq('id', id));
-  } else {
-    ({ error } = await sb.from('services').insert(payload));
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) {
+    showToast('Your admin session expired - sign in again');
+    return;
   }
-  if (error) {
-    showToast('Save failed: ' + error.message);
+
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      role: 'admin-services-save',
+      access_token: session.access_token,
+      id: id || null,
+      name,
+      category,
+      price,
+      duration_min: dminRaw === '' ? null : parseInt(dminRaw),
+      duration_max: dmaxRaw === '' ? null : parseInt(dmaxRaw),
+      description: description || null,
+    }),
+  });
+  const result = await resp.json();
+  if (!resp.ok) {
+    showToast('Save failed: ' + (result.error || 'Unknown error'));
     return;
   }
   document.getElementById('service-modal').remove();
@@ -3208,7 +3218,29 @@ async function deleteService(id) {
   const s = servicesData.find((x) => x.id === id);
   if (!confirm(`Delete "${s?.name || 'this service'}"? It will disappear from booking everywhere.`))
     return;
-  await sb.from('services').delete().eq('id', id);
+
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) {
+    showToast('Your admin session expired - sign in again');
+    return;
+  }
+
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      role: 'admin-services-delete',
+      access_token: session.access_token,
+      id,
+    }),
+  });
+  const result = await resp.json();
+  if (!resp.ok) {
+    showToast('Delete failed: ' + (result.error || 'Unknown error'));
+    return;
+  }
   showToast('Service removed');
   loadServices();
 }
