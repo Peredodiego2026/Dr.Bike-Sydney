@@ -223,7 +223,22 @@ async function loadTimeSlots(screen, date, serviceId) {
   grid.innerHTML =
     '<div class="skeleton" style="height:44px;grid-column:1/-1"></div>' +
     '<div class="skeleton" style="height:44px;grid-column:1/-1"></div>';
-  const slots = await getAvailableSlots(date, serviceId);
+  let slots;
+  try {
+    slots = await getAvailableSlots(date, serviceId);
+  } catch (e) {
+    grid.innerHTML =
+      '<div style="grid-column:1/-1;padding:20px 0;text-align:center">' +
+      '<div style="font-size:24px;margin-bottom:6px">⚠️</div>' +
+      '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Could not load available times</div>' +
+      '<div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>' +
+      '<button id="retry-slots-btn" style="padding:11px 20px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>' +
+      '</div>';
+    screen
+      .querySelector('#retry-slots-btn')
+      ?.addEventListener('click', () => loadTimeSlots(screen, date, serviceId));
+    return;
+  }
   const allBooked = slots.length > 0 && slots.every((s) => !s.available);
   if (allBooked) {
     grid.innerHTML =

@@ -38,17 +38,6 @@ const MOCK_SERVICES = [
   },
 ];
 
-const MOCK_SLOTS = [
-  '8:00 AM',
-  '9:00 AM',
-  '10:00 AM',
-  '11:00 AM',
-  '1:00 PM',
-  '2:00 PM',
-  '3:00 PM',
-  '4:00 PM',
-];
-
 const _d0 = new Date();
 const _dateStr = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -90,13 +79,12 @@ export async function getServices() {
 }
 
 export async function getAvailableSlots(date, serviceId) {
-  try {
-    const res = await fetch(`/api/auth?role=get-availability&date=${encodeURIComponent(date)}`);
-    if (!res.ok) throw new Error('availability fetch failed');
-    return await res.json();
-  } catch {
-    return MOCK_SLOTS.map((t) => ({ time: t, available: true }));
-  }
+  // No fallback to "all available" here on purpose: a failed check must never
+  // let a client see a slot as bookable that we couldn't actually verify -
+  // callers must handle the rejection (show retry, not a slot grid).
+  const res = await fetch(`/api/auth?role=get-availability&date=${encodeURIComponent(date)}`);
+  if (!res.ok) throw new Error('availability fetch failed');
+  return await res.json();
 }
 
 export async function createBooking(bookingData) {
