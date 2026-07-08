@@ -446,3 +446,146 @@
 .dbs-listing-card--inprogress{ border-left-color: #22C55E; }
 .dbs-listing-card--completed { border-left-color: #6B7280; }
 .dbs-listing-card--cancelled { border-left-color: #EF4444; opacity: 0.6; }
+
+/* ── Booking Wizard (book-service, service-summary, payment) ────────────── */
+.dbs-step-indicator {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+}
+.dbs-step-indicator__step {
+  flex: 1;
+  height: 3px;
+  background: var(--color-surface-hover);
+  border-radius: 2px;
+  transition: background 300ms ease;
+}
+.dbs-step-indicator__step.done   { background: var(--color-primary); }
+.dbs-step-indicator__step.active { background: var(--color-primary); }
+
+/* Date pill in calendar */
+.dbs-date-pill {
+  padding: 10px 6px;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 150ms ease;
+  background: var(--color-bg);
+}
+.dbs-date-pill:hover { border-color: var(--color-primary); }
+.dbs-date-pill.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+.dbs-date-pill__day {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.dbs-date-pill__num {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+.dbs-date-pill__mon {
+  font-size: 11px;
+}
+
+/* Time slot */
+.dbs-time-slot {
+  padding: 12px;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 150ms ease;
+  background: var(--color-bg);
+  box-shadow: var(--elevation-0);
+}
+.dbs-time-slot:hover { border-color: var(--color-primary); }
+.dbs-time-slot.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--elevation-1);
+}
+.dbs-time-slot.unavailable {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Summary card (service-summary) */
+.dbs-summary-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--elevation-0);
+}
+.dbs-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+}
+.dbs-summary-row:last-child { border-bottom: none; }
+.dbs-summary-row__label { color: var(--color-text-secondary); }
+.dbs-summary-row__value { font-weight: 600; color: var(--color-text); }
+
+.dbs-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  margin-top: 16px;
+  box-shadow: var(--elevation-0);
+}
+.dbs-summary-total__label { font-weight: 700; color: var(--color-text); font-size: 16px; }
+.dbs-summary-total__amount { font-weight: 800; color: var(--color-primary); font-size: 24px; }
+
+/* Payment security badge */
+.dbs-payment-security {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 12px;
+}
+
+/* Discount code */
+.dbs-discount-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.dbs-discount-input {
+  flex: 1;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--color-text);
+  font-size: 14px;
+  outline: none;
+  text-transform: uppercase;
+  font-family: var(--font-family);
+}
+.dbs-discount-input:focus { border-color: var(--color-primary); }
+.dbs-discount-msg { font-size: 12px; margin-top: 6px; min-height: 16px; }
+.dbs-discount-msg.success { color: #059669; }
+.dbs-discount-msg.error   { color: #DC2626; }

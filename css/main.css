@@ -1202,6 +1202,92 @@ body {
 }
 
 /* ── Profile ─────────────────────────────────────────────────────────────────── */
+
+/* ── Booking Elevation Polish ────────────────────────────────────────────────── */
+/* Time slots */ .time-slot { box-shadow: var(--elevation-0); transition: all var(--motion-fast) var(--ease-out); }
+.time-slot:hover { border-color: var(--color-primary); }
+.time-slot.selected { box-shadow: var(--elevation-1); }
+
+/* Summary cards */ .summary-card { box-shadow: var(--elevation-0); }
+.summary-total { box-shadow: var(--elevation-0); }
+
+/* Service cards in book-service */ .service-card.selected { box-shadow: var(--elevation-1); }
+
+/* Payment methods */ .payment-methods { box-shadow: var(--elevation-0); }
+
+/* Card element */ .card-element {
+  padding: 14px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  min-height: 48px;
+  transition: border-color var(--motion-fast) ease;
+}
+.card-element.StripeElement--focus { border-color: var(--color-primary); box-shadow: var(--elevation-1); }
+
+/* Referral / promo section */
+.referral-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  box-shadow: var(--elevation-0);
+}
+
+/* Login screen polish */
+.login-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: #fff;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--motion-fast) ease;
+  font-family: var(--font-family);
+  box-shadow: var(--elevation-0);
+}
+.login-google-btn:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--elevation-1);
+}
+
+/* Review screen inline card */
+.review-card-inline {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--elevation-0);
+}
+
+/* Bike card */
+.bike-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--elevation-0);
+  margin-bottom: 12px;
+}
+@media (hover: hover) {
+  .bike-card:hover {
+    box-shadow: var(--elevation-1);
+    transform: translateY(-1px);
+    transition: all var(--motion-fast) var(--ease-out);
+  }
+}
+
+/* Membership card */ .membership-card { box-shadow: var(--elevation-0); }
+
+/* ── Profile ─────────────────────────────────────────────────────────────────── */
 .profile-wrap {
   display: flex;
   flex-direction: column;

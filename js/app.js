@@ -1516,13 +1516,8 @@ async function renderTracking() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <div style="font-size:12px;color:#1848C8"><b>Your code: <span id="arrival-pin-value" style="font-size:14px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
       </div>
-      <div style="display:flex;gap:4px;padding:10px 16px">
-        ${['Confirmed', 'En Route', 'Arrived', 'Done']
-          .map(
-            (s, i) =>
-              `<div id="step-${i}" style="flex:1;padding:5px 2px;text-align:center;font-size:10px;font-weight:700;border-radius:6px;background:#F3F4F6;color:#9CA3AF;transition:all 0.3s">${s}</div>`
-          )
-          .join('')}
+      <div style="padding:10px 16px">
+        ${createStatusSteps(booking.status)}
       </div>
       <div style="display:flex;gap:8px;padding:0 16px 12px">
         <button id="message-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:#fff;border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:#0D1F3C;cursor:pointer;font-family:inherit">
@@ -2350,14 +2345,14 @@ async function renderLogin() {
       <p style="text-align:center;font-size:13px;font-weight:600;color:#2563EB;margin:0 0 12px">Healthy bikes, happy riders</p>
       <h2 class="login-title">${isSignup ? 'Create Account' : 'Welcome Back!'}</h2>
       <p class="login-sub text-secondary text-center">${isSignup ? 'Join Dr. Bike Sydney' : 'Login to your account'}</p>
-      <button type="button" id="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;color:#0F172A;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;transition:border-color 150ms ease,background 150ms ease">
+      <button type="button" id="google-btn" class="login-google-btn" style="margin-bottom:16px">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
         </svg>
-        Continue with Google
+        <span>Continue with Google</span>
       </button>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
         <div style="flex:1;height:1px;background:var(--color-border)"></div>
@@ -3153,9 +3148,9 @@ async function renderMyBikes() {
       list.innerHTML = data
         .map(
           (bike) => `
-        <div data-bike-id="${bike.id}" style="cursor:pointer;background:var(--color-surface);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;border-radius:12px;background:var(--color-primary-alpha,rgba(10,88,202,0.12));display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span style="display:inline-block;width:26px;height:18px;background-color:var(--color-primary);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
+        <div class="bike-card" data-bike-id="${bike.id}" style="cursor:pointer;display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border-radius:12px;background:var(--color-primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"/><circle cx="12" cy="5" r="2" fill="var(--color-primary)" stroke="none"/></svg>
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:15px">${bike.name}</div>
@@ -3163,7 +3158,7 @@ async function renderMyBikes() {
               ${[bike.brand, bike.model, bike.color, bike.year, TYPE_LABELS[bike.type]].filter(Boolean).join(' · ') || 'No details'}
             </div>
           </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </div>
       `
         )
