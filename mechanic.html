@@ -151,12 +151,12 @@
     <div class="login-card">
       <label class="lbl">Select your van</label>
       <div class="van-grid">
-        <div class="van-opt sel" id="v1" onclick="selVan(1)">Van 1<div style="font-size:11px;opacity:0.6;margin-top:2px">Inner West</div></div>
-        <div class="van-opt" id="v2" onclick="selVan(2)">Van 2<div style="font-size:11px;opacity:0.6;margin-top:2px">North Shore</div></div>
+        <div class="van-opt sel" id="v1">Van 1<div style="font-size:11px;opacity:0.6;margin-top:2px">Inner West</div></div>
+        <div class="van-opt" id="v2">Van 2<div style="font-size:11px;opacity:0.6;margin-top:2px">North Shore</div></div>
       </div>
       <label class="lbl">Enter your PIN</label>
       <input class="pin-inp" id="pin-inp" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in →</button>
+      <button class="login-btn" id="login-btn">Sign in →</button>
       <div class="login-err" id="login-err"></div>
     </div>
   </div>
@@ -170,20 +170,20 @@
       <div class="topbar-van" id="van-label">Van 1</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <button id="theme-btn-mech" onclick="toggleMechTheme()" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Toggle theme">
+      <button id="theme-btn-mech" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Toggle theme">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
-      <button class="status-btn" id="status-btn" onclick="toggleStatus()">● Online</button>
+      <button class="status-btn" id="status-btn">● Online</button>
     </div>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab on" onclick="goTab('today',this)">Today<span class="tab-badge" id="b-today"></span></button>
-    <button class="nav-tab" onclick="goTab('upcoming',this)">Upcoming<span class="tab-badge" id="b-upcoming"></span></button>
-    <button class="nav-tab" onclick="goTab('agenda',this)">Agenda</button>
-    <button class="nav-tab" onclick="goTab('done',this)">Done<span class="tab-badge" id="b-done"></span></button>
-    <button class="nav-tab" onclick="goTab('profile',this)">Profile</button>
-    <button class="nav-tab" onclick="goTab('inventory',this)">Stock</button>
-    <button class="nav-tab" onclick="goTab('spareparts',this)">Spare Parts</button>
+    <button class="nav-tab on" data-tab="today">Today<span class="tab-badge" id="b-today"></span></button>
+    <button class="nav-tab" data-tab="upcoming">Upcoming<span class="tab-badge" id="b-upcoming"></span></button>
+    <button class="nav-tab" data-tab="agenda">Agenda</button>
+    <button class="nav-tab" data-tab="done">Done<span class="tab-badge" id="b-done"></span></button>
+    <button class="nav-tab" data-tab="profile">Profile</button>
+    <button class="nav-tab" data-tab="inventory">Stock</button>
+    <button class="nav-tab" data-tab="spareparts">Spare Parts</button>
   </div>
   <!-- jobs-list is the main content area — all tabs render here -->
   <div class="jobs-wrap" id="jobs-list">
@@ -222,7 +222,7 @@
     <div style="font-size:11px;opacity:.6;text-transform:uppercase">Service in progress</div>
     <div id="timer-display" style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">00:00</div>
   </div>
-  <button onclick="completeService()" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;font-size:14px;cursor:pointer">Complete</button>
+  <button id="complete-service-btn" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;font-size:14px;cursor:pointer">Complete</button>
 </div>
 
 <!-- PRE-SERVICE CHECKLIST MODAL — theme-aware -->
@@ -230,17 +230,17 @@
   <div class="modal-inner">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <h2 style="font-size:18px;font-weight:800;color:var(--color-text)">Pre-Service Checklist</h2>
-      <button onclick="closeChecklist()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--color-text)">✕</button>
+      <button id="checklist-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--color-text)">✕</button>
     </div>
     <div id="checklist-items"></div>
     <div style="margin-top:20px">
       <textarea id="checklist-notes" placeholder="Additional notes..."></textarea>
     </div>
-    <button onclick="saveChecklist()" style="width:100%;background:#0A58CA;color:#fff;border:none;border-radius:8px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;margin-top:12px">Save & Start Service ⏱️</button>
+    <button id="checklist-save-btn" style="width:100%;background:#0A58CA;color:#fff;border:none;border-radius:8px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;margin-top:12px">Save & Start Service ⏱️</button>
   </div>
 </div>
 
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/mechanic.js?v=20260707"></script>
+<script src="js/mechanic.js?v=20260708a"></script>
 </body>
 </html>

@@ -5,6 +5,95 @@ function gtag() {
 gtag('js', new Date());
 gtag('config', 'G-GXYD68JXZW');
 
+// ── TASK-023: onclick → addEventListener (see tasks.md) ─────────────────────
+// Static buttons that exist in the initial mechanic.html markup - script
+// runs at the end of body so the DOM is already there, no need to wait for
+// DOMContentLoaded.
+(function wireStaticMechanicButtons() {
+  const byId = (id) => document.getElementById(id);
+  const wire = (id, fn) => {
+    const el = byId(id);
+    if (el) el.addEventListener('click', fn);
+  };
+
+  wire('v1', () => selVan(1));
+  wire('v2', () => selVan(2));
+  wire('login-btn', () => doLogin());
+  wire('theme-btn-mech', () => toggleMechTheme());
+  wire('status-btn', () => toggleStatus());
+  wire('complete-service-btn', () => completeService());
+  wire('checklist-close-btn', () => closeChecklist());
+  wire('checklist-save-btn', () => saveChecklist());
+
+  const navTabs = document.querySelector('.nav-tabs');
+  if (navTabs) {
+    navTabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('.nav-tab');
+      if (btn && btn.dataset.tab) goTab(btn.dataset.tab, btn);
+    });
+  }
+})();
+
+// Everything else (job cards, parts picker, checklist rows, chat, etc.) is
+// built dynamically via innerHTML, so those buttons don't exist yet when
+// this script runs. One delegated listener on document, dispatched by
+// data-action, covers all of them regardless of when they're created.
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const id = el.dataset.id;
+  switch (el.dataset.action) {
+    case 'retry-load':
+      load();
+      break;
+    case 'open-parts-picker':
+      openPartsPicker();
+      break;
+    case 'apply-mech-discount':
+      applyMechDiscount();
+      break;
+    case 'clear-sig':
+      clearSig();
+      break;
+    case 'close-complete-modal':
+      document.getElementById('complete-modal')?.remove();
+      break;
+    case 'submit-complete':
+      submitComplete(id);
+      break;
+    case 'close-parts-picker':
+      closePartsPicker();
+      break;
+    case 'confirm-parts':
+      confirmParts(el.dataset.value === 'true');
+      break;
+    case 'parts-step':
+      partsStep(id, parseInt(el.dataset.delta));
+      break;
+    case 'close-history-modal':
+      document.getElementById('history-modal')?.remove();
+      break;
+    case 'update-qty':
+      updateQty(id, parseInt(el.dataset.delta), el);
+      break;
+    case 'set-check':
+      setCheck(id, el.dataset.status);
+      break;
+    case 'do-logout':
+      doLogout();
+      break;
+    case 'open-mech-chat':
+      openMechChat(id);
+      break;
+    case 'close-mech-chat':
+      closeMechChat();
+      break;
+    case 'send-mech-message':
+      sendMechMessage();
+      break;
+  }
+});
+
 // ── HTML ESCAPE HELPER (XSS protection) ──────────────────────────────────────
 function esc(str) {
   if (str === null || str === undefined) return '';
@@ -166,7 +255,7 @@ async function init() {
   const loadTimeout = setTimeout(() => {
     if (document.getElementById('jobs-list')?.innerHTML.includes('Loading')) {
       document.getElementById('jobs-list').innerHTML =
-        '<div style="text-align:center;padding:40px;color:var(--mgray)"><div style="font-size:32px;margin-bottom:12px">📡</div><div style="font-weight:600;color:var(--navy)">Taking longer than usual</div><div style="font-size:13px;margin-top:8px">Check your connection</div><button onclick="load()" style="margin-top:16px;padding:10px 24px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:var(--sans)">Retry</button></div>';
+        '<div style="text-align:center;padding:40px;color:var(--mgray)"><div style="font-size:32px;margin-bottom:12px">📡</div><div style="font-weight:600;color:var(--navy)">Taking longer than usual</div><div style="font-size:13px;margin-top:8px">Check your connection</div><button data-action="retry-load" style="margin-top:16px;padding:10px 24px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:var(--sans)">Retry</button></div>';
     }
   }, 8000);
   // Transient failures here must NOT log the mechanic out — only a real 401 inside load() does.
@@ -888,7 +977,7 @@ function openCompleteModal(id) {
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">🔧 Parts used</label>
-          <button type="button" onclick="openPartsPicker()" id="parts-used-btn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--off);cursor:pointer;font-family:var(--sans)">
+          <button type="button" data-action="open-parts-picker" id="parts-used-btn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--off);cursor:pointer;font-family:var(--sans)">
             <span id="parts-used-label" style="font-size:13px;font-weight:600;color:var(--navy)">Add parts used</span>
             <span style="display:flex;align-items:center;gap:8px">
               <span id="parts-used-count" style="display:none;font-size:11px;font-weight:700;color:#1E40AF;background:#1E40AF15;padding:2px 9px;border-radius:20px">0</span>
@@ -902,7 +991,7 @@ function openCompleteModal(id) {
           <div id="charge-breakdown" style="background:var(--off);border:1px solid var(--border);border-radius:12px;padding:14px 16px"></div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <input id="mech-disc-code" placeholder="Discount code (optional)" style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);text-transform:uppercase" />
-            <button type="button" onclick="applyMechDiscount()" id="mech-disc-btn" style="flex-shrink:0;padding:0 16px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Apply</button>
+            <button type="button" data-action="apply-mech-discount" id="mech-disc-btn" style="flex-shrink:0;padding:0 16px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Apply</button>
           </div>
           <div id="mech-disc-msg" style="display:none;font-size:12px;font-weight:600;margin-top:6px"></div>
         </div>
@@ -941,12 +1030,12 @@ function openCompleteModal(id) {
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:#DC2626">*</span></label>
           <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
-          <button onclick="clearSig()" style="font-size:11px;color:#6B7280;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--sans)">Clear signature</button>
+          <button data-action="clear-sig" style="font-size:11px;color:#6B7280;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--sans)">Clear signature</button>
         </div>
         <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
         <div style="display:flex;gap:8px;margin-top:8px">
-          <button onclick="document.getElementById('complete-modal').remove()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--sans);cursor:pointer;font-size:13px;color:var(--navy)">Cancel</button>
-          <button onclick="submitComplete('${id}')" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">💳 Marcar como cobrado (EFTPOS) y completar</button>
+          <button data-action="close-complete-modal" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--sans);cursor:pointer;font-size:13px;color:var(--navy)">Cancel</button>
+          <button data-action="submit-complete" data-id="${id}" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">💳 Marcar como cobrado (EFTPOS) y completar</button>
         </div>
       </div>
     </div>`;
@@ -1099,7 +1188,7 @@ async function openPartsPicker() {
     'position:fixed;inset:0;background:var(--white);z-index:1100;display:flex;flex-direction:column';
   panel.innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;padding:0 12px;height:56px;border-bottom:1px solid var(--border);flex-shrink:0">
-      <button onclick="closePartsPicker()" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Back">
+      <button data-action="close-parts-picker" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Back">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div style="flex:1;min-width:0">
@@ -1111,8 +1200,8 @@ async function openPartsPicker() {
       <div style="text-align:center;color:#6B7280;font-size:13px;padding:30px">Loading parts...</div>
     </div>
     <div style="padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white);display:flex;flex-direction:column;gap:8px">
-      <button onclick="confirmParts(true)" id="pp-done" disabled style="width:100%;padding:13px;background:#1E40AF;color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;opacity:0.5">Confirm parts</button>
-      <button onclick="confirmParts(false)" style="width:100%;padding:11px;background:none;border:1.5px solid var(--border);color:var(--navy);border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">No parts used in this service</button>
+      <button data-action="confirm-parts" data-value="true" id="pp-done" disabled style="width:100%;padding:13px;background:#1E40AF;color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;opacity:0.5">Confirm parts</button>
+      <button data-action="confirm-parts" data-value="false" style="width:100%;padding:11px;background:none;border:1.5px solid var(--border);color:var(--navy);border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">No parts used in this service</button>
     </div>`;
   document.body.appendChild(panel);
 
@@ -1164,9 +1253,9 @@ function renderPartsPicker(parts) {
           <div style="font-size:11px;color:${low ? '#DC2626' : '#6B7280'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <button onclick="partsStep('${p.id}',-1)" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
+          <button data-action="parts-step" data-id="${p.id}" data-delta="-1" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
           <span id="pp-qty-${p.id}" style="font-size:15px;font-weight:700;min-width:22px;text-align:center;color:${qty > 0 ? m.color : 'var(--navy)'}">${qty}</span>
-          <button onclick="partsStep('${p.id}',1)" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
+          <button data-action="parts-step" data-id="${p.id}" data-delta="1" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
         </div>
       </div>`;
       });
@@ -1638,7 +1727,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
           <div style="font-size:17px;font-weight:700;color:var(--navy)">${esc(clientName)}</div>
           <div style="font-size:12px;color:var(--mgray)">Service history</div>
         </div>
-        <button onclick="document.getElementById('history-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mgray)">✕</button>
+        <button data-action="close-history-modal" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mgray)">✕</button>
       </div>
       <div id="history-content" style="min-height:80px;display:flex;align-items:center;justify-content:center">
         <div style="color:var(--mgray);font-size:13px">Loading history...</div>
@@ -1798,9 +1887,9 @@ async function loadInventory() {
             ${low ? '<div style="font-size:11px;color:#DC2626;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <button onclick="updateQty('${item.id}',-1,this)" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
+            <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
             <span style="font-size:15px;font-weight:700;min-width:28px;text-align:center;color:var(--navy)" id="qty-${item.id}">${item.stock}</span>
-            <button onclick="updateQty('${item.id}',1,this)" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
+            <button data-action="update-qty" data-id="${item.id}" data-delta="1" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
           </div>
         </div>`;
       });
@@ -2072,7 +2161,7 @@ function openChecklist(bookingId) {
         <div style="display:flex;gap:4px">
           ${['ok', 'warn', 'critical']
             .map(
-              (s) => `<button onclick="setCheck('${item.id}','${s}',this)"
+              (s) => `<button data-action="set-check" data-id="${item.id}" data-status="${s}"
             style="padding:4px 8px;border-radius:6px;border:1px solid #E5E7EB;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#374151"
             id="cb-${item.id}-${s}">${s === 'ok' ? '✅ OK' : s === 'warn' ? '⚠️ Warn' : '🔴 Critical'}</button>`
             )
@@ -2274,7 +2363,7 @@ function profile() {
     <div style="padding:0 16px;margin-bottom:20px">${ratingHTML(jobs)}</div>
 
     <div style="padding:0 16px">
-      <button onclick="doLogout()" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
+      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
     </div>
   </div>`;
 }
@@ -2362,7 +2451,7 @@ function renderAgenda() {
           const color = stColors[j.status] || '#6B7280';
           html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
           <div style="width:52px;font-size:11px;color:#9CA3AF;padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
-          <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" onclick="openMechChat('${j.id}')">
+          <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">
             <div style="font-size:13px;font-weight:600;color:#0D1F3C">${esc(j.service)}</div>
             <div style="font-size:12px;color:#6B7280;margin-top:2px">${esc(j.client)} · ${j.suburb || j.address || '—'}</div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
@@ -2420,7 +2509,7 @@ function openMechChat(bookingId) {
       <div style="background:var(--white);border-radius:16px 16px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column">
         <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
           <div style="font-weight:700;color:var(--navy);font-size:14px">💬 Chat with client</div>
-          <button onclick="closeMechChat()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">×</button>
+          <button data-action="close-mech-chat" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">×</button>
         </div>
         <div id="mech-chat-msgs" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--off);min-height:200px"></div>
         <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
@@ -2429,7 +2518,7 @@ function openMechChat(bookingId) {
             <input type="file" accept="image/*" capture="environment" id="mech-chat-photo-inp" style="display:none" onchange="sendMechPhoto()">
           </label>
           <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMechMessage()">
-          <button onclick="sendMechMessage()" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;cursor:pointer;font-size:18px">→</button>
+          <button data-action="send-mech-message" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;cursor:pointer;font-size:18px">→</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
