@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. Bike - Component Preview</title>
+<link rel="stylesheet" href="css/variables.css?v=20260708">
+<link rel="stylesheet" href="css/main.css?v=20260708">
+<link rel="stylesheet" href="css/components-v2.css?v=20260708">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { font-family: Inter, system-ui, sans-serif; background: #F7F8FA; padding: 20px; color: #0D1F3C; }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  h2 { font-size: 14px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.06em; margin: 32px 0 12px; border-bottom: 1px solid #E5E7EB; padding-bottom: 8px; }
+  .preview-wrap { max-width: 480px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div class="preview-wrap">
+<h1>Dr. Bike Sydney</h1>
+<p style="font-size:13px;color:#6B7280;margin-bottom:24px">Component System v2 - Visual Preview (no login needed)</p>
+
+<!-- SERVICE CARDS -->
+<h2>B) Service Cards</h2>
+
+<div class="dbs-card-service" style="margin-bottom:10px">
+  <div class="dbs-card-service__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+  </div>
+  <div class="dbs-card-service__body">
+    <div class="dbs-card-service__name">Tune-Up</div>
+    <div class="dbs-card-service__desc">Adjust brakes &amp; gears, lube chain, safety check</div>
+    <div class="dbs-card-service__meta">~1 hour</div>
+  </div>
+  <div class="dbs-card-service__price">$109</div>
+  <div class="dbs-card-service__cta">Book now</div>
+</div>
+
+<div class="dbs-card-service" style="margin-bottom:10px">
+  <div class="dbs-card-service__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+  </div>
+  <div class="dbs-card-service__body">
+    <div class="dbs-card-service__name">Standard Service</div>
+    <div class="dbs-card-service__desc">Full tune-up + wheel true + drivetrain clean</div>
+    <div class="dbs-card-service__meta">~1.5 hours</div>
+  </div>
+  <div class="dbs-card-service__price">$149</div>
+  <div class="dbs-card-service__cta">Book now</div>
+</div>
+
+<div class="dbs-card-service" style="margin-bottom:10px">
+  <div class="dbs-card-service__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+  </div>
+  <div class="dbs-card-service__body">
+    <div class="dbs-card-service__name">Major Service</div>
+    <div class="dbs-card-service__desc">Complete overhaul: bearings, cables, full clean</div>
+    <div class="dbs-card-service__meta">~2.5 hours</div>
+  </div>
+  <div class="dbs-card-service__price">$199</div>
+  <div class="dbs-card-service__cta">Book now</div>
+</div>
+
+<!-- PROGRESS BARS -->
+<h2>D) Progress Bars</h2>
+
+<div class="dbs-progress dbs-progress--bronze" style="margin-bottom:10px">
+  <div class="dbs-progress__track">
+    <div class="dbs-progress__fill" style="width:65%"></div>
+  </div>
+  <div class="dbs-progress__label">Silver · 4/6 · <strong>2 to go</strong></div>
+</div>
+<div class="dbs-progress dbs-progress--silver" style="margin-bottom:10px">
+  <div class="dbs-progress__track">
+    <div class="dbs-progress__fill" style="width:70%"></div>
+  </div>
+  <div class="dbs-progress__label">Gold · 7/10 · <strong>3 to go</strong></div>
+</div>
+<div class="dbs-progress dbs-progress--gold" style="margin-bottom:10px">
+  <div class="dbs-progress__track">
+    <div class="dbs-progress__fill" style="width:100%"></div>
+  </div>
+  <div class="dbs-progress__label">Gold · 10/10 · <strong style="color:#D4AF37">Complete!</strong></div>
+</div>
+<div class="dbs-progress dbs-progress--primary" style="margin-bottom:10px">
+  <div class="dbs-progress__track">
+    <div class="dbs-progress__fill" style="width:45%"></div>
+  </div>
+  <div class="dbs-progress__label">Basic usage metric</div>
+</div>
+
+<!-- STATUS BADGES -->
+<h2>E) Status Badges</h2>
+
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+  <span class="dbs-badge dbs-badge--pending"><span class="dbs-badge__dot"></span>Pending</span>
+  <span class="dbs-badge dbs-badge--confirmed"><span class="dbs-badge__dot"></span>Confirmed</span>
+  <span class="dbs-badge dbs-badge--enroute"><span class="dbs-badge__dot"></span>En Route</span>
+  <span class="dbs-badge dbs-badge--inprogress"><span class="dbs-badge__dot"></span>In Progress</span>
+  <span class="dbs-badge dbs-badge--completed"><span class="dbs-badge__dot"></span>Completed</span>
+  <span class="dbs-badge dbs-badge--cancelled"><span class="dbs-badge__dot"></span>Cancelled</span>
+</div>
+
+<!-- STATUS STEPS -->
+<h2>E2) Status Steps</h2>
+
+<div class="dbs-status-progress">
+  <div class="dbs-status-step done">Confirmed</div>
+  <div class="dbs-status-step active">En Route</div>
+  <div class="dbs-status-step">Arrived</div>
+  <div class="dbs-status-step">Done</div>
+</div>
+
+<!-- EMPTY STATES -->
+<h2>F) Empty States</h2>
+
+<div class="dbs-empty-state">
+  <div class="dbs-empty-state__icon">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+  </div>
+  <div class="dbs-empty-state__title">No bookings yet</div>
+  <div class="dbs-empty-state__sub">Book your first service to see it here. We'll send you a tracking link.</div>
+  <a href="#" class="dbs-card-service__cta">Book a Service →</a>
+</div>
+
+<div class="dbs-empty-state">
+  <div class="dbs-empty-state__icon">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"/><circle cx="12" cy="5" r="2" fill="#2563EB" stroke="none"/></svg>
+  </div>
+  <div class="dbs-empty-state__title">No bikes added yet</div>
+  <div class="dbs-empty-state__sub">Add your first bike to track its service history and get personalized recommendations.</div>
+</div>
+
+<!-- KPI CARDS -->
+<h2>KPI Cards (Mechanic Dashboard)</h2>
+
+<div class="dbs-kpi-grid" style="margin-bottom:16px">
+  <div class="dbs-kpi-card dbs-kpi-card--primary">
+    <div class="dbs-kpi-card__value">$285</div>
+    <div class="dbs-kpi-card__label">Today · 3 jobs</div>
+    <div class="dbs-kpi-card__trend dbs-kpi-card__trend--up">↑ 12% vs yesterday</div>
+  </div>
+  <div class="dbs-kpi-card">
+    <div class="dbs-kpi-card__value">$1,420</div>
+    <div class="dbs-kpi-card__label">This week · 14 jobs</div>
+  </div>
+  <div class="dbs-kpi-card">
+    <div class="dbs-kpi-card__value">$4,850</div>
+    <div class="dbs-kpi-card__label">This month · 42 jobs</div>
+    <div class="dbs-kpi-card__trend dbs-kpi-card__trend--flat">→ same as last month</div>
+  </div>
+  <div class="dbs-kpi-card dbs-kpi-card--success">
+    <div class="dbs-kpi-card__value">$58,200</div>
+    <div class="dbs-kpi-card__label">All time · 580 jobs</div>
+  </div>
+</div>
+
+<!-- LISTING CARDS -->
+<h2>Listing Cards (Bookings)</h2>
+
+<div class="dbs-listing-card dbs-listing-card--pending" style="margin-bottom:8px">
+  <div class="dbs-listing-card__body">
+    <div class="dbs-listing-card__title">Tune-Up</div>
+    <div class="dbs-listing-card__sub">Wed 9 Jul · 10:00 AM</div>
+  </div>
+  <span class="dbs-badge dbs-badge--pending"><span class="dbs-badge__dot"></span>Pending</span>
+  <div class="dbs-listing-card__chevron">›</div>
+</div>
+
+<div class="dbs-listing-card dbs-listing-card--confirmed" style="margin-bottom:8px">
+  <div class="dbs-listing-card__body">
+    <div class="dbs-listing-card__title">Standard Service</div>
+    <div class="dbs-listing-card__sub">Mon 7 Jul · 2:30 PM</div>
+  </div>
+  <span class="dbs-badge dbs-badge--confirmed"><span class="dbs-badge__dot"></span>Confirmed</span>
+  <div class="dbs-listing-card__chevron">›</div>
+</div>
+
+<div class="dbs-listing-card dbs-listing-card--enroute" style="margin-bottom:8px">
+  <div class="dbs-listing-card__body">
+    <div class="dbs-listing-card__title">Brake Bleed</div>
+    <div class="dbs-listing-card__sub">Fri 4 Jul · 9:00 AM</div>
+  </div>
+  <span class="dbs-badge dbs-badge--enroute"><span class="dbs-badge__dot"></span>En Route</span>
+  <div class="dbs-listing-card__chevron">›</div>
+</div>
+
+<div class="dbs-listing-card dbs-listing-card--completed" style="margin-bottom:8px">
+  <div class="dbs-listing-card__body">
+    <div class="dbs-listing-card__title">Major Service</div>
+    <div class="dbs-listing-card__sub">Mon 30 Jun · 3:00 PM</div>
+  </div>
+  <span class="dbs-badge dbs-badge--completed"><span class="dbs-badge__dot"></span>Completed</span>
+  <div class="dbs-listing-card__chevron">›</div>
+</div>
+
+<!-- BAR CHART -->
+<h2>Service Ranking (Admin)</h2>
+<div class="dbs-bar-list">
+  <div class="dbs-bar-item">
+    <div class="dbs-bar-item__label">Tune-Up</div>
+    <div class="dbs-bar-item__track"><div class="dbs-bar-item__fill" style="width:100%"></div></div>
+    <div class="dbs-bar-item__count">128</div>
+  </div>
+  <div class="dbs-bar-item">
+    <div class="dbs-bar-item__label">Standard Service</div>
+    <div class="dbs-bar-item__track"><div class="dbs-bar-item__fill" style="width:72%"></div></div>
+    <div class="dbs-bar-item__count">92</div>
+  </div>
+  <div class="dbs-bar-item">
+    <div class="dbs-bar-item__label">Flat Tyre Repair</div>
+    <div class="dbs-bar-item__track"><div class="dbs-bar-item__fill" style="width:55%"></div></div>
+    <div class="dbs-bar-item__count">71</div>
+  </div>
+  <div class="dbs-bar-item">
+    <div class="dbs-bar-item__label">Gear Adjustment</div>
+    <div class="dbs-bar-item__track"><div class="dbs-bar-item__fill" style="width:42%"></div></div>
+    <div class="dbs-bar-item__count">54</div>
+  </div>
+  <div class="dbs-bar-item">
+    <div class="dbs-bar-item__label">Brake Pad Replace</div>
+    <div class="dbs-bar-item__track"><div class="dbs-bar-item__fill" style="width:38%"></div></div>
+    <div class="dbs-bar-item__count">49</div>
+  </div>
+</div>
+
+<!-- FILTER CHIPS -->
+<h2>Filter Chips (Admin Services)</h2>
+<div class="dbs-chip-row" style="margin-bottom:16px">
+  <button class="dbs-chip active" data-cat="all">All</button>
+  <button class="dbs-chip" data-cat="drivetrain">Drivetrain</button>
+  <button class="dbs-chip" data-cat="wheels">Wheels</button>
+  <button class="dbs-chip" data-cat="brakes">Brakes</button>
+  <button class="dbs-chip" data-cat="suspension">Suspension</button>
+</div>
+
+<!-- MEDALS -->
+<h2>Medals (Rider Tier)</h2>
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:24px">
+  <div class="tier-badge" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid #E5E7EB;background:#F9FAFB;box-shadow:0 1px 2px rgba(13,31,60,0.06)">
+    <img src="images/medals/new-rider.svg" alt="New Rider" width="44" height="44">
+    <div><div style="font-size:14px;font-weight:700;color:#0D1F3C">New Rider</div><div style="font-size:11px;color:#6B7280">0 services completed</div></div>
+  </div>
+  <div class="tier-badge" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid #E5E7EB;background:#F9FAFB;box-shadow:0 1px 2px rgba(13,31,60,0.06)">
+    <img src="images/medals/bronze.svg" alt="Bronze" width="44" height="44">
+    <div><div style="font-size:14px;font-weight:700;color:#0D1F3C">Bronze</div><div style="font-size:11px;color:#6B7280">4 services completed</div></div>
+  </div>
+  <div class="tier-badge" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid #E5E7EB;background:#F9FAFB;box-shadow:0 1px 2px rgba(13,31,60,0.06)">
+    <img src="images/medals/silver.svg" alt="Silver" width="44" height="44">
+    <div><div style="font-size:14px;font-weight:700;color:#0D1F3C">Silver</div><div style="font-size:11px;color:#6B7280">7 services completed</div></div>
+  </div>
+  <div class="tier-badge" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid #E5E7EB;background:#F9FAFB;box-shadow:0 1px 2px rgba(13,31,60,0.06)">
+    <img src="images/medals/gold.svg" alt="Gold" width="44" height="44">
+    <div><div style="font-size:14px;font-weight:700;color:#0D1F3C">Gold</div><div style="font-size:11px;color:#6B7280">12 services completed</div></div>
+  </div>
+  <div class="tier-badge" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid #E5E7EB;background:#F9FAFB;box-shadow:0 1px 2px rgba(13,31,60,0.06)">
+    <img src="images/medals/diamond.svg" alt="Diamond" width="44" height="44">
+    <div><div style="font-size:14px;font-weight:700;color:#0D1F3C">Diamond</div><div style="font-size:11px;color:#6B7280">22 services completed</div></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
