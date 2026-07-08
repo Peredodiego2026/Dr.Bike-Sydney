@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1848C8">
 <title>Track your Dr. Bike service</title>
+<link rel="preconnect" href="https://tgpipbloisahufaywhqb.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 function copyTrackingLink(url) {
   navigator.clipboard.writeText(url).then(() => {
     const btn = event.target;
@@ -18,7 +22,6 @@ function copyTrackingLink(url) {
   });
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --sans:'Inter',-apple-system,sans-serif;
@@ -40,8 +43,9 @@ function copyTrackingLink(url) {
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--bg);color:var(--navy);min-height:100vh}
 .top{background:var(--card-bg);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px}
-.logo{width:34px;height:34px;background:var(--blue);display:flex;align-items:center;justify-content:center;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
-.brand{font-size:16px;font-weight:700;color:var(--navy)}
+.logo{display:flex;align-items:center}
+.brand{font-size:17px;font-weight:700;color:var(--navy);letter-spacing:-0.2px}
+.brand span{color:var(--blue)}
 .wrap{max-width:520px;margin:0 auto;padding:20px}
 .card{background:var(--card-bg);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
 .status-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
@@ -58,13 +62,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--navy);min-height:1
 </head>
 <body>
 <div class="top">
-  <div class="logo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20">
-      <circle cx="5.5" cy="17" r="3"/><circle cx="18.5" cy="17" r="3"/>
-      <path d="M5.5 17L9 8h6l3.5 9"/><path d="M9 8l3.5 9"/>
-    </svg>
-  </div>
-  <div class="brand">Dr. Bike Sydney</div>
+  <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="32" style="width:auto;display:block;margin-right:2px">
+  <div class="brand">Dr. <span>Bike</span> Sydney</div>
 </div>
 
 <div class="wrap">
@@ -107,6 +106,34 @@ async function init(){
   const statusClass = stColors[bkg.status]||'pending';
   const statusLabel = stLabels[bkg.status]||bkg.status;
 
+  const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const mech = bkg.mechanic_profile || {};
+  const mechName = escHtml(mech.name || 'Diego Peredo');
+  const mechAvatarHTML = mech.photo_url
+    ? `<img src="${mech.photo_url}" alt="${mechName}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--card-bg);display:block">`
+    : `<div style="width:68px;height:68px;border-radius:50%;background:var(--blue);border:3px solid var(--card-bg);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:700">${mechName.charAt(0)}</div>`;
+  const mechBioHTML = mech.bio
+    ? `<div style="font-size:12px;color:var(--mgray);margin-top:6px;line-height:1.4;padding:0 8px">${escHtml(mech.bio)}</div>`
+    : '';
+  const mechStatDivider = '<div style="width:1px;height:32px;background:var(--border)"></div>';
+  const mechStatsRowHTML = `
+    <div style="display:flex;align-items:center;margin:16px 20px 0;border:1px solid var(--border);border-radius:10px;padding:10px 0">
+      <div style="flex:1;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">${mech.rating ? '★ ' + mech.rating : '—'}</div>
+        <div style="font-size:10px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">Rating</div>
+      </div>
+      ${mechStatDivider}
+      <div style="flex:1;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">${mech.jobs_completed || 0}</div>
+        <div style="font-size:10px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">Jobs done</div>
+      </div>
+      ${mechStatDivider}
+      <div style="flex:1;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--green);display:flex;align-items:center;justify-content:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:var(--green)"></span>Live</div>
+        <div style="font-size:10px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">Location</div>
+      </div>
+    </div>`;
+
   content.innerHTML = `
 <div class="card">
        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
@@ -119,20 +146,26 @@ async function init(){
        <div class="row"><span class="lbl">Address</span><span>${bkg.address||'—'}</span></div>
        <div class="row"><span class="lbl">Van</span><span>Van ${bkg.van_number||1} · Mechanic ${bkg.van_number||1}</span></div>
        <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue)">$${bkg.service_price}</span></div>
-       ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div>`:''}
+       ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div><div id="track-eta" style="display:none;font-size:13px;font-weight:700;color:var(--blue);text-align:center;margin-top:6px"></div>`:''}
      </div>
 
      ${(bkg.status==='enroute'||bkg.status==='in_progress')?`
-     <div class="card mechanic-card" style="background:var(--card-bg);border-color:var(--border);display:flex;align-items:center;gap:14px;padding:16px">
-       <div class="mechanic-avatar" style="width:56px;height:56px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:700;flex-shrink:0">${(bkg.mechanic_name||'D').charAt(0)}</div>
-       <div style="flex:1;min-width:0">
-         <div style="font-size:15px;font-weight:700;color:var(--navy)">${bkg.mechanic_name||'Diego Peredo'}</div>
-         <div style="font-size:12px;color:var(--mgray);margin-top:2px">Head Mechanic · ${bkg.mechanic_rating || '5.0'}★ · ${bkg.mechanic_jobs || '500+'} jobs</div>
-         <div style="font-size:11px;color:var(--blue);margin-top:4px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green)"></span> Live location sharing</div>
+     <div class="card mechanic-card" style="padding:0;overflow:hidden">
+       <div style="height:84px;width:100%;overflow:hidden">
+         <img src="images/mechanic-working.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
        </div>
-       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-         <a href="tel:+61433963250" style="background:var(--blue);color:white;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">📞 Call</a>
-         <a href="https://wa.me/61433963250" style="background:#25D366;color:white;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">💬 Chat</a>
+       <div style="display:flex;justify-content:center;margin-top:-34px">
+         ${mechAvatarHTML}
+       </div>
+       <div style="text-align:center;padding:8px 20px 0">
+         <div style="font-size:16px;font-weight:700;color:var(--navy)">${mechName}</div>
+         <div style="font-size:12px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
+         ${mechBioHTML}
+       </div>
+       ${mechStatsRowHTML}
+       <div style="display:flex;gap:8px;padding:16px 20px 20px">
+         <a href="tel:+61433963250" style="flex:1;text-align:center;background:var(--blue);color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+         <a href="https://wa.me/61433963250" style="flex:1;text-align:center;background:#25D366;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
        </div>
      </div>
      <div class="card" style="background:var(--green-lt);border-color:#6EE7B7">
@@ -156,7 +189,7 @@ async function init(){
     </div>`;
 
   // Live map if enroute or in_progress
-  let trackMap = null, mechMarker = null;
+  let trackMap = null, mechMarker = null, destMarker = null, destLat = null, destLng = null;
   if(bkg.status === 'enroute' || bkg.status === 'in_progress'){
     setTimeout(() => {
       const mapEl = document.getElementById('track-map');
@@ -173,6 +206,20 @@ async function init(){
         if(ms) ms.style.display = 'none';
       }
     }, 300);
+
+    // Geocode the client's address once, so we can compute a real driving ETA
+    if(bkg.address) {
+      fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(bkg.address) + '&format=json&limit=1', {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' }
+      }).then(r => r.json()).then(data => {
+        if(data?.length) {
+          destLat = parseFloat(data[0].lat);
+          destLng = parseFloat(data[0].lon);
+          if(trackMap) destMarker = L.marker([destLat, destLng], {icon: L.divIcon({html:'🏠', className:'', iconSize:[22,22]})}).addTo(trackMap);
+          if(mechMarker) updateETA(mechMarker.getLatLng().lat, mechMarker.getLatLng().lng);
+        }
+      }).catch(() => {});
+    }
   }
 
   function placeMarker(lat, lng) {
@@ -182,7 +229,33 @@ async function init(){
     } else {
       mechMarker = L.marker([lat, lng], {icon: L.divIcon({html:'🚐', className:'', iconSize:[24,24]})}).addTo(trackMap);
     }
-    trackMap.setView([lat, lng], 15);
+    if(destLat && destLng && !destMarker) {
+      destMarker = L.marker([destLat, destLng], {icon: L.divIcon({html:'🏠', className:'', iconSize:[22,22]})}).addTo(trackMap);
+    }
+    if(destLat && destLng) {
+      trackMap.fitBounds([[lat, lng], [destLat, destLng]], { padding: [30, 30] });
+    } else {
+      trackMap.setView([lat, lng], 15);
+    }
+    updateETA(lat, lng);
+  }
+
+  let etaFetching = false;
+  function updateETA(mechLat, mechLng) {
+    if(!destLat || !destLng || etaFetching) return;
+    etaFetching = true;
+    fetch(`https://router.project-osrm.org/route/v1/driving/${mechLng},${mechLat};${destLng},${destLat}?overview=false`)
+      .then(r => r.json())
+      .then(data => {
+        etaFetching = false;
+        const route = data?.routes?.[0];
+        const etaEl = document.getElementById('track-eta');
+        if(!route || !etaEl) return;
+        const mins = Math.max(1, Math.round(route.duration / 60));
+        etaEl.textContent = '🕐 Estimated arrival: ~' + mins + ' min';
+        etaEl.style.display = 'block';
+      })
+      .catch(() => { etaFetching = false; });
   }
 
   // Poll every 15s: update status + mechanic position (server-side, bypasses RLS)
@@ -239,7 +312,7 @@ function showEmailForm(content) {
       bookings.forEach(function(b) {
         const label = ST_LABELS[b.status] || b.status;
         const isActive = ['enroute','in_progress'].includes(b.status);
-        const url = b.tracking_token ? '/track?token=' + b.tracking_token : '/track?id=' + b.id;
+        const url = b.tracking_token ? '/track.html?token=' + b.tracking_token : '/track.html?id=' + b.id;
         html += '<a href="' + url + '" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-lt);text-decoration:none;color:inherit">';
         html += '<div><div style="font-size:14px;font-weight:600;color:var(--navy)">' + (b.service_name||'Service') + '</div>';
         html += '<div style="font-size:12px;color:var(--mgray);margin-top:2px">' + (b.scheduled_date||'') + (b.scheduled_time?' · '+b.scheduled_time:'') + '</div></div>';

@@ -1,5 +1,53 @@
 ﻿import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 
+// ── Services & prices for the chatbot's system prompt ─────────────────────
+// Pure formatter: turns already-ordered `services` rows into the grouped
+// text block the assistant reads as ground truth. getServicesPromptBlock()
+// below feeds it live rows so pricing can never drift from Admin again.
+export function formatServicesPrompt(services) {
+  if (!Array.isArray(services) || !services.length) return '';
+  const byCat = {};
+  for (const s of services) {
+    const cat = s.category || 'Other';
+    (byCat[cat] = byCat[cat] || []).push(s);
+  }
+  return Object.entries(byCat)
+    .map(([cat, items]) => {
+      const lines = items.map((s) => {
+        const hasDuration = Number.isFinite(s.duration_min) && Number.isFinite(s.duration_max);
+        const dur = !hasDuration
+          ? ''
+          : s.duration_min === s.duration_max
+            ? ` (${s.duration_min} min)`
+            : ` (${s.duration_min}-${s.duration_max} min)`;
+        return `- ${s.name}: $${s.price}${dur}`;
+      });
+      return `${cat.toUpperCase()}:\n${lines.join('\n')}`;
+    })
+    .join('\n\n');
+}
+
+async function getServicesPromptBlock() {
+  try {
+    const { createClient } = await import('@supabase/supabase-js');
+    const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+    const supabase = createClient(sbUrl, process.env.SUPABASE_SERVICE_KEY);
+    const { data, error } = await supabase
+      .from('services')
+      .select('name,price,category,duration_min,duration_max')
+      .order('category')
+      .order('price');
+    if (error) {
+      console.error('[chat] services fetch error:', error.message);
+      return '';
+    }
+    return formatServicesPrompt(data);
+  } catch (e) {
+    console.error('[chat] services fetch failed:', e.message);
+    return '';
+  }
+}
+
 // ── Health check (?type=health) ───────────────────────────────────────────────
 async function handleHealth(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -130,7 +178,8 @@ async function handler(req, res) {
   if (req.method === 'GET' && req.query.type === 'reviews') {
     res.setHeader('Cache-Control', 's-maxage=300');
     const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+    const supabase = createClient(sbUrl, process.env.SUPABASE_SERVICE_KEY);
     const { data, error } = await supabase
       .from('bookings')
       .select(
@@ -168,28 +217,11 @@ async function handler(req, res) {
   }));
 
   try {
+    const servicesBlock = await getServicesPromptBlock();
     const systemPrompt = `You are the Dr. Bike Sydney virtual assistant — friendly, expert, and concise. Dr. Bike is Sydney's premium mobile bicycle repair service. Our mechanics come to your door — home, work or park — Monday to Saturday 8am–5pm.
 
 SERVICES & PRICES (all prices already include the $20 mobile call-out fee):
-TUNE-UPS & SERVICING:
-- Tune-Up: $109 (45–60 min) ← most popular — brakes, gears, tyre pressure, safety check
-- Standard Service: $149 (60–90 min) — tune-up + drivetrain clean + full safety assessment
-- Major Service: $229 (90–120 min) — everything + bearing check + brake bleed + wheel true
-- Safety Check: $59 (20–30 min) — pre-ride safety inspection
-
-REPAIRS:
-- Flat Tyre Repair: $49 (15–20 min)
-- Gear Adjustment: $59 (20–30 min)
-- Brake Pad Install: $49 (20–30 min)
-- Brake Bleed (hydraulic): $79 (30–45 min)
-- Cable Replace: $65 (30 min)
-- Chain Replace: $55 (20 min)
-- Wheel True: $75 (30 min)
-
-SPECIALIST:
-- E-Bike Diagnostic: $99 (45–60 min)
-- Bike Build (from box): $299+ (2–3 hrs)
-- Custom Build: from $399
+${servicesBlock || 'Prices are temporarily unavailable — tell the user to check drbikesydney.com.au or type "mechanic" to talk to the team directly.'}
 
 MEMBERSHIPS (call-out fee always waived for members):
 - Basic $57/mo: 8% off all services, 1 free Tune-Up/year, priority booking
@@ -249,11 +281,9 @@ SECURITY RULES - ALWAYS FOLLOW:
     return res.status(200).json({ reply });
   } catch (error) {
     console.error('Chat error:', error);
-    return res
-      .status(500)
-      .json({
-        reply:
-          "Sorry, I'm having trouble right now. Type 'mechanic' to speak with our team directly! 🔧",
-      });
+    return res.status(500).json({
+      reply:
+        "Sorry, I'm having trouble right now. Type 'mechanic' to speak with our team directly! 🔧",
+    });
   }
 }

@@ -9,11 +9,13 @@
 const rateLimitStore = new Map();
 
 function getClientIP(req) {
-  return req.headers['x-vercel-forwarded-for']?.split(',')[0]?.trim()
-    || req.headers['x-forwarded-for']?.split(',')[0]?.trim()
-    || req.headers['x-real-ip']
-    || req.socket?.remoteAddress
-    || 'unknown';
+  return (
+    req.headers['x-vercel-forwarded-for']?.split(',')[0]?.trim() ||
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.headers['x-real-ip'] ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
 }
 
 async function rateLimitRedis(limitKey, max, windowMs) {
@@ -59,7 +61,8 @@ export async function rateLimit(req, res, { max = 20, windowMs = 60000, key = nu
   const ip = getClientIP(req);
   const limitKey = key ? `rl:${ip}:${key}` : `rl:${ip}`;
 
-  const count = (await rateLimitRedis(limitKey, max, windowMs)) ?? rateLimitMemory(limitKey, max, windowMs);
+  const count =
+    (await rateLimitRedis(limitKey, max, windowMs)) ?? rateLimitMemory(limitKey, max, windowMs);
 
   if (count > max) {
     res.setHeader('Retry-After', Math.ceil(windowMs / 1000));
@@ -68,6 +71,83 @@ export async function rateLimit(req, res, { max = 20, windowMs = 60000, key = nu
   }
 
   return false;
+}
+
+// ── LOGIN LOCKOUT — failed PIN attempts per IP, DB-backed (cross-instance) ────
+// Memory/Redis are per-instance/unreliable here, so lockout state lives in the
+// `login_attempts` table (service-key only). 5 fails / 15 min → locked 15 min.
+const LOCK_MAX = 5;
+const LOCK_WINDOW_MS = 15 * 60 * 1000;
+const LOCK_SB_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+const lockKey = () => process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+async function lockFetch(path, opts = {}) {
+  return fetch(`${LOCK_SB_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      apikey: lockKey(),
+      Authorization: `Bearer ${lockKey()}`,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+    },
+  });
+}
+
+export const LOGIN_LOCK_MINUTES = LOCK_WINDOW_MS / 60000;
+
+export async function isLoginLocked(req) {
+  const ip = getClientIP(req);
+  try {
+    const r = await lockFetch(`login_attempts?ip=eq.${encodeURIComponent(ip)}&select=locked_until`);
+    if (!r.ok) return false;
+    const rows = await r.json();
+    const lu = rows?.[0]?.locked_until;
+    return !!(lu && new Date(lu) > new Date());
+  } catch {
+    return false;
+  }
+}
+
+export async function recordLoginFailure(req) {
+  const ip = getClientIP(req);
+  try {
+    const r = await lockFetch(`login_attempts?ip=eq.${encodeURIComponent(ip)}&select=*`);
+    const rows = r.ok ? await r.json() : [];
+    const now = Date.now();
+    if (rows?.[0]) {
+      const ws = new Date(rows[0].window_start).getTime();
+      const fresh = now - ws > LOCK_WINDOW_MS;
+      const count = fresh ? 1 : (rows[0].fail_count || 0) + 1;
+      const window_start = fresh ? new Date(now).toISOString() : rows[0].window_start;
+      const locked_until = count >= LOCK_MAX ? new Date(now + LOCK_WINDOW_MS).toISOString() : null;
+      await lockFetch(`login_attempts?ip=eq.${encodeURIComponent(ip)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ fail_count: count, window_start, locked_until }),
+      });
+    } else {
+      await lockFetch('login_attempts', {
+        method: 'POST',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          ip,
+          fail_count: 1,
+          window_start: new Date(now).toISOString(),
+          locked_until: null,
+        }),
+      });
+    }
+  } catch {}
+}
+
+export async function clearLoginFailures(req) {
+  const ip = getClientIP(req);
+  try {
+    await lockFetch(`login_attempts?ip=eq.${encodeURIComponent(ip)}`, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    });
+  } catch {}
 }
 
 // ── SANITIZE — strip HTML/script tags from strings ───────────────────────────
@@ -160,29 +240,30 @@ export function normalizeAUPhone(raw) {
 // ── VALIDATE PHONE (AU) ───────────────────────────────────────────────────────
 export function isValidAUPhone(phone) {
   const digits = String(phone || '').replace(/\D/g, '');
-  return (digits.startsWith('61') && digits.length === 11) ||
-         (digits.startsWith('0') && digits.length === 10) ||
-         digits.length === 9;
+  return (
+    (digits.startsWith('61') && digits.length === 11) ||
+    (digits.startsWith('0') && digits.length === 10) ||
+    digits.length === 9
+  );
 }
 
 // ── STRIP SENSITIVE FIELDS from logs ─────────────────────────────────────────
 export function safeLog(label, obj) {
   const safe = { ...obj };
-  ['password', 'token', 'key', 'secret', 'auth', 'card', 'cvv', 'pan'].forEach(k => {
-    Object.keys(safe).forEach(f => {
+  ['password', 'token', 'key', 'secret', 'auth', 'card', 'cvv', 'pan'].forEach((k) => {
+    Object.keys(safe).forEach((f) => {
       if (f.toLowerCase().includes(k)) safe[f] = '[REDACTED]';
     });
   });
   console.log(label, JSON.stringify(safe));
 }
 
-
 // ── INTERNAL AUTH — verify requests come from our own domain ─────────────────
 export function verifyInternalAuth(req, res) {
   const origin = req.headers.origin || '';
   const referer = req.headers.referer || '';
   const allowed = ['drbikesydney.com.au', 'dr-bike-sydney.vercel.app', 'localhost'];
-  const isAllowed = allowed.some(d => origin.includes(d) || referer.includes(d));
+  const isAllowed = allowed.some((d) => origin.includes(d) || referer.includes(d));
   if (!isAllowed && origin) {
     res.status(403).json({ error: 'Forbidden' });
     return true; // blocked

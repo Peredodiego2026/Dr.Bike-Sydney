@@ -1,19 +1,53 @@
 ﻿import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
 export default async function handler(req, res) {
-  if(await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
-  if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
+  if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if (verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  let { to, name, clientName, phone, service, date, time, address, price, type, bookingId, mechNotes, nextService, referralCode, friendName, referralCount } = req.body;
-  name = sanitize(name); service = sanitize(service); address = sanitize(address);
-  mechNotes = sanitize(mechNotes); nextService = sanitize(nextService);
+  const { to, type, referralCount } = req.body;
+  let {
+    name,
+    clientName,
+    phone,
+    service,
+    date,
+    time,
+    address,
+    price,
+    bookingId,
+    mechNotes,
+    nextService,
+    referralCode,
+    friendName,
+    senderName,
+    message,
+    amount,
+    code,
+  } = req.body;
+  if (senderName) senderName = sanitize(senderName);
+  if (message) message = sanitize(message);
+  if (code)
+    code = String(code)
+      .replace(/[^A-Z0-9-]/gi, '')
+      .toUpperCase();
+  amount = Number(amount) || 0;
+  name = sanitize(name);
+  service = sanitize(service);
+  address = sanitize(address);
+  mechNotes = sanitize(mechNotes);
+  nextService = sanitize(nextService);
   referralCode = sanitize(referralCode);
   if (friendName) friendName = sanitize(friendName);
   if (clientName) clientName = sanitize(clientName);
   if (phone) phone = sanitize(phone);
+  if (date) date = sanitize(date);
+  if (time) time = sanitize(time);
+  price = Number(price) || 0;
+  // bookingId used in URLs — whitelist only alphanumeric and dashes
+  if (bookingId) bookingId = String(bookingId).replace(/[^a-zA-Z0-9-]/g, '');
 
-  const gst = Math.round((price||0) / 11);
-  const net = (price||0) - gst;
+  const gst = Math.round((price || 0) / 11);
+  const net = (price || 0) - gst;
   const year = new Date().getFullYear();
 
   const header = (color, emoji, title) => `
@@ -34,8 +68,8 @@ export default async function handler(req, res) {
     <div style="background:#F7F8FA;border-radius:12px;padding:20px;margin-bottom:24px">
       <table style="width:100%;border-collapse:collapse">
         <tr><td style="padding:8px 0;color:#6B7280;font-size:13px">Service</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right">${service}</td></tr>
-        ${date?`<tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Date & time</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${date}${time?' · '+time:''}</td></tr>`:''}
-        ${address?`<tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Address</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${address}</td></tr>`:''}
+        ${date ? `<tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Date & time</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${date}${time ? ' · ' + time : ''}</td></tr>` : ''}
+        ${address ? `<tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Address</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${address}</td></tr>` : ''}
         <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Net amount</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">$${net} AUD</td></tr>
         <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">GST (10%)</td><td style="padding:8px 0;font-weight:600;color:#6B7280;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">$${gst} AUD</td></tr>
         <tr><td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px;border-top:2px solid #E5E7EB">Total</td><td style="padding:10px 0 0;font-weight:800;color:#1848C8;font-size:18px;text-align:right;border-top:2px solid #E5E7EB">$${price} AUD</td></tr>
@@ -45,7 +79,7 @@ export default async function handler(req, res) {
   const templates = {
     confirmation: {
       subject: `✅ Booking confirmed — ${service} · ${date}`,
-      html: `${header('#0D1F3C','🚲','Booking confirmed!')}
+      html: `${header('#0D1F3C', '🚲', 'Booking confirmed!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your booking is confirmed ✅ Your mechanic will contact you 30 min before arrival.</p>
 
@@ -66,7 +100,7 @@ export default async function handler(req, res) {
           <div style="border:1.5px solid #E5E7EB;border-radius:12px;overflow:hidden;margin-bottom:20px">
             <div style="background:#F7F8FA;padding:12px 16px;border-bottom:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center">
               <span style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em">Tax Invoice</span>
-              <span style="font-size:11px;color:#6B7280;font-weight:600">DRBK-${bookingId ? bookingId.slice(0,8).toUpperCase() : 'PENDING'}</span>
+              <span style="font-size:11px;color:#6B7280;font-weight:600">DRBK-${bookingId ? bookingId.slice(0, 8).toUpperCase() : 'PENDING'}</span>
             </div>
             <div style="padding:16px">
               <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -85,18 +119,22 @@ export default async function handler(req, res) {
           </div>
 
           <!-- Referral code -->
-          ${referralCode ? `<div style="background:#FEF3C7;border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
+          ${
+            referralCode
+              ? `<div style="background:#FEF3C7;border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
             <p style="font-size:12px;color:#D97706;font-weight:700;margin:0 0 4px">🎁 Share Dr. Bike — earn $15 off your next service</p>
             <p style="font-size:16px;font-weight:800;color:#D97706;letter-spacing:0.12em;margin:0 0 4px">${referralCode}</p>
             <p style="font-size:11px;color:#D97706;margin:0;opacity:0.8">You and your friend each get $15 off when they use your code</p>
-          </div>` : ''}
+          </div>`
+              : ''
+          }
 
           <a href="https://drbikesydney.com.au/?action=dashboard" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View your booking →</a>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     mechanic_new_booking: {
       subject: `🔔 New booking — ${service} · ${date}`,
-      html: `${header('#1848C8','🔔','New booking!')}
+      html: `${header('#1848C8', '🔔', 'New booking!')}
         <div style="padding:32px 28px">
           <h1 style="font-size:20px;font-weight:700;color:#0D1F3C;margin:0 0 16px">New job assigned to you</h1>
           ${bookingTable()}
@@ -105,11 +143,11 @@ export default async function handler(req, res) {
             <p style="font-size:12px;color:#1848C8;margin:0">Log in to accept and see full client details</p>
           </div>
           <a href="https://drbikesydney.com.au/mechanic.html" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     reminder2h: {
       subject: `⏰ Reminder — your Dr. Bike service is in ~2 hours`,
-      html: `${header('#1848C8','⏰','See you soon!')}
+      html: `${header('#1848C8', '⏰', 'See you soon!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, just a friendly reminder that your booking is coming up in about <strong style="color:#0D1F3C">2 hours</strong>. Your mechanic will contact you ~30 min before arrival.</p>
           ${bookingTable()}
@@ -123,11 +161,11 @@ export default async function handler(req, res) {
           </div>
           <p style="font-size:12px;color:#9CA3AF;margin:0">Questions? Call us on 0433 963 250.</p>
         </div>
-        ${footer()}`
+        ${footer()}`,
     },
     reminder: {
       subject: `🚲 Time for a bike check-up, ${name}!`,
-      html: `${header('#059669','🚲','Time for a service!')}
+      html: `${header('#059669', '🚲', 'Time for a service!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 24px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, it's been 6+ months since your last service. Regular maintenance keeps your bike safe and riding smoothly!</p>
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:24px">
@@ -136,11 +174,11 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Book a service now →</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you — home, work or park · Mon–Sat</p>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     review_request: {
       subject: `⭐ How was your ${service} with Dr. Bike?`,
-      html: `${header('#F59E0B','⭐','How was your service?')}
+      html: `${header('#F59E0B', '⭐', 'How was your service?')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your <strong>${service}</strong> is complete! We'd love to hear how it went.</p>
           <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
@@ -149,11 +187,42 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au/?review=${bookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Leave a review →</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">It takes less than 30 seconds and helps other Sydney cyclists find us 🙏</p>
-        </div>${footer()}`
+        </div>${footer()}`,
+    },
+    gift_card: {
+      subject: `🎁 ${senderName} sent you a $${amount} Dr. Bike Sydney gift card`,
+      html: `${header('#7C3AED', '🎁', 'You received a gift card!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, <strong>${senderName}</strong> sent you a Dr. Bike Sydney gift card 🚲</p>
+          ${
+            message
+              ? `<div style="background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:8px;padding:14px 16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#6D28D9;font-style:italic;margin:0;line-height:1.6">"${message}"</p>
+          </div>`
+              : ''
+          }
+          <div style="background:linear-gradient(135deg,#7C3AED,#1848C8);border-radius:16px;padding:28px 24px;margin-bottom:20px;text-align:center">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Gift card value</div>
+            <div style="font-size:42px;font-weight:900;color:#fff;margin-bottom:16px">$${amount}</div>
+            <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:12px;display:inline-block">
+              <div style="font-size:10px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Your code</div>
+              <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:0.18em;font-family:monospace">${code}</div>
+            </div>
+          </div>
+          <div style="background:#F7F8FA;border-radius:12px;padding:16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#0D1F3C;font-weight:600;margin:0 0 8px">How to redeem</p>
+            <p style="font-size:12px;color:#6B7280;margin:0;line-height:1.8">
+              1. Book any service at drbikesydney.com.au<br>
+              2. Enter code <strong style="color:#7C3AED">${code}</strong> at checkout<br>
+              3. The value is deducted from your service total
+            </p>
+          </div>
+          <a href="https://drbikesydney.com.au" style="display:block;background:#7C3AED;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book a service →</a>
+        </div>${footer()}`,
     },
     cancellation_client: {
       subject: `❌ Booking cancelled — ${service} · ${date}`,
-      html: `${header('#DC2626','❌','Booking cancelled')}
+      html: `${header('#DC2626', '❌', 'Booking cancelled')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your booking has been cancelled as requested.</p>
           ${bookingTable()}
@@ -162,11 +231,11 @@ export default async function handler(req, res) {
             <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">If you paid online, your refund will be processed within 5–7 business days. For questions contact contact@drbikesydney.com.au</p>
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book again →</a>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     cancellation_admin: {
       subject: `❌ Booking cancelled — ${name} · ${service} · ${date}`,
-      html: `${header('#DC2626','❌','Booking cancelled by client')}
+      html: `${header('#DC2626', '❌', 'Booking cancelled by client')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6"><strong style="color:#0D1F3C">${name}</strong> cancelled their booking.</p>
           ${bookingTable()}
@@ -174,11 +243,11 @@ export default async function handler(req, res) {
             <p style="font-size:13px;color:#DC2626;font-weight:600;margin:0 0 4px">Action required</p>
             <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">This slot is now free. Consider reaching out to waitlisted clients or updating the schedule.</p>
           </div>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     referral_success: {
       subject: `🎉 Your referral worked — $15 credit earned!`,
-      html: `${header('#059669','🎉','Referral successful!')}
+      html: `${header('#059669', '🎉', 'Referral successful!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, great news — ${friendName || 'a friend'} just booked using your referral code!</p>
           <div style="background:#ECFDF5;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
@@ -192,11 +261,11 @@ export default async function handler(req, res) {
           </div>
           <p style="font-size:13px;color:#6B7280;margin:0 0 20px;line-height:1.6">Keep sharing your code — every referral earns you both $15 off. 🚲</p>
           <a href="https://drbikesydney.com.au/?action=dashboard" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">View my dashboard →</a>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     waitlist_confirmation: {
       subject: `🔔 You're on the waitlist — Dr. Bike Sydney`,
-      html: `${header('#1848C8','🔔','On the waitlist!')}
+      html: `${header('#1848C8', '🔔', 'On the waitlist!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, you're on the waitlist for <strong>${date}</strong>.</p>
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
@@ -204,22 +273,22 @@ export default async function handler(req, res) {
             <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6">We'll send you an email the moment a slot opens up on that day. You'll have 30 minutes to complete your booking before it's offered to the next person on the list.</p>
           </div>
           <a href="https://drbikesydney.com.au/?action=book" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Check other dates →</a>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     tip_received: {
       subject: `💛 Tip received — $${price} from ${name}`,
-      html: `${header('#059669','💛','Tip received!')}
+      html: `${header('#059669', '💛', 'Tip received!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6"><strong style="color:#0D1F3C">${name}</strong> left a $${price} tip after their service.</p>
           <div style="background:#ECFDF5;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
             <div style="font-size:32px;font-weight:800;color:#059669">$${price}</div>
             <div style="font-size:13px;color:#059669;margin-top:4px">Goes directly to the mechanic</div>
           </div>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     payment_failed: {
       subject: `⚠️ Payment failed — Dr. Bike Sydney membership`,
-      html: `${header('#D97706','⚠️','Payment failed')}
+      html: `${header('#D97706', '⚠️', 'Payment failed')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, we couldn't process your membership payment of <strong>$${price}</strong>. This is attempt ${typeof attemptCount !== 'undefined' ? attemptCount : 1}.</p>
           <div style="background:#FEF9C3;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #FCD34D">
@@ -228,11 +297,11 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#D97706;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Update payment method →</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">Questions? Reply to this email or WhatsApp us at +61 433 963 250</p>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     reengagement: {
       subject: `🚲 We miss you, ${name} — here's $15 to come back`,
-      html: `${header('#0A58CA','🚲','We miss you!')}
+      html: `${header('#0A58CA', '🚲', 'We miss you!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, it's been a while since your last service with us${typeof monthsAgo !== 'undefined' && monthsAgo ? ' (' + monthsAgo + ' months ago)' : ''}. Your bike misses the open road!</p>
           <div style="background:#EEF3FC;border-radius:16px;padding:28px;margin-bottom:24px;text-align:center">
@@ -255,11 +324,11 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au/?coupon=BACK15" style="display:block;background:#0A58CA;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Book now — use BACK15 &rarr;</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; 0433 963 250</p>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     abandoned_recovery: {
       subject: `🚲 You left something behind, ${name}!`,
-      html: `${header('#0D1F3C','🚲','Still thinking about it?')}
+      html: `${header('#0D1F3C', '🚲', 'Still thinking about it?')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, you started booking a <strong>${service}</strong>${date ? ' for ' + date : ''} but didn't complete it. Your bike is waiting!</p>
           <div style="background:#EEF3FC;border-radius:16px;padding:24px;margin-bottom:24px;text-align:center">
@@ -270,11 +339,11 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Complete my booking &rarr;</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; 0433 963 250</p>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     birthday_promo: {
       subject: `🎂 Happy Birthday, ${name}! A gift from Dr. Bike Sydney`,
-      html: `${header('#F59E0B','🎂','Happy Birthday!')}
+      html: `${header('#F59E0B', '🎂', 'Happy Birthday!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, wishing you an amazing birthday from the whole Dr. Bike team! 🚲</p>
           <div style="background:#FFFBEB;border-radius:16px;padding:28px;margin-bottom:24px;text-align:center;border:2px dashed #FCD34D">
@@ -296,11 +365,11 @@ export default async function handler(req, res) {
           </div>
           <a href="https://drbikesydney.com.au/?coupon=BDAY20" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Redeem my birthday gift &rarr;</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; Mon&ndash;Sat</p>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     payment_action_required: {
       subject: `🔐 Action required — verify your Dr. Bike payment`,
-      html: `${header('#1848C8','🔐','Payment verification needed')}
+      html: `${header('#1848C8', '🔐', 'Payment verification needed')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your bank requires additional verification for your membership renewal.</p>
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
@@ -308,12 +377,12 @@ export default async function handler(req, res) {
             <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6">Your bank uses 3D Secure authentication. Click below to complete verification and keep your membership active.</p>
           </div>
           <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Complete verification →</a>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
     booking_confirmation: {
       to: 'contact@drbikesydney.com.au',
       subject: `New Booking - ${service} - ${clientName || name}`,
-      html: `${header('#0D1F3C','📋','New Booking Request')}
+      html: `${header('#0D1F3C', '📋', 'New Booking Request')}
         <div style="padding:32px 28px">
           <div style="background:#F7F8FA;border-radius:12px;padding:20px;margin-bottom:24px">
             <table style="width:100%;border-collapse:collapse">
@@ -326,7 +395,7 @@ export default async function handler(req, res) {
             </table>
           </div>
           <a href="https://drbikesydney.com.au/admin.html" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open admin panel →</a>
-        </div>${footer()}`
+        </div>${footer()}`,
     },
   };
 
@@ -334,20 +403,20 @@ export default async function handler(req, res) {
 
   // Recipients
   const recipients = [template.to || to];
-  
+
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: recipients,
         subject: template.subject,
-        html: template.html
-      })
+        html: template.html,
+      }),
     });
 
     const data = await response.json();

@@ -1,0 +1,34 @@
+name: Production smoke test
+
+# Runs the existing Playwright suite against the live site (playwright.config.js
+# baseURL is drbikesydney.com.au) since deploys are manual (vercel --prod), not
+# git-triggered. This is post-deploy monitoring, not a pre-merge gate.
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+
+      - name: Run e2e smoke tests against production
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

@@ -92,13 +92,15 @@ stripe-webhook.js.
 - S02: Admin auth - server-side via /api/auth (but admin.html still has weak PIN)
 - RLS on bookings - enabled
 - Dead files (mobile.html v1/v2/v3, index-redesign.html, admin.html.bak) - deleted
+- S03: XSS in email templates - FIXED Jun 2026: date, time, bookingId, price now sanitized in send-email.js
 
 ### Still open
-- S01: Google Maps API key - hardcoded, no HTTP referrer restriction set
-- S03: XSS in email templates - user data not escaped in some templates
-- B01: stripe-webhook.js uses `membership` field instead of `membership_status`
-- B02: send-email.js referral_success template has out-of-scope variables
 - Apple Pay/Google Pay: canMakePayment() returns null on Safari iPhone
+
+### Resolved (no longer open)
+- S01: Google Maps API key - app uses Leaflet (no API key), not Google Maps. Non-issue.
+- B01: stripe-webhook.js - already uses membership_status correctly. Non-issue.
+- B02: send-email.js referral_success - variables are in scope. Non-issue.
 
 ### Session 5 (routing unification) - PENDING - 2 bugs to fix
 Attempt to unify routing (one page for all devices) failed. Two visible bugs in index.html when served to desktop via the root URL:
@@ -108,10 +110,9 @@ Attempt to unify routing (one page for all devices) failed. Two visible bugs in 
 Before retrying Session 5: reproduce bugs at /index.html to isolate whether the issue is routing or CSS specificity.
 
 ## Pricing
-- Tune-Up $109, Standard $149, Major $199, Ultimate Overhaul $369
-- Safety Check $59, Flat Tyre $49, Gear Adjustment $59, Brake Pad $49
-- Brake Bleed $79, Cable Replace $65, Chain Replace $55, Wheel True $75
-- E-Bike Diagnostic $99, Bike Build $299+, Custom Build $399+
+- Prices live in Supabase's `services` table (name, price, category) - do not hardcode
+  a price list here, it drifts constantly. To check current prices, query it live or
+  see Admin > Services & Prices. js/live-prices.js and api/chat.js read it the same way.
 - All prices include $20 mobile call-out fee
 - Phone: 0433 963 250 / +61433963250
 - WhatsApp: wa.me/61433963250
@@ -127,10 +128,13 @@ Before retrying Session 5: reproduce bugs at /index.html to isolate whether the 
 - Lawyer review pending (after August 2026).
 
 ## Deploy
-- MANUAL ONLY: `npx vercel --prod` from local working directory
-- Auto-deploy via GitHub push is BROKEN (do not rely on it)
-- Changes are NOT committed to git before deploying - Vercel CLI deploys working directory
-- node --check js/app.js before every deploy
+- Auto-deploy: pushing to `main` on GitHub triggers an automatic Vercel production
+  deploy within seconds (confirmed via Vercel API Jul 2026) - no separate command
+  needed. Every commit pushed to main goes live immediately.
+- Always commit before pushing - never deploy an uncommitted working directory
+  via `npx vercel --prod`, it silently diverges from what's in the repo.
+- node --check js/app.js (or `npm run check`) before pushing to main, since it
+  goes live immediately.
 - Skip `<script type="application/ld+json">` blocks in node --check (JSON-LD, not JS)
 
 ## Critical coding rules

@@ -5,7 +5,8 @@ export default async function handler(req, res) {
   if (await guard(req, res, { rateMax: 20, rateWindow: 60000 })) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  let { email, name, source = 'website', tags = [] } = req.body || {};
+  let { email, name, tags = [] } = req.body || {};
+  const source = req.body?.source || 'website';
   if (!email || !isValidEmail(email)) {
     return res.status(400).json({ error: 'Valid email required' });
   }
@@ -13,7 +14,10 @@ export default async function handler(req, res) {
   email = email.toLowerCase().trim();
   name = sanitize(name || '');
   if (!Array.isArray(tags)) tags = [];
-  tags = tags.map(t => sanitize(String(t))).filter(Boolean).slice(0, 10);
+  tags = tags
+    .map((t) => sanitize(String(t)))
+    .filter(Boolean)
+    .slice(0, 10);
 
   const supabase = createClient(
     process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co',
@@ -54,15 +58,15 @@ export default async function handler(req, res) {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: email,
         subject: "You're subscribed — Dr. Bike Sydney 🚲",
-        html: welcomeHtml
-      })
+        html: welcomeHtml,
+      }),
     });
   } catch (e) {
     // Non-fatal: subscriber saved, email failed
