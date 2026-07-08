@@ -1693,46 +1693,57 @@ async function loadDashboard() {
 // ── BOOKINGS ──────────────────────────────────────────────────────────────────
 let allBookings = [];
 
-async function loadBookings() {
-  const { data, error } = await sb
-    .from('bookings')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(500);
+// TASK-030: filters now run server-side (not a client-side re-filter of a
+// capped fetch) so a date range reaches data beyond the first page instead
+// of silently returning nothing once there are more than one page of
+// bookings. Pagination via .range() with a "Load more" button.
+const BK_PAGE_SIZE = 100;
+let bkOffset = 0;
+let bkHasMore = false;
+
+function buildBookingsQuery() {
+  const from = document.getElementById('bk-f-from')?.value;
+  const to = document.getElementById('bk-f-to')?.value;
+  const van = document.getElementById('bk-f-van')?.value;
+  const status = document.getElementById('bk-f-status')?.value;
+  const search = document.getElementById('bk-f-search')?.value?.trim();
+
+  let q = sb.from('bookings').select('*').order('created_at', { ascending: false });
+  if (from) q = q.gte('scheduled_date', from);
+  if (to) q = q.lte('scheduled_date', to);
+  if (van) q = q.eq('van_number', parseInt(van));
+  if (status) q = q.eq('status', status);
+  if (search) q = q.ilike('client_name', `%${search}%`);
+  return q;
+}
+
+async function loadBookings(reset = true) {
+  if (reset) {
+    bkOffset = 0;
+    allBookings = [];
+  }
+  const { data, error } = await buildBookingsQuery().range(bkOffset, bkOffset + BK_PAGE_SIZE - 1);
 
   if (error) {
     showToast('Error cargando bookings: ' + error.message);
     return;
   }
-  allBookings = data || [];
-  applyBookingFilters();
+  allBookings = reset ? data || [] : allBookings.concat(data || []);
+  bkOffset += (data || []).length;
+  bkHasMore = (data || []).length === BK_PAGE_SIZE;
+
+  const loadMoreBtn = document.getElementById('bk-load-more');
+  if (loadMoreBtn) loadMoreBtn.style.display = bkHasMore ? 'inline-block' : 'none';
+
+  renderBookingsTable(allBookings);
+}
+
+function loadMoreBookings() {
+  loadBookings(false);
 }
 
 function applyBookingFilters() {
-  const from = document.getElementById('bk-f-from')?.value;
-  const to = document.getElementById('bk-f-to')?.value;
-  const van = document.getElementById('bk-f-van')?.value;
-  const status = document.getElementById('bk-f-status')?.value;
-  const search = (document.getElementById('bk-f-search')?.value || '').toLowerCase();
-
-  const filtered = allBookings.filter((b) => {
-    if (from && b.scheduled_date < from) return false;
-    if (to && b.scheduled_date > to) return false;
-    if (van && String(b.van_number) !== van) return false;
-    if (status && b.status !== status) return false;
-    if (search) {
-      const name = (
-        b.client_name ||
-        b.profiles?.full_name ||
-        b.profiles?.email ||
-        ''
-      ).toLowerCase();
-      if (!name.includes(search)) return false;
-    }
-    return true;
-  });
-
-  renderBookingsTable(filtered);
+  loadBookings(true);
 }
 
 function resetBookingFilters() {

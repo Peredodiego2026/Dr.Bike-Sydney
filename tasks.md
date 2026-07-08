@@ -24,8 +24,8 @@
 
 ## Phase 3 — Scale & performance (P1, 60-120 days)
 - [ ] **TASK-030** [NFR-001] Add pagination + date filters to admin bookings, mechanic jobs, client bookings (limit + range). _Verify:_ with 5,000 seeded bookings, each list loads < 500ms p95.
-- [ ] **TASK-031** [NFR-001] Add DB indexes for hot queries: bookings(scheduled_date), bookings(client_id), bookings(status), bookings(mechanic_id), mechanic_locations(van_number). _Verify:_ `explain analyze` shows index scans, not seq scans.
-- [ ] **TASK-032** [REQ-021] Make job accept atomic to avoid two mechanics taking one job: conditional update `set mechanic_id where mechanic_id is null`. _Verify:_ two concurrent accepts → only one succeeds.
+- [~] **TASK-031** [NFR-001] SQL ready, waiting on Diego to run it in Supabase SQL Editor (see message in session). Indexes: bookings(scheduled_date), bookings(client_id), bookings(status), bookings(mechanic_id), mechanic_locations(van_number). _Verify:_ `explain analyze` shows index scans, not seq scans.
+- [x] **TASK-032** [REQ-021] DONE (already in code, this checkbox was stale). `handleMechanicAccept` in `api/auth.js` does a conditional PATCH `mechanic_id=is.null` - a concurrent second accept matches 0 rows and returns 409 "This job was just taken by another mechanic". _Verified 2026-07-08:_ read the implementation directly, confirmed the atomic guard and 409 response path are both present and deployed.
 
 ## Phase 4 — Reliability & observability (P1/P2, 90-180 days)
 - [x] **TASK-040** [NFR-003] DONE 2026-06-29. Client Sentry already on all 4 pages. Server: `api/_sentry.js` DSN defaults to public project DSN (no env needed); `withSentry()` wraps auth/chat/stripe-webhook/create-payment-session → uncaught errors reported (endpoint tag + PII redaction).
