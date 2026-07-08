@@ -260,14 +260,28 @@
   </div>
 </div>
 
-<!-- BOOKING SCREEN COMPONENTS -->
-<h2>Date Pills (Calendar)</h2>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-  <div class="dbs-date-pill"><div class="dbs-date-pill__day">Mon</div><div class="dbs-date-pill__num">7</div><div class="dbs-date-pill__mon">Jul</div></div>
-  <div class="dbs-date-pill"><div class="dbs-date-pill__day">Tue</div><div class="dbs-date-pill__num">8</div><div class="dbs-date-pill__mon">Jul</div></div>
-  <div class="dbs-date-pill selected"><div class="dbs-date-pill__day">Wed</div><div class="dbs-date-pill__num">9</div><div class="dbs-date-pill__mon">Jul</div></div>
-  <div class="dbs-date-pill"><div class="dbs-date-pill__day">Thu</div><div class="dbs-date-pill__num">10</div><div class="dbs-date-pill__mon">Jul</div></div>
-  <div class="dbs-date-pill"><div class="dbs-date-pill__day">Fri</div><div class="dbs-date-pill__num">11</div><div class="dbs-date-pill__mon">Jul</div></div>
+<!-- CALENDAR -->
+<h2>Calendar (Date Picker)</h2>
+<div class="dbs-calendar">
+  <div class="dbs-calendar__header">
+    <button class="dbs-calendar__arrow">‹</button>
+    <span class="dbs-calendar__month">July 2026</span>
+    <button class="dbs-calendar__arrow">›</button>
+  </div>
+  <div class="dbs-calendar__dow">
+    <div class="dbs-calendar__dow-item">Su</div><div class="dbs-calendar__dow-item">Mo</div><div class="dbs-calendar__dow-item">Tu</div><div class="dbs-calendar__dow-item">We</div><div class="dbs-calendar__dow-item">Th</div><div class="dbs-calendar__dow-item">Fr</div><div class="dbs-calendar__dow-item">Sa</div>
+  </div>
+  <div class="dbs-calendar__grid">
+    <div></div><div></div><div></div>
+    <button class="dbs-calendar__day">1</button><button class="dbs-calendar__day">2</button><button class="dbs-calendar__day">3</button><button class="dbs-calendar__day">4</button>
+    <button class="dbs-calendar__day">5</button><button class="dbs-calendar__day">6</button><button class="dbs-calendar__day">7</button>
+    <button class="dbs-calendar__day today">8</button>
+    <button class="dbs-calendar__day selected">9</button><button class="dbs-calendar__day">10</button><button class="dbs-calendar__day">11</button>
+    <button class="dbs-calendar__day">12</button><button class="dbs-calendar__day">13</button><button class="dbs-calendar__day">14</button><button class="dbs-calendar__day">15</button>
+    <button class="dbs-calendar__day">16</button><button class="dbs-calendar__day">17</button><button class="dbs-calendar__day">18</button><button class="dbs-calendar__day">19</button>
+    <button class="dbs-calendar__day">20</button><button class="dbs-calendar__day">21</button><button class="dbs-calendar__day">22</button>
+    <button class="dbs-calendar__day" disabled>23</button><button class="dbs-calendar__day" disabled>24</button>
+  </div>
 </div>
 
 <h2>Time Slots (Booking Step 2)</h2>

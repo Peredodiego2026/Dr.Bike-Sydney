@@ -635,11 +635,8 @@ async function renderBookService() {
     function buildCal() {
       const firstDow = new Date(_calYear, _calMonth, 1).getDay();
       const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
-      const prevOk =
-        new Date(_calYear, _calMonth - 1, 1) >= new Date(today.getFullYear(), today.getMonth(), 1);
-      const nextOk =
-        new Date(_calYear, _calMonth + 1, 1) <=
-        new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+      const prevOk = new Date(_calYear, _calMonth - 1, 1) >= new Date(today.getFullYear(), today.getMonth(), 1);
+      const nextOk = new Date(_calYear, _calMonth + 1, 1) <= new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
       let cells = '';
       for (let i = 0; i < firstDow; i++) cells += '<div></div>';
       for (let d = 1; d <= daysInMonth; d++) {
@@ -648,24 +645,24 @@ async function renderBookService() {
         const disabled = dt < today || dt > maxDate;
         const isSel = ds === window.appState.date;
         const isToday = dt.getTime() === today.getTime();
-        cells += `<button type="button" class="cal-day${isSel ? ' cal-sel' : ''}${isToday ? ' cal-today' : ''}${disabled ? ' cal-dis' : ''}" ${disabled ? 'disabled' : ''} data-date="${ds}">${d}</button>`;
+        cells += `<button type="button" class="dbs-calendar__day${isSel ? ' selected' : ''}${isToday ? ' today' : ''}" ${disabled ? 'disabled' : ''} data-date="${ds}">${d}</button>`;
       }
       return `
-        <div class="cal-nav">
-          <button type="button" id="cal-prev" class="cal-arrow" ${prevOk ? '' : 'disabled'}>&#8249;</button>
-          <span class="cal-month"><span>${MONTH_NAMES[_calMonth]}</span> ${_calYear}</span>
-          <button type="button" id="cal-next" class="cal-arrow" ${nextOk ? '' : 'disabled'}>&#8250;</button>
+        <div class="dbs-calendar__header">
+          <button type="button" id="cal-prev" class="dbs-calendar__arrow" ${prevOk ? '' : 'disabled'}>‹</button>
+          <span class="dbs-calendar__month">${MONTH_NAMES[_calMonth]} ${_calYear}</span>
+          <button type="button" id="cal-next" class="dbs-calendar__arrow" ${nextOk ? '' : 'disabled'}>›</button>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
-          ${DOW.map((d) => `<div class="cal-dow">${d}</div>`).join('')}
-          ${cells}
-        </div>`;
+        <div class="dbs-calendar__dow">
+          ${DOW.map((d) => `<div class="dbs-calendar__dow-item">${d}</div>`).join('')}
+        </div>
+        <div class="dbs-calendar__grid">${cells}</div>`;
     }
 
     screen.innerHTML = `
       ${createHeader('Choose Date & Time', true, '#book-service')}
       <div class="section-label">Select Date</div>
-      <div id="cal-wrap" style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:20px">${buildCal()}</div>
+      <div id="cal-wrap" class="dbs-calendar">${buildCal()}</div>
       <div class="section-label">Select Time</div>
       <div class="time-grid" id="time-grid">
         <div class="skeleton" style="height:44px;grid-column:1/-1"></div>
@@ -697,7 +694,7 @@ async function renderBookService() {
         wrap.innerHTML = buildCal();
         wireCal();
       });
-      wrap.querySelectorAll('.cal-day:not([disabled])').forEach((btn) => {
+      wrap.querySelectorAll('.dbs-calendar__day:not([disabled])').forEach((btn) => {
         btn.addEventListener('click', () => {
           window.appState.date = btn.dataset.date;
           window.appState.time = null;
