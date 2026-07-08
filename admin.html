@@ -64,7 +64,7 @@
 </head>
 <body>
 
-<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+<div class="sb-overlay" id="sb-overlay"></div>
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
@@ -78,73 +78,73 @@
 
   <nav class="sb-nav">
     <div class="sb-section">Operations</div>
-    <button class="sb-item on" onclick="go('dashboard',this)">
+    <button class="sb-item on" data-page="dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
       Dashboard
     </button>
-    <button class="sb-item" id="sb-btn-bookings" onclick="go('bookings',this)">
+    <button class="sb-item" id="sb-btn-bookings" data-page="bookings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
       Bookings
       <span class="sb-badge">4</span>
     </button>
-    <button class="sb-item" onclick="go('vans',this)">
+    <button class="sb-item" data-page="vans">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
       Vans &amp; Mechanics
     </button>
-    <button class="sb-item" onclick="go('mechanic-profile',this)">
+    <button class="sb-item" data-page="mechanic-profile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle><path d="M16 11l1.5 1.5L21 9"></path></svg>
       Mechanic Profile
     </button>
 
     <div class="sb-section">Business</div>
-    <button class="sb-item" onclick="go('clients',this)">
+    <button class="sb-item" data-page="clients">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
       Clients
     </button>
-    <button class="sb-item" onclick="go('finance',this)">
+    <button class="sb-item" data-page="finance">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
       Finance
     </button>
-    <button class="sb-item" onclick="go('analytics',this)">
+    <button class="sb-item" data-page="analytics">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
       Analytics
     </button>
-    <button class="sb-item" onclick="go('memberships',this)">
+    <button class="sb-item" data-page="memberships">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       Memberships
     </button>
-    <button class="sb-item" onclick="go('inventory',this)">
+    <button class="sb-item" data-page="inventory">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
       Spare Parts
     </button>
-    <button class="sb-item" onclick="go('services',this)">
+    <button class="sb-item" data-page="services">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
       Services &amp; Prices
     </button>
-    <button class="sb-item" onclick="go('calendar',this)">
+    <button class="sb-item" data-page="calendar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
       Calendar
     </button>
-    <button class="sb-item" onclick="go('coupons',this)">
+    <button class="sb-item" data-page="coupons">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
       Discount Codes
     </button>
-    <button class="sb-item" onclick="go('reminders',this)">
+    <button class="sb-item" data-page="reminders">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
       Reminders
     </button>
 
     <div class="sb-section">Zones</div>
-    <button class="sb-item" onclick="go('zones',this)">
+    <button class="sb-item" data-page="zones">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
       Zone Manager
     </button>
-    <button class="sb-item" onclick="go('contacts',this)">
+    <button class="sb-item" data-page="contacts">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"></path></svg>
       Escalation Contacts
     </button>
     <div class="sb-section">System</div>
-    <button class="sb-item" onclick="go('settings',this)">
+    <button class="sb-item" data-page="settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       Settings
     </button>
@@ -166,17 +166,17 @@
       <div class="topbar-sub" id="page-sub">Assign suburbs to each van</div>
     </div>
     <div class="topbar-right">
-      <button id="theme-btn-admin" onclick="toggleAdminTheme()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center" title="Toggle theme">
+      <button id="theme-btn-admin" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center" title="Toggle theme">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
       <div class="date-badge" id="admin-date-badge">Mon 4 May 2026</div>
-      <div class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" style="cursor:pointer">
+      <div class="notif-btn" id="notif-btn" style="cursor:pointer">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
         <div class="notif-dot" id="notif-dot" style="display:none"></div>
         <span id="notif-count" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;border:2px solid var(--white)"></span>
       </div>
       <!-- Hamburger — only visible on mobile, inside topbar -->
-      <button class="mob-toggle-inline" onclick="toggleSidebar()" style="width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <button class="mob-toggle-inline" style="width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px" id="auto-wire-1">
         <span class="ham-line"></span>
         <span class="ham-line"></span>
         <span class="ham-line"></span>
@@ -227,22 +227,22 @@
       </div>
 
       <div class="quick-actions">
-        <div class="qa" onclick="go('bookings',document.querySelector('[onclick*=bookings]'))">
+        <div class="qa" data-page="bookings">
           <div class="qa-icon" style="background:#EEF3FC"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1848C8" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
           <div class="qa-label">New booking</div>
           <div class="qa-sub">Schedule a job</div>
         </div>
-        <div class="qa" onclick="go('clients',document.querySelector('[onclick*=clients]'))">
+        <div class="qa" data-page="clients">
           <div class="qa-icon" style="background:#ECFDF5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg></div>
           <div class="qa-label">Add client</div>
           <div class="qa-sub">New customer</div>
         </div>
-        <div class="qa" onclick="go('vans',document.querySelector('[onclick*=vans]'))">
+        <div class="qa" data-page="vans">
           <div class="qa-icon" style="background:#FEF3C7"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
           <div class="qa-label">Van status</div>
           <div class="qa-sub">2 vans online</div>
         </div>
-        <div class="qa" onclick="go('finance',document.querySelector('[onclick*=finance]'))">
+        <div class="qa" data-page="finance">
           <div class="qa-icon" style="background:#FEF2F2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
           <div class="qa-label">Finance</div>
           <div class="qa-sub">P&amp;L overview</div>
@@ -253,7 +253,7 @@
         <div class="card">
           <div class="card-hdr">
             <div><div class="card-title">Today's bookings</div><div class="card-sub" id="dash-today-sub">Loading...</div></div>
-            <span class="card-action" onclick="go('bookings',document.getElementById('sb-btn-bookings'))">View all →</span>
+            <span class="card-action" data-page="bookings">View all →</span>
           </div>
           <table class="tbl">
             <thead><tr><th>Client</th><th>Service</th><th>Time</th><th>Van</th><th>Status</th><th>Total</th></tr></thead>
@@ -316,8 +316,8 @@
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Client name</div>
             <input type="text" id="bk-f-search" class="inp" placeholder="Search client..." oninput="applyBookingFilters()">
           </div>
-          <button onclick="applyBookingFilters()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Filter</button>
-          <button onclick="resetBookingFilters()" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Reset</button>
+          <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-2">Filter</button>
+          <button style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-3">Reset</button>
         </div>
       </div>
 
@@ -330,7 +330,7 @@
           </table>
         </div>
         <div style="padding:14px 20px;text-align:center">
-          <button id="bk-load-more" onclick="loadMoreBookings()" style="display:none;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Load 100 more</button>
+          <button id="bk-load-more" style="display:none;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Load 100 more</button>
         </div>
       </div>
     </div>
@@ -354,8 +354,8 @@
           <textarea id="cancel-notes" class="inp" style="height:70px;resize:none" placeholder="Additional notes..."></textarea>
         </div>
         <div style="display:flex;gap:10px">
-          <button onclick="confirmCancel()" style="flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel booking</button>
-          <button onclick="document.getElementById('cancel-modal').style.display='none'" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Go back</button>
+          <button style="flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-4">Cancel booking</button>
+          <button style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-5">Go back</button>
         </div>
       </div>
     </div>
@@ -366,10 +366,10 @@
         <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Reassign to van</div>
         <input type="hidden" id="reassign-booking-id">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          <button onclick="doReassign(1)" style="padding:16px;border:2px solid #1848C8;border-radius:10px;background:#EEF3FC;color:#1848C8;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
-          <button onclick="doReassign(2)" style="padding:16px;border:2px solid #D97706;border-radius:10px;background:#FEF3C7;color:#D97706;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
+          <button style="padding:16px;border:2px solid #1848C8;border-radius:10px;background:#EEF3FC;color:#1848C8;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-6">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
+          <button style="padding:16px;border:2px solid #D97706;border-radius:10px;background:#FEF3C7;color:#D97706;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-7">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
         </div>
-        <button onclick="document.getElementById('reassign-modal').style.display='none'" style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+        <button style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-8">Cancel</button>
       </div>
     </div>
 
@@ -387,7 +387,7 @@
               <option value="1">Van 1</option>
               <option value="2">Van 2</option>
             </select>
-            <button onclick="toggleRouteMode()" id="route-mode-btn" style="padding:7px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Optimise by distance</button>
+            <button id="route-mode-btn" style="padding:7px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Optimise by distance</button>
           </div>
         </div>
         <div id="route-map" style="height:340px;border-radius:10px;overflow:hidden;background:#EEF2F6;margin-bottom:14px"></div>
@@ -567,15 +567,15 @@
         <!-- Fila 2: view pills + export -->
         <div style="display:flex;align-items:center;gap:8px">
           <div style="display:flex;background:var(--off);border-radius:8px;padding:3px;gap:2px;flex:1">
-            <button onclick="setFinView('month',this)" id="fv-month" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:var(--blue);color:#fff;transition:all .15s">Monthly</button>
-            <button onclick="setFinView('quarter',this)" id="fv-quarter" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:transparent;color:var(--mgray);transition:all .15s">Quarterly</button>
-            <button onclick="setFinView('year',this)" id="fv-year" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:transparent;color:var(--mgray);transition:all .15s">Annual</button>
+            <button id="fv-month" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:var(--blue);color:#fff;transition:all .15s">Monthly</button>
+            <button id="fv-quarter" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:transparent;color:var(--mgray);transition:all .15s">Quarterly</button>
+            <button id="fv-year" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:transparent;color:var(--mgray);transition:all .15s">Annual</button>
           </div>
-          <button onclick="exportFinancePDF()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap">
+          <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap" id="auto-wire-9">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             PDF
           </button>
-          <button onclick="exportFinanceCSV()" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">CSV</button>
+          <button style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap" id="auto-wire-10">CSV</button>
         </div>
       </div>
 
@@ -621,7 +621,7 @@
       <div class="card" style="margin-top:16px">
         <div class="card-hdr">
           <div><div class="card-title">🇦🇺 BAS Summary — ATO Reporting</div><div class="card-sub">Business Activity Statement · GST quarterly obligations</div></div>
-          <button onclick="exportBAS()" style="background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Export BAS</button>
+          <button style="background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-11">Export BAS</button>
         </div>
         <div class="bas-grid" id="bas-grid">
           <div class="bas-cell bas-cell--sales">
@@ -665,7 +665,7 @@
           <div style="font-size:22px;font-weight:700;color:var(--navy)">Escalation Contacts</div>
           <div style="font-size:13px;color:var(--mgray);margin-top:4px">When the chatbot can't help, it shows these contacts to clients</div>
         </div>
-        <button onclick="openContactModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:8px">
+        <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:8px" id="auto-wire-12">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New contact
         </button>
@@ -700,8 +700,8 @@
           </select>
         </div>
         <div style="display:flex;gap:10px">
-          <button onclick="saveContact()" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
-          <button onclick="closeContactModal()" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+          <button style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-13">Save</button>
+          <button style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-14">Cancel</button>
         </div>
       </div>
     </div>
@@ -709,7 +709,7 @@
     <!-- ZONES -->
     <div id="page-zones" class="page">
       <div id="zones-container"></div>
-      <button class="add-van-btn" onclick="addVan()" style="display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed #E5E7EB;border-radius:12px;padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:Inter,sans-serif;transition:all .15s;width:100%;margin-top:8px">
+      <button class="add-van-btn" style="display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed #E5E7EB;border-radius:12px;padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:Inter,sans-serif;transition:all .15s;width:100%;margin-top:8px" id="auto-wire-15">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add another van
       </button>
@@ -722,7 +722,7 @@
     <!-- ANALYTICS -->
     <div id="page-analytics" class="page">
       <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-        <button onclick="exportAnalyticsCSV()" style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:6px">
+        <button style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:6px" id="auto-wire-16">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Export CSV
         </button>
@@ -758,7 +758,7 @@
     <div id="page-coupons" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">Discount Codes</div>
-        <button onclick="toggleCouponForm()" id="btn-toggle-coupon-form" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:6px">
+        <button id="btn-toggle-coupon-form" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:6px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Create code
         </button>
@@ -771,7 +771,7 @@
           <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Code</label>
           <div style="display:flex;gap:8px">
             <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.1em;font-size:15px" placeholder="e.g. NEWRIDER20">
-            <button onclick="document.getElementById('c-code').value='BIKE'+Math.random().toString(36).substr(2,5).toUpperCase()" style="white-space:nowrap;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)">Random</button>
+            <button style="white-space:nowrap;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)" id="auto-wire-17">Random</button>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -798,8 +798,8 @@
           </div>
         </div>
         <div style="display:flex;gap:8px">
-          <button onclick="toggleCouponForm()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy);font-size:13px">Cancel</button>
-          <button onclick="saveCoupon()" id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
+          <button style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy);font-size:13px" id="auto-wire-18">Cancel</button>
+          <button id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
         </div>
       </div>
 
@@ -819,7 +819,7 @@
           <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">How it works</div>
           <div style="font-size:12px;color:var(--mgray);line-height:1.6">Finds all clients whose last completed service was 6+ months ago and sends a friendly reminder email with a booking link.</div>
         </div>
-        <button onclick="sendReminders()" id="reminder-btn" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+        <button id="reminder-btn" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
           Send reminders now
         </button>
         <div id="reminder-result" style="margin-top:12px;font-size:13px;display:none"></div>
@@ -847,7 +847,7 @@
               <option value="/?action=dashboard">My dashboard</option>
             </select>
           </div>
-          <button onclick="sendBroadcastPush()" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">
+          <button style="background:#059669;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-19">
             📢 Send to all subscribers
           </button>
           <div id="bc-result" style="font-size:13px;display:none"></div>
@@ -867,7 +867,7 @@
       <div class="card" style="padding:24px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <div class="card-title">📬 Newsletter subscribers</div>
-          <button onclick="exportNewsletterCSV()" style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Export CSV</button>
+          <button style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)" id="auto-wire-20">Export CSV</button>
         </div>
         <div class="card-sub" style="margin-bottom:16px">Clients subscribed via the website newsletter form.</div>
         <div id="newsletter-list">
@@ -885,7 +885,7 @@
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
             <span style="font-size:20px">📲</span>
             <div class="setting-title" style="margin:0">Notification Numbers</div>
-            <button onclick="openNotifModal()" style="margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap">+ Add number</button>
+            <button style="margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap" id="auto-wire-21">+ Add number</button>
           </div>
           <div class="setting-sub" style="margin-bottom:16px">
             Each mechanic receives SMS/WhatsApp alerts only for their zone. Manager numbers receive all zones.
@@ -913,7 +913,7 @@
             <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Email</div><input id="set-biz-email" class="inp" placeholder="hello@drbike.com.au"></div>
             <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">ABN</div><input id="set-biz-abn" class="inp" placeholder="Pending registration"></div>
           </div>
-          <button class="btn-save" onclick="saveBusinessDetails()">Save changes</button>
+          <button class="btn-save" id="auto-wire-22">Save changes</button>
         </div>
 
         <!-- ══ WHATSAPP BUSINESS ══ -->
@@ -927,7 +927,7 @@
           <div id="wa-status" style="font-size:12px;padding:8px 12px;background:var(--off);border-radius:8px;line-height:1.6;color:var(--mgray);margin-top:8px">
             No number configured — WhatsApp disabled.
           </div>
-          <button class="btn-save" onclick="saveWhatsappNumber()" style="margin-top:10px">Save number</button>
+          <button class="btn-save" style="margin-top:10px" id="auto-wire-23">Save number</button>
           <details style="margin-top:10px">
             <summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600">How to activate ›</summary>
             <ol style="font-size:12px;color:var(--mgray);margin:8px 0 0 16px;line-height:2">
@@ -949,19 +949,19 @@
           <div class="setting-row"><span class="setting-label">Resend email</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Active</span></div>
           <div class="setting-row"><span class="setting-label">Twilio SMS/WhatsApp</span><span id="integ-twilio" class="setting-val" style="color:#F59E0B;font-weight:500">⚠ Needs keys</span></div>
           <div class="setting-row"><span class="setting-label">Vercel hosting</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Live</span></div>
-          <button onclick="sendTestSMS()" style="margin-top:10px;width:100%;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">📱 Send test SMS to your number</button>
+          <button style="margin-top:10px;width:100%;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-24">📱 Send test SMS to your number</button>
         </div>
 
         <!-- ══ NOTIFICATIONS TOGGLES ══ -->
         <div class="setting-card">
           <div class="setting-title">Alert triggers</div>
           <div class="setting-sub">Which events send notifications to the numbers above</div>
-          <div class="setting-row"><span class="setting-label">New booking</span><div class="toggle on" id="trig-new_booking" onclick="toggleTrigger(this,'new_booking')"></div></div>
-          <div class="setting-row"><span class="setting-label">Mechanic en route</span><div class="toggle on" id="trig-enroute" onclick="toggleTrigger(this,'enroute')"></div></div>
-          <div class="setting-row"><span class="setting-label">Job completed</span><div class="toggle on" id="trig-completed" onclick="toggleTrigger(this,'completed')"></div></div>
-          <div class="setting-row"><span class="setting-label">Payment received</span><div class="toggle on" id="trig-payment" onclick="toggleTrigger(this,'payment')"></div></div>
-          <div class="setting-row"><span class="setting-label">Booking cancelled</span><div class="toggle on" id="trig-cancelled" onclick="toggleTrigger(this,'cancelled')"></div></div>
-          <div class="setting-row"><span class="setting-label">Monthly reminders</span><div class="toggle" id="trig-reminders" onclick="toggleTrigger(this,'reminders')"></div></div>
+          <div class="setting-row"><span class="setting-label">New booking</span><div class="toggle on" id="trig-new_booking"></div></div>
+          <div class="setting-row"><span class="setting-label">Mechanic en route</span><div class="toggle on" id="trig-enroute"></div></div>
+          <div class="setting-row"><span class="setting-label">Job completed</span><div class="toggle on" id="trig-completed"></div></div>
+          <div class="setting-row"><span class="setting-label">Payment received</span><div class="toggle on" id="trig-payment"></div></div>
+          <div class="setting-row"><span class="setting-label">Booking cancelled</span><div class="toggle on" id="trig-cancelled"></div></div>
+          <div class="setting-row"><span class="setting-label">Monthly reminders</span><div class="toggle" id="trig-reminders"></div></div>
         </div>
 
       </div>
@@ -974,7 +974,7 @@
           <div style="font-size:18px;font-weight:700;color:var(--navy)">Spare Parts</div>
           <div style="font-size:13px;color:var(--mgray)">Stock, internal cost and client price per part</div>
         </div>
-        <button onclick="openPartModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Add part</button>
+        <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-25">+ Add part</button>
       </div>
       <!-- KPIs -->
       <div class="kpis" style="margin-bottom:20px">
@@ -1006,7 +1006,7 @@
           <div style="font-size:18px;font-weight:700;color:var(--navy)">Services &amp; Prices</div>
           <div style="font-size:13px;color:var(--mgray)">One catalog for the whole site - edit a price here and it updates everywhere</div>
         </div>
-        <button onclick="openServiceModal()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">+ Add service</button>
+        <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-26">+ Add service</button>
       </div>
       <!-- KPIs -->
       <div class="kpis" style="margin-bottom:20px">
@@ -1036,14 +1036,14 @@
     <!-- ══ CALENDAR ══ -->
     <div id="page-calendar" class="page">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
-        <button onclick="calPrev()" style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)">← Prev</button>
+        <button style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)" id="auto-wire-27">← Prev</button>
         <div style="flex:1;text-align:center;font-size:16px;font-weight:700;color:var(--navy)" id="cal-title">Week</div>
-        <button onclick="calNext()" style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)">Next →</button>
-        <button onclick="openBlockModal()" style="background:#FEF3C7;color:#D97706;border:1.5px solid #FCD34D;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap">🚫 Block slots</button>
+        <button style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)" id="auto-wire-28">Next →</button>
+        <button style="background:#FEF3C7;color:#D97706;border:1.5px solid #FCD34D;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap" id="auto-wire-29">🚫 Block slots</button>
         <div style="display:flex;background:var(--off);border-radius:8px;padding:3px;gap:2px">
-          <button onclick="setCalView('month',this)" id="cv-month" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:var(--blue);color:#fff">Month</button>
-          <button onclick="setCalView('week',this)" id="cv-week" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray)">Week</button>
-          <button onclick="setCalView('day',this)" id="cv-day" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray)">Day</button>
+          <button id="cv-month" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:var(--blue);color:#fff">Month</button>
+          <button id="cv-week" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray)">Week</button>
+          <button id="cv-day" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray)">Day</button>
         </div>
       </div>
       <div id="cal-grid" style="overflow-x:auto">
@@ -1101,7 +1101,7 @@
             <div style="font-size:14px;font-weight:700;color:var(--navy)" id="admin-chat-title">Job Chat</div>
             <div style="font-size:11px;color:var(--mgray)">Admin ↔ Mechanic</div>
           </div>
-          <button onclick="closeAdminChat()" style="background:var(--off);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:var(--sans);font-size:12px;color:var(--navy)">Close</button>
+          <button style="background:var(--off);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:var(--sans);font-size:12px;color:var(--navy)" id="auto-wire-30">Close</button>
         </div>
         <!-- Messages -->
         <div id="admin-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:200px">
@@ -1153,8 +1153,8 @@
           </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px">
-          <button onclick="closeNotifModal()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
-          <button onclick="saveNotifNumber()" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+          <button style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-31">Cancel</button>
+          <button style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-32">Save</button>
         </div>
       </div>
     </div>
@@ -1183,8 +1183,8 @@
           </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px">
-          <button onclick="closeMechProfileModal()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
-          <button onclick="saveMechProfile()" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+          <button style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-33">Cancel</button>
+          <button style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-34">Save</button>
         </div>
       </div>
     </div>
@@ -1200,8 +1200,8 @@
         </div>
         <input type="range" id="crop-zoom-slider" min="0" max="100" value="0" style="width:280px;display:block;margin:16px auto 0">
         <div style="display:flex;gap:10px;margin-top:16px">
-          <button id="crop-cancel-btn" onclick="closePhotoCropModal()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
-          <button id="crop-confirm-btn" onclick="confirmPhotoCrop()" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Use this photo</button>
+          <button id="crop-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+          <button id="crop-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Use this photo</button>
         </div>
       </div>
     </div>
@@ -1212,29 +1212,29 @@
 
 <!-- Mobile bottom nav -->
 <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
-  <a onclick="go('dashboard')" id="mbnav-dashboard">
+  <a data-page="dashboard" id="mbnav-dashboard">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
     Dashboard
   </a>
-  <a onclick="go('bookings')" id="mbnav-bookings" style="position:relative">
+  <a data-page="bookings" id="mbnav-bookings" style="position:relative">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     Bookings
     <span class="nav-badge" id="mbnav-badge" style="display:none">0</span>
   </a>
-  <a onclick="go('clients')" id="mbnav-clients">
+  <a data-page="clients" id="mbnav-clients">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
     Clients
   </a>
-  <a onclick="go('finance')" id="mbnav-finance">
+  <a data-page="finance" id="mbnav-finance">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
     Finance
   </a>
-  <a onclick="toggleSidebar()" id="mbnav-more">
+  <a id="mbnav-more">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     More
   </a>
 </nav>
 
 
-<script src="js/admin.js?v=20260708a"></script>
+<script src="js/admin.js?v=20260708b"></script>
 </body></html>

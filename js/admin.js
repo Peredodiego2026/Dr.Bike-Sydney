@@ -19,6 +19,308 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { storageKey: 'dr-bike-admin-session', persistSession: false },
 });
 
+// ── TASK-023: onclick -> addEventListener (see tasks.md) ────────────────────
+// Script runs at the end of body so the DOM already exists - no need to wait
+// for DOMContentLoaded. byId() no-ops safely if an element is not present
+// (some ids only exist behind conditional rendering).
+function byId(id) {
+  const el = document.getElementById(id);
+  return el || { addEventListener: () => {} };
+}
+(function wireStaticAdminButtons() {
+  byId('sb-overlay').addEventListener('click', function (event) {
+    closeSidebar();
+  });
+  byId('theme-btn-admin').addEventListener('click', function (event) {
+    toggleAdminTheme();
+  });
+  byId('notif-btn').addEventListener('click', function (event) {
+    toggleNotifPanel();
+  });
+  byId('auto-wire-1').addEventListener('click', function (event) {
+    toggleSidebar();
+  });
+  byId('auto-wire-2').addEventListener('click', function (event) {
+    applyBookingFilters();
+  });
+  byId('auto-wire-3').addEventListener('click', function (event) {
+    resetBookingFilters();
+  });
+  byId('bk-load-more').addEventListener('click', function (event) {
+    loadMoreBookings();
+  });
+  byId('auto-wire-4').addEventListener('click', function (event) {
+    confirmCancel();
+  });
+  byId('auto-wire-5').addEventListener('click', function (event) {
+    document.getElementById('cancel-modal').style.display = 'none';
+  });
+  byId('auto-wire-6').addEventListener('click', function (event) {
+    doReassign(1);
+  });
+  byId('auto-wire-7').addEventListener('click', function (event) {
+    doReassign(2);
+  });
+  byId('auto-wire-8').addEventListener('click', function (event) {
+    document.getElementById('reassign-modal').style.display = 'none';
+  });
+  byId('route-mode-btn').addEventListener('click', function (event) {
+    toggleRouteMode();
+  });
+  byId('fv-month').addEventListener('click', function (event) {
+    setFinView('month', event.currentTarget);
+  });
+  byId('fv-quarter').addEventListener('click', function (event) {
+    setFinView('quarter', event.currentTarget);
+  });
+  byId('fv-year').addEventListener('click', function (event) {
+    setFinView('year', event.currentTarget);
+  });
+  byId('auto-wire-9').addEventListener('click', function (event) {
+    exportFinancePDF();
+  });
+  byId('auto-wire-10').addEventListener('click', function (event) {
+    exportFinanceCSV();
+  });
+  byId('auto-wire-11').addEventListener('click', function (event) {
+    exportBAS();
+  });
+  byId('auto-wire-12').addEventListener('click', function (event) {
+    openContactModal();
+  });
+  byId('auto-wire-13').addEventListener('click', function (event) {
+    saveContact();
+  });
+  byId('auto-wire-14').addEventListener('click', function (event) {
+    closeContactModal();
+  });
+  byId('auto-wire-15').addEventListener('click', function (event) {
+    addVan();
+  });
+  byId('auto-wire-16').addEventListener('click', function (event) {
+    exportAnalyticsCSV();
+  });
+  byId('btn-toggle-coupon-form').addEventListener('click', function (event) {
+    toggleCouponForm();
+  });
+  byId('auto-wire-17').addEventListener('click', function (event) {
+    document.getElementById('c-code').value =
+      'BIKE' + Math.random().toString(36).substr(2, 5).toUpperCase();
+  });
+  byId('auto-wire-18').addEventListener('click', function (event) {
+    toggleCouponForm();
+  });
+  byId('c-save-btn').addEventListener('click', function (event) {
+    saveCoupon();
+  });
+  byId('reminder-btn').addEventListener('click', function (event) {
+    sendReminders();
+  });
+  byId('auto-wire-19').addEventListener('click', function (event) {
+    sendBroadcastPush();
+  });
+  byId('auto-wire-20').addEventListener('click', function (event) {
+    exportNewsletterCSV();
+  });
+  byId('auto-wire-21').addEventListener('click', function (event) {
+    openNotifModal();
+  });
+  byId('auto-wire-22').addEventListener('click', function (event) {
+    saveBusinessDetails();
+  });
+  byId('auto-wire-23').addEventListener('click', function (event) {
+    saveWhatsappNumber();
+  });
+  byId('auto-wire-24').addEventListener('click', function (event) {
+    sendTestSMS();
+  });
+  byId('trig-new_booking').addEventListener('click', function (event) {
+    toggleTrigger(event.currentTarget, 'new_booking');
+  });
+  byId('trig-enroute').addEventListener('click', function (event) {
+    toggleTrigger(event.currentTarget, 'enroute');
+  });
+  byId('trig-completed').addEventListener('click', function (event) {
+    toggleTrigger(event.currentTarget, 'completed');
+  });
+  byId('trig-payment').addEventListener('click', function (event) {
+    toggleTrigger(event.currentTarget, 'payment');
+  });
+  byId('trig-cancelled').addEventListener('click', function (event) {
+    toggleTrigger(event.currentTarget, 'cancelled');
+  });
+  byId('trig-reminders').addEventListener('click', function (event) {
+    toggleTrigger(event.currentTarget, 'reminders');
+  });
+  byId('auto-wire-25').addEventListener('click', function (event) {
+    openPartModal();
+  });
+  byId('auto-wire-26').addEventListener('click', function (event) {
+    openServiceModal();
+  });
+  byId('auto-wire-27').addEventListener('click', function (event) {
+    calPrev();
+  });
+  byId('auto-wire-28').addEventListener('click', function (event) {
+    calNext();
+  });
+  byId('auto-wire-29').addEventListener('click', function (event) {
+    openBlockModal();
+  });
+  byId('cv-month').addEventListener('click', function (event) {
+    setCalView('month', event.currentTarget);
+  });
+  byId('cv-week').addEventListener('click', function (event) {
+    setCalView('week', event.currentTarget);
+  });
+  byId('cv-day').addEventListener('click', function (event) {
+    setCalView('day', event.currentTarget);
+  });
+  byId('auto-wire-30').addEventListener('click', function (event) {
+    closeAdminChat();
+  });
+  byId('auto-wire-31').addEventListener('click', function (event) {
+    closeNotifModal();
+  });
+  byId('auto-wire-32').addEventListener('click', function (event) {
+    saveNotifNumber();
+  });
+  byId('auto-wire-33').addEventListener('click', function (event) {
+    closeMechProfileModal();
+  });
+  byId('auto-wire-34').addEventListener('click', function (event) {
+    saveMechProfile();
+  });
+  byId('crop-cancel-btn').addEventListener('click', function (event) {
+    closePhotoCropModal();
+  });
+  byId('crop-confirm-btn').addEventListener('click', function (event) {
+    confirmPhotoCrop();
+  });
+  byId('mbnav-more').addEventListener('click', function (event) {
+    toggleSidebar();
+  });
+})();
+
+// Sidebar / quick-action / mobile-nav page navigation - all converted from
+// onclick="go('page',...)" to data-page="page" (see admin.html). One
+// delegated listener replicates the original behaviour: whichever element
+// was clicked navigates, and the matching .sb-item (if any) gets the
+// active/'on' highlight, same as go(page, btn) always did.
+document.addEventListener('click', function (e) {
+  const el = e.target.closest('[data-page]');
+  if (!el) return;
+  const sbBtn = document.querySelector('.sb-item[data-page="' + el.dataset.page + '"]');
+  go(el.dataset.page, sbBtn);
+});
+
+// Dynamically-rendered content (tables/modals built via template strings) -
+// all converted from inline onclick="fn(...)" to data-action + data-* (see
+// tasks.md TASK-023). One delegated listener dispatches by data-action,
+// same pattern as js/mechanic.js.
+document.addEventListener('click', function (e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const d = el.dataset;
+  switch (d.action) {
+    case 'close-block-modal':
+      document.getElementById('block-modal')?.remove();
+      break;
+    case 'select-all-slots':
+      selectAllSlots(d.value === 'true');
+      break;
+    case 'save-blocks':
+      saveBlocks();
+      break;
+    case 'unblock-date':
+      unblockDate();
+      break;
+    case 'toggle-coupon':
+      toggleCoupon(d.id, d.value === 'true');
+      break;
+    case 'delete-coupon':
+      deleteCoupon(d.id, d.code);
+      break;
+    case 'submit-admin-login':
+      submitAdminLogin();
+      break;
+    case 'submit-totp-code':
+      submitTOTPCode();
+      break;
+    case 'submit-mfa-setup-code':
+      submitMFASetupCode();
+      break;
+    case 'remove-van':
+      removeVan(parseInt(d.id));
+      break;
+    case 'save-van-zone':
+      saveVanZone(parseInt(d.id));
+      break;
+    case 'remove-suburb':
+      removeSuburb(parseInt(d.id), d.suburb);
+      break;
+    case 'add-suburb':
+      addSuburb(parseInt(d.id));
+      break;
+    case 'adjust-stock':
+      adjustStock(d.id, parseInt(d.stock), parseInt(d.delta));
+      break;
+    case 'open-part-modal':
+      openPartModal(d.id);
+      break;
+    case 'delete-part':
+      deletePart(d.id);
+      break;
+    case 'close-part-modal':
+      document.getElementById('part-modal')?.remove();
+      break;
+    case 'save-part':
+      savePart(d.id);
+      break;
+    case 'set-service-category-filter':
+      setServiceCategoryFilter(d.cat || null);
+      break;
+    case 'open-service-modal':
+      openServiceModal(d.id);
+      break;
+    case 'delete-service':
+      deleteService(d.id);
+      break;
+    case 'close-service-modal':
+      document.getElementById('service-modal')?.remove();
+      break;
+    case 'save-service':
+      saveService(d.id);
+      break;
+    case 'open-photo':
+      window.open(d.url, '_blank');
+      break;
+    case 'edit-notif-number':
+      editNotifNumber(d.id);
+      break;
+    case 'delete-notif-number':
+      deleteNotifNumber(d.id);
+      break;
+    case 'open-mech-profile-modal':
+      openMechProfileModal(d.id);
+      break;
+    case 'close-reassign-modal': {
+      const rm = document.getElementById('reassign-modal');
+      if (rm) rm.style.display = 'none';
+      break;
+    }
+    case 'mark-all-read':
+      markAllRead();
+      break;
+    case 'edit-contact':
+      editContact(d.id, d.firstName, d.lastName, d.phone, d.role);
+      break;
+    case 'delete-contact':
+      deleteContact(d.id);
+      break;
+  }
+});
+
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
 const titles = {
   dashboard: 'Dashboard',
@@ -713,7 +1015,7 @@ function openBlockModal() {
     <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:420px;font-family:var(--sans)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div style="font-size:16px;font-weight:700;color:var(--navy)">🚫 Block availability</div>
-        <button onclick="document.getElementById('block-modal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">✕</button>
+        <button data-action="close-block-modal" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">✕</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <div>
@@ -759,16 +1061,16 @@ function openBlockModal() {
               )
               .join('')}
           </div>
-          <button onclick="selectAllSlots(true)" style="background:none;border:none;color:var(--blue);font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0">Select all</button>
-          <button onclick="selectAllSlots(false)" style="background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0;margin-left:12px">Clear all</button>
+          <button data-action="select-all-slots" data-value="true" style="background:none;border:none;color:var(--blue);font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0">Select all</button>
+          <button data-action="select-all-slots" data-value="false" style="background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0;margin-left:12px">Clear all</button>
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Reason (optional)</div>
           <input type="text" id="block-reason" class="inp" style="margin:0" placeholder="e.g. Public holiday, mechanic unavailable">
         </div>
         <div style="display:flex;gap:10px;margin-top:4px">
-          <button onclick="saveBlocks()" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
-          <button onclick="unblockDate()" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid #FECACA;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock all</button>
+          <button data-action="save-blocks" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
+          <button data-action="unblock-date" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid #FECACA;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock all</button>
         </div>
       </div>
     </div>`;
@@ -1041,10 +1343,10 @@ async function loadCoupons() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          <button onclick="toggleCoupon('${c.id}',${!isActive})" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? '#DC2626' : '#16A34A'};font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? '#DC2626' : '#16A34A'};font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             ${isActive ? 'Deactivate' : 'Activate'}
           </button>
-          <button onclick="deleteCoupon('${c.id}','${esc(c.code)}')" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#DC2626;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#DC2626;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -1216,7 +1518,7 @@ function checkAdminAuth() {
         style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')submitAdminLogin()">
       <div id="admin-pass-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none">Invalid credentials</div>
-      <button onclick="submitAdminLogin()" style="width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
+      <button data-action="submit-admin-login" style="width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
     </div>`;
   document.body.appendChild(overlay);
   setTimeout(() => document.getElementById('admin-email-inp')?.focus(), 100);
@@ -1442,7 +1744,7 @@ function _totpInputHTML() {
     style="${_inp}font-size:24px;font-weight:700;text-align:center;letter-spacing:10px"
     onkeydown="if(event.key==='Enter')submitTOTPCode()">
   <div id="admin-totp-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none"></div>
-  <button onclick="submitTOTPCode()" style="${_btn}">Verify →</button>`;
+  <button data-action="submit-totp-code" style="${_btn}">Verify →</button>`;
 }
 
 function _enrollHTML(qrSvg, secret) {
@@ -1453,7 +1755,7 @@ function _enrollHTML(qrSvg, secret) {
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
     onkeydown="if(event.key==='Enter')submitMFASetupCode()">
   <div id="admin-enroll-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none"></div>
-  <button onclick="submitMFASetupCode()" style="${_btn}">Activate 2FA →</button>`;
+  <button data-action="submit-mfa-setup-code" style="${_btn}">Activate 2FA →</button>`;
 }
 
 async function loadDashboard() {
@@ -1967,7 +2269,7 @@ async function loadRecentNotifications() {
         hour12: true,
       });
       const st = b.status || 'pending';
-      return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" onclick="go('bookings',document.querySelector('[onclick*=bookings]'))">
+      return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" data-page="bookings">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
         <div style="font-size:13px;font-weight:600;color:var(--navy)">${name}</div>
         <span style="font-size:10px;color:#fff;background:${stColors[st] || '#6B7280'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
@@ -2799,7 +3101,7 @@ function renderVanZones() {
       <div style="padding:14px 16px;background:${van.color}">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:15px;font-weight:600;color:#fff">${van.name}</div>
-          ${vanZones.length > 1 ? `<button onclick="removeVan(${van.id})" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>` : ''}
+          ${vanZones.length > 1 ? `<button data-action="remove-van" data-id="${van.id}" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <span style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap">👤</span>
@@ -2809,17 +3111,17 @@ function renderVanZones() {
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div style="font-size:11px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs</div>
-          <button onclick="saveVanZone(${van.id})" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
+          <button data-action="save-van-zone" data-id="${van.id}" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
         </div>
       </div>
       <div style="padding:16px 20px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:#1848C8;border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500">${s}<span onclick="removeSuburb(${van.id},'${s}')" style="cursor:pointer;font-size:14px;opacity:.6;line-height:1">×</span></span>`).join('')}
+          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:#1848C8;border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:14px;opacity:.6;line-height:1">×</span></span>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
           <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" onkeydown="if(event.key==='Enter')addSuburb(${van.id})"
             style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:Inter,sans-serif;outline:none">
-          <button onclick="addSuburb(${van.id})" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
+          <button data-action="add-suburb" data-id="${van.id}" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
         </div>
       </div>
     </div>`;
@@ -2927,8 +3229,8 @@ async function loadContacts() {
         <span style="background:${roleBg[c.role] || '#F3F4F6'};color:${roleColors[c.role] || '#6B7280'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
       <div style="display:flex;gap:8px">
-        <button onclick="editContact('${c.id}','${c.first_name}','${c.last_name}','${c.phone}','${c.role}')" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
-        <button onclick="deleteContact('${c.id}')" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
+        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
+        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`
     )
@@ -3080,10 +3382,10 @@ function renderInventory() {
       <td data-label="Status"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusCl}">${statusTxt}</span></td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
-          <button onclick="adjustStock('${p.id}',${p.stock},-1)" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:700">−</button>
-          <button onclick="adjustStock('${p.id}',${p.stock},1)"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:700">+</button>
-          <button onclick="openPartModal('${p.id}')" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">Edit</button>
-          <button onclick="deletePart('${p.id}')" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">✕</button>
+          <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:700">−</button>
+          <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:700">+</button>
+          <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">Edit</button>
+          <button data-action="delete-part" data-id="${p.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -3136,8 +3438,8 @@ function openPartModal(id) {
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
-      <button onclick="document.getElementById('part-modal').remove()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
-      <button onclick="savePart('${p?.id || ''}')" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+      <button data-action="close-part-modal" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+      <button data-action="save-part" data-id="${p?.id || ''}" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -3234,7 +3536,7 @@ function renderServiceCatChips() {
     servicesData.some((s) => (s.category || 'General & assembly') === cat)
   );
   const chip = (label, cat, active) =>
-    `<button onclick="setServiceCategoryFilter(${cat === null ? 'null' : `'${cat}'`})" style="height:30px;padding:0 14px;border-radius:15px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;border:1.5px solid ${active ? 'var(--blue)' : 'var(--border)'};background:${active ? 'var(--blue)' : 'var(--white)'};color:${active ? '#fff' : 'var(--navy)'}">${escapeHtml(label)}</button>`;
+    `<button data-action="set-service-category-filter" data-cat="${cat === null ? '' : esc(cat)}" style="height:30px;padding:0 14px;border-radius:15px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;border:1.5px solid ${active ? 'var(--blue)' : 'var(--border)'};background:${active ? 'var(--blue)' : 'var(--white)'};color:${active ? '#fff' : 'var(--navy)'}">${escapeHtml(label)}</button>`;
   wrap.innerHTML =
     chip('All', null, _svcCategoryFilter === null) +
     present.map((cat) => chip(cat, cat, _svcCategoryFilter === cat)).join('');
@@ -3303,8 +3605,8 @@ function renderServices() {
       <td data-label="Duration" style="color:var(--mgray)">${durationLabel(s)}</td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
-          <button onclick="openServiceModal('${s.id}')" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">Edit</button>
-          <button onclick="deleteService('${s.id}')" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">✕</button>
+          <button data-action="open-service-modal" data-id="${s.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">Edit</button>
+          <button data-action="delete-service" data-id="${s.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -3348,8 +3650,8 @@ function openServiceModal(id) {
         <input class="inp" id="sm-desc" value="${s?.description ? escapeHtml(s.description) : ''}" placeholder="Shown to clients when booking"></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
-      <button onclick="document.getElementById('service-modal').remove()" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
-      <button onclick="saveService('${s?.id || ''}')" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+      <button data-action="close-service-modal" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+      <button data-action="save-service" data-id="${s?.id || ''}" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -3546,7 +3848,7 @@ async function loadCalendar() {
             const st = j.status || 'pending';
             const nm = j.profiles?.full_name?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
-            return `<div style="font-size:10px;background:${stBg[st] || '#F3F4F6'};border-left:2px solid ${stColors[st] || '#6B7280'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="go('bookings')">${tm} ${nm}</div>`;
+            return `<div style="font-size:10px;background:${stBg[st] || '#F3F4F6'};border-left:2px solid ${stColors[st] || '#6B7280'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${nm}</div>`;
           })
           .join('')}
         ${dayJobs.length > 3 ? `<div style="font-size:10px;color:var(--mgray)">+${dayJobs.length - 3} more</div>` : ''}
@@ -3652,7 +3954,7 @@ async function loadCalendar() {
                   const name = j.profiles?.full_name?.split(' ')[0] || 'Client';
                   const time = j.scheduled_time || '';
                   const van = j.van_number || 1;
-                  return `<div style="background:${stBg[st] || '#F3F4F6'};border-left:3px solid ${stColors[st] || '#6B7280'};border-radius:6px;padding:6px 8px;cursor:pointer" onclick="go('bookings')">
+                  return `<div style="background:${stBg[st] || '#F3F4F6'};border-left:3px solid ${stColors[st] || '#6B7280'};border-radius:6px;padding:6px 8px;cursor:pointer" data-page="bookings">
               <div style="font-size:11px;font-weight:700;color:${stColors[st] || '#6B7280'}">${time}</div>
               <div style="font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
               <div style="font-size:10px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.service_name || ''}</div>
@@ -3747,7 +4049,7 @@ function appendAdminChatMsg(msg, scroll = true) {
     <div style="font-size:10px;color:var(--mgray);font-weight:600">${label}</div>
     ${
       isPhoto
-        ? `<img src="${photoUrl}" style="max-width:200px;border-radius:10px;cursor:pointer" onclick="window.open('${photoUrl}','_blank')">`
+        ? `<img src="${photoUrl}" style="max-width:200px;border-radius:10px;cursor:pointer" data-action="open-photo" data-url="${esc(photoUrl)}">`
         : `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:12px;font-size:13px;max-width:280px;word-break:break-word">${msg.message}</div>`
     }
     <div style="font-size:10px;color:var(--mgray)">${time}</div>
@@ -4099,9 +4401,9 @@ async function loadNotifNumbers() {
       <!-- Fila 2: teléfono + canal + botones -->
       <div style="display:flex;align-items:center;gap:8px;padding-left:46px">
         <span style="font-size:12px;color:var(--mgray);flex:1">${c.phone} · ${channelIcon[channel]} ${channel.toUpperCase()}</span>
-        <button onclick="editNotifNumber('${c.id}')"
+        <button data-action="edit-notif-number" data-id="${c.id}"
           style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
-        <button onclick="deleteNotifNumber('${c.id}')"
+        <button data-action="delete-notif-number" data-id="${c.id}"
           style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
       </div>
     </div>`;
@@ -4260,7 +4562,7 @@ async function loadMechanicProfiles() {
         <div style="text-align:center"><div style="font-weight:800;font-size:15px;color:var(--navy)">${rating ? '★ ' + rating : '—'}</div><div style="font-size:11px;color:var(--mgray)">Rating</div></div>
       </div>
       <div style="padding:14px 20px">
-        <button onclick="openMechProfileModal('${c.id}')" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--sans)">Edit profile</button>
+        <button data-action="open-mech-profile-modal" data-id="${c.id}" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--sans)">Edit profile</button>
       </div>
     </div>`;
     })
@@ -4517,7 +4819,7 @@ async function viewClientBikes(clientId, clientName) {
     <div style="background:var(--white);border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div style="font-size:16px;font-weight:700;color:var(--navy)">🚲 ${esc(clientName)}'s Bikes</div>
-        <button onclick="document.getElementById('reassign-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button>
+        <button data-action="close-reassign-modal" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button>
       </div>
       ${bikeRows}
     </div>`;
@@ -4615,7 +4917,7 @@ setTimeout(() => {
     'display:none;position:fixed;top:68px;right:16px;width:360px;max-height:480px;overflow-y:auto;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:200';
   panel.innerHTML = `<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white)">
     <div style="font-size:14px;font-weight:700;color:var(--navy)">🔔 Notifications</div>
-    <button onclick="markAllRead()" style="font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Mark all read</button>
+    <button data-action="mark-all-read" style="font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Mark all read</button>
   </div>
   <div id="notif-list" style="padding:8px"><div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">Loading...</div></div>`;
   document.body.appendChild(panel);
