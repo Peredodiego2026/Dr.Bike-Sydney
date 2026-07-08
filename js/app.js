@@ -1660,18 +1660,26 @@ async function renderProfile() {
       <div class="fw-600 text-center">${name}</div>
       <div class="text-secondary text-sm text-center">${user.email}</div>
 
+      <div style="margin:16px auto;max-width:340px" id="tier-badge-container">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--color-border);background:var(--color-surface);box-shadow:var(--elevation-0)">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--color-surface-hover);display:flex;align-items:center;justify-content:center;font-size:24px">🚲</div>
+          <div><div style="font-size:13px;font-weight:600;color:#0D1F3C">Calculating...</div>
+          <div style="font-size:11px;color:#6B7280">Loading tier</div></div>
+        </div>
+      </div>
+
       <div style="background:linear-gradient(135deg,#0A58CA,#1848C8);border-radius:16px;padding:20px;margin:20px 0;text-align:center">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Your referral code</div>
         <div id="ref-code-display" style="font-size:28px;font-weight:900;color:#fff;letter-spacing:0.18em;margin-bottom:4px">${refCode}</div>
         <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:16px">You and your friend each get $15 off</div>
         <div style="display:flex;gap:8px;justify-content:center">
-          <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Copy code</button>
-          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px">📱 Share</a>
+          <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Copy code</button>
+          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:4px;font-family:inherit"><span>📱</span> <span>Share</span></a>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div style="background:var(--color-surface);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--color-border)">
+        <div class="card-hover" style="background:var(--color-surface);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--color-border);box-shadow:var(--elevation-0)">
           <div style="font-size:24px;font-weight:800;color:var(--color-primary)">${referralCount}</div>
           <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Friends referred</div>
         </div>
@@ -1710,6 +1718,20 @@ async function renderProfile() {
     showToast('Signed out successfully', 'success');
     router.navigate('home');
   });
+
+  // Load real rider tier async
+  (async () => {
+    try {
+      const { data: bookingsResp } = await sb.from('bookings')
+        .select('id').eq('client_id', user.id).eq('status', 'completed');
+      const count = bookingsResp ? bookingsResp.length : 0;
+      const tier = window.getRiderTier ? window.getRiderTier(count) : null;
+      const container = screen.querySelector('#tier-badge-container');
+      if (container && tier && window.renderTierBadge) {
+        container.innerHTML = window.renderTierBadge(tier);
+      }
+    } catch(e) { console.warn('Tier fetch failed:', e); }
+  })();
 }
 
 

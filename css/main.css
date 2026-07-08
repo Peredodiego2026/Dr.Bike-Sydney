@@ -838,6 +838,62 @@ body {
 .toast--error { border-color: #EF4444; color: #EF4444; }
 .toast--success { border-color: var(--color-primary); }
 
+/* ── Elevation System ─────────────────────────────────────────────────────────── */
+/* Nivel 0 - Flat (default, cards de lista en reposo) */
+.elevation-0 {
+  box-shadow: var(--elevation-0);
+  transform: none;
+}
+
+/* Nivel 1 - Raised (hover/active/seleccionado) */
+@media (hover: hover) {
+  .card-hover:hover {
+    box-shadow: var(--elevation-1);
+    transform: translateY(-2px);
+    transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+  }
+}
+
+/* Nivel 2 - Floating (modales, overlays) */
+.elevation-2 {
+  box-shadow: var(--elevation-2);
+}
+
+/* Tap feedback (mobile) */
+.btn:active {
+  transform: scale(0.97);
+  transition: transform 0ms;
+}
+
+/* ── Animated list cascade ──────────────────────────────────────────────────── */
+.list-fade-in > * {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.list-fade-in > *.visible {
+  animation: fadeSlideUp var(--motion-base) var(--ease-out) forwards;
+}
+
+@keyframes fadeSlideUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Screen transition (mobile SPA) ──────────────────────────────────────────── */
+[data-screen].active {
+  animation: screenIn var(--screen-transition-duration) var(--ease-out) forwards;
+}
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-screen].active { animation: none; }
+  .card-hover:hover { transform: none; }
+}
+
 /* ── Profile ─────────────────────────────────────────────────────────────────── */
 .profile-wrap {
   display: flex;

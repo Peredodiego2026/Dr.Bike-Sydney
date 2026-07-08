@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="48" height="48">
+  <defs>
+    <radialGradient id="bg" cx="40%" cy="35%"><stop offset="0%" stop-color="#60A5FA"/><stop offset="100%" stop-color="#1D4ED8"/></radialGradient>
+    <radialGradient id="rg" cx="40%" cy="35%"><stop offset="0%" stop-color="#93C5FD"/><stop offset="100%" stop-color="#3B82F6"/></radialGradient>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity=".3"/></filter>
+  </defs>
+  <circle cx="60" cy="56" r="50" fill="url(#bg)" filter="url(#s)"/>
+  <circle cx="60" cy="56" r="44" fill="none" stroke="url(#rg)" stroke-width="2"/>
+  <polygon points="60,28 80,56 60,84 40,56" fill="url(#rg)" opacity=".4"/>
+  <polygon points="60,28 70,56 60,84" fill="#FFF" opacity=".15"/>
+  <text x="60" y="100" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="10" fill="#93C5FD">DIAMOND</text>
+</svg>

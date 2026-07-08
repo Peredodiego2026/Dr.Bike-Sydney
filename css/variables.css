@@ -60,4 +60,26 @@
   /* ── Transitions ─────────────────────────────────────────────────────────── */
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
+
+  /* ── Elevation ───────────────────────────────────────────────────────────── */
+  --elevation-0: 0 1px 2px rgba(13,31,60,0.06);
+  --elevation-1: 0 8px 24px rgba(13,31,60,0.12);
+  --elevation-2: 0 24px 64px rgba(13,31,60,0.18);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────── */
+  --motion-fast: 200ms;
+  --motion-base: 250ms;
+  --ease-out: cubic-bezier(0.4,0,0.2,1);
+
+  /* ── Reduced motion ──────────────────────────────────────────────────────── */
+  --screen-transition-duration: 250ms;
+  --screen-transition-easing: cubic-bezier(0.4,0,0.2,1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --screen-transition-duration: 0ms;
+  }
 }

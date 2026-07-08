@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="48" height="48">
+  <defs>
+    <radialGradient id="bg" cx="40%" cy="35%"><stop offset="0%" stop-color="#D1D5DB"/><stop offset="100%" stop-color="#6B7280"/></radialGradient>
+    <radialGradient id="rg" cx="40%" cy="35%"><stop offset="0%" stop-color="#F3F4F6"/><stop offset="100%" stop-color="#9CA3AF"/></radialGradient>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity=".3"/></filter>
+  </defs>
+  <circle cx="60" cy="56" r="50" fill="url(#bg)" filter="url(#s)"/>
+  <circle cx="60" cy="56" r="44" fill="none" stroke="url(#rg)" stroke-width="2"/>
+  <path d="M35 44 L42 44 L60 30 L78 44 L85 44 L65 60 L65 86 L55 86 L55 60 Z" fill="url(#rg)" opacity=".5"/>
+  <text x="60" y="100" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="10" fill="#9CA3AF">SILVER</text>
+</svg>
