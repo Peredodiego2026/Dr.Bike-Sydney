@@ -2868,9 +2868,9 @@ async function renderProfile() {
       <div class="fw-600 text-center">${name}</div>
       <div class="text-secondary text-sm text-center">${user.email}</div>
 
-      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-top:16px">
+      <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;padding:16px;margin-top:16px;box-shadow:var(--elevation-0)" class="card-hover">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span style="font-size:26px">${riderTier.emoji}</span>
+          ${window.renderMedalImage ? window.renderMedalImage(riderTier.name, 44) : '<span style="font-size:26px">' + (riderTier.emoji || '🚲') + '</span>'}
           <div>
             <div style="font-size:14px;font-weight:700;color:#0D1F3C">${riderTier.label}</div>
             <div style="font-size:12px;color:#6B7280">${completedJobs} service${completedJobs === 1 ? '' : 's'} completed</div>
@@ -2892,7 +2892,7 @@ async function renderProfile() {
         <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:16px">You and your friend each get $15 off</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Copy code</button>
-          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px">📱 Share</a>
+          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:4px;font-family:inherit"><span>📱</span> <span>Share</span></a>
         </div>
       </div>
 
