@@ -658,3 +658,95 @@
 .dbs-discount-msg { font-size: 12px; margin-top: 6px; min-height: 16px; }
 .dbs-discount-msg.success { color: #059669; }
 .dbs-discount-msg.error   { color: #DC2626; }
+
+/* ── Landing Page polish ───────────────────────────────────────────────── */
+/* Review cards */
+.review-card {
+  box-shadow: var(--elevation-0);
+  transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+}
+@media (hover: hover) {
+  .review-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--elevation-1);
+  }
+}
+
+/* Membership cards (landing + index) */
+.membership-card {
+  box-shadow: var(--elevation-0);
+  transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+}
+@media (hover: hover) {
+  .membership-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--elevation-1);
+  }
+}
+
+/* Hero CTA button */
+.btn-primary {
+  box-shadow: var(--elevation-0);
+  transition: all var(--motion-fast) var(--ease-out);
+}
+.btn-primary:hover {
+  box-shadow: var(--elevation-1);
+  transform: translateY(-1px);
+}
+
+/* ── Track.html polish ─────────────────────────────────────────────────── */
+#track-map {
+  border-radius: 12px;
+  box-shadow: var(--elevation-0);
+  border: 1px solid var(--color-border);
+}
+
+/* Mechanic card in tracking */
+.mechanic-card {
+  box-shadow: var(--elevation-0);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+/* ── Admin.html polish ─────────────────────────────────────────────────── */
+/* KPI grid (existing .kpis class in admin.css) */
+.kpis .kpi {
+  box-shadow: var(--elevation-0);
+  transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+}
+@media (hover: hover) {
+  .kpis .kpi:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--elevation-1);
+  }
+}
+
+/* Bookings table rows */
+.booking-row {
+  transition: background var(--motion-fast) ease;
+}
+.booking-row:hover td {
+  background: var(--color-primary-light);
+}
+
+/* Admin tab buttons */
+.nav-tab {
+  transition: all var(--motion-fast) ease;
+}
+.nav-tab:hover {
+  color: var(--color-primary);
+}
+
+/* ── Mechanic polish ───────────────────────────────────────────────────── */
+/* Job cards already have border-left via existing mechanic.css */
+/* Active tab indicator */
+.nav-tab.on {
+  font-weight: 700;
+  border-bottom-color: var(--color-primary);
+}
+
+/* ── Global polish ─────────────────────────────────────────────────────── */
+/* All cards get a subtle default elevation */
+.card, .job-card {
+  box-shadow: var(--elevation-0);
+}
