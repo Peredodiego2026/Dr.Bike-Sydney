@@ -3501,6 +3501,9 @@ async function bkProceed() {
         service_id: _bkState.service.id || null, service_name: _bkState.service.name,
         scheduled_date: _bkState.date, scheduled_time: _bkState.time,
         address: addr || 'Home', discount_code: _bkState.discountCode || null,
+        utm_source: sessionStorage.getItem('utm_source') || null,
+        utm_medium: sessionStorage.getItem('utm_medium') || null,
+        utm_campaign: sessionStorage.getItem('utm_campaign') || null,
       }),
     });
     var d = await resp.json();
@@ -4154,6 +4157,7 @@ function openLandingChat(bookingId) {
 <script src="js/app.js?v=20260707e" type="module"></script>
 <script src="js/live-prices.js" defer></script>
 <script src="js/cta-tracking.js" defer></script>
+<script src="js/utm-capture.js"></script>
 
 </body>
 </html>

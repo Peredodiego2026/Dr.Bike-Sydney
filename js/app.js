@@ -131,6 +131,9 @@ const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
               address: draft.location || 'Home',
               checkout_session_id: sessionId,
               discount_code: draft.discountCode || null,
+              utm_source: sessionStorage.getItem('utm_source') || null,
+              utm_medium: sessionStorage.getItem('utm_medium') || null,
+              utm_campaign: sessionStorage.getItem('utm_campaign') || null,
             }),
           });
           const d = await resp.json();
@@ -1181,6 +1184,9 @@ async function renderPayment() {
         payment_intent_id: realPI,
         discount_code:
           !isTest && window.appState.discountCode ? window.appState.discountCode : null,
+        utm_source: sessionStorage.getItem('utm_source') || null,
+        utm_medium: sessionStorage.getItem('utm_medium') || null,
+        utm_campaign: sessionStorage.getItem('utm_campaign') || null,
       }),
     });
     const _bk = await resp.json();

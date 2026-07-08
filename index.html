@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
   <script>
+    // Capture UTM params before the redirect below can drop them - the
+    // redirect target has no query string, but sessionStorage survives
+    // the client-side navigation since it stays on the same origin.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (f) {
+        var v = params.get(f);
+        if (v) sessionStorage.setItem(f, v);
+      });
+    })();
     if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
       window.location.replace('/landing.html');
     }

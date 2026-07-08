@@ -159,6 +159,9 @@ async function handleCreateBooking(req, res) {
     payment_intent_id,
     checkout_session_id,
     discount_code,
+    utm_source,
+    utm_medium,
+    utm_campaign,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!access_token) return res.status(401).json({ error: 'Sign in required' });
@@ -271,6 +274,9 @@ async function handleCreateBooking(req, res) {
         van_number: vanNumber,
         stripe_payment_intent_id: verifiedPI,
         bike_id: bike_id || null,
+        utm_source: utm_source || null,
+        utm_medium: utm_medium || null,
+        utm_campaign: utm_campaign || null,
       },
     ])
     .select()
