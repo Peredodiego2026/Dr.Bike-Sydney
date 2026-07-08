@@ -23,7 +23,7 @@
 - Never touch PIN-of-arrival or tip logic (not in this phase's files, but noted so nobody "helpfully" touches `tracking`).
 - No inline `onclick` - `addEventListener` + data attributes only (existing project rule).
 - No silent `catch {}` - surface `e.message` or log it (existing project rule).
-- Deploy order: preview -> `npm run check`/`lint`/`test` -> commit -> push to `main` (Vercel auto-deploys on push; do not run `npx vercel --prod` on an uncommitted tree).
+- All 12 tasks commit to the `fase0-home-cuentas-medallas` branch (already created and pushed, tracked by a Draft PR) - never `main`. Vercel auto-deploys on push to `main` only, so work on this branch does not touch production until the human reviews and merges the PR themselves; do not run `npx vercel --prod` on an uncommitted tree at any point.
 
 ---
 
@@ -1200,9 +1200,10 @@ git add sw.js index.html
 git commit -m "chore: bump cache versions for Fase 0 rollout"
 ```
 
-- [ ] **Step 5: Push and confirm in production**
+- [ ] **Step 5: Push the branch (updates the existing Draft PR)**
 
 ```bash
-git push origin main
+git push origin fase0-home-cuentas-medallas
 ```
-Wait for the Vercel deploy to finish (check `mcp__4e3e7e36-851b-4b21-9669-04ab90a9fb09__list_deployments` or the Vercel dashboard), then repeat the Step 3 walkthrough against `https://drbikesydney.com.au` itself (not localhost) to confirm production matches what was verified in preview.
+
+Do not push to `main` and do not run `npx vercel --prod` - this branch is tracked by a Draft PR (`fase0-home-cuentas-medallas` -> `main`) that a human converts to "Ready for review" and merges themselves once they've reviewed it. That merge is what triggers the real production deploy (Vercel auto-deploys on push to `main`). Production verification against `https://drbikesydney.com.au` happens after that merge, outside this plan's scope - this task's job ends at "all 12 tasks verified in preview and pushed to the PR branch."
