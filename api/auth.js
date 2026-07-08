@@ -1301,7 +1301,6 @@ async function handlePublicTrack(req, res) {
   const isActive = ['confirmed', 'enroute', 'en_route', 'in_progress', 'arrived'].includes(
     booking.status
   );
-  const sixtyMinAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
   // PRIMARY: lookup by van_number (most reliable - keyed on van, not mechanic FK)
   if (isActive && booking.van_number) {
@@ -1339,23 +1338,13 @@ async function handlePublicTrack(req, res) {
     }
   }
 
-  // FALLBACK B: any online mechanic in last 60 min (last resort)
-  if (!mechanic_location && isActive) {
-    const locResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/mechanic_locations?select=lat,lng,updated_at,mechanic_id&is_online=eq.true&updated_at=gte.${sixtyMinAgo}&order=updated_at.desc&limit=1`,
-      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
-    );
-    if (locResp.ok) {
-      const locData = await locResp.json();
-      if (locData?.length && locData[0].lat && locData[0].lng) {
-        mechanic_location = {
-          lat: locData[0].lat,
-          lng: locData[0].lng,
-          mechanic_id: locData[0].mechanic_id,
-        };
-      }
-    }
-  }
+  // Removed: a third fallback used to show ANY online mechanic's location
+  // (regardless of whether they were assigned to this booking) when the
+  // van_number/mechanic_id lookups above found nothing. That's the exact
+  // "pin shows up anywhere on the map" bug - a client would see a random
+  // unrelated mechanic's position labelled "Your mechanic". If we can't
+  // find the actual assigned mechanic's location, show no pin instead of
+  // a wrong one.
 
   // Real mechanic profile (photo/bio) + real stats (rating/completed jobs) - no fabricated numbers.
   // Looked up directly by mechanic_id (the exact contact who accepted) - not by zone/role, since
