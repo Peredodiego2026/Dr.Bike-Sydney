@@ -1500,14 +1500,14 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       <p style="color:#9ca3af;margin:12px 0 24px;font-size:15px">Choose a service, pick a time, and we'll come to you.</p>
 
       <div style="display:flex;flex-direction:column;gap:16px">
-        <select class="lform-input">
+        <select class="lform-input" id="lform-service">
           <option value="" disabled selected>Service Type</option>
-          <option>Tune-Up - $109</option>
-          <option>Standard Service - $149</option>
-          <option>Standard+ Service - $199</option>
-          <option>Repairs - from $60</option>
-          <option>E-Bike Service - $129</option>
-          <option>Bike Assembly - $80</option>
+          <option>Tune-Up</option>
+          <option>Standard Service</option>
+          <option>Standard+ Service</option>
+          <option>Repairs</option>
+          <option>E-Bike Service</option>
+          <option>Bike Assembly</option>
         </select>
         <input type="date" class="lform-input" id="lform-date">
         <select class="lform-input">
@@ -1519,7 +1519,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
         <input type="text" class="lform-input" placeholder="Enter your address">
       </div>
 
-      <button style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
+      <button id="lform-continue-btn" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit" onmouseover="this.style.background='var(--blue-dark)'" onmouseout="this.style.background='var(--blue)'">Continue Booking</button>
 
       <div style="display:flex;gap:24px;margin-top:12px">
         <span style="color:#6b7280;font-size:13px">&#10003; Confirmation in minutes</span>
@@ -3606,10 +3606,15 @@ function bkShowDiagResult(data) {
   }
 }
 
-function bkAutoSelectService(serviceId) {
+function bkAutoSelectService(preselect) {
   var list = document.getElementById('bk-services-list');
   if (!list) return;
-  var card = list.querySelector('[data-service-id="' + serviceId + '"]');
+  // preselect may be a real service id (e.g. from the AI diagnosis) or a
+  // plain service name (e.g. from the static "Book A Service" section's
+  // dropdown) - resolve name to id first if it doesn't already match one.
+  var svc = _bkState.services.find(function(s) { return s.id === preselect || s.name === preselect; });
+  var id = svc ? svc.id : preselect;
+  var card = list.querySelector('[data-service-id="' + id + '"]');
   if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
 
@@ -3627,6 +3632,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var heroBk = document.getElementById('hero-book-btn');
   if (heroBk) heroBk.addEventListener('click', function() { openBooking(); });
+
+  // "Book A Service" static section - previously had no handler at all,
+  // looked like a working form but did nothing on submit (see
+  // docs/cro-audit-landing.md). Opens the real booking modal, pre-selecting
+  // whatever service was chosen in the dropdown if any.
+  var lformContinueBtn = document.getElementById('lform-continue-btn');
+  if (lformContinueBtn) {
+    lformContinueBtn.addEventListener('click', function() {
+      var svcEl = document.getElementById('lform-service');
+      var svcName = svcEl && svcEl.value ? svcEl.value : null;
+      openBooking(svcName);
+    });
+  }
 
   // First GrowthBook experiment: hero CTA copy. Falls back to the default
   // text below if GrowthBook isn't configured yet (see <head> for setup).
