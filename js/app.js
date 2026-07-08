@@ -3485,20 +3485,27 @@ async function renderMyBikes() {
 }
 
 async function updateHomeNav() {
-  const btn = document.getElementById('home-nav-auth-btn');
-  if (!btn) return;
+  const btns = [
+    document.getElementById('home-nav-auth-btn'),
+    document.getElementById('home-mobile-auth-btn'),
+  ].filter(Boolean);
+  if (!btns.length) return;
   try {
     const {
       data: { user },
     } = await sb.auth.getUser();
-    const label = btn.querySelector('span');
-    if (user) {
-      const name = (user.user_metadata?.full_name || user.email || '').split('@')[0].split(' ')[0];
-      if (label) label.textContent = 'Hi, ' + name;
-      btn.href = '#profile';
-    } else {
-      if (label) label.textContent = 'Sign In';
-      btn.href = '#login';
+    for (const btn of btns) {
+      const label = btn.querySelector('span');
+      if (user) {
+        const name = (user.user_metadata?.full_name || user.email || '')
+          .split('@')[0]
+          .split(' ')[0];
+        if (label) label.textContent = 'Hi, ' + name;
+        btn.href = '#profile';
+      } else {
+        if (label) label.textContent = 'Sign In';
+        btn.href = '#login';
+      }
     }
   } catch {}
 }
