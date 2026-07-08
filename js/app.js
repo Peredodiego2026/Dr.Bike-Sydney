@@ -400,6 +400,7 @@ async function renderBookService() {
 
   // ── Step 1: Choose Service ────────────────────────────────────────────────
   function renderStep1() {
+    if (window.posthog) posthog.capture('booking_step_viewed', { step: 'select_service' });
     const groups = {};
     CAT_ORDER.forEach((c) => {
       groups[c] = [];
@@ -567,6 +568,7 @@ async function renderBookService() {
 
   // ── Step 2: Date & Time ───────────────────────────────────────────────────
   async function renderStep2() {
+    if (window.posthog) posthog.capture('booking_step_viewed', { step: 'select_date' });
     if (!document.getElementById('cal-styles')) {
       const s = document.createElement('style');
       s.id = 'cal-styles';
@@ -702,6 +704,7 @@ async function renderBookService() {
 
   // ── Step 3: Address ───────────────────────────────────────────────────────
   function renderStep3() {
+    if (window.posthog) posthog.capture('booking_step_viewed', { step: 'address' });
     const saved = window.appState.location !== 'Home' ? window.appState.location : '';
     screen.innerHTML = `
       ${createHeader('Your Address', true, '#book-service')}
@@ -875,6 +878,7 @@ async function renderServiceSummary() {
     return;
   }
   if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
+  if (window.posthog) posthog.capture('booking_step_viewed', { step: 'quote_summary' });
 
   const adj = applyPricingAdjustments(Number(service.price || 0), date);
   const serviceTotal = adj.total;
@@ -1088,6 +1092,7 @@ async function renderPayment() {
     router.navigate('book-service');
     return;
   }
+  if (window.posthog) posthog.capture('booking_step_viewed', { step: 'payment' });
   const calloutFee = await getCalloutFee(location);
 
   const {
