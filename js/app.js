@@ -65,6 +65,11 @@ import {
   createBookingCard,
   createEmptyState,
   showToast,
+  createStatusBadge,
+  createEmptyStateV2,
+  createListingCard,
+  createProgressBar,
+  createStatusSteps,
 } from './components.js';
 import { getRiderTier } from './rider-tier.js';
 import { getLang, setLang, translateScreen, LANGUAGES } from './i18n.js';
@@ -1398,12 +1403,8 @@ async function renderTrackingPicker(screen) {
     const active = (bookings || []).filter((b) => b.status !== 'cancelled');
 
     if (!active.length) {
-      listEl.innerHTML = `
-        <div style="text-align:center;padding:40px 0">
-          <div style="font-size:40px;margin-bottom:12px">📋</div>
-          <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:6px">No bookings yet</div>
-          <div style="font-size:13px;color:#6B7280">Book a service to track it here</div>
-        </div>`;
+      const listIcon = '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+      listEl.innerHTML = createEmptyStateV2({ iconSvg: listIcon, title: 'No bookings yet', subtitle: 'Book a service to track it here' });
       return;
     }
 
@@ -2506,19 +2507,27 @@ async function renderMyBookings() {
     );
 
     if (!filtered.length) {
-      list.innerHTML = createEmptyState(
-        calIcon,
-        tab === 'upcoming' ? 'No upcoming bookings' : 'No booking history',
-        tab === 'upcoming'
+      list.innerHTML = createEmptyStateV2({
+        iconSvg: calIcon,
+        title: tab === 'upcoming' ? 'No upcoming bookings' : 'No booking history',
+        subtitle: tab === 'upcoming'
           ? 'Book your first service today!'
-          : 'Completed services will appear here.'
-      );
+          : 'Completed services will appear here.',
+        actionLabel: 'Book a Service',
+        actionHref: '#book-service',
+      });
       return;
     }
 
-    list.innerHTML = filtered.map((b) => createBookingCard(b)).join('');
+    list.innerHTML = filtered.map((b) => createListingCard({
+      title: b.service_name || 'Service',
+      subtitle: (b.scheduled_date || '') + (b.scheduled_time ? ' · ' + b.scheduled_time : ''),
+      status: b.status || 'pending',
+      dataId: b.id,
+      badgeHtml: createStatusBadge(b.status || 'pending'),
+    })).join('');
 
-    list.querySelectorAll('.booking-card').forEach((card) => {
+    list.querySelectorAll('.dbs-listing-card').forEach((card) => {
       card.style.cursor = 'pointer';
       card.addEventListener('click', () => {
         const booking = allBookings.find((b) => String(b.id) === card.dataset.bookingId);
@@ -2552,10 +2561,10 @@ async function renderMyBookings() {
         const sc = STATUS_COLORS[booking.status] || '#64748B';
         const sl = STATUS_LABELS[booking.status] || booking.status;
         overlay.innerHTML = `
-          <div id="detail-panel" style="background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
+          <div id="detail-panel" style="background:var(--color-bg,#fff);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--elevation-2)">
             <div style="width:36px;height:4px;background:#E2E8F0;border-radius:4px;margin:0 auto 20px"></div>
             <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:4px">${booking.service_name || 'Service'}</div>
-            <div style="display:inline-block;font-size:11px;font-weight:600;color:${sc};background:${sc}1A;padding:3px 10px;border-radius:20px;margin-bottom:20px">${sl}</div>
+            <div style="margin-bottom:20px">${createStatusBadge(booking.status)}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;background:#F8FAFC;border-radius:12px;padding:16px;border:1px solid #E2E8F0">
               <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Date</span><span style="font-weight:600;color:#0F172A">${booking.scheduled_date || '--'}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Time</span><span style="font-weight:600;color:#0F172A">${booking.scheduled_time || '--'}</span></div>
@@ -3126,13 +3135,11 @@ async function renderMyBikes() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       if (!data || data.length === 0) {
-        list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--color-text-secondary)">
-          <div style="width:88px;height:88px;border-radius:20px;background:#2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto">
-            <span style="display:inline-block;width:56px;height:38px;background-color:#fff;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
-          </div>
-          <div style="margin-top:14px;font-size:14px">No bikes added yet</div>
-          <div style="font-size:12px;margin-top:4px;opacity:0.7">Add your first bike below</div>
-        </div>`;
+        list.innerHTML = createEmptyStateV2({
+          iconSvg: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M5.5 17.5l4-10h6l3 6h-5l-2-3.5"/><circle cx="12" cy="5" r="2" fill="#2563EB" stroke="none"/></svg>',
+          title: 'No bikes added yet',
+          subtitle: 'Add your first bike to track its service history',
+        });
         return;
       }
       const TYPE_LABELS = {

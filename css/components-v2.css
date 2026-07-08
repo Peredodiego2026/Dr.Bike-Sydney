@@ -1,0 +1,448 @@
+/* ==========================================================================
+   Dr. Bike Sydney — Component System v2 (Fase 0 elevacion + 21st inspirado)
+   Carga despues de variables.css y main.css. Todo con vanilla CSS.
+   ========================================================================== */
+
+/* ── B) Service Card Premium ────────────────────────────────────────────── */
+.dbs-card-service {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 12px;
+  background: var(--color-bg);
+  box-shadow: var(--elevation-0);
+  cursor: pointer;
+  transition: transform var(--motion-fast) var(--ease-out),
+              box-shadow var(--motion-fast) ease;
+}
+@media (hover: hover) {
+  .dbs-card-service:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--elevation-1);
+    border-left-color: var(--color-primary-hover);
+  }
+}
+.dbs-card-service:active {
+  transform: scale(0.985);
+  transition: transform 0ms;
+}
+.dbs-card-service__icon {
+  width: 44px;
+  height: 44px;
+  background: var(--color-primary-light);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dbs-card-service__body {
+  flex: 1;
+  min-width: 0;
+}
+.dbs-card-service__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.dbs-card-service__desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dbs-card-service__meta {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 3px;
+}
+.dbs-card-service__price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dbs-card-service__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-family);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--motion-fast) ease;
+}
+.dbs-card-service__cta:hover {
+  background: var(--color-primary-hover);
+}
+
+/* ── D) Progress Bar ────────────────────────────────────────────────────── */
+.dbs-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dbs-progress__track {
+  height: 6px;
+  background: var(--color-surface-hover, #e5e7eb);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.dbs-progress__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 600ms var(--ease-out, cubic-bezier(0.4,0,0.2,1));
+}
+.dbs-progress__label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.dbs-progress__label strong {
+  color: var(--color-text);
+}
+
+/* Variantes de color */
+.dbs-progress--primary .dbs-progress__fill { background: var(--color-primary); }
+.dbs-progress--success .dbs-progress__fill { background: #22C55E; }
+.dbs-progress--warning .dbs-progress__fill { background: #F59E0B; }
+.dbs-progress--danger  .dbs-progress__fill { background: #EF4444; }
+.dbs-progress--bronze  .dbs-progress__fill { background: #CD7F32; }
+.dbs-progress--silver  .dbs-progress__fill { background: #A8A9AD; }
+.dbs-progress--gold    .dbs-progress__fill { background: #D4AF37; }
+.dbs-progress--diamond .dbs-progress__fill { background: #3B82F6; }
+
+/* ── E) Status Badge ────────────────────────────────────────────────────── */
+.dbs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+.dbs-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Variantes por status */
+.dbs-badge--pending {
+  background: rgba(245,158,11,0.12);
+  color: #D97706;
+}
+.dbs-badge--pending .dbs-badge__dot { background: #D97706; }
+
+.dbs-badge--confirmed {
+  background: rgba(10,88,202,0.12);
+  color: #0A58CA;
+}
+.dbs-badge--confirmed .dbs-badge__dot { background: #0A58CA; }
+
+.dbs-badge--enroute {
+  background: rgba(34,197,94,0.12);
+  color: #059669;
+}
+.dbs-badge--enroute .dbs-badge__dot { background: #22C55E; }
+
+.dbs-badge--inprogress {
+  background: rgba(34,197,94,0.12);
+  color: #059669;
+}
+.dbs-badge--inprogress .dbs-badge__dot { background: #22C55E; }
+
+.dbs-badge--completed {
+  background: rgba(107,114,128,0.12);
+  color: #6B7280;
+}
+.dbs-badge--completed .dbs-badge__dot { background: #6B7280; }
+
+.dbs-badge--cancelled {
+  background: rgba(239,68,68,0.12);
+  color: #DC2626;
+}
+.dbs-badge--cancelled .dbs-badge__dot { background: #EF4444; }
+
+/* ── Status indicator compuesto (dot + texto + icono) ─────────────────── */
+.dbs-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dbs-status-progress {
+  display: flex;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 0 20px;
+}
+.dbs-status-step {
+  flex: 1;
+  padding: 6px 4px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border-right: 1px solid var(--color-border);
+  transition: background 300ms ease, color 300ms ease;
+}
+.dbs-status-step:last-child { border-right: none; }
+.dbs-status-step.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+.dbs-status-step.done {
+  background: #22C55E;
+  color: #fff;
+}
+
+/* ── F) Empty State ─────────────────────────────────────────────────────── */
+.dbs-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+}
+.dbs-empty-state__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  /* SVG dentro, no emoji */
+}
+.dbs-empty-state__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+.dbs-empty-state__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  max-width: 260px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* ── KPI Card (Admin / Mechanic dashboard) ─────────────────────────────── */
+.dbs-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.dbs-kpi-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--elevation-0);
+}
+.dbs-kpi-card__value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.dbs-kpi-card__label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  font-weight: 500;
+}
+.dbs-kpi-card__trend {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.dbs-kpi-card__trend--up   { color: #059669; }
+.dbs-kpi-card__trend--down { color: #DC2626; }
+.dbs-kpi-card__trend--flat { color: #6B7280; }
+
+/* Variantes de color KPI */
+.dbs-kpi-card--primary .dbs-kpi-card__value { color: var(--color-primary); }
+.dbs-kpi-card--success .dbs-kpi-card__value { color: #059669; }
+.dbs-kpi-card--warning .dbs-kpi-card__value { color: #D97706; }
+.dbs-kpi-card--danger  .dbs-kpi-card__value { color: #DC2626; }
+
+/* ── Analytics Card (Admin) ─────────────────────────────────────────────── */
+.dbs-analytics-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--elevation-0);
+  margin-bottom: 16px;
+}
+.dbs-analytics-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.dbs-analytics-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.dbs-analytics-card__subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ── Bar Chart (horizontal, servicios populares) ────────────────────────── */
+.dbs-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dbs-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dbs-bar-item__label {
+  width: 120px;
+  font-size: 12px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+.dbs-bar-item__track {
+  flex: 1;
+  height: 20px;
+  background: var(--color-surface-hover);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dbs-bar-item__fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 500ms var(--ease-out);
+}
+.dbs-bar-item__count {
+  width: 36px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Colores del top 3 */
+.dbs-bar-item:nth-child(1) .dbs-bar-item__fill { background: #D4AF37; }
+.dbs-bar-item:nth-child(2) .dbs-bar-item__fill { background: #A8A9AD; }
+.dbs-bar-item:nth-child(3) .dbs-bar-item__fill { background: #CD7F32; }
+.dbs-bar-item:nth-child(n+4) .dbs-bar-item__fill { background: var(--color-primary); }
+
+/* ── Filter Chips (Admin Services) ──────────────────────────────────────── */
+.dbs-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dbs-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  background: transparent;
+  transition: all 150ms ease;
+  font-family: var(--font-family);
+  white-space: nowrap;
+}
+.dbs-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.dbs-chip.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Listing Card (bookings, jobs del mechanic) ────────────────────────── */
+.dbs-listing-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 12px;
+  background: var(--color-bg);
+  box-shadow: var(--elevation-0);
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: transform var(--motion-fast) var(--ease-out),
+              box-shadow var(--motion-fast) ease;
+}
+@media (hover: hover) {
+  .dbs-listing-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--elevation-1);
+  }
+}
+.dbs-listing-card:active { transform: scale(0.99); transition: transform 0ms; }
+.dbs-listing-card__body { flex: 1; min-width: 0; }
+.dbs-listing-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dbs-listing-card__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.dbs-listing-card__chevron {
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Status border colors */
+.dbs-listing-card--pending   { border-left-color: #F59E0B; }
+.dbs-listing-card--confirmed { border-left-color: #0A58CA; }
+.dbs-listing-card--enroute   { border-left-color: #22C55E; }
+.dbs-listing-card--inprogress{ border-left-color: #22C55E; }
+.dbs-listing-card--completed { border-left-color: #6B7280; }
+.dbs-listing-card--cancelled { border-left-color: #EF4444; opacity: 0.6; }

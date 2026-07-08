@@ -244,3 +244,115 @@ export function createStarRating(rating = 0, interactive = false) {
 
   return `<div class="star-rating${interactive ? ' star-rating--interactive' : ''}" role="${interactive ? 'group' : 'img'}" aria-label="${rating} out of 5 stars">${stars.join('')}</div>`;
 }
+
+// ── Component System v2 ─────────────────────────────────────────────────────
+
+// B) Service Card Premium (icon + name + price + desc + CTA)
+export function createServiceCardV2({ iconSvg, name, price, description, duration, dataId, onClick }) {
+  return `
+<div class="dbs-card-service" data-service-id="${dataId || ''}" role="button" tabindex="0" style="cursor:pointer">
+  ${iconSvg ? `<div class="dbs-card-service__icon">${iconSvg}</div>` : ''}
+  <div class="dbs-card-service__body">
+    <div class="dbs-card-service__name">${name || ''}</div>
+    ${description ? `<div class="dbs-card-service__desc">${description}</div>` : ''}
+    ${duration ? `<div class="dbs-card-service__meta">${duration}</div>` : ''}
+  </div>
+  <div class="dbs-card-service__price">$${price || 0}</div>
+  <button class="dbs-card-service__cta" onclick="event.stopPropagation()">Book now</button>
+</div>`;
+}
+
+// D) Progress Bar
+export function createProgressBar({ progress = 0, label = '', variant = 'primary' }) {
+  return `
+<div class="dbs-progress dbs-progress--${variant}">
+  <div class="dbs-progress__track">
+    <div class="dbs-progress__fill" style="width:${Math.min(100, Math.max(0, progress))}%"></div>
+  </div>
+  ${label ? `<div class="dbs-progress__label">${label}</div>` : ''}
+</div>`;
+}
+
+// E) Status Badge
+export function createStatusBadge(status) {
+  const map = {
+    pending:     { cls: 'pending',     label: 'Pending' },
+    confirmed:   { cls: 'confirmed',   label: 'Confirmed' },
+    enroute:     { cls: 'enroute',     label: 'En Route' },
+    en_route:    { cls: 'enroute',     label: 'En Route' },
+    in_progress: { cls: 'inprogress',  label: 'In Progress' },
+    inprogress:  { cls: 'inprogress',  label: 'In Progress' },
+    arrived:     { cls: 'inprogress',  label: 'Arrived' },
+    completed:   { cls: 'completed',   label: 'Completed' },
+    cancelled:   { cls: 'cancelled',   label: 'Cancelled' },
+  };
+  const s = map[status] || map.pending;
+  return `<span class="dbs-badge dbs-badge--${s.cls}"><span class="dbs-badge__dot"></span>${s.label}</span>`;
+}
+
+// E2) Status Progress Steps (Confirmed → En Route → Arrived → Done)
+export function createStatusSteps(currentStatus, steps = ['Confirmed','En Route','Arrived','Done']) {
+  const order = ['confirmed','confirmed','enroute','enroute','inprogress','inprogress','arrived','arrived','completed','completed'];
+  const currentIdx = order.indexOf(currentStatus);
+  return `
+<div class="dbs-status-progress">
+  ${steps.map((label, i) => {
+    let cls = '';
+    if (i <= Math.floor(currentIdx / 2)) cls = 'done';
+    else if (i === Math.floor(currentIdx / 2) + 1 && currentIdx >= 0) cls = 'active';
+    return `<div class="dbs-status-step${cls ? ' ' + cls : ''}">${label}</div>`;
+  }).join('')}
+</div>`;
+}
+
+// F) Empty State
+export function createEmptyStateV2({ iconSvg, title, subtitle, actionLabel, actionHref }) {
+  return `
+<div class="dbs-empty-state">
+  ${iconSvg ? `<div class="dbs-empty-state__icon">${iconSvg}</div>` : ''}
+  <div class="dbs-empty-state__title">${title || ''}</div>
+  ${subtitle ? `<div class="dbs-empty-state__sub">${subtitle}</div>` : ''}
+  ${actionLabel ? `<a href="${actionHref || '#'}" class="dbs-card-service__cta">${actionLabel} →</a>` : ''}
+</div>`;
+}
+
+// KPI Card (Admin / Mechanic dashboard)
+export function createKpiCard({ value, label, trend, variant = '' }) {
+  return `
+<div class="dbs-kpi-card${variant ? ' dbs-kpi-card--' + variant : ''}">
+  <div class="dbs-kpi-card__value">${value || '—'}</div>
+  <div class="dbs-kpi-card__label">${label || ''}</div>
+  ${trend ? `<div class="dbs-kpi-card__trend dbs-kpi-card__trend--${trend.dir || 'flat'}">${trend.text || ''}</div>` : ''}
+</div>`;
+}
+
+// Bar Chart Item (horizontal, para ranking de servicios)
+export function createBarItem({ label, count, maxCount, variant }) {
+  const pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+  return `
+<div class="dbs-bar-item">
+  <div class="dbs-bar-item__label">${label || ''}</div>
+  <div class="dbs-bar-item__track">
+    <div class="dbs-bar-item__fill" style="width:${Math.max(2, pct)}%"></div>
+  </div>
+  <div class="dbs-bar-item__count">${count || 0}</div>
+</div>`;
+}
+
+// Filter Chip
+export function createChip({ label, active, dataCat }) {
+  return `<button class="dbs-chip${active ? ' active' : ''}" data-cat="${dataCat || ''}">${label || ''}</button>`;
+}
+
+// Listing Card (bookings, jobs)
+export function createListingCard({ title, subtitle, status, dataId, badgeHtml }) {
+  return `
+<div class="dbs-listing-card dbs-listing-card--${status || 'pending'}" data-id="${dataId || ''}" role="button" tabindex="0">
+  <div class="dbs-listing-card__body">
+    <div class="dbs-listing-card__title">${title || ''}</div>
+    ${subtitle ? `<div class="dbs-listing-card__sub">${subtitle}</div>` : ''}
+  </div>
+  ${badgeHtml || ''}
+  <div class="dbs-listing-card__chevron">›</div>
+</div>`;
+}

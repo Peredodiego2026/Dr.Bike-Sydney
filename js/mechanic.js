@@ -5,6 +5,20 @@ function gtag() {
 gtag('js', new Date());
 gtag('config', 'G-GXYD68JXZW');
 
+// ── Component Helpers (components-v2.css classes) ────────────────────────────
+function mechKpi(value, label, variant) {
+  return '<div class="dbs-kpi-card' + (variant ? ' dbs-kpi-card--' + variant : '') + '">'
+    + '<div class="dbs-kpi-card__value">' + (value != null ? value : '—') + '</div>'
+    + '<div class="dbs-kpi-card__label">' + (label || '') + '</div>'
+    + '</div>';
+}
+function mechBadge(status) {
+  var map = {pending:'pending',confirmed:'confirmed',enroute:'enroute',en_route:'enroute',in_progress:'inprogress',inprogress:'inprogress',arrived:'inprogress',completed:'completed',cancelled:'cancelled'};
+  var labels = {pending:'Pending',confirmed:'Confirmed',enroute:'En Route',in_progress:'In Progress',inprogress:'In Progress',arrived:'Arrived',completed:'Completed',cancelled:'Cancelled'};
+  var cls = map[status] || 'pending';
+  return '<span class="dbs-badge dbs-badge--' + cls + '"><span class="dbs-badge__dot"></span>' + (labels[status] || status) + '</span>';
+}
+
 // ── TASK-023: onclick → addEventListener (see tasks.md) ─────────────────────
 // Static buttons that exist in the initial mechanic.html markup - script
 // runs at the end of body so the DOM is already there, no need to wait for
@@ -653,7 +667,7 @@ function card(j) {
           .toUpperCase()}</div>
         <div><div class="job-client">${esc(j.client)}</div><div class="job-meta">${j.date === today ? 'Today' : ''}${t ? ' · ' + t : ''} ${j.date !== today ? '· ' + d : ''}</div></div>
       </div>
-      <span class="status-badge" style="background:${sc[st]}1A;color:${sc[st]}">${sl[st] || st}</span>
+      <span class="status-badge">${mechBadge(st)}</span>
     </div>
     ${isEnroute ? `<div id="timer-${j.id}" style="font-size:12px;color:#D97706;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
     <div class="job-service">${esc(j.service)}</div>
@@ -2317,27 +2331,11 @@ function profile() {
     <!-- Earnings cards -->
     <div style="padding:0 16px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6">Earnings</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div style="background:linear-gradient(135deg,#1848C8,#0D1F3C);border-radius:14px;padding:16px;color:#fff">
-          <div style="font-size:11px;opacity:0.7;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Today</div>
-          <div style="font-size:26px;font-weight:800;margin-top:4px">$${todayRev}</div>
-          <div style="font-size:12px;opacity:0.7;margin-top:2px">${td.length} job${td.length !== 1 ? 's' : ''}</div>
-        </div>
-        <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
-          <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">This week</div>
-          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${weekRev}</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${wk.length} job${wk.length !== 1 ? 's' : ''}</div>
-        </div>
-        <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
-          <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">This month</div>
-          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${monthRev}</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${mo.length} job${mo.length !== 1 ? 's' : ''}</div>
-        </div>
-        <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
-          <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">All time</div>
-          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${totalRev}</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${all.length} job${all.length !== 1 ? 's' : ''}</div>
-        </div>
+      <div class="dbs-kpi-grid">
+        ${mechKpi('$' + todayRev, 'Today · ' + td.length + ' job' + (td.length !== 1 ? 's' : ''), 'primary')}
+        ${mechKpi('$' + weekRev, 'This week · ' + wk.length + ' job' + (wk.length !== 1 ? 's' : ''))}
+        ${mechKpi('$' + monthRev, 'This month · ' + mo.length + ' job' + (mo.length !== 1 ? 's' : ''))}
+        ${mechKpi('$' + totalRev, 'All time · ' + all.length + ' job' + (all.length !== 1 ? 's' : '') + '', 'success')}
       </div>
     </div>
 

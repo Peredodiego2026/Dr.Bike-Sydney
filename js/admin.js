@@ -5,6 +5,19 @@ function gtag() {
 gtag('js', new Date());
 gtag('config', 'G-GXYD68JXZW');
 
+// ── Component Helpers (components-v2.css) ─────────────────────────────────────
+function adminBarItem(label, count, maxCount) {
+  var pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+  return '<div class="dbs-bar-item">'
+    + '<div class="dbs-bar-item__label">' + label + '</div>'
+    + '<div class="dbs-bar-item__track"><div class="dbs-bar-item__fill" style="width:' + Math.max(2, pct) + '%"></div></div>'
+    + '<div class="dbs-bar-item__count">' + (count || 0) + '</div>'
+    + '</div>';
+}
+function adminChip(label, active, dataCat) {
+  return '<button class="dbs-chip' + (active ? ' active' : '') + '" data-cat="' + (dataCat || '') + '">' + label + '</button>';
+}
+
 // ── THEME ────────────────────────────────────────────────────────────────────
 (function () {
   const saved = localStorage.getItem('drbike-theme');
@@ -2720,20 +2733,9 @@ function renderServicePopularity(all, catalog) {
     return;
   }
   const max = Math.max(1, rows[0][1]);
-  el.innerHTML = rows
-    .map(([name, n]) => {
-      const pct = Math.round((n / max) * 100);
-      const color = n === 0 ? 'var(--mgray)' : n === rows[0][1] ? 'var(--green)' : 'var(--blue)';
-      return `
-    <div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-        <span style="font-weight:600;color:var(--navy)">${escapeHtml(name)}</span>
-        <span style="color:var(--mgray)">${n} job${n !== 1 ? 's' : ''}</span>
-      </div>
-      <div style="height:10px;background:var(--off);border-radius:5px;overflow:hidden"><div style="height:100%;width:${Math.max(pct, n > 0 ? 2 : 0)}%;background:${color};border-radius:5px"></div></div>
-    </div>`;
-    })
-    .join('');
+  el.innerHTML = '<div class="dbs-bar-list">' + rows
+    .map(([name, n]) => adminBarItem(name, n, max))
+    .join('') + '</div>';
 }
 
 // #20 Conversion funnel
