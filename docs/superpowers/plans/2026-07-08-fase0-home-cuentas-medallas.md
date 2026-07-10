@@ -1139,15 +1139,15 @@ git commit -m "feat: My Bikes cards adopt shared elevation pattern"
 
 `js/rider-tier.js` and `js/i18n.js` are imported by `js/app.js` via bare specifiers (`import { getRiderTier } from './rider-tier.js';`, no `?v=` query) and are **not** in `sw.js`'s `STATIC_ASSETS` precache list - the service worker's cache-first fetch handler matches any `.js` file by extension regardless of that list, and once a URL is cached it is never revalidated. Bumping the `?v=` query on `<script src="js/app.js?...">` does **not** bust the cache for these indirectly-imported files, since ES module relative imports resolve to a plain URL with no query string. The only mechanism that reliably busts everything (direct scripts, indirectly-imported modules, and images) is renaming the cache itself, which forces the `activate` handler to delete the old cache and let every asset re-fetch on next request.
 
-In `sw.js`, current:
-```js
-const CACHE_STATIC = 'drbike-static-v23';
-const CACHE_PAGES  = 'drbike-pages-v23';
-```
-Change to:
+In `sw.js`, current (v24 - v23 was consumed by the 2026-07-11 production restore after an external bot's bad deploys; this branch already merged that fix from main):
 ```js
 const CACHE_STATIC = 'drbike-static-v24';
 const CACHE_PAGES  = 'drbike-pages-v24';
+```
+Change to:
+```js
+const CACHE_STATIC = 'drbike-static-v25';
+const CACHE_PAGES  = 'drbike-pages-v25';
 ```
 
 - [ ] **Step 2: Bump `?v=` on the directly-referenced tags too (defense in depth, matches existing project convention)**
