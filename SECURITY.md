@@ -25,7 +25,7 @@ Last full review: **2026-07-11**. Next scheduled: **2027-01-11** (recurring ever
 ## Incident log
 
 - **2026-07-11 (a)**: local AI agent (opencode CLI) pushed ~28 commits direct to main -> bad prod deploys + poisoned SW cache. Restored to 38620c6, SW bumped to v24. Countermeasure same day: branch protection with enforce_admins.
-- **2026-07-11 (b)**: GitHub PAT found embedded in plaintext in the git remote URL (.git/config), and printed in a chat transcript. Removed from remote (auth now via Windows Credential Manager). **Token revocation pending (Diego, manual).**
+- **2026-07-11 (b)**: GitHub PAT found embedded in plaintext in the git remote URL (.git/config), and printed in a chat transcript. Removed from remote (auth now via Windows Credential Manager). Token revoked by Diego same day (2026-07-11). Incident closed.
 
 ## Semi-annual security review - the "blindaje" checklist
 
