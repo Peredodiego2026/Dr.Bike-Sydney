@@ -2966,7 +2966,18 @@ async function renderProfile() {
 
   screen.querySelectorAll('.lang-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      setLang(btn.dataset.lang);
+      // Paint the selected state immediately - the highlight used to wait for
+      // the full renderProfile() round-trip (getUser + profile + bookings
+      // queries), which lags well behind the instant text translation and
+      // looked "stuck" until a second tap forced a re-render.
+      const chosen = btn.dataset.lang;
+      screen.querySelectorAll('.lang-btn').forEach((b) => {
+        const active = b.dataset.lang === chosen;
+        b.style.borderColor = active ? '#2563EB' : '#E5E7EB';
+        b.style.background = active ? '#EFF6FF' : '#fff';
+        b.style.color = active ? '#2563EB' : '#374151';
+      });
+      setLang(chosen);
       renderProfile();
     });
   });
