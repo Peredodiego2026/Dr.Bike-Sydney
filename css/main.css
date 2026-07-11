@@ -1022,6 +1022,10 @@ body {
 }
 
 .google-btn {
+  /* border lives here, not in the inline style attribute, so :hover below can
+     actually win - an inline style's border shorthand has higher specificity
+     than any external rule and would silently block border-color changes */
+  border: 1.5px solid #e2e8f0;
   transition:
     border-color var(--motion-fast),
     box-shadow var(--motion-fast);

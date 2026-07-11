@@ -2349,7 +2349,7 @@ async function renderLogin() {
       <p style="text-align:center;font-size:13px;font-weight:600;color:#2563EB;margin:0 0 12px">Healthy bikes, happy riders</p>
       <h2 class="login-title">${isSignup ? 'Create Account' : 'Welcome Back!'}</h2>
       <p class="login-sub text-secondary text-center">${isSignup ? 'Join Dr. Bike Sydney' : 'Login to your account'}</p>
-      <button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;color:#0F172A;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
+      <button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0F172A;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
