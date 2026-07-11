@@ -73,7 +73,7 @@ RLS is ENABLED on bookings (fixed Jun 2026).
 Key column gotchas:
 - `bikes` table uses `client_id` (NOT `user_id`)
 - `bookings.scheduled_time` stored as 24h string (e.g. "14:30")
-- `bookings` lacks `bike_id` column (needed for service history per bike)
+- `bookings.bike_id`: CONTEXT.md (schema verified 2026-06-29 via SQL) says it EXISTS; this file previously said it was missing. Re-verify with a SELECT before relying on it.
 - WhatsApp admin number stored in van_zones with van_number=0 (hack)
 
 ## API endpoints (/api directory)
@@ -102,12 +102,10 @@ stripe-webhook.js.
 - B01: stripe-webhook.js - already uses membership_status correctly. Non-issue.
 - B02: send-email.js referral_success - variables are in scope. Non-issue.
 
-### Session 5 (routing unification) - PENDING - 2 bugs to fix
-Attempt to unify routing (one page for all devices) failed. Two visible bugs in index.html when served to desktop via the root URL:
-1. Hero text invisible (root cause unknown - works fine at /index.html directly)
-2. Bottom nav visible on desktop despite @media (min-width: 768px) { display:none !important }
-
-Before retrying Session 5: reproduce bugs at /index.html to isolate whether the issue is routing or CSS specificity.
+### Session 5 (routing unification) - PARTIAL (Jul 2026)
+Desktop booking now uses the index.html wizard (commit 0c639c1) - the booking FLOW
+is unified. Page-level bifurcation remains: middleware.js still routes
+mobile->index.html, desktop->landing.html. Full one-page routing was not retried.
 
 ## Pricing
 - Prices live in Supabase's `services` table (name, price, category) - do not hardcode
@@ -128,9 +126,12 @@ Before retrying Session 5: reproduce bugs at /index.html to isolate whether the 
 - Lawyer review pending (after August 2026).
 
 ## Deploy
-- Auto-deploy: pushing to `main` on GitHub triggers an automatic Vercel production
-  deploy within seconds (confirmed via Vercel API Jul 2026) - no separate command
-  needed. Every commit pushed to main goes live immediately.
+- Branch protection (since 11 Jul 2026): main rejects direct pushes for EVERYONE,
+  admin included (enforce_admins). All changes reach main via PR with the
+  `quality-gate` CI check green. Work on feature branches always.
+- Auto-deploy: merging to `main` triggers an automatic Vercel production deploy
+  within seconds (confirmed via Vercel API Jul 2026) - no separate command needed.
+  Every commit that lands on main goes live immediately.
 - Always commit before pushing - never deploy an uncommitted working directory
   via `npx vercel --prod`, it silently diverges from what's in the repo.
 - node --check js/app.js (or `npm run check`) before pushing to main, since it
