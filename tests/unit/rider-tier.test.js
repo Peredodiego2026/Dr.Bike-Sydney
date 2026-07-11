@@ -42,10 +42,13 @@ describe('getRiderTier', () => {
     expect(tier.image).toBe('images/bike-icon.png');
   });
 
+  // Medal files are .svg placeholders pending Gemini API billing - see the
+  // comment at the top of js/rider-tier.js. Swap the extension here too when
+  // the real renders land.
   it('gives every medal tier a photo icon pointing at its own render', () => {
-    expect(getRiderTier(3)).toMatchObject({ iconType: 'photo', image: 'images/medals/bronze.png' });
-    expect(getRiderTier(6)).toMatchObject({ iconType: 'photo', image: 'images/medals/silver.png' });
-    expect(getRiderTier(10)).toMatchObject({ iconType: 'photo', image: 'images/medals/gold.png' });
-    expect(getRiderTier(20)).toMatchObject({ iconType: 'photo', image: 'images/medals/diamond.png' });
+    expect(getRiderTier(3)).toMatchObject({ iconType: 'photo', image: 'images/medals/bronze.svg' });
+    expect(getRiderTier(6)).toMatchObject({ iconType: 'photo', image: 'images/medals/silver.svg' });
+    expect(getRiderTier(10)).toMatchObject({ iconType: 'photo', image: 'images/medals/gold.svg' });
+    expect(getRiderTier(20)).toMatchObject({ iconType: 'photo', image: 'images/medals/diamond.svg' });
   });
 });
