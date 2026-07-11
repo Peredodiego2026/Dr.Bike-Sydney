@@ -35,4 +35,17 @@ describe('getRiderTier', () => {
     expect(tier.label).toBe('Bronze Rider');
     expect(tier.progressPct).toBeCloseTo(33, 0);
   });
+
+  it('gives New Rider a mask icon pointing at the shared bike glyph', () => {
+    const tier = getRiderTier(0);
+    expect(tier.iconType).toBe('mask');
+    expect(tier.image).toBe('images/bike-icon.png');
+  });
+
+  it('gives every medal tier a photo icon pointing at its own render', () => {
+    expect(getRiderTier(3)).toMatchObject({ iconType: 'photo', image: 'images/medals/bronze.png' });
+    expect(getRiderTier(6)).toMatchObject({ iconType: 'photo', image: 'images/medals/silver.png' });
+    expect(getRiderTier(10)).toMatchObject({ iconType: 'photo', image: 'images/medals/gold.png' });
+    expect(getRiderTier(20)).toMatchObject({ iconType: 'photo', image: 'images/medals/diamond.png' });
+  });
 });
