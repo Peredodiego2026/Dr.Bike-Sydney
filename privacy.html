@@ -35,14 +35,21 @@
       position: sticky; top: 0; z-index: 100;
       background: var(--white); border-bottom: 1px solid var(--border); height: 64px;
     }
-    .navbar .container { display: flex; align-items: center; justify-content: space-between; height: 100%; }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 16px; }
     .nav-logo { display: flex; gap: 10px; align-items: center; }
     .nav-logo span { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
     .nav-back {
       font-size: 14px; color: var(--gray); font-weight: 500;
       display: flex; align-items: center; gap: 6px; transition: color 150ms;
     }
     .nav-back:hover { color: var(--blue); }
+
+    /* Machine-translation disclaimer */
+    .mt-disclaimer {
+      background: #fffbeb; border-bottom: 1px solid #fde68a;
+      padding: 10px 0; font-size: 13px; color: #92400e; text-align: center;
+    }
 
     /* Page header */
     .legal-header {
@@ -101,6 +108,10 @@
 </head>
 <body>
 
+<div id="mt-disclaimer" class="mt-disclaimer" hidden>
+  <span data-i18n="mt-notice">This translation is machine-generated and provided for convenience only. The English version is the legally binding text.</span>
+</div>
+
 <nav class="navbar">
   <div class="container">
     <a href="/" class="nav-logo">
@@ -114,208 +125,211 @@
       </svg>
       <span>DR BIKE SYDNEY</span>
     </a>
-    <a href="/" class="nav-back">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      Back to Home
-    </a>
+    <div class="nav-right">
+      <div id="lang-switcher-slot"></div>
+      <a href="/" class="nav-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span data-i18n="nav-back">Back to Home</span>
+      </a>
+    </div>
   </div>
 </nav>
 
 <section class="legal-header">
   <div class="container">
-    <h1>Privacy Policy</h1>
-    <p>Effective date: 1 June 2026 &nbsp;&middot;&nbsp; Last updated: 14 June 2026</p>
+    <h1 data-i18n="h1">Privacy Policy</h1>
+    <p><span data-i18n="eff-date">Effective date: 1 June 2026</span> &nbsp;&middot;&nbsp; <span data-i18n="upd-date">Last updated: 14 June 2026</span></p>
   </div>
 </section>
 
 <main>
   <div class="legal-content">
 
-    <h2>1. Our Commitment to Privacy</h2>
-    <p>Dr. Bike Sydney ("we", "us", "our") is committed to protecting your personal information. This Privacy Policy explains how we collect, use, store and disclose information in accordance with the <strong>Privacy Act 1988 (Cth)</strong> and the Australian Privacy Principles (APPs).</p>
-    <p>By using our website or services, you consent to the practices described in this policy.</p>
+    <h2 data-i18n="s1-h">1. Our Commitment to Privacy</h2>
+    <p data-i18n="s1-p1">Dr. Bike Sydney ("we", "us", "our") is committed to protecting your personal information. This Privacy Policy explains how we collect, use, store and disclose information in accordance with the <strong>Privacy Act 1988 (Cth)</strong> and the Australian Privacy Principles (APPs).</p>
+    <p data-i18n="s1-p2">By using our website or services, you consent to the practices described in this policy.</p>
     <div class="highlight-box">
-      <p>We only collect information necessary to provide and improve our services. We do not sell your personal data to third parties.</p>
+      <p data-i18n="s1-box">We only collect information necessary to provide and improve our services. We do not sell your personal data to third parties.</p>
     </div>
 
-    <h2>2. Who We Are</h2>
-    <p>Dr. Bike Sydney is a mobile bicycle repair and maintenance business operating in Sydney, NSW, Australia.</p>
-    <p><strong>Privacy Contact:</strong><br>
+    <h2 data-i18n="s2-h">2. Who We Are</h2>
+    <p data-i18n="s2-p1">Dr. Bike Sydney is a mobile bicycle repair and maintenance business operating in Sydney, NSW, Australia.</p>
+    <p data-i18n="s2-p2"><strong>Privacy Contact:</strong><br>
     Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a><br>
     Phone: <a href="tel:+61433963250">0433 963 250</a><br>
     Location: Sydney, NSW, Australia</p>
 
-    <h2>3. Information We Collect</h2>
-    <p>We collect the following categories of personal information:</p>
+    <h2 data-i18n="s3-h">3. Information We Collect</h2>
+    <p data-i18n="s3-p1">We collect the following categories of personal information:</p>
 
-    <p><strong>Information you provide directly:</strong></p>
+    <p data-i18n="s3-p2"><strong>Information you provide directly:</strong></p>
     <ul>
-      <li><strong>Name</strong> - to identify you and address communications</li>
-      <li><strong>Email address</strong> - for booking confirmations, receipts and service updates</li>
-      <li><strong>Phone number</strong> - for booking reminders, scheduling and mechanic coordination</li>
-      <li><strong>Service address</strong> - to dispatch our mechanic to your location</li>
-      <li><strong>Bicycle details</strong> (brand, model, type) - to prepare appropriate tools and parts</li>
-      <li><strong>Service history</strong> - records of work performed on your bicycle</li>
-      <li><strong>Communication content</strong> - messages sent through our chat or email</li>
+      <li data-i18n="s3-li1"><strong>Name</strong> - to identify you and address communications</li>
+      <li data-i18n="s3-li2"><strong>Email address</strong> - for booking confirmations, receipts and service updates</li>
+      <li data-i18n="s3-li3"><strong>Phone number</strong> - for booking reminders, scheduling and mechanic coordination</li>
+      <li data-i18n="s3-li4"><strong>Service address</strong> - to dispatch our mechanic to your location</li>
+      <li data-i18n="s3-li5"><strong>Bicycle details</strong> (brand, model, type) - to prepare appropriate tools and parts</li>
+      <li data-i18n="s3-li6"><strong>Service history</strong> - records of work performed on your bicycle</li>
+      <li data-i18n="s3-li7"><strong>Communication content</strong> - messages sent through our chat or email</li>
     </ul>
 
-    <p><strong>Payment information:</strong></p>
-    <p>Payments are processed by Stripe, Inc. We do not collect, store or process your card number, CVV or full payment credentials. Stripe handles all payment data in compliance with PCI DSS standards. We receive only transaction confirmation details (amount, status, last 4 digits of card).</p>
+    <p data-i18n="s3-p3"><strong>Payment information:</strong></p>
+    <p data-i18n="s3-p4">Payments are processed by Stripe, Inc. We do not collect, store or process your card number, CVV or full payment credentials. Stripe handles all payment data in compliance with PCI DSS standards. We receive only transaction confirmation details (amount, status, last 4 digits of card).</p>
 
-    <p><strong>Information collected automatically:</strong></p>
+    <p data-i18n="s3-p5"><strong>Information collected automatically:</strong></p>
     <ul>
-      <li>Browser type and version</li>
-      <li>Operating system</li>
-      <li>IP address (anonymised for analytics)</li>
-      <li>Pages visited and time spent on site</li>
-      <li>Referring URL</li>
-      <li>Device type (mobile, desktop)</li>
+      <li data-i18n="s3-li8">Browser type and version</li>
+      <li data-i18n="s3-li9">Operating system</li>
+      <li data-i18n="s3-li10">IP address (anonymised for analytics)</li>
+      <li data-i18n="s3-li11">Pages visited and time spent on site</li>
+      <li data-i18n="s3-li12">Referring URL</li>
+      <li data-i18n="s3-li13">Device type (mobile, desktop)</li>
     </ul>
-    <p>This information is collected via Google Analytics and our hosting infrastructure (Vercel).</p>
+    <p data-i18n="s3-p6">This information is collected via Google Analytics and our hosting infrastructure (Vercel).</p>
 
-    <h2>4. How We Use Your Information</h2>
-    <p>We use your personal information to:</p>
+    <h2 data-i18n="s4-h">4. How We Use Your Information</h2>
+    <p data-i18n="s4-p1">We use your personal information to:</p>
     <ul>
-      <li>Process and confirm your bookings</li>
-      <li>Dispatch and coordinate our mechanics</li>
-      <li>Send booking reminders, service updates and receipts via email and SMS</li>
-      <li>Process payments through Stripe</li>
-      <li>Respond to your questions and support requests</li>
-      <li>Maintain a record of services performed on your bicycle</li>
-      <li>Improve our services and website based on usage patterns</li>
-      <li>Send marketing communications (only with your consent - you may unsubscribe at any time)</li>
-      <li>Comply with our legal obligations</li>
+      <li data-i18n="s4-li1">Process and confirm your bookings</li>
+      <li data-i18n="s4-li2">Dispatch and coordinate our mechanics</li>
+      <li data-i18n="s4-li3">Send booking reminders, service updates and receipts via email and SMS</li>
+      <li data-i18n="s4-li4">Process payments through Stripe</li>
+      <li data-i18n="s4-li5">Respond to your questions and support requests</li>
+      <li data-i18n="s4-li6">Maintain a record of services performed on your bicycle</li>
+      <li data-i18n="s4-li7">Improve our services and website based on usage patterns</li>
+      <li data-i18n="s4-li8">Send marketing communications (only with your consent - you may unsubscribe at any time)</li>
+      <li data-i18n="s4-li9">Comply with our legal obligations</li>
     </ul>
-    <p>We will not use your information for purposes that are incompatible with the original purpose of collection, except where required by law or with your consent.</p>
+    <p data-i18n="s4-p2">We will not use your information for purposes that are incompatible with the original purpose of collection, except where required by law or with your consent.</p>
 
-    <h2>5. Third-Party Service Providers</h2>
-    <p>We share your information only with the service providers necessary to operate our business. Each is bound by their own privacy policies and applicable law.</p>
+    <h2 data-i18n="s5-h">5. Third-Party Service Providers</h2>
+    <p data-i18n="s5-p1">We share your information only with the service providers necessary to operate our business. Each is bound by their own privacy policies and applicable law.</p>
 
     <table class="third-party-table">
       <thead>
         <tr>
-          <th>Provider</th>
-          <th>Purpose</th>
-          <th>Data Shared</th>
+          <th data-i18n="tbl-provider">Provider</th>
+          <th data-i18n="tbl-purpose">Purpose</th>
+          <th data-i18n="tbl-data">Data Shared</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>Stripe, Inc.</strong> (USA)</td>
-          <td>Payment processing</td>
-          <td>Name, email, payment card (direct to Stripe - not stored by us)</td>
+          <td data-i18n="tbl-r1-purpose">Payment processing</td>
+          <td data-i18n="tbl-r1-data">Name, email, payment card (direct to Stripe - not stored by us)</td>
         </tr>
         <tr>
           <td><strong>Supabase, Inc.</strong> (USA)</td>
-          <td>Database and authentication</td>
-          <td>Name, email, phone, address, booking details, service history</td>
+          <td data-i18n="tbl-r2-purpose">Database and authentication</td>
+          <td data-i18n="tbl-r2-data">Name, email, phone, address, booking details, service history</td>
         </tr>
         <tr>
           <td><strong>Resend, Inc.</strong> (USA)</td>
-          <td>Transactional email delivery</td>
-          <td>Name, email address</td>
+          <td data-i18n="tbl-r3-purpose">Transactional email delivery</td>
+          <td data-i18n="tbl-r3-data">Name, email address</td>
         </tr>
         <tr>
           <td><strong>Twilio, Inc.</strong> (USA)</td>
-          <td>SMS and WhatsApp notifications</td>
-          <td>Phone number, booking details</td>
+          <td data-i18n="tbl-r4-purpose">SMS and WhatsApp notifications</td>
+          <td data-i18n="tbl-r4-data">Phone number, booking details</td>
         </tr>
         <tr>
           <td><strong>Google LLC</strong> (USA)</td>
-          <td>Analytics (Google Analytics) and Maps</td>
-          <td>Anonymised usage data, approximate location</td>
+          <td data-i18n="tbl-r5-purpose">Analytics (Google Analytics) and Maps</td>
+          <td data-i18n="tbl-r5-data">Anonymised usage data, approximate location</td>
         </tr>
         <tr>
           <td><strong>Vercel, Inc.</strong> (USA)</td>
-          <td>Website hosting and serverless functions</td>
-          <td>IP address, request logs (retained per Vercel policy)</td>
+          <td data-i18n="tbl-r6-purpose">Website hosting and serverless functions</td>
+          <td data-i18n="tbl-r6-data">IP address, request logs (retained per Vercel policy)</td>
         </tr>
         <tr>
           <td><strong>Anthropic, PBC</strong> (USA)</td>
-          <td>AI-powered bike diagnosis feature</td>
-          <td>Bike description and issue details provided in chat</td>
+          <td data-i18n="tbl-r7-purpose">AI-powered bike diagnosis feature</td>
+          <td data-i18n="tbl-r7-data">Bike description and issue details provided in chat</td>
         </tr>
       </tbody>
     </table>
 
-    <p>Some of these providers are located in the United States. Where personal information is transferred overseas, we take reasonable steps to ensure it receives comparable protection to that required under the Privacy Act 1988 (Cth), including through contractual protections.</p>
+    <p data-i18n="s5-p2">Some of these providers are located in the United States. Where personal information is transferred overseas, we take reasonable steps to ensure it receives comparable protection to that required under the Privacy Act 1988 (Cth), including through contractual protections.</p>
 
-    <h2>6. Cookies and Tracking</h2>
-    <p>Our website uses cookies and similar tracking technologies to:</p>
+    <h2 data-i18n="s6-h">6. Cookies and Tracking</h2>
+    <p data-i18n="s6-p1">Our website uses cookies and similar tracking technologies to:</p>
     <ul>
-      <li>Maintain your session and booking progress</li>
-      <li>Analyse website traffic (Google Analytics)</li>
-      <li>Remember your preferences</li>
+      <li data-i18n="s6-li1">Maintain your session and booking progress</li>
+      <li data-i18n="s6-li2">Analyse website traffic (Google Analytics)</li>
+      <li data-i18n="s6-li3">Remember your preferences</li>
     </ul>
-    <p>Google Analytics is configured with IP anonymisation. You can opt out of Google Analytics tracking by installing the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics Opt-out Browser Add-on</a>.</p>
-    <p>You can disable cookies in your browser settings. This may affect some functionality of our website.</p>
+    <p data-i18n="s6-p2">Google Analytics is configured with IP anonymisation. You can opt out of Google Analytics tracking by installing the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics Opt-out Browser Add-on</a>.</p>
+    <p data-i18n="s6-p3">You can disable cookies in your browser settings. This may affect some functionality of our website.</p>
 
-    <h2>7. Data Retention</h2>
-    <p>We retain your personal information for as long as necessary to provide our services and meet our legal obligations:</p>
+    <h2 data-i18n="s7-h">7. Data Retention</h2>
+    <p data-i18n="s7-p1">We retain your personal information for as long as necessary to provide our services and meet our legal obligations:</p>
     <ul>
-      <li><strong>Booking and service records</strong> - 7 years (required for tax and financial compliance under Australian law)</li>
-      <li><strong>Account information</strong> - for the duration of your account plus 2 years after last activity</li>
-      <li><strong>Marketing consent records</strong> - until you withdraw consent</li>
-      <li><strong>Website logs</strong> - 90 days (Vercel default)</li>
+      <li data-i18n="s7-li1"><strong>Booking and service records</strong> - 7 years (required for tax and financial compliance under Australian law)</li>
+      <li data-i18n="s7-li2"><strong>Account information</strong> - for the duration of your account plus 2 years after last activity</li>
+      <li data-i18n="s7-li3"><strong>Marketing consent records</strong> - until you withdraw consent</li>
+      <li data-i18n="s7-li4"><strong>Website logs</strong> - 90 days (Vercel default)</li>
     </ul>
-    <p>When data is no longer required, it is securely deleted or anonymised.</p>
+    <p data-i18n="s7-p2">When data is no longer required, it is securely deleted or anonymised.</p>
 
-    <h2>8. Security</h2>
-    <p>We take reasonable steps to protect your personal information from misuse, interference, loss, unauthorised access, modification and disclosure. These steps include:</p>
+    <h2 data-i18n="s8-h">8. Security</h2>
+    <p data-i18n="s8-p1">We take reasonable steps to protect your personal information from misuse, interference, loss, unauthorised access, modification and disclosure. These steps include:</p>
     <ul>
-      <li>Encrypted connections (HTTPS/TLS) for all data in transit</li>
-      <li>Database access controls and row-level security via Supabase</li>
-      <li>Payment data handled exclusively by Stripe (PCI DSS compliant)</li>
-      <li>Access limited to authorised personnel only</li>
+      <li data-i18n="s8-li1">Encrypted connections (HTTPS/TLS) for all data in transit</li>
+      <li data-i18n="s8-li2">Database access controls and row-level security via Supabase</li>
+      <li data-i18n="s8-li3">Payment data handled exclusively by Stripe (PCI DSS compliant)</li>
+      <li data-i18n="s8-li4">Access limited to authorised personnel only</li>
     </ul>
-    <p>No data transmission over the internet is 100% secure. If you have reason to believe your interaction with us is no longer secure, please contact us immediately at <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>.</p>
+    <p data-i18n="s8-p2">No data transmission over the internet is 100% secure. If you have reason to believe your interaction with us is no longer secure, please contact us immediately at <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>.</p>
 
-    <h2>9. Notifiable Data Breaches</h2>
-    <p>We comply with the Notifiable Data Breaches (NDB) scheme under Part IIIC of the Privacy Act 1988 (Cth). If we become aware of an eligible data breach that is likely to result in serious harm to individuals whose information is involved, we will:</p>
+    <h2 data-i18n="s9-h">9. Notifiable Data Breaches</h2>
+    <p data-i18n="s9-p1">We comply with the Notifiable Data Breaches (NDB) scheme under Part IIIC of the Privacy Act 1988 (Cth). If we become aware of an eligible data breach that is likely to result in serious harm to individuals whose information is involved, we will:</p>
     <ul>
-      <li>Notify the Office of the Australian Information Commissioner (OAIC) as soon as practicable</li>
-      <li>Notify affected individuals directly where required</li>
-      <li>Take immediate steps to contain and remediate the breach</li>
+      <li data-i18n="s9-li1">Notify the Office of the Australian Information Commissioner (OAIC) as soon as practicable</li>
+      <li data-i18n="s9-li2">Notify affected individuals directly where required</li>
+      <li data-i18n="s9-li3">Take immediate steps to contain and remediate the breach</li>
     </ul>
 
-    <h2>10. Your Rights</h2>
-    <p>Under the Privacy Act 1988 (Cth), you have the right to:</p>
+    <h2 data-i18n="s10-h">10. Your Rights</h2>
+    <p data-i18n="s10-p1">Under the Privacy Act 1988 (Cth), you have the right to:</p>
     <ul>
-      <li><strong>Access</strong> the personal information we hold about you</li>
-      <li><strong>Correct</strong> inaccurate, out-of-date or incomplete personal information</li>
-      <li><strong>Request deletion</strong> of your personal information (subject to our legal retention obligations)</li>
-      <li><strong>Withdraw consent</strong> for marketing communications at any time</li>
-      <li><strong>Complain</strong> about a breach of the APPs</li>
+      <li data-i18n="s10-li1"><strong>Access</strong> the personal information we hold about you</li>
+      <li data-i18n="s10-li2"><strong>Correct</strong> inaccurate, out-of-date or incomplete personal information</li>
+      <li data-i18n="s10-li3"><strong>Request deletion</strong> of your personal information (subject to our legal retention obligations)</li>
+      <li data-i18n="s10-li4"><strong>Withdraw consent</strong> for marketing communications at any time</li>
+      <li data-i18n="s10-li5"><strong>Complain</strong> about a breach of the APPs</li>
     </ul>
-    <p>To exercise any of these rights, contact us at <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>. We will respond within 30 days. There is no fee for making a request, though we may charge a reasonable fee for providing access if the request involves substantial effort.</p>
+    <p data-i18n="s10-p2">To exercise any of these rights, contact us at <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>. We will respond within 30 days. There is no fee for making a request, though we may charge a reasonable fee for providing access if the request involves substantial effort.</p>
 
-    <h2>11. Children's Privacy</h2>
-    <p>Our services are not directed at children under 16. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information without parental consent, please contact us and we will delete it promptly.</p>
+    <h2 data-i18n="s11-h">11. Children's Privacy</h2>
+    <p data-i18n="s11-p1">Our services are not directed at children under 16. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information without parental consent, please contact us and we will delete it promptly.</p>
 
-    <h2>12. Marketing Communications</h2>
-    <p>We may send you promotional emails or SMS messages about our services only if you have opted in. Each marketing communication includes an unsubscribe option. You can also opt out at any time by emailing <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> with "Unsubscribe" in the subject line.</p>
-    <p>We comply with the <strong>Spam Act 2003 (Cth)</strong> for all electronic marketing.</p>
+    <h2 data-i18n="s12-h">12. Marketing Communications</h2>
+    <p data-i18n="s12-p1">We may send you promotional emails or SMS messages about our services only if you have opted in. Each marketing communication includes an unsubscribe option. You can also opt out at any time by emailing <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> with "Unsubscribe" in the subject line.</p>
+    <p data-i18n="s12-p2">We comply with the <strong>Spam Act 2003 (Cth)</strong> for all electronic marketing.</p>
 
-    <h2>13. Links to Other Websites</h2>
-    <p>Our website may contain links to third-party websites. We are not responsible for the privacy practices of those sites and encourage you to read their privacy policies.</p>
+    <h2 data-i18n="s13-h">13. Links to Other Websites</h2>
+    <p data-i18n="s13-p1">Our website may contain links to third-party websites. We are not responsible for the privacy practices of those sites and encourage you to read their privacy policies.</p>
 
-    <h2>14. Changes to This Policy</h2>
-    <p>We may update this Privacy Policy from time to time. The current version will always be available on this page with the effective date noted at the top. We will notify you of material changes via email if you have an account with us.</p>
+    <h2 data-i18n="s14-h">14. Changes to This Policy</h2>
+    <p data-i18n="s14-p1">We may update this Privacy Policy from time to time. The current version will always be available on this page with the effective date noted at the top. We will notify you of material changes via email if you have an account with us.</p>
 
-    <h2>15. Complaints</h2>
-    <p>If you believe we have breached the Privacy Act 1988 (Cth) or the Australian Privacy Principles, please contact us first:</p>
+    <h2 data-i18n="s15-h">15. Complaints</h2>
+    <p data-i18n="s15-p1">If you believe we have breached the Privacy Act 1988 (Cth) or the Australian Privacy Principles, please contact us first:</p>
     <ul>
-      <li>Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
-      <li>Phone: <a href="tel:+61433963250">0433 963 250</a></li>
+      <li data-i18n="s15-li1">Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
+      <li data-i18n="s15-li2">Phone: <a href="tel:+61433963250">0433 963 250</a></li>
     </ul>
-    <p>We will acknowledge your complaint within 5 business days and aim to resolve it within 30 days. If you are not satisfied with our response, you may lodge a complaint with the <strong>Office of the Australian Information Commissioner (OAIC)</strong> at <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>.</p>
+    <p data-i18n="s15-p2">We will acknowledge your complaint within 5 business days and aim to resolve it within 30 days. If you are not satisfied with our response, you may lodge a complaint with the <strong>Office of the Australian Information Commissioner (OAIC)</strong> at <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>.</p>
 
-    <h2>16. Contact Us</h2>
-    <p>For any privacy questions or requests:</p>
+    <h2 data-i18n="s16-h">16. Contact Us</h2>
+    <p data-i18n="s16-p1">For any privacy questions or requests:</p>
     <ul>
-      <li>Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
-      <li>Phone: <a href="tel:+61433963250">0433 963 250</a></li>
-      <li>Hours: Monday - Sunday, 7:00 AM - 7:00 PM AEST</li>
+      <li data-i18n="s16-li1">Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
+      <li data-i18n="s16-li2">Phone: <a href="tel:+61433963250">0433 963 250</a></li>
+      <li data-i18n="s16-li3">Hours: Monday - Sunday, 7:00 AM - 7:00 PM AEST</li>
     </ul>
 
   </div>
@@ -337,7 +351,7 @@
           </svg>
           <span style="font-weight:700;font-size:15px;color:white;letter-spacing:0.5px">DR BIKE SYDNEY</span>
         </div>
-        <p style="color:#6b7280;font-size:14px;margin-top:12px;line-height:1.6">Professional bike service at your doorstep.</p>
+        <p data-i18n="footer-tag" style="color:#6b7280;font-size:14px;margin-top:12px;line-height:1.6">Professional bike service at your doorstep.</p>
         <div style="display:flex;gap:12px;margin-top:20px">
           <a href="#" class="footer-social" aria-label="Facebook">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
@@ -352,30 +366,30 @@
       </div>
 
       <div>
-        <h4 class="footer-h4">Services</h4>
-        <a href="/#services" class="footer-link">Tune-Up</a>
-        <a href="/#services" class="footer-link">Standard Service</a>
-        <a href="/#services" class="footer-link">Standard+ Service</a>
-        <a href="/#services" class="footer-link">Ultimate Overhaul</a>
-        <a href="/#memberships" class="footer-link">Subscriptions</a>
+        <h4 class="footer-h4" data-i18n="footer-services-h">Services</h4>
+        <a href="/#services" class="footer-link" data-i18n="footer-svc1">Tune-Up</a>
+        <a href="/#services" class="footer-link" data-i18n="footer-svc2">Standard Service</a>
+        <a href="/#services" class="footer-link" data-i18n="footer-svc3">Standard+ Service</a>
+        <a href="/#services" class="footer-link" data-i18n="footer-svc4">Ultimate Overhaul</a>
+        <a href="/#memberships" class="footer-link" data-i18n="footer-svc5">Subscriptions</a>
       </div>
 
       <div>
-        <h4 class="footer-h4">Company</h4>
-        <a href="/#about" class="footer-link">About Us</a>
-        <a href="/#reviews" class="footer-link">Reviews</a>
-        <a href="/#faq" class="footer-link">FAQ</a>
-        <a href="mailto:contact@drbikesydney.com.au" class="footer-link">Contact</a>
+        <h4 class="footer-h4" data-i18n="footer-company-h">Company</h4>
+        <a href="/#about" class="footer-link" data-i18n="footer-co1">About Us</a>
+        <a href="/#reviews" class="footer-link" data-i18n="footer-co2">Reviews</a>
+        <a href="/#faq" class="footer-link" data-i18n="footer-co3">FAQ</a>
+        <a href="mailto:contact@drbikesydney.com.au" class="footer-link" data-i18n="footer-co4">Contact</a>
       </div>
 
       <div>
-        <h4 class="footer-h4">Legal</h4>
-        <a href="/terms.html" class="footer-link">Terms &amp; Conditions</a>
-        <a href="/privacy.html" class="footer-link" style="color:white">Privacy Policy</a>
+        <h4 class="footer-h4" data-i18n="footer-legal-h">Legal</h4>
+        <a href="/terms.html" class="footer-link" data-i18n="footer-legal1">Terms &amp; Conditions</a>
+        <a href="/privacy.html" class="footer-link" style="color:white" data-i18n="footer-legal2">Privacy Policy</a>
       </div>
 
       <div>
-        <h4 class="footer-h4">Contact</h4>
+        <h4 class="footer-h4" data-i18n="footer-contact-h">Contact</h4>
         <div class="footer-contact-item">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           0433 963 250
@@ -390,20 +404,308 @@
         </div>
         <div class="footer-contact-item">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Mon - Sun: 7AM - 7PM
+          <span data-i18n="footer-hours">Mon - Sun: 7AM - 7PM</span>
         </div>
       </div>
     </div>
 
     <div style="border-top:1px solid #1f2937;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-      <p style="color:#4b5563;font-size:13px">&copy; 2026 Dr. Bike Sydney. All rights reserved.</p>
+      <p data-i18n="footer-copyright" style="color:#4b5563;font-size:13px">&copy; 2026 Dr. Bike Sydney. All rights reserved.</p>
       <div style="display:flex;gap:20px">
-        <a href="/terms.html" style="color:#4b5563;font-size:13px">Terms</a>
-        <a href="/privacy.html" style="color:#4b5563;font-size:13px">Privacy</a>
+        <a href="/terms.html" style="color:#4b5563;font-size:13px" data-i18n="footer-bottom-terms">Terms</a>
+        <a href="/privacy.html" style="color:#4b5563;font-size:13px" data-i18n="footer-bottom-privacy">Privacy</a>
       </div>
     </div>
   </div>
 </footer>
+
+<script type="module">
+  import { renderLangSwitcher, initLegalPage } from '/js/legal-i18n.js?v=20260712';
+  document.getElementById('lang-switcher-slot').innerHTML = renderLangSwitcher();
+
+  const dict = {
+    es: {
+      'mt-notice': 'Esta traducción fue generada automáticamente y se ofrece solo como referencia. La versión en inglés es el texto legalmente vinculante.',
+      'nav-back': 'Volver al Inicio',
+      'h1': 'Política de Privacidad',
+      'eff-date': 'Fecha de vigencia: 1 de junio de 2026',
+      'upd-date': 'Última actualización: 14 de junio de 2026',
+      's1-h': '1. Nuestro Compromiso con la Privacidad',
+      's1-p1': 'Dr. Bike Sydney ("nosotros", "nuestro") se compromete a proteger tu información personal. Esta Política de Privacidad explica cómo recopilamos, usamos, almacenamos y divulgamos información de acuerdo con la <strong>Privacy Act 1988 (Cth)</strong> y los Principios Australianos de Privacidad (APPs).',
+      's1-p2': 'Al usar nuestro sitio web o servicios, consentís las prácticas descritas en esta política.',
+      's1-box': 'Solo recopilamos la información necesaria para prestar y mejorar nuestros servicios. No vendemos tus datos personales a terceros.',
+      's2-h': '2. Quiénes Somos',
+      's2-p1': 'Dr. Bike Sydney es un negocio móvil de reparación y mantenimiento de bicicletas que opera en Sydney, NSW, Australia.',
+      's2-p2': '<strong>Contacto de Privacidad:</strong><br>Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a><br>Teléfono: <a href="tel:+61433963250">0433 963 250</a><br>Ubicación: Sydney, NSW, Australia',
+      's3-h': '3. Información que Recopilamos',
+      's3-p1': 'Recopilamos las siguientes categorías de información personal:',
+      's3-p2': '<strong>Información que proporcionás directamente:</strong>',
+      's3-li1': '<strong>Nombre</strong> - para identificarte y dirigir comunicaciones',
+      's3-li2': '<strong>Dirección de email</strong> - para confirmaciones de reserva, recibos y actualizaciones de servicio',
+      's3-li3': '<strong>Número de teléfono</strong> - para recordatorios de reserva, programación y coordinación con el mecánico',
+      's3-li4': '<strong>Dirección del servicio</strong> - para enviar a nuestro mecánico a tu ubicación',
+      's3-li5': '<strong>Datos de la bicicleta</strong> (marca, modelo, tipo) - para preparar las herramientas y piezas adecuadas',
+      's3-li6': '<strong>Historial de servicio</strong> - registros del trabajo realizado en tu bicicleta',
+      's3-li7': '<strong>Contenido de comunicaciones</strong> - mensajes enviados a través de nuestro chat o email',
+      's3-p3': '<strong>Información de pago:</strong>',
+      's3-p4': 'Los pagos son procesados por Stripe, Inc. No recopilamos, almacenamos ni procesamos el número de tu tarjeta, el CVV ni tus credenciales completas de pago. Stripe gestiona todos los datos de pago cumpliendo con los estándares PCI DSS. Solo recibimos detalles de confirmación de la transacción (monto, estado, últimos 4 dígitos de la tarjeta).',
+      's3-p5': '<strong>Información recopilada automáticamente:</strong>',
+      's3-li8': 'Tipo y versión del navegador',
+      's3-li9': 'Sistema operativo',
+      's3-li10': 'Dirección IP (anonimizada para análisis)',
+      's3-li11': 'Páginas visitadas y tiempo en el sitio',
+      's3-li12': 'URL de referencia',
+      's3-li13': 'Tipo de dispositivo (móvil, escritorio)',
+      's3-p6': 'Esta información se recopila mediante Google Analytics y nuestra infraestructura de alojamiento (Vercel).',
+      's4-h': '4. Cómo Usamos tu Información',
+      's4-p1': 'Usamos tu información personal para:',
+      's4-li1': 'Procesar y confirmar tus reservas',
+      's4-li2': 'Enviar y coordinar a nuestros mecánicos',
+      's4-li3': 'Enviar recordatorios de reserva, actualizaciones de servicio y recibos por email y SMS',
+      's4-li4': 'Procesar pagos a través de Stripe',
+      's4-li5': 'Responder a tus preguntas y solicitudes de soporte',
+      's4-li6': 'Mantener un registro de los servicios realizados en tu bicicleta',
+      's4-li7': 'Mejorar nuestros servicios y sitio web según los patrones de uso',
+      's4-li8': 'Enviar comunicaciones de marketing (solo con tu consentimiento - podés darte de baja en cualquier momento)',
+      's4-li9': 'Cumplir con nuestras obligaciones legales',
+      's4-p2': 'No usaremos tu información para fines incompatibles con el propósito original de recopilación, salvo que la ley lo exija o cuentes con tu consentimiento.',
+      's5-h': '5. Proveedores de Servicios Externos',
+      's5-p1': 'Compartimos tu información solo con los proveedores de servicios necesarios para operar nuestro negocio. Cada uno está sujeto a sus propias políticas de privacidad y a la ley aplicable.',
+      'tbl-provider': 'Proveedor',
+      'tbl-purpose': 'Propósito',
+      'tbl-data': 'Datos Compartidos',
+      'tbl-r1-purpose': 'Procesamiento de pagos',
+      'tbl-r1-data': 'Nombre, email, tarjeta de pago (directo a Stripe - no lo almacenamos nosotros)',
+      'tbl-r2-purpose': 'Base de datos y autenticación',
+      'tbl-r2-data': 'Nombre, email, teléfono, dirección, datos de reserva, historial de servicio',
+      'tbl-r3-purpose': 'Envío de emails transaccionales',
+      'tbl-r3-data': 'Nombre, dirección de email',
+      'tbl-r4-purpose': 'Notificaciones por SMS y WhatsApp',
+      'tbl-r4-data': 'Número de teléfono, datos de la reserva',
+      'tbl-r5-purpose': 'Análisis (Google Analytics) y Mapas',
+      'tbl-r5-data': 'Datos de uso anonimizados, ubicación aproximada',
+      'tbl-r6-purpose': 'Alojamiento del sitio web y funciones serverless',
+      'tbl-r6-data': 'Dirección IP, registros de solicitudes (retenidos según la política de Vercel)',
+      'tbl-r7-purpose': 'Función de diagnóstico de bicicletas con IA',
+      'tbl-r7-data': 'Descripción de la bicicleta y detalles del problema provistos en el chat',
+      's5-p2': 'Algunos de estos proveedores están ubicados en Estados Unidos. Cuando la información personal se transfiere al exterior, tomamos medidas razonables para asegurar que reciba una protección comparable a la exigida por la Privacy Act 1988 (Cth), incluyendo protecciones contractuales.',
+      's6-h': '6. Cookies y Rastreo',
+      's6-p1': 'Nuestro sitio web usa cookies y tecnologías de rastreo similares para:',
+      's6-li1': 'Mantener tu sesión y el progreso de tu reserva',
+      's6-li2': 'Analizar el tráfico del sitio web (Google Analytics)',
+      's6-li3': 'Recordar tus preferencias',
+      's6-p2': 'Google Analytics está configurado con anonimización de IP. Podés optar por no participar del rastreo de Google Analytics instalando el <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">complemento de exclusión de Google Analytics</a>.',
+      's6-p3': 'Podés deshabilitar las cookies en la configuración de tu navegador. Esto puede afectar algunas funciones de nuestro sitio web.',
+      's7-h': '7. Retención de Datos',
+      's7-p1': 'Conservamos tu información personal durante el tiempo necesario para prestar nuestros servicios y cumplir con nuestras obligaciones legales:',
+      's7-li1': '<strong>Registros de reservas y servicios</strong> - 7 años (requerido para el cumplimiento tributario y financiero según la ley australiana)',
+      's7-li2': '<strong>Información de la cuenta</strong> - durante la vigencia de tu cuenta más 2 años tras la última actividad',
+      's7-li3': '<strong>Registros de consentimiento de marketing</strong> - hasta que retires el consentimiento',
+      's7-li4': '<strong>Registros del sitio web</strong> - 90 días (predeterminado de Vercel)',
+      's7-p2': 'Cuando los datos ya no son necesarios, se eliminan de forma segura o se anonimizan.',
+      's8-h': '8. Seguridad',
+      's8-p1': 'Tomamos medidas razonables para proteger tu información personal contra el uso indebido, la interferencia, la pérdida, el acceso no autorizado, la modificación y la divulgación. Estas medidas incluyen:',
+      's8-li1': 'Conexiones cifradas (HTTPS/TLS) para todos los datos en tránsito',
+      's8-li2': 'Controles de acceso a la base de datos y seguridad a nivel de fila mediante Supabase',
+      's8-li3': 'Datos de pago gestionados exclusivamente por Stripe (cumple con PCI DSS)',
+      's8-li4': 'Acceso limitado solo a personal autorizado',
+      's8-p2': 'Ninguna transmisión de datos por internet es 100% segura. Si tenés motivos para creer que tu interacción con nosotros ya no es segura, contactanos de inmediato a <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>.',
+      's9-h': '9. Violaciones de Datos Notificables',
+      's9-p1': 'Cumplimos con el esquema de Violaciones de Datos Notificables (NDB) bajo la Parte IIIC de la Privacy Act 1988 (Cth). Si tomamos conocimiento de una violación de datos elegible que probablemente cause daño grave a las personas cuya información está involucrada, nosotros:',
+      's9-li1': 'Notificaremos a la Oficina del Comisionado Australiano de Información (OAIC) tan pronto como sea posible',
+      's9-li2': 'Notificaremos directamente a las personas afectadas cuando sea necesario',
+      's9-li3': 'Tomaremos medidas inmediatas para contener y remediar la violación',
+      's10-h': '10. Tus Derechos',
+      's10-p1': 'Bajo la Privacy Act 1988 (Cth), tenés derecho a:',
+      's10-li1': '<strong>Acceder</strong> a la información personal que tenemos sobre vos',
+      's10-li2': '<strong>Corregir</strong> información personal inexacta, desactualizada o incompleta',
+      's10-li3': '<strong>Solicitar la eliminación</strong> de tu información personal (sujeto a nuestras obligaciones legales de retención)',
+      's10-li4': '<strong>Retirar el consentimiento</strong> para comunicaciones de marketing en cualquier momento',
+      's10-li5': '<strong>Presentar una queja</strong> por incumplimiento de los APPs',
+      's10-p2': 'Para ejercer cualquiera de estos derechos, contactanos a <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>. Responderemos dentro de los 30 días. No hay costo por hacer la solicitud, aunque podemos cobrar una tarifa razonable por brindar acceso si la solicitud implica un esfuerzo considerable.',
+      's11-h': '11. Privacidad de Menores',
+      's11-p1': 'Nuestros servicios no están dirigidos a menores de 16 años. No recopilamos a sabiendas información personal de menores. Si creés que un menor nos proporcionó información personal sin el consentimiento de sus padres, contactanos y la eliminaremos de inmediato.',
+      's12-h': '12. Comunicaciones de Marketing',
+      's12-p1': 'Podemos enviarte emails o SMS promocionales sobre nuestros servicios solo si optaste por recibirlos. Cada comunicación de marketing incluye una opción para darte de baja. También podés darte de baja en cualquier momento escribiendo a <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> con "Unsubscribe" en el asunto.',
+      's12-p2': 'Cumplimos con la <strong>Spam Act 2003 (Cth)</strong> para todo el marketing electrónico.',
+      's13-h': '13. Enlaces a Otros Sitios Web',
+      's13-p1': 'Nuestro sitio web puede contener enlaces a sitios web de terceros. No somos responsables de las prácticas de privacidad de esos sitios y te recomendamos leer sus políticas de privacidad.',
+      's14-h': '14. Cambios a Esta Política',
+      's14-p1': 'Podemos actualizar esta Política de Privacidad de vez en cuando. La versión actual siempre estará disponible en esta página con la fecha de vigencia indicada arriba. Te notificaremos cambios importantes por email si tenés una cuenta con nosotros.',
+      's15-h': '15. Reclamos',
+      's15-p1': 'Si creés que hemos incumplido la Privacy Act 1988 (Cth) o los Principios Australianos de Privacidad, por favor contactanos primero:',
+      's15-li1': 'Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's15-li2': 'Teléfono: <a href="tel:+61433963250">0433 963 250</a>',
+      's15-p2': 'Confirmaremos la recepción de tu reclamo dentro de los 5 días hábiles y buscaremos resolverlo dentro de los 30 días. Si no estás conforme con nuestra respuesta, podés presentar una queja ante la <strong>Oficina del Comisionado Australiano de Información (OAIC)</strong> en <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>.',
+      's16-h': '16. Contactanos',
+      's16-p1': 'Para cualquier pregunta o solicitud relacionada con la privacidad:',
+      's16-li1': 'Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's16-li2': 'Teléfono: <a href="tel:+61433963250">0433 963 250</a>',
+      's16-li3': 'Horario: lunes a domingo, 7:00 a 19:00 AEST',
+      'footer-tag': 'Servicio profesional de bicicletas a domicilio.',
+      'footer-services-h': 'Servicios',
+      'footer-svc1': 'Tune-Up',
+      'footer-svc2': 'Servicio Estándar',
+      'footer-svc3': 'Servicio Estándar+',
+      'footer-svc4': 'Revisión Completa',
+      'footer-svc5': 'Suscripciones',
+      'footer-company-h': 'Empresa',
+      'footer-co1': 'Sobre Nosotros',
+      'footer-co2': 'Reseñas',
+      'footer-co3': 'Preguntas Frecuentes',
+      'footer-co4': 'Contacto',
+      'footer-legal-h': 'Legal',
+      'footer-legal1': 'Términos y Condiciones',
+      'footer-legal2': 'Política de Privacidad',
+      'footer-contact-h': 'Contacto',
+      'footer-hours': 'Lun - Dom: 7 - 19h',
+      'footer-copyright': '&copy; 2026 Dr. Bike Sydney. Todos los derechos reservados.',
+      'footer-bottom-terms': 'Términos',
+      'footer-bottom-privacy': 'Privacidad',
+    },
+    zh: {
+      'mt-notice': '此翻译由机器自动生成，仅供参考。英文版本为具有法律约束力的正式文本。',
+      'nav-back': '返回首页',
+      'h1': '隐私政策',
+      'eff-date': '生效日期：2026年6月1日',
+      'upd-date': '最后更新：2026年6月14日',
+      's1-h': '1. 我们对隐私的承诺',
+      's1-p1': 'Dr. Bike Sydney（"我们"）致力于保护您的个人信息。本隐私政策说明我们如何依据<strong>《1988年隐私法》（联邦）</strong>及澳大利亚隐私原则（APPs）收集、使用、存储和披露信息。',
+      's1-p2': '使用我们的网站或服务，即表示您同意本政策所述的做法。',
+      's1-box': '我们仅收集提供和改进服务所必需的信息。我们不会将您的个人数据出售给第三方。',
+      's2-h': '2. 我们是谁',
+      's2-p1': 'Dr. Bike Sydney 是一家在澳大利亚新南威尔士州悉尼运营的移动自行车维修保养企业。',
+      's2-p2': '<strong>隐私联系方式：</strong><br>邮箱：<a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a><br>电话：<a href="tel:+61433963250">0433 963 250</a><br>地点：澳大利亚新南威尔士州悉尼',
+      's3-h': '3. 我们收集的信息',
+      's3-p1': '我们收集以下类别的个人信息：',
+      's3-p2': '<strong>您直接提供的信息：</strong>',
+      's3-li1': '<strong>姓名</strong> - 用于识别您身份及通信联系',
+      's3-li2': '<strong>电子邮箱</strong> - 用于预约确认、收据和服务更新',
+      's3-li3': '<strong>电话号码</strong> - 用于预约提醒、排期及与技师协调',
+      's3-li4': '<strong>服务地址</strong> - 用于安排技师前往您的所在地',
+      's3-li5': '<strong>自行车信息</strong>（品牌、型号、类型）- 用于准备合适的工具和零件',
+      's3-li6': '<strong>服务历史</strong> - 您自行车维修记录',
+      's3-li7': '<strong>沟通内容</strong> - 通过聊天或邮件发送的消息',
+      's3-p3': '<strong>支付信息：</strong>',
+      's3-p4': '付款由 Stripe, Inc. 处理。我们不会收集、存储或处理您的卡号、CVV或完整支付凭证。Stripe 按照 PCI DSS 标准处理所有支付数据。我们仅收到交易确认信息（金额、状态、卡号后四位）。',
+      's3-p5': '<strong>自动收集的信息：</strong>',
+      's3-li8': '浏览器类型和版本',
+      's3-li9': '操作系统',
+      's3-li10': 'IP地址（用于分析时已匿名化）',
+      's3-li11': '访问的页面及停留时间',
+      's3-li12': '来源网址',
+      's3-li13': '设备类型（移动端、桌面端）',
+      's3-p6': '此信息通过 Google Analytics 及我们的托管基础设施（Vercel）收集。',
+      's4-h': '4. 我们如何使用您的信息',
+      's4-p1': '我们使用您的个人信息用于：',
+      's4-li1': '处理和确认您的预约',
+      's4-li2': '调度和协调我们的技师',
+      's4-li3': '通过邮件和短信发送预约提醒、服务更新和收据',
+      's4-li4': '通过 Stripe 处理付款',
+      's4-li5': '回应您的问题和支持请求',
+      's4-li6': '保存您自行车的服务记录',
+      's4-li7': '根据使用情况改进我们的服务和网站',
+      's4-li8': '发送营销通信（仅在您同意的情况下 - 您可随时取消订阅）',
+      's4-li9': '履行我们的法律义务',
+      's4-p2': '除法律要求或经您同意外，我们不会将您的信息用于与最初收集目的不符的用途。',
+      's5-h': '5. 第三方服务提供商',
+      's5-p1': '我们仅与运营业务所必需的服务提供商共享您的信息。每家提供商均受其自身隐私政策及适用法律约束。',
+      'tbl-provider': '提供商',
+      'tbl-purpose': '用途',
+      'tbl-data': '共享数据',
+      'tbl-r1-purpose': '支付处理',
+      'tbl-r1-data': '姓名、邮箱、支付卡（直接交由 Stripe - 我们不存储）',
+      'tbl-r2-purpose': '数据库与身份验证',
+      'tbl-r2-data': '姓名、邮箱、电话、地址、预约信息、服务历史',
+      'tbl-r3-purpose': '事务性邮件发送',
+      'tbl-r3-data': '姓名、电子邮箱',
+      'tbl-r4-purpose': '短信和WhatsApp通知',
+      'tbl-r4-data': '电话号码、预约信息',
+      'tbl-r5-purpose': '分析（Google Analytics）与地图',
+      'tbl-r5-data': '匿名化使用数据、大致位置',
+      'tbl-r6-purpose': '网站托管与无服务器函数',
+      'tbl-r6-data': 'IP地址、请求日志（按Vercel政策保留）',
+      'tbl-r7-purpose': 'AI自行车诊断功能',
+      'tbl-r7-data': '聊天中提供的自行车描述和问题详情',
+      's5-p2': '部分提供商位于美国。个人信息如需跨境传输，我们会采取合理措施确保其获得与《1988年隐私法》（联邦）要求相当的保护，包括通过合同保护措施。',
+      's6-h': '6. Cookie 与跟踪技术',
+      's6-p1': '我们的网站使用 Cookie 及类似跟踪技术，用于：',
+      's6-li1': '保持您的会话及预约进度',
+      's6-li2': '分析网站流量（Google Analytics）',
+      's6-li3': '记住您的偏好设置',
+      's6-p2': 'Google Analytics 已配置IP匿名化。您可以通过安装 <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics 停用浏览器插件</a> 选择退出 Google Analytics 跟踪。',
+      's6-p3': '您可以在浏览器设置中禁用 Cookie。这可能会影响我们网站的部分功能。',
+      's7-h': '7. 数据保留',
+      's7-p1': '我们会在提供服务及履行法律义务所需的期限内保留您的个人信息：',
+      's7-li1': '<strong>预约与服务记录</strong> - 7年（澳大利亚法律要求的税务及财务合规期限）',
+      's7-li2': '<strong>账户信息</strong> - 账户存续期间加最后活动后2年',
+      's7-li3': '<strong>营销同意记录</strong> - 直至您撤回同意',
+      's7-li4': '<strong>网站日志</strong> - 90天（Vercel默认设置）',
+      's7-p2': '当数据不再需要时，将被安全删除或匿名化处理。',
+      's8-h': '8. 安全',
+      's8-p1': '我们采取合理措施保护您的个人信息，防止滥用、干扰、丢失、未经授权的访问、修改和披露。这些措施包括：',
+      's8-li1': '所有传输中数据均采用加密连接（HTTPS/TLS）',
+      's8-li2': '通过 Supabase 实现数据库访问控制和行级安全',
+      's8-li3': '支付数据完全由 Stripe 处理（符合 PCI DSS 标准）',
+      's8-li4': '访问权限仅限于授权人员',
+      's8-p2': '互联网上没有任何数据传输是100%安全的。如果您有理由认为与我们的互动已不再安全，请立即通过 <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> 联系我们。',
+      's9-h': '9. 可通报的数据泄露',
+      's9-p1': '我们遵守《1988年隐私法》（联邦）第IIIC部分下的可通报数据泄露（NDB）计划。如果我们发现可能对相关个人造成严重损害的合格数据泄露事件，我们将：',
+      's9-li1': '尽快通知澳大利亚信息专员办公室（OAIC）',
+      's9-li2': '在必要时直接通知受影响的个人',
+      's9-li3': '立即采取措施控制和修复该泄露事件',
+      's10-h': '10. 您的权利',
+      's10-p1': '根据《1988年隐私法》（联邦），您有权：',
+      's10-li1': '<strong>访问</strong>我们持有的您的个人信息',
+      's10-li2': '<strong>更正</strong>不准确、过时或不完整的个人信息',
+      's10-li3': '<strong>要求删除</strong>您的个人信息（须遵守我们的法定保留义务）',
+      's10-li4': '随时<strong>撤回</strong>对营销通信的同意',
+      's10-li5': '就违反APPs的行为<strong>提出投诉</strong>',
+      's10-p2': '如需行使上述任何权利，请通过 <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> 联系我们。我们将在30天内回复。提出请求无需付费，但如果请求涉及大量工作，我们可能会收取合理费用以提供访问权限。',
+      's11-h': '11. 儿童隐私',
+      's11-p1': '我们的服务不面向16岁以下儿童。我们不会故意收集儿童的个人信息。如果您认为儿童在未经父母同意的情况下向我们提供了个人信息，请联系我们，我们将立即删除该信息。',
+      's12-h': '12. 营销通信',
+      's12-p1': '只有在您选择接收的情况下，我们才会向您发送有关我们服务的推广邮件或短信。每条营销通信都包含取消订阅选项。您也可以随时通过发送邮件至 <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>（主题注明"Unsubscribe"）选择退出。',
+      's12-p2': '我们所有的电子营销均遵守<strong>《2003年垃圾邮件法》（联邦）</strong>。',
+      's13-h': '13. 其他网站链接',
+      's13-p1': '我们的网站可能包含指向第三方网站的链接。我们不对这些网站的隐私做法负责，并建议您阅读其隐私政策。',
+      's14-h': '14. 本政策的变更',
+      's14-p1': '我们可能会不时更新本隐私政策。最新版本将始终发布在本页面，并在页面顶部注明生效日期。如果您在我们这里拥有账户，我们将通过电子邮件通知您重大变更。',
+      's15-h': '15. 投诉',
+      's15-p1': '如果您认为我们违反了《1988年隐私法》（联邦）或澳大利亚隐私原则，请先联系我们：',
+      's15-li1': '邮箱：<a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's15-li2': '电话：<a href="tel:+61433963250">0433 963 250</a>',
+      's15-p2': '我们将在5个工作日内确认收到您的投诉，并力争在30天内解决。如果您对我们的回复不满意，可向<strong>澳大利亚信息专员办公室（OAIC）</strong>投诉，网址为 <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>。',
+      's16-h': '16. 联系我们',
+      's16-p1': '如有任何隐私相关问题或请求：',
+      's16-li1': '邮箱：<a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's16-li2': '电话：<a href="tel:+61433963250">0433 963 250</a>',
+      's16-li3': '营业时间：周一至周日 上午7:00 - 晚上7:00（AEST）',
+      'footer-tag': '专业上门自行车服务。',
+      'footer-services-h': '服务',
+      'footer-svc1': '基础保养',
+      'footer-svc2': '标准服务',
+      'footer-svc3': '标准+服务',
+      'footer-svc4': '全面翻新',
+      'footer-svc5': '订阅服务',
+      'footer-company-h': '公司',
+      'footer-co1': '关于我们',
+      'footer-co2': '客户评价',
+      'footer-co3': '常见问题',
+      'footer-co4': '联系我们',
+      'footer-legal-h': '法律',
+      'footer-legal1': '条款与条件',
+      'footer-legal2': '隐私政策',
+      'footer-contact-h': '联系方式',
+      'footer-hours': '周一至周日：7 - 19时',
+      'footer-copyright': '&copy; 2026 Dr. Bike Sydney。保留所有权利。',
+      'footer-bottom-terms': '条款',
+      'footer-bottom-privacy': '隐私',
+    },
+  };
+
+  initLegalPage(dict);
+</script>
 
 </body>
 </html>
