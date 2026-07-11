@@ -1021,6 +1021,20 @@ body {
   text-decoration: underline;
 }
 
+.google-btn {
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+@media (hover: hover) {
+  .google-btn:hover {
+    border-color: #4285f4;
+  }
+}
+.google-btn:active {
+  transform: scale(0.97);
+}
+
 /* ── My Bookings ─────────────────────────────────────────────────────────────── */
 .tabs-row {
   display: flex;
