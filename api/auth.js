@@ -1583,7 +1583,11 @@ function slotToMinutes(slot) {
 }
 
 async function handleGetAvailability(req, res) {
-  if (await guard(req, res, { rateMax: 120, rateWindow: 60000 })) return;
+  // Read-only query, no body - the client (js/supabase.js getAvailableSlots)
+  // has always sent a plain GET with ?date= in the query string. guard()
+  // defaults to requiring POST when no method is given, which made every
+  // real call 405 (see tests/unit/get-availability-method.test.js).
+  if (await guard(req, res, { method: 'GET', rateMax: 120, rateWindow: 60000 })) return;
   const date = req.query?.date;
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date))
     return res.status(400).json({ error: 'date required (YYYY-MM-DD)' });
