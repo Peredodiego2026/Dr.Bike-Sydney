@@ -1135,6 +1135,8 @@ async function renderPayment() {
         </div>
       </div>
 
+      <div id="payment-request-btn" style="margin-bottom:12px" hidden></div>
+      <div class="payment-divider" id="card-divider" hidden><span>or pay by card</span></div>
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:16px">
         <div style="font-size:12px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">Card details</div>
         <div id="card-element" class="card-element"></div>
@@ -1280,6 +1282,38 @@ async function renderPayment() {
 
   await createPaymentForm('card-element');
 
+  const getPayingEmail = async () => {
+    const {
+      data: { user: payingUser },
+    } = await sb.auth.getUser();
+    return payingUser?.email || 'guest@drbikesydney.com.au';
+  };
+
+  // Guards against double-charging if a payment somehow completes twice
+  // (e.g. the Payment Request Button fires, then the card form is also
+  // submitted) - the second call reuses the first PaymentIntent instead of
+  // charging again.
+  let paidIntent = null;
+  async function chargeOnce(paymentMethodId) {
+    if (paidIntent) return paidIntent;
+    const email = await getPayingEmail();
+    paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId);
+    return paidIntent;
+  }
+
+  const prSupported = await createPaymentRequestButton('payment-request-btn', {
+    amountCents: Math.round(calloutFee * 100),
+    label: 'Dr. Bike Sydney - Call-out fee',
+    onPayment: async (paymentMethodId) => {
+      const pi = await chargeOnce(paymentMethodId);
+      await finalizeBooking(pi, { isTest: false });
+    },
+  });
+  if (prSupported) {
+    screen.querySelector('#payment-request-btn').hidden = false;
+    screen.querySelector('#card-divider').hidden = false;
+  }
+
   screen.querySelector('#pay-btn').addEventListener('click', async () => {
     const btn = screen.querySelector('#pay-btn');
     const errEl = screen.querySelector('#payment-error');
@@ -1287,15 +1321,12 @@ async function renderPayment() {
     btn.textContent = 'Processing payment...';
     errEl.hidden = true;
     try {
-      const {
-        data: { user: payingUser },
-      } = await sb.auth.getUser();
-      const email = payingUser?.email || 'guest@drbikesydney.com.au';
-      const paymentIntent = await processPayment(Math.round(calloutFee * 100), null, email);
+      const paymentIntent = await chargeOnce();
       await finalizeBooking(paymentIntent, { isTest: false });
     } catch (e) {
-      errEl.textContent =
-        e.message || 'Payment failed. Please check your card details and try again.';
+      errEl.textContent = paidIntent
+        ? 'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
+        : e.message || 'Payment failed. Please check your card details and try again.';
       errEl.hidden = false;
       btn.disabled = false;
       btn.textContent = `Pay $${calloutFee.toFixed(2)} Call-out Fee`;
