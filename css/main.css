@@ -62,7 +62,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  animation: slideInRight var(--transition-base);
+  animation: slideInRight var(--motion-base);
   padding-bottom: 10rem;
 }
 
@@ -74,6 +74,27 @@ body {
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+.screen.screen--leaving {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition:
+    transform var(--motion-base),
+    opacity var(--motion-base);
+}
+.screen.screen--leaving.screen--leaving-go {
+  transform: translateX(-24px) scale(0.96);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.active {
+    animation: none;
+  }
+  .screen.screen--leaving {
+    transition: none;
   }
 }
 
