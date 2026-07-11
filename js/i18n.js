@@ -103,6 +103,31 @@ const dict = {
     'Friends referred': 'Amigos referidos',
     'Credits earned': 'Créditos ganados',
     'How it works': 'Cómo funciona',
+    // Profile - rider tier card
+    'New Rider': 'Ciclista Nuevo',
+    'Bronze Rider': 'Ciclista Bronce',
+    'Silver Rider': 'Ciclista Plata',
+    'Gold Rider': 'Ciclista Oro',
+    'Diamond Rider': 'Ciclista Diamante',
+    'service completed': 'servicio completado',
+    'services completed': 'servicios completados',
+    'more service to reach': 'servicio más para llegar a',
+    'more services to reach': 'servicios más para llegar a',
+    "You've reached our highest tier - thank you for riding with us!":
+      'Llegaste a nuestro nivel más alto - ¡gracias por andar con nosotros!',
+    // Profile - membership card
+    Membership: 'Membresía',
+    Plan: 'Plan',
+    Active: 'Activa',
+    Paused: 'Pausada',
+    'Resume membership': 'Reanudar membresía',
+    'Pause membership': 'Pausar membresía',
+    Cancel: 'Cancelar',
+    // Home nav greeting (split from the dynamic name for translation) -
+    // translateScreen() looks up the TRIMMED text node, so the key has no
+    // trailing space even though the rendered node does (verified: a key
+    // with a trailing space here never matches).
+    'Hi,': 'Hola,',
     // Booking flow - Step 1 (select service)
     'Not sure what your bike needs?': '¿No estás seguro qué necesita tu bici?',
     'Take a photo or describe the problem — our AI will recommend the right service.':
@@ -252,6 +277,22 @@ const dict = {
     Call: '呼叫',
     'My Bikes': '我的自行车',
     '+ Add a Bike': '+ 添加自行车',
+    'New Rider': '新骑手',
+    'Bronze Rider': '青铜骑手',
+    'Silver Rider': '白银骑手',
+    'Gold Rider': '黄金骑手',
+    'Diamond Rider': '钻石骑手',
+    'service completed': '项服务已完成',
+    'services completed': '项服务已完成',
+    'more service to reach': '项服务即可达到',
+    'more services to reach': '项服务即可达到',
+    Share: '分享',
+    Membership: '会员',
+    Plan: '计划',
+    Active: '生效中',
+    Paused: '已暂停',
+    Cancel: '取消',
+    'Hi,': '你好，',
   },
 };
 

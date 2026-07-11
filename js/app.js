@@ -2896,7 +2896,7 @@ async function renderProfile() {
           <span style="font-size:26px">${riderTier.emoji}</span>
           <div>
             <div style="font-size:14px;font-weight:700;color:#0D1F3C">${riderTier.label}</div>
-            <div style="font-size:12px;color:#6B7280">${completedJobs} service${completedJobs === 1 ? '' : 's'} completed</div>
+            <div style="font-size:12px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
           </div>
         </div>
         ${
@@ -2904,8 +2904,8 @@ async function renderProfile() {
             ? `<div style="height:6px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:6px">
                  <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px"></div>
                </div>
-               <div style="font-size:12px;color:#6B7280">${riderTier.nextAt - completedJobs} more service${riderTier.nextAt - completedJobs === 1 ? '' : 's'} to reach ${riderTier.nextLabel}</div>`
-            : `<div style="font-size:12px;color:#6B7280">You've reached our highest tier — thank you for riding with us!</div>`
+               <div style="font-size:12px;color:#6B7280"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
+            : `<div style="font-size:12px;color:#6B7280">You've reached our highest tier - thank you for riding with us!</div>`
         }
       </div>
 
@@ -2915,7 +2915,7 @@ async function renderProfile() {
         <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:16px">You and your friend each get $15 off</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Copy code</button>
-          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px">📱 Share</a>
+          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px"><span aria-hidden="true">📱</span><span>Share</span></a>
         </div>
       </div>
 
@@ -2954,7 +2954,7 @@ async function renderProfile() {
               return `<div style="margin-bottom:20px">
           <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:#fff;margin-bottom:10px">
             <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Membership</div>
-            <div style="font-size:20px;font-weight:800">${planLabel} Plan</div>
+            <div style="font-size:20px;font-weight:800"><span>${planLabel}</span> <span>Plan</span></div>
             <div style="margin-top:8px">${statusBadge}</div>
           </div>
           <div style="display:flex;gap:8px">
@@ -3523,7 +3523,10 @@ async function updateHomeNav() {
         const name = (user.user_metadata?.full_name || user.email || '')
           .split('@')[0]
           .split(' ')[0];
-        if (label) label.textContent = 'Hi, ' + name;
+        if (label) {
+          label.innerHTML = '';
+          label.append(document.createTextNode('Hi, '), document.createTextNode(name));
+        }
         btn.href = '#profile';
       } else {
         if (label) label.textContent = 'Sign In';
