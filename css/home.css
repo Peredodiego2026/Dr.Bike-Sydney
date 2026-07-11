@@ -312,7 +312,7 @@
   padding: 12px 8px;
   background: #fff;
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--elevation-0);
 }
 [data-screen='home'] .stat-mini-n {
   font-size: 18px;
