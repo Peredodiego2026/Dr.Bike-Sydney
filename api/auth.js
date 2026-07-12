@@ -934,7 +934,7 @@ async function handleClientCancel(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -963,16 +963,34 @@ async function handleClientCancel(req, res) {
   // Notify first person on waitlist for this slot (fire-and-forget)
   notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time).catch(() => {});
 
-  // Tell Diego whether this cancellation qualifies for a refund per the 24h
-  // policy in terms.html section 6 (fire-and-forget - never block the client's
+  // Auto-refund the $20 callout fee for >=24h notice (per terms.html section 6),
+  // then tell Diego the outcome (fire-and-forget - never block the client's
   // cancel response on this).
-  notifyAdminCancellation(bk).catch(() => {});
+  notifyAdminCancellation(bk).catch((e) =>
+    console.error('[client-cancel] refund/notify failed:', e.message)
+  );
 
   return res.status(200).json({ ok: true });
 }
 
 async function notifyAdminCancellation(bk) {
   const hours = hoursUntilAppointment(bk.scheduled_date, bk.scheduled_time);
+  const eligibleForRefund = hours >= 24;
+
+  let refunded = false;
+  let refundAttempted = false;
+  if (eligibleForRefund && bk.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
+    refundAttempted = true;
+    try {
+      await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+        payment_intent: bk.stripe_payment_intent_id,
+      });
+      refunded = true;
+    } catch (e) {
+      console.error('[client-cancel] Stripe refund failed:', e.message);
+    }
+  }
+
   const base = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : 'https://drbikesydney.com.au';
@@ -988,7 +1006,9 @@ async function notifyAdminCancellation(bk) {
         date: bk.scheduled_date,
         time: bk.scheduled_time,
         hours,
-        refund: hours >= 24,
+        refund: eligibleForRefund,
+        refunded,
+        refundAttempted,
       },
     }),
   });
