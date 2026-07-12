@@ -248,7 +248,7 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Fully booked on this date</div>' +
       '<div style="font-size:13px;color:#6B7280">Please choose another day or join the waitlist</div></div>' +
       '<button id="waitlist-btn" style="width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">' +
-      'Join Waitlist for ' +
+      '<span>Join Waitlist for</span> ' +
       date +
       '</button>' +
       '<div id="waitlist-form" style="display:none;margin-top:14px;background:#F8FAFF;border:1px solid #DBEAFE;border-radius:10px;padding:16px">' +
@@ -314,9 +314,9 @@ async function loadTimeSlots(screen, date, serviceId) {
           '<div style="text-align:center;padding:8px 0">' +
           '<div style="font-size:22px;margin-bottom:8px">✅</div>' +
           '<div style="font-weight:700;color:#059669;font-size:14px">You\'re on the waitlist!</div>' +
-          '<div style="font-size:13px;color:#6B7280;margin-top:4px">We\'ll email ' +
+          '<div style="font-size:13px;color:#6B7280;margin-top:4px"><span>We\'ll email</span> ' +
           user.email +
-          ' if a slot opens up on ' +
+          ' <span>if a slot opens up on</span> ' +
           date +
           '.</div>' +
           '</div>';
@@ -819,8 +819,32 @@ async function renderBookService() {
       renderStep2();
     });
 
-    screen.querySelector('#s3-continue').addEventListener('click', () => {
-      window.appState.location = input.value.trim() || 'Home';
+    screen.querySelector('#s3-continue').addEventListener('click', async () => {
+      const addr = input.value.trim() || 'Home';
+      window.appState.location = addr;
+      const btn = screen.querySelector('#s3-continue');
+      btn.textContent = 'Checking address...';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'check-coverage', address: addr }),
+        });
+        const data = res.ok ? await res.json() : { covered: true };
+        if (data.covered === false) {
+          showToast(
+            "Sorry, we don't currently service that address. Try a different address or contact us.",
+            'error'
+          );
+          btn.textContent = 'Continue to Summary';
+          btn.disabled = false;
+          return;
+        }
+      } catch {
+        // Coverage check failed (network) - don't block booking on it, the
+        // server re-checks authoritatively in create-booking anyway.
+      }
       if (window.gtag) gtag('event', 'checkout_progress', { step: 2 });
       router.navigate('service-summary');
     });
@@ -2617,6 +2641,32 @@ async function renderMyBookings() {
               <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Call-out fee</span><span style="font-weight:600;color:#0F172A">$${booking.callout_fee ?? 20}</span></div>
             </div>
             ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#DC2626;margin-bottom:4px">Cancellation reason</div><div style="font-size:14px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
+            ${
+              booking.status === 'completed' &&
+              (booking.photo_before_url || booking.photo_after_url)
+                ? `<div style="margin-bottom:16px">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#6B7280;margin-bottom:8px">Photos</div>
+                    <div style="display:flex;gap:8px">
+                      ${
+                        booking.photo_before_url
+                          ? `<a href="${booking.photo_before_url}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
+                              <img src="${booking.photo_before_url}" alt="Before" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
+                              <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">Before</div>
+                            </a>`
+                          : ''
+                      }
+                      ${
+                        booking.photo_after_url
+                          ? `<a href="${booking.photo_after_url}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
+                              <img src="${booking.photo_after_url}" alt="After" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
+                              <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">After</div>
+                            </a>`
+                          : ''
+                      }
+                    </div>
+                  </div>`
+                : ''
+            }
             <div style="display:flex;flex-direction:column;gap:8px">
               ${booking.status === 'completed' ? '<button id="book-again-btn" class="btn btn--primary btn--full">↻ Book Again</button>' : ''}
               ${booking.status === 'enroute' || booking.status === 'en_route' || booking.status === 'in_progress' ? '<button id="track-live-btn" class="btn btn--primary btn--full">Track Live</button>' : ''}
