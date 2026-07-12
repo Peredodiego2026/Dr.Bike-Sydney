@@ -546,7 +546,10 @@ const dict = {
 function detectLang() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && dict[saved]) return saved;
+    // 'en' is a valid saved choice with no dict entry (it IS the source
+    // language) - without this check an explicit English pick gets overridden
+    // by the device locale on every reload.
+    if (saved === 'en' || (saved && dict[saved])) return saved;
   } catch {}
   const nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
   return dict[nav] ? nav : 'en';
