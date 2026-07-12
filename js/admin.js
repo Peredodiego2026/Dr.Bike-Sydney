@@ -331,6 +331,7 @@ const titles = {
   clients: 'Clients',
   finance: 'Finance',
   zones: 'Zone Manager',
+  claims: 'Claims',
   settings: 'Settings',
   coupons: 'Discount Codes',
   reminders: 'Service Reminders',
@@ -349,6 +350,7 @@ const subs = {
   finance: 'Financial overview',
   analytics: 'Funnel · heatmap · LTV · margins',
   zones: 'Assign suburbs to each van',
+  claims: 'Warranty claims from clients - review evidence and resolve',
   settings: 'System settings',
   memberships: 'Active plans · Stripe subscriptions',
   inventory: 'Stock, internal cost and client price per part',
@@ -365,6 +367,7 @@ function go(page, btn) {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sb-overlay').classList.remove('open');
   if (page === 'zones') loadVanZones();
+  if (page === 'claims') loadClaims();
   if (page === 'finance') {
     const now = new Date();
     document.getElementById('fin-month').value = now.getMonth() + 1;
@@ -3291,6 +3294,126 @@ if (chart)
         `<div class="bar-wrap"><div class="bar" style="height:${v ? Math.max((v / max) * 100, 4) : 4}%;background:${v ? '#1848C8' : '#F3F4F6'};opacity:${v ? 1 : 0.3}" title="$${v}"></div>${i % 7 === 0 ? `<div class="bar-label">${['W1', 'W2', 'W3', 'W4'][Math.floor(i / 7)]}</div>` : '<div class="bar-label"></div>'}</div>`
     )
     .join('');
+
+// ── CLAIMS ────────────────────────────────────────────────────────────────────
+// Reads/updates go through /api/auth (service key server-side) because the
+// claims table has RLS with no public policies - the anon-key client used for
+// most other admin reads can't see it.
+const CLAIM_STATUS = {
+  new: { label: 'New', color: '#D97706', bg: '#FEF9C3' },
+  reviewing: { label: 'Reviewing', color: '#1848C8', bg: '#EEF3FC' },
+  resolved: { label: 'Resolved', color: '#059669', bg: '#ECFDF5' },
+  rejected: { label: 'Rejected', color: '#DC2626', bg: '#FEF2F2' },
+};
+
+async function loadClaims() {
+  const list = document.getElementById('claims-list');
+  if (!list) return;
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) {
+    list.innerHTML =
+      '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Admin session expired - sign in again</div>';
+    return;
+  }
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'admin-claims-list', access_token: session.access_token }),
+  });
+  const claims = resp.ok ? await resp.json() : null;
+  if (!claims) {
+    list.innerHTML =
+      '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Could not load claims - check that the claims table exists</div>';
+    return;
+  }
+  if (!claims.length) {
+    list.innerHTML =
+      '<div style="text-align:center;padding:48px;color:var(--mgray)"><div style="font-size:36px;margin-bottom:8px">📭</div><div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">No claims yet</div><div style="font-size:13px">Client warranty claims from /claims.html will appear here.</div></div>';
+    return;
+  }
+
+  list.innerHTML = claims
+    .map((c) => {
+      const st = CLAIM_STATUS[c.status] || CLAIM_STATUS.new;
+      const when = c.created_at
+        ? new Date(c.created_at).toLocaleDateString('en-AU', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          })
+        : '—';
+      const photos = (c.photo_urls || [])
+        .map(
+          (u) =>
+            `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--border)"></a>`
+        )
+        .join('');
+      const invoice = c.invoice_url
+        ? `<a href="${esc(c.invoice_url)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue);text-decoration:underline">View invoice screenshot</a>`
+        : '<span style="font-size:12px;color:var(--mgray)">No invoice attached</span>';
+      return `
+    <div style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${st.color};border-radius:12px;padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(c.client_name)}</div>
+          <div style="font-size:12px;color:var(--mgray)">${esc(c.client_email)}${c.phone ? ' · ' + esc(c.phone) : ''} · submitted ${when}${c.service_date ? ' · service on ' + esc(c.service_date) : ''}</div>
+        </div>
+        <span style="background:${st.bg};color:${st.color};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${st.label}</span>
+      </div>
+      <div style="font-size:13px;color:#374151;margin:10px 0;white-space:pre-wrap">${esc(c.description)}</div>
+      ${photos ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${photos}</div>` : ''}
+      <div style="margin-bottom:12px">${invoice}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select data-claim-status="${esc(c.id)}" class="inp" style="width:auto;padding:7px 10px;font-size:12px;cursor:pointer">
+          ${Object.entries(CLAIM_STATUS)
+            .map(
+              ([k, v]) =>
+                `<option value="${k}"${k === c.status ? ' selected' : ''}>${v.label}</option>`
+            )
+            .join('')}
+        </select>
+        <input data-claim-notes="${esc(c.id)}" class="inp" placeholder="Resolution notes" value="${esc(c.resolution_notes || '')}" style="flex:1;min-width:180px;padding:7px 10px;font-size:12px">
+        <button data-claim-save="${esc(c.id)}" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
+      </div>
+    </div>`;
+    })
+    .join('');
+
+  list.querySelectorAll('[data-claim-save]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.claimSave;
+      const status = list.querySelector(`[data-claim-status="${id}"]`).value;
+      const notes = list.querySelector(`[data-claim-notes="${id}"]`).value;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      const {
+        data: { session: s2 },
+      } = await sb.auth.getSession();
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'admin-claims-update',
+          access_token: s2?.access_token,
+          id,
+          status,
+          resolution_notes: notes,
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        showToast('Save failed: ' + (d.error || 'Unknown error'));
+        btn.disabled = false;
+        btn.textContent = 'Save';
+        return;
+      }
+      showToast('Claim updated ✓');
+      loadClaims();
+    });
+  });
+}
 
 // ── ESCALATION CONTACTS ───────────────────────────────────────────────────────
 async function loadContacts() {

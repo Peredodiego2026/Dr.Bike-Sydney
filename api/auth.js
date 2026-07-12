@@ -1963,6 +1963,127 @@ async function handleVapidPublicKey(req, res) {
   return res.status(200).json({ key: process.env.VAPID_PUBLIC_KEY || null });
 }
 
+// ── Claims (warranty/complaint reports) ─────────────────────────────────────
+// Public submit endpoint + admin-only list/update. The claims table has RLS
+// with no public policies - everything goes through here with the service key,
+// same pattern as the admin services CRUD below.
+async function handleSubmitClaim(req, res) {
+  const { name, email, phone, service_date, description, invoice_base64, photos_base64 } =
+    req.body || {};
+  const cleanName = String(name || '').trim();
+  const cleanEmail = String(email || '')
+    .trim()
+    .toLowerCase();
+  const cleanDesc = String(description || '')
+    .trim()
+    .slice(0, 2000);
+  if (!cleanName || !cleanDesc)
+    return res.status(400).json({ error: 'Name and description are required' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail))
+    return res.status(400).json({ error: 'A valid email is required' });
+  if (service_date && !/^\d{4}-\d{2}-\d{2}$/.test(service_date))
+    return res.status(400).json({ error: 'Invalid service date' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const ts = Date.now();
+
+  // Photos arrive as client-side-compressed base64 JPEGs (claims.html caps
+  // them at 1280px), max 3 + optional invoice screenshot, each <= ~1.5MB
+  // decoded so the whole request stays under Vercel's body limit.
+  async function uploadB64(b64, label, idx) {
+    try {
+      const data = String(b64).replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(data, 'base64');
+      if (buffer.length > 1_500_000) return null;
+      const path = `claims/${ts}/${label}_${idx}.jpg`;
+      const up = await fetch(`${SUPABASE_URL}/storage/v1/object/job-photos/${path}`, {
+        method: 'POST',
+        headers: {
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          'Content-Type': 'image/jpeg',
+          'x-upsert': 'true',
+        },
+        body: buffer,
+      });
+      return up.ok ? `${SUPABASE_URL}/storage/v1/object/public/job-photos/${path}` : null;
+    } catch {
+      return null;
+    }
+  }
+
+  const photoUrls = [];
+  for (const [i, p] of (Array.isArray(photos_base64) ? photos_base64.slice(0, 3) : []).entries()) {
+    const url = await uploadB64(p, 'photo', i);
+    if (url) photoUrls.push(url);
+  }
+  const invoiceUrl = invoice_base64 ? await uploadB64(invoice_base64, 'invoice', 0) : null;
+
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: claim, error } = await sb
+    .from('claims')
+    .insert({
+      client_name: cleanName,
+      client_email: cleanEmail,
+      phone: String(phone || '').trim() || null,
+      service_date: service_date || null,
+      description: cleanDesc,
+      photo_urls: photoUrls,
+      invoice_url: invoiceUrl,
+      status: 'new',
+    })
+    .select()
+    .single();
+  if (error) return res.status(500).json({ error: 'Could not submit claim: ' + error.message });
+
+  // Heads-up email to Diego (fire-and-forget, same direct-Resend pattern as
+  // notifyWaitlist) so a claim never sits unseen until he opens Admin.
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  if (RESEND_KEY) {
+    fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
+        to: ['peredo.dm@gmail.com'],
+        subject: `New claim from ${cleanName}`,
+        html: `<p><strong>${cleanName}</strong> (${cleanEmail}) submitted a claim${service_date ? ` for a service on ${service_date}` : ''}.</p><p>${cleanDesc.replace(/</g, '&lt;')}</p><p>Review it in <a href="https://drbikesydney.com.au/admin.html">Admin &gt; Claims</a>.</p>`,
+      }),
+    }).catch(() => {});
+  }
+
+  return res.status(200).json({ ok: true, id: claim.id });
+}
+
+async function handleAdminClaimsList(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const { data, error } = await auth.sb
+    .from('claims')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json(data || []);
+}
+
+async function handleAdminClaimsUpdate(req, res) {
+  const { access_token, id, status, resolution_notes } = req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!id) return res.status(400).json({ error: 'id required' });
+  if (!['new', 'reviewing', 'resolved', 'rejected'].includes(status))
+    return res.status(400).json({ error: 'Invalid status' });
+  const { error } = await auth.sb
+    .from('claims')
+    .update({ status, resolution_notes: String(resolution_notes || '').slice(0, 2000) || null })
+    .eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ ok: true });
+}
+
 // ── Admin: Services CRUD (server-authoritative, bypasses RLS via service key) ──
 // The admin client uses the anon key for reads; writes go through here instead
 // of direct sb.from('services') calls so they don't silently no-op under RLS.
@@ -2090,5 +2211,8 @@ async function handler(req, res) {
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
+  if (role === 'submit-claim') return handleSubmitClaim(req, res);
+  if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
+  if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   return handleAdmin(req, res);
 }
