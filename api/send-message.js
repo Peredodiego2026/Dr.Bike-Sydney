@@ -162,6 +162,19 @@ async function handleWhatsApp(req, res) {
   }
   if (!fromNumber) return res.status(503).json({ error: 'WhatsApp not configured' });
 
+  if (normalizeAUPhone(fromNumber) === toNorm) {
+    await logNotification({
+      channel: 'whatsapp',
+      recipient: toNorm,
+      type: template,
+      status: 'skipped_self',
+      attempts: 0,
+      error: 'to matches the business WhatsApp sender number',
+      booking_id: data?.bookingId ? String(data.bookingId) : null,
+    });
+    return res.status(200).json({ success: true, skipped: true, reason: 'to_equals_from' });
+  }
+
   const body = buildWAMessage(template, data);
   if (!body) return res.status(400).json({ error: 'Could not build message for template' });
 
