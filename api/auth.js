@@ -219,6 +219,7 @@ async function handleCreateBooking(req, res) {
     utm_source,
     utm_medium,
     utm_campaign,
+    time_to_book_seconds,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!access_token) return res.status(401).json({ error: 'Sign in required' });
@@ -346,6 +347,15 @@ async function handleCreateBooking(req, res) {
         utm_source: utm_source || null,
         utm_medium: utm_medium || null,
         utm_campaign: utm_campaign || null,
+        // Client-reported elapsed time, only trusted within a sane range - a
+        // bogus/manipulated value would just skew the "avg time to book" KPI,
+        // it's never used for pricing or access control.
+        time_to_book_seconds:
+          Number.isFinite(Number(time_to_book_seconds)) &&
+          Number(time_to_book_seconds) >= 0 &&
+          Number(time_to_book_seconds) <= 86400
+            ? Math.round(Number(time_to_book_seconds))
+            : null,
       },
     ])
     .select()
@@ -731,6 +741,7 @@ async function handleMechanicAccept(req, res) {
         status: 'confirmed',
         mechanic_id: mechanic.id,
         arrival_pin: arrivalPin,
+        mechanic_accepted_at: new Date().toISOString(),
       }),
     }
   );
