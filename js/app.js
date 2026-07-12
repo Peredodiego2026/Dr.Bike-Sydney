@@ -2628,7 +2628,7 @@ async function renderMyBookings() {
         const sc = STATUS_COLORS[booking.status] || '#64748B';
         const sl = STATUS_LABELS[booking.status] || booking.status;
         overlay.innerHTML = `
-          <div id="detail-panel" style="background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
+          <div id="detail-panel" style="background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--elevation-2)">
             <div style="width:36px;height:4px;background:#E2E8F0;border-radius:4px;margin:0 auto 20px"></div>
             <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:4px">${booking.service_name || 'Service'}</div>
             <div style="display:inline-block;font-size:11px;font-weight:600;color:${sc};background:${sc}1A;padding:3px 10px;border-radius:20px;margin-bottom:20px">${sl}</div>
@@ -2666,11 +2666,11 @@ async function renderMyBookings() {
                 : ''
             }
             <div style="display:flex;flex-direction:column;gap:8px">
-              ${booking.status === 'completed' ? '<button id="book-again-btn" class="btn btn--primary btn--full">↻ Book Again</button>' : ''}
-              ${booking.status === 'enroute' || booking.status === 'en_route' || booking.status === 'in_progress' ? '<button id="track-live-btn" class="btn btn--primary btn--full">Track Live</button>' : ''}
-              ${booking.tracking_token ? '<button id="share-track-btn" class="btn btn--secondary btn--full">Share tracking link</button>' : ''}
-              ${canCancel ? '<button id="reschedule-btn" class="btn btn--secondary btn--full">Reschedule</button>' : ''}
-              ${canCancel ? '<button id="cancel-booking-btn" class="btn btn--danger btn--full">Cancel booking</button>' : ''}
+              ${booking.status === 'completed' ? '<button id="book-again-btn" class="btn btn--primary btn--full btn-press"><span aria-hidden="true">↻</span> <span>Book Again</span></button>' : ''}
+              ${booking.status === 'enroute' || booking.status === 'en_route' || booking.status === 'in_progress' ? '<button id="track-live-btn" class="btn btn--primary btn--full btn-press">Track Live</button>' : ''}
+              ${booking.tracking_token ? '<button id="share-track-btn" class="btn btn--secondary btn--full btn-press">Share tracking link</button>' : ''}
+              ${canCancel ? '<button id="reschedule-btn" class="btn btn--secondary btn--full btn-press">Reschedule</button>' : ''}
+              ${canCancel ? '<button id="cancel-booking-btn" class="btn btn--danger btn--full btn-press">Cancel booking</button>' : ''}
             </div>
             ${booking.mechanic_id ? '<div id="detail-mechanic-section"></div>' : ''}
             <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
@@ -2733,7 +2733,9 @@ async function renderMyBookings() {
           const match = (services || []).find((s) => s.name === booking.service_name);
           if (!match) {
             showToast('That service is no longer available. Please pick a new one.', 'error');
-            btn.textContent = '↻ Book Again';
+            // Rebuild the split icon/text spans - textContent would flatten them
+            // back into one node and break the i18n exact-match lookup.
+            btn.innerHTML = '<span aria-hidden="true">↻</span> <span>Book Again</span>';
             btn.disabled = false;
             return;
           }
