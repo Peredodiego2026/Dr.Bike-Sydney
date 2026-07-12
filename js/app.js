@@ -1,43 +1,38 @@
-// ── Surge & Early Bird Pricing ─────────────────────────────────────────────
-const AU_PUBLIC_HOLIDAYS_2026 = [
-  '2026-01-01',
-  '2026-01-26',
-  '2026-04-03',
-  '2026-04-04',
-  '2026-04-05',
-  '2026-04-06',
-  '2026-04-25',
-  '2026-06-08',
-  '2026-08-03',
-  '2026-10-05',
-  '2026-12-25',
-  '2026-12-26',
-  '2026-12-28',
+// ── Sunday / NSW public holiday surcharge (+20%) ────────────────────────────
+// Display-side mirror of the authoritative copy in api/auth.js (isSurchargeDay
+// / applySurcharge) - the server recomputes both prices in handleCreateBooking
+// and verifies the Stripe charge against ITS number, so these two lists must
+// stay in sync or Sunday/holiday payments will be rejected as amount mismatch.
+// Saturday is deliberately normal price (Diego's rule, 12 Jul 2026).
+const NSW_PUBLIC_HOLIDAYS_2026 = [
+  '2026-01-01', // New Year's Day
+  '2026-01-26', // Australia Day
+  '2026-04-03', // Good Friday
+  '2026-04-04', // Easter Saturday
+  '2026-04-05', // Easter Sunday
+  '2026-04-06', // Easter Monday
+  '2026-04-25', // Anzac Day
+  '2026-04-27', // Anzac Day additional public holiday
+  '2026-06-08', // King's Birthday
+  '2026-10-05', // Labour Day
+  '2026-12-25', // Christmas Day
+  '2026-12-26', // Boxing Day
+  '2026-12-28', // Boxing Day additional public holiday
 ];
+const SURCHARGE_MULTIPLIER = 1.2;
 
-function getSurcharge(dateStr) {
-  // dateStr: 'YYYY-MM-DD'
-  if (!dateStr) return { surge: 0, earlyBird: 0, label: '' };
-  const d = new Date(dateStr + 'T12:00:00');
-  const day = d.getDay(); // 0=Sun,6=Sat
-  const isWeekend = day === 0 || day === 6;
-  const isHoliday = AU_PUBLIC_HOLIDAYS_2026.includes(dateStr);
-  const surge = isWeekend || isHoliday ? 15 : 0;
-  // Early bird: booking made 48h+ before scheduled date
-  const now = new Date();
-  const scheduled = new Date(dateStr + 'T08:00:00');
-  const hoursAhead = (scheduled - now) / 36e5;
-  const earlyBird = hoursAhead >= 48 ? -10 : 0;
-  const labels = [];
-  if (isHoliday) labels.push('Public holiday surcharge +$15');
-  else if (isWeekend) labels.push('Weekend surcharge +$15');
-  if (earlyBird) labels.push('Early bird discount -$10');
-  return { surge, earlyBird, label: labels.join(' · ') };
+function isSurchargeDay(dateStr) {
+  const [Y, Mo, D] = String(dateStr || '')
+    .split('-')
+    .map(Number);
+  if (!Y || !Mo || !D) return false;
+  if (new Date(Y, Mo - 1, D).getDay() === 0) return true; // Sunday
+  return NSW_PUBLIC_HOLIDAYS_2026.includes(dateStr);
 }
 
-function applyPricingAdjustments(basePrice, dateStr) {
-  const { surge, earlyBird, label } = getSurcharge(dateStr);
-  return { total: basePrice + surge + earlyBird, surge, earlyBird, label };
+function applySurcharge(amount, dateStr) {
+  if (!isSurchargeDay(dateStr)) return amount;
+  return Math.round(amount * SURCHARGE_MULTIPLIER * 100) / 100;
 }
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -923,9 +918,9 @@ async function renderServiceSummary() {
   if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'quote_summary' });
 
-  const adj = applyPricingAdjustments(Number(service.price || 0), date);
-  const serviceTotal = adj.total;
-  const calloutFee = await getCalloutFee(location);
+  const surcharged = isSurchargeDay(date);
+  const serviceTotal = applySurcharge(Number(service.price || 0), date);
+  const calloutFee = applySurcharge(await getCalloutFee(location), date);
   const grandTotal = serviceTotal + calloutFee;
   const inclusions = getServiceInclusions(service.name);
   const dur = formatServiceDuration(service);
@@ -968,7 +963,7 @@ async function renderServiceSummary() {
           : ''
       }
 
-      ${adj.label ? `<div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--color-text-secondary);margin-bottom:14px">${adj.label}</div>` : ''}
+      ${surcharged ? `<div style="background:#FEF9EE;border:1px solid #FDE9C8;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
       <!-- Pricing breakdown -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
@@ -1136,7 +1131,9 @@ async function renderPayment() {
     return;
   }
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'payment' });
-  const calloutFee = await getCalloutFee(location);
+  // Surcharge must match what handleCreateBooking will verify against Stripe -
+  // an unsurcharged charge on a Sunday/holiday gets rejected as amount mismatch.
+  const calloutFee = applySurcharge(await getCalloutFee(location), date);
 
   const {
     data: { user: currentUser },
@@ -1254,7 +1251,7 @@ async function renderPayment() {
         service: service?.name || 'Service',
       });
     const _bId = booking.id;
-    const _total = fee + service.price;
+    const _total = fee + applySurcharge(Number(service.price || 0), date);
     Promise.allSettled([
       fetch('/api/send-message?channel=whatsapp', {
         method: 'POST',

@@ -152,6 +152,48 @@ export function hoursUntilAppointment(dateStr, timeStr, nowMs = Date.now()) {
   return Math.max(0, Math.floor((when.getTime() - nowMs) / 3600000));
 }
 
+// NSW public holidays 2026 (source: nsw.gov.au / Fair Work Ombudsman, checked
+// 12 Jul 2026). Needs a new entry added each year - there's no API for this,
+// and a wrong date here means a Sunday-rate day silently charges normal price
+// or vice versa, so keep this list verified against an official source, not
+// guessed.
+const NSW_PUBLIC_HOLIDAYS_2026 = [
+  '2026-01-01', // New Year's Day
+  '2026-01-26', // Australia Day
+  '2026-04-03', // Good Friday
+  '2026-04-04', // Easter Saturday
+  '2026-04-05', // Easter Sunday
+  '2026-04-06', // Easter Monday
+  '2026-04-25', // Anzac Day
+  '2026-04-27', // Anzac Day additional public holiday
+  '2026-06-08', // King's Birthday
+  '2026-10-05', // Labour Day
+  '2026-12-25', // Christmas Day
+  '2026-12-26', // Boxing Day
+  '2026-12-28', // Boxing Day additional public holiday
+];
+
+// Diego's rule (confirmed): Sundays and NSW public holidays cost 20% more -
+// the standard AU trade "penalty rate" convention. Saturdays are normal price.
+export const SURCHARGE_MULTIPLIER = 1.2;
+
+export function isSurchargeDay(dateStr) {
+  const [Y, Mo, D] = String(dateStr || '')
+    .split('-')
+    .map(Number);
+  if (!Y || !Mo || !D) return false;
+  const dow = new Date(Y, Mo - 1, D).getDay(); // 0 = Sunday
+  if (dow === 0) return true;
+  return NSW_PUBLIC_HOLIDAYS_2026.includes(dateStr);
+}
+
+// Rounds to the nearest cent so $109 * 1.2 comes out as a clean $130.80, not a
+// floating-point remainder.
+export function applySurcharge(amount, dateStr) {
+  if (!isSurchargeDay(dateStr)) return amount;
+  return Math.round(amount * SURCHARGE_MULTIPLIER * 100) / 100;
+}
+
 // Privacy-safe display name for a client's review shown publicly (e.g. "Sarah M.")
 export function shortClientName(name) {
   const parts = String(name || '')
@@ -251,7 +293,10 @@ async function handleCreateBooking(req, res) {
     svc = r.data;
   }
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
-  const servicePrice = Number(svc.price);
+  // Sunday/NSW public holiday surcharge (+20%, confirmed with Diego) - applied
+  // to both components so the itemized quote stays honest line-by-line rather
+  // than a mystery lump surcharge.
+  const servicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
   // 3. Authoritative call-out fee (callout_zones by address, default $20)
   let calloutFee = 20;
@@ -263,6 +308,7 @@ async function handleCreateBooking(req, res) {
     );
     if (zone) calloutFee = Number(zone.callout_fee);
   } catch {}
+  calloutFee = applySurcharge(calloutFee, scheduled_date);
 
   // 3b. Zone dispatch: reject bookings outside any configured coverage zone
   // instead of silently defaulting to van 1 - previously this accepted (and
