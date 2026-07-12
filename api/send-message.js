@@ -112,6 +112,15 @@ function buildWAMessage(template, data) {
       return `Service reminder 🔔\n\nHi ${d.name || 'there'}! Your Dr. Bike service is coming up:\n\n📅 ${d.date || 'soon'} at ${d.time || 'your selected time'}\n📍 ${d.suburb || 'your location'}\n\nNeed to reschedule? https://drbikesydney.com.au\n\n— Dr. Bike Sydney 🚲`;
     case 'new_booking':
       return `Nueva reserva recibida 🚲\n\n🔧 ${d.service || 'Bike repair'}\n📅 ${d.date || ''} a las ${d.time || ''}\n📍 ${d.address || ''}\n👤 ${d.clientName || 'Cliente'}\n💰 $${d.price || '—'}\n\nVer: ${d.trackUrl || 'https://drbikesydney.com.au'}`;
+    case 'client_cancelled': {
+      if (!d.refund) {
+        return `⚠️ Cancelación de cliente\n\nDiego, este cliente ha cancelado su servicio, pero no debes reembolsar su dinero. Lo canceló con ${d.hours ?? '—'} horas de anticipación antes del servicio.\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n📅 ${d.date || ''} a las ${d.time || ''}`;
+      }
+      const status = d.refunded
+        ? `✅ Reembolso de $20 procesado automáticamente. Revisa que todo esté en orden.`
+        : `⚠️ Debía reembolsarse $20 (más de 24h de anticipación) pero no se pudo procesar automáticamente. Revisa manualmente en Stripe.`;
+      return `⚠️ Cancelación de cliente\n\n${status}\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n📅 ${d.date || ''} a las ${d.time || ''}\n⏱️ Canceló con ${d.hours ?? '—'} horas de anticipación (más de 24h)`;
+    }
     default:
       return null;
   }
@@ -125,7 +134,16 @@ async function handleWhatsApp(req, res) {
   const { to, template, data } = req.body || {};
   if (!to || !template)
     return res.status(400).json({ error: 'Missing required fields: to, template' });
-  if (!['confirmation', 'enroute', 'completed', 'reminder', 'new_booking'].includes(template)) {
+  if (
+    ![
+      'confirmation',
+      'enroute',
+      'completed',
+      'reminder',
+      'new_booking',
+      'client_cancelled',
+    ].includes(template)
+  ) {
     return res.status(400).json({ error: 'Invalid template' });
   }
 

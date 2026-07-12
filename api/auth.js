@@ -116,6 +116,35 @@ function mechanicName(m) {
   return [m.first_name, m.last_name].filter(Boolean).join(' ').trim() || m.name || '';
 }
 
+// Convert Sydney local date+time to UTC Date (DST-aware). Same approach as
+// api/send-reminders.js's sydneyLocalToUtc - kept as a local copy since there's
+// no shared utils module for these two small files.
+function sydneyLocalToUtc(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return null;
+  const m = timeStr.trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const [hh, mm] = [parseInt(m[1], 10), parseInt(m[2], 10)];
+  const [Y, Mo, D] = dateStr.split('-').map(Number);
+  const probe = new Date(Date.UTC(Y, Mo - 1, D, hh, mm));
+  const part = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Australia/Sydney',
+    timeZoneName: 'shortOffset',
+  })
+    .formatToParts(probe)
+    .find((p) => p.type === 'timeZoneName');
+  const offset = part ? parseInt((part.value.match(/GMT([+-]\d{1,2})/) || [0, 10])[1], 10) : 10;
+  return new Date(Date.UTC(Y, Mo - 1, D, hh - offset, mm));
+}
+
+// Whole hours of notice between `nowMs` and the Sydney-local scheduled_date/time,
+// floored and clamped at 0 (never negative). Used to decide whether a client
+// cancellation qualifies for a refund per the 24h policy in terms.html section 6.
+export function hoursUntilAppointment(dateStr, timeStr, nowMs = Date.now()) {
+  const when = sydneyLocalToUtc(dateStr, timeStr);
+  if (!when) return 0;
+  return Math.max(0, Math.floor((when.getTime() - nowMs) / 3600000));
+}
+
 // Privacy-safe display name for a client's review shown publicly (e.g. "Sarah M.")
 export function shortClientName(name) {
   const parts = String(name || '')
@@ -905,7 +934,7 @@ async function handleClientCancel(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,scheduled_date,scheduled_time&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -934,7 +963,55 @@ async function handleClientCancel(req, res) {
   // Notify first person on waitlist for this slot (fire-and-forget)
   notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time).catch(() => {});
 
+  // Auto-refund the $20 callout fee for >=24h notice (per terms.html section 6),
+  // then tell Diego the outcome (fire-and-forget - never block the client's
+  // cancel response on this).
+  notifyAdminCancellation(bk).catch((e) =>
+    console.error('[client-cancel] refund/notify failed:', e.message)
+  );
+
   return res.status(200).json({ ok: true });
+}
+
+async function notifyAdminCancellation(bk) {
+  const hours = hoursUntilAppointment(bk.scheduled_date, bk.scheduled_time);
+  const eligibleForRefund = hours >= 24;
+
+  let refunded = false;
+  let refundAttempted = false;
+  if (eligibleForRefund && bk.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
+    refundAttempted = true;
+    try {
+      await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+        payment_intent: bk.stripe_payment_intent_id,
+      });
+      refunded = true;
+    } catch (e) {
+      console.error('[client-cancel] Stripe refund failed:', e.message);
+    }
+  }
+
+  const base = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'https://drbikesydney.com.au';
+  await fetch(`${base}/api/send-message?channel=whatsapp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to: '0433963250',
+      template: 'client_cancelled',
+      data: {
+        clientName: bk.client_name || 'Cliente',
+        service: bk.service_name || 'Servicio',
+        date: bk.scheduled_date,
+        time: bk.scheduled_time,
+        hours,
+        refund: eligibleForRefund,
+        refunded,
+        refundAttempted,
+      },
+    }),
+  });
 }
 
 async function notifyWaitlist(SERVICE_KEY, date, time) {
