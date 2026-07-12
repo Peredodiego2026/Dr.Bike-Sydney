@@ -313,7 +313,7 @@ document.addEventListener('click', function (e) {
       markAllRead();
       break;
     case 'edit-contact':
-      editContact(d.id, d.firstName, d.lastName, d.phone, d.role);
+      editContact(d.id, d.firstName, d.lastName, d.phone, d.email, d.role);
       break;
     case 'delete-contact':
       deleteContact(d.id);
@@ -2178,6 +2178,19 @@ async function confirmCancel() {
   document.getElementById('cancel-modal').style.display = 'none';
   applyBookingFilters();
   showToast('Booking cancelled');
+
+  if (upd[0]?.google_event_id) {
+    const { data: sess } = await sb.auth.getSession();
+    fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-delete-calendar-event',
+        access_token: sess?.session?.access_token,
+        event_id: upd[0].google_event_id,
+      }),
+    }).catch(() => {});
+  }
 }
 
 function openReassign(id) {
@@ -3225,11 +3238,12 @@ async function loadContacts() {
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:600;color:var(--navy)">${c.first_name} ${c.last_name}</div>
           <div style="font-size:12px;color:var(--mgray)">${c.phone}</div>
+          ${c.email ? `<div style="font-size:12px;color:var(--mgray)">${c.email}</div>` : ''}
         </div>
         <span style="background:${roleBg[c.role] || '#F3F4F6'};color:${roleColors[c.role] || '#6B7280'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
       <div style="display:flex;gap:8px">
-        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
+        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
         <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`
@@ -3243,6 +3257,7 @@ function openContactModal() {
   document.getElementById('modal-fname').value = '';
   document.getElementById('modal-lname').value = '';
   document.getElementById('modal-phone').value = '';
+  document.getElementById('modal-email').value = '';
   document.getElementById('modal-role').value = 'mechanic';
   document.getElementById('contact-modal').style.display = 'flex';
 }
@@ -3251,12 +3266,13 @@ function closeContactModal() {
   document.getElementById('contact-modal').style.display = 'none';
 }
 
-function editContact(id, fname, lname, phone, role) {
+function editContact(id, fname, lname, phone, email, role) {
   document.getElementById('modal-title').textContent = 'Edit Contact';
   document.getElementById('modal-id').value = id;
   document.getElementById('modal-fname').value = fname;
   document.getElementById('modal-lname').value = lname;
   document.getElementById('modal-phone').value = phone;
+  document.getElementById('modal-email').value = email || '';
   document.getElementById('modal-role').value = role;
   document.getElementById('contact-modal').style.display = 'flex';
 }
@@ -3266,6 +3282,7 @@ async function saveContact() {
   const fname = document.getElementById('modal-fname').value.trim();
   const lname = document.getElementById('modal-lname').value.trim();
   const phone = document.getElementById('modal-phone').value.trim();
+  const email = document.getElementById('modal-email').value.trim();
   const role = document.getElementById('modal-role').value;
   if (!fname || !lname || !phone) {
     showToast('Please fill all fields');
@@ -3274,13 +3291,20 @@ async function saveContact() {
   if (id) {
     await sb
       .from('escalation_contacts')
-      .update({ first_name: fname, last_name: lname, phone, role })
+      .update({ first_name: fname, last_name: lname, phone, email: email || null, role })
       .eq('id', id);
     showToast('Contact updated ✓');
   } else {
     await sb
       .from('escalation_contacts')
-      .insert({ first_name: fname, last_name: lname, phone, role, active: true });
+      .insert({
+        first_name: fname,
+        last_name: lname,
+        phone,
+        email: email || null,
+        role,
+        active: true,
+      });
     showToast('Contact added ✓');
   }
   closeContactModal();
@@ -4893,7 +4917,27 @@ async function initAdmin() {
     await restoreAdminSession();
     await loadDashboard();
     subscribeToBookings();
+    handleUrlParams();
   }
+}
+
+// Reads ?page= and ?calendar= set by the Google Calendar OAuth callback
+// redirect (see api/google-calendar-callback.js) - lands the admin back on
+// Settings with a clear success/error message instead of just the dashboard.
+function handleUrlParams() {
+  const params = new URLSearchParams(location.search);
+  const page = params.get('page');
+  const calendar = params.get('calendar');
+  if (page) go(page);
+  const statusEl = document.getElementById('gcal-status');
+  if (statusEl && calendar === 'connected') {
+    statusEl.textContent = '✓ Connected';
+    statusEl.style.color = '#059669';
+  } else if (statusEl && calendar === 'error') {
+    statusEl.textContent = '✗ Connection failed - try again';
+    statusEl.style.color = '#DC2626';
+  }
+  if (page || calendar) history.replaceState(null, '', location.pathname);
 }
 
 if (document.readyState === 'loading') {

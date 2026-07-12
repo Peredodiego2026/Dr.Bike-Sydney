@@ -692,6 +692,10 @@
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone (WhatsApp)</div>
           <input class="inp" id="modal-phone" placeholder="+61 400 000 000">
         </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Email (Gmail - for calendar invites)</div>
+          <input class="inp" id="modal-email" type="email" placeholder="e.g. mechanic@gmail.com">
+        </div>
         <div style="margin-bottom:20px">
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Role</div>
           <select class="inp" id="modal-role">
@@ -914,6 +918,14 @@
             <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">ABN</div><input id="set-biz-abn" class="inp" placeholder="Pending registration"></div>
           </div>
           <button class="btn-save" id="auto-wire-22">Save changes</button>
+        </div>
+
+        <!-- ══ GOOGLE CALENDAR ══ -->
+        <div class="setting-card">
+          <div class="setting-title">Google Calendar sync</div>
+          <div class="setting-sub">Confirmed jobs are added to your Google Calendar and the assigned mechanic is invited - they get native alarms and notifications on their phone.</div>
+          <div id="gcal-status" style="font-size:13px;color:var(--mgray);margin-bottom:12px"></div>
+          <a href="/api/google-calendar-connect" style="display:inline-block;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;text-decoration:none;font-family:var(--sans)">Connect Google Calendar</a>
         </div>
 
         <!-- ══ WHATSAPP BUSINESS ══ -->
@@ -1236,5 +1248,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=20260708b"></script>
+<script src="js/admin.js?v=20260712"></script>
 </body></html>

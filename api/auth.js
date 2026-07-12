@@ -10,6 +10,13 @@ import {
   clearLoginFailures,
   LOGIN_LOCK_MINUTES,
 } from './_security.js';
+import {
+  createCalendarEvent,
+  updateCalendarEvent,
+  deleteCalendarEvent,
+  isGoogleCalendarConfigured,
+  saveGoogleRefreshToken,
+} from './_google-calendar.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
@@ -735,7 +742,35 @@ async function handleMechanicAccept(req, res) {
   if (!Array.isArray(acceptedRows) || acceptedRows.length === 0) {
     return res.status(409).json({ error: 'This job was just taken by another mechanic' });
   }
+
+  // Calendar sync (fire-and-forget) - only does anything once Google Calendar
+  // is configured and connected; a no-op otherwise (see _google-calendar.js).
+  syncBookingToCalendar(acceptedRows[0], mechanic.email, SERVICE_KEY).catch((e) =>
+    console.error('[mechanic-accept] calendar sync failed:', e.message)
+  );
+
   return res.status(200).json({ ok: true, mechanic_name: mechanic.name });
+}
+
+async function syncBookingToCalendar(booking, mechanicEmail, SERVICE_KEY) {
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: svc } = await sb
+    .from('services')
+    .select('duration_max')
+    .eq('name', booking.service_name)
+    .maybeSingle();
+  const eventId = await createCalendarEvent({
+    scheduledDate: booking.scheduled_date,
+    scheduledTime: booking.scheduled_time,
+    durationMin: (svc?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN,
+    serviceName: booking.service_name,
+    address: booking.address,
+    clientName: booking.client_name,
+    mechanicEmail,
+  });
+  if (eventId) {
+    await sb.from('bookings').update({ google_event_id: eventId }).eq('id', booking.id);
+  }
 }
 
 async function handleMechanicReject(req, res) {
@@ -967,7 +1002,7 @@ async function handleClientCancel(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id,google_event_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -995,6 +1030,9 @@ async function handleClientCancel(req, res) {
 
   // Notify first person on waitlist for this slot (fire-and-forget)
   notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time).catch(() => {});
+
+  // Remove the mechanic's calendar event, if one was ever created (fire-and-forget)
+  if (bk.google_event_id) deleteCalendarEvent(bk.google_event_id).catch(() => {});
 
   // Auto-refund the $20 callout fee for >=24h notice (per terms.html section 6),
   // then tell Diego the outcome (fire-and-forget - never block the client's
@@ -1214,7 +1252,7 @@ async function handleClientReschedule(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,google_event_id,service_name&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -1239,6 +1277,23 @@ async function handleClientReschedule(req, res) {
     }
   );
   if (!updateResp.ok) return res.status(500).json({ error: 'Failed to reschedule booking' });
+
+  if (bk.google_event_id) {
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+    sb.from('services')
+      .select('duration_max')
+      .eq('name', bk.service_name)
+      .maybeSingle()
+      .then(({ data: svc }) =>
+        updateCalendarEvent(bk.google_event_id, {
+          scheduledDate: scheduled_date,
+          scheduledTime: scheduled_time,
+          durationMin: (svc?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN,
+        })
+      )
+      .catch(() => {});
+  }
+
   return res.status(200).json({ ok: true });
 }
 
@@ -1799,6 +1854,66 @@ async function handleGetAvailability(req, res) {
   return res.status(200).json(slots);
 }
 
+// ── Google Calendar OAuth (see api/_google-calendar.js) ─────────────────────────
+// Both roles are reached via vercel.json rewrites (/api/google-calendar-connect,
+// /api/google-calendar-callback) rather than their own files, to stay under
+// Vercel's Hobby-plan 12-serverless-function limit - adding 2 more standalone
+// route files pushed this project's deployment over that cap.
+async function handleGoogleCalendarConnect(req, res) {
+  if (!isGoogleCalendarConfigured()) {
+    return res
+      .status(503)
+      .send('Google Calendar is not configured yet (missing Client ID/Secret).');
+  }
+  const redirectUri = `https://${req.headers.host}/api/google-calendar-callback`;
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    access_type: 'offline',
+    prompt: 'consent', // forces a refresh_token even if this account connected before
+    scope: 'https://www.googleapis.com/auth/calendar',
+  });
+  res.writeHead(302, { Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
+  return res.end();
+}
+
+async function handleGoogleCalendarCallback(req, res) {
+  const code = req.query?.code;
+  const err = req.query?.error;
+  if (err || !code || !isGoogleCalendarConfigured()) {
+    res.writeHead(302, { Location: '/admin.html?page=settings&calendar=error' });
+    return res.end();
+  }
+  try {
+    const redirectUri = `https://${req.headers.host}/api/google-calendar-callback`;
+    const resp = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.refresh_token) {
+      console.error('[google-calendar-callback] token exchange failed:', data);
+      res.writeHead(302, { Location: '/admin.html?page=settings&calendar=error' });
+      return res.end();
+    }
+    await saveGoogleRefreshToken(data.refresh_token);
+    res.writeHead(302, { Location: '/admin.html?page=settings&calendar=connected' });
+    return res.end();
+  } catch (e) {
+    console.error('[google-calendar-callback] error:', e.message);
+    res.writeHead(302, { Location: '/admin.html?page=settings&calendar=error' });
+    return res.end();
+  }
+}
+
 // ── Admin: Services CRUD (server-authoritative, bypasses RLS via service key) ──
 // The admin client uses the anon key for reads; writes go through here instead
 // of direct sb.from('services') calls so they don't silently no-op under RLS.
@@ -1811,6 +1926,20 @@ async function verifyAdminSession(access_token, SERVICE_KEY) {
   } = await sb.auth.getUser(access_token);
   if (uErr || !user) return { error: 'Invalid session', status: 401 };
   return { sb, user };
+}
+
+// Cleans up a booking's synced calendar event after an admin-side cancel
+// (admin.js's confirmCancel() cancels the booking directly via the browser
+// Supabase client, so this is the one server hop needed to reach the Google
+// Calendar credentials, which must never be exposed client-side).
+async function handleAdminDeleteCalendarEvent(req, res) {
+  const { access_token, event_id } = req.body;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!event_id) return res.status(400).json({ error: 'event_id required' });
+  const ok = await deleteCalendarEvent(event_id);
+  return res.status(200).json({ ok });
 }
 
 async function handleAdminServicesSave(req, res) {
@@ -1860,6 +1989,8 @@ async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';
 
   if (role === 'get-availability') return handleGetAvailability(req, res);
+  if (role === 'google-calendar-connect') return handleGoogleCalendarConnect(req, res);
+  if (role === 'google-calendar-callback') return handleGoogleCalendarCallback(req, res);
 
   const rateMax = role.startsWith('mechanic-')
     ? 30
@@ -1908,5 +2039,6 @@ async function handler(req, res) {
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
+  if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   return handleAdmin(req, res);
 }
