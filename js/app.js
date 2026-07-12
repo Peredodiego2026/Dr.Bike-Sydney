@@ -60,6 +60,7 @@ import {
   createBookingCard,
   createEmptyState,
   showToast,
+  createTierBadge,
 } from './components.js';
 import { getRiderTier } from './rider-tier.js';
 import { getLang, setLang, translateScreen, LANGUAGES } from './i18n.js';
@@ -3672,31 +3673,53 @@ async function renderMyBikes() {
 }
 
 async function updateHomeNav() {
-  const btns = [
-    document.getElementById('home-nav-auth-btn'),
-    document.getElementById('home-mobile-auth-btn'),
-  ].filter(Boolean);
-  if (!btns.length) return;
+  const targets = [
+    { icon: 'home-nav-auth-icon', label: 'home-nav-auth-label', btn: 'home-nav-auth-btn' },
+    { icon: 'home-mobile-auth-icon', label: 'home-mobile-auth-label', btn: 'home-mobile-auth-btn' },
+  ]
+    .map((t) => ({
+      iconEl: document.getElementById(t.icon),
+      labelEl: document.getElementById(t.label),
+      btnEl: document.getElementById(t.btn),
+    }))
+    .filter((t) => t.btnEl);
+  if (!targets.length) return;
+
   try {
     const {
       data: { user },
     } = await sb.auth.getUser();
-    for (const btn of btns) {
-      const label = btn.querySelector('span');
-      if (user) {
-        const name = (user.user_metadata?.full_name || user.email || '')
-          .split('@')[0]
-          .split(' ')[0];
-        if (label) {
-          label.innerHTML = '';
-          label.append(document.createTextNode('Hi, '), document.createTextNode(name));
-        }
-        btn.href = '#profile';
-      } else {
-        if (label) label.textContent = 'Sign In';
-        btn.href = '#login';
-      }
+
+    if (!user) {
+      targets.forEach(({ labelEl, btnEl }) => {
+        if (labelEl) labelEl.textContent = 'Sign In';
+        btnEl.href = '#login';
+      });
+      return;
     }
+
+    const name = (user.user_metadata?.full_name || user.email || '').split('@')[0].split(' ')[0];
+
+    targets.forEach(({ labelEl, btnEl }) => {
+      if (labelEl) {
+        labelEl.innerHTML = '';
+        labelEl.append(document.createTextNode('Hi, '), document.createTextNode(name));
+      }
+      btnEl.href = '#profile';
+    });
+
+    let completedJobs = 0;
+    try {
+      const myBookings = await getMyBookings();
+      completedJobs = (myBookings || []).filter((b) => b.status === 'completed').length;
+    } catch {}
+    const riderTier = getRiderTier(completedJobs);
+
+    // Both nav slots show the same small tier icon - desktop's nav swaps out
+    // its generic person SVG for it, mobile's bar gets one for the first time.
+    targets.forEach(({ iconEl }) => {
+      if (iconEl) iconEl.innerHTML = createTierBadge(riderTier, 'sm');
+    });
   } catch {}
 }
 
