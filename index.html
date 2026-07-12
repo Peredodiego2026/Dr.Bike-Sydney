@@ -33,9 +33,9 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="icon" href="/icon-512.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/variables.css?v=20260628">
-  <link rel="stylesheet" href="css/main.css?v=20260628">
-  <link rel="stylesheet" href="css/home.css?v=20260628">
+  <link rel="stylesheet" href="css/variables.css?v=20260713">
+  <link rel="stylesheet" href="css/main.css?v=20260713">
+  <link rel="stylesheet" href="css/home.css?v=20260713">
   <!-- Google Analytics -->
   <!-- Meta Pixel - replace PIXEL_ID_HERE with your actual Pixel ID from Meta Business Manager -->
   <script>
@@ -100,7 +100,7 @@
         <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="28" style="width:auto;display:block">
         <span style="font-weight:700;font-size:16px;letter-spacing:-0.2px;color:#fff">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
       </div>
-      <a href="#login" id="home-mobile-auth-btn" style="background:#2563EB;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;min-height:36px;display:inline-flex;align-items:center"><span>Sign In</span></a>
+      <a href="#login" id="home-mobile-auth-btn" style="background:#2563EB;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;min-height:36px;display:inline-flex;align-items:center;gap:6px"><span id="home-mobile-auth-icon"></span><span id="home-mobile-auth-label">Sign In</span></a>
     </div>
 
     <header id="home-desktop-nav" aria-label="Site navigation">
@@ -108,8 +108,8 @@
         <a href="#home" class="home-nav-logo">
           <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="34" style="width:auto;display:block">
           <div>
-            <span style="font-weight:700;font-size:17px;letter-spacing:-0.2px;color:#0D1F3C">Dr. <span style="color:#2563EB">Bike</span> Sydney</span>
-            <span style="display:block;font-size:11px;font-weight:400;color:#2563EB;margin-top:-2px">Healthy bikes, happy riders</span>
+            <span style="font-weight:700;font-size:17px;letter-spacing:-0.2px;color:#fff">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
+            <span style="display:block;font-size:11px;font-weight:400;color:#60A5FA;margin-top:-2px">Healthy bikes, happy riders</span>
           </div>
         </a>
         <div class="home-nav-links">
@@ -118,8 +118,8 @@
           <a href="#about">About</a>
         </div>
         <a href="#login" id="home-nav-auth-btn" class="home-nav-book">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span>Sign In</span>
+          <span id="home-nav-auth-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <span id="home-nav-auth-label">Sign In</span>
         </a>
       </div>
     </header>
@@ -375,7 +375,7 @@
         <p class="section-sub">Save more with our membership plans. Designed for regular cyclists.</p>
         <div class="membership-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:860px;margin:40px auto 0;text-align:left">
           <!-- Basic -->
-          <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px">
+          <div class="plan-card">
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">Basic</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$57</span><span style="color:var(--gray);font-size:14px">/month</span></div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
@@ -388,7 +388,7 @@
             <button class="btn-learn-more" data-plan="basic" style="display:block;width:100%;margin-top:8px;padding:7px;border:none;color:var(--gray);background:transparent;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
           </div>
           <!-- Standard (popular) -->
-          <div style="background:#fff;border:2px solid var(--blue);border-radius:12px;padding:28px;position:relative">
+          <div class="plan-card plan-card--featured">
             <div style="position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:3px 14px;border-radius:9999px;font-size:11px;font-weight:600;white-space:nowrap">Most Popular</div>
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">Standard</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$97</span><span style="color:var(--gray);font-size:14px">/month</span></div>
@@ -403,7 +403,7 @@
             <button class="btn-learn-more" data-plan="standard" style="display:block;width:100%;margin-top:8px;padding:7px;border:none;color:var(--gray);background:transparent;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
           </div>
           <!-- VIP -->
-          <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px">
+          <div class="plan-card">
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">VIP</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$147</span><span style="color:var(--gray);font-size:14px">/month</span></div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
@@ -645,10 +645,10 @@
 </div><!-- #app -->
 
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/router.js?v=20260627"     type="module"></script>
+<script src="js/router.js?v=20260713"      type="module"></script>
 <script src="js/supabase.js?v=20260629a"   type="module"></script>
-<script src="js/components.js?v=20260704c" type="module"></script>
-<script src="js/app.js?v=20260708a"        type="module"></script>
+<script src="js/components.js?v=20260713"  type="module"></script>
+<script src="js/app.js?v=20260713"         type="module"></script>
 <script src="js/live-prices.js" defer></script>
 <script src="js/cta-tracking.js" defer></script>
 

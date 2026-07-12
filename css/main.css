@@ -62,7 +62,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  animation: slideInRight var(--transition-base);
+  animation: slideInRight var(--motion-base);
   padding-bottom: 10rem;
 }
 
@@ -74,6 +74,27 @@ body {
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+.screen.screen--leaving {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition:
+    transform var(--motion-base),
+    opacity var(--motion-base);
+}
+.screen.screen--leaving.screen--leaving-go {
+  transform: translateX(-24px) scale(0.96);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.active {
+    animation: none;
+  }
+  .screen.screen--leaving {
+    transition: none;
   }
 }
 
@@ -1000,6 +1021,24 @@ body {
   text-decoration: underline;
 }
 
+.google-btn {
+  /* border lives here, not in the inline style attribute, so :hover below can
+     actually win - an inline style's border shorthand has higher specificity
+     than any external rule and would silently block border-color changes */
+  border: 1.5px solid #e2e8f0;
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+@media (hover: hover) {
+  .google-btn:hover {
+    border-color: #4285f4;
+  }
+}
+.google-btn:active {
+  transform: scale(0.97);
+}
+
 /* ── My Bookings ─────────────────────────────────────────────────────────────── */
 .tabs-row {
   display: flex;
@@ -1044,13 +1083,22 @@ body {
   border-radius: 12px;
   padding: 16px;
   cursor: pointer;
+  box-shadow: var(--elevation-0);
   transition:
     background var(--transition-fast),
-    box-shadow var(--transition-fast);
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
   /* border-left set dynamically per status */
 }
-.booking-card:hover {
-  background: var(--surface);
+@media (hover: hover) {
+  .booking-card:hover {
+    background: var(--surface);
+    box-shadow: var(--elevation-1);
+    transform: translateY(-2px);
+  }
+}
+.booking-card:active {
+  transform: scale(0.98);
 }
 .booking-card__date {
   width: 44px;
@@ -1154,4 +1202,31 @@ body {
 }
 .text-center {
   text-align: center;
+}
+
+/* Shared press feedback for inline-styled buttons (Fase 0) */
+.btn-press {
+  transition: transform var(--motion-fast);
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* My Bikes cards - same elevation pattern as .booking-card.
+   box-shadow/transition live here, NOT inline - an inline box-shadow
+   would override the :hover rule below (inline beats any selector). */
+.bike-card {
+  box-shadow: var(--elevation-0);
+  transition:
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
+}
+@media (hover: hover) {
+  .bike-card:hover {
+    box-shadow: var(--elevation-1);
+    transform: translateY(-2px);
+  }
+}
+.bike-card:active {
+  transform: scale(0.98);
 }

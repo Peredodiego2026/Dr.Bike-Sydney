@@ -52,7 +52,7 @@ const dict = {
     Time: 'Hora',
     Address: 'Dirección',
     'Call-out fee': 'Tarifa de visita',
-    '↻ Book Again': '↻ Reservar de nuevo',
+    'Book Again': 'Reservar de nuevo',
     'Track Live': 'Rastrear en vivo',
     'Share tracking link': 'Compartir enlace de rastreo',
     Reschedule: 'Reprogramar',
@@ -320,7 +320,7 @@ const dict = {
     Time: '时间',
     Address: '地址',
     'Call-out fee': '上门费',
-    '↻ Book Again': '↻ 再次预订',
+    'Book Again': '再次预订',
     'Track Live': '实时追踪',
     'Share tracking link': '分享追踪链接',
     Reschedule: '改期',
@@ -546,7 +546,10 @@ const dict = {
 function detectLang() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && dict[saved]) return saved;
+    // 'en' is a valid saved choice with no dict entry (it IS the source
+    // language) - without this check an explicit English pick gets overridden
+    // by the device locale on every reload.
+    if (saved === 'en' || (saved && dict[saved])) return saved;
   } catch {}
   const nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
   return dict[nav] ? nav : 'en';

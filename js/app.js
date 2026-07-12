@@ -60,6 +60,7 @@ import {
   createBookingCard,
   createEmptyState,
   showToast,
+  createTierBadge,
 } from './components.js';
 import { getRiderTier } from './rider-tier.js';
 import { getLang, setLang, translateScreen, LANGUAGES } from './i18n.js';
@@ -2430,7 +2431,7 @@ async function renderLogin() {
       <p style="text-align:center;font-size:13px;font-weight:600;color:#2563EB;margin:0 0 12px">Healthy bikes, happy riders</p>
       <h2 class="login-title">${isSignup ? 'Create Account' : 'Welcome Back!'}</h2>
       <p class="login-sub text-secondary text-center">${isSignup ? 'Join Dr. Bike Sydney' : 'Login to your account'}</p>
-      <button type="button" id="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;color:#0F172A;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;transition:border-color 150ms ease,background 150ms ease">
+      <button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0F172A;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -2471,12 +2472,6 @@ async function renderLogin() {
   `;
 
   const googleBtn = screen.querySelector('#google-btn');
-  googleBtn.addEventListener('mouseover', () => {
-    googleBtn.style.borderColor = '#4285f4';
-  });
-  googleBtn.addEventListener('mouseout', () => {
-    googleBtn.style.borderColor = '';
-  });
 
   const pwdInput = screen.querySelector('#login-password');
   const eyeEl = screen.querySelector('#eye-icon');
@@ -2495,7 +2490,7 @@ async function renderLogin() {
     alert('A password reset link will be sent to your email address.');
   });
 
-  screen.querySelector('#google-btn').addEventListener('click', async () => {
+  googleBtn.addEventListener('click', async () => {
     const errEl = screen.querySelector('#login-error');
     errEl.hidden = true;
     try {
@@ -2633,7 +2628,7 @@ async function renderMyBookings() {
         const sc = STATUS_COLORS[booking.status] || '#64748B';
         const sl = STATUS_LABELS[booking.status] || booking.status;
         overlay.innerHTML = `
-          <div id="detail-panel" style="background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
+          <div id="detail-panel" style="background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--elevation-2)">
             <div style="width:36px;height:4px;background:#E2E8F0;border-radius:4px;margin:0 auto 20px"></div>
             <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:4px">${booking.service_name || 'Service'}</div>
             <div style="display:inline-block;font-size:11px;font-weight:600;color:${sc};background:${sc}1A;padding:3px 10px;border-radius:20px;margin-bottom:20px">${sl}</div>
@@ -2671,11 +2666,11 @@ async function renderMyBookings() {
                 : ''
             }
             <div style="display:flex;flex-direction:column;gap:8px">
-              ${booking.status === 'completed' ? '<button id="book-again-btn" class="btn btn--primary btn--full">↻ Book Again</button>' : ''}
-              ${booking.status === 'enroute' || booking.status === 'en_route' || booking.status === 'in_progress' ? '<button id="track-live-btn" class="btn btn--primary btn--full">Track Live</button>' : ''}
-              ${booking.tracking_token ? '<button id="share-track-btn" class="btn btn--secondary btn--full">Share tracking link</button>' : ''}
-              ${canCancel ? '<button id="reschedule-btn" class="btn btn--secondary btn--full">Reschedule</button>' : ''}
-              ${canCancel ? '<button id="cancel-booking-btn" class="btn btn--danger btn--full">Cancel booking</button>' : ''}
+              ${booking.status === 'completed' ? '<button id="book-again-btn" class="btn btn--primary btn--full btn-press"><span aria-hidden="true">↻</span> <span>Book Again</span></button>' : ''}
+              ${booking.status === 'enroute' || booking.status === 'en_route' || booking.status === 'in_progress' ? '<button id="track-live-btn" class="btn btn--primary btn--full btn-press">Track Live</button>' : ''}
+              ${booking.tracking_token ? '<button id="share-track-btn" class="btn btn--secondary btn--full btn-press">Share tracking link</button>' : ''}
+              ${canCancel ? '<button id="reschedule-btn" class="btn btn--secondary btn--full btn-press">Reschedule</button>' : ''}
+              ${canCancel ? '<button id="cancel-booking-btn" class="btn btn--danger btn--full btn-press">Cancel booking</button>' : ''}
             </div>
             ${booking.mechanic_id ? '<div id="detail-mechanic-section"></div>' : ''}
             <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
@@ -2738,7 +2733,9 @@ async function renderMyBookings() {
           const match = (services || []).find((s) => s.name === booking.service_name);
           if (!match) {
             showToast('That service is no longer available. Please pick a new one.', 'error');
-            btn.textContent = '↻ Book Again';
+            // Rebuild the split icon/text spans - textContent would flatten them
+            // back into one node and break the i18n exact-match lookup.
+            btn.innerHTML = '<span aria-hidden="true">↻</span> <span>Book Again</span>';
             btn.disabled = false;
             return;
           }
@@ -3027,18 +3024,15 @@ async function renderProfile() {
       <div class="fw-600 text-center">${name}</div>
       <div class="text-secondary text-sm text-center">${user.email}</div>
 
-      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-top:16px">
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-top:16px;box-shadow:var(--elevation-0)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span style="font-size:26px">${riderTier.emoji}</span>
-          <div>
-            <div style="font-size:14px;font-weight:700;color:#0D1F3C">${riderTier.label}</div>
-            <div style="font-size:12px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
-          </div>
+          ${createTierBadge(riderTier, 'lg')}
+          <div style="font-size:12px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
         </div>
         ${
           riderTier.nextAt
             ? `<div style="height:6px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:6px">
-                 <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px"></div>
+                 <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px;transition:width var(--motion-base)"></div>
                </div>
                <div style="font-size:12px;color:#6B7280"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
             : `<div style="font-size:12px;color:#6B7280">You've reached our highest tier - thank you for riding with us!</div>`
@@ -3088,16 +3082,16 @@ async function renderProfile() {
                 ? '<span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">Paused</span>'
                 : '<span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block"></span>Active</span>';
               return `<div style="margin-bottom:20px">
-          <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:#fff;margin-bottom:10px">
+          <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:#fff;margin-bottom:10px;box-shadow:var(--elevation-1)">
             <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Membership</div>
             <div style="font-size:20px;font-weight:800"><span>${planLabel}</span> <span>Plan</span></div>
             <div style="margin-top:8px">${statusBadge}</div>
           </div>
           <div style="display:flex;gap:8px">
-            <button id="membership-toggle-btn" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
+            <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
               ${isPaused ? 'Resume membership' : 'Pause membership'}
             </button>
-            <button id="membership-cancel-btn" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:#fff">Cancel</button>
+            <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:#fff">Cancel</button>
           </div>
         </div>`;
             })()
@@ -3270,7 +3264,7 @@ async function renderMyBikes() {
       <button class="btn btn--primary btn--full" id="add-bike-btn">+ Add a Bike</button>
 
       <!-- Add bike form (hidden by default) -->
-      <div id="add-bike-form" style="display:none;margin-top:20px;background:var(--color-surface);border-radius:16px;padding:20px;border:1px solid var(--color-border)">
+      <div id="add-bike-form" style="display:none;margin-top:20px;background:var(--color-surface);border-radius:16px;padding:20px;border:1px solid var(--color-border);box-shadow:var(--elevation-0)">
         <div style="font-size:15px;font-weight:700;margin-bottom:16px">New Bike</div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <input id="bike-nickname" type="text" placeholder="Name (e.g. Red Trek)*" maxlength="60"
@@ -3299,8 +3293,8 @@ async function renderMyBikes() {
           </select>
           <div id="bike-form-error" style="font-size:12px;color:var(--color-error);min-height:16px"></div>
           <div style="display:flex;gap:10px">
-            <button id="cancel-bike-btn" class="btn btn--secondary" style="flex:1">Cancel</button>
-            <button id="save-bike-btn" class="btn btn--primary" style="flex:1">Save Bike</button>
+            <button id="cancel-bike-btn" class="btn btn--secondary btn-press" style="flex:1">Cancel</button>
+            <button id="save-bike-btn" class="btn btn--primary btn-press" style="flex:1">Save Bike</button>
           </div>
         </div>
       </div>
@@ -3339,7 +3333,7 @@ async function renderMyBikes() {
       list.innerHTML = data
         .map(
           (bike) => `
-        <div data-bike-id="${bike.id}" style="cursor:pointer;background:var(--color-surface);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
+        <div data-bike-id="${bike.id}" class="bike-card" style="cursor:pointer;background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
           <div style="width:44px;height:44px;border-radius:12px;background:var(--color-primary-alpha,rgba(10,88,202,0.12));display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <span style="display:inline-block;width:26px;height:18px;background-color:var(--color-primary);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
@@ -3678,31 +3672,53 @@ async function renderMyBikes() {
 }
 
 async function updateHomeNav() {
-  const btns = [
-    document.getElementById('home-nav-auth-btn'),
-    document.getElementById('home-mobile-auth-btn'),
-  ].filter(Boolean);
-  if (!btns.length) return;
+  const targets = [
+    { icon: 'home-nav-auth-icon', label: 'home-nav-auth-label', btn: 'home-nav-auth-btn' },
+    { icon: 'home-mobile-auth-icon', label: 'home-mobile-auth-label', btn: 'home-mobile-auth-btn' },
+  ]
+    .map((t) => ({
+      iconEl: document.getElementById(t.icon),
+      labelEl: document.getElementById(t.label),
+      btnEl: document.getElementById(t.btn),
+    }))
+    .filter((t) => t.btnEl);
+  if (!targets.length) return;
+
   try {
     const {
       data: { user },
     } = await sb.auth.getUser();
-    for (const btn of btns) {
-      const label = btn.querySelector('span');
-      if (user) {
-        const name = (user.user_metadata?.full_name || user.email || '')
-          .split('@')[0]
-          .split(' ')[0];
-        if (label) {
-          label.innerHTML = '';
-          label.append(document.createTextNode('Hi, '), document.createTextNode(name));
-        }
-        btn.href = '#profile';
-      } else {
-        if (label) label.textContent = 'Sign In';
-        btn.href = '#login';
-      }
+
+    if (!user) {
+      targets.forEach(({ labelEl, btnEl }) => {
+        if (labelEl) labelEl.textContent = 'Sign In';
+        btnEl.href = '#login';
+      });
+      return;
     }
+
+    const name = (user.user_metadata?.full_name || user.email || '').split('@')[0].split(' ')[0];
+
+    targets.forEach(({ labelEl, btnEl }) => {
+      if (labelEl) {
+        labelEl.innerHTML = '';
+        labelEl.append(document.createTextNode('Hi, '), document.createTextNode(name));
+      }
+      btnEl.href = '#profile';
+    });
+
+    let completedJobs = 0;
+    try {
+      const myBookings = await getMyBookings();
+      completedJobs = (myBookings || []).filter((b) => b.status === 'completed').length;
+    } catch {}
+    const riderTier = getRiderTier(completedJobs);
+
+    // Both nav slots show the same small tier icon - desktop's nav swaps out
+    // its generic person SVG for it, mobile's bar gets one for the first time.
+    targets.forEach(({ iconEl }) => {
+      if (iconEl) iconEl.innerHTML = createTierBadge(riderTier, 'sm');
+    });
   } catch {}
 }
 

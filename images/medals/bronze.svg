@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280" width="240" height="280">
+  <defs>
+    <radialGradient id="bronzeMetal" cx="38%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#E2A76F"/>
+      <stop offset="55%" stop-color="#B45309"/>
+      <stop offset="100%" stop-color="#7C3A0A"/>
+    </radialGradient>
+  </defs>
+  <path d="M92 10 L120 100 L92 100 Z" fill="#1E3A8A"/>
+  <path d="M148 10 L120 100 L148 100 Z" fill="#1E40AF"/>
+  <circle cx="120" cy="170" r="100" fill="url(#bronzeMetal)" stroke="#5A2C08" stroke-width="4"/>
+  <circle cx="120" cy="170" r="84" fill="none" stroke="#F3C892" stroke-width="2" opacity="0.6"/>
+  <g stroke="#FDEBD3" stroke-width="4" stroke-linecap="round" opacity="0.9">
+    <circle cx="120" cy="170" r="34" fill="none"/>
+    <line x1="120" y1="136" x2="120" y2="204"/>
+    <line x1="86" y1="170" x2="154" y2="170"/>
+    <line x1="96" y1="146" x2="144" y2="194"/>
+    <line x1="144" y1="146" x2="96" y2="194"/>
+  </g>
+  <circle cx="120" cy="170" r="7" fill="#FDEBD3"/>
+</svg>

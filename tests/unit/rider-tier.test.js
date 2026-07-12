@@ -35,4 +35,20 @@ describe('getRiderTier', () => {
     expect(tier.label).toBe('Bronze Rider');
     expect(tier.progressPct).toBeCloseTo(33, 0);
   });
+
+  it('gives New Rider a mask icon pointing at the shared bike glyph', () => {
+    const tier = getRiderTier(0);
+    expect(tier.iconType).toBe('mask');
+    expect(tier.image).toBe('images/bike-icon.png');
+  });
+
+  // Medal files are .svg placeholders pending Gemini API billing - see the
+  // comment at the top of js/rider-tier.js. Swap the extension here too when
+  // the real renders land.
+  it('gives every medal tier a photo icon pointing at its own render', () => {
+    expect(getRiderTier(3)).toMatchObject({ iconType: 'photo', image: 'images/medals/bronze.svg' });
+    expect(getRiderTier(6)).toMatchObject({ iconType: 'photo', image: 'images/medals/silver.svg' });
+    expect(getRiderTier(10)).toMatchObject({ iconType: 'photo', image: 'images/medals/gold.svg' });
+    expect(getRiderTier(20)).toMatchObject({ iconType: 'photo', image: 'images/medals/diamond.svg' });
+  });
 });

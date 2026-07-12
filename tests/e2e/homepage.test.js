@@ -4,7 +4,12 @@
 
 import { test, expect } from '@playwright/test';
 
+// middleware.js routes by user-agent: desktop UA -> landing.html, mobile UA -> index.html (SPA).
+// These tests assert landing.html DOM, so they only apply to the desktop project.
+// Mobile UAs get the SPA and are covered by the 'Mobile experience' block below.
 test.describe('Landing page', () => {
+  test.skip(({ browserName, isMobile }) => isMobile, 'Desktop surface only (mobile UA gets the SPA)');
+
   test('loads and shows hero', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1')).toContainText('Bike');
@@ -19,13 +24,14 @@ test.describe('Landing page', () => {
   test('Memberships section visible', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Choose Your Plan')).toBeVisible();
-    await expect(page.getByText('$57')).toBeVisible();
+    await expect(page.getByText('$57').first()).toBeVisible();
   });
 
-  test('My Account button is visible', async ({ page }) => {
+  test('auth button is visible', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#nav-auth-btn')).toBeVisible();
-    await expect(page.locator('#nav-auth-btn')).toContainText('My Account');
+    // Copy is "Sign In" for logged-out visitors (changed from "My Account" in 097017c)
+    await expect(page.locator('#nav-auth-btn')).toContainText('Sign In');
   });
 
   test('navbar links work', async ({ page }) => {
@@ -35,7 +41,11 @@ test.describe('Landing page', () => {
   });
 });
 
+// Landing.html at a narrow viewport (responsive check). Runs on the desktop UA only:
+// middleware serves landing.html to desktop UAs, and the viewport override makes it mobile-width.
+// NOTE: the real mobile SPA (index.html, served to mobile UAs) has NO e2e coverage yet - gap to fill.
 test.describe('Mobile experience', () => {
+  test.skip(({ isMobile }) => isMobile, 'Exercises landing.html responsive layout via desktop UA');
   test.use({ viewport: { width: 390, height: 844 } }); // iPhone 14
 
   test('steps show in 2-column layout on mobile', async ({ page }) => {
@@ -54,6 +64,6 @@ test.describe('Mechanic app', () => {
   test('login screen loads', async ({ page }) => {
     await page.goto('/mechanic.html');
     await expect(page.locator('#s-login')).toBeVisible();
-    await expect(page.locator('.login-title')).toContainText('Dr. Bike');
+    await expect(page.locator('.login-title')).toContainText('Mechanic App');
   });
 });

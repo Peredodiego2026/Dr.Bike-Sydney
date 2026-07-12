@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280" width="240" height="280">
+  <defs>
+    <radialGradient id="diamondCrystal" cx="38%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#EFF6FF"/>
+      <stop offset="45%" stop-color="#93C5FD"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </radialGradient>
+  </defs>
+  <path d="M92 10 L120 100 L92 100 Z" fill="#1E3A8A"/>
+  <path d="M148 10 L120 100 L148 100 Z" fill="#1E40AF"/>
+  <circle cx="120" cy="170" r="100" fill="url(#diamondCrystal)" stroke="#1E3A8A" stroke-width="4"/>
+  <g fill="#DBEAFE" opacity="0.55">
+    <polygon points="120,86 158,140 120,170 82,140"/>
+    <polygon points="120,170 158,140 172,190 120,220"/>
+    <polygon points="120,170 82,140 68,190 120,220"/>
+  </g>
+  <circle cx="120" cy="170" r="84" fill="none" stroke="#EFF6FF" stroke-width="2" opacity="0.7"/>
+  <g stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.95">
+    <circle cx="120" cy="170" r="34" fill="none"/>
+    <line x1="120" y1="136" x2="120" y2="204"/>
+    <line x1="86" y1="170" x2="154" y2="170"/>
+    <line x1="96" y1="146" x2="144" y2="194"/>
+    <line x1="144" y1="146" x2="96" y2="194"/>
+  </g>
+  <circle cx="120" cy="170" r="7" fill="#FFFFFF"/>
+</svg>

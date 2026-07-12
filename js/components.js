@@ -244,3 +244,24 @@ export function createStarRating(rating = 0, interactive = false) {
 
   return `<div class="star-rating${interactive ? ' star-rating--interactive' : ''}" role="${interactive ? 'group' : 'img'}" aria-label="${rating} out of 5 stars">${stars.join('')}</div>`;
 }
+
+// ── Rider Tier Badge ──────────────────────────────────────────────────────────
+// size: 'sm' = icon only (nav, 18px) | 'lg' = icon + label (Profile card, 40px)
+export function createTierBadge(riderTier, size = 'sm') {
+  const { label, image, iconType, color } = riderTier;
+  const px = size === 'lg' ? 40 : 18;
+  const iconHTML =
+    iconType === 'mask'
+      ? `<span style="display:inline-block;width:${px}px;height:${Math.round(px * 0.7)}px;background-color:${color};-webkit-mask:url('${image}') center/contain no-repeat;mask:url('${image}') center/contain no-repeat;flex-shrink:0"></span>`
+      : `<img src="${image}" alt="" width="${px}" height="${px}" style="width:${px}px;height:${px}px;object-fit:contain;flex-shrink:0">`;
+
+  if (size === 'sm') {
+    return `<span class="tier-badge tier-badge--sm">${iconHTML}</span>`;
+  }
+
+  return `
+<span class="tier-badge tier-badge--lg" style="display:inline-flex;align-items:center;gap:10px">
+  ${iconHTML}
+  <span class="tier-badge__label" style="font-size:14px;font-weight:700;color:#0D1F3C">${label}</span>
+</span>`;
+}
