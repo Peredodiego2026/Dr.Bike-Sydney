@@ -2585,7 +2585,7 @@ async function loadAnalytics() {
     sb
       .from('bookings')
       .select(
-        'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,profiles(full_name,email)'
+        'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,mechanic_accepted_at,time_to_book_seconds,profiles(full_name,email)'
       )
       .limit(5000),
     sb.from('services').select('name'),
@@ -2597,11 +2597,92 @@ async function loadAnalytics() {
   const all = data || [];
   _analyticsData = { all, catalog: catalog || [] };
 
+  renderTargetMetrics(all);
   renderFunnel(all);
   renderHeatmap(all);
   renderServicePopularity(all, catalog || []);
   renderMargins(all);
   renderLTV(all);
+}
+
+// Diego's KPI scorecard: the 3 targets that had no measurement anywhere before
+// (booking-flow completion time, mechanic response time, 6-month retention).
+// Each shows "No data yet" instead of a misleading 0/0% until real bookings
+// carry the new columns (time_to_book_seconds, mechanic_accepted_at) or the
+// business has enough history for the 6-month cohort to be non-empty.
+function renderTargetMetrics(all) {
+  const el = document.getElementById('an-targets');
+  if (!el) return;
+
+  // 1. Avg time to book (target: < 60s)
+  const withTiming = all.filter((b) => Number.isFinite(b.time_to_book_seconds));
+  const avgBookSec = withTiming.length
+    ? Math.round(withTiming.reduce((s, b) => s + b.time_to_book_seconds, 0) / withTiming.length)
+    : null;
+  const bookLabel =
+    avgBookSec === null
+      ? 'No data yet'
+      : avgBookSec < 60
+        ? `${avgBookSec}s`
+        : `${Math.floor(avgBookSec / 60)}m ${avgBookSec % 60}s`;
+  const bookOk = avgBookSec !== null && avgBookSec < 60;
+
+  // 2. Avg mechanic response time (target: < 5 min) - time from booking
+  // creation to a mechanic accepting it.
+  const withResponse = all.filter((b) => b.created_at && b.mechanic_accepted_at);
+  const avgResponseMin = withResponse.length
+    ? Math.round(
+        withResponse.reduce(
+          (s, b) => s + (new Date(b.mechanic_accepted_at) - new Date(b.created_at)) / 60000,
+          0
+        ) / withResponse.length
+      )
+    : null;
+  const responseLabel = avgResponseMin === null ? 'No data yet' : `${avgResponseMin} min`;
+  const responseOk = avgResponseMin !== null && avgResponseMin < 5;
+
+  // 3. 6-month retention: of clients with a completed booking 6-12 months ago
+  // (old enough to have had a full 6-month window to come back), what % have
+  // another completed booking in the last 6 months? No schema change needed -
+  // computed entirely from data already fetched for the rest of this page.
+  const completed = all.filter((b) => b.status === 'completed' && b.scheduled_date);
+  const now = new Date();
+  const sixMoAgo = new Date(now);
+  sixMoAgo.setMonth(sixMoAgo.getMonth() - 6);
+  const twelveMoAgo = new Date(now);
+  twelveMoAgo.setMonth(twelveMoAgo.getMonth() - 12);
+  const clientKey = (b) => b.client_id || b.client_email || b.profiles?.email;
+  const cohort = new Set();
+  completed.forEach((b) => {
+    const d = new Date(b.scheduled_date + 'T00:00:00');
+    if (d >= twelveMoAgo && d < sixMoAgo) cohort.add(clientKey(b));
+  });
+  const returned = new Set();
+  completed.forEach((b) => {
+    const key = clientKey(b);
+    if (!cohort.has(key)) return;
+    const d = new Date(b.scheduled_date + 'T00:00:00');
+    if (d >= sixMoAgo) returned.add(key);
+  });
+  const retention = cohort.size ? Math.round((returned.size / cohort.size) * 100) : null;
+  const retentionLabel = retention === null ? 'No data yet' : `${retention}%`;
+  const retentionOk = retention !== null && retention >= 40;
+
+  const cards = [
+    ['Avg time to book', bookLabel, 'Target: < 60s', bookOk],
+    ['Mechanic response time', responseLabel, 'Target: < 5 min', responseOk],
+    ['6-month retention', retentionLabel, 'Target: > 40%', retentionOk],
+  ];
+  el.innerHTML = cards
+    .map(([label, val, target, ok]) => {
+      const color = val === 'No data yet' ? 'var(--mgray)' : ok ? 'var(--green)' : 'var(--red)';
+      return `<div style="background:var(--off);border-radius:10px;padding:14px 16px">
+        <div style="font-size:11px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${label}</div>
+        <div style="font-size:22px;font-weight:800;color:${color}">${val}</div>
+        <div style="font-size:11px;color:var(--mgray);margin-top:2px">${target}</div>
+      </div>`;
+    })
+    .join('');
 }
 
 // Exports every Analytics section into one CSV - conversion funnel, service
@@ -3295,16 +3376,14 @@ async function saveContact() {
       .eq('id', id);
     showToast('Contact updated ✓');
   } else {
-    await sb
-      .from('escalation_contacts')
-      .insert({
-        first_name: fname,
-        last_name: lname,
-        phone,
-        email: email || null,
-        role,
-        active: true,
-      });
+    await sb.from('escalation_contacts').insert({
+      first_name: fname,
+      last_name: lname,
+      phone,
+      email: email || null,
+      role,
+      active: true,
+    });
     showToast('Contact added ✓');
   }
   closeContactModal();

@@ -2868,6 +2868,7 @@ function openBooking(preselect) {
   _bkState.preselect = preselect || null;
   document.getElementById('booking-panel').style.display = 'block';
   document.body.style.overflow = 'hidden';
+  sessionStorage.setItem('drbike-booking-start', String(Date.now()));
   bkShowStep(1);
 }
 
@@ -3517,10 +3518,15 @@ async function bkProceed() {
         utm_source: sessionStorage.getItem('utm_source') || null,
         utm_medium: sessionStorage.getItem('utm_medium') || null,
         utm_campaign: sessionStorage.getItem('utm_campaign') || null,
+        time_to_book_seconds: (function() {
+          var start = parseInt(sessionStorage.getItem('drbike-booking-start'), 10);
+          return isFinite(start) ? Math.round((Date.now() - start) / 1000) : null;
+        })(),
       }),
     });
     var d = await resp.json();
     if (!resp.ok) throw new Error(d.error || 'Could not save booking. Please try again.');
+    sessionStorage.removeItem('drbike-booking-start');
     _bkState.bookingId = d.id;
     document.getElementById('bk-content').innerHTML = bkConfirmedHTML(d.id);
     document.getElementById('bk-done-btn').addEventListener('click', function() {

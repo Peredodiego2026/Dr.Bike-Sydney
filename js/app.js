@@ -383,6 +383,7 @@ async function renderBookService() {
   if (!screen) return;
   if (window.gtag) gtag('event', 'begin_checkout');
   if (window.fbq) fbq('track', 'InitiateCheckout');
+  sessionStorage.setItem('drbike-booking-start', String(Date.now()));
   if (!window.appState.location) window.appState.location = 'Home';
   window.appState.bikeId = null;
 
@@ -1227,10 +1228,15 @@ async function renderPayment() {
         utm_source: sessionStorage.getItem('utm_source') || null,
         utm_medium: sessionStorage.getItem('utm_medium') || null,
         utm_campaign: sessionStorage.getItem('utm_campaign') || null,
+        time_to_book_seconds: (() => {
+          const start = parseInt(sessionStorage.getItem('drbike-booking-start'), 10);
+          return Number.isFinite(start) ? Math.round((Date.now() - start) / 1000) : null;
+        })(),
       }),
     });
     const _bk = await resp.json();
     if (!resp.ok) throw new Error(_bk.error || 'Could not create booking');
+    sessionStorage.removeItem('drbike-booking-start');
     const booking = { id: _bk.id, tracking_token: _bk.tracking_token };
     window.appState.bookingId = booking.id;
     window.appState.trackingToken = booking.tracking_token || null;
