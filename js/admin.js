@@ -631,7 +631,103 @@ function setFinView(view, btn) {
   loadFinance();
 }
 
+// Weekly cash reconciliation: cash-paid completed jobs not yet handed over,
+// grouped per mechanic. Deliberately NOT filtered by the finance month picker -
+// unsettled cash is owed regardless of which period it was collected in.
+async function loadCashHandover() {
+  const el = document.getElementById('fin-cash');
+  if (!el) return;
+  const [{ data: rows, error }, { data: mechs }] = await Promise.all([
+    sb
+      .from('bookings')
+      .select(
+        'id,client_name,service_name,scheduled_date,final_charge_amount,tip_amount,mechanic_id,van_number'
+      )
+      .eq('status', 'completed')
+      .eq('final_charge_status', 'cash')
+      .is('cash_settled_at', null)
+      .order('scheduled_date', { ascending: true }),
+    sb.from('escalation_contacts').select('id,first_name,last_name'),
+  ]);
+  if (error) {
+    el.innerHTML = `<div style="color:var(--mgray);font-size:13px">Could not load cash data${/cash_settled_at/.test(error.message) ? ' - add the cash_settled_at column to bookings' : ': ' + esc(error.message)}</div>`;
+    return;
+  }
+  if (!rows || !rows.length) {
+    el.innerHTML =
+      '<div style="color:var(--mgray);font-size:13px">✓ No cash pending handover - all settled.</div>';
+    return;
+  }
+  const mechName = (id) => {
+    const m = (mechs || []).find((x) => x.id === id);
+    return m ? `${m.first_name} ${m.last_name}` : null;
+  };
+  const groups = {};
+  rows.forEach((b) => {
+    const key = b.mechanic_id || 'van' + (b.van_number || '?');
+    if (!groups[key])
+      groups[key] = {
+        name: mechName(b.mechanic_id) || 'Van ' + (b.van_number || '?'),
+        jobs: [],
+        total: 0,
+      };
+    groups[key].jobs.push(b);
+    groups[key].total += (b.final_charge_amount || 0) + (b.tip_amount || 0);
+  });
+  el.innerHTML = Object.entries(groups)
+    .map(
+      ([key, g]) => `
+    <div style="border:1px solid var(--border);border-left:3px solid #059669;border-radius:12px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(g.name)}</div>
+          <div style="font-size:12px;color:var(--mgray)">${g.jobs.length} cash job${g.jobs.length !== 1 ? 's' : ''} pending</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px;font-weight:800;color:#059669">$${g.total.toLocaleString()}</span>
+          <button data-cash-settle="${esc(key)}" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--mgray)">
+        ${g.jobs.map((j) => `${esc(j.scheduled_date || '')} · ${esc(j.client_name || 'Client')} · ${esc(j.service_name || '')} · $${((j.final_charge_amount || 0) + (j.tip_amount || 0)).toLocaleString()}`).join('<br>')}
+      </div>
+    </div>`
+    )
+    .join('');
+
+  el.querySelectorAll('[data-cash-settle]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const g = groups[btn.dataset.cashSettle];
+      if (!g) return;
+      if (
+        !confirm(
+          `Confirm ${g.name} handed over $${g.total.toLocaleString()} in cash (${g.jobs.length} jobs)?`
+        )
+      )
+        return;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      const { error: upErr } = await sb
+        .from('bookings')
+        .update({ cash_settled_at: new Date().toISOString() })
+        .in(
+          'id',
+          g.jobs.map((j) => j.id)
+        );
+      if (upErr) {
+        showToast('Could not settle: ' + upErr.message);
+        btn.disabled = false;
+        btn.textContent = 'Mark handed over';
+        return;
+      }
+      showToast('Cash handover recorded ✓');
+      loadCashHandover();
+    });
+  });
+}
+
 async function loadFinance() {
+  loadCashHandover();
   const month = parseInt(document.getElementById('fin-month')?.value || new Date().getMonth() + 1);
   const year = parseInt(document.getElementById('fin-year')?.value || new Date().getFullYear());
   const view = document.getElementById('fin-view')?.value || 'month';
