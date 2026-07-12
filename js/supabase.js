@@ -82,7 +82,10 @@ export async function getAvailableSlots(date, serviceId) {
   // No fallback to "all available" here on purpose: a failed check must never
   // let a client see a slot as bookable that we couldn't actually verify -
   // callers must handle the rejection (show retry, not a slot grid).
-  const res = await fetch(`/api/auth?role=get-availability&date=${encodeURIComponent(date)}`);
+  const svcParam = serviceId ? `&serviceId=${encodeURIComponent(serviceId)}` : '';
+  const res = await fetch(
+    `/api/auth?role=get-availability&date=${encodeURIComponent(date)}${svcParam}`
+  );
   if (!res.ok) throw new Error('availability fetch failed');
   return await res.json();
 }

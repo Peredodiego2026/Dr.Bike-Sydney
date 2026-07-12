@@ -3149,7 +3149,8 @@ async function bkLoadAndRenderSlots() {
   grid.innerHTML = '<div style="height:34px;background:#F3F4F6;border-radius:8px;grid-column:1/-1"></div>';
   var slots;
   try {
-    var res = await fetch('/api/auth?role=get-availability&date=' + encodeURIComponent(_bkState.date));
+    var svcParam = (_bkState.service && _bkState.service.id) ? '&serviceId=' + encodeURIComponent(_bkState.service.id) : '';
+    var res = await fetch('/api/auth?role=get-availability&date=' + encodeURIComponent(_bkState.date) + svcParam);
     if (!res.ok) throw new Error('availability fetch failed');
     slots = await res.json();
   } catch(e) {
