@@ -213,6 +213,7 @@ const dict = {
       'La tarifa de visita de $20 cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
     'Continue to Summary': 'Continuar al Resumen',
     // Service Summary / Quote
+    'Sunday & public holiday rate': 'Tarifa de domingo y feriado',
     'Your Quote': 'Tu Cotización',
     Location: 'Ubicación',
     "What's included": 'Qué incluye',
@@ -472,6 +473,7 @@ const dict = {
       '20美元的上门费包含技工的车费。悉尼大部分地区均可提供服务。',
     'Continue to Summary': '继续查看摘要',
     // Service Summary / Quote
+    'Sunday & public holiday rate': '周日及公共假期费率',
     'Your Quote': '您的报价',
     Location: '位置',
     "What's included": '服务内容',
