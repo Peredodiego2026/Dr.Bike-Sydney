@@ -3022,18 +3022,15 @@ async function renderProfile() {
       <div class="fw-600 text-center">${name}</div>
       <div class="text-secondary text-sm text-center">${user.email}</div>
 
-      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-top:16px">
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-top:16px;box-shadow:var(--elevation-0)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span style="font-size:26px">${riderTier.emoji}</span>
-          <div>
-            <div style="font-size:14px;font-weight:700;color:#0D1F3C">${riderTier.label}</div>
-            <div style="font-size:12px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
-          </div>
+          ${createTierBadge(riderTier, 'lg')}
+          <div style="font-size:12px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
         </div>
         ${
           riderTier.nextAt
             ? `<div style="height:6px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:6px">
-                 <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px"></div>
+                 <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px;transition:width var(--motion-base)"></div>
                </div>
                <div style="font-size:12px;color:#6B7280"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
             : `<div style="font-size:12px;color:#6B7280">You've reached our highest tier - thank you for riding with us!</div>`
@@ -3083,16 +3080,16 @@ async function renderProfile() {
                 ? '<span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">Paused</span>'
                 : '<span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block"></span>Active</span>';
               return `<div style="margin-bottom:20px">
-          <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:#fff;margin-bottom:10px">
+          <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:#fff;margin-bottom:10px;box-shadow:var(--elevation-1)">
             <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Membership</div>
             <div style="font-size:20px;font-weight:800"><span>${planLabel}</span> <span>Plan</span></div>
             <div style="margin-top:8px">${statusBadge}</div>
           </div>
           <div style="display:flex;gap:8px">
-            <button id="membership-toggle-btn" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
+            <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
               ${isPaused ? 'Resume membership' : 'Pause membership'}
             </button>
-            <button id="membership-cancel-btn" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:#fff">Cancel</button>
+            <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:#fff">Cancel</button>
           </div>
         </div>`;
             })()

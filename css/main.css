@@ -1194,3 +1194,11 @@ body {
 .text-center {
   text-align: center;
 }
+
+/* Shared press feedback for inline-styled buttons (Fase 0) */
+.btn-press {
+  transition: transform var(--motion-fast);
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
