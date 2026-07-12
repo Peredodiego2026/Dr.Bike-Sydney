@@ -10,6 +10,11 @@ import {
   clearLoginFailures,
   LOGIN_LOCK_MINUTES,
 } from './_security.js';
+import {
+  createCalendarEvent,
+  updateCalendarEvent,
+  deleteCalendarEvent,
+} from './_google-calendar.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
@@ -735,7 +740,35 @@ async function handleMechanicAccept(req, res) {
   if (!Array.isArray(acceptedRows) || acceptedRows.length === 0) {
     return res.status(409).json({ error: 'This job was just taken by another mechanic' });
   }
+
+  // Calendar sync (fire-and-forget) - only does anything once Google Calendar
+  // is configured and connected; a no-op otherwise (see _google-calendar.js).
+  syncBookingToCalendar(acceptedRows[0], mechanic.email, SERVICE_KEY).catch((e) =>
+    console.error('[mechanic-accept] calendar sync failed:', e.message)
+  );
+
   return res.status(200).json({ ok: true, mechanic_name: mechanic.name });
+}
+
+async function syncBookingToCalendar(booking, mechanicEmail, SERVICE_KEY) {
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: svc } = await sb
+    .from('services')
+    .select('duration_max')
+    .eq('name', booking.service_name)
+    .maybeSingle();
+  const eventId = await createCalendarEvent({
+    scheduledDate: booking.scheduled_date,
+    scheduledTime: booking.scheduled_time,
+    durationMin: (svc?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN,
+    serviceName: booking.service_name,
+    address: booking.address,
+    clientName: booking.client_name,
+    mechanicEmail,
+  });
+  if (eventId) {
+    await sb.from('bookings').update({ google_event_id: eventId }).eq('id', booking.id);
+  }
 }
 
 async function handleMechanicReject(req, res) {
@@ -967,7 +1000,7 @@ async function handleClientCancel(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id,google_event_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -995,6 +1028,9 @@ async function handleClientCancel(req, res) {
 
   // Notify first person on waitlist for this slot (fire-and-forget)
   notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time).catch(() => {});
+
+  // Remove the mechanic's calendar event, if one was ever created (fire-and-forget)
+  if (bk.google_event_id) deleteCalendarEvent(bk.google_event_id).catch(() => {});
 
   // Auto-refund the $20 callout fee for >=24h notice (per terms.html section 6),
   // then tell Diego the outcome (fire-and-forget - never block the client's
@@ -1214,7 +1250,7 @@ async function handleClientReschedule(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,google_event_id,service_name&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -1239,6 +1275,23 @@ async function handleClientReschedule(req, res) {
     }
   );
   if (!updateResp.ok) return res.status(500).json({ error: 'Failed to reschedule booking' });
+
+  if (bk.google_event_id) {
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+    sb.from('services')
+      .select('duration_max')
+      .eq('name', bk.service_name)
+      .maybeSingle()
+      .then(({ data: svc }) =>
+        updateCalendarEvent(bk.google_event_id, {
+          scheduledDate: scheduled_date,
+          scheduledTime: scheduled_time,
+          durationMin: (svc?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN,
+        })
+      )
+      .catch(() => {});
+  }
+
   return res.status(200).json({ ok: true });
 }
 
@@ -1813,6 +1866,20 @@ async function verifyAdminSession(access_token, SERVICE_KEY) {
   return { sb, user };
 }
 
+// Cleans up a booking's synced calendar event after an admin-side cancel
+// (admin.js's confirmCancel() cancels the booking directly via the browser
+// Supabase client, so this is the one server hop needed to reach the Google
+// Calendar credentials, which must never be exposed client-side).
+async function handleAdminDeleteCalendarEvent(req, res) {
+  const { access_token, event_id } = req.body;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!event_id) return res.status(400).json({ error: 'event_id required' });
+  const ok = await deleteCalendarEvent(event_id);
+  return res.status(200).json({ ok });
+}
+
 async function handleAdminServicesSave(req, res) {
   const { access_token, id, name, category, price, duration_min, duration_max, description } =
     req.body;
@@ -1908,5 +1975,6 @@ async function handler(req, res) {
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
+  if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   return handleAdmin(req, res);
 }
