@@ -2904,6 +2904,58 @@ async function renderMyBookings() {
   });
 }
 
+// Converts the VAPID public key (base64url, from the server) into the raw byte
+// array format pushManager.subscribe() expects.
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+// Requests notification permission, subscribes via the service worker's push
+// manager, and saves the subscription on the client's profile so
+// notifyClientOfMechanicMessage (api/auth.js) can reach them.
+async function enablePushNotifications() {
+  if (
+    !('Notification' in window) ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
+    showToast('Push notifications are not supported on this browser', 'error');
+    return;
+  }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      showToast('Notification permission was not granted', 'error');
+      return;
+    }
+    const keyResp = await fetch('/api/auth?role=vapid-public-key');
+    const { key } = await keyResp.json();
+    if (!key) {
+      showToast('Notifications are not set up yet - try again later', 'error');
+      return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(key),
+    });
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    if (!user) return;
+    await sb
+      .from('profiles')
+      .update({ push_subscription: JSON.stringify(sub) })
+      .eq('id', user.id);
+    showToast('Notifications enabled!', 'success');
+  } catch (e) {
+    showToast('Could not enable notifications: ' + e.message, 'error');
+  }
+}
+
 // ── Profile + Referral ────────────────────────────────────────────────
 async function renderProfile() {
   const screen = document.querySelector('[data-screen="profile"]');
@@ -3059,6 +3111,21 @@ async function renderProfile() {
         </div>
       </div>
 
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
+          <div style="min-width:0">
+            <div style="font-size:14px;font-weight:600;color:#0F172A">Mechanic messages</div>
+            <div style="font-size:12px;color:#6B7280;margin-top:2px">Get a phone alert when your mechanic messages you</div>
+          </div>
+          ${
+            typeof Notification !== 'undefined' && Notification.permission === 'granted'
+              ? '<span style="flex-shrink:0;font-size:12px;font-weight:600;color:#059669;white-space:nowrap">✓ <span>Enabled</span></span>'
+              : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Enable</button>'
+          }
+        </div>
+      </div>
+
       <button class="btn btn--secondary btn--full" id="signout-btn">Sign Out</button>
       <div style="display:flex;gap:24px;justify-content:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border)">
         <a href="/terms.html" style="font-size:13px;color:var(--color-text-secondary);text-decoration:none">Terms &amp; Conditions</a>
@@ -3097,6 +3164,14 @@ async function renderProfile() {
     await sb.auth.signOut().catch(() => {});
     showToast('Signed out successfully', 'success');
     router.navigate('home');
+  });
+
+  screen.querySelector('#push-enable-btn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Enabling...';
+    await enablePushNotifications();
+    renderProfile();
   });
 
   // Membership pause/resume/cancel

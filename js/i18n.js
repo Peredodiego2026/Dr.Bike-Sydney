@@ -123,6 +123,14 @@ const dict = {
     'Resume membership': 'Reanudar membresía',
     'Pause membership': 'Pausar membresía',
     Cancel: 'Cancelar',
+    // Profile - push notifications
+    Notifications: 'Notificaciones',
+    'Mechanic messages': 'Mensajes del mecánico',
+    'Get a phone alert when your mechanic messages you':
+      'Recibí una alerta en tu celular cuando tu mecánico te escriba',
+    Enable: 'Activar',
+    'Enabling...': 'Activando...',
+    Enabled: 'Activado',
     // Home nav greeting (split from the dynamic name for translation) -
     // translateScreen() looks up the TRIMMED text node, so the key has no
     // trailing space even though the rendered node does (verified: a key
@@ -381,6 +389,13 @@ const dict = {
     'Resume membership': '恢复会员',
     'Pause membership': '暂停会员',
     Cancel: '取消',
+    // Profile - push notifications
+    Notifications: '通知',
+    'Mechanic messages': '技工消息',
+    'Get a phone alert when your mechanic messages you': '技工给您发消息时，手机会收到提醒',
+    Enable: '开启',
+    'Enabling...': '正在开启...',
+    Enabled: '已开启',
     // Home nav greeting
     'Hi,': '你好，',
     // Booking flow - Step 1 (select service)
