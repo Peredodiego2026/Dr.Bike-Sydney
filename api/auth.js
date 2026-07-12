@@ -1682,7 +1682,7 @@ const ALL_SLOTS = [
   '5:00 PM',
 ];
 
-function slotToMinutes(slot) {
+export function slotToMinutes(slot) {
   const m = slot.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if (!m) return -1;
   let h = parseInt(m[1], 10);
@@ -1690,6 +1690,52 @@ function slotToMinutes(slot) {
   if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
   if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
   return h * 60 + min;
+}
+
+// A van is occupied for longer than the slot it was booked in - long services can
+// run for hours. Every booking blocks its van for (service duration + this buffer),
+// so the next job always has a realistic gap instead of stacking back-to-back.
+export const SLOT_BUFFER_MIN = 30;
+// Used when a booking's service can't be matched in the services table (renamed/
+// deleted service, or a legacy row) - a full hour-slot is the safest assumption
+// given ALL_SLOTS itself is on 1-hour granularity.
+export const DEFAULT_SERVICE_DURATION_MIN = 60;
+
+// Turns each existing booking into a per-van busy window in minutes-since-midnight,
+// using that booking's own service duration (looked up by name) + the buffer.
+export function buildBusyIntervals(bookings, durationByService) {
+  return bookings
+    .filter((b) => b.scheduled_time && b.van_number)
+    .map((b) => {
+      const start = slotToMinutes(b.scheduled_time);
+      const dur = durationByService[b.service_name] ?? DEFAULT_SERVICE_DURATION_MIN;
+      return { van: b.van_number, start, end: start + dur + SLOT_BUFFER_MIN };
+    });
+}
+
+// A slot is bookable if AT LEAST ONE van has no busy interval overlapping the
+// full window the new booking would occupy (its own duration + buffer) - not
+// just a free slot at the start time, which is what the old van-count-only
+// check effectively assumed.
+export function computeAvailableSlots({
+  allSlots,
+  vans,
+  busyIntervals,
+  neededMin,
+  manualUnavailable,
+  isToday,
+  nowMin,
+}) {
+  return allSlots.map((time) => {
+    const slotMin = slotToMinutes(time);
+    const slotEnd = slotMin + neededMin;
+    let available = vans.some(
+      (van) => !busyIntervals.some((iv) => iv.van === van && slotMin < iv.end && iv.start < slotEnd)
+    );
+    if (manualUnavailable.has(time)) available = false;
+    if (isToday && slotMin < nowMin) available = false;
+    return { time, available };
+  });
 }
 
 async function handleGetAvailability(req, res) {
@@ -1701,25 +1747,33 @@ async function handleGetAvailability(req, res) {
   const date = req.query?.date;
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date))
     return res.status(400).json({ error: 'date required (YYYY-MM-DD)' });
+  const serviceId = req.query?.serviceId || null;
 
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const [{ data: bookings }, { data: overrides }, { data: vzrows }] = await Promise.all([
-    sb
-      .from('bookings')
-      .select('scheduled_time')
-      .eq('scheduled_date', date)
-      .in('status', ['pending', 'confirmed', 'enroute', 'in_progress', 'arrived']),
-    sb.from('availability').select('time_slot, available').eq('date', date),
-    sb.from('van_zones').select('van_number').neq('van_number', 0),
-  ]);
-  // Real capacity = number of vans in the fleet (a slot is full only when every van is booked).
-  const vanCount = Math.max(1, new Set((vzrows || []).map((r) => r.van_number)).size);
+  const [{ data: bookings }, { data: overrides }, { data: vzrows }, { data: services }] =
+    await Promise.all([
+      sb
+        .from('bookings')
+        .select('scheduled_time,van_number,service_name')
+        .eq('scheduled_date', date)
+        .in('status', ['pending', 'confirmed', 'enroute', 'in_progress', 'arrived']),
+      sb.from('availability').select('time_slot, available').eq('date', date),
+      sb.from('van_zones').select('van_number').neq('van_number', 0),
+      sb.from('services').select('id,name,duration_max'),
+    ]);
+  const vans = [...new Set((vzrows || []).map((r) => r.van_number))];
+  if (!vans.length) vans.push(1); // never advertise zero capacity if van_zones is misconfigured
 
-  const slotCount = {};
-  for (const b of bookings || []) {
-    if (b.scheduled_time) slotCount[b.scheduled_time] = (slotCount[b.scheduled_time] || 0) + 1;
+  const durationByService = {};
+  for (const s of services || []) {
+    if (s.name) durationByService[s.name] = s.duration_max || DEFAULT_SERVICE_DURATION_MIN;
   }
+  const requestedService = (services || []).find((s) => String(s.id) === String(serviceId));
+  const neededMin =
+    (requestedService?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+
+  const busyIntervals = buildBusyIntervals(bookings || [], durationByService);
   const manualUnavailable = new Set(
     (overrides || []).filter((r) => !r.available).map((r) => r.time_slot)
   );
@@ -1731,12 +1785,14 @@ async function handleGetAvailability(req, res) {
   const isToday = date === todayStr;
   const nowMin = nowSydney.getHours() * 60 + nowSydney.getMinutes() + 120;
 
-  const slots = ALL_SLOTS.map((time) => {
-    let available = true;
-    if ((slotCount[time] || 0) >= vanCount) available = false;
-    if (manualUnavailable.has(time)) available = false;
-    if (isToday && slotToMinutes(time) < nowMin) available = false;
-    return { time, available };
+  const slots = computeAvailableSlots({
+    allSlots: ALL_SLOTS,
+    vans,
+    busyIntervals,
+    neededMin,
+    manualUnavailable,
+    isToday,
+    nowMin,
   });
 
   res.setHeader('Cache-Control', 'no-store, no-cache');
