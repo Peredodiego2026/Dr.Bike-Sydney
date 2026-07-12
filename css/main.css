@@ -1211,3 +1211,22 @@ body {
 .btn-press:active {
   transform: scale(0.97);
 }
+
+/* My Bikes cards - same elevation pattern as .booking-card.
+   box-shadow/transition live here, NOT inline - an inline box-shadow
+   would override the :hover rule below (inline beats any selector). */
+.bike-card {
+  box-shadow: var(--elevation-0);
+  transition:
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
+}
+@media (hover: hover) {
+  .bike-card:hover {
+    box-shadow: var(--elevation-1);
+    transform: translateY(-2px);
+  }
+}
+.bike-card:active {
+  transform: scale(0.98);
+}

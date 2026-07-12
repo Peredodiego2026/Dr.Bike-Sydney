@@ -3264,7 +3264,7 @@ async function renderMyBikes() {
       <button class="btn btn--primary btn--full" id="add-bike-btn">+ Add a Bike</button>
 
       <!-- Add bike form (hidden by default) -->
-      <div id="add-bike-form" style="display:none;margin-top:20px;background:var(--color-surface);border-radius:16px;padding:20px;border:1px solid var(--color-border)">
+      <div id="add-bike-form" style="display:none;margin-top:20px;background:var(--color-surface);border-radius:16px;padding:20px;border:1px solid var(--color-border);box-shadow:var(--elevation-0)">
         <div style="font-size:15px;font-weight:700;margin-bottom:16px">New Bike</div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <input id="bike-nickname" type="text" placeholder="Name (e.g. Red Trek)*" maxlength="60"
@@ -3293,8 +3293,8 @@ async function renderMyBikes() {
           </select>
           <div id="bike-form-error" style="font-size:12px;color:var(--color-error);min-height:16px"></div>
           <div style="display:flex;gap:10px">
-            <button id="cancel-bike-btn" class="btn btn--secondary" style="flex:1">Cancel</button>
-            <button id="save-bike-btn" class="btn btn--primary" style="flex:1">Save Bike</button>
+            <button id="cancel-bike-btn" class="btn btn--secondary btn-press" style="flex:1">Cancel</button>
+            <button id="save-bike-btn" class="btn btn--primary btn-press" style="flex:1">Save Bike</button>
           </div>
         </div>
       </div>
@@ -3333,7 +3333,7 @@ async function renderMyBikes() {
       list.innerHTML = data
         .map(
           (bike) => `
-        <div data-bike-id="${bike.id}" style="cursor:pointer;background:var(--color-surface);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
+        <div data-bike-id="${bike.id}" class="bike-card" style="cursor:pointer;background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
           <div style="width:44px;height:44px;border-radius:12px;background:var(--color-primary-alpha,rgba(10,88,202,0.12));display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <span style="display:inline-block;width:26px;height:18px;background-color:var(--color-primary);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
