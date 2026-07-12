@@ -35,14 +35,21 @@
       position: sticky; top: 0; z-index: 100;
       background: var(--white); border-bottom: 1px solid var(--border); height: 64px;
     }
-    .navbar .container { display: flex; align-items: center; justify-content: space-between; height: 100%; }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 16px; }
     .nav-logo { display: flex; gap: 10px; align-items: center; }
     .nav-logo span { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
     .nav-back {
       font-size: 14px; color: var(--gray); font-weight: 500;
       display: flex; align-items: center; gap: 6px; transition: color 150ms;
     }
     .nav-back:hover { color: var(--blue); }
+
+    /* Machine-translation disclaimer */
+    .mt-disclaimer {
+      background: #fffbeb; border-bottom: 1px solid #fde68a;
+      padding: 10px 0; font-size: 13px; color: #92400e; text-align: center;
+    }
 
     /* Page header */
     .legal-header {
@@ -96,6 +103,10 @@
 </head>
 <body>
 
+<div id="mt-disclaimer" class="mt-disclaimer" hidden>
+  <span data-i18n="mt-notice">This translation is machine-generated and provided for convenience only. The English version is the legally binding text.</span>
+</div>
+
 <nav class="navbar">
   <div class="container">
     <a href="/" class="nav-logo">
@@ -109,125 +120,154 @@
       </svg>
       <span>DR BIKE SYDNEY</span>
     </a>
-    <a href="/" class="nav-back">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      Back to Home
-    </a>
+    <div class="nav-right">
+      <div id="lang-switcher-slot"></div>
+      <a href="/" class="nav-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span data-i18n="nav-back">Back to Home</span>
+      </a>
+    </div>
   </div>
 </nav>
 
 <section class="legal-header">
   <div class="container">
-    <h1>Terms &amp; Conditions</h1>
-    <p>Effective date: 1 June 2026 &nbsp;&middot;&nbsp; Last updated: 14 June 2026</p>
+    <h1 data-i18n="h1">Terms &amp; Conditions</h1>
+    <p><span data-i18n="eff-date">Effective date: 1 June 2026</span> &nbsp;&middot;&nbsp; <span data-i18n="upd-date">Last updated: 12 July 2026</span></p>
   </div>
 </section>
 
 <main>
   <div class="legal-content">
 
-    <h2>1. About Us</h2>
-    <p>Dr. Bike Sydney ("we", "us", "our") is a mobile bicycle repair and maintenance service operating in Sydney, New South Wales, Australia. We provide on-demand, at-your-location bicycle servicing throughout Sydney's Inner West, Eastern Suburbs, CBD, North Shore, Manly and Northern Beaches areas.</p>
-    <p>Contact: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> &nbsp;|&nbsp; Phone: <a href="tel:+61433963250">0433 963 250</a></p>
+    <h2 data-i18n="s1-h">1. About Us</h2>
+    <p data-i18n="s1-p1">Dr. Bike Sydney ("we", "us", "our") is a mobile bicycle repair and maintenance service operating in Sydney, New South Wales, Australia. We provide on-demand, at-your-location bicycle servicing throughout Sydney's Inner West, Eastern Suburbs, CBD, North Shore, Manly and Northern Beaches areas.</p>
+    <p data-i18n="s1-p2">Contact: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> &nbsp;|&nbsp; Phone: <a href="tel:+61433963250">0433 963 250</a></p>
 
-    <h2>2. Acceptance of Terms</h2>
-    <p>By booking a service with Dr. Bike Sydney, whether through our website, phone or any other channel, you agree to be bound by these Terms and Conditions. If you do not agree, please do not proceed with a booking.</p>
-    <p>These terms apply to all services including one-off repairs, scheduled maintenance and subscription plans.</p>
+    <h2 data-i18n="s2-h">2. Acceptance of Terms</h2>
+    <p data-i18n="s2-p1">By booking a service with Dr. Bike Sydney, whether through our website, phone or any other channel, you agree to be bound by these Terms and Conditions. If you do not agree, please do not proceed with a booking.</p>
+    <p data-i18n="s2-p2">These terms apply to all services including one-off repairs, scheduled maintenance and subscription plans.</p>
 
-    <h2>3. Services</h2>
-    <p>We offer mobile bicycle repair and maintenance services delivered to your home, workplace or any location within our service area in Sydney, NSW. Our current service menu and pricing includes:</p>
+    <h2 data-i18n="s3-h">3. Services</h2>
+    <p data-i18n="s3-p1">We offer mobile bicycle repair and maintenance services delivered to your home, workplace or any location within our service area in Sydney, NSW. Our current service menu and pricing includes:</p>
     <ul>
-      <li><strong>Tune-Up</strong> - $109 (includes $20 mobile call-out fee)</li>
-      <li><strong>Standard Service</strong> - $149 (includes $20 mobile call-out fee)</li>
-      <li><strong>Standard+ Service</strong> - $199 (includes $20 mobile call-out fee)</li>
-      <li><strong>Ultimate Overhaul</strong> - $369 (includes $20 mobile call-out fee)</li>
+      <li data-i18n="s3-li1"><strong>Tune-Up</strong> - $109 (includes $20 mobile call-out fee)</li>
+      <li data-i18n="s3-li2"><strong>Standard Service</strong> - $149 (includes $20 mobile call-out fee)</li>
+      <li data-i18n="s3-li3"><strong>Standard+ Service</strong> - $199 (includes $20 mobile call-out fee)</li>
+      <li data-i18n="s3-li4"><strong>Ultimate Overhaul</strong> - $369 (includes $20 mobile call-out fee)</li>
     </ul>
-    <p>Subscription plans (minimum 3-month commitment):</p>
+    <p data-i18n="s3-p2">Subscription plans (minimum 3-month commitment):</p>
     <ul>
-      <li><strong>Basic</strong> - $57/month</li>
-      <li><strong>Standard</strong> - $97/month</li>
-      <li><strong>VIP</strong> - $147/month (20% off when billed annually)</li>
+      <li data-i18n="s3-li5"><strong>Basic</strong> - $57/month</li>
+      <li data-i18n="s3-li6"><strong>Standard</strong> - $97/month</li>
+      <li data-i18n="s3-li7"><strong>VIP</strong> - $147/month (20% off when billed annually)</li>
     </ul>
-    <p>All prices are in Australian dollars and are inclusive of GST where applicable. Prices are subject to change; the price applicable to your booking is confirmed at the time of booking.</p>
-    <p>Additional parts or components required during a service will be quoted and must be approved by you before installation. Parts are charged separately at cost plus a reasonable handling fee.</p>
+    <p data-i18n="s3-p3">All prices are in Australian dollars and are inclusive of GST where applicable. Prices are subject to change; the price applicable to your booking is confirmed at the time of booking.</p>
+    <p data-i18n="s3-p4">Additional parts or components required during a service will be quoted and must be approved by you before installation. Parts are charged separately at cost plus a reasonable handling fee.</p>
 
-    <h2>4. Bookings</h2>
-    <p>Bookings are confirmed only once you receive a written confirmation via email or SMS. We reserve the right to decline any booking at our discretion.</p>
-    <p>By submitting a booking you confirm that:</p>
+    <h2 data-i18n="s4-h">4. Bookings</h2>
+    <p data-i18n="s4-p1">Bookings are confirmed only once you receive a written confirmation via email or SMS. We reserve the right to decline any booking at our discretion.</p>
+    <p data-i18n="s4-p2">By submitting a booking you confirm that:</p>
     <ul>
-      <li>You are 18 years of age or older, or have the consent of a parent or guardian.</li>
-      <li>The bicycle(s) to be serviced are owned by you or you have authority to authorise the work.</li>
-      <li>The information you provide (name, address, contact details) is accurate.</li>
+      <li data-i18n="s4-li1">You are 18 years of age or older, or have the consent of a parent or guardian.</li>
+      <li data-i18n="s4-li2">The bicycle(s) to be serviced are owned by you or you have authority to authorise the work.</li>
+      <li data-i18n="s4-li3">The information you provide (name, address, contact details) is accurate.</li>
     </ul>
 
-    <h2>5. Payment</h2>
-    <p>Payment is collected securely via Stripe at the time of booking or upon completion of service, as indicated during checkout. We accept major credit and debit cards.</p>
-    <p>Dr. Bike Sydney does not store your card details. All payment data is handled directly by Stripe, Inc. and is subject to Stripe's own privacy and security policies.</p>
+    <h2 data-i18n="s5-h">5. Payment</h2>
+    <p data-i18n="s5-p1">Payment is collected securely via Stripe at the time of booking or upon completion of service, as indicated during checkout. We accept major credit and debit cards.</p>
+    <p data-i18n="s5-p2">Dr. Bike Sydney does not store your card details. All payment data is handled directly by Stripe, Inc. and is subject to Stripe's own privacy and security policies.</p>
     <div class="highlight-box">
-      <p>Your payment is protected by Stripe's industry-standard encryption. We never see or store your full card number.</p>
+      <p data-i18n="s5-box">Your payment is protected by Stripe's industry-standard encryption. We never see or store your full card number.</p>
     </div>
 
-    <h2>6. Cancellation and Rescheduling</h2>
+    <h2 data-i18n="s6-h">6. Cancellation and Rescheduling</h2>
     <div class="warn-box">
-      <p><strong>24-hour notice required.</strong> Cancellations or reschedules with less than 24 hours' notice before the scheduled appointment may incur a cancellation fee of up to $20 (the mobile call-out fee).</p>
+      <p data-i18n="s6-box"><strong>24-hour notice required.</strong> Cancellations or reschedules with less than 24 hours' notice before the scheduled appointment may incur a cancellation fee of up to $20 (the mobile call-out fee).</p>
     </div>
-    <p>To cancel or reschedule:</p>
+    <p data-i18n="s6-p1">To cancel or reschedule:</p>
     <ul>
-      <li>Email <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
-      <li>Call or SMS <a href="tel:+61433963250">0433 963 250</a></li>
-      <li>Use the cancellation link in your booking confirmation email</li>
+      <li data-i18n="s6-li1">Email <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
+      <li data-i18n="s6-li2">Call or SMS <a href="tel:+61433963250">0433 963 250</a></li>
+      <li data-i18n="s6-li3">Use the cancellation link in your booking confirmation email</li>
     </ul>
-    <p>Cancellations made with more than 24 hours' notice will receive a full refund. Cancellations made with fewer than 24 hours' notice may be subject to the cancellation fee at our discretion.</p>
-    <p>We reserve the right to cancel or reschedule appointments due to unsafe weather conditions, mechanical breakdown, illness or other unforeseen circumstances. In such cases, no cancellation fee applies and you will be offered a full refund or a priority rescheduled appointment.</p>
+    <p data-i18n="s6-p2">Cancellations made with more than 24 hours' notice will receive a full refund. Cancellations made with fewer than 24 hours' notice may be subject to the cancellation fee at our discretion.</p>
+    <p data-i18n="s6-p3">We reserve the right to cancel or reschedule appointments due to unsafe weather conditions, mechanical breakdown, illness or other unforeseen circumstances. In such cases, no cancellation fee applies and you will be offered a full refund or a priority rescheduled appointment.</p>
 
-    <h2>7. Subscriptions</h2>
-    <p>Subscription plans require a minimum commitment of 3 consecutive months. After the initial period, subscriptions continue on a month-to-month basis and may be cancelled with 30 days' written notice.</p>
-    <p>Annual subscriptions are billed upfront and are non-refundable after the first 14 days, except as required by Australian Consumer Law.</p>
-    <p>Unused service credits from a subscription month do not roll over to the following month unless otherwise agreed in writing.</p>
+    <h2 data-i18n="s7-h">7. Subscriptions</h2>
+    <p data-i18n="s7-p1">Subscription plans require a minimum commitment of 3 consecutive months. After the initial period, subscriptions continue on a month-to-month basis and may be cancelled with 30 days' written notice.</p>
+    <p data-i18n="s7-p2">Annual subscriptions are billed upfront and are non-refundable after the first 14 days, except as required by Australian Consumer Law.</p>
+    <p data-i18n="s7-p3">Unused service credits from a subscription month do not roll over to the following month unless otherwise agreed in writing.</p>
 
-    <h2>8. Your Bicycle and Liability</h2>
-    <p>Our mechanics exercise professional care and skill in all work performed. However, certain limitations apply:</p>
+    <h2 data-i18n="s8-h">8. Your Bicycle and Liability</h2>
+    <p data-i18n="s8-p1">Our mechanics exercise professional care and skill in all work performed. However, certain limitations apply:</p>
     <ul>
-      <li>We are not liable for pre-existing faults or damage not caused by our service.</li>
-      <li>We are not liable for damage to components that are excessively worn, corroded or structurally compromised prior to our service, including damage that becomes apparent during inspection or repair.</li>
-      <li>We are not liable for indirect or consequential losses, including loss of income or enjoyment, arising from service delays or unforeseen bicycle faults.</li>
+      <li data-i18n="s8-li1">We are not liable for pre-existing faults or damage not caused by our service.</li>
+      <li data-i18n="s8-li2">We are not liable for damage to components that are excessively worn, corroded or structurally compromised prior to our service, including damage that becomes apparent during inspection or repair.</li>
+      <li data-i18n="s8-li3">We are not liable for indirect or consequential losses, including loss of income or enjoyment, arising from service delays or unforeseen bicycle faults.</li>
     </ul>
-    <p>Before commencing work, our mechanic will inspect your bicycle and advise you of any concerns. Where additional work or parts are required beyond the booked service, we will obtain your approval before proceeding.</p>
-    <p>If your bicycle cannot be safely serviced at the agreed location (e.g., insufficient access, unsafe environment), we may decline to complete the service. A partial call-out fee may still apply.</p>
+    <p data-i18n="s8-p2">Before commencing work, our mechanic will inspect your bicycle and advise you of any concerns. Where additional work or parts are required beyond the booked service, we will obtain your approval before proceeding.</p>
+    <p data-i18n="s8-p3">If your bicycle cannot be safely serviced at the agreed location (e.g., insufficient access, unsafe environment), we may decline to complete the service. A partial call-out fee may still apply.</p>
 
-    <h2>9. Australian Consumer Law Guarantees</h2>
-    <p>Our services come with guarantees that cannot be excluded under the Australian Consumer Law (Schedule 2 of the Competition and Consumer Act 2010 (Cth)). You are entitled to a remedy if the service is not performed with due care and skill, or if the service is not fit for the purpose we agreed to perform it for.</p>
-    <p>Nothing in these terms limits, excludes or modifies any rights or guarantees you have under Australian Consumer Law that cannot be excluded by contract.</p>
+    <h2 data-i18n="s9-h">9. Australian Consumer Law Guarantees</h2>
+    <p data-i18n="s9-p1">Our services come with guarantees that cannot be excluded under the Australian Consumer Law (Schedule 2 of the Competition and Consumer Act 2010 (Cth)). You are entitled to a remedy if the service is not performed with due care and skill, or if the service is not fit for the purpose we agreed to perform it for.</p>
+    <p data-i18n="s9-p2">Nothing in these terms limits, excludes or modifies any rights or guarantees you have under Australian Consumer Law that cannot be excluded by contract.</p>
 
-    <h2>10. Complaints and Disputes</h2>
-    <p>If you are unhappy with our service, please contact us within 7 days:</p>
+    <h2 data-i18n="s10-h">10. Complaints and Disputes</h2>
+    <p data-i18n="s10-p1">If you are unhappy with our service, please contact us within 7 days:</p>
     <ul>
-      <li>Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
-      <li>Phone: <a href="tel:+61433963250">0433 963 250</a></li>
+      <li data-i18n="s10-li1">Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
+      <li data-i18n="s10-li2">Phone: <a href="tel:+61433963250">0433 963 250</a></li>
     </ul>
-    <p>We will acknowledge your complaint within 2 business days and aim to resolve it within 10 business days. If we cannot resolve the dispute directly, either party may refer the matter to NSW Fair Trading or seek resolution through the courts of New South Wales.</p>
+    <p data-i18n="s10-p2">We will acknowledge your complaint within 2 business days and aim to resolve it within 10 business days. If we cannot resolve the dispute directly, either party may refer the matter to NSW Fair Trading or seek resolution through the courts of New South Wales.</p>
 
-    <h2>11. Privacy</h2>
-    <p>We collect and handle your personal information in accordance with our <a href="/privacy.html">Privacy Policy</a> and the Privacy Act 1988 (Cth). By using our services, you consent to the collection and use of your information as described in that policy.</p>
+    <h2 data-i18n="s11-h">11. Privacy</h2>
+    <p data-i18n="s11-p1">We collect and handle your personal information in accordance with our <a href="/privacy.html">Privacy Policy</a> and the Privacy Act 1988 (Cth). By using our services, you consent to the collection and use of your information as described in that policy.</p>
 
-    <h2>12. Intellectual Property</h2>
-    <p>All content on our website, including text, images, logos and software, is owned by or licensed to Dr. Bike Sydney. You may not reproduce, distribute or use our content without prior written permission.</p>
+    <h2 data-i18n="s12-h">12. Intellectual Property</h2>
+    <p data-i18n="s12-p1">All content on our website, including text, images, logos and software, is owned by or licensed to Dr. Bike Sydney. You may not reproduce, distribute or use our content without prior written permission.</p>
 
-    <h2>13. Website Use</h2>
-    <p>Our website is provided for the purpose of booking services and obtaining information about Dr. Bike Sydney. You agree not to use the website for any unlawful purpose or in any manner that could damage, disable or impair the website or interfere with other users.</p>
+    <h2 data-i18n="s13-h">13. Website Use</h2>
+    <p data-i18n="s13-p1">Our website is provided for the purpose of booking services and obtaining information about Dr. Bike Sydney. You agree not to use the website for any unlawful purpose or in any manner that could damage, disable or impair the website or interfere with other users.</p>
 
-    <h2>14. Changes to These Terms</h2>
-    <p>We may update these Terms and Conditions from time to time. The current version will always be published on this page. Continued use of our services after any change constitutes your acceptance of the updated terms. We will make reasonable efforts to notify you of material changes via email.</p>
+    <h2 data-i18n="s14-h">14. Changes to These Terms</h2>
+    <p data-i18n="s14-p1">We may update these Terms and Conditions from time to time. The current version will always be published on this page. Continued use of our services after any change constitutes your acceptance of the updated terms. We will make reasonable efforts to notify you of material changes via email.</p>
 
-    <h2>15. Governing Law</h2>
-    <p>These Terms and Conditions are governed by the laws of New South Wales, Australia. Any disputes arising under these terms are subject to the exclusive jurisdiction of the courts of New South Wales.</p>
+    <h2 data-i18n="s15-h">15. Governing Law</h2>
+    <p data-i18n="s15-p1">These Terms and Conditions are governed by the laws of New South Wales, Australia. Any disputes arising under these terms are subject to the exclusive jurisdiction of the courts of New South Wales.</p>
 
-    <h2>16. Contact Us</h2>
-    <p>For any questions about these Terms and Conditions:</p>
+    <h2 data-i18n="s16-h">16. Service Warranty</h2>
+    <div class="warn-box">
+      <p data-i18n="s16-box"><strong>3-day warranty window.</strong> If the exact issue we serviced reoccurs, contact us within 3 days of your service for a free repeat visit or a full refund. Requests made after 3 days are not eligible under this policy.</p>
+    </div>
+    <p data-i18n="s16-p1">This warranty covers workmanship only - the quality of the adjustments and repairs performed by our mechanic. It does not separately cover parts, which are inspected by our mechanic before installation and by you before our mechanic leaves.</p>
+    <p data-i18n="s16-p2">If the exact issue we serviced reoccurs:</p>
     <ul>
-      <li>Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
-      <li>Phone: <a href="tel:+61433963250">0433 963 250</a></li>
-      <li>Hours: Monday - Sunday, 7:00 AM - 7:00 PM AEST</li>
+      <li data-i18n="s16-li1">Contact us within 3 days of your service via WhatsApp on <a href="tel:+61433963250">0433 963 250</a>, with photos or evidence of the problem.</li>
+      <li data-i18n="s16-li2">We will return to fix it at no additional charge, subject to availability within 7 business days of your report.</li>
+    </ul>
+    <p data-i18n="s16-p3">This warranty does not cover:</p>
+    <ul>
+      <li data-i18n="s16-li3">A different or unrelated issue that was not part of the original service - we will explain why if this is the case.</li>
+      <li data-i18n="s16-li4">Issues arising from how the bicycle was used after the service (for example, aggressive riding shortly after a basic tune-up). In these cases we may offer a discounted inspection visit for $15 instead of the full call-out fee.</li>
+    </ul>
+    <p data-i18n="s16-p4">Our standard remedy is a free repeat visit. If you would prefer a refund instead, and you contacted us within 3 days of your service, we will provide a full refund. Requests made after 3 days are not eligible for a refund or a free repeat visit.</p>
+    <p data-i18n="s16-p5">This warranty applies equally regardless of your subscription plan or how you paid for your service, and does not limit any rights or guarantees you have under Australian Consumer Law that cannot be excluded by contract.</p>
+
+    <h2 data-i18n="s17-h">17. Service Delivery</h2>
+    <div class="warn-box">
+      <p data-i18n="s17-box"><strong>15-minute arrival window.</strong> Your mechanic will arrive within 15 minutes of your scheduled time, in either direction.</p>
+    </div>
+    <p data-i18n="s17-p1">We schedule a buffer between bookings so your mechanic has enough time to finish a previous job properly before heading to your appointment, rather than rushing between back-to-back services.</p>
+    <p data-i18n="s17-p2">If your mechanic is running behind, they will message you through the in-app chat as soon as they know. Enable notifications in your Profile to be alerted the moment they send an update.</p>
+    <p data-i18n="s17-p3">An estimated duration is shown for each service when you book. Actual time on site may vary depending on your bicycle's condition and any additional work agreed during the visit.</p>
+
+    <h2 data-i18n="s18-h">18. Contact Us</h2>
+    <p data-i18n="s18-p1">For any questions about these Terms and Conditions:</p>
+    <ul>
+      <li data-i18n="s18-li1">Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a></li>
+      <li data-i18n="s18-li2">Phone: <a href="tel:+61433963250">0433 963 250</a></li>
+      <li data-i18n="s18-li3">Hours: Monday - Sunday, 7:00 AM - 7:00 PM AEST</li>
     </ul>
 
   </div>
@@ -249,7 +289,7 @@
           </svg>
           <span style="font-weight:700;font-size:15px;color:white;letter-spacing:0.5px">DR BIKE SYDNEY</span>
         </div>
-        <p style="color:#6b7280;font-size:14px;margin-top:12px;line-height:1.6">Professional bike service at your doorstep.</p>
+        <p data-i18n="footer-tag" style="color:#6b7280;font-size:14px;margin-top:12px;line-height:1.6">Professional bike service at your doorstep.</p>
         <div style="display:flex;gap:12px;margin-top:20px">
           <a href="#" class="footer-social" aria-label="Facebook">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
@@ -264,30 +304,30 @@
       </div>
 
       <div>
-        <h4 class="footer-h4">Services</h4>
-        <a href="/#services" class="footer-link">Tune-Up</a>
-        <a href="/#services" class="footer-link">Standard Service</a>
-        <a href="/#services" class="footer-link">Standard+ Service</a>
-        <a href="/#services" class="footer-link">Ultimate Overhaul</a>
-        <a href="/#memberships" class="footer-link">Subscriptions</a>
+        <h4 class="footer-h4" data-i18n="footer-services-h">Services</h4>
+        <a href="/#services" class="footer-link" data-i18n="footer-svc1">Tune-Up</a>
+        <a href="/#services" class="footer-link" data-i18n="footer-svc2">Standard Service</a>
+        <a href="/#services" class="footer-link" data-i18n="footer-svc3">Standard+ Service</a>
+        <a href="/#services" class="footer-link" data-i18n="footer-svc4">Ultimate Overhaul</a>
+        <a href="/#memberships" class="footer-link" data-i18n="footer-svc5">Subscriptions</a>
       </div>
 
       <div>
-        <h4 class="footer-h4">Company</h4>
-        <a href="/#about" class="footer-link">About Us</a>
-        <a href="/#reviews" class="footer-link">Reviews</a>
-        <a href="/#faq" class="footer-link">FAQ</a>
-        <a href="mailto:contact@drbikesydney.com.au" class="footer-link">Contact</a>
+        <h4 class="footer-h4" data-i18n="footer-company-h">Company</h4>
+        <a href="/#about" class="footer-link" data-i18n="footer-co1">About Us</a>
+        <a href="/#reviews" class="footer-link" data-i18n="footer-co2">Reviews</a>
+        <a href="/#faq" class="footer-link" data-i18n="footer-co3">FAQ</a>
+        <a href="mailto:contact@drbikesydney.com.au" class="footer-link" data-i18n="footer-co4">Contact</a>
       </div>
 
       <div>
-        <h4 class="footer-h4">Legal</h4>
-        <a href="/terms.html" class="footer-link" style="color:white">Terms &amp; Conditions</a>
-        <a href="/privacy.html" class="footer-link">Privacy Policy</a>
+        <h4 class="footer-h4" data-i18n="footer-legal-h">Legal</h4>
+        <a href="/terms.html" class="footer-link" style="color:white" data-i18n="footer-legal1">Terms &amp; Conditions</a>
+        <a href="/privacy.html" class="footer-link" data-i18n="footer-legal2">Privacy Policy</a>
       </div>
 
       <div>
-        <h4 class="footer-h4">Contact</h4>
+        <h4 class="footer-h4" data-i18n="footer-contact-h">Contact</h4>
         <div class="footer-contact-item">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           0433 963 250
@@ -302,20 +342,256 @@
         </div>
         <div class="footer-contact-item">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Mon - Sun: 7AM - 7PM
+          <span data-i18n="footer-hours">Mon - Sun: 7AM - 7PM</span>
         </div>
       </div>
     </div>
 
     <div style="border-top:1px solid #1f2937;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-      <p style="color:#4b5563;font-size:13px">&copy; 2026 Dr. Bike Sydney. All rights reserved.</p>
+      <p data-i18n="footer-copyright" style="color:#4b5563;font-size:13px">&copy; 2026 Dr. Bike Sydney. All rights reserved.</p>
       <div style="display:flex;gap:20px">
-        <a href="/terms.html" style="color:#4b5563;font-size:13px">Terms</a>
-        <a href="/privacy.html" style="color:#4b5563;font-size:13px">Privacy</a>
+        <a href="/terms.html" style="color:#4b5563;font-size:13px" data-i18n="footer-bottom-terms">Terms</a>
+        <a href="/privacy.html" style="color:#4b5563;font-size:13px" data-i18n="footer-bottom-privacy">Privacy</a>
       </div>
     </div>
   </div>
 </footer>
+
+<script type="module">
+  import { renderLangSwitcher, initLegalPage } from '/js/legal-i18n.js?v=20260712';
+  document.getElementById('lang-switcher-slot').innerHTML = renderLangSwitcher();
+
+  const dict = {
+    es: {
+      'mt-notice': 'Esta traducción fue generada automáticamente y se ofrece solo como referencia. La versión en inglés es el texto legalmente vinculante.',
+      'nav-back': 'Volver al Inicio',
+      'h1': 'Términos y Condiciones',
+      'eff-date': 'Fecha de vigencia: 1 de junio de 2026',
+      'upd-date': 'Última actualización: 12 de julio de 2026',
+      's1-h': '1. Sobre Nosotros',
+      's1-p1': 'Dr. Bike Sydney ("nosotros", "nuestro") es un servicio móvil de reparación y mantenimiento de bicicletas que opera en Sydney, Nueva Gales del Sur, Australia. Ofrecemos servicio de bicicletas a domicilio, bajo demanda, en las zonas de Inner West, Eastern Suburbs, CBD, North Shore, Manly y Northern Beaches de Sydney.',
+      's1-p2': 'Contacto: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> &nbsp;|&nbsp; Teléfono: <a href="tel:+61433963250">0433 963 250</a>',
+      's2-h': '2. Aceptación de los Términos',
+      's2-p1': 'Al reservar un servicio con Dr. Bike Sydney, ya sea a través de nuestro sitio web, teléfono o cualquier otro canal, aceptás quedar sujeto a estos Términos y Condiciones. Si no estás de acuerdo, por favor no continúes con la reserva.',
+      's2-p2': 'Estos términos se aplican a todos los servicios, incluyendo reparaciones puntuales, mantenimiento programado y planes de suscripción.',
+      's3-h': '3. Servicios',
+      's3-p1': 'Ofrecemos servicios móviles de reparación y mantenimiento de bicicletas en tu casa, trabajo o cualquier ubicación dentro de nuestra zona de cobertura en Sydney, NSW. Nuestro menú de servicios y precios actual incluye:',
+      's3-li1': '<strong>Tune-Up</strong> - $109 (incluye tarifa de visita móvil de $20)',
+      's3-li2': '<strong>Servicio Estándar</strong> - $149 (incluye tarifa de visita móvil de $20)',
+      's3-li3': '<strong>Servicio Estándar+</strong> - $199 (incluye tarifa de visita móvil de $20)',
+      's3-li4': '<strong>Revisión Completa</strong> - $369 (incluye tarifa de visita móvil de $20)',
+      's3-p2': 'Planes de suscripción (compromiso mínimo de 3 meses):',
+      's3-li5': '<strong>Básico</strong> - $57/mes',
+      's3-li6': '<strong>Estándar</strong> - $97/mes',
+      's3-li7': '<strong>VIP</strong> - $147/mes (20% de descuento con facturación anual)',
+      's3-p3': 'Todos los precios están en dólares australianos e incluyen GST cuando corresponde. Los precios pueden cambiar; el precio aplicable a tu reserva se confirma en el momento de reservar.',
+      's3-p4': 'Las piezas o componentes adicionales necesarios durante un servicio se cotizarán y deberán ser aprobados por vos antes de su instalación. Las piezas se cobran por separado, a costo más un cargo razonable de gestión.',
+      's4-h': '4. Reservas',
+      's4-p1': 'Las reservas se confirman solo cuando recibís una confirmación por escrito vía email o SMS. Nos reservamos el derecho de rechazar cualquier reserva a nuestro criterio.',
+      's4-p2': 'Al enviar una reserva, confirmás que:',
+      's4-li1': 'Tenés 18 años de edad o más, o contás con el consentimiento de un padre, madre o tutor.',
+      's4-li2': 'La(s) bicicleta(s) a reparar son de tu propiedad o tenés autoridad para autorizar el trabajo.',
+      's4-li3': 'La información que proporcionás (nombre, dirección, datos de contacto) es correcta.',
+      's5-h': '5. Pago',
+      's5-p1': 'El pago se cobra de forma segura a través de Stripe al momento de la reserva o al completar el servicio, según se indique al finalizar la compra. Aceptamos las principales tarjetas de crédito y débito.',
+      's5-p2': 'Dr. Bike Sydney no almacena los datos de tu tarjeta. Todos los datos de pago son gestionados directamente por Stripe, Inc. y están sujetos a las políticas de privacidad y seguridad propias de Stripe.',
+      's5-box': 'Tu pago está protegido por el cifrado de nivel industrial de Stripe. Nunca vemos ni almacenamos el número completo de tu tarjeta.',
+      's6-h': '6. Cancelación y Reprogramación',
+      's6-box': '<strong>Se requiere aviso con 24 horas de anticipación.</strong> Las cancelaciones o reprogramaciones con menos de 24 horas de aviso antes de la cita programada pueden generar un cargo por cancelación de hasta $20 (la tarifa de visita móvil).',
+      's6-p1': 'Para cancelar o reprogramar:',
+      's6-li1': 'Escribinos a <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's6-li2': 'Llamá o enviá un SMS al <a href="tel:+61433963250">0433 963 250</a>',
+      's6-li3': 'Usá el enlace de cancelación en tu email de confirmación de reserva',
+      's6-p2': 'Las cancelaciones realizadas con más de 24 horas de aviso recibirán un reembolso completo. Las cancelaciones con menos de 24 horas de aviso pueden estar sujetas al cargo por cancelación, a nuestro criterio.',
+      's6-p3': 'Nos reservamos el derecho de cancelar o reprogramar citas por condiciones climáticas inseguras, roturas mecánicas, enfermedad u otras circunstancias imprevistas. En esos casos, no se aplica cargo por cancelación y se te ofrecerá un reembolso completo o una cita reprogramada con prioridad.',
+      's7-h': '7. Suscripciones',
+      's7-p1': 'Los planes de suscripción requieren un compromiso mínimo de 3 meses consecutivos. Después del período inicial, las suscripciones continúan mes a mes y pueden cancelarse con 30 días de aviso por escrito.',
+      's7-p2': 'Las suscripciones anuales se facturan por adelantado y no son reembolsables después de los primeros 14 días, salvo lo exigido por la Ley del Consumidor de Australia.',
+      's7-p3': 'Los créditos de servicio no utilizados de un mes de suscripción no se transfieren al mes siguiente, salvo que se acuerde lo contrario por escrito.',
+      's8-h': '8. Tu Bicicleta y Responsabilidad',
+      's8-p1': 'Nuestros mecánicos aplican cuidado y habilidad profesional en todo el trabajo realizado. Sin embargo, se aplican ciertas limitaciones:',
+      's8-li1': 'No somos responsables por fallas o daños preexistentes que no hayan sido causados por nuestro servicio.',
+      's8-li2': 'No somos responsables por daños a componentes excesivamente desgastados, corroídos o estructuralmente comprometidos antes de nuestro servicio, incluyendo daños que se hagan evidentes durante la inspección o reparación.',
+      's8-li3': 'No somos responsables por pérdidas indirectas o consecuentes, incluyendo pérdida de ingresos o disfrute, derivadas de demoras en el servicio o fallas imprevistas de la bicicleta.',
+      's8-p2': 'Antes de comenzar el trabajo, nuestro mecánico inspeccionará tu bicicleta y te informará sobre cualquier inconveniente. Cuando se requiera trabajo o piezas adicionales más allá del servicio reservado, obtendremos tu aprobación antes de continuar.',
+      's8-p3': 'Si tu bicicleta no puede ser reparada de forma segura en el lugar acordado (por ejemplo, acceso insuficiente o entorno inseguro), podemos rechazar completar el servicio. Aun así, puede aplicarse una tarifa de visita parcial.',
+      's9-h': '9. Garantías de la Ley del Consumidor de Australia',
+      's9-p1': 'Nuestros servicios cuentan con garantías que no pueden excluirse bajo la Ley del Consumidor de Australia (Anexo 2 de la Competition and Consumer Act 2010 (Cth)). Tenés derecho a una solución si el servicio no se realiza con el debido cuidado y habilidad, o si no es adecuado para el propósito acordado.',
+      's9-p2': 'Nada en estos términos limita, excluye o modifica ningún derecho o garantía que tengas bajo la Ley del Consumidor de Australia que no pueda excluirse por contrato.',
+      's10-h': '10. Reclamos y Disputas',
+      's10-p1': 'Si no estás conforme con nuestro servicio, por favor contactanos dentro de los 7 días:',
+      's10-li1': 'Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's10-li2': 'Teléfono: <a href="tel:+61433963250">0433 963 250</a>',
+      's10-p2': 'Confirmaremos la recepción de tu reclamo dentro de los 2 días hábiles y buscaremos resolverlo dentro de los 10 días hábiles. Si no podemos resolver la disputa directamente, cualquiera de las partes puede derivar el asunto a NSW Fair Trading o buscar resolución en los tribunales de Nueva Gales del Sur.',
+      's11-h': '11. Privacidad',
+      's11-p1': 'Recopilamos y tratamos tu información personal de acuerdo con nuestra <a href="/privacy.html">Política de Privacidad</a> y la Privacy Act 1988 (Cth). Al usar nuestros servicios, consentís la recopilación y el uso de tu información según se describe en dicha política.',
+      's12-h': '12. Propiedad Intelectual',
+      's12-p1': 'Todo el contenido de nuestro sitio web, incluyendo texto, imágenes, logotipos y software, es propiedad de Dr. Bike Sydney o está licenciado a nuestro favor. No podés reproducir, distribuir ni utilizar nuestro contenido sin autorización previa por escrito.',
+      's13-h': '13. Uso del Sitio Web',
+      's13-p1': 'Nuestro sitio web se proporciona con el fin de reservar servicios y obtener información sobre Dr. Bike Sydney. Aceptás no usar el sitio web para ningún propósito ilegal ni de forma que pueda dañar, deshabilitar o afectar el sitio web o interferir con otros usuarios.',
+      's14-h': '14. Cambios a Estos Términos',
+      's14-p1': 'Podemos actualizar estos Términos y Condiciones de vez en cuando. La versión actual siempre estará publicada en esta página. El uso continuado de nuestros servicios después de cualquier cambio constituye tu aceptación de los términos actualizados. Haremos esfuerzos razonables para notificarte de cambios importantes por email.',
+      's15-h': '15. Ley Aplicable',
+      's15-p1': 'Estos Términos y Condiciones se rigen por las leyes de Nueva Gales del Sur, Australia. Cualquier disputa derivada de estos términos está sujeta a la jurisdicción exclusiva de los tribunales de Nueva Gales del Sur.',
+      's16-h': '16. Garantía del Servicio',
+      's16-box': '<strong>Ventana de garantía de 3 días.</strong> Si el mismo problema que reparamos vuelve a aparecer, contactanos dentro de los 3 días posteriores a tu servicio para una revisita gratuita o un reembolso completo. Las solicitudes hechas después de 3 días no son elegibles bajo esta política.',
+      's16-p1': 'Esta garantía cubre solo la mano de obra: la calidad de los ajustes y reparaciones realizados por nuestro mecánico. No cubre las piezas por separado, ya que son revisadas por nuestro mecánico antes de instalarlas y por vos antes de que el mecánico se retire.',
+      's16-p2': 'Si el mismo problema que reparamos vuelve a aparecer:',
+      's16-li1': 'Contactanos dentro de los 3 días posteriores a tu servicio por WhatsApp al <a href="tel:+61433963250">0433 963 250</a>, con fotos o evidencia del problema.',
+      's16-li2': 'Volveremos a repararlo sin cargo adicional, según disponibilidad, dentro de los 7 días hábiles posteriores a tu aviso.',
+      's16-p3': 'Esta garantía no cubre:',
+      's16-li3': 'Un problema distinto o no relacionado que no formaba parte del servicio original - te explicaremos por qué si este es el caso.',
+      's16-li4': 'Problemas derivados del uso que le diste a la bicicleta después del servicio (por ejemplo, uso intenso poco después de un Tune-Up básico). En estos casos podemos ofrecerte una visita de inspección con descuento de $15 en vez de la tarifa de visita completa.',
+      's16-p4': 'Nuestra solución estándar es una revisita gratuita. Si preferís un reembolso en vez de una revisita, y nos contactaste dentro de los 3 días posteriores a tu servicio, te daremos un reembolso completo. Las solicitudes hechas después de 3 días no son elegibles ni para reembolso ni para revisita gratuita.',
+      's16-p5': 'Esta garantía aplica por igual sin importar tu plan de suscripción o cómo pagaste tu servicio, y no limita ningún derecho o garantía que tengas bajo la Ley del Consumidor de Australia que no pueda excluirse por contrato.',
+      's17-h': '17. Entrega del Servicio',
+      's17-box': '<strong>Ventana de llegada de 15 minutos.</strong> Tu mecánico va a llegar dentro de los 15 minutos de tu horario programado, antes o después.',
+      's17-p1': 'Programamos un margen entre reservas para que tu mecánico tenga tiempo suficiente de terminar bien el trabajo anterior antes de ir a tu cita, en vez de apurarse entre servicios seguidos.',
+      's17-p2': 'Si tu mecánico se va a atrasar, te va a escribir por el chat dentro de la app apenas lo sepa. Activá las notificaciones en tu Perfil para enterarte al instante cuando te escriba.',
+      's17-p3': 'Se muestra una duración estimada para cada servicio al momento de reservar. El tiempo real puede variar según el estado de tu bicicleta y cualquier trabajo adicional acordado durante la visita.',
+      's18-h': '18. Contactanos',
+      's18-p1': 'Para cualquier pregunta sobre estos Términos y Condiciones:',
+      's18-li1': 'Email: <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's18-li2': 'Teléfono: <a href="tel:+61433963250">0433 963 250</a>',
+      's18-li3': 'Horario: lunes a domingo, 7:00 a 19:00 AEST',
+      'footer-tag': 'Servicio profesional de bicicletas a domicilio.',
+      'footer-services-h': 'Servicios',
+      'footer-svc1': 'Tune-Up',
+      'footer-svc2': 'Servicio Estándar',
+      'footer-svc3': 'Servicio Estándar+',
+      'footer-svc4': 'Revisión Completa',
+      'footer-svc5': 'Suscripciones',
+      'footer-company-h': 'Empresa',
+      'footer-co1': 'Sobre Nosotros',
+      'footer-co2': 'Reseñas',
+      'footer-co3': 'Preguntas Frecuentes',
+      'footer-co4': 'Contacto',
+      'footer-legal-h': 'Legal',
+      'footer-legal1': 'Términos y Condiciones',
+      'footer-legal2': 'Política de Privacidad',
+      'footer-contact-h': 'Contacto',
+      'footer-hours': 'Lun - Dom: 7 - 19h',
+      'footer-copyright': '&copy; 2026 Dr. Bike Sydney. Todos los derechos reservados.',
+      'footer-bottom-terms': 'Términos',
+      'footer-bottom-privacy': 'Privacidad',
+    },
+    zh: {
+      'mt-notice': '此翻译由机器自动生成，仅供参考。英文版本为具有法律约束力的正式文本。',
+      'nav-back': '返回首页',
+      'h1': '条款与条件',
+      'eff-date': '生效日期：2026年6月1日',
+      'upd-date': '最后更新：2026年7月12日',
+      's1-h': '1. 关于我们',
+      's1-p1': 'Dr. Bike Sydney（"我们"）是一家在澳大利亚新南威尔士州悉尼运营的移动自行车维修保养服务商。我们在悉尼内西区、东郊区、中央商务区（CBD）、北岸、曼利和北部海滩地区提供上门自行车服务。',
+      's1-p2': '联系方式：<a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a> &nbsp;|&nbsp; 电话：<a href="tel:+61433963250">0433 963 250</a>',
+      's2-h': '2. 条款的接受',
+      's2-p1': '无论通过我们的网站、电话或其他任何渠道预约服务，即表示您同意受本条款与条件的约束。如果您不同意，请不要继续预约。',
+      's2-p2': '本条款适用于所有服务，包括一次性维修、定期保养和订阅计划。',
+      's3-h': '3. 服务项目',
+      's3-p1': '我们提供上门自行车维修保养服务，可在您的住所、工作地点或悉尼新南威尔士州服务范围内的任何地点提供服务。我们目前的服务及价格如下：',
+      's3-li1': '<strong>基础保养（Tune-Up）</strong> - $109（含 $20 上门服务费）',
+      's3-li2': '<strong>标准服务</strong> - $149（含 $20 上门服务费）',
+      's3-li3': '<strong>标准+服务</strong> - $199（含 $20 上门服务费）',
+      's3-li4': '<strong>全面翻新</strong> - $369（含 $20 上门服务费）',
+      's3-p2': '订阅计划（最低承诺3个月）：',
+      's3-li5': '<strong>基础版</strong> - $57/月',
+      's3-li6': '<strong>标准版</strong> - $97/月',
+      's3-li7': '<strong>VIP版</strong> - $147/月（按年付费享20%折扣）',
+      's3-p3': '所有价格均以澳元计算，并在适用情况下含GST（商品服务税）。价格如有变动，以预约时确认的价格为准。',
+      's3-p4': '服务过程中如需额外零件或部件，我们会先报价，并须经您批准后才会安装。零件费用按成本另计，并加收合理的手续费。',
+      's4-h': '4. 预约',
+      's4-p1': '只有在您收到通过电子邮件或短信发送的书面确认后，预约才算确认。我们保留自行决定拒绝任何预约的权利。',
+      's4-p2': '提交预约即表示您确认：',
+      's4-li1': '您年满18岁，或已获得父母或监护人的同意。',
+      's4-li2': '待维修的自行车归您所有，或您有权授权此项工作。',
+      's4-li3': '您提供的信息（姓名、地址、联系方式）真实准确。',
+      's5-h': '5. 付款',
+      's5-p1': '款项通过Stripe在预约时或服务完成后安全收取，具体以结账时的说明为准。我们接受主要的信用卡和借记卡。',
+      's5-p2': 'Dr. Bike Sydney 不会存储您的银行卡信息。所有支付数据由 Stripe, Inc. 直接处理，并受 Stripe 自身的隐私和安全政策约束。',
+      's5-box': '您的付款受到 Stripe 行业标准加密技术的保护。我们从不查看或存储您的完整卡号。',
+      's6-h': '6. 取消与改期',
+      's6-box': '<strong>需提前24小时通知。</strong> 若在预约时间前不足24小时取消或改期，可能会产生最高 $20（即上门服务费）的取消费用。',
+      's6-p1': '如需取消或改期，请：',
+      's6-li1': '发送邮件至 <a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's6-li2': '致电或发短信至 <a href="tel:+61433963250">0433 963 250</a>',
+      's6-li3': '使用预约确认邮件中的取消链接',
+      's6-p2': '提前超过24小时取消的，将获得全额退款。不足24小时取消的，我们可自行决定是否收取取消费用。',
+      's6-p3': '因恶劣天气、机械故障、疾病或其他不可预见的情况，我们保留取消或改期预约的权利。在此情况下，不收取取消费用，我们将为您提供全额退款或优先改期安排。',
+      's7-h': '7. 订阅服务',
+      's7-p1': '订阅计划最低承诺为连续3个月。首期结束后，订阅按月continuing，可提前30天书面通知取消。',
+      's7-p2': '年度订阅需预付费用，前14天后不予退款，但澳大利亚消费者法另有规定的除外。',
+      's7-p3': '当月未使用的服务额度不会结转至下月，除非另有书面约定。',
+      's8-h': '8. 您的自行车与责任',
+      's8-p1': '我们的技师在所有工作中均秉持专业的谨慎与技能。但以下情况存在限制：',
+      's8-li1': '对于并非由我们服务造成的既有故障或损坏，我们不承担责任。',
+      's8-li2': '对于服务前已过度磨损、锈蚀或结构受损的部件所产生的损坏（包括在检查或维修过程中才发现的损坏），我们不承担责任。',
+      's8-li3': '对于因服务延误或自行车意外故障而产生的间接或后果性损失（包括收入损失或使用乐趣的损失），我们不承担责任。',
+      's8-p2': '开始工作前，我们的技师会检查您的自行车并告知您任何问题。如需超出预约服务范围的额外工作或零件，我们会先征得您的同意后再进行。',
+      's8-p3': '如果您的自行车无法在约定地点安全维修（例如空间不足或环境不安全），我们可能拒绝完成服务，但仍可能收取部分上门服务费。',
+      's9-h': '9. 澳大利亚消费者法保障',
+      's9-p1': '我们的服务享有澳大利亚消费者法（《2010年竞争与消费者法》附表2）项下不可排除的保障。如果服务未能以应有的谨慎和技能完成，或不适合我们约定的用途，您有权获得相应补救。',
+      's9-p2': '本条款中的任何内容均不会限制、排除或修改您根据澳大利亚消费者法所享有的、依法不可通过合同排除的任何权利或保障。',
+      's10-h': '10. 投诉与争议',
+      's10-p1': '如果您对我们的服务不满意，请在7天内联系我们：',
+      's10-li1': '邮箱：<a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's10-li2': '电话：<a href="tel:+61433963250">0433 963 250</a>',
+      's10-p2': '我们将在2个工作日内确认收到您的投诉，并力争在10个工作日内解决。如果双方无法直接解决争议，任何一方均可将事项提交新南威尔士州公平交易局，或通过新南威尔士州法院寻求解决。',
+      's11-h': '11. 隐私',
+      's11-p1': '我们按照我们的<a href="/privacy.html">隐私政策</a>及《1988年隐私法》（联邦）收集和处理您的个人信息。使用我们的服务即表示您同意按该政策所述收集和使用您的信息。',
+      's12-h': '12. 知识产权',
+      's12-p1': '我们网站上的所有内容，包括文字、图片、标识和软件，均归 Dr. Bike Sydney 所有或获得授权使用。未经事先书面许可，您不得复制、传播或使用我们的内容。',
+      's13-h': '13. 网站使用',
+      's13-p1': '我们的网站旨在用于预约服务及获取有关 Dr. Bike Sydney 的信息。您同意不将本网站用于任何非法目的，或以任何可能损害、禁用、损坏网站或干扰其他用户的方式使用本网站。',
+      's14-h': '14. 条款变更',
+      's14-p1': '我们可能会不时更新本条款与条件。最新版本将始终发布在本页面。在任何变更后继续使用我们的服务，即表示您接受更新后的条款。我们将合理努力通过电子邮件通知您重大变更。',
+      's15-h': '15. 适用法律',
+      's15-p1': '本条款与条件受澳大利亚新南威尔士州法律管辖。因本条款引起的任何争议均受新南威尔士州法院的专属管辖。',
+      's16-h': '16. 服务保修',
+      's16-box': '<strong>3天保修期。</strong>如果我们维修的同一问题再次出现，请在服务后3天内联系我们，获得免费复检或全额退款。超过3天提出的申请不适用本政策。',
+      's16-p1': '本保修仅涵盖工艺质量，即我们技师所做调整和维修的质量。不单独涵盖零件，零件在安装前由我们的技师检查，并在技师离开前由您本人检查。',
+      's16-p2': '如果我们维修的同一问题再次出现：',
+      's16-li1': '请在服务后3天内通过WhatsApp联系<a href="tel:+61433963250">0433 963 250</a>，并提供问题的照片或证据。',
+      's16-li2': '我们将根据档期安排，在收到您的通知后7个工作日内免费上门为您修复。',
+      's16-p3': '本保修不涵盖：',
+      's16-li3': '与原服务项目无关的其他问题——如属此情况，我们会向您说明原因。',
+      's16-li4': '因服务后使用方式导致的问题（例如在基础保养后不久进行剧烈骑行）。在这种情况下，我们可能会为您提供 $15 的优惠检查上门服务，而非全额上门服务费。',
+      's16-p4': '我们的标准处理方式是免费上门复检。如果您希望获得退款而非复检，且在服务后3天内联系了我们，我们将提供全额退款。超过3天提出的申请不适用退款或免费复检。',
+      's16-p5': '本保修条款对所有订阅计划及付款方式一视同仁，且不限制您根据澳大利亚消费者法所享有的、依法不可通过合同排除的任何权利或保障。',
+      's17-h': '17. 服务交付',
+      's17-box': '<strong>15分钟到达窗口。</strong>技工将在您预约时间前后15分钟内到达。',
+      's17-p1': '我们在预约之间安排了缓冲时间，让技工有足够时间妥善完成上一项工作，而不是在连续服务之间匆忙赶场。',
+      's17-p2': '如果技工将要迟到，会尽快通过应用内聊天给您发消息。请在"个人资料"中开启通知，以便第一时间收到提醒。',
+      's17-p3': '预约时会显示每项服务的预计时长。实际所需时间可能因您自行车的状况以及上门期间商定的额外工作而有所不同。',
+      's18-h': '18. 联系我们',
+      's18-p1': '如对本条款与条件有任何疑问：',
+      's18-li1': '邮箱：<a href="mailto:contact@drbikesydney.com.au">contact@drbikesydney.com.au</a>',
+      's18-li2': '电话：<a href="tel:+61433963250">0433 963 250</a>',
+      's18-li3': '营业时间：周一至周日 上午7:00 - 晚上7:00（AEST）',
+      'footer-tag': '专业上门自行车服务。',
+      'footer-services-h': '服务',
+      'footer-svc1': '基础保养',
+      'footer-svc2': '标准服务',
+      'footer-svc3': '标准+服务',
+      'footer-svc4': '全面翻新',
+      'footer-svc5': '订阅服务',
+      'footer-company-h': '公司',
+      'footer-co1': '关于我们',
+      'footer-co2': '客户评价',
+      'footer-co3': '常见问题',
+      'footer-co4': '联系我们',
+      'footer-legal-h': '法律',
+      'footer-legal1': '条款与条件',
+      'footer-legal2': '隐私政策',
+      'footer-contact-h': '联系方式',
+      'footer-hours': '周一至周日：7 - 19时',
+      'footer-copyright': '&copy; 2026 Dr. Bike Sydney。保留所有权利。',
+      'footer-bottom-terms': '条款',
+      'footer-bottom-privacy': '隐私',
+    },
+  };
+
+  initLegalPage(dict);
+</script>
 
 </body>
 </html>

@@ -313,7 +313,7 @@ document.addEventListener('click', function (e) {
       markAllRead();
       break;
     case 'edit-contact':
-      editContact(d.id, d.firstName, d.lastName, d.phone, d.role);
+      editContact(d.id, d.firstName, d.lastName, d.phone, d.email, d.role);
       break;
     case 'delete-contact':
       deleteContact(d.id);
@@ -331,6 +331,7 @@ const titles = {
   clients: 'Clients',
   finance: 'Finance',
   zones: 'Zone Manager',
+  claims: 'Claims',
   settings: 'Settings',
   coupons: 'Discount Codes',
   reminders: 'Service Reminders',
@@ -349,6 +350,7 @@ const subs = {
   finance: 'Financial overview',
   analytics: 'Funnel · heatmap · LTV · margins',
   zones: 'Assign suburbs to each van',
+  claims: 'Warranty claims from clients - review evidence and resolve',
   settings: 'System settings',
   memberships: 'Active plans · Stripe subscriptions',
   inventory: 'Stock, internal cost and client price per part',
@@ -365,6 +367,7 @@ function go(page, btn) {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sb-overlay').classList.remove('open');
   if (page === 'zones') loadVanZones();
+  if (page === 'claims') loadClaims();
   if (page === 'finance') {
     const now = new Date();
     document.getElementById('fin-month').value = now.getMonth() + 1;
@@ -631,7 +634,103 @@ function setFinView(view, btn) {
   loadFinance();
 }
 
+// Weekly cash reconciliation: cash-paid completed jobs not yet handed over,
+// grouped per mechanic. Deliberately NOT filtered by the finance month picker -
+// unsettled cash is owed regardless of which period it was collected in.
+async function loadCashHandover() {
+  const el = document.getElementById('fin-cash');
+  if (!el) return;
+  const [{ data: rows, error }, { data: mechs }] = await Promise.all([
+    sb
+      .from('bookings')
+      .select(
+        'id,client_name,service_name,scheduled_date,final_charge_amount,tip_amount,mechanic_id,van_number'
+      )
+      .eq('status', 'completed')
+      .eq('final_charge_status', 'cash')
+      .is('cash_settled_at', null)
+      .order('scheduled_date', { ascending: true }),
+    sb.from('escalation_contacts').select('id,first_name,last_name'),
+  ]);
+  if (error) {
+    el.innerHTML = `<div style="color:var(--mgray);font-size:13px">Could not load cash data${/cash_settled_at/.test(error.message) ? ' - add the cash_settled_at column to bookings' : ': ' + esc(error.message)}</div>`;
+    return;
+  }
+  if (!rows || !rows.length) {
+    el.innerHTML =
+      '<div style="color:var(--mgray);font-size:13px">✓ No cash pending handover - all settled.</div>';
+    return;
+  }
+  const mechName = (id) => {
+    const m = (mechs || []).find((x) => x.id === id);
+    return m ? `${m.first_name} ${m.last_name}` : null;
+  };
+  const groups = {};
+  rows.forEach((b) => {
+    const key = b.mechanic_id || 'van' + (b.van_number || '?');
+    if (!groups[key])
+      groups[key] = {
+        name: mechName(b.mechanic_id) || 'Van ' + (b.van_number || '?'),
+        jobs: [],
+        total: 0,
+      };
+    groups[key].jobs.push(b);
+    groups[key].total += (b.final_charge_amount || 0) + (b.tip_amount || 0);
+  });
+  el.innerHTML = Object.entries(groups)
+    .map(
+      ([key, g]) => `
+    <div style="border:1px solid var(--border);border-left:3px solid #059669;border-radius:12px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(g.name)}</div>
+          <div style="font-size:12px;color:var(--mgray)">${g.jobs.length} cash job${g.jobs.length !== 1 ? 's' : ''} pending</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px;font-weight:800;color:#059669">$${g.total.toLocaleString()}</span>
+          <button data-cash-settle="${esc(key)}" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--mgray)">
+        ${g.jobs.map((j) => `${esc(j.scheduled_date || '')} · ${esc(j.client_name || 'Client')} · ${esc(j.service_name || '')} · $${((j.final_charge_amount || 0) + (j.tip_amount || 0)).toLocaleString()}`).join('<br>')}
+      </div>
+    </div>`
+    )
+    .join('');
+
+  el.querySelectorAll('[data-cash-settle]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const g = groups[btn.dataset.cashSettle];
+      if (!g) return;
+      if (
+        !confirm(
+          `Confirm ${g.name} handed over $${g.total.toLocaleString()} in cash (${g.jobs.length} jobs)?`
+        )
+      )
+        return;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      const { error: upErr } = await sb
+        .from('bookings')
+        .update({ cash_settled_at: new Date().toISOString() })
+        .in(
+          'id',
+          g.jobs.map((j) => j.id)
+        );
+      if (upErr) {
+        showToast('Could not settle: ' + upErr.message);
+        btn.disabled = false;
+        btn.textContent = 'Mark handed over';
+        return;
+      }
+      showToast('Cash handover recorded ✓');
+      loadCashHandover();
+    });
+  });
+}
+
 async function loadFinance() {
+  loadCashHandover();
   const month = parseInt(document.getElementById('fin-month')?.value || new Date().getMonth() + 1);
   const year = parseInt(document.getElementById('fin-year')?.value || new Date().getFullYear());
   const view = document.getElementById('fin-view')?.value || 'month';
@@ -1508,7 +1607,7 @@ function checkAdminAuth() {
     'position:fixed;inset:0;background:#0D1F3C;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-      <div style="width:56px;height:56px;background:#1848C8;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
+      <div style="width:56px;height:56px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
       <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" autocomplete="username"
@@ -1730,7 +1829,7 @@ function _showLoginCard(innerHtml) {
 }
 
 function _loginCardHeader() {
-  return '<div style="width:56px;height:56px;background:#1848C8;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
+  return '<div style="width:56px;height:56px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
 }
 
 const _inp =
@@ -2178,6 +2277,19 @@ async function confirmCancel() {
   document.getElementById('cancel-modal').style.display = 'none';
   applyBookingFilters();
   showToast('Booking cancelled');
+
+  if (upd[0]?.google_event_id) {
+    const { data: sess } = await sb.auth.getSession();
+    fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-delete-calendar-event',
+        access_token: sess?.session?.access_token,
+        event_id: upd[0].google_event_id,
+      }),
+    }).catch(() => {});
+  }
 }
 
 function openReassign(id) {
@@ -2572,7 +2684,7 @@ async function loadAnalytics() {
     sb
       .from('bookings')
       .select(
-        'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,profiles(full_name,email)'
+        'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,mechanic_accepted_at,time_to_book_seconds,profiles(full_name,email)'
       )
       .limit(5000),
     sb.from('services').select('name'),
@@ -2584,11 +2696,92 @@ async function loadAnalytics() {
   const all = data || [];
   _analyticsData = { all, catalog: catalog || [] };
 
+  renderTargetMetrics(all);
   renderFunnel(all);
   renderHeatmap(all);
   renderServicePopularity(all, catalog || []);
   renderMargins(all);
   renderLTV(all);
+}
+
+// Diego's KPI scorecard: the 3 targets that had no measurement anywhere before
+// (booking-flow completion time, mechanic response time, 6-month retention).
+// Each shows "No data yet" instead of a misleading 0/0% until real bookings
+// carry the new columns (time_to_book_seconds, mechanic_accepted_at) or the
+// business has enough history for the 6-month cohort to be non-empty.
+function renderTargetMetrics(all) {
+  const el = document.getElementById('an-targets');
+  if (!el) return;
+
+  // 1. Avg time to book (target: < 60s)
+  const withTiming = all.filter((b) => Number.isFinite(b.time_to_book_seconds));
+  const avgBookSec = withTiming.length
+    ? Math.round(withTiming.reduce((s, b) => s + b.time_to_book_seconds, 0) / withTiming.length)
+    : null;
+  const bookLabel =
+    avgBookSec === null
+      ? 'No data yet'
+      : avgBookSec < 60
+        ? `${avgBookSec}s`
+        : `${Math.floor(avgBookSec / 60)}m ${avgBookSec % 60}s`;
+  const bookOk = avgBookSec !== null && avgBookSec < 60;
+
+  // 2. Avg mechanic response time (target: < 5 min) - time from booking
+  // creation to a mechanic accepting it.
+  const withResponse = all.filter((b) => b.created_at && b.mechanic_accepted_at);
+  const avgResponseMin = withResponse.length
+    ? Math.round(
+        withResponse.reduce(
+          (s, b) => s + (new Date(b.mechanic_accepted_at) - new Date(b.created_at)) / 60000,
+          0
+        ) / withResponse.length
+      )
+    : null;
+  const responseLabel = avgResponseMin === null ? 'No data yet' : `${avgResponseMin} min`;
+  const responseOk = avgResponseMin !== null && avgResponseMin < 5;
+
+  // 3. 6-month retention: of clients with a completed booking 6-12 months ago
+  // (old enough to have had a full 6-month window to come back), what % have
+  // another completed booking in the last 6 months? No schema change needed -
+  // computed entirely from data already fetched for the rest of this page.
+  const completed = all.filter((b) => b.status === 'completed' && b.scheduled_date);
+  const now = new Date();
+  const sixMoAgo = new Date(now);
+  sixMoAgo.setMonth(sixMoAgo.getMonth() - 6);
+  const twelveMoAgo = new Date(now);
+  twelveMoAgo.setMonth(twelveMoAgo.getMonth() - 12);
+  const clientKey = (b) => b.client_id || b.client_email || b.profiles?.email;
+  const cohort = new Set();
+  completed.forEach((b) => {
+    const d = new Date(b.scheduled_date + 'T00:00:00');
+    if (d >= twelveMoAgo && d < sixMoAgo) cohort.add(clientKey(b));
+  });
+  const returned = new Set();
+  completed.forEach((b) => {
+    const key = clientKey(b);
+    if (!cohort.has(key)) return;
+    const d = new Date(b.scheduled_date + 'T00:00:00');
+    if (d >= sixMoAgo) returned.add(key);
+  });
+  const retention = cohort.size ? Math.round((returned.size / cohort.size) * 100) : null;
+  const retentionLabel = retention === null ? 'No data yet' : `${retention}%`;
+  const retentionOk = retention !== null && retention >= 40;
+
+  const cards = [
+    ['Avg time to book', bookLabel, 'Target: < 60s', bookOk],
+    ['Mechanic response time', responseLabel, 'Target: < 5 min', responseOk],
+    ['6-month retention', retentionLabel, 'Target: > 40%', retentionOk],
+  ];
+  el.innerHTML = cards
+    .map(([label, val, target, ok]) => {
+      const color = val === 'No data yet' ? 'var(--mgray)' : ok ? 'var(--green)' : 'var(--red)';
+      return `<div style="background:var(--off);border-radius:10px;padding:14px 16px">
+        <div style="font-size:11px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${label}</div>
+        <div style="font-size:22px;font-weight:800;color:${color}">${val}</div>
+        <div style="font-size:11px;color:var(--mgray);margin-top:2px">${target}</div>
+      </div>`;
+    })
+    .join('');
 }
 
 // Exports every Analytics section into one CSV - conversion funnel, service
@@ -3198,6 +3391,126 @@ if (chart)
     )
     .join('');
 
+// ── CLAIMS ────────────────────────────────────────────────────────────────────
+// Reads/updates go through /api/auth (service key server-side) because the
+// claims table has RLS with no public policies - the anon-key client used for
+// most other admin reads can't see it.
+const CLAIM_STATUS = {
+  new: { label: 'New', color: '#D97706', bg: '#FEF9C3' },
+  reviewing: { label: 'Reviewing', color: '#1848C8', bg: '#EEF3FC' },
+  resolved: { label: 'Resolved', color: '#059669', bg: '#ECFDF5' },
+  rejected: { label: 'Rejected', color: '#DC2626', bg: '#FEF2F2' },
+};
+
+async function loadClaims() {
+  const list = document.getElementById('claims-list');
+  if (!list) return;
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) {
+    list.innerHTML =
+      '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Admin session expired - sign in again</div>';
+    return;
+  }
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'admin-claims-list', access_token: session.access_token }),
+  });
+  const claims = resp.ok ? await resp.json() : null;
+  if (!claims) {
+    list.innerHTML =
+      '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Could not load claims - check that the claims table exists</div>';
+    return;
+  }
+  if (!claims.length) {
+    list.innerHTML =
+      '<div style="text-align:center;padding:48px;color:var(--mgray)"><div style="font-size:36px;margin-bottom:8px">📭</div><div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">No claims yet</div><div style="font-size:13px">Client warranty claims from /claims.html will appear here.</div></div>';
+    return;
+  }
+
+  list.innerHTML = claims
+    .map((c) => {
+      const st = CLAIM_STATUS[c.status] || CLAIM_STATUS.new;
+      const when = c.created_at
+        ? new Date(c.created_at).toLocaleDateString('en-AU', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          })
+        : '—';
+      const photos = (c.photo_urls || [])
+        .map(
+          (u) =>
+            `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--border)"></a>`
+        )
+        .join('');
+      const invoice = c.invoice_url
+        ? `<a href="${esc(c.invoice_url)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue);text-decoration:underline">View invoice screenshot</a>`
+        : '<span style="font-size:12px;color:var(--mgray)">No invoice attached</span>';
+      return `
+    <div style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${st.color};border-radius:12px;padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(c.client_name)}</div>
+          <div style="font-size:12px;color:var(--mgray)">${esc(c.client_email)}${c.phone ? ' · ' + esc(c.phone) : ''} · submitted ${when}${c.service_date ? ' · service on ' + esc(c.service_date) : ''}</div>
+        </div>
+        <span style="background:${st.bg};color:${st.color};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${st.label}</span>
+      </div>
+      <div style="font-size:13px;color:#374151;margin:10px 0;white-space:pre-wrap">${esc(c.description)}</div>
+      ${photos ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${photos}</div>` : ''}
+      <div style="margin-bottom:12px">${invoice}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select data-claim-status="${esc(c.id)}" class="inp" style="width:auto;padding:7px 10px;font-size:12px;cursor:pointer">
+          ${Object.entries(CLAIM_STATUS)
+            .map(
+              ([k, v]) =>
+                `<option value="${k}"${k === c.status ? ' selected' : ''}>${v.label}</option>`
+            )
+            .join('')}
+        </select>
+        <input data-claim-notes="${esc(c.id)}" class="inp" placeholder="Resolution notes" value="${esc(c.resolution_notes || '')}" style="flex:1;min-width:180px;padding:7px 10px;font-size:12px">
+        <button data-claim-save="${esc(c.id)}" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
+      </div>
+    </div>`;
+    })
+    .join('');
+
+  list.querySelectorAll('[data-claim-save]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.claimSave;
+      const status = list.querySelector(`[data-claim-status="${id}"]`).value;
+      const notes = list.querySelector(`[data-claim-notes="${id}"]`).value;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      const {
+        data: { session: s2 },
+      } = await sb.auth.getSession();
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'admin-claims-update',
+          access_token: s2?.access_token,
+          id,
+          status,
+          resolution_notes: notes,
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        showToast('Save failed: ' + (d.error || 'Unknown error'));
+        btn.disabled = false;
+        btn.textContent = 'Save';
+        return;
+      }
+      showToast('Claim updated ✓');
+      loadClaims();
+    });
+  });
+}
+
 // ── ESCALATION CONTACTS ───────────────────────────────────────────────────────
 async function loadContacts() {
   const { data } = await sb
@@ -3225,11 +3538,12 @@ async function loadContacts() {
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:600;color:var(--navy)">${c.first_name} ${c.last_name}</div>
           <div style="font-size:12px;color:var(--mgray)">${c.phone}</div>
+          ${c.email ? `<div style="font-size:12px;color:var(--mgray)">${c.email}</div>` : ''}
         </div>
         <span style="background:${roleBg[c.role] || '#F3F4F6'};color:${roleColors[c.role] || '#6B7280'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
       <div style="display:flex;gap:8px">
-        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
+        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
         <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`
@@ -3243,6 +3557,7 @@ function openContactModal() {
   document.getElementById('modal-fname').value = '';
   document.getElementById('modal-lname').value = '';
   document.getElementById('modal-phone').value = '';
+  document.getElementById('modal-email').value = '';
   document.getElementById('modal-role').value = 'mechanic';
   document.getElementById('contact-modal').style.display = 'flex';
 }
@@ -3251,12 +3566,13 @@ function closeContactModal() {
   document.getElementById('contact-modal').style.display = 'none';
 }
 
-function editContact(id, fname, lname, phone, role) {
+function editContact(id, fname, lname, phone, email, role) {
   document.getElementById('modal-title').textContent = 'Edit Contact';
   document.getElementById('modal-id').value = id;
   document.getElementById('modal-fname').value = fname;
   document.getElementById('modal-lname').value = lname;
   document.getElementById('modal-phone').value = phone;
+  document.getElementById('modal-email').value = email || '';
   document.getElementById('modal-role').value = role;
   document.getElementById('contact-modal').style.display = 'flex';
 }
@@ -3266,6 +3582,7 @@ async function saveContact() {
   const fname = document.getElementById('modal-fname').value.trim();
   const lname = document.getElementById('modal-lname').value.trim();
   const phone = document.getElementById('modal-phone').value.trim();
+  const email = document.getElementById('modal-email').value.trim();
   const role = document.getElementById('modal-role').value;
   if (!fname || !lname || !phone) {
     showToast('Please fill all fields');
@@ -3274,13 +3591,18 @@ async function saveContact() {
   if (id) {
     await sb
       .from('escalation_contacts')
-      .update({ first_name: fname, last_name: lname, phone, role })
+      .update({ first_name: fname, last_name: lname, phone, email: email || null, role })
       .eq('id', id);
     showToast('Contact updated ✓');
   } else {
-    await sb
-      .from('escalation_contacts')
-      .insert({ first_name: fname, last_name: lname, phone, role, active: true });
+    await sb.from('escalation_contacts').insert({
+      first_name: fname,
+      last_name: lname,
+      phone,
+      email: email || null,
+      role,
+      active: true,
+    });
     showToast('Contact added ✓');
   }
   closeContactModal();
@@ -4893,7 +5215,27 @@ async function initAdmin() {
     await restoreAdminSession();
     await loadDashboard();
     subscribeToBookings();
+    handleUrlParams();
   }
+}
+
+// Reads ?page= and ?calendar= set by the Google Calendar OAuth callback
+// redirect (see api/google-calendar-callback.js) - lands the admin back on
+// Settings with a clear success/error message instead of just the dashboard.
+function handleUrlParams() {
+  const params = new URLSearchParams(location.search);
+  const page = params.get('page');
+  const calendar = params.get('calendar');
+  if (page) go(page);
+  const statusEl = document.getElementById('gcal-status');
+  if (statusEl && calendar === 'connected') {
+    statusEl.textContent = '✓ Connected';
+    statusEl.style.color = '#059669';
+  } else if (statusEl && calendar === 'error') {
+    statusEl.textContent = '✗ Connection failed - try again';
+    statusEl.style.color = '#DC2626';
+  }
+  if (page || calendar) history.replaceState(null, '', location.pathname);
 }
 
 if (document.readyState === 'loading') {

@@ -73,6 +73,14 @@
       "destination": "/api/auth?role=mechanic"
     },
     {
+      "source": "/api/google-calendar-connect",
+      "destination": "/api/auth?role=google-calendar-connect"
+    },
+    {
+      "source": "/api/google-calendar-callback",
+      "destination": "/api/auth?role=google-calendar-callback"
+    },
+    {
       "source": "/track",
       "destination": "/track.html"
     },

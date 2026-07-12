@@ -10,6 +10,13 @@ import {
   clearLoginFailures,
   LOGIN_LOCK_MINUTES,
 } from './_security.js';
+import {
+  createCalendarEvent,
+  updateCalendarEvent,
+  deleteCalendarEvent,
+  isGoogleCalendarConfigured,
+  saveGoogleRefreshToken,
+} from './_google-calendar.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
@@ -116,6 +123,77 @@ function mechanicName(m) {
   return [m.first_name, m.last_name].filter(Boolean).join(' ').trim() || m.name || '';
 }
 
+// Convert Sydney local date+time to UTC Date (DST-aware). Same approach as
+// api/send-reminders.js's sydneyLocalToUtc - kept as a local copy since there's
+// no shared utils module for these two small files.
+function sydneyLocalToUtc(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return null;
+  const m = timeStr.trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const [hh, mm] = [parseInt(m[1], 10), parseInt(m[2], 10)];
+  const [Y, Mo, D] = dateStr.split('-').map(Number);
+  const probe = new Date(Date.UTC(Y, Mo - 1, D, hh, mm));
+  const part = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Australia/Sydney',
+    timeZoneName: 'shortOffset',
+  })
+    .formatToParts(probe)
+    .find((p) => p.type === 'timeZoneName');
+  const offset = part ? parseInt((part.value.match(/GMT([+-]\d{1,2})/) || [0, 10])[1], 10) : 10;
+  return new Date(Date.UTC(Y, Mo - 1, D, hh - offset, mm));
+}
+
+// Whole hours of notice between `nowMs` and the Sydney-local scheduled_date/time,
+// floored and clamped at 0 (never negative). Used to decide whether a client
+// cancellation qualifies for a refund per the 24h policy in terms.html section 6.
+export function hoursUntilAppointment(dateStr, timeStr, nowMs = Date.now()) {
+  const when = sydneyLocalToUtc(dateStr, timeStr);
+  if (!when) return 0;
+  return Math.max(0, Math.floor((when.getTime() - nowMs) / 3600000));
+}
+
+// NSW public holidays 2026 (source: nsw.gov.au / Fair Work Ombudsman, checked
+// 12 Jul 2026). Needs a new entry added each year - there's no API for this,
+// and a wrong date here means a Sunday-rate day silently charges normal price
+// or vice versa, so keep this list verified against an official source, not
+// guessed.
+const NSW_PUBLIC_HOLIDAYS_2026 = [
+  '2026-01-01', // New Year's Day
+  '2026-01-26', // Australia Day
+  '2026-04-03', // Good Friday
+  '2026-04-04', // Easter Saturday
+  '2026-04-05', // Easter Sunday
+  '2026-04-06', // Easter Monday
+  '2026-04-25', // Anzac Day
+  '2026-04-27', // Anzac Day additional public holiday
+  '2026-06-08', // King's Birthday
+  '2026-10-05', // Labour Day
+  '2026-12-25', // Christmas Day
+  '2026-12-26', // Boxing Day
+  '2026-12-28', // Boxing Day additional public holiday
+];
+
+// Diego's rule (confirmed): Sundays and NSW public holidays cost 20% more -
+// the standard AU trade "penalty rate" convention. Saturdays are normal price.
+export const SURCHARGE_MULTIPLIER = 1.2;
+
+export function isSurchargeDay(dateStr) {
+  const [Y, Mo, D] = String(dateStr || '')
+    .split('-')
+    .map(Number);
+  if (!Y || !Mo || !D) return false;
+  const dow = new Date(Y, Mo - 1, D).getDay(); // 0 = Sunday
+  if (dow === 0) return true;
+  return NSW_PUBLIC_HOLIDAYS_2026.includes(dateStr);
+}
+
+// Rounds to the nearest cent so $109 * 1.2 comes out as a clean $130.80, not a
+// floating-point remainder.
+export function applySurcharge(amount, dateStr) {
+  if (!isSurchargeDay(dateStr)) return amount;
+  return Math.round(amount * SURCHARGE_MULTIPLIER * 100) / 100;
+}
+
 // Privacy-safe display name for a client's review shown publicly (e.g. "Sarah M.")
 export function shortClientName(name) {
   const parts = String(name || '')
@@ -144,6 +222,27 @@ export function aggregateMechanicStats(jobs, { maxReviews = 8 } = {}) {
   return { jobs_completed: jobs.length, rating, reviews };
 }
 
+// Matches an address's suburb against van_zones. Returns the covering van_number,
+// or null if the address isn't in any configured zone - shared by the coverage
+// pre-check (handleCheckCoverage) and handleCreateBooking's own dispatch step,
+// so the two can never disagree about what counts as "covered".
+async function matchVanZone(sb, address) {
+  const { data: vz } = await sb.from('van_zones').select('van_number,suburb').neq('van_number', 0);
+  const addr = (address || '').toLowerCase();
+  const match = (vz || []).find((z) => z.suburb && addr.includes(String(z.suburb).toLowerCase()));
+  return match && Number(match.van_number) ? Number(match.van_number) : null;
+}
+
+// Lets the client check coverage before paying, so a client outside the service
+// area finds out at the address step instead of after being charged.
+async function handleCheckCoverage(req, res) {
+  const { address } = req.body || {};
+  if (!address) return res.status(400).json({ error: 'address required' });
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const vanNumber = await matchVanZone(sb, address);
+  return res.status(200).json({ covered: vanNumber !== null });
+}
+
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
@@ -162,6 +261,7 @@ async function handleCreateBooking(req, res) {
     utm_source,
     utm_medium,
     utm_campaign,
+    time_to_book_seconds,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!access_token) return res.status(401).json({ error: 'Sign in required' });
@@ -193,7 +293,10 @@ async function handleCreateBooking(req, res) {
     svc = r.data;
   }
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
-  const servicePrice = Number(svc.price);
+  // Sunday/NSW public holiday surcharge (+20%, confirmed with Diego) - applied
+  // to both components so the itemized quote stays honest line-by-line rather
+  // than a mystery lump surcharge.
+  const servicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
   // 3. Authoritative call-out fee (callout_zones by address, default $20)
   let calloutFee = 20;
@@ -205,18 +308,31 @@ async function handleCreateBooking(req, res) {
     );
     if (zone) calloutFee = Number(zone.callout_fee);
   } catch {}
+  calloutFee = applySurcharge(calloutFee, scheduled_date);
 
-  // 3b. Zone dispatch: assign the van whose zone covers the address suburb (default van 1)
-  let vanNumber = 1;
-  try {
-    const { data: vz } = await sb
-      .from('van_zones')
-      .select('van_number,suburb')
-      .neq('van_number', 0);
-    const addr = (address || '').toLowerCase();
-    const match = (vz || []).find((z) => z.suburb && addr.includes(String(z.suburb).toLowerCase()));
-    if (match && Number(match.van_number)) vanNumber = Number(match.van_number);
-  } catch {}
+  // 3b. Zone dispatch: reject bookings outside any configured coverage zone
+  // instead of silently defaulting to van 1 - previously this accepted (and
+  // charged) bookings no mechanic could actually reach. The admin test
+  // account keeps the van-1 fallback so test addresses don't have to match
+  // a real suburb.
+  let vanNumber = await matchVanZone(sb, address);
+  if (!vanNumber && isAdmin) vanNumber = 1;
+  if (!vanNumber) {
+    if (payment_intent_id) {
+      try {
+        await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+          payment_intent: payment_intent_id,
+        });
+      } catch (e) {
+        console.error('[create-booking] out-of-zone refund failed:', e.message);
+      }
+    }
+    return res.status(400).json({
+      error:
+        "Sorry, we don't currently service that address." +
+        (payment_intent_id ? ' Your payment has been refunded.' : ''),
+    });
+  }
 
   // 4. Verify payment (skipped for the admin test account)
   let verifiedPI = null;
@@ -277,6 +393,15 @@ async function handleCreateBooking(req, res) {
         utm_source: utm_source || null,
         utm_medium: utm_medium || null,
         utm_campaign: utm_campaign || null,
+        // Client-reported elapsed time, only trusted within a sane range - a
+        // bogus/manipulated value would just skew the "avg time to book" KPI,
+        // it's never used for pricing or access control.
+        time_to_book_seconds:
+          Number.isFinite(Number(time_to_book_seconds)) &&
+          Number(time_to_book_seconds) >= 0 &&
+          Number(time_to_book_seconds) <= 86400
+            ? Math.round(Number(time_to_book_seconds))
+            : null,
       },
     ])
     .select()
@@ -619,7 +744,7 @@ async function handleClientBookings(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const base =
-    'id,service_name,service_price,callout_fee,scheduled_date,scheduled_time,address,status,client_rating,client_review,tracking_token,mechanic_id,notes';
+    'id,service_name,service_price,callout_fee,scheduled_date,scheduled_time,address,status,client_rating,client_review,tracking_token,mechanic_id,notes,photo_before_url,photo_after_url';
   const hdrs = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
   const q = `client_id=eq.${client_id}&order=scheduled_date.desc&limit=100`;
   // Try with cancellation_reason; fall back if the column isn't there yet.
@@ -662,6 +787,7 @@ async function handleMechanicAccept(req, res) {
         status: 'confirmed',
         mechanic_id: mechanic.id,
         arrival_pin: arrivalPin,
+        mechanic_accepted_at: new Date().toISOString(),
       }),
     }
   );
@@ -673,7 +799,35 @@ async function handleMechanicAccept(req, res) {
   if (!Array.isArray(acceptedRows) || acceptedRows.length === 0) {
     return res.status(409).json({ error: 'This job was just taken by another mechanic' });
   }
+
+  // Calendar sync (fire-and-forget) - only does anything once Google Calendar
+  // is configured and connected; a no-op otherwise (see _google-calendar.js).
+  syncBookingToCalendar(acceptedRows[0], mechanic.email, SERVICE_KEY).catch((e) =>
+    console.error('[mechanic-accept] calendar sync failed:', e.message)
+  );
+
   return res.status(200).json({ ok: true, mechanic_name: mechanic.name });
+}
+
+async function syncBookingToCalendar(booking, mechanicEmail, SERVICE_KEY) {
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: svc } = await sb
+    .from('services')
+    .select('duration_max')
+    .eq('name', booking.service_name)
+    .maybeSingle();
+  const eventId = await createCalendarEvent({
+    scheduledDate: booking.scheduled_date,
+    scheduledTime: booking.scheduled_time,
+    durationMin: (svc?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN,
+    serviceName: booking.service_name,
+    address: booking.address,
+    clientName: booking.client_name,
+    mechanicEmail,
+  });
+  if (eventId) {
+    await sb.from('bookings').update({ google_event_id: eventId }).eq('id', booking.id);
+  }
 }
 
 async function handleMechanicReject(req, res) {
@@ -905,7 +1059,7 @@ async function handleClientCancel(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,scheduled_date,scheduled_time&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id,google_event_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -934,7 +1088,58 @@ async function handleClientCancel(req, res) {
   // Notify first person on waitlist for this slot (fire-and-forget)
   notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time).catch(() => {});
 
+  // Remove the mechanic's calendar event, if one was ever created (fire-and-forget)
+  if (bk.google_event_id) deleteCalendarEvent(bk.google_event_id).catch(() => {});
+
+  // Auto-refund the $20 callout fee for >=24h notice (per terms.html section 6),
+  // then tell Diego the outcome (fire-and-forget - never block the client's
+  // cancel response on this).
+  notifyAdminCancellation(bk).catch((e) =>
+    console.error('[client-cancel] refund/notify failed:', e.message)
+  );
+
   return res.status(200).json({ ok: true });
+}
+
+async function notifyAdminCancellation(bk) {
+  const hours = hoursUntilAppointment(bk.scheduled_date, bk.scheduled_time);
+  const eligibleForRefund = hours >= 24;
+
+  let refunded = false;
+  let refundAttempted = false;
+  if (eligibleForRefund && bk.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
+    refundAttempted = true;
+    try {
+      await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+        payment_intent: bk.stripe_payment_intent_id,
+      });
+      refunded = true;
+    } catch (e) {
+      console.error('[client-cancel] Stripe refund failed:', e.message);
+    }
+  }
+
+  const base = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'https://drbikesydney.com.au';
+  await fetch(`${base}/api/send-message?channel=whatsapp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to: '0433963250',
+      template: 'client_cancelled',
+      data: {
+        clientName: bk.client_name || 'Cliente',
+        service: bk.service_name || 'Servicio',
+        date: bk.scheduled_date,
+        time: bk.scheduled_time,
+        hours,
+        refund: eligibleForRefund,
+        refunded,
+        refundAttempted,
+      },
+    }),
+  });
 }
 
 async function notifyWaitlist(SERVICE_KEY, date, time) {
@@ -1104,7 +1309,7 @@ async function handleClientReschedule(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,google_event_id,service_name&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -1129,6 +1334,23 @@ async function handleClientReschedule(req, res) {
     }
   );
   if (!updateResp.ok) return res.status(500).json({ error: 'Failed to reschedule booking' });
+
+  if (bk.google_event_id) {
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+    sb.from('services')
+      .select('duration_max')
+      .eq('name', bk.service_name)
+      .maybeSingle()
+      .then(({ data: svc }) =>
+        updateCalendarEvent(bk.google_event_id, {
+          scheduledDate: scheduled_date,
+          scheduledTime: scheduled_time,
+          durationMin: (svc?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN,
+        })
+      )
+      .catch(() => {});
+  }
+
   return res.status(200).json({ ok: true });
 }
 
@@ -1273,7 +1495,38 @@ async function handleMechanicMessageSend(req, res) {
     }),
   });
   if (!resp.ok) return res.status(500).json({ error: 'Failed to send message' });
+
+  // Push-notify the client, if they've enabled notifications (fire-and-forget -
+  // a client with no push_subscription on file just gets a no-op 404 from
+  // send-push, which we don't need to react to here).
+  notifyClientOfMechanicMessage(booking_id, msg, SERVICE_KEY).catch(() => {});
+
   return res.status(200).json({ ok: true });
+}
+
+async function notifyClientOfMechanicMessage(bookingId, message, SERVICE_KEY) {
+  const bkResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=client_id,service_name&id=eq.${encodeURIComponent(bookingId)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const bkData = bkResp.ok ? await bkResp.json() : [];
+  const clientId = bkData?.[0]?.client_id;
+  if (!clientId) return;
+
+  const base = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'https://drbikesydney.com.au';
+  await fetch(`${base}/api/send-push`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      clientId,
+      title: `Message about your ${bkData[0].service_name || 'service'}`,
+      body: message.slice(0, 100),
+      url: '/index.html#tracking',
+      tag: 'mechanic-message',
+    }),
+  });
 }
 
 async function handlePublicTrack(req, res) {
@@ -1572,7 +1825,7 @@ const ALL_SLOTS = [
   '5:00 PM',
 ];
 
-function slotToMinutes(slot) {
+export function slotToMinutes(slot) {
   const m = slot.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if (!m) return -1;
   let h = parseInt(m[1], 10);
@@ -1582,30 +1835,88 @@ function slotToMinutes(slot) {
   return h * 60 + min;
 }
 
+// A van is occupied for longer than the slot it was booked in - long services can
+// run for hours. Every booking blocks its van for (service duration + this buffer),
+// so the next job always has a realistic gap instead of stacking back-to-back.
+export const SLOT_BUFFER_MIN = 30;
+// Used when a booking's service can't be matched in the services table (renamed/
+// deleted service, or a legacy row) - a full hour-slot is the safest assumption
+// given ALL_SLOTS itself is on 1-hour granularity.
+export const DEFAULT_SERVICE_DURATION_MIN = 60;
+
+// Turns each existing booking into a per-van busy window in minutes-since-midnight,
+// using that booking's own service duration (looked up by name) + the buffer.
+export function buildBusyIntervals(bookings, durationByService) {
+  return bookings
+    .filter((b) => b.scheduled_time && b.van_number)
+    .map((b) => {
+      const start = slotToMinutes(b.scheduled_time);
+      const dur = durationByService[b.service_name] ?? DEFAULT_SERVICE_DURATION_MIN;
+      return { van: b.van_number, start, end: start + dur + SLOT_BUFFER_MIN };
+    });
+}
+
+// A slot is bookable if AT LEAST ONE van has no busy interval overlapping the
+// full window the new booking would occupy (its own duration + buffer) - not
+// just a free slot at the start time, which is what the old van-count-only
+// check effectively assumed.
+export function computeAvailableSlots({
+  allSlots,
+  vans,
+  busyIntervals,
+  neededMin,
+  manualUnavailable,
+  isToday,
+  nowMin,
+}) {
+  return allSlots.map((time) => {
+    const slotMin = slotToMinutes(time);
+    const slotEnd = slotMin + neededMin;
+    let available = vans.some(
+      (van) => !busyIntervals.some((iv) => iv.van === van && slotMin < iv.end && iv.start < slotEnd)
+    );
+    if (manualUnavailable.has(time)) available = false;
+    if (isToday && slotMin < nowMin) available = false;
+    return { time, available };
+  });
+}
+
 async function handleGetAvailability(req, res) {
-  if (await guard(req, res, { rateMax: 120, rateWindow: 60000 })) return;
+  // Read-only query, no body - the client (js/supabase.js getAvailableSlots)
+  // has always sent a plain GET with ?date= in the query string. guard()
+  // defaults to requiring POST when no method is given, which made every
+  // real call 405 (see tests/unit/get-availability-method.test.js).
+  if (await guard(req, res, { method: 'GET', rateMax: 120, rateWindow: 60000 })) return;
   const date = req.query?.date;
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date))
     return res.status(400).json({ error: 'date required (YYYY-MM-DD)' });
+  const serviceId = req.query?.serviceId || null;
 
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const [{ data: bookings }, { data: overrides }, { data: vzrows }] = await Promise.all([
-    sb
-      .from('bookings')
-      .select('scheduled_time')
-      .eq('scheduled_date', date)
-      .in('status', ['pending', 'confirmed', 'enroute', 'in_progress', 'arrived']),
-    sb.from('availability').select('time_slot, available').eq('date', date),
-    sb.from('van_zones').select('van_number').neq('van_number', 0),
-  ]);
-  // Real capacity = number of vans in the fleet (a slot is full only when every van is booked).
-  const vanCount = Math.max(1, new Set((vzrows || []).map((r) => r.van_number)).size);
+  const [{ data: bookings }, { data: overrides }, { data: vzrows }, { data: services }] =
+    await Promise.all([
+      sb
+        .from('bookings')
+        .select('scheduled_time,van_number,service_name')
+        .eq('scheduled_date', date)
+        .in('status', ['pending', 'confirmed', 'enroute', 'in_progress', 'arrived']),
+      sb.from('availability').select('time_slot, available').eq('date', date),
+      sb.from('van_zones').select('van_number').neq('van_number', 0),
+      sb.from('services').select('id,name,duration_max'),
+    ]);
+  const vans = [...new Set((vzrows || []).map((r) => r.van_number))];
+  if (!vans.length) vans.push(1); // never advertise zero capacity if van_zones is misconfigured
 
-  const slotCount = {};
-  for (const b of bookings || []) {
-    if (b.scheduled_time) slotCount[b.scheduled_time] = (slotCount[b.scheduled_time] || 0) + 1;
+  const durationByService = {};
+  for (const s of services || []) {
+    if (s.name) durationByService[s.name] = s.duration_max || DEFAULT_SERVICE_DURATION_MIN;
   }
+  const requestedService = (services || []).find((s) => String(s.id) === String(serviceId));
+  const neededMin =
+    (requestedService?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+
+  const busyIntervals = buildBusyIntervals(bookings || [], durationByService);
   const manualUnavailable = new Set(
     (overrides || []).filter((r) => !r.available).map((r) => r.time_slot)
   );
@@ -1617,16 +1928,206 @@ async function handleGetAvailability(req, res) {
   const isToday = date === todayStr;
   const nowMin = nowSydney.getHours() * 60 + nowSydney.getMinutes() + 120;
 
-  const slots = ALL_SLOTS.map((time) => {
-    let available = true;
-    if ((slotCount[time] || 0) >= vanCount) available = false;
-    if (manualUnavailable.has(time)) available = false;
-    if (isToday && slotToMinutes(time) < nowMin) available = false;
-    return { time, available };
+  const slots = computeAvailableSlots({
+    allSlots: ALL_SLOTS,
+    vans,
+    busyIntervals,
+    neededMin,
+    manualUnavailable,
+    isToday,
+    nowMin,
   });
 
   res.setHeader('Cache-Control', 'no-store, no-cache');
   return res.status(200).json(slots);
+}
+
+// ── Google Calendar OAuth (see api/_google-calendar.js) ─────────────────────────
+// Both roles are reached via vercel.json rewrites (/api/google-calendar-connect,
+// /api/google-calendar-callback) rather than their own files, to stay under
+// Vercel's Hobby-plan 12-serverless-function limit - adding 2 more standalone
+// route files pushed this project's deployment over that cap.
+async function handleGoogleCalendarConnect(req, res) {
+  if (!isGoogleCalendarConfigured()) {
+    return res
+      .status(503)
+      .send('Google Calendar is not configured yet (missing Client ID/Secret).');
+  }
+  const redirectUri = `https://${req.headers.host}/api/google-calendar-callback`;
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    access_type: 'offline',
+    prompt: 'consent', // forces a refresh_token even if this account connected before
+    scope: 'https://www.googleapis.com/auth/calendar',
+  });
+  res.writeHead(302, { Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
+  return res.end();
+}
+
+async function handleGoogleCalendarCallback(req, res) {
+  const code = req.query?.code;
+  const err = req.query?.error;
+  if (err || !code || !isGoogleCalendarConfigured()) {
+    res.writeHead(302, { Location: '/admin.html?page=settings&calendar=error' });
+    return res.end();
+  }
+  try {
+    const redirectUri = `https://${req.headers.host}/api/google-calendar-callback`;
+    const resp = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.refresh_token) {
+      console.error('[google-calendar-callback] token exchange failed:', data);
+      res.writeHead(302, { Location: '/admin.html?page=settings&calendar=error' });
+      return res.end();
+    }
+    await saveGoogleRefreshToken(data.refresh_token);
+    res.writeHead(302, { Location: '/admin.html?page=settings&calendar=connected' });
+    return res.end();
+  } catch (e) {
+    console.error('[google-calendar-callback] error:', e.message);
+    res.writeHead(302, { Location: '/admin.html?page=settings&calendar=error' });
+    return res.end();
+  }
+}
+
+// The VAPID public key is safe to expose (it's the whole point of the
+// public/private keypair) but has no other way to reach a no-build-step
+// static client, so it's served from here rather than hardcoded in js/app.js.
+async function handleVapidPublicKey(req, res) {
+  return res.status(200).json({ key: process.env.VAPID_PUBLIC_KEY || null });
+}
+
+// ── Claims (warranty/complaint reports) ─────────────────────────────────────
+// Public submit endpoint + admin-only list/update. The claims table has RLS
+// with no public policies - everything goes through here with the service key,
+// same pattern as the admin services CRUD below.
+async function handleSubmitClaim(req, res) {
+  const { name, email, phone, service_date, description, invoice_base64, photos_base64 } =
+    req.body || {};
+  const cleanName = String(name || '').trim();
+  const cleanEmail = String(email || '')
+    .trim()
+    .toLowerCase();
+  const cleanDesc = String(description || '')
+    .trim()
+    .slice(0, 2000);
+  if (!cleanName || !cleanDesc)
+    return res.status(400).json({ error: 'Name and description are required' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail))
+    return res.status(400).json({ error: 'A valid email is required' });
+  if (service_date && !/^\d{4}-\d{2}-\d{2}$/.test(service_date))
+    return res.status(400).json({ error: 'Invalid service date' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const ts = Date.now();
+
+  // Photos arrive as client-side-compressed base64 JPEGs (claims.html caps
+  // them at 1280px), max 3 + optional invoice screenshot, each <= ~1.5MB
+  // decoded so the whole request stays under Vercel's body limit.
+  async function uploadB64(b64, label, idx) {
+    try {
+      const data = String(b64).replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(data, 'base64');
+      if (buffer.length > 1_500_000) return null;
+      const path = `claims/${ts}/${label}_${idx}.jpg`;
+      const up = await fetch(`${SUPABASE_URL}/storage/v1/object/job-photos/${path}`, {
+        method: 'POST',
+        headers: {
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          'Content-Type': 'image/jpeg',
+          'x-upsert': 'true',
+        },
+        body: buffer,
+      });
+      return up.ok ? `${SUPABASE_URL}/storage/v1/object/public/job-photos/${path}` : null;
+    } catch {
+      return null;
+    }
+  }
+
+  const photoUrls = [];
+  for (const [i, p] of (Array.isArray(photos_base64) ? photos_base64.slice(0, 3) : []).entries()) {
+    const url = await uploadB64(p, 'photo', i);
+    if (url) photoUrls.push(url);
+  }
+  const invoiceUrl = invoice_base64 ? await uploadB64(invoice_base64, 'invoice', 0) : null;
+
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: claim, error } = await sb
+    .from('claims')
+    .insert({
+      client_name: cleanName,
+      client_email: cleanEmail,
+      phone: String(phone || '').trim() || null,
+      service_date: service_date || null,
+      description: cleanDesc,
+      photo_urls: photoUrls,
+      invoice_url: invoiceUrl,
+      status: 'new',
+    })
+    .select()
+    .single();
+  if (error) return res.status(500).json({ error: 'Could not submit claim: ' + error.message });
+
+  // Heads-up email to Diego (fire-and-forget, same direct-Resend pattern as
+  // notifyWaitlist) so a claim never sits unseen until he opens Admin.
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  if (RESEND_KEY) {
+    fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
+        to: ['peredo.dm@gmail.com'],
+        subject: `New claim from ${cleanName}`,
+        html: `<p><strong>${cleanName}</strong> (${cleanEmail}) submitted a claim${service_date ? ` for a service on ${service_date}` : ''}.</p><p>${cleanDesc.replace(/</g, '&lt;')}</p><p>Review it in <a href="https://drbikesydney.com.au/admin.html">Admin &gt; Claims</a>.</p>`,
+      }),
+    }).catch(() => {});
+  }
+
+  return res.status(200).json({ ok: true, id: claim.id });
+}
+
+async function handleAdminClaimsList(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const { data, error } = await auth.sb
+    .from('claims')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json(data || []);
+}
+
+async function handleAdminClaimsUpdate(req, res) {
+  const { access_token, id, status, resolution_notes } = req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!id) return res.status(400).json({ error: 'id required' });
+  if (!['new', 'reviewing', 'resolved', 'rejected'].includes(status))
+    return res.status(400).json({ error: 'Invalid status' });
+  const { error } = await auth.sb
+    .from('claims')
+    .update({ status, resolution_notes: String(resolution_notes || '').slice(0, 2000) || null })
+    .eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ ok: true });
 }
 
 // ── Admin: Services CRUD (server-authoritative, bypasses RLS via service key) ──
@@ -1641,6 +2142,20 @@ async function verifyAdminSession(access_token, SERVICE_KEY) {
   } = await sb.auth.getUser(access_token);
   if (uErr || !user) return { error: 'Invalid session', status: 401 };
   return { sb, user };
+}
+
+// Cleans up a booking's synced calendar event after an admin-side cancel
+// (admin.js's confirmCancel() cancels the booking directly via the browser
+// Supabase client, so this is the one server hop needed to reach the Google
+// Calendar credentials, which must never be exposed client-side).
+async function handleAdminDeleteCalendarEvent(req, res) {
+  const { access_token, event_id } = req.body;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!event_id) return res.status(400).json({ error: 'event_id required' });
+  const ok = await deleteCalendarEvent(event_id);
+  return res.status(200).json({ ok });
 }
 
 async function handleAdminServicesSave(req, res) {
@@ -1690,6 +2205,9 @@ async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';
 
   if (role === 'get-availability') return handleGetAvailability(req, res);
+  if (role === 'google-calendar-connect') return handleGoogleCalendarConnect(req, res);
+  if (role === 'google-calendar-callback') return handleGoogleCalendarCallback(req, res);
+  if (role === 'vapid-public-key') return handleVapidPublicKey(req, res);
 
   const rateMax = role.startsWith('mechanic-')
     ? 30
@@ -1702,6 +2220,7 @@ async function handler(req, res) {
           role === 'join-waitlist' ||
           role === 'apply-referral' ||
           role === 'create-booking' ||
+          role === 'check-coverage' ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -1734,7 +2253,12 @@ async function handler(req, res) {
   if (role === 'client-history') return handleClientHistory(req, res);
   if (role === 'client-bookings') return handleClientBookings(req, res);
   if (role === 'create-booking') return handleCreateBooking(req, res);
+  if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
+  if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
+  if (role === 'submit-claim') return handleSubmitClaim(req, res);
+  if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
+  if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   return handleAdmin(req, res);
 }

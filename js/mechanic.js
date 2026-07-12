@@ -1033,6 +1033,17 @@ function openCompleteModal(id) {
           <button data-action="clear-sig" style="font-size:11px;color:#6B7280;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--sans)">Clear signature</button>
         </div>
         <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
+          <div style="display:flex;gap:8px">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
+              <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:#1848C8"> 💳 Card (EFTPOS)
+            </label>
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
+              <input type="radio" name="pay-method" value="cash" style="accent-color:#059669"> 💵 Cash
+            </label>
+          </div>
+        </div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button data-action="close-complete-modal" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--sans);cursor:pointer;font-size:13px;color:var(--navy)">Cancel</button>
           <button data-action="submit-complete" data-id="${id}" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">💳 Marcar como cobrado (EFTPOS) y completar</button>
@@ -1542,7 +1553,8 @@ async function submitComplete(id) {
       },
       final_charge_amount: breakdown ? breakdown.chargeNow : null,
       tip_amount: breakdown?.tip || 0,
-      final_charge_status: 'charged_manual',
+      final_charge_status:
+        document.querySelector('input[name="pay-method"]:checked')?.value || 'charged_manual',
       photo_before_url: photoBeforeUrl || null,
       photo_after_url: photoAfterUrl || null,
       client_signature_url: signature || null,

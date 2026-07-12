@@ -1,43 +1,38 @@
-// ── Surge & Early Bird Pricing ─────────────────────────────────────────────
-const AU_PUBLIC_HOLIDAYS_2026 = [
-  '2026-01-01',
-  '2026-01-26',
-  '2026-04-03',
-  '2026-04-04',
-  '2026-04-05',
-  '2026-04-06',
-  '2026-04-25',
-  '2026-06-08',
-  '2026-08-03',
-  '2026-10-05',
-  '2026-12-25',
-  '2026-12-26',
-  '2026-12-28',
+// ── Sunday / NSW public holiday surcharge (+20%) ────────────────────────────
+// Display-side mirror of the authoritative copy in api/auth.js (isSurchargeDay
+// / applySurcharge) - the server recomputes both prices in handleCreateBooking
+// and verifies the Stripe charge against ITS number, so these two lists must
+// stay in sync or Sunday/holiday payments will be rejected as amount mismatch.
+// Saturday is deliberately normal price (Diego's rule, 12 Jul 2026).
+const NSW_PUBLIC_HOLIDAYS_2026 = [
+  '2026-01-01', // New Year's Day
+  '2026-01-26', // Australia Day
+  '2026-04-03', // Good Friday
+  '2026-04-04', // Easter Saturday
+  '2026-04-05', // Easter Sunday
+  '2026-04-06', // Easter Monday
+  '2026-04-25', // Anzac Day
+  '2026-04-27', // Anzac Day additional public holiday
+  '2026-06-08', // King's Birthday
+  '2026-10-05', // Labour Day
+  '2026-12-25', // Christmas Day
+  '2026-12-26', // Boxing Day
+  '2026-12-28', // Boxing Day additional public holiday
 ];
+const SURCHARGE_MULTIPLIER = 1.2;
 
-function getSurcharge(dateStr) {
-  // dateStr: 'YYYY-MM-DD'
-  if (!dateStr) return { surge: 0, earlyBird: 0, label: '' };
-  const d = new Date(dateStr + 'T12:00:00');
-  const day = d.getDay(); // 0=Sun,6=Sat
-  const isWeekend = day === 0 || day === 6;
-  const isHoliday = AU_PUBLIC_HOLIDAYS_2026.includes(dateStr);
-  const surge = isWeekend || isHoliday ? 15 : 0;
-  // Early bird: booking made 48h+ before scheduled date
-  const now = new Date();
-  const scheduled = new Date(dateStr + 'T08:00:00');
-  const hoursAhead = (scheduled - now) / 36e5;
-  const earlyBird = hoursAhead >= 48 ? -10 : 0;
-  const labels = [];
-  if (isHoliday) labels.push('Public holiday surcharge +$15');
-  else if (isWeekend) labels.push('Weekend surcharge +$15');
-  if (earlyBird) labels.push('Early bird discount -$10');
-  return { surge, earlyBird, label: labels.join(' · ') };
+function isSurchargeDay(dateStr) {
+  const [Y, Mo, D] = String(dateStr || '')
+    .split('-')
+    .map(Number);
+  if (!Y || !Mo || !D) return false;
+  if (new Date(Y, Mo - 1, D).getDay() === 0) return true; // Sunday
+  return NSW_PUBLIC_HOLIDAYS_2026.includes(dateStr);
 }
 
-function applyPricingAdjustments(basePrice, dateStr) {
-  const { surge, earlyBird, label } = getSurcharge(dateStr);
-  return { total: basePrice + surge + earlyBird, surge, earlyBird, label };
+function applySurcharge(amount, dateStr) {
+  if (!isSurchargeDay(dateStr)) return amount;
+  return Math.round(amount * SURCHARGE_MULTIPLIER * 100) / 100;
 }
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -248,7 +243,7 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Fully booked on this date</div>' +
       '<div style="font-size:13px;color:#6B7280">Please choose another day or join the waitlist</div></div>' +
       '<button id="waitlist-btn" style="width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">' +
-      'Join Waitlist for ' +
+      '<span>Join Waitlist for</span> ' +
       date +
       '</button>' +
       '<div id="waitlist-form" style="display:none;margin-top:14px;background:#F8FAFF;border:1px solid #DBEAFE;border-radius:10px;padding:16px">' +
@@ -314,9 +309,9 @@ async function loadTimeSlots(screen, date, serviceId) {
           '<div style="text-align:center;padding:8px 0">' +
           '<div style="font-size:22px;margin-bottom:8px">✅</div>' +
           '<div style="font-weight:700;color:#059669;font-size:14px">You\'re on the waitlist!</div>' +
-          '<div style="font-size:13px;color:#6B7280;margin-top:4px">We\'ll email ' +
+          '<div style="font-size:13px;color:#6B7280;margin-top:4px"><span>We\'ll email</span> ' +
           user.email +
-          ' if a slot opens up on ' +
+          ' <span>if a slot opens up on</span> ' +
           date +
           '.</div>' +
           '</div>';
@@ -383,6 +378,7 @@ async function renderBookService() {
   if (!screen) return;
   if (window.gtag) gtag('event', 'begin_checkout');
   if (window.fbq) fbq('track', 'InitiateCheckout');
+  sessionStorage.setItem('drbike-booking-start', String(Date.now()));
   if (!window.appState.location) window.appState.location = 'Home';
   window.appState.bikeId = null;
 
@@ -819,8 +815,32 @@ async function renderBookService() {
       renderStep2();
     });
 
-    screen.querySelector('#s3-continue').addEventListener('click', () => {
-      window.appState.location = input.value.trim() || 'Home';
+    screen.querySelector('#s3-continue').addEventListener('click', async () => {
+      const addr = input.value.trim() || 'Home';
+      window.appState.location = addr;
+      const btn = screen.querySelector('#s3-continue');
+      btn.textContent = 'Checking address...';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'check-coverage', address: addr }),
+        });
+        const data = res.ok ? await res.json() : { covered: true };
+        if (data.covered === false) {
+          showToast(
+            "Sorry, we don't currently service that address. Try a different address or contact us.",
+            'error'
+          );
+          btn.textContent = 'Continue to Summary';
+          btn.disabled = false;
+          return;
+        }
+      } catch {
+        // Coverage check failed (network) - don't block booking on it, the
+        // server re-checks authoritatively in create-booking anyway.
+      }
       if (window.gtag) gtag('event', 'checkout_progress', { step: 2 });
       router.navigate('service-summary');
     });
@@ -898,9 +918,9 @@ async function renderServiceSummary() {
   if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'quote_summary' });
 
-  const adj = applyPricingAdjustments(Number(service.price || 0), date);
-  const serviceTotal = adj.total;
-  const calloutFee = await getCalloutFee(location);
+  const surcharged = isSurchargeDay(date);
+  const serviceTotal = applySurcharge(Number(service.price || 0), date);
+  const calloutFee = applySurcharge(await getCalloutFee(location), date);
   const grandTotal = serviceTotal + calloutFee;
   const inclusions = getServiceInclusions(service.name);
   const dur = formatServiceDuration(service);
@@ -943,7 +963,7 @@ async function renderServiceSummary() {
           : ''
       }
 
-      ${adj.label ? `<div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--color-text-secondary);margin-bottom:14px">${adj.label}</div>` : ''}
+      ${surcharged ? `<div style="background:#FEF9EE;border:1px solid #FDE9C8;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
       <!-- Pricing breakdown -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
@@ -1111,7 +1131,9 @@ async function renderPayment() {
     return;
   }
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'payment' });
-  const calloutFee = await getCalloutFee(location);
+  // Surcharge must match what handleCreateBooking will verify against Stripe -
+  // an unsurcharged charge on a Sunday/holiday gets rejected as amount mismatch.
+  const calloutFee = applySurcharge(await getCalloutFee(location), date);
 
   const {
     data: { user: currentUser },
@@ -1135,26 +1157,27 @@ async function renderPayment() {
         </div>
       </div>
 
-      <div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:16px;padding:28px 20px;margin-bottom:24px;text-align:center">
-        <div style="width:52px;height:52px;background:#FEF3C7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-        </div>
-        <div style="font-weight:800;color:#0D1F3C;font-size:17px;margin-bottom:8px">Online payments coming soon</div>
-        <div style="font-size:13px;color:#6B7280;line-height:1.6">We're finalising our business setup. Contact us directly to lock in your slot at the same price.</div>
+      <div id="payment-request-btn" style="margin-bottom:12px" hidden></div>
+      <div class="payment-divider" id="card-divider" hidden><span>or pay by card</span></div>
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">Card details</div>
+        <div id="card-element" class="card-element"></div>
       </div>
+      <div id="payment-error" class="booking-error" hidden style="margin-bottom:12px"></div>
+      <div class="payment-security" style="margin-bottom:16px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span>Secure payment powered by Stripe. Encrypted and safe.</span>
+      </div>
+      <button class="btn btn--primary btn--full" id="pay-btn">Pay $${calloutFee.toFixed(2)} Call-out Fee</button>
 
-      <a href="https://wa.me/61433963250?text=${waText}"
-         style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;background:#25D366;color:#fff;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:10px;box-sizing:border-box">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-        Book via WhatsApp
-      </a>
-      <a href="tel:+61433963250"
-         style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;background:#fff;color:#2563EB;border:2px solid #2563EB;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;box-sizing:border-box">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        Call 0433 963 250
-      </a>
+      <div style="text-align:center;margin-top:16px;font-size:12px;color:#9CA3AF">
+        Prefer to book manually?
+        <a href="https://wa.me/61433963250?text=${waText}" style="color:#2563EB;font-weight:600">WhatsApp us</a>
+        or
+        <a href="tel:+61433963250" style="color:#2563EB;font-weight:600">call 0433 963 250</a>
+      </div>
     </div>
     ${
       isTestAdmin
@@ -1202,10 +1225,15 @@ async function renderPayment() {
         utm_source: sessionStorage.getItem('utm_source') || null,
         utm_medium: sessionStorage.getItem('utm_medium') || null,
         utm_campaign: sessionStorage.getItem('utm_campaign') || null,
+        time_to_book_seconds: (() => {
+          const start = parseInt(sessionStorage.getItem('drbike-booking-start'), 10);
+          return Number.isFinite(start) ? Math.round((Date.now() - start) / 1000) : null;
+        })(),
       }),
     });
     const _bk = await resp.json();
     if (!resp.ok) throw new Error(_bk.error || 'Could not create booking');
+    sessionStorage.removeItem('drbike-booking-start');
     const booking = { id: _bk.id, tracking_token: _bk.tracking_token };
     window.appState.bookingId = booking.id;
     window.appState.trackingToken = booking.tracking_token || null;
@@ -1223,7 +1251,7 @@ async function renderPayment() {
         service: service?.name || 'Service',
       });
     const _bId = booking.id;
-    const _total = fee + service.price;
+    const _total = fee + applySurcharge(Number(service.price || 0), date);
     Promise.allSettled([
       fetch('/api/send-message?channel=whatsapp', {
         method: 'POST',
@@ -1278,6 +1306,59 @@ async function renderPayment() {
     );
     router.navigate('tracking');
   }
+
+  await createPaymentForm('card-element');
+
+  const getPayingEmail = async () => {
+    const {
+      data: { user: payingUser },
+    } = await sb.auth.getUser();
+    return payingUser?.email || 'guest@drbikesydney.com.au';
+  };
+
+  // Guards against double-charging if a payment somehow completes twice
+  // (e.g. the Payment Request Button fires, then the card form is also
+  // submitted) - the second call reuses the first PaymentIntent instead of
+  // charging again.
+  let paidIntent = null;
+  async function chargeOnce(paymentMethodId) {
+    if (paidIntent) return paidIntent;
+    const email = await getPayingEmail();
+    paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId);
+    return paidIntent;
+  }
+
+  const prSupported = await createPaymentRequestButton('payment-request-btn', {
+    amountCents: Math.round(calloutFee * 100),
+    label: 'Dr. Bike Sydney - Call-out fee',
+    onPayment: async (paymentMethodId) => {
+      const pi = await chargeOnce(paymentMethodId);
+      await finalizeBooking(pi, { isTest: false });
+    },
+  });
+  if (prSupported) {
+    screen.querySelector('#payment-request-btn').hidden = false;
+    screen.querySelector('#card-divider').hidden = false;
+  }
+
+  screen.querySelector('#pay-btn').addEventListener('click', async () => {
+    const btn = screen.querySelector('#pay-btn');
+    const errEl = screen.querySelector('#payment-error');
+    btn.disabled = true;
+    btn.textContent = 'Processing payment...';
+    errEl.hidden = true;
+    try {
+      const paymentIntent = await chargeOnce();
+      await finalizeBooking(paymentIntent, { isTest: false });
+    } catch (e) {
+      errEl.textContent = paidIntent
+        ? 'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
+        : e.message || 'Payment failed. Please check your card details and try again.';
+      errEl.hidden = false;
+      btn.disabled = false;
+      btn.textContent = `Pay $${calloutFee.toFixed(2)} Call-out Fee`;
+    }
+  });
 
   if (isTestAdmin) {
     screen.querySelector('#test-booking-btn')?.addEventListener('click', async () => {
@@ -2557,6 +2638,32 @@ async function renderMyBookings() {
               <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Call-out fee</span><span style="font-weight:600;color:#0F172A">$${booking.callout_fee ?? 20}</span></div>
             </div>
             ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#DC2626;margin-bottom:4px">Cancellation reason</div><div style="font-size:14px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
+            ${
+              booking.status === 'completed' &&
+              (booking.photo_before_url || booking.photo_after_url)
+                ? `<div style="margin-bottom:16px">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#6B7280;margin-bottom:8px">Photos</div>
+                    <div style="display:flex;gap:8px">
+                      ${
+                        booking.photo_before_url
+                          ? `<a href="${booking.photo_before_url}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
+                              <img src="${booking.photo_before_url}" alt="Before" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
+                              <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">Before</div>
+                            </a>`
+                          : ''
+                      }
+                      ${
+                        booking.photo_after_url
+                          ? `<a href="${booking.photo_after_url}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
+                              <img src="${booking.photo_after_url}" alt="After" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
+                              <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">After</div>
+                            </a>`
+                          : ''
+                      }
+                    </div>
+                  </div>`
+                : ''
+            }
             <div style="display:flex;flex-direction:column;gap:8px">
               ${booking.status === 'completed' ? '<button id="book-again-btn" class="btn btn--primary btn--full">↻ Book Again</button>' : ''}
               ${booking.status === 'enroute' || booking.status === 'en_route' || booking.status === 'in_progress' ? '<button id="track-live-btn" class="btn btn--primary btn--full">Track Live</button>' : ''}
@@ -2794,6 +2901,58 @@ async function renderMyBookings() {
   });
 }
 
+// Converts the VAPID public key (base64url, from the server) into the raw byte
+// array format pushManager.subscribe() expects.
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+// Requests notification permission, subscribes via the service worker's push
+// manager, and saves the subscription on the client's profile so
+// notifyClientOfMechanicMessage (api/auth.js) can reach them.
+async function enablePushNotifications() {
+  if (
+    !('Notification' in window) ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
+    showToast('Push notifications are not supported on this browser', 'error');
+    return;
+  }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      showToast('Notification permission was not granted', 'error');
+      return;
+    }
+    const keyResp = await fetch('/api/auth?role=vapid-public-key');
+    const { key } = await keyResp.json();
+    if (!key) {
+      showToast('Notifications are not set up yet - try again later', 'error');
+      return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(key),
+    });
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    if (!user) return;
+    await sb
+      .from('profiles')
+      .update({ push_subscription: JSON.stringify(sub) })
+      .eq('id', user.id);
+    showToast('Notifications enabled!', 'success');
+  } catch (e) {
+    showToast('Could not enable notifications: ' + e.message, 'error');
+  }
+}
+
 // ── Profile + Referral ────────────────────────────────────────────────
 async function renderProfile() {
   const screen = document.querySelector('[data-screen="profile"]');
@@ -2867,7 +3026,7 @@ async function renderProfile() {
           <span style="font-size:26px">${riderTier.emoji}</span>
           <div>
             <div style="font-size:14px;font-weight:700;color:#0D1F3C">${riderTier.label}</div>
-            <div style="font-size:12px;color:#6B7280">${completedJobs} service${completedJobs === 1 ? '' : 's'} completed</div>
+            <div style="font-size:12px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
           </div>
         </div>
         ${
@@ -2875,8 +3034,8 @@ async function renderProfile() {
             ? `<div style="height:6px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:6px">
                  <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px"></div>
                </div>
-               <div style="font-size:12px;color:#6B7280">${riderTier.nextAt - completedJobs} more service${riderTier.nextAt - completedJobs === 1 ? '' : 's'} to reach ${riderTier.nextLabel}</div>`
-            : `<div style="font-size:12px;color:#6B7280">You've reached our highest tier — thank you for riding with us!</div>`
+               <div style="font-size:12px;color:#6B7280"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
+            : `<div style="font-size:12px;color:#6B7280">You've reached our highest tier - thank you for riding with us!</div>`
         }
       </div>
 
@@ -2886,7 +3045,7 @@ async function renderProfile() {
         <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:16px">You and your friend each get $15 off</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Copy code</button>
-          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px">📱 Share</a>
+          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px"><span aria-hidden="true">📱</span><span>Share</span></a>
         </div>
       </div>
 
@@ -2925,7 +3084,7 @@ async function renderProfile() {
               return `<div style="margin-bottom:20px">
           <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:#fff;margin-bottom:10px">
             <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Membership</div>
-            <div style="font-size:20px;font-weight:800">${planLabel} Plan</div>
+            <div style="font-size:20px;font-weight:800"><span>${planLabel}</span> <span>Plan</span></div>
             <div style="margin-top:8px">${statusBadge}</div>
           </div>
           <div style="display:flex;gap:8px">
@@ -2949,6 +3108,21 @@ async function renderProfile() {
         </div>
       </div>
 
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
+          <div style="min-width:0">
+            <div style="font-size:14px;font-weight:600;color:#0F172A">Mechanic messages</div>
+            <div style="font-size:12px;color:#6B7280;margin-top:2px">Get a phone alert when your mechanic messages you</div>
+          </div>
+          ${
+            typeof Notification !== 'undefined' && Notification.permission === 'granted'
+              ? '<span style="flex-shrink:0;font-size:12px;font-weight:600;color:#059669;white-space:nowrap">✓ <span>Enabled</span></span>'
+              : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Enable</button>'
+          }
+        </div>
+      </div>
+
       <button class="btn btn--secondary btn--full" id="signout-btn">Sign Out</button>
       <div style="display:flex;gap:24px;justify-content:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--color-border)">
         <a href="/terms.html" style="font-size:13px;color:var(--color-text-secondary);text-decoration:none">Terms &amp; Conditions</a>
@@ -2960,7 +3134,18 @@ async function renderProfile() {
 
   screen.querySelectorAll('.lang-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      setLang(btn.dataset.lang);
+      // Paint the selected state immediately - the highlight used to wait for
+      // the full renderProfile() round-trip (getUser + profile + bookings
+      // queries), which lags well behind the instant text translation and
+      // looked "stuck" until a second tap forced a re-render.
+      const chosen = btn.dataset.lang;
+      screen.querySelectorAll('.lang-btn').forEach((b) => {
+        const active = b.dataset.lang === chosen;
+        b.style.borderColor = active ? '#2563EB' : '#E5E7EB';
+        b.style.background = active ? '#EFF6FF' : '#fff';
+        b.style.color = active ? '#2563EB' : '#374151';
+      });
+      setLang(chosen);
       renderProfile();
     });
   });
@@ -2976,6 +3161,14 @@ async function renderProfile() {
     await sb.auth.signOut().catch(() => {});
     showToast('Signed out successfully', 'success');
     router.navigate('home');
+  });
+
+  screen.querySelector('#push-enable-btn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Enabling...';
+    await enablePushNotifications();
+    renderProfile();
   });
 
   // Membership pause/resume/cancel
@@ -3494,7 +3687,10 @@ async function updateHomeNav() {
         const name = (user.user_metadata?.full_name || user.email || '')
           .split('@')[0]
           .split(' ')[0];
-        if (label) label.textContent = 'Hi, ' + name;
+        if (label) {
+          label.innerHTML = '';
+          label.append(document.createTextNode('Hi, '), document.createTextNode(name));
+        }
         btn.href = '#profile';
       } else {
         if (label) label.textContent = 'Sign In';
