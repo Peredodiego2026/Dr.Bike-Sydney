@@ -173,6 +173,27 @@ export function aggregateMechanicStats(jobs, { maxReviews = 8 } = {}) {
   return { jobs_completed: jobs.length, rating, reviews };
 }
 
+// Matches an address's suburb against van_zones. Returns the covering van_number,
+// or null if the address isn't in any configured zone - shared by the coverage
+// pre-check (handleCheckCoverage) and handleCreateBooking's own dispatch step,
+// so the two can never disagree about what counts as "covered".
+async function matchVanZone(sb, address) {
+  const { data: vz } = await sb.from('van_zones').select('van_number,suburb').neq('van_number', 0);
+  const addr = (address || '').toLowerCase();
+  const match = (vz || []).find((z) => z.suburb && addr.includes(String(z.suburb).toLowerCase()));
+  return match && Number(match.van_number) ? Number(match.van_number) : null;
+}
+
+// Lets the client check coverage before paying, so a client outside the service
+// area finds out at the address step instead of after being charged.
+async function handleCheckCoverage(req, res) {
+  const { address } = req.body || {};
+  if (!address) return res.status(400).json({ error: 'address required' });
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const vanNumber = await matchVanZone(sb, address);
+  return res.status(200).json({ covered: vanNumber !== null });
+}
+
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
@@ -235,17 +256,29 @@ async function handleCreateBooking(req, res) {
     if (zone) calloutFee = Number(zone.callout_fee);
   } catch {}
 
-  // 3b. Zone dispatch: assign the van whose zone covers the address suburb (default van 1)
-  let vanNumber = 1;
-  try {
-    const { data: vz } = await sb
-      .from('van_zones')
-      .select('van_number,suburb')
-      .neq('van_number', 0);
-    const addr = (address || '').toLowerCase();
-    const match = (vz || []).find((z) => z.suburb && addr.includes(String(z.suburb).toLowerCase()));
-    if (match && Number(match.van_number)) vanNumber = Number(match.van_number);
-  } catch {}
+  // 3b. Zone dispatch: reject bookings outside any configured coverage zone
+  // instead of silently defaulting to van 1 - previously this accepted (and
+  // charged) bookings no mechanic could actually reach. The admin test
+  // account keeps the van-1 fallback so test addresses don't have to match
+  // a real suburb.
+  let vanNumber = await matchVanZone(sb, address);
+  if (!vanNumber && isAdmin) vanNumber = 1;
+  if (!vanNumber) {
+    if (payment_intent_id) {
+      try {
+        await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+          payment_intent: payment_intent_id,
+        });
+      } catch (e) {
+        console.error('[create-booking] out-of-zone refund failed:', e.message);
+      }
+    }
+    return res.status(400).json({
+      error:
+        "Sorry, we don't currently service that address." +
+        (payment_intent_id ? ' Your payment has been refunded.' : ''),
+    });
+  }
 
   // 4. Verify payment (skipped for the admin test account)
   let verifiedPI = null;
@@ -648,7 +681,7 @@ async function handleClientBookings(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const base =
-    'id,service_name,service_price,callout_fee,scheduled_date,scheduled_time,address,status,client_rating,client_review,tracking_token,mechanic_id,notes';
+    'id,service_name,service_price,callout_fee,scheduled_date,scheduled_time,address,status,client_rating,client_review,tracking_token,mechanic_id,notes,photo_before_url,photo_after_url';
   const hdrs = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
   const q = `client_id=eq.${client_id}&order=scheduled_date.desc&limit=100`;
   // Try with cancellation_reason; fall back if the column isn't there yet.
@@ -1783,6 +1816,7 @@ async function handler(req, res) {
           role === 'join-waitlist' ||
           role === 'apply-referral' ||
           role === 'create-booking' ||
+          role === 'check-coverage' ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -1815,6 +1849,7 @@ async function handler(req, res) {
   if (role === 'client-history') return handleClientHistory(req, res);
   if (role === 'client-bookings') return handleClientBookings(req, res);
   if (role === 'create-booking') return handleCreateBooking(req, res);
+  if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
   return handleAdmin(req, res);
