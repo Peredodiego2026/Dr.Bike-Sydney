@@ -1438,7 +1438,38 @@ async function handleMechanicMessageSend(req, res) {
     }),
   });
   if (!resp.ok) return res.status(500).json({ error: 'Failed to send message' });
+
+  // Push-notify the client, if they've enabled notifications (fire-and-forget -
+  // a client with no push_subscription on file just gets a no-op 404 from
+  // send-push, which we don't need to react to here).
+  notifyClientOfMechanicMessage(booking_id, msg, SERVICE_KEY).catch(() => {});
+
   return res.status(200).json({ ok: true });
+}
+
+async function notifyClientOfMechanicMessage(bookingId, message, SERVICE_KEY) {
+  const bkResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=client_id,service_name&id=eq.${encodeURIComponent(bookingId)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const bkData = bkResp.ok ? await bkResp.json() : [];
+  const clientId = bkData?.[0]?.client_id;
+  if (!clientId) return;
+
+  const base = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'https://drbikesydney.com.au';
+  await fetch(`${base}/api/send-push`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      clientId,
+      title: `Message about your ${bkData[0].service_name || 'service'}`,
+      body: message.slice(0, 100),
+      url: '/index.html#tracking',
+      tag: 'mechanic-message',
+    }),
+  });
 }
 
 async function handlePublicTrack(req, res) {
@@ -1914,6 +1945,13 @@ async function handleGoogleCalendarCallback(req, res) {
   }
 }
 
+// The VAPID public key is safe to expose (it's the whole point of the
+// public/private keypair) but has no other way to reach a no-build-step
+// static client, so it's served from here rather than hardcoded in js/app.js.
+async function handleVapidPublicKey(req, res) {
+  return res.status(200).json({ key: process.env.VAPID_PUBLIC_KEY || null });
+}
+
 // ── Admin: Services CRUD (server-authoritative, bypasses RLS via service key) ──
 // The admin client uses the anon key for reads; writes go through here instead
 // of direct sb.from('services') calls so they don't silently no-op under RLS.
@@ -1991,6 +2029,7 @@ async function handler(req, res) {
   if (role === 'get-availability') return handleGetAvailability(req, res);
   if (role === 'google-calendar-connect') return handleGoogleCalendarConnect(req, res);
   if (role === 'google-calendar-callback') return handleGoogleCalendarCallback(req, res);
+  if (role === 'vapid-public-key') return handleVapidPublicKey(req, res);
 
   const rateMax = role.startsWith('mechanic-')
     ? 30
