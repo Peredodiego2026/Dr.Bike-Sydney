@@ -185,6 +185,9 @@ function byId(id) {
   byId('auto-wire-32').addEventListener('click', function (event) {
     saveNotifNumber();
   });
+  byId('notif-modal-pin-btn').addEventListener('click', function (event) {
+    generateMechanicPin();
+  });
   byId('auto-wire-33').addEventListener('click', function (event) {
     closeMechProfileModal();
   });
@@ -4741,6 +4744,11 @@ function openNotifModal() {
   document.getElementById('notif-modal-role').value = 'mechanic';
   document.getElementById('notif-modal-zone').value = '1';
   document.getElementById('notif-modal-channel').value = 'sms';
+  const pinBtn = document.getElementById('notif-modal-pin-btn');
+  pinBtn.disabled = true;
+  pinBtn.textContent = 'Generate PIN';
+  document.getElementById('notif-modal-pin-status').textContent =
+    'Save the contact first to set a PIN';
   updateZoneVisibility();
   document.getElementById('notif-modal').style.display = 'flex';
 }
@@ -4752,7 +4760,9 @@ function closeNotifModal() {
 function updateZoneVisibility() {
   const role = document.getElementById('notif-modal-role').value;
   const zoneWrap = document.getElementById('notif-modal-zone-wrap');
+  const pinWrap = document.getElementById('notif-modal-pin-wrap');
   if (zoneWrap) zoneWrap.style.display = role === 'manager' ? 'none' : 'block';
+  if (pinWrap) pinWrap.style.display = role === 'mechanic' ? 'block' : 'none';
 }
 
 async function editNotifNumber(id) {
@@ -4770,8 +4780,57 @@ async function editNotifNumber(id) {
   document.getElementById('notif-modal-role').value = c.role || 'mechanic';
   document.getElementById('notif-modal-zone').value = c.zone || '1';
   document.getElementById('notif-modal-channel').value = c.channel || 'sms';
+  const pinBtn = document.getElementById('notif-modal-pin-btn');
+  pinBtn.disabled = false;
+  pinBtn.textContent = c.pin_hash ? 'Reset PIN' : 'Generate PIN';
+  document.getElementById('notif-modal-pin-status').textContent = c.pin_hash
+    ? 'PIN is set'
+    : 'No PIN set yet - mechanic cannot log in';
   updateZoneVisibility();
   document.getElementById('notif-modal').style.display = 'flex';
+}
+
+// Server hop is required: pin_hash is an HMAC keyed on the service key, which
+// the admin panel's browser client (anon key only) cannot compute (see
+// handleAdminSetMechanicPin in api/auth.js). The plaintext PIN is shown here
+// exactly once via alert() - deliberately not a toast, since it must not
+// auto-dismiss before the admin can copy it down for the mechanic.
+async function generateMechanicPin() {
+  const id = document.getElementById('notif-modal-id').value;
+  if (!id) return;
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) {
+    showToast('Admin session expired - sign in again');
+    return;
+  }
+  const btn = document.getElementById('notif-modal-pin-btn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-set-mechanic-pin',
+        access_token: session.access_token,
+        contact_id: id,
+      }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      showToast('Could not set PIN: ' + (data.error || 'unknown error'));
+      return;
+    }
+    document.getElementById('notif-modal-pin-status').textContent = 'PIN is set';
+    alert(
+      `Login PIN for mechanic.html: ${data.pin}\n\nShare this with the mechanic now - it won't be shown again.`
+    );
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Reset PIN';
+  }
 }
 
 async function uploadMechanicPhoto(file, contactId) {
@@ -4802,11 +4861,13 @@ async function saveNotifNumber() {
 
   const payload = { first_name: fname, last_name: lname, phone, role, zone, channel, active: true };
 
-  let error;
+  let error, newId;
   if (id) {
     ({ error } = await sb.from('escalation_contacts').update(payload).eq('id', id));
   } else {
-    ({ error } = await sb.from('escalation_contacts').insert(payload));
+    const result = await sb.from('escalation_contacts').insert(payload).select('id').single();
+    error = result.error;
+    newId = result.data?.id;
   }
 
   if (error) {
@@ -4816,6 +4877,13 @@ async function saveNotifNumber() {
   closeNotifModal();
   showToast(id ? 'Number updated ✓' : 'Number added ✓');
   loadNotifNumbers();
+
+  // Brand-new mechanic: generate their login PIN right away instead of
+  // making the admin reopen Edit just to set one - onboarding in one step.
+  if (!id && role === 'mechanic' && newId) {
+    document.getElementById('notif-modal-id').value = newId;
+    await generateMechanicPin();
+  }
 }
 
 async function deleteNotifNumber(id) {

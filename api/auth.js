@@ -2101,6 +2101,32 @@ async function handleSubmitClaim(req, res) {
   return res.status(200).json({ ok: true, id: claim.id });
 }
 
+// Generates (or resets) a mechanic's login PIN for mechanic.html. The admin
+// UI has always been able to add a name/phone/zone to escalation_contacts,
+// but never a PIN - pin_hash is an HMAC keyed on the service key (see
+// hashPin above), which the admin panel's browser client (anon key only)
+// cannot compute itself. This is the one server hop needed to onboard a
+// new mechanic without Diego running SQL by hand. The plaintext PIN is
+// returned exactly once, in this response, for the admin to hand to the
+// mechanic - it is never stored or retrievable again after this call.
+async function handleAdminSetMechanicPin(req, res) {
+  const { access_token, contact_id, pin } = req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!contact_id) return res.status(400).json({ error: 'contact_id required' });
+
+  const finalPin = pin ? String(pin).trim() : String(Math.floor(1000 + Math.random() * 9000));
+  if (!/^\d{4}$/.test(finalPin)) return res.status(400).json({ error: 'PIN must be 4 digits' });
+
+  const { error } = await auth.sb
+    .from('escalation_contacts')
+    .update({ pin_hash: hashPin(finalPin), pin: null }) // pin: null clears any legacy plaintext value
+    .eq('id', contact_id);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ ok: true, pin: finalPin });
+}
+
 async function handleAdminClaimsList(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
@@ -2133,6 +2159,14 @@ async function handleAdminClaimsUpdate(req, res) {
 // ── Admin: Services CRUD (server-authoritative, bypasses RLS via service key) ──
 // The admin client uses the anon key for reads; writes go through here instead
 // of direct sb.from('services') calls so they don't silently no-op under RLS.
+export function isAdminEmail(email) {
+  return ADMIN_ALLOWED_EMAILS.includes(
+    String(email || '')
+      .toLowerCase()
+      .trim()
+  );
+}
+
 async function verifyAdminSession(access_token, SERVICE_KEY) {
   if (!access_token) return { error: 'Sign in required', status: 401 };
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -2141,6 +2175,10 @@ async function verifyAdminSession(access_token, SERVICE_KEY) {
     error: uErr,
   } = await sb.auth.getUser(access_token);
   if (uErr || !user) return { error: 'Invalid session', status: 401 };
+  // A valid Supabase session alone isn't enough - any signed-up client has one.
+  // Only emails on the admin allowlist may use admin-* roles (same check the
+  // admin login flow itself uses).
+  if (!isAdminEmail(user.email)) return { error: 'Not authorized', status: 403 };
   return { sb, user };
 }
 
@@ -2260,5 +2298,6 @@ async function handler(req, res) {
   if (role === 'submit-claim') return handleSubmitClaim(req, res);
   if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
+  if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   return handleAdmin(req, res);
 }
