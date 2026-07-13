@@ -3567,9 +3567,10 @@ async function renderMyBikes() {
     }
   }
 
-  // Predictive maintenance: estimate the next service date from the client's own
-  // history (average gap between past completed services) rather than relying
-  // only on whatever the mechanic manually noted on the last job.
+  // Predictive maintenance: estimate the next service date as a fixed 3-month
+  // interval from the client's last completed service - matches the 3-month
+  // minimum on every subscription plan, rather than an actual-history average
+  // (which reads as "we want you back sooner" when history is short/sparse).
   async function loadPredictedService() {
     const card = screen.querySelector('#predicted-service-card');
     if (!card) return;
@@ -3584,15 +3585,11 @@ async function renderMyBikes() {
       .map((b) => new Date(b.scheduled_date))
       .sort((a, b) => a - b);
 
-    if (completedDates.length < 2) return; // not enough history to predict yet
+    if (completedDates.length < 1) return; // no service history yet
 
-    let totalDays = 0;
-    for (let i = 1; i < completedDates.length; i++) {
-      totalDays += (completedDates[i] - completedDates[i - 1]) / 86400000;
-    }
-    const avgDays = Math.round(totalDays / (completedDates.length - 1));
+    const SERVICE_INTERVAL_DAYS = 90; // 3 months
     const lastDate = completedDates[completedDates.length - 1];
-    const predicted = new Date(lastDate.getTime() + avgDays * 86400000);
+    const predicted = new Date(lastDate.getTime() + SERVICE_INTERVAL_DAYS * 86400000);
     const daysUntil = Math.round((predicted - new Date()) / 86400000);
     const dateLabel = predicted.toLocaleDateString('en-AU', {
       day: 'numeric',
@@ -3608,11 +3605,9 @@ async function renderMyBikes() {
           <span style="font-size:13px;font-weight:700;color:#0D1F3C">${overdue ? "You're likely due for a service" : 'Predicted next service'}</span>
         </div>
         <div style="font-size:13px;color:#374151;line-height:1.5">
-          ${
-            overdue
-              ? `Based on your history (services roughly every ${avgDays} days), you were due around <b>${dateLabel}</b>.`
-              : `Based on your history (services roughly every ${avgDays} days), you'll likely need your next service around <b>${dateLabel}</b>.`
-          }
+          <span>We recommend a service roughly every 3 months.</span>
+          <span>${overdue ? 'You were due around' : 'Your next one is around'}</span>
+          <b>${dateLabel}</b>.
         </div>
       </div>`;
   }
@@ -3673,11 +3668,10 @@ async function renderMyBikes() {
 
 async function updateHomeNav() {
   const targets = [
-    { icon: 'home-nav-auth-icon', label: 'home-nav-auth-label', btn: 'home-nav-auth-btn' },
-    { icon: 'home-mobile-auth-icon', label: 'home-mobile-auth-label', btn: 'home-mobile-auth-btn' },
+    { label: 'home-nav-auth-label', btn: 'home-nav-auth-btn' },
+    { label: 'home-mobile-auth-label', btn: 'home-mobile-auth-btn' },
   ]
     .map((t) => ({
-      iconEl: document.getElementById(t.icon),
       labelEl: document.getElementById(t.label),
       btnEl: document.getElementById(t.btn),
     }))
@@ -3699,25 +3693,14 @@ async function updateHomeNav() {
 
     const name = (user.user_metadata?.full_name || user.email || '').split('@')[0].split(' ')[0];
 
+    // Text-only greeting - no tier icon/badge next to it (Diego: no photo or
+    // logo beside "Hi, {name}" in the nav).
     targets.forEach(({ labelEl, btnEl }) => {
       if (labelEl) {
         labelEl.innerHTML = '';
         labelEl.append(document.createTextNode('Hi, '), document.createTextNode(name));
       }
       btnEl.href = '#profile';
-    });
-
-    let completedJobs = 0;
-    try {
-      const myBookings = await getMyBookings();
-      completedJobs = (myBookings || []).filter((b) => b.status === 'completed').length;
-    } catch {}
-    const riderTier = getRiderTier(completedJobs);
-
-    // Both nav slots show the same small tier icon - desktop's nav swaps out
-    // its generic person SVG for it, mobile's bar gets one for the first time.
-    targets.forEach(({ iconEl }) => {
-      if (iconEl) iconEl.innerHTML = createTierBadge(riderTier, 'sm');
     });
   } catch {}
 }
