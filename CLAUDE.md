@@ -95,9 +95,10 @@ stripe-webhook.js.
 - S03: XSS in email templates - FIXED Jun 2026: date, time, bookingId, price now sanitized in send-email.js
 
 ### Still open
-- Apple Pay/Google Pay: canMakePayment() returns null on Safari iPhone
+(none currently tracked here - see docs/ROADMAP.md for the live punch list)
 
 ### Resolved (no longer open)
+- Apple Pay/Google Pay: Diego completed a real Apple Pay charge successfully (13 Jul 2026) - confirmed working end-to-end, not just canMakePayment() detection.
 - S01: Google Maps API key - app uses Leaflet (no API key), not Google Maps. Non-issue.
 - B01: stripe-webhook.js - already uses membership_status correctly. Non-issue.
 - B02: send-email.js referral_success - variables are in scope. Non-issue.
