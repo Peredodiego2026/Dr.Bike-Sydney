@@ -135,6 +135,20 @@
       transition: color 150ms;
     }
     .nav-links a:hover { color: var(--blue); }
+    .nav-lang-btn {
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+      background: transparent;
+      border: none;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm, 6px);
+      cursor: pointer;
+      transition: color 150ms, background 150ms;
+    }
+    .nav-lang-btn:hover { color: #374151; background: var(--gray-light); }
+    .nav-lang-btn.active { color: var(--blue); background: var(--blue-light); }
     .nav-book {
       background: var(--blue);
       color: var(--white);
@@ -623,6 +637,8 @@
       <a href="#fleet" style="color:#2563EB;font-weight:700">Fleet &#x2192;</a>
       <a href="#about">About</a>
     </div>
+
+    <div id="nav-lang-switcher" style="display:flex;align-items:center;gap:2px;margin-right:8px" role="group" aria-label="Language"></div>
 
     <button id="nav-auth-btn" class="nav-book" style="display:inline-flex;align-items:center;gap:8px;font-family:inherit;padding:8px 16px">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -2038,8 +2054,8 @@ function openMembershipModal(plan) {
   document.getElementById('membership-submit').disabled = false;
   document.getElementById('membership-plan-name').textContent = _membershipLabels[plan] + ' Plan';
   var price = _membershipPrices[plan][_membershipBilling];
-  var priceLabel = _membershipBilling === 'annual' ? '$' + price + '/year' : '$' + price + '/month';
-  document.getElementById('membership-plan-price').textContent = priceLabel;
+  var priceUnit = _membershipBilling === 'annual' ? 'year' : 'month';
+  document.getElementById('membership-plan-price').innerHTML = '$' + price + '/<span>' + priceUnit + '</span>';
   document.getElementById('membership-modal').style.display = 'block';
   document.body.style.overflow = 'hidden';
   var STRIPE_KEY = 'pk_live_51TUbFqPPGSm5cT7JKBDANyRVDmi6Ytia6r31kFxAEWis6xYZuhXlDnoZ3KyB4xUoJWd3nKpzrLxuDzsQEz7X3od3006xPoLzVV';
@@ -2863,7 +2879,10 @@ function bkFormatDate(dateStr) {
   if (!dateStr) return '-';
   var parts = dateStr.split('-').map(Number);
   var d = new Date(parts[0], parts[1] - 1, parts[2]);
-  return BK_DAY_NAMES[d.getDay()] + ' ' + d.getDate() + ' ' + BK_MONTH_NAMES[d.getMonth()] + ' ' + parts[0];
+  // Day/month abbreviations wrapped in their own <span> so translateScreen()
+  // can match+swap them as isolated text nodes - the surrounding numbers
+  // and the rest of the string are never translatable (they vary per date).
+  return '<span>' + BK_DAY_NAMES[d.getDay()] + '</span> ' + d.getDate() + ' <span>' + BK_MONTH_NAMES[d.getMonth()] + '</span> ' + parts[0];
 }
 
 function openBooking(preselect) {
@@ -3075,7 +3094,7 @@ function bkBuildCal() {
   var firstDay = new Date(_bkCalYear, _bkCalMonth, 1).getDay();
   var daysInMonth = new Date(_bkCalYear, _bkCalMonth + 1, 0).getDate();
   var DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  var monthLabel = BK_MONTH_NAMES[_bkCalMonth] + ' ' + _bkCalYear;
+  var monthLabel = '<span>' + BK_MONTH_NAMES[_bkCalMonth] + '</span> ' + _bkCalYear;
 
   var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
   html += '<button id="bk-cal-prev" type="button" style="background:none;border:1px solid #E5E7EB;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px;font-family:inherit">&#8592;</button>';
@@ -3225,7 +3244,7 @@ async function bkLoadAndRenderSlots() {
           '<div style="text-align:center;padding:6px 0">' +
           '<div style="font-size:18px;margin-bottom:6px">&#9989;</div>' +
           '<div style="font-weight:700;color:#059669;font-size:13px">You\'re on the waitlist!</div>' +
-          '<div style="font-size:12px;color:#6B7280;margin-top:3px">We\'ll email ' + u.email + ' if a slot opens on ' + wlDate + '.</div>' +
+          '<div style="font-size:12px;color:#6B7280;margin-top:3px">We\'ll email <span>' + esc(u.email) + '</span> if a slot opens on <span>' + esc(wlDate) + '</span>.</div>' +
           '</div>';
       } catch(e) {
         msg.textContent = e.message; msg.style.display = 'block';
@@ -3305,7 +3324,7 @@ function bkRenderStep3() {
         if (totalEl) totalEl.textContent = '$' + (Math.max(0, base - disc) + fee).toFixed(2);
         if (discRow) discRow.style.display = 'flex';
         if (discAmt) discAmt.textContent = '-$' + disc.toFixed(2);
-        msg.style.color = '#059669'; msg.textContent = 'Code applied! -$' + disc.toFixed(2) + ' off';
+        msg.style.color = '#059669'; msg.innerHTML = 'Code applied! -$<span>' + disc.toFixed(2) + '</span> off';
         document.getElementById('bk-promo').disabled = true;
         document.getElementById('bk-promo-btn').disabled = true;
       }).catch(function(e) {
@@ -3419,7 +3438,7 @@ function bkStep3HTML() {
   html += '<div style="background:#0D1F3C;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">';
   html += '<img src="images/logo-db.png" alt="Dr. Bike Sydney" height="20" style="width:auto;display:block">';
   html += '<div><div style="color:#fff;font-size:14px;font-weight:700">' + (s.name || '-') + '</div>';
-  if (dur) html += '<div style="color:rgba(255,255,255,0.65);font-size:11px;margin-top:1px">Est. ' + dur + '</div>';
+  if (dur) html += '<div style="color:rgba(255,255,255,0.65);font-size:11px;margin-top:1px"><span>Est.</span> ' + dur + '</div>';
   html += '</div></div>';
 
   // Appointment details
@@ -3494,7 +3513,7 @@ function bkShowPaymentComingSoon() {
     '<div style="width:56px;height:56px;background:#FEF3C7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' +
     '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>' +
     '<div style="font-weight:800;font-size:19px;color:#0D1F3C;margin-bottom:10px">Online payments coming soon</div>' +
-    '<div style="font-size:14px;color:#6B7280;line-height:1.6;margin-bottom:24px">We\'re finalising our business setup. Contact us now to lock in your <strong>' + svcName + '</strong>' + (date ? ' on <strong>' + date + '</strong>' : '') + (time ? ' at <strong>' + time + '</strong>' : '') + ' - same price, same service.</div>' +
+    '<div style="font-size:14px;color:#6B7280;line-height:1.6;margin-bottom:24px"><span>We\'re finalising our business setup. Contact us now to lock in your</span> <strong>' + svcName + '</strong>' + (date ? ' <span>on</span> <strong>' + date + '</strong>' : '') + (time ? ' <span>at</span> <strong>' + time + '</strong>' : '') + ' <span>- same price, same service.</span></div>' +
     '<a href="https://wa.me/61433963250?text=' + waMsg + '" target="_blank" ' +
     'style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:#25D366;color:#fff;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:10px;box-sizing:border-box">' +
     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>' +
@@ -4271,6 +4290,51 @@ function openLandingChat(bookingId) {
 <!-- Service Worker -->
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 <!-- App JS Modules -->
+<script type="module">
+  import { getLang, setLang, translateScreen, LANGUAGES } from './js/i18n.js?v=20260713';
+
+  function renderLangSwitcher() {
+    var wrap = document.getElementById('nav-lang-switcher');
+    if (!wrap) return;
+    wrap.innerHTML = LANGUAGES.map(function(l) {
+      return '<button type="button" class="nav-lang-btn' + (l.code === getLang() ? ' active' : '') + '" data-lang="' + l.code + '">' + l.label + '</button>';
+    }).join('<span style="color:#e5e7eb;font-size:11px">&middot;</span>');
+    wrap.querySelectorAll('.nav-lang-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { setLang(btn.dataset.lang); });
+    });
+  }
+
+  function translateAll() {
+    translateScreen(document.body);
+  }
+
+  renderLangSwitcher();
+  translateAll();
+
+  document.addEventListener('langchange', function() {
+    renderLangSwitcher();
+    translateAll();
+  });
+
+  // Re-translate after any dynamic re-render that injects new English text
+  // (booking wizard steps, mechanic carousel, account panel, modals, chat,
+  // FAQ bot). A MutationObserver on the whole body catches every innerHTML
+  // swap without needing to hook each render function individually.
+  // Uses setTimeout rather than requestAnimationFrame for the debounce -
+  // rAF is throttled/never fires on backgrounded or unfocused tabs (verified
+  // in testing), which would silently stop translations from applying.
+  var _i18nDebounce = null;
+  var _bodyObserver = new MutationObserver(function() {
+    if (_i18nDebounce) return;
+    _i18nDebounce = setTimeout(function() {
+      _i18nDebounce = null;
+      translateAll();
+    }, 0);
+  });
+  _bodyObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  window.__drbikeI18n = { getLang: getLang, setLang: setLang, translateScreen: translateScreen };
+</script>
 <script src="js/router.js?v=20260704" type="module"></script>
 <script src="js/supabase.js?v=20260704" type="module"></script>
 <script src="js/components.js?v=20260704c" type="module"></script>
