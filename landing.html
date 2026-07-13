@@ -39,6 +39,7 @@
   <meta name="twitter:image" content="https://drbikesydney.com.au/og-image.svg">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" href="/icon-512.svg" type="image/svg+xml">
   <meta name="theme-color" content="#2563eb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -1427,7 +1428,7 @@
             <div style="font-weight:700;font-size:14px;color:#0D1F3C">James T.</div>
             <div style="font-size:12px;color:#6B7280">Surry Hills · Google Review</div>
           </div>
-          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
+          <img src="images/google-logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
         </div>
         <div style="color:#F59E0B;font-size:16px;margin-bottom:8px">★★★★★</div>
         <p style="font-size:14px;color:#374151;line-height:1.6">"Diego came to my apartment in Surry Hills and fixed my derailleur in under an hour. Absolutely professional — showed up on time, van was stocked with everything. My bike shifts perfectly now. Will definitely book again."</p>
@@ -1441,7 +1442,7 @@
             <div style="font-weight:700;font-size:14px;color:#0D1F3C">Sarah M.</div>
             <div style="font-size:12px;color:#6B7280">Bondi Beach · Google Review</div>
           </div>
-          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
+          <img src="images/google-logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
         </div>
         <div style="color:#F59E0B;font-size:16px;margin-bottom:8px">★★★★★</div>
         <p style="font-size:14px;color:#374151;line-height:1.6">"Best mobile mechanic in Sydney, no question. I was sceptical about a mobile service but Dr. Bike exceeded every expectation. Arrived at Bondi, full service done in 90 minutes in my parking spot. Pricing is very fair."</p>
@@ -1455,7 +1456,7 @@
             <div style="font-weight:700;font-size:14px;color:#0D1F3C">Ryan K.</div>
             <div style="font-size:12px;color:#6B7280">Newtown · Google Review</div>
           </div>
-          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
+          <img src="images/google-logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
         </div>
         <div style="color:#F59E0B;font-size:16px;margin-bottom:8px">★★★★★</div>
         <p style="font-size:14px;color:#374151;line-height:1.6">"Used the VIP membership and it's worth every cent. Two services already this year — brake bleed and a full tune-up. The convenience of having a mechanic come to my home in Newtown is unbeatable. Highly recommend."</p>
@@ -1465,7 +1466,7 @@
     </div>
     <div style="text-align:center;margin-bottom:8px">
       <a href="https://g.page/r/drbikesydney/review" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #E5E7EB;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;color:#374151;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.08)">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" style="width:52px">
+        <img src="images/google-logo.svg" alt="Google" style="width:52px">
         <span>Leave us a review</span>
       </a>
     </div>
@@ -1500,7 +1501,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       <p style="color:#9ca3af;margin:12px 0 24px;font-size:15px">Choose a service, pick a time, and we'll come to you.</p>
 
       <div style="display:flex;flex-direction:column;gap:16px">
-        <select class="lform-input" id="lform-service">
+        <select class="lform-input" id="lform-service" aria-label="Service Type">
           <option value="" disabled selected>Service Type</option>
           <option>Tune-Up</option>
           <option>Standard Service</option>
@@ -1509,8 +1510,8 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
           <option>E-Bike Service</option>
           <option>Bike Assembly</option>
         </select>
-        <input type="date" class="lform-input" id="lform-date">
-        <select class="lform-input">
+        <input type="date" class="lform-input" id="lform-date" aria-label="Preferred date">
+        <select class="lform-input" aria-label="Preferred Time">
           <option value="" disabled selected>Preferred Time</option>
           <option>Morning (8:30am - 12pm)</option>
           <option>Afternoon (12pm - 4pm)</option>
@@ -1711,7 +1712,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
               <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Fleet size *</label>
-              <select name="fleetSize" required style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
+              <select name="fleetSize" required aria-label="Fleet size" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
                 <option value="">Select...</option>
                 <option>2-5 bikes</option>
                 <option>6-15 bikes</option>
@@ -1722,7 +1723,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
             </div>
             <div>
               <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Service frequency</label>
-              <select name="frequency" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
+              <select name="frequency" aria-label="Service frequency" style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;background:#fff;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'">
                 <option value="">Not sure yet</option>
                 <option>Monthly</option>
                 <option>Quarterly</option>
@@ -1825,7 +1826,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
 
       <!-- Col 2: Services -->
       <div>
-        <h4 class="footer-h4">Services</h4>
+        <h3 class="footer-h4">Services</h3>
         <a href="/index.html" class="footer-link">Basic Service</a>
         <a href="/index.html" class="footer-link">Standard Service</a>
         <a href="/index.html" class="footer-link">Premium Service</a>
@@ -1835,7 +1836,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
 
       <!-- Col 3: Company -->
       <div>
-        <h4 class="footer-h4">Company</h4>
+        <h3 class="footer-h4">Company</h3>
         <a href="#about" class="footer-link">About Us</a>
         <a href="#about" class="footer-link">Our Story</a>
         <a href="#reviews" class="footer-link">Reviews</a>
@@ -1844,7 +1845,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
 
       <!-- Col 4: Support -->
       <div>
-        <h4 class="footer-h4">Support</h4>
+        <h3 class="footer-h4">Support</h3>
         <a href="#faq" class="footer-link">FAQ</a>
         <a href="/index.html" class="footer-link">Booking Help</a>
         <a href="/claims.html" class="footer-link">Submit a Claim</a>
@@ -1854,7 +1855,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
 
       <!-- Col 5: Contact -->
       <div>
-        <h4 class="footer-h4">Contact</h4>
+        <h3 class="footer-h4">Contact</h3>
         <div class="footer-contact-item">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           0433 963 250
