@@ -407,11 +407,527 @@ const dict = {
     'Professional bike service at your doorstep. Sydney’s mobile bicycle mechanic.':
       'Servicio profesional de bicicletas en tu puerta. El mecánico móvil de bicicletas de Sydney.',
     Company: 'Empresa',
+    Support: 'Soporte',
+    'Terms & Conditions': 'Términos y Condiciones',
+    'Privacy Policy': 'Política de Privacidad',
     Contact: 'Contacto',
     'About Us': 'Sobre Nosotros',
     'My Account': 'Mi Cuenta',
     'Sydney, NSW': 'Sydney, NSW',
     'Mon – Sun: 8:30AM – 4:00PM': 'Lun - Dom: 8:30AM - 4:00PM',
+    'Mon - Sun: 8:30AM - 4:00PM': 'Lun - Dom: 8:30AM - 4:00PM',
+    'Healthy bikes, happy riders': 'Bicis sanas, ciclistas felices',
+
+    // ── landing.html (desktop) — Navbar ──────────────────────────────────
+    Mechanics: 'Mecánicos',
+    Memberships: 'Membresías',
+    About: 'Nosotros',
+    'Fleet →': 'Flotas →',
+    'Sign in to manage bookings': 'Iniciá sesión para gestionar tus reservas',
+    'Bookings · Bikes · Membership': 'Reservas · Bicis · Membresía',
+    // Trust badges bar
+    '100% Satisfaction Guarantee': '100% Satisfacción Garantizada',
+    'Verified Mechanic': 'Mecánico Verificado',
+    'Background Checked': 'Antecedentes Verificados',
+    'Fully Insured': 'Totalmente Asegurado',
+    // Hero (landing-specific strings not already in the mobile dict)
+    'Mobile Service · Sydney Wide': 'Servicio Móvil · Toda Sydney',
+    'Professional Bike Service at Your Doorstep': 'Servicio Profesional de Bicicletas en tu Puerta',
+    'Mobile bicycle mechanic in Sydney. We come to you, fully equipped.':
+      'Mecánico móvil de bicicletas en Sydney. Vamos hasta vos, totalmente equipados.',
+    'Or call': 'O llamá al',
+    // GrowthBook A/B experiment "hero-cta-copy" variant copy - the default
+    // fallback is 'Book a Service' (already in the mobile dict above). Any
+    // NEW variant text added in GrowthBook later needs its own key here too,
+    // since experiment copy is server-controlled and can't be hooked into
+    // translateScreen() automatically - see final report for this limitation.
+    'Get Your Free Quote': 'Obtené tu Cotización Gratis',
+    'Qualified Mechanic': 'Mecánico Calificado',
+    'Fully Equipped Van': 'Van Totalmente Equipada',
+    '5 Star Rated': 'Calificación 5 Estrellas',
+    // Mechanics 3D carousel
+    'OUR TEAM': 'NUESTRO EQUIPO',
+    'Meet Your Mechanics': 'Conocé a Nuestros Mecánicos',
+    'Qualified, background-checked mechanics rated by real Sydney riders.':
+      'Mecánicos calificados, con antecedentes verificados, calificados por ciclistas reales de Sydney.',
+    'Previous mechanic': 'Mecánico anterior',
+    'Next mechanic': 'Siguiente mecánico',
+    'Our mechanic profiles are coming soon.':
+      'Los perfiles de nuestros mecánicos estarán disponibles pronto.',
+    'service completed': 'servicio completado',
+    'services completed': 'servicios completados',
+    // Memberships section (landing-specific)
+    Monthly: 'Mensual',
+    Annual: 'Anual',
+    'Save 20%': 'Ahorrá 20%',
+    Basic: 'Basic',
+    Standard: 'Standard',
+    VIP: 'VIP',
+    Popular: 'Popular',
+    '1 Basic Service': '1 Servicio Basic',
+    '10% off repairs': '10% de descuento en reparaciones',
+    'Priority booking': 'Reserva prioritaria',
+    'Email support': 'Soporte por correo',
+    '2 Standard Services': '2 Servicios Standard',
+    'Phone support': 'Soporte telefónico',
+    'Free safety check': 'Chequeo de seguridad gratis',
+    'Unlimited Services': 'Servicios ilimitados',
+    '20% off repairs': '20% de descuento en reparaciones',
+    'Annual tune-up': 'Ajuste anual',
+    'All plans include mobile service within Sydney metro area':
+      'Todos los planes incluyen servicio móvil dentro del área metropolitana de Sydney',
+    'Gift a service': 'Regalá un servicio',
+    'Send a Dr. Bike gift card by email - perfect for any cyclist':
+      'Enviá una gift card de Dr. Bike por correo - perfecta para cualquier ciclista',
+    'Buy a gift card': 'Comprar una gift card',
+    // Trust bar (brands not translated - see section below)
+    'TRUSTED BY CYCLISTS ACROSS SYDNEY': 'CON LA CONFIANZA DE CICLISTAS DE TODA SYDNEY',
+    // Services intro + "All Services" modal
+    'Book a Service →': 'Reservar un Servicio →',
+    'All Services': 'Todos los Servicios',
+    'All prices include $20 mobile call-out fee. We come to you.':
+      'Todos los precios incluyen la tarifa de visita de $20. Vamos hasta vos.',
+    Essentials: 'Esenciales',
+    'Tyres & Wheels': 'Neumáticos y Ruedas',
+    'Cables & Accessories': 'Cables y Accesorios',
+    'Basic Tune-Up': 'Ajuste Básico',
+    'Full tune-up + wheel true + drivetrain clean':
+      'Ajuste completo + centrado de rueda + limpieza de transmisión',
+    'Ultimate Overhaul': 'Revisión Definitiva',
+    'Strip & rebuild, all consumables replaced':
+      'Desarme y reconstrucción, todos los consumibles reemplazados',
+    'Book Now': 'Reservar Ahora',
+    'Flat Tyre Repair': 'Reparación de Pinchazo',
+    'Tube replace or patch, remount & inflate': 'Reemplazo o parche de cámara, remontaje e inflado',
+    'Tyre Replacement': 'Reemplazo de Neumático',
+    'New tyre fitted (tyre cost extra)': 'Neumático nuevo instalado (costo del neumático aparte)',
+    'Wheel Truing - Minor': 'Centrado de Rueda - Menor',
+    'Quick spoke tension touch-up': 'Ajuste rápido de tensión de rayos',
+    'Wheel Truing - Major': 'Centrado de Rueda - Mayor',
+    'Full spoke tension & rim alignment': 'Tensión completa de rayos y alineación de llanta',
+    'Spoke Replacement': 'Reemplazo de Rayo',
+    'Per spoke, includes re-true': 'Por rayo, incluye recentrado',
+    'Brake Adjustment': 'Ajuste de Frenos',
+    'Pad align, cable tension, lever reach':
+      'Alineación de pastillas, tensión de cable, alcance de maneta',
+    'Brake Pad Replacement': 'Reemplazo de Pastillas de Freno',
+    'Both wheels, pads included': 'Ambas ruedas, pastillas incluidas',
+    'Hydraulic Bleed': 'Purga Hidráulica',
+    'Full bleed with fresh fluid': 'Purga completa con líquido nuevo',
+    'Gear Adjustment': 'Ajuste de Cambios',
+    'Front & rear derailleur indexed': 'Desviador delantero y trasero indexado',
+    'Chain Replacement': 'Reemplazo de Cadena',
+    'KMC or SRAM chain fitted': 'Cadena KMC o SRAM instalada',
+    'Cassette/Freewheel Swap': 'Cambio de Cassette/Piñón Libre',
+    'Remove & fit (part cost extra)': 'Retiro e instalación (costo de la pieza aparte)',
+    'Cable & Housing': 'Cables y Fundas',
+    'Full replace front & rear': 'Reemplazo completo delantero y trasero',
+    'Handlebar Tape': 'Cinta de Manubrio',
+    'Cork or EVA wrap, bar ends included': 'Envoltura de corcho o EVA, terminales incluidos',
+    'Saddle Fitting': 'Ajuste de Asiento',
+    'Height, fore-aft, tilt optimised': 'Altura, posición e inclinación optimizadas',
+    'Bottom Bracket Service': 'Servicio de Caja Pedalera',
+    'Clean, regrease or replace BB': 'Limpieza, re-engrase o reemplazo de la caja pedalera',
+    'Headset Service': 'Servicio de Dirección',
+    'Clean, adjust, regrease': 'Limpieza, ajuste, re-engrase',
+    'Custom Quote': 'Cotización Personalizada',
+    'E-bikes, carbon, vintage, insurance claims': 'E-bikes, carbono, vintage, reclamos de seguro',
+    'All prices include $20 mobile call-out. Parts charged separately unless stated.':
+      'Todos los precios incluyen la visita de $20. Los repuestos se cobran aparte salvo que se indique lo contrario.',
+    'Same-day booking +$30. Weekend +$20.': 'Reserva el mismo día +$30. Fin de semana +$20.',
+
+    // ── Testimonials (landing.html specific reviews) ─────────────────────
+    "Real reviews from Sydney cyclists who've used Dr. Bike Sydney.":
+      'Reseñas reales de ciclistas de Sydney que usaron Dr. Bike Sydney.',
+    'Google Review': 'Reseña de Google',
+    '"Diego came to my apartment in Surry Hills and fixed my derailleur in under an hour. Absolutely professional — showed up on time, van was stocked with everything. My bike shifts perfectly now. Will definitely book again."':
+      '"Diego vino a mi departamento en Surry Hills y arregló mi desviador en menos de una hora. Totalmente profesional - llegó puntual, la van tenía de todo. Mi bici cambia perfecto ahora. Sin dudas vuelvo a reservar."',
+    '2 weeks ago': 'Hace 2 semanas',
+    '"Best mobile mechanic in Sydney, no question. I was sceptical about a mobile service but Dr. Bike exceeded every expectation. Arrived at Bondi, full service done in 90 minutes in my parking spot. Pricing is very fair."':
+      '"El mejor mecánico móvil de Sydney, sin dudas. Era escéptica sobre un servicio móvil pero Dr. Bike superó todas mis expectativas. Llegó a Bondi, servicio completo hecho en 90 minutos en mi propio estacionamiento. Los precios son muy justos."',
+    '1 month ago': 'Hace 1 mes',
+    '"Used the VIP membership and it\'s worth every cent. Two services already this year — brake bleed and a full tune-up. The convenience of having a mechanic come to my home in Newtown is unbeatable. Highly recommend."':
+      '"Usé la membresía VIP y vale cada centavo. Ya tuve dos servicios este año - purga de frenos y un ajuste completo. La comodidad de tener un mecánico que va a mi casa en Newtown es inigualable. Lo recomiendo totalmente."',
+    '3 weeks ago': 'Hace 3 semanas',
+    'Leave us a review': 'Dejanos una reseña',
+    'See Our Service In Action': 'Mirá Nuestro Servicio en Acción',
+    'Watch how we service bikes on location.': 'Mirá cómo reparamos bicis en el lugar.',
+    'Watch Video': 'Ver Video',
+
+    // ── Book a Service (dark form section) ────────────────────────────────
+    'BOOK A SERVICE': 'RESERVAR UN SERVICIO',
+    'Schedule Your Service Today': 'Agendá tu Servicio Hoy',
+    "Choose a service, pick a time, and we'll come to you.":
+      'Elegí un servicio, elegí un horario, y vamos hasta vos.',
+    'Service Type': 'Tipo de Servicio',
+    'Preferred date': 'Fecha preferida',
+    'Preferred Time': 'Horario Preferido',
+    'Morning (8:30am - 12pm)': 'Mañana (8:30am - 12pm)',
+    'Afternoon (12pm - 4pm)': 'Tarde (12pm - 4pm)',
+    'Evening (4pm - 7pm)': 'Noche (4pm - 7pm)',
+    'Enter your address': 'Ingresá tu dirección',
+    'Continue Booking': 'Continuar Reserva',
+    '✓ Confirmation in minutes': '✓ Confirmación en minutos',
+    '✓ Free cancellation': '✓ Cancelación gratuita',
+
+    // ── Auth modal ──────────────────────────────────────────────────────────
+    'Sign In': 'Iniciar Sesión',
+    'Sign in to your account': 'Iniciá sesión en tu cuenta',
+    'Create your account': 'Creá tu cuenta',
+    'or continue with': 'o continuá con',
+    'Check your email to confirm your account': 'Revisá tu correo para confirmar tu cuenta',
+
+    // ── Membership modal ────────────────────────────────────────────────────
+    'Start Your Membership': 'Comenzá tu Membresía',
+    'Monthly Total': 'Total Mensual',
+    month: 'mes',
+    year: 'año',
+    'Card Details': 'Datos de la Tarjeta',
+    'Secured by Stripe · 3-month minimum · Cancel anytime after':
+      'Protegido por Stripe · mínimo 3 meses · cancelá cuando quieras después',
+
+    // ── Gift Card modal ──────────────────────────────────────────────────────
+    'Send a Dr. Bike gift card by email': 'Enviá una gift card de Dr. Bike por correo',
+    Amount: 'Monto',
+    'Or enter a custom amount ($20-$1000)': 'O ingresá un monto personalizado ($20-$1000)',
+    "Recipient's name": 'Nombre del destinatario',
+    "Recipient's email *": 'Correo del destinatario *',
+    'Your name': 'Tu nombre',
+    'Personal message (optional)': 'Mensaje personal (opcional)',
+    'Continue to payment →': 'Continuar al pago →',
+    'Secured by Stripe · Delivered instantly by email':
+      'Protegido por Stripe · Entrega instantánea por correo',
+
+    // ── Account panel (bookings / bikes / membership tabs) ────────────────
+    'No bookings yet': 'Todavía no tenés reservas',
+    'Book a service to get started': 'Reservá un servicio para empezar',
+    'Message mechanic': 'Mensaje al mecánico',
+    'Cancel this booking?': '¿Cancelar esta reserva?',
+    'Could not cancel. Please call us.': 'No se pudo cancelar. Por favor, llamanos.',
+    'New date (YYYY-MM-DD):': 'Nueva fecha (AAAA-MM-DD):',
+    'New time:\n': 'Nuevo horario:\n',
+    'Could not reschedule. Please call us.': 'No se pudo reprogramar. Por favor, llamanos.',
+    'Could not load bookings.': 'No se pudieron cargar las reservas.',
+    'No bikes registered': 'No hay bicis registradas',
+    'Your bikes appear here after your first service':
+      'Tus bicis van a aparecer acá después de tu primer servicio',
+    'No active membership': 'Sin membresía activa',
+    'Save money with a recurring plan': 'Ahorrá con un plan recurrente',
+    'View Plans': 'Ver Planes',
+    'Current Plan': 'Plan Actual',
+    'Member since': 'Miembro desde',
+    Resume: 'Reanudar',
+    Pause: 'Pausar',
+    'Resuming...': 'Reanudando...',
+    'Pausing...': 'Pausando...',
+    'Membership resumed!': '¡Membresía reanudada!',
+    'Membership paused. No charges until you resume.':
+      'Membresía pausada. Sin cargos hasta que la reanudes.',
+    'Something went wrong': 'Algo salió mal',
+    'Cancel your membership? It will stay active until the end of the billing period.':
+      '¿Cancelar tu membresía? Va a seguir activa hasta el fin del período de facturación.',
+    'Cancelling...': 'Cancelando...',
+    'Membership will cancel at end of current period.':
+      'La membresía se va a cancelar al final del período actual.',
+    'Sign out': 'Cerrar sesión',
+    'Sign out?': '¿Cerrar sesión?',
+
+    // ── Auth modal (submit/tabs handlers) ──────────────────────────────────
+    'Please fill in all fields.': 'Por favor, completá todos los campos.',
+    'Creating...': 'Creando...',
+    'Signing in...': 'Iniciando sesión...',
+    'Authentication failed. Please try again.':
+      'Falló la autenticación. Por favor, intentá de nuevo.',
+    'Google sign-in failed. Please try again.':
+      'Falló el inicio de sesión con Google. Por favor, intentá de nuevo.',
+
+    // ── Booking wizard: mock service descriptions ──────────────────────────
+    'Gears, brakes, wheels trued + safety check':
+      'Cambios, frenos, centrado de ruedas + chequeo de seguridad',
+    'Full tune-up + drivetrain clean': 'Ajuste completo + limpieza de transmisión',
+    'Comprehensive overhaul + parts check': 'Revisión integral + chequeo de piezas',
+    'Complete rebuild, all bearings serviced':
+      'Reconstrucción completa, todos los rodamientos revisados',
+    '~1 hour': '~1 hora',
+    '~1.5 hours': '~1,5 horas',
+    '~2.5 hours': '~2,5 horas',
+    '~4 hours': '~4 horas',
+    // Step 1: AI diagnosis + service selection
+    'Not sure what your bike needs?': '¿No estás seguro qué necesita tu bici?',
+    'Upload a photo or describe the problem — our AI will recommend the right service.':
+      'Subí una foto o describí el problema - nuestra IA te va a recomendar el servicio correcto.',
+    '📷 Upload Photo': '📷 Subir Foto',
+    // Booking wizard summary: abbreviated day names (BK_DAY_NAMES - 3-letter
+    // format, distinct from the 2-letter DOW keys 'Su'/'Mo'.. used by the
+    // calendar grid header)
+    Sun: 'Dom',
+    Mon: 'Lun',
+    Tue: 'Mar',
+    Wed: 'Mié',
+    Thu: 'Jue',
+    Fri: 'Vie',
+    Sat: 'Sáb',
+    // Booking wizard calendar: abbreviated month names (BK_MONTH_NAMES —
+    // distinct from the full 'January'.. keys used by the mobile calendar)
+    Jan: 'Ene',
+    Feb: 'Feb',
+    Mar: 'Mar',
+    Apr: 'Abr',
+    // 'May' is skipped on purpose: the full-month key `May: 'Mayo'` already
+    // exists above (mobile calendar) and the 3-letter abbreviation is the
+    // identical string in English, so adding it here would overwrite that
+    // translation. The booking-wizard calendar falls back to English "May"
+    // for that one month only - documented limitation, see final report.
+    Jun: 'Jun',
+    Jul: 'Jul',
+    Aug: 'Ago',
+    Sep: 'Sep',
+    Oct: 'Oct',
+    Nov: 'Nov',
+    Dec: 'Dic',
+    'Ask AI →': 'Preguntar a la IA →',
+    'Select a Service': 'Elegí un Servicio',
+    'Continue to Date & Time →': 'Continuar a Fecha y Hora →',
+    // Step 2: date + time
+    'Select a Date': 'Elegí una Fecha',
+    'Select a Time': 'Elegí un Horario',
+    '← Back': '← Atrás',
+    'Summary →': 'Resumen →',
+    // Step 2: waitlist ("We'll email" / "if a slot opens on" already covered
+    // by the mobile dict entries above)
+    'Select at least one time.': 'Seleccioná al menos un horario.',
+    // Step 3: summary — admin test mode + promo code
+    'Create test booking (admin - no charge) →': 'Crear reserva de prueba (admin - sin cargo) →',
+    'Admin test mode - this booking is created without payment':
+      'Modo de prueba admin - esta reserva se crea sin pago',
+    'Code applied! -$': 'Código aplicado! -$',
+    off: 'de descuento',
+    // Step 3: summary card
+    'Est.': 'Aprox.',
+    '123 Example St, Suburb NSW 2000': 'Calle Ejemplo 123, Suburbio NSW 2000',
+    'We come to you anywhere in the Sydney area': 'Vamos hasta vos en cualquier zona de Sydney',
+    'Promo code': 'Código promocional',
+    '(optional)': '(opcional)',
+    'e.g. WELCOME10': 'ej. WELCOME10',
+    "We'll arrange payment on confirmation": 'Coordinamos el pago al confirmar',
+    'Confirm Booking →': 'Confirmar Reserva →',
+    // bkShowPaymentComingSoon overlay
+    'Online payments coming soon': 'Pagos en línea próximamente',
+    "We're finalising our business setup. Contact us now to lock in your":
+      'Estamos terminando de configurar el negocio. Contactanos ahora para reservar tu',
+    '- same price, same service.': '- mismo precio, mismo servicio.',
+    'Book via WhatsApp': 'Reservar por WhatsApp',
+    'Go back': 'Volver',
+    // bkProceed / bkConfirmedHTML
+    'Saving...': 'Guardando...',
+    'Confirm & Pay →': 'Confirmar y Pagar →',
+    'Please sign in to confirm your booking.':
+      'Por favor, iniciá sesión para confirmar tu reserva.',
+    'Could not save booking. Please try again.':
+      'No se pudo guardar la reserva. Por favor, intentá de nuevo.',
+    'That time slot was just booked. Please choose another time.':
+      'Ese horario se acaba de reservar. Por favor, elegí otro horario.',
+    'Booking Received!': '¡Reserva Recibida!',
+    'Reference:': 'Referencia:',
+    "We'll contact you within 1 hour to confirm your appointment. Payment is arranged separately.":
+      'Te vamos a contactar dentro de 1 hora para confirmar tu turno. El pago se coordina por separado.',
+    // AI diagnosis (booking wizard variant)
+    'Analysing your photo...': 'Analizando tu foto...',
+    'Could not analyse photo. Please describe the problem instead.':
+      'No se pudo analizar la foto. Por favor, describí el problema en su lugar.',
+    'Analysing...': 'Analizando...',
+    'Could not process. Please select a service manually.':
+      'No se pudo procesar. Por favor, elegí un servicio manualmente.',
+    'AI Recommendation': 'Recomendación de la IA',
+    'Bike issue detected': 'Problema de bici detectado',
+    'Book soon': 'Reservá pronto',
+
+    // ── Plan info modal ("Learn more") ─────────────────────────────────────
+    'Basic Plan': 'Plan Basic',
+    'Standard Plan': 'Plan Standard',
+    'VIP Plan': 'Plan VIP',
+    '1 maintenance service per month (Tune-Up)': '1 servicio de mantenimiento por mes (Ajuste)',
+    '10% discount on parts': '10% de descuento en repuestos',
+    'Digital bike history log': 'Historial digital de la bici',
+    'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'Servicios de emergencia, descuento en servicios extra, visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    'A regular Tune-Up costs $109. With Basic you save $52/month.':
+      'Un Ajuste normal cuesta $109. Con Basic ahorrás $52/mes.',
+    '2 services per month (any type)': '2 servicios por mes (cualquier tipo)',
+    '15% discount on parts': '15% de descuento en repuestos',
+    '1 emergency callout per month': '1 visita de emergencia por mes',
+    'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'Visitas ilimitadas, descuento en servicios más allá del límite mensual. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    '2 services/month = $218 value. With Standard you save $121/month.':
+      '2 servicios/mes = valor de $218. Con Standard ahorrás $121/mes.',
+    'Unlimited services per month': 'Servicios ilimitados por mes',
+    'Same-day priority': 'Prioridad el mismo día',
+    '20% discount on parts': '20% de descuento en repuestos',
+    'Unlimited emergency callouts': 'Visitas de emergencia ilimitadas',
+    'Dedicated mechanic': 'Mecánico dedicado',
+    'High-end parts (charged at cost). Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'Repuestos de alta gama (se cobran a precio de costo). Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.':
+      'Servicios ilimitados + emergencias = valor de $400+. Con VIP ahorrás $250+/mes.',
+    'Get Started - $57/month': 'Comenzar - $57/mes',
+    'Get Started - $97/month': 'Comenzar - $97/mes',
+    'Get Started - $147/month': 'Comenzar - $147/mes',
+
+    // ── Gift card success alert ──────────────────────────────────────────
+    '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
+      '🎁 ¡Gift card comprada! Se envió por correo al destinatario con su código único.',
+
+    // ── Review modal ────────────────────────────────────────────────────────
+    Terrible: 'Terrible',
+    Poor: 'Malo',
+    OK: 'Regular',
+    Good: 'Bueno',
+    Excellent: 'Excelente',
+    'How was your service?': '¿Cómo estuvo tu servicio?',
+    'Your feedback helps us improve': 'Tu opinión nos ayuda a mejorar',
+    'Your comments': 'Tus comentarios',
+    'Tell us what you loved or what we can improve...':
+      'Contanos qué te gustó o qué podemos mejorar...',
+    'Add a photo': 'Agregar una foto',
+    'Tap to add a photo': 'Tocá para agregar una foto',
+    'Remove photo': 'Quitar foto',
+    'Submit review': 'Enviar reseña',
+    'Maybe later': 'Tal vez después',
+    'Please select a star rating first': 'Por favor, elegí primero una calificación con estrellas',
+    'Submitting...': 'Enviando...',
+    'Could not submit review': 'No se pudo enviar la reseña',
+    'Thank you!': '¡Gracias!',
+    'Your review has been submitted': 'Tu reseña fue enviada',
+    'Also leave a Google review?': '¿Querés dejar también una reseña en Google?',
+    'Helps cyclists find us': 'Ayuda a otros ciclistas a encontrarnos',
+    'Connection error — try again': 'Error de conexión - intentá de nuevo',
+    'Uploading photo...': 'Subiendo foto...',
+    'Change photo': 'Cambiar foto',
+
+    // ── Client <-> mechanic chat modal (landing.html) ──────────────────────
+    'Online now': 'En línea ahora',
+    'Message failed to send': 'No se pudo enviar el mensaje',
+    'Loading messages...': 'Cargando mensajes...',
+    'No messages yet': 'Todavía no hay mensajes',
+    'Send a message to your mechanic': 'Enviale un mensaje a tu mecánico',
+
+    // ── Floating FAQ chatbot ────────────────────────────────────────────────
+    'Chat with Dr. Bike': 'Chatear con Dr. Bike',
+    'Dr. Bike Assistant': 'Asistente de Dr. Bike',
+    'Ask me anything': 'Preguntame lo que quieras',
+    'Type your question...': 'Escribí tu pregunta...',
+    'What does a Tune-Up include?': '¿Qué incluye un Ajuste?',
+    'Which areas do you cover?': '¿Qué zonas cubren?',
+    'How do memberships work?': '¿Cómo funcionan las membresías?',
+    'Do you fix e-bikes?': '¿Reparan e-bikes?',
+    "Sorry, I couldn't process that. Call us on 0433 963 250.":
+      'Perdón, no pude procesar eso. Llamanos al 0433 963 250.',
+    "Sorry, I'm having trouble right now. Call us on 0433 963 250. 🔧":
+      'Perdón, estoy teniendo problemas en este momento. Llamanos al 0433 963 250. 🔧',
+    "G'day! I'm the Dr. Bike assistant. Ask me about services, prices, coverage areas or memberships. 🚲":
+      '¡Hola! Soy el asistente de Dr. Bike. Preguntame sobre servicios, precios, zonas de cobertura o membresías. 🚲',
+
+    // ── FAQ (landing.html specific answers) ───────────────────────────────
+    'We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches.':
+      'Cubrimos toda el área metropolitana de Sydney, incluyendo Inner West, Eastern Suburbs, CBD, North Shore, Manly y Northern Beaches.',
+    'You can reschedule or cancel up to 2 hours before your appointment at no charge.':
+      'Podés reprogramar o cancelar hasta 2 horas antes de tu turno sin cargo.',
+    "Yes, we carry common parts in the van, but they are not included in the service price — they're charged separately at cost price with no markup.":
+      'Sí, llevamos repuestos comunes en la van, pero no están incluidos en el precio del servicio - se cobran aparte a precio de costo sin recargo.',
+    'A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required.':
+      'Un ajuste básico toma 45-90 minutos. Los servicios completos pueden tomar 2-3 horas según el trabajo requerido.',
+    'We accept all major credit cards, debit cards, Apple Pay, and Google Pay. Payment is taken after service completion.':
+      'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. El pago se cobra al completar el servicio.',
+    'Still have questions?': '¿Tenés más preguntas?',
+    "We're here to help! Contact us and we'll get back to you within the hour.":
+      '¡Estamos para ayudarte! Contactanos y te respondemos dentro de la hora.',
+
+    // ── Fleet / Corporate (B2B) ────────────────────────────────────────────
+    'For businesses': 'Para empresas',
+    'Keep your whole fleet rolling': 'Mantené toda tu flota rodando',
+    'One mechanic, your entire team. We come to your office or depot and service all bikes in a single visit — no downtime, no logistics hassle.':
+      'Un mecánico, todo tu equipo. Vamos a tu oficina o depósito y reparamos todas las bicis en una sola visita - sin tiempos muertos, sin complicaciones logísticas.',
+    'On-site service': 'Servicio en el lugar',
+    'We come to your office, warehouse or depot. Zero travel time for your team.':
+      'Vamos a tu oficina, depósito o almacén. Cero tiempo de viaje para tu equipo.',
+    'Volume pricing': 'Precios por volumen',
+    'Custom rates for 5+ bikes. The more bikes, the better the deal.':
+      'Tarifas personalizadas para 5+ bicis. Cuantas más bicis, mejor el precio.',
+    'Priority scheduling': 'Turnos prioritarios',
+    'Fleet clients get first access to bookings and a dedicated point of contact.':
+      'Los clientes de flota tienen acceso prioritario a turnos y un contacto dedicado.',
+    'Service reports': 'Informes de servicio',
+    'Full PDF report per bike after every visit. Track the health of your entire fleet.':
+      'Informe PDF completo por bici después de cada visita. Seguí el estado de toda tu flota.',
+    'bikes serviced': 'bicis reparadas',
+    'response time': 'tiempo de respuesta',
+    'call-out for fleets': 'de visita para flotas',
+    'Get a fleet quote': 'Cotizá tu flota',
+    "We'll reply within 2 business hours": 'Te respondemos dentro de 2 horas hábiles',
+    'Business name *': 'Nombre de la empresa *',
+    'Your name *': 'Tu nombre *',
+    'Work email *': 'Correo laboral *',
+    Phone: 'Teléfono',
+    'Fleet size *': 'Tamaño de la flota *',
+    'Fleet size': 'Tamaño de la flota',
+    'Service frequency': 'Frecuencia de servicio',
+    'Select...': 'Seleccioná...',
+    '2-5 bikes': '2-5 bicis',
+    '6-15 bikes': '6-15 bicis',
+    '16-30 bikes': '16-30 bicis',
+    '31-50 bikes': '31-50 bicis',
+    '50+ bikes': '50+ bicis',
+    'Not sure yet': 'Todavía no sé',
+    Quarterly: 'Trimestral',
+    'Bi-annually': 'Semestral',
+    'One-off': 'Puntual',
+    Notes: 'Notas',
+    'Types of bikes, location, any specific issues...':
+      'Tipos de bicis, ubicación, algún problema específico...',
+    'Request Fleet Quote': 'Solicitar Cotización de Flota',
+    "No commitment required. We'll build a custom plan for your team.":
+      'Sin compromiso. Armamos un plan a medida para tu equipo.',
+    'Sending...': 'Enviando...',
+    "Thanks! We'll be in touch within 2 business hours.":
+      '¡Gracias! Te contactamos dentro de 2 horas hábiles.',
+    'Check your inbox for a confirmation.': 'Revisá tu correo para la confirmación.',
+    'Quote Requested': 'Cotización Solicitada',
+    'Something went wrong. Please email us directly.':
+      'Algo salió mal. Por favor escribinos directamente.',
+
+    // ── Final CTA ───────────────────────────────────────────────────────────
+    'Ready to Experience Premium Bike Service?': '¿Listo para Experimentar un Servicio Premium?',
+    'Book your service today and join hundreds of satisfied cyclists across Sydney.':
+      'Reservá tu servicio hoy y sumate a cientos de ciclistas satisfechos en toda Sydney.',
+    'Call 0433 963 250': 'Llamar al 0433 963 250',
+
+    // ── Footer ──────────────────────────────────────────────────────────────
+    'Professional bike service at your doorstep.':
+      'Servicio profesional de bicicletas en tu puerta.',
+    Facebook: 'Facebook',
+    Instagram: 'Instagram',
+    YouTube: 'YouTube',
+    'Basic Service': 'Servicio Basic',
+    'Premium Service': 'Servicio Premium',
+    'Our Story': 'Nuestra Historia',
+    Reviews: 'Reseñas',
+    'Booking Help': 'Ayuda con Reservas',
+    'Submit a Claim': 'Enviar un Reclamo',
+    '© 2026 Dr. Bike Sydney. All rights reserved.':
+      '© 2026 Dr. Bike Sydney. Todos los derechos reservados.',
+
+    // ── Newsletter signup ───────────────────────────────────────────────────
+    'STAY IN THE LOOP': 'MANTENETE AL DÍA',
+    'Cycling Tips & Offers': 'Tips de Ciclismo y Ofertas',
+    Subscribe: 'Suscribirse',
+    'Please enter a valid email address.': 'Por favor, ingresá un correo válido.',
+    '✅ Subscribed! Check your inbox for a 10% off code.':
+      '✅ ¡Suscripto! Revisá tu correo por un código de 10% de descuento.',
+    'Could not subscribe. Please try again.': 'No se pudo suscribir. Por favor, intentá de nuevo.',
+    'No spam. Unsubscribe anytime.': 'Sin spam. Cancelá cuando quieras.',
+    'Monthly bike maintenance tips, seasonal safety advice and exclusive offers for Dr. Bike subscribers. Use code':
+      'Tips mensuales de mantenimiento de bici, consejos de seguridad de temporada y ofertas exclusivas para suscriptores de Dr. Bike. Usá el código',
+    'for 10% off your first booking.': 'para 10% de descuento en tu primera reserva.',
   },
   zh: {
     // Bottom nav
@@ -793,11 +1309,495 @@ const dict = {
     'Professional bike service at your doorstep. Sydney’s mobile bicycle mechanic.':
       '上门专业自行车服务，悉尼的移动自行车技工。',
     Company: '公司',
+    Support: '支持',
+    'Terms & Conditions': '条款与条件',
+    'Privacy Policy': '隐私政策',
     Contact: '联系方式',
     'About Us': '关于我们',
     'My Account': '我的账户',
     'Sydney, NSW': '悉尼, NSW',
     'Mon – Sun: 8:30AM – 4:00PM': '周一至周日：8:30 - 16:00',
+    'Mon - Sun: 8:30AM - 4:00PM': '周一至周日：8:30 - 16:00',
+    'Healthy bikes, happy riders': '健康的自行车，快乐的骑行者',
+
+    // ── landing.html (desktop) — Navbar ──────────────────────────────────
+    Mechanics: '技工',
+    Memberships: '会员',
+    About: '关于我们',
+    'Fleet →': '车队 →',
+    'Sign in to manage bookings': '登录以管理您的预订',
+    'Bookings · Bikes · Membership': '预订 · 自行车 · 会员',
+    // Trust badges bar
+    '100% Satisfaction Guarantee': '100%满意保证',
+    'Verified Mechanic': '认证技工',
+    'Background Checked': '背景审查',
+    'Fully Insured': '全额保险',
+    // Hero (landing-specific strings not already in the mobile dict)
+    'Mobile Service · Sydney Wide': '上门服务 · 覆盖全悉尼',
+    'Professional Bike Service at Your Doorstep': '专业自行车服务，直达家门口',
+    'Mobile bicycle mechanic in Sydney. We come to you, fully equipped.':
+      '悉尼的移动自行车技工，装备齐全，随叫随到。',
+    'Or call': '或致电',
+    // GrowthBook A/B experiment "hero-cta-copy" variant copy (see ES block
+    // comment for context)
+    'Get Your Free Quote': '获取免费报价',
+    'Qualified Mechanic': '专业技工',
+    'Fully Equipped Van': '装备齐全的服务车',
+    '5 Star Rated': '五星好评',
+    // Mechanics 3D carousel
+    'OUR TEAM': '我们的团队',
+    'Meet Your Mechanics': '认识我们的技工',
+    'Qualified, background-checked mechanics rated by real Sydney riders.':
+      '经过认证和背景审查的技工，由悉尼真实骑行者评分。',
+    'Previous mechanic': '上一位技工',
+    'Next mechanic': '下一位技工',
+    'Our mechanic profiles are coming soon.': '技工资料即将上线。',
+    'service completed': '项服务已完成',
+    'services completed': '项服务已完成',
+    // Memberships section (landing-specific)
+    Monthly: '按月',
+    Annual: '按年',
+    'Save 20%': '省20%',
+    Basic: 'Basic',
+    Standard: 'Standard',
+    VIP: 'VIP',
+    Popular: '最受欢迎',
+    '1 Basic Service': '1次Basic服务',
+    '10% off repairs': '维修享9折',
+    'Priority booking': '优先预约',
+    'Email support': '邮件支持',
+    '2 Standard Services': '2次Standard服务',
+    'Phone support': '电话支持',
+    'Free safety check': '免费安全检查',
+    'Unlimited Services': '无限次服务',
+    '20% off repairs': '维修享8折',
+    'Annual tune-up': '年度调校',
+    'All plans include mobile service within Sydney metro area': '所有计划均包含悉尼都会区上门服务',
+    'Gift a service': '赠送一次服务',
+    'Send a Dr. Bike gift card by email - perfect for any cyclist':
+      '通过邮件发送Dr. Bike礼品卡 - 适合任何骑行者',
+    'Buy a gift card': '购买礼品卡',
+    // Trust bar (brands not translated - see section below)
+    'TRUSTED BY CYCLISTS ACROSS SYDNEY': '深受悉尼骑行者信赖',
+    // Services intro + "All Services" modal
+    'Book a Service →': '预约服务 →',
+    'All Services': '所有服务',
+    'All prices include $20 mobile call-out fee. We come to you.':
+      '所有价格均含$20上门费，我们会上门为您服务。',
+    Essentials: '基础服务',
+    'Tyres & Wheels': '轮胎与车轮',
+    'Cables & Accessories': '线缆与配件',
+    'Basic Tune-Up': '基础调校',
+    'Full tune-up + wheel true + drivetrain clean': '全面调校 + 车轮校正 + 传动系统清洁',
+    'Ultimate Overhaul': '终极大修',
+    'Strip & rebuild, all consumables replaced': '拆解重装，更换所有易损件',
+    'Book Now': '立即预订',
+    'Flat Tyre Repair': '爆胎修理',
+    'Tube replace or patch, remount & inflate': '更换或修补内胎，重新安装并充气',
+    'Tyre Replacement': '轮胎更换',
+    'New tyre fitted (tyre cost extra)': '安装新轮胎（轮胎费用另计）',
+    'Wheel Truing - Minor': '车轮校正 - 轻度',
+    'Quick spoke tension touch-up': '快速调整辐条张力',
+    'Wheel Truing - Major': '车轮校正 - 重度',
+    'Full spoke tension & rim alignment': '全面调整辐条张力与轮圈校准',
+    'Spoke Replacement': '辐条更换',
+    'Per spoke, includes re-true': '按根计费，含重新校正',
+    'Brake Adjustment': '刹车调整',
+    'Pad align, cable tension, lever reach': '刹车片对齐、线管张力、刹把行程调整',
+    'Brake Pad Replacement': '刹车片更换',
+    'Both wheels, pads included': '前后轮，含刹车片',
+    'Hydraulic Bleed': '油压刹车排气',
+    'Full bleed with fresh fluid': '全面排气并更换新油',
+    'Gear Adjustment': '变速调整',
+    'Front & rear derailleur indexed': '前后变速器索引调整',
+    'Chain Replacement': '链条更换',
+    'KMC or SRAM chain fitted': '安装KMC或SRAM链条',
+    'Cassette/Freewheel Swap': '飞轮/棘轮更换',
+    'Remove & fit (part cost extra)': '拆卸并安装（零件费用另计）',
+    'Cable & Housing': '线管与线壳',
+    'Full replace front & rear': '前后全部更换',
+    'Handlebar Tape': '车把带',
+    'Cork or EVA wrap, bar ends included': '软木或EVA材质，含车把塞',
+    'Saddle Fitting': '坐垫调校',
+    'Height, fore-aft, tilt optimised': '优化高度、前后位置与倾角',
+    'Bottom Bracket Service': '五通保养',
+    'Clean, regrease or replace BB': '清洁、重新润滑或更换五通',
+    'Headset Service': '头碗保养',
+    'Clean, adjust, regrease': '清洁、调整、重新润滑',
+    'Custom Quote': '定制报价',
+    'E-bikes, carbon, vintage, insurance claims': '电动自行车、碳纤维车架、老式车、保险理赔',
+    'All prices include $20 mobile call-out. Parts charged separately unless stated.':
+      '所有价格均含$20上门费。除另有说明外，零件费用另计。',
+    'Same-day booking +$30. Weekend +$20.': '当天预订加收$30，周末加收$20。',
+
+    // ── Testimonials (landing.html specific reviews) ─────────────────────
+    "Real reviews from Sydney cyclists who've used Dr. Bike Sydney.":
+      '来自使用过Dr. Bike Sydney的悉尼骑行者的真实评价。',
+    'Google Review': '谷歌评价',
+    '"Diego came to my apartment in Surry Hills and fixed my derailleur in under an hour. Absolutely professional — showed up on time, van was stocked with everything. My bike shifts perfectly now. Will definitely book again."':
+      '"Diego上门到我在Surry Hills的公寓，不到一小时就修好了我的变速器。非常专业 - 准时到达，车上备件齐全。我的车现在换挡完美。一定会再次预订。"',
+    '2 weeks ago': '2周前',
+    '"Best mobile mechanic in Sydney, no question. I was sceptical about a mobile service but Dr. Bike exceeded every expectation. Arrived at Bondi, full service done in 90 minutes in my parking spot. Pricing is very fair."':
+      '"毫无疑问是悉尼最好的移动技工。我原本对上门服务有些怀疑，但Dr. Bike超出了我的所有期待。技工到达Bondi后，在我的停车位上90分钟内完成了全套服务。价格非常公道。"',
+    '1 month ago': '1个月前',
+    '"Used the VIP membership and it\'s worth every cent. Two services already this year — brake bleed and a full tune-up. The convenience of having a mechanic come to my home in Newtown is unbeatable. Highly recommend."':
+      '"用了VIP会员，物超所值。今年已经做了两次服务 - 刹车排气和全面调校。技工直接上门到我在Newtown的家，太方便了。强烈推荐。"',
+    '3 weeks ago': '3周前',
+    'Leave us a review': '给我们留个评价',
+    'See Our Service In Action': '看看我们的服务实况',
+    'Watch how we service bikes on location.': '看看我们如何上门为自行车服务。',
+    'Watch Video': '观看视频',
+
+    // ── Book a Service (dark form section) ────────────────────────────────
+    'BOOK A SERVICE': '预约服务',
+    'Schedule Your Service Today': '立即安排您的服务',
+    "Choose a service, pick a time, and we'll come to you.":
+      '选择服务，选择时间，我们上门为您服务。',
+    'Service Type': '服务类型',
+    'Preferred date': '首选日期',
+    'Preferred Time': '首选时间',
+    'Morning (8:30am - 12pm)': '上午 (8:30 - 12:00)',
+    'Afternoon (12pm - 4pm)': '下午 (12:00 - 16:00)',
+    'Evening (4pm - 7pm)': '傍晚 (16:00 - 19:00)',
+    'Enter your address': '输入您的地址',
+    'Continue Booking': '继续预订',
+    '✓ Confirmation in minutes': '✓ 几分钟内确认',
+    '✓ Free cancellation': '✓ 免费取消',
+
+    // ── Auth modal ──────────────────────────────────────────────────────────
+    'Sign In': '登录',
+    'Sign in to your account': '登录您的账户',
+    'Create your account': '创建您的账户',
+    'or continue with': '或使用以下方式继续',
+    'Check your email to confirm your account': '请查收邮箱以确认您的账户',
+
+    // ── Membership modal ────────────────────────────────────────────────────
+    'Start Your Membership': '开始您的会员',
+    'Monthly Total': '每月总计',
+    month: '月',
+    year: '年',
+    'Card Details': '卡片信息',
+    'Secured by Stripe · 3-month minimum · Cancel anytime after':
+      'Stripe安全保障 · 最低3个月 · 之后可随时取消',
+
+    // ── Gift Card modal ──────────────────────────────────────────────────────
+    'Send a Dr. Bike gift card by email': '通过邮件发送Dr. Bike礼品卡',
+    Amount: '金额',
+    'Or enter a custom amount ($20-$1000)': '或输入自定义金额（$20-$1000）',
+    "Recipient's name": '收件人姓名',
+    "Recipient's email *": '收件人邮箱 *',
+    'Your name': '您的姓名',
+    'Personal message (optional)': '个性化留言（可选）',
+    'Continue to payment →': '继续付款 →',
+    'Secured by Stripe · Delivered instantly by email': 'Stripe安全保障 · 邮件即时送达',
+
+    // ── Account panel (bookings / bikes / membership tabs) ────────────────
+    'No bookings yet': '暂无预订',
+    'Book a service to get started': '预订服务以开始使用',
+    'Message mechanic': '给技工发消息',
+    'Cancel this booking?': '取消此预订吗？',
+    'Could not cancel. Please call us.': '无法取消，请致电我们。',
+    'New date (YYYY-MM-DD):': '新日期（YYYY-MM-DD）：',
+    'New time:\n': '新时间：\n',
+    'Could not reschedule. Please call us.': '无法改期，请致电我们。',
+    'Could not load bookings.': '无法加载预订。',
+    'No bikes registered': '暂无已注册自行车',
+    'Your bikes appear here after your first service': '您的第一次服务后，自行车会显示在这里',
+    'No active membership': '暂无生效会员',
+    'Save money with a recurring plan': '订阅计划更省钱',
+    'View Plans': '查看计划',
+    'Current Plan': '当前计划',
+    'Member since': '会员起始于',
+    Resume: '恢复',
+    Pause: '暂停',
+    'Resuming...': '恢复中...',
+    'Pausing...': '暂停中...',
+    'Membership resumed!': '会员已恢复！',
+    'Membership paused. No charges until you resume.': '会员已暂停，恢复前不会扣费。',
+    'Something went wrong': '出现问题',
+    'Cancel your membership? It will stay active until the end of the billing period.':
+      '取消会员资格吗？将保持生效至本计费周期结束。',
+    'Cancelling...': '取消中...',
+    'Membership will cancel at end of current period.': '会员将在本周期结束时取消。',
+    'Sign out': '退出登录',
+    'Sign out?': '退出登录吗？',
+
+    // ── Auth modal (submit/tabs handlers) ──────────────────────────────────
+    'Please fill in all fields.': '请填写所有字段。',
+    'Creating...': '创建中...',
+    'Signing in...': '登录中...',
+    'Authentication failed. Please try again.': '身份验证失败，请重试。',
+    'Google sign-in failed. Please try again.': 'Google登录失败，请重试。',
+
+    // ── Booking wizard: mock service descriptions ──────────────────────────
+    'Gears, brakes, wheels trued + safety check': '变速、刹车、车轮校正 + 安全检查',
+    'Full tune-up + drivetrain clean': '全面调校 + 传动系统清洁',
+    'Comprehensive overhaul + parts check': '全面检修 + 零件检查',
+    'Complete rebuild, all bearings serviced': '完全翻新，所有轴承保养',
+    '~1 hour': '约1小时',
+    '~1.5 hours': '约1.5小时',
+    '~2.5 hours': '约2.5小时',
+    '~4 hours': '约4小时',
+    // Step 1: AI diagnosis + service selection
+    'Not sure what your bike needs?': '不确定您的自行车需要什么服务？',
+    'Upload a photo or describe the problem — our AI will recommend the right service.':
+      '上传照片或描述问题，我们的AI会为您推荐合适的服务。',
+    '📷 Upload Photo': '📷 上传照片',
+    // Booking wizard summary: abbreviated day names (see ES block comment)
+    Sun: '周日',
+    Mon: '周一',
+    Tue: '周二',
+    Wed: '周三',
+    Thu: '周四',
+    Fri: '周五',
+    Sat: '周六',
+    // Booking wizard calendar: abbreviated month names (see ES block comment
+    // for the 'May' collision note - same limitation applies here)
+    Jan: '1月',
+    Feb: '2月',
+    Mar: '3月',
+    Apr: '4月',
+    Jun: '6月',
+    Jul: '7月',
+    Aug: '8月',
+    Sep: '9月',
+    Oct: '10月',
+    Nov: '11月',
+    Dec: '12月',
+    'Ask AI →': '询问AI →',
+    'Select a Service': '选择服务',
+    'Continue to Date & Time →': '继续选择日期和时间 →',
+    // Step 2: date + time
+    'Select a Date': '选择日期',
+    'Select a Time': '选择时间',
+    '← Back': '← 返回',
+    'Summary →': '摘要 →',
+    // Step 2: waitlist ("We'll email" / "if a slot opens on" already covered
+    // by the mobile dict entries above)
+    'Select at least one time.': '请至少选择一个时间段。',
+    // Step 3: summary — admin test mode + promo code
+    'Create test booking (admin - no charge) →': '创建测试预订（管理员 - 免费）→',
+    'Admin test mode - this booking is created without payment':
+      '管理员测试模式 - 此预订创建时不收取费用',
+    'Code applied! -$': '优惠码已应用！-$',
+    off: '折扣',
+    // Step 3: summary card
+    'Est.': '预计',
+    '123 Example St, Suburb NSW 2000': '示例街123号, 郊区 NSW 2000',
+    'We come to you anywhere in the Sydney area': '悉尼地区任何地方我们都会上门',
+    'Promo code': '优惠码',
+    '(optional)': '（可选）',
+    'e.g. WELCOME10': '例如 WELCOME10',
+    "We'll arrange payment on confirmation": '确认后我们会安排付款',
+    'Confirm Booking →': '确认预订 →',
+    // bkShowPaymentComingSoon overlay
+    'Online payments coming soon': '在线支付即将上线',
+    "We're finalising our business setup. Contact us now to lock in your":
+      '我们正在完成业务筹备。请立即联系我们以锁定您的',
+    '- same price, same service.': '- 价格和服务不变。',
+    'Book via WhatsApp': '通过WhatsApp预订',
+    'Go back': '返回',
+    // bkProceed / bkConfirmedHTML
+    'Saving...': '保存中...',
+    'Confirm & Pay →': '确认并支付 →',
+    'Please sign in to confirm your booking.': '请登录以确认您的预订。',
+    'Could not save booking. Please try again.': '无法保存预订，请重试。',
+    'That time slot was just booked. Please choose another time.':
+      '该时间段刚被预订，请选择其他时间。',
+    'Booking Received!': '预订已收到！',
+    'Reference:': '参考编号：',
+    "We'll contact you within 1 hour to confirm your appointment. Payment is arranged separately.":
+      '我们会在1小时内联系您确认预约，付款将另行安排。',
+    // AI diagnosis (booking wizard variant)
+    'Analysing your photo...': '正在分析您的照片...',
+    'Could not analyse photo. Please describe the problem instead.':
+      '无法分析照片，请改为描述问题。',
+    'Analysing...': '正在分析...',
+    'Could not process. Please select a service manually.': '无法处理，请手动选择服务。',
+    'AI Recommendation': 'AI推荐',
+    'Bike issue detected': '检测到自行车问题',
+    'Book soon': '尽快预订',
+
+    // ── Plan info modal ("Learn more") ─────────────────────────────────────
+    'Basic Plan': 'Basic计划',
+    'Standard Plan': 'Standard计划',
+    'VIP Plan': 'VIP计划',
+    '1 maintenance service per month (Tune-Up)': '每月1次保养服务（基础调校）',
+    '10% discount on parts': '零件享9折',
+    'Digital bike history log': '数字化车辆记录',
+    'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '紧急服务、额外服务折扣、无限次上门不含在内。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    'A regular Tune-Up costs $109. With Basic you save $52/month.':
+      '普通基础调校售价$109。使用Basic每月可节省$52。',
+    '2 services per month (any type)': '每月2次服务（任意类型）',
+    '15% discount on parts': '零件享85折',
+    '1 emergency callout per month': '每月1次紧急上门',
+    'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '无限次上门、超出每月限额的服务折扣不含在内。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    '2 services/month = $218 value. With Standard you save $121/month.':
+      '每月2次服务价值$218。使用Standard每月可节省$121。',
+    'Unlimited services per month': '每月无限次服务',
+    'Same-day priority': '当天优先服务',
+    '20% discount on parts': '零件享8折',
+    'Unlimited emergency callouts': '无限次紧急上门',
+    'Dedicated mechanic': '专属技工',
+    'High-end parts (charged at cost). Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '高端零件按成本价收费。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.':
+      '无限次服务+紧急上门 = 价值$400以上。使用VIP每月可节省$250以上。',
+    'Get Started - $57/month': '立即开始 - $57/月',
+    'Get Started - $97/month': '立即开始 - $97/月',
+    'Get Started - $147/month': '立即开始 - $147/月',
+
+    // ── Gift card success alert ──────────────────────────────────────────
+    '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
+      '🎁 礼品卡购买成功！已通过邮件将专属兑换码发送给收件人。',
+
+    // ── Review modal ────────────────────────────────────────────────────────
+    Terrible: '很差',
+    Poor: '较差',
+    OK: '一般',
+    Good: '不错',
+    Excellent: '很棒',
+    'How was your service?': '您的服务体验如何？',
+    'Your feedback helps us improve': '您的反馈有助于我们改进',
+    'Your comments': '您的评论',
+    'Tell us what you loved or what we can improve...':
+      '告诉我们您喜欢的地方或我们可以改进的地方...',
+    'Add a photo': '添加照片',
+    'Tap to add a photo': '点击添加照片',
+    'Remove photo': '移除照片',
+    'Submit review': '提交评价',
+    'Maybe later': '稍后再说',
+    'Please select a star rating first': '请先选择星级评分',
+    'Submitting...': '提交中...',
+    'Could not submit review': '无法提交评价',
+    'Thank you!': '谢谢！',
+    'Your review has been submitted': '您的评价已提交',
+    'Also leave a Google review?': '要顺便留一个谷歌评价吗？',
+    'Helps cyclists find us': '帮助更多骑行者找到我们',
+    'Connection error — try again': '连接错误 - 请重试',
+    'Uploading photo...': '正在上传照片...',
+    'Change photo': '更换照片',
+
+    // ── Client <-> mechanic chat modal (landing.html) ──────────────────────
+    'Online now': '当前在线',
+    'Message failed to send': '消息发送失败',
+    'Loading messages...': '正在加载消息...',
+    'No messages yet': '暂无消息',
+    'Send a message to your mechanic': '给您的技工发送消息',
+
+    // ── Floating FAQ chatbot ────────────────────────────────────────────────
+    'Chat with Dr. Bike': '与Dr. Bike聊天',
+    'Dr. Bike Assistant': 'Dr. Bike助手',
+    'Ask me anything': '有问必答',
+    'Type your question...': '输入您的问题...',
+    'What does a Tune-Up include?': '基础调校包含什么？',
+    'Which areas do you cover?': '你们覆盖哪些区域？',
+    'How do memberships work?': '会员计划如何运作？',
+    'Do you fix e-bikes?': '你们维修电动自行车吗？',
+    "Sorry, I couldn't process that. Call us on 0433 963 250.":
+      '抱歉，我无法处理该请求。请致电 0433 963 250。',
+    "Sorry, I'm having trouble right now. Call us on 0433 963 250. 🔧":
+      '抱歉，我现在遇到了一些问题。请致电 0433 963 250。🔧',
+    "G'day! I'm the Dr. Bike assistant. Ask me about services, prices, coverage areas or memberships. 🚲":
+      '您好！我是Dr. Bike助手。欢迎咨询服务、价格、覆盖区域或会员计划。🚲',
+
+    // ── FAQ (landing.html specific answers) ───────────────────────────────
+    'We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches.':
+      '我们覆盖悉尼都会区所有区域，包括Inner West、Eastern Suburbs、CBD、North Shore、Manly和Northern Beaches。',
+    'You can reschedule or cancel up to 2 hours before your appointment at no charge.':
+      '您可以在预约前2小时内免费改期或取消。',
+    "Yes, we carry common parts in the van, but they are not included in the service price — they're charged separately at cost price with no markup.":
+      '是的，我们车上备有常用零件，但不包含在服务价格内 - 按成本价另行收费，不加价。',
+    'A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required.':
+      '基础调校需要45-90分钟。完整服务根据所需工作可能需要2-3小时。',
+    'We accept all major credit cards, debit cards, Apple Pay, and Google Pay. Payment is taken after service completion.':
+      '我们接受所有主流信用卡、借记卡、Apple Pay和Google Pay。服务完成后收取费用。',
+    'Still have questions?': '还有疑问？',
+    "We're here to help! Contact us and we'll get back to you within the hour.":
+      '我们随时为您解答！联系我们，一小时内回复您。',
+
+    // ── Fleet / Corporate (B2B) ────────────────────────────────────────────
+    'For businesses': '企业服务',
+    'Keep your whole fleet rolling': '让您的整个车队保持运转',
+    'One mechanic, your entire team. We come to your office or depot and service all bikes in a single visit — no downtime, no logistics hassle.':
+      '一位技工，服务您的整个团队。我们上门到您的办公室或仓库，一次上门为所有自行车提供服务 - 没有停工，没有物流麻烦。',
+    'On-site service': '现场服务',
+    'We come to your office, warehouse or depot. Zero travel time for your team.':
+      '我们上门到您的办公室、仓库或车队基地，为您的团队节省全部往返时间。',
+    'Volume pricing': '批量优惠',
+    'Custom rates for 5+ bikes. The more bikes, the better the deal.':
+      '5辆以上自行车享定制价格，车辆越多优惠越大。',
+    'Priority scheduling': '优先排期',
+    'Fleet clients get first access to bookings and a dedicated point of contact.':
+      '车队客户享有优先预约权和专属联系人。',
+    'Service reports': '服务报告',
+    'Full PDF report per bike after every visit. Track the health of your entire fleet.':
+      '每次上门后为每辆车提供完整PDF报告，追踪整个车队的健康状况。',
+    'bikes serviced': '辆车已服务',
+    'response time': '响应时间',
+    'call-out for fleets': '车队上门费',
+    'Get a fleet quote': '获取车队报价',
+    "We'll reply within 2 business hours": '我们会在2个工作小时内回复',
+    'Business name *': '企业名称 *',
+    'Your name *': '您的姓名 *',
+    'Work email *': '工作邮箱 *',
+    Phone: '电话',
+    'Fleet size *': '车队规模 *',
+    'Fleet size': '车队规模',
+    'Service frequency': '服务频率',
+    'Select...': '请选择...',
+    '2-5 bikes': '2-5辆',
+    '6-15 bikes': '6-15辆',
+    '16-30 bikes': '16-30辆',
+    '31-50 bikes': '31-50辆',
+    '50+ bikes': '50辆以上',
+    'Not sure yet': '还不确定',
+    Quarterly: '每季度',
+    'Bi-annually': '每半年',
+    'One-off': '单次',
+    Notes: '备注',
+    'Types of bikes, location, any specific issues...': '自行车类型、地点、具体问题...',
+    'Request Fleet Quote': '申请车队报价',
+    "No commitment required. We'll build a custom plan for your team.":
+      '无需承诺，我们会为您的团队制定专属方案。',
+    'Sending...': '发送中...',
+    "Thanks! We'll be in touch within 2 business hours.": '谢谢！我们会在2个工作小时内联系您。',
+    'Check your inbox for a confirmation.': '请查收邮箱中的确认信息。',
+    'Quote Requested': '已申请报价',
+    'Something went wrong. Please email us directly.': '出现问题，请直接给我们发邮件。',
+
+    // ── Final CTA ───────────────────────────────────────────────────────────
+    'Ready to Experience Premium Bike Service?': '准备好体验高端自行车服务了吗？',
+    'Book your service today and join hundreds of satisfied cyclists across Sydney.':
+      '立即预订，加入悉尼数百位满意骑行者的行列。',
+    'Call 0433 963 250': '致电 0433 963 250',
+
+    // ── Footer ──────────────────────────────────────────────────────────────
+    'Professional bike service at your doorstep.': '上门专业自行车服务。',
+    Facebook: 'Facebook',
+    Instagram: 'Instagram',
+    YouTube: 'YouTube',
+    'Basic Service': 'Basic服务',
+    'Premium Service': '高级服务',
+    'Our Story': '我们的故事',
+    Reviews: '客户评价',
+    'Booking Help': '预订帮助',
+    'Submit a Claim': '提交理赔',
+    '© 2026 Dr. Bike Sydney. All rights reserved.': '© 2026 Dr. Bike Sydney. 保留所有权利。',
+
+    // ── Newsletter signup ───────────────────────────────────────────────────
+    'STAY IN THE LOOP': '随时了解最新资讯',
+    'Cycling Tips & Offers': '骑行贴士与优惠',
+    Subscribe: '订阅',
+    'Please enter a valid email address.': '请输入有效的邮箱地址。',
+    '✅ Subscribed! Check your inbox for a 10% off code.': '✅ 订阅成功！请查收邮箱中的9折优惠码。',
+    'Could not subscribe. Please try again.': '订阅失败，请重试。',
+    'No spam. Unsubscribe anytime.': '不会发送垃圾邮件，随时可取消订阅。',
+    'Monthly bike maintenance tips, seasonal safety advice and exclusive offers for Dr. Bike subscribers. Use code':
+      '每月自行车保养贴士、季节性安全建议及Dr. Bike订阅者专属优惠。使用代码',
+    'for 10% off your first booking.': '即可享首次预订9折优惠。',
   },
 };
 
