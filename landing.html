@@ -62,488 +62,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel up to 2 hours before your appointment at no charge."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes, we carry common parts in the van, but they are not included in the service price — they are charged separately at cost price with no markup."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit cards, debit cards, Apple Pay, and Google Pay. A $20 call-out deposit is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <style>
-    /* ── Variables ────────────────────────────────────────────────────────────── */
-    :root {
-      --blue:        #2563eb;
-      --blue-dark:   #1d4ed8;
-      --blue-light:  #eff6ff;
-      --dark:        #111827;
-      --gray:        #6b7280;
-      --gray-light:  #f9fafb;
-      --border:      #e5e7eb;
-      --white:       #ffffff;
-      --radius:      8px;
-      --radius-lg:   12px;
-      --radius-full: 9999px;
-      --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
-      --shadow-md:   0 4px 16px rgba(0,0,0,0.10);
-      --transition:  all 200ms ease;
-    }
-
-    /* ── Base ─────────────────────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; font-family: Inter, system-ui, sans-serif; }
-    body { color: var(--dark); background: var(--white); line-height: 1.6; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    a { text-decoration: none; color: inherit; }
-    img { max-width: 100%; }
-
-    /* ── Navbar ───────────────────────────────────────────────────────────────── */
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      height: 64px;
-    }
-    .navbar .container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 100%;
-    }
-    .nav-logo {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      text-decoration: none;
-    }
-    .nav-logo .wm-text {
-      font-weight: 700;
-      font-size: 17px;
-      letter-spacing: -0.2px;
-      color: #0D1F3C;
-    }
-    .nav-logo .wm-blue { color: #2563EB; }
-    .nav-logo .wm-tag {
-      display: block;
-      font-size: 11px;
-      font-weight: 400;
-      color: #2563EB;
-      letter-spacing: 0;
-      margin-top: -2px;
-    }
-    .nav-links {
-      display: flex;
-      gap: 32px;
-    }
-    .nav-links a {
-      font-size: 14px;
-      color: #374151;
-      transition: color 150ms;
-    }
-    .nav-links a:hover { color: var(--blue); }
-    .nav-lang-btn {
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 600;
-      color: #9ca3af;
-      background: transparent;
-      border: none;
-      padding: 6px 8px;
-      border-radius: var(--radius-sm, 6px);
-      cursor: pointer;
-      transition: color 150ms, background 150ms;
-    }
-    .nav-lang-btn:hover { color: #374151; background: var(--gray-light); }
-    .nav-lang-btn.active { color: var(--blue); background: var(--blue-light); }
-    .nav-book {
-      background: var(--blue);
-      color: var(--white);
-      padding: 10px 20px;
-      border-radius: var(--radius);
-      font-weight: 600;
-      font-size: 14px;
-      border: none;
-      cursor: pointer;
-      transition: background 150ms;
-    }
-    .nav-book:hover { background: var(--blue-dark); }
-
-    /* ── Hero ─────────────────────────────────────────────────────────────────── */
-    .hero {
-      min-height: 0;
-      display: flex;
-      align-items: center;
-    }
-    .hero .container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 64px;
-      align-items: start;
-      padding-top: 20px;
-      padding-bottom: 20px;
-    }
-    .hero-badge {
-      background: var(--blue-light);
-      color: var(--blue);
-      padding: 4px 14px;
-      border-radius: var(--radius-full);
-      font-size: 13px;
-      font-weight: 600;
-      display: inline-block;
-      margin-bottom: 20px;
-    }
-    .hero-h1 {
-      font-size: clamp(2.2rem, 4vw, 3.5rem);
-      font-weight: 800;
-      color: var(--dark);
-      line-height: 1.15;
-    }
-    .hero-p {
-      font-size: 18px;
-      color: var(--gray);
-      margin-top: 16px;
-    }
-    .hero-btns {
-      display: flex;
-      gap: 12px;
-      margin-top: 32px;
-    }
-    .btn-primary {
-      background: var(--blue);
-      color: var(--white);
-      padding: 14px 28px;
-      border-radius: var(--radius);
-      font-weight: 600;
-      font-size: 16px;
-      transition: var(--transition);
-    }
-    .btn-primary:hover { background: var(--blue-dark); }
-    .btn-outline {
-      background: transparent;
-      border: 2px solid var(--border);
-      color: #374151;
-      padding: 14px 28px;
-      border-radius: var(--radius);
-      font-weight: 600;
-      font-size: 16px;
-      transition: var(--transition);
-    }
-    .btn-outline:hover { border-color: #9ca3af; background: var(--gray-light); }
-    .hero-stats {
-      display: flex;
-      gap: 28px;
-      margin-top: 48px;
-      padding-top: 32px;
-      border-top: 1px solid var(--border);
-    }
-    .hero-stat {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      color: #374151;
-    }
-    .hero-image {
-      border-radius: 16px;
-      aspect-ratio: 4/5;
-      position: relative;
-      display: flex;
-      align-items: flex-end;
-      padding: 0;
-      overflow: hidden;
-      min-height: 400px;
-    }
-    .hero-image-text {
-      color: var(--white);
-      font-weight: 700;
-      font-size: 18px;
-      line-height: 1.5;
-    }
-    .hero-image-sub {
-      color: rgba(255,255,255,0.75);
-      font-size: 13px;
-      font-weight: 400;
-    }
-
-    /* ── Trust Bar ────────────────────────────────────────────────────────────── */
-    .trust-bar {
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 0;
-    }
-    .trust-bar .container {
-      display: flex;
-      align-items: center;
-      gap: 40px;
-    }
-    .trust-label {
-      font-size: 11px;
-      letter-spacing: 1.5px;
-      color: #9ca3af;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .trust-brands {
-      display: flex;
-      gap: 32px;
-      align-items: center;
-      margin-left: auto;
-    }
-    .trust-brand {
-      font-size: 14px;
-      font-weight: 700;
-      color: #374151;
-    }
-    .trust-sep {
-      color: var(--border);
-      font-size: 16px;
-    }
-
-    .section-center {
-      text-align: center;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .section-badge {
-      background: var(--blue-light);
-      color: var(--blue);
-      padding: 4px 14px;
-      border-radius: var(--radius-full);
-      font-size: 13px;
-      font-weight: 600;
-      display: inline-block;
-    }
-    .section-h2 {
-      font-size: 2.25rem;
-      font-weight: 800;
-      margin-top: 12px;
-      color: var(--dark);
-    }
-    .section-sub {
-      color: var(--gray);
-      font-size: 18px;
-      margin: 16px auto 48px;
-      max-width: 600px;
-    }
-    .btn-outline-blue {
-      display: inline-block;
-      margin-top: 48px;
-      border: 2px solid var(--blue);
-      color: var(--blue);
-      background: transparent;
-      padding: 12px 32px;
-      border-radius: var(--radius);
-      font-weight: 600;
-      font-size: 15px;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .btn-outline-blue:hover {
-      background: var(--blue);
-      color: var(--white);
-    }
-
-    /* ── About ────────────────────────────────────────────────────────────────── */
-    .about-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 64px;
-      align-items: center;
-    }
-    .about-h2 {
-      font-size: 2rem;
-      font-weight: 800;
-      margin-top: 12px;
-      color: var(--dark);
-    }
-    .about-p {
-      color: var(--gray);
-      margin: 16px 0 24px;
-    }
-    .check-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .check-item {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      font-size: 15px;
-      color: var(--dark);
-    }
-    .about-sig {
-      margin-top: 32px;
-      padding-top: 24px;
-      border-top: 1px solid var(--border);
-    }
-    .stats-mini {
-      margin-top: 32px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-    .stat-mini {
-      text-align: center;
-      padding: 16px;
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-    }
-    .stat-mini-n {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--blue);
-    }
-    .stat-mini-l {
-      font-size: 11px;
-      color: var(--gray);
-      margin-top: 4px;
-    }
-    .about-image {
-      background: linear-gradient(160deg, #1e3a5f, #2563eb);
-      border-radius: 16px;
-      aspect-ratio: 3/4;
-      display: flex;
-      align-items: flex-end;
-      padding: 24px;
-    }
-
-    /* ── Reviews ──────────────────────────────────────────────────────────────── */
-    .review-card {
-      padding: 28px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--blue);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      margin: 48px auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Section fade-in ──────────────────────────────────────────────────────── */
-    section.visible { opacity: 1 !important; transform: none !important; }
-
-    /* ── FAQ ──────────────────────────────────────────────────────────────────── */
-    .faq-item { border-bottom: 1px solid var(--border); }
-    .faq-q {
-      width: 100%;
-      text-align: left;
-      padding: 20px 0;
-      background: none;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--dark);
-      font-family: inherit;
-    }
-    .faq-q:hover { color: var(--blue); }
-    .faq-icon { transition: transform 300ms ease; flex-shrink: 0; }
-    .faq-a { display: none; padding-bottom: 20px; color: var(--gray); font-size: 15px; line-height: 1.7; }
-
-    /* ── Footer ───────────────────────────────────────────────────────────────── */
-    .footer-h4 {
-      color: white;
-      font-size: 12px;
-      letter-spacing: 1px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      text-transform: uppercase;
-    }
-    .footer-link {
-      display: block;
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 10px;
-      transition: color 150ms;
-    }
-    .footer-link:hover { color: white; }
-    .footer-contact-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 12px;
-    }
-    .footer-social {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid #374151;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: var(--transition);
-    }
-    .footer-social:hover { border-color: var(--blue); }
-
-    /* ── Booking Modal ───────────────────────────────────────────────────────── */
-    .service-option { padding:16px; border:2px solid #e5e7eb; border-radius:10px; cursor:pointer; transition:all 200ms ease; display:flex; align-items:center; gap:14px; margin-bottom:10px; }
-    .service-option:hover { border-color:#93c5fd; background:#eff6ff; }
-    .service-option.selected { border-color:#2563eb; background:#eff6ff; }
-    .service-option .so-name { font-weight:700; color:#111827; font-size:15px; }
-    .service-option .so-price { font-weight:800; color:#2563eb; font-size:16px; }
-    .service-option .so-desc { color:#6b7280; font-size:13px; margin-top:2px; }
-    .date-pill { padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; cursor:pointer; text-align:center; transition:all 200ms ease; min-width:64px; }
-    .date-pill:hover { border-color:#93c5fd; }
-    .date-pill.selected { border-color:#2563eb; background:#2563eb; color:white; }
-    .date-pill .dp-day { font-size:11px; font-weight:600; text-transform:uppercase; }
-    .date-pill .dp-num { font-size:22px; font-weight:800; line-height:1; }
-    .date-pill .dp-mon { font-size:11px; }
-    .time-slot { padding:12px; border:2px solid #e5e7eb; border-radius:8px; cursor:pointer; text-align:center; font-weight:600; font-size:14px; transition:all 200ms ease; }
-    .time-slot:hover { border-color:#93c5fd; }
-    .time-slot.selected { border-color:#2563eb; background:#2563eb; color:white; }
-    .time-slot.unavailable { opacity:0.4; cursor:not-allowed; }
-    .summary-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f3f4f6; font-size:15px; }
-    .summary-row:last-child { border-bottom:none; }
-    .summary-row .sr-label { color:#6b7280; }
-    .summary-row .sr-value { font-weight:600; color:#111827; }
-    .summary-total { display:flex; justify-content:space-between; align-items:center; padding:16px; background:#f9fafb; border-radius:10px; margin-top:16px; }
-    .summary-total .st-label { font-weight:700; color:#111827; font-size:16px; }
-    .summary-total .st-amount { font-weight:800; color:#2563eb; font-size:24px; }
-  /* ── All Services section ─────────────────────────────────────────────────── */
-  .svc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-  @media(max-width:768px){ .svc-grid { grid-template-columns:1fr; } }
-  @media(max-width:640px){
-    .steps-grid { grid-template-columns:1fr 1fr !important; gap:20px !important; }
-    .steps-grid::before { display:none; }
-    .memberships-grid { grid-template-columns:1fr !important; }
-    #nav-auth-sub { display:none; }
-  }
-  .svc-card {
-    border:1.5px solid #E5E7EB; border-radius:12px; padding:20px; cursor:pointer;
-    display:flex; flex-direction:column; gap:6px;
-    transition:border-color 200ms,box-shadow 200ms; background:#fff;
-  }
-  .svc-card:hover { border-color:#2563EB; box-shadow:0 4px 16px rgba(37,99,235,0.12); }
-  .svc-icon { width:40px; height:40px; background:#eff6ff; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
-  .svc-name { font-weight:700; font-size:15px; color:#111827; }
-  .svc-price { font-weight:800; font-size:18px; color:#2563eb; }
-  .svc-desc { font-size:13px; color:#6B7280; flex:1; }
-  .svc-btn {
-    margin-top:10px; padding:9px 0; background:#2563eb; color:#fff; border:none;
-    border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; width:100%;
-    transition:background 150ms;
-  }
-  .svc-btn:hover { background:#1d4ed8; }
-
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0px 1000px white inset !important;
-    box-shadow: 0 0 0px 1000px white inset !important;
-    -webkit-text-fill-color: #111827 !important;
-  }
-  </style>
+  <link rel="stylesheet" href="css/landing.css?v=20260717">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
   <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
@@ -650,6 +169,7 @@
     </button>
   </div>
 </nav>
+<main>
   <!-- 6.1 + 6.2 Trust Badges -->
   <div style="background:#F7F8FA;border-bottom:1px solid #E5E7EB;padding:8px 24px">
     <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:20px">
@@ -722,7 +242,7 @@
     </div>
 
     <div class="hero-image" style="padding:0;overflow:hidden">
-      <img src="images/hero-van.png" alt="Dr. Bike Sydney mobile van" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:16px">
+      <img src="images/hero-van.webp" alt="Dr. Bike Sydney mobile van" width="1672" height="941" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:16px">
     </div>
   </div>
 </section>
@@ -1813,6 +1333,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
     </div>
   </div>
 </section>
+</main>
 
 <!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
 <footer style="background:#0d1117;padding:64px 0 32px">
@@ -3767,13 +3288,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // First GrowthBook experiment: hero CTA copy. Falls back to the default
   // text below if GrowthBook isn't configured yet (see <head> for setup).
+  // The raw (English) variant text is stashed in a data attribute so it can
+  // be re-translated from a known-good source on every language switch -
+  // translateScreen()'s WeakMap caches the "original" text per DOM node the
+  // first time it sees it, and textContent assignment always creates a new
+  // node, so relying on that cache for content GrowthBook can overwrite at
+  // any time risks caching an already-translated string as if it were the
+  // English source (reproduced: switching languages after GrowthBook painted
+  // left this button stuck in the previous language).
   function applyHeroCtaExperiment() {
     if (!heroBk || !window.__growthbook) return;
     var copy = window.__growthbook.getFeatureValue('hero-cta-copy', 'Book a Service');
+    heroBk.dataset.i18nSource = copy;
     heroBk.textContent = copy;
+    if (window.__drbikeI18n) window.__drbikeI18n.translateScreen(heroBk);
   }
   applyHeroCtaExperiment();
   document.addEventListener('growthbook-ready', applyHeroCtaExperiment);
+  document.addEventListener('langchange', function() {
+    if (!heroBk || !heroBk.dataset.i18nSource || !window.__drbikeI18n) return;
+    heroBk.textContent = heroBk.dataset.i18nSource;
+    window.__drbikeI18n.translateScreen(heroBk);
+  });
 
   document.querySelectorAll('.svc-btn').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
