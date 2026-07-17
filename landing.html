@@ -901,7 +901,7 @@
           <div style="font-size:16px;font-weight:700;color:#0D1F3C">${escapeMechHtml(m.name)}</div>
           <div style="font-size:12px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
           ${m.rating ? `<div style="color:#F59E0B;font-size:14px;margin-top:8px">${stars} <span style="color:#6B7280;font-size:12px">${m.rating}</span></div>` : ''}
-          <div style="font-size:12px;color:#6B7280;margin-top:4px">${m.jobs_completed} service${m.jobs_completed === 1 ? '' : 's'} completed</div>
+          <div style="font-size:12px;color:#6B7280;margin-top:4px">${m.jobs_completed} <span>${m.jobs_completed === 1 ? 'service completed' : 'services completed'}</span></div>
         </div>
       </div>`;
       })
@@ -1068,7 +1068,7 @@
         <div style="margin:16px 0">
           <span id="price-basic" style="font-size:2.5rem;font-weight:800">$57</span>
           <span id="period-basic" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-basic" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$548/yr - save $136</div>
+          <div id="annual-note-basic" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$548<span>/yr - save</span> $136</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>1 Basic Service</li>
@@ -1086,7 +1086,7 @@
         <div style="margin:16px 0">
           <span id="price-standard" style="font-size:2.5rem;font-weight:800">$97</span>
           <span id="period-standard" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-standard" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$931/yr - save $233</div>
+          <div id="annual-note-standard" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$931<span>/yr - save</span> $233</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>2 Standard Services</li>
@@ -1104,7 +1104,7 @@
         <div style="margin:16px 0">
           <span id="price-vip" style="font-size:2.5rem;font-weight:800">$147</span>
           <span id="period-vip" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-vip" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$1,411/yr - save $353</div>
+          <div id="annual-note-vip" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$1,411<span>/yr - save</span> $353</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Unlimited Services</li>

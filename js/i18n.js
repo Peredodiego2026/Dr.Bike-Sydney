@@ -441,6 +441,7 @@ const dict = {
     // NEW variant text added in GrowthBook later needs its own key here too,
     // since experiment copy is server-controlled and can't be hooked into
     // translateScreen() automatically - see final report for this limitation.
+    'Book a service': 'Reservar Servicio',
     'Get Your Free Quote': 'Obtené tu Cotización Gratis',
     'Qualified Mechanic': 'Mecánico Calificado',
     'Fully Equipped Van': 'Van Totalmente Equipada',
@@ -460,6 +461,7 @@ const dict = {
     Monthly: 'Mensual',
     Annual: 'Anual',
     'Save 20%': 'Ahorrá 20%',
+    '/yr - save': '/año - ahorrás',
     Basic: 'Basic',
     Standard: 'Standard',
     VIP: 'VIP',
@@ -569,6 +571,9 @@ const dict = {
     'Continue Booking': 'Continuar Reserva',
     '✓ Confirmation in minutes': '✓ Confirmación en minutos',
     '✓ Free cancellation': '✓ Cancelación gratuita',
+    'Step 1 of 3 – Select Service': 'Paso 1 de 3 – Elegí el Servicio',
+    'Step 2 of 3 – Date & Time': 'Paso 2 de 3 – Fecha y Hora',
+    'Step 3 of 3 – Summary': 'Paso 3 de 3 – Resumen',
 
     // ── Auth modal ──────────────────────────────────────────────────────────
     'Sign In': 'Iniciar Sesión',
@@ -576,12 +581,14 @@ const dict = {
     'Create your account': 'Creá tu cuenta',
     'or continue with': 'o continuá con',
     'Check your email to confirm your account': 'Revisá tu correo para confirmar tu cuenta',
+    'Email address': 'Correo electrónico',
 
     // ── Membership modal ────────────────────────────────────────────────────
     'Start Your Membership': 'Comenzá tu Membresía',
     'Monthly Total': 'Total Mensual',
     month: 'mes',
     year: 'año',
+    'Email Address': 'Correo Electrónico',
     'Card Details': 'Datos de la Tarjeta',
     'Secured by Stripe · 3-month minimum · Cancel anytime after':
       'Protegido por Stripe · mínimo 3 meses · cancelá cuando quieras después',
@@ -1340,6 +1347,7 @@ const dict = {
     'Or call': '或致电',
     // GrowthBook A/B experiment "hero-cta-copy" variant copy (see ES block
     // comment for context)
+    'Book a service': '预约服务',
     'Get Your Free Quote': '获取免费报价',
     'Qualified Mechanic': '专业技工',
     'Fully Equipped Van': '装备齐全的服务车',
@@ -1358,6 +1366,7 @@ const dict = {
     Monthly: '按月',
     Annual: '按年',
     'Save 20%': '省20%',
+    '/yr - save': '/年 - 节省',
     Basic: 'Basic',
     Standard: 'Standard',
     VIP: 'VIP',
@@ -1463,6 +1472,9 @@ const dict = {
     'Continue Booking': '继续预订',
     '✓ Confirmation in minutes': '✓ 几分钟内确认',
     '✓ Free cancellation': '✓ 免费取消',
+    'Step 1 of 3 – Select Service': '第1步，共3步 – 选择服务',
+    'Step 2 of 3 – Date & Time': '第2步，共3步 – 日期和时间',
+    'Step 3 of 3 – Summary': '第3步，共3步 – 摘要',
 
     // ── Auth modal ──────────────────────────────────────────────────────────
     'Sign In': '登录',
@@ -1470,12 +1482,14 @@ const dict = {
     'Create your account': '创建您的账户',
     'or continue with': '或使用以下方式继续',
     'Check your email to confirm your account': '请查收邮箱以确认您的账户',
+    'Email address': '电子邮箱',
 
     // ── Membership modal ────────────────────────────────────────────────────
     'Start Your Membership': '开始您的会员',
     'Monthly Total': '每月总计',
     month: '月',
     year: '年',
+    'Email Address': '电子邮箱',
     'Card Details': '卡片信息',
     'Secured by Stripe · 3-month minimum · Cancel anytime after':
       'Stripe安全保障 · 最低3个月 · 之后可随时取消',
