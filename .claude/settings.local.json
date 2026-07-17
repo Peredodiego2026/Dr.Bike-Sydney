@@ -1,4 +1,9 @@
 {
+  "skillOverrides": {
+    "ab-testing": "off",
+    "analytics": "off",
+    "cro": "off"
+  },
   "permissions": {
     "allow": [
       "PowerShell(gh api *)",
