@@ -90,18 +90,6 @@ export async function getAvailableSlots(date, serviceId) {
   return await res.json();
 }
 
-export async function createBooking(bookingData) {
-  const { data, error } = await sb.from('bookings').insert([bookingData]).select().single();
-  if (error) {
-    // Unique slot index (bookings_unique_slot) rejected a concurrent double-booking
-    if (error.code === '23505' || /unique|duplicate key/i.test(error.message || '')) {
-      throw new Error('That time slot was just booked by someone else. Please pick another time.');
-    }
-    throw error;
-  }
-  return data;
-}
-
 const DEFAULT_CALLOUT_FEE = 20;
 
 export async function getCalloutFee(address) {

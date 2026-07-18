@@ -41,7 +41,6 @@ import {
   sb,
   getServices,
   getAvailableSlots,
-  createBooking,
   getCalloutFee,
   subscribeToMechanicLocation,
   submitReview,
