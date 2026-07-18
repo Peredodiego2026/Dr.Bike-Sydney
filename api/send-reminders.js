@@ -16,15 +16,20 @@ function sydneyLocalToUtc(dateStr, timeStr) {
   const [hh, mm] = [parseInt(m[1], 10), parseInt(m[2], 10)];
   const [Y, Mo, D] = dateStr.split('-').map(Number);
   const probe = new Date(Date.UTC(Y, Mo - 1, D, hh, mm));
-  const part = new Intl.DateTimeFormat('en-US', { timeZone: 'Australia/Sydney', timeZoneName: 'shortOffset' })
-    .formatToParts(probe).find(p => p.type === 'timeZoneName');
-  const offset = part ? (parseInt((part.value.match(/GMT([+-]\d{1,2})/) || [0, 10])[1], 10)) : 10;
+  const part = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Australia/Sydney',
+    timeZoneName: 'shortOffset',
+  })
+    .formatToParts(probe)
+    .find((p) => p.type === 'timeZoneName');
+  const offset = part ? parseInt((part.value.match(/GMT([+-]\d{1,2})/) || [0, 10])[1], 10) : 10;
   return new Date(Date.UTC(Y, Mo - 1, D, hh - offset, mm));
 }
 
 async function handle2hReminders(req, res) {
   // Allow both GET (cron) and POST (manual)
-  if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET' && req.method !== 'POST')
+    return res.status(405).json({ error: 'Method not allowed' });
   const secret = process.env.CRON_SECRET;
   if (secret) {
     const provided = (req.headers.authorization || '').replace('Bearer ', '') || req.query?.key;
@@ -40,7 +45,9 @@ async function handle2hReminders(req, res) {
 
   const { data: bookings, error } = await sb
     .from('bookings')
-    .select('id, client_email, client_name, service_name, service_price, scheduled_date, scheduled_time, address')
+    .select(
+      'id, client_email, client_name, service_name, service_price, scheduled_date, scheduled_time, address'
+    )
     .in('status', ['confirmed', 'pending'])
     .gte('scheduled_date', today)
     .or('reminder_2h_sent.is.null,reminder_2h_sent.eq.false');
@@ -48,17 +55,36 @@ async function handle2hReminders(req, res) {
   if (error) return res.status(500).json({ error: error.message });
   if (!bookings?.length) return res.status(200).json({ sent: 0, message: 'No bookings due' });
 
-  const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://drbikesydney.com.au';
+  const base = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'https://drbikesydney.com.au';
   let sent = 0;
   for (const b of bookings) {
     const when = sydneyLocalToUtc(b.scheduled_date, b.scheduled_time);
     if (!when || when.getTime() < lo || when.getTime() > hi) continue;
     if (!b.client_email) continue;
-    const dateLabel = new Date(b.scheduled_date).toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' });
+    const dateLabel = new Date(b.scheduled_date).toLocaleDateString('en-AU', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
     const r = await fetch(`${base}/api/send-email`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to: b.client_email, name: b.client_name || b.client_email.split('@')[0], service: b.service_name, date: dateLabel, time: b.scheduled_time, address: b.address || '', price: b.service_price || 0, type: 'reminder2h', bookingId: b.id }),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
+      body: JSON.stringify({
+        to: b.client_email,
+        name: b.client_name || b.client_email.split('@')[0],
+        service: b.service_name,
+        date: dateLabel,
+        time: b.scheduled_time,
+        address: b.address || '',
+        price: b.service_price || 0,
+        type: 'reminder2h',
+        bookingId: b.id,
+      }),
     }).catch(() => ({ ok: false }));
     if (r.ok) {
       await sb.from('bookings').update({ reminder_2h_sent: true }).eq('id', b.id);
@@ -72,7 +98,7 @@ export default async function handler(req, res) {
   // 2h reminders: called by cron as GET /api/send-reminders?type=2h
   if (req.query?.type === '2h') return handle2hReminders(req, res);
 
-  if(await guard(req, res, { rateMax: 30, rateWindow: 60000 })) return;
+  if (await guard(req, res, { rateMax: 30, rateWindow: 60000 })) return;
   // Can be called by a cron job or manually from admin
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -92,7 +118,7 @@ export default async function handler(req, res) {
 
     // Group by client email, take most recent booking per client
     const clientMap = {};
-    bookings.forEach(b => {
+    bookings.forEach((b) => {
       const email = b.profiles?.email;
       if (email && !clientMap[email]) clientMap[email] = b;
     });
@@ -100,12 +126,21 @@ export default async function handler(req, res) {
     let sent = 0;
     for (const [email, booking] of Object.entries(clientMap)) {
       const name = booking.profiles?.full_name || email.split('@')[0];
-      const lastService = new Date(booking.completed_at).toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' });
-      const monthsAgo = Math.floor((Date.now() - new Date(booking.completed_at)) / (1000*60*60*24*30));
+      const lastService = new Date(booking.completed_at).toLocaleDateString('en-AU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      const monthsAgo = Math.floor(
+        (Date.now() - new Date(booking.completed_at)) / (1000 * 60 * 60 * 24 * 30)
+      );
 
       await fetch(`${process.env.VERCEL_URL || 'https://drbikesydney.com.au'}/api/send-email`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+        },
         body: JSON.stringify({
           to: email,
           name,
@@ -113,8 +148,8 @@ export default async function handler(req, res) {
           type: 'reminder',
           monthsAgo,
           lastService,
-          bookingId: booking.id
-        })
+          bookingId: booking.id,
+        }),
       });
       sent++;
     }
