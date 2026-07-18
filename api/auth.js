@@ -426,31 +426,26 @@ async function handleCreateBooking(req, res) {
     return res.status(500).json({ error: 'Could not create booking', detail: insErr.message });
   }
 
-  // 6. Discount/gift code (server-authoritative): recompute, record, consume single-use
+  // 6. Discount/gift code (server-authoritative): atomic consume via RPC -
+  // consume_discount_code() does the check-and-increment in one guarded
+  // UPDATE, so two concurrent bookings can't both pass the "still has uses
+  // left" check and double-spend a single-use code. Previously this used a
+  // separate SELECT-then-UPDATE (racy), queried a discount_amount column
+  // that doesn't exist (silently never matched, discount was never applied),
+  // and compared discount_type to 'percentage' instead of the real 'percent'.
   if (discount_code) {
     const code = String(discount_code).trim().toUpperCase();
-    const { data: dc } = await sb
-      .from('discount_codes')
-      .select('id,discount_amount,discount_type,max_uses,uses_count,active')
-      .eq('code', code)
-      .maybeSingle();
-    if (dc && dc.active && !(dc.max_uses && dc.uses_count >= dc.max_uses)) {
+    const { data: rows } = await sb.rpc('consume_discount_code', { p_code: code });
+    const dc = rows && rows[0];
+    if (dc) {
       const disc =
-        dc.discount_type === 'percentage'
-          ? Math.round(servicePrice * dc.discount_amount) / 100
-          : Math.min(dc.discount_amount, servicePrice);
+        dc.discount_type === 'percent'
+          ? Math.round(servicePrice * dc.discount_value) / 100
+          : Math.min(dc.discount_value, servicePrice);
       await sb
         .from('bookings')
         .update({ discount_applied: disc, discount_code: code })
         .eq('id', booking.id);
-      const newCount = (dc.uses_count || 0) + 1;
-      await sb
-        .from('discount_codes')
-        .update({
-          uses_count: newCount,
-          ...(dc.max_uses && newCount >= dc.max_uses ? { active: false } : {}),
-        })
-        .eq('id', dc.id);
     }
   }
 
@@ -951,27 +946,26 @@ async function handleMechanicComplete(req, res) {
     'Content-Type': 'application/json',
   };
 
-  // Deduct used parts from inventory and build a readable summary stored on the booking.
+  // Deduct used parts from inventory and build a readable summary stored on
+  // the booking. Uses the decrement_part_stock() RPC (atomic guarded UPDATE)
+  // instead of read-then-write, so two mechanics completing jobs with the
+  // same part at the same time can't both compute a decrement from the same
+  // stale stock count and silently lose one of the two deductions.
   let partsText = null;
   const lowStock = [];
   if (Array.isArray(parts_used) && parts_used.length) {
     for (const p of parts_used) {
       const qty = parseInt(p?.qty, 10);
       if (!p?.id || !Number.isFinite(qty) || qty <= 0) continue;
-      const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(p.id)}&select=name,stock,min_stock`,
-        { headers: sbHdr }
-      );
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decrement_part_stock`, {
+        method: 'POST',
+        headers: sbHdr,
+        body: JSON.stringify({ p_part_id: p.id, p_qty: qty }),
+      });
       if (!r.ok) continue;
       const row = (await r.json())[0];
       if (!row) continue;
-      const newStock = Math.max(0, (row.stock || 0) - qty);
-      await fetch(`${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(p.id)}`, {
-        method: 'PATCH',
-        headers: { ...sbHdr, Prefer: 'return=minimal' },
-        body: JSON.stringify({ stock: newStock }),
-      });
-      if (newStock <= (row.min_stock || 0)) lowStock.push(row.name);
+      if (row.new_stock <= (row.min_stock || 0)) lowStock.push(row.name);
     }
     partsText =
       parts_used
@@ -1001,25 +995,17 @@ async function handleMechanicComplete(req, res) {
   if (client_signature_url) payload.client_signature_url = client_signature_url;
   if (duration_seconds) payload.service_duration_seconds = duration_seconds;
 
-  // If a discount code was applied at completion time, record its use server-side
+  // If a discount code was applied at completion time, record its use
+  // server-side via the atomic consume_discount_code() RPC (see booking
+  // creation above for why - same double-spend race, same fix).
   const mechDiscCode = parts_charged?.discount_code;
   if (mechDiscCode) {
     try {
-      const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/discount_codes?code=eq.${encodeURIComponent(mechDiscCode)}&select=id,max_uses,uses_count`,
-        { headers: sbHdr }
-      );
-      const row = r.ok ? (await r.json())[0] : null;
-      if (row) {
-        const newCount = (row.uses_count || 0) + 1;
-        const update = { uses_count: newCount };
-        if (row.max_uses && newCount >= row.max_uses) update.active = false;
-        await fetch(`${SUPABASE_URL}/rest/v1/discount_codes?id=eq.${encodeURIComponent(row.id)}`, {
-          method: 'PATCH',
-          headers: { ...sbHdr, Prefer: 'return=minimal' },
-          body: JSON.stringify(update),
-        });
-      }
+      await fetch(`${SUPABASE_URL}/rest/v1/rpc/consume_discount_code`, {
+        method: 'POST',
+        headers: sbHdr,
+        body: JSON.stringify({ p_code: String(mechDiscCode).trim().toUpperCase() }),
+      });
     } catch {}
   }
 
@@ -1124,7 +1110,10 @@ async function notifyAdminCancellation(bk) {
     : 'https://drbikesydney.com.au';
   await fetch(`${base}/api/send-message?channel=whatsapp`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+    },
     body: JSON.stringify({
       to: '0433963250',
       template: 'client_cancelled',
@@ -1518,7 +1507,10 @@ async function notifyClientOfMechanicMessage(bookingId, message, SERVICE_KEY) {
     : 'https://drbikesydney.com.au';
   await fetch(`${base}/api/send-push`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+    },
     body: JSON.stringify({
       clientId,
       title: `Message about your ${bkData[0].service_name || 'service'}`,
@@ -1652,6 +1644,10 @@ async function handleConsumeCode(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
+  // Read first only to give a specific, friendly error message - the actual
+  // consume below is a single atomic guarded UPDATE (consume_discount_code
+  // RPC), so a second request racing this one can't also succeed: it
+  // re-reads the row under lock and correctly finds it already exhausted.
   const { data: row, error } = await sb
     .from('discount_codes')
     .select('id, max_uses, uses_count, active')
@@ -1662,12 +1658,8 @@ async function handleConsumeCode(req, res) {
   if (row.max_uses && row.uses_count >= row.max_uses)
     return res.status(409).json({ error: 'Code already used' });
 
-  const newCount = (row.uses_count || 0) + 1;
-  const update = { uses_count: newCount };
-  if (row.max_uses && newCount >= row.max_uses) update.active = false;
-
-  const { error: upErr } = await sb.from('discount_codes').update(update).eq('id', row.id);
-  if (upErr) return res.status(500).json({ error: 'Could not consume code' });
+  const { data: consumed } = await sb.rpc('consume_discount_code', { p_code: code });
+  if (!consumed || !consumed[0]) return res.status(409).json({ error: 'Code already used' });
 
   // Mark gift card ledger as redeemed if this was a gift card (best-effort)
   if (code.startsWith('GIFT-')) {
@@ -1680,9 +1672,7 @@ async function handleConsumeCode(req, res) {
         () => {}
       );
   }
-  return res
-    .status(200)
-    .json({ ok: true, remaining: row.max_uses ? Math.max(0, row.max_uses - newCount) : null });
+  return res.status(200).json({ ok: true, remaining: consumed[0].remaining });
 }
 
 async function handlePublicBookingList(req, res) {

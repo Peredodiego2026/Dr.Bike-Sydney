@@ -1,6 +1,8 @@
 // api/_security.js — Security middleware for all API endpoints
 // Usage: import { guard, sanitize, rateLimit } from './_security.js';
 
+import crypto from 'crypto';
+
 // ── RATE LIMITING ─────────────────────────────────────────────────────────────
 // Primary: Upstash Redis (cross-instance, persistent) — requires env vars:
 //   UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
@@ -258,13 +260,44 @@ export function safeLog(label, obj) {
   console.log(label, JSON.stringify(safe));
 }
 
-// ── INTERNAL AUTH — verify requests come from our own domain ─────────────────
+// ── INTERNAL AUTH — verify requests come from our own app or server ──────────
+// Two paths: (1) server-to-server calls (send-cron.js, send-reminders.js)
+// send a shared secret in x-internal-token - checked first, works
+// regardless of Origin/Referer since those callers are never a browser.
+// (2) browser calls are checked against an exact-match allowlist of our own
+// origins. Both previously used origin.includes(d)/referer.includes(d),
+// which a domain like drbikesydney.com.au.evil.com would also match (it
+// contains the substring), and fell through to ALLOWED when Origin AND
+// Referer were both simply omitted - trivial for a non-browser client
+// (curl, a script) since only real browsers are required to send Origin.
+const INTERNAL_ALLOWED_ORIGINS = [
+  'https://drbikesydney.com.au',
+  'https://www.drbikesydney.com.au',
+  'https://dr-bike-sydney.vercel.app',
+];
+const INTERNAL_ALLOWED_REFERER_PREFIXES = INTERNAL_ALLOWED_ORIGINS.map((o) => o + '/');
+
+function timingSafeEqualStr(a, b) {
+  const bufA = Buffer.from(String(a));
+  const bufB = Buffer.from(String(b));
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 export function verifyInternalAuth(req, res) {
+  const token = req.headers['x-internal-token'];
+  const secret = process.env.INTERNAL_API_SECRET;
+  if (secret && token && timingSafeEqualStr(token, secret)) {
+    return false; // allowed - trusted server-to-server call
+  }
+
   const origin = req.headers.origin || '';
   const referer = req.headers.referer || '';
-  const allowed = ['drbikesydney.com.au', 'dr-bike-sydney.vercel.app', 'localhost'];
-  const isAllowed = allowed.some((d) => origin.includes(d) || referer.includes(d));
-  if (!isAllowed && origin) {
+  const isAllowed =
+    INTERNAL_ALLOWED_ORIGINS.includes(origin) ||
+    INTERNAL_ALLOWED_REFERER_PREFIXES.some((p) => referer.startsWith(p));
+
+  if (!isAllowed) {
     res.status(403).json({ error: 'Forbidden' });
     return true; // blocked
   }
