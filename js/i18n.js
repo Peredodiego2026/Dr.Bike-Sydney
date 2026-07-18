@@ -935,6 +935,54 @@ const dict = {
     'Monthly bike maintenance tips, seasonal safety advice and exclusive offers for Dr. Bike subscribers. Use code':
       'Tips mensuales de mantenimiento de bici, consejos de seguridad de temporada y ofertas exclusivas para suscriptores de Dr. Bike. Usá el código',
     'for 10% off your first booking.': 'para 10% de descuento en tu primera reserva.',
+
+    // ── Mobile SPA: form placeholders (My Bikes "add a bike" form) ─────────
+    Brand: 'Marca',
+    Color: 'Color',
+    Model: 'Modelo',
+    'Name (e.g. Red Trek)*': 'Nombre (ej. Trek Roja)*',
+    Year: 'Año',
+    'e.g. 14 Smith St, Surry Hills NSW 2010': 'ej. 14 Smith St, Surry Hills NSW 2010',
+    'Type a message...': 'Escribí un mensaje...',
+
+    // ── Mobile SPA: toast messages (showToast) ──────────────────────────────
+    'Account created! Check your email to verify.':
+      '¡Cuenta creada! Revisá tu correo para verificar.',
+    'Bike added!': '¡Bici agregada!',
+    'Booking cancelled.': 'Reserva cancelada.',
+    'Booking rescheduled!': '¡Reserva reprogramada!',
+    'Code copied!': '¡Código copiado!',
+    'Could not delete bike. Try again.': 'No se pudo eliminar la bici. Intentá de nuevo.',
+    'Membership will cancel at period end': 'La membresía se cancelará al final del período',
+    'No active booking.': 'No tenés una reserva activa.',
+    'Notification permission was not granted': 'No se otorgó permiso de notificaciones',
+    'Notifications are not set up yet - try again later':
+      'Las notificaciones aún no están configuradas - intentá más tarde',
+    'Notifications enabled!': '¡Notificaciones activadas!',
+    'Push notifications are not supported on this browser':
+      'Este navegador no soporta notificaciones push',
+    'Select a date.': 'Elegí una fecha.',
+    'Signed out successfully': 'Sesión cerrada con éxito',
+    'Thanks for your feedback!': '¡Gracias por tu opinión!',
+    'That service is no longer available. Please pick a new one.':
+      'Ese servicio ya no está disponible. Por favor, elegí uno nuevo.',
+    'Tracking link copied!': '¡Enlace de rastreo copiado!',
+    'Welcome back!': '¡Bienvenido de nuevo!',
+    "Sorry, we don't currently service that address. Try a different address or contact us.":
+      'Lo sentimos, no cubrimos esa dirección por ahora. Probá con otra dirección o contactanos.',
+
+    // ── Mobile SPA: dynamic button/status text ──────────────────────────────
+    'Checking address...': 'Verificando dirección...',
+    'Processing payment...': 'Procesando pago...',
+    'Creating test booking...': 'Creando reserva de prueba...',
+    'Photo selected — tap to change': 'Foto seleccionada — tocá para cambiar',
+    'Tap to add a photo (optional)': 'Tocá para agregar una foto (opcional)',
+    'Please select a rating.': 'Por favor, elegí una calificación.',
+    'Loading...': 'Cargando...',
+    'Confirm reschedule': 'Confirmar reprogramación',
+    'No service data yet': 'Aún no hay datos de servicio',
+    'No checklist data': 'Sin datos de checklist',
+    'Could not load health data': 'No se pudieron cargar los datos de salud',
   },
   zh: {
     // Bottom nav
@@ -1812,6 +1860,51 @@ const dict = {
     'Monthly bike maintenance tips, seasonal safety advice and exclusive offers for Dr. Bike subscribers. Use code':
       '每月自行车保养贴士、季节性安全建议及Dr. Bike订阅者专属优惠。使用代码',
     'for 10% off your first booking.': '即可享首次预订9折优惠。',
+
+    // ── Mobile SPA: form placeholders (My Bikes "add a bike" form) ─────────
+    Brand: '品牌',
+    Color: '颜色',
+    Model: '型号',
+    'Name (e.g. Red Trek)*': '名称（例如：红色Trek）*',
+    Year: '年份',
+    'e.g. 14 Smith St, Surry Hills NSW 2010': '例如：14 Smith St, Surry Hills NSW 2010',
+    'Type a message...': '输入消息...',
+
+    // ── Mobile SPA: toast messages (showToast) ──────────────────────────────
+    'Account created! Check your email to verify.': '账户已创建！请查收邮箱进行验证。',
+    'Bike added!': '自行车已添加！',
+    'Booking cancelled.': '预订已取消。',
+    'Booking rescheduled!': '预订已重新安排！',
+    'Code copied!': '代码已复制！',
+    'Could not delete bike. Try again.': '无法删除自行车，请重试。',
+    'Membership will cancel at period end': '会员资格将在本期结束时取消',
+    'No active booking.': '没有进行中的预订。',
+    'Notification permission was not granted': '未授予通知权限',
+    'Notifications are not set up yet - try again later': '通知尚未设置 - 请稍后再试',
+    'Notifications enabled!': '通知已启用！',
+    'Push notifications are not supported on this browser': '此浏览器不支持推送通知',
+    'Select a date.': '请选择日期。',
+    'Signed out successfully': '已成功退出登录',
+    'Thanks for your feedback!': '感谢您的反馈！',
+    'That service is no longer available. Please pick a new one.':
+      '该服务已不可用，请选择新的服务。',
+    'Tracking link copied!': '追踪链接已复制！',
+    'Welcome back!': '欢迎回来！',
+    "Sorry, we don't currently service that address. Try a different address or contact us.":
+      '抱歉，我们目前不提供该地址的服务。请尝试其他地址或联系我们。',
+
+    // ── Mobile SPA: dynamic button/status text ──────────────────────────────
+    'Checking address...': '正在核实地址...',
+    'Processing payment...': '正在处理付款...',
+    'Creating test booking...': '正在创建测试预订...',
+    'Photo selected — tap to change': '已选择照片 — 点击更改',
+    'Tap to add a photo (optional)': '点击添加照片（可选）',
+    'Please select a rating.': '请选择评分。',
+    'Loading...': '加载中...',
+    'Confirm reschedule': '确认重新安排',
+    'No service data yet': '暂无服务数据',
+    'No checklist data': '暂无检查清单数据',
+    'Could not load health data': '无法加载健康数据',
   },
 };
 
@@ -1848,7 +1941,7 @@ export function setLang(lang) {
 const originalText = new WeakMap(); // TextNode -> original nodeValue
 const originalAttrs = new WeakMap(); // Element -> { placeholder?, ariaLabel? }
 
-function translateValue(original) {
+export function translateValue(original) {
   const trimmed = original.trim();
   if (!trimmed) return original;
   if (currentLang === 'en') return original;

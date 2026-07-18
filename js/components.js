@@ -2,6 +2,8 @@
 // All components return HTML strings; inject with innerHTML or insertAdjacentHTML.
 // Colors reference CSS variables from variables.css — no hardcoded values.
 
+import { translateValue } from './i18n.js';
+
 // ── Header ────────────────────────────────────────────────────────────────────
 export function createHeader(title, showBack = false, backUrl = '#home') {
   return `
@@ -221,7 +223,7 @@ export function showToast(message, type = 'success') {
   document.querySelector('.toast')?.remove();
   const toast = Object.assign(document.createElement('div'), {
     className: `toast toast--${type}`,
-    textContent: message,
+    textContent: translateValue(message),
   });
   document.body.appendChild(toast);
   requestAnimationFrame(() => toast.classList.add('toast--visible'));
