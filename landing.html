@@ -954,51 +954,16 @@
       <p class="section-sub">Real reviews from Sydney cyclists who've used Dr. Bike Sydney.</p>
     </div>
 
-    <!-- Static Google Reviews widget -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px">
-
-      <div class="review-card">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <div style="width:44px;height:44px;border-radius:50%;background:#0A58CA;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0">J</div>
-          <div>
-            <div style="font-weight:700;font-size:14px;color:#0D1F3C">James T.</div>
-            <div style="font-size:12px;color:#6B7280">Surry Hills · Google Review</div>
-          </div>
-          <img src="images/google-logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
-        </div>
-        <div style="color:#F59E0B;font-size:16px;margin-bottom:8px">★★★★★</div>
-        <p style="font-size:14px;color:#374151;line-height:1.6">"Diego came to my apartment in Surry Hills and fixed my derailleur in under an hour. Absolutely professional — showed up on time, van was stocked with everything. My bike shifts perfectly now. Will definitely book again."</p>
-        <div style="font-size:12px;color:#9CA3AF;margin-top:10px">2 weeks ago</div>
-      </div>
-
-      <div class="review-card">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <div style="width:44px;height:44px;border-radius:50%;background:#059669;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0">S</div>
-          <div>
-            <div style="font-weight:700;font-size:14px;color:#0D1F3C">Sarah M.</div>
-            <div style="font-size:12px;color:#6B7280">Bondi Beach · Google Review</div>
-          </div>
-          <img src="images/google-logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
-        </div>
-        <div style="color:#F59E0B;font-size:16px;margin-bottom:8px">★★★★★</div>
-        <p style="font-size:14px;color:#374151;line-height:1.6">"Best mobile mechanic in Sydney, no question. I was sceptical about a mobile service but Dr. Bike exceeded every expectation. Arrived at Bondi, full service done in 90 minutes in my parking spot. Pricing is very fair."</p>
-        <div style="font-size:12px;color:#9CA3AF;margin-top:10px">1 month ago</div>
-      </div>
-
-      <div class="review-card">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <div style="width:44px;height:44px;border-radius:50%;background:#7C3AED;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0">R</div>
-          <div>
-            <div style="font-weight:700;font-size:14px;color:#0D1F3C">Ryan K.</div>
-            <div style="font-size:12px;color:#6B7280">Newtown · Google Review</div>
-          </div>
-          <img src="images/google-logo.svg" alt="Google" style="width:48px;margin-left:auto;opacity:.6">
-        </div>
-        <div style="color:#F59E0B;font-size:16px;margin-bottom:8px">★★★★★</div>
-        <p style="font-size:14px;color:#374151;line-height:1.6">"Used the VIP membership and it's worth every cent. Two services already this year — brake bleed and a full tune-up. The convenience of having a mechanic come to my home in Newtown is unbeatable. Highly recommend."</p>
-        <div style="font-size:12px;color:#9CA3AF;margin-top:10px">3 weeks ago</div>
-      </div>
-
+    <!-- Real reviews, loaded from the public_reviews view (see
+         scripts/create-public-reviews-view.sql). Starts empty until the
+         first client leaves a review after a completed job - #reviews-empty
+         below covers that state, swapped for real cards automatically once
+         any exist. No fabricated content, no fake "Google Review" label. -->
+    <div id="reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px"></div>
+    <div id="reviews-empty" style="display:none;text-align:center;padding:32px 20px;margin-bottom:32px">
+      <div style="font-size:32px;margin-bottom:12px">&#128172;</div>
+      <p style="font-weight:700;font-size:16px;color:#0D1F3C;margin-bottom:6px">Be the first to leave a review</p>
+      <p style="font-size:14px;color:#6B7280;max-width:380px;margin:0 auto">Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.</p>
     </div>
     <div style="text-align:center;margin-bottom:8px">
       <a href="https://g.page/r/drbikesydney/review" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #E5E7EB;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;color:#374151;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.08)">
@@ -1986,6 +1951,66 @@ var _sb = window.supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U'
 );
 var _authMode = 'signin';
+
+/* ── Real reviews (public_reviews view) ────────────────────────────────── */
+(function () {
+  var AVATAR_COLORS = ['#0A58CA', '#059669', '#7C3AED', '#D97706', '#DC2626'];
+
+  function timeAgo(iso) {
+    var days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+    if (days < 1) return 'Today';
+    if (days < 14) return days + (days === 1 ? ' day ago' : ' days ago');
+    if (days < 60) { var w = Math.floor(days / 7); return w + (w === 1 ? ' week ago' : ' weeks ago'); }
+    var m = Math.floor(days / 30);
+    return m + (m === 1 ? ' month ago' : ' months ago');
+  }
+
+  function reviewEsc(str) {
+    var d = document.createElement('div');
+    d.textContent = String(str == null ? '' : str);
+    return d.innerHTML;
+  }
+
+  function reviewCardHTML(r, i) {
+    var initial = (r.display_name || '?').charAt(0).toUpperCase();
+    var color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+    var n = Math.max(1, Math.min(5, r.rating || 5));
+    var stars = '&#9733;'.repeat(n) + '&#9734;'.repeat(5 - n);
+    return (
+      '<div class="review-card">' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+          '<div style="width:44px;height:44px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0">' + reviewEsc(initial) + '</div>' +
+          '<div>' +
+            '<div style="font-weight:700;font-size:14px;color:#0D1F3C">' + reviewEsc(r.display_name || 'Dr. Bike client') + '</div>' +
+            '<div style="font-size:12px;color:#6B7280">' + reviewEsc(r.suburb || 'Sydney') + ' &middot; Verified customer</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="color:#F59E0B;font-size:16px;margin-bottom:8px">' + stars + '</div>' +
+        '<p style="font-size:14px;color:#374151;line-height:1.6">"' + reviewEsc(r.comment) + '"</p>' +
+        '<div style="font-size:12px;color:#9CA3AF;margin-top:10px">' + timeAgo(r.completed_at) + '</div>' +
+      '</div>'
+    );
+  }
+
+  _sb.from('public_reviews')
+    .select('display_name,suburb,rating,comment,completed_at')
+    .order('completed_at', { ascending: false })
+    .limit(6)
+    .then(function (res) {
+      var grid = document.getElementById('reviews-grid');
+      var empty = document.getElementById('reviews-empty');
+      var reviews = (res && res.data) || [];
+      if (!reviews.length) {
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (grid) grid.innerHTML = reviews.map(reviewCardHTML).join('');
+    })
+    .catch(function () {
+      var empty = document.getElementById('reviews-empty');
+      if (empty) empty.style.display = 'block';
+    });
+}());
 
 document.addEventListener('DOMContentLoaded', function() {
   _sb.auth.getSession().then(function(result) {
