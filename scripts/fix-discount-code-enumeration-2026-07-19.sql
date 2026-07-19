@@ -24,7 +24,7 @@ drop policy if exists discount_codes_select_public_active on public.discount_cod
 
 create or replace function public.validate_discount_code(p_code text)
 returns table (
-  discount_value numeric, discount_type text, max_uses int, uses_count int,
+  discount_value integer, discount_type text, max_uses int, uses_count int,
   expires_at timestamptz
 )
 language plpgsql
