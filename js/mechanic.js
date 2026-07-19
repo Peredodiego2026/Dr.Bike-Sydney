@@ -1411,12 +1411,9 @@ async function applyMechDiscount() {
   msg.style.color = '#6B7280';
   msg.textContent = 'Checking...';
   try {
-    const { data, error } = await sb
-      .from('discount_codes')
-      .select('discount_type, discount_value, max_uses, uses_count, active, expires_at')
-      .eq('code', code)
-      .single();
-    if (error || !data || !data.active) throw new Error('Invalid or expired code');
+    const { data: rows, error } = await sb.rpc('validate_discount_code', { p_code: code });
+    const data = rows && rows[0];
+    if (error || !data) throw new Error('Invalid or expired code');
     if (data.expires_at && new Date(data.expires_at) < new Date())
       throw new Error('Code has expired');
     if (data.max_uses && data.uses_count >= data.max_uses)

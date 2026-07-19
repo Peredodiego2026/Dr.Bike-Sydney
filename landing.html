@@ -2865,12 +2865,11 @@ function bkRenderStep3() {
     var msg = document.getElementById('bk-promo-msg');
     if (!code) return;
     msg.style.color = '#6B7280'; msg.textContent = 'Checking...';
-    _sb.from('discount_codes')
-      .select('discount_value, discount_type, max_uses, uses_count, active')
-      .eq('code', code).single()
+    _sb.rpc('validate_discount_code', { p_code: code })
       .then(function(res) {
-        var data = res.data, error = res.error;
-        if (error || !data || !data.active) throw new Error('Invalid or expired code');
+        var rows = res.data, error = res.error;
+        var data = rows && rows[0];
+        if (error || !data) throw new Error('Invalid or expired code');
         if (data.max_uses && data.uses_count >= data.max_uses) throw new Error('Code has reached its limit');
         var base = bkApplySurcharge(Number((_bkState.service || {}).price || 0), _bkState.date);
         var fee = bkApplySurcharge(20, _bkState.date);
