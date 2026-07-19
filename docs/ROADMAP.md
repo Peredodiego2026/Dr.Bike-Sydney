@@ -1,4 +1,4 @@
-# ROADMAP — Dr. Bike Sydney (actualizado 2026-07-11)
+# ROADMAP — Dr. Bike Sydney (actualizado 2026-07-19)
 
 Meta: **la mejor aplicación del mundo en servicio de mecánica de bicicletas a domicilio.**
 Regla de lectura: cada fase tiene una PUERTA (gate). No se pasa a la siguiente sin cruzarla — features nuevas no compensan fundamentos rotos.
@@ -14,15 +14,30 @@ Regla de lectura: cada fase tiene una PUERTA (gate). No se pasa a la siguiente s
 **Puerta de salida:** un cliente puede reservar, pagar de verdad, trackear al mecánico y recibir invoice — sin intervención manual de Diego.
 
 ## Agosto 2026 — Launch readiness
-- [ ] Auditoría de producción completa (performance, SEO, accesibilidad, errores)
-- [ ] Lighthouse móvil ≥ 90 (baseline hoy: landing.html = 255 KB solo HTML — primer candidato a dieta)
-- [ ] Multi-idioma 100% (ES/ZH en todo el flujo de reserva)
-- [ ] Fotos antes/después en el flujo del mecánico (alimenta el plan de contenido)
-- [ ] Tests e2e del SPA móvil (hoy solo landing tiene cobertura)
-- [ ] Onboarding de mecánicos nuevos + dashboard de métricas de negocio
-- [ ] Predictive maintenance MVP (verificar `bookings.bike_id` primero)
+- [x] Auditoría de producción (19 Jul): SEO (sitemap tenía 28 URLs fantasma sin contenido
+      real - eliminadas), accesibilidad (16 inputs sin aria-label - corregido), errores
+      (0 P0 en logs de Vercel de los últimos 7 días - solo ruido de deprecation warning +
+      2 fallos aislados de push/WhatsApp, no accionables). Lighthouse formal (Chrome
+      DevTools) no corrido - el resto de la auditoría no encontró bloqueadores para eso.
+- [x] Lighthouse 85→90 (task Jul, imágenes/cache) - hero-van.webp, cache headers
+- [x] Multi-idioma 100%: landing.html (PR #31/#32) + SPA móvil (auditado 19 Jul - el
+      wizard de reserva ya estaba ~95% traducido; el gap real era showToast() nunca
+      pasaba por el traductor - PR #41 lo cerró, 37 strings ES/ZH agregadas)
+- [x] Fotos antes/después en el flujo del mecánico
+- [x] Tests e2e del SPA móvil: tests/e2e/mobile-spa.test.js ya cubre home, precios en
+      vivo, estado de auth, bottom nav, cambio de idioma (ambas direcciones), login
+- [x] Onboarding de mecánicos (MECHANIC-ONBOARDING.md, PIN desde Admin PR #30) +
+      dashboard de métricas (Admin Analytics)
+- [x] Predictive maintenance MVP: ya en producción, más completo que un MVP -
+      api/send-cron.js?type=service corre a diario (9am), 2 niveles: fecha que fija el
+      mecánico manualmente (prioridad 1), fallback automático por tipo de servicio
+      (Tune-Up 6m / Standard 9m / Major-Ultimate-Overhaul 12m, prioridad 2), con
+      deduplicación vía next_service_reminder_sent. bookings.bike_id confirmado en uso
+      (historial de servicio por bici en Mis Bicis).
 
-**Puerta de salida:** checklist pre-launch 100% + 2 semanas sin bugs P0.
+**Puerta de salida:** checklist pre-launch 100% + 2 semanas sin bugs P0. Casi todo
+verificado 19 Jul - falta solo la ventana de "2 semanas sin bugs P0" en sí (empieza a
+correr desde que julio cierre) y la prueba manual del GPS pendiente en la puerta de julio.
 
 ## Septiembre 2026 — Soft launch (primavera = temporada alta de ciclismo)
 - [ ] Google Business Profile completo + sistema de reseñas corriendo (pedir tras CADA trabajo)
