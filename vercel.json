@@ -85,6 +85,14 @@
       "destination": "/track.html"
     },
     {
+      "source": "/(bike-check|bondi|business|cbd|chatswood|cycling-map|eastern-suburbs|hills-district|hornsby|inner-west|manly|marrickville|mosman|newtown|north-shore|northern-beaches|parramatta|penrith|ryde|st-george|strathfield|surry-hills|sutherland-shire)",
+      "destination": "/$1.html"
+    },
+    {
+      "source": "/blog/(best-bikes-for-sydney-commuting-2026|cycling-safety-tips-sydney-roads|electric-bike-laws-nsw-2026|how-to-choose-a-bike-mechanic-sydney|how-to-clean-your-bike-chain-sydney)",
+      "destination": "/blog/$1.html"
+    },
+    {
       "source": "/((?!api/|\\.well-known/|.*\\.html|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml|.*\\.webmanifest|.*\\.ico|.*\\.css|.*\\.woff|.*\\.woff2).*)",
       "destination": "/landing.html"
     }
