@@ -7,7 +7,7 @@
     "@growthbook/growthbook": "^1.6.5",
     "@plasmicpkgs/framer-motion": "^0.0.248",
     "@sentry/node": "^10.62.0",
-    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/supabase-js": "^2.110.7",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "isomorphic-dompurify": "^3.18.0",
