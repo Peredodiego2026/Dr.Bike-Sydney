@@ -18,11 +18,14 @@ function makeSb() {
   return createClient(SB_URL, process.env.SUPABASE_SERVICE_KEY);
 }
 
+// Fails closed: an unset CRON_SECRET blocks the request rather than skipping
+// the check, so a missing env var can never leave these endpoints wide open.
+// Only guards the scheduled-only types (see router below) - b2b/upsell are
+// meant to be called directly from a browser and never go through this.
 function checkSecret(req, res) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
   const provided = (req.headers.authorization || '').replace('Bearer ', '') || req.query?.key;
-  if (provided !== secret) {
+  if (!secret || provided !== secret) {
     res.status(401).json({ error: 'Unauthorized' });
     return true;
   }
@@ -528,15 +531,20 @@ async function handleB2B(req, res) {
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST')
     return res.status(405).json({ error: 'Method not allowed' });
-  if (checkSecret(req, res)) return;
 
   const type = req.query?.type || req.body?.type;
+
+  // Public, browser-triggered types - never gated by CRON_SECRET.
+  if (type === 'b2b') return handleB2B(req, res);
+  if (type === 'upsell') return handleUpsell(req, res);
+
+  // Everything below only ever runs on Vercel's own cron schedule.
+  if (checkSecret(req, res)) return;
+
   if (type === 'birthday') return handleBirthday(req, res);
   if (type === 'reengagement') return handleReengagement(req, res);
   if (type === 'abandoned') return handleAbandoned(req, res);
   if (type === 'service') return handleServiceReminders(req, res);
-  if (type === 'upsell') return handleUpsell(req, res);
-  if (type === 'b2b') return handleB2B(req, res);
 
   // Consolidated daily cron: runs all background jobs in sequence
   if (type === 'all') {
