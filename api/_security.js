@@ -230,6 +230,32 @@ export function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ''));
 }
 
+// ── CLOUDFLARE TURNSTILE ──────────────────────────────────────────────────────
+// Server-side verification of the token the Turnstile widget produced in the
+// browser. Fails closed: missing TURNSTILE_SECRET_KEY, missing token, network
+// failure, or a non-success answer from Cloudflare all return false - same
+// principle as checkSecret (a misconfigured env var must never silently
+// disable the protection).
+export async function verifyTurnstile(req, token) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret || !token) return false;
+  try {
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret,
+        response: String(token),
+        remoteip: getClientIP(req),
+      }),
+    });
+    const data = await r.json();
+    return data.success === true;
+  } catch {
+    return false;
+  }
+}
+
 // ── NORMALIZE PHONE (AU) ─────────────────────────────────────────────────────
 export function normalizeAUPhone(raw) {
   const digits = String(raw || '').replace(/\D/g, '');

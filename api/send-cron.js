@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { guard } from './_security.js';
+import { guard, verifyTurnstile } from './_security.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -472,6 +472,14 @@ async function handleB2B(req, res) {
   let { businessName, contactName, phone, fleetSize, frequency, notes } = req.body || {};
   if (!businessName || !contactName || !email || !fleetSize)
     return res.status(400).json({ error: 'Missing required fields' });
+
+  // Bot check - each enquiry sends 2 Resend emails (one to Diego, one echo to
+  // the submitted address, which spammers can point at anyone). The fleet form
+  // posts FormData entries, so the implicit Turnstile widget's hidden input
+  // arrives under its default cf-turnstile-response name.
+  if (!(await verifyTurnstile(req, req.body?.['cf-turnstile-response']))) {
+    return res.status(403).json({ error: 'Verification failed - please try again' });
+  }
 
   const esc = (s) =>
     String(s || '').replace(

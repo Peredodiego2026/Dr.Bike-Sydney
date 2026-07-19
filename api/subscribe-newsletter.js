@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { guard, sanitize, isValidEmail } from './_security.js';
+import { guard, sanitize, isValidEmail, verifyTurnstile } from './_security.js';
 
 export default async function handler(req, res) {
   if (await guard(req, res, { rateMax: 20, rateWindow: 60000 })) return;
@@ -9,6 +9,12 @@ export default async function handler(req, res) {
   const source = req.body?.source || 'website';
   if (!email || !isValidEmail(email)) {
     return res.status(400).json({ error: 'Valid email required' });
+  }
+
+  // Bot check - each subscribe writes a DB row and sends a Resend email, so
+  // an unprotected endpoint is a spam/quota-burn vector.
+  if (!(await verifyTurnstile(req, req.body?.turnstileToken))) {
+    return res.status(403).json({ error: 'Verification failed - please try again' });
   }
 
   email = email.toLowerCase().trim();

@@ -50,6 +50,9 @@
   <link rel="preconnect" href="https://js.stripe.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+  <!-- Cloudflare Turnstile (bot protection on newsletter + fleet forms) -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   <!-- Booking wizard styles (from index.html CSS) -->
   <link rel="stylesheet" href="css/variables.css?v=20260622">
   <link rel="stylesheet" href="css/main.css?v=20260622">
@@ -1237,6 +1240,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
             <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px">Notes</label>
             <textarea name="notes" rows="3" placeholder="Types of bikes, location, any specific issues..." style="width:100%;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none" onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#E5E7EB'"></textarea>
           </div>
+          <div id="fleet-turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAAD46XeEV_Dvk2GA9"></div>
           <div id="fleet-msg" style="display:none;font-size:13px;padding:10px 14px;border-radius:8px"></div>
           <button type="submit" id="fleet-submit" style="width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 150ms" onmouseover="this.style.background='#1848C8'" onmouseout="this.style.background='#2563EB'">
             Request Fleet Quote
@@ -1282,6 +1286,8 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       msg.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Request Fleet Quote';
+      // Turnstile tokens are single-use - refresh so a retry gets a new one
+      if (window.turnstile) try { turnstile.reset('#fleet-turnstile'); } catch(e2) {}
     }
   });
 }());
@@ -1849,6 +1855,8 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
           Subscribe
         </button>
       </div>
+      <div id="nl-turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAAD46XeEV_Dvk2GA9"
+        style="display:flex;justify-content:center;margin-top:14px"></div>
       <div id="nl-success" style="display:none;color:#fff;font-weight:600;font-size:15px;padding:16px">
         ✅ Subscribed! Check your inbox for a 10% off code.
       </div>
@@ -1864,16 +1872,26 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       alert('Please enter a valid email address.'); return;
     }
+    // The managed widget solves in the background on page load; the token
+    // lands in a hidden input inside its container.
+    var tokenInput = document.querySelector('#nl-turnstile input[name="cf-turnstile-response"]');
+    var turnstileToken = tokenInput ? tokenInput.value : '';
+    if (!turnstileToken) {
+      alert('Please wait a moment for the security check to finish, then try again.');
+      return;
+    }
     try {
       var r = await fetch('/api/subscribe-newsletter', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ email, source: 'landing_page' })
+        body: JSON.stringify({ email, source: 'landing_page', turnstileToken })
       });
       if (!r.ok) throw new Error('Subscription failed');
     } catch(e) {
       var nlErr = document.getElementById('nl-error');
       if (nlErr) nlErr.style.display = 'block';
+      // Turnstile tokens are single-use - refresh so a retry gets a new one
+      if (window.turnstile) try { turnstile.reset('#nl-turnstile'); } catch(e2) {}
       return;
     }
     document.getElementById('newsletter-form').style.display = 'none';
