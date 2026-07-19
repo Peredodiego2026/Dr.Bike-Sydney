@@ -1053,13 +1053,12 @@ async function renderServiceSummary() {
     };
 
     try {
-      // 1. Try discount_codes table first
-      const { data, error } = await sb
-        .from('discount_codes')
-        .select('discount_value, discount_type, max_uses, uses_count, active')
-        .eq('code', code)
-        .single();
-      if (!error && data && data.active) {
+      // 1. Try discount_codes table first (via RPC - direct table SELECT
+      // was removed, it let anon enumerate every active code, see
+      // scripts/fix-discount-code-enumeration-2026-07-19.sql)
+      const { data: rows, error } = await sb.rpc('validate_discount_code', { p_code: code });
+      const data = rows && rows[0];
+      if (!error && data) {
         if (data.max_uses && data.uses_count >= data.max_uses)
           throw new Error('Code has reached its limit');
         const base = service.price || 0;
