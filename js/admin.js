@@ -1580,10 +1580,20 @@ async function sendReminders() {
   btn.disabled = true;
   result.style.display = 'none';
   try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    if (!session) {
+      result.style.display = 'block';
+      result.textContent = '❌ Your admin session expired - sign in again';
+      btn.textContent = '📨 Send Reminders';
+      btn.disabled = false;
+      return;
+    }
     const res = await fetch('/api/send-reminders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: '{}',
+      body: JSON.stringify({ access_token: session.access_token }),
     });
     const data = await res.json();
     result.style.display = 'block';

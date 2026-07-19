@@ -2,6 +2,7 @@
 // Vercel cron for 2h reminders calls /api/send-reminders?type=2h
 import { createClient } from '@supabase/supabase-js';
 import { guard } from './_security.js';
+import { isAdminEmail } from './auth.js';
 
 const sb = createClient(
   'https://tgpipbloisahufaywhqb.supabase.co',
@@ -30,11 +31,11 @@ async function handle2hReminders(req, res) {
   // Allow both GET (cron) and POST (manual)
   if (req.method !== 'GET' && req.method !== 'POST')
     return res.status(405).json({ error: 'Method not allowed' });
+  // Fails closed: an unset CRON_SECRET blocks the request rather than
+  // skipping the check, so a missing env var can never leave this open.
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const provided = (req.headers.authorization || '').replace('Bearer ', '') || req.query?.key;
-    if (provided !== secret) return res.status(401).json({ error: 'Unauthorized' });
-  }
+  const provided = (req.headers.authorization || '').replace('Bearer ', '') || req.query?.key;
+  if (!secret || provided !== secret) return res.status(401).json({ error: 'Unauthorized' });
 
   const now = Date.now();
   const WINDOW_MIN = 60; // cron now runs hourly
@@ -99,8 +100,20 @@ export default async function handler(req, res) {
   if (req.query?.type === '2h') return handle2hReminders(req, res);
 
   if (await guard(req, res, { rateMax: 30, rateWindow: 60000 })) return;
-  // Can be called by a cron job or manually from admin
+  // Manual-only today (no vercel.json cron entry targets this path) - triggered
+  // by the "Send Reminders" button in Admin. Requires a real admin session,
+  // same check every other admin-* action in api/auth.js uses - rate limiting
+  // alone isn't authentication, and this sends real emails to real clients.
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const { access_token } = req.body || {};
+  if (!access_token) return res.status(401).json({ error: 'Sign in required' });
+  const {
+    data: { user },
+    error: uErr,
+  } = await sb.auth.getUser(access_token);
+  if (uErr || !user || !isAdminEmail(user.email)) {
+    return res.status(403).json({ error: 'Not authorized' });
+  }
 
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
