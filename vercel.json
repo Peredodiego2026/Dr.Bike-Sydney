@@ -85,7 +85,7 @@
       "destination": "/track.html"
     },
     {
-      "source": "/(bike-check|bondi|business|cbd|chatswood|cycling-map|eastern-suburbs|hills-district|hornsby|inner-west|manly|marrickville|mosman|newtown|north-shore|northern-beaches|parramatta|penrith|ryde|st-george|strathfield|surry-hills|sutherland-shire)",
+      "source": "/(bike-check|bondi|business|cbd|chatswood|cycling-map|eastern-suburbs|hills-district|hornsby|inner-west|manly|marrickville|mosman|newtown|north-shore|northern-beaches|parramatta|penrith|privacy|ryde|st-george|strathfield|surry-hills|sutherland-shire|terms)",
       "destination": "/$1.html"
     },
     {
