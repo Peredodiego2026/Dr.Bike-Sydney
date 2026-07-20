@@ -668,6 +668,17 @@ body {
   margin-top: var(--space-3);
 }
 
+.reset-sent-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto 20px;
+}
+
 /* ── Additional Utilities ────────────────────────────────────────────────────── */
 .mb-4 {
   margin-bottom: var(--space-4);

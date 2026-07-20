@@ -1272,12 +1272,33 @@ async function handleRequestPasswordReset(req, res) {
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: [cleanEmail],
-        subject: 'Reset your Dr. Bike Sydney password',
-        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:480px;margin:0 auto;padding:24px">
-          <h2 style="color:#0D1F3C;margin:0 0 12px">Reset your password</h2>
-          <p style="color:#374151;font-size:14px;line-height:1.6">We received a request to reset the password for your Dr. Bike Sydney account. Click below to choose a new one - this link expires in 1 hour.</p>
-          <a href="${actionLink}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;margin:12px 0">Reset password</a>
-          <p style="color:#9CA3AF;font-size:12px;margin-top:20px">If you didn't request this, you can safely ignore this email - your password will stay the same.</p>
+        subject: '🔐 Reset your Dr. Bike Sydney password',
+        html: `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+          <div style="background:#1848C8;padding:32px 28px;text-align:center">
+            <div style="display:inline-block;background:#fff;border-radius:14px;padding:10px 18px;margin-bottom:14px">
+              <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="26" style="display:block;width:auto">
+            </div>
+            <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Dr. Bike Sydney</div>
+            <div style="font-size:22px;font-weight:800;color:#fff">Reset your password</div>
+          </div>
+          <div style="padding:36px 28px">
+            <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 28px;text-align:center">We received a request to reset the password for your Dr. Bike Sydney account. Click below to choose a new one.</p>
+            <div style="text-align:center;margin-bottom:22px">
+              <a href="${actionLink}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px">Reset password</a>
+            </div>
+            <p style="color:#9CA3AF;font-size:12px;text-align:center;margin:0 0 28px">This link expires in 1 hour, for your security.</p>
+            <div style="border-top:1px solid #E5E7EB;padding-top:18px;margin-bottom:20px">
+              <p style="color:#9CA3AF;font-size:11px;margin:0 0 6px">Button not working? Paste this link into your browser:</p>
+              <p style="color:#2563EB;font-size:11px;word-break:break-all;margin:0">${actionLink}</p>
+            </div>
+            <div style="background:#EEF3FC;border-radius:12px;padding:16px">
+              <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6;opacity:0.9">Didn't request this? No action needed - you can safely ignore this email and your password will stay the same.</p>
+            </div>
+          </div>
+          <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E5E7EB">
+            <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
+            <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
+          </div>
         </div>`,
       }),
     });

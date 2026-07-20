@@ -62,7 +62,7 @@ import {
   createTierBadge,
 } from './components.js';
 import { getRiderTier } from './rider-tier.js';
-import { getLang, setLang, translateScreen, LANGUAGES } from './i18n.js';
+import { getLang, setLang, translateScreen, translateValue, LANGUAGES } from './i18n.js';
 import {
   createPaymentForm,
   createPaymentRequestButton,
@@ -2567,9 +2567,7 @@ async function renderLogin() {
           body: JSON.stringify({ role: 'request-password-reset', email }),
         });
         if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
-        infoEl.textContent = 'Check your email for a reset link. It can take a minute to arrive.';
-        infoEl.hidden = false;
-        btn.textContent = 'Link sent';
+        renderResetSent(email);
       } catch (err) {
         errEl.textContent = err.message || 'Could not send reset link. Please try again.';
         errEl.hidden = false;
@@ -2613,6 +2611,54 @@ async function renderLogin() {
   });
 }
 
+// ── Password reset: "check your email" confirmation ─────────────────────────
+function renderResetSent(email) {
+  const screen = document.querySelector('[data-screen="login"]');
+  if (!screen) return;
+  const mailIcon = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>`;
+
+  screen.innerHTML = `
+    <div class="login-wrap">
+      <div class="reset-sent-icon">${mailIcon}</div>
+      <h2 class="login-title" style="text-align:center">Check your email</h2>
+      <p class="login-sub text-secondary text-center">We sent a password reset link to <strong style="color:var(--color-text)">${escapeHtml(email)}</strong></p>
+      <p class="login-sub text-secondary text-center" style="margin-top:-8px">It can take a minute to arrive.</p>
+      <button type="button" class="btn btn--secondary btn--full mt-4" id="resend-reset-btn">Resend email</button>
+      <div class="login-footer">
+        <button class="link-btn" id="back-to-signin-btn">Back to sign in</button>
+      </div>
+      <div style="text-align:center;margin-top:14px">
+        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:12px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:#2563EB;font-weight:600">WhatsApp us</span></a>
+      </div>
+    </div>
+    ${createBottomNav('profile')}
+  `;
+
+  screen.querySelector('#back-to-signin-btn').addEventListener('click', () => {
+    _loginMode = 'signin';
+    renderLogin();
+  });
+
+  const resendBtn = screen.querySelector('#resend-reset-btn');
+  resendBtn.addEventListener('click', async () => {
+    resendBtn.disabled = true;
+    resendBtn.textContent = 'Sending...';
+    try {
+      const resp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'request-password-reset', email }),
+      });
+      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
+      resendBtn.textContent = 'Link sent';
+    } catch (err) {
+      resendBtn.disabled = false;
+      resendBtn.textContent = 'Resend email';
+      showToast(err.message || 'Could not send reset link. Please try again.', 'error');
+    }
+  });
+}
+
 // ── Password recovery: Supabase redirects here with a recovery session and
 // fires PASSWORD_RECOVERY instead of SIGNED_IN. Prompt for a new password
 // rather than dropping the user on Home still holding their old one.
@@ -2633,6 +2679,7 @@ function promptNewPassword() {
     </div>
   `;
   document.body.appendChild(modal);
+  translateScreen(modal); // outside [data-screen], not covered by the router's auto-translate observer
   const inp = modal.querySelector('#reset-pw-inp');
   inp.focus();
   const errEl = modal.querySelector('#reset-pw-err');
@@ -2929,7 +2976,7 @@ async function renderMyBookings() {
             const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
             const fmtTime = (t) => t.replace(':00', '') + (parseInt(t) < 12 ? 'am' : 'pm');
             panel.innerHTML = `
-              <div style="font-size:17px;font-weight:700;margin-bottom:20px">📅 Reschedule</div>
+              <div style="font-size:17px;font-weight:700;margin-bottom:20px">📅 <span>Reschedule</span></div>
               <div style="margin-bottom:16px">
                 <label for="resched-date" style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New date</label>
                 <input id="resched-date" type="date" min="${tomorrow}" value="${booking.scheduled_date || ''}"
@@ -2964,7 +3011,7 @@ async function renderMyBookings() {
                 timeSel.innerHTML = slots
                   .map(
                     (s) =>
-                      `<option value="${s.time}" ${!s.available ? 'disabled' : ''} ${s.time === booking.scheduled_time && s.available ? 'selected' : ''}>${fmtTime(s.time)}${!s.available ? ' - unavailable' : ''}</option>`
+                      `<option value="${s.time}" ${!s.available ? 'disabled' : ''} ${s.time === booking.scheduled_time && s.available ? 'selected' : ''}>${fmtTime(s.time)}${!s.available ? translateValue(' - unavailable') : ''}</option>`
                   )
                   .join('');
                 timeSel.disabled = !anyAvailable;
