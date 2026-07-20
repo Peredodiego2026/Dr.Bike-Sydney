@@ -865,7 +865,7 @@ async function loadFinance() {
             j.client_name || j.profiles?.full_name || j.profiles?.email?.split('@')[0] || 'Client';
           return `<tr>
       <td data-label="Date">${j.scheduled_date}</td>
-      <td data-label="Client">${name}</td>
+      <td data-label="Client">${esc(name)}</td>
       <td data-label="Service">${esc(j.service_name || 'Service')}</td>
       <td data-label="Amount" style="font-weight:600">$${price.toLocaleString()}</td>
       <td data-label="GST" style="color:var(--orange)">$${jGst}</td>
@@ -1078,9 +1078,9 @@ function exportFinancePDF() {
             '<tr><td>' +
             (j.scheduled_date || '—') +
             '</td><td class="bold">' +
-            (j.profiles?.full_name || 'Client') +
+            escapeHtml(j.profiles?.full_name || 'Client') +
             '</td><td>' +
-            (j.service_name || '—') +
+            escapeHtml(j.service_name || '—') +
             '</td><td>Van ' +
             (j.van_number || 1) +
             '</td><td class="blue">$' +
@@ -1330,8 +1330,8 @@ async function loadReferralLeaderboard() {
       return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
       <div style="font-size:18px;min-width:28px;text-align:center">${medal || '#' + (i + 1)}</div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:var(--navy)">${p.full_name || p.email?.split('@')[0] || 'Client'}</div>
-        <div style="font-size:11px;color:var(--mgray)">Code: ${p.referral_code || '—'} · ${p.membership_plan || 'No plan'}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.full_name || p.email?.split('@')[0] || 'Client')}</div>
+        <div style="font-size:11px;color:var(--mgray)">Code: ${esc(p.referral_code || '—')} · ${esc(p.membership_plan || 'No plan')}</div>
       </div>
       <div style="text-align:right">
         <div style="font-size:14px;font-weight:700;color:var(--blue)">${p.referral_count} referral${p.referral_count !== 1 ? 's' : ''}</div>
@@ -1990,7 +1990,7 @@ async function loadDashboard() {
           const vanColors = { 1: '#1848C8', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
           const vanNum = b.van_number || 1;
           return `<tr>
-        <td data-label="Client" style="font-weight:700">${name}</td>
+        <td data-label="Client" style="font-weight:700">${esc(name)}</td>
         <td data-label="Service">${esc(b.service_name || '—')}</td>
         <td data-label="Date">${b.scheduled_date || '—'}</td>
         <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
@@ -2046,7 +2046,7 @@ async function loadDashboard() {
           const clientName = b.profiles?.full_name || b.client_name || 'Client';
           const timeStr = b.scheduled_time || '—';
           return `<tr>
-          <td data-label="Client" style="font-weight:600">${clientName}</td>
+          <td data-label="Client" style="font-weight:600">${esc(clientName)}</td>
           <td data-label="Service">${esc(b.service_name || '—')}</td>
           <td data-label="Time">${timeStr}</td>
           <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
@@ -2087,8 +2087,8 @@ async function loadDashboard() {
           <div class="sch-time">${b.scheduled_time || '—'}</div>
           <div class="sch-dot" style="background:${stDotColors[b.status || 'pending']}"></div>
           <div style="flex:1;min-width:0">
-            <div class="sch-name">${b.profiles?.full_name || b.client_name || 'Client'}</div>
-            <div class="sch-svc">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
+            <div class="sch-name">${esc(b.profiles?.full_name || b.client_name || 'Client')}</div>
+            <div class="sch-svc">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
           </div>
           <div class="sch-price">$${b.service_price || 0}</div>
         </div>`
@@ -2214,10 +2214,9 @@ function renderBookingsTable(data) {
       const st = b.status || 'pending';
       const isPending = st === 'pending';
       const isCancelled = st === 'cancelled' || st === 'completed';
-      const safeName = name.replace(/"/g, '&quot;');
       return `<tr>
       <td data-label="Date">${date}</td>
-      <td data-label="Client"><b>${name}</b></td>
+      <td data-label="Client"><b>${esc(name)}</b></td>
       <td data-label="Service">${esc(b.service_name || '—')}</td>
       <td data-label="Suburb">${esc(b.suburb || '—')}</td>
       <td data-label="Van"><span class="mech-tag v${b.van_number || 1}">Van ${b.van_number || 1}</span></td>
@@ -2225,7 +2224,7 @@ function renderBookingsTable(data) {
       <td data-label="Price"><b>$${b.service_price || 0}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
         ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:#ECFDF5;color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${safeName}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
+        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
         ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:#1848C8;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
       </td>
@@ -2396,10 +2395,10 @@ async function loadRecentNotifications() {
       const st = b.status || 'pending';
       return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" data-page="bookings">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-        <div style="font-size:13px;font-weight:600;color:var(--navy)">${name}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(name)}</div>
         <span style="font-size:10px;color:#fff;background:${stColors[st] || '#6B7280'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
       </div>
-      <div style="font-size:12px;color:var(--mgray)">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
+      <div style="font-size:12px;color:var(--mgray)">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
       <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price || 0}</div>
     </div>`;
     })
@@ -3223,7 +3222,7 @@ async function loadClients() {
       return `<div class="client-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <div class="cl-av" style="background:${colors[i % colors.length]}">${initials}</div>
-        <div style="flex:1"><div class="cl-name">${name}</div><div class="cl-suburb">${c.email || ''}</div></div>
+        <div style="flex:1"><div class="cl-name">${esc(name)}</div><div class="cl-suburb">${esc(c.email || '')}</div></div>
         <span class="cl-seg ${segClass}">${segLabel}</span>
       </div>
       <div class="cl-stats">
@@ -4183,7 +4182,7 @@ async function loadCalendar() {
             const st = j.status || 'pending';
             const nm = j.profiles?.full_name?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
-            return `<div style="font-size:10px;background:${stBg[st] || '#F3F4F6'};border-left:2px solid ${stColors[st] || '#6B7280'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${nm}</div>`;
+            return `<div style="font-size:10px;background:${stBg[st] || '#F3F4F6'};border-left:2px solid ${stColors[st] || '#6B7280'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${esc(nm)}</div>`;
           })
           .join('')}
         ${dayJobs.length > 3 ? `<div style="font-size:10px;color:var(--mgray)">+${dayJobs.length - 3} more</div>` : ''}
@@ -4291,8 +4290,8 @@ async function loadCalendar() {
                   const van = j.van_number || 1;
                   return `<div style="background:${stBg[st] || '#F3F4F6'};border-left:3px solid ${stColors[st] || '#6B7280'};border-radius:6px;padding:6px 8px;cursor:pointer" data-page="bookings">
               <div style="font-size:11px;font-weight:700;color:${stColors[st] || '#6B7280'}">${time}</div>
-              <div style="font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-              <div style="font-size:10px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.service_name || ''}</div>
+              <div style="font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
+              <div style="font-size:10px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.service_name || '')}</div>
               <div style="font-size:10px;font-weight:600;color:${stColors[st]};margin-top:2px">Van ${van}</div>
             </div>`;
                 })
@@ -4384,8 +4383,8 @@ function appendAdminChatMsg(msg, scroll = true) {
     <div style="font-size:10px;color:var(--mgray);font-weight:600">${label}</div>
     ${
       isPhoto
-        ? `<img src="${photoUrl}" style="max-width:200px;border-radius:10px;cursor:pointer" data-action="open-photo" data-url="${esc(photoUrl)}">`
-        : `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:12px;font-size:13px;max-width:280px;word-break:break-word">${msg.message}</div>`
+        ? `<img src="${esc(photoUrl)}" style="max-width:200px;border-radius:10px;cursor:pointer" data-action="open-photo" data-url="${esc(photoUrl)}">`
+        : `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:12px;font-size:13px;max-width:280px;word-break:break-word">${esc(msg.message)}</div>`
     }
     <div style="font-size:10px;color:var(--mgray)">${time}</div>
   `;
@@ -4667,10 +4666,10 @@ async function loadMemberships() {
       return (
         '<tr style="border-bottom:1px solid var(--border)">' +
         '<td style="padding:12px 16px;font-weight:600;color:var(--navy)">' +
-        name +
+        esc(name) +
         '</td>' +
         '<td style="padding:12px 16px;font-size:12px;color:var(--mgray)">' +
-        (m.email || '—') +
+        esc(m.email || '—') +
         '</td>' +
         '<td style="padding:12px 16px">' +
         plan +
@@ -4937,7 +4936,7 @@ async function loadMechanicProfiles() {
       const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unnamed contact';
       const initials = ((c.first_name || '?')[0] + (c.last_name || '')[0]).toUpperCase();
       const avatarHTML = c.photo_url
-        ? `<img src="${c.photo_url}" alt="${name}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
+        ? `<img src="${esc(c.photo_url)}" alt="${esc(name)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
         : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--blue)">${initials}</div>`;
       const roleTag =
         c.role === 'manager'
@@ -4952,9 +4951,9 @@ async function loadMechanicProfiles() {
       </div>
       <div style="display:flex;justify-content:center;margin-top:-40px">${avatarHTML}</div>
       <div style="text-align:center;padding:10px 20px 0">
-        <div style="font-size:16px;font-weight:700;color:var(--navy)">${name}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--navy)">${esc(name)}</div>
         <div style="font-size:12px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
-        <div style="font-size:13px;color:#374151;margin-top:8px;min-height:20px">${c.bio || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
+        <div style="font-size:13px;color:#374151;margin-top:8px;min-height:20px">${esc(c.bio) || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
       </div>
       <div style="display:flex;justify-content:center;gap:24px;padding:14px 20px;margin-top:8px;border-top:1px solid var(--border)">
         <div style="text-align:center"><div style="font-weight:800;font-size:15px;color:var(--navy)">${jobs.length}</div><div style="font-size:11px;color:var(--mgray)">Jobs done</div></div>

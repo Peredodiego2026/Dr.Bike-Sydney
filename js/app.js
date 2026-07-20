@@ -733,7 +733,7 @@ async function renderBookService() {
             <div style="flex:1;position:relative">
               <label for="location-input" style="font-size:12px;color:var(--color-text-secondary);font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Address</label>
               <input id="location-input" type="text" placeholder="e.g. 14 Smith St, Surry Hills NSW 2010"
-                value="${saved.replace(/"/g, '"')}"
+                value="${escapeHtml(saved)}"
                 style="width:100%;border:none;outline:none;background:transparent;font-size:16px;color:var(--color-text);padding:0;font-family:inherit;box-sizing:border-box" autocomplete="off">
               <div id="address-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--color-border);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;z-index:10;box-shadow:var(--shadow-md)"></div>
               <div style="height:1px;background:var(--color-border);margin-top:8px"></div>
@@ -774,10 +774,10 @@ async function renderBookService() {
         suggestionsBox.innerHTML = data
           .map(
             (item) => `
-          <button type="button" class="address-suggestion" data-address="${item.display_name.replace(/"/g, '"')}"
+          <button type="button" class="address-suggestion" data-address="${escapeHtml(item.display_name)}"
             style="display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--color-text);font-family:inherit;border-bottom:1px solid var(--color-border)">
-            ${item.display_name.split(',')[0]}<br>
-            <span style="font-size:12px;color:var(--color-text-secondary)">${item.display_name.split(',').slice(1).join(',')}</span>
+            ${escapeHtml(item.display_name.split(',')[0])}<br>
+            <span style="font-size:12px;color:var(--color-text-secondary)">${escapeHtml(item.display_name.split(',').slice(1).join(','))}</span>
           </button>
         `
           )
@@ -1768,7 +1768,7 @@ async function renderTracking() {
       }
       if (avatarEl) {
         if (p.photo_url) {
-          avatarEl.innerHTML = `<img src="${p.photo_url}" alt="${p.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+          avatarEl.innerHTML = `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
           avatarEl.style.background = 'transparent';
         } else {
           const initials = p.name
@@ -1971,7 +1971,7 @@ function openMechanicProfile(p, booking, screen) {
     .join('')
     .toUpperCase();
   const avatarHTML = p.photo_url
-    ? `<img src="${p.photo_url}" alt="${p.name}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
+    ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
     : `<div style="width:88px;height:88px;border-radius:50%;background:#EFF6FF;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#2563EB">${initials}</div>`;
 
   const statParts = [];
@@ -2001,9 +2001,9 @@ function openMechanicProfile(p, booking, screen) {
       </div>
       <div style="display:flex;justify-content:center;margin-top:-44px">${avatarHTML}</div>
       <div style="text-align:center;padding:10px 20px 0">
-        <div style="font-size:17px;font-weight:700;color:#0D1F3C">${p.name}</div>
+        <div style="font-size:17px;font-weight:700;color:#0D1F3C">${escapeHtml(p.name)}</div>
         <div style="font-size:12px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
-        ${p.bio ? `<div style="font-size:13px;color:#374151;margin-top:10px;line-height:1.5">${p.bio}</div>` : ''}
+        ${p.bio ? `<div style="font-size:13px;color:#374151;margin-top:10px;line-height:1.5">${escapeHtml(p.bio)}</div>` : ''}
       </div>
       ${statParts.length ? `<div style="display:flex;justify-content:center;gap:32px;padding:16px 20px">${statParts.join('')}</div>` : ''}
       <div style="display:flex;gap:8px;padding:16px 20px">
@@ -2701,7 +2701,7 @@ async function renderMyBookings() {
                 .join('')
                 .toUpperCase();
               const avatarHTML = p.photo_url
-                ? `<img src="${p.photo_url}" alt="${p.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
+                ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
                 : `<div style="width:44px;height:44px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#2563EB">${initials}</div>`;
               const metaParts = [];
               if (p.jobs_completed > 0) metaParts.push(`${p.jobs_completed} services`);
@@ -2713,7 +2713,7 @@ async function renderMyBookings() {
                   ${avatarHTML}
                   <div style="min-width:0">
                     <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Your mechanic</div>
-                    <div style="font-size:14px;font-weight:700;color:#0F172A">${p.name}</div>
+                    <div style="font-size:14px;font-weight:700;color:#0F172A">${escapeHtml(p.name)}</div>
                     ${metaParts.length ? `<div style="font-size:12px;color:#6B7280">${metaParts.join('  ·  ')}</div>` : ''}
                   </div>
                 </div>
