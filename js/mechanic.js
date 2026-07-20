@@ -2040,95 +2040,18 @@ function startServiceTimer(bookingId) {
   }, 1000);
 }
 
-async function completeService() {
+// "Complete" on the service-timer bar used to finish the job directly (only
+// duration_seconds, no signature/parts/photos/charge amount) - a shortcut
+// that bypassed everything openCompleteModal()/submitComplete() require.
+// It now just stops the timer display and opens that same required modal;
+// activeTimerBookingId/serviceStartTime are left set so submitComplete()
+// still picks up the correct elapsed duration once the mechanic finishes it.
+function completeService() {
   clearInterval(timerInterval);
   const bar = document.getElementById('service-timer-bar');
   if (bar) bar.style.display = 'none';
-  const duration = serviceStartTime ? Math.floor((Date.now() - serviceStartTime) / 1000) : null;
   const bookingId = activeTimerBookingId;
-  if (bookingId) {
-    const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
-    try {
-      const resp = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          role: 'mechanic-complete',
-          token: stored.token || '',
-          booking_id: bookingId,
-          duration_seconds: duration,
-        }),
-      });
-      if (!resp.ok) toast('Could not complete job via timer');
-    } catch (e) {
-      toast('Timer complete error: ' + e.message);
-    }
-    // Notify client — same as submitComplete()
-    const j = jobs.find((x) => x.id === bookingId);
-    if (j) {
-      notifyClientComplete(j);
-      // Send invoice + review request (non-blocking)
-      try {
-        let clientEmail = j.email || '';
-        let clientPhone = j.phone || '';
-        if (!clientEmail) {
-          const { data: bkg } = await sb
-            .from('bookings')
-            .select('client_email, client_phone')
-            .eq('id', bookingId)
-            .single();
-          clientEmail = bkg?.client_email || '';
-          clientPhone = bkg?.client_phone || clientPhone;
-        }
-        if (clientEmail) {
-          const mechName = (
-            (mechanic?.first_name || '') +
-            ' ' +
-            (mechanic?.last_name || '')
-          ).trim();
-          await Promise.allSettled([
-            fetch('/api/send-invoice', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                bookingId,
-                to: clientEmail,
-                clientName: j.client || 'Client',
-                service: j.service_name || j.service,
-                date: j.scheduled_date,
-                time: j.scheduled_time,
-                address: j.address || j.suburb,
-                price: Math.max(0, (j.price || 0) - (j.discount_applied || 0)),
-                discount: j.discount_applied || 0,
-                calloutFee: j.callout_fee ?? 20,
-                mechNotes: null,
-                mechName,
-                nextService: 'We recommend a service check every 3–6 months.',
-                bookingRef: bookingId.slice(0, 8).toUpperCase(),
-              }),
-            }),
-            fetch('/api/send-email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: 'review_request',
-                to: clientEmail,
-                name: j.client || 'Client',
-                service: j.service_name || j.service,
-                bookingId,
-              }),
-            }),
-          ]);
-        }
-      } catch (e) {
-        /* non-fatal */
-      }
-    }
-  }
-  activeTimerBookingId = null;
-  serviceStartTime = null;
-  if (typeof load === 'function') load();
-  render();
+  if (bookingId) openCompleteModal(bookingId);
 }
 
 // ── Pre-Service Checklist (4.1) ──────────────────────────────────────────────
