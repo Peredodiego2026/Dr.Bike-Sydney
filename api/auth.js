@@ -1322,7 +1322,18 @@ async function handleClientReschedule(req, res) {
       body: JSON.stringify({ scheduled_date, scheduled_time }),
     }
   );
-  if (!updateResp.ok) return res.status(500).json({ error: 'Failed to reschedule booking' });
+  if (!updateResp.ok) {
+    // 23505 = unique_violation on bookings_unique_slot (van_number, scheduled_date,
+    // scheduled_time) - someone else took that slot between the client loading
+    // availability and confirming. Tell them that specifically instead of a
+    // generic failure so they know to just pick another time.
+    const errBody = await updateResp.json().catch(() => ({}));
+    if (errBody.code === '23505')
+      return res
+        .status(409)
+        .json({ error: 'That time was just taken by another booking - please pick another.' });
+    return res.status(500).json({ error: 'Failed to reschedule booking' });
+  }
 
   if (bk.google_event_id) {
     const sb = createClient(SUPABASE_URL, SERVICE_KEY);
