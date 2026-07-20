@@ -225,7 +225,7 @@ function ratingHTML(jobs) {
           j
         ) => `<div style="margin-top:10px;padding:10px;background:var(--off);border-radius:8px;text-align:left">
       <div style="font-size:11px;font-weight:600;color:var(--navy)">${'⭐'.repeat(j.rating || 0)} ${esc(j.client)}</div>
-      ${j.review ? `<div style="font-size:11px;color:var(--mgray);margin-top:3px;font-style:italic">"${j.review}"</div>` : ''}
+      ${j.review ? `<div style="font-size:11px;color:var(--mgray);margin-top:3px;font-style:italic">"${esc(j.review)}"</div>` : ''}
     </div>`
       )
       .join('')}
@@ -1887,12 +1887,12 @@ async function loadInventory() {
     });
     let html = '';
     for (const [cat, items] of Object.entries(byCategory)) {
-      html += `<div style="margin-bottom:20px"><h3 style="font-size:12px;font-weight:700;text-transform:uppercase;color:#6B7280;margin-bottom:8px">${cat}</h3>`;
+      html += `<div style="margin-bottom:20px"><h3 style="font-size:12px;font-weight:700;text-transform:uppercase;color:#6B7280;margin-bottom:8px">${esc(cat)}</h3>`;
       items.forEach((item) => {
         const low = item.stock <= item.min_stock;
         html += `<div class="inv-row${low ? ' low' : ''}">
           <div>
-            <div style="font-size:13px;font-weight:600;color:var(--navy)">${item.name}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(item.name)}</div>
             ${low ? '<div style="font-size:11px;color:#DC2626;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
