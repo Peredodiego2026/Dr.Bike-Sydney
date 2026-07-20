@@ -1605,8 +1605,12 @@ async function submitComplete(id) {
         .single();
       clientEmail = bkgFull?.client_email || '';
       clientPhone = bkgFull?.client_phone || clientPhone;
-      // Si aún no hay email, usar peredo.dm@gmail.com como fallback para testear
-      if (!clientEmail) clientEmail = 'peredo.dm@gmail.com';
+      if (!clientEmail)
+        console.warn(
+          '[submitComplete] no client email on file for booking',
+          id,
+          '- invoice/review email skipped'
+        );
     }
     const nextSvcMsg = nextDate
       ? `Your next recommended service is on ${new Date(nextDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`
