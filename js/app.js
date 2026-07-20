@@ -2918,6 +2918,7 @@ async function renderMyBookings() {
           overlay.querySelector('#reschedule-btn').addEventListener('click', () => {
             const panel = document.getElementById('detail-panel');
             const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+            const fmtTime = (t) => t.replace(':00', '') + (parseInt(t) < 12 ? 'am' : 'pm');
             panel.innerHTML = `
               <div style="font-size:17px;font-weight:700;margin-bottom:20px">📅 Reschedule</div>
               <div style="margin-bottom:16px">
@@ -2927,14 +2928,10 @@ async function renderMyBookings() {
               </div>
               <div style="margin-bottom:24px">
                 <label for="resched-time" style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New time</label>
-                <select id="resched-time" style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
-                  ${['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
-                    .map(
-                      (t) =>
-                        `<option value="${t}" ${booking.scheduled_time === t ? 'selected' : ''}>${t.replace(':00', '') + (parseInt(t) < 12 ? 'am' : 'pm')}</option>`
-                    )
-                    .join('')}
+                <select id="resched-time" disabled style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
+                  <option>Loading available times...</option>
                 </select>
+                <div id="resched-time-err" style="display:none;font-size:12px;color:var(--color-error);margin-top:6px"></div>
               </div>
               <button id="confirm-resched-btn" class="btn btn--primary btn--full" style="margin-bottom:10px">Confirm reschedule</button>
               <button id="back-detail-btn" class="btn btn--secondary btn--full">Back</button>
@@ -2942,11 +2939,50 @@ async function renderMyBookings() {
             panel
               .querySelector('#back-detail-btn')
               .addEventListener('click', () => overlay.remove());
+
+            // Real availability, same check the booking wizard uses - the old
+            // fixed 8-slot list didn't know which times were actually taken.
+            async function loadReschedTimes(date) {
+              const timeSel = panel.querySelector('#resched-time');
+              const errEl = panel.querySelector('#resched-time-err');
+              if (!timeSel) return;
+              errEl.style.display = 'none';
+              timeSel.disabled = true;
+              timeSel.innerHTML = '<option>Loading available times...</option>';
+              try {
+                const slots = await getAvailableSlots(date);
+                const anyAvailable = slots.some((s) => s.available);
+                timeSel.innerHTML = slots
+                  .map(
+                    (s) =>
+                      `<option value="${s.time}" ${!s.available ? 'disabled' : ''} ${s.time === booking.scheduled_time && s.available ? 'selected' : ''}>${fmtTime(s.time)}${!s.available ? ' - unavailable' : ''}</option>`
+                  )
+                  .join('');
+                timeSel.disabled = !anyAvailable;
+                if (!anyAvailable) {
+                  errEl.textContent = 'No times available that day - try another date.';
+                  errEl.style.display = 'block';
+                }
+              } catch {
+                timeSel.innerHTML = '<option>Could not load times</option>';
+                errEl.textContent = 'Could not check availability. Try again.';
+                errEl.style.display = 'block';
+              }
+            }
+            panel
+              .querySelector('#resched-date')
+              .addEventListener('change', (e) => loadReschedTimes(e.target.value));
+            loadReschedTimes(booking.scheduled_date || tomorrow);
+
             panel.querySelector('#confirm-resched-btn').addEventListener('click', async () => {
               const newDate = panel.querySelector('#resched-date').value;
               const newTime = panel.querySelector('#resched-time').value;
               if (!newDate) {
                 showToast('Select a date.', 'error');
+                return;
+              }
+              if (!newTime) {
+                showToast('Select a time.', 'error');
                 return;
               }
               const {
