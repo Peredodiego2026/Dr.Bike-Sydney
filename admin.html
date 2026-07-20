@@ -291,11 +291,11 @@
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
           <div>
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">From</div>
-            <input type="date" id="bk-f-from" class="inp" style="width:140px">
+            <input type="date" id="bk-f-from" class="inp" aria-label="From date" style="width:140px">
           </div>
           <div>
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">To</div>
-            <input type="date" id="bk-f-to" class="inp" style="width:140px">
+            <input type="date" id="bk-f-to" class="inp" aria-label="To date" style="width:140px">
           </div>
           <div>
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Van</div>
@@ -318,7 +318,7 @@
           </div>
           <div style="flex:1;min-width:180px">
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Client name</div>
-            <input type="text" id="bk-f-search" class="inp" placeholder="Search client..." oninput="applyBookingFilters()">
+            <input type="text" id="bk-f-search" class="inp" placeholder="Search client..." aria-label="Search client" oninput="applyBookingFilters()">
           </div>
           <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-2">Filter</button>
           <button style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-3">Reset</button>
@@ -691,20 +691,20 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">First name</div>
-            <input class="inp" id="modal-fname" placeholder="e.g. Diego">
+            <input class="inp" id="modal-fname" placeholder="e.g. Diego" aria-label="First name">
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Last name</div>
-            <input class="inp" id="modal-lname" placeholder="e.g. Peredó">
+            <input class="inp" id="modal-lname" placeholder="e.g. Peredó" aria-label="Last name">
           </div>
         </div>
         <div style="margin-bottom:12px">
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone (WhatsApp)</div>
-          <input class="inp" id="modal-phone" placeholder="+61 400 000 000">
+          <input class="inp" id="modal-phone" placeholder="+61 400 000 000" aria-label="Phone">
         </div>
         <div style="margin-bottom:12px">
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Email (Gmail - for calendar invites)</div>
-          <input class="inp" id="modal-email" type="email" placeholder="e.g. mechanic@gmail.com">
+          <input class="inp" id="modal-email" type="email" placeholder="e.g. mechanic@gmail.com" aria-label="Email">
         </div>
         <div style="margin-bottom:20px">
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Role</div>
@@ -794,7 +794,7 @@
       <div id="coupon-inline-form" style="display:none;background:var(--white);border:1.5px solid var(--border);border-radius:16px;padding:22px;margin-bottom:20px;box-shadow:var(--shadow)">
         <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:18px">🎟️ New discount code</div>
         <div style="margin-bottom:12px">
-          <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Code</label>
+          <label for="c-code" style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Code</label>
           <div style="display:flex;gap:8px">
             <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.1em;font-size:15px" placeholder="e.g. NEWRIDER20">
             <button style="white-space:nowrap;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)" id="auto-wire-17">Random</button>
@@ -809,17 +809,17 @@
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Value</label>
+            <label for="c-value" style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Value</label>
             <input id="c-value" type="number" class="inp" style="margin:0;font-size:16px;font-weight:700" placeholder="15" min="1">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Max uses</label>
+            <label for="c-maxuses" style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Max uses</label>
             <input id="c-maxuses" type="number" class="inp" style="margin:0" placeholder="Unlimited">
           </div>
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Expires</label>
+            <label for="c-expires" style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Expires</label>
             <input id="c-expires" type="date" class="inp" style="margin:0">
           </div>
         </div>
@@ -858,7 +858,7 @@
         <div style="display:flex;flex-direction:column;gap:12px">
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Title</div>
-            <input type="text" id="bc-title" class="inp" style="margin:0" placeholder="e.g. Weekend special — 20% off" maxlength="50">
+            <input type="text" id="bc-title" class="inp" style="margin:0" placeholder="e.g. Weekend special — 20% off" aria-label="Title" maxlength="50">
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Message</div>
@@ -934,10 +934,10 @@
           <div class="setting-title">Business details</div>
           <div class="setting-sub">Saved to Supabase — used in notifications and invoices</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Business name</div><input id="set-biz-name" class="inp" placeholder="Dr. Bike Sydney"></div>
-            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone</div><input id="set-biz-phone" class="inp" placeholder="+61 4XX XXX XXX"></div>
-            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Email</div><input id="set-biz-email" class="inp" placeholder="hello@drbike.com.au"></div>
-            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">ABN</div><input id="set-biz-abn" class="inp" placeholder="Pending registration"></div>
+            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Business name</div><input id="set-biz-name" class="inp" placeholder="Dr. Bike Sydney" aria-label="Business name"></div>
+            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone</div><input id="set-biz-phone" class="inp" placeholder="+61 4XX XXX XXX" aria-label="Phone"></div>
+            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Email</div><input id="set-biz-email" class="inp" placeholder="hello@drbike.com.au" aria-label="Email"></div>
+            <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">ABN</div><input id="set-biz-abn" class="inp" placeholder="Pending registration" aria-label="ABN"></div>
           </div>
           <button class="btn-save" id="auto-wire-22">Save changes</button>
         </div>
@@ -956,7 +956,7 @@
           <div class="setting-sub">Number clients receive WhatsApp messages from</div>
           <div style="margin-top:8px">
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Sender number</div>
-            <input id="wa-number-input" class="inp" placeholder="+61 4XX XXX XXX">
+            <input id="wa-number-input" class="inp" placeholder="+61 4XX XXX XXX" aria-label="Sender number">
           </div>
           <div id="wa-status" style="font-size:12px;padding:8px 12px;background:var(--off);border-radius:8px;line-height:1.6;color:var(--mgray);margin-top:8px">
             No number configured — WhatsApp disabled.
@@ -1020,7 +1020,7 @@
       <!-- Search -->
       <div style="position:relative;margin-bottom:16px;max-width:360px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="inv-search" class="inp" placeholder="Search parts..." style="padding-left:36px" oninput="renderInventory()">
+        <input id="inv-search" class="inp" placeholder="Search parts..." aria-label="Search parts" style="padding-left:36px" oninput="renderInventory()">
       </div>
       <!-- Grouped table -->
       <div class="card">
@@ -1052,7 +1052,7 @@
       <!-- Search -->
       <div style="position:relative;margin-bottom:12px;max-width:360px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="svc-search" class="inp" placeholder="Search services..." style="padding-left:36px" oninput="renderServices()">
+        <input id="svc-search" class="inp" placeholder="Search services..." aria-label="Search services" style="padding-left:36px" oninput="renderServices()">
       </div>
       <!-- Category filter chips -->
       <div id="svc-cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
@@ -1157,11 +1157,11 @@
         <div style="display:flex;flex-direction:column;gap:12px">
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Name</div>
-            <input class="inp" id="notif-modal-name" placeholder="e.g. Diego (Manager), Jake (Mechanic 1)">
+            <input class="inp" id="notif-modal-name" placeholder="e.g. Diego (Manager), Jake (Mechanic 1)" aria-label="Name">
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Phone number</div>
-            <input class="inp" id="notif-modal-phone" placeholder="+61 4XX XXX XXX" type="tel">
+            <input class="inp" id="notif-modal-phone" placeholder="+61 4XX XXX XXX" type="tel" aria-label="Phone number">
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Role</div>
@@ -1208,7 +1208,7 @@
         <div style="display:flex;flex-direction:column;gap:12px">
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Name</div>
-            <input class="inp" id="mech-profile-modal-name" placeholder="e.g. Diego Peredo">
+            <input class="inp" id="mech-profile-modal-name" placeholder="e.g. Diego Peredo" aria-label="Name">
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Photo</div>
@@ -1239,7 +1239,7 @@
           <img id="crop-img" draggable="false" style="position:absolute;left:50%;top:50%;user-select:none;pointer-events:none">
           <div style="position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 9999px rgba(0,0,0,0.55);pointer-events:none"></div>
         </div>
-        <input type="range" id="crop-zoom-slider" min="0" max="100" value="0" style="width:280px;display:block;margin:16px auto 0">
+        <input type="range" id="crop-zoom-slider" min="0" max="100" value="0" aria-label="Zoom" style="width:280px;display:block;margin:16px auto 0">
         <div style="display:flex;gap:10px;margin-top:16px">
           <button id="crop-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
           <button id="crop-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Use this photo</button>

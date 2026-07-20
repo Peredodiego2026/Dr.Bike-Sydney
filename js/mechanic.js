@@ -668,7 +668,7 @@ function card(j) {
       <button class="abtn" data-action="history" data-id="${j.id}" data-client="${j.client.replace(/"/g, '&quot;')}" data-client-id="${j.client_id || ''}" style="background:#16A34A1A;color:#16A34A">History</button>
       ${!done ? `${isPending || (st === 'confirmed' && !j.mechanic_id) ? `<button class="abtn" data-action="accept" data-id="${j.id}" style="background:#16A34A1A;color:#16A34A;font-weight:700">Accept</button><button class="abtn" data-action="reject" data-id="${j.id}" style="background:#DC26261A;color:#DC2626">Reject</button>` : st === 'confirmed' ? `<button class="abtn go" data-action="enroute" data-id="${j.id}">En route</button>` : isEnroute ? `<button class="abtn" data-action="arrived" data-id="${j.id}" style="background:#16A34A1A;color:#16A34A">Arrived</button>` : st === 'arrived' || st === 'inprogress' || st === 'in_progress' ? `<button class="abtn done" data-action="complete" data-id="${j.id}">Complete</button>` : ``}` : `<button class="abtn undo" data-action="undo" data-id="${j.id}">Undo</button>`}
     </div>
-    ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." value="${j.mnotes}" data-notes-id="${j.id}">` : ''}
+    ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." aria-label="Mechanic notes" value="${j.mnotes}" data-notes-id="${j.id}">` : ''}
     ${isPending ? `<div style="text-align:center;font-size:11px;color:#16A34A;padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
     </div>
   </div>`;
@@ -990,7 +990,7 @@ function openCompleteModal(id) {
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">💳 Payment breakdown</label>
           <div id="charge-breakdown" style="background:var(--off);border:1px solid var(--border);border-radius:12px;padding:14px 16px"></div>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <input id="mech-disc-code" placeholder="Discount code (optional)" style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);text-transform:uppercase" />
+            <input id="mech-disc-code" placeholder="Discount code (optional)" aria-label="Discount code" style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);text-transform:uppercase" />
             <button type="button" data-action="apply-mech-discount" id="mech-disc-btn" style="flex-shrink:0;padding:0 16px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Apply</button>
           </div>
           <div id="mech-disc-msg" style="display:none;font-size:12px;font-weight:600;margin-top:6px"></div>
@@ -1024,7 +1024,7 @@ function openCompleteModal(id) {
           </div>
         </div>
         <div>
-          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Next service recommended</label>
+          <label for="comp-next" style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Next service recommended</label>
           <input id="comp-next" type="date" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
         </div>
         <div>
@@ -2526,7 +2526,7 @@ function openMechChat(bookingId) {
             📷
             <input type="file" accept="image/*" capture="environment" id="mech-chat-photo-inp" style="display:none" onchange="sendMechPhoto()">
           </label>
-          <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMechMessage()">
+          <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." aria-label="Type a message" onkeydown="if(event.key==='Enter')sendMechMessage()">
           <button data-action="send-mech-message" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;cursor:pointer;font-size:18px">→</button>
         </div>
       </div>`;
