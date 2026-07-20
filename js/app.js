@@ -731,7 +731,7 @@ async function renderBookService() {
               <circle cx="12" cy="10" r="3"></circle>
             </svg>
             <div style="flex:1;position:relative">
-              <label style="font-size:12px;color:var(--color-text-secondary);font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Address</label>
+              <label for="location-input" style="font-size:12px;color:var(--color-text-secondary);font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Address</label>
               <input id="location-input" type="text" placeholder="e.g. 14 Smith St, Surry Hills NSW 2010"
                 value="${saved.replace(/"/g, '"')}"
                 style="width:100%;border:none;outline:none;background:transparent;font-size:16px;color:var(--color-text);padding:0;font-family:inherit;box-sizing:border-box" autocomplete="off">
@@ -994,7 +994,7 @@ async function renderServiceSummary() {
       <div style="margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-secondary);margin-bottom:8px">Promo or referral code</div>
         <div style="display:flex;gap:8px">
-          <input id="referral-input" type="text" placeholder="Enter code (optional)"
+          <input id="referral-input" type="text" placeholder="Enter code (optional)" aria-label="Promo or referral code"
             style="flex:1;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 14px;color:var(--color-text);font-size:16px;outline:none;text-transform:uppercase" />
           <button id="referral-apply-btn" class="btn btn--secondary" style="padding:10px 16px;font-size:13px;white-space:nowrap">Apply</button>
         </div>
@@ -2807,12 +2807,12 @@ async function renderMyBookings() {
             panel.innerHTML = `
               <div style="font-size:17px;font-weight:700;margin-bottom:20px">📅 Reschedule</div>
               <div style="margin-bottom:16px">
-                <label style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New date</label>
+                <label for="resched-date" style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New date</label>
                 <input id="resched-date" type="date" min="${tomorrow}" value="${booking.scheduled_date || ''}"
                   style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
               </div>
               <div style="margin-bottom:24px">
-                <label style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New time</label>
+                <label for="resched-time" style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New time</label>
                 <select id="resched-time" style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
                   ${['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
                     .map(
@@ -3265,21 +3265,21 @@ async function renderMyBikes() {
       <div id="add-bike-form" style="display:none;margin-top:20px;background:var(--color-surface);border-radius:16px;padding:20px;border:1px solid var(--color-border);box-shadow:var(--elevation-0)">
         <div style="font-size:15px;font-weight:700;margin-bottom:16px">New Bike</div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <input id="bike-nickname" type="text" placeholder="Name (e.g. Red Trek)*" maxlength="60"
+          <input id="bike-nickname" type="text" placeholder="Name (e.g. Red Trek)*" aria-label="Bike name" maxlength="60"
             style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <input id="bike-brand" type="text" placeholder="Brand" maxlength="40"
+            <input id="bike-brand" type="text" placeholder="Brand" aria-label="Brand" maxlength="40"
               style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
-            <input id="bike-model" type="text" placeholder="Model" maxlength="40"
+            <input id="bike-model" type="text" placeholder="Model" aria-label="Model" maxlength="40"
               style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <input id="bike-color" type="text" placeholder="Color" maxlength="30"
+            <input id="bike-color" type="text" placeholder="Color" aria-label="Color" maxlength="30"
               style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
-            <input id="bike-year" type="number" placeholder="Year" min="1990" max="2030"
+            <input id="bike-year" type="number" placeholder="Year" aria-label="Year" min="1990" max="2030"
               style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
           </div>
-          <select id="bike-type"
+          <select id="bike-type" aria-label="Bike type"
             style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none;appearance:none">
             <option value="">Type (optional)</option>
             <option value="road">Road</option>

@@ -816,7 +816,7 @@ function promptArrivalPin(id) {
     <div style="background:var(--white);border-radius:16px;width:100%;max-width:340px;padding:20px">
       <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">Confirm arrival</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Ask the client for their 4-digit code and enter it below.</div>
-      <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000"
+      <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="4-digit arrival code"
         style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy)">
       <div id="pin-error" style="display:none;color:#DC2626;font-size:12px;margin-top:8px"></div>
       <div style="display:flex;gap:10px;margin-top:18px">
@@ -996,7 +996,7 @@ function openCompleteModal(id) {
           <div id="mech-disc-msg" style="display:none;font-size:12px;font-weight:600;margin-top:6px"></div>
         </div>
         <div>
-          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">💚 Tip (optional, 100% goes to you)</label>
+          <label for="mech-tip-input" style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">💚 Tip (optional, 100% goes to you)</label>
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:15px;font-weight:700;color:var(--navy)">$</span>
             <input id="mech-tip-input" type="number" min="0" step="1" placeholder="0" inputmode="decimal"
@@ -1011,14 +1011,14 @@ function openCompleteModal(id) {
               <div style="font-size:11px;color:#6B7280;margin-bottom:4px">Before</div>
               <label style="display:flex;align-items:center;justify-content:center;height:80px;border:2px dashed var(--border);border-radius:8px;cursor:pointer;background:var(--off);font-size:24px" id="before-label">
                 📷
-                <input type="file" accept="image/*" capture="environment" id="photo-before" style="display:none" onchange="previewPhoto('before')">
+                <input type="file" accept="image/*" capture="environment" id="photo-before" aria-label="Before photo" style="display:none" onchange="previewPhoto('before')">
               </label>
             </div>
             <div>
               <div style="font-size:11px;color:#6B7280;margin-bottom:4px">After</div>
               <label style="display:flex;align-items:center;justify-content:center;height:80px;border:2px dashed var(--border);border-radius:8px;cursor:pointer;background:var(--off);font-size:24px" id="after-label">
                 📷
-                <input type="file" accept="image/*" capture="environment" id="photo-after" style="display:none" onchange="previewPhoto('after')">
+                <input type="file" accept="image/*" capture="environment" id="photo-after" aria-label="After photo" style="display:none" onchange="previewPhoto('after')">
               </label>
             </div>
           </div>
@@ -2524,7 +2524,7 @@ function openMechChat(bookingId) {
         <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
           <label style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;flex-shrink:0;font-size:18px;background:var(--off)" title="Send photo">
             📷
-            <input type="file" accept="image/*" capture="environment" id="mech-chat-photo-inp" style="display:none" onchange="sendMechPhoto()">
+            <input type="file" accept="image/*" capture="environment" id="mech-chat-photo-inp" aria-label="Send photo" style="display:none" onchange="sendMechPhoto()">
           </label>
           <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." aria-label="Type a message" onkeydown="if(event.key==='Enter')sendMechMessage()">
           <button data-action="send-mech-message" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;cursor:pointer;font-size:18px">→</button>

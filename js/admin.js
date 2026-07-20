@@ -1122,7 +1122,7 @@ function openBlockModal() {
       <div style="display:flex;flex-direction:column;gap:14px">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Van</div>
-          <select id="block-van" class="inp" style="margin:0">
+          <select id="block-van" class="inp" aria-label="Van" style="margin:0">
             <option value="1">Van 1 — Inner West / Eastern / CBD</option>
             <option value="2">Van 2 — North Shore / Manly / Beaches</option>
             <option value="0">All vans</option>
@@ -1623,10 +1623,10 @@ function checkAdminAuth() {
       <div style="width:56px;height:56px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
       <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
-      <input type="email" id="admin-email-inp" placeholder="Email" autocomplete="username"
+      <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
         style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')document.getElementById('admin-pass-inp').focus()">
-      <input type="password" id="admin-pass-inp" placeholder="Password" autocomplete="current-password"
+      <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
         style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')submitAdminLogin()">
       <div id="admin-pass-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none">Invalid credentials</div>
@@ -1852,7 +1852,7 @@ const _btn =
 
 function _totpInputHTML() {
   return `<div style="font-size:13px;color:#6B7280;margin-bottom:28px">Enter the 6-digit code from your authenticator app</div>
-  <input type="text" id="admin-totp-inp" placeholder="000000" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
+  <input type="text" id="admin-totp-inp" placeholder="000000" aria-label="6-digit authentication code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:24px;font-weight:700;text-align:center;letter-spacing:10px"
     onkeydown="if(event.key==='Enter')submitTOTPCode()">
   <div id="admin-totp-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none"></div>
@@ -1863,7 +1863,7 @@ function _enrollHTML(qrSvg, secret) {
   return `<div style="font-size:13px;color:#6B7280;margin-bottom:16px">Scan with Google Authenticator or Authy to enable 2FA on this account</div>
   <div style="margin:0 auto 12px;max-width:180px">${qrSvg}</div>
   <div style="font-size:11px;color:#6B7280;margin-bottom:16px">Or enter manually: <code style="background:#F3F4F6;padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:1px">${secret}</code></div>
-  <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
+  <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" aria-label="6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
     onkeydown="if(event.key==='Enter')submitMFASetupCode()">
   <div id="admin-enroll-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none"></div>
@@ -3311,7 +3311,7 @@ function renderVanZones() {
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <span style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap">👤</span>
-          <input id="driver-${van.id}" value="${van.driverName || ''}" placeholder="Mechanic name"
+          <input id="driver-${van.id}" value="${van.driverName || ''}" placeholder="Mechanic name" aria-label="Mechanic name"
             style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:6px 10px;font-size:13px;color:#fff;font-family:Inter,sans-serif;outline:none;flex:1;min-width:0"
             onblur="saveDriverName(${van.id},this.value)">
         </div>
@@ -3325,7 +3325,7 @@ function renderVanZones() {
           ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:#1848C8;border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:14px;opacity:.6;line-height:1">×</span></span>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
-          <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" onkeydown="if(event.key==='Enter')addSuburb(${van.id})"
+          <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" onkeydown="if(event.key==='Enter')addSuburb(${van.id})"
             style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:Inter,sans-serif;outline:none">
           <button data-action="add-suburb" data-id="${van.id}" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
         </div>
@@ -3475,7 +3475,7 @@ async function loadClaims() {
       ${photos ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${photos}</div>` : ''}
       <div style="margin-bottom:12px">${invoice}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <select data-claim-status="${esc(c.id)}" class="inp" style="width:auto;padding:7px 10px;font-size:12px;cursor:pointer">
+        <select data-claim-status="${esc(c.id)}" class="inp" aria-label="Claim status" style="width:auto;padding:7px 10px;font-size:12px;cursor:pointer">
           ${Object.entries(CLAIM_STATUS)
             .map(
               ([k, v]) =>
@@ -3758,7 +3758,7 @@ function openPartModal(id) {
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Part name</div>
         <input class="inp" id="pm-name" value="${p?.name || ''}" placeholder="e.g. Brake pads (Shimano B01S)" aria-label="Part name"></div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Category</div>
-        <select class="inp" id="pm-cat" style="cursor:pointer">${cats.map((c) => `<option value="${c}"${(p?.category || 'General') === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
+        <select class="inp" id="pm-cat" aria-label="Category" style="cursor:pointer">${cats.map((c) => `<option value="${c}"${(p?.category || 'General') === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Current stock</div>
           <input class="inp" id="pm-stock" type="number" min="0" value="${p?.stock || 0}" aria-label="Current stock"></div>
@@ -3972,7 +3972,7 @@ function openServiceModal(id) {
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Service name</div>
         <input class="inp" id="sm-name" value="${s?.name ? escapeHtml(s.name) : ''}" placeholder="e.g. Chain Install" aria-label="Service name"></div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Category</div>
-        <select class="inp" id="sm-cat" style="cursor:pointer">${SERVICE_CATEGORIES.map((c) => `<option value="${c}"${(s?.category || SERVICE_CATEGORIES[0]) === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
+        <select class="inp" id="sm-cat" aria-label="Category" style="cursor:pointer">${SERVICE_CATEGORIES.map((c) => `<option value="${c}"${(s?.category || SERVICE_CATEGORIES[0]) === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Price ($)</div>
         <input class="inp" id="sm-price" type="number" min="0" step="1" value="${s?.price ?? ''}" placeholder="0" aria-label="Price"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
