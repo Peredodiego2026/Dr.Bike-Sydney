@@ -338,31 +338,11 @@
           <h2 class="section-h2">What Our Customers Say</h2>
           <p class="section-sub">Don't just take our word for it. Here's what Sydney cyclists have to say.</p>
         </div>
-        <div class="reviews-grid">
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">"Diego is a true professional! He came to my place, serviced my bike perfectly, and even gave me tips on maintenance. Highly recommend!"</p>
-            <div class="review-author">
-              <div class="review-avatar">JM</div>
-              <div><div class="review-name">James M.</div><div class="review-role">Road Cyclist</div></div>
-            </div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">"Amazing service! So convenient and affordable. Dr. Bike Sydney is now my go-to for all bike maintenance."</p>
-            <div class="review-author">
-              <div class="review-avatar">SK</div>
-              <div><div class="review-name">Sarah K.</div><div class="review-role">Triathlete</div></div>
-            </div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">"Fast, reliable, and affordable. Dr. Bike Sydney has transformed my bike. My bike has never ridden better."</p>
-            <div class="review-author">
-              <div class="review-avatar">MR</div>
-              <div><div class="review-name">Michael R.</div><div class="review-role">Mountain Biker</div></div>
-            </div>
-          </div>
+        <div class="reviews-grid" id="reviews-grid"></div>
+        <div id="reviews-empty" style="display:none;text-align:center;padding:28px 16px">
+          <div style="font-size:28px;margin-bottom:10px">&#128172;</div>
+          <p style="font-weight:700;font-size:15px;color:#0D1F3C;margin-bottom:6px">Be the first to leave a review</p>
+          <p style="font-size:13px;color:#6B7280;max-width:340px;margin:0 auto">Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.</p>
         </div>
       </div>
     </section>
@@ -649,6 +629,53 @@
 <script src="js/supabase.js?v=20260629a"   type="module"></script>
 <script src="js/components.js?v=20260713"  type="module"></script>
 <script src="js/app.js?v=20260713b"        type="module"></script>
+<script type="module">
+/* ── Real reviews (public_reviews view) ─────────────────────────────────── */
+import { sb } from './js/supabase.js';
+(function () {
+  function reviewEsc(str) {
+    var d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+  function reviewInitials(name) {
+    return (name || '?').split(' ').map(function (p) { return p.charAt(0); }).join('').slice(0, 2).toUpperCase();
+  }
+  function reviewCardHTML(r) {
+    var n = Math.max(1, Math.min(5, r.rating || 5));
+    var stars = '&#9733;'.repeat(n) + '&#9734;'.repeat(5 - n);
+    return (
+      '<div class="review-card">' +
+        '<div class="review-stars">' + stars + '</div>' +
+        '<p class="review-text">"' + reviewEsc(r.comment) + '"</p>' +
+        '<div class="review-author">' +
+          '<div class="review-avatar">' + reviewEsc(reviewInitials(r.display_name)) + '</div>' +
+          '<div><div class="review-name">' + reviewEsc(r.display_name || 'Dr. Bike client') + '</div>' +
+          '<div class="review-role">' + reviewEsc(r.suburb || 'Sydney') + '</div></div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+  sb.from('public_reviews')
+    .select('display_name,suburb,rating,comment,completed_at')
+    .order('completed_at', { ascending: false })
+    .limit(6)
+    .then(function (res) {
+      var grid = document.getElementById('reviews-grid');
+      var empty = document.getElementById('reviews-empty');
+      var reviews = (res && res.data) || [];
+      if (!reviews.length) {
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (grid) grid.innerHTML = reviews.map(reviewCardHTML).join('');
+    })
+    .catch(function () {
+      var empty = document.getElementById('reviews-empty');
+      if (empty) empty.style.display = 'block';
+    });
+}());
+</script>
 <script src="js/live-prices.js" defer></script>
 <script src="js/cta-tracking.js" defer></script>
 
