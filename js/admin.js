@@ -462,11 +462,13 @@ function applyDarkModeInline() {
         el.style.setProperty('color', '#F2F2F7', 'important');
       }
     } else {
-      // Restore light mode - remove forced important styles
+      // Restore light mode - undo exactly what the dark-mode branch above
+      // forced. Previously this loop computed `orig` and did nothing with
+      // it, so switching back to light mode without navigating away left
+      // dark colors stuck on-screen.
       ['color', 'background', 'border-color'].forEach((prop) => {
         if (el.style.getPropertyPriority(prop) === 'important') {
-          const orig = el.getAttribute('style') || '';
-          // Only remove if it was a dark mode injection
+          el.style.removeProperty(prop);
         }
       });
     }
@@ -3387,21 +3389,6 @@ function removeVan(vanId) {
   vanZones = vanZones.filter((v) => v.id !== vanId);
   renderVanZones();
 }
-
-// ── CHART ─────────────────────────────────────────────────────────────────────
-const days = [
-  980, 1120, 850, 1340, 1580, 0, 1210, 1050, 1420, 1680, 1240, 0, 1380, 1520, 980, 1620, 1750, 0,
-  1290, 1440, 1180, 1560, 1830, 0, 1120, 890,
-];
-const max = Math.max(...days);
-const chart = document.getElementById('chart');
-if (chart)
-  chart.innerHTML = days
-    .map(
-      (v, i) =>
-        `<div class="bar-wrap"><div class="bar" style="height:${v ? Math.max((v / max) * 100, 4) : 4}%;background:${v ? '#1848C8' : '#F3F4F6'};opacity:${v ? 1 : 0.3}" title="$${v}"></div>${i % 7 === 0 ? `<div class="bar-label">${['W1', 'W2', 'W3', 'W4'][Math.floor(i / 7)]}</div>` : '<div class="bar-label"></div>'}</div>`
-    )
-    .join('');
 
 // ── CLAIMS ────────────────────────────────────────────────────────────────────
 // Reads/updates go through /api/auth (service key server-side) because the
