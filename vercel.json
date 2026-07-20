@@ -141,6 +141,15 @@
       ]
     },
     {
+      "source": "/((?!api/|\\.well-known/|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml|.*\\.webmanifest|.*\\.ico|.*\\.css|.*\\.woff|.*\\.woff2|.*\\.jpg|.*\\.jpeg|.*\\.webp|.*\\.gif).*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, s-maxage=0, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/.well-known/apple-developer-merchantid-domain-association",
       "headers": [
         {
