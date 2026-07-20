@@ -175,6 +175,11 @@ let _trackingMap = null;
 let _mechanicMarker = null;
 let _unsubTracking = null;
 let _trackingMechId = null;
+// Bumped on every renderTracking() call so a stale call (superseded by a
+// newer one before its own async setup finished - e.g. rapid double-nav to
+// the tracking screen) can tell it's stale and bail instead of fighting the
+// newer call over _trackingMap/DOM state.
+let _trackingRenderSeq = 0;
 let _loginMode = 'signin';
 let _bookingsTab = 'upcoming';
 
@@ -348,9 +353,15 @@ function cleanupTracking() {
   _trackingMechId = null;
 }
 
+// Tracks the in-flight load so two near-simultaneous callers (e.g. rapid
+// double-navigation to the tracking screen) await the SAME promise instead
+// of the second one seeing the <script> tag already in the DOM and
+// resolving immediately, before window.L actually exists.
+let _leafletLoadPromise = null;
 async function loadLeaflet() {
   if (window.L) return;
-  await new Promise((resolve, reject) => {
+  if (_leafletLoadPromise) return _leafletLoadPromise;
+  _leafletLoadPromise = new Promise((resolve, reject) => {
     if (!document.getElementById('leaflet-css')) {
       const link = Object.assign(document.createElement('link'), {
         id: 'leaflet-css',
@@ -359,8 +370,10 @@ async function loadLeaflet() {
       });
       document.head.appendChild(link);
     }
-    if (document.querySelector('script[src*="leaflet"]')) {
-      resolve();
+    const existing = document.querySelector('script[src*="leaflet"]');
+    if (existing) {
+      existing.addEventListener('load', resolve, { once: true });
+      existing.addEventListener('error', reject, { once: true });
       return;
     }
     const s = Object.assign(document.createElement('script'), {
@@ -370,6 +383,11 @@ async function loadLeaflet() {
     s.onerror = reject;
     document.head.appendChild(s);
   });
+  try {
+    await _leafletLoadPromise;
+  } finally {
+    _leafletLoadPromise = null;
+  }
 }
 
 // ── Book a Service (3-step wizard) ───────────────────────────────────────────
@@ -1546,6 +1564,7 @@ async function renderTracking() {
   const screen = document.querySelector('[data-screen="tracking"]');
   if (!screen) return;
 
+  const _renderSeq = ++_trackingRenderSeq;
   cleanupTracking();
 
   const { bookingId } = window.appState;
@@ -1625,7 +1644,7 @@ async function renderTracking() {
   });
 
   await loadLeaflet();
-  if (!screen.classList.contains('active')) return;
+  if (_renderSeq !== _trackingRenderSeq || !screen.classList.contains('active')) return;
 
   const SYDNEY_DEFAULT = [-33.8688, 151.2093];
   const CITY_SPEED_KMH = 30;
@@ -1749,6 +1768,7 @@ async function renderTracking() {
   }
 
   const booking = await pollBooking();
+  if (_renderSeq !== _trackingRenderSeq) return;
 
   if (booking) {
     applyStatus(booking.status || 'confirmed');
