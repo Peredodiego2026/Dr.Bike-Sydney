@@ -725,7 +725,12 @@ async function acceptJob(id) {
     const resp = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'mechanic-accept', token: stored.token || '', booking_id: id }),
+      body: JSON.stringify({
+        role: 'mechanic-accept',
+        token: stored.token || '',
+        booking_id: id,
+        van_number: vanNum,
+      }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));

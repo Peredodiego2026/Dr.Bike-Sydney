@@ -638,7 +638,12 @@ async function handleMechanicJobs(req, res) {
   };
   // Only recent + upcoming jobs (last 7 days onward) so the list stays small at scale.
   const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const order = `scheduled_date=gte.${cutoff}&order=scheduled_date.asc,scheduled_time.asc&limit=300`;
+  // Scoped to this mechanic's own van - previously "van" was accepted but never
+  // used in the query, so every mechanic saw every van's jobs (and, downstream,
+  // the client's own Earnings screen summed company-wide revenue instead of
+  // their own). matchVanZone() assigns van_number once at booking creation, so
+  // filtering on it here is exact, not a heuristic.
+  const order = `van_number=eq.${van}&scheduled_date=gte.${cutoff}&order=scheduled_date.asc,scheduled_time.asc&limit=300`;
   // Try richer select including discount columns; fall back if migration not yet run.
   let jobsResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?select=${baseCols},discount_applied,discount_code&${order}`,
@@ -757,19 +762,21 @@ async function handleClientBookings(req, res) {
 }
 
 async function handleMechanicAccept(req, res) {
-  const { booking_id } = req.body;
+  const { booking_id, van_number } = req.body;
   if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const mechanic = auth.mechanic;
+  const van = parseInt(van_number) || 1;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   // Arrival PIN: client sees this in-app and reads it aloud when the mechanic arrives,
   // proving the right person is at the door - same pattern as Uber's rider PIN.
   const arrivalPin = String(crypto.randomInt(1000, 10000));
-  // Atomic accept: only assign if no mechanic has taken it yet (mechanic_id is null).
-  // A concurrent second accept matches 0 rows → 409, so two mechanics can't take one job.
+  // Atomic accept: only assign if no mechanic has taken it yet (mechanic_id is null)
+  // AND it belongs to this mechanic's own van - a concurrent second accept, or an
+  // accept attempt on another van's job, matches 0 rows → 409.
   const acceptResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}&mechanic_id=is.null`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}&mechanic_id=is.null&van_number=eq.${van}`,
     {
       method: 'PATCH',
       headers: {
