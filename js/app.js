@@ -2417,6 +2417,7 @@ async function renderLogin() {
   if (!screen) return;
 
   const isSignup = _loginMode === 'signup';
+  const isReset = _loginMode === 'reset';
   const eyeOpen = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
   const eyeClosed = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
 
@@ -2427,9 +2428,12 @@ async function renderLogin() {
         <span>Dr. <span style="color:#2563EB">Bike</span> Sydney</span>
       </div>
       <p style="text-align:center;font-size:13px;font-weight:600;color:#2563EB;margin:0 0 12px">Healthy bikes, happy riders</p>
-      <h2 class="login-title">${isSignup ? 'Create Account' : 'Welcome Back!'}</h2>
-      <p class="login-sub text-secondary text-center">${isSignup ? 'Join Dr. Bike Sydney' : 'Login to your account'}</p>
-      <button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0F172A;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
+      <h2 class="login-title">${isReset ? 'Reset Password' : isSignup ? 'Create Account' : 'Welcome Back!'}</h2>
+      <p class="login-sub text-secondary text-center">${isReset ? "Enter your email and we'll send you a reset link" : isSignup ? 'Join Dr. Bike Sydney' : 'Login to your account'}</p>
+      ${
+        isReset
+          ? ''
+          : `<button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0F172A;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -2442,27 +2446,35 @@ async function renderLogin() {
         <div style="flex:1;height:1px;background:var(--color-border)"></div>
         <span style="color:var(--color-text-secondary);font-size:13px">or</span>
         <div style="flex:1;height:1px;background:var(--color-border)"></div>
-      </div>
+      </div>`
+      }
       <form class="login-form" id="login-form" novalidate>
         ${isSignup ? `<div class="form-field"><input type="text" id="login-name" class="form-input" placeholder="Full Name" aria-label="Full Name" autocomplete="name"></div>` : ''}
         <div class="form-field">
           <input type="email" id="login-email" class="form-input" placeholder="hello@drbike.com.au" aria-label="Email address" autocomplete="email">
         </div>
-        <div class="form-field form-field--password">
+        ${
+          isReset
+            ? ''
+            : `<div class="form-field form-field--password">
           <input type="password" id="login-password" class="form-input" placeholder="Password" aria-label="Password" autocomplete="${isSignup ? 'new-password' : 'current-password'}">
           <button type="button" class="password-toggle" id="pwd-toggle" aria-label="Toggle password visibility">
             <span id="eye-icon">${eyeOpen}</span>
           </button>
-        </div>
-        ${!isSignup ? `<div class="forgot-wrap"><button type="button" class="btn btn--ghost forgot-link" id="forgot-btn">Forgot Password?</button></div>` : ''}
+        </div>`
+        }
+        ${!isSignup && !isReset ? `<div class="forgot-wrap"><button type="button" class="btn btn--ghost forgot-link" id="forgot-btn">Forgot Password?</button></div>` : ''}
         <div id="login-error" class="booking-error" hidden></div>
-        <button type="submit" class="btn btn--primary btn--full mt-4" id="login-submit">${isSignup ? 'Create Account' : 'Login'}</button>
+        <div id="login-info" class="booking-success" hidden></div>
+        <button type="submit" class="btn btn--primary btn--full mt-4" id="login-submit">${isReset ? 'Send reset link' : isSignup ? 'Create Account' : 'Login'}</button>
       </form>
       <div class="login-footer">
         ${
-          isSignup
-            ? `Already have an account? <button class="link-btn" id="toggle-mode">Sign in</button>`
-            : `Don't have an account? <button class="link-btn" id="toggle-mode">Sign up</button>`
+          isReset
+            ? `<button class="link-btn" id="toggle-mode">Back to sign in</button>`
+            : isSignup
+              ? `Already have an account? <button class="link-btn" id="toggle-mode">Sign in</button>`
+              : `Don't have an account? <button class="link-btn" id="toggle-mode">Sign up</button>`
         }
       </div>
     </div>
@@ -2473,22 +2485,23 @@ async function renderLogin() {
 
   const pwdInput = screen.querySelector('#login-password');
   const eyeEl = screen.querySelector('#eye-icon');
-  screen.querySelector('#pwd-toggle').addEventListener('click', () => {
+  screen.querySelector('#pwd-toggle')?.addEventListener('click', () => {
     const show = pwdInput.type === 'password';
     pwdInput.type = show ? 'text' : 'password';
     eyeEl.innerHTML = show ? eyeClosed : eyeOpen;
   });
 
   screen.querySelector('#toggle-mode').addEventListener('click', () => {
-    _loginMode = _loginMode === 'signin' ? 'signup' : 'signin';
+    _loginMode = isReset ? 'signin' : _loginMode === 'signin' ? 'signup' : 'signin';
     renderLogin();
   });
 
   screen.querySelector('#forgot-btn')?.addEventListener('click', () => {
-    alert('A password reset link will be sent to your email address.');
+    _loginMode = 'reset';
+    renderLogin();
   });
 
-  googleBtn.addEventListener('click', async () => {
+  googleBtn?.addEventListener('click', async () => {
     const errEl = screen.querySelector('#login-error');
     errEl.hidden = true;
     try {
@@ -2507,7 +2520,36 @@ async function renderLogin() {
     e.preventDefault();
     const btn = screen.querySelector('#login-submit');
     const errEl = screen.querySelector('#login-error');
+    const infoEl = screen.querySelector('#login-info');
     const email = screen.querySelector('#login-email').value.trim();
+    errEl.hidden = true;
+    infoEl.hidden = true;
+
+    if (isReset) {
+      if (!email) {
+        errEl.textContent = 'Please enter your email.';
+        errEl.hidden = false;
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/index.html',
+        });
+        if (error) throw error;
+        infoEl.textContent = 'Check your email for a reset link. It can take a minute to arrive.';
+        infoEl.hidden = false;
+        btn.textContent = 'Link sent';
+      } catch (err) {
+        errEl.textContent = err.message || 'Could not send reset link. Please try again.';
+        errEl.hidden = false;
+        btn.disabled = false;
+        btn.textContent = 'Send reset link';
+      }
+      return;
+    }
+
     const password = screen.querySelector('#login-password').value;
     const name = isSignup ? screen.querySelector('#login-name')?.value.trim() || '' : '';
 
@@ -2519,7 +2561,6 @@ async function renderLogin() {
 
     btn.disabled = true;
     btn.textContent = isSignup ? 'Creating account...' : 'Logging in...';
-    errEl.hidden = true;
 
     try {
       if (isSignup) {
@@ -2540,6 +2581,59 @@ async function renderLogin() {
       btn.disabled = false;
       btn.textContent = isSignup ? 'Create Account' : 'Login';
     }
+  });
+}
+
+// ── Password recovery: Supabase redirects here with a recovery session and
+// fires PASSWORD_RECOVERY instead of SIGNED_IN. Prompt for a new password
+// rather than dropping the user on Home still holding their old one.
+function promptNewPassword() {
+  document.getElementById('reset-pw-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'reset-pw-modal';
+  modal.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px">
+      <div style="font-weight:700;color:#0D1F3C;font-size:16px;margin-bottom:6px">Set a new password</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Choose a new password for your account.</div>
+      <input id="reset-pw-inp" type="password" placeholder="New password" aria-label="New password" autocomplete="new-password"
+        style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1.5px solid #E5E7EB;border-radius:10px;font-family:inherit;margin-bottom:10px">
+      <div id="reset-pw-err" style="display:none;color:#DC2626;font-size:12px;margin-bottom:10px"></div>
+      <button id="reset-pw-btn" class="btn btn--primary btn--full">Update password</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  const inp = modal.querySelector('#reset-pw-inp');
+  inp.focus();
+  const errEl = modal.querySelector('#reset-pw-err');
+  const btn = modal.querySelector('#reset-pw-btn');
+
+  async function submit() {
+    const password = inp.value;
+    if (password.length < 6) {
+      errEl.textContent = 'Password must be at least 6 characters.';
+      errEl.style.display = 'block';
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+    try {
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) throw error;
+      modal.remove();
+      showToast('Password updated - you are signed in.', 'success');
+      router.navigate('home');
+    } catch (e) {
+      errEl.textContent = e.message || 'Could not update password. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Update password';
+    }
+  }
+  btn.addEventListener('click', submit);
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submit();
   });
 }
 
@@ -3826,8 +3920,13 @@ function autoSelectService(screen, serviceId) {
   }
 }
 
-// Auto-apply pending referral code after login
+// Auto-apply pending referral code after login; prompt for a new password
+// when Supabase redirects back here from a password-reset email link.
 sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    promptNewPassword();
+    return;
+  }
   if (event !== 'SIGNED_IN' || !session) return;
   const pendingRef = localStorage.getItem('dbs_pending_ref');
   if (!pendingRef) return;
