@@ -2497,6 +2497,13 @@ async function renderLogin() {
               : `Don't have an account? <button class="link-btn" id="toggle-mode">Sign up</button>`
         }
       </div>
+      ${
+        isReset
+          ? `<div style="text-align:center;margin-top:14px">
+        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:12px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:#2563EB;font-weight:600">WhatsApp us</span></a>
+      </div>`
+          : ''
+      }
     </div>
     ${createBottomNav('profile')}
   `;
@@ -2554,10 +2561,12 @@ async function renderLogin() {
       btn.disabled = true;
       btn.textContent = 'Sending...';
       try {
-        const { error } = await sb.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/index.html',
+        const resp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'request-password-reset', email }),
         });
-        if (error) throw error;
+        if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
         infoEl.textContent = 'Check your email for a reset link. It can take a minute to arrive.';
         infoEl.hidden = false;
         btn.textContent = 'Link sent';

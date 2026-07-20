@@ -1228,6 +1228,67 @@ async function handleJoinWaitlist(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+// Password reset: generates a real recovery link via the Supabase Admin API
+// and emails it through Resend - the same pathway every other transactional
+// email in this app already uses. Supabase Auth's own built-in email sending
+// was never configured for this project (nothing else here relies on it) -
+// sb.auth.resetPasswordForEmail() always reports success client-side even
+// when delivery silently fails, so this bypasses it entirely rather than
+// depending on a second, unconfigured email pathway.
+async function handleRequestPasswordReset(req, res) {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string') return res.status(400).json({ error: 'email required' });
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Always respond the same way regardless of outcome - never reveal whether
+  // an email is registered (same principle Supabase's own endpoint follows).
+  const genericOk = () => res.status(200).json({ ok: true });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  if (!SERVICE_KEY || !process.env.RESEND_API_KEY) {
+    console.error('[request-password-reset] missing SERVICE_KEY or RESEND_API_KEY');
+    return genericOk();
+  }
+
+  try {
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data, error } = await sb.auth.admin.generateLink({
+      type: 'recovery',
+      email: cleanEmail,
+      options: { redirectTo: 'https://drbikesydney.com.au/index.html' },
+    });
+    if (error || !data?.properties?.action_link) {
+      if (error) console.warn('[request-password-reset] generateLink:', error.message);
+      return genericOk();
+    }
+
+    const actionLink = data.properties.action_link;
+    const emailResp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
+        to: [cleanEmail],
+        subject: 'Reset your Dr. Bike Sydney password',
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+          <h2 style="color:#0D1F3C;margin:0 0 12px">Reset your password</h2>
+          <p style="color:#374151;font-size:14px;line-height:1.6">We received a request to reset the password for your Dr. Bike Sydney account. Click below to choose a new one - this link expires in 1 hour.</p>
+          <a href="${actionLink}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;margin:12px 0">Reset password</a>
+          <p style="color:#9CA3AF;font-size:12px;margin-top:20px">If you didn't request this, you can safely ignore this email - your password will stay the same.</p>
+        </div>`,
+      }),
+    });
+    if (!emailResp.ok)
+      console.error('[request-password-reset] Resend send failed:', await emailResp.text());
+  } catch (e) {
+    console.error('[request-password-reset] failed:', e.message);
+  }
+  return genericOk();
+}
+
 async function handleApplyReferral(req, res) {
   const { access_token, referral_code } = req.body;
   if (!access_token || !referral_code)
@@ -2294,6 +2355,7 @@ async function handler(req, res) {
   if (role === 'mechanic-location') return handleMechanicLocation(req, res);
   if (role === 'client-cancel') return handleClientCancel(req, res);
   if (role === 'join-waitlist') return handleJoinWaitlist(req, res);
+  if (role === 'request-password-reset') return handleRequestPasswordReset(req, res);
   if (role === 'apply-referral') return handleApplyReferral(req, res);
   if (role === 'client-reschedule') return handleClientReschedule(req, res);
   if (role === 'client-history') return handleClientHistory(req, res);
