@@ -2989,12 +2989,14 @@ async function renderProfile() {
       referralCount = profile.referral_count || 0;
       membershipStatus = profile.membership_status || null;
       membershipPlan = profile.membership_plan || null;
-      if (!profile.referral_code)
-        await sb
+      if (!profile.referral_code) {
+        const { error: refCodeErr } = await sb
           .from('profiles')
           .update({ referral_code: refCode })
-          .eq('id', user.id)
-          .catch(() => {});
+          .eq('id', user.id);
+        if (refCodeErr)
+          console.warn('[renderProfile] could not save referral_code:', refCodeErr.message);
+      }
     }
   } catch {}
 
