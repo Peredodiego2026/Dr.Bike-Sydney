@@ -1130,7 +1130,7 @@ function openBlockModal() {
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Date</div>
-          <input type="date" id="block-date" class="inp" style="margin:0" min="${today}" value="${today}">
+          <input type="date" id="block-date" class="inp" aria-label="Date" style="margin:0" min="${today}" value="${today}">
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:8px;text-transform:uppercase">Time slots to block</div>
@@ -1168,7 +1168,7 @@ function openBlockModal() {
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Reason (optional)</div>
-          <input type="text" id="block-reason" class="inp" style="margin:0" placeholder="e.g. Public holiday, mechanic unavailable">
+          <input type="text" id="block-reason" class="inp" aria-label="Reason" style="margin:0" placeholder="e.g. Public holiday, mechanic unavailable">
         </div>
         <div style="display:flex;gap:10px;margin-top:4px">
           <button data-action="save-blocks" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
@@ -3483,7 +3483,7 @@ async function loadClaims() {
             )
             .join('')}
         </select>
-        <input data-claim-notes="${esc(c.id)}" class="inp" placeholder="Resolution notes" value="${esc(c.resolution_notes || '')}" style="flex:1;min-width:180px;padding:7px 10px;font-size:12px">
+        <input data-claim-notes="${esc(c.id)}" class="inp" placeholder="Resolution notes" aria-label="Resolution notes" value="${esc(c.resolution_notes || '')}" style="flex:1;min-width:180px;padding:7px 10px;font-size:12px">
         <button data-claim-save="${esc(c.id)}" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
       </div>
     </div>`;
@@ -3756,20 +3756,20 @@ function openPartModal(id) {
     <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">${p ? 'Edit part' : 'Add part'}</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Part name</div>
-        <input class="inp" id="pm-name" value="${p?.name || ''}" placeholder="e.g. Brake pads (Shimano B01S)"></div>
+        <input class="inp" id="pm-name" value="${p?.name || ''}" placeholder="e.g. Brake pads (Shimano B01S)" aria-label="Part name"></div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Category</div>
         <select class="inp" id="pm-cat" style="cursor:pointer">${cats.map((c) => `<option value="${c}"${(p?.category || 'General') === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Current stock</div>
-          <input class="inp" id="pm-stock" type="number" min="0" value="${p?.stock || 0}"></div>
+          <input class="inp" id="pm-stock" type="number" min="0" value="${p?.stock || 0}" aria-label="Current stock"></div>
         <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Min stock</div>
-          <input class="inp" id="pm-min" type="number" min="0" value="${p?.min_stock || 5}"></div>
+          <input class="inp" id="pm-min" type="number" min="0" value="${p?.min_stock || 5}" aria-label="Min stock"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Cost price ($)</div>
-          <input class="inp" id="pm-cost" type="number" min="0" step="0.01" value="${p?.cost_price || 0}" placeholder="0.00"></div>
+          <input class="inp" id="pm-cost" type="number" min="0" step="0.01" value="${p?.cost_price || 0}" placeholder="0.00" aria-label="Cost price"></div>
         <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Client price ($)</div>
-          <input class="inp" id="pm-sell" type="number" min="0" step="0.01" value="${p?.sell_price ?? ''}" placeholder="0.00"></div>
+          <input class="inp" id="pm-sell" type="number" min="0" step="0.01" value="${p?.sell_price ?? ''}" placeholder="0.00" aria-label="Client price"></div>
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
@@ -3970,19 +3970,19 @@ function openServiceModal(id) {
     <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">${s ? 'Edit service' : 'Add service'}</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Service name</div>
-        <input class="inp" id="sm-name" value="${s?.name ? escapeHtml(s.name) : ''}" placeholder="e.g. Chain Install"></div>
+        <input class="inp" id="sm-name" value="${s?.name ? escapeHtml(s.name) : ''}" placeholder="e.g. Chain Install" aria-label="Service name"></div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Category</div>
         <select class="inp" id="sm-cat" style="cursor:pointer">${SERVICE_CATEGORIES.map((c) => `<option value="${c}"${(s?.category || SERVICE_CATEGORIES[0]) === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Price ($)</div>
-        <input class="inp" id="sm-price" type="number" min="0" step="1" value="${s?.price ?? ''}" placeholder="0"></div>
+        <input class="inp" id="sm-price" type="number" min="0" step="1" value="${s?.price ?? ''}" placeholder="0" aria-label="Price"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Min duration (min)</div>
-          <input class="inp" id="sm-dmin" type="number" min="0" value="${s?.duration_min ?? ''}"></div>
+          <input class="inp" id="sm-dmin" type="number" min="0" value="${s?.duration_min ?? ''}" aria-label="Min duration"></div>
         <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Max duration (min)</div>
-          <input class="inp" id="sm-dmax" type="number" min="0" value="${s?.duration_max ?? ''}"></div>
+          <input class="inp" id="sm-dmax" type="number" min="0" value="${s?.duration_max ?? ''}" aria-label="Max duration"></div>
       </div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Description</div>
-        <input class="inp" id="sm-desc" value="${s?.description ? escapeHtml(s.description) : ''}" placeholder="Shown to clients when booking"></div>
+        <input class="inp" id="sm-desc" value="${s?.description ? escapeHtml(s.description) : ''}" placeholder="Shown to clients when booking" aria-label="Description"></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button data-action="close-service-modal" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>

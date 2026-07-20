@@ -465,7 +465,7 @@ async function renderBookService() {
             <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
             <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:#1E40AF;cursor:pointer;white-space:nowrap">Photo</div>
           </label>
-          <input type="text" id="diag-text" placeholder="Describe the problem..." style="flex:1;min-width:0;height:44px;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:16px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff">
+          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:16px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff">
           <button id="diag-ask-btn" style="flex-shrink:0;height:44px;background:#1E40AF;color:white;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Ask AI</button>
         </div>
         <div id="diag-result" style="margin-top:10px;display:none"></div>
@@ -2052,7 +2052,7 @@ function openClientChat(bookingId, screen) {
       </div>
       <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:#F9FAFB"></div>
       <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #E5E7EB;flex-shrink:0;background:#fff">
-        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:16px;outline:none;color:#0D1F3C;background:#fff" placeholder="Type a message..." maxlength="500">
+        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:16px;outline:none;color:#0D1F3C;background:#fff" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
         <button id="client-chat-send" style="background:#2563EB;color:#fff;border:none;border-radius:50%;width:40px;height:40px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -2444,12 +2444,12 @@ async function renderLogin() {
         <div style="flex:1;height:1px;background:var(--color-border)"></div>
       </div>
       <form class="login-form" id="login-form" novalidate>
-        ${isSignup ? `<div class="form-field"><input type="text" id="login-name" class="form-input" placeholder="Full Name" autocomplete="name"></div>` : ''}
+        ${isSignup ? `<div class="form-field"><input type="text" id="login-name" class="form-input" placeholder="Full Name" aria-label="Full Name" autocomplete="name"></div>` : ''}
         <div class="form-field">
-          <input type="email" id="login-email" class="form-input" placeholder="hello@drbike.com.au" autocomplete="email">
+          <input type="email" id="login-email" class="form-input" placeholder="hello@drbike.com.au" aria-label="Email address" autocomplete="email">
         </div>
         <div class="form-field form-field--password">
-          <input type="password" id="login-password" class="form-input" placeholder="Password" autocomplete="${isSignup ? 'new-password' : 'current-password'}">
+          <input type="password" id="login-password" class="form-input" placeholder="Password" aria-label="Password" autocomplete="${isSignup ? 'new-password' : 'current-password'}">
           <button type="button" class="password-toggle" id="pwd-toggle" aria-label="Toggle password visibility">
             <span id="eye-icon">${eyeOpen}</span>
           </button>
