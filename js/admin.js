@@ -4993,7 +4993,7 @@ function openMechProfileModal(id) {
       }
       document.getElementById('mech-profile-modal-bio').value = c.bio || '';
       document.getElementById('mech-profile-modal-van').value =
-        c.van_number != null ? String(c.van_number) : '';
+        c.van_number !== null ? String(c.van_number) : '';
       document.getElementById('mech-profile-modal').style.display = 'flex';
     });
 }

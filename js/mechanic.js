@@ -303,7 +303,7 @@ async function doLogin() {
     // admin) - null means "all zones", in which case the picker on this
     // screen still decides which van's GPS position gets reported. A
     // bound mechanic's own value always wins over whatever they clicked.
-    if (m.van_number != null) vanNum = m.van_number;
+    if (m.van_number !== null) vanNum = m.van_number;
     mechanic = { ...m, van_number: m.van_number ?? null };
     localStorage.setItem('drbike-mech', JSON.stringify(mechanic));
     go('s-main');
