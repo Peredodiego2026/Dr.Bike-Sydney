@@ -496,16 +496,35 @@ async function handleCreateBooking(req, res) {
         const sess = await stripe.checkout.sessions.retrieve(checkout_session_id);
         if (sess.payment_status !== 'paid')
           return res.status(402).json({ error: 'Payment not completed' });
-        if (Math.round(sess.amount_total) !== Math.round(calloutFee * 100))
-          return res.status(402).json({ error: 'Payment amount mismatch' });
-        verifiedPI =
+        const sessPI =
           typeof sess.payment_intent === 'string' ? sess.payment_intent : sess.payment_intent?.id;
+        if (Math.round(sess.amount_total) !== Math.round(calloutFee * 100)) {
+          if (sessPI) {
+            try {
+              await stripe.refunds.create({ payment_intent: sessPI });
+            } catch (e) {
+              console.error('[create-booking] amount-mismatch refund failed:', e.message);
+            }
+          }
+          return res.status(402).json({
+            error: 'Payment amount mismatch' + (sessPI ? '. Your payment has been refunded.' : ''),
+          });
+        }
+        verifiedPI = sessPI;
       } else if (payment_intent_id) {
         const p = await stripe.paymentIntents.retrieve(payment_intent_id);
         if (p.status !== 'succeeded')
           return res.status(402).json({ error: 'Payment not completed' });
-        if (Math.round(p.amount) !== Math.round(calloutFee * 100))
-          return res.status(402).json({ error: 'Payment amount mismatch' });
+        if (Math.round(p.amount) !== Math.round(calloutFee * 100)) {
+          try {
+            await stripe.refunds.create({ payment_intent: p.id });
+          } catch (e) {
+            console.error('[create-booking] amount-mismatch refund failed:', e.message);
+          }
+          return res
+            .status(402)
+            .json({ error: 'Payment amount mismatch. Your payment has been refunded.' });
+        }
         verifiedPI = p.id;
       } else {
         return res.status(402).json({ error: 'Payment required' });
