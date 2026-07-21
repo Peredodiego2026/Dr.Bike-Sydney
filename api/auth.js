@@ -262,6 +262,7 @@ async function handleCreateBooking(req, res) {
     utm_medium,
     utm_campaign,
     time_to_book_seconds,
+    preferred_mechanic_id,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!access_token) return res.status(401).json({ error: 'Sign in required' });
@@ -370,6 +371,19 @@ async function handleCreateBooking(req, res) {
     if (dup) return res.status(409).json({ error: 'This payment was already used for a booking' });
   }
 
+  // 4b. Preferred mechanic: only honored while the admin toggle is on, and only
+  // if it's a real, active mechanic - never trust the client id blindly.
+  let preferredMechanicId = null;
+  if (preferred_mechanic_id && (await isMechanicPreferenceEnabled(SERVICE_KEY))) {
+    const { data: pm } = await sb
+      .from('escalation_contacts')
+      .select('id')
+      .eq('id', preferred_mechanic_id)
+      .eq('active', true)
+      .maybeSingle();
+    if (pm) preferredMechanicId = pm.id;
+  }
+
   // 5. Insert with server-set fields only
   const meta = user.user_metadata || {};
   const { data: booking, error: insErr } = await sb
@@ -388,6 +402,7 @@ async function handleCreateBooking(req, res) {
         address: address || 'Home',
         status: 'pending',
         van_number: vanNumber,
+        preferred_mechanic_id: preferredMechanicId,
         stripe_payment_intent_id: verifiedPI,
         bike_id: bike_id || null,
         utm_source: utm_source || null,
@@ -630,7 +645,7 @@ async function handleMechanicJobs(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
   const baseCols =
-    'id,client_id,client_name,client_email,client_phone,service_name,service_price,callout_fee,scheduled_date,scheduled_time,status,suburb,address,van_number,notes,mechanic_notes,mechanic_id,client_rating,client_review';
+    'id,client_id,client_name,client_email,client_phone,service_name,service_price,callout_fee,scheduled_date,scheduled_time,status,suburb,address,van_number,notes,mechanic_notes,mechanic_id,client_rating,client_review,preferred_mechanic_id,created_at';
   const hdrs = {
     apikey: SERVICE_KEY,
     Authorization: `Bearer ${SERVICE_KEY}`,
@@ -655,7 +670,22 @@ async function handleMechanicJobs(req, res) {
     });
   }
   if (!jobsResp.ok) return res.status(500).json({ error: 'Failed to fetch jobs' });
-  const jobs = await jobsResp.json();
+  let jobs = await jobsResp.json();
+
+  // Preferred-mechanic priority window: an unclaimed job someone else was
+  // preferred for stays hidden from this mechanic until it expires, then
+  // opens to the whole van same as any other job. Only filters open jobs -
+  // never hides a mechanic's own already-accepted jobs.
+  if (await isMechanicPreferenceEnabled(SERVICE_KEY)) {
+    const windowMs = MECHANIC_PREFERENCE_WINDOW_MIN * 60 * 1000;
+    jobs = jobs.filter((j) => {
+      if (j.mechanic_id || !j.preferred_mechanic_id) return true;
+      if (j.preferred_mechanic_id === auth.mechanic.id) return true;
+      const ageMs = Date.now() - new Date(j.created_at).getTime();
+      return ageMs >= windowMs;
+    });
+  }
+
   return res.status(200).json(jobs);
 }
 
@@ -1817,6 +1847,7 @@ async function handlePublicMechanics(req, res) {
       const jobs = bookings.filter((b) => b.mechanic_id === c.id);
       const { jobs_completed, rating, reviews } = aggregateMechanicStats(jobs, { maxReviews: 12 });
       return {
+        id: c.id,
         name: [c.first_name, c.last_name].filter(Boolean).join(' ').trim(),
         photo_url: c.photo_url || null,
         bio: c.bio || null,
@@ -1828,6 +1859,32 @@ async function handlePublicMechanics(req, res) {
     .filter((m) => m.name);
 
   return res.status(200).json(mechanics);
+}
+
+// ── Client-preferred-mechanic (optional, admin-toggleable) ──────────────────
+// Reuses the van_zones(van_number=0) sentinel-row settings pattern already
+// used for business details / WhatsApp number / alert triggers, so this
+// doesn't need its own settings table - see js/admin.js toggleTrigger().
+const MECHANIC_PREFERENCE_WINDOW_MIN = 30;
+
+async function isMechanicPreferenceEnabled(SERVICE_KEY) {
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/van_zones?select=postcode&van_number=eq.0&suburb=eq.__trig_mechanic_preference__`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (!resp.ok) return false;
+    const rows = await resp.json();
+    return rows[0]?.postcode === '1';
+  } catch {
+    return false;
+  }
+}
+
+async function handleMechanicPreferenceStatus(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const enabled = await isMechanicPreferenceEnabled(SERVICE_KEY);
+  return res.status(200).json({ enabled });
 }
 
 async function handleClientReview(req, res) {
@@ -2377,6 +2434,7 @@ async function handler(req, res) {
   if (role === 'client-cancel') return handleClientCancel(req, res);
   if (role === 'join-waitlist') return handleJoinWaitlist(req, res);
   if (role === 'request-password-reset') return handleRequestPasswordReset(req, res);
+  if (role === 'mechanic-preference-status') return handleMechanicPreferenceStatus(req, res);
   if (role === 'apply-referral') return handleApplyReferral(req, res);
   if (role === 'client-reschedule') return handleClientReschedule(req, res);
   if (role === 'client-history') return handleClientHistory(req, res);

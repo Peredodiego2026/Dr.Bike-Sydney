@@ -80,6 +80,7 @@ window.appState = {
   bookingId: null,
   bikeId: null,
   trackingToken: null,
+  preferredMechanicId: null,
 };
 
 const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
@@ -1135,6 +1136,93 @@ async function renderServiceSummary() {
   });
 }
 
+// ── Optional preferred-mechanic picker (admin-toggleable, see Admin > Settings) ──
+async function loadMechanicPreferencePicker() {
+  try {
+    const statusResp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'mechanic-preference-status' }),
+    });
+    const { enabled } = statusResp.ok ? await statusResp.json() : { enabled: false };
+    if (!enabled) return { html: '', mechanics: [] };
+
+    const listResp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'public-mechanics' }),
+    });
+    const mechanics = listResp.ok ? await listResp.json() : [];
+    if (!mechanics.length) return { html: '', mechanics: [] };
+
+    const cards = mechanics
+      .map((m) => {
+        const initials = m.name
+          .split(' ')
+          .slice(0, 2)
+          .map((w) => w[0])
+          .join('')
+          .toUpperCase();
+        const avatarHTML = m.photo_url
+          ? `<img src="${escapeHtml(m.photo_url)}" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover">`
+          : `<div style="width:52px;height:52px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#2563EB">${initials}</div>`;
+        // "jobs" stays its own text node (not pre-translated into the string)
+        // so translateScreen's automatic re-walk can still catch it if the
+        // user switches language after this card is already on screen -
+        // baking a translateValue() result into a fused string would freeze
+        // it in whatever language was active at render time.
+        const metaHTML = [];
+        if (m.jobs_completed > 0) metaHTML.push(`${m.jobs_completed} <span>jobs</span>`);
+        if (m.rating) metaHTML.push(`★ ${m.rating}`);
+        return `
+          <button type="button" class="mechanic-pref-card" data-mechanic-id="${escapeHtml(m.id)}"
+            style="flex-shrink:0;width:104px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:12px;border:1.5px solid var(--color-border);background:#fff;cursor:pointer">
+            ${avatarHTML}
+            <div style="font-size:12px;font-weight:700;color:#0D1F3C;text-align:center;line-height:1.3">${escapeHtml(m.name)}</div>
+            ${metaHTML.length ? `<div style="font-size:11px;color:#6B7280">${metaHTML.join(' · ')}</div>` : ''}
+          </button>`;
+      })
+      .join('');
+
+    const html = `
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;color:#6B7280;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Prefer a specific mechanic? (optional)</div>
+        <div id="mechanic-pref-row" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">${cards}</div>
+        <div id="mechanic-pref-note" style="font-size:11px;color:#9CA3AF;margin-top:8px" hidden>We'll try to send your job to them first.</div>
+      </div>`;
+    return { html, mechanics };
+  } catch {
+    return { html: '', mechanics: [] };
+  }
+}
+
+function wireMechanicPreferencePicker(screen, mechanics) {
+  if (!mechanics.length) return;
+  const row = screen.querySelector('#mechanic-pref-row');
+  const note = screen.querySelector('#mechanic-pref-note');
+  if (!row) return;
+  row.addEventListener('click', (e) => {
+    const card = e.target.closest('.mechanic-pref-card');
+    if (!card) return;
+    const id = card.dataset.mechanicId;
+    const wasSelected = card.classList.contains('is-selected');
+    row.querySelectorAll('.mechanic-pref-card').forEach((c) => {
+      c.classList.remove('is-selected');
+      c.style.borderColor = 'var(--color-border)';
+      c.style.background = '#fff';
+    });
+    if (wasSelected) {
+      window.appState.preferredMechanicId = null;
+    } else {
+      card.classList.add('is-selected');
+      card.style.borderColor = '#2563EB';
+      card.style.background = '#EFF6FF';
+      window.appState.preferredMechanicId = id;
+    }
+    if (note) note.hidden = !window.appState.preferredMechanicId;
+  });
+}
+
 // ── Payment ───────────────────────────────────────────────────────────────────
 async function renderPayment() {
   const screen = document.querySelector('[data-screen="payment"]');
@@ -1147,10 +1235,14 @@ async function renderPayment() {
     router.navigate('book-service');
     return;
   }
+  // Fresh each visit to this screen - an old selection from a previous,
+  // possibly-abandoned booking should never silently carry over.
+  window.appState.preferredMechanicId = null;
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'payment' });
   // Surcharge must match what handleCreateBooking will verify against Stripe -
   // an unsurcharged charge on a Sunday/holiday gets rejected as amount mismatch.
   const calloutFee = applySurcharge(await getCalloutFee(location), date);
+  const mechanicPicker = await loadMechanicPreferencePicker();
 
   const {
     data: { user: currentUser },
@@ -1173,6 +1265,8 @@ async function renderPayment() {
           <span style="font-weight:700;color:#0D1F3C">$${calloutFee.toFixed(2)}</span>
         </div>
       </div>
+
+      ${mechanicPicker.html}
 
       <div id="payment-request-btn" style="margin-bottom:12px" hidden></div>
       <div class="payment-divider" id="card-divider" hidden><span>or pay by card</span></div>
@@ -1209,6 +1303,8 @@ async function renderPayment() {
     ${createBottomNav('home')}
   `;
 
+  wireMechanicPreferencePicker(screen, mechanicPicker.mechanics);
+
   async function finalizeBooking(paymentIntent, { feeOverride = null, isTest = false } = {}) {
     const {
       data: { session },
@@ -1236,6 +1332,7 @@ async function renderPayment() {
         scheduled_time: time,
         address: location || 'Home',
         bike_id: window.appState.bikeId || null,
+        preferred_mechanic_id: window.appState.preferredMechanicId || null,
         payment_intent_id: realPI,
         discount_code:
           !isTest && window.appState.discountCode ? window.appState.discountCode : null,

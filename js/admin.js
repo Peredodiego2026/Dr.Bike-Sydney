@@ -152,6 +152,9 @@ function byId(id) {
   byId('trig-reminders').addEventListener('click', function (event) {
     toggleTrigger(event.currentTarget, 'reminders');
   });
+  byId('trig-mechanic_preference').addEventListener('click', function (event) {
+    toggleTrigger(event.currentTarget, 'mechanic_preference');
+  });
   byId('auto-wire-25').addEventListener('click', function (event) {
     openPartModal();
   });
@@ -532,7 +535,15 @@ const FIXED_COSTS = {
 const VAR_COST_PER_JOB = 10; // parts/supplies per job
 
 // ── ALERT TRIGGERS (persistentes en Supabase) ────────────────────────────────
-const TRIGGER_KEYS = ['new_booking', 'enroute', 'completed', 'payment', 'cancelled', 'reminders'];
+const TRIGGER_KEYS = [
+  'new_booking',
+  'enroute',
+  'completed',
+  'payment',
+  'cancelled',
+  'reminders',
+  'mechanic_preference',
+];
 
 async function loadTriggers() {
   try {
@@ -552,8 +563,9 @@ async function loadTriggers() {
       const el = document.getElementById('trig-' + k);
       if (!el) return;
       const saved = map['__trig_' + k + '__'];
-      // Default: todos on excepto reminders
-      const isOn = saved !== undefined ? saved === '1' : k !== 'reminders';
+      // Default: todos on excepto reminders y mechanic_preference (opt-in)
+      const isOn =
+        saved !== undefined ? saved === '1' : k !== 'reminders' && k !== 'mechanic_preference';
       el.classList.toggle('on', isOn);
     });
   } catch (e) {
