@@ -1165,7 +1165,7 @@ async function loadMechanicPreferencePicker() {
           .toUpperCase();
         const avatarHTML = m.photo_url
           ? `<img src="${escapeHtml(m.photo_url)}" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover">`
-          : `<div style="width:52px;height:52px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#2563EB">${initials}</div>`;
+          : `<div style="width:52px;height:52px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#2563EB">${escapeHtml(initials)}</div>`;
         // "jobs" stays its own text node (not pre-translated into the string)
         // so translateScreen's automatic re-walk can still catch it if the
         // user switches language after this card is already on screen -
@@ -2097,7 +2097,7 @@ function openMechanicProfile(p, booking, screen) {
     .toUpperCase();
   const avatarHTML = p.photo_url
     ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
-    : `<div style="width:88px;height:88px;border-radius:50%;background:#EFF6FF;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#2563EB">${initials}</div>`;
+    : `<div style="width:88px;height:88px;border-radius:50%;background:#EFF6FF;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#2563EB">${escapeHtml(initials)}</div>`;
 
   const statParts = [];
   if (p.jobs_completed > 0)
@@ -2977,7 +2977,7 @@ async function renderMyBookings() {
                 .toUpperCase();
               const avatarHTML = p.photo_url
                 ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
-                : `<div style="width:44px;height:44px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#2563EB">${initials}</div>`;
+                : `<div style="width:44px;height:44px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#2563EB">${escapeHtml(initials)}</div>`;
               const metaParts = [];
               if (p.jobs_completed > 0) metaParts.push(`${p.jobs_completed} services`);
               if (p.rating) metaParts.push(`★ ${p.rating}`);
