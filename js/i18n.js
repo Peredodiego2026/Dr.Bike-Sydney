@@ -99,6 +99,9 @@ const dict = {
     'Client reviews': 'Reseñas de clientes',
     'Jobs done': 'Trabajos hechos',
     Rating: 'Calificación',
+    'Prefer a specific mechanic? (optional)': '¿Preferís un mecánico en particular? (opcional)',
+    "We'll try to send your job to them first.": 'Vamos a intentar asignarte primero con ellos.',
+    jobs: 'trabajos',
     // My Bikes
     'My Bikes': 'Mis Bicis',
     'No bikes added yet': 'Aún no has agregado bicis',
@@ -1100,6 +1103,9 @@ const dict = {
     'Client reviews': '客户评价',
     'Jobs done': '已完成工作',
     Rating: '评分',
+    'Prefer a specific mechanic? (optional)': '想指定技工吗？（可选）',
+    "We'll try to send your job to them first.": '我们会优先尝试把订单分配给该技工。',
+    jobs: '单',
     // My Bikes
     'No bikes added yet': '尚未添加自行车',
     'Add your first bike below': '在下方添加您的第一辆自行车',
