@@ -299,7 +299,12 @@ async function doLogin() {
       err(m.error || 'Invalid PIN');
       return;
     }
-    mechanic = { ...m, van_number: vanNum };
+    // The server now says which van this PIN is actually bound to (set by
+    // admin) - null means "all zones", in which case the picker on this
+    // screen still decides which van's GPS position gets reported. A
+    // bound mechanic's own value always wins over whatever they clicked.
+    if (m.van_number != null) vanNum = m.van_number;
+    mechanic = { ...m, van_number: m.van_number ?? null };
     localStorage.setItem('drbike-mech', JSON.stringify(mechanic));
     go('s-main');
     updateUI();
@@ -822,7 +827,7 @@ function promptArrivalPin(id) {
       <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">Confirm arrival</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Ask the client for their 4-digit code and enter it below.</div>
       <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="4-digit arrival code"
-        style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy)">
+        style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy);background:var(--off)">
       <div id="pin-error" style="display:none;color:#DC2626;font-size:12px;margin-top:8px"></div>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button id="pin-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>

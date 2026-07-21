@@ -1911,6 +1911,18 @@ async function renderTracking() {
         const pinValue = screen.querySelector('#arrival-pin-value');
         if (pinValue) pinValue.textContent = booking.arrival_pin;
         if (pinBadge) pinBadge.style.display = 'flex';
+        // mapH below was computed against the bottom panel's height BEFORE
+        // this badge existed - showing it grows the panel by ~40px with
+        // nothing to absorb the difference (this screen has no scroll
+        // anywhere by design), which pushed the Message/Share buttons
+        // behind the fixed bottom nav with no way to reach them. Redo the
+        // same calculation now that the panel's real height is final.
+        if (bottomPanel) {
+          const newBottomH = bottomPanel.getBoundingClientRect().height;
+          const newMapH = Math.max(140, window.innerHeight - topH - navH - newBottomH);
+          mapEl.style.height = newMapH + 'px';
+          requestAnimationFrame(() => _trackingMap?.invalidateSize?.({ animate: false }));
+        }
       }
     }
 
@@ -2201,15 +2213,36 @@ function openClientChat(bookingId, screen) {
       const text = inp.value.trim();
       if (!text) return;
       inp.value = '';
-      let userId = 'client';
       try {
-        const { data } = await sb.auth.getUser();
-        userId = data?.user?.id || 'client';
-      } catch {}
-      const { error } = await sb
-        .from('job_messages')
-        .insert({ booking_id: bookingId, sender_role: 'client', sender_id: userId, message: text });
-      if (error) {
+        const {
+          data: { session },
+        } = await sb.auth.getSession();
+        if (!session?.user) throw new Error('Please sign in to send a message.');
+        const resp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'client-message-send',
+            booking_id: bookingId,
+            access_token: session.access_token,
+            client_id: session.user.id,
+            message: text,
+          }),
+        });
+        if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
+        // The realtime subscription below normally echoes this back as an
+        // INSERT event, but appending it directly here means the message
+        // shows up immediately even if that channel is slow or drops it.
+        const msgs = panel.querySelector('#client-chat-msgs');
+        if (msgs) {
+          msgs.querySelector('[data-empty]')?.remove();
+          appendClientMsg(
+            { sender_role: 'client', message: text, created_at: new Date().toISOString() },
+            msgs,
+            true
+          );
+        }
+      } catch (e) {
         showToast('Message failed to send', 'error');
         inp.value = text;
       }
@@ -2234,11 +2267,25 @@ function openClientChat(bookingId, screen) {
     const msgs = panel.querySelector('#client-chat-msgs');
     msgs.innerHTML =
       '<div style="text-align:center;font-size:12px;color:#6B7280;padding:20px">Loading messages...</div>';
-    const { data } = await sb
-      .from('job_messages')
-      .select('*')
-      .eq('booking_id', bookingId)
-      .order('created_at', { ascending: true });
+    let data = [];
+    try {
+      const {
+        data: { session },
+      } = await sb.auth.getSession();
+      if (session?.user) {
+        const resp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'client-messages',
+            booking_id: bookingId,
+            access_token: session.access_token,
+            client_id: session.user.id,
+          }),
+        });
+        if (resp.ok) data = await resp.json();
+      }
+    } catch {}
     msgs.innerHTML = '';
     if (!data?.length) {
       msgs.innerHTML =

@@ -4992,6 +4992,8 @@ function openMechProfileModal(id) {
         preview.style.display = 'none';
       }
       document.getElementById('mech-profile-modal-bio').value = c.bio || '';
+      document.getElementById('mech-profile-modal-van').value =
+        c.van_number != null ? String(c.van_number) : '';
       document.getElementById('mech-profile-modal').style.display = 'flex';
     });
 }
@@ -5010,6 +5012,8 @@ async function saveMechProfile() {
   const id = document.getElementById('mech-profile-modal-id').value;
   const fullName = document.getElementById('mech-profile-modal-name').value.trim();
   const bio = document.getElementById('mech-profile-modal-bio').value.trim();
+  const vanRaw = document.getElementById('mech-profile-modal-van').value;
+  const van_number = vanRaw ? parseInt(vanRaw, 10) : null;
 
   if (!fullName) {
     showToast('Name is required');
@@ -5032,7 +5036,7 @@ async function saveMechProfile() {
 
   const { error } = await sb
     .from('escalation_contacts')
-    .update({ first_name, last_name, photo_url, bio: bio || null })
+    .update({ first_name, last_name, photo_url, bio: bio || null, van_number })
     .eq('id', id);
 
   if (error) {

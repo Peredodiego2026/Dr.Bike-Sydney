@@ -634,11 +634,17 @@ async function handleMechanic(req, res) {
     phone: mechanic.phone,
     role: mechanic.role || 'mechanic',
     token: makeToken(mechanic.id),
+    // null = "all zones" (see admin.html mechanic profile). The client used
+    // to have no way to know this and just kept whatever van the mechanic
+    // last picked on the login screen's own selector - harmless now that
+    // every server-side handler re-derives van scope from the mechanic's
+    // own record instead of trusting the client, but the client still needs
+    // the real value to know whether to even show that selector.
+    van_number: mechanic.van_number ?? null,
   });
 }
 
 async function handleMechanicJobs(req, res) {
-  const van = parseInt(req.body?.van) || 1;
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
@@ -653,12 +659,16 @@ async function handleMechanicJobs(req, res) {
   };
   // Only recent + upcoming jobs (last 7 days onward) so the list stays small at scale.
   const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  // Scoped to this mechanic's own van - previously "van" was accepted but never
-  // used in the query, so every mechanic saw every van's jobs (and, downstream,
-  // the client's own Earnings screen summed company-wide revenue instead of
-  // their own). matchVanZone() assigns van_number once at booking creation, so
-  // filtering on it here is exact, not a heuristic.
-  const order = `van_number=eq.${van}&scheduled_date=gte.${cutoff}&order=scheduled_date.asc,scheduled_time.asc&limit=300`;
+  // Scoped to THIS MECHANIC'S OWN van (set on their escalation_contacts row
+  // by admin, never client-supplied) - previously "van" came straight from
+  // req.body with no check that it was actually theirs, so any mechanic
+  // could read any other van's full job list by just claiming it. A mechanic
+  // with no van_number set (van_number IS NULL) covers every zone - no
+  // filter at all for them, by design (see admin.html mechanic profile van
+  // field: "All zones" is for one person covering everything).
+  const vanFilter =
+    auth.mechanic.van_number !== null ? `van_number=eq.${auth.mechanic.van_number}&` : '';
+  const order = `${vanFilter}scheduled_date=gte.${cutoff}&order=scheduled_date.asc,scheduled_time.asc&limit=300`;
   // Try richer select including discount columns; fall back if migration not yet run.
   let jobsResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?select=${baseCols},discount_applied,discount_code&${order}`,
@@ -698,7 +708,11 @@ async function handleMechanicLocation(req, res) {
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const mechanic = auth.mechanic;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-  const van = parseInt(van_number) || 1;
+  // A van-bound mechanic can only ever update THEIR OWN van's position (can't
+  // overwrite another van's GPS trail by sending a different van_number). An
+  // "all zones" mechanic (van_number null) has no single van to force, so
+  // this one write still trusts which van they say they're currently driving.
+  const van = mechanic.van_number !== null ? mechanic.van_number : parseInt(van_number) || 1;
 
   const now = new Date().toISOString();
   const SERVICE_URL = `${SUPABASE_URL}/rest/v1/mechanic_locations`;
@@ -792,21 +806,24 @@ async function handleClientBookings(req, res) {
 }
 
 async function handleMechanicAccept(req, res) {
-  const { booking_id, van_number } = req.body;
+  const { booking_id } = req.body;
   if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const mechanic = auth.mechanic;
-  const van = parseInt(van_number) || 1;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   // Arrival PIN: client sees this in-app and reads it aloud when the mechanic arrives,
   // proving the right person is at the door - same pattern as Uber's rider PIN.
   const arrivalPin = String(crypto.randomInt(1000, 10000));
+  // Van scope from the mechanic's own record, never the client - same reasoning
+  // as handleMechanicJobs above. A mechanic with no van_number set (all zones)
+  // can accept from either van, so no van filter at all for them.
+  const vanFilter = mechanic.van_number !== null ? `&van_number=eq.${mechanic.van_number}` : '';
   // Atomic accept: only assign if no mechanic has taken it yet (mechanic_id is null)
   // AND it belongs to this mechanic's own van - a concurrent second accept, or an
   // accept attempt on another van's job, matches 0 rows → 409.
   const acceptResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}&mechanic_id=is.null&van_number=eq.${van}`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}&mechanic_id=is.null${vanFilter}`,
     {
       method: 'PATCH',
       headers: {
@@ -1601,6 +1618,16 @@ async function handleMechanicMessages(req, res) {
   const { booking_id } = req.body;
   if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  // Ownership: only on a job actually assigned to this mechanic - previously
+  // any mechanic could read (or send into, below) any booking's chat by id.
+  const bkResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=mechanic_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const bk = bkResp.ok ? (await bkResp.json())?.[0] : null;
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+  if (bk.mechanic_id !== auth.mechanic.id) return res.status(403).json({ error: 'Forbidden' });
+
   const resp = await fetch(
     `${SUPABASE_URL}/rest/v1/job_messages?select=*&booking_id=eq.${encodeURIComponent(booking_id)}&order=created_at.asc`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
@@ -1617,6 +1644,15 @@ async function handleMechanicMessageSend(req, res) {
     return res.status(400).json({ error: 'booking_id and message required' });
   const msg = String(message).slice(0, 1000);
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const bkResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=mechanic_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const bk = bkResp.ok ? (await bkResp.json())?.[0] : null;
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+  if (bk.mechanic_id !== auth.mechanic.id) return res.status(403).json({ error: 'Forbidden' });
+
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/job_messages`, {
     method: 'POST',
     headers: {
@@ -1639,6 +1675,85 @@ async function handleMechanicMessageSend(req, res) {
   // send-push, which we don't need to react to here).
   notifyClientOfMechanicMessage(booking_id, msg, SERVICE_KEY).catch(() => {});
 
+  return res.status(200).json({ ok: true });
+}
+
+// ── Client Chat (mirrors the mechanic handlers above) ────────────────────────
+// The client side used to write straight to job_messages via the browser's
+// own Supabase session (sb.from('job_messages').insert(...)), which is
+// subject to RLS - unlike the mechanic side, which always went through this
+// server with the service_role key. That mismatch is exactly the kind of gap
+// that fails silently as "works for the mechanic, not the client": if
+// job_messages has no INSERT policy for authenticated users (likely, since
+// nothing else in this schema grants direct client writes to a table that
+// also holds mechanic-authored content), the client's insert is denied by
+// Postgres before it ever reaches application code, and Supabase surfaces
+// that as a plain error with no useful detail - "Message failed to send".
+async function handleClientMessages(req, res) {
+  const { booking_id, access_token, client_id } = req.body;
+  if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
+  if (!access_token || !client_id)
+    return res.status(400).json({ error: 'access_token and client_id required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid or expired session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const bkResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=client_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const bk = bkResp.ok ? (await bkResp.json())?.[0] : null;
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+  if (bk.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/job_messages?select=*&booking_id=eq.${encodeURIComponent(booking_id)}&order=created_at.asc`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!resp.ok) return res.status(500).json({ error: 'Failed to load messages' });
+  return res.status(200).json(await resp.json());
+}
+
+async function handleClientMessageSend(req, res) {
+  const { booking_id, access_token, client_id, message } = req.body;
+  if (!booking_id || !message)
+    return res.status(400).json({ error: 'booking_id and message required' });
+  if (!access_token || !client_id)
+    return res.status(400).json({ error: 'access_token and client_id required' });
+  const msg = String(message).slice(0, 1000);
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid or expired session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const bkResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=client_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const bk = bkResp.ok ? (await bkResp.json())?.[0] : null;
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+  if (bk.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/job_messages`, {
+    method: 'POST',
+    headers: {
+      apikey: SERVICE_KEY,
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ booking_id, sender_role: 'client', sender_id: client_id, message: msg }),
+  });
+  if (!resp.ok) return res.status(500).json({ error: 'Failed to send message' });
   return res.status(200).json({ ok: true });
 }
 
@@ -2528,6 +2643,8 @@ async function handler(req, res) {
   if (role === 'mechanic-parts-update') return handleMechanicPartsUpdate(req, res);
   if (role === 'mechanic-messages') return handleMechanicMessages(req, res);
   if (role === 'mechanic-message-send') return handleMechanicMessageSend(req, res);
+  if (role === 'client-messages') return handleClientMessages(req, res);
+  if (role === 'client-message-send') return handleClientMessageSend(req, res);
   if (role === 'mechanic-checklist') return handleMechanicChecklist(req, res);
   if (role === 'mechanic-complete') return handleMechanicComplete(req, res);
   if (role === 'mechanic-accept') return handleMechanicAccept(req, res);
