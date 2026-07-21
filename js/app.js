@@ -2018,10 +2018,18 @@ async function renderTracking() {
 }
 
 // ── Mechanic profile panel (tap "Your Mechanic" bar for details) ────────────
+// The textContent/innerHTML round-trip this used to do escapes &, <, > but
+// NOT quotes - safe for text nodes, but every call site here that uses it
+// inside an attribute (src="...", value="...", data-*="...") was still
+// breakout-able via a plain double-quote. Explicit replace matches the esc()
+// implementations already used correctly in mechanic.js/admin.js.
 function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function renderMiniStars(rating) {
