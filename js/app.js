@@ -2920,16 +2920,16 @@ async function renderMyBookings() {
                     <div style="display:flex;gap:8px">
                       ${
                         booking.photo_before_url
-                          ? `<a href="${booking.photo_before_url}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
-                              <img src="${booking.photo_before_url}" alt="Before" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
+                          ? `<a href="${escapeHtml(booking.photo_before_url)}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
+                              <img src="${escapeHtml(booking.photo_before_url)}" alt="Before" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
                               <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">Before</div>
                             </a>`
                           : ''
                       }
                       ${
                         booking.photo_after_url
-                          ? `<a href="${booking.photo_after_url}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
-                              <img src="${booking.photo_after_url}" alt="After" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
+                          ? `<a href="${escapeHtml(booking.photo_after_url)}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
+                              <img src="${escapeHtml(booking.photo_after_url)}" alt="After" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
                               <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">After</div>
                             </a>`
                           : ''
@@ -3084,7 +3084,7 @@ async function renderMyBookings() {
               <div style="font-size:17px;font-weight:700;margin-bottom:20px">📅 <span>Reschedule</span></div>
               <div style="margin-bottom:16px">
                 <label for="resched-date" style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New date</label>
-                <input id="resched-date" type="date" min="${tomorrow}" value="${booking.scheduled_date || ''}"
+                <input id="resched-date" type="date" min="${tomorrow}" value="${escapeHtml(booking.scheduled_date || '')}"
                   style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
               </div>
               <div style="margin-bottom:24px">

@@ -3324,7 +3324,7 @@ function renderVanZones() {
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <span style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap">👤</span>
-          <input id="driver-${van.id}" value="${van.driverName || ''}" placeholder="Mechanic name" aria-label="Mechanic name"
+          <input id="driver-${van.id}" value="${esc(van.driverName || '')}" placeholder="Mechanic name" aria-label="Mechanic name"
             style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:6px 10px;font-size:13px;color:#fff;font-family:Inter,sans-serif;outline:none;flex:1;min-width:0"
             onblur="saveDriverName(${van.id},this.value)">
         </div>
@@ -3754,7 +3754,7 @@ function openPartModal(id) {
     <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">${p ? 'Edit part' : 'Add part'}</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Part name</div>
-        <input class="inp" id="pm-name" value="${p?.name || ''}" placeholder="e.g. Brake pads (Shimano B01S)" aria-label="Part name"></div>
+        <input class="inp" id="pm-name" value="${esc(p?.name || '')}" placeholder="e.g. Brake pads (Shimano B01S)" aria-label="Part name"></div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Category</div>
         <select class="inp" id="pm-cat" aria-label="Category" style="cursor:pointer">${cats.map((c) => `<option value="${c}"${(p?.category || 'General') === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
