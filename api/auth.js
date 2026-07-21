@@ -870,7 +870,9 @@ async function handleMechanicReject(req, res) {
   const mechanic = auth.mechanic;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    // mechanic_id scope: a mechanic can only reject a job actually assigned
+    // to them, not reopen anyone else's by guessing a booking_id.
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}&mechanic_id=eq.${encodeURIComponent(mechanic.id)}`,
     {
       method: 'PATCH',
       headers: {
@@ -898,19 +900,27 @@ async function handleMechanicArrived(req, res) {
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
+  // mechanic_id scope on the lookup too - a mechanic should never be able to
+  // read another mechanic's arrival_pin by guessing a booking_id, not just
+  // be blocked from the later write.
   const bookingResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=arrival_pin&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=arrival_pin&id=eq.${encodeURIComponent(booking_id)}&mechanic_id=eq.${encodeURIComponent(auth.mechanic.id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bookingResp.ok) return res.status(500).json({ error: 'Database error' });
   const bookingRows = await bookingResp.json();
-  const storedPin = bookingRows?.[0]?.arrival_pin;
-  if (storedPin && String(pin).trim() !== String(storedPin)) {
+  if (!bookingRows?.length) return res.status(404).json({ error: 'Booking not found' });
+  const storedPin = bookingRows[0].arrival_pin;
+  // A missing storedPin used to silently PASS this check instead of failing
+  // it - every job gets a real arrival_pin at accept time, so a null one
+  // here means something's wrong with the data, not a reason to wave the
+  // mechanic through.
+  if (!storedPin || String(pin).trim() !== String(storedPin)) {
     return res.status(403).json({ error: 'Incorrect code - ask the client to read it again' });
   }
 
   const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}&mechanic_id=eq.${encodeURIComponent(auth.mechanic.id)}`,
     {
       method: 'PATCH',
       headers: {
@@ -937,7 +947,7 @@ async function handleMechanicChecklist(req, res) {
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}&mechanic_id=eq.${encodeURIComponent(auth.mechanic.id)}`,
     {
       method: 'PATCH',
       headers: {
@@ -1514,8 +1524,17 @@ async function handleMechanicUpdateStatus(req, res) {
   const mechanic = auth.mechanic;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
+  // Ownership scope: 'enroute' is this endpoint's own claim path (sets
+  // mechanic_id), so it's allowed on an unclaimed job OR one already theirs;
+  // every other status transition requires the job to already be theirs -
+  // previously nothing here checked that, so any mechanic could complete,
+  // cancel, or reopen any booking company-wide by id alone.
+  const ownershipFilter =
+    status === 'enroute'
+      ? `&or=(mechanic_id.is.null,mechanic_id.eq.${encodeURIComponent(mechanic.id)})`
+      : `&mechanic_id=eq.${encodeURIComponent(mechanic.id)}`;
   const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}${ownershipFilter}`,
     {
       method: 'PATCH',
       headers: {
@@ -1652,16 +1671,22 @@ async function notifyClientOfMechanicMessage(bookingId, message, SERVICE_KEY) {
 }
 
 async function handlePublicTrack(req, res) {
-  const { tracking_token, booking_id } = req.body;
-  if (!tracking_token && !booking_id)
-    return res.status(400).json({ error: 'tracking_token or booking_id required' });
+  // tracking_token ONLY - it's the one credential this endpoint is meant to
+  // accept (a long random UUID, unguessable). Raw booking_id used to work
+  // here too, which defeated the entire point of having a separate secret
+  // token: every booking already gets a tracking_token via the DB column's
+  // DEFAULT gen_random_uuid() (backfilled for existing rows too when that
+  // migration ran), so nothing legitimate ever needed the booking_id path -
+  // it just let anyone who obtained a booking_id (e.g. via the email-lookup
+  // endpoint below, before ITS fix) pull address/arrival_pin/live GPS with
+  // no authentication at all.
+  const { tracking_token } = req.body;
+  if (!tracking_token) return res.status(400).json({ error: 'tracking_token required' });
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const cols =
     'id,status,scheduled_date,scheduled_time,service_name,service_price,address,van_number,mechanic_id,mechanic_notes,parts_used,next_service_date,tracking_token,client_rating,client_review,arrival_pin';
-  const filter = tracking_token
-    ? `tracking_token=eq.${encodeURIComponent(tracking_token)}`
-    : `id=eq.${encodeURIComponent(booking_id)}`;
+  const filter = `tracking_token=eq.${encodeURIComponent(tracking_token)}`;
 
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/bookings?select=${cols}&${filter}&limit=1`, {
     headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
@@ -1805,19 +1830,83 @@ async function handleConsumeCode(req, res) {
   return res.status(200).json({ ok: true, remaining: consumed[0].remaining });
 }
 
+// "Forgot my tracking link" recovery. Used to hand back every tracking_token
+// for the typed email directly in the response - anyone could type in
+// someone else's email and get their tracking_token(s), which is the exact
+// credential handlePublicTrack treats as proof of ownership (chained: their
+// home address, arrival_pin, live mechanic GPS). Now mirrors the password-
+// reset endpoint's anti-enumeration pattern - always the same generic
+// response, actual links only ever go out via email to the address that
+// was typed, never in the API response itself.
 async function handlePublicBookingList(req, res) {
   const { email } = req.body;
   if (!email || !email.includes('@')) return res.status(400).json({ error: 'Email required' });
+  const cleanEmail = email.trim().toLowerCase();
+  const genericOk = () => res.status(200).json({ ok: true });
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-  const cols = 'id,service_name,scheduled_date,scheduled_time,status,tracking_token';
-  const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&client_email=eq.${encodeURIComponent(email)}&status=neq.cancelled&order=scheduled_date.desc&limit=10`,
-    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
-  );
-  if (!resp.ok) return res.status(500).json({ error: 'Database error' });
-  const data = await resp.json();
-  return res.status(200).json(data || []);
+  if (!SERVICE_KEY || !process.env.RESEND_API_KEY) {
+    console.error('[public-booking-list] missing SERVICE_KEY or RESEND_API_KEY');
+    return genericOk();
+  }
+
+  try {
+    const cols = 'service_name,scheduled_date,scheduled_time,status,tracking_token';
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&client_email=eq.${encodeURIComponent(cleanEmail)}&status=neq.cancelled&order=scheduled_date.desc&limit=10`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (!resp.ok) return genericOk();
+    const bookings = await resp.json();
+    if (!Array.isArray(bookings) || !bookings.length) return genericOk();
+
+    const rows = bookings
+      .map(
+        (b) => `
+        <div style="padding:14px 0;border-top:1px solid #E5E7EB">
+          <div style="font-weight:700;color:#0D1F3C;font-size:14px">${b.service_name || 'Service'}</div>
+          <div style="color:#6B7280;font-size:13px;margin:2px 0 8px">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''} · ${b.status}</div>
+          <a href="https://drbikesydney.com.au/track.html?token=${b.tracking_token}" style="color:#2563EB;font-size:13px;font-weight:600">Track this booking →</a>
+        </div>`
+      )
+      .join('');
+
+    const emailResp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
+        to: [cleanEmail],
+        subject: 'Your Dr. Bike Sydney booking tracking links',
+        html: `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+          <div style="background:#1848C8;padding:32px 28px;text-align:center">
+            <div style="display:inline-block;background:#fff;border-radius:14px;padding:10px 18px;margin-bottom:14px">
+              <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="26" style="display:block;width:auto">
+            </div>
+            <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Dr. Bike Sydney</div>
+            <div style="font-size:22px;font-weight:800;color:#fff">Your booking links</div>
+          </div>
+          <div style="padding:28px">
+            <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 8px">Here's every active booking on file for this email:</p>
+            ${rows}
+            <p style="color:#9CA3AF;font-size:11px;margin:20px 0 0">Didn't request this? You can safely ignore this email.</p>
+          </div>
+          <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E5E7EB">
+            <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
+            <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
+          </div>
+        </div>`,
+      }),
+    });
+    if (!emailResp.ok)
+      console.error('[public-booking-list] Resend send failed:', await emailResp.text());
+  } catch (e) {
+    console.error('[public-booking-list] failed:', e.message);
+  }
+  return genericOk();
 }
 
 // Public, aggregated roster for the landing page: every mechanic who has
@@ -1888,20 +1977,36 @@ async function handleMechanicPreferenceStatus(req, res) {
 }
 
 async function handleClientReview(req, res) {
-  const { booking_id, rating, comment, photo_base64 } = req.body;
+  const { booking_id, access_token, client_id, rating, comment, photo_base64 } = req.body;
   if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
+  if (!access_token || !client_id)
+    return res.status(400).json({ error: 'access_token and client_id required' });
   if (!rating || rating < 1 || rating > 5)
     return res.status(400).json({ error: 'rating must be 1-5' });
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  // This endpoint used to take no auth at all - anyone who had a booking_id
+  // (which didn't even need to be a secret, see handlePublicTrack above)
+  // could post a rating/review/photo to any completed job. Same
+  // access_token -> client_id -> booking.client_id chain the other
+  // client-* handlers already use.
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid or expired session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
   const checkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_rating&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_rating&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!checkResp.ok) return res.status(500).json({ error: 'Database error' });
   const rows = await checkResp.json();
   if (!rows?.length) return res.status(404).json({ error: 'Booking not found' });
   const booking = rows[0];
+  if (booking.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
   if (booking.status !== 'completed')
     return res.status(400).json({ error: 'Booking not completed yet' });
   if (booking.client_rating) return res.status(409).json({ error: 'Already reviewed' });

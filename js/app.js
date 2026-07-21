@@ -1837,10 +1837,7 @@ async function renderTracking() {
       const resp = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          role: 'public-track',
-          ...(trackingToken ? { tracking_token: trackingToken } : { booking_id: bookingId }),
-        }),
+        body: JSON.stringify({ role: 'public-track', tracking_token: trackingToken }),
       });
       if (!resp.ok) return null;
       return await resp.json();
@@ -2962,7 +2959,7 @@ async function renderMyBookings() {
           fetch('/api/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ role: 'public-track', booking_id: booking.id }),
+            body: JSON.stringify({ role: 'public-track', tracking_token: booking.tracking_token }),
           })
             .then((r) => (r.ok ? r.json() : null))
             .then((data) => {
