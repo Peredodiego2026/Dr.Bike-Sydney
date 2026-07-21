@@ -668,7 +668,7 @@ function card(j) {
       <button class="abtn" data-action="history" data-id="${j.id}" data-client="${j.client.replace(/"/g, '&quot;')}" data-client-id="${j.client_id || ''}" style="background:#16A34A1A;color:#16A34A">History</button>
       ${!done ? `${isPending || (st === 'confirmed' && !j.mechanic_id) ? `<button class="abtn" data-action="accept" data-id="${j.id}" style="background:#16A34A1A;color:#16A34A;font-weight:700">Accept</button><button class="abtn" data-action="reject" data-id="${j.id}" style="background:#DC26261A;color:#DC2626">Reject</button>` : st === 'confirmed' ? `<button class="abtn go" data-action="enroute" data-id="${j.id}">En route</button>` : isEnroute ? `<button class="abtn" data-action="arrived" data-id="${j.id}" style="background:#16A34A1A;color:#16A34A">Arrived</button>` : st === 'arrived' || st === 'inprogress' || st === 'in_progress' ? `<button class="abtn done" data-action="complete" data-id="${j.id}">Complete</button>` : ``}` : `<button class="abtn undo" data-action="undo" data-id="${j.id}">Undo</button>`}
     </div>
-    ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." aria-label="Mechanic notes" value="${j.mnotes}" data-notes-id="${j.id}">` : ''}
+    ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." aria-label="Mechanic notes" value="${esc(j.mnotes)}" data-notes-id="${j.id}">` : ''}
     ${isPending ? `<div style="text-align:center;font-size:11px;color:#16A34A;padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
     </div>
   </div>`;
