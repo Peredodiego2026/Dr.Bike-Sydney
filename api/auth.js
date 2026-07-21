@@ -194,6 +194,71 @@ export function applySurcharge(amount, dateStr) {
   return Math.round(amount * SURCHARGE_MULTIPLIER * 100) / 100;
 }
 
+// Membership plans (confirmed with Diego): each plan includes N services/month.
+// Basic's included visit still incurs the callout fee ("solo por ir" - Diego's
+// words); Standard/VIP's included visit(s) waive it entirely. Once a member's
+// monthly quota is used, every subsequent booking is full price with their
+// plan's ongoing repair discount applied to both price and fee (same
+// both-components convention the Sunday surcharge already uses). VIP has no
+// quota - every booking is "included".
+export const MEMBERSHIP_PLANS = {
+  basic: { monthlyQuota: 1, waiveCallout: false, discountPct: 10 },
+  standard: { monthlyQuota: 2, waiveCallout: true, discountPct: 10 },
+  vip: { monthlyQuota: Infinity, waiveCallout: true, discountPct: 20 },
+};
+
+// Counts this client's non-cancelled bookings already scheduled in the same
+// calendar month as scheduledDate - i.e. how many of their monthly quota
+// they've already used, so this NEW booking knows whether it's the included
+// visit or an extra one. Uses the booking being scheduled's own month, not
+// today's, so booking ahead into next month checks next month's quota.
+async function countMonthlyBookings(sb, clientId, scheduledDate) {
+  const [y, m] = String(scheduledDate).split('-');
+  const monthStart = `${y}-${m}-01`;
+  const nextMonth = new Date(Number(y), Number(m), 1); // JS month is 0-based, so this is already +1
+  const monthEnd = nextMonth.toISOString().split('T')[0];
+  const { count } = await sb
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('client_id', clientId)
+    .neq('status', 'cancelled')
+    .gte('scheduled_date', monthStart)
+    .lt('scheduled_date', monthEnd);
+  return count || 0;
+}
+
+// Authoritative pricing: base prices in, membership-adjusted prices out.
+// Shared by the client-facing quote endpoint (so what Stripe charges is
+// already correct) and handleCreateBooking's own verification (so a booking
+// can never be created for less than what membership rules actually allow).
+async function applyMembershipPricing(sb, clientId, scheduledDate, servicePrice, calloutFee) {
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('membership_plan, membership_status')
+    .eq('id', clientId)
+    .maybeSingle();
+  const plan = MEMBERSHIP_PLANS[profile?.membership_plan];
+  if (!plan || profile.membership_status !== 'active')
+    return { servicePrice, calloutFee, plan: null, included: false };
+
+  const usedThisMonth = await countMonthlyBookings(sb, clientId, scheduledDate);
+  if (usedThisMonth < plan.monthlyQuota) {
+    return {
+      servicePrice: 0,
+      calloutFee: plan.waiveCallout ? 0 : calloutFee,
+      plan: profile.membership_plan,
+      included: true,
+    };
+  }
+  const pct = (100 - plan.discountPct) / 100;
+  return {
+    servicePrice: Math.round(servicePrice * pct * 100) / 100,
+    calloutFee: Math.round(calloutFee * pct * 100) / 100,
+    plan: profile.membership_plan,
+    included: false,
+  };
+}
+
 // Privacy-safe display name for a client's review shown publicly (e.g. "Sarah M.")
 export function shortClientName(name) {
   const parts = String(name || '')
@@ -241,6 +306,66 @@ async function handleCheckCoverage(req, res) {
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
   const vanNumber = await matchVanZone(sb, address);
   return res.status(200).json({ covered: vanNumber !== null });
+}
+
+// The client needs to know the REAL price (including any membership waiver/
+// discount) before it ever asks Stripe to charge anything - otherwise a
+// member either gets overcharged, or the amount Stripe actually collects
+// won't match what handleCreateBooking's own verification expects, and the
+// booking gets rejected (with a refund) after a successful-looking payment.
+// This does the exact same price derivation handleCreateBooking uses, minus
+// creating anything, so "what will I pay" and "what did they pay" can never
+// drift apart.
+async function handleGetPrice(req, res) {
+  const { access_token, service_id, service_name, scheduled_date, address } = req.body || {};
+  if (!access_token) return res.status(401).json({ error: 'Sign in required' });
+  if (!scheduled_date) return res.status(400).json({ error: 'scheduled_date required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  const {
+    data: { user },
+    error: uErr,
+  } = await sb.auth.getUser(access_token);
+  if (uErr || !user) return res.status(401).json({ error: 'Invalid session' });
+
+  let svc = null;
+  if (service_id) {
+    const r = await sb.from('services').select('price').eq('id', service_id).maybeSingle();
+    svc = r.data;
+  }
+  if (!svc && service_name) {
+    const r = await sb.from('services').select('price').eq('name', service_name).maybeSingle();
+    svc = r.data;
+  }
+  if (!svc) return res.status(400).json({ error: 'Unknown service' });
+  const baseServicePrice = applySurcharge(Number(svc.price), scheduled_date);
+
+  let baseCalloutFee = 20;
+  try {
+    const { data: zones } = await sb.from('callout_zones').select('callout_fee,suburbs');
+    const addr = (address || '').toLowerCase();
+    const zone = (zones || []).find((z) =>
+      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
+    );
+    if (zone) baseCalloutFee = Number(zone.callout_fee);
+  } catch {}
+  baseCalloutFee = applySurcharge(baseCalloutFee, scheduled_date);
+
+  const priced = await applyMembershipPricing(
+    sb,
+    user.id,
+    scheduled_date,
+    baseServicePrice,
+    baseCalloutFee
+  );
+  return res.status(200).json({
+    servicePrice: priced.servicePrice,
+    calloutFee: priced.calloutFee,
+    total: Math.round((priced.servicePrice + priced.calloutFee) * 100) / 100,
+    membershipPlan: priced.plan,
+    isIncludedVisit: priced.included,
+  });
 }
 
 // ── Server-authoritative booking creation ────────────────────────────────────
@@ -297,7 +422,7 @@ async function handleCreateBooking(req, res) {
   // Sunday/NSW public holiday surcharge (+20%, confirmed with Diego) - applied
   // to both components so the itemized quote stays honest line-by-line rather
   // than a mystery lump surcharge.
-  const servicePrice = applySurcharge(Number(svc.price), scheduled_date);
+  let servicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
   // 3. Authoritative call-out fee (callout_zones by address, default $20)
   let calloutFee = 20;
@@ -310,6 +435,30 @@ async function handleCreateBooking(req, res) {
     if (zone) calloutFee = Number(zone.callout_fee);
   } catch {}
   calloutFee = applySurcharge(calloutFee, scheduled_date);
+
+  // 3a. Membership pricing: waives/discounts servicePrice and calloutFee per
+  // the client's active plan and how much of their monthly quota is left
+  // (see applyMembershipPricing - was previously never applied at all, so
+  // "1 service/month included" was purely marketing copy with nothing
+  // enforcing it). Runs before payment verification below because the
+  // Stripe charge itself only ever covers the callout fee (the service
+  // price is collected later, in person, by the mechanic) - a waived
+  // calloutFee of $0 means there's no Stripe charge to verify at all.
+  let membershipPlan = null;
+  let isIncludedVisit = false;
+  if (!isAdmin) {
+    const priced = await applyMembershipPricing(
+      sb,
+      user.id,
+      scheduled_date,
+      servicePrice,
+      calloutFee
+    );
+    servicePrice = priced.servicePrice;
+    calloutFee = priced.calloutFee;
+    membershipPlan = priced.plan;
+    isIncludedVisit = priced.included;
+  }
 
   // 3b. Zone dispatch: reject bookings outside any configured coverage zone
   // instead of silently defaulting to van 1 - previously this accepted (and
@@ -335,9 +484,11 @@ async function handleCreateBooking(req, res) {
     });
   }
 
-  // 4. Verify payment (skipped for the admin test account)
+  // 4. Verify payment (skipped for the admin test account, and for a
+  // membership visit that waived the callout fee down to $0 - there's no
+  // Stripe charge to verify since nothing was ever going to be charged).
   let verifiedPI = null;
-  if (!isAdmin) {
+  if (!isAdmin && calloutFee > 0) {
     if (!process.env.STRIPE_SECRET_KEY) return res.status(402).json({ error: 'Payment required' });
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     try {
@@ -345,16 +496,35 @@ async function handleCreateBooking(req, res) {
         const sess = await stripe.checkout.sessions.retrieve(checkout_session_id);
         if (sess.payment_status !== 'paid')
           return res.status(402).json({ error: 'Payment not completed' });
-        if (Math.round(sess.amount_total) !== Math.round(calloutFee * 100))
-          return res.status(402).json({ error: 'Payment amount mismatch' });
-        verifiedPI =
+        const sessPI =
           typeof sess.payment_intent === 'string' ? sess.payment_intent : sess.payment_intent?.id;
+        if (Math.round(sess.amount_total) !== Math.round(calloutFee * 100)) {
+          if (sessPI) {
+            try {
+              await stripe.refunds.create({ payment_intent: sessPI });
+            } catch (e) {
+              console.error('[create-booking] amount-mismatch refund failed:', e.message);
+            }
+          }
+          return res.status(402).json({
+            error: 'Payment amount mismatch' + (sessPI ? '. Your payment has been refunded.' : ''),
+          });
+        }
+        verifiedPI = sessPI;
       } else if (payment_intent_id) {
         const p = await stripe.paymentIntents.retrieve(payment_intent_id);
         if (p.status !== 'succeeded')
           return res.status(402).json({ error: 'Payment not completed' });
-        if (Math.round(p.amount) !== Math.round(calloutFee * 100))
-          return res.status(402).json({ error: 'Payment amount mismatch' });
+        if (Math.round(p.amount) !== Math.round(calloutFee * 100)) {
+          try {
+            await stripe.refunds.create({ payment_intent: p.id });
+          } catch (e) {
+            console.error('[create-booking] amount-mismatch refund failed:', e.message);
+          }
+          return res
+            .status(402)
+            .json({ error: 'Payment amount mismatch. Your payment has been refunded.' });
+        }
         verifiedPI = p.id;
       } else {
         return res.status(402).json({ error: 'Payment required' });
@@ -1034,15 +1204,47 @@ async function handleMechanicComplete(req, res) {
 
   // If a discount code was applied at completion time, record its use
   // server-side via the atomic consume_discount_code() RPC (see booking
-  // creation above for why - same double-spend race, same fix).
+  // creation above for why - same double-spend race, same fix). But
+  // consume_discount_code() is keyed only on the code string, with no idea
+  // which booking is using it - it happily lets the SAME booking consume a
+  // code a second time here even though handleCreateBooking may have
+  // already consumed one for it, discounting an already-discounted total
+  // again. Skip the second consume if this booking already has one on file.
   const mechDiscCode = parts_charged?.discount_code;
   if (mechDiscCode) {
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/rpc/consume_discount_code`, {
-        method: 'POST',
-        headers: sbHdr,
-        body: JSON.stringify({ p_code: String(mechDiscCode).trim().toUpperCase() }),
-      });
+      const existingResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/bookings?select=discount_code,service_price&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+        { headers: sbHdr }
+      );
+      const existing = existingResp.ok ? (await existingResp.json())?.[0] : null;
+      if (existing?.discount_code) {
+        console.warn(
+          '[mechanic-complete] booking',
+          booking_id,
+          'already has discount_code',
+          existing.discount_code,
+          '- not consuming another'
+        );
+      } else {
+        const rpcResp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/consume_discount_code`, {
+          method: 'POST',
+          headers: sbHdr,
+          body: JSON.stringify({ p_code: String(mechDiscCode).trim().toUpperCase() }),
+        });
+        const dc = rpcResp.ok ? (await rpcResp.json())?.[0] : null;
+        if (dc) {
+          // Recorded on the booking (same fields handleCreateBooking writes)
+          // so a second completion call - retry, double-tap - sees the code
+          // as already spent instead of re-reading a still-empty column.
+          const price = Number(existing?.service_price) || 0;
+          payload.discount_code = String(mechDiscCode).trim().toUpperCase();
+          payload.discount_applied =
+            dc.discount_type === 'percent'
+              ? Math.round(price * dc.discount_value) / 100
+              : Math.min(dc.discount_value, price);
+        }
+      }
     } catch {}
   }
 
@@ -1417,7 +1619,7 @@ async function handleClientReschedule(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,google_event_id,service_name&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,google_event_id,service_name,address&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -1427,6 +1629,41 @@ async function handleClientReschedule(req, res) {
   if (bk.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
   if (!['pending', 'confirmed'].includes(bk.status))
     return res.status(400).json({ error: 'Booking cannot be rescheduled' });
+
+  // Re-derive price + callout fee for the NEW date, same lookups
+  // handleCreateBooking uses - previously this only updated date/time, so
+  // moving a booking onto or off a Sunday/NSW-holiday silently left the
+  // stale price in place (undercharging or overcharging by the 20%
+  // surcharge). Recomputing fresh from the base service/zone price is
+  // correct regardless of whether the OLD date was a surcharge day too -
+  // adjusting the already-surcharged stored value in place would double
+  // (or wrongly drop) the surcharge instead.
+  const svcResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/services?select=price&name=eq.${encodeURIComponent(bk.service_name)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const svcData = svcResp.ok ? await svcResp.json() : [];
+  const newServicePrice = svcData?.[0]
+    ? applySurcharge(Number(svcData[0].price), scheduled_date)
+    : null;
+
+  let newCalloutFee = 20;
+  try {
+    const zonesResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/callout_zones?select=callout_fee,suburbs`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    const zones = zonesResp.ok ? await zonesResp.json() : [];
+    const addr = (bk.address || '').toLowerCase();
+    const zone = (zones || []).find((z) =>
+      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
+    );
+    if (zone) newCalloutFee = Number(zone.callout_fee);
+  } catch {}
+  newCalloutFee = applySurcharge(newCalloutFee, scheduled_date);
+
+  const updatePayload = { scheduled_date, scheduled_time, callout_fee: newCalloutFee };
+  if (newServicePrice !== null) updatePayload.service_price = newServicePrice;
 
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
@@ -1438,7 +1675,7 @@ async function handleClientReschedule(req, res) {
         'Content-Type': 'application/json',
         Prefer: 'return=minimal',
       },
-      body: JSON.stringify({ scheduled_date, scheduled_time }),
+      body: JSON.stringify(updatePayload),
     }
   );
   if (!updateResp.ok) {
@@ -2441,6 +2678,7 @@ async function handler(req, res) {
   if (role === 'client-bookings') return handleClientBookings(req, res);
   if (role === 'create-booking') return handleCreateBooking(req, res);
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
+  if (role === 'get-price') return handleGetPrice(req, res);
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
