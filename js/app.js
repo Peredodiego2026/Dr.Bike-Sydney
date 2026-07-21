@@ -1239,15 +1239,48 @@ async function renderPayment() {
   // possibly-abandoned booking should never silently carry over.
   window.appState.preferredMechanicId = null;
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'payment' });
-  // Surcharge must match what handleCreateBooking will verify against Stripe -
-  // an unsurcharged charge on a Sunday/holiday gets rejected as amount mismatch.
-  const calloutFee = applySurcharge(await getCalloutFee(location), date);
-  const mechanicPicker = await loadMechanicPreferencePicker();
 
   const {
-    data: { user: currentUser },
-  } = await sb.auth.getUser();
+    data: { session: paySession },
+  } = await sb.auth.getSession();
+  const currentUser = paySession?.user || null;
   const isTestAdmin = currentUser?.email === 'peredo.dm@gmail.com';
+
+  // Authoritative price from the server (membership waiver/discount + Sunday
+  // surcharge already applied) - must match exactly what handleCreateBooking
+  // will verify, or a paid charge gets rejected as "amount mismatch" and a
+  // membership visit that should be free would otherwise still show a card
+  // form asking to pay for it.
+  let calloutFee = 0;
+  let isIncludedVisit = false;
+  if (currentUser && !isTestAdmin) {
+    try {
+      const priceResp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'get-price',
+          access_token: paySession.access_token,
+          service_id: service.id || null,
+          service_name: service.name,
+          scheduled_date: date,
+          address: location,
+        }),
+      });
+      if (priceResp.ok) {
+        const priced = await priceResp.json();
+        calloutFee = priced.calloutFee;
+        isIncludedVisit = priced.isIncludedVisit;
+      } else {
+        calloutFee = applySurcharge(await getCalloutFee(location), date);
+      }
+    } catch {
+      calloutFee = applySurcharge(await getCalloutFee(location), date);
+    }
+  } else {
+    calloutFee = applySurcharge(await getCalloutFee(location), date);
+  }
+  const mechanicPicker = await loadMechanicPreferencePicker();
 
   const waText = encodeURIComponent(
     `Hi Dr. Bike! I'd like to book a ${service.name} on ${date} at ${time} at ${location}. Can you confirm my slot?`
@@ -1262,12 +1295,22 @@ async function renderPayment() {
         <div style="font-size:13px;color:#374151">${location}</div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;color:#6B7280">Call-out fee</span>
-          <span style="font-weight:700;color:#0D1F3C">$${calloutFee.toFixed(2)}</span>
+          ${
+            isIncludedVisit
+              ? `<span style="font-size:11px;font-weight:700;color:#059669;background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
+              : `<span style="font-weight:700;color:#0D1F3C">$${calloutFee.toFixed(2)}</span>`
+          }
         </div>
       </div>
 
       ${mechanicPicker.html}
 
+      ${
+        calloutFee <= 0
+          ? `
+      <div id="payment-error" class="booking-error" hidden style="margin-bottom:12px"></div>
+      <button class="btn btn--primary btn--full" id="pay-btn">Confirm booking</button>`
+          : `
       <div id="payment-request-btn" style="margin-bottom:12px" hidden></div>
       <div class="payment-divider" id="card-divider" hidden><span>or pay by card</span></div>
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:16px">
@@ -1281,7 +1324,8 @@ async function renderPayment() {
         </svg>
         <span>Secure payment powered by Stripe. Encrypted and safe.</span>
       </div>
-      <button class="btn btn--primary btn--full" id="pay-btn">Pay $${calloutFee.toFixed(2)} Call-out Fee</button>
+      <button class="btn btn--primary btn--full" id="pay-btn">Pay $${calloutFee.toFixed(2)} Call-out Fee</button>`
+      }
 
       <div style="text-align:center;margin-top:16px;font-size:12px;color:#9CA3AF">
         Prefer to book manually?
@@ -1421,15 +1465,6 @@ async function renderPayment() {
     router.navigate('tracking');
   }
 
-  await createPaymentForm('card-element');
-
-  const getPayingEmail = async () => {
-    const {
-      data: { user: payingUser },
-    } = await sb.auth.getUser();
-    return payingUser?.email || 'guest@drbikesydney.com.au';
-  };
-
   // Guards against double-charging if a payment somehow completes twice
   // (e.g. the Payment Request Button fires, then the card form is also
   // submitted) - the second call reuses the first PaymentIntent instead of
@@ -1437,42 +1472,65 @@ async function renderPayment() {
   let paidIntent = null;
   async function chargeOnce(paymentMethodId) {
     if (paidIntent) return paidIntent;
-    const email = await getPayingEmail();
+    const {
+      data: { user: payingUser },
+    } = await sb.auth.getUser();
+    const email = payingUser?.email || 'guest@drbikesydney.com.au';
     paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId);
     return paidIntent;
   }
 
-  const prSupported = await createPaymentRequestButton('payment-request-btn', {
-    amountCents: Math.round(calloutFee * 100),
-    label: 'Dr. Bike Sydney - Call-out fee',
-    onPayment: async (paymentMethodId) => {
-      const pi = await chargeOnce(paymentMethodId);
-      await finalizeBooking(pi, { isTest: false });
-    },
-  });
-  if (prSupported) {
-    screen.querySelector('#payment-request-btn').hidden = false;
-    screen.querySelector('#card-divider').hidden = false;
-  }
+  if (calloutFee > 0) {
+    await createPaymentForm('card-element');
 
-  screen.querySelector('#pay-btn').addEventListener('click', async () => {
-    const btn = screen.querySelector('#pay-btn');
-    const errEl = screen.querySelector('#payment-error');
-    btn.disabled = true;
-    btn.textContent = 'Processing payment...';
-    errEl.hidden = true;
-    try {
-      const paymentIntent = await chargeOnce();
-      await finalizeBooking(paymentIntent, { isTest: false });
-    } catch (e) {
-      errEl.textContent = paidIntent
-        ? 'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
-        : e.message || 'Payment failed. Please check your card details and try again.';
-      errEl.hidden = false;
-      btn.disabled = false;
-      btn.textContent = `Pay $${calloutFee.toFixed(2)} Call-out Fee`;
+    const prSupported = await createPaymentRequestButton('payment-request-btn', {
+      amountCents: Math.round(calloutFee * 100),
+      label: 'Dr. Bike Sydney - Call-out fee',
+      onPayment: async (paymentMethodId) => {
+        const pi = await chargeOnce(paymentMethodId);
+        await finalizeBooking(pi, { isTest: false });
+      },
+    });
+    if (prSupported) {
+      screen.querySelector('#payment-request-btn').hidden = false;
+      screen.querySelector('#card-divider').hidden = false;
     }
-  });
+
+    screen.querySelector('#pay-btn').addEventListener('click', async () => {
+      const btn = screen.querySelector('#pay-btn');
+      const errEl = screen.querySelector('#payment-error');
+      btn.disabled = true;
+      btn.textContent = 'Processing payment...';
+      errEl.hidden = true;
+      try {
+        const paymentIntent = await chargeOnce();
+        await finalizeBooking(paymentIntent, { isTest: false });
+      } catch (e) {
+        errEl.textContent = paidIntent
+          ? 'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
+          : e.message || 'Payment failed. Please check your card details and try again.';
+        errEl.hidden = false;
+        btn.disabled = false;
+        btn.textContent = `Pay $${calloutFee.toFixed(2)} Call-out Fee`;
+      }
+    });
+  } else {
+    screen.querySelector('#pay-btn').addEventListener('click', async () => {
+      const btn = screen.querySelector('#pay-btn');
+      const errEl = screen.querySelector('#payment-error');
+      btn.disabled = true;
+      btn.textContent = 'Confirming...';
+      errEl.hidden = true;
+      try {
+        await finalizeBooking(null, { isTest: false });
+      } catch (e) {
+        errEl.textContent = e.message || 'Could not confirm booking. Please try again.';
+        errEl.hidden = false;
+        btn.disabled = false;
+        btn.textContent = 'Confirm booking';
+      }
+    });
+  }
 
   if (isTestAdmin) {
     screen.querySelector('#test-booking-btn')?.addEventListener('click', async () => {

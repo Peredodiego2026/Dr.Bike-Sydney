@@ -359,8 +359,8 @@
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">Basic</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$57</span><span style="color:var(--gray);font-size:14px">/month</span></div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>1 Tune-Up per month</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>10% off parts</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>1 free Tune-Up per month ($20 call-out fee applies)</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>10% off extra visits beyond your monthly service</li>
               <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (48hs)</li>
               <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
             </ul>
@@ -373,8 +373,8 @@
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">Standard</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$97</span><span style="color:var(--gray);font-size:14px">/month</span></div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>2 services per month (any type)</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>15% off parts</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>2 free services per month, call-out fee included</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>10% off extra visits beyond your monthly services</li>
               <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (24hs)</li>
               <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
               <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>1 emergency callout/month</li>
@@ -387,7 +387,7 @@
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">VIP</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$147</span><span style="color:var(--gray);font-size:14px">/month</span></div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Unlimited services per month</li>
+              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Unlimited services per month, call-out fee always included</li>
               <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>20% off parts</li>
               <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Same-day priority</li>
               <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
@@ -694,30 +694,30 @@ import { sb } from './js/supabase.js';
     basic: {
       label: 'Basic Plan', price: '$57/month',
       includes: [
-        '1 maintenance service per month (Tune-Up)',
+        '1 free maintenance service per month (Tune-Up)',
         'Priority scheduling (48hs)',
-        '10% discount on parts',
+        '10% off extra visits beyond your monthly service',
         'Digital bike history log'
       ],
-      excludes: 'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Call-out fee is not included - the standard $20 call-out fee still applies to your monthly visit. Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
       savings: 'A regular Tune-Up costs $109. With Basic you save $52/month.'
     },
     standard: {
       label: 'Standard Plan', price: '$97/month',
       includes: [
-        '2 services per month (any type)',
+        '2 free services per month (any type), call-out fee included',
         'Priority scheduling (24hs)',
-        '15% discount on parts',
+        '10% off extra visits beyond your monthly services',
         'Digital bike history log',
         '1 emergency callout per month'
       ],
-      excludes: 'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
       savings: '2 services/month = $218 value. With Standard you save $121/month.'
     },
     vip: {
       label: 'VIP Plan', price: '$147/month',
       includes: [
-        'Unlimited services per month',
+        'Unlimited services per month, call-out fee always included',
         'Same-day priority',
         '20% discount on parts',
         'Digital bike history log',

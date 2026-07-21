@@ -594,8 +594,8 @@
           <div id="annual-note-basic" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$548<span>/yr - save</span> $136</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>1 Basic Service</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>1 free Basic Service/month ($20 call-out fee applies)</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off extra visits beyond your monthly service</li>
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
         </ul>
@@ -612,8 +612,8 @@
           <div id="annual-note-standard" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$931<span>/yr - save</span> $233</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>2 Standard Services</li>
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off repairs</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>2 free Standard Services/month, call-out fee included</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>10% off extra visits beyond your monthly services</li>
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
@@ -630,7 +630,7 @@
           <div id="annual-note-vip" style="display:none;font-size:12px;color:#16a34a;font-weight:600;margin-top:4px">$1,411<span>/yr - save</span> $353</div>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#374151">
-          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Unlimited Services</li>
+          <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Unlimited Services, call-out fee always included</li>
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>20% off repairs</li>
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Priority booking</li>
           <li><span style="color:#16a34a;font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
@@ -3409,30 +3409,30 @@ document.addEventListener('DOMContentLoaded', function() {
     basic: {
       label: 'Basic Plan', price: '$57/month',
       includes: [
-        '1 maintenance service per month (Tune-Up)',
+        '1 free maintenance service per month (Tune-Up)',
         'Priority scheduling (48hs)',
-        '10% discount on parts',
+        '10% off extra visits beyond your monthly service',
         'Digital bike history log'
       ],
-      excludes: 'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Call-out fee is not included - the standard $20 call-out fee still applies to your monthly visit. Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
       savings: 'A regular Tune-Up costs $109. With Basic you save $52/month.'
     },
     standard: {
       label: 'Standard Plan', price: '$97/month',
       includes: [
-        '2 services per month (any type)',
+        '2 free services per month (any type), call-out fee included',
         'Priority scheduling (24hs)',
-        '15% discount on parts',
+        '10% off extra visits beyond your monthly services',
         'Digital bike history log',
         '1 emergency callout per month'
       ],
-      excludes: 'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
       savings: '2 services/month = $218 value. With Standard you save $121/month.'
     },
     vip: {
       label: 'VIP Plan', price: '$147/month',
       includes: [
-        'Unlimited services per month',
+        'Unlimited services per month, call-out fee always included',
         'Same-day priority',
         '20% discount on parts',
         'Digital bike history log',

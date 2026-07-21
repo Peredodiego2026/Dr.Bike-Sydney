@@ -390,14 +390,24 @@ const dict = {
     '/month': '/mes',
     '1 Tune-Up per month': '1 Ajuste por mes',
     '10% off parts': '10% de descuento en repuestos',
+    '1 free Tune-Up per month ($20 call-out fee applies)':
+      '1 Ajuste gratis por mes (se cobra la tarifa de visita de $20)',
+    '10% off extra visits beyond your monthly service':
+      '10% de descuento en visitas extra más allá de tu servicio mensual',
     'Priority scheduling (48hs)': 'Turnos prioritarios (48hs)',
     'Digital bike history': 'Historial digital de la bici',
     '2 services per month (any type)': '2 servicios por mes (cualquier tipo)',
     '15% off parts': '15% de descuento en repuestos',
+    '2 free services per month, call-out fee included':
+      '2 servicios gratis por mes, tarifa de visita incluida',
+    '10% off extra visits beyond your monthly services':
+      '10% de descuento en visitas extra más allá de tus servicios mensuales',
     'Priority scheduling (24hs)': 'Turnos prioritarios (24hs)',
     '1 emergency callout/month': '1 visita de emergencia/mes',
     'Unlimited services per month': 'Servicios ilimitados por mes',
     '20% off parts': '20% de descuento en repuestos',
+    'Unlimited services per month, call-out fee always included':
+      'Servicios ilimitados por mes, tarifa de visita siempre incluida',
     'Same-day priority': 'Prioridad el mismo día',
     'Unlimited emergency callouts': 'Visitas de emergencia ilimitadas',
     'Dedicated mechanic': 'Mecánico dedicado',
@@ -506,13 +516,19 @@ const dict = {
     Popular: 'Popular',
     '1 Basic Service': '1 Servicio Basic',
     '10% off repairs': '10% de descuento en reparaciones',
+    '1 free Basic Service/month ($20 call-out fee applies)':
+      '1 Servicio Basic gratis/mes (se cobra la tarifa de visita de $20)',
     'Priority booking': 'Reserva prioritaria',
     'Email support': 'Soporte por correo',
     '2 Standard Services': '2 Servicios Standard',
+    '2 free Standard Services/month, call-out fee included':
+      '2 Servicios Standard gratis/mes, tarifa de visita incluida',
     'Phone support': 'Soporte telefónico',
     'Free safety check': 'Chequeo de seguridad gratis',
     'Unlimited Services': 'Servicios ilimitados',
     '20% off repairs': '20% de descuento en reparaciones',
+    'Unlimited Services, call-out fee always included':
+      'Servicios ilimitados, tarifa de visita siempre incluida',
     'Annual tune-up': 'Ajuste anual',
     'All plans include mobile service within Sydney metro area':
       'Todos los planes incluyen servicio móvil dentro del área metropolitana de Sydney',
@@ -792,17 +808,25 @@ const dict = {
     'Standard Plan': 'Plan Standard',
     'VIP Plan': 'Plan VIP',
     '1 maintenance service per month (Tune-Up)': '1 servicio de mantenimiento por mes (Ajuste)',
+    '1 free maintenance service per month (Tune-Up)':
+      '1 servicio de mantenimiento gratis por mes (Ajuste)',
     '10% discount on parts': '10% de descuento en repuestos',
     'Digital bike history log': 'Historial digital de la bici',
     'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       'Servicios de emergencia, descuento en servicios extra, visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    'Call-out fee is not included - the standard $20 call-out fee still applies to your monthly visit. Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'La tarifa de visita no está incluida - se cobra igual la tarifa de $20 en tu visita mensual. Visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     'A regular Tune-Up costs $109. With Basic you save $52/month.':
       'Un Ajuste normal cuesta $109. Con Basic ahorrás $52/mes.',
     '2 services per month (any type)': '2 servicios por mes (cualquier tipo)',
+    '2 free services per month (any type), call-out fee included':
+      '2 servicios gratis por mes (cualquier tipo), tarifa de visita incluida',
     '15% discount on parts': '15% de descuento en repuestos',
     '1 emergency callout per month': '1 visita de emergencia por mes',
     'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       'Visitas ilimitadas, descuento en servicios más allá del límite mensual. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    'Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'Visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     '2 services/month = $218 value. With Standard you save $121/month.':
       '2 servicios/mes = valor de $218. Con Standard ahorrás $121/mes.',
     'Unlimited services per month': 'Servicios ilimitados por mes',
@@ -1380,14 +1404,19 @@ const dict = {
     '/month': '/月',
     '1 Tune-Up per month': '每月1次基础调校',
     '10% off parts': '零件享9折',
+    '1 free Tune-Up per month ($20 call-out fee applies)': '每月1次免费基础调校（仍收$20上门费）',
+    '10% off extra visits beyond your monthly service': '超出每月服务后，额外上门享9折',
     'Priority scheduling (48hs)': '优先预约（48小时）',
     'Digital bike history': '数字化车辆记录',
     '2 services per month (any type)': '每月2次服务（任意类型）',
     '15% off parts': '零件享85折',
+    '2 free services per month, call-out fee included': '每月2次免费服务，含上门费',
+    '10% off extra visits beyond your monthly services': '超出每月服务后，额外上门享9折',
     'Priority scheduling (24hs)': '优先预约（24小时）',
     '1 emergency callout/month': '每月1次紧急上门',
     'Unlimited services per month': '每月无限次服务',
     '20% off parts': '零件享8折',
+    'Unlimited services per month, call-out fee always included': '每月无限次服务，上门费全免',
     'Same-day priority': '当天优先服务',
     'Unlimited emergency callouts': '无限次紧急上门',
     'Dedicated mechanic': '专属技工',
@@ -1492,13 +1521,17 @@ const dict = {
     Popular: '最受欢迎',
     '1 Basic Service': '1次Basic服务',
     '10% off repairs': '维修享9折',
+    '1 free Basic Service/month ($20 call-out fee applies)':
+      '每月1次免费Basic服务（仍收$20上门费）',
     'Priority booking': '优先预约',
     'Email support': '邮件支持',
     '2 Standard Services': '2次Standard服务',
+    '2 free Standard Services/month, call-out fee included': '每月2次免费Standard服务，含上门费',
     'Phone support': '电话支持',
     'Free safety check': '免费安全检查',
     'Unlimited Services': '无限次服务',
     '20% off repairs': '维修享8折',
+    'Unlimited Services, call-out fee always included': '无限次服务，上门费全免',
     'Annual tune-up': '年度调校',
     'All plans include mobile service within Sydney metro area': '所有计划均包含悉尼都会区上门服务',
     'Gift a service': '赠送一次服务',
@@ -1756,17 +1789,24 @@ const dict = {
     'Standard Plan': 'Standard计划',
     'VIP Plan': 'VIP计划',
     '1 maintenance service per month (Tune-Up)': '每月1次保养服务（基础调校）',
+    '1 free maintenance service per month (Tune-Up)': '每月1次免费保养服务（基础调校）',
     '10% discount on parts': '零件享9折',
     'Digital bike history log': '数字化车辆记录',
     'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       '紧急服务、额外服务折扣、无限次上门不含在内。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    'Call-out fee is not included - the standard $20 call-out fee still applies to your monthly visit. Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '不含上门费 - 每月服务仍需支付$20上门费。无限次上门。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     'A regular Tune-Up costs $109. With Basic you save $52/month.':
       '普通基础调校售价$109。使用Basic每月可节省$52。',
     '2 services per month (any type)': '每月2次服务（任意类型）',
+    '2 free services per month (any type), call-out fee included':
+      '每月2次免费服务（任意类型），含上门费',
     '15% discount on parts': '零件享85折',
     '1 emergency callout per month': '每月1次紧急上门',
     'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       '无限次上门、超出每月限额的服务折扣不含在内。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    'Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '无限次上门。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     '2 services/month = $218 value. With Standard you save $121/month.':
       '每月2次服务价值$218。使用Standard每月可节省$121。',
     'Unlimited services per month': '每月无限次服务',
