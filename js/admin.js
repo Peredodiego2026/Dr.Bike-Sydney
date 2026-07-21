@@ -3235,7 +3235,7 @@ async function loadClients() {
         { vip: 'VIP', basic: 'Basic', std: 'Standard', none: 'No plan' }[mem] || 'No plan';
       return `<div class="client-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <div class="cl-av" style="background:${colors[i % colors.length]}">${initials}</div>
+        <div class="cl-av" style="background:${colors[i % colors.length]}">${esc(initials)}</div>
         <div style="flex:1"><div class="cl-name">${esc(name)}</div><div class="cl-suburb">${esc(c.email || '')}</div></div>
         <span class="cl-seg ${segClass}">${segLabel}</span>
       </div>
@@ -4727,8 +4727,8 @@ async function loadNotifNumbers() {
     <div style="padding:12px 14px;background:var(--off);border-radius:10px;border:1px solid var(--border)">
       <!-- Fila 1: avatar + nombre + zona badge -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="width:36px;height:36px;border-radius:50%;background:${zoneBg[zone]};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${zoneColor[zone]};flex-shrink:0">${initials}</div>
-        <div style="font-size:14px;font-weight:600;color:var(--navy);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${roleIcon[c.role] || ''} ${c.first_name} ${c.last_name}</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:${zoneBg[zone]};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${zoneColor[zone]};flex-shrink:0">${esc(initials)}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--navy);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${roleIcon[c.role] || ''} ${esc(c.first_name)} ${esc(c.last_name)}</div>
         <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${zoneBg[zone]};color:${zoneColor[zone]};white-space:nowrap;flex-shrink:0">${zoneLabel[zone]}</span>
       </div>
       <!-- Fila 2: teléfono + canal + botones -->
@@ -4936,7 +4936,7 @@ async function loadMechanicProfiles() {
       const initials = ((c.first_name || '?')[0] + (c.last_name || '')[0]).toUpperCase();
       const avatarHTML = c.photo_url
         ? `<img src="${esc(c.photo_url)}" alt="${esc(name)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
-        : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--blue)">${initials}</div>`;
+        : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
       const roleTag =
         c.role === 'manager'
           ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ Manager</span>'
