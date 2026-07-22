@@ -1510,19 +1510,19 @@ var _membershipBilling = 'monthly';
 var _membershipCard = null;
 // 2026-07-22: Basic/VIP prices changed ($57->$67, $147->$197 monthly; annual
 // figures below recomputed at the same 20% annual discount Standard already
-// uses). The 4 Stripe Price IDs marked TODO below still point at the OLD
-// $57/$548/$147/$1411 recurring prices - DO NOT deploy until Diego creates
-// the new prices in the Stripe Dashboard and these IDs are updated, or a
-// client will be shown the new price and actually get billed the old one.
+// uses). Diego updated the 4 existing Stripe Price objects (Legacy Plans) to
+// the new amounts directly in the Dashboard rather than creating new ones -
+// same price_ids as before, confirmed 0 active subscriptions on each at the
+// time of the change, so no existing client was silently repriced.
 var _membershipPrices = {
   basic:    { monthly: 67,  annual: 643  },
   standard: { monthly: 97,  annual: 931  },
   vip:      { monthly: 197, annual: 1891 }
 };
 var _membershipPriceIds = {
-  basic:    { monthly: 'price_1Ti1YFPPGSm5cT7JsoTZQFJh' /* TODO: was $57/mo */, annual: 'price_1Ti1YsPPGSm5cT7JrTHai1NV' /* TODO: was $548/yr */ },
+  basic:    { monthly: 'price_1Ti1YFPPGSm5cT7JsoTZQFJh', annual: 'price_1Ti1YsPPGSm5cT7JrTHai1NV' },
   standard: { monthly: 'price_1Ti1ZMPPGSm5cT7Ju9HPXs4s', annual: 'price_1Ti1ZhPPGSm5cT7JSQk0D4W0' },
-  vip:      { monthly: 'price_1Ti1aIPPGSm5cT7JC75QU0gL' /* TODO: was $147/mo */, annual: 'price_1Ti1aePPGSm5cT7J5lPHrkps' /* TODO: was $1411/yr */ }
+  vip:      { monthly: 'price_1Ti1aIPPGSm5cT7JC75QU0gL', annual: 'price_1Ti1aePPGSm5cT7J5lPHrkps' }
 };
 var _membershipLabels = { basic: 'Basic', standard: 'Standard', vip: 'VIP' };
 
