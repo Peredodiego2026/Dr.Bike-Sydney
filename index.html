@@ -684,17 +684,16 @@ import { sb } from './js/supabase.js';
 <script>
 (function () {
   var _msPlan = null;
-  // 2026-07-22: Basic/VIP prices changed ($57->$67, $147->$197) but the
-  // Stripe Price IDs below still point at the OLD $57/$147 recurring
-  // prices - Stripe has no $67 or $197 Price object yet. DO NOT deploy
-  // this until Diego creates the 2 new recurring prices in the Stripe
-  // Dashboard and the IDs here are updated to match, or a client will be
-  // shown "$67/month" and actually get billed $57/month.
+  // 2026-07-22: Basic/VIP prices changed ($57->$67, $147->$197). Diego
+  // updated these 3 Stripe Price objects (Legacy Plans) to the new amounts
+  // directly in the Dashboard - same price_ids as before, confirmed 0 active
+  // subscriptions on each at the time, so no existing client was silently
+  // repriced.
   var _msPrices = { basic: 67, standard: 97, vip: 197 };
   var _msPriceIds = {
-    basic:    'price_1Ti1YFPPGSm5cT7JsoTZQFJh', // TODO: still the old $57/mo price - needs a new $67/mo price
+    basic:    'price_1Ti1YFPPGSm5cT7JsoTZQFJh',
     standard: 'price_1Ti1ZMPPGSm5cT7Ju9HPXs4s',
-    vip:      'price_1Ti1aIPPGSm5cT7JC75QU0gL'  // TODO: still the old $147/mo price - needs a new $197/mo price
+    vip:      'price_1Ti1aIPPGSm5cT7JC75QU0gL'
   };
   var _msLabels = { basic: 'Basic Plan', standard: 'Standard Plan', vip: 'VIP Plan' };
 
