@@ -396,6 +396,7 @@ async function load() {
       discount_code: b.discount_code || '',
       membership_plan: b.client_membership_plan || null,
       membership_status: b.client_membership_status || null,
+      has_card_on_file: !!b.client_has_card_on_file,
     }));
     jobs = mapped;
     try {
@@ -963,6 +964,7 @@ let _partsConfirmed = false; // true once parts chosen OR "no parts used" confir
 let _completeJobId = null;
 let _mechDiscount = null; // { code, type, value, amount } - discount applied at completion time (separate from any booking-time discount)
 let _tipAmount = 0; // Optional tip, 100% to the mechanic, kept out of GST-taxable totals
+let _skipAutoCharge = false; // true after a card-on-file auto-charge attempt failed once and the mechanic fell back to manual EFTPOS/Cash
 
 function setMechTip(value) {
   _tipAmount = Math.max(0, Number(value) || 0);
@@ -976,6 +978,7 @@ function openCompleteModal(id) {
   _completeJobId = id;
   _mechDiscount = null;
   _tipAmount = 0;
+  _skipAutoCharge = false;
   let modal = document.getElementById('complete-modal');
   if (modal) modal.remove();
   modal = document.createElement('div');
@@ -1060,16 +1063,23 @@ function openCompleteModal(id) {
           <button data-action="clear-sig" style="font-size:11px;color:#6B7280;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--sans)">Clear signature</button>
         </div>
         <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
-        <div>
-          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
-          <div style="display:flex;gap:8px">
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
-              <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:#1848C8"> 💳 Card (EFTPOS)
-            </label>
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
-              <input type="radio" name="pay-method" value="cash" style="accent-color:#059669"> 💵 Cash
-            </label>
-          </div>
+        <div id="pay-method-section">
+          ${
+            j.has_card_on_file
+              ? `<div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:18px" aria-hidden="true">💳</span>
+                <div style="font-size:13px;color:#1E40AF;font-weight:600">Will auto-charge the client's card on file - no EFTPOS needed.</div>
+              </div>`
+              : `<label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
+              <div style="display:flex;gap:8px">
+                <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
+                  <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:#1848C8"> 💳 Card (EFTPOS)
+                </label>
+                <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
+                  <input type="radio" name="pay-method" value="cash" style="accent-color:#059669"> 💵 Cash
+                </label>
+              </div>`
+          }
         </div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button data-action="close-complete-modal" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--sans);cursor:pointer;font-size:13px;color:var(--navy)">Cancel</button>
@@ -1579,6 +1589,7 @@ async function submitComplete(id) {
       tip_amount: breakdown?.tip || 0,
       final_charge_status:
         document.querySelector('input[name="pay-method"]:checked')?.value || 'charged_manual',
+      skip_auto_charge: _skipAutoCharge,
       photo_before_url: photoBeforeUrl || null,
       photo_after_url: photoAfterUrl || null,
       client_signature_url: signature || null,
@@ -1588,6 +1599,34 @@ async function submitComplete(id) {
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
+    if (err.code === 'AUTO_CHARGE_FAILED') {
+      // Card on file exists but the charge failed - reveal the manual
+      // EFTPOS/Cash picker in place (was hidden because a card was on file)
+      // so the mechanic can collect payment and retry without losing their
+      // signature/photos/notes already filled in.
+      _skipAutoCharge = true;
+      const section = document.getElementById('pay-method-section');
+      if (section) {
+        section.innerHTML = `
+          <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:10px 12px;color:#B91C1C;font-size:12px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
+          <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
+          <div style="display:flex;gap:8px">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
+              <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:#1848C8"> 💳 Card (EFTPOS)
+            </label>
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
+              <input type="radio" name="pay-method" value="cash" style="accent-color:#059669"> 💵 Cash
+            </label>
+          </div>`;
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (btn) {
+        btn.textContent = '💳 Marcar como cobrado (EFTPOS) y completar';
+        btn.disabled = false;
+      }
+      toast('Auto-charge failed - please collect payment below and try again');
+      return;
+    }
     if (btn) {
       btn.textContent = '💳 Marcar como cobrado (EFTPOS) y completar';
       btn.disabled = false;
@@ -1602,6 +1641,7 @@ async function submitComplete(id) {
   if (j) j.status = 'completed';
   render();
   badges();
+  if (okData.auto_charged) toast('✅ Charged to card on file');
   stopGPS();
   toast('✅ Job completed!' + (photoBeforeUrl || photoAfterUrl ? ' Photos saved.' : ''));
   if (Array.isArray(okData.low_stock) && okData.low_stock.length) {

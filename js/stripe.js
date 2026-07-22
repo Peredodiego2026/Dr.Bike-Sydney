@@ -1,4 +1,5 @@
-const STRIPE_KEY = 'pk_live_51TUbFqPPGSm5cT7JKBDANyRVDmi6Ytia6r31kFxAEWis6xYZuhXlDnoZ3KyB4xUoJWd3nKpzrLxuDzsQEz7X3od3006xPoLzVV';
+const STRIPE_KEY =
+  'pk_live_51TUbFqPPGSm5cT7JKBDANyRVDmi6Ytia6r31kFxAEWis6xYZuhXlDnoZ3KyB4xUoJWd3nKpzrLxuDzsQEz7X3od3006xPoLzVV';
 
 let _stripe = null;
 let _card = null;
@@ -6,7 +7,10 @@ let _prEl = null;
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
     const s = Object.assign(document.createElement('script'), { src });
     s.onload = resolve;
     s.onerror = () => reject(new Error(`Script load failed: ${src}`));
@@ -23,7 +27,12 @@ export async function initStripe() {
 
 export async function createPaymentForm(containerId) {
   const stripe = await initStripe();
-  if (_card) { try { _card.destroy(); } catch {} _card = null; }
+  if (_card) {
+    try {
+      _card.destroy();
+    } catch {}
+    _card = null;
+  }
 
   const elements = stripe.elements();
   _card = elements.create('card', {
@@ -45,7 +54,10 @@ export async function createPaymentForm(containerId) {
   return _card;
 }
 
-export async function createPaymentRequestButton(containerId, { amountCents, label = 'Dr. Bike Sydney', onPayment }) {
+export async function createPaymentRequestButton(
+  containerId,
+  { amountCents, label = 'Dr. Bike Sydney', onPayment }
+) {
   const stripe = await initStripe();
   const container = document.getElementById(containerId);
   if (!container) return false;
@@ -61,7 +73,7 @@ export async function createPaymentRequestButton(containerId, { amountCents, lab
   const canMake = await pr.canMakePayment();
   if (!canMake) return false;
 
-  pr.on('paymentmethod', async ev => {
+  pr.on('paymentmethod', async (ev) => {
     try {
       await onPayment(ev.paymentMethod.id);
       ev.complete('success');
@@ -70,7 +82,11 @@ export async function createPaymentRequestButton(containerId, { amountCents, lab
     }
   });
 
-  if (_prEl) { try { _prEl.destroy(); } catch {} }
+  if (_prEl) {
+    try {
+      _prEl.destroy();
+    } catch {}
+  }
   const prElements = stripe.elements();
   _prEl = prElements.create('paymentRequestButton', {
     paymentRequest: pr,
@@ -103,13 +119,39 @@ export async function processPayment(amountCents, bookingId, email, paymentMetho
   });
 
   if (error) throw new Error(error.message);
-  if (paymentIntent.status !== 'succeeded') throw new Error('Payment incomplete. Please try again.');
+  if (paymentIntent.status !== 'succeeded')
+    throw new Error('Payment incomplete. Please try again.');
   return paymentIntent;
 }
 
+// Confirms a SetupIntent (card-on-file save, no charge) against the card
+// element mounted by createPaymentForm(). Mirrors processPayment()'s shape
+// but for saving a card rather than charging one.
+export async function confirmCardSetup(clientSecret) {
+  const stripe = await initStripe();
+  if (!_card) throw new Error('Card element not ready');
+  const { setupIntent, error } = await stripe.confirmCardSetup(clientSecret, {
+    payment_method: { card: _card },
+  });
+  if (error) throw new Error(error.message);
+  if (setupIntent.status !== 'succeeded')
+    throw new Error('Card could not be saved. Please try again.');
+  return setupIntent;
+}
+
 export function destroyPaymentForm() {
-  if (_card) { try { _card.destroy(); } catch {} _card = null; }
-  if (_prEl) { try { _prEl.destroy(); } catch {} _prEl = null; }
+  if (_card) {
+    try {
+      _card.destroy();
+    } catch {}
+    _card = null;
+  }
+  if (_prEl) {
+    try {
+      _prEl.destroy();
+    } catch {}
+    _prEl = null;
+  }
 }
 
 export async function createCheckoutSession({ amountCents, description, bookingId, email }) {
@@ -133,4 +175,3 @@ export async function verifyCheckoutSession(sessionId) {
   if (!resp.ok) throw new Error('Could not verify payment');
   return resp.json();
 }
-

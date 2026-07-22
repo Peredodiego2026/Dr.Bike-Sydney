@@ -102,6 +102,23 @@ const dict = {
     'Prefer a specific mechanic? (optional)': '¿Preferís un mecánico en particular? (opcional)',
     "We'll try to send your job to them first.": 'Vamos a intentar asignarte primero con ellos.',
     jobs: 'trabajos',
+    // Payment method (card on file, 2026-07-22)
+    'Payment Method': 'Método de Pago',
+    '💳 Card on file': '💳 Tarjeta guardada',
+    'Auto-charged when your mechanic completes a job':
+      'Se cobra automáticamente cuando tu mecánico termina el servicio',
+    Remove: 'Quitar',
+    'No card saved': 'No tenés tarjeta guardada',
+    'Save a card so your mechanic can charge you automatically instead of using EFTPOS':
+      'Guardá una tarjeta para que tu mecánico te cobre automáticamente en vez de usar EFTPOS',
+    'Add card': 'Agregar tarjeta',
+    'Save card': 'Guardar tarjeta',
+    'Removing...': 'Quitando...',
+    'Card saved': 'Tarjeta guardada',
+    'Card removed': 'Tarjeta eliminada',
+    'Could not save card. Please try again.': 'No pudimos guardar la tarjeta. Intentá de nuevo.',
+    'Could not remove card': 'No pudimos quitar la tarjeta',
+
     // My Bikes
     'My Bikes': 'Mis Bicis',
     'Service history is a Standard/VIP perk':
@@ -1182,6 +1199,21 @@ const dict = {
     'Prefer a specific mechanic? (optional)': '想指定技工吗？（可选）',
     "We'll try to send your job to them first.": '我们会优先尝试把订单分配给该技工。',
     jobs: '单',
+    // Payment method (card on file, 2026-07-22)
+    'Payment Method': '支付方式',
+    '💳 Card on file': '💳 已保存的银行卡',
+    'Auto-charged when your mechanic completes a job': '技工完成服务后会自动扣款',
+    Remove: '移除',
+    'No card saved': '尚未保存银行卡',
+    'Save a card so your mechanic can charge you automatically instead of using EFTPOS':
+      '保存一张银行卡，技工完成服务后可直接自动扣款，无需使用POS机',
+    'Add card': '添加银行卡',
+    'Save card': '保存银行卡',
+    'Removing...': '移除中...',
+    'Card saved': '银行卡已保存',
+    'Card removed': '银行卡已移除',
+    'Could not save card. Please try again.': '无法保存银行卡，请重试。',
+    'Could not remove card': '无法移除银行卡',
     // My Bikes
     'Service history is a Standard/VIP perk': '服务记录是Standard/VIP会员专享',
     'Upgrade your membership to see every past service for this bike.':

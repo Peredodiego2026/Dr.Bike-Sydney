@@ -67,6 +67,7 @@ import {
   createPaymentForm,
   createPaymentRequestButton,
   processPayment,
+  confirmCardSetup,
   destroyPaymentForm,
   createCheckoutSession,
   verifyCheckoutSession,
@@ -3428,12 +3429,13 @@ async function renderProfile() {
   let credits = 0,
     referralCount = 0,
     membershipStatus = null,
-    membershipPlan = null;
+    membershipPlan = null,
+    savedCardId = null;
   try {
     const { data: profile } = await sb
       .from('profiles')
       .select(
-        'referral_code, referral_credits, referral_count, membership_status, membership_plan, membership_started_at'
+        'referral_code, referral_credits, referral_count, membership_status, membership_plan, membership_started_at, stripe_default_payment_method_id'
       )
       .eq('id', user.id)
       .single();
@@ -3442,6 +3444,7 @@ async function renderProfile() {
       referralCount = profile.referral_count || 0;
       membershipStatus = profile.membership_status || null;
       membershipPlan = profile.membership_plan || null;
+      savedCardId = profile.stripe_default_payment_method_id || null;
       if (!profile.referral_code) {
         const { error: refCodeErr } = await sb
           .from('profiles')
@@ -3562,6 +3565,29 @@ async function renderProfile() {
       </div>
 
       <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Payment Method</div>
+        <div id="card-on-file-section" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
+          ${
+            savedCardId
+              ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div style="min-width:0">
+                  <div style="font-size:14px;font-weight:600;color:#0F172A">💳 Card on file</div>
+                  <div style="font-size:12px;color:#6B7280;margin-top:2px">Auto-charged when your mechanic completes a job</div>
+                </div>
+                <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #DC2626;color:#DC2626;background:#fff;white-space:nowrap">Remove</button>
+              </div>`
+              : `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div style="min-width:0">
+                  <div style="font-size:14px;font-weight:600;color:#0F172A">No card saved</div>
+                  <div style="font-size:12px;color:#6B7280;margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
+                </div>
+                <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Add card</button>
+              </div>`
+          }
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
         <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
           <div style="min-width:0">
@@ -3614,6 +3640,92 @@ async function renderProfile() {
     await sb.auth.signOut().catch(() => {});
     showToast('Signed out successfully', 'success');
     router.navigate('home');
+  });
+
+  screen.querySelector('#add-card-btn')?.addEventListener('click', async () => {
+    const section = screen.querySelector('#card-on-file-section');
+    section.innerHTML = `
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:10px">
+        <div id="new-card-element" class="card-element"></div>
+      </div>
+      <div id="add-card-error" class="booking-error" hidden style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button id="add-card-cancel-btn" class="btn btn--secondary" style="flex:1">Cancel</button>
+        <button id="add-card-save-btn" class="btn btn--primary" style="flex:1">Save card</button>
+      </div>`;
+    await createPaymentForm('new-card-element');
+    section.querySelector('#add-card-cancel-btn').addEventListener('click', () => renderProfile());
+    section.querySelector('#add-card-save-btn').addEventListener('click', async () => {
+      const btn = section.querySelector('#add-card-save-btn');
+      const errEl = section.querySelector('#add-card-error');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      errEl.hidden = true;
+      try {
+        const {
+          data: { session },
+        } = await sb.auth.getSession();
+        if (!session) throw new Error('Please sign in again.');
+        const setupResp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'save-card-setup',
+            access_token: session.access_token,
+            client_id: session.user.id,
+          }),
+        });
+        const setupData = await setupResp.json();
+        if (!setupResp.ok) throw new Error(setupData.error || 'Could not start card setup');
+        const setupIntent = await confirmCardSetup(setupData.clientSecret);
+        const confirmResp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'save-card-confirm',
+            access_token: session.access_token,
+            client_id: session.user.id,
+            setup_intent_id: setupIntent.id,
+          }),
+        });
+        const confirmData = await confirmResp.json();
+        if (!confirmResp.ok) throw new Error(confirmData.error || 'Could not save card');
+        showToast('Card saved', 'success');
+        renderProfile();
+      } catch (e) {
+        errEl.textContent = e.message || 'Could not save card. Please try again.';
+        errEl.hidden = false;
+        btn.disabled = false;
+        btn.textContent = 'Save card';
+      }
+    });
+  });
+
+  screen.querySelector('#remove-card-btn')?.addEventListener('click', async () => {
+    const btn = screen.querySelector('#remove-card-btn');
+    btn.disabled = true;
+    btn.textContent = 'Removing...';
+    try {
+      const {
+        data: { session },
+      } = await sb.auth.getSession();
+      if (!session) throw new Error('Please sign in again.');
+      await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'remove-card',
+          access_token: session.access_token,
+          client_id: session.user.id,
+        }),
+      });
+      showToast('Card removed', 'success');
+      renderProfile();
+    } catch (e) {
+      showToast(e.message || 'Could not remove card', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Remove';
+    }
   });
 
   screen.querySelector('#push-enable-btn')?.addEventListener('click', async (e) => {
