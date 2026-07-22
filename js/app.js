@@ -392,6 +392,38 @@ async function loadLeaflet() {
 }
 
 // ── Book a Service (3-step wizard) ───────────────────────────────────────────
+// Emergency Service (services table row, category "Scheduled services") is
+// intercepted before it ever reaches the normal booking wizard - see the
+// service-card click handler in renderStep1() below.
+function showEmergencyServiceModal() {
+  document.getElementById('emergency-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'emergency-modal';
+  modal.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  const waText = encodeURIComponent(
+    'Hi Dr. Bike! I need emergency service - can you help me right away?'
+  );
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px" aria-hidden="true">🚨</div>
+      <div style="font-weight:700;color:#0D1F3C;font-size:16px;margin-bottom:6px">Emergency Service</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:20px;line-height:1.5;text-align:left">Emergency visits depend on where our mechanic already is, so we confirm these directly - call or WhatsApp us and we'll tell you right away if we can help and what it'll cost.</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <a href="tel:+61433963250" style="flex:1;text-align:center;background:#2563EB;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+        <a href="https://wa.me/61433963250?text=${waText}" style="flex:1;text-align:center;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
+      </div>
+      <button id="emergency-modal-close" class="btn btn--secondary btn--full">Back to services</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  translateScreen(modal); // outside [data-screen], not covered by the router's auto-translate observer
+  modal.querySelector('#emergency-modal-close').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
 async function renderBookService() {
   const screen = document.querySelector('[data-screen="book-service"]');
   if (!screen) return;
@@ -525,12 +557,20 @@ async function renderBookService() {
 
     screen.querySelectorAll('.service-card').forEach((card) => {
       card.addEventListener('click', () => {
+        const svc = (_services || []).find((s) => String(s.id) === card.dataset.serviceId);
+        // Emergency Service skips the normal calendar/payment flow entirely -
+        // availability and price depend on where the mechanic already is, so
+        // Diego confirms these by phone/WhatsApp himself rather than through
+        // an automated slot (Diego, 2026-07-22: "que lleve al numero de
+        // contacto del administrador... asi el puede tomar la decision").
+        if (svc?.name === 'Emergency Service') {
+          showEmergencyServiceModal();
+          return;
+        }
         screen.querySelectorAll('.service-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
         const prev = window.appState.service;
-        window.appState.service = (_services || []).find(
-          (s) => String(s.id) === card.dataset.serviceId
-        );
+        window.appState.service = svc;
         if (!prev || prev.id !== window.appState.service?.id) {
           window.appState.date = null;
           window.appState.time = null;

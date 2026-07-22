@@ -186,6 +186,12 @@ const dict = {
     'Describe the problem...': 'Describí el problema...',
     'Ask AI': 'Preguntar a la IA',
     'Select Service': 'Elegí un Servicio',
+    'Emergency Service': 'Servicio de Emergencia',
+    'Price and availability confirmed by phone or WhatsApp - tap to contact us directly.':
+      'Precio y disponibilidad se confirman por teléfono o WhatsApp - tocá para contactarnos directamente.',
+    "Emergency visits depend on where our mechanic already is, so we confirm these directly - call or WhatsApp us and we'll tell you right away if we can help and what it'll cost.":
+      'Las visitas de emergencia dependen de dónde esté nuestro mecánico, así que las confirmamos directamente - llamanos o escribinos por WhatsApp y te decimos al toque si podemos ayudarte y cuánto cuesta.',
+    'Back to services': 'Volver a los servicios',
     'Which bike?': '¿Qué bici?',
     Skip: 'Omitir',
     Continue: 'Continuar',
@@ -1250,6 +1256,12 @@ const dict = {
     'Describe the problem...': '描述问题...',
     'Ask AI': '询问AI',
     'Select Service': '选择服务',
+    'Emergency Service': '紧急服务',
+    'Price and availability confirmed by phone or WhatsApp - tap to contact us directly.':
+      '价格和可预约时间通过电话或WhatsApp确认 - 点击直接联系我们。',
+    "Emergency visits depend on where our mechanic already is, so we confirm these directly - call or WhatsApp us and we'll tell you right away if we can help and what it'll cost.":
+      '紧急上门服务取决于我们技工当时所在的位置，因此需要直接确认 - 请致电或通过WhatsApp联系我们，我们会立即告诉您能否提供服务以及费用。',
+    'Back to services': '返回服务列表',
     'Which bike?': '哪辆自行车？',
     Skip: '跳过',
     Continue: '继续',
