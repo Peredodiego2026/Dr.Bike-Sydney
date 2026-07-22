@@ -194,7 +194,7 @@ export function createBookingCard(booking) {
   }
   return `
 <div class="booking-card" data-booking-id="${id}" style="border-left:4px solid ${s.border}">
-  <div class="booking-card__date" style="font-size:18px;font-weight:800;color:#0F172A;text-align:center;line-height:1.1;flex-shrink:0;width:44px">${dateLabel}</div>
+  <div class="booking-card__date" style="font-size:18px;font-weight:800;color:#0D1F3C;text-align:center;line-height:1.1;flex-shrink:0;width:44px">${dateLabel}</div>
   <div class="booking-card__info">
     <div class="booking-card__service">${service_name || 'Service'}</div>
     <div style="font-size:12px;color:#475569;margin-top:2px">${scheduled_time || ''}</div>

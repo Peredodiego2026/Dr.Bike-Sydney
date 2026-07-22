@@ -634,14 +634,14 @@ function card(j) {
     : '';
   const done = j.status === 'completed';
   const sc = {
-    pending: '#D97706',
-    confirmed: '#1E40AF',
-    enroute: '#16A34A',
-    in_progress: '#16A34A',
-    inprogress: '#16A34A',
-    arrived: '#16A34A',
-    completed: '#64748B',
-    cancelled: '#DC2626',
+    pending: '#F59E0B',
+    confirmed: '#0A58CA',
+    enroute: '#22C55E',
+    in_progress: '#22C55E',
+    inprogress: '#22C55E',
+    arrived: '#22C55E',
+    completed: '#6B7280',
+    cancelled: '#EF4444',
   };
   const sl = {
     pending: 'Pending',
@@ -2442,10 +2442,14 @@ function renderAgenda() {
         '5:00 pm',
       ];
       const stColors = {
-        pending: '#D97706',
-        confirmed: '#1848C8',
-        enroute: '#059669',
-        completed: '#059669',
+        pending: '#F59E0B',
+        confirmed: '#0A58CA',
+        enroute: '#22C55E',
+        in_progress: '#22C55E',
+        inprogress: '#22C55E',
+        arrived: '#22C55E',
+        completed: '#6B7280',
+        cancelled: '#EF4444',
       };
 
       dayJobs

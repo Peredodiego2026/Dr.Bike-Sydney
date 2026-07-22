@@ -649,12 +649,12 @@ async function renderBookService() {
       s.textContent = `
         .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
         .cal-month{font-weight:700;font-size:15px;color:var(--color-text)}
-        .cal-arrow{background:#fff;border:1px solid #E2E8F0;border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:20px;color:#0F172A;display:flex;align-items:center;justify-content:center;line-height:1;transition:background 150ms ease}
+        .cal-arrow{background:#fff;border:1px solid #E2E8F0;border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:20px;color:#0D1F3C;display:flex;align-items:center;justify-content:center;line-height:1;transition:background 150ms ease}
         .cal-arrow:hover:not(:disabled){background:#F8FAFC}
         .cal-arrow:disabled{opacity:0.3;cursor:default}
-        .cal-month{font-weight:800;font-size:15px;color:#0F172A}
+        .cal-month{font-weight:800;font-size:15px;color:#0D1F3C}
         .cal-dow{text-align:center;font-size:11px;font-weight:700;color:#94A3B8;padding:4px 0;text-transform:uppercase;letter-spacing:0.05em}
-        .cal-day{background:none;border:none;border-radius:8px;padding:9px 2px;font-size:14px;cursor:pointer;color:#0F172A;text-align:center;width:100%;transition:background 120ms}
+        .cal-day{background:none;border:none;border-radius:8px;padding:9px 2px;font-size:14px;cursor:pointer;color:#0D1F3C;text-align:center;width:100%;transition:background 120ms}
         .cal-day:hover:not(:disabled){background:#F1F5F9}
         .cal-day.cal-today{font-weight:800;color:#1E40AF}
         .cal-day.cal-sel{background:#1E40AF!important;color:#fff;font-weight:700;border-radius:8px}
@@ -1713,7 +1713,7 @@ async function renderTrackingPicker(screen) {
           <div class="booking-pick-item" data-id="${b.id}" data-token="${b.tracking_token || ''}"
             style="background:#fff;border:1px solid #E2E8F0;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
             <div style="flex:1;min-width:0">
-              <div style="font-size:15px;font-weight:700;color:#0F172A;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
+              <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
               <div style="font-size:12px;color:#475569">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
@@ -1732,7 +1732,7 @@ async function renderTrackingPicker(screen) {
           <div class="booking-pick-item" data-id="${b.id}" data-token="${b.tracking_token || ''}"
             style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
             <div style="flex:1;min-width:0">
-              <div style="font-size:15px;font-weight:700;color:#0F172A;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
+              <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
               <div style="font-size:12px;color:#475569">${b.scheduled_date || ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
@@ -2701,7 +2701,7 @@ async function renderLogin() {
       ${
         isReset
           ? ''
-          : `<button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0F172A;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
+          : `<button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0D1F3C;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -3046,13 +3046,13 @@ async function renderMyBookings() {
         overlay.innerHTML = `
           <div id="detail-panel" style="background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--elevation-2)">
             <div style="width:36px;height:4px;background:#E2E8F0;border-radius:4px;margin:0 auto 20px"></div>
-            <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:4px">${booking.service_name || 'Service'}</div>
+            <div style="font-size:18px;font-weight:800;color:#0D1F3C;margin-bottom:4px">${booking.service_name || 'Service'}</div>
             <div style="display:inline-block;font-size:11px;font-weight:600;color:${sc};background:${sc}1A;padding:3px 10px;border-radius:20px;margin-bottom:20px">${sl}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;background:#F8FAFC;border-radius:12px;padding:16px;border:1px solid #E2E8F0">
-              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Date</span><span style="font-weight:600;color:#0F172A">${booking.scheduled_date || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Time</span><span style="font-weight:600;color:#0F172A">${booking.scheduled_time || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:14px"><span style="color:#475569">Address</span><span style="font-weight:600;color:#0F172A;text-align:right;max-width:60%">${booking.address || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Call-out fee</span><span style="font-weight:600;color:#0F172A">$${booking.callout_fee ?? 20}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Date</span><span style="font-weight:600;color:#0D1F3C">${booking.scheduled_date || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Time</span><span style="font-weight:600;color:#0D1F3C">${booking.scheduled_time || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:14px"><span style="color:#475569">Address</span><span style="font-weight:600;color:#0D1F3C;text-align:right;max-width:60%">${booking.address || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Call-out fee</span><span style="font-weight:600;color:#0D1F3C">$${booking.callout_fee ?? 20}</span></div>
             </div>
             ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#DC2626;margin-bottom:4px">Cancellation reason</div><div style="font-size:14px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
             ${
@@ -3131,7 +3131,7 @@ async function renderMyBookings() {
                   ${avatarHTML}
                   <div style="min-width:0">
                     <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Your mechanic</div>
-                    <div style="font-size:14px;font-weight:700;color:#0F172A">${escapeHtml(p.name)}</div>
+                    <div style="font-size:14px;font-weight:700;color:#0D1F3C">${escapeHtml(p.name)}</div>
                     ${metaParts.length ? `<div style="font-size:12px;color:#6B7280">${metaParts.join('  ·  ')}</div>` : ''}
                   </div>
                 </div>
@@ -3517,7 +3517,7 @@ async function renderProfile() {
       </div>
 
       <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #E2E8F0">
-        <div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:10px">How it works</div>
+        <div style="font-size:14px;font-weight:700;color:#0D1F3C;margin-bottom:10px">How it works</div>
         <div style="font-size:13px;color:#475569;line-height:1.8">
           1. Share your code with friends<br>
           2. They get $15 off their first service<br>
@@ -3571,14 +3571,14 @@ async function renderProfile() {
             savedCardId
               ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
-                  <div style="font-size:14px;font-weight:600;color:#0F172A">💳 Card on file</div>
+                  <div style="font-size:14px;font-weight:600;color:#0D1F3C">💳 Card on file</div>
                   <div style="font-size:12px;color:#6B7280;margin-top:2px">Auto-charged when your mechanic completes a job</div>
                 </div>
                 <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #DC2626;color:#DC2626;background:#fff;white-space:nowrap">Remove</button>
               </div>`
               : `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
-                  <div style="font-size:14px;font-weight:600;color:#0F172A">No card saved</div>
+                  <div style="font-size:14px;font-weight:600;color:#0D1F3C">No card saved</div>
                   <div style="font-size:12px;color:#6B7280;margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
                 </div>
                 <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Add card</button>
@@ -3591,7 +3591,7 @@ async function renderProfile() {
         <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
           <div style="min-width:0">
-            <div style="font-size:14px;font-weight:600;color:#0F172A">Mechanic messages</div>
+            <div style="font-size:14px;font-weight:600;color:#0D1F3C">Mechanic messages</div>
             <div style="font-size:12px;color:#6B7280;margin-top:2px">Get a phone alert when your mechanic messages you</div>
           </div>
           ${
