@@ -394,6 +394,8 @@ async function load() {
       review: b.client_review,
       discount_applied: b.discount_applied || 0,
       discount_code: b.discount_code || '',
+      membership_plan: b.client_membership_plan || null,
+      membership_status: b.client_membership_status || null,
     }));
     jobs = mapped;
     try {
@@ -609,6 +611,16 @@ function checklistChanged() {
   }
 }
 
+// Discount % shown here must stay in sync with MEMBERSHIP_PLANS in
+// api/auth.js (kept as separate copies since this is browser code and that
+// file is server-only). Lets the mechanic see at a glance whether - and how
+// much - to discount this client's job before charging via EFTPOS.
+const MEMBERSHIP_BADGE = {
+  basic: { label: 'Basic member · 5% off', color: '#0A58CA' },
+  standard: { label: 'Standard member · 10% off', color: '#2563EB' },
+  vip: { label: 'VIP member · 15%+5% off', color: '#7C3AED' },
+};
+
 function card(j) {
   const today = new Date().toISOString().split('T')[0];
   const t = j.time ? j.time.substring(0, 5) : '';
@@ -660,6 +672,11 @@ function card(j) {
       </div>
       <span class="status-badge" style="background:${sc[st]}1A;color:${sc[st]}">${sl[st] || st}</span>
     </div>
+    ${
+      j.membership_status === 'active' && MEMBERSHIP_BADGE[j.membership_plan]
+        ? `<div style="padding:0 18px 6px"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${MEMBERSHIP_BADGE[j.membership_plan].color}15;color:${MEMBERSHIP_BADGE[j.membership_plan].color}">${MEMBERSHIP_BADGE[j.membership_plan].label}</span></div>`
+        : ''
+    }
     ${isEnroute ? `<div id="timer-${j.id}" style="font-size:12px;color:#D97706;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
     <div class="job-service">${esc(j.service)}</div>
     <div class="job-addr">${j.address || j.suburb || '—'}</div>
