@@ -701,14 +701,14 @@ async function loadCashHandover() {
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <div>
           <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(g.name)}</div>
-          <div style="font-size:12px;color:var(--mgray)">${g.jobs.length} cash job${g.jobs.length !== 1 ? 's' : ''} pending</div>
+          <div style="font-size:13px;color:var(--mgray)">${g.jobs.length} cash job${g.jobs.length !== 1 ? 's' : ''} pending</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <span style="font-size:20px;font-weight:800;color:#059669">$${g.total.toLocaleString()}</span>
-          <button data-cash-settle="${esc(key)}" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
+          <button data-cash-settle="${esc(key)}" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
         </div>
       </div>
-      <div style="font-size:12px;color:var(--mgray)">
+      <div style="font-size:13px;color:var(--mgray)">
         ${g.jobs.map((j) => `${esc(j.scheduled_date || '')} · ${esc(j.client_name || 'Client')} · ${esc(j.service_name || '')} · $${((j.final_charge_amount || 0) + (j.tip_amount || 0)).toLocaleString()}`).join('<br>')}
       </div>
     </div>`
@@ -855,7 +855,7 @@ async function loadFinance() {
           const label = new Date(d + 'T00:00:00').getDate();
           return `<div style="display:flex;flex-direction:column;align-items:center;flex:1 1 0;max-width:32px;gap:3px" title="${d}: $${v}">
       <div style="width:100%;background:#1848C8;border-radius:3px 3px 0 0;height:${h}px;min-height:4px"></div>
-      <div style="font-size:9px;color:var(--mgray)">${label}</div>
+      <div style="font-size:11px;color:var(--mgray)">${label}</div>
     </div>`;
         })
         .join('')
@@ -888,7 +888,7 @@ async function loadFinance() {
     </tr>`;
         })
         .join('')
-    : '<tr><td colspan="7"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:10px"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div style="font-size:14px;font-weight:600;color:var(--mgray)">No transactions yet</div><div style="font-size:12px;color:var(--mgray);opacity:0.7">Completed jobs will appear here</div></div></td></tr>';
+    : '<tr><td colspan="7"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:10px"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div style="font-size:15px;font-weight:600;color:var(--mgray)">No transactions yet</div><div style="font-size:13px;color:var(--mgray);opacity:0.7">Completed jobs will appear here</div></div></td></tr>';
 
   // Store for export
   window._finData = {
@@ -999,16 +999,16 @@ function exportFinancePDF() {
     .brand{display:flex;align-items:center;gap:12px}
     .brand-icon{width:42px;height:42px;background:#1848C8;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800}
     .brand-name{font-size:20px;font-weight:800;color:#0D1F3C}
-    .brand-sub{font-size:12px;color:#6B7280;margin-top:1px}
+    .brand-sub{font-size:13px;color:#6B7280;margin-top:1px}
     .report-info{text-align:right}
-    .report-title{font-size:14px;font-weight:700;color:#0D1F3C}
-    .report-period{font-size:12px;color:#6B7280;margin-top:2px}
+    .report-title{font-size:15px;font-weight:700;color:#0D1F3C}
+    .report-period{font-size:13px;color:#6B7280;margin-top:2px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
     .kpi{background:#F7F8FA;border-radius:12px;padding:16px;border-left:3px solid #1848C8}
     .kpi.green{border-left-color:#059669}
     .kpi.orange{border-left-color:#D97706}
     .kpi.red{border-left-color:#DC2626}
-    .kpi-label{font-size:10px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+    .kpi-label{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
     .kpi-val{font-size:24px;font-weight:800;color:#0D1F3C}
     .kpi-sub{font-size:11px;color:#9CA3AF;margin-top:3px}
     .section-title{font-size:13px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid #E5E7EB}
@@ -1018,7 +1018,7 @@ function exportFinancePDF() {
     .bar-bg{flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden}
     .bar-fill{height:100%;background:#1848C8;border-radius:4px}
     .bar-val{font-size:11px;font-weight:700;color:#0D1F3C;min-width:44px;text-align:right}
-    table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:32px}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px}
     thead th{background:#0D1F3C;color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em}
     tbody tr:nth-child(even){background:#F9FAFB}
     tbody td{padding:9px 12px;border-bottom:1px solid #F3F4F6;color:#374151}
@@ -1130,7 +1130,7 @@ function openBlockModal() {
   modal.innerHTML = `
     <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:420px;font-family:var(--sans)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <div style="font-size:16px;font-weight:700;color:var(--navy)">🚫 Block availability</div>
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">🚫 Block availability</div>
         <button data-action="close-block-modal" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">✕</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
@@ -1171,22 +1171,22 @@ function openBlockModal() {
             ]
               .map(
                 (t) =>
-                  `<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:6px;border:1px solid var(--border);border-radius:6px;color:var(--navy)">
+                  `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:6px;border:1px solid var(--border);border-radius:6px;color:var(--navy)">
                 <input type="checkbox" value="${t}" style="accent-color:var(--blue)"> ${t}
               </label>`
               )
               .join('')}
           </div>
-          <button data-action="select-all-slots" data-value="true" style="background:none;border:none;color:var(--blue);font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0">Select all</button>
-          <button data-action="select-all-slots" data-value="false" style="background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0;margin-left:12px">Clear all</button>
+          <button data-action="select-all-slots" data-value="true" style="background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0">Select all</button>
+          <button data-action="select-all-slots" data-value="false" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0;margin-left:12px">Clear all</button>
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Reason (optional)</div>
           <input type="text" id="block-reason" class="inp" aria-label="Reason" style="margin:0" placeholder="e.g. Public holiday, mechanic unavailable">
         </div>
         <div style="display:flex;gap:10px;margin-top:4px">
-          <button data-action="save-blocks" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
-          <button data-action="unblock-date" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid #FECACA;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock all</button>
+          <button data-action="save-blocks" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
+          <button data-action="unblock-date" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid #FECACA;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock all</button>
         </div>
       </div>
     </div>`;
@@ -1348,7 +1348,7 @@ async function loadReferralLeaderboard() {
         <div style="font-size:11px;color:var(--mgray)">Code: ${esc(p.referral_code || '—')} · ${esc(p.membership_plan || 'No plan')}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:14px;font-weight:700;color:var(--blue)">${p.referral_count} referral${p.referral_count !== 1 ? 's' : ''}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--blue)">${p.referral_count} referral${p.referral_count !== 1 ? 's' : ''}</div>
         <div style="font-size:11px;color:var(--mgray)">saved $${savings}</div>
       </div>
     </div>`;
@@ -1435,34 +1435,34 @@ async function loadCoupons() {
 
         <!-- Code + status -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;margin-top:4px">
-          <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:0.08em;font-variant-numeric:tabular-nums">${esc(c.code)}</div>
-          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive && !expired ? '#DCFCE7' : '#FEE2E2'};color:${isActive && !expired ? '#15803D' : '#DC2626'}">${expired ? 'Expired' : isActive ? 'Active' : 'Inactive'}</span>
+          <div style="font-size:18px;font-weight:800;color:var(--navy);letter-spacing:0.08em;font-variant-numeric:tabular-nums">${esc(c.code)}</div>
+          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive && !expired ? '#DCFCE7' : '#FEE2E2'};color:${isActive && !expired ? '#15803D' : '#DC2626'}">${expired ? 'Expired' : isActive ? 'Active' : 'Inactive'}</span>
         </div>
 
         <!-- Big value display -->
         <div style="background:${isPct ? '#EEF3FC' : '#ECFDF5'};border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
           <div style="font-size:28px;font-weight:800;color:${isPct ? 'var(--blue)' : '#059669'}">${valDisplay}</div>
-          <div style="font-size:12px;color:var(--mgray);line-height:1.4">${isPct ? 'percentage<br>discount' : 'fixed amount<br>discount'}</div>
+          <div style="font-size:13px;color:var(--mgray);line-height:1.4">${isPct ? 'percentage<br>discount' : 'fixed amount<br>discount'}</div>
         </div>
 
         <!-- Stats row -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
           <div style="background:var(--off);border-radius:10px;padding:10px 12px">
-            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Uses</div>
-            <div style="font-size:14px;font-weight:700;color:var(--navy)">${usesDisplay}</div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Uses</div>
+            <div style="font-size:15px;font-weight:700;color:var(--navy)">${usesDisplay}</div>
           </div>
           <div style="background:var(--off);border-radius:10px;padding:10px 12px">
-            <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Expires</div>
-            <div style="font-size:12px;font-weight:600;color:${expired ? 'var(--red)' : 'var(--navy)'}">${expDisplay}</div>
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Expires</div>
+            <div style="font-size:13px;font-weight:600;color:${expired ? 'var(--red)' : 'var(--navy)'}">${expDisplay}</div>
           </div>
         </div>
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? '#DC2626' : '#16A34A'};font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? '#DC2626' : '#16A34A'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             ${isActive ? 'Deactivate' : 'Activate'}
           </button>
-          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#DC2626;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#DC2626;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -1643,7 +1643,7 @@ function checkAdminAuth() {
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
         style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')submitAdminLogin()">
-      <div id="admin-pass-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none">Invalid credentials</div>
+      <div id="admin-pass-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
       <button data-action="submit-admin-login" style="width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
     </div>`;
   document.body.appendChild(overlay);
@@ -1869,7 +1869,7 @@ function _totpInputHTML() {
   <input type="text" id="admin-totp-inp" placeholder="000000" aria-label="6-digit authentication code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:24px;font-weight:700;text-align:center;letter-spacing:10px"
     onkeydown="if(event.key==='Enter')submitTOTPCode()">
-  <div id="admin-totp-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none"></div>
+  <div id="admin-totp-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none"></div>
   <button data-action="submit-totp-code" style="${_btn}">Verify →</button>`;
 }
 
@@ -1880,7 +1880,7 @@ function _enrollHTML(qrSvg, secret) {
   <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" aria-label="6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
     onkeydown="if(event.key==='Enter')submitMFASetupCode()">
-  <div id="admin-enroll-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none"></div>
+  <div id="admin-enroll-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none"></div>
   <button data-action="submit-mfa-setup-code" style="${_btn}">Activate 2FA →</button>`;
 }
 
@@ -2072,8 +2072,8 @@ async function loadDashboard() {
     } else {
       todayTbody.innerHTML = `<tr><td colspan="6"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:8px">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <div style="font-size:14px;font-weight:600;color:var(--mgray)">No jobs today</div>
-        <div style="font-size:12px;color:var(--mgray);opacity:.7">New bookings appear here automatically</div>
+        <div style="font-size:15px;font-weight:600;color:var(--mgray)">No jobs today</div>
+        <div style="font-size:13px;color:var(--mgray);opacity:.7">New bookings appear here automatically</div>
       </div></td></tr>`;
     }
   }
@@ -2111,8 +2111,8 @@ async function loadDashboard() {
     } else {
       schList.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:8px">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <div style="font-size:14px;font-weight:600;color:var(--mgray)">All clear for today</div>
-        <div style="font-size:12px;color:var(--mgray);opacity:.7">No upcoming jobs</div>
+        <div style="font-size:15px;font-weight:600;color:var(--mgray)">All clear for today</div>
+        <div style="font-size:13px;color:var(--mgray);opacity:.7">No upcoming jobs</div>
       </div>`;
     }
   }
@@ -2211,7 +2211,7 @@ function renderBookingsTable(data) {
 
   if (!data.length) {
     tbody.innerHTML =
-      '<tr><td colspan="8"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:10px"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><div style="font-size:14px;font-weight:600;color:var(--mgray)">No bookings found</div><div style="font-size:12px;color:var(--mgray);opacity:0.7">Try adjusting your filters</div></div></td></tr>';
+      '<tr><td colspan="8"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:10px"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><div style="font-size:15px;font-weight:600;color:var(--mgray)">No bookings found</div><div style="font-size:13px;color:var(--mgray);opacity:0.7">Try adjusting your filters</div></div></td></tr>';
     return;
   }
 
@@ -2410,9 +2410,9 @@ async function loadRecentNotifications() {
       return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" data-page="bookings">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
         <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(name)}</div>
-        <span style="font-size:10px;color:#fff;background:${stColors[st] || '#6B7280'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
+        <span style="font-size:11px;color:#fff;background:${stColors[st] || '#6B7280'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
       </div>
-      <div style="font-size:12px;color:var(--mgray)">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
+      <div style="font-size:13px;color:var(--mgray)">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
       <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price || 0}</div>
     </div>`;
     })
@@ -2431,7 +2431,7 @@ function prependNotification(b) {
   div.style.cssText =
     'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid #1848C8;animation:fadeSlideIn .3s';
   div.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--navy)">🔔 New booking</div>
-    <div style="font-size:12px;color:var(--mgray)">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
+    <div style="font-size:13px;color:var(--mgray)">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
     <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price || 0}</div>`;
   list.prepend(div);
 }
@@ -2686,7 +2686,7 @@ async function renderRouteMap(useCache) {
           prev = s.coord;
           const color = VAN_COLORS[s.van_number] || '#1848C8';
           return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--off);border-radius:8px;border-left:3px solid ${color}">
-        <div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(s.client_name || 'Client')} · ${esc(s.suburb || '—')}</div>
           <div style="font-size:11px;color:var(--mgray)">${esc(s.service_name || '')} · ${s.scheduled_time || '—'} · Van ${s.van_number || 1}</div>
@@ -2695,7 +2695,7 @@ async function renderRouteMap(useCache) {
       </div>`;
         })
         .join('') +
-      `<div style="text-align:right;font-size:12px;color:var(--mgray);padding:4px 12px 0;font-weight:600">Total: ${totalKm.toFixed(1)} km</div>`;
+      `<div style="text-align:right;font-size:13px;color:var(--mgray);padding:4px 12px 0;font-weight:600">Total: ${totalKm.toFixed(1)} km</div>`;
   }
 }
 
@@ -2803,7 +2803,7 @@ function renderTargetMetrics(all) {
       const color = val === 'No data yet' ? 'var(--mgray)' : ok ? 'var(--green)' : 'var(--red)';
       return `<div style="background:var(--off);border-radius:10px;padding:14px 16px">
         <div style="font-size:11px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${label}</div>
-        <div style="font-size:22px;font-weight:800;color:${color}">${val}</div>
+        <div style="font-size:24px;font-weight:800;color:${color}">${val}</div>
         <div style="font-size:11px;color:var(--mgray);margin-top:2px">${target}</div>
       </div>`;
     })
@@ -2945,7 +2945,7 @@ function renderServicePopularity(all, catalog) {
       const color = n === 0 ? 'var(--mgray)' : n === rows[0][1] ? 'var(--green)' : 'var(--blue)';
       return `
     <div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
         <span style="font-weight:600;color:var(--navy)">${escapeHtml(name)}</span>
         <span style="color:var(--mgray)">${n} job${n !== 1 ? 's' : ''}</span>
       </div>
@@ -2976,7 +2976,7 @@ function renderFunnel(all) {
       .map(
         (s, i) => `
     <div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
         <span style="font-weight:600;color:var(--navy)">${s.label}</span>
         <span style="color:var(--mgray)">${s.val} · ${pct(s.val)}%${i > 0 && steps[i - 1].val ? ` · ${Math.round((s.val / steps[i - 1].val) * 100)}% of prev` : ''}</span>
       </div>
@@ -2984,7 +2984,7 @@ function renderFunnel(all) {
     </div>`
       )
       .join('') +
-    `<div style="font-size:12px;color:var(--red);margin-top:6px">${cancelled} cancelled (${pct(cancelled)}% of all bookings)</div>`;
+    `<div style="font-size:13px;color:var(--red);margin-top:6px">${cancelled} cancelled (${pct(cancelled)}% of all bookings)</div>`;
 }
 
 // #21 Geographic heatmap
@@ -3115,7 +3115,7 @@ function renderLTV(all) {
       .map(
         ([l, v, c]) => `<div style="background:var(--off);border-radius:10px;padding:14px 16px">
       <div style="font-size:11px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${l}</div>
-      <div style="font-size:22px;font-weight:800;color:${c}">${v}</div></div>`
+      <div style="font-size:24px;font-weight:800;color:${c}">${v}</div></div>`
       )
       .join('');
 
@@ -3183,9 +3183,9 @@ async function renderMechStats() {
         return `<div style="background:var(--off);border-radius:10px;padding:16px">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🚐 Van ${v}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:${colors[v]}">${totalJobs}</div><div style="font-size:10px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Jobs done</div></div>
-          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">$${totalRev}</div><div style="font-size:10px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Revenue</div></div>
-          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--gold)">${avgRating}${avgRating !== '—' ? '★' : ''}</div><div style="font-size:10px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Avg rating</div></div>
+          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:${colors[v]}">${totalJobs}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Jobs done</div></div>
+          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">$${totalRev}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Revenue</div></div>
+          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--gold)">${avgRating}${avgRating !== '—' ? '★' : ''}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Avg rating</div></div>
         </div>
         <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">Utilisation: ${util}% · ${totalJobs}/${maxSlots} slots</div>
         <div style="height:5px;background:var(--border);border-radius:3px;margin-bottom:12px"><div style="height:100%;width:${Math.min(util, 100)}%;background:${colors[v]};border-radius:3px"></div></div>
@@ -3197,7 +3197,7 @@ async function renderMechStats() {
               const day = new Date(d + 'T00:00:00')
                 .toLocaleDateString('en-AU', { weekday: 'short' })
                 .slice(0, 2);
-              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:100%;height:${h}%;background:${v2 > 0 ? colors[v] : '#E5E7EB'};border-radius:3px 3px 0 0;transition:height .4s" title="${v2} job${v2 !== 1 ? 's' : ''}"></div><div style="font-size:8px;color:var(--mgray)">${day}</div></div>`;
+              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:100%;height:${h}%;background:${v2 > 0 ? colors[v] : '#E5E7EB'};border-radius:3px 3px 0 0;transition:height .4s" title="${v2} job${v2 !== 1 ? 's' : ''}"></div><div style="font-size:11px;color:var(--mgray)">${day}</div></div>`;
             })
             .join('')}
         </div>
@@ -3216,7 +3216,7 @@ async function loadClients() {
   const colors = ['#1848C8', '#059669', '#D97706', '#7C3AED', '#0891B2', '#DC2626'];
   if (!data || data.length === 0) {
     grid.innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;color:var(--mgray);padding:48px;font-size:14px">No clients yet — they will appear here when they sign up.</div>';
+      '<div style="grid-column:1/-1;text-align:center;color:var(--mgray);padding:48px;font-size:15px">No clients yet — they will appear here when they sign up.</div>';
     return;
   }
   grid.innerHTML = data
@@ -3245,8 +3245,8 @@ async function loadClients() {
         <div class="cl-stat"><div class="cl-stat-n">${new Date(c.created_at).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })}</div><div class="cl-stat-l">Joined</div></div>
       </div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px">
-        <button data-cl-action="bikes" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Bikes</button>
-        <button data-cl-action="chat" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Chat</button>
+        <button data-cl-action="bikes" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Bikes</button>
+        <button data-cl-action="chat" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Chat</button>
       </div>
     </div>`;
     })
@@ -3320,7 +3320,7 @@ function renderVanZones() {
       <div style="padding:14px 16px;background:${van.color}">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:15px;font-weight:600;color:#fff">${van.name}</div>
-          ${vanZones.length > 1 ? `<button data-action="remove-van" data-id="${van.id}" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer">✕</button>` : ''}
+          ${vanZones.length > 1 ? `<button data-action="remove-van" data-id="${van.id}" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:4px 8px;border-radius:6px;font-size:13px;cursor:pointer">✕</button>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <span style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap">👤</span>
@@ -3330,12 +3330,12 @@ function renderVanZones() {
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div style="font-size:11px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs</div>
-          <button data-action="save-van-zone" data-id="${van.id}" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
+          <button data-action="save-van-zone" data-id="${van.id}" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
         </div>
       </div>
       <div style="padding:16px 20px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:#1848C8;border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:14px;opacity:.6;line-height:1">×</span></span>`).join('')}
+          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:#1848C8;border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
           <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" onkeydown="if(event.key==='Enter')addSuburb(${van.id})"
@@ -3458,14 +3458,14 @@ async function loadClaims() {
         )
         .join('');
       const invoice = c.invoice_url
-        ? `<a href="${esc(c.invoice_url)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue);text-decoration:underline">View invoice screenshot</a>`
-        : '<span style="font-size:12px;color:var(--mgray)">No invoice attached</span>';
+        ? `<a href="${esc(c.invoice_url)}" target="_blank" rel="noopener" style="font-size:13px;color:var(--blue);text-decoration:underline">View invoice screenshot</a>`
+        : '<span style="font-size:13px;color:var(--mgray)">No invoice attached</span>';
       return `
     <div style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${st.color};border-radius:12px;padding:14px 16px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
         <div style="min-width:0">
           <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(c.client_name)}</div>
-          <div style="font-size:12px;color:var(--mgray)">${esc(c.client_email)}${c.phone ? ' · ' + esc(c.phone) : ''} · submitted ${when}${c.service_date ? ' · service on ' + esc(c.service_date) : ''}</div>
+          <div style="font-size:13px;color:var(--mgray)">${esc(c.client_email)}${c.phone ? ' · ' + esc(c.phone) : ''} · submitted ${when}${c.service_date ? ' · service on ' + esc(c.service_date) : ''}</div>
         </div>
         <span style="background:${st.bg};color:${st.color};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${st.label}</span>
       </div>
@@ -3473,7 +3473,7 @@ async function loadClaims() {
       ${photos ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${photos}</div>` : ''}
       <div style="margin-bottom:12px">${invoice}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <select data-claim-status="${esc(c.id)}" class="inp" aria-label="Claim status" style="width:auto;padding:7px 10px;font-size:12px;cursor:pointer">
+        <select data-claim-status="${esc(c.id)}" class="inp" aria-label="Claim status" style="width:auto;padding:7px 10px;font-size:13px;cursor:pointer">
           ${Object.entries(CLAIM_STATUS)
             .map(
               ([k, v]) =>
@@ -3481,8 +3481,8 @@ async function loadClaims() {
             )
             .join('')}
         </select>
-        <input data-claim-notes="${esc(c.id)}" class="inp" placeholder="Resolution notes" aria-label="Resolution notes" value="${esc(c.resolution_notes || '')}" style="flex:1;min-width:180px;padding:7px 10px;font-size:12px">
-        <button data-claim-save="${esc(c.id)}" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
+        <input data-claim-notes="${esc(c.id)}" class="inp" placeholder="Resolution notes" aria-label="Resolution notes" value="${esc(c.resolution_notes || '')}" style="flex:1;min-width:180px;padding:7px 10px;font-size:13px">
+        <button data-claim-save="${esc(c.id)}" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
       </div>
     </div>`;
     })
@@ -3533,7 +3533,7 @@ async function loadContacts() {
   if (!list) return;
   if (!data || data.length === 0) {
     list.innerHTML =
-      '<div style="text-align:center;color:var(--mgray);padding:48px;font-size:14px">No contacts yet. Add your first contact above.</div>';
+      '<div style="text-align:center;color:var(--mgray);padding:48px;font-size:15px">No contacts yet. Add your first contact above.</div>';
     return;
   }
   const roleColors = { manager: '#1848C8', mechanic: '#059669' };
@@ -3543,19 +3543,19 @@ async function loadContacts() {
       (c) => `
     <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || '#F3F4F6'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${roleColors[c.role] || '#6B7280'};flex-shrink:0">
+        <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || '#F3F4F6'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role] || '#6B7280'};flex-shrink:0">
           ${c.first_name[0]}${c.last_name[0]}
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600;color:var(--navy)">${c.first_name} ${c.last_name}</div>
-          <div style="font-size:12px;color:var(--mgray)">${c.phone}</div>
-          ${c.email ? `<div style="font-size:12px;color:var(--mgray)">${c.email}</div>` : ''}
+          <div style="font-size:15px;font-weight:600;color:var(--navy)">${c.first_name} ${c.last_name}</div>
+          <div style="font-size:13px;color:var(--mgray)">${c.phone}</div>
+          ${c.email ? `<div style="font-size:13px;color:var(--mgray)">${c.email}</div>` : ''}
         </div>
         <span style="background:${roleBg[c.role] || '#F3F4F6'};color:${roleColors[c.role] || '#6B7280'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
       <div style="display:flex;gap:8px">
-        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
-        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
+        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
+        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`
     )
@@ -3678,8 +3678,8 @@ function renderInventory() {
   if (!inventoryData.length) {
     tbody.innerHTML = `<tr><td colspan="7"><div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:10px">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-      <div style="font-size:14px;font-weight:600;color:var(--mgray)">No parts yet</div>
-      <div style="font-size:12px;color:var(--mgray);opacity:.7">Add your first part to start tracking stock</div>
+      <div style="font-size:15px;font-weight:600;color:var(--mgray)">No parts yet</div>
+      <div style="font-size:13px;color:var(--mgray);opacity:.7">Add your first part to start tracking stock</div>
     </div></td></tr>`;
     return;
   }
@@ -3715,10 +3715,10 @@ function renderInventory() {
       <td data-label="Status"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusCl}">${statusTxt}</span></td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
-          <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:700">−</button>
-          <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:700">+</button>
-          <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">Edit</button>
-          <button data-action="delete-part" data-id="${p.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">✕</button>
+          <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">−</button>
+          <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">+</button>
+          <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
+          <button data-action="delete-part" data-id="${p.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -3751,7 +3751,7 @@ function openPartModal(id) {
   modal.style.cssText =
     'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">${p ? 'Edit part' : 'Add part'}</div>
+    <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px">${p ? 'Edit part' : 'Add part'}</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Part name</div>
         <input class="inp" id="pm-name" value="${esc(p?.name || '')}" placeholder="e.g. Brake pads (Shimano B01S)" aria-label="Part name"></div>
@@ -3869,7 +3869,7 @@ function renderServiceCatChips() {
     servicesData.some((s) => (s.category || 'General & assembly') === cat)
   );
   const chip = (label, cat, active) =>
-    `<button data-action="set-service-category-filter" data-cat="${cat === null ? '' : esc(cat)}" style="height:30px;padding:0 14px;border-radius:15px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;border:1.5px solid ${active ? 'var(--blue)' : 'var(--border)'};background:${active ? 'var(--blue)' : 'var(--white)'};color:${active ? '#fff' : 'var(--navy)'}">${escapeHtml(label)}</button>`;
+    `<button data-action="set-service-category-filter" data-cat="${cat === null ? '' : esc(cat)}" style="height:30px;padding:0 14px;border-radius:15px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;border:1.5px solid ${active ? 'var(--blue)' : 'var(--border)'};background:${active ? 'var(--blue)' : 'var(--white)'};color:${active ? '#fff' : 'var(--navy)'}">${escapeHtml(label)}</button>`;
   wrap.innerHTML =
     chip('All', null, _svcCategoryFilter === null) +
     present.map((cat) => chip(cat, cat, _svcCategoryFilter === cat)).join('');
@@ -3895,8 +3895,8 @@ function renderServices() {
 
   if (!total) {
     tbody.innerHTML = `<tr><td colspan="5"><div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:10px">
-      <div style="font-size:14px;font-weight:600;color:var(--mgray)">No services yet</div>
-      <div style="font-size:12px;color:var(--mgray);opacity:.7">Add your first service to start the catalog</div>
+      <div style="font-size:15px;font-weight:600;color:var(--mgray)">No services yet</div>
+      <div style="font-size:13px;color:var(--mgray);opacity:.7">Add your first service to start the catalog</div>
     </div></td></tr>`;
     applyDarkModeInline();
     return;
@@ -3938,8 +3938,8 @@ function renderServices() {
       <td data-label="Duration" style="color:var(--mgray)">${durationLabel(s)}</td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
-          <button data-action="open-service-modal" data-id="${s.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">Edit</button>
-          <button data-action="delete-service" data-id="${s.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">✕</button>
+          <button data-action="open-service-modal" data-id="${s.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
+          <button data-action="delete-service" data-id="${s.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -3965,7 +3965,7 @@ function openServiceModal(id) {
   modal.style.cssText =
     'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto">
-    <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">${s ? 'Edit service' : 'Add service'}</div>
+    <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px">${s ? 'Edit service' : 'Add service'}</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Service name</div>
         <input class="inp" id="sm-name" value="${s?.name ? escapeHtml(s.name) : ''}" placeholder="e.g. Chain Install" aria-label="Service name"></div>
@@ -4181,10 +4181,10 @@ async function loadCalendar() {
             const st = j.status || 'pending';
             const nm = j.profiles?.full_name?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
-            return `<div style="font-size:10px;background:${stBg[st] || '#F3F4F6'};border-left:2px solid ${stColors[st] || '#6B7280'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${esc(nm)}</div>`;
+            return `<div style="font-size:11px;background:${stBg[st] || '#F3F4F6'};border-left:2px solid ${stColors[st] || '#6B7280'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${esc(nm)}</div>`;
           })
           .join('')}
-        ${dayJobs.length > 3 ? `<div style="font-size:10px;color:var(--mgray)">+${dayJobs.length - 3} more</div>` : ''}
+        ${dayJobs.length > 3 ? `<div style="font-size:11px;color:var(--mgray)">+${dayJobs.length - 3} more</div>` : ''}
       </div>`;
       cur.setDate(cur.getDate() + 1);
       cells++;
@@ -4274,7 +4274,7 @@ async function loadCalendar() {
       <div style="padding:10px 8px;text-align:center;background:${isToday ? 'var(--blue)' : 'var(--off)'};border-bottom:1px solid var(--border)">
         <div style="font-size:11px;font-weight:600;color:${isToday ? 'rgba(255,255,255,0.8)' : 'var(--mgray)'};text-transform:uppercase">${dayName}</div>
         <div style="font-size:18px;font-weight:700;color:${isToday ? '#fff' : 'var(--navy)'}">${dayNum}</div>
-        ${dayJobs.length > 0 ? `<div style="font-size:10px;color:${isToday ? 'rgba(255,255,255,0.7)' : 'var(--mgray)'};">${dayJobs.length} job${dayJobs.length > 1 ? 's' : ''}</div>` : ''}
+        ${dayJobs.length > 0 ? `<div style="font-size:11px;color:${isToday ? 'rgba(255,255,255,0.7)' : 'var(--mgray)'};">${dayJobs.length} job${dayJobs.length > 1 ? 's' : ''}</div>` : ''}
       </div>
       <!-- Jobs -->
       <div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:120px">
@@ -4289,9 +4289,9 @@ async function loadCalendar() {
                   const van = j.van_number || 1;
                   return `<div style="background:${stBg[st] || '#F3F4F6'};border-left:3px solid ${stColors[st] || '#6B7280'};border-radius:6px;padding:6px 8px;cursor:pointer" data-page="bookings">
               <div style="font-size:11px;font-weight:700;color:${stColors[st] || '#6B7280'}">${time}</div>
-              <div style="font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
-              <div style="font-size:10px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.service_name || '')}</div>
-              <div style="font-size:10px;font-weight:600;color:${stColors[st]};margin-top:2px">Van ${van}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
+              <div style="font-size:11px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.service_name || '')}</div>
+              <div style="font-size:11px;font-weight:600;color:${stColors[st]};margin-top:2px">Van ${van}</div>
             </div>`;
                 })
                 .join('')
@@ -4379,13 +4379,13 @@ function appendAdminChatMsg(msg, scroll = true) {
   const photoUrl = isPhoto ? msg.message.replace('[PHOTO:', '').replace(']', '') : null;
 
   bubble.innerHTML = `
-    <div style="font-size:10px;color:var(--mgray);font-weight:600">${label}</div>
+    <div style="font-size:11px;color:var(--mgray);font-weight:600">${label}</div>
     ${
       isPhoto
         ? `<img src="${esc(photoUrl)}" style="max-width:200px;border-radius:10px;cursor:pointer" data-action="open-photo" data-url="${esc(photoUrl)}">`
         : `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:12px;font-size:13px;max-width:280px;word-break:break-word">${esc(msg.message)}</div>`
     }
-    <div style="font-size:10px;color:var(--mgray)">${time}</div>
+    <div style="font-size:11px;color:var(--mgray)">${time}</div>
   `;
   msgs.appendChild(bubble);
   if (scroll) msgs.scrollTop = msgs.scrollHeight;
@@ -4622,7 +4622,7 @@ async function loadMemberships() {
 
   if (!data?.length) {
     tbody.innerHTML =
-      '<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--mgray);font-size:14px">No active memberships yet</td></tr>';
+      '<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--mgray);font-size:15px">No active memberships yet</td></tr>';
     return;
   }
 
@@ -4658,7 +4658,7 @@ async function loadMemberships() {
           })
         : '—';
       const subId = m.stripe_subscription_id
-        ? '<span style="font-size:10px;color:var(--mgray);font-family:monospace">' +
+        ? '<span style="font-size:11px;color:var(--mgray);font-family:monospace">' +
           m.stripe_subscription_id +
           '</span>'
         : '—';
@@ -4667,7 +4667,7 @@ async function loadMemberships() {
         '<td style="padding:12px 16px;font-weight:600;color:var(--navy)">' +
         esc(name) +
         '</td>' +
-        '<td style="padding:12px 16px;font-size:12px;color:var(--mgray)">' +
+        '<td style="padding:12px 16px;font-size:13px;color:var(--mgray)">' +
         esc(m.email || '—') +
         '</td>' +
         '<td style="padding:12px 16px">' +
@@ -4676,10 +4676,10 @@ async function loadMemberships() {
         '<td style="padding:12px 16px">' +
         badge +
         '</td>' +
-        '<td style="padding:12px 16px;font-size:12px;white-space:nowrap">' +
+        '<td style="padding:12px 16px;font-size:13px;white-space:nowrap">' +
         started +
         '</td>' +
-        '<td style="padding:12px 16px;font-size:12px;white-space:nowrap">' +
+        '<td style="padding:12px 16px;font-size:13px;white-space:nowrap">' +
         renewed +
         '</td>' +
         '<td style="padding:12px 16px">' +
@@ -4727,17 +4727,17 @@ async function loadNotifNumbers() {
     <div style="padding:12px 14px;background:var(--off);border-radius:10px;border:1px solid var(--border)">
       <!-- Fila 1: avatar + nombre + zona badge -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="width:36px;height:36px;border-radius:50%;background:${zoneBg[zone]};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${zoneColor[zone]};flex-shrink:0">${esc(initials)}</div>
-        <div style="font-size:14px;font-weight:600;color:var(--navy);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${roleIcon[c.role] || ''} ${esc(c.first_name)} ${esc(c.last_name)}</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:${zoneBg[zone]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${zoneColor[zone]};flex-shrink:0">${esc(initials)}</div>
+        <div style="font-size:15px;font-weight:600;color:var(--navy);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${roleIcon[c.role] || ''} ${esc(c.first_name)} ${esc(c.last_name)}</div>
         <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${zoneBg[zone]};color:${zoneColor[zone]};white-space:nowrap;flex-shrink:0">${zoneLabel[zone]}</span>
       </div>
       <!-- Fila 2: teléfono + canal + botones -->
       <div style="display:flex;align-items:center;gap:8px;padding-left:46px">
-        <span style="font-size:12px;color:var(--mgray);flex:1">${c.phone} · ${channelIcon[channel]} ${channel.toUpperCase()}</span>
+        <span style="font-size:13px;color:var(--mgray);flex:1">${c.phone} · ${channelIcon[channel]} ${channel.toUpperCase()}</span>
         <button data-action="edit-notif-number" data-id="${c.id}"
-          style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
+          style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
         <button data-action="delete-notif-number" data-id="${c.id}"
-          style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
+          style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
       </div>
     </div>`;
     })
@@ -4936,7 +4936,7 @@ async function loadMechanicProfiles() {
       const initials = ((c.first_name || '?')[0] + (c.last_name || '')[0]).toUpperCase();
       const avatarHTML = c.photo_url
         ? `<img src="${esc(c.photo_url)}" alt="${esc(name)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
-        : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
+        : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
       const roleTag =
         c.role === 'manager'
           ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ Manager</span>'
@@ -4950,8 +4950,8 @@ async function loadMechanicProfiles() {
       </div>
       <div style="display:flex;justify-content:center;margin-top:-40px">${avatarHTML}</div>
       <div style="text-align:center;padding:10px 20px 0">
-        <div style="font-size:16px;font-weight:700;color:var(--navy)">${esc(name)}</div>
-        <div style="font-size:12px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(name)}</div>
+        <div style="font-size:13px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
         <div style="font-size:13px;color:#374151;margin-top:8px;min-height:20px">${esc(c.bio) || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
       </div>
       <div style="display:flex;justify-content:center;gap:24px;padding:14px 20px;margin-top:8px;border-top:1px solid var(--border)">
@@ -5201,13 +5201,13 @@ async function viewClientBikes(clientId, clientName) {
   };
   const bikeRows =
     (bikes || []).length === 0
-      ? '<p style="color:var(--mgray);font-size:14px;text-align:center;padding:20px">No bikes registered yet.</p>'
+      ? '<p style="color:var(--mgray);font-size:15px;text-align:center;padding:20px">No bikes registered yet.</p>'
       : (bikes || [])
           .map(
             (b) => `
         <div style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px">
-          <div style="font-weight:700;font-size:14px">${esc(b.nickname)}</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:3px">
+          <div style="font-weight:700;font-size:15px">${esc(b.nickname)}</div>
+          <div style="font-size:13px;color:var(--mgray);margin-top:3px">
             ${[b.year, b.brand, b.model, b.color, TYPE_LABELS[b.bike_type]].filter(Boolean).join(' · ') || 'No details'}
           </div>
         </div>`
@@ -5220,7 +5220,7 @@ async function viewClientBikes(clientId, clientName) {
   modal.querySelector('div').innerHTML = `
     <div style="background:var(--white);border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div style="font-size:16px;font-weight:700;color:var(--navy)">🚲 ${esc(clientName)}'s Bikes</div>
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">🚲 ${esc(clientName)}'s Bikes</div>
         <button data-action="close-reassign-modal" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button>
       </div>
       ${bikeRows}
@@ -5244,7 +5244,7 @@ async function loadNewsletter() {
     return;
   }
   el.innerHTML = `
-    <div style="font-size:12px;color:var(--mgray);margin-bottom:10px">${data.filter((s) => s.active).length} active · ${data.filter((s) => !s.active).length} unsubscribed</div>
+    <div style="font-size:13px;color:var(--mgray);margin-bottom:10px">${data.filter((s) => s.active).length} active · ${data.filter((s) => !s.active).length} unsubscribed</div>
     <table class="tbl">
       <thead><tr><th>Email</th><th>Name</th><th>Source</th><th>Subscribed</th><th>Status</th></tr></thead>
       <tbody>${data
@@ -5252,8 +5252,8 @@ async function loadNewsletter() {
           (s) => `<tr>
         <td style="font-size:13px">${esc(s.email)}</td>
         <td style="font-size:13px">${esc(s.name || '—')}</td>
-        <td style="font-size:12px">${esc(s.source || 'website')}</td>
-        <td style="font-size:12px">${new Date(s.subscribed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+        <td style="font-size:13px">${esc(s.source || 'website')}</td>
+        <td style="font-size:13px">${new Date(s.subscribed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
         <td><span style="background:${s.active ? '#ECFDF5' : '#FEF2F2'};color:${s.active ? '#059669' : '#DC2626'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
       </tr>`
         )
@@ -5338,8 +5338,8 @@ setTimeout(() => {
   panel.style.cssText =
     'display:none;position:fixed;top:68px;right:16px;width:360px;max-height:480px;overflow-y:auto;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:200';
   panel.innerHTML = `<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white)">
-    <div style="font-size:14px;font-weight:700;color:var(--navy)">🔔 Notifications</div>
-    <button data-action="mark-all-read" style="font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Mark all read</button>
+    <div style="font-size:15px;font-weight:700;color:var(--navy)">🔔 Notifications</div>
+    <button data-action="mark-all-read" style="font-size:13px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Mark all read</button>
   </div>
   <div id="notif-list" style="padding:8px"><div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">Loading...</div></div>`;
   document.body.appendChild(panel);

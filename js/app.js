@@ -234,7 +234,7 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="font-size:24px;margin-bottom:6px">⚠️</div>' +
       '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Could not load available times</div>' +
       '<div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>' +
-      '<button id="retry-slots-btn" style="padding:11px 20px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>' +
+      '<button id="retry-slots-btn" style="padding:11px 20px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>' +
       '</div>';
     screen
       .querySelector('#retry-slots-btn')
@@ -249,12 +249,12 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="font-size:24px;margin-bottom:6px">😔</div>' +
       '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Fully booked on this date</div>' +
       '<div style="font-size:13px;color:#6B7280">Please choose another day or join the waitlist</div></div>' +
-      '<button id="waitlist-btn" style="width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">' +
+      '<button id="waitlist-btn" style="width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' +
       '<span>Join Waitlist for</span> ' +
       date +
       '</button>' +
       '<div id="waitlist-form" style="display:none;margin-top:14px;background:#F8FAFF;border:1px solid #DBEAFE;border-radius:10px;padding:16px">' +
-      '<div style="font-weight:700;color:#0D1F3C;font-size:14px;margin-bottom:10px">Which times work for you?</div>' +
+      '<div style="font-weight:700;color:#0D1F3C;font-size:15px;margin-bottom:10px">Which times work for you?</div>' +
       '<div id="waitlist-times" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">' +
       slots
         .map(
@@ -268,8 +268,8 @@ async function loadTimeSlots(screen, date, serviceId) {
         )
         .join('') +
       '</div>' +
-      '<div id="waitlist-msg" style="font-size:12px;color:#DC2626;margin-bottom:10px;display:none"></div>' +
-      '<button id="waitlist-submit" style="width:100%;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
+      '<div id="waitlist-msg" style="font-size:13px;color:#DC2626;margin-bottom:10px;display:none"></div>' +
+      '<button id="waitlist-submit" style="width:100%;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
       '</div></div>';
 
     screen.querySelector('#waitlist-btn').addEventListener('click', () => {
@@ -314,8 +314,8 @@ async function loadTimeSlots(screen, date, serviceId) {
         if (!resp.ok) throw new Error(data.error || 'Failed to join waitlist');
         screen.querySelector('#waitlist-form').innerHTML =
           '<div style="text-align:center;padding:8px 0">' +
-          '<div style="font-size:22px;margin-bottom:8px">✅</div>' +
-          '<div style="font-weight:700;color:#059669;font-size:14px">You\'re on the waitlist!</div>' +
+          '<div style="font-size:24px;margin-bottom:8px">✅</div>' +
+          '<div style="font-weight:700;color:#059669;font-size:15px">You\'re on the waitlist!</div>' +
           '<div style="font-size:13px;color:#6B7280;margin-top:4px"><span>We\'ll email</span> ' +
           user.email +
           ' <span>if a slot opens up on</span> ' +
@@ -408,7 +408,7 @@ function showEmergencyServiceModal() {
   modal.innerHTML = `
     <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;text-align:center">
       <div style="font-size:32px;margin-bottom:8px" aria-hidden="true">🚨</div>
-      <div style="font-weight:700;color:#0D1F3C;font-size:16px;margin-bottom:6px">Emergency Service</div>
+      <div style="font-weight:700;color:#0D1F3C;font-size:15px;margin-bottom:6px">Emergency Service</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:20px;line-height:1.5;text-align:left">Emergency visits depend on where our mechanic already is, so we confirm these directly - call or WhatsApp us and we'll tell you right away if we can help and what it'll cost.</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <a href="tel:+61433963250" style="flex:1;text-align:center;background:#2563EB;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
@@ -452,16 +452,34 @@ async function renderBookService() {
     'Suspension',
     'General & assembly',
   ];
+  const svgIco = (inner) =>
+    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
   const CAT_ICON = {
-    'Scheduled services': '🔧',
-    Brakes: '🛑',
-    'Cockpit & levers': '🎛️',
-    Drivetrain: '⚙️',
-    'Gears & cables': '🔩',
-    'Wheels & tyres': '🔄',
-    'Electronic & e-bike': '⚡',
-    Suspension: '🏔️',
-    'General & assembly': '🔨',
+    'Scheduled services': svgIco(
+      '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>'
+    ),
+    Brakes: svgIco(
+      '<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>'
+    ),
+    'Cockpit & levers': svgIco(
+      '<line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line>'
+    ),
+    Drivetrain: svgIco(
+      '<circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="2"></circle>'
+    ),
+    'Gears & cables': svgIco(
+      '<circle cx="6" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><line x1="7.5" y1="7.5" x2="16.5" y2="16.5"></line>'
+    ),
+    'Wheels & tyres': svgIco(
+      '<circle cx="12" cy="12" r="9"></circle><line x1="12" y1="3" x2="12" y2="21"></line><line x1="3" y1="12" x2="21" y2="12"></line>'
+    ),
+    'Electronic & e-bike': svgIco(
+      '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>'
+    ),
+    Suspension: svgIco('<polyline points="3 12 8 12 10 6 14 18 16 12 21 12"></polyline>'),
+    'General & assembly': svgIco(
+      '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>'
+    ),
   };
 
   // ── Step 1: Choose Service ────────────────────────────────────────────────
@@ -511,19 +529,19 @@ async function renderBookService() {
       ${createHeader('Book a Service', true, '#home')}
       <div id="diag-block" style="background:#EFF6FF;border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #BFDBFE">
         <div style="font-size:13px;font-weight:700;color:#1E40AF;margin-bottom:6px">Not sure what your bike needs?</div>
-        <div style="font-size:12px;color:#475569;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
+        <div style="font-size:13px;color:#475569;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
         <div style="display:flex;align-items:center;gap:8px;width:100%">
           <label style="flex-shrink:0;cursor:pointer">
             <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
             <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:#1E40AF;cursor:pointer;white-space:nowrap">Photo</div>
           </label>
-          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:16px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff">
+          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff">
           <button id="diag-ask-btn" style="flex-shrink:0;height:44px;background:#1E40AF;color:white;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Ask AI</button>
         </div>
         <div id="diag-result" style="margin-top:10px;display:none"></div>
       </div>
       <div id="cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0">
-        ${CAT_ORDER.map((cat) => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;height:32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap;transition:all 150ms ease"><span aria-hidden="true">${CAT_ICON[cat] || ''}</span>${CAT_SHORT[cat]}</button>`).join('')}
+        ${CAT_ORDER.map((cat) => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;height:32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap;transition:all 150ms ease"><span aria-hidden="true">${CAT_ICON[cat] || ''}</span>${CAT_SHORT[cat]}</button>`).join('')}
       </div>
       <div class="section-label">Select Service</div>
       <div id="step1-services">${categoriesHtml}</div>
@@ -620,8 +638,8 @@ async function renderBookService() {
         wrap.innerHTML = `
           <div class="section-label" style="margin-top:8px">Which bike?</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0" id="bike-chips">
-            <button class="bike-chip active" data-bike-id="" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:#1E40AF;color:#fff;border:1px solid #1E40AF;border-radius:16px;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Skip</button>
-            ${bikes.map((b) => `<button class="bike-chip" data-bike-id="${b.id}" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:0 14px;font-size:12px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap">${b.name}${b.brand ? ' · ' + b.brand : ''}</button>`).join('')}
+            <button class="bike-chip active" data-bike-id="" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:#1E40AF;color:#fff;border:1px solid #1E40AF;border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Skip</button>
+            ${bikes.map((b) => `<button class="bike-chip" data-bike-id="${b.id}" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap">${b.name}${b.brand ? ' · ' + b.brand : ''}</button>`).join('')}
           </div>`;
         wrap.querySelectorAll('.bike-chip').forEach((chip) => {
           chip.addEventListener('click', () => {
@@ -654,7 +672,7 @@ async function renderBookService() {
         .cal-arrow:disabled{opacity:0.3;cursor:default}
         .cal-month{font-weight:800;font-size:15px;color:#0D1F3C}
         .cal-dow{text-align:center;font-size:11px;font-weight:700;color:#94A3B8;padding:4px 0;text-transform:uppercase;letter-spacing:0.05em}
-        .cal-day{background:none;border:none;border-radius:8px;padding:9px 2px;font-size:14px;cursor:pointer;color:#0D1F3C;text-align:center;width:100%;transition:background 120ms}
+        .cal-day{background:none;border:none;border-radius:8px;padding:9px 2px;font-size:15px;cursor:pointer;color:#0D1F3C;text-align:center;width:100%;transition:background 120ms}
         .cal-day:hover:not(:disabled){background:#F1F5F9}
         .cal-day.cal-today{font-weight:800;color:#1E40AF}
         .cal-day.cal-sel{background:#1E40AF!important;color:#fff;font-weight:700;border-radius:8px}
@@ -791,17 +809,17 @@ async function renderBookService() {
               <circle cx="12" cy="10" r="3"></circle>
             </svg>
             <div style="flex:1;position:relative">
-              <label for="location-input" style="font-size:12px;color:var(--color-text-secondary);font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Address</label>
+              <label for="location-input" style="font-size:13px;color:var(--color-text-secondary);font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Address</label>
               <input id="location-input" type="text" placeholder="e.g. 14 Smith St, Surry Hills NSW 2010"
                 value="${escapeHtml(saved)}"
-                style="width:100%;border:none;outline:none;background:transparent;font-size:16px;color:var(--color-text);padding:0;font-family:inherit;box-sizing:border-box" autocomplete="off">
+                style="width:100%;border:none;outline:none;background:transparent;font-size:15px;color:var(--color-text);padding:0;font-family:inherit;box-sizing:border-box" autocomplete="off">
               <div id="address-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--color-border);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;z-index:10;box-shadow:var(--shadow-md)"></div>
               <div style="height:1px;background:var(--color-border);margin-top:8px"></div>
-              <div style="margin-top:6px;font-size:12px;color:var(--color-text-secondary)">Your mechanic will come to this address</div>
+              <div style="margin-top:6px;font-size:13px;color:var(--color-text-secondary)">Your mechanic will come to this address</div>
             </div>
           </div>
         </div>
-        <div style="font-size:12px;color:#475569;padding:0 4px;line-height:1.6">The $20 call-out fee covers the mechanic's trip. Most areas in Sydney are covered.</div>
+        <div style="font-size:13px;color:#475569;padding:0 4px;line-height:1.6">The $20 call-out fee covers the mechanic's trip. Most areas in Sydney are covered.</div>
       </div>
       <div class="sticky-bottom">
         <button class="btn btn--primary btn--full" id="s3-continue">Continue to Summary</button>
@@ -835,9 +853,9 @@ async function renderBookService() {
           .map(
             (item) => `
           <button type="button" class="address-suggestion" data-address="${escapeHtml(item.display_name)}"
-            style="display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--color-text);font-family:inherit;border-bottom:1px solid var(--color-border)">
+            style="display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--color-text);font-family:inherit;border-bottom:1px solid var(--color-border)">
             ${escapeHtml(item.display_name.split(',')[0])}<br>
-            <span style="font-size:12px;color:var(--color-text-secondary)">${escapeHtml(item.display_name.split(',').slice(1).join(','))}</span>
+            <span style="font-size:13px;color:var(--color-text-secondary)">${escapeHtml(item.display_name.split(',').slice(1).join(','))}</span>
           </button>
         `
           )
@@ -994,7 +1012,7 @@ async function renderServiceSummary() {
         <div style="background:#0D1F3C;padding:14px 16px;display:flex;align-items:center;gap:10px">
           <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="20" style="width:auto;display:block">
           <div>
-            <div style="color:#fff;font-size:14px;font-weight:700">${service.name}</div>
+            <div style="color:#fff;font-size:15px;font-weight:700">${service.name}</div>
             ${dur ? `<div style="color:rgba(255,255,255,0.65);font-size:11px;margin-top:1px">Est. ${dur}</div>` : ''}
           </div>
         </div>
@@ -1046,7 +1064,7 @@ async function renderServiceSummary() {
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px;background:var(--color-bg)">
           <span style="font-size:15px;font-weight:700">Total</span>
-          <span style="font-size:19px;font-weight:800;color:var(--color-primary)" id="summary-total-amount">$${grandTotal.toFixed(2)}</span>
+          <span style="font-size:20px;font-weight:800;color:var(--color-primary)" id="summary-total-amount">$${grandTotal.toFixed(2)}</span>
         </div>
       </div>
 
@@ -1055,16 +1073,16 @@ async function renderServiceSummary() {
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-secondary);margin-bottom:8px">Promo or referral code</div>
         <div style="display:flex;gap:8px">
           <input id="referral-input" type="text" placeholder="Enter code (optional)" aria-label="Promo or referral code"
-            style="flex:1;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 14px;color:var(--color-text);font-size:16px;outline:none;text-transform:uppercase" />
+            style="flex:1;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 14px;color:var(--color-text);font-size:15px;outline:none;text-transform:uppercase" />
           <button id="referral-apply-btn" class="btn btn--secondary" style="padding:10px 16px;font-size:13px;white-space:nowrap">Apply</button>
         </div>
-        <div id="referral-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
+        <div id="referral-msg" style="font-size:13px;margin-top:6px;min-height:16px"></div>
       </div>
 
       <!-- Payment split note -->
       <div style="display:flex;gap:10px;background:#EEF3FC;border-radius:10px;padding:12px 14px;margin-bottom:16px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div style="font-size:12px;color:#1848C8;line-height:1.55">
+        <div style="font-size:13px;color:#1848C8;line-height:1.55">
           <strong>How payment works:</strong> The $${calloutFee.toFixed(2)} call-out fee is charged now via Stripe. The service fee ($<span id="q-svc-note">${serviceTotal.toFixed(2)}</span>) is paid to the mechanic directly by card (EFTPOS) when they arrive.
         </div>
       </div>
@@ -1206,7 +1224,7 @@ async function loadMechanicPreferencePicker() {
           .toUpperCase();
         const avatarHTML = m.photo_url
           ? `<img src="${escapeHtml(m.photo_url)}" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover">`
-          : `<div style="width:52px;height:52px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#2563EB">${escapeHtml(initials)}</div>`;
+          : `<div style="width:52px;height:52px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#2563EB">${escapeHtml(initials)}</div>`;
         // "jobs" stays its own text node (not pre-translated into the string)
         // so translateScreen's automatic re-walk can still catch it if the
         // user switches language after this card is already on screen -
@@ -1219,7 +1237,7 @@ async function loadMechanicPreferencePicker() {
           <button type="button" class="mechanic-pref-card" data-mechanic-id="${escapeHtml(m.id)}"
             style="flex-shrink:0;width:104px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:12px;border:1.5px solid var(--color-border);background:#fff;cursor:pointer">
             ${avatarHTML}
-            <div style="font-size:12px;font-weight:700;color:#0D1F3C;text-align:center;line-height:1.3">${escapeHtml(m.name)}</div>
+            <div style="font-size:13px;font-weight:700;color:#0D1F3C;text-align:center;line-height:1.3">${escapeHtml(m.name)}</div>
             ${metaHTML.length ? `<div style="font-size:11px;color:#6B7280">${metaHTML.join(' · ')}</div>` : ''}
           </button>`;
       })
@@ -1227,7 +1245,7 @@ async function loadMechanicPreferencePicker() {
 
     const html = `
       <div style="margin-bottom:20px">
-        <div style="font-size:12px;color:#6B7280;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Prefer a specific mechanic? (optional)</div>
+        <div style="font-size:13px;color:#6B7280;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Prefer a specific mechanic? (optional)</div>
         <div id="mechanic-pref-row" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">${cards}</div>
         <div id="mechanic-pref-note" style="font-size:11px;color:#9CA3AF;margin-top:8px" hidden>We'll try to send your job to them first.</div>
       </div>`;
@@ -1330,7 +1348,7 @@ async function renderPayment() {
     ${createHeader('Confirm Booking', true, '#service-summary')}
     <div style="padding:0 16px 24px">
       <div style="background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:20px">
-        <div style="font-size:12px;color:#6B7280;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Your selection</div>
+        <div style="font-size:13px;color:#6B7280;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Your selection</div>
         <div style="font-weight:700;color:#0D1F3C;font-size:15px">${service.name}</div>
         <div style="font-size:13px;color:#374151;margin-top:4px">${date} &bull; ${time}</div>
         <div style="font-size:13px;color:#374151">${location}</div>
@@ -1355,7 +1373,7 @@ async function renderPayment() {
       <div id="payment-request-btn" style="margin-bottom:12px" hidden></div>
       <div class="payment-divider" id="card-divider" hidden><span>or pay by card</span></div>
       <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">Card details</div>
+        <div style="font-size:13px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">Card details</div>
         <div id="card-element" class="card-element"></div>
       </div>
       <div id="payment-error" class="booking-error" hidden style="margin-bottom:12px"></div>
@@ -1368,7 +1386,7 @@ async function renderPayment() {
       <button class="btn btn--primary btn--full" id="pay-btn">Pay $${calloutFee.toFixed(2)} Call-out Fee</button>`
       }
 
-      <div style="text-align:center;margin-top:16px;font-size:12px;color:#9CA3AF">
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:#9CA3AF">
         Prefer to book manually?
         <a href="https://wa.me/61433963250?text=${waText}" style="color:#2563EB;font-weight:600">WhatsApp us</a>
         or
@@ -1671,7 +1689,7 @@ async function renderTrackingPicker(screen) {
           <div style="font-size:40px;margin-bottom:12px">🔒</div>
           <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:6px">Sign in to track bookings</div>
           <div style="font-size:13px;color:#6B7280;margin-bottom:20px">Your bookings will appear here</div>
-          <button class="btn btn--primary" id="picker-signin-btn" style="padding:12px 28px;font-size:14px;font-weight:700">Sign in</button>
+          <button class="btn btn--primary" id="picker-signin-btn" style="padding:12px 28px;font-size:15px;font-weight:700">Sign in</button>
         </div>`;
       listEl
         .querySelector('#picker-signin-btn')
@@ -1714,7 +1732,7 @@ async function renderTrackingPicker(screen) {
             style="background:#fff;border:1px solid #E2E8F0;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
             <div style="flex:1;min-width:0">
               <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
-              <div style="font-size:12px;color:#475569">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''}</div>
+              <div style="font-size:13px;color:#475569">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
               <span style="font-size:11px;font-weight:600;color:${color};background:${color}1A;padding:3px 10px;border-radius:20px;white-space:nowrap">${ST_LABELS[b.status] || b.status}</span>
@@ -1733,7 +1751,7 @@ async function renderTrackingPicker(screen) {
             style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
             <div style="flex:1;min-width:0">
               <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
-              <div style="font-size:12px;color:#475569">${b.scheduled_date || ''}</div>
+              <div style="font-size:13px;color:#475569">${b.scheduled_date || ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
               <span style="font-size:11px;font-weight:600;color:${color};background:${color}1A;padding:3px 10px;border-radius:20px;white-space:nowrap">${ST_LABELS[b.status] || b.status}</span>
@@ -1775,8 +1793,8 @@ async function renderTracking() {
   screen.innerHTML = `
     <!-- Header -->
     <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:#fff;border-bottom:1px solid #E5E7EB">
-      <div style="font-size:17px;font-weight:700;color:#0D1F3C">Live Tracking</div>
-      <button id="change-booking-btn" style="background:none;border:none;font-size:12px;color:#2563EB;cursor:pointer;font-weight:600;font-family:inherit;padding:8px 0;display:flex;align-items:center;gap:4px">
+      <div style="font-size:18px;font-weight:700;color:#0D1F3C">Live Tracking</div>
+      <button id="change-booking-btn" style="background:none;border:none;font-size:13px;color:#2563EB;cursor:pointer;font-weight:600;font-family:inherit;padding:8px 0;display:flex;align-items:center;gap:4px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         Change booking
       </button>
@@ -1794,27 +1812,27 @@ async function renderTracking() {
     <!-- Bottom panel -->
     <div style="flex-shrink:0;background:#fff;border-top:1px solid #E5E7EB">
       <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #F3F4F6">
-        <div id="mechanic-avatar" style="width:40px;height:40px;background:#EFF6FF;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:700;color:#2563EB">
+        <div id="mechanic-avatar" style="width:40px;height:40px;background:#EFF6FF;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:#2563EB">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
         <div style="min-width:0">
-          <div id="mechanic-name" style="font-size:14px;font-weight:700;color:#0D1F3C">Your mechanic</div>
-          <div id="mechanic-meta" style="font-size:12px;color:#6B7280;margin-top:1px"></div>
+          <div id="mechanic-name" style="font-size:15px;font-weight:700;color:#0D1F3C">Your mechanic</div>
+          <div id="mechanic-meta" style="font-size:13px;color:#6B7280;margin-top:1px"></div>
         </div>
         <div id="eta-badge" style="margin-left:auto;flex-shrink:0;text-align:right">
-          <div id="eta-text" style="font-size:12px;color:#6B7280">On the way to you</div>
+          <div id="eta-text" style="font-size:13px;color:#6B7280">On the way to you</div>
         </div>
         <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:#EFF6FF;border-bottom:1px solid #F3F4F6">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <div style="font-size:12px;color:#1848C8"><b>Your code: <span id="arrival-pin-value" style="font-size:14px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
+        <div style="font-size:13px;color:#1848C8"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
       </div>
       <div style="display:flex;gap:4px;padding:10px 16px">
         ${['Confirmed', 'En Route', 'Arrived', 'Done']
           .map(
             (s, i) =>
-              `<div id="step-${i}" style="flex:1;padding:5px 2px;text-align:center;font-size:10px;font-weight:700;border-radius:6px;background:#F3F4F6;color:#9CA3AF;transition:all 0.3s">${s}</div>`
+              `<div id="step-${i}" style="flex:1;padding:5px 2px;text-align:center;font-size:11px;font-weight:700;border-radius:6px;background:#F3F4F6;color:#9CA3AF;transition:all 0.3s">${s}</div>`
           )
           .join('')}
       </div>
@@ -2174,8 +2192,8 @@ function renderMechanicTrackRecord(p) {
             (r) => `
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
-              <span style="font-size:12px;font-weight:600;color:#0D1F3C">${escapeHtml(r.client_name)}</span>
-              ${r.rating ? `<span style="color:#F59E0B;font-size:12px">${renderMiniStars(r.rating)}</span>` : ''}
+              <span style="font-size:13px;font-weight:600;color:#0D1F3C">${escapeHtml(r.client_name)}</span>
+              ${r.rating ? `<span style="color:#F59E0B;font-size:13px">${renderMiniStars(r.rating)}</span>` : ''}
             </div>
             <p style="font-size:13px;color:#374151;line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
           </div>`
@@ -2210,11 +2228,11 @@ function openMechanicProfile(p, booking, screen) {
   const statParts = [];
   if (p.jobs_completed > 0)
     statParts.push(
-      `<div style="text-align:center"><div style="font-size:17px;font-weight:800;color:#0D1F3C">${p.jobs_completed}</div><div style="font-size:11px;color:#6B7280">Jobs done</div></div>`
+      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:#0D1F3C">${p.jobs_completed}</div><div style="font-size:11px;color:#6B7280">Jobs done</div></div>`
     );
   if (p.rating)
     statParts.push(
-      `<div style="text-align:center"><div style="font-size:17px;font-weight:800;color:#0D1F3C">★ ${p.rating}</div><div style="font-size:11px;color:#6B7280">Rating</div></div>`
+      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:#0D1F3C">★ ${p.rating}</div><div style="font-size:11px;color:#6B7280">Rating</div></div>`
     );
 
   const panel = document.createElement('div');
@@ -2234,8 +2252,8 @@ function openMechanicProfile(p, booking, screen) {
       </div>
       <div style="display:flex;justify-content:center;margin-top:-44px">${avatarHTML}</div>
       <div style="text-align:center;padding:10px 20px 0">
-        <div style="font-size:17px;font-weight:700;color:#0D1F3C">${escapeHtml(p.name)}</div>
-        <div style="font-size:12px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
+        <div style="font-size:18px;font-weight:700;color:#0D1F3C">${escapeHtml(p.name)}</div>
+        <div style="font-size:13px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
         ${p.bio ? `<div style="font-size:13px;color:#374151;margin-top:10px;line-height:1.5">${escapeHtml(p.bio)}</div>` : ''}
       </div>
       ${statParts.length ? `<div style="display:flex;justify-content:center;gap:32px;padding:16px 20px">${statParts.join('')}</div>` : ''}
@@ -2277,15 +2295,15 @@ function openClientChat(bookingId, screen) {
         <button id="close-chat-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close chat">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div style="width:38px;height:38px;border-radius:50%;background:#1E40AF;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔧</div>
+        <div style="width:38px;height:38px;border-radius:50%;background:#1E40AF;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></div>
         <div style="min-width:0;flex:1">
           <div style="font-size:15px;font-weight:700;color:#0D1F3C">Your mechanic</div>
-          <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#059669"><span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block"></span>Online now</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:#059669"><span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block"></span>Online now</div>
         </div>
       </div>
       <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:#F9FAFB"></div>
       <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #E5E7EB;flex-shrink:0;background:#fff">
-        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:16px;outline:none;color:#0D1F3C;background:#fff" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
+        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:15px;outline:none;color:#0D1F3C;background:#fff" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
         <button id="client-chat-send" style="background:#2563EB;color:#fff;border:none;border-radius:50%;width:40px;height:40px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -2365,7 +2383,7 @@ function openClientChat(bookingId, screen) {
   (async () => {
     const msgs = panel.querySelector('#client-chat-msgs');
     msgs.innerHTML =
-      '<div style="text-align:center;font-size:12px;color:#6B7280;padding:20px">Loading messages...</div>';
+      '<div style="text-align:center;font-size:13px;color:#6B7280;padding:20px">Loading messages...</div>';
     let data = [];
     try {
       const {
@@ -2388,7 +2406,7 @@ function openClientChat(bookingId, screen) {
     msgs.innerHTML = '';
     if (!data?.length) {
       msgs.innerHTML =
-        '<div data-empty style="text-align:center;padding:40px 20px;color:#6B7280;margin:auto"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:14px;font-weight:600;color:#0D1F3C">No messages yet</div><div style="font-size:12px;margin-top:4px">Send a message to your mechanic</div></div>';
+        '<div data-empty style="text-align:center;padding:40px 20px;color:#6B7280;margin:auto"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:15px;font-weight:600;color:#0D1F3C">No messages yet</div><div style="font-size:13px;margin-top:4px">Send a message to your mechanic</div></div>';
     } else {
       data.forEach((m) => appendClientMsg(m, msgs, false));
     }
@@ -2423,7 +2441,7 @@ function appendClientMsg(msg, container, scroll) {
   const wrap = document.createElement('div');
   wrap.style.cssText = `display:flex;flex-direction:column;align-items:${isClient ? 'flex-end' : 'flex-start'};gap:2px`;
   const bubble = document.createElement('div');
-  bubble.style.cssText = `max-width:75%;padding:9px 13px;border-radius:${isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};font-size:14px;line-height:1.4;word-break:break-word;background:${isClient ? '#2563EB' : '#fff'};color:${isClient ? '#fff' : '#0D1F3C'};border:${isClient ? 'none' : '1px solid #E5E7EB'}`;
+  bubble.style.cssText = `max-width:75%;padding:9px 13px;border-radius:${isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};font-size:15px;line-height:1.4;word-break:break-word;background:${isClient ? '#2563EB' : '#fff'};color:${isClient ? '#fff' : '#0D1F3C'};border:${isClient ? 'none' : '1px solid #E5E7EB'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
   if (photoMatch) {
     const img = document.createElement('img');
@@ -2437,7 +2455,7 @@ function appendClientMsg(msg, container, scroll) {
     bubble.textContent = msg.message;
   }
   const time = document.createElement('div');
-  time.style.cssText = 'font-size:10px;color:#9CA3AF';
+  time.style.cssText = 'font-size:11px;color:#9CA3AF';
   time.textContent = new Date(msg.created_at).toLocaleTimeString('en-AU', {
     hour: '2-digit',
     minute: '2-digit',
@@ -2641,18 +2659,18 @@ async function renderReview() {
       screen.innerHTML = `
         <div style="padding:48px 24px;text-align:center">
           <div style="font-size:48px;margin-bottom:16px">&#11088;&#11088;&#11088;&#11088;&#11088;</div>
-          <h2 style="font-size:22px;font-weight:800;color:var(--color-text);margin-bottom:8px">Thanks for the 5 stars!</h2>
-          <p style="font-size:14px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:28px">
+          <h2 style="font-size:24px;font-weight:800;color:var(--color-text);margin-bottom:8px">Thanks for the 5 stars!</h2>
+          <p style="font-size:15px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:28px">
             Would you mind leaving a quick Google review? It helps other Sydney cyclists find us.
           </p>
           <div style="display:flex;flex-direction:column;gap:12px;max-width:280px;margin:0 auto">
             <a id="google-review-link" href="https://g.page/r/drbikesydney/review" target="_blank" rel="noopener"
-              style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:2px solid #E5E7EB;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:14px;color:#374151">
+              style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:2px solid #E5E7EB;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#374151">
               <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               Leave a Google Review
             </a>
             <a id="fb-share-link" href="https://www.facebook.com/drbikesydney" target="_blank" rel="noopener"
-              style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1877F2;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:14px;color:#fff">
+              style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1877F2;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#fff">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
               Share on Facebook
             </a>
@@ -2691,7 +2709,7 @@ async function renderLogin() {
 
   screen.innerHTML = `
     <div class="login-wrap">
-      <div class="login-logo" style="letter-spacing:-0.3px;font-size:22px">
+      <div class="login-logo" style="letter-spacing:-0.3px;font-size:24px">
         <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="32" style="width:auto;display:block">
         <span>Dr. <span style="color:#2563EB">Bike</span> Sydney</span>
       </div>
@@ -2701,7 +2719,7 @@ async function renderLogin() {
       ${
         isReset
           ? ''
-          : `<button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0D1F3C;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
+          : `<button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0D1F3C;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -2748,7 +2766,7 @@ async function renderLogin() {
       ${
         isReset
           ? `<div style="text-align:center;margin-top:14px">
-        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:12px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:#2563EB;font-weight:600">WhatsApp us</span></a>
+        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:#2563EB;font-weight:600">WhatsApp us</span></a>
       </div>`
           : ''
       }
@@ -2876,7 +2894,7 @@ function renderResetSent(email) {
         <button class="link-btn" id="back-to-signin-btn">Back to sign in</button>
       </div>
       <div style="text-align:center;margin-top:14px">
-        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:12px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:#2563EB;font-weight:600">WhatsApp us</span></a>
+        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:#2563EB;font-weight:600">WhatsApp us</span></a>
       </div>
     </div>
     ${createBottomNav('profile')}
@@ -2918,11 +2936,11 @@ function promptNewPassword() {
     'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.innerHTML = `
     <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px">
-      <div style="font-weight:700;color:#0D1F3C;font-size:16px;margin-bottom:6px">Set a new password</div>
+      <div style="font-weight:700;color:#0D1F3C;font-size:15px;margin-bottom:6px">Set a new password</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Choose a new password for your account.</div>
       <input id="reset-pw-inp" type="password" placeholder="New password" aria-label="New password" autocomplete="new-password"
         style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1.5px solid #E5E7EB;border-radius:10px;font-family:inherit;margin-bottom:10px">
-      <div id="reset-pw-err" style="display:none;color:#DC2626;font-size:12px;margin-bottom:10px"></div>
+      <div id="reset-pw-err" style="display:none;color:#DC2626;font-size:13px;margin-bottom:10px"></div>
       <button id="reset-pw-btn" class="btn btn--primary btn--full">Update password</button>
     </div>
   `;
@@ -3049,12 +3067,12 @@ async function renderMyBookings() {
             <div style="font-size:18px;font-weight:800;color:#0D1F3C;margin-bottom:4px">${booking.service_name || 'Service'}</div>
             <div style="display:inline-block;font-size:11px;font-weight:600;color:${sc};background:${sc}1A;padding:3px 10px;border-radius:20px;margin-bottom:20px">${sl}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;background:#F8FAFC;border-radius:12px;padding:16px;border:1px solid #E2E8F0">
-              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Date</span><span style="font-weight:600;color:#0D1F3C">${booking.scheduled_date || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Time</span><span style="font-weight:600;color:#0D1F3C">${booking.scheduled_time || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:14px"><span style="color:#475569">Address</span><span style="font-weight:600;color:#0D1F3C;text-align:right;max-width:60%">${booking.address || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#475569">Call-out fee</span><span style="font-weight:600;color:#0D1F3C">$${booking.callout_fee ?? 20}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:#475569">Date</span><span style="font-weight:600;color:#0D1F3C">${booking.scheduled_date || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:#475569">Time</span><span style="font-weight:600;color:#0D1F3C">${booking.scheduled_time || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:#475569">Address</span><span style="font-weight:600;color:#0D1F3C;text-align:right;max-width:60%">${booking.address || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:#475569">Call-out fee</span><span style="font-weight:600;color:#0D1F3C">$${booking.callout_fee ?? 20}</span></div>
             </div>
-            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#DC2626;margin-bottom:4px">Cancellation reason</div><div style="font-size:14px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
+            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#DC2626;margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
             ${
               booking.status === 'completed' &&
               (booking.photo_before_url || booking.photo_after_url)
@@ -3131,8 +3149,8 @@ async function renderMyBookings() {
                   ${avatarHTML}
                   <div style="min-width:0">
                     <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Your mechanic</div>
-                    <div style="font-size:14px;font-weight:700;color:#0D1F3C">${escapeHtml(p.name)}</div>
-                    ${metaParts.length ? `<div style="font-size:12px;color:#6B7280">${metaParts.join('  ·  ')}</div>` : ''}
+                    <div style="font-size:15px;font-weight:700;color:#0D1F3C">${escapeHtml(p.name)}</div>
+                    ${metaParts.length ? `<div style="font-size:13px;color:#6B7280">${metaParts.join('  ·  ')}</div>` : ''}
                   </div>
                 </div>
                 ${renderReviewSection(booking)}
@@ -3224,18 +3242,18 @@ async function renderMyBookings() {
             const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
             const fmtTime = (t) => t.replace(':00', '') + (parseInt(t) < 12 ? 'am' : 'pm');
             panel.innerHTML = `
-              <div style="font-size:17px;font-weight:700;margin-bottom:20px">📅 <span>Reschedule</span></div>
+              <div style="font-size:18px;font-weight:700;margin-bottom:20px">📅 <span>Reschedule</span></div>
               <div style="margin-bottom:16px">
                 <label for="resched-date" style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New date</label>
                 <input id="resched-date" type="date" min="${tomorrow}" value="${escapeHtml(booking.scheduled_date || '')}"
-                  style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
+                  style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:15px;background:var(--color-bg);color:var(--color-text)">
               </div>
               <div style="margin-bottom:24px">
                 <label for="resched-time" style="font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:6px">New time</label>
-                <select id="resched-time" disabled style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:var(--color-bg);color:var(--color-text)">
+                <select id="resched-time" disabled style="width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;font-size:15px;background:var(--color-bg);color:var(--color-text)">
                   <option>Loading available times...</option>
                 </select>
-                <div id="resched-time-err" style="display:none;font-size:12px;color:var(--color-error);margin-top:6px"></div>
+                <div id="resched-time-err" style="display:none;font-size:13px;color:var(--color-error);margin-top:6px"></div>
               </div>
               <button id="confirm-resched-btn" class="btn btn--primary btn--full" style="margin-bottom:10px">Confirm reschedule</button>
               <button id="back-detail-btn" class="btn btn--secondary btn--full">Back</button>
@@ -3483,22 +3501,22 @@ async function renderProfile() {
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-top:16px;box-shadow:var(--elevation-0)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           ${createTierBadge(riderTier, 'lg')}
-          <div style="font-size:12px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
+          <div style="font-size:13px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
         </div>
         ${
           riderTier.nextAt
             ? `<div style="height:6px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:6px">
                  <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px;transition:width var(--motion-base)"></div>
                </div>
-               <div style="font-size:12px;color:#6B7280"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
-            : `<div style="font-size:12px;color:#6B7280">You've reached our highest tier - thank you for riding with us!</div>`
+               <div style="font-size:13px;color:#6B7280"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
+            : `<div style="font-size:13px;color:#6B7280">You've reached our highest tier - thank you for riding with us!</div>`
         }
       </div>
 
       <div style="background:linear-gradient(135deg,#1E40AF,#1E3A8A);border-radius:16px;padding:20px;margin:20px 0;text-align:center">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Your referral code</div>
         <div id="ref-code-display" style="font-size:28px;font-weight:900;color:#fff;letter-spacing:0.18em;margin-bottom:4px">${refCode}</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:16px">You and your friend each get $15 off</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:16px">You and your friend each get $15 off</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Copy code</button>
           <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px"><span aria-hidden="true">📱</span><span>Share</span></a>
@@ -3508,16 +3526,16 @@ async function renderProfile() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
         <div style="background:#EFF6FF;border-radius:12px;padding:16px;text-align:center;border:1px solid #BFDBFE">
           <div style="font-size:28px;font-weight:800;color:#1E40AF">${referralCount}</div>
-          <div style="font-size:12px;color:#475569;margin-top:2px;font-weight:600">Friends referred</div>
+          <div style="font-size:13px;color:#475569;margin-top:2px;font-weight:600">Friends referred</div>
         </div>
         <div style="background:#F0FDF4;border-radius:12px;padding:16px;text-align:center;border:1px solid #BBF7D0">
           <div style="font-size:28px;font-weight:800;color:#16A34A">$${credits}</div>
-          <div style="font-size:12px;color:#475569;margin-top:2px;font-weight:600">Credits earned</div>
+          <div style="font-size:13px;color:#475569;margin-top:2px;font-weight:600">Credits earned</div>
         </div>
       </div>
 
       <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #E2E8F0">
-        <div style="font-size:14px;font-weight:700;color:#0D1F3C;margin-bottom:10px">How it works</div>
+        <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:10px">How it works</div>
         <div style="font-size:13px;color:#475569;line-height:1.8">
           1. Share your code with friends<br>
           2. They get $15 off their first service<br>
@@ -3571,15 +3589,15 @@ async function renderProfile() {
             savedCardId
               ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
-                  <div style="font-size:14px;font-weight:600;color:#0D1F3C">💳 Card on file</div>
-                  <div style="font-size:12px;color:#6B7280;margin-top:2px">Auto-charged when your mechanic completes a job</div>
+                  <div style="font-size:15px;font-weight:600;color:#0D1F3C">💳 Card on file</div>
+                  <div style="font-size:13px;color:#6B7280;margin-top:2px">Auto-charged when your mechanic completes a job</div>
                 </div>
                 <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #DC2626;color:#DC2626;background:#fff;white-space:nowrap">Remove</button>
               </div>`
               : `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
-                  <div style="font-size:14px;font-weight:600;color:#0D1F3C">No card saved</div>
-                  <div style="font-size:12px;color:#6B7280;margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
+                  <div style="font-size:15px;font-weight:600;color:#0D1F3C">No card saved</div>
+                  <div style="font-size:13px;color:#6B7280;margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
                 </div>
                 <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Add card</button>
               </div>`
@@ -3591,12 +3609,12 @@ async function renderProfile() {
         <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
           <div style="min-width:0">
-            <div style="font-size:14px;font-weight:600;color:#0D1F3C">Mechanic messages</div>
-            <div style="font-size:12px;color:#6B7280;margin-top:2px">Get a phone alert when your mechanic messages you</div>
+            <div style="font-size:15px;font-weight:600;color:#0D1F3C">Mechanic messages</div>
+            <div style="font-size:13px;color:#6B7280;margin-top:2px">Get a phone alert when your mechanic messages you</div>
           </div>
           ${
             typeof Notification !== 'undefined' && Notification.permission === 'granted'
-              ? '<span style="flex-shrink:0;font-size:12px;font-weight:600;color:#059669;white-space:nowrap">✓ <span>Enabled</span></span>'
+              ? '<span style="flex-shrink:0;font-size:13px;font-weight:600;color:#059669;white-space:nowrap">✓ <span>Enabled</span></span>'
               : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Enable</button>'
           }
         </div>
@@ -3838,7 +3856,7 @@ async function renderMyBikes() {
           <div style="width:88px;height:88px;border-radius:20px;background:#2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5">
             <span style="display:inline-block;width:56px;height:38px;background-color:#fff;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
-          <div style="margin-top:12px;font-size:14px">Loading bikes...</div>
+          <div style="margin-top:12px;font-size:15px">Loading bikes...</div>
         </div>
       </div>
       <button class="btn btn--primary btn--full" id="add-bike-btn">+ Add a Bike</button>
@@ -3848,21 +3866,21 @@ async function renderMyBikes() {
         <div style="font-size:15px;font-weight:700;margin-bottom:16px">New Bike</div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <input id="bike-nickname" type="text" placeholder="Name (e.g. Red Trek)*" aria-label="Bike name" maxlength="60"
-            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
+            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:15px;outline:none"/>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <input id="bike-brand" type="text" placeholder="Brand" aria-label="Brand" maxlength="40"
-              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:15px;outline:none"/>
             <input id="bike-model" type="text" placeholder="Model" aria-label="Model" maxlength="40"
-              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:15px;outline:none"/>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <input id="bike-color" type="text" placeholder="Color" aria-label="Color" maxlength="30"
-              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:15px;outline:none"/>
             <input id="bike-year" type="number" placeholder="Year" aria-label="Year" min="1990" max="2030"
-              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none"/>
+              style="min-width:0;background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:15px;outline:none"/>
           </div>
           <select id="bike-type" aria-label="Bike type"
-            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:16px;outline:none;appearance:none">
+            style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:10px;padding:12px 14px;color:var(--color-text);font-size:15px;outline:none;appearance:none">
             <option value="">Type (optional)</option>
             <option value="road">Road</option>
             <option value="mtb">Mountain Bike</option>
@@ -3871,7 +3889,7 @@ async function renderMyBikes() {
             <option value="cargo">Cargo</option>
             <option value="folding">Folding</option>
           </select>
-          <div id="bike-form-error" style="font-size:12px;color:var(--color-error);min-height:16px"></div>
+          <div id="bike-form-error" style="font-size:13px;color:var(--color-error);min-height:16px"></div>
           <div style="display:flex;gap:10px">
             <button id="cancel-bike-btn" class="btn btn--secondary btn-press" style="flex:1">Cancel</button>
             <button id="save-bike-btn" class="btn btn--primary btn-press" style="flex:1">Save Bike</button>
@@ -3897,8 +3915,8 @@ async function renderMyBikes() {
           <div style="width:88px;height:88px;border-radius:20px;background:#2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto">
             <span style="display:inline-block;width:56px;height:38px;background-color:#fff;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
-          <div style="margin-top:14px;font-size:14px">No bikes added yet</div>
-          <div style="font-size:12px;margin-top:4px;opacity:0.7">Add your first bike below</div>
+          <div style="margin-top:14px;font-size:15px">No bikes added yet</div>
+          <div style="font-size:13px;margin-top:4px;opacity:0.7">Add your first bike below</div>
         </div>`;
         return;
       }
@@ -3919,7 +3937,7 @@ async function renderMyBikes() {
           </div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:15px">${bike.name}</div>
-            <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">
+            <div style="font-size:13px;color:var(--color-text-secondary);margin-top:2px">
               ${[bike.brand, bike.model, bike.color, bike.year, TYPE_LABELS[bike.type]].filter(Boolean).join(' · ') || 'No details'}
             </div>
           </div>
@@ -3939,7 +3957,7 @@ async function renderMyBikes() {
           overlay.innerHTML = `
             <div style="background:var(--color-bg);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-                <div style="font-size:17px;font-weight:700">${bike.name}</div>
+                <div style="font-size:18px;font-weight:700">${bike.name}</div>
                 <div style="font-size:11px;color:var(--color-text-secondary)">${TYPE_LABELS[bike.type] || ''}</div>
               </div>
               <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
@@ -3952,7 +3970,7 @@ async function renderMyBikes() {
                   .filter((r) => r[1])
                   .map(
                     (r) =>
-                      `<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--color-text-secondary)">${r[0]}</span><span style="font-weight:500">${r[1]}</span></div>`
+                      `<div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--color-text-secondary)">${r[0]}</span><span style="font-weight:500">${r[1]}</span></div>`
                   )
                   .join('')}
               </div>
@@ -3990,7 +4008,7 @@ async function renderMyBikes() {
                   <span style="font-size:20px" aria-hidden="true">🔒</span>
                   <div style="min-width:0">
                     <div style="font-size:13px;font-weight:600;color:var(--color-text)">Service history is a Standard/VIP perk</div>
-                    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Upgrade your membership to see every past service for this bike.</div>
+                    <div style="font-size:13px;color:var(--color-text-secondary);margin-top:2px">Upgrade your membership to see every past service for this bike.</div>
                   </div>
                 </div>`;
               return;
@@ -4119,7 +4137,7 @@ async function renderMyBikes() {
                 <div style="height:1px;background:var(--color-border);margin-bottom:16px"></div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
                   <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-secondary)">Bike Health Score</div>
-                  <div style="font-size:10px;color:var(--color-text-secondary)">Last service: ${lastDate}</div>
+                  <div style="font-size:11px;color:var(--color-text-secondary)">Last service: ${lastDate}</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
                   <div style="width:64px;height:64px;flex-shrink:0;position:relative">
@@ -4128,11 +4146,11 @@ async function renderMyBikes() {
                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="${scoreColor}" stroke-width="3"
                         stroke-dasharray="${avg} ${100 - avg}" stroke-dashoffset="0" stroke-linecap="round"/>
                     </svg>
-                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${scoreColor}">${avg}%</div>
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${scoreColor}">${avg}%</div>
                   </div>
                   <div>
-                    <div style="font-size:17px;font-weight:700;color:${scoreColor}">${scoreLabel}</div>
-                    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${scored.length} components checked</div>
+                    <div style="font-size:18px;font-weight:700;color:${scoreColor}">${scoreLabel}</div>
+                    <div style="font-size:13px;color:var(--color-text-secondary);margin-top:2px">${scored.length} components checked</div>
                   </div>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:6px">
@@ -4334,7 +4352,7 @@ async function runAIDiagnosis(screen) {
   const resultEl = screen.querySelector('#diag-result');
   resultEl.style.display = 'block';
   resultEl.innerHTML =
-    '<div style="font-size:12px;color:var(--color-text-secondary)">&#128269; Analysing your photo...</div>';
+    '<div style="font-size:13px;color:var(--color-text-secondary)">&#128269; Analysing your photo...</div>';
   try {
     const dataUrl = await compressImageToBase64(file);
     const base64 = dataUrl.split(',')[1];
@@ -4346,7 +4364,7 @@ async function runAIDiagnosis(screen) {
     showDiagResult(screen, await resp.json());
   } catch {
     resultEl.innerHTML =
-      '<div style="font-size:12px;color:var(--color-error)">Could not analyse photo. Please describe the problem instead.</div>';
+      '<div style="font-size:13px;color:var(--color-error)">Could not analyse photo. Please describe the problem instead.</div>';
   }
 }
 
@@ -4356,7 +4374,7 @@ async function runAIDiagnosisText(screen) {
   const resultEl = screen.querySelector('#diag-result');
   resultEl.style.display = 'block';
   resultEl.innerHTML =
-    '<div style="font-size:12px;color:var(--color-text-secondary)">&#128269; Analysing...</div>';
+    '<div style="font-size:13px;color:var(--color-text-secondary)">&#128269; Analysing...</div>';
   try {
     const resp = await fetch('/api/chat?type=diagnose', {
       method: 'POST',
@@ -4366,7 +4384,7 @@ async function runAIDiagnosisText(screen) {
     showDiagResult(screen, await resp.json());
   } catch {
     resultEl.innerHTML =
-      '<div style="font-size:12px;color:var(--color-error)">Could not process. Please select a service manually.</div>';
+      '<div style="font-size:13px;color:var(--color-error)">Could not process. Please select a service manually.</div>';
   }
 }
 
@@ -4389,8 +4407,8 @@ function showDiagResult(screen, data) {
       : '';
   resultEl.innerHTML = `
     <div style="background:var(--color-bg);border-radius:8px;padding:12px;border:1px solid var(--color-border)">
-      <div style="font-size:12px;font-weight:700;color:var(--color-text);margin-bottom:6px">&#129302; AI Recommendation</div>
-      <div style="font-size:12px;color:var(--color-text);margin-bottom:8px">${data.diagnosis || 'Bike issue detected'}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--color-text);margin-bottom:6px">&#129302; AI Recommendation</div>
+      <div style="font-size:13px;color:var(--color-text);margin-bottom:8px">${data.diagnosis || 'Bike issue detected'}</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span style="font-size:11px;color:${sevColor};font-weight:600">${sev.charAt(0).toUpperCase() + sev.slice(1)} severity</span>
         <span style="color:var(--color-border)">&#183;</span>

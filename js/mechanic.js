@@ -216,7 +216,7 @@ function ratingHTML(jobs) {
   return `<div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px;text-align:center;margin-bottom:16px">
     <div style="font-size:32px;font-weight:800;color:var(--navy)">${avg}</div>
     <div style="font-size:20px;margin:4px 0">${stars}</div>
-    <div style="font-size:12px;color:var(--mgray)">${rated.length} review${rated.length !== 1 ? 's' : ''}</div>
+    <div style="font-size:13px;color:var(--mgray)">${rated.length} review${rated.length !== 1 ? 's' : ''}</div>
     ${rated
       .slice(-3)
       .reverse()
@@ -494,7 +494,7 @@ function render() {
       upcoming: '📅|No upcoming jobs|Future bookings show here',
       done: '✅|No completed jobs|Completed jobs appear here',
     }[tab]?.split('|');
-    c.innerHTML = `<div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:48px;margin-bottom:16px">${m[0]}</div><div style="font-size:16px;font-weight:600;color:var(--navy);margin-bottom:8px">${m[1]}</div><div style="font-size:13px">${m[2]}</div></div>`;
+    c.innerHTML = `<div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:48px;margin-bottom:16px">${m[0]}</div><div style="font-size:15px;font-weight:600;color:var(--navy);margin-bottom:8px">${m[1]}</div><div style="font-size:13px">${m[2]}</div></div>`;
     return;
   }
   c.innerHTML = list.map((j) => card(j)).join('');
@@ -663,7 +663,7 @@ function card(j) {
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:40px;height:40px;border-radius:50%;background:${sc[st]}1A;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:${sc[st]};flex-shrink:0;letter-spacing:-0.03em">${j.client
+        <div style="width:40px;height:40px;border-radius:50%;background:${sc[st]}1A;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:${sc[st]};flex-shrink:0;letter-spacing:-0.03em">${j.client
           .split(' ')
           .map((n) => n[0] || '')
           .join('')
@@ -678,7 +678,7 @@ function card(j) {
         ? `<div style="padding:0 18px 6px"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${MEMBERSHIP_BADGE[j.membership_plan].color}15;color:${MEMBERSHIP_BADGE[j.membership_plan].color}">${MEMBERSHIP_BADGE[j.membership_plan].label}</span></div>`
         : ''
     }
-    ${isEnroute ? `<div id="timer-${j.id}" style="font-size:12px;color:#D97706;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
+    ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:#D97706;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
     <div class="job-service">${esc(j.service)}</div>
     <div class="job-addr">${j.address || j.suburb || '—'}</div>
     ${j.phone ? `<div class="job-addr">${esc(j.phone)}</div>` : ''}
@@ -846,10 +846,10 @@ function promptArrivalPin(id) {
       <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Ask the client for their 4-digit code and enter it below.</div>
       <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="4-digit arrival code"
         style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy);background:var(--off)">
-      <div id="pin-error" style="display:none;color:#DC2626;font-size:12px;margin-top:8px"></div>
+      <div id="pin-error" style="display:none;color:#DC2626;font-size:13px;margin-top:8px"></div>
       <div style="display:flex;gap:10px;margin-top:18px">
-        <button id="pin-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
-        <button id="pin-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirm arrival</button>
+        <button id="pin-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
+        <button id="pin-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirm arrival</button>
       </div>
     </div>
   `;
@@ -991,8 +991,8 @@ function openCompleteModal(id) {
       ${
         j.discount_applied > 0
           ? `<div style="margin:16px 16px 0;background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:10px;padding:12px 14px">
-        <div style="font-size:12px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
-        <div style="font-size:14px;color:#065F46">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
+        <div style="font-size:13px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
+        <div style="font-size:15px;color:#065F46">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
       </div>`
           : ''
       }
@@ -1023,14 +1023,14 @@ function openCompleteModal(id) {
             <input id="mech-disc-code" placeholder="Discount code (optional)" aria-label="Discount code" style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);text-transform:uppercase" />
             <button type="button" data-action="apply-mech-discount" id="mech-disc-btn" style="flex-shrink:0;padding:0 16px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Apply</button>
           </div>
-          <div id="mech-disc-msg" style="display:none;font-size:12px;font-weight:600;margin-top:6px"></div>
+          <div id="mech-disc-msg" style="display:none;font-size:13px;font-weight:600;margin-top:6px"></div>
         </div>
         <div>
           <label for="mech-tip-input" style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">💚 Tip (optional, 100% goes to you)</label>
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:15px;font-weight:700;color:var(--navy)">$</span>
             <input id="mech-tip-input" type="number" min="0" step="1" placeholder="0" inputmode="decimal"
-              style="flex:1;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);background:var(--white);color:var(--navy)"
+              style="flex:1;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:var(--sans);background:var(--white);color:var(--navy)"
               oninput="setMechTip(this.value)">
           </div>
         </div>
@@ -1146,7 +1146,7 @@ function openCompleteModal(id) {
           (item, i) => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
           <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#DC2626' : '#059669'};flex-shrink:0" onchange="checklistChanged()">
-          <span>${item.label}${item.required ? '<span style="color:#DC2626;font-size:10px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
+          <span>${item.label}${item.required ? '<span style="color:#DC2626;font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
         )
         .join('');
@@ -1241,14 +1241,14 @@ async function openPartsPicker() {
       </button>
       <div style="flex:1;min-width:0">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">Parts used</div>
-        <div style="font-size:12px;color:#6B7280"><span id="pp-count">0</span> selected · stock deducts on complete</div>
+        <div style="font-size:13px;color:#6B7280"><span id="pp-count">0</span> selected · stock deducts on complete</div>
       </div>
     </div>
     <div id="pp-list" style="flex:1;overflow-y:auto;padding:14px 16px;background:var(--off)">
       <div style="text-align:center;color:#6B7280;font-size:13px;padding:30px">Loading parts...</div>
     </div>
     <div style="padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white);display:flex;flex-direction:column;gap:8px">
-      <button data-action="confirm-parts" data-value="true" id="pp-done" disabled style="width:100%;padding:13px;background:#1E40AF;color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;opacity:0.5">Confirm parts</button>
+      <button data-action="confirm-parts" data-value="true" id="pp-done" disabled style="width:100%;padding:13px;background:#1E40AF;color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;opacity:0.5">Confirm parts</button>
       <button data-action="confirm-parts" data-value="false" style="width:100%;padding:11px;background:none;border:1.5px solid var(--border);color:var(--navy);border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">No parts used in this service</button>
     </div>`;
   document.body.appendChild(panel);
@@ -1271,7 +1271,7 @@ function renderPartsPicker(parts) {
   if (!list) return;
   if (!parts.length) {
     list.innerHTML =
-      '<div style="text-align:center;padding:40px 20px;color:#6B7280"><div style="font-size:40px;margin-bottom:10px">📦</div><div style="font-size:14px;font-weight:600;color:var(--navy)">No parts in inventory</div><div style="font-size:12px;margin-top:4px">Add parts from the admin panel</div></div>';
+      '<div style="text-align:center;padding:40px 20px;color:#6B7280"><div style="font-size:40px;margin-bottom:10px">📦</div><div style="font-size:15px;font-weight:600;color:var(--navy)">No parts in inventory</div><div style="font-size:13px;margin-top:4px">Add parts from the admin panel</div></div>';
     return;
   }
   // Stash for stepper lookups
@@ -1290,7 +1290,7 @@ function renderPartsPicker(parts) {
       html += `<div style="margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
         <span style="font-size:15px">${m.icon}</span>
-        <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${m.color}">${esc(m.label)}</span>
+        <span style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${m.color}">${esc(m.label)}</span>
       </div>`;
       byCat[cat].forEach((p) => {
         const qty = _partsUsed[p.id]?.qty || 0;
@@ -1425,7 +1425,7 @@ function renderChargeBreakdown() {
   rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--navy);margin-bottom:6px"><span>Service</span><span>$${b.service.toFixed(2)}</span></div>`;
   if (b.partsItems.length) {
     b.partsItems.forEach((p) => {
-      rows += `<div style="display:flex;justify-content:space-between;font-size:12px;color:#6B7280;margin-bottom:4px;padding-left:8px"><span>${p.qty}× ${esc(p.name)}</span><span>$${(p.qty * (p.sell_price || 0)).toFixed(2)}</span></div>`;
+      rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B7280;margin-bottom:4px;padding-left:8px"><span>${p.qty}× ${esc(p.name)}</span><span>$${(p.qty * (p.sell_price || 0)).toFixed(2)}</span></div>`;
     });
   }
   if (b.mechDiscountAmount > 0) {
@@ -1608,7 +1608,7 @@ async function submitComplete(id) {
       const section = document.getElementById('pay-method-section');
       if (section) {
         section.innerHTML = `
-          <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:10px 12px;color:#B91C1C;font-size:12px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
+          <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:10px 12px;color:#B91C1C;font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
           <div style="display:flex;gap:8px">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
@@ -1804,10 +1804,10 @@ async function openClientHistory(bookingId, clientName, clientId) {
     <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:24px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div>
-          <div style="font-size:17px;font-weight:700;color:var(--navy)">${esc(clientName)}</div>
-          <div style="font-size:12px;color:var(--mgray)">Service history</div>
+          <div style="font-size:18px;font-weight:700;color:var(--navy)">${esc(clientName)}</div>
+          <div style="font-size:13px;color:var(--mgray)">Service history</div>
         </div>
-        <button data-action="close-history-modal" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mgray)">✕</button>
+        <button data-action="close-history-modal" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--mgray)">✕</button>
       </div>
       <div id="history-content" style="min-height:80px;display:flex;align-items:center;justify-content:center">
         <div style="color:var(--mgray);font-size:13px">Loading history...</div>
@@ -1871,7 +1871,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
             <div style="font-size:13px;font-weight:700;color:#059669">$${b.service_price || 0}</div>
           </div>
           <div style="font-size:11px;color:var(--mgray);margin-bottom:4px">${d} ${stars ? '· ' + stars : ''}</div>
-          ${b.client_review ? `<div style="font-size:12px;color:#6B7280;font-style:italic">&ldquo;${esc(b.client_review)}&rdquo;</div>` : ''}
+          ${b.client_review ? `<div style="font-size:13px;color:#6B7280;font-style:italic">&ldquo;${esc(b.client_review)}&rdquo;</div>` : ''}
           ${b.mechanic_notes ? `<div style="font-size:11px;color:#1848C8;margin-top:4px">📝 ${esc(b.mechanic_notes)}</div>` : ''}
         </div>`;
         })
@@ -1958,7 +1958,7 @@ async function loadInventory() {
     });
     let html = '';
     for (const [cat, items] of Object.entries(byCategory)) {
-      html += `<div style="margin-bottom:20px"><h3 style="font-size:12px;font-weight:700;text-transform:uppercase;color:#6B7280;margin-bottom:8px">${esc(cat)}</h3>`;
+      html += `<div style="margin-bottom:20px"><h3 style="font-size:13px;font-weight:700;text-transform:uppercase;color:#6B7280;margin-bottom:8px">${esc(cat)}</h3>`;
       items.forEach((item) => {
         const low = item.stock <= item.min_stock;
         html += `<div class="inv-row${low ? ' low' : ''}">
@@ -1967,9 +1967,9 @@ async function loadInventory() {
             ${low ? '<div style="font-size:11px;color:#DC2626;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
+            <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
             <span style="font-size:15px;font-weight:700;min-width:28px;text-align:center;color:var(--navy)" id="qty-${item.id}">${item.stock}</span>
-            <button data-action="update-qty" data-id="${item.id}" data-delta="1" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
+            <button data-action="update-qty" data-id="${item.id}" data-delta="1" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
           </div>
         </div>`;
       });
@@ -2074,14 +2074,14 @@ function renderSpareParts() {
       html += `<div style="margin-bottom:18px">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
           <span style="font-size:15px">${m.icon}</span>
-          <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${m.color}">${esc(m.label)}</span>
+          <span style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${m.color}">${esc(m.label)}</span>
         </div>`;
       byCat[cat].forEach((p) => {
         const hasPrice = p.sell_price !== null && p.sell_price !== undefined;
         const price = hasPrice ? '$' + parseFloat(p.sell_price).toFixed(2) : 'No price set';
         html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--white);border:1px solid var(--border);border-left:3px solid ${m.color};border-radius:10px;padding:12px 14px;margin-bottom:7px">
           <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.name)}</div>
-          <div style="font-size:16px;font-weight:800;color:${hasPrice ? m.color : 'var(--mgray)'};flex-shrink:0">${price}</div>
+          <div style="font-size:15px;font-weight:800;color:${hasPrice ? m.color : 'var(--mgray)'};flex-shrink:0">${price}</div>
         </div>`;
       });
       html += '</div>';
@@ -2314,7 +2314,7 @@ function profile() {
       <div class="profile-av">${mechanic?.first_name?.[0] || 'M'}${mechanic?.last_name?.[0] || ''}</div>
       <div style="font-size:18px;font-weight:700;color:var(--navy)">${mechanic?.first_name} ${mechanic?.last_name}</div>
       <div style="font-size:13px;color:var(--mgray);margin-top:4px">Van ${vanNum} · ${mechanic?.role || 'Mechanic'}</div>
-      ${rated.length ? `<div style="font-size:20px;margin-top:8px">${stars} <span style="font-size:15px;font-weight:700;color:var(--navy)">${avgRating}</span> <span style="font-size:12px;color:var(--mgray)">(${rated.length} reviews)</span></div>` : ''}
+      ${rated.length ? `<div style="font-size:20px;margin-top:8px">${stars} <span style="font-size:15px;font-weight:700;color:var(--navy)">${avgRating}</span> <span style="font-size:13px;color:var(--mgray)">(${rated.length} reviews)</span></div>` : ''}
     </div>
 
     <!-- Earnings cards -->
@@ -2323,23 +2323,23 @@ function profile() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="background:linear-gradient(135deg,#1848C8,#0D1F3C);border-radius:14px;padding:16px;color:#fff">
           <div style="font-size:11px;opacity:0.7;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Today</div>
-          <div style="font-size:26px;font-weight:800;margin-top:4px">$${todayRev}</div>
-          <div style="font-size:12px;opacity:0.7;margin-top:2px">${td.length} job${td.length !== 1 ? 's' : ''}</div>
+          <div style="font-size:24px;font-weight:800;margin-top:4px">$${todayRev}</div>
+          <div style="font-size:13px;opacity:0.7;margin-top:2px">${td.length} job${td.length !== 1 ? 's' : ''}</div>
         </div>
         <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
           <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">This week</div>
-          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${weekRev}</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${wk.length} job${wk.length !== 1 ? 's' : ''}</div>
+          <div style="font-size:24px;font-weight:800;color:var(--navy);margin-top:4px">$${weekRev}</div>
+          <div style="font-size:13px;color:var(--mgray);margin-top:2px">${wk.length} job${wk.length !== 1 ? 's' : ''}</div>
         </div>
         <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
           <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">This month</div>
-          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${monthRev}</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${mo.length} job${mo.length !== 1 ? 's' : ''}</div>
+          <div style="font-size:24px;font-weight:800;color:var(--navy);margin-top:4px">$${monthRev}</div>
+          <div style="font-size:13px;color:var(--mgray);margin-top:2px">${mo.length} job${mo.length !== 1 ? 's' : ''}</div>
         </div>
         <div style="background:var(--off);border:1px solid var(--border);border-radius:14px;padding:16px">
           <div style="font-size:11px;color:var(--mgray);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">All time</div>
-          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-top:4px">$${totalRev}</div>
-          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${all.length} job${all.length !== 1 ? 's' : ''}</div>
+          <div style="font-size:24px;font-weight:800;color:var(--navy);margin-top:4px">$${totalRev}</div>
+          <div style="font-size:13px;color:var(--mgray);margin-top:2px">${all.length} job${all.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
     </div>
@@ -2366,7 +2366,7 @@ function profile() {
     <div style="padding:0 16px;margin-bottom:20px">${ratingHTML(jobs)}</div>
 
     <div style="padding:0 16px">
-      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
+      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
     </div>
   </div>`;
 }
@@ -2413,11 +2413,11 @@ function renderAgenda() {
     html += `<div style="margin-top:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700;color:${isToday ? '#1848C8' : '#0D1F3C'}">${label}</div>
-        ${dayJobs.length ? `<div style="font-size:12px;color:#6B7280">${dayJobs.length} job${dayJobs.length !== 1 ? 's' : ''} · $${revenue}</div>` : ''}
+        ${dayJobs.length ? `<div style="font-size:13px;color:#6B7280">${dayJobs.length} job${dayJobs.length !== 1 ? 's' : ''} · $${revenue}</div>` : ''}
       </div>`;
 
     if (!dayJobs.length) {
-      html += `<div style="padding:12px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;font-size:12px;color:#9CA3AF">No jobs scheduled</div>`;
+      html += `<div style="padding:12px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;font-size:13px;color:#9CA3AF">No jobs scheduled</div>`;
     } else {
       // Timeline view
       const times = [
@@ -2460,7 +2460,7 @@ function renderAgenda() {
           <div style="width:52px;font-size:11px;color:#9CA3AF;padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">
             <div style="font-size:13px;font-weight:600;color:#0D1F3C">${esc(j.service)}</div>
-            <div style="font-size:12px;color:#6B7280;margin-top:2px">${esc(j.client)} · ${j.suburb || j.address || '—'}</div>
+            <div style="font-size:13px;color:#6B7280;margin-top:2px">${esc(j.client)} · ${j.suburb || j.address || '—'}</div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
               <span style="font-size:11px;font-weight:600;color:${color}">${j.status.toUpperCase()}</span>
               <span style="font-size:13px;font-weight:700;color:#0D1F3C">$${j.price}</span>
@@ -2515,7 +2515,7 @@ function openMechChat(bookingId) {
     modal.innerHTML = `
       <div style="background:var(--white);border-radius:16px 16px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column">
         <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <div style="font-weight:700;color:var(--navy);font-size:14px">💬 Chat with client</div>
+          <div style="font-weight:700;color:var(--navy);font-size:15px">💬 Chat with client</div>
           <button data-action="close-mech-chat" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">×</button>
         </div>
         <div id="mech-chat-msgs" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--off);min-height:200px"></div>
@@ -2555,7 +2555,7 @@ async function loadMechMessages(bookingId) {
   c.innerHTML = '';
   if (!data.length) {
     c.innerHTML =
-      '<div style="text-align:center;color:#6B7280;font-size:12px;padding:20px">No messages yet</div>';
+      '<div style="text-align:center;color:#6B7280;font-size:13px;padding:20px">No messages yet</div>';
     return;
   }
   data.forEach((m) => appendMechMessage(m, false));
@@ -2583,7 +2583,7 @@ function appendMechMessage(msg, scroll = true) {
     bubble.textContent = msg.message;
   }
   const time = document.createElement('div');
-  time.style.cssText = 'font-size:10px;color:#6B7280';
+  time.style.cssText = 'font-size:11px;color:#6B7280';
   time.textContent = new Date(msg.created_at).toLocaleTimeString('en-AU', {
     hour: '2-digit',
     minute: '2-digit',
