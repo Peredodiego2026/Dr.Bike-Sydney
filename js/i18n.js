@@ -104,6 +104,10 @@ const dict = {
     jobs: 'trabajos',
     // My Bikes
     'My Bikes': 'Mis Bicis',
+    'Service history is a Standard/VIP perk':
+      'El historial de servicios es un beneficio Standard/VIP',
+    'Upgrade your membership to see every past service for this bike.':
+      'Mejorá tu membresía para ver todos los servicios anteriores de esta bici.',
     'No bikes added yet': 'Aún no has agregado bicis',
     'Add your first bike below': 'Agrega tu primera bici abajo',
     '+ Add a Bike': '+ Agregar una Bici',
@@ -870,8 +874,8 @@ const dict = {
     '1 free minor repair per month (any repair under $60)':
       '1 reparación menor gratis por mes (cualquier arreglo de menos de $60)',
     '1 free bike wash per month': '1 lavado de bici gratis por mes',
-    'Call-out fee is not included - the standard $20 call-out fee still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-      'La tarifa de visita no está incluida - se cobra igual la tarifa de $20 en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    'Digital service history log is a Standard/VIP perk. Call-out fee is not included - the standard $20 call-out fee still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'El historial digital de servicios es un beneficio Standard/VIP. La tarifa de visita no está incluida - se cobra igual la tarifa de $20 en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
       'Un lavado más una reparación menor promedio vale unos $75. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
     '2 free minor repairs per month (any repair under $60)':
@@ -1179,6 +1183,9 @@ const dict = {
     "We'll try to send your job to them first.": '我们会优先尝试把订单分配给该技工。',
     jobs: '单',
     // My Bikes
+    'Service history is a Standard/VIP perk': '服务记录是Standard/VIP会员专享',
+    'Upgrade your membership to see every past service for this bike.':
+      '升级会员即可查看这辆车的所有历史服务记录。',
     'No bikes added yet': '尚未添加自行车',
     'Add your first bike below': '在下方添加您的第一辆自行车',
     '+ Add a Bike': '+ 添加自行车',
@@ -1897,8 +1904,8 @@ const dict = {
     '1 free minor repair per month (any repair under $60)':
       '每月1次免费小额维修（任何低于$60的维修）',
     '1 free bike wash per month': '每月1次免费洗车',
-    'Call-out fee is not included - the standard $20 call-out fee still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-      '不含上门费 - 您的覆盖服务仍需支付标准的$20上门费。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    'Digital service history log is a Standard/VIP perk. Call-out fee is not included - the standard $20 call-out fee still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '数字化服务记录是Standard/VIP会员专享。不含上门费 - 您的覆盖服务仍需支付标准的$20上门费。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
       '一次洗车加一次平均小额维修价值约$75。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
     '2 free minor repairs per month (any repair under $60)':

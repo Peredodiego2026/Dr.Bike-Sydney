@@ -3702,6 +3702,21 @@ async function renderMyBikes() {
     return;
   }
 
+  // Service history is a Standard/VIP perk (Diego, 2026-07-22) - Basic and
+  // non-members still get the bike list and Bike Health Score, just not the
+  // per-service log. Fetched once here rather than per-bike-click.
+  let hasHistoryAccess = false;
+  try {
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('membership_plan, membership_status')
+      .eq('id', user.id)
+      .maybeSingle();
+    hasHistoryAccess =
+      ['standard', 'vip'].includes(profile?.membership_plan) &&
+      profile?.membership_status === 'active';
+  } catch {}
+
   screen.innerHTML = `
     ${createHeader('My Bikes', false)}
     <div class="profile-wrap">
@@ -3851,10 +3866,23 @@ async function renderMyBikes() {
             if (e.target === overlay) overlay.remove();
           });
 
-          // Per-bike service history (bookings linked via bike_id)
+          // Per-bike service history (bookings linked via bike_id) - Standard/VIP only
           (async () => {
             const hEl = overlay.querySelector('#history-list');
             if (!hEl) return;
+            if (!hasHistoryAccess) {
+              hEl.style.textAlign = 'left';
+              hEl.style.padding = '0';
+              hEl.innerHTML = `
+                <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+                  <span style="font-size:20px" aria-hidden="true">🔒</span>
+                  <div style="min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:var(--color-text)">Service history is a Standard/VIP perk</div>
+                    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Upgrade your membership to see every past service for this bike.</div>
+                  </div>
+                </div>`;
+              return;
+            }
             try {
               const { data: hist } = await sb
                 .from('bookings')
