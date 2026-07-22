@@ -194,44 +194,87 @@ export function applySurcharge(amount, dateStr) {
   return Math.round(amount * SURCHARGE_MULTIPLIER * 100) / 100;
 }
 
-// Membership plans (confirmed with Diego): each plan includes N services/month.
-// Basic's included visit still incurs the callout fee ("solo por ir" - Diego's
-// words); Standard/VIP's included visit(s) waive it entirely. Once a member's
-// monthly quota is used, every subsequent booking is full price with their
-// plan's ongoing repair discount applied to both price and fee (same
-// both-components convention the Sunday surcharge already uses). VIP has no
-// quota - every booking is "included".
+// Membership plans (confirmed with Diego, revised version): each plan gets
+// 3 separate monthly quotas - "minor" (any service under $60), "wash" (the
+// Bike Wash service), and "tuneup" (the Tune-Up service) - matched against
+// the real services table by price/name, not a hardcoded list. Basic's
+// included visits still incur the callout fee ("solo por ir" - Diego's
+// words); Standard/VIP's waive it entirely. A booking that doesn't fall into
+// any of the 3 categories (e.g. a Standard Service or a repair >= $60), or
+// one that does but has used up that category's quota, is full price with
+// the plan's ongoing discount applied to both price and fee (same
+// both-components convention the Sunday surcharge already uses). VIP's
+// discount gets a further +5 points because there's no separate "parts"
+// line item to discount on its own - it stacks onto the whole beyond-quota
+// price instead.
+//
+// "Emergency" callout terms and VIP's "unless outside your zone" fee waiver
+// are policy stated in the plan copy, not enforced here - there's no
+// "is_emergency" flag or "client's home zone" concept in the booking flow
+// today, so those stay a manual call at booking/admin time rather than an
+// automated check.
 export const MEMBERSHIP_PLANS = {
-  basic: { monthlyQuota: 1, waiveCallout: false, discountPct: 10 },
-  standard: { monthlyQuota: 2, waiveCallout: true, discountPct: 10 },
-  vip: { monthlyQuota: Infinity, waiveCallout: true, discountPct: 20 },
+  basic: { quotas: { minor: 1, wash: 1, tuneup: 0 }, waiveCallout: false, discountPct: 5 },
+  standard: { quotas: { minor: 2, wash: 1, tuneup: 1 }, waiveCallout: true, discountPct: 10 },
+  vip: {
+    quotas: { minor: 3, wash: 2, tuneup: 1 },
+    waiveCallout: true,
+    discountPct: 15,
+    bonusDiscountPct: 5,
+  },
 };
 
+const MINOR_SERVICE_MAX_PRICE = 60;
+
+// Which free-quota bucket (if any) a service falls into, matched against the
+// base (pre-surcharge) price/name so a Sunday surcharge never pushes a
+// service in or out of the "minor" bucket.
+export function membershipCategoryFor(serviceName, basePrice) {
+  if (serviceName === 'Bike Wash') return 'wash';
+  if (serviceName === 'Tune-Up') return 'tuneup';
+  if (Number(basePrice) < MINOR_SERVICE_MAX_PRICE) return 'minor';
+  return null;
+}
+
 // Counts this client's non-cancelled bookings already scheduled in the same
-// calendar month as scheduledDate - i.e. how many of their monthly quota
-// they've already used, so this NEW booking knows whether it's the included
-// visit or an extra one. Uses the booking being scheduled's own month, not
-// today's, so booking ahead into next month checks next month's quota.
-async function countMonthlyBookings(sb, clientId, scheduledDate) {
+// calendar month as scheduledDate, broken down by membership category - i.e.
+// how many of each monthly quota they've already used, so this NEW booking
+// knows whether it's an included visit or an extra one. Uses the booking
+// being scheduled's own month, not today's, so booking ahead into next month
+// checks next month's quota.
+async function countMonthlyBookingsByCategory(sb, clientId, scheduledDate) {
   const [y, m] = String(scheduledDate).split('-');
   const monthStart = `${y}-${m}-01`;
   const nextMonth = new Date(Number(y), Number(m), 1); // JS month is 0-based, so this is already +1
   const monthEnd = nextMonth.toISOString().split('T')[0];
-  const { count } = await sb
+  const { data } = await sb
     .from('bookings')
-    .select('id', { count: 'exact', head: true })
+    .select('service_name, service_price')
     .eq('client_id', clientId)
     .neq('status', 'cancelled')
     .gte('scheduled_date', monthStart)
     .lt('scheduled_date', monthEnd);
-  return count || 0;
+  const counts = { minor: 0, wash: 0, tuneup: 0 };
+  for (const b of data || []) {
+    const cat = membershipCategoryFor(b.service_name, b.service_price);
+    if (cat) counts[cat]++;
+  }
+  return counts;
 }
 
 // Authoritative pricing: base prices in, membership-adjusted prices out.
 // Shared by the client-facing quote endpoint (so what Stripe charges is
 // already correct) and handleCreateBooking's own verification (so a booking
 // can never be created for less than what membership rules actually allow).
-async function applyMembershipPricing(sb, clientId, scheduledDate, servicePrice, calloutFee) {
+async function applyMembershipPricing(
+  sb,
+  clientId,
+  scheduledDate,
+  servicePrice,
+  calloutFee,
+  serviceName,
+  basePrice
+) {
   const { data: profile } = await sb
     .from('profiles')
     .select('membership_plan, membership_status')
@@ -241,16 +284,19 @@ async function applyMembershipPricing(sb, clientId, scheduledDate, servicePrice,
   if (!plan || profile.membership_status !== 'active')
     return { servicePrice, calloutFee, plan: null, included: false };
 
-  const usedThisMonth = await countMonthlyBookings(sb, clientId, scheduledDate);
-  if (usedThisMonth < plan.monthlyQuota) {
-    return {
-      servicePrice: 0,
-      calloutFee: plan.waiveCallout ? 0 : calloutFee,
-      plan: profile.membership_plan,
-      included: true,
-    };
+  const category = membershipCategoryFor(serviceName, basePrice);
+  if (category && plan.quotas[category] > 0) {
+    const usedThisMonth = await countMonthlyBookingsByCategory(sb, clientId, scheduledDate);
+    if (usedThisMonth[category] < plan.quotas[category]) {
+      return {
+        servicePrice: 0,
+        calloutFee: plan.waiveCallout ? 0 : calloutFee,
+        plan: profile.membership_plan,
+        included: true,
+      };
+    }
   }
-  const pct = (100 - plan.discountPct) / 100;
+  const pct = (100 - plan.discountPct - (plan.bonusDiscountPct || 0)) / 100;
   return {
     servicePrice: Math.round(servicePrice * pct * 100) / 100,
     calloutFee: Math.round(calloutFee * pct * 100) / 100,
@@ -331,11 +377,11 @@ async function handleGetPrice(req, res) {
 
   let svc = null;
   if (service_id) {
-    const r = await sb.from('services').select('price').eq('id', service_id).maybeSingle();
+    const r = await sb.from('services').select('name,price').eq('id', service_id).maybeSingle();
     svc = r.data;
   }
   if (!svc && service_name) {
-    const r = await sb.from('services').select('price').eq('name', service_name).maybeSingle();
+    const r = await sb.from('services').select('name,price').eq('name', service_name).maybeSingle();
     svc = r.data;
   }
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
@@ -357,7 +403,9 @@ async function handleGetPrice(req, res) {
     user.id,
     scheduled_date,
     baseServicePrice,
-    baseCalloutFee
+    baseCalloutFee,
+    svc.name,
+    svc.price
   );
   return res.status(200).json({
     servicePrice: priced.servicePrice,
@@ -452,7 +500,9 @@ async function handleCreateBooking(req, res) {
       user.id,
       scheduled_date,
       servicePrice,
-      calloutFee
+      calloutFee,
+      svc.name,
+      svc.price
     );
     servicePrice = priced.servicePrice;
     calloutFee = priced.calloutFee;
@@ -854,6 +904,31 @@ async function handleMechanicJobs(req, res) {
       const ageMs = Date.now() - new Date(j.created_at).getTime();
       return ageMs >= windowMs;
     });
+  }
+
+  // Attach each client's membership status so the mechanic can see, before
+  // charging, whether this job is a covered/discounted visit and by how
+  // much (Diego: "el mecanico debe ser capaz de ver que el cliente...tiene
+  // una membresia activa para que sepa cuando aplicar descuento y cuanto").
+  const clientIds = [...new Set(jobs.map((j) => j.client_id).filter(Boolean))];
+  if (clientIds.length) {
+    const idsFilter = clientIds.map((id) => `"${id}"`).join(',');
+    const profResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?select=id,membership_plan,membership_status&id=in.(${idsFilter})`,
+      { headers: hdrs }
+    );
+    if (profResp.ok) {
+      const profiles = await profResp.json();
+      const byId = new Map(profiles.map((p) => [p.id, p]));
+      jobs = jobs.map((j) => {
+        const p = byId.get(j.client_id);
+        return {
+          ...j,
+          client_membership_plan: p?.membership_plan || null,
+          client_membership_status: p?.membership_status || null,
+        };
+      });
+    }
   }
 
   return res.status(200).json(jobs);

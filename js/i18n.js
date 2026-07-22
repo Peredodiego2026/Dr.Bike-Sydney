@@ -841,6 +841,48 @@ const dict = {
     'Get Started - $57/month': 'Comenzar - $57/mes',
     'Get Started - $97/month': 'Comenzar - $97/mes',
     'Get Started - $147/month': 'Comenzar - $147/mes',
+    'Get Started - $67/month': 'Comenzar - $67/mes',
+    'Get Started - $197/month': 'Comenzar - $197/mes',
+
+    // ── Membership redesign 2026-07-22 (3 free-quota categories) ─────────
+    '1 free minor repair (under $60) + 1 free bike wash per month':
+      '1 reparación menor gratis (menos de $60) + 1 lavado gratis por mes',
+    '5% off extra services': '5% de descuento en servicios extra',
+    '10% off extra services': '10% de descuento en servicios extra',
+    '$20 call-out fee applies': 'Se cobra la tarifa de visita de $20',
+    'Priority scheduling (72hs)': 'Turnos prioritarios (72hs)',
+    '2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month':
+      '2 reparaciones menores gratis (menos de $60) + 1 lavado gratis + 1 Ajuste gratis por mes',
+    'Call-out fee included': 'Tarifa de visita incluida',
+    '1 emergency callout per month (call-out fee applies)':
+      '1 visita de emergencia por mes (se cobra la tarifa de visita)',
+    '3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month':
+      '3 reparaciones menores gratis (menos de $60) + 2 lavados gratis + 1 Ajuste gratis por mes',
+    '15% off extra services, plus 5% more': '15% de descuento en servicios extra, más 5% adicional',
+    '1 emergency callout per month (call-out fee waived in your zone)':
+      '1 visita de emergencia por mes (tarifa de visita gratis dentro de tu zona)',
+    '1 free minor repair per month (any repair under $60)':
+      '1 reparación menor gratis por mes (cualquier arreglo de menos de $60)',
+    '1 free bike wash per month': '1 lavado de bici gratis por mes',
+    'Call-out fee is not included - the standard $20 call-out fee still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'La tarifa de visita no está incluida - se cobra igual la tarifa de $20 en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
+      'Un lavado más una reparación menor promedio vale unos $75. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
+    '2 free minor repairs per month (any repair under $60)':
+      '2 reparaciones menores gratis por mes (cualquier arreglo de menos de $60)',
+    '1 free Tune-Up per month': '1 Ajuste gratis por mes',
+    'Call-out fee included on covered visits': 'Tarifa de visita incluida en las visitas cubiertas',
+    '1 emergency callout per month (standard $20 call-out fee applies)':
+      '1 visita de emergencia por mes (se cobra la tarifa de visita estándar de $20)',
+    'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    'A Tune-Up ($109) + a wash ($35) + 2 minor repairs (~$80) = about $224 in free work every month, for $97.':
+      'Un Ajuste ($109) + un lavado ($35) + 2 reparaciones menores (~$80) = unos $224 en trabajo gratis cada mes, por $97.',
+    '3 free minor repairs per month (any repair under $60)':
+      '3 reparaciones menores gratis por mes (cualquier arreglo de menos de $60)',
+    '2 free bike washes per month': '2 lavados de bici gratis por mes',
+    'A Tune-Up ($109) + 2 washes ($70) + 3 minor repairs (~$120) = about $299 in free work every month, for $197.':
+      'Un Ajuste ($109) + 2 lavados ($70) + 3 reparaciones menores (~$120) = unos $299 en trabajo gratis cada mes, por $197.',
 
     // ── Gift card success alert ──────────────────────────────────────────
     '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
@@ -1821,6 +1863,47 @@ const dict = {
     'Get Started - $57/month': '立即开始 - $57/月',
     'Get Started - $97/month': '立即开始 - $97/月',
     'Get Started - $147/month': '立即开始 - $147/月',
+    'Get Started - $67/month': '立即开始 - $67/月',
+    'Get Started - $197/month': '立即开始 - $197/月',
+
+    // ── Membership redesign 2026-07-22 (3 free-quota categories) ─────────
+    '1 free minor repair (under $60) + 1 free bike wash per month':
+      '每月1次免费小额维修（低于$60）+ 1次免费洗车',
+    '5% off extra services': '额外服务享95折',
+    '10% off extra services': '额外服务享9折',
+    '$20 call-out fee applies': '仍需支付$20上门费',
+    'Priority scheduling (72hs)': '优先预约（72小时）',
+    '2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month':
+      '每月2次免费小额维修（低于$60）+ 1次免费洗车 + 1次免费基础调校',
+    'Call-out fee included': '含上门费',
+    '1 emergency callout per month (call-out fee applies)': '每月1次紧急上门（需付上门费）',
+    '3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month':
+      '每月3次免费小额维修（低于$60）+ 2次免费洗车 + 1次免费基础调校',
+    '15% off extra services, plus 5% more': '额外服务享85折，再多减5%',
+    '1 emergency callout per month (call-out fee waived in your zone)':
+      '每月1次紧急上门（在您所在区域内免上门费）',
+    '1 free minor repair per month (any repair under $60)':
+      '每月1次免费小额维修（任何低于$60的维修）',
+    '1 free bike wash per month': '每月1次免费洗车',
+    'Call-out fee is not included - the standard $20 call-out fee still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '不含上门费 - 您的覆盖服务仍需支付标准的$20上门费。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
+      '一次洗车加一次平均小额维修价值约$75。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
+    '2 free minor repairs per month (any repair under $60)':
+      '每月2次免费小额维修（任何低于$60的维修）',
+    '1 free Tune-Up per month': '每月1次免费基础调校',
+    'Call-out fee included on covered visits': '覆盖服务含上门费',
+    '1 emergency callout per month (standard $20 call-out fee applies)':
+      '每月1次紧急上门（需付标准$20上门费）',
+    'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    'A Tune-Up ($109) + a wash ($35) + 2 minor repairs (~$80) = about $224 in free work every month, for $97.':
+      '1次基础调校（$109）+ 1次洗车（$35）+ 2次小额维修（约$80）= 每月约$224的免费服务，只需$97。',
+    '3 free minor repairs per month (any repair under $60)':
+      '每月3次免费小额维修（任何低于$60的维修）',
+    '2 free bike washes per month': '每月2次免费洗车',
+    'A Tune-Up ($109) + 2 washes ($70) + 3 minor repairs (~$120) = about $299 in free work every month, for $197.':
+      '1次基础调校（$109）+ 2次洗车（$70）+ 3次小额维修（约$120）= 每月约$299的免费服务，只需$197。',
 
     // ── Gift card success alert ──────────────────────────────────────────
     '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
