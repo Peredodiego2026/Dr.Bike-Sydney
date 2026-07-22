@@ -223,10 +223,10 @@ async function handler(req, res) {
 SERVICES & PRICES (all prices already include the $20 mobile call-out fee):
 ${servicesBlock || 'Prices are temporarily unavailable — tell the user to check drbikesydney.com.au or type "mechanic" to talk to the team directly.'}
 
-MEMBERSHIPS (call-out fee always waived for members):
-- Basic $57/mo: 8% off all services, 1 free Tune-Up/year, priority booking
-- Standard $97/mo: 12% off, 2 free Tune-Ups/year, priority booking ← most popular
-- VIP $147/mo: 18% off, 3 free Tune-Ups/year, same-day guarantee, dedicated mechanic
+MEMBERSHIPS:
+- Basic $67/mo: 1 free minor repair (any repair under $60) + 1 free bike wash per month, 5% off extra services. The $20 call-out fee still applies even on the free visit.
+- Standard $97/mo: 2 free minor repairs + 1 free bike wash + 1 free Tune-Up per month, 10% off extra services, call-out fee included on covered visits, 1 emergency callout/month (call-out fee applies) ← most popular
+- VIP $197/mo: 3 free minor repairs + 2 free bike washes + 1 free Tune-Up per month, 15% off extra services plus 5% more, call-out fee included, 1 emergency callout/month (call-out fee waived in your zone), dedicated mechanic
 - Annual billing: save 20% on any plan. 3-month minimum commitment.
 
 COVERAGE AREAS:

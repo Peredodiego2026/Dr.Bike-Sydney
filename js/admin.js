@@ -4608,7 +4608,7 @@ async function loadMemberships() {
 
   const active = (data || []).filter((m) => m.membership_status === 'active').length;
   const pastDue = (data || []).filter((m) => m.membership_status === 'past_due').length;
-  const prices = { basic: 57, standard: 97, vip: 147 };
+  const prices = { basic: 67, standard: 97, vip: 197 };
   const mrr = (data || [])
     .filter((m) => m.membership_status === 'active')
     .reduce((s, m) => s + (prices[m.membership_plan] || 0), 0);
@@ -4626,7 +4626,7 @@ async function loadMemberships() {
     return;
   }
 
-  const planLabel = { basic: 'Basic $57', standard: 'Standard $97', vip: 'VIP $147' };
+  const planLabel = { basic: 'Basic $67', standard: 'Standard $97', vip: 'VIP $197' };
   const statusBadge = {
     active:
       '<span style="background:#ECFDF5;color:#059669;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',

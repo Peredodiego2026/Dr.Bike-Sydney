@@ -24,7 +24,7 @@ test.describe('Landing page', () => {
   test('Memberships section visible', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Choose Your Plan')).toBeVisible();
-    await expect(page.getByText('$57').first()).toBeVisible();
+    await expect(page.getByText('$67').first()).toBeVisible();
   });
 
   test('auth button is visible', async ({ page }) => {
