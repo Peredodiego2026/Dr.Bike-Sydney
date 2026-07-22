@@ -1846,7 +1846,7 @@ function _completeAdminLogin(data) {
   localStorage.setItem('drbike-admin-refresh', data.refresh_token);
   sb.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
   document.getElementById('admin-login-overlay')?.remove();
-  loadDashboard();
+  go('dashboard');
   subscribeToBookings();
 }
 
@@ -5293,7 +5293,7 @@ async function initAdmin() {
   // Auth via Supabase (api/admin-auth.js). Token stored in localStorage.
   if (checkAdminAuth()) {
     await restoreAdminSession();
-    await loadDashboard();
+    go('dashboard');
     subscribeToBookings();
     handleUrlParams();
   }

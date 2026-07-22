@@ -2320,7 +2320,7 @@ function profile() {
   document.getElementById('jobs-list').innerHTML = `<div class="profile-wrap">
     <div style="text-align:center;margin-bottom:24px;padding:0 16px">
       <div class="profile-av">${mechanic?.first_name?.[0] || 'M'}${mechanic?.last_name?.[0] || ''}</div>
-      <div style="font-size:18px;font-weight:700;color:var(--navy)">${mechanic?.first_name} ${mechanic?.last_name}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--navy)">${((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Mechanic'}</div>
       <div style="font-size:13px;color:var(--mgray);margin-top:4px">Van ${vanNum} · ${mechanic?.role || 'Mechanic'}</div>
       ${rated.length ? `<div style="font-size:20px;margin-top:8px">${stars} <span style="font-size:15px;font-weight:700;color:var(--navy)">${avgRating}</span> <span style="font-size:13px;color:var(--mgray)">(${rated.length} reviews)</span></div>` : ''}
     </div>

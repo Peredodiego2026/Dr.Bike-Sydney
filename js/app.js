@@ -844,11 +844,21 @@ async function renderBookService() {
             headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' },
           }
         );
-        const data = await res.json();
-        if (!data.length) {
+        const raw = await res.json();
+        if (!raw.length) {
           suggestionsBox.style.display = 'none';
           return;
         }
+        // Nominatim can return multiple distinct records that render to the
+        // exact same display_name (separate OSM way segments for the same
+        // street, etc.) - dedupe on the visible text so the dropdown never
+        // shows the identical suggestion two or three times in a row.
+        const seen = new Set();
+        const data = raw.filter((item) => {
+          if (seen.has(item.display_name)) return false;
+          seen.add(item.display_name);
+          return true;
+        });
         suggestionsBox.innerHTML = data
           .map(
             (item) => `
