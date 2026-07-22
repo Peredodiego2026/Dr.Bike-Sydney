@@ -404,14 +404,7 @@
             <div><div class="van-name">Van 1 — Mechanic 1</div><div class="van-zone">Inner West · Eastern Suburbs · CBD</div></div>
             <span class="van-online on">● Online</span>
           </div>
-          <div class="van-stats">
-            <div class="vs-item"><div class="vs-n">6</div><div class="vs-l">Jobs today</div></div>
-            <div class="vs-item"><div class="vs-n">$812</div><div class="vs-l">Revenue</div></div>
-            <div class="vs-item"><div class="vs-n">94%</div><div class="vs-l">Utilisation</div></div>
-          </div>
-          <div style="margin-top:14px;font-size:12px;color:var(--mgray);margin-bottom:6px;font-weight:500">Daily target: $1,000</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:81%;background:var(--blue)"></div></div>
-          <div style="margin-top:14px;font-size:11px;color:var(--mgray)">Live route shown in the map above</div>
+          <div style="margin-top:14px;font-size:11px;color:var(--mgray)">Live route shown in the map above · performance below</div>
         </div>
         <div class="van-card">
           <div class="van-hdr">
@@ -419,40 +412,16 @@
             <div><div class="van-name">Van 2 — Mechanic 2</div><div class="van-zone">North Shore · Manly · Northern Beaches</div></div>
             <span class="van-online on">● Online</span>
           </div>
-          <div class="van-stats">
-            <div class="vs-item"><div class="vs-n">5</div><div class="vs-l">Jobs today</div></div>
-            <div class="vs-item"><div class="vs-n">$638</div><div class="vs-l">Revenue</div></div>
-            <div class="vs-item"><div class="vs-n">78%</div><div class="vs-l">Utilisation</div></div>
-          </div>
-          <div style="margin-top:14px;font-size:12px;color:var(--mgray);margin-bottom:6px;font-weight:500">Daily target: $1,000</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:63%;background:#D97706"></div></div>
-          <div style="margin-top:14px;font-size:11px;color:var(--mgray)">Live route shown in the map above</div>
+          <div style="margin-top:14px;font-size:11px;color:var(--mgray)">Live route shown in the map above · performance below</div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-hdr"><div><div class="card-title">Monthly performance</div><div class="card-sub">April 2026</div></div></div>
-        <table class="tbl perf-tbl">
-          <thead><tr><th>Van</th><th>Jobs</th><th>Revenue</th><th>Avg ticket</th><th>Utilisation</th><th>Top service</th></tr></thead>
-          <tbody>
-            <tr>
-              <td data-label="Van"><span class="mech-tag v1">Van 1</span></td>
-              <td data-label="Jobs">214</td>
-              <td data-label="Revenue"><b>$21,683</b></td>
-              <td data-label="Avg ticket">$101</td>
-              <td data-label="Utilisation">88%</td>
-              <td data-label="Top service">Standard Service</td>
-            </tr>
-            <tr>
-              <td data-label="Van"><span class="mech-tag v2">Van 2</span></td>
-              <td data-label="Jobs">209</td>
-              <td data-label="Revenue"><b>$14,455</b></td>
-              <td data-label="Avg ticket">$69</td>
-              <td data-label="Utilisation">74%</td>
-              <td data-label="Top service">Tune-Up</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- Real "Jobs today/$Revenue/Utilisation" per van + the old "Monthly
+           performance" table used to be hardcoded here with numbers that
+           were never connected to any query (grepped, zero JS references) -
+           they'd have shown "$21,683 in April" forever regardless of actual
+           bookings. renderMechStats() below computes real 7-day performance
+           from actual completed jobs, so it replaces both instead of sitting
+           next to them showing a different, fake number for the same thing. -->
     </div>
 
     <!-- MECHANIC PROFILE -->
@@ -468,8 +437,8 @@
       <div class="kpis">
         <div class="kpi-card blue"><div class="kpi-label">Total clients</div><div class="kpi-value">12</div><div class="kpi-sub">Active database</div></div>
         <div class="kpi-card orange"><div class="kpi-label">VIP clients</div><div class="kpi-value">3</div><div class="kpi-sub">$197/mo plan</div></div>
-        <div class="kpi-card green"><div class="kpi-label">New this month</div><div class="kpi-value">2</div><div class="kpi-sub">Ava L. · Sofia D.</div></div>
-        <div class="kpi-card red"><div class="kpi-label">At risk</div><div class="kpi-value">2</div><div class="kpi-sub">5+ months inactive</div></div>
+        <div class="kpi-card green"><div class="kpi-label">New this month</div><div class="kpi-value">0</div><div class="kpi-sub">Since the 1st</div></div>
+        <div class="kpi-card red"><div class="kpi-label">At risk</div><div class="kpi-value">—</div><div class="kpi-sub">Not tracked yet</div></div>
       </div>
       <div class="clients-grid">
         <div class="client-card">

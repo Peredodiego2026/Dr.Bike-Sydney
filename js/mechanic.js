@@ -499,29 +499,37 @@ function render() {
   }
   c.innerHTML = list.map((j) => card(j)).join('');
 
-  // Event delegation for all card action buttons
-  c.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
-    const action = btn.dataset.action;
-    const id = btn.dataset.id;
-    if (action === 'navigate') {
-      openMaps(btn.dataset.addr);
-      return;
-    }
-    if (action === 'chat') {
-      openMechChat(id);
-      return;
-    }
-    if (action === 'whatsapp') {
-      openWA(btn.dataset.phone, btn.dataset.client);
-      return;
-    }
-    if (action === 'history') {
-      openClientHistory(id, btn.dataset.client, btn.dataset.clientId);
-      return;
-    }
-  });
+  // Event delegation for all card action buttons. render() runs on every
+  // tab switch / data refresh, but #jobs-list is a single persistent
+  // element (only innerHTML changes) - binding this listener unguarded on
+  // every render() call stacked up N duplicate listeners over a session,
+  // so one click fired the action N times (confirmed live: Navigate opened
+  // 3 Maps tabs, WhatsApp sent the same message twice). Bind once.
+  if (!c.dataset.actionsBound) {
+    c.dataset.actionsBound = '1';
+    c.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      if (action === 'navigate') {
+        openMaps(btn.dataset.addr);
+        return;
+      }
+      if (action === 'chat') {
+        openMechChat(id);
+        return;
+      }
+      if (action === 'whatsapp') {
+        openWA(btn.dataset.phone, btn.dataset.client);
+        return;
+      }
+      if (action === 'history') {
+        openClientHistory(id, btn.dataset.client, btn.dataset.clientId);
+        return;
+      }
+    });
+  }
 
   // Wire notes inputs via blur delegation
   c.querySelectorAll('.notes-inp[data-notes-id]').forEach((inp) => {
