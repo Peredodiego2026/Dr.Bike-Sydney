@@ -89,6 +89,16 @@ const router = {
       // pending cleanup or it would strip the 'active' we are about to add.
       this._cancelLeave(nextScreen);
       nextScreen.classList.add('active');
+      // Nothing here ever moved the viewport to the new screen. On the SPA
+      // that's invisible (the screen IS the viewport), but on landing.html
+      // these same screens sit inside one long marketing page - switching
+      // to "book-service" left the user wherever they'd scrolled to (as far
+      // down as the footer newsletter box), on every step of the wizard,
+      // not just on entry. scrollIntoView brings the *new* screen to the
+      // top regardless of where it lives in the surrounding page.
+      if (prevRoute !== route) {
+        nextScreen.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
     }
 
     // Fire screen-change event so app.js can react

@@ -926,24 +926,11 @@
           <span style="color:var(--gray);font-size:15px">Founder &amp; Head Mechanic</span></p>
         </div>
 
-        <div class="stats-mini">
-          <div class="stat-mini">
-            <div class="stat-mini-n">500+</div>
-            <div class="stat-mini-l">Happy Customers</div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-n">1,000+</div>
-            <div class="stat-mini-l">Bikes Serviced</div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-n">5.0&#9733;</div>
-            <div class="stat-mini-l">Avg Rating</div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-n">100%</div>
-            <div class="stat-mini-l">Satisfaction</div>
-          </div>
-        </div>
+        <!-- 2026-07-22: removed a hardcoded "500+ Happy Customers / 1,000+
+             Bikes Serviced / 5.0 / 100%" stats block - it was static text
+             with no real data behind it, sitting right above the honest
+             Testimonials empty state ("Be the first to leave a review"),
+             which contradicted it. Bring real numbers back once they exist. -->
       </div>
 
       <div class="about-image" style="padding:0;overflow:hidden">
@@ -2916,8 +2903,17 @@ function bkRenderStep3() {
     var q = encodeURIComponent(query + ', Sydney, NSW, Australia');
     fetch('https://nominatim.openstreetmap.org/search?q=' + q + '&format=json&limit=5&addressdetails=1', {
       headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' }
-    }).then(function(res) { return res.json(); }).then(function(data) {
-      if (!data.length) { _addrBox.style.display = 'none'; return; }
+    }).then(function(res) { return res.json(); }).then(function(raw) {
+      if (!raw.length) { _addrBox.style.display = 'none'; return; }
+      // Nominatim can return distinct records that render to the same
+      // display_name (separate OSM way segments for the same street) -
+      // dedupe on the visible text, same fix as js/app.js's version.
+      var seen = {};
+      var data = raw.filter(function(item) {
+        if (seen[item.display_name]) return false;
+        seen[item.display_name] = true;
+        return true;
+      });
       _addrBox.innerHTML = data.map(function(item) {
         var main = item.display_name.split(',')[0];
         var rest = item.display_name.split(',').slice(1).join(',');
