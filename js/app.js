@@ -67,6 +67,7 @@ import {
   createPaymentForm,
   createPaymentRequestButton,
   processPayment,
+  confirmCardSetup,
   destroyPaymentForm,
   createCheckoutSession,
   verifyCheckoutSession,
@@ -392,6 +393,38 @@ async function loadLeaflet() {
 }
 
 // ── Book a Service (3-step wizard) ───────────────────────────────────────────
+// Emergency Service (services table row, category "Scheduled services") is
+// intercepted before it ever reaches the normal booking wizard - see the
+// service-card click handler in renderStep1() below.
+function showEmergencyServiceModal() {
+  document.getElementById('emergency-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'emergency-modal';
+  modal.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  const waText = encodeURIComponent(
+    'Hi Dr. Bike! I need emergency service - can you help me right away?'
+  );
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px" aria-hidden="true">🚨</div>
+      <div style="font-weight:700;color:#0D1F3C;font-size:16px;margin-bottom:6px">Emergency Service</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:20px;line-height:1.5;text-align:left">Emergency visits depend on where our mechanic already is, so we confirm these directly - call or WhatsApp us and we'll tell you right away if we can help and what it'll cost.</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <a href="tel:+61433963250" style="flex:1;text-align:center;background:#2563EB;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+        <a href="https://wa.me/61433963250?text=${waText}" style="flex:1;text-align:center;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
+      </div>
+      <button id="emergency-modal-close" class="btn btn--secondary btn--full">Back to services</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  translateScreen(modal); // outside [data-screen], not covered by the router's auto-translate observer
+  modal.querySelector('#emergency-modal-close').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
 async function renderBookService() {
   const screen = document.querySelector('[data-screen="book-service"]');
   if (!screen) return;
@@ -525,12 +558,20 @@ async function renderBookService() {
 
     screen.querySelectorAll('.service-card').forEach((card) => {
       card.addEventListener('click', () => {
+        const svc = (_services || []).find((s) => String(s.id) === card.dataset.serviceId);
+        // Emergency Service skips the normal calendar/payment flow entirely -
+        // availability and price depend on where the mechanic already is, so
+        // Diego confirms these by phone/WhatsApp himself rather than through
+        // an automated slot (Diego, 2026-07-22: "que lleve al numero de
+        // contacto del administrador... asi el puede tomar la decision").
+        if (svc?.name === 'Emergency Service') {
+          showEmergencyServiceModal();
+          return;
+        }
         screen.querySelectorAll('.service-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
         const prev = window.appState.service;
-        window.appState.service = (_services || []).find(
-          (s) => String(s.id) === card.dataset.serviceId
-        );
+        window.appState.service = svc;
         if (!prev || prev.id !== window.appState.service?.id) {
           window.appState.date = null;
           window.appState.time = null;
@@ -3388,12 +3429,13 @@ async function renderProfile() {
   let credits = 0,
     referralCount = 0,
     membershipStatus = null,
-    membershipPlan = null;
+    membershipPlan = null,
+    savedCardId = null;
   try {
     const { data: profile } = await sb
       .from('profiles')
       .select(
-        'referral_code, referral_credits, referral_count, membership_status, membership_plan, membership_started_at'
+        'referral_code, referral_credits, referral_count, membership_status, membership_plan, membership_started_at, stripe_default_payment_method_id'
       )
       .eq('id', user.id)
       .single();
@@ -3402,6 +3444,7 @@ async function renderProfile() {
       referralCount = profile.referral_count || 0;
       membershipStatus = profile.membership_status || null;
       membershipPlan = profile.membership_plan || null;
+      savedCardId = profile.stripe_default_payment_method_id || null;
       if (!profile.referral_code) {
         const { error: refCodeErr } = await sb
           .from('profiles')
@@ -3522,6 +3565,29 @@ async function renderProfile() {
       </div>
 
       <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Payment Method</div>
+        <div id="card-on-file-section" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
+          ${
+            savedCardId
+              ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div style="min-width:0">
+                  <div style="font-size:14px;font-weight:600;color:#0F172A">💳 Card on file</div>
+                  <div style="font-size:12px;color:#6B7280;margin-top:2px">Auto-charged when your mechanic completes a job</div>
+                </div>
+                <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #DC2626;color:#DC2626;background:#fff;white-space:nowrap">Remove</button>
+              </div>`
+              : `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div style="min-width:0">
+                  <div style="font-size:14px;font-weight:600;color:#0F172A">No card saved</div>
+                  <div style="font-size:12px;color:#6B7280;margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
+                </div>
+                <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Add card</button>
+              </div>`
+          }
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
         <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
           <div style="min-width:0">
@@ -3574,6 +3640,92 @@ async function renderProfile() {
     await sb.auth.signOut().catch(() => {});
     showToast('Signed out successfully', 'success');
     router.navigate('home');
+  });
+
+  screen.querySelector('#add-card-btn')?.addEventListener('click', async () => {
+    const section = screen.querySelector('#card-on-file-section');
+    section.innerHTML = `
+      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:10px">
+        <div id="new-card-element" class="card-element"></div>
+      </div>
+      <div id="add-card-error" class="booking-error" hidden style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button id="add-card-cancel-btn" class="btn btn--secondary" style="flex:1">Cancel</button>
+        <button id="add-card-save-btn" class="btn btn--primary" style="flex:1">Save card</button>
+      </div>`;
+    await createPaymentForm('new-card-element');
+    section.querySelector('#add-card-cancel-btn').addEventListener('click', () => renderProfile());
+    section.querySelector('#add-card-save-btn').addEventListener('click', async () => {
+      const btn = section.querySelector('#add-card-save-btn');
+      const errEl = section.querySelector('#add-card-error');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      errEl.hidden = true;
+      try {
+        const {
+          data: { session },
+        } = await sb.auth.getSession();
+        if (!session) throw new Error('Please sign in again.');
+        const setupResp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'save-card-setup',
+            access_token: session.access_token,
+            client_id: session.user.id,
+          }),
+        });
+        const setupData = await setupResp.json();
+        if (!setupResp.ok) throw new Error(setupData.error || 'Could not start card setup');
+        const setupIntent = await confirmCardSetup(setupData.clientSecret);
+        const confirmResp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'save-card-confirm',
+            access_token: session.access_token,
+            client_id: session.user.id,
+            setup_intent_id: setupIntent.id,
+          }),
+        });
+        const confirmData = await confirmResp.json();
+        if (!confirmResp.ok) throw new Error(confirmData.error || 'Could not save card');
+        showToast('Card saved', 'success');
+        renderProfile();
+      } catch (e) {
+        errEl.textContent = e.message || 'Could not save card. Please try again.';
+        errEl.hidden = false;
+        btn.disabled = false;
+        btn.textContent = 'Save card';
+      }
+    });
+  });
+
+  screen.querySelector('#remove-card-btn')?.addEventListener('click', async () => {
+    const btn = screen.querySelector('#remove-card-btn');
+    btn.disabled = true;
+    btn.textContent = 'Removing...';
+    try {
+      const {
+        data: { session },
+      } = await sb.auth.getSession();
+      if (!session) throw new Error('Please sign in again.');
+      await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'remove-card',
+          access_token: session.access_token,
+          client_id: session.user.id,
+        }),
+      });
+      showToast('Card removed', 'success');
+      renderProfile();
+    } catch (e) {
+      showToast(e.message || 'Could not remove card', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Remove';
+    }
   });
 
   screen.querySelector('#push-enable-btn')?.addEventListener('click', async (e) => {
@@ -3661,6 +3813,21 @@ async function renderMyBikes() {
     router.navigate('login');
     return;
   }
+
+  // Service history is a Standard/VIP perk (Diego, 2026-07-22) - Basic and
+  // non-members still get the bike list and Bike Health Score, just not the
+  // per-service log. Fetched once here rather than per-bike-click.
+  let hasHistoryAccess = false;
+  try {
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('membership_plan, membership_status')
+      .eq('id', user.id)
+      .maybeSingle();
+    hasHistoryAccess =
+      ['standard', 'vip'].includes(profile?.membership_plan) &&
+      profile?.membership_status === 'active';
+  } catch {}
 
   screen.innerHTML = `
     ${createHeader('My Bikes', false)}
@@ -3811,10 +3978,23 @@ async function renderMyBikes() {
             if (e.target === overlay) overlay.remove();
           });
 
-          // Per-bike service history (bookings linked via bike_id)
+          // Per-bike service history (bookings linked via bike_id) - Standard/VIP only
           (async () => {
             const hEl = overlay.querySelector('#history-list');
             if (!hEl) return;
+            if (!hasHistoryAccess) {
+              hEl.style.textAlign = 'left';
+              hEl.style.padding = '0';
+              hEl.innerHTML = `
+                <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+                  <span style="font-size:20px" aria-hidden="true">🔒</span>
+                  <div style="min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:var(--color-text)">Service history is a Standard/VIP perk</div>
+                    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Upgrade your membership to see every past service for this bike.</div>
+                  </div>
+                </div>`;
+              return;
+            }
             try {
               const { data: hist } = await sb
                 .from('bookings')

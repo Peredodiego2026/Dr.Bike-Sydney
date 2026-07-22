@@ -416,6 +416,143 @@ async function handleGetPrice(req, res) {
   });
 }
 
+// ── Card on file (Diego, 2026-07-22) ─────────────────────────────────────────
+// Lets a client save a card once so the mechanic can auto-charge the final
+// amount at job completion instead of physical EFTPOS every time. Reuses the
+// same Stripe Customer membership subscriptions already create
+// (api/create-subscription.js) rather than a separate concept - a member's
+// card-on-file and their subscription billing are the same Stripe Customer.
+async function handleSaveCardSetupIntent(req, res) {
+  const { access_token, client_id } = req.body || {};
+  if (!access_token || !client_id)
+    return res.status(400).json({ error: 'access_token, client_id required' });
+  if (!process.env.STRIPE_SECRET_KEY)
+    return res.status(500).json({ error: 'Payments unavailable' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('stripe_customer_id, full_name')
+    .eq('id', client_id)
+    .maybeSingle();
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  let customerId = profile?.stripe_customer_id || null;
+  if (customerId) {
+    try {
+      const c = await stripe.customers.retrieve(customerId);
+      if (c.deleted) customerId = null;
+    } catch {
+      customerId = null;
+    }
+  }
+  if (!customerId) {
+    const existing = await stripe.customers.list({ email: userData.email, limit: 1 });
+    const customer =
+      existing.data[0] ||
+      (await stripe.customers.create({
+        email: userData.email,
+        name: profile?.full_name || undefined,
+        metadata: { supabase_user: client_id },
+      }));
+    customerId = customer.id;
+    await sb.from('profiles').update({ stripe_customer_id: customerId }).eq('id', client_id);
+  }
+
+  const setupIntent = await stripe.setupIntents.create({
+    customer: customerId,
+    payment_method_types: ['card'],
+    usage: 'off_session',
+  });
+  return res.status(200).json({ clientSecret: setupIntent.client_secret });
+}
+
+// Called after the client confirms the SetupIntent card-side
+// (stripe.confirmCardSetup in the browser). Never trusts the client's "it
+// worked" claim - retrieves the SetupIntent from Stripe directly and only
+// persists if Stripe itself says succeeded and it belongs to this client's
+// own Customer.
+async function handleSaveCardConfirm(req, res) {
+  const { access_token, client_id, setup_intent_id } = req.body || {};
+  if (!access_token || !client_id || !setup_intent_id)
+    return res.status(400).json({ error: 'access_token, client_id, setup_intent_id required' });
+  if (!process.env.STRIPE_SECRET_KEY)
+    return res.status(500).json({ error: 'Payments unavailable' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('stripe_customer_id')
+    .eq('id', client_id)
+    .maybeSingle();
+  if (!profile?.stripe_customer_id)
+    return res.status(400).json({ error: 'No Stripe customer on file' });
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const si = await stripe.setupIntents.retrieve(setup_intent_id);
+  if (si.status !== 'succeeded' || si.customer !== profile.stripe_customer_id)
+    return res.status(400).json({ error: 'Card could not be verified' });
+
+  const pm = await stripe.paymentMethods.retrieve(si.payment_method);
+  await sb
+    .from('profiles')
+    .update({ stripe_default_payment_method_id: si.payment_method })
+    .eq('id', client_id);
+  return res
+    .status(200)
+    .json({ ok: true, brand: pm.card?.brand || null, last4: pm.card?.last4 || null });
+}
+
+// Detaches the saved payment method from Stripe (so it can't be charged even
+// if the DB clear below somehow failed) and clears it from the profile.
+async function handleRemoveCard(req, res) {
+  const { access_token, client_id } = req.body || {};
+  if (!access_token || !client_id)
+    return res.status(400).json({ error: 'access_token, client_id required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+  });
+  if (!userResp.ok) return res.status(401).json({ error: 'Invalid session' });
+  const userData = await userResp.json();
+  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('stripe_default_payment_method_id')
+    .eq('id', client_id)
+    .maybeSingle();
+
+  if (profile?.stripe_default_payment_method_id && process.env.STRIPE_SECRET_KEY) {
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+      await stripe.paymentMethods.detach(profile.stripe_default_payment_method_id);
+    } catch (e) {
+      console.error('[remove-card] detach failed:', e.message);
+    }
+  }
+  await sb.from('profiles').update({ stripe_default_payment_method_id: null }).eq('id', client_id);
+  return res.status(200).json({ ok: true });
+}
+
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
@@ -916,15 +1053,17 @@ async function handleMechanicJobs(req, res) {
     });
   }
 
-  // Attach each client's membership status so the mechanic can see, before
-  // charging, whether this job is a covered/discounted visit and by how
-  // much (Diego: "el mecanico debe ser capaz de ver que el cliente...tiene
-  // una membresia activa para que sepa cuando aplicar descuento y cuanto").
+  // Attach each client's membership status (so the mechanic can see, before
+  // charging, whether this job is a covered/discounted visit and by how much
+  // - Diego: "el mecanico debe ser capaz de ver que el cliente...tiene una
+  // membresia activa para que sepa cuando aplicar descuento y cuanto") and
+  // whether they have a card on file (so the mechanic knows completion will
+  // auto-charge instead of needing EFTPOS - see handleMechanicComplete).
   const clientIds = [...new Set(jobs.map((j) => j.client_id).filter(Boolean))];
   if (clientIds.length) {
     const idsFilter = clientIds.map((id) => `"${id}"`).join(',');
     const profResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/profiles?select=id,membership_plan,membership_status&id=in.(${idsFilter})`,
+      `${SUPABASE_URL}/rest/v1/profiles?select=id,membership_plan,membership_status,stripe_default_payment_method_id&id=in.(${idsFilter})`,
       { headers: hdrs }
     );
     if (profResp.ok) {
@@ -936,6 +1075,7 @@ async function handleMechanicJobs(req, res) {
           ...j,
           client_membership_plan: p?.membership_plan || null,
           client_membership_status: p?.membership_status || null,
+          client_has_card_on_file: !!p?.stripe_default_payment_method_id,
         };
       });
     }
@@ -1237,6 +1377,7 @@ async function handleMechanicComplete(req, res) {
     parts_charged,
     final_charge_amount,
     final_charge_status,
+    skip_auto_charge,
     tip_amount,
     photo_before_url,
     photo_after_url,
@@ -1254,6 +1395,66 @@ async function handleMechanicComplete(req, res) {
     Authorization: `Bearer ${SERVICE_KEY}`,
     'Content-Type': 'application/json',
   };
+
+  // Card-on-file auto-charge (Diego, 2026-07-22): if the client has a saved
+  // card, charge them automatically here - no mechanic confirmation, matching
+  // what Diego asked for. Unlike a plain "fall through on any failure", a
+  // card that EXISTS but fails to charge blocks completion here (returns
+  // AUTO_CHARGE_FAILED, booking stays incomplete) rather than silently
+  // defaulting final_charge_status to "charged_manual" for a charge that
+  // never actually happened - mechanic.js catches this code and reveals the
+  // EFTPOS UI so the mechanic can retry with skip_auto_charge:true once they
+  // 've actually collected payment (per Diego: "fallback a EFTPOS en el
+  // momento"). Idempotency key keyed on booking_id so a retry (or a lost
+  // response on a request that actually succeeded) can never double-charge.
+  // No card on file at all is the normal, unaffected case - proceeds exactly
+  // as before this feature existed.
+  let autoChargeResult = null;
+  if (!skip_auto_charge && Number(final_charge_amount) > 0 && process.env.STRIPE_SECRET_KEY) {
+    const bkResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=client_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+      { headers: sbHdr }
+    );
+    const bkRow = bkResp.ok ? (await bkResp.json())?.[0] : null;
+    if (bkRow?.client_id) {
+      const profResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?select=stripe_customer_id,stripe_default_payment_method_id&id=eq.${encodeURIComponent(bkRow.client_id)}&limit=1`,
+        { headers: sbHdr }
+      );
+      const prof = profResp.ok ? (await profResp.json())?.[0] : null;
+      if (prof?.stripe_customer_id && prof?.stripe_default_payment_method_id) {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        try {
+          const pi = await stripe.paymentIntents.create(
+            {
+              amount: Math.round(Number(final_charge_amount) * 100),
+              currency: 'aud',
+              customer: prof.stripe_customer_id,
+              payment_method: prof.stripe_default_payment_method_id,
+              off_session: true,
+              confirm: true,
+              description: `Dr. Bike Sydney - booking ${booking_id}`,
+            },
+            { idempotencyKey: `complete-charge-${booking_id}` }
+          );
+          if (pi.status === 'succeeded') {
+            autoChargeResult = { charged: true, paymentIntentId: pi.id };
+          } else {
+            return res.status(402).json({
+              error: 'Card on file could not be charged - collect payment via EFTPOS/Cash instead.',
+              code: 'AUTO_CHARGE_FAILED',
+            });
+          }
+        } catch (e) {
+          console.warn('[mechanic-complete] card-on-file auto-charge failed:', e.message);
+          return res.status(402).json({
+            error: 'Card on file could not be charged - collect payment via EFTPOS/Cash instead.',
+            code: 'AUTO_CHARGE_FAILED',
+          });
+        }
+      }
+    }
+  }
 
   // Deduct used parts from inventory and build a readable summary stored on
   // the booking. Uses the decrement_part_stock() RPC (atomic guarded UPDATE)
@@ -1295,7 +1496,10 @@ async function handleMechanicComplete(req, res) {
       final_charge_amount !== null && final_charge_amount !== undefined
         ? Number(final_charge_amount)
         : null,
-    final_charge_status: final_charge_status || null,
+    final_charge_status: autoChargeResult?.charged
+      ? 'charged_card_on_file'
+      : final_charge_status || null,
+    completion_payment_intent_id: autoChargeResult?.paymentIntentId || null,
     tip_amount: Number(tip_amount) || 0,
     next_service_date: next_service_date || null,
   };
@@ -1368,7 +1572,11 @@ async function handleMechanicComplete(req, res) {
     console.error('complete patch error:', updateResp.status, errText);
     return res.status(500).json({ error: 'Failed to complete booking', detail: errText });
   }
-  return res.status(200).json({ ok: true, low_stock: lowStock });
+  return res.status(200).json({
+    ok: true,
+    low_stock: lowStock,
+    auto_charged: !!autoChargeResult?.charged,
+  });
 }
 
 async function handleClientCancel(req, res) {
@@ -2976,6 +3184,9 @@ async function handler(req, res) {
   if (role === 'create-booking') return handleCreateBooking(req, res);
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'get-price') return handleGetPrice(req, res);
+  if (role === 'save-card-setup') return handleSaveCardSetupIntent(req, res);
+  if (role === 'save-card-confirm') return handleSaveCardConfirm(req, res);
+  if (role === 'remove-card') return handleRemoveCard(req, res);
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);

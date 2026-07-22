@@ -147,6 +147,21 @@ NEVER reference columns that don't exist -> verify with SELECT before INSERT/UPD
 ### No deletes without confirmation
 NEVER DELETE without confirming with Diego first.
 
+### Full coverage on every content/copy change
+Any text, price, or plan detail you add or edit must be checked against
+ALL FOUR app surfaces (`index.html` SPA, `landing.html`, `mechanic.html`/
+`js/mechanic.js`, `admin.html`/`js/admin.js`) AND all 3 languages in
+`js/i18n.js` (en/es/zh) - not just the one file you were asked to touch.
+Also check `terms.html` and `api/chat.js` (the AI assistant's own
+knowledge) when the change is pricing or membership terms, since both
+have historically drifted out of sync silently. Grep the exact old
+value (price, plan name, etc.) across the whole repo before calling a
+copy change done - stale copy in a place nobody thought to check is a
+recurring bug class in this project (2026-07-22: a $57/$147 price bump
+was live on the main pricing pages for a while before admin.js's MRR
+math, terms.html's 3 languages, api/chat.js's chatbot knowledge, and an
+e2e test were found still on the old numbers).
+
 ---
 
 # Style rules (ALWAYS apply)
