@@ -764,22 +764,23 @@ body {
   background: #2563eb;
 }
 .kpi-card.green::before {
-  background: #16a34a;
+  background: #059669;
 }
 .kpi-card.orange::before {
-  background: #f59e0b;
+  background: #d97706;
 }
 .kpi-card.red::before {
-  background: #ef4444;
+  background: #dc2626;
 }
+/* purple/teal/indigo folded into the 4 real tokens above - no more one-off hues */
 .kpi-card.purple::before {
-  background: #7c3aed;
+  background: #2563eb;
 }
 .kpi-card.teal::before {
   background: #059669;
 }
 .kpi-card.indigo::before {
-  background: #1848c8;
+  background: #2563eb;
 }
 .kpi-label {
   font-size: 10px;
