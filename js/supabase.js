@@ -127,12 +127,18 @@ export async function getBookingStatus(bookingId) {
 }
 
 export async function submitReview(bookingId, rating, comment, photoBase64) {
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session?.user) throw new Error('Please sign in to leave a review.');
   const resp = await fetch('/api/auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       role: 'client-review',
       booking_id: bookingId,
+      access_token: session.access_token,
+      client_id: session.user.id,
       rating,
       comment,
       photo_base64: photoBase64 || null,

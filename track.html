@@ -82,18 +82,26 @@ async function init(){
   const trackingToken = params.get('token');
   const content = document.getElementById('content');
 
-  if(!bookingId && !trackingToken){
+  if(!trackingToken){
+    // ?id= alone used to work here too, which meant a raw booking_id worked
+    // as well as the actual secret token - the server no longer accepts it
+    // (see api/auth.js handlePublicTrack). No real link should ever be
+    // ?id=-only since every booking already has a tracking_token, but if
+    // one somehow is, send them to recover a real link instead of a dead end.
+    if(bookingId){
+      content.innerHTML = '<div class="card"><div class="err">This link is no longer valid.<br><br><a href="/track.html" style="color:var(--blue)">Look up your booking by email →</a></div></div>';
+      return;
+    }
     showEmailForm(content);
     return;
   }
 
-  // Fetch via server-side handler (bypasses RLS, works for both ?token= and ?id= paths)
   let bkg = null;
   try {
     const resp = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'public-track', ...(trackingToken ? { tracking_token: trackingToken } : { booking_id: bookingId }) }),
+      body: JSON.stringify({ role: 'public-track', tracking_token: trackingToken }),
     });
     if(resp.ok) bkg = await resp.json();
   } catch {}
@@ -110,7 +118,7 @@ async function init(){
   const mech = bkg.mechanic_profile || {};
   const mechName = escHtml(mech.name || 'Diego Peredo');
   const mechAvatarHTML = mech.photo_url
-    ? `<img src="${mech.photo_url}" alt="${mechName}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--card-bg);display:block">`
+    ? `<img src="${escHtml(mech.photo_url)}" alt="${mechName}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--card-bg);display:block">`
     : `<div style="width:68px;height:68px;border-radius:50%;background:var(--blue);border:3px solid var(--card-bg);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:700">${mechName.charAt(0)}</div>`;
   const mechBioHTML = mech.bio
     ? `<div style="font-size:12px;color:var(--mgray);margin-top:6px;line-height:1.4;padding:0 8px">${escHtml(mech.bio)}</div>`
@@ -264,7 +272,7 @@ async function init(){
       const resp = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'public-track', ...(trackingToken ? { tracking_token: trackingToken } : { booking_id: bookingId }) }),
+        body: JSON.stringify({ role: 'public-track', tracking_token: trackingToken }),
       });
       if(!resp.ok) return;
       const updated = await resp.json();
@@ -279,7 +287,6 @@ async function init(){
 }
 
 function showEmailForm(content) {
-  const ST_LABELS = {pending:'⏳ Pending',confirmed:'✅ Confirmed',enroute:'🚐 En route',in_progress:'🔧 In progress',completed:'✅ Completed'};
   content.innerHTML = `
     <div class="card">
       <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">Track your booking</div>
@@ -296,31 +303,21 @@ function showEmailForm(content) {
     if (!email || !email.includes('@')) { errEl.textContent = 'Enter a valid email'; errEl.style.display = 'block'; return; }
     btn.textContent = 'Searching...'; btn.disabled = true; errEl.style.display = 'none';
     try {
-      const resp = await fetch('/api/auth', {
+      // The server never hands tracking links back in this response (that
+      // would let anyone type in someone else's email and get their
+      // address/arrival PIN/live location via the tracking endpoint) - it
+      // emails them instead, and always replies the same way either way so
+      // this can't be used to check which emails have bookings on file.
+      await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: 'public-booking-list', email })
       });
-      const bookings = await resp.json();
-      if (!bookings.length) {
-        errEl.textContent = 'No bookings found for that email.';
-        errEl.style.display = 'block';
-        btn.textContent = 'Find my bookings →'; btn.disabled = false;
-        return;
-      }
-      let html = '<div class="card"><div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px">Your bookings</div>';
-      bookings.forEach(function(b) {
-        const label = ST_LABELS[b.status] || b.status;
-        const isActive = ['enroute','in_progress'].includes(b.status);
-        const url = b.tracking_token ? '/track.html?token=' + b.tracking_token : '/track.html?id=' + b.id;
-        html += '<a href="' + url + '" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-lt);text-decoration:none;color:inherit">';
-        html += '<div><div style="font-size:14px;font-weight:600;color:var(--navy)">' + (b.service_name||'Service') + '</div>';
-        html += '<div style="font-size:12px;color:var(--mgray);margin-top:2px">' + (b.scheduled_date||'') + (b.scheduled_time?' · '+b.scheduled_time:'') + '</div></div>';
-        html += '<span style="font-size:12px;font-weight:600;color:' + (isActive?'var(--green)':'var(--mgray)') + ';white-space:nowrap;margin-left:12px">' + label + '</span>';
-        html += '</a>';
-      });
-      html += '</div>';
-      content.innerHTML = html;
+      content.innerHTML = '<div class="card" style="text-align:center">'
+        + '<div style="font-size:32px;margin-bottom:8px">📧</div>'
+        + '<div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">Check your email</div>'
+        + '<div style="font-size:13px;color:var(--mgray)">If that email has any bookings, we just sent tracking links for all of them.</div>'
+        + '</div>';
     } catch(e) {
       errEl.textContent = 'Connection error. Try again.';
       errEl.style.display = 'block';
