@@ -3135,7 +3135,7 @@ function renderLTV(all) {
       <td data-label="Client"><b>${esc(c.name)}</b></td>
       <td data-label="Jobs">${c.jobs}</td>
       <td data-label="LTV"><b style="color:var(--green)">$${c.ltv.toLocaleString()}</b></td>
-      <td data-label="Last service">${lastStr} <span style="color:var(--mgray);font-size:11px">(${ds > 9000 ? 'never' : ds + 'd ago'})</span></td>
+      <td data-label="Last service">${lastStr} <span style="color:var(--mgray);font-size:11px">(${ds > 9000 ? 'never' : ds <= 0 ? 'today' : ds + 'd ago'})</span></td>
       <td data-label="Status"><span class="status ${isChurned ? 'cancelled' : 'confirmed'}">${isChurned ? 'Churned' : 'Active'}</span></td>
     </tr>`;
     })
@@ -3366,7 +3366,7 @@ function addSuburb(vanId) {
   const suburb = inp.value.trim().toLowerCase();
   if (!suburb) return;
   const van = vanZones.find((v) => v.id === vanId);
-  if (!van || van.suburbs.includes(suburb)) {
+  if (!van || van.suburbs.some((s) => s.toLowerCase() === suburb)) {
     showToast('Already added');
     return;
   }
