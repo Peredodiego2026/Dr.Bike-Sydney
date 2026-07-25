@@ -16,7 +16,7 @@
 | Motor | Rol | Estado |
 |---|---|---|
 | Reparaciones one-off | La puerta de entrada. Todo el marketing apunta aquí | Activo |
-| **Membresías** (Basic $57 / Standard $97 / VIP $147) | EL negocio real: ingreso predecible, cliente retenido, demanda suavizada | Construido, sin ventas — push en Oct-Nov |
+| **Membresías** (Basic $67 / Standard $97 / VIP $197) | EL negocio real: ingreso predecible, cliente retenido, demanda suavizada | Construido, sin ventas — push en Oct-Nov |
 | B2B flotas/corporativo | La escala 2027: contratos, volumen, ingresos planos todo el año | Futuro |
 
 La membresía es la métrica que separa "changas" de "empresa": un cliente recurrente vale 5-10× uno de una vez.

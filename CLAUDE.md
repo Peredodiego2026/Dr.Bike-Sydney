@@ -53,7 +53,7 @@ Both pages use the same light/white design system:
 - Stripe LIVE keys active in production
 - Mobile (index.html): $20 call-out fee charged via Stripe at booking step 3 (PaymentIntent)
 - Desktop (landing.html): NO Stripe charge - bkProceed() creates booking in Supabase and Diego contacts client manually
-- Subscriptions: Basic $57/mo, Standard $97/mo, VIP $147/mo (3-month min). stripe-webhook.js handles events.
+- Subscriptions: Basic $67/mo ($643/yr), Standard $97/mo ($931/yr), VIP $197/mo ($1,891/yr) - all annual options are the same 20% off (3-month min commitment either way). stripe-webhook.js handles events. Verified live in terms.html/index.html/landing.html 2026-07-26 - re-check here before quoting if it's been a while, these have drifted before (see the note two paragraphs below).
 
 ## Notifications (working as of Jun 2026)
 When a booking is created via mobile SPA (finalizeBooking()):

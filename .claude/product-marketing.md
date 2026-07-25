@@ -13,8 +13,9 @@ off, no bike shop queue.
   Standard+ Service, Ultimate Overhaul, or dozens of smaller repairs), pays
   a $20 mobile call-out fee online, pays the mechanic directly (card/EFTPOS)
   on completion.
-- Subscriptions: Basic $57/mo, Standard $97/mo, VIP $147/mo - discounted
-  services, waived call-out fee, priority booking.
+- Subscriptions: Basic $67/mo, Standard $97/mo, VIP $197/mo - discounted
+  services, waived call-out fee, priority booking. (Prices current as of
+  2026-07-26; Basic/VIP changed from $57/$147 on 2026-07-22.)
 - Solo/small operation, Sydney metro only, run by Diego (founder + ops).
 
 ## Primary conversion goals (in order)
