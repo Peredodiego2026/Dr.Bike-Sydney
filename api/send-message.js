@@ -87,6 +87,14 @@ async function handleSMS(req, res) {
   const messages = {
     test: `Dr. Bike Sydney SMS active`,
     confirmation: `Dr. Bike Sydney ${safeService} confirmed at ${safeAddress}. Total: $${price}`,
+    accepted: `Hi ${safeName}! ${mechName || 'Your mechanic'} has accepted your ${safeService}${
+      time
+        ? ` for ${String(time)
+            .replace(/[\r\n]/g, ' ')
+            .slice(0, 40)}`
+        : ''
+    }. We'll message you when they're on the way. Dr. Bike Sydney`,
+    arrived: `Hi ${safeName}! ${mechName || 'Your mechanic'} has arrived at ${safeAddress} and is starting your ${safeService}.`,
     enroute: `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress}.${etaText} Track live: ${trackUrl}`,
     completed: `Hi ${safeName}! Your ${safeService} is complete. Total: $${price} AUD. Book again: https://drbikesydney.com.au`,
     reminder: `Hi ${safeName}! Time for a bike check-up. Book your next service at https://drbikesydney.com.au`,
@@ -251,11 +259,29 @@ async function handleWhatsApp(req, res) {
 }
 
 // ── Router ────────────────────────────────────────────────────────────────────
+// ── ETA lookup ────────────────────────────────────────────────────────────────
+// The mechanic app assembles the push body on the device, so it needs the same
+// number this file puts in the SMS and WhatsApp.
+async function handleEta(req, res) {
+  const { mechLat, mechLng, destAddress } = req.body || {};
+  const minutes = await drivingEtaMinutes({
+    fromLat: mechLat,
+    fromLng: mechLng,
+    address: destAddress,
+  });
+  // 200 with minutes:null is the normal "couldn't work it out" answer - the
+  // caller drops the ETA line rather than treating it as an error.
+  return res.status(200).json({ minutes });
+}
+
 export default async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if (verifyInternalAuth(req, res)) return;
 
   const channel = req.query?.channel || 'sms';
   if (channel === 'whatsapp') return handleWhatsApp(req, res);
+  // Rides along on this file rather than becoming api/eta.js: the Hobby plan
+  // caps a deployment at 12 Serverless Functions and we are already at 12.
+  if (channel === 'eta') return handleEta(req, res);
   return handleSMS(req, res);
 }

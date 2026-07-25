@@ -781,6 +781,7 @@ async function acceptJob(id) {
     render();
     badges();
     toast('✅ Job accepted!');
+    notifyClientAccepted(j);
   } catch (e) {
     toast('Error: ' + e.message);
   }
@@ -835,6 +836,7 @@ async function markArrived(id, pin) {
     render();
     badges();
     toast('📍 Arrived at location!');
+    notifyClientArrived(j);
     return true;
   } catch (e) {
     toast('Error: ' + e.message);
@@ -908,6 +910,71 @@ async function sendClientPush(clientId, { title, body, url, tag }) {
   } catch (e) {
     console.warn('Push to client failed:', e);
   }
+}
+
+// The client booked and then heard nothing until the mechanic was already
+// driving over - on a booking made 5 days out, that was 5 days of silence.
+function notifyClientAccepted(j) {
+  if (!j) return;
+  const mechName =
+    ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+  const when = [j.date, j.time].filter(Boolean).join(' at ');
+
+  if (j.client_id)
+    sendClientPush(j.client_id, {
+      title: '🔧 Your booking is confirmed',
+      body: `${mechName} has accepted your ${esc(j.service)}${when ? ` for ${when}` : ''}. You'll get a message when they're on the way.`,
+      url: `/?action=dashboard&tracking=${j.id}`,
+      tag: 'booking-accepted-' + j.id,
+      badge: '/icon-mech-192.png',
+      icon: '/icon-512.svg',
+    });
+
+  if (j.phone)
+    fetch('/api/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: j.phone,
+        name: j.client,
+        mechName,
+        service: j.service,
+        time: when,
+        type: 'accepted',
+        bookingId: j.id,
+      }),
+    }).catch((e) => console.warn('Accepted SMS failed:', e.message));
+}
+
+function notifyClientArrived(j) {
+  if (!j) return;
+  const mechName =
+    ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+
+  if (j.client_id)
+    sendClientPush(j.client_id, {
+      title: '📍 Your mechanic has arrived',
+      body: `${mechName} is at ${j.suburb || 'your address'} and starting your ${esc(j.service)}.`,
+      url: `/?action=dashboard&tracking=${j.id}`,
+      tag: 'mechanic-arrived-' + j.id,
+      badge: '/icon-mech-192.png',
+      icon: '/icon-512.svg',
+    });
+
+  if (j.phone)
+    fetch('/api/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: j.phone,
+        name: j.client,
+        mechName,
+        service: j.service,
+        address: j.suburb,
+        type: 'arrived',
+        bookingId: j.id,
+      }),
+    }).catch((e) => console.warn('Arrived SMS failed:', e.message));
 }
 
 async function notifyClientEnroute(j) {

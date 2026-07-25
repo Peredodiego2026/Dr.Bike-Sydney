@@ -65,6 +65,10 @@
       "destination": "/api/send-message?channel=whatsapp"
     },
     {
+      "source": "/api/eta",
+      "destination": "/api/send-message?channel=eta"
+    },
+    {
       "source": "/api/admin-auth",
       "destination": "/api/auth?role=admin"
     },
