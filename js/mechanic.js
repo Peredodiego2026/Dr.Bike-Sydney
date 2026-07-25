@@ -1068,7 +1068,7 @@ function openCompleteModal(id) {
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:#DC2626">*</span></label>
           <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
-          <button data-action="clear-sig" style="font-size:11px;color:#6B7280;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--sans)">Clear signature</button>
+          <button data-action="clear-sig" style="font-size:13px;color:#6B7280;background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
         <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
         <div id="pay-method-section">
@@ -1091,7 +1091,7 @@ function openCompleteModal(id) {
         </div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button data-action="close-complete-modal" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--sans);cursor:pointer;font-size:13px;color:var(--navy)">Cancel</button>
-          <button data-action="submit-complete" data-id="${id}" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">💳 Marcar como cobrado (EFTPOS) y completar</button>
+          <button data-action="submit-complete" data-id="${id}" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">💳 Mark as Charged (EFTPOS) and Complete</button>
         </div>
       </div>
     </div>`;
@@ -1629,14 +1629,14 @@ async function submitComplete(id) {
         section.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       if (btn) {
-        btn.textContent = '💳 Marcar como cobrado (EFTPOS) y completar';
+        btn.textContent = '💳 Mark as Charged (EFTPOS) and Complete';
         btn.disabled = false;
       }
       toast('Auto-charge failed - please collect payment below and try again');
       return;
     }
     if (btn) {
-      btn.textContent = '💳 Marcar como cobrado (EFTPOS) y completar';
+      btn.textContent = '💳 Mark as Charged (EFTPOS) and Complete';
       btn.disabled = false;
     }
     toast('Error: ' + (err.error || 'Could not complete job'));
@@ -1975,9 +1975,9 @@ async function loadInventory() {
             ${low ? '<div style="font-size:11px;color:#DC2626;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
+            <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:44px;height:44px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
             <span style="font-size:15px;font-weight:700;min-width:28px;text-align:center;color:var(--navy)" id="qty-${item.id}">${item.stock}</span>
-            <button data-action="update-qty" data-id="${item.id}" data-delta="1" style="background:var(--border);border:none;border-radius:6px;width:28px;height:28px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
+            <button data-action="update-qty" data-id="${item.id}" data-delta="1" style="background:var(--border);border:none;border-radius:6px;width:44px;height:44px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
           </div>
         </div>`;
       });

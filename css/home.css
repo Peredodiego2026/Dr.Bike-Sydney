@@ -119,7 +119,7 @@
 }
 [data-screen='home'] .hero-image {
   border-radius: 16px;
-  aspect-ratio: 4/5;
+  aspect-ratio: 16/9;
   position: relative;
   overflow: hidden;
   min-height: 300px;

@@ -256,10 +256,17 @@ body {
   display: flex;
   background: #fff;
   border-bottom: 1px solid #e8ecf0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none;
 }
 .nav-tab {
-  flex: 1;
-  padding: 13px 4px;
+  flex: 0 0 auto;
+  padding: 13px 14px;
+  white-space: nowrap;
   background: none;
   border: none;
   border-bottom: 2.5px solid transparent;
@@ -325,7 +332,7 @@ body {
 }
 .job-meta {
   font-size: 12px;
-  color: #94a3b8;
+  color: #6b7280;
   margin-top: 2px;
   font-weight: 400;
 }
@@ -337,13 +344,13 @@ body {
 }
 .job-addr {
   font-size: 12px;
-  color: #94a3b8;
+  color: #6b7280;
   margin-bottom: 8px;
   font-weight: 400;
 }
 .job-notes {
   font-size: 12px;
-  color: #94a3b8;
+  color: #6b7280;
   margin-bottom: 8px;
   font-style: italic;
 }

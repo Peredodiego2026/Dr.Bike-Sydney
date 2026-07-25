@@ -215,13 +215,13 @@ img {
 }
 .hero-image {
   border-radius: 16px;
-  aspect-ratio: 4/5;
+  aspect-ratio: 16/9;
   position: relative;
   display: flex;
   align-items: flex-end;
   padding: 0;
   overflow: hidden;
-  min-height: 400px;
+  min-height: 300px;
 }
 .hero-image-text {
   color: var(--white);
@@ -233,6 +233,16 @@ img {
   color: rgba(255, 255, 255, 0.75);
   font-size: 13px;
   font-weight: 400;
+}
+@media (max-width: 900px) {
+  .hero .container {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding-top: 32px;
+  }
+  .hero-image {
+    min-height: 200px;
+  }
 }
 
 /* ── Trust Bar ────────────────────────────────────────────────────────────── */
