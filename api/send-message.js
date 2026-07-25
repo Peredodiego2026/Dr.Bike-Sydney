@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
 import { guard, verifyInternalAuth, normalizeAUPhone } from './_security.js';
+import { drivingEtaMinutes } from './_eta.js';
 
 const sb = createClient(
   process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co',
@@ -44,6 +45,9 @@ async function handleSMS(req, res) {
     reviewLink,
     customMsg,
     time,
+    mechLat,
+    mechLng,
+    destAddress,
   } = req.body;
   if (!to) return res.status(400).json({ error: 'Missing phone number' });
 
@@ -66,10 +70,24 @@ async function handleSMS(req, res) {
   if (!phone) return res.status(400).json({ error: 'Invalid Australian phone number' });
 
   const trackUrl = `https://drbikesydney.com.au/track.html?id=${bookingId || ''}`;
+
+  // Real driving time from where the mechanic actually is to the client's
+  // street address. If it can't be worked out we say nothing about timing
+  // rather than repeating the old hardcoded "10-20 min" to everyone.
+  const etaMin =
+    type === 'enroute'
+      ? await drivingEtaMinutes({
+          fromLat: mechLat,
+          fromLng: mechLng,
+          address: destAddress || address,
+        })
+      : null;
+  const etaText = etaMin ? ` Est. arrival: ~${etaMin} min.` : '';
+
   const messages = {
     test: `Dr. Bike Sydney SMS active`,
     confirmation: `Dr. Bike Sydney ${safeService} confirmed at ${safeAddress}. Total: $${price}`,
-    enroute: `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress}. Est. arrival: 10-20 min. Track live: ${trackUrl}`,
+    enroute: `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress}.${etaText} Track live: ${trackUrl}`,
     completed: `Hi ${safeName}! Your ${safeService} is complete. Total: $${price} AUD. Book again: https://drbikesydney.com.au`,
     reminder: `Hi ${safeName}! Time for a bike check-up. Book your next service at https://drbikesydney.com.au`,
     review_request: `Hi ${safeName}! Your ${safeService} is done. How did we do? ${reviewLink || 'https://drbikesydney.com.au'}`,
@@ -105,7 +123,10 @@ function buildWAMessage(template, data) {
     case 'confirmation':
       return `Hi ${d.name || 'there'} 👋\n\nYour Dr. Bike booking is confirmed!\n\n🔧 Service: ${d.service || 'Bike repair'}\n📅 Date: ${d.date || 'TBD'}\n📍 Location: ${d.suburb || 'your area'}\n💰 Price: $${d.price || '—'}\n\nYou'll receive a message when your mechanic is on the way. Track live at ${d.trackUrl || 'https://drbikesydney.com.au/track.html'}\n\n— Dr. Bike Sydney 🚲`;
     case 'enroute':
-      return `Your Dr. Bike mechanic is on the way! 🚐\n\nHi ${d.name || 'there'}, *${d.mechanic || 'your mechanic'}* is heading to you now.\n\n⏱️ ETA: ~${d.eta || '20'} minutes\n📍 Heading to: ${d.suburb || 'your location'}\n\nTrack live: ${d.trackUrl || 'https://drbikesydney.com.au/track.html'}\n\n— Dr. Bike Sydney 🚲`;
+      // The ETA line is dropped entirely when the real driving time is
+      // unavailable - the old `d.eta || '20'` default sent every client the
+      // same made-up number.
+      return `Your Dr. Bike mechanic is on the way! 🚐\n\nHi ${d.name || 'there'}, *${d.mechanic || 'your mechanic'}* is heading to you now.\n${d.eta ? `\n⏱️ ETA: ~${d.eta} minutes` : ''}\n📍 Heading to: ${d.suburb || 'your location'}\n\nTrack live: ${d.trackUrl || 'https://drbikesydney.com.au/track.html'}\n\n— Dr. Bike Sydney 🚲`;
     case 'completed':
       return `Job complete! ✅\n\nHi ${d.name || 'there'}, your bike has been serviced by *${d.mechanic || 'your mechanic'}*.\n\n🔧 ${d.service || 'Service'} — done!\n\nRate your experience: ${d.reviewUrl || 'https://drbikesydney.com.au'}\n\nThank you for choosing Dr. Bike Sydney! 🚲`;
     case 'reminder':
@@ -175,7 +196,20 @@ async function handleWhatsApp(req, res) {
     return res.status(200).json({ success: true, skipped: true, reason: 'to_equals_from' });
   }
 
-  const body = buildWAMessage(template, data);
+  // Same real-ETA lookup as the SMS path, so both channels quote the same number.
+  const waData =
+    template === 'enroute'
+      ? {
+          ...data,
+          eta: await drivingEtaMinutes({
+            fromLat: data?.mechLat,
+            fromLng: data?.mechLng,
+            address: data?.destAddress,
+          }),
+        }
+      : data;
+
+  const body = buildWAMessage(template, waData);
   if (!body) return res.status(400).json({ error: 'Could not build message for template' });
 
   const { TWILIO_ACCOUNT_SID: sid, TWILIO_AUTH_TOKEN: token } = process.env;
