@@ -1884,19 +1884,26 @@ function _enrollHTML(qrSvg, secret) {
   <button data-action="submit-mfa-setup-code" style="${_btn}">Activate 2FA →</button>`;
 }
 
+function showDashboardError(msg) {
+  const box = document.getElementById('dash-error');
+  if (box) {
+    box.textContent = '❌ Could not load dashboard data: ' + msg;
+    box.style.display = 'block';
+  }
+  // Leave the "$—" placeholders alone: showing $0 here would look like real
+  // data, which is exactly the bug this guard exists to prevent.
+  document.querySelectorAll('#page-dashboard .kpi-sub').forEach((el) => {
+    el.textContent = 'unavailable';
+  });
+}
+
 async function loadDashboard() {
   const today = new Date().toISOString().split('T')[0];
   const firstOfMonth = today.slice(0, 8) + '01';
+  const errBox = document.getElementById('dash-error');
+  if (errBox) errBox.style.display = 'none';
 
-  const [
-    { data: todayJobs },
-    { data: monthJobs },
-    { data: pendingJobs },
-    { data: recentBookings },
-    { data: allClients },
-    { count: newsletterCount },
-    { count: bikesCount },
-  ] = await Promise.all([
+  const results = await Promise.all([
     sb.from('bookings').select('*').eq('scheduled_date', today),
     sb.from('bookings').select('*').gte('scheduled_date', firstOfMonth).neq('status', 'cancelled'),
     sb.from('bookings').select('*').eq('status', 'pending'),
@@ -1907,7 +1914,23 @@ async function loadDashboard() {
       .select('*', { count: 'exact', head: true })
       .eq('active', true),
     sb.from('bikes').select('*', { count: 'exact', head: true }),
-  ]);
+  ]).catch((e) => e);
+
+  if (results instanceof Error) return showDashboardError(results.message);
+  // Supabase resolves (not rejects) on a query error, so an RLS or schema
+  // problem would otherwise render as a silent $0 instead of a failure.
+  const queryErr = results.find((r) => r && r.error)?.error;
+  if (queryErr) return showDashboardError(queryErr.message);
+
+  const [
+    { data: todayJobs },
+    { data: monthJobs },
+    { data: pendingJobs },
+    { data: recentBookings },
+    { data: allClients },
+    { count: newsletterCount },
+    { count: bikesCount },
+  ] = results;
 
   const todayRev = (todayJobs || []).reduce((s, b) => s + (b.service_price || 0), 0);
   const monthRev = (monthJobs || []).reduce((s, b) => s + (b.service_price || 0), 0);
