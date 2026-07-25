@@ -245,6 +245,19 @@ img {
   }
 }
 
+/* ── Clickable feedback ───────────────────────────────────────────────────── */
+/* 68 of the 73 cursor:pointer elements on this page are <button>s carrying
+   inline styles and no class, so a generic rule is the only way to cover them
+   without editing 58 tags. brightness() composes with the specific :hover
+   rules elsewhere in this file instead of fighting their background values. */
+@media (hover: hover) {
+  button:not(:disabled):hover,
+  label[style*='cursor:pointer']:hover,
+  div[style*='cursor:pointer']:hover {
+    filter: brightness(0.95);
+  }
+}
+
 /* ── Trust Bar ────────────────────────────────────────────────────────────── */
 .trust-bar {
   border-top: 1px solid var(--border);

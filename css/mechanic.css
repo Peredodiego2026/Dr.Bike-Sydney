@@ -265,7 +265,7 @@ body {
 }
 .nav-tab {
   flex: 0 0 auto;
-  padding: 13px 14px;
+  padding: 14px;
   white-space: nowrap;
   background: none;
   border: none;
@@ -312,7 +312,6 @@ body {
   padding: 18px;
   margin-bottom: 10px;
   border: 1px solid #e8ecf0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   transition: background 150ms ease;
 }
 .job-card.done {
@@ -458,7 +457,6 @@ body {
   border-radius: 12px;
   padding: 18px 16px;
   border: 1px solid #e8ecf0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   text-align: center;
 }
 .kpi-val {
