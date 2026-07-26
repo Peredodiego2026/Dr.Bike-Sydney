@@ -93,6 +93,10 @@
       "destination": "/$1.html"
     },
     {
+      "source": "/(es|zh)/(bondi|cbd|chatswood|eastern-suburbs|hills-district|hornsby|inner-west|manly|marrickville|mosman|newtown|north-shore|northern-beaches|parramatta|penrith|ryde|st-george|strathfield|surry-hills|sutherland-shire)",
+      "destination": "/$1/$2.html"
+    },
+    {
       "source": "/blog/(best-bikes-for-sydney-commuting-2026|cycling-safety-tips-sydney-roads|electric-bike-laws-nsw-2026|how-to-choose-a-bike-mechanic-sydney|how-to-clean-your-bike-chain-sydney)",
       "destination": "/blog/$1.html"
     },

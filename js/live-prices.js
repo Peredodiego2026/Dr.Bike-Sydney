@@ -56,13 +56,17 @@
       const heading = card.querySelector('h3, .service-name, .svc-name');
       const priceEl = card.querySelector('.price, .service-price, .svc-price');
       if (!heading || !priceEl) return;
-      // The heading may already be translated (index.html and landing.html run
-      // a translation pass over the whole body), and the Supabase names are
-      // English - map it back first, or every card falls back to its static
-      // price for Spanish and Chinese visitors. Suburb pages have no i18n, so
-      // there the raw heading is already the English name.
+      // Three ways to get the English name the Supabase `services` table uses:
+      //  1. data-service on the card - the translated suburb pages carry it,
+      //     since their headings are authored in Spanish/Chinese;
+      //  2. the i18n reverse map, for index.html and landing.html, where the
+      //     heading was translated in place after render;
+      //  3. the heading itself, for pages with no translation at all.
+      // Without this, every card silently fell back to its static price for
+      // Spanish and Chinese visitors and Admin price edits never reached them.
       const rendered = heading.textContent.trim();
-      const cardName = window.__drbikeI18n?.sourceOf?.(rendered) || rendered;
+      const cardName =
+        card.dataset.service || window.__drbikeI18n?.sourceOf?.(rendered) || rendered;
       const lookupName = NAME_MAP[cardName] || cardName;
       const match = services.find((s) => s.name === lookupName);
       if (match && typeof match.price === 'number') {
