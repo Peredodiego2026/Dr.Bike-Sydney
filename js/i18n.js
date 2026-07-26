@@ -617,7 +617,8 @@ const dict = {
     'E-bikes, carbon, vintage, insurance claims': 'E-bikes, carbono, vintage, reclamos de seguro',
     'All prices include $20 mobile call-out. Parts charged separately unless stated.':
       'Todos los precios incluyen la visita de $20. Los repuestos se cobran aparte salvo que se indique lo contrario.',
-    'Same-day booking +$30. Weekend +$20.': 'Reserva el mismo día +$30. Fin de semana +$20.',
+    'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
+      'Reservas de domingo y feriados de NSW +20%. El sábado tiene precio normal.',
 
     // ── Testimonials (landing.html specific reviews) ─────────────────────
     "Real reviews from Sydney cyclists who've used Dr. Bike Sydney.":
@@ -865,9 +866,7 @@ const dict = {
       'Repuestos de alta gama (se cobran a precio de costo). Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.':
       'Servicios ilimitados + emergencias = valor de $400+. Con VIP ahorrás $250+/mes.',
-    'Get Started - $57/month': 'Comenzar - $57/mes',
     'Get Started - $97/month': 'Comenzar - $97/mes',
-    'Get Started - $147/month': 'Comenzar - $147/mes',
     'Get Started - $67/month': 'Comenzar - $67/mes',
     'Get Started - $197/month': 'Comenzar - $197/mes',
 
@@ -1682,7 +1681,8 @@ const dict = {
     'E-bikes, carbon, vintage, insurance claims': '电动自行车、碳纤维车架、老式车、保险理赔',
     'All prices include $20 mobile call-out. Parts charged separately unless stated.':
       '所有价格均含$20上门费。除另有说明外，零件费用另计。',
-    'Same-day booking +$30. Weekend +$20.': '当天预订加收$30，周末加收$20。',
+    'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
+      '周日及新南威尔士州公共假日预订加收20%。周六按正常价格计算。',
 
     // ── Testimonials (landing.html specific reviews) ─────────────────────
     "Real reviews from Sydney cyclists who've used Dr. Bike Sydney.":
@@ -1911,9 +1911,7 @@ const dict = {
       '高端零件按成本价收费。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.':
       '无限次服务+紧急上门 = 价值$400以上。使用VIP每月可节省$250以上。',
-    'Get Started - $57/month': '立即开始 - $57/月',
     'Get Started - $97/month': '立即开始 - $97/月',
-    'Get Started - $147/month': '立即开始 - $147/月',
     'Get Started - $67/month': '立即开始 - $67/月',
     'Get Started - $197/month': '立即开始 - $197/月',
 

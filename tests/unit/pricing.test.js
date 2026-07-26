@@ -24,10 +24,12 @@ const SAMPLE_PRICES = {
 
 const CALLOUT_FEE = 20;
 
+// Real membership prices - must match landing.html `_membershipPrices`,
+// index.html `_msPrices` and the Stripe Price objects.
 const MEMBERSHIP_PRICES = {
-  basic: { monthly: 57, annual: 548 },
+  basic: { monthly: 67, annual: 643 },
   standard: { monthly: 97, annual: 931 },
-  vip: { monthly: 147, annual: 1411 },
+  vip: { monthly: 197, annual: 1891 },
 };
 
 function totalWithCallout(serviceKey) {
@@ -57,16 +59,16 @@ describe('Service pricing', () => {
 });
 
 describe('Membership pricing', () => {
-  it('basic annual saves $136', () => {
-    expect(annualSavings('basic')).toBe(136);
+  it('basic annual saves $161', () => {
+    expect(annualSavings('basic')).toBe(161);
   });
 
   it('standard annual saves $233', () => {
     expect(annualSavings('standard')).toBe(233);
   });
 
-  it('vip annual saves $353', () => {
-    expect(annualSavings('vip')).toBe(353);
+  it('vip annual saves $473', () => {
+    expect(annualSavings('vip')).toBe(473);
   });
 
   it('annual plans are always cheaper than monthly * 12', () => {
