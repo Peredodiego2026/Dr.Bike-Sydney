@@ -22,7 +22,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Syntax check (api/ + js/)
+      # Also runs scripts/i18n-check.mjs: fails the build when any client-facing
+      # string is missing from the Spanish or Chinese dictionary, so untranslated
+      # copy cannot reach main.
+      - name: Syntax + i18n coverage check
         run: npm run check
 
       - name: Unit tests
