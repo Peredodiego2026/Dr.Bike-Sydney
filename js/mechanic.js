@@ -781,6 +781,7 @@ async function acceptJob(id) {
     render();
     badges();
     toast('✅ Job accepted!');
+    notifyClientAccepted(j);
   } catch (e) {
     toast('Error: ' + e.message);
   }
@@ -835,6 +836,7 @@ async function markArrived(id, pin) {
     render();
     badges();
     toast('📍 Arrived at location!');
+    notifyClientArrived(j);
     return true;
   } catch (e) {
     toast('Error: ' + e.message);
@@ -910,48 +912,160 @@ async function sendClientPush(clientId, { title, body, url, tag }) {
   }
 }
 
-function notifyClientEnroute(j) {
+// The client booked and then heard nothing until the mechanic was already
+// driving over - on a booking made 5 days out, that was 5 days of silence.
+function notifyClientAccepted(j) {
+  if (!j) return;
+  const mechName =
+    ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+  const when = [j.date, j.time].filter(Boolean).join(' at ');
+
+  if (j.client_id)
+    sendClientPush(j.client_id, {
+      title: '🔧 Your booking is confirmed',
+      body: `${mechName} has accepted your ${esc(j.service)}${when ? ` for ${when}` : ''}. You'll get a message when they're on the way.`,
+      url: `/?action=dashboard&tracking=${j.id}`,
+      tag: 'booking-accepted-' + j.id,
+      badge: '/icon-mech-192.png',
+      icon: '/icon-512.svg',
+    });
+
+  if (j.phone)
+    fetch('/api/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: j.phone,
+        name: j.client,
+        mechName,
+        service: j.service,
+        time: when,
+        type: 'accepted',
+        bookingId: j.id,
+      }),
+    }).catch((e) => console.warn('Accepted SMS failed:', e.message));
+}
+
+function notifyClientArrived(j) {
+  if (!j) return;
+  const mechName =
+    ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+
+  if (j.client_id)
+    sendClientPush(j.client_id, {
+      title: '📍 Your mechanic has arrived',
+      body: `${mechName} is at ${j.suburb || 'your address'} and starting your ${esc(j.service)}.`,
+      url: `/?action=dashboard&tracking=${j.id}`,
+      tag: 'mechanic-arrived-' + j.id,
+      badge: '/icon-mech-192.png',
+      icon: '/icon-512.svg',
+    });
+
+  if (j.phone)
+    fetch('/api/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: j.phone,
+        name: j.client,
+        mechName,
+        service: j.service,
+        address: j.suburb,
+        type: 'arrived',
+        bookingId: j.id,
+      }),
+    }).catch((e) => console.warn('Arrived SMS failed:', e.message));
+}
+
+async function notifyClientEnroute(j) {
   if (!j) return;
   const mechName =
     ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
   const trackUrl = `https://drbikesydney.com.au/?tracking=${j.id}`;
 
+  // Where the mechanic actually is right now. The server turns this plus the
+  // client's street address into a real driving time; if we can't get a fix,
+  // the messages simply go out without an ETA.
+  const fix = await currentPosition();
+  const destAddress = j.address || j.suburb || '';
+
   // SMS + WhatsApp (works even if app not installed)
   if (j.phone) {
-    const smsBody = JSON.stringify({
-      to: j.phone,
-      name: j.client,
-      mechName,
-      service: j.service,
-      address: j.suburb,
-      price: j.price,
-      type: 'enroute',
-      bookingId: j.id,
-    });
+    const common = {
+      mechLat: fix?.lat,
+      mechLng: fix?.lng,
+      destAddress,
+    };
     Promise.allSettled([
       fetch('/api/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: smsBody,
+        body: JSON.stringify({
+          to: j.phone,
+          name: j.client,
+          mechName,
+          service: j.service,
+          address: j.suburb,
+          price: j.price,
+          type: 'enroute',
+          bookingId: j.id,
+          ...common,
+        }),
       }),
+      // This endpoint takes {to, template, data} - it was being sent the SMS
+      // shape, so every enroute WhatsApp was rejected with a 400 and the
+      // client never got one.
       fetch('/api/send-whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: smsBody,
+        body: JSON.stringify({
+          to: j.phone,
+          template: 'enroute',
+          data: {
+            name: j.client,
+            mechanic: mechName,
+            suburb: j.suburb,
+            trackUrl,
+            bookingId: j.id,
+            ...common,
+          },
+        }),
       }),
     ]);
   }
 
   // Push notification to app (if client has it installed + subscribed)
-  if (j.client_id)
+  if (j.client_id) {
+    const etaMin = await fetchEta(fix, destAddress);
     sendClientPush(j.client_id, {
       title: `🚐 ${mechName} is on the way!`,
-      body: `Heading to ${j.suburb || 'your address'} for your ${esc(j.service)}. Est. arrival: 10–20 min. Tap to track live 📍`,
+      body: `Heading to ${j.suburb || 'your address'} for your ${esc(j.service)}.${etaMin ? ` Est. arrival: ~${etaMin} min.` : ''} Tap to track live 📍`,
       url: `/?action=dashboard&tracking=${j.id}`,
       tag: 'mechanic-enroute-' + j.id,
       badge: '/icon-mech-192.png',
       icon: '/icon-512.svg',
     });
+  }
+}
+
+// The push body is built here rather than server-side, so it needs the same
+// number the SMS quotes. Returns null on any failure - the caller then omits
+// the ETA line instead of guessing.
+async function fetchEta(fix, address) {
+  if (!fix || !address) return null;
+  try {
+    const r = await fetch('/api/eta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mechLat: fix.lat, mechLng: fix.lng, destAddress: address }),
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d?.minutes || null;
+  } catch (e) {
+    console.warn('ETA lookup failed:', e.message);
+    return null;
+  }
 }
 
 // Push cuando el job es completado
@@ -2714,6 +2828,26 @@ function stopBackgroundGPS() {
 }
 
 // High-frequency GPS for active enroute jobs (5s, Uber-style)
+// Last known GPS fix, kept so the "on the way" message can quote a real
+// driving time instead of a fixed guess. Every fix funnels through
+// upsertLocation(), so recording it there covers the watch and the interval.
+let lastGpsFix = null;
+
+// Resolve the mechanic's position for the enroute notification. Prefers a
+// fresh watch fix; falls back to one direct read, since startGPS() and the
+// notification fire in the same tick and the watch may not have reported yet.
+function currentPosition(timeoutMs = 6000) {
+  if (lastGpsFix && Date.now() - lastGpsFix.at < 30000) return Promise.resolve(lastGpsFix);
+  if (!navigator.geolocation) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, at: Date.now() }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 30000 }
+    );
+  });
+}
+
 function startGPS(bookingId) {
   activeJobId = bookingId;
   if (!navigator.geolocation) {
@@ -2762,6 +2896,7 @@ function sendLocation(bookingId) {
 }
 
 async function upsertLocation(lat, lng) {
+  lastGpsFix = { lat, lng, at: Date.now() };
   if (!mechanic?.token) return;
   try {
     const resp = await fetch('/api/auth', {
