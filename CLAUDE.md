@@ -148,6 +148,18 @@ NEVER reference columns that don't exist -> verify with SELECT before INSERT/UPD
 NEVER DELETE without confirming with Diego first.
 
 ### Full coverage on every content/copy change
+
+**Enforced, not remembered:** `npm run check` runs `scripts/i18n-check.mjs`,
+which fails (and blocks the CI quality-gate) if any user-visible string on
+`index.html`, `landing.html`, `track.html`, `js/app.js` or `js/components.js`
+has no `es` AND `zh` entry, if the two dictionaries drift apart, or if a key is
+duplicated. Adding English copy without both translations cannot reach main.
+Run `npm run i18n:check` while working. A string that must stay in English goes
+in `ALLOWED` in that script, so every exception is visible in review.
+New static pages: generate them per language (see
+`scripts/generate-suburb-pages.mjs`) instead of writing one file and translating
+it later.
+
 Any text, price, or plan detail you add or edit must be checked against
 ALL FOUR app surfaces (`index.html` SPA, `landing.html`, `mechanic.html`/
 `js/mechanic.js`, `admin.html`/`js/admin.js`) AND all 3 languages in
