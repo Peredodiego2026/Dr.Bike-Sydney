@@ -5426,3 +5426,30 @@ async function loadAvgServiceTime() {
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => loadAvgServiceTime(), 1200);
 });
+
+// The Connect button used to be a plain link to an endpoint that asked for no
+// credentials at all. It now trades the admin session for a 5-minute ticket
+// first, and that ticket is what authorises the redirect.
+byId('gcal-connect-btn').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = 'Connecting...';
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'google-calendar-ticket',
+        access_token: localStorage.getItem('drbike-admin-token') || '',
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.ticket) throw new Error(data.error || 'Could not start the connection');
+    window.location.href = '/api/google-calendar-connect?ticket=' + encodeURIComponent(data.ticket);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = original;
+    showToast('Google Calendar: ' + err.message);
+  }
+});
