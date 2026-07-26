@@ -17,8 +17,14 @@
   translation is broken" hunts today. Now at `?v=20260726c` / SW **v39** on the plan-names branch.
 - **Known gap in the i18n gate:** `scripts/i18n-check.mjs` strips `<script>` blocks, so strings
   built inside landing.html's inline scripts are not covered. That is how `$97/month` escaped it.
-- **Still English-only:** `business.html`, `bike-check.html`, the 5 blog posts. Mechanism is ready
-  (per-language files + hreflang), it is translation work.
+- **Still English-only, NEXT TASK:** `business.html` (79 strings), `bike-check.html` (63) and the
+  5 blog posts. Mechanism decided, not yet written: do NOT rewrite them as templates like the
+  suburb generator. Keep the English file as the source and add a script that emits
+  `/es/<page>.html` and `/zh/<page>.html` by replacing whole prose strings from a per-page
+  dictionary (the `api/_email-i18n.js` approach - these pages are prose blocks between tags, so a
+  fragment swap is safe), then injects `hreflang`, `<html lang>` and the sitemap entries. Add the
+  new URLs to the `vercel.json` rewrite list. ~284 translations for the two pages; the blog is a
+  much larger content job and should be its own PR.
 - **Needs Diego, not code:** unique 200-300 word content per suburb (real local facts - cycle
   paths, typical problems, response times; must not be invented), Google Business Profile,
   Search Console, real reviews.
