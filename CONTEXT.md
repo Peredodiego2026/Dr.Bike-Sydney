@@ -1,6 +1,27 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
 ## Current state (2026-07-26) — read this first
+- **3 open branches, pushed, NOT merged (2026-07-26 evening):** `feat/sms-whatsapp-i18n`
+  (SMS/WhatsApp in 3 languages via `api/_message-i18n.js`, one builder per language because an
+  SMS interleaves values and word order differs - messages to Diego stay Spanish; 13 tests),
+  `feat/seo-structure-and-links` (neighbour links between suburb pages scoped per language, blog
+  links on the English pages only, keyword-variant H2, BreadcrumbList schema,
+  `scripts/add-blog-area-links.mjs` idempotently adds an area-links block to the 5 posts),
+  `feat/plan-names-i18n` (Basic/Standard/VIP were dictionary keys mapped to themselves so they
+  looked translated and were not; plan selection is `data-plan`-driven so it was safe; also the
+  plan-info modal price `$97/month` had no entry at all). They touch different files and merge in
+  any order.
+- **Footgun, now a rule in CLAUDE.md:** editing `js/i18n.js` requires bumping the `?v=` on its
+  import in `landing.html` and `track.html` AND the `sw.js` cache version, or returning visitors
+  keep the old dictionary and new strings silently render in English. Cost two false "the
+  translation is broken" hunts today. Now at `?v=20260726c` / SW **v39** on the plan-names branch.
+- **Known gap in the i18n gate:** `scripts/i18n-check.mjs` strips `<script>` blocks, so strings
+  built inside landing.html's inline scripts are not covered. That is how `$97/month` escaped it.
+- **Still English-only:** `business.html`, `bike-check.html`, the 5 blog posts. Mechanism is ready
+  (per-language files + hreflang), it is translation work.
+- **Needs Diego, not code:** unique 200-300 word content per suburb (real local facts - cycle
+  paths, typical problems, response times; must not be invented), Google Business Profile,
+  Search Console, real reviews.
 - **MERGED 2026-07-26 (PR #101 + #102):** pricing consistency, the full 3-language i18n audit,
   the messaging-endpoint hardening, email i18n (+ `scripts/add-client-language.sql`, **applied**),
   push-link hardening, `npm audit fix`. SW **v38** live.
