@@ -414,6 +414,30 @@ function page(sub, lang) {
     areaServed: { '@type': 'City', name: `${sub.name}, Sydney` },
   });
 
+  // Service schema: says what we actually sell, in this area, at what price, in
+  // the language of the page. LocalBusiness above describes who we are - this
+  // describes the offer, and the two answer different questions for Google.
+  // Prices are the display defaults from SERVICE_PRICES; js/live-prices.js
+  // updates the visible ones from Supabase but structured data is static, so
+  // keep these in step with the `services` table.
+  const serviceSchema = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    serviceType: 'Mobile bicycle repair and servicing',
+    provider: { '@type': 'LocalBusiness', name: 'Dr. Bike Sydney', telephone: '+61433963250' },
+    areaServed: { '@type': 'City', name: `${sub.name}, Sydney` },
+    inLanguage: meta.hreflang,
+    url,
+    offers: c.serviceNames.map((name, i) => ({
+      '@type': 'Offer',
+      name,
+      price: SERVICE_PRICES[i].replace('$', ''),
+      priceCurrency: 'AUD',
+      availability: 'https://schema.org/InStock',
+      url,
+    })),
+  });
+
   const breadcrumbSchema = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -466,6 +490,7 @@ ${alternates}
   <script type="application/ld+json">${businessSchema}</script>
   <script type="application/ld+json">${faqSchema}</script>
   <script type="application/ld+json">${breadcrumbSchema}</script>
+  <script type="application/ld+json">${serviceSchema}</script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
   <link rel="stylesheet" href="/css/variables.css">
