@@ -237,7 +237,12 @@ async function handleWhatsApp(req, res) {
     toNorm = bound;
   }
 
-  let fromNumber = process.env.TWILIO_WHATSAPP_FROM;
+  // Vercel has this as TWILIO_WHATSAPP_NUMBER while the code only ever read
+  // TWILIO_WHATSAPP_FROM, so WhatsApp has been silently running off the
+  // van_zones fallback row below - which breaks the day anyone edits that row.
+  // Accept both names rather than making the env var the thing that has to be
+  // renamed correctly.
+  let fromNumber = process.env.TWILIO_WHATSAPP_FROM || process.env.TWILIO_WHATSAPP_NUMBER;
   if (!fromNumber) {
     const { data: waRow } = await sb
       .from('van_zones')

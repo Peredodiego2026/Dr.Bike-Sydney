@@ -97,6 +97,38 @@ const BLOG_POSTS = [
 const SERVICE_KEYS = ['Tune-Up', 'Standard Service', 'Standard+ Service', 'Ultimate Overhaul'];
 const SERVICE_PRICES = ['$109', '$149', '$199', '$369'];
 
+// The visible prices get overwritten in the browser by js/live-prices.js from the
+// Supabase `services` table, but the Service schema is static HTML - so when the
+// defaults above drift, the structured data starts telling Google a price the
+// page does not charge. Read the real ones at generation time; SERVICE_PRICES is
+// only the offline fallback.
+const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
+// Public anon key - the `services` table is world-readable by design, the browser
+// reads it exactly like this in js/live-prices.js.
+const SUPABASE_ANON =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U';
+
+async function livePrices() {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,price`, {
+      headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` },
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const rows = await r.json();
+    const missing = SERVICE_KEYS.filter((key) => !rows.some((s) => s.name === key));
+    if (missing.length) console.warn(`  ! no Supabase row for ${missing.join(', ')} - kept default`);
+    const prices = SERVICE_KEYS.map((key, i) => {
+      const match = rows.find((s) => s.name === key);
+      return typeof match?.price === 'number' ? `$${match.price}` : SERVICE_PRICES[i];
+    });
+    console.log(`prices: live from Supabase -> ${prices.join(' ')}`);
+    return prices;
+  } catch (e) {
+    console.warn(`prices: Supabase unreachable (${e.message}) - using the built-in defaults`);
+    return SERVICE_PRICES;
+  }
+}
+
 const LANGS = {
   en: { hreflang: 'en-AU', htmlLang: 'en', prefix: '', label: 'EN' },
   es: { hreflang: 'es', htmlLang: 'es', prefix: '/es', label: 'ES' },
@@ -361,7 +393,7 @@ function page(sub, lang) {
   const services = c.serviceNames
     .map(
       (name, i) =>
-        `      <div class="service-card" data-service="${SERVICE_KEYS[i]}"><h3>${name}</h3><div class="price">${SERVICE_PRICES[i]}</div><p style="font-size:12px;color:#6B7280;margin-top:4px">${c.serviceDescs[i]}</p></div>`
+        `      <div class="service-card" data-service="${SERVICE_KEYS[i]}"><h3>${name}</h3><div class="price">${PRICES[i]}</div><p style="font-size:12px;color:#6B7280;margin-top:4px">${c.serviceDescs[i]}</p></div>`
     )
     .join('\n');
 
@@ -417,9 +449,8 @@ function page(sub, lang) {
   // Service schema: says what we actually sell, in this area, at what price, in
   // the language of the page. LocalBusiness above describes who we are - this
   // describes the offer, and the two answer different questions for Google.
-  // Prices are the display defaults from SERVICE_PRICES; js/live-prices.js
-  // updates the visible ones from Supabase but structured data is static, so
-  // keep these in step with the `services` table.
+  // Prices come from Supabase at generation time (see livePrices), so the
+  // structured data and the visible card can never quote different numbers.
   const serviceSchema = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Service',
@@ -431,7 +462,7 @@ function page(sub, lang) {
     offers: c.serviceNames.map((name, i) => ({
       '@type': 'Offer',
       name,
-      price: SERVICE_PRICES[i].replace('$', ''),
+      price: PRICES[i].replace(/^\$/, ''),
       priceCurrency: 'AUD',
       availability: 'https://schema.org/InStock',
       url,
@@ -674,6 +705,8 @@ ${entries.join('\n')}
 }
 
 // ── Write ───────────────────────────────────────────────────────────────────
+// Resolved once, so all 60 pages and every Service schema quote the same number.
+const PRICES = await livePrices();
 let written = 0;
 for (const [code, meta] of Object.entries(LANGS)) {
   const dir = code === 'en' ? ROOT : path.join(ROOT, code);
