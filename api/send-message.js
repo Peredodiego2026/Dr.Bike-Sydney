@@ -11,6 +11,7 @@ import {
   isStaffPhone,
   recipientForBooking,
 } from './_security.js';
+import { smsBody, waBody, normalizeLang } from './_message-i18n.js';
 import { drivingEtaMinutes } from './_eta.js';
 
 const sb = createClient(
@@ -102,34 +103,46 @@ async function handleSMS(req, res) {
           address: destAddress || address,
         })
       : null;
-  const etaText = etaMin ? ` Est. arrival: ~${etaMin} min.` : '';
+  // Language: the caller can pass it (the app knows what the client is reading),
+  // otherwise it comes off the booking - the crons run server-side with no
+  // browser to ask. Unknown values fall back to English.
+  const lang = normalizeLang(
+    req.body?.lang || (await recipientForBooking(bookingId, 'client_lang'))
+  );
 
-  const messages = {
+  // Messages addressed to Diego, not to a client: they stay as they are (he
+  // reads them in Spanish) and are never affected by the client's language.
+  const INTERNAL = {
     test: `Dr. Bike Sydney SMS active`,
-    confirmation: `Dr. Bike Sydney ${safeService} confirmed at ${safeAddress}. Total: $${price}`,
-    accepted: `Hi ${safeName}! ${mechName || 'Your mechanic'} has accepted your ${safeService}${
-      time
-        ? ` for ${String(time)
-            .replace(/[\r\n]/g, ' ')
-            .slice(0, 40)}`
-        : ''
-    }. We'll message you when they're on the way. Dr. Bike Sydney`,
-    arrived: `Hi ${safeName}! ${mechName || 'Your mechanic'} has arrived at ${safeAddress} and is starting your ${safeService}.`,
-    upcoming: `Hi ${safeName}! Reminder: your ${safeService} with Dr. Bike Sydney is coming up${
-      time
-        ? ` on ${String(time)
-            .replace(/[\r\n]/g, ' ')
-            .slice(0, 60)}`
-        : ''
-    }${safeAddress ? ` at ${safeAddress}` : ''}. Need to reschedule? Reply or call 0433 963 250.`,
-    enroute: `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress}.${etaText} Track live: ${trackUrl}`,
-    completed: `Hi ${safeName}! Your ${safeService} is complete. Total: $${price} AUD. Book again: https://drbikesydney.com.au`,
-    reminder: `Hi ${safeName}! Time for a bike check-up. Book your next service at https://drbikesydney.com.au`,
-    review_request: `Hi ${safeName}! Your ${safeService} is done. How did we do? ${reviewLink || 'https://drbikesydney.com.au'}`,
     cancellation_alert: safeMsg || `CANCELLED: ${name} cancelled their ${safeService} booking.`,
     new_booking: `NUEVA RESERVA: ${safeService} a las ${time || ''} - ${safeAddress}`,
   };
-  const body = messages[type] || messages.confirmation;
+
+  const safeTime = (max) =>
+    time
+      ? String(time)
+          .replace(/[\r\n]/g, ' ')
+          .slice(0, max)
+      : '';
+
+  const body =
+    (Object.hasOwn(INTERNAL, type) ? INTERNAL[type] : null) ??
+    smsBody(type, lang, {
+      name: safeName,
+      service: safeService,
+      address: safeAddress,
+      price,
+      mechName,
+      etaMin,
+      trackUrl,
+      reviewLink,
+      time: type === 'accepted' ? safeTime(40) : safeTime(60),
+    }) ??
+    smsBody('confirmation', lang, {
+      service: safeService,
+      address: safeAddress,
+      price,
+    });
 
   const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
   const r = await sendWithRetry(() =>
@@ -152,7 +165,13 @@ async function handleSMS(req, res) {
 }
 
 // ── WhatsApp ──────────────────────────────────────────────────────────────────
-function buildWAMessage(template, data) {
+// The four client-facing templates (confirmation, enroute, completed, reminder)
+// live in api/_message-i18n.js, one builder per language. What is left in the
+// switch below is only the mail addressed to Diego, which stays in Spanish.
+function buildWAMessage(template, data, lang) {
+  const fromDict = waBody(template, lang, data);
+  if (fromDict) return fromDict;
+
   const d = data || {};
   switch (template) {
     case 'confirmation':
@@ -256,7 +275,10 @@ async function handleWhatsApp(req, res) {
         }
       : data;
 
-  const body = buildWAMessage(template, waData);
+  const waLang = normalizeLang(
+    req.body?.lang || (await recipientForBooking(data?.bookingId, 'client_lang'))
+  );
+  const body = buildWAMessage(template, waData, waLang);
   if (!body) return res.status(400).json({ error: 'Could not build message for template' });
 
   const { TWILIO_ACCOUNT_SID: sid, TWILIO_AUTH_TOKEN: token } = process.env;
