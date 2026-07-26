@@ -62,7 +62,15 @@ import {
   createTierBadge,
 } from './components.js';
 import { getRiderTier } from './rider-tier.js';
-import { getLang, setLang, translateScreen, translateValue, LANGUAGES } from './i18n.js';
+import {
+  getLang,
+  setLang,
+  translateScreen,
+  translateValue,
+  dateLocale,
+  sourceOf,
+  LANGUAGES,
+} from './i18n.js';
 import {
   createPaymentForm,
   createPaymentRequestButton,
@@ -200,7 +208,7 @@ function generateDates(count = 7) {
 function formatDate(dateStr) {
   if (!dateStr) return '-';
   const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-AU', {
+  return new Date(y, m - 1, d).toLocaleDateString(dateLocale(), {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -1093,7 +1101,11 @@ async function renderServiceSummary() {
       <div style="display:flex;gap:10px;background:#EEF3FC;border-radius:10px;padding:12px 14px;margin-bottom:16px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <div style="font-size:13px;color:#1848C8;line-height:1.55">
-          <strong>How payment works:</strong> The $${calloutFee.toFixed(2)} call-out fee is charged now via Stripe. The service fee ($<span id="q-svc-note">${serviceTotal.toFixed(2)}</span>) is paid to the mechanic directly by card (EFTPOS) when they arrive.
+          <strong>How payment works:</strong> ${translateValue(
+            'The $CALLOUT call-out fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.'
+          )
+            .replace('CALLOUT', calloutFee.toFixed(2))
+            .replace('SERVICE', `<span id="q-svc-note">${serviceTotal.toFixed(2)}</span>`)}
         </div>
       </div>
 
@@ -1920,7 +1932,7 @@ async function renderTracking() {
     const distKm = haversineKm(mechCoords, clientCoords);
     const mins = Math.max(1, Math.round((distKm / CITY_SPEED_KMH) * 60));
     const eta = new Date(Date.now() + mins * 60000);
-    const etaStr = eta.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+    const etaStr = eta.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
     const el = screen.querySelector('#eta-text');
     if (el)
       el.textContent =
@@ -2466,7 +2478,7 @@ function appendClientMsg(msg, container, scroll) {
   }
   const time = document.createElement('div');
   time.style.cssText = 'font-size:11px;color:#9CA3AF';
-  time.textContent = new Date(msg.created_at).toLocaleTimeString('en-AU', {
+  time.textContent = new Date(msg.created_at).toLocaleTimeString(dateLocale(), {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -2747,7 +2759,7 @@ async function renderLogin() {
       <form class="login-form" id="login-form" novalidate>
         ${isSignup ? `<div class="form-field"><input type="text" id="login-name" class="form-input" placeholder="Full Name" aria-label="Full Name" autocomplete="name"></div>` : ''}
         <div class="form-field">
-          <input type="email" id="login-email" class="form-input" placeholder="hello@drbike.com.au" aria-label="Email address" autocomplete="email">
+          <input type="email" id="login-email" class="form-input" placeholder="your@email.com" aria-label="Email address" autocomplete="email">
         </div>
         ${
           isReset
@@ -4137,7 +4149,7 @@ async function renderMyBikes() {
               const scoreColor = avg >= 75 ? '#059669' : avg >= 50 ? '#D97706' : '#DC2626';
               const scoreLabel =
                 avg >= 75 ? 'Good' : avg >= 50 ? 'Needs attention' : 'Critical issues';
-              const lastDate = new Date(bkgs[0].scheduled_date).toLocaleDateString('en-AU', {
+              const lastDate = new Date(bkgs[0].scheduled_date).toLocaleDateString(dateLocale(), {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
@@ -4212,7 +4224,7 @@ async function renderMyBikes() {
     const lastDate = completedDates[completedDates.length - 1];
     const predicted = new Date(lastDate.getTime() + SERVICE_INTERVAL_DAYS * 86400000);
     const daysUntil = Math.round((predicted - new Date()) / 86400000);
-    const dateLabel = predicted.toLocaleDateString('en-AU', {
+    const dateLabel = predicted.toLocaleDateString(dateLocale(), {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -4478,6 +4490,19 @@ updateHomeNav();
 if (window._pendingReview) {
   setTimeout(() => router.navigate('review'), 200);
 }
+
+// Published for the non-module scripts on the page (js/live-prices.js needs
+// sourceOf to map a translated service-card heading back to its English name).
+// Object.assign because landing.html's own inline module publishes the same
+// global and load order between the two is not guaranteed.
+window.__drbikeI18n = Object.assign(window.__drbikeI18n || {}, {
+  getLang,
+  setLang,
+  translateScreen,
+  translateValue,
+  dateLocale,
+  sourceOf,
+});
 
 // i18n: translate every screen whenever its content changes, instead of
 // threading a translateScreen() call through every render function. Also
