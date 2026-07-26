@@ -902,10 +902,19 @@ function promptArrivalPin(id) {
 // Send a push notification to a client via their stored browser subscription
 async function sendClientPush(clientId, { title, body, url, tag }) {
   try {
+    // /api/send-push needs a real credential now, not just our Origin header.
+    const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
     await fetch('/api/send-push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId, title, body, url: url || '/', tag }),
+      body: JSON.stringify({
+        clientId,
+        title,
+        body,
+        url: url || '/',
+        tag,
+        token: stored.token || '',
+      }),
     });
   } catch (e) {
     console.warn('Push to client failed:', e);

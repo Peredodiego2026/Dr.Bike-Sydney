@@ -370,6 +370,67 @@ export async function recipientForBooking(bookingId, field) {
   }
 }
 
+// ── WHO IS CALLING — mechanic session token and admin session ───────────────
+// The mechanic session token is a stateless HMAC over {mid, exp}, minted by
+// api/auth.js on PIN login. Verification lives here so an endpoint can identify
+// a mechanic without importing api/auth.js (147 KB, pulls in Stripe and the
+// Supabase SDK) - and so there is exactly one implementation of the check.
+// api/auth.js's verifyToken() delegates to this.
+function b64url(buf) {
+  return Buffer.from(buf)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+export function verifyMechanicToken(token) {
+  try {
+    const secret = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || '';
+    if (!secret) return null; // fail closed
+    const [payload, sig] = String(token || '').split('.');
+    if (!payload || !sig) return null;
+    const expected = b64url(crypto.createHmac('sha256', secret).update(payload).digest());
+    const a = Buffer.from(sig);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+    const data = JSON.parse(
+      Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()
+    );
+    if (!data.mid || !data.exp || Date.now() > data.exp) return null;
+    return data.mid;
+  } catch {
+    return null;
+  }
+}
+
+// True only for a signed-in user whose profiles.role is 'admin'. Two hops on
+// purpose: the JWT proves who they are, the service-key read proves what they
+// are - a client could otherwise put role:'admin' in their own metadata.
+export async function isAdminAccessToken(accessToken) {
+  if (!accessToken) return false;
+  const url = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  if (!key) return false;
+  try {
+    const who = await fetch(`${url}/auth/v1/user`, {
+      headers: { apikey: key, Authorization: `Bearer ${accessToken}` },
+    });
+    if (!who.ok) return false;
+    const user = await who.json();
+    if (!user?.id) return false;
+    const prof = await fetch(
+      `${url}/rest/v1/profiles?select=role&id=eq.${encodeURIComponent(user.id)}&limit=1`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    );
+    if (!prof.ok) return false;
+    const rows = await prof.json();
+    return rows?.[0]?.role === 'admin';
+  } catch {
+    return false;
+  }
+}
+
 // Numbers that belong to our own people (mechanics and the manager row live in
 // escalation_contacts). Staff-facing notifications and the admin "test SMS"
 // button need to reach these without opening the endpoint up to any number.

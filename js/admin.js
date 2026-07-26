@@ -1280,6 +1280,15 @@ async function sendBroadcastPush() {
   res.innerHTML = '<span style="color:var(--mgray)">Sending...</span>';
 
   try {
+    // /api/send-push needs a real credential now, not just our Origin header.
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    if (!session?.access_token) {
+      res.innerHTML = '<span style="color:var(--red)">Session expired - sign in again.</span>';
+      return;
+    }
+
     // Get all client IDs with push subscriptions
     const { data: profiles } = await sb
       .from('profiles')
@@ -1304,6 +1313,7 @@ async function sendBroadcastPush() {
               body,
               url,
               tag: 'broadcast-' + Date.now(),
+              access_token: session.access_token,
             }),
           });
           sent++;
