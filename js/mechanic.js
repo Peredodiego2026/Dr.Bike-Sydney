@@ -1866,22 +1866,11 @@ async function submitComplete(id) {
             }),
           })
         : Promise.resolve(),
-      // 3. WhatsApp review request
-      clientPhone
-        ? fetch('/api/send-whatsapp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: clientPhone,
-              name: clientName,
-              service: j?.service,
-              price: j?.price,
-              type: 'review_request',
-              bookingId: id,
-              reviewLink,
-            }),
-          })
-        : Promise.resolve(),
+      // A 4th call sent the review request over WhatsApp too, but it passed the
+      // SMS shape ({to, type, ...}) to an endpoint that takes {to, template,
+      // data} and 'review_request' is not one of its templates - so it 400'd
+      // every single time and never sent anything. Removed rather than left as
+      // console noise; the SMS and the email above already ask for the review.
     ]);
   } catch (e) {
     console.log('Notification error', e);

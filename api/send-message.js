@@ -2,7 +2,15 @@
 // Vercel rewrites map /api/send-sms and /api/send-whatsapp to this file.
 import { createClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
-import { guard, verifyInternalAuth, normalizeAUPhone } from './_security.js';
+import {
+  guard,
+  verifyInternalAuth,
+  normalizeAUPhone,
+  isInternalCall,
+  isBusinessRecipient,
+  isStaffPhone,
+  recipientForBooking,
+} from './_security.js';
 import { drivingEtaMinutes } from './_eta.js';
 
 const sb = createClient(
@@ -66,8 +74,20 @@ async function handleSMS(req, res) {
         .slice(0, 160)
     : null;
 
-  const phone = normalizeAUPhone(to);
+  let phone = normalizeAUPhone(to);
   if (!phone) return res.status(400).json({ error: 'Invalid Australian phone number' });
+
+  // Same rule as send-email: a browser call cannot pick the destination number.
+  // Twilio messages cost real money and land as the business, so the number has
+  // to be one we already know - our own, one of our staff, or the phone stored
+  // on the booking being notified.
+  if (!isInternalCall(req) && !isBusinessRecipient(phone) && !(await isStaffPhone(phone))) {
+    const bound = normalizeAUPhone(await recipientForBooking(bookingId, 'client_phone'));
+    if (!bound) {
+      return res.status(403).json({ error: 'A booking id is required to text this number' });
+    }
+    phone = bound;
+  }
 
   const trackUrl = `https://drbikesydney.com.au/track.html?id=${bookingId || ''}`;
 
@@ -186,8 +206,17 @@ async function handleWhatsApp(req, res) {
     return res.status(400).json({ error: 'Invalid template' });
   }
 
-  const toNorm = normalizeAUPhone(to);
+  let toNorm = normalizeAUPhone(to);
   if (!toNorm) return res.status(400).json({ error: 'Invalid Australian phone number' });
+
+  // Browser calls cannot choose the destination - see handleSMS above.
+  if (!isInternalCall(req) && !isBusinessRecipient(toNorm) && !(await isStaffPhone(toNorm))) {
+    const bound = normalizeAUPhone(await recipientForBooking(data?.bookingId, 'client_phone'));
+    if (!bound) {
+      return res.status(403).json({ error: 'A booking id is required to message this number' });
+    }
+    toNorm = bound;
+  }
 
   let fromNumber = process.env.TWILIO_WHATSAPP_FROM;
   if (!fromNumber) {

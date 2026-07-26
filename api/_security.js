@@ -310,20 +310,91 @@ function timingSafeEqualStr(a, b) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-export function verifyInternalAuth(req, res) {
+// A trusted server-to-server call: it carries the shared secret, which no
+// browser client ever sees.
+export function isInternalCall(req) {
   const token = req.headers['x-internal-token'];
   const secret = process.env.INTERNAL_API_SECRET;
-  if (secret && token && timingSafeEqualStr(token, secret)) {
-    return false; // allowed - trusted server-to-server call
-  }
+  return !!(secret && token && timingSafeEqualStr(token, secret));
+}
 
+// Origin/Referer are attacker-controlled: `curl -H "Origin: https://
+// drbikesydney.com.au"` passes this. Treat it as a cheap filter against
+// drive-by/CSRF noise, NEVER as proof of who is calling. Endpoints that spend
+// money or send mail as us must also bind the recipient to something the
+// server already knows (see recipientForBooking / isBusinessRecipient).
+export function isAllowedBrowserOrigin(req) {
   const origin = req.headers.origin || '';
   const referer = req.headers.referer || '';
-  const isAllowed =
+  return (
     INTERNAL_ALLOWED_ORIGINS.includes(origin) ||
-    INTERNAL_ALLOWED_REFERER_PREFIXES.some((p) => referer.startsWith(p));
+    INTERNAL_ALLOWED_REFERER_PREFIXES.some((p) => referer.startsWith(p))
+  );
+}
 
-  if (!isAllowed) {
+// Our own contact points. A notification addressed to the business itself is
+// always fine - the worst an abuser achieves is spamming Diego, rate-limited.
+const BUSINESS_PHONES = ['+61433963250'];
+const BUSINESS_EMAILS = ['contact@drbikesydney.com.au', 'noreply@drbikesydney.com.au'];
+
+export function isBusinessRecipient(to) {
+  const raw = String(to || '').trim();
+  if (!raw) return false;
+  if (raw.includes('@')) return BUSINESS_EMAILS.includes(raw.toLowerCase());
+  const normalized = normalizeAUPhone(raw);
+  return !!normalized && BUSINESS_PHONES.includes(normalized);
+}
+
+// Reads the contact point off the booking itself (service key), so a browser
+// call can only ever reach the client that booking belongs to - knowing a
+// booking id is not enough to have us mail or text a third party.
+export async function recipientForBooking(bookingId, field) {
+  const id = String(bookingId || '');
+  if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)) {
+    return null;
+  }
+  const url = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  if (!key) return null;
+  try {
+    const r = await fetch(
+      `${url}/rest/v1/bookings?select=${encodeURIComponent(field)}&id=eq.${id}&limit=1`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    );
+    if (!r.ok) return null;
+    const rows = await r.json();
+    // eslint-disable-next-line security/detect-object-injection -- field is a literal at every call site
+    return rows?.[0]?.[field] || null;
+  } catch {
+    return null;
+  }
+}
+
+// Numbers that belong to our own people (mechanics and the manager row live in
+// escalation_contacts). Staff-facing notifications and the admin "test SMS"
+// button need to reach these without opening the endpoint up to any number.
+export async function isStaffPhone(phone) {
+  const normalized = normalizeAUPhone(phone);
+  if (!normalized) return false;
+  const url = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  if (!key) return false;
+  try {
+    const r = await fetch(`${url}/rest/v1/escalation_contacts?select=phone`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    });
+    if (!r.ok) return false;
+    const rows = await r.json();
+    return Array.isArray(rows) && rows.some((row) => normalizeAUPhone(row.phone) === normalized);
+  } catch {
+    return false;
+  }
+}
+
+export function verifyInternalAuth(req, res) {
+  if (isInternalCall(req)) return false; // allowed - trusted server-to-server call
+
+  if (!isAllowedBrowserOrigin(req)) {
     res.status(403).json({ error: 'Forbidden' });
     return true; // blocked
   }

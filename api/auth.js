@@ -5,6 +5,7 @@ import Stripe from 'stripe';
 import crypto from 'crypto';
 import {
   guard,
+  rateLimit,
   isLoginLocked,
   recordLoginFailure,
   clearLoginFailures,
@@ -3204,10 +3205,26 @@ export default withSentry(handler, 'auth');
 async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';
 
-  if (role === 'get-availability') return handleGetAvailability(req, res);
-  if (role === 'google-calendar-connect') return handleGoogleCalendarConnect(req, res);
-  if (role === 'google-calendar-callback') return handleGoogleCalendarCallback(req, res);
-  if (role === 'vapid-public-key') return handleVapidPublicKey(req, res);
+  // These four run before guard() because they are GET reads / browser OAuth
+  // redirects rather than the POST+JSON shape guard() enforces. They still get
+  // a limiter of their own - skipping guard() also skipped the rate limit,
+  // which left them the only endpoints here free to hammer.
+  if (role === 'get-availability') {
+    if (await rateLimit(req, res, { max: 30, windowMs: 60000, key: 'get-availability' })) return;
+    return handleGetAvailability(req, res);
+  }
+  if (role === 'google-calendar-connect') {
+    if (await rateLimit(req, res, { max: 10, windowMs: 60000, key: 'cal-connect' })) return;
+    return handleGoogleCalendarConnect(req, res);
+  }
+  if (role === 'google-calendar-callback') {
+    if (await rateLimit(req, res, { max: 10, windowMs: 60000, key: 'cal-callback' })) return;
+    return handleGoogleCalendarCallback(req, res);
+  }
+  if (role === 'vapid-public-key') {
+    if (await rateLimit(req, res, { max: 30, windowMs: 60000, key: 'vapid' })) return;
+    return handleVapidPublicKey(req, res);
+  }
 
   const rateMax = role.startsWith('mechanic-')
     ? 30
