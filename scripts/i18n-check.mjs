@@ -57,11 +57,9 @@ const ALLOWED = new Set([
   'Giant',
   'Cannondale',
   'BMC',
-  // Membership plan names - product names, and code elsewhere matches on them
-  'Basic',
-  'Standard',
-  'VIP',
-  'Popular',
+  // Basic / Standard / VIP / Popular used to be listed here as untranslatable.
+  // They are in the dictionary now: plan selection runs off the data-plan
+  // attribute, so the visible name is free to change per language.
   'E-Bike',
   'Total',
   'Plan',

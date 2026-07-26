@@ -149,6 +149,12 @@ NEVER DELETE without confirming with Diego first.
 
 ### Full coverage on every content/copy change
 
+**After editing `js/i18n.js` you MUST bump two things** or returning visitors
+keep the old dictionary and your new strings silently show in English:
+the `?v=` on the `js/i18n.js` import in `landing.html` and `track.html`, and the
+`sw.js` cache version (the SPA gets it through the service worker). This has
+already caused two false "the translation does not work" hunts.
+
 **Enforced, not remembered:** `npm run check` runs `scripts/i18n-check.mjs`,
 which fails (and blocks the CI quality-gate) if any user-visible string on
 `index.html`, `landing.html`, `track.html`, `js/app.js` or `js/components.js`
