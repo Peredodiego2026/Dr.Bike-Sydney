@@ -1,4 +1,13 @@
-﻿import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
+﻿import {
+  guard,
+  sanitize,
+  sanitizeObj,
+  rateLimit,
+  verifyInternalAuth,
+  isInternalCall,
+  isBusinessRecipient,
+  recipientForBooking,
+} from './_security.js';
 export default async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if (verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
@@ -417,10 +426,24 @@ export default async function handler(req, res) {
     },
   };
 
-  const template = templates[type] || templates.confirmation;
+  const template = Object.hasOwn(templates, type) ? templates[type] : templates.confirmation;
 
-  // Recipients
-  const recipients = [template.to || to];
+  // Recipients. The Origin/Referer check above is forgeable with a single curl
+  // header, so a browser-originated call does NOT get to choose who we mail:
+  // either the template has a fixed business address, or the address is read
+  // off the booking being notified. Without this, /api/send-email was an open
+  // relay for HTML mail from our DNS-verified noreply@drbikesydney.com.au.
+  let recipient = template.to || to;
+  if (!isInternalCall(req)) {
+    if (!template.to && !isBusinessRecipient(recipient)) {
+      const bound = await recipientForBooking(bookingId, 'client_email');
+      if (!bound) {
+        return res.status(403).json({ error: 'A booking id is required to email this recipient' });
+      }
+      recipient = bound;
+    }
+  }
+  const recipients = [recipient];
 
   try {
     const response = await fetch('https://api.resend.com/emails', {

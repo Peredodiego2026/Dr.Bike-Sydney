@@ -56,7 +56,13 @@
       const heading = card.querySelector('h3, .service-name, .svc-name');
       const priceEl = card.querySelector('.price, .service-price, .svc-price');
       if (!heading || !priceEl) return;
-      const cardName = heading.textContent.trim();
+      // The heading may already be translated (index.html and landing.html run
+      // a translation pass over the whole body), and the Supabase names are
+      // English - map it back first, or every card falls back to its static
+      // price for Spanish and Chinese visitors. Suburb pages have no i18n, so
+      // there the raw heading is already the English name.
+      const rendered = heading.textContent.trim();
+      const cardName = window.__drbikeI18n?.sourceOf?.(rendered) || rendered;
       const lookupName = NAME_MAP[cardName] || cardName;
       const match = services.find((s) => s.name === lookupName);
       if (match && typeof match.price === 'number') {

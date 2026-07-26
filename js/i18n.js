@@ -120,7 +120,6 @@ const dict = {
     'Could not remove card': 'No pudimos quitar la tarjeta',
 
     // My Bikes
-    'My Bikes': 'Mis Bicis',
     'Service history is a Standard/VIP perk':
       'El historial de servicios es un beneficio Standard/VIP',
     'Upgrade your membership to see every past service for this bike.':
@@ -470,12 +469,9 @@ const dict = {
     'Start Your Membership': 'Comenzá tu Membresía',
     'Phone Number (04XX XXX XXX)': 'Número de Teléfono (04XX XXX XXX)',
     'Start Membership': 'Comenzar Membresía',
-    'Secured by Stripe · 3-month minimum · Cancel anytime after':
-      'Protegido por Stripe - mínimo 3 meses - cancelá cuando quieras después',
     "You're all set!": '¡Todo listo!',
     "We'll be in touch shortly to confirm your membership and schedule your first service.":
       'Nos pondremos en contacto pronto para confirmar tu membresía y agendar tu primer servicio.',
-    Done: 'Listo',
     INCLUDES: 'INCLUYE',
     'DOES NOT INCLUDE': 'NO INCLUYE',
     'SAVINGS EXAMPLE': 'EJEMPLO DE AHORRO',
@@ -530,8 +526,6 @@ const dict = {
     'Next mechanic': 'Siguiente mecánico',
     'Our mechanic profiles are coming soon.':
       'Los perfiles de nuestros mecánicos estarán disponibles pronto.',
-    'service completed': 'servicio completado',
-    'services completed': 'servicios completados',
     // Memberships section (landing-specific)
     Monthly: 'Mensual',
     Annual: 'Anual',
@@ -579,7 +573,6 @@ const dict = {
     'Ultimate Overhaul': 'Revisión Definitiva',
     'Strip & rebuild, all consumables replaced':
       'Desarme y reconstrucción, todos los consumibles reemplazados',
-    'Book Now': 'Reservar Ahora',
     'Flat Tyre Repair': 'Reparación de Pinchazo',
     'Tube replace or patch, remount & inflate': 'Reemplazo o parche de cámara, remontaje e inflado',
     'Tyre Replacement': 'Reemplazo de Neumático',
@@ -617,7 +610,8 @@ const dict = {
     'E-bikes, carbon, vintage, insurance claims': 'E-bikes, carbono, vintage, reclamos de seguro',
     'All prices include $20 mobile call-out. Parts charged separately unless stated.':
       'Todos los precios incluyen la visita de $20. Los repuestos se cobran aparte salvo que se indique lo contrario.',
-    'Same-day booking +$30. Weekend +$20.': 'Reserva el mismo día +$30. Fin de semana +$20.',
+    'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
+      'Reservas de domingo y feriados de NSW +20%. El sábado tiene precio normal.',
 
     // ── Testimonials (landing.html specific reviews) ─────────────────────
     "Real reviews from Sydney cyclists who've used Dr. Bike Sydney.":
@@ -665,7 +659,6 @@ const dict = {
     'Email address': 'Correo electrónico',
 
     // ── Membership modal ────────────────────────────────────────────────────
-    'Start Your Membership': 'Comenzá tu Membresía',
     'Monthly Total': 'Total Mensual',
     month: 'mes',
     year: 'año',
@@ -741,7 +734,6 @@ const dict = {
     '~2.5 hours': '~2,5 horas',
     '~4 hours': '~4 horas',
     // Step 1: AI diagnosis + service selection
-    'Not sure what your bike needs?': '¿No estás seguro qué necesita tu bici?',
     'Upload a photo or describe the problem — our AI will recommend the right service.':
       'Subí una foto o describí el problema - nuestra IA te va a recomendar el servicio correcto.',
     '📷 Upload Photo': '📷 Subir Foto',
@@ -800,11 +792,9 @@ const dict = {
     "We'll arrange payment on confirmation": 'Coordinamos el pago al confirmar',
     'Confirm Booking →': 'Confirmar Reserva →',
     // bkShowPaymentComingSoon overlay
-    'Online payments coming soon': 'Pagos en línea próximamente',
     "We're finalising our business setup. Contact us now to lock in your":
       'Estamos terminando de configurar el negocio. Contactanos ahora para reservar tu',
     '- same price, same service.': '- mismo precio, mismo servicio.',
-    'Book via WhatsApp': 'Reservar por WhatsApp',
     'Go back': 'Volver',
     // bkProceed / bkConfirmedHTML
     'Saving...': 'Guardando...',
@@ -845,7 +835,6 @@ const dict = {
       'La tarifa de visita no está incluida - se cobra igual la tarifa de $20 en tu visita mensual. Visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     'A regular Tune-Up costs $109. With Basic you save $52/month.':
       'Un Ajuste normal cuesta $109. Con Basic ahorrás $52/mes.',
-    '2 services per month (any type)': '2 servicios por mes (cualquier tipo)',
     '2 free services per month (any type), call-out fee included':
       '2 servicios gratis por mes (cualquier tipo), tarifa de visita incluida',
     '15% discount on parts': '15% de descuento en repuestos',
@@ -856,18 +845,12 @@ const dict = {
       'Visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     '2 services/month = $218 value. With Standard you save $121/month.':
       '2 servicios/mes = valor de $218. Con Standard ahorrás $121/mes.',
-    'Unlimited services per month': 'Servicios ilimitados por mes',
-    'Same-day priority': 'Prioridad el mismo día',
     '20% discount on parts': '20% de descuento en repuestos',
-    'Unlimited emergency callouts': 'Visitas de emergencia ilimitadas',
-    'Dedicated mechanic': 'Mecánico dedicado',
     'High-end parts (charged at cost). Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       'Repuestos de alta gama (se cobran a precio de costo). Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.':
       'Servicios ilimitados + emergencias = valor de $400+. Con VIP ahorrás $250+/mes.',
-    'Get Started - $57/month': 'Comenzar - $57/mes',
     'Get Started - $97/month': 'Comenzar - $97/mes',
-    'Get Started - $147/month': 'Comenzar - $147/mes',
     'Get Started - $67/month': 'Comenzar - $67/mes',
     'Get Started - $197/month': 'Comenzar - $197/mes',
 
@@ -1025,7 +1008,6 @@ const dict = {
     'Request Fleet Quote': 'Solicitar Cotización de Flota',
     "No commitment required. We'll build a custom plan for your team.":
       'Sin compromiso. Armamos un plan a medida para tu equipo.',
-    'Sending...': 'Enviando...',
     "Thanks! We'll be in touch within 2 business hours.":
       '¡Gracias! Te contactamos dentro de 2 horas hábiles.',
     'Check your inbox for a confirmation.': 'Revisá tu correo para la confirmación.',
@@ -1035,9 +1017,6 @@ const dict = {
 
     // ── Final CTA ───────────────────────────────────────────────────────────
     'Ready to Experience Premium Bike Service?': '¿Listo para Experimentar un Servicio Premium?',
-    'Book your service today and join hundreds of satisfied cyclists across Sydney.':
-      'Reservá tu servicio hoy y sumate a cientos de ciclistas satisfechos en toda Sydney.',
-    'Call 0433 963 250': 'Llamar al 0433 963 250',
 
     // ── Footer ──────────────────────────────────────────────────────────────
     'Professional bike service at your doorstep.':
@@ -1114,6 +1093,119 @@ const dict = {
     'No service data yet': 'Aún no hay datos de servicio',
     'No checklist data': 'Sin datos de checklist',
     'Could not load health data': 'No se pudieron cargar los datos de salud',
+
+    // ── Full i18n sweep 2026-07-26: strings rendered by js/app.js, index.html
+    // and landing.html that had no dictionary entry (found by walking every
+    // text node / placeholder / aria-label and testing it against the dict).
+    'Included in your membership': 'Incluido en tu membresía',
+    'Confirm booking': 'Confirmar reserva',
+    'or pay by card': 'o paga con tarjeta',
+    'Card details': 'Datos de la tarjeta',
+    'Secure payment powered by Stripe. Encrypted and safe.':
+      'Pago seguro con Stripe. Cifrado y protegido.',
+    'Prefer to book manually?': '¿Prefieres reservar manualmente?',
+    'call 0433 963 250': 'llama al 0433 963 250',
+    'Select a time.': 'Selecciona un horario.',
+    'Sign in to track bookings': 'Inicia sesión para rastrear tus reservas',
+    'Your bookings will appear here': 'Tus reservas aparecerán aquí',
+    'Book a service to track it here': 'Reserva un servicio para rastrearlo aquí',
+    'Could not load bookings. Try again.': 'No se pudieron cargar las reservas. Intenta de nuevo.',
+    'Your code:': 'Tu código:',
+    '— read this to your mechanic when they arrive': '— dile este código al mecánico cuando llegue',
+    'Cancellation reason': 'Motivo de cancelación',
+    Photos: 'Fotos',
+    Before: 'Antes',
+    After: 'Después',
+    '⭐ Rate this mechanic': '⭐ Califica al mecánico',
+    'Thanks for the 5 stars!': '¡Gracias por las 5 estrellas!',
+    'Would you mind leaving a quick Google review? It helps other Sydney cyclists find us.':
+      '¿Nos dejas una reseña rápida en Google? Ayuda a que otros ciclistas de Sydney nos encuentren.',
+    'Leave a Google Review': 'Dejar una reseña en Google',
+    'Share on Facebook': 'Compartir en Facebook',
+    'Skip — back to home': 'Omitir — volver al inicio',
+    'Rate your experience': 'Califica tu experiencia',
+    '📞 Call': '📞 Llamar',
+    '1. Share your code with friends': '1. Comparte tu código con amigos',
+    Language: 'Idioma',
+    'Sign Out': 'Cerrar sesión',
+    'Loading bikes...': 'Cargando bicis...',
+    'Type (optional)': 'Tipo (opcional)',
+    Road: 'Ruta',
+    'Mountain Bike': 'Mountain bike',
+    Hybrid: 'Híbrida',
+    Cargo: 'Carga',
+    Folding: 'Plegable',
+    'Save Bike': 'Guardar bici',
+    'Bike Health Score': 'Puntaje de salud de la bici',
+    'Service history': 'Historial de servicios',
+    'Delete bike': 'Eliminar bici',
+    'Failed to load bikes': 'No se pudieron cargar las bicis',
+    'Bike name': 'Nombre de la bici',
+    'Bike type': 'Tipo de bici',
+    '🔍 Analysing your photo...': '🔍 Analizando tu foto...',
+    '🔍 Analysing...': '🔍 Analizando...',
+    '🤖 AI Recommendation': '🤖 Recomendación de la IA',
+    'Describe the problem': 'Describe el problema',
+    'Close chat': 'Cerrar chat',
+    'Type a message': 'Escribe un mensaje',
+    'Toggle password visibility': 'Mostrar u ocultar la contraseña',
+    'Could not enable notifications:': 'No se pudieron activar las notificaciones:',
+    '100% Satisfaction': '100% Satisfacción',
+    'Trusted by cyclists across Sydney': 'Elegido por ciclistas de todo Sydney',
+    'Be the first to leave a review': 'Sé el primero en dejar una reseña',
+    'Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.':
+      'Las reseñas reales de ciclistas de Sydney aparecerán aquí en cuanto los clientes empiecen a compartir su experiencia.',
+    'Site navigation': 'Navegación del sitio',
+    'Main navigation': 'Navegación principal',
+    'Phone Number': 'Número de teléfono',
+    'Business name': 'Nombre de la empresa',
+    'Work email': 'Correo de trabajo',
+    'Custom gift amount': 'Monto personalizado del regalo',
+    "Recipient's email": 'Correo del destinatario',
+    'Adjust brakes & gears, lube chain, safety check':
+      'Ajuste de frenos y cambios, lubricación de cadena y chequeo de seguridad',
+    'Complete overhaul: bearings, cables, full clean':
+      'Revisión completa: rodamientos, cables y limpieza total',
+    '© 2026 Dr. Bike Sydney. All rights reserved. · ABN: 87 654 025 287':
+      '© 2026 Dr. Bike Sydney. Todos los derechos reservados. · ABN: 87 654 025 287',
+
+    // Interpolated sentence: the two amounts are substituted after the lookup
+    // (a text node containing a number can never match a dictionary key), so
+    // the placeholders CALLOUT and SERVICE must survive translation verbatim.
+    'The $CALLOUT call-out fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.':
+      'La tarifa de visita de $CALLOUT se cobra ahora con Stripe. El servicio ($SERVICE) se le paga al mecánico con tarjeta (EFTPOS) cuando llega.',
+
+    // ── track.html (public tracking link) — was English-only until 2026-07-26
+    'Loading your booking...': 'Cargando tu reserva...',
+    'This link is no longer valid.': 'Este enlace ya no es válido.',
+    'Look up your booking by email →': 'Busca tu reserva por correo →',
+    'Booking not found.': 'No encontramos la reserva.',
+    '← Back to Dr. Bike': '← Volver a Dr. Bike',
+    '⏳ Pending confirmation': '⏳ Pendiente de confirmación',
+    '✅ Confirmed': '✅ Confirmada',
+    '🚐 Mechanic on the way!': '🚐 ¡El mecánico está en camino!',
+    '✅ Service completed': '✅ Servicio completado',
+    Van: 'Camioneta',
+    'Service price': 'Precio del servicio',
+    'Locating mechanic...': 'Ubicando al mecánico...',
+    Live: 'En vivo',
+    'Your mechanic is on the way!': '¡Tu mecánico está en camino!',
+    'Your mechanic has arrived!': '¡Tu mecánico llegó!',
+    'This page updates automatically': 'Esta página se actualiza automáticamente',
+    'Questions? Contact us': '¿Dudas? Contáctanos',
+    '📞 Call +61 433 963 250': '📞 Llamar al +61 433 963 250',
+    '🔧 Parts:': '🔧 Repuestos:',
+    '📅 Next service:': '📅 Próximo servicio:',
+    '🕐 Estimated arrival: ~MIN min': '🕐 Llegada estimada: ~MIN min',
+    'Track your booking': 'Rastrea tu reserva',
+    'Enter the email you used to book': 'Ingresa el correo que usaste para reservar',
+    'Find my bookings →': 'Buscar mis reservas →',
+    'Enter a valid email': 'Ingresa un correo válido',
+    'Searching...': 'Buscando...',
+    'If that email has any bookings, we just sent tracking links for all of them.':
+      'Si ese correo tiene reservas, acabamos de enviarte los enlaces de seguimiento de todas.',
+    'Connection error. Try again.': 'Error de conexión. Intenta de nuevo.',
+    'your@email.com': 'tu@correo.com',
   },
   zh: {
     // Bottom nav
@@ -1545,12 +1637,9 @@ const dict = {
     'Start Your Membership': '开始您的会员',
     'Phone Number (04XX XXX XXX)': '电话号码 (04XX XXX XXX)',
     'Start Membership': '开始会员',
-    'Secured by Stripe · 3-month minimum · Cancel anytime after':
-      'Stripe安全保障 - 最低3个月 - 之后可随时取消',
     "You're all set!": '一切就绪！',
     "We'll be in touch shortly to confirm your membership and schedule your first service.":
       '我们会尽快与您联系，确认会员资格并安排首次服务。',
-    Done: '完成',
     INCLUDES: '包含',
     'DOES NOT INCLUDE': '不包含',
     'SAVINGS EXAMPLE': '节省示例',
@@ -1601,8 +1690,6 @@ const dict = {
     'Previous mechanic': '上一位技工',
     'Next mechanic': '下一位技工',
     'Our mechanic profiles are coming soon.': '技工资料即将上线。',
-    'service completed': '项服务已完成',
-    'services completed': '项服务已完成',
     // Memberships section (landing-specific)
     Monthly: '按月',
     Annual: '按年',
@@ -1645,7 +1732,6 @@ const dict = {
     'Full tune-up + wheel true + drivetrain clean': '全面调校 + 车轮校正 + 传动系统清洁',
     'Ultimate Overhaul': '终极大修',
     'Strip & rebuild, all consumables replaced': '拆解重装，更换所有易损件',
-    'Book Now': '立即预订',
     'Flat Tyre Repair': '爆胎修理',
     'Tube replace or patch, remount & inflate': '更换或修补内胎，重新安装并充气',
     'Tyre Replacement': '轮胎更换',
@@ -1682,7 +1768,8 @@ const dict = {
     'E-bikes, carbon, vintage, insurance claims': '电动自行车、碳纤维车架、老式车、保险理赔',
     'All prices include $20 mobile call-out. Parts charged separately unless stated.':
       '所有价格均含$20上门费。除另有说明外，零件费用另计。',
-    'Same-day booking +$30. Weekend +$20.': '当天预订加收$30，周末加收$20。',
+    'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
+      '周日及新南威尔士州公共假日预订加收20%。周六按正常价格计算。',
 
     // ── Testimonials (landing.html specific reviews) ─────────────────────
     "Real reviews from Sydney cyclists who've used Dr. Bike Sydney.":
@@ -1730,7 +1817,6 @@ const dict = {
     'Email address': '电子邮箱',
 
     // ── Membership modal ────────────────────────────────────────────────────
-    'Start Your Membership': '开始您的会员',
     'Monthly Total': '每月总计',
     month: '月',
     year: '年',
@@ -1798,7 +1884,6 @@ const dict = {
     '~2.5 hours': '约2.5小时',
     '~4 hours': '约4小时',
     // Step 1: AI diagnosis + service selection
-    'Not sure what your bike needs?': '不确定您的自行车需要什么服务？',
     'Upload a photo or describe the problem — our AI will recommend the right service.':
       '上传照片或描述问题，我们的AI会为您推荐合适的服务。',
     '📷 Upload Photo': '📷 上传照片',
@@ -1850,11 +1935,9 @@ const dict = {
     "We'll arrange payment on confirmation": '确认后我们会安排付款',
     'Confirm Booking →': '确认预订 →',
     // bkShowPaymentComingSoon overlay
-    'Online payments coming soon': '在线支付即将上线',
     "We're finalising our business setup. Contact us now to lock in your":
       '我们正在完成业务筹备。请立即联系我们以锁定您的',
     '- same price, same service.': '- 价格和服务不变。',
-    'Book via WhatsApp': '通过WhatsApp预订',
     'Go back': '返回',
     // bkProceed / bkConfirmedHTML
     'Saving...': '保存中...',
@@ -1891,7 +1974,6 @@ const dict = {
       '不含上门费 - 每月服务仍需支付$20上门费。无限次上门。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     'A regular Tune-Up costs $109. With Basic you save $52/month.':
       '普通基础调校售价$109。使用Basic每月可节省$52。',
-    '2 services per month (any type)': '每月2次服务（任意类型）',
     '2 free services per month (any type), call-out fee included':
       '每月2次免费服务（任意类型），含上门费',
     '15% discount on parts': '零件享85折',
@@ -1902,18 +1984,12 @@ const dict = {
       '无限次上门。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     '2 services/month = $218 value. With Standard you save $121/month.':
       '每月2次服务价值$218。使用Standard每月可节省$121。',
-    'Unlimited services per month': '每月无限次服务',
-    'Same-day priority': '当天优先服务',
     '20% discount on parts': '零件享8折',
-    'Unlimited emergency callouts': '无限次紧急上门',
-    'Dedicated mechanic': '专属技工',
     'High-end parts (charged at cost). Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       '高端零件按成本价收费。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.':
       '无限次服务+紧急上门 = 价值$400以上。使用VIP每月可节省$250以上。',
-    'Get Started - $57/month': '立即开始 - $57/月',
     'Get Started - $97/month': '立即开始 - $97/月',
-    'Get Started - $147/month': '立即开始 - $147/月',
     'Get Started - $67/month': '立即开始 - $67/月',
     'Get Started - $197/month': '立即开始 - $197/月',
 
@@ -2069,7 +2145,6 @@ const dict = {
     'Request Fleet Quote': '申请车队报价',
     "No commitment required. We'll build a custom plan for your team.":
       '无需承诺，我们会为您的团队制定专属方案。',
-    'Sending...': '发送中...',
     "Thanks! We'll be in touch within 2 business hours.": '谢谢！我们会在2个工作小时内联系您。',
     'Check your inbox for a confirmation.': '请查收邮箱中的确认信息。',
     'Quote Requested': '已申请报价',
@@ -2077,9 +2152,6 @@ const dict = {
 
     // ── Final CTA ───────────────────────────────────────────────────────────
     'Ready to Experience Premium Bike Service?': '准备好体验高端自行车服务了吗？',
-    'Book your service today and join hundreds of satisfied cyclists across Sydney.':
-      '立即预订，加入悉尼数百位满意骑行者的行列。',
-    'Call 0433 963 250': '致电 0433 963 250',
 
     // ── Footer ──────────────────────────────────────────────────────────────
     'Professional bike service at your doorstep.': '上门专业自行车服务。',
@@ -2150,6 +2222,112 @@ const dict = {
     'No service data yet': '暂无服务数据',
     'No checklist data': '暂无检查清单数据',
     'Could not load health data': '无法加载健康数据',
+
+    // ── Full i18n sweep 2026-07-26 (same set as the Spanish block above) ────
+    'Included in your membership': '已包含在您的会员权益内',
+    'Confirm booking': '确认预订',
+    'or pay by card': '或使用银行卡支付',
+    'Card details': '银行卡信息',
+    'Secure payment powered by Stripe. Encrypted and safe.':
+      '由 Stripe 提供安全支付，全程加密，安全可靠。',
+    'Prefer to book manually?': '想通过人工预订？',
+    'call 0433 963 250': '致电 0433 963 250',
+    'Select a time.': '请选择时间。',
+    'Sign in to track bookings': '登录以追踪预订',
+    'Your bookings will appear here': '您的预订将显示在这里',
+    'Book a service to track it here': '预订服务后即可在此追踪',
+    'Could not load bookings. Try again.': '无法加载预订，请重试。',
+    'Your code:': '您的验证码：',
+    '— read this to your mechanic when they arrive': '— 技师到达时请把此码告诉他',
+    'Cancellation reason': '取消原因',
+    Photos: '照片',
+    Before: '维修前',
+    After: '维修后',
+    '⭐ Rate this mechanic': '⭐ 为技师评分',
+    'Thanks for the 5 stars!': '感谢您的五星好评！',
+    'Would you mind leaving a quick Google review? It helps other Sydney cyclists find us.':
+      '方便在 Google 上留个简短评价吗？这能帮助更多悉尼骑行者找到我们。',
+    'Leave a Google Review': '去 Google 留下评价',
+    'Share on Facebook': '分享到 Facebook',
+    'Skip — back to home': '跳过 — 返回主页',
+    'Rate your experience': '为您的体验评分',
+    '📞 Call': '📞 致电',
+    '1. Share your code with friends': '1. 把您的邀请码分享给朋友',
+    Language: '语言',
+    'Sign Out': '退出登录',
+    'Loading bikes...': '正在加载自行车...',
+    'Type (optional)': '类型（可选）',
+    Road: '公路车',
+    'Mountain Bike': '山地车',
+    Hybrid: '混合车',
+    Cargo: '载货车',
+    Folding: '折叠车',
+    'Save Bike': '保存自行车',
+    'Bike Health Score': '自行车健康评分',
+    'Service history': '服务记录',
+    'Delete bike': '删除自行车',
+    'Failed to load bikes': '无法加载自行车',
+    'Bike name': '自行车名称',
+    'Bike type': '自行车类型',
+    '🔍 Analysing your photo...': '🔍 正在分析您的照片...',
+    '🔍 Analysing...': '🔍 正在分析...',
+    '🤖 AI Recommendation': '🤖 AI 建议',
+    'Describe the problem': '描述问题',
+    'Close chat': '关闭聊天',
+    'Type a message': '输入消息',
+    'Toggle password visibility': '显示或隐藏密码',
+    'Could not enable notifications:': '无法开启通知：',
+    '100% Satisfaction': '100% 满意',
+    'Trusted by cyclists across Sydney': '深受悉尼各地骑行者信赖',
+    'Be the first to leave a review': '成为第一个留下评价的人',
+    'Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.':
+      '悉尼骑行者的真实评价会在客户开始分享体验后显示在这里。',
+    'Site navigation': '网站导航',
+    'Main navigation': '主导航',
+    'Phone Number': '电话号码',
+    'Business name': '公司名称',
+    'Work email': '工作邮箱',
+    'Custom gift amount': '自定义礼品金额',
+    "Recipient's email": '收件人邮箱',
+    'Adjust brakes & gears, lube chain, safety check': '调整刹车与变速、润滑链条、安全检查',
+    'Complete overhaul: bearings, cables, full clean': '全面大修：轴承、线缆、彻底清洁',
+    '© 2026 Dr. Bike Sydney. All rights reserved. · ABN: 87 654 025 287':
+      '© 2026 Dr. Bike Sydney. 版权所有。· ABN: 87 654 025 287',
+
+    'The $CALLOUT call-out fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.':
+      '$CALLOUT 的上门费现在通过 Stripe 收取。服务费（$SERVICE）在技师到达时用银行卡（EFTPOS）直接支付给技师。',
+
+    // ── track.html (public tracking link) ───────────────────────────────────
+    'Loading your booking...': '正在加载您的预订...',
+    'This link is no longer valid.': '此链接已失效。',
+    'Look up your booking by email →': '用邮箱查找您的预订 →',
+    'Booking not found.': '未找到预订。',
+    '← Back to Dr. Bike': '← 返回 Dr. Bike',
+    '⏳ Pending confirmation': '⏳ 等待确认',
+    '✅ Confirmed': '✅ 已确认',
+    '🚐 Mechanic on the way!': '🚐 技师正在路上！',
+    '✅ Service completed': '✅ 服务已完成',
+    Van: '服务车',
+    'Service price': '服务价格',
+    'Locating mechanic...': '正在定位技师...',
+    Live: '实时',
+    'Your mechanic is on the way!': '您的技师正在路上！',
+    'Your mechanic has arrived!': '您的技师已到达！',
+    'This page updates automatically': '此页面会自动更新',
+    'Questions? Contact us': '有疑问？联系我们',
+    '📞 Call +61 433 963 250': '📞 致电 +61 433 963 250',
+    '🔧 Parts:': '🔧 零件：',
+    '📅 Next service:': '📅 下次服务：',
+    '🕐 Estimated arrival: ~MIN min': '🕐 预计到达：约 MIN 分钟',
+    'Track your booking': '追踪您的预订',
+    'Enter the email you used to book': '请输入您预订时使用的邮箱',
+    'Find my bookings →': '查找我的预订 →',
+    'Enter a valid email': '请输入有效的邮箱',
+    'Searching...': '正在搜索...',
+    'If that email has any bookings, we just sent tracking links for all of them.':
+      '如果该邮箱有任何预订，我们已将全部追踪链接发送至该邮箱。',
+    'Connection error. Try again.': '连接错误，请重试。',
+    'your@email.com': 'your@email.com',
   },
 };
 
@@ -2171,6 +2349,16 @@ export function getLang() {
   return currentLang;
 }
 
+// Dates and times were formatted with a hardcoded 'en-AU' everywhere, so a
+// client reading the app in Spanish or Chinese still got "Monday, 27 July".
+// Use this for any client-facing toLocaleDateString/toLocaleTimeString call
+// (the admin and mechanic apps are English-only by design and keep en-AU).
+const DATE_LOCALES = { en: 'en-AU', es: 'es-ES', zh: 'zh-CN' };
+
+export function dateLocale() {
+  return DATE_LOCALES[currentLang] || 'en-AU';
+}
+
 export function setLang(lang) {
   if (lang !== 'en' && !dict[lang]) return;
   currentLang = lang;
@@ -2178,6 +2366,28 @@ export function setLang(lang) {
     localStorage.setItem(STORAGE_KEY, lang);
   } catch {}
   document.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
+}
+
+// Reverse lookup (translated text -> original English). Needed by code that
+// reads rendered text back out of the DOM and matches it against English data:
+// js/live-prices.js compares service-card headings with the Supabase `services`
+// table, and after a translation pass those headings are no longer English, so
+// every card silently fell back to its static price in Spanish and Chinese.
+const reverseIndex = {};
+
+export function sourceOf(text) {
+  const trimmed = (text || '').trim();
+  if (currentLang === 'en') return trimmed;
+  if (!reverseIndex[currentLang]) {
+    const index = {};
+    for (const [source, translated] of Object.entries(dict[currentLang] || {})) {
+      // first definition wins, so an English word that is its own translation
+      // never gets shadowed by a later entry
+      if (!(translated in index)) index[translated] = source;
+    }
+    reverseIndex[currentLang] = index;
+  }
+  return reverseIndex[currentLang][trimmed] || trimmed;
 }
 
 // Original (English) text is cached per node/element so switching languages

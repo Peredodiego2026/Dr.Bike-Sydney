@@ -5,23 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1848C8">
 <title>Track your Dr. Bike service</title>
-<link rel="preconnect" href="https://tgpipbloisahufaywhqb.supabase.co">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-function copyTrackingLink(url) {
-  navigator.clipboard.writeText(url).then(() => {
-    const btn = event.target;
-    btn.textContent = '✅ Link copied!';
-    setTimeout(() => btn.textContent = '🔗 Share tracking link', 2000);
-  }).catch(() => {
-    prompt('Copy this tracking link:', url);
-  });
-}
-</script>
 <style>
 :root{
   --sans:'Inter',-apple-system,sans-serif;
@@ -71,7 +58,18 @@ body{font-family:var(--sans);background:var(--bg);color:var(--navy);min-height:1
 </div>
 
 <script>
-const sb = supabase.createClient('https://tgpipbloisahufaywhqb.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRncGlwYmxvaXNhaHVmYXl3aHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTM4NjgsImV4cCI6MjA5MzQ4OTg2OH0.P1lpqPVmW0HE3PwHeUhRw20eRP3ApdDGYuiwtJhRD9U');
+// This page talks to /api/auth only (server-side, service key) - it needs no
+// Supabase client, so neither the SDK nor the anon key ship here.
+
+// i18n: js/i18n.js is an ES module loaded at the end of the page and exposed
+// as window.__trackI18n. Read it lazily - these helpers are called at render
+// time, well after the module has evaluated, and fall back to English.
+function tLoc() {
+  try { return window.__trackI18n.dateLocale(); } catch { return 'en-AU'; }
+}
+function tVal(s) {
+  try { return window.__trackI18n.translateValue(s); } catch { return s; }
+}
 
 const stColors={pending:'pending',confirmed:'confirmed',enroute:'enroute',completed:'completed'};
 const stLabels={pending:'⏳ Pending confirmation',confirmed:'✅ Confirmed',enroute:'🚐 Mechanic on the way!',completed:'✅ Service completed'};
@@ -110,7 +108,7 @@ async function init(){
     return;
   }
 
-  const date = new Date(bkg.scheduled_date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+  const date = new Date(bkg.scheduled_date+'T00:00:00').toLocaleDateString(tLoc(),{weekday:'long',day:'numeric',month:'long'});
   const statusClass = stColors[bkg.status]||'pending';
   const statusLabel = stLabels[bkg.status]||bkg.status;
 
@@ -146,14 +144,14 @@ async function init(){
 <div class="card">
        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
          <div>
-           <div style="font-size:15px;font-weight:700;color:var(--navy)">${bkg.service_name}</div>
-           <div style="font-size:12px;color:var(--mgray);margin-top:2px">${date}${bkg.scheduled_time?' · '+bkg.scheduled_time:''}</div>
+           <div style="font-size:15px;font-weight:700;color:var(--navy)">${escHtml(bkg.service_name || '')}</div>
+           <div style="font-size:12px;color:var(--mgray);margin-top:2px">${escHtml(date)}${bkg.scheduled_time?' · '+escHtml(bkg.scheduled_time):''}</div>
          </div>
-         <span class="status-chip ${statusClass}">${statusLabel}</span>
+         <span class="status-chip ${statusClass}">${escHtml(statusLabel)}</span>
        </div>
-       <div class="row"><span class="lbl">Address</span><span>${bkg.address||'—'}</span></div>
-       <div class="row"><span class="lbl">Van</span><span>Van ${bkg.van_number||1} · Mechanic ${bkg.van_number||1}</span></div>
-       <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue)">$${bkg.service_price}</span></div>
+       <div class="row"><span class="lbl">Address</span><span>${escHtml(bkg.address||'—')}</span></div>
+       <div class="row"><span class="lbl">Van</span><span>Van ${Number(bkg.van_number)||1} · Mechanic ${Number(bkg.van_number)||1}</span></div>
+       <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue)">$${Number(bkg.service_price)||0}</span></div>
        ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div><div id="track-eta" style="display:none;font-size:13px;font-weight:700;color:var(--blue);text-align:center;margin-top:6px"></div>`:''}
      </div>
 
@@ -185,9 +183,9 @@ async function init(){
     ${bkg.status==='completed'?`
     <div class="card">
       <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px">✅ Service completed</div>
-      ${bkg.mechanic_notes?`<div style="background:var(--bg);border-radius:8px;padding:12px;font-size:13px;color:var(--navy);margin-bottom:10px">📝 ${bkg.mechanic_notes}</div>`:''}
-      ${bkg.parts_used?`<div style="font-size:12px;color:var(--mgray);margin-bottom:6px">🔧 Parts: ${bkg.parts_used}</div>`:''}
-      ${bkg.next_service_date?`<div style="font-size:12px;color:var(--green);font-weight:600">📅 Next service: ${new Date(bkg.next_service_date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
+      ${bkg.mechanic_notes?`<div style="background:var(--bg);border-radius:8px;padding:12px;font-size:13px;color:var(--navy);margin-bottom:10px">📝 ${escHtml(bkg.mechanic_notes)}</div>`:''}
+      ${bkg.parts_used?`<div style="font-size:12px;color:var(--mgray);margin-bottom:6px"><span>🔧 Parts:</span> ${escHtml(bkg.parts_used)}</div>`:''}
+      ${bkg.next_service_date?`<div style="font-size:12px;color:var(--green);font-weight:600"><span>📅 Next service:</span> ${new Date(bkg.next_service_date+'T00:00:00').toLocaleDateString(tLoc(),{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
     </div>`:''}
 
     <div class="card" style="text-align:center">
@@ -260,7 +258,7 @@ async function init(){
         const etaEl = document.getElementById('track-eta');
         if(!route || !etaEl) return;
         const mins = Math.max(1, Math.round(route.duration / 60));
-        etaEl.textContent = '🕐 Estimated arrival: ~' + mins + ' min';
+        etaEl.textContent = tVal('🕐 Estimated arrival: ~MIN min').replace('MIN', mins);
         etaEl.style.display = 'block';
       })
       .catch(() => { etaFetching = false; });
@@ -331,6 +329,30 @@ function showEmailForm(content) {
 }
 
 init();
+</script>
+
+<!-- i18n: this page is a shared link, so it has no language switcher - it
+     follows whatever language the client already picked in the app (same
+     localStorage key). A MutationObserver re-translates every re-render
+     (status changes, ETA, email lookup) without hooking each one. -->
+<script type="module">
+  import { getLang, translateScreen, translateValue, dateLocale } from './js/i18n.js?v=20260726b';
+
+  window.__trackI18n = { translateValue: translateValue, dateLocale: dateLocale };
+  document.documentElement.lang = getLang();
+
+  var debounce = null;
+  function translateAll() {
+    translateScreen(document.body);
+  }
+  new MutationObserver(function () {
+    if (debounce) return;
+    debounce = setTimeout(function () {
+      debounce = null;
+      translateAll();
+    }, 0);
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  translateAll();
 </script>
 </body>
 </html>

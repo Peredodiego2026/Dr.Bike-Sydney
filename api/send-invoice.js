@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
-import { guard, sanitize } from './_security.js';
+import {
+  guard,
+  sanitize,
+  isInternalCall,
+  isAllowedBrowserOrigin,
+  isBusinessRecipient,
+  recipientForBooking,
+} from './_security.js';
 import PDFDocument from 'pdfkit';
 import { computeInvoiceTotals } from './_invoice-math.js';
 
@@ -353,6 +360,25 @@ export default async function handler(req, res) {
 
   if (!to || !bookingId) return res.status(400).json({ error: 'Missing required fields' });
 
+  // This endpoint had no caller check at all: anyone could have a PDF invoice
+  // with arbitrary amounts and text sent from receipts@drbikesydney.com.au to
+  // any address - a ready-made fake-invoice phish. Server-to-server calls carry
+  // the shared secret; a browser call has to come from our own pages AND can
+  // only reach the address stored on the booking it is invoicing.
+  let recipient = to;
+  if (!isInternalCall(req)) {
+    if (!isAllowedBrowserOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
+    if (!isBusinessRecipient(recipient)) {
+      const bound = await recipientForBooking(bookingId, 'client_email');
+      if (!bound) {
+        return res
+          .status(403)
+          .json({ error: 'A booking id is required to invoice this recipient' });
+      }
+      recipient = bound;
+    }
+  }
+
   // bookingId is embedded in a review link URL below — whitelist only alphanumeric and dashes
   const safeBookingId = String(bookingId).replace(/[^a-zA-Z0-9-]/g, '');
 
@@ -700,7 +726,7 @@ export default async function handler(req, res) {
   try {
     const emailPayload = {
       from: 'Dr. Bike Sydney <receipts@drbikesydney.com.au>',
-      to,
+      to: recipient,
       subject: `Your Dr. Bike Sydney receipt & service report — ${invoiceNumber}`,
       html,
     };
