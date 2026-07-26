@@ -21,8 +21,8 @@ webpush.setVapidDetails(
 );
 
 export default async function handler(req, res) {
-  if(await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
-  if(verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
+  if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
+  if (verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { clientId, title, body, url, tag, icon } = req.body;
@@ -31,13 +31,14 @@ export default async function handler(req, res) {
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
     return res.status(503).json({
       error: 'VAPID keys not configured',
-      hint: 'Run: npx web-push generate-vapid-keys — then add VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY to Vercel env vars'
+      hint: 'Run: npx web-push generate-vapid-keys — then add VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY to Vercel env vars',
     });
   }
 
   // Get client's push subscription from Supabase
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-  const { data: profile } = await sb.from('profiles')
+  const { data: profile } = await sb
+    .from('profiles')
     .select('push_subscription, full_name')
     .eq('id', clientId)
     .single();
@@ -48,20 +49,34 @@ export default async function handler(req, res) {
 
   let subscription;
   try {
-    subscription = typeof profile.push_subscription === 'string'
-      ? JSON.parse(profile.push_subscription)
-      : profile.push_subscription;
+    subscription =
+      typeof profile.push_subscription === 'string'
+        ? JSON.parse(profile.push_subscription)
+        : profile.push_subscription;
   } catch {
     return res.status(400).json({ error: 'Invalid push subscription format' });
   }
 
+  // The caller decides the text and the link, and the Origin check above is
+  // forgeable, so a push could otherwise carry an off-site link and read as if
+  // we sent it. Force the destination to be a path on our own site, and cap the
+  // text - no legitimate caller needs either freedom.
+  const safePath = (value) => {
+    const raw = String(value || '/');
+    return /^\/(?!\/)[^\s]*$/.test(raw) ? raw.slice(0, 300) : '/';
+  };
+  const clamp = (value, max, fallback) =>
+    String(value || fallback)
+      .replace(/\s+/g, ' ')
+      .slice(0, max);
+
   const payload = JSON.stringify({
-    title: title || 'Dr. Bike Sydney',
-    body:  body  || 'Update on your booking',
-    icon:  icon  || '/icon-192.png',
+    title: clamp(title, 80, 'Dr. Bike Sydney'),
+    body: clamp(body, 300, 'Update on your booking'),
+    icon: safePath(icon || '/icon-192.png'),
     badge: '/icon-192.png',
-    tag:   tag   || 'drbike-update',
-    url:   url   || '/',
+    tag: clamp(tag, 60, 'drbike-update'),
+    url: safePath(url),
   });
 
   try {
