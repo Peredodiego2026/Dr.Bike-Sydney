@@ -1,6 +1,24 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
 ## Current state (2026-07-26) — read this first
+- **MERGED 2026-07-26 (PR #101 + #102):** pricing consistency, the full 3-language i18n audit,
+  the messaging-endpoint hardening, email i18n (+ `scripts/add-client-language.sql`, **applied**),
+  push-link hardening, `npm audit fix`. SW **v38** live.
+- **OPEN branch `feat/multilingual-seo-pages` (pushed, not merged):** the 20 suburb pages are now
+  **generated** by `scripts/generate-suburb-pages.mjs` (copy lives once per language) and exist in
+  3 languages on their own crawlable URLs - `/<slug>`, `/es/<slug>`, `/zh/<slug>` - with hreflang,
+  per-page canonical, FAQPage schema, a header language switcher, `data-service` on price cards so
+  live-prices still syncs on translated pages, `?v=` on the script (these pages are outside the
+  SW), vercel rewrites, and a regenerated sitemap (71 urls, alternates declared). Also
+  `middleware.js` now sends `Vary: User-Agent` - it serves two different documents at `/` by UA
+  and never told caches or Google. **Still English-only: business.html, bike-check.html and the
+  5 blog posts** (mechanism is ready, it is translation work).
+- **Vercel env gap found 2026-07-26:** `CRON_SECRET` is NOT set, and both cron entry points fail
+  closed -> every scheduled email (2h reminder, birthday, re-engagement, abandoned, service
+  reminder) has been returning 401. Diego was told; confirm it is set. Also unused secrets in
+  Vercel (MAPBOX_TOKEN, GOOGLE_PLACES_API_KEY, POSTHOG_KEY - none referenced in code) and a name
+  mismatch: code reads `TWILIO_WHATSAPP_FROM`, Vercel has `TWILIO_WHATSAPP_NUMBER` (falls back to
+  the van_zones hack row).
 - **IN PROGRESS 2026-07-26 (branch `fix/pricing-consistency`, 3 commits, NOT pushed, NOT deployed):**
   `191cb08` + `8a37257` pricing consistency (annual plan prices + the Sunday/NSW-holiday +20%
   surcharge disclosed on every surface incl. 20 suburb pages, terms in 3 languages, the chatbot's

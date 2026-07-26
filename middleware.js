@@ -8,6 +8,13 @@ export default async function middleware(request) {
   const response = await fetch(new URL(target, request.url).toString());
   const headers = new Headers(response.headers);
   
+  // Two different documents are served at the same URL depending on the
+  // User-Agent (mobile -> index.html, desktop -> landing.html). Any shared
+  // cache in front of this - and Google, whose docs require it for dynamic
+  // serving - has to be told the response varies by UA, or a desktop visitor
+  // can be handed the mobile document out of a cache keyed only on the URL.
+  headers.set('Vary', 'User-Agent');
+
   // Security headers at edge
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-XSS-Protection', '1; mode=block');
