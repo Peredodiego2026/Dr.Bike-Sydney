@@ -54,6 +54,44 @@ const SUBURBS = [
   { slug: 'sutherland-shire', name: 'Sutherland Shire', areas: 'Cronulla, Miranda, Caringbah, Engadine, Gymea' },
 ];
 
+// Neighbouring areas, by Sydney geography. Used for internal links: every
+// suburb page was a dead end that only linked to Home/Services/Terms/Privacy,
+// so nothing passed authority between them and a visitor in the wrong suburb had
+// no way across. Links always stay inside the same language.
+const NEIGHBOURS = {
+  bondi: ['eastern-suburbs', 'surry-hills', 'cbd'],
+  cbd: ['surry-hills', 'inner-west', 'bondi'],
+  chatswood: ['north-shore', 'mosman', 'hornsby'],
+  'eastern-suburbs': ['bondi', 'surry-hills', 'cbd'],
+  'hills-district': ['parramatta', 'penrith', 'hornsby'],
+  hornsby: ['chatswood', 'north-shore', 'hills-district'],
+  'inner-west': ['newtown', 'marrickville', 'cbd'],
+  manly: ['northern-beaches', 'mosman', 'north-shore'],
+  marrickville: ['newtown', 'inner-west', 'st-george'],
+  mosman: ['north-shore', 'manly', 'chatswood'],
+  newtown: ['inner-west', 'marrickville', 'surry-hills'],
+  'north-shore': ['chatswood', 'mosman', 'hornsby'],
+  'northern-beaches': ['manly', 'mosman', 'north-shore'],
+  parramatta: ['hills-district', 'ryde', 'strathfield'],
+  penrith: ['hills-district', 'parramatta', 'strathfield'],
+  ryde: ['north-shore', 'parramatta', 'chatswood'],
+  'st-george': ['sutherland-shire', 'marrickville', 'strathfield'],
+  strathfield: ['inner-west', 'parramatta', 'ryde'],
+  'surry-hills': ['cbd', 'newtown', 'bondi'],
+  'sutherland-shire': ['st-george', 'marrickville', 'cbd'],
+};
+
+// Existing blog posts, linked from the English pages only - they have no
+// translation yet, and sending a Spanish reader to an English article is worse
+// than not linking it.
+const BLOG_POSTS = [
+  ['/blog/how-to-choose-a-bike-mechanic-sydney', 'How to choose a bike mechanic in Sydney'],
+  ['/blog/how-to-clean-your-bike-chain-sydney', 'How to clean your bike chain'],
+  ['/blog/cycling-safety-tips-sydney-roads', 'Cycling safety on Sydney roads'],
+  ['/blog/best-bikes-for-sydney-commuting-2026', 'Best bikes for Sydney commuting'],
+  ['/blog/electric-bike-laws-nsw-2026', 'Electric bike laws in NSW'],
+];
+
 // Prices are display defaults only - js/live-prices.js overwrites them from the
 // Supabase `services` table on load, matching on data-service.
 const SERVICE_KEYS = ['Tune-Up', 'Standard Service', 'Standard+ Service', 'Ultimate Overhaul'];
@@ -129,6 +167,10 @@ const COPY = {
     footer1: 'Dr. Bike Sydney · Mobile Bicycle Mechanic · ABN 87 654 025 287',
     footer2: 'Serving {name} and all of Sydney · Mon–Sat 8am–6pm',
     footerLinks: ['Home', 'Services', 'Terms', 'Privacy'],
+    nearbyH2: 'Bike repair near {name}',
+    nearbyP: 'We also service these neighbouring areas - same mechanic, same van, same day rates:',
+    readMore: 'Bike care guides',
+    breadcrumbHome: 'Home',
   },
 
   es: {
@@ -199,6 +241,10 @@ const COPY = {
     footer1: 'Dr. Bike Sydney · Mecánico de bicicletas a domicilio · ABN 87 654 025 287',
     footer2: 'Atendemos {name} y todo Sídney · lun–sáb 8:00–18:00',
     footerLinks: ['Inicio', 'Servicios', 'Términos', 'Privacidad'],
+    nearbyH2: 'Reparación de bicicletas cerca de {name}',
+    nearbyP: 'También atendemos estas zonas vecinas: el mismo mecánico, la misma camioneta y las mismas tarifas del día:',
+    readMore: 'Guías de cuidado de la bici',
+    breadcrumbHome: 'Inicio',
   },
 
   zh: {
@@ -263,6 +309,10 @@ const COPY = {
     footer1: 'Dr. Bike Sydney · 上门自行车技师 · ABN 87 654 025 287',
     footer2: '服务 {name} 及整个悉尼 · 周一至周六 8:00–18:00',
     footerLinks: ['首页', '服务', '条款', '隐私'],
+    nearbyH2: '{name} 附近的自行车维修',
+    nearbyP: '我们同样服务这些邻近区域：同一位技师、同一辆服务车、同样的当日价格：',
+    readMore: '自行车保养指南',
+    breadcrumbHome: '首页',
   },
 };
 
@@ -364,6 +414,37 @@ function page(sub, lang) {
     areaServed: { '@type': 'City', name: `${sub.name}, Sydney` },
   });
 
+  const breadcrumbSchema = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: c.breadcrumbHome, item: `${SITE}${meta.prefix}/` },
+      { '@type': 'ListItem', position: 2, name: sub.name, item: url },
+    ],
+  });
+
+  const neighbours = (NEIGHBOURS[sub.slug] || [])
+    .map((slug) => SUBURBS.find((s) => s.slug === slug))
+    .filter(Boolean);
+
+  const nearbySection = neighbours.length
+    ? `
+<section class="section">
+  <h2>${fill(c.nearbyH2, sub)}</h2>
+  <p>${c.nearbyP}</p>
+  <p class="links-row">${neighbours
+    .map((n) => `<a href="${meta.prefix}/${n.slug}">${n.name}</a>`)
+    .join('')}</p>
+  ${
+    lang === 'en'
+      ? `<h3 class="links-h3">${c.readMore}</h3>
+  <p class="links-row">${BLOG_POSTS.map(([href, label]) => `<a href="${href}">${label}</a>`).join('')}</p>`
+      : ''
+  }
+</section>
+`
+    : '';
+
   return `<!DOCTYPE html>
 <html lang="${meta.htmlLang}">
 <head>
@@ -384,6 +465,7 @@ ${alternates}
   <meta property="og:image" content="${SITE}/images/hero-van.png">
   <script type="application/ld+json">${businessSchema}</script>
   <script type="application/ld+json">${faqSchema}</script>
+  <script type="application/ld+json">${breadcrumbSchema}</script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
   <link rel="stylesheet" href="/css/variables.css">
@@ -419,6 +501,10 @@ ${alternates}
     .faq-item p{font-size:14px;color:#4B5563;line-height:1.6}
     footer{background:#0D1F3C;color:rgba(255,255,255,.6);text-align:center;padding:32px 24px;font-size:13px}
     footer a{color:rgba(255,255,255,.8);text-decoration:none;margin:0 12px}
+    .links-row{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:8px}
+    .links-row a{color:#0A58CA;font-weight:600;text-decoration:none;font-size:15px}
+    .links-row a:hover{text-decoration:underline}
+    .links-h3{font-size:16px;font-weight:700;color:#0D1F3C;margin-top:28px}
   </style>
 </head>
 <body>
@@ -475,6 +561,7 @@ ${faqs}
   </div>
 </section>
 
+${nearbySection}
 <section class="section" style="text-align:center">
   <h2>${fill(c.ctaH2, sub)}</h2>
   <p style="margin-bottom:24px">${c.ctaP}</p>
