@@ -2039,6 +2039,23 @@ async function handleClientHistory(req, res) {
     .order('scheduled_date', { ascending: false })
     .limit(10);
 
+  // A valid mechanic token was the only gate here, and the lookup key came
+  // straight from the caller - so any mechanic (the PIN is a shared 4-digit
+  // code) could pull any client's full history: prices, ratings, reviews and
+  // private mechanic notes, for clients they had never worked with. Reading a
+  // client's history is legitimate when you are about to service their bike,
+  // which means you hold a booking for them - so that is the requirement.
+  const link = supabase.from('bookings').select('id').eq('mechanic_id', auth.mechanic.id).limit(1);
+  const linkQuery = client_id
+    ? link.eq('client_id', client_id)
+    : client_email
+      ? link.eq('client_email', client_email)
+      : link.eq('id', booking_id);
+  const { data: own, error: linkErr } = await linkQuery;
+  if (linkErr) return res.status(500).json({ error: linkErr.message });
+  if (!own || own.length === 0)
+    return res.status(403).json({ error: 'You have no booking with this client' });
+
   if (client_id) query = query.eq('client_id', client_id);
   else if (client_email) query = query.eq('client_email', client_email);
   else query = query.eq('id', booking_id);
@@ -2834,11 +2851,61 @@ async function handleGetAvailability(req, res) {
 // /api/google-calendar-callback) rather than their own files, to stay under
 // Vercel's Hobby-plan 12-serverless-function limit - adding 2 more standalone
 // route files pushed this project's deployment over that cap.
+// Both OAuth routes used to be completely unauthenticated. Anyone who hit
+// /api/google-calendar-connect could complete the flow with their own Google
+// account, and the callback saved whatever refresh token came back - silently
+// repointing every future booking sync (client name, address, phone, time) at
+// a stranger's calendar. No login required.
+//
+// The connect route is a browser redirect, so it can't carry a POST body. It
+// now needs a short-lived ticket that only an authenticated admin can mint,
+// and that same ticket travels through Google as the OAuth `state` so the
+// callback can prove the flow it is completing is the one an admin started.
+const CAL_TICKET_TTL_MS = 5 * 60 * 1000;
+
+function makeCalendarTicket() {
+  const secret = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || '';
+  const payload = b64url(JSON.stringify({ cal: 1, exp: Date.now() + CAL_TICKET_TTL_MS }));
+  const sig = b64url(crypto.createHmac('sha256', secret).update(payload).digest());
+  return `${payload}.${sig}`;
+}
+
+function verifyCalendarTicket(ticket) {
+  try {
+    const secret = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || '';
+    const [payload, sig] = String(ticket || '').split('.');
+    if (!payload || !sig) return false;
+    const expected = b64url(crypto.createHmac('sha256', secret).update(payload).digest());
+    const a = Buffer.from(sig);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+    const data = JSON.parse(
+      Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()
+    );
+    return data.cal === 1 && !!data.exp && Date.now() <= data.exp;
+  } catch {
+    return false;
+  }
+}
+
+// Admin-only: mints the ticket the connect redirect needs.
+async function handleGoogleCalendarTicket(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  return res.status(200).json({ ticket: makeCalendarTicket() });
+}
+
 async function handleGoogleCalendarConnect(req, res) {
   if (!isGoogleCalendarConfigured()) {
     return res
       .status(503)
       .send('Google Calendar is not configured yet (missing Client ID/Secret).');
+  }
+  if (!verifyCalendarTicket(req.query?.ticket)) {
+    return res
+      .status(403)
+      .send('This link is invalid or has expired. Start again from Admin > Settings.');
   }
   const redirectUri = `https://${req.headers.host}/api/google-calendar-callback`;
   const params = new URLSearchParams({
@@ -2848,6 +2915,7 @@ async function handleGoogleCalendarConnect(req, res) {
     access_type: 'offline',
     prompt: 'consent', // forces a refresh_token even if this account connected before
     scope: 'https://www.googleapis.com/auth/calendar',
+    state: req.query.ticket,
   });
   res.writeHead(302, { Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
   return res.end();
@@ -2857,6 +2925,13 @@ async function handleGoogleCalendarCallback(req, res) {
   const code = req.query?.code;
   const err = req.query?.error;
   if (err || !code || !isGoogleCalendarConfigured()) {
+    res.writeHead(302, { Location: '/admin.html?page=settings&calendar=error' });
+    return res.end();
+  }
+  // Without this the callback would save a refresh token from any OAuth flow
+  // that reached it, not just one an admin started.
+  if (!verifyCalendarTicket(req.query?.state)) {
+    console.error('[google-calendar-callback] rejected: missing or expired state ticket');
     res.writeHead(302, { Location: '/admin.html?page=settings&calendar=error' });
     return res.end();
   }
@@ -3180,6 +3255,7 @@ async function handler(req, res) {
   if (role === 'apply-referral') return handleApplyReferral(req, res);
   if (role === 'client-reschedule') return handleClientReschedule(req, res);
   if (role === 'client-history') return handleClientHistory(req, res);
+  if (role === 'google-calendar-ticket') return handleGoogleCalendarTicket(req, res);
   if (role === 'client-bookings') return handleClientBookings(req, res);
   if (role === 'create-booking') return handleCreateBooking(req, res);
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
