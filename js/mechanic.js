@@ -693,11 +693,11 @@ function card(j) {
     ${j.notes ? `<div class="job-notes">Note: ${esc(j.notes)}</div>` : ''}
     <div class="job-price">$${j.price}</div>
     <div class="actions">
-      <button class="abtn nav" data-action="navigate" data-addr="${addr.replace(/"/g, '&quot;')}">Navigate</button>
-      <button class="abtn" data-action="chat" data-id="${j.id}" style="background:#1E40AF1A;color:#1E40AF">Chat</button>
-      <button class="abtn chat" data-action="whatsapp" data-phone="${(j.phone || j.email || '').replace(/"/g, '&quot;')}" data-client="${j.client.replace(/"/g, '&quot;')}">WhatsApp</button>
-      <button class="abtn" data-action="history" data-id="${j.id}" data-client="${j.client.replace(/"/g, '&quot;')}" data-client-id="${j.client_id || ''}" style="background:#16A34A1A;color:#16A34A">History</button>
-      ${!done ? `${isPending || (st === 'confirmed' && !j.mechanic_id) ? `<button class="abtn" data-action="accept" data-id="${j.id}" style="background:#16A34A1A;color:#16A34A;font-weight:700">Accept</button><button class="abtn" data-action="reject" data-id="${j.id}" style="background:#DC26261A;color:#DC2626">Reject</button>` : st === 'confirmed' ? `<button class="abtn go" data-action="enroute" data-id="${j.id}">En route</button>` : isEnroute ? `<button class="abtn" data-action="arrived" data-id="${j.id}" style="background:#16A34A1A;color:#16A34A">Arrived</button>` : st === 'arrived' || st === 'inprogress' || st === 'in_progress' ? `<button class="abtn done" data-action="complete" data-id="${j.id}">Complete</button>` : ``}` : `<button class="abtn undo" data-action="undo" data-id="${j.id}">Undo</button>`}
+      <button class="abtn secondary" data-action="navigate" data-addr="${addr.replace(/"/g, '&quot;')}">Navigate</button>
+      <button class="abtn secondary" data-action="chat" data-id="${j.id}">Chat</button>
+      <button class="abtn secondary" data-action="whatsapp" data-phone="${(j.phone || j.email || '').replace(/"/g, '&quot;')}" data-client="${j.client.replace(/"/g, '&quot;')}">WhatsApp</button>
+      <button class="abtn secondary" data-action="history" data-id="${j.id}" data-client="${j.client.replace(/"/g, '&quot;')}" data-client-id="${j.client_id || ''}">History</button>
+      ${!done ? `${isPending || (st === 'confirmed' && !j.mechanic_id) ? `<button class="abtn primary accept" data-action="accept" data-id="${j.id}">Accept</button><button class="abtn danger" data-action="reject" data-id="${j.id}">Reject</button>` : st === 'confirmed' ? `<button class="abtn primary go" data-action="enroute" data-id="${j.id}">En route</button>` : isEnroute ? `<button class="abtn primary accept" data-action="arrived" data-id="${j.id}">Arrived</button>` : st === 'arrived' || st === 'inprogress' || st === 'in_progress' ? `<button class="abtn primary done" data-action="complete" data-id="${j.id}">Complete</button>` : ``}` : `<button class="abtn undo" data-action="undo" data-id="${j.id}">Undo</button>`}
     </div>
     ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." aria-label="Mechanic notes" value="${esc(j.mnotes)}" data-notes-id="${j.id}">` : ''}
     ${isPending ? `<div style="text-align:center;font-size:11px;color:#16A34A;padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
@@ -2796,15 +2796,26 @@ async function requestGPSPermission() {
     gpsPermissionState = 'granted';
     return true;
   } catch (err) {
-    if (err.code === 1) {
-      gpsPermissionState = 'denied';
-      toast(
-        '📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)'
-      );
-    } else {
-      toast('GPS error: ' + err.message);
-    }
+    if (err.code === 1) gpsPermissionState = 'denied';
+    toast(gpsErrorMessage(err));
     return false;
+  }
+}
+
+// Browser geolocation errors surface as strings like "Timeout expired", which
+// tell the mechanic nothing about what to do. Map the three real codes to an
+// action; the raw error still goes to the console for debugging.
+function gpsErrorMessage(err) {
+  console.warn('[gps]', err?.code, err?.message);
+  switch (err?.code) {
+    case 1:
+      return '📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)';
+    case 2:
+      return '📍 No GPS signal here. Try moving somewhere with a clearer view of the sky.';
+    case 3:
+      return '📍 GPS is taking too long. Check that Location is on, then try again.';
+    default:
+      return '📍 Could not get your location. Check that Location is on for this site.';
   }
 }
 
@@ -2864,14 +2875,8 @@ function startGPS(bookingId) {
     watchId = navigator.geolocation.watchPosition(
       (pos) => upsertLocation(pos.coords.latitude, pos.coords.longitude),
       (err) => {
-        if (err.code === 1) {
-          toast(
-            '📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)'
-          );
-          stopGPS();
-        } else {
-          toast('GPS: ' + err.message);
-        }
+        toast(gpsErrorMessage(err));
+        if (err.code === 1) stopGPS();
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
@@ -2882,14 +2887,8 @@ function sendLocation(bookingId) {
   navigator.geolocation.getCurrentPosition(
     (pos) => upsertLocation(pos.coords.latitude, pos.coords.longitude),
     (err) => {
-      if (err.code === 1) {
-        toast(
-          '📍 Location permission denied. Enable in browser settings (lock icon → Location → Allow)'
-        );
-        stopGPS();
-      } else {
-        toast('GPS: ' + err.message);
-      }
+      toast(gpsErrorMessage(err));
+      if (err.code === 1) stopGPS();
     },
     { enableHighAccuracy: true, timeout: 8000 }
   );

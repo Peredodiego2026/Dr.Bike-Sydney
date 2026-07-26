@@ -95,6 +95,13 @@ async function handleSMS(req, res) {
         : ''
     }. We'll message you when they're on the way. Dr. Bike Sydney`,
     arrived: `Hi ${safeName}! ${mechName || 'Your mechanic'} has arrived at ${safeAddress} and is starting your ${safeService}.`,
+    upcoming: `Hi ${safeName}! Reminder: your ${safeService} with Dr. Bike Sydney is coming up${
+      time
+        ? ` on ${String(time)
+            .replace(/[\r\n]/g, ' ')
+            .slice(0, 60)}`
+        : ''
+    }${safeAddress ? ` at ${safeAddress}` : ''}. Need to reschedule? Reply or call 0433 963 250.`,
     enroute: `Hi ${safeName}! Your mechanic ${mechName ? mechName + ' ' : ''}is on the way to ${safeAddress}.${etaText} Track live: ${trackUrl}`,
     completed: `Hi ${safeName}! Your ${safeService} is complete. Total: $${price} AUD. Book again: https://drbikesydney.com.au`,
     reminder: `Hi ${safeName}! Time for a bike check-up. Book your next service at https://drbikesydney.com.au`,
@@ -141,6 +148,8 @@ function buildWAMessage(template, data) {
       return `Service reminder 🔔\n\nHi ${d.name || 'there'}! Your Dr. Bike service is coming up:\n\n📅 ${d.date || 'soon'} at ${d.time || 'your selected time'}\n📍 ${d.suburb || 'your location'}\n\nNeed to reschedule? https://drbikesydney.com.au\n\n— Dr. Bike Sydney 🚲`;
     case 'new_booking':
       return `Nueva reserva recibida 🚲\n\n🔧 ${d.service || 'Bike repair'}\n📅 ${d.date || ''} a las ${d.time || ''}\n📍 ${d.address || ''}\n👤 ${d.clientName || 'Cliente'}\n💰 $${d.price || '—'}\n\nVer: ${d.trackUrl || 'https://drbikesydney.com.au'}`;
+    case 'noshow_alert':
+      return `⚠️ Reserva vencida sin completar\n\nDiego, esta reserva ya pasó su horario y sigue sin marcarse como completada. El cliente puede estar esperando.\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n📅 ${d.date || ''} a las ${d.time || ''}\n📍 ${d.suburb || ''}\n⏱️ ${d.hours ?? '—'} horas de retraso\n📋 Estado actual: ${d.status || '—'}${d.assigned ? '' : ' (SIN mecánico asignado)'}\n\nRevisar: https://drbikesydney.com.au/admin.html`;
     case 'client_cancelled': {
       if (!d.refund) {
         return `⚠️ Cancelación de cliente\n\nDiego, este cliente ha cancelado su servicio, pero no debes reembolsar su dinero. Lo canceló con ${d.hours ?? '—'} horas de anticipación antes del servicio.\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n📅 ${d.date || ''} a las ${d.time || ''}`;
@@ -171,6 +180,7 @@ async function handleWhatsApp(req, res) {
       'reminder',
       'new_booking',
       'client_cancelled',
+      'noshow_alert',
     ].includes(template)
   ) {
     return res.status(400).json({ error: 'Invalid template' });

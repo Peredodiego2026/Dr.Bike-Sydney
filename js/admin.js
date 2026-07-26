@@ -2269,15 +2269,22 @@ function renderBookingsTable(data) {
     })
     .join('');
 
-  tbody.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-bk-action]');
-    if (!btn) return;
-    const action = btn.dataset.bkAction;
-    if (action === 'confirm') confirmBookingAdmin(btn.dataset.id);
-    else if (action === 'chat') openAdminChat(btn.dataset.id, btn.dataset.name);
-    else if (action === 'track') copyTrackLink(btn.dataset.token);
-    else if (action === 'cancel') openCancel(btn.dataset.id);
-  });
+  // #bk-tbody survives every re-render, so an unguarded bind stacked one
+  // listener per render. On a table refreshed 3 times, one click on Cancel
+  // opened the cancel flow 3 times - the worst instance of this bug in the
+  // app, since it acts on a real booking.
+  if (!tbody.dataset.clickBound) {
+    tbody.dataset.clickBound = '1';
+    tbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-bk-action]');
+      if (!btn) return;
+      const action = btn.dataset.bkAction;
+      if (action === 'confirm') confirmBookingAdmin(btn.dataset.id);
+      else if (action === 'chat') openAdminChat(btn.dataset.id, btn.dataset.name);
+      else if (action === 'track') copyTrackLink(btn.dataset.token);
+      else if (action === 'cancel') openCancel(btn.dataset.id);
+    });
+  }
 }
 
 function copyTrackLink(token) {
@@ -3233,10 +3240,19 @@ async function renderMechStats() {
 
 // ── CLIENTS ───────────────────────────────────────────────────────────────────
 async function loadClients() {
-  const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
   const colors = ['#1848C8', '#059669', '#D97706', '#7C3AED', '#0891B2', '#DC2626'];
+  // Without this, a permissions or network failure rendered the friendly
+  // "No clients yet" message - indistinguishable from genuinely having none.
+  if (error) {
+    grid.innerHTML = `<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
+    return;
+  }
   if (!data || data.length === 0) {
     grid.innerHTML =
       '<div style="grid-column:1/-1;text-align:center;color:var(--mgray);padding:48px;font-size:15px">No clients yet — they will appear here when they sign up.</div>';
@@ -3274,12 +3290,18 @@ async function loadClients() {
     </div>`;
     })
     .join('');
-  grid.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-cl-action]');
-    if (!btn) return;
-    if (btn.dataset.clAction === 'bikes') viewClientBikes(btn.dataset.id, btn.dataset.name);
-    else if (btn.dataset.clAction === 'chat') openAdminChat(btn.dataset.id, btn.dataset.name);
-  });
+  // Bound once. loadClients() runs on every visit to the Clients page, so
+  // attaching here unguarded stacked a listener per visit and fired the
+  // handler N times on one click - the same bug already fixed in mechanic.js.
+  if (!grid.dataset.clickBound) {
+    grid.dataset.clickBound = '1';
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-cl-action]');
+      if (!btn) return;
+      if (btn.dataset.clAction === 'bikes') viewClientBikes(btn.dataset.id, btn.dataset.name);
+      else if (btn.dataset.clAction === 'chat') openAdminChat(btn.dataset.id, btn.dataset.name);
+    });
+  }
   const kpis = document.querySelectorAll('#page-clients .kpi-value');
   if (kpis[0]) kpis[0].textContent = data.length;
   if (kpis[1]) kpis[1].textContent = data.filter((c) => c.membership_plan === 'vip').length;

@@ -163,6 +163,24 @@ export default async function handler(req, res) {
         </div>
         ${footer()}`,
     },
+    upcoming: {
+      subject: `📅 Your Dr. Bike service is coming up`,
+      html: `${header('#1848C8', '📅', 'See you soon!')}
+        <div style="padding:32px 28px">
+          <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, a reminder that your booking with Dr. Bike Sydney is coming up. We'll message you again on the day, and your mechanic will let you know when they're on the way.</p>
+          ${bookingTable()}
+          <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
+            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 8px">✅ Before the day</p>
+            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.8;opacity:0.9">
+              • Make sure the bike will be accessible at the address<br>
+              • Let us know now if the time no longer works<br>
+              • Free to cancel or reschedule up to 2h before
+            </p>
+          </div>
+          <p style="font-size:12px;color:#9CA3AF;margin:0">Need to change something? Call or text 0433 963 250.</p>
+        </div>
+        ${footer()}`,
+    },
     reminder: {
       subject: `🚲 Time for a bike check-up, ${name}!`,
       html: `${header('#059669', '🚲', 'Time for a service!')}
