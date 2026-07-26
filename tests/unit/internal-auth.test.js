@@ -6,11 +6,13 @@
 // Run: npm test
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import crypto from 'node:crypto';
 import {
   isInternalCall,
   isAllowedBrowserOrigin,
   isBusinessRecipient,
   recipientForBooking,
+  verifyMechanicToken,
 } from '../../api/_security.js';
 
 const req = (headers) => ({ headers });
@@ -82,6 +84,62 @@ describe('isBusinessRecipient', () => {
     expect(isBusinessRecipient('victim@example.com')).toBe(false);
     expect(isBusinessRecipient('')).toBe(false);
     expect(isBusinessRecipient(undefined)).toBe(false);
+  });
+});
+
+// api/auth.js's verifyToken() is now this function, so a break here logs every
+// mechanic out of the app - not just the push notifications.
+describe('verifyMechanicToken', () => {
+  const SECRET = 'test-service-key';
+  const original = process.env.SUPABASE_SERVICE_KEY;
+  const b64url = (buf) =>
+    Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const mint = (mid, expMs, secret = SECRET) => {
+    const payload = b64url(JSON.stringify({ mid, exp: expMs }));
+    return `${payload}.${b64url(crypto.createHmac('sha256', secret).update(payload).digest())}`;
+  };
+
+  beforeEach(() => {
+    process.env.SUPABASE_SERVICE_KEY = SECRET;
+  });
+  afterEach(() => {
+    if (original === undefined) delete process.env.SUPABASE_SERVICE_KEY;
+    else process.env.SUPABASE_SERVICE_KEY = original;
+  });
+
+  it('accepts a valid unexpired token and returns the mechanic id', () => {
+    expect(verifyMechanicToken(mint('mech-1', Date.now() + 60000))).toBe('mech-1');
+  });
+
+  it('rejects an expired token', () => {
+    expect(verifyMechanicToken(mint('mech-1', Date.now() - 1))).toBe(null);
+  });
+
+  it('rejects a token signed with a different secret', () => {
+    expect(verifyMechanicToken(mint('mech-1', Date.now() + 60000, 'other-secret'))).toBe(null);
+  });
+
+  it('rejects a tampered payload', () => {
+    const token = mint('mech-1', Date.now() + 60000);
+    const [payload, sig] = token.split('.');
+    const forged = b64url(JSON.stringify({ mid: 'mech-999', exp: Date.now() + 60000 }));
+    expect(payload).not.toBe(forged);
+    expect(verifyMechanicToken(`${forged}.${sig}`)).toBe(null);
+  });
+
+  it('rejects junk and empty input', () => {
+    for (const bad of ['', null, undefined, 'nope', 'a.b', '...']) {
+      expect(verifyMechanicToken(bad)).toBe(null);
+    }
+  });
+
+  it('fails closed when no service key is configured', () => {
+    const token = mint('mech-1', Date.now() + 60000);
+    delete process.env.SUPABASE_SERVICE_KEY;
+    const previous = process.env.SUPABASE_KEY;
+    delete process.env.SUPABASE_KEY;
+    expect(verifyMechanicToken(token)).toBe(null);
+    if (previous !== undefined) process.env.SUPABASE_KEY = previous;
   });
 });
 

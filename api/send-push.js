@@ -8,7 +8,16 @@
 
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
-import { guard, sanitize, sanitizeObj, rateLimit, verifyInternalAuth } from './_security.js';
+import {
+  guard,
+  sanitize,
+  sanitizeObj,
+  rateLimit,
+  isInternalCall,
+  isAllowedBrowserOrigin,
+  verifyMechanicToken,
+  isAdminAccessToken,
+} from './_security.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -22,11 +31,25 @@ webpush.setVapidDetails(
 
 export default async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
-  if (verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { clientId, title, body, url, tag, icon } = req.body;
   if (!clientId) return res.status(400).json({ error: 'Missing clientId' });
+
+  // Who is calling. The Origin/Referer check is a filter, not proof - it is
+  // forgeable with one curl header - so pushing to a client now needs a real
+  // credential: the server-to-server secret, a mechanic session token, or an
+  // admin session. Before this, anyone who knew a client's UUID could put our
+  // branding and their own text on that client's lock screen.
+  const internal = isInternalCall(req);
+  if (!internal) {
+    if (!isAllowedBrowserOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
+    const isMechanic = !!verifyMechanicToken(req.body?.token);
+    const isAdmin = isMechanic ? false : await isAdminAccessToken(req.body?.access_token);
+    if (!isMechanic && !isAdmin) {
+      return res.status(401).json({ error: 'Sign in as a mechanic or admin to send a push' });
+    }
+  }
 
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
     return res.status(503).json({

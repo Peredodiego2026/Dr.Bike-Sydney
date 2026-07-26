@@ -9,6 +9,7 @@ import {
   isLoginLocked,
   recordLoginFailure,
   clearLoginFailures,
+  verifyMechanicToken,
   LOGIN_LOCK_MINUTES,
 } from './_security.js';
 import {
@@ -50,24 +51,9 @@ function makeToken(mid) {
   const sig = b64url(crypto.createHmac('sha256', secret).update(payload).digest());
   return `${payload}.${sig}`;
 }
-function verifyToken(token) {
-  try {
-    const secret = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || '';
-    const [payload, sig] = String(token).split('.');
-    if (!payload || !sig) return null;
-    const expected = b64url(crypto.createHmac('sha256', secret).update(payload).digest());
-    const a = Buffer.from(sig),
-      b = Buffer.from(expected);
-    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-    const data = JSON.parse(
-      Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()
-    );
-    if (!data.mid || !data.exp || Date.now() > data.exp) return null;
-    return data.mid;
-  } catch {
-    return null;
-  }
-}
+// One implementation, in _security.js, so /api/send-push can identify a mechanic
+// without importing this whole module.
+const verifyToken = verifyMechanicToken;
 
 // Shared mechanic auth: accepts a session token OR a PIN (dual-accept during
 // migration). Returns { mechanic } on success, or { error, status } on failure.
