@@ -203,6 +203,38 @@ function stringsFromHtml(file) {
   return found;
 }
 
+// landing.html and index.html build user-visible text inside their inline
+// <script> blocks (plan tables, toasts, button labels), which stringsFromHtml
+// strips along with the rest of the script. That blind spot is how the plan-info
+// modal shipped '$97/month' next to a fully Spanish label.
+//
+// Only the shapes that end up on screen are read: textContent/innerText
+// assignments, the label/price/savings-style table fields, and showToast().
+const INLINE_PATTERNS = [
+  /(?:textContent|innerText)\s*=\s*(['"])((?:[^'"\\]|\\.){3,140}?)\1/g,
+  /\b(?:label|price|savings|excludes|title|body|msg|text|placeholder)\s*:\s*(['"])((?:[^'"\\]|\\.){4,160}?)\1/g,
+  /showToast\(\s*(['"])((?:[^'"\\]|\\.){4,160}?)\1/g,
+];
+
+function stringsFromInlineScripts(file) {
+  const html = read(file);
+  const src = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)]
+    .map((m) => m[1])
+    .join('\n');
+  const found = new Set();
+  for (const re of INLINE_PATTERNS) {
+    for (const m of src.matchAll(re)) {
+      const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
+      // A piece of a concatenation ('Get Started - ' + price) is never a whole
+      // text node at runtime, so it can never match a dictionary key either.
+      if (/[-:(,+]$/.test(t)) continue;
+      if (/^[a-z-]+$/.test(t)) continue; // css class / id / event name
+      if (isCandidate(t) && !looksLikeCode(t)) found.add(t);
+    }
+  }
+  return found;
+}
+
 function stringsFromJs(file) {
   const src = read(file);
   const found = new Set();
@@ -250,7 +282,9 @@ for (const lang of ['es', 'zh']) {
 // 3. coverage per surface
 let scanned = 0;
 for (const file of [...HTML_SURFACES, ...JS_SURFACES]) {
-  const strings = file.endsWith('.html') ? stringsFromHtml(file) : stringsFromJs(file);
+  const strings = file.endsWith('.html')
+    ? new Set([...stringsFromHtml(file), ...stringsFromInlineScripts(file)])
+    : stringsFromJs(file);
   scanned += strings.size;
   const missing = [...strings].filter((s) => !esKeys.has(s) || !zhKeys.has(s));
   if (missing.length) {

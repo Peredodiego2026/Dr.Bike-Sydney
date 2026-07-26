@@ -1,5 +1,5 @@
-const CACHE_STATIC = 'drbike-static-v39';
-const CACHE_PAGES  = 'drbike-pages-v39';
+const CACHE_STATIC = 'drbike-static-v40';
+const CACHE_PAGES  = 'drbike-pages-v40';
 
 const STATIC_ASSETS = [
   '/index.html',

@@ -1090,6 +1090,10 @@ const dict = {
     // ── Mobile SPA: dynamic button/status text ──────────────────────────────
     'Checking address...': 'Verificando dirección...',
     'Processing payment...': 'Procesando pago...',
+    // Set by the inline scripts in landing.html / index.html
+    'Processing...': 'Procesando...',
+    'Redirecting to payment...': 'Redirigiendo al pago...',
+    'Choose an amount between $20 and $1000.': 'Elige un monto entre $20 y $1000.',
     'Creating test booking...': 'Creando reserva de prueba...',
     'Photo selected — tap to change': 'Foto seleccionada — tocá para cambiar',
     'Tap to add a photo (optional)': 'Tocá para agregar una foto (opcional)',
@@ -2223,6 +2227,9 @@ const dict = {
     // ── Mobile SPA: dynamic button/status text ──────────────────────────────
     'Checking address...': '正在核实地址...',
     'Processing payment...': '正在处理付款...',
+    'Processing...': '处理中...',
+    'Redirecting to payment...': '正在跳转到支付页面...',
+    'Choose an amount between $20 and $1000.': '请选择 $20 至 $1000 之间的金额。',
     'Creating test booking...': '正在创建测试预订...',
     'Photo selected — tap to change': '已选择照片 — 点击更改',
     'Tap to add a photo (optional)': '点击添加照片（可选）',
