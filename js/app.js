@@ -130,6 +130,7 @@ const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
             body: JSON.stringify({
               role: 'create-booking',
               access_token: session.access_token,
+              client_lang: getLang(),
               service_name: draft.serviceName,
               scheduled_date: draft.date,
               scheduled_time: draft.time,
@@ -1451,6 +1452,7 @@ async function renderPayment() {
       body: JSON.stringify({
         role: 'create-booking',
         access_token: session.access_token,
+        client_lang: getLang(),
         service_id: service.id || null,
         service_name: service.name,
         scheduled_date: date,
@@ -1536,6 +1538,7 @@ async function renderPayment() {
           price: _total,
           bookingId: _bId,
           type: 'confirmation',
+          lang: getLang(),
         }),
       }),
     ]).then((results) =>
@@ -3665,6 +3668,15 @@ async function renderProfile() {
         b.style.color = active ? '#2563EB' : '#374151';
       });
       setLang(chosen);
+      // Persist it on the profile too: the reminder/birthday/re-engagement
+      // emails are sent by crons with no browser to ask what language this
+      // client reads. Best-effort - a failure here must not block the switch.
+      sb.from('profiles')
+        .update({ preferred_lang: chosen })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.error('[lang] could not save preferred_lang:', error.message);
+        });
       renderProfile();
     });
   });

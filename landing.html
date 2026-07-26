@@ -3133,6 +3133,7 @@ async function bkProceed() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         role: 'create-booking', access_token: sess.access_token,
+        client_lang: (window.__drbikeI18n ? window.__drbikeI18n.getLang() : 'en'),
         service_id: _bkState.service.id || null, service_name: _bkState.service.name,
         scheduled_date: _bkState.date, scheduled_time: _bkState.time,
         address: addr || 'Home', discount_code: _bkState.discountCode || null,
