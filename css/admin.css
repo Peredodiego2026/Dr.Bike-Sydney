@@ -312,16 +312,18 @@ body {
   color: #98989f;
 }
 [data-theme='dark'] .seg-vip {
-  background: rgba(217, 119, 6, 0.15);
-  color: #fbbf24;
+  background: #7c3aed;
+  color: #fff;
 }
 [data-theme='dark'] .seg-reg {
-  background: rgba(22, 163, 74, 0.15);
-  color: #34d399;
+  background: transparent;
+  color: #98989f;
+  border: 1px solid #3a3a3f;
 }
 [data-theme='dark'] .seg-new {
-  background: rgba(37, 99, 235, 0.18);
-  color: #60a5fa;
+  background: transparent;
+  color: #6e6e76;
+  border: 1px solid #2e2e33;
 }
 [data-theme='dark'] .seg-risk {
   background: rgba(239, 68, 68, 0.15);
@@ -1158,19 +1160,19 @@ body {
 #page-clients {
   overflow-x: hidden;
 }
+/* The card itself has no click handler - only the Bikes and Chat buttons do.
+   The pointer cursor, lift and blue hover border promised an action the card
+   never performed, so clicking a name did nothing and looked broken. The
+   shadow also went against the project's own no-shadow-on-list-cards rule. */
 .client-card {
   background: #fff;
   border-radius: 12px;
   border: 1px solid #e8ecf0;
   padding: 18px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s;
 }
 .client-card:hover {
-  border-color: #2563eb;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+  border-color: #d5dbe2;
 }
 .cl-av {
   width: 42px;
@@ -1201,21 +1203,30 @@ body {
   padding: 2px 8px;
   border-radius: 20px;
 }
+/* Client segment is a different axis from booking status, but both render as
+   pills on the same admin screens and they were sharing a palette: amber meant
+   "pending, needs action" in .status.* and "VIP, your best client" here; green
+   meant "en route" there and "regular client" here. Segments now read as tier
+   labels - violet for VIP (a hue .status.* never uses) and neutral outlines
+   for the rest - so one colour carries one meaning per screen. Red stays on
+   at-risk, where "something is wrong" matches what red means everywhere else. */
 .seg-vip {
-  background: #fffbeb;
-  color: #d97706;
+  background: #7c3aed;
+  color: #fff;
 }
 .seg-reg {
-  background: #f0fdf4;
-  color: #16a34a;
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
 }
 .seg-new {
-  background: #eff6ff;
-  color: #2563eb;
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid #f3f4f6;
 }
 .seg-risk {
   background: #fef2f2;
-  color: #ef4444;
+  color: #dc2626;
 }
 .cl-stats {
   display: grid;

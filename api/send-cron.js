@@ -203,6 +203,160 @@ async function handleAbandoned(req, res) {
   return res.status(200).json({ sent, checked: (bookings || []).length });
 }
 
+// ── Advance reminder (3 days before the appointment) ──────────────────────────
+// The only reminder that existed fired 2h before. A booking made a week out
+// went from "confirmed" to a message two hours before the mechanic showed up.
+const ADVANCE_REMINDER_DAYS = 3;
+
+async function handleAdvanceReminders(req, res) {
+  const sb = makeSb();
+  const target = new Date();
+  target.setDate(target.getDate() + ADVANCE_REMINDER_DAYS);
+  const targetDate = target.toISOString().split('T')[0];
+
+  const { data: bookings, error } = await sb
+    .from('bookings')
+    .select(
+      'id, client_email, client_phone, client_name, service_name, scheduled_date, scheduled_time, address, suburb'
+    )
+    .eq('scheduled_date', targetDate)
+    .in('status', ['pending', 'confirmed'])
+    .or('reminder_days_sent.is.null,reminder_days_sent.eq.false');
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  let sent = 0;
+  for (const b of bookings || []) {
+    const dateLabel = new Date(b.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'short',
+    });
+    const results = await Promise.allSettled([
+      b.client_email
+        ? fetch(`${BASE}/api/send-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+            },
+            body: JSON.stringify({
+              to: b.client_email,
+              name: b.client_name || b.client_email.split('@')[0],
+              service: b.service_name,
+              date: dateLabel,
+              time: b.scheduled_time,
+              bookingId: b.id,
+              type: 'upcoming',
+            }),
+          })
+        : Promise.resolve(null),
+      b.client_phone
+        ? fetch(`${BASE}/api/send-sms`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+            },
+            body: JSON.stringify({
+              to: b.client_phone,
+              name: b.client_name,
+              service: b.service_name,
+              time: `${dateLabel} at ${b.scheduled_time || ''}`.trim(),
+              address: b.suburb || b.address,
+              type: 'upcoming',
+              bookingId: b.id,
+            }),
+          })
+        : Promise.resolve(null),
+    ]);
+    // One channel landing is enough to consider the client reminded; marking
+    // it only on total failure means a flaky SMS never blocks the flag.
+    if (results.some((r) => r.status === 'fulfilled' && r.value && r.value.ok)) {
+      await sb.from('bookings').update({ reminder_days_sent: true }).eq('id', b.id);
+      sent++;
+    }
+  }
+  return res.status(200).json({ sent, checked: (bookings || []).length, targetDate });
+}
+
+// ── No-show watch ─────────────────────────────────────────────────────────────
+// Nothing was watching for a booking whose slot came and went with nobody
+// marking it arrived or completed. The client sat waiting and the system never
+// noticed. Alerts the admin so a human can chase it.
+const NOSHOW_GRACE_HOURS = 2;
+
+async function handleNoShowWatch(req, res) {
+  const sb = makeSb();
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  const yesterday = new Date(now - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  const { data: bookings, error } = await sb
+    .from('bookings')
+    .select(
+      'id, client_name, client_phone, service_name, scheduled_date, scheduled_time, suburb, address, status, mechanic_id'
+    )
+    .in('scheduled_date', [yesterday, today])
+    .in('status', ['pending', 'confirmed', 'enroute'])
+    .or('noshow_alert_sent.is.null,noshow_alert_sent.eq.false');
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  // The admin's WhatsApp lives in the van_zones sentinel row, same lookup
+  // send-message.js uses for the sender number.
+  const { data: waRow } = await sb
+    .from('van_zones')
+    .select('postcode')
+    .eq('van_number', 0)
+    .eq('suburb', '__whatsapp__')
+    .maybeSingle();
+  const adminPhone = waRow?.postcode;
+
+  let alerted = 0;
+  const overdue = [];
+  for (const b of bookings || []) {
+    // scheduled_time is a 24h string like "14:30" (see CLAUDE.md).
+    const [h, m] = String(b.scheduled_time || '00:00')
+      .split(':')
+      .map(Number);
+    const slot = new Date(`${b.scheduled_date}T00:00:00`);
+    slot.setHours(h || 0, m || 0, 0, 0);
+    const hoursLate = (now - slot) / (1000 * 60 * 60);
+    if (hoursLate < NOSHOW_GRACE_HOURS) continue;
+
+    overdue.push({ id: b.id, client: b.client_name, hoursLate: Math.round(hoursLate) });
+
+    if (adminPhone) {
+      const r = await fetch(`${BASE}/api/send-whatsapp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+        },
+        body: JSON.stringify({
+          to: adminPhone,
+          template: 'noshow_alert',
+          data: {
+            clientName: b.client_name,
+            service: b.service_name,
+            date: b.scheduled_date,
+            time: b.scheduled_time,
+            suburb: b.suburb || b.address,
+            hours: Math.round(hoursLate),
+            status: b.status,
+            assigned: !!b.mechanic_id,
+            bookingId: b.id,
+          },
+        }),
+      }).catch(() => ({ ok: false }));
+      if (r.ok) alerted++;
+    }
+    await sb.from('bookings').update({ noshow_alert_sent: true }).eq('id', b.id);
+  }
+  return res.status(200).json({ overdue: overdue.length, alerted, bookings: overdue });
+}
+
 // ── Service reminders ─────────────────────────────────────────────────────────
 async function handleServiceReminders(req, res) {
   const sb = makeSb();
@@ -553,6 +707,8 @@ export default async function handler(req, res) {
   if (type === 'reengagement') return handleReengagement(req, res);
   if (type === 'abandoned') return handleAbandoned(req, res);
   if (type === 'service') return handleServiceReminders(req, res);
+  if (type === 'advance') return handleAdvanceReminders(req, res);
+  if (type === 'noshow') return handleNoShowWatch(req, res);
 
   // Consolidated daily cron: runs all background jobs in sequence
   if (type === 'all') {
@@ -571,17 +727,21 @@ export default async function handler(req, res) {
         };
         fn(req, mockRes).catch((e) => resolve({ error: e.message }));
       });
-    const [birthday, reengagement, abandoned, service] = await Promise.allSettled([
+    const [birthday, reengagement, abandoned, service, advance, noshow] = await Promise.allSettled([
       wrap((r) => handleBirthday(req, r)),
       wrap((r) => handleReengagement(req, r)),
       wrap((r) => handleAbandoned(req, r)),
       wrap((r) => handleServiceReminders(req, r)),
+      wrap((r) => handleAdvanceReminders(req, r)),
+      wrap((r) => handleNoShowWatch(req, r)),
     ]);
     return res.status(200).json({
       birthday: birthday.value || birthday.reason?.message,
       reengagement: reengagement.value || reengagement.reason?.message,
       abandoned: abandoned.value || abandoned.reason?.message,
       service: service.value || service.reason?.message,
+      advance: advance.value || advance.reason?.message,
+      noshow: noshow.value || noshow.reason?.message,
     });
   }
 

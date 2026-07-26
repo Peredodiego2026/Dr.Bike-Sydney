@@ -34,7 +34,32 @@
 [data-theme='dark'] .job-card .job-header {
   color: #f2f2f7;
 }
-[data-theme='dark'] .abtn {
+/* This blanket !important was flattening every action button to one navy in
+   dark mode, so the hierarchy below was invisible exactly where the mechanic
+   works most - outdoors, screen usually in dark. Now only the utilities take
+   the neutral fill; the state action and the destructive one keep their own. */
+[data-theme='dark'] .abtn.secondary {
+  background: #1a2740 !important;
+  color: #f2f2f7 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme='dark'] .abtn.primary {
+  color: #fff !important;
+}
+[data-theme='dark'] .abtn.primary.go {
+  background: #d97706 !important;
+}
+[data-theme='dark'] .abtn.primary.done,
+[data-theme='dark'] .abtn.primary.accept {
+  background: #059669 !important;
+}
+[data-theme='dark'] .abtn.danger {
+  background: transparent !important;
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.4) !important;
+}
+[data-theme='dark'] .abtn.chat,
+[data-theme='dark'] .abtn.undo {
   background: #1a2740 !important;
   color: #f2f2f7 !important;
 }
@@ -392,21 +417,41 @@ body {
 .abtn:active {
   opacity: 0.65;
 }
-.abtn.nav {
-  background: #eff6ff;
-  color: #2563eb;
+/* A job card was showing up to six buttons at identical visual weight, each in
+   its own pastel tint, so nothing indicated which one actually moves the job
+   forward. Only the state action (Accept / En route / Arrived / Complete) does
+   - it takes the single solid fill the design skill allows per card, and the
+   four standing utilities drop back to neutral outlines. */
+.abtn.secondary {
+  background: transparent;
+  color: var(--navy);
+  border: 1.5px solid #e8ecf0;
+  font-weight: 600;
+}
+.abtn.secondary:hover {
+  background: rgba(0, 0, 0, 0.02);
+  opacity: 1;
+}
+.abtn.primary {
+  color: #fff;
+  font-weight: 700;
+}
+.abtn.primary.go {
+  background: #d97706;
+}
+.abtn.primary.done,
+.abtn.primary.accept {
+  background: #059669;
+}
+.abtn.danger {
+  background: transparent;
+  color: #dc2626;
+  border: 1.5px solid #fecaca;
+  font-weight: 600;
 }
 .abtn.chat {
   background: var(--wa-lt);
   color: var(--wa);
-}
-.abtn.go {
-  background: #fffbeb;
-  color: #d97706;
-}
-.abtn.done {
-  background: #f0fdf4;
-  color: #16a34a;
 }
 .abtn.undo {
   background: #f8fafc;
