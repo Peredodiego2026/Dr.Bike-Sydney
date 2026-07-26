@@ -8,6 +8,7 @@
   isBusinessRecipient,
   recipientForBooking,
 } from './_security.js';
+import { translateEmailHtml, translateEmailSubject, normalizeLang } from './_email-i18n.js';
 export default async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if (verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
@@ -445,6 +446,15 @@ export default async function handler(req, res) {
   }
   const recipients = [recipient];
 
+  // Language: the caller can pass it (the app knows what the client is reading
+  // right now), otherwise it comes off the booking - the crons run server-side
+  // with no browser to ask. Anything unknown falls back to English.
+  // Mail addressed to ourselves stays English: the team works in English.
+  let lang = 'en';
+  if (!template.to && !isBusinessRecipient(recipient)) {
+    lang = normalizeLang(req.body?.lang || (await recipientForBooking(bookingId, 'client_lang')));
+  }
+
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -455,8 +465,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: recipients,
-        subject: template.subject,
-        html: template.html,
+        subject: translateEmailSubject(template.subject, lang),
+        html: translateEmailHtml(template.html, lang),
       }),
     });
 

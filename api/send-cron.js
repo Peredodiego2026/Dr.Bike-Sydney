@@ -42,7 +42,7 @@ async function handleBirthday(req, res) {
 
   const { data: profiles, error } = await sb
     .from('profiles')
-    .select('id, full_name, email, birthday, birthday_promo_sent_year')
+    .select('id, full_name, email, birthday, birthday_promo_sent_year, preferred_lang')
     .not('birthday', 'is', null)
     .not('email', 'is', null);
 
@@ -65,6 +65,8 @@ async function handleBirthday(req, res) {
         to: p.email,
         name: p.full_name || p.email.split('@')[0],
         type: 'birthday_promo',
+        // No browser in a cron, so the language comes off the profile.
+        lang: p.preferred_lang || 'en',
       }),
     }).catch(() => ({ ok: false }));
     if (r.ok) {
@@ -106,8 +108,9 @@ async function handleReengagement(req, res) {
 
   const { data: profiles } = await sb
     .from('profiles')
-    .select('email, reengagement_sent_at')
+    .select('email, reengagement_sent_at, preferred_lang')
     .in('email', targetEmails);
+  const langByEmail = new Map((profiles || []).map((p) => [p.email, p.preferred_lang || 'en']));
   const sentRecently = new Set(
     (profiles || [])
       .filter((p) => {
@@ -136,6 +139,7 @@ async function handleReengagement(req, res) {
         service: b.service_name,
         type: 'reengagement',
         monthsAgo,
+        lang: langByEmail.get(email) || 'en',
       }),
     }).catch(() => ({ ok: false }));
     if (r.ok) {

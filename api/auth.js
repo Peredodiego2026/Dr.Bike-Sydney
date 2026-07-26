@@ -574,6 +574,7 @@ async function handleCreateBooking(req, res) {
     utm_campaign,
     time_to_book_seconds,
     preferred_mechanic_id,
+    client_lang,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!access_token) return res.status(401).json({ error: 'Sign in required' });
@@ -766,6 +767,10 @@ async function handleCreateBooking(req, res) {
         utm_source: utm_source || null,
         utm_medium: utm_medium || null,
         utm_campaign: utm_campaign || null,
+        // Which language this client is reading the app in, so the confirmation
+        // and every later reminder/cron email goes out in it. Whitelisted here
+        // because the DB has a CHECK constraint on the column.
+        client_lang: ['en', 'es', 'zh'].includes(client_lang) ? client_lang : 'en',
         // Client-reported elapsed time, only trusted within a sane range - a
         // bogus/manipulated value would just skew the "avg time to book" KPI,
         // it's never used for pricing or access control.
