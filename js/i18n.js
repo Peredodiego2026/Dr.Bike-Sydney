@@ -531,11 +531,13 @@ const dict = {
     Annual: 'Anual',
     'Save 20%': 'Ahorrá 20%',
     '/yr - save': '/año - ahorrás',
-    Basic: 'Basic',
-    Standard: 'Standard',
+    // Plan names on the pricing cards. Safe to translate: plan selection is
+    // driven by the data-plan attribute on the buttons, never by this text.
+    Basic: 'Básico',
+    Standard: 'Estándar',
     VIP: 'VIP',
     Popular: 'Popular',
-    '1 Basic Service': '1 Servicio Basic',
+    '1 Basic Service': '1 Servicio Básico',
     '10% off repairs': '10% de descuento en reparaciones',
     '1 free Basic Service/month ($20 call-out fee applies)':
       '1 Servicio Basic gratis/mes (se cobra la tarifa de visita de $20)',
@@ -821,8 +823,12 @@ const dict = {
     'Book soon': 'Reservá pronto',
 
     // ── Plan info modal ("Learn more") ─────────────────────────────────────
-    'Basic Plan': 'Plan Basic',
-    'Standard Plan': 'Plan Standard',
+    // Plan-info modal price, set by JS from a table in landing.html/index.html.
+    '$67/month': '$67/mes',
+    '$97/month': '$97/mes',
+    '$197/month': '$197/mes',
+    'Basic Plan': 'Plan Básico',
+    'Standard Plan': 'Plan Estándar',
     'VIP Plan': 'Plan VIP',
     '1 maintenance service per month (Tune-Up)': '1 servicio de mantenimiento por mes (Ajuste)',
     '1 free maintenance service per month (Tune-Up)':
@@ -1695,9 +1701,10 @@ const dict = {
     Annual: '按年',
     'Save 20%': '省20%',
     '/yr - save': '/年 - 节省',
-    Basic: 'Basic',
-    Standard: 'Standard',
-    VIP: 'VIP',
+    // Same wording terms.html already uses for the plans.
+    Basic: '基础版',
+    Standard: '标准版',
+    VIP: 'VIP版',
     Popular: '最受欢迎',
     '1 Basic Service': '1次Basic服务',
     '10% off repairs': '维修享9折',
@@ -1961,9 +1968,12 @@ const dict = {
     'Book soon': '尽快预订',
 
     // ── Plan info modal ("Learn more") ─────────────────────────────────────
-    'Basic Plan': 'Basic计划',
-    'Standard Plan': 'Standard计划',
-    'VIP Plan': 'VIP计划',
+    '$67/month': '$67/月',
+    '$97/month': '$97/月',
+    '$197/month': '$197/月',
+    'Basic Plan': '基础版会员',
+    'Standard Plan': '标准版会员',
+    'VIP Plan': 'VIP版会员',
     '1 maintenance service per month (Tune-Up)': '每月1次保养服务（基础调校）',
     '1 free maintenance service per month (Tune-Up)': '每月1次免费保养服务（基础调校）',
     '10% discount on parts': '零件享9折',
