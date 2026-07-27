@@ -303,6 +303,14 @@ const INTERNAL_ALLOWED_ORIGINS = [
 ];
 const INTERNAL_ALLOWED_REFERER_PREFIXES = INTERNAL_ALLOWED_ORIGINS.map((o) => o + '/');
 
+// Where our own server-to-server calls must point. NOT `VERCEL_URL`: that is
+// always set and resolves to the per-deployment hostname
+// (dr-bike-sydney-<hash>-dr-bike.vercel.app), which Deployment Protection
+// answers with a 302 to vercel.com/sso-api. Every scheduled email built its
+// URL that way and was bounced at the edge before ever reaching the function.
+// The custom production domain is the only self-address never behind SSO.
+export const SELF_BASE_URL = 'https://drbikesydney.com.au';
+
 function timingSafeEqualStr(a, b) {
   const bufA = Buffer.from(String(a));
   const bufB = Buffer.from(String(b));
