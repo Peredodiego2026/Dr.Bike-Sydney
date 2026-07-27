@@ -335,6 +335,7 @@ const dict = {
     // Payment
     'Confirm Booking': 'Confirmar Reserva',
     'Your selection': 'Tu selección',
+    'Contact us': 'Contáctanos',
     'Online payments coming soon': 'Pagos en línea próximamente',
     "We're finalising our business setup. Contact us directly to lock in your slot at the same price.":
       'Estamos terminando de configurar el negocio. Contactanos directamente para reservar tu turno al mismo precio.',
@@ -1523,6 +1524,7 @@ const dict = {
     // Payment
     'Confirm Booking': '确认预订',
     'Your selection': '您的选择',
+    'Contact us': '联系我们',
     'Online payments coming soon': '在线支付即将上线',
     "We're finalising our business setup. Contact us directly to lock in your slot at the same price.":
       '我们正在完成业务筹备。请直接联系我们以相同价格锁定您的预约时段。',
