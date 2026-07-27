@@ -457,6 +457,28 @@ body {
   background: var(--color-primary-light);
 }
 
+/* Emergency Service is not bookable - the click handler in js/app.js catches it
+   by name and opens the contact modal instead - so it must not read like the 31
+   cards around it. danger token at 8% plus a left accent, the badge pattern from
+   .claude/skills/drbike-design. Must stay after the .service-card rules above:
+   same specificity, so source order is what makes the hover state win. */
+.service-card--emergency {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.28);
+  border-left: 4px solid var(--red);
+}
+.service-card--emergency:hover {
+  background: rgba(220, 38, 38, 0.13);
+  border-color: var(--red);
+}
+.service-card--emergency .service-card__price {
+  color: var(--red);
+}
+.service-card--emergency .service-card__amount {
+  color: var(--red);
+  font-size: 15px;
+}
+
 /* ── Desktop overrides ──────────────────────────────────────────────────────── */
 @media (min-width: 768px) {
   .bottom-nav {
@@ -618,11 +640,17 @@ body {
   margin-bottom: var(--space-4);
 }
 
+/* Date / Time / Location in the quote card. The horizontal padding is not
+   decoration: the card these sit in has none of its own, so without it the
+   labels sit on the left border and a full street address runs into the right
+   one. baseline keeps the label level with the first line of a value that
+   wraps. */
 .summary-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3) 0;
+  align-items: baseline;
+  gap: 24px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
 }
 .summary-row:last-child {
@@ -632,9 +660,12 @@ body {
 .summary-row__label {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  flex-shrink: 0;
 }
 .summary-row__value {
   font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .summary-total {
