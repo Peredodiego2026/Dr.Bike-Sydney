@@ -65,7 +65,7 @@ restauracion de prueba a un proyecto scratch contando filas.
 | # | Que | Desde |
 |---|---|---|
 | 2.1 | Sacar el PIN en texto plano: dejar de mandarlo en las requests, de guardarlo en localStorage, y dropear la columna `pin` de `escalation_contacts`. Hoy sigue como fallback | 29-jun |
-| 2.2 | Confirmar si se corrio `scripts/add-card-on-file-columns.sql` (agrega `profiles.stripe_default_payment_method_id` y `bookings.completion_payment_intent_id`) | 22-jul |
+| ~~2.2~~ | ~~Confirmar `scripts/add-card-on-file-columns.sql`~~ **CERRADO 27-jul: Diego lo corrio contra produccion, las dos columnas existen** | - |
 
 Para 2.2, la consulta de verificacion:
 
@@ -79,6 +79,57 @@ where (table_name = 'profiles'  and column_name = 'stripe_default_payment_method
 Dos filas = ya esta aplicado. Cero filas = falta correr el script.
 
 ---
+
+## 2.5. Cobrar desde desktop (decidido 2026-07-27, sin empezar)
+
+**El problema, verificado en codigo el 27-jul:** en desktop NO existe codigo de
+pago. El aviso "Online payments coming soon" de `landing.html` no tapa un
+checkout que funcione: atras no hay nada. `bkProceed()` solo escribe la reserva
+en Supabase, sin cobrar y sin notificar a nadie. En movil, en cambio, el pago
+esta vivo y probado (tarjeta + Apple Pay/Google Pay, cobra el call-out, y
+`finalizeBooking()` dispara WhatsApp a Diego + SMS al mecanico + email al
+cliente). El cobro real con Apple Pay del 13-jul fue en movil.
+
+**La causa de fondo:** `landing.html` tiene DOS flujos de reserva. El boton
+`Book a Service` del hero abre el modal viejo `bk-` (sin pago); un link mas
+abajo abre `#book-service`, que es el wizard del SPA y si cobra. La
+unificacion de julio (commit `0c639c1`) conecto un CTA y dejo el otro en el
+flujo viejo.
+
+**Decision de Diego (27-jul): unificar.** El wizard del SPA pasa a ser el unico
+flujo, tambien en desktop.
+
+Hechos verificados que hacen esto viable:
+
+- `landing.html` YA carga Stripe v3 (linea 69) y `js/stripe.js` (linea 3952)
+- Las `data-screen` del wizard (`book-service`, `service-summary`, `payment`,
+  `tracking`) YA existen en `landing.html` y renderizan - comprobado en vivo:
+  32 tarjetas de servicio y el calendario cargan bien
+- Los 5 puntos de entrada del flujo viejo pasan TODOS por una sola funcion,
+  `openBooking(preselect)` en `landing.html:2460`. Cambiando esa unica funcion
+  se redirigen los 5 CTAs
+
+**El hueco a cerrar:** el wizard del SPA no soporta preseleccion de servicio.
+4 de los 5 llamados a `openBooking()` pasan un nombre de servicio que hoy se
+perderia. Hay que agregar soporte de preselect en `renderBookService()`
+(`js/app.js:437`) antes de redirigir.
+
+Pasos, en orden:
+
+1. Soporte de preselect en `renderBookService()`.
+2. Reescribir `openBooking(preselect)` para navegar a `#book-service` en vez de
+   abrir `#booking-panel`.
+3. Verificar el flujo completo en desktop. **Ojo: local no alcanza** - el
+   server estatico no sirve `/api`, asi que no hay slots de horario. La
+   verificacion real es en produccion.
+4. PR aparte: borrar el flujo `bk-` muerto (~600 lineas, `landing.html`
+   2460-3110) y el overlay de coming-soon.
+5. Bump de `?v=` de app.js en las dos paginas + version del service worker.
+
+**Riesgo a manejar:** esto pone un cobro real de $20 en el CTA principal del
+sitio. Antes de mergear hace falta una reserva de punta a punta en produccion
+con tarjeta real (o el bypass de admin, que ya existe hardcodeado para
+peredo.dm@gmail.com) y confirmar que llegan las 3 notificaciones.
 
 ## 3. Diseno
 
