@@ -2081,9 +2081,38 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// "2026-07-29 · 10:00:00" is a database row, not something to show a client.
+// Date parts are passed to the Date constructor rather than parsed from the
+// string, because 'YYYY-MM-DD' is read as UTC and lands on the previous day
+// for anyone west of Greenwich.
+function acctWhen(dateStr, timeStr) {
+  var out = '';
+  if (dateStr) {
+    var p = String(dateStr).split('-').map(Number);
+    var d = new Date(p[0], (p[1] || 1) - 1, p[2] || 1);
+    out = isNaN(d.getTime())
+      ? String(dateStr)
+      : d.toLocaleDateString(lpDateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  if (timeStr) out += (out ? ' · ' : '') + String(timeStr).slice(0, 5);
+  return out;
+}
+
 function openAccountPanel(session) {
   document.getElementById('account-panel')?.remove();
-  var user = session && session.user ? session.user : null;
+  // The membership actions below reopen this panel with no argument. Reading
+  // that as "signed out" put the sign-in modal in front of people who were
+  // very much signed in - the same symptom the nav button had. Ask for the
+  // session instead of assuming.
+  if (!session) {
+    _sb.auth.getSession().then(function(r) {
+      var s = r.data && r.data.session ? r.data.session : null;
+      if (s) openAccountPanel(s);
+      else openAuthModal();
+    });
+    return;
+  }
+  var user = session.user || null;
   if (!user) { openAuthModal(); return; }
   var meta = user.user_metadata || {};
   var name = meta.full_name || meta.name || user.email || '';
@@ -2098,16 +2127,20 @@ function openAccountPanel(session) {
   var STATUS_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#6B7280', cancelled:'#EF4444' };
   var STATUS_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'En Route', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
 
-  var tabStyle = 'flex:1;padding:10px 4px;border:none;border-bottom:2.5px solid transparent;background:none;font-size:13px;font-weight:700;color:#94A3B8;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.05em;transition:all .15s';
-  var tabActiveStyle = tabStyle + ';color:#2563eb;border-bottom-color:#2563eb';
+  // Same segmented control the app uses for Upcoming/History (.tabs-row and
+  // .tab-btn in css/main.css): a tray in --surface with a blue pill on the
+  // active tab. The panel used uppercase underlined tabs, which read like a
+  // different product bolted onto the page.
+  var tabStyle = 'flex:1;min-height:36px;padding:8px 10px;border:none;border-radius:8px;background:transparent;font-size:13px;font-weight:600;color:#475569;cursor:pointer;font-family:inherit;transition:background .15s,color .15s';
+  var tabActiveStyle = tabStyle + ';background:#2563eb;color:#fff';
 
   var panel = document.createElement('div');
   panel.id = 'account-panel';
   panel.style.cssText = 'position:fixed;inset:0;z-index:9999;background:transparent';
   panel.innerHTML = [
-    '<div id="account-panel-inner" style="position:absolute;right:' + panelRight + 'px;top:' + panelTop + 'px;width:min(400px,calc(100vw-32px));background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid #E8ECF0;display:flex;flex-direction:column;overflow:hidden;max-height:' + maxH + 'px">',
+    '<div id="account-panel-inner" style="position:absolute;right:' + panelRight + 'px;top:' + panelTop + 'px;width:min(400px,calc(100vw-32px));background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.18);border:1px solid #E2E8F0;display:flex;flex-direction:column;overflow:hidden;max-height:' + maxH + 'px">',
       /* Header */
-      '<div style="padding:16px 20px;border-bottom:1px solid #E8ECF0;display:flex;align-items:center;gap:12px;flex-shrink:0">',
+      '<div style="padding:16px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;gap:12px;flex-shrink:0">',
         '<div style="width:40px;height:40px;border-radius:50%;background:#2563eb;color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + initials + '</div>',
         '<div style="flex:1;min-width:0">',
           '<div style="font-size:15px;font-weight:700;color:#0D1F3C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(name) + '</div>',
@@ -2116,7 +2149,7 @@ function openAccountPanel(session) {
         '<button id="account-panel-close" style="background:none;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:#94A3B8;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#215;</button>',
       '</div>',
       /* Tabs */
-      '<div style="display:flex;border-bottom:1px solid #E8ECF0;flex-shrink:0;padding:0 8px">',
+      '<div style="display:flex;gap:4px;background:#F1F5F9;border-radius:10px;padding:4px;margin:12px 20px 4px;flex-shrink:0">',
         '<button id="acct-tab-bookings" style="' + tabActiveStyle + '" data-acct-tab="bookings">Bookings</button>',
         '<button id="acct-tab-bikes" style="' + tabStyle + '" data-acct-tab="bikes">My Bikes</button>',
         '<button id="acct-tab-membership" style="' + tabStyle + '" data-acct-tab="membership">Membership</button>',
@@ -2134,8 +2167,8 @@ function openAccountPanel(session) {
         '</div>',
       '</div>',
       /* Footer */
-      '<div style="padding:12px 20px;border-top:1px solid #E8ECF0;flex-shrink:0">',
-        '<button id="account-signout-btn" style="width:100%;padding:10px;border:1.5px solid #E8ECF0;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>',
+      '<div style="padding:12px 20px;border-top:1px solid #E2E8F0;flex-shrink:0">',
+        '<button id="account-signout-btn" style="width:100%;min-height:40px;padding:10px;border:1.5px solid #E2E8F0;border-radius:8px;background:#fff;color:#475569;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>',
       '</div>',
     '</div>'
   ].join('');
@@ -2180,19 +2213,23 @@ function openAccountPanel(session) {
       var past = bookings.filter(function(b) { return ['completed','cancelled'].includes(b.status); });
       var html = '';
       if (upcoming.length) {
-        html += '<div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Upcoming (' + upcoming.length + ')</div>';
+        // The word is its own text node so the dictionary can match it - with
+        // the count inside the string it never could, which is why this label
+        // stayed in English on a Spanish page. Grey like History below it: a
+        // section heading in success-green meant nothing.
+        html += '<div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px"><span>Upcoming</span> (' + upcoming.length + ')</div>';
         upcoming.forEach(function(b) {
           var canEdit = b.status === 'pending' || b.status === 'confirmed';
           var sc = STATUS_COLORS[b.status]||'#6B7280';
-          html += '<div style="background:#F8FAFC;border:1px solid #E8ECF0;border-left:3px solid ' + sc + ';border-radius:10px;padding:12px;margin-bottom:8px">';
+          html += '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid ' + sc + ';border-radius:12px;padding:12px;margin-bottom:10px">';
           html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
           html += '<div style="font-size:13px;font-weight:700;color:#0D1F3C">' + esc(b.service_name || 'Service') + '</div>';
           html += '<span style="font-size:11px;font-weight:600;color:' + sc + ';background:' + sc + '18;padding:2px 8px;border-radius:20px">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
           html += '</div>';
-          html += '<div style="font-size:13px;color:#94A3B8">' + esc(b.scheduled_date||'') + (b.scheduled_time ? ' · ' + esc(b.scheduled_time) : '') + '</div>';
+          html += '<div style="font-size:13px;color:#94A3B8">' + esc(acctWhen(b.scheduled_date, b.scheduled_time)) + '</div>';
           if (canEdit) {
             html += '<div style="display:flex;gap:6px;margin-top:8px">';
-            html += '<button class="acct-resched-btn" data-id="' + esc(b.id) + '" data-date="' + esc(b.scheduled_date||'') + '" data-time="' + esc(b.scheduled_time||'08:00') + '" style="flex:1;padding:7px;border:1px solid #E8ECF0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;color:#0D1F3C">Reschedule</button>';
+            html += '<button class="acct-resched-btn" data-id="' + esc(b.id) + '" data-date="' + esc(b.scheduled_date||'') + '" data-time="' + esc(b.scheduled_time||'08:00') + '" style="flex:1;padding:7px;border:1px solid #E2E8F0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;color:#0D1F3C">Reschedule</button>';
             html += '<button class="acct-cancel-btn" data-id="' + esc(b.id) + '" style="flex:1;padding:7px;border:1px solid #fee2e2;border-radius:6px;background:#fff;color:#dc2626;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Cancel</button>';
             html += '</div>';
           }
@@ -2206,8 +2243,8 @@ function openAccountPanel(session) {
         html += '<div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px">History</div>';
         past.slice(0, 5).forEach(function(b) {
           var sc = STATUS_COLORS[b.status]||'#6B7280';
-          html += '<div style="background:#F8FAFC;border:1px solid #E8ECF0;border-left:3px solid ' + sc + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">';
-          html += '<div><div style="font-size:13px;font-weight:600;color:#0D1F3C">' + esc(b.service_name||'Service') + '</div><div style="font-size:11px;color:#94A3B8;margin-top:2px">' + esc(b.scheduled_date||'') + '</div></div>';
+          html += '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid ' + sc + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">';
+          html += '<div><div style="font-size:13px;font-weight:600;color:#0D1F3C">' + esc(b.service_name||'Service') + '</div><div style="font-size:11px;color:#94A3B8;margin-top:2px">' + esc(acctWhen(b.scheduled_date, '')) + '</div></div>';
           html += '<span style="font-size:11px;font-weight:600;color:' + sc + '">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
           html += '</div>';
         });
@@ -2262,7 +2299,7 @@ function openAccountPanel(session) {
         }
         var html = '';
         res.data.forEach(function(bike) {
-          html += '<div style="background:#F8FAFC;border:1px solid #E8ECF0;border-left:3px solid #2563eb;border-radius:10px;padding:12px;margin-bottom:8px">';
+          html += '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #2563eb;border-radius:12px;padding:12px;margin-bottom:10px">';
           html += '<div style="font-size:13px;font-weight:700;color:#0D1F3C">' + esc((bike.brand||'') + ' ' + (bike.model||'Bike')) + '</div>';
           var details = [bike.type, bike.year, bike.color].filter(Boolean).join(' · ');
           if (details) html += '<div style="font-size:13px;color:#94A3B8;margin-top:3px">' + esc(details) + '</div>';
@@ -3941,7 +3978,7 @@ function openLandingChat(bookingId) {
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 <!-- App JS Modules -->
 <script type="module">
-  import { getLang, setLang, translateScreen, dateLocale, sourceOf, LANGUAGES } from './js/i18n.js?v=20260728a';
+  import { getLang, setLang, translateScreen, dateLocale, sourceOf, LANGUAGES } from './js/i18n.js?v=20260728b';
 
   // One control instead of three loose links: the header showed English,
   // Español and 中文 all at once, which reads as navigation rather than as a
