@@ -92,8 +92,13 @@ export function formatServiceDuration(service) {
 export function createServiceCard(service) {
   const { id = '', name = '', description = '', price = 0 } = service;
   const duration = formatServiceDuration(service);
+  // Emergency Service never reaches the booking wizard - the click handler in
+  // js/app.js matches this same name and opens the contact modal instead. The
+  // modifier is only a hook: css/landing.css tints the card there so it does
+  // not read like the bookable ones. Unstyled (so unchanged) in the mobile SPA.
+  const emergency = name === 'Emergency Service';
   return `
-<div class="service-card" data-service-id="${id}" role="button" tabindex="0">
+<div class="service-card${emergency ? ' service-card--emergency' : ''}" data-service-id="${id}" role="button" tabindex="0">
   <div class="service-card__body">
     <div class="service-card__name">${name}</div>
     ${description ? `<div class="service-card__desc">${description}</div>` : ''}

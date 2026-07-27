@@ -276,6 +276,10 @@ Diego probo el flujo completo en produccion despues del PR #121 (reserva de
 prueba con el bypass de admin: **funciono, las notificaciones llegaron**). Lo
 que sigue es todo visual, ninguno rompe el pago.
 
+**Estado 2026-07-27: 8.1 a 8.7 CERRADOS** en la rama
+`fix/desktop-wizard-visual-bugs`. Falta 8.8 (auditar las otras 3 superficies).
+El detalle de que se hizo y como se verifico esta al final de esta seccion.
+
 ### 8.1 CAUSA RAIZ de 8.2 a 8.5 — el wizard es full-screen, la landing no
 
 Las pantallas del wizard (`js/app.js`, `data-screen`) se disenaron como app
@@ -319,3 +323,33 @@ fondo al 8%, mismo patron que los badges del skill `drbike-design`.
 Diego reviso solo `landing.html`. Las otras tres superficies no se miraron
 todavia. Esto conecta con el punto 3.1: **no existe lista de hallazgos de
 diseno**, y esta seccion 8 es el primer pedazo real de esa auditoria pendiente.
+
+### Como se cerraron 8.1 a 8.7 (2026-07-27)
+
+`<body data-surface="landing">` es el marcador. Todo lo que sigue esta acotado
+a el, ademas de vivir en `css/landing.css`, que solo carga esta pagina. Una
+media query de ancho no alcanzaba: un desktop puede abrir `index.html` directo
+y tiene que seguir viendo la SPA tal cual.
+
+- **8.1** las `[data-screen]` que no son `home` se montan `position:fixed;
+  inset:0; z-index:900` con su propio scroll. Con eso caen 8.2 a 8.5 juntas.
+  `js/router.js` bloquea el scroll de la pagina de atras
+  (`html.drbike-wizard-open`) y resetea el scroll del overlay al cambiar de
+  pantalla; `scrollStepToTop()` en `js/app.js` hace lo mismo entre pasos.
+- **8.3** confirmado en codigo: el bloque azul era la seccion de newsletter
+  (`landing.html`, "Newsletter Signup"), que vive FUERA de
+  `[data-screen="home"]`. Ocultar "home" nunca la ocultaba. El overlay opaco si.
+- **8.5** `.summary-row` no tenia padding horizontal: las etiquetas quedaban
+  sobre el borde izquierdo de la tarjeta y la direccion contra el derecho.
+- **8.7** `createServiceCard()` marca la tarjeta con `service-card--emergency`;
+  el tenido rojo (danger al 8% + acento izquierdo) esta solo en la landing.
+- **8.6** un boton con globo + idioma actual que despliega las 3 opciones
+  (`role="listbox"`, Escape, flechas, click afuera, foco de vuelta al boton).
+  `setLang()` no se toco.
+
+Verificado en Chromium real (Playwright) a 1280px en en/es/zh: 24 aserciones,
+incluida la pantalla de pago (Stripe monta sus iframes dentro del overlay; no
+se apreto Pagar, no se creo ninguna reserva). La SPA movil a 375px se comparo
+pixel a pixel contra la version anterior en los 9 pasos del wizard: **0
+diferencias**. Los slots de horario se stubearon en local porque el server
+estatico no sirve `/api`.

@@ -65,7 +65,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel up to 2 hours before your appointment at no charge."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes, we carry common parts in the van, but they are not included in the service price — they are charged separately at cost price with no markup."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit cards, debit cards, Apple Pay, and Google Pay. A $20 call-out deposit is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=20260717">
+  <link rel="stylesheet" href="css/landing.css?v=20260727c">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
   <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
@@ -137,7 +137,12 @@
   })();
   </script>
 </head>
-<body>
+<!-- data-surface marks this page for the shared wizard code. js/app.js,
+     js/router.js and css/landing.css all key off it so the booking screens can
+     behave differently here (full-screen overlay) than in the mobile SPA
+     without a width media query - a desktop opening index.html directly must
+     still get the SPA layout untouched. -->
+<body data-surface="landing">
 
 <script>
 // Dates rendered by the classic inline scripts below must follow the chosen
@@ -170,7 +175,7 @@ function lpDateLocale() {
       <a href="#about">About</a>
     </div>
 
-    <div id="nav-lang-switcher" style="display:flex;align-items:center;gap:2px;margin-right:8px" role="group" aria-label="Language"></div>
+    <div id="nav-lang-switcher" class="nav-lang"></div>
 
     <button id="nav-auth-btn" class="nav-book" style="display:inline-flex;align-items:center;gap:8px;font-family:inherit;padding:8px 16px">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -3930,14 +3935,83 @@ function openLandingChat(bookingId) {
 <script type="module">
   import { getLang, setLang, translateScreen, dateLocale, sourceOf, LANGUAGES } from './js/i18n.js?v=20260727b';
 
+  // One control instead of three loose links: the header showed English,
+  // Español and 中文 all at once, which reads as navigation rather than as a
+  // setting. setLang() is untouched - this is only how the three options are
+  // presented. Options are buttons in a role="listbox", so Enter/Space work for
+  // free; the extra keyboard wiring below is Escape, the arrows and closing on
+  // an outside click.
+  var LANG_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+  var LANG_CARET = '<svg class="nav-lang-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+  var LANG_CHECK = '<svg class="nav-lang-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+
   function renderLangSwitcher() {
     var wrap = document.getElementById('nav-lang-switcher');
     if (!wrap) return;
-    wrap.innerHTML = LANGUAGES.map(function(l) {
-      return '<button type="button" class="nav-lang-btn' + (l.code === getLang() ? ' active' : '') + '" data-lang="' + l.code + '">' + l.label + '</button>';
-    }).join('<span style="color:#E5E7EB;font-size:11px">&middot;</span>');
-    wrap.querySelectorAll('.nav-lang-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() { setLang(btn.dataset.lang); });
+    var code = getLang();
+    var current = LANGUAGES.filter(function(l) { return l.code === code; })[0] || LANGUAGES[0];
+
+    wrap.innerHTML =
+      '<button type="button" class="nav-lang-toggle" id="nav-lang-toggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="nav-lang-menu" aria-label="Language">'
+      + LANG_ICON + '<span>' + current.label + '</span>' + LANG_CARET
+      + '</button>'
+      + '<div class="nav-lang-menu" id="nav-lang-menu" role="listbox" aria-label="Language" hidden>'
+      + LANGUAGES.map(function(l) {
+          return '<button type="button" class="nav-lang-option" role="option" data-lang="' + l.code + '"'
+            + ' aria-selected="' + (l.code === current.code) + '"><span>' + l.label + '</span>' + LANG_CHECK + '</button>';
+        }).join('')
+      + '</div>';
+
+    var toggle = wrap.querySelector('#nav-lang-toggle');
+    var menu = wrap.querySelector('#nav-lang-menu');
+    var options = Array.prototype.slice.call(menu.querySelectorAll('.nav-lang-option'));
+
+    // Bound on open and unbound on close: renderLangSwitcher() runs again on
+    // every language change, so a listener left on document would pile up.
+    function onOutside(e) {
+      if (!wrap.contains(e.target)) closeMenu(false);
+    }
+
+    function openMenu(index) {
+      menu.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      document.addEventListener('mousedown', onOutside);
+      var start = typeof index === 'number' ? index : Math.max(0, options.indexOf(wrap.querySelector('[aria-selected="true"]')));
+      options[start].focus();
+    }
+
+    function closeMenu(refocus) {
+      if (menu.hidden) return;
+      menu.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('mousedown', onOutside);
+      if (refocus) toggle.focus();
+    }
+
+    toggle.addEventListener('click', function() {
+      if (menu.hidden) openMenu();
+      else closeMenu(true);
+    });
+    toggle.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); openMenu(0); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); openMenu(options.length - 1); }
+    });
+
+    options.forEach(function(opt, i) {
+      opt.addEventListener('click', function() {
+        closeMenu(false);
+        // Re-renders this switcher (langchange), so focus would be lost on a
+        // detached node - put it back on the control the user was using.
+        setLang(opt.dataset.lang);
+        var next = document.getElementById('nav-lang-toggle');
+        if (next) next.focus();
+      });
+      opt.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { e.preventDefault(); closeMenu(true); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); options[(i + 1) % options.length].focus(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); options[(i - 1 + options.length) % options.length].focus(); }
+        else if (e.key === 'Tab') closeMenu(false);
+      });
     });
   }
 
@@ -3978,11 +4052,11 @@ function openLandingChat(bookingId) {
     dateLocale: dateLocale, sourceOf: sourceOf,
   });
 </script>
-<script src="js/router.js?v=20260704" type="module"></script>
+<script src="js/router.js?v=20260727c" type="module"></script>
 <script src="js/supabase.js?v=20260704" type="module"></script>
-<script src="js/components.js?v=20260704c" type="module"></script>
+<script src="js/components.js?v=20260727c" type="module"></script>
 <script src="js/stripe.js?v=20260704" type="module"></script>
-<script src="js/app.js?v=20260727b" type="module"></script>
+<script src="js/app.js?v=20260727c" type="module"></script>
 <script src="js/live-prices.js" defer></script>
 <script src="js/cta-tracking.js" defer></script>
 <script src="js/utm-capture.js"></script>
