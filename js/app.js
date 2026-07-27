@@ -1045,6 +1045,14 @@ function getServiceInclusions(name) {
   return null;
 }
 
+// The two pay buttons carry the amount, so their finished text can never match
+// a dictionary key - they shipped in English in Spanish and Chinese until this
+// was noticed on 2026-07-28. Same fix the "How payment works" note already
+// used: keep CALLOUT as a placeholder in the key, substitute after the lookup.
+function payButtonLabel(key, amount) {
+  return translateValue(key).replace('CALLOUT', amount.toFixed(2));
+}
+
 async function renderServiceSummary() {
   const screen = document.querySelector('[data-screen="service-summary"]');
   if (!screen) return;
@@ -1163,7 +1171,7 @@ async function renderServiceSummary() {
     </div>
     <div id="booking-error" class="booking-error" hidden></div>
     <div class="sticky-bottom">
-      <button class="btn btn--primary btn--full" id="proceed-btn">Confirm & Pay $${calloutFee.toFixed(2)} Call-out Fee</button>
+      <button class="btn btn--primary btn--full" id="proceed-btn">${payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee)}</button>
     </div>
     ${createBottomNav('home')}
   `;
@@ -1263,7 +1271,7 @@ async function renderServiceSummary() {
       errEl.textContent = e.message || 'Please try again.';
       errEl.hidden = false;
       btn.disabled = false;
-      btn.textContent = `Confirm & Pay $${calloutFee.toFixed(2)} Call-out Fee`;
+      btn.textContent = payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
     }
   });
 }
@@ -1465,7 +1473,7 @@ async function renderPayment() {
         </svg>
         <span>Secure payment powered by Stripe. Encrypted and safe.</span>
       </div>
-      <button class="btn btn--primary btn--full" id="pay-btn">Pay $${calloutFee.toFixed(2)} Call-out Fee</button>`
+      <button class="btn btn--primary btn--full" id="pay-btn">${payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee)}</button>`
       }
 
       <div style="text-align:center;margin-top:16px;font-size:13px;color:#9CA3AF">
@@ -1654,7 +1662,7 @@ async function renderPayment() {
           : e.message || 'Payment failed. Please check your card details and try again.';
         errEl.hidden = false;
         btn.disabled = false;
-        btn.textContent = `Pay $${calloutFee.toFixed(2)} Call-out Fee`;
+        btn.textContent = payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee);
       }
     });
   } else {

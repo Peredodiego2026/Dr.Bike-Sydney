@@ -1186,6 +1186,13 @@ const dict = {
     'The $CALLOUT call-out fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.':
       'La tarifa de visita de $CALLOUT se cobra ahora con Stripe. El servicio ($SERVICE) se le paga al mecánico con tarjeta (EFTPOS) cuando llega.',
 
+    // The two pay buttons, same placeholder trick. They shipped in English in
+    // every language until 2026-07-28 because the amount was baked into the
+    // string: "Pay $20.00 Call-out Fee" matches no key, and it is the button
+    // the client presses to pay.
+    'Confirm & Pay $CALLOUT Call-out Fee': 'Confirmar y pagar la tarifa de visita de $CALLOUT',
+    'Pay $CALLOUT Call-out Fee': 'Pagar la tarifa de visita de $CALLOUT',
+
     // ── track.html (public tracking link) — was English-only until 2026-07-26
     'Loading your booking...': 'Cargando tu reserva...',
     'This link is no longer valid.': 'Este enlace ya no es válido.',
@@ -2315,6 +2322,9 @@ const dict = {
 
     'The $CALLOUT call-out fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.':
       '$CALLOUT 的上门费现在通过 Stripe 收取。服务费（$SERVICE）在技师到达时用银行卡（EFTPOS）直接支付给技师。',
+
+    'Confirm & Pay $CALLOUT Call-out Fee': '确认并支付 $CALLOUT 上门费',
+    'Pay $CALLOUT Call-out Fee': '支付 $CALLOUT 上门费',
 
     // ── track.html (public tracking link) ───────────────────────────────────
     'Loading your booking...': '正在加载您的预订...',
