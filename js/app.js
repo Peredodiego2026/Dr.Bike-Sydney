@@ -90,6 +90,10 @@ window.appState = {
   bikeId: null,
   trackingToken: null,
   preferredMechanicId: null,
+  // Service to auto-select when the wizard opens, as an id OR a name - the
+  // landing page CTAs only know the name printed on the card they sit in.
+  // Consumed and cleared by renderBookService()'s step 1.
+  preselect: null,
 };
 
 const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
@@ -677,6 +681,22 @@ async function renderBookService() {
         });
       } catch {}
     })();
+
+    // Preselection, e.g. from a landing page service card. Only once the real
+    // services are in - the first renderStep1() paints skeletons and has no
+    // cards to match against. Resolves an id or a name, same as the old bk-
+    // modal did, because the callers only have the name on screen.
+    if (_services && window.appState.preselect) {
+      const want = String(window.appState.preselect);
+      window.appState.preselect = null; // one shot: don't re-fire on Back
+      const svc = _services.find((s) => String(s.id) === want || s.name === want);
+      const card = svc && screen.querySelector(`[data-service-id="${svc.id}"]`);
+      // A real click rather than setting the state by hand, so preselection
+      // inherits everything a click already does: the Emergency Service
+      // interception, the add_to_cart event and the jump to step 2. A name
+      // that matches nothing just leaves the list open on step 1.
+      if (card) card.click();
+    }
   }
 
   // ── Step 2: Date & Time ───────────────────────────────────────────────────
