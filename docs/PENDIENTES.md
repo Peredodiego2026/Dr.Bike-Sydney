@@ -276,9 +276,10 @@ Diego probo el flujo completo en produccion despues del PR #121 (reserva de
 prueba con el bypass de admin: **funciono, las notificaciones llegaron**). Lo
 que sigue es todo visual, ninguno rompe el pago.
 
-**Estado 2026-07-27: 8.1 a 8.7 CERRADOS** en la rama
-`fix/desktop-wizard-visual-bugs`. Falta 8.8 (auditar las otras 3 superficies).
+**Estado 2026-07-27: 8.1 a 8.7 CERRADOS**, mergeados en la PR #123 y
+verificados en produccion. Falta 8.8 (auditar las otras 3 superficies).
 El detalle de que se hizo y como se verifico esta al final de esta seccion.
+Los cinco hallazgos que salieron de esa sesion estan en la seccion 9.
 
 ### 8.1 CAUSA RAIZ de 8.2 a 8.5 — el wizard es full-screen, la landing no
 
@@ -353,3 +354,95 @@ se apreto Pagar, no se creo ninguna reserva). La SPA movil a 375px se comparo
 pixel a pixel contra la version anterior en los 9 pasos del wizard: **0
 diferencias**. Los slots de horario se stubearon en local porque el server
 estatico no sirve `/api`.
+
+---
+
+## 9. Los cinco hallazgos de la sesion del 27-jul (rama `fix/spa-reliability-batch`)
+
+Salieron de dos cosas: la auditoria del wizard, y de perseguir un reporte de
+Diego ("la SPA no responde, se pone negra") que al final era su conexion. Todos
+estan **verificados en el codigo**, no son sospechas. Orden por valor/riesgo.
+
+Diego eligio el 28-jul hacer los cinco. Van en **una sola rama con un commit por
+item**, no cinco ramas: cada merge a main deploya a produccion, y cinco deploys
+seguidos son cinco rondas de verificacion para el mismo lote de arreglos
+chicos. El unico riesgoso (9.4, ruteo) va al final para poder revertir ese
+commit solo.
+
+### 9.1 Pantallas en blanco cuando la conexion esta lenta
+
+`renderProfile()` y `renderMyBikes()` (`js/app.js`) hacen
+`await sb.auth.getUser()` - una llamada de RED - **antes de escribir una sola
+linea de HTML**. Con internet lento la pantalla queda vacia hasta que el
+servidor contesta: sin spinner, sin nada. `renderMyBookings()` ya hace lo
+correcto (pinta un esqueleto y despues carga); es copiar ese patron.
+
+Esto es lo que Diego vio el 27-jul y atribuyo a su internet. Tenia razon sobre
+la causa, pero la app no deberia verse rota por una conexion lenta.
+
+**Como se arreglo:** un componente compartido `createBrandLoader()` en
+`js/components.js` - el logo DB con un halo azul suave que late, y
+"Healthy bikes, happy riders" debajo (pedido de Diego, 28-jul). Se pinta antes
+del `await`, con el mismo header y bottom nav que la pantalla final, asi que no
+hay salto cuando llega el contenido. Respeta `prefers-reduced-motion`.
+
+### 9.2 Dos archivos JS congelados en los celulares
+
+`index.html` carga `js/live-prices.js` y `js/cta-tracking.js` **sin `?v=`**. El
+service worker los guarda cache-first, asi que en cualquier telefono que ya
+visito el sitio quedan clavados en la version cacheada **para siempre**, hasta
+que cambie el nombre del cache en `sw.js`.
+
+Ya paso: el PR #121 modifico `live-prices.js` sin bumpear `sw.js`. Durante
+semanas los celulares con la app instalada corrieron el archivo viejo. El merge
+del PR #123 lo destrabo de casualidad (bumpeo `sw.js` por otro motivo), no
+porque el sistema lo garantice.
+
+Ademas `sw.js` precachea `/js/app.js` y compania **sin query**, y las paginas
+siempre los piden con `?v=...`: esas entradas del precache no se usan nunca.
+
+### 9.3 El boton de pago sigue en ingles en español y chino
+
+"Pay $20.00 Call-out Fee" y "Confirm & Pay $20.00 Call-out Fee" no se traducen
+nunca, porque el precio se interpola dentro del string y deja de coincidir con
+la clave del diccionario. Verificado en las 3 corridas contra produccion del
+27-jul. Es el boton que aprieta el cliente para pagar.
+
+El propio `js/app.js` ya tiene el patron para resolverlo: la nota de "How
+payment works" usa `$CALLOUT` como marcador y lo reemplaza DESPUES de traducir.
+
+### 9.4 Dos clientes de Supabase peleando por la misma sesion
+
+`index.html` carga `js/supabase.js?v=...` como script, y mas abajo un modulo
+inline hace `import { sb } from './js/supabase.js'` **sin el `?v=`**. Para el
+navegador son dos URLs distintas: instancia el modulo dos veces y quedan **dos
+GoTrueClient sobre la misma clave de sesion**. Produccion lo avisa en cada
+carga ("Multiple GoTrueClient instances detected...").
+
+Hoy no rompe nada visible, pero es la receta para que a un usuario logueado se
+le invalide el token cuando los dos intentan refrescarlo a la vez. Se arregla
+igualando la URL del import. **Probar logueado.**
+
+### 9.5 iPad y celulares en "modo escritorio" reciben la pagina de PC
+
+`middleware.js` rutea con `/Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/`.
+**iPad no esta en la lista**, y un iPhone con "Solicitar sitio web para
+computadora" manda user-agent de Mac. Los dos reciben `landing.html`.
+Comprobado contra produccion el 27-jul.
+
+Desde el overlay (8.1) ya no se rompe nada, pero les servis la pagina de
+marketing de PC en una pantalla de 6 pulgadas.
+
+**Ojo, decision de producto:** el iPad se suma a la lista y listo. Un iPhone en
+modo escritorio es **indistinguible de una Mac desde el servidor** - eso solo
+se puede resolver del lado del navegador (si el viewport es angosto, mandarlo a
+la SPA). Es un cambio de comportamiento, no solo un fix; va al final del lote
+justamente por eso.
+
+### 9.6 Lo que NO esta en este lote
+
+- 8.8: auditar `mechanic.html`, `admin.html` y la SPA movil. Sigue abierto.
+- El tenido rojo de Emergency y el padding del cuadro Date/Time/Location
+  quedaron **solo en desktop** por el alcance que pidio Diego. En movil la
+  tarjeta de Emergency sigue igual que las demas y las filas del presupuesto
+  siguen tocando el borde de la tarjeta. Decision pendiente de Diego.
