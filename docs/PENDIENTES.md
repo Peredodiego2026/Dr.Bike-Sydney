@@ -267,3 +267,55 @@ Ver `docs/ROADMAP.md` para el detalle y las puertas de cada fase.
   `scripts/harden-bookings-rls.sql`. `CONTEXT.md` dice que Diego los corrio el
   29-jun y que no queda nada pendiente. **Uno de los dos miente**: verificar
   contra Supabase y corregir el que este mal.
+
+---
+
+## 8. Bugs visuales del wizard en desktop (reportados 2026-07-27)
+
+Diego probo el flujo completo en produccion despues del PR #121 (reserva de
+prueba con el bypass de admin: **funciono, las notificaciones llegaron**). Lo
+que sigue es todo visual, ninguno rompe el pago.
+
+### 8.1 CAUSA RAIZ de 8.2 a 8.5 — el wizard es full-screen, la landing no
+
+Las pantallas del wizard (`js/app.js`, `data-screen`) se disenaron como app
+movil: barra de accion **fija** abajo, cada pantalla ocupa el viewport entero.
+En `landing.html` esas mismas pantallas viven **incrustadas dentro de la pagina
+de marketing de ~9000px**. Nada las aisla del resto del documento.
+
+**Arreglar esto de raiz resuelve 8.2, 8.3, 8.4 y 8.5 de una sola vez.** La
+direccion propuesta (no implementada): que al entrar a `#book-service` en
+landing.html el wizard se monte como overlay a pantalla completa
+(`position:fixed; inset:0; overflow-y:auto; z-index` por encima del contenido)
+en vez de renderizarse en linea. Sin eso, cada bug se parchea por separado y
+vuelven.
+
+**Verificacion obligatoria:** navegador real, 1280px y 375px, en los 3 idiomas.
+Nada de esto se puede dar por bueno leyendo el codigo.
+
+| # | Sintoma |
+|---|---|
+| 8.2 | La barra azul de accion (`Continue`, `Confirm & Pay`) flota **encima** de las tarjetas de servicio y del resumen, tapandolos. Solo se lee bien al llegar al final de la pagina |
+| 8.3 | Al abrir un servicio, arriba asoma un bloque azul cortado: es la seccion de newsletter de la landing (con el "Success!" de Cloudflare Turnstile) que quedo por encima de la pantalla del wizard |
+| 8.4 | Al elegir una hora la pagina no acompana el scroll: se queda donde esta y solo se habilita el boton |
+| 8.5 | En `#service-summary`, el cuadro Date / Time / Location tiene el texto mal distribuido y la direccion se desborda hasta el borde |
+
+### 8.6 Selector de idioma: 3 opciones sueltas -> 1 control
+
+Hoy el header de `landing.html` muestra `English · Espanol · 中文` los tres a la
+vista. Diego lo quiere como **un solo boton o icono** que al hacer click
+despliega las opciones. Es puramente visual: el mecanismo de `setLang()` no se
+toca. Ojo con el foco y el teclado al convertirlo en dropdown.
+
+### 8.7 Emergency Service tiene que distinguirse
+
+La tarjeta de Emergency Service se ve igual que las demas. Diego la quiere
+**tenida de rojo con opacidad** para que se lea distinto: no es un servicio
+reservable, abre el modal de contacto. Usar el token de `danger` (#DC2626) con
+fondo al 8%, mismo patron que los badges del skill `drbike-design`.
+
+### 8.8 Falta revisar SPA movil, mechanic.html y admin.html
+
+Diego reviso solo `landing.html`. Las otras tres superficies no se miraron
+todavia. Esto conecta con el punto 3.1: **no existe lista de hallazgos de
+diseno**, y esta seccion 8 es el primer pedazo real de esa auditoria pendiente.
