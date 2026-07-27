@@ -631,13 +631,13 @@
 </div><!-- #app -->
 
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/router.js?v=20260727c"     type="module"></script>
-<!-- js/supabase.js is NOT loaded here on purpose. A module is one instance per
-     URL, and this tag's URL (with the ?v=) is a different URL from the
-     './supabase.js' that js/app.js imports - so the file ran twice and built
-     two Supabase clients over one auth token, which the console warned about
-     on every load. Everything that needs it imports it. -->
-<script src="js/components.js?v=20260728a" type="module"></script>
+<!-- js/app.js is the only entry point, and it is deliberate. A module is one
+     instance per URL: a tag asking for `router.js?v=...` is a different URL
+     from the './router.js' app.js imports, so listing them here ran every one
+     of them twice. With supabase.js that built two auth clients over one token
+     (removed 2026-07-28); router.js and components.js got away with it only
+     because they hold no state of their own. app.js pulls in the whole graph -
+     router, supabase, components, i18n, rider-tier, stripe. -->
 <script src="js/app.js?v=20260728a"        type="module"></script>
 <script type="module">
 /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
