@@ -232,6 +232,18 @@ function stringsFromInlineScripts(file) {
       if (isCandidate(t) && !looksLikeCode(t)) found.add(t);
     }
   }
+  // The three patterns above only cover text assigned to a property or handed
+  // to showToast. Most of landing.html's interface is built the other way: HTML
+  // markup concatenated into innerHTML, exactly like js/app.js does it - and
+  // that was not read at all. It is how the account panel shipped "Upcoming"
+  // and "Pending" in English on a Spanish page with this check green
+  // (2026-07-28). Same extraction stringsFromJs uses, since it is the same
+  // shape of source.
+  const unescape = (s) => s.replace(/\\'/g, "'").replace(/\\"/g, '"');
+  for (const m of src.matchAll(/>([^<>`]{3,200})</g)) {
+    const t = clean(unescape(m[1]));
+    if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
+  }
   return found;
 }
 

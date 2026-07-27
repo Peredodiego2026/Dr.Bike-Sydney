@@ -148,6 +148,10 @@ const dict = {
     'In Progress': 'En curso',
     Completed: 'Completado',
     Cancelled: 'Cancelado',
+    // landing.html's own booking confirmation and its failure message
+    'Booking Confirmed!': '¡Reserva confirmada!',
+    'Something went wrong. Please call us at 0433 963 250.':
+      'Algo salió mal. Llamanos al 0433 963 250.',
     Arrived: 'Llegó',
     Done: 'Listo',
     Message: 'Mensaje',
@@ -1355,6 +1359,8 @@ const dict = {
     'In Progress': '进行中',
     Completed: '已完成',
     Cancelled: '已取消',
+    'Booking Confirmed!': '预订已确认！',
+    'Something went wrong. Please call us at 0433 963 250.': '出了点问题。请致电 0433 963 250。',
     Arrived: '已到达',
     Done: '完成',
     Message: '消息',

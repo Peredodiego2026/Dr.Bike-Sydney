@@ -2234,7 +2234,7 @@ function openAccountPanel(session) {
             html += '</div>';
           }
           if (['confirmed','enroute','in_progress'].includes(b.status)) {
-            html += '<button class="acct-chat-btn" data-id="' + esc(b.id) + '" style="width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;background:#2563eb;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">&#128172; Message mechanic</button>';
+            html += '<button class="acct-chat-btn" data-id="' + esc(b.id) + '" style="width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;background:#2563eb;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">&#128172; <span>Message mechanic</span></button>';
           }
           html += '</div>';
         });
@@ -2845,8 +2845,8 @@ async function bkLoadAndRenderSlots() {
       '<div style="text-align:center;margin-bottom:12px">' +
       '<div style="font-size:20px;margin-bottom:4px">&#128536;</div>' +
       '<div style="font-weight:700;color:#374151;font-size:13px;margin-bottom:2px">Fully booked on this date</div>' +
-      '<div style="font-size:13px;color:#6B7280">Choose another day or join the waitlist</div></div>' +
-      '<button id="bk-waitlist-btn" style="width:100%;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Join Waitlist</button>' +
+      '<div style="font-size:13px;color:#6B7280">Please choose another day or join the waitlist</div></div>' +
+      '<button id="bk-waitlist-btn" style="width:100%;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
       '<div id="bk-waitlist-form" style="display:none;margin-top:12px;background:#F8FAFF;border:1px solid #DBEAFE;border-radius:10px;padding:14px">' +
       '<div style="font-weight:700;color:#0D1F3C;font-size:13px;margin-bottom:8px">Which times work for you?</div>' +
       '<div id="bk-waitlist-times" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">' + wlTimesHtml + '</div>' +
@@ -2889,7 +2889,7 @@ async function bkLoadAndRenderSlots() {
           '<div style="text-align:center;padding:6px 0">' +
           '<div style="font-size:18px;margin-bottom:6px">&#9989;</div>' +
           '<div style="font-weight:700;color:#059669;font-size:13px">You\'re on the waitlist!</div>' +
-          '<div style="font-size:13px;color:#6B7280;margin-top:3px">We\'ll email <span>' + esc(u.email) + '</span> if a slot opens on <span>' + esc(wlDate) + '</span>.</div>' +
+          '<div style="font-size:13px;color:#6B7280;margin-top:3px">We\'ll email <span>' + esc(u.email) + '</span> if a slot opens up on <span>' + esc(wlDate) + '</span>.</div>' +
           '</div>';
       } catch(e) {
         msg.textContent = e.message; msg.style.display = 'block';
@@ -3978,7 +3978,7 @@ function openLandingChat(bookingId) {
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 <!-- App JS Modules -->
 <script type="module">
-  import { getLang, setLang, translateScreen, dateLocale, sourceOf, LANGUAGES } from './js/i18n.js?v=20260728b';
+  import { getLang, setLang, translateScreen, dateLocale, sourceOf, LANGUAGES } from './js/i18n.js?v=20260728c';
 
   // One control instead of three loose links: the header showed English,
   // Español and 中文 all at once, which reads as navigation rather than as a
