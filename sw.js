@@ -1,17 +1,19 @@
-const CACHE_STATIC = 'drbike-static-v43';
-const CACHE_PAGES  = 'drbike-pages-v43';
+const CACHE_STATIC = 'drbike-static-v44';
+const CACHE_PAGES  = 'drbike-pages-v44';
 
+// Only URLs the pages actually request. The CSS and JS used to be listed here
+// too, without their query, and every one of those entries was dead weight:
+// caches.match() keys on the full URL, the pages always ask for
+// `app.js?v=...`, so a cached `/js/app.js` could never match. They were
+// downloaded on every install and never served once.
+//
+// Which is also the rule for anything added below the fetch handler: every
+// local .js and .css is served CACHE FIRST, so a file requested without a
+// `?v=` is frozen on returning devices until CACHE_STATIC changes name. Give
+// new scripts a `?v=` in the page - do not rely on this list.
 const STATIC_ASSETS = [
   '/index.html',
   '/mechanic.html',
-  '/css/variables.css',
-  '/css/main.css',
-  '/css/mechanic.css',
-  '/js/router.js',
-  '/js/supabase.js',
-  '/js/components.js',
-  '/js/app.js',
-  '/js/stripe.js',
   '/icon-192.png',
   '/icon-512.png',
   '/icon-512.svg',

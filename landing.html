@@ -55,7 +55,7 @@
 
   <!-- Booking wizard styles (from index.html CSS) -->
   <link rel="stylesheet" href="css/variables.css?v=20260622">
-  <link rel="stylesheet" href="css/main.css?v=20260622">
+  <link rel="stylesheet" href="css/main.css?v=20260728a">
   <link rel="stylesheet" href="css/home.css?v=20260622">
 
   <script type="application/ld+json">
@@ -3933,7 +3933,7 @@ function openLandingChat(bookingId) {
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 <!-- App JS Modules -->
 <script type="module">
-  import { getLang, setLang, translateScreen, dateLocale, sourceOf, LANGUAGES } from './js/i18n.js?v=20260727b';
+  import { getLang, setLang, translateScreen, dateLocale, sourceOf, LANGUAGES } from './js/i18n.js?v=20260728a';
 
   // One control instead of three loose links: the header showed English,
   // Español and 中文 all at once, which reads as navigation rather than as a
@@ -4053,13 +4053,15 @@ function openLandingChat(bookingId) {
   });
 </script>
 <script src="js/router.js?v=20260727c" type="module"></script>
-<script src="js/supabase.js?v=20260704" type="module"></script>
-<script src="js/components.js?v=20260727c" type="module"></script>
+<!-- js/supabase.js deliberately not loaded here - see the note in index.html:
+     this tag's URL differs from the './supabase.js' js/app.js imports, so it
+     built a second Supabase client over the same auth token. -->
+<script src="js/components.js?v=20260728a" type="module"></script>
 <script src="js/stripe.js?v=20260704" type="module"></script>
-<script src="js/app.js?v=20260727c" type="module"></script>
-<script src="js/live-prices.js" defer></script>
-<script src="js/cta-tracking.js" defer></script>
-<script src="js/utm-capture.js"></script>
+<script src="js/app.js?v=20260728a" type="module"></script>
+<script src="js/live-prices.js?v=20260728a" defer></script>
+<script src="js/cta-tracking.js?v=20260728a" defer></script>
+<script src="js/utm-capture.js?v=20260728a"></script>
 
 </body>
 </html>

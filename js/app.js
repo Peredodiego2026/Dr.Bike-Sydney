@@ -58,6 +58,7 @@ import {
   createSummaryRow,
   createBookingCard,
   createEmptyState,
+  createBrandLoader,
   showToast,
   createTierBadge,
 } from './components.js';
@@ -1044,6 +1045,14 @@ function getServiceInclusions(name) {
   return null;
 }
 
+// The two pay buttons carry the amount, so their finished text can never match
+// a dictionary key - they shipped in English in Spanish and Chinese until this
+// was noticed on 2026-07-28. Same fix the "How payment works" note already
+// used: keep CALLOUT as a placeholder in the key, substitute after the lookup.
+function payButtonLabel(key, amount) {
+  return translateValue(key).replace('CALLOUT', amount.toFixed(2));
+}
+
 async function renderServiceSummary() {
   const screen = document.querySelector('[data-screen="service-summary"]');
   if (!screen) return;
@@ -1055,6 +1064,14 @@ async function renderServiceSummary() {
   }
   if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'quote_summary' });
+
+  // getCalloutFee() below hits Supabase, so this screen has the same blank-box
+  // problem as Profile - and this one sits in the middle of the paid flow.
+  screen.innerHTML = `
+    ${createHeader('Your Quote', true, '#book-service')}
+    ${createBrandLoader()}
+    ${createBottomNav('home')}
+  `;
 
   const surcharged = isSurchargeDay(date);
   const serviceTotal = applySurcharge(Number(service.price || 0), date);
@@ -1154,7 +1171,7 @@ async function renderServiceSummary() {
     </div>
     <div id="booking-error" class="booking-error" hidden></div>
     <div class="sticky-bottom">
-      <button class="btn btn--primary btn--full" id="proceed-btn">Confirm & Pay $${calloutFee.toFixed(2)} Call-out Fee</button>
+      <button class="btn btn--primary btn--full" id="proceed-btn">${payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee)}</button>
     </div>
     ${createBottomNav('home')}
   `;
@@ -1254,7 +1271,7 @@ async function renderServiceSummary() {
       errEl.textContent = e.message || 'Please try again.';
       errEl.hidden = false;
       btn.disabled = false;
-      btn.textContent = `Confirm & Pay $${calloutFee.toFixed(2)} Call-out Fee`;
+      btn.textContent = payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
     }
   });
 }
@@ -1363,6 +1380,15 @@ async function renderPayment() {
   window.appState.preferredMechanicId = null;
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'payment' });
 
+  // Four network calls run before this screen can paint (session, server
+  // price, callout zones, mechanic list). It is the last thing a client sees
+  // before paying, so it must never be an empty box.
+  screen.innerHTML = `
+    ${createHeader('Confirm Booking', true, '#service-summary')}
+    ${createBrandLoader()}
+    ${createBottomNav('home')}
+  `;
+
   const {
     data: { session: paySession },
   } = await sb.auth.getSession();
@@ -1447,7 +1473,7 @@ async function renderPayment() {
         </svg>
         <span>Secure payment powered by Stripe. Encrypted and safe.</span>
       </div>
-      <button class="btn btn--primary btn--full" id="pay-btn">Pay $${calloutFee.toFixed(2)} Call-out Fee</button>`
+      <button class="btn btn--primary btn--full" id="pay-btn">${payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee)}</button>`
       }
 
       <div style="text-align:center;margin-top:16px;font-size:13px;color:#9CA3AF">
@@ -1636,7 +1662,7 @@ async function renderPayment() {
           : e.message || 'Payment failed. Please check your card details and try again.';
         errEl.hidden = false;
         btn.disabled = false;
-        btn.textContent = `Pay $${calloutFee.toFixed(2)} Call-out Fee`;
+        btn.textContent = payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee);
       }
     });
   } else {
@@ -3497,6 +3523,16 @@ async function renderProfile() {
   const screen = document.querySelector('[data-screen="profile"]');
   if (!screen) return;
 
+  // Painted before the first await, with the same header and nav the finished
+  // screen uses: sb.auth.getUser() is a network round trip, and until it came
+  // back this screen was an empty box. On a slow connection that is
+  // indistinguishable from the app being broken.
+  screen.innerHTML = `
+    ${createHeader('Profile', false)}
+    ${createBrandLoader()}
+    ${createBottomNav('profile')}
+  `;
+
   let user = null;
   try {
     const { data } = await sb.auth.getUser();
@@ -3896,6 +3932,14 @@ async function renderProfile() {
 async function renderMyBikes() {
   const screen = document.querySelector('[data-screen="my-bikes"]');
   if (!screen) return;
+
+  // Same reason as renderProfile: two network calls run before the first line
+  // of this screen's HTML exists.
+  screen.innerHTML = `
+    ${createHeader('My Bikes', false)}
+    ${createBrandLoader()}
+    ${createBottomNav('my-bikes')}
+  `;
 
   let user = null;
   try {
