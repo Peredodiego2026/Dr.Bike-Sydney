@@ -6,7 +6,7 @@ Regla de lectura: cada fase tiene una PUERTA (gate). No se pasa a la siguiente s
 ## Julio 2026 — Terminar la base (en curso)
 - [x] Fase 0 completa: 12 tareas del rediseño (Home + Cuentas + Medallas), mergeado a main (PR #5, 13 Jul)
 - [x] Stripe LIVE test end-to-end: Diego confirmó cobro real con Apple Pay funcionando perfecto (13 Jul)
-- [ ] Prueba manual del GPS del mecánico (pin en vivo) - único pendiente de esta puerta
+- [x] Prueba manual del GPS del mecánico (pin en vivo) — Diego lo probó en producción el 2026-07-27 y funciona
 - [x] Merge del PR #5 (dispara deploy, SW v25/v26)
 - [x] Branch protection + blindaje de seguridad + smoke tests verdes (hecho 11 Jul)
 - [x] Post-Fase 0: fixes de idioma (secciones de marketing sin traducir), próximo servicio a 3 meses fijo, ícono del nav (PR #25, 13 Jul)
