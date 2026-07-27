@@ -632,7 +632,11 @@
 
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 <script src="js/router.js?v=20260727c"     type="module"></script>
-<script src="js/supabase.js?v=20260629a"   type="module"></script>
+<!-- js/supabase.js is NOT loaded here on purpose. A module is one instance per
+     URL, and this tag's URL (with the ?v=) is a different URL from the
+     './supabase.js' that js/app.js imports - so the file ran twice and built
+     two Supabase clients over one auth token, which the console warned about
+     on every load. Everything that needs it imports it. -->
 <script src="js/components.js?v=20260728a" type="module"></script>
 <script src="js/app.js?v=20260728a"        type="module"></script>
 <script type="module">

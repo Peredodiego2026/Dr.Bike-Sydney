@@ -4053,7 +4053,9 @@ function openLandingChat(bookingId) {
   });
 </script>
 <script src="js/router.js?v=20260727c" type="module"></script>
-<script src="js/supabase.js?v=20260704" type="module"></script>
+<!-- js/supabase.js deliberately not loaded here - see the note in index.html:
+     this tag's URL differs from the './supabase.js' js/app.js imports, so it
+     built a second Supabase client over the same auth token. -->
 <script src="js/components.js?v=20260728a" type="module"></script>
 <script src="js/stripe.js?v=20260704" type="module"></script>
 <script src="js/app.js?v=20260728a" type="module"></script>
