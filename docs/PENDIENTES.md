@@ -366,8 +366,11 @@ estan **verificados en el codigo**, no son sospechas. Orden por valor/riesgo.
 Diego eligio el 28-jul hacer los cinco. Van en **una sola rama con un commit por
 item**, no cinco ramas: cada merge a main deploya a produccion, y cinco deploys
 seguidos son cinco rondas de verificacion para el mismo lote de arreglos
-chicos. El unico riesgoso (9.4, ruteo) va al final para poder revertir ese
+chicos. El unico riesgoso (9.5, ruteo) va al final para poder revertir ese
 commit solo.
+
+**Estado 28-jul: los cinco HECHOS** en `fix/spa-reliability-batch`, con lo que
+quedo afuera anotado en 9.7.
 
 ### 9.1 Pantallas en blanco cuando la conexion esta lenta
 
@@ -439,6 +442,32 @@ se puede resolver del lado del navegador (si el viewport es angosto, mandarlo a
 la SPA). Es un cambio de comportamiento, no solo un fix; va al final del lote
 justamente por eso.
 
+### 9.5-bis Lo que se hizo del ruteo, y lo que quedo por decidir
+
+**Hecho:** la lista de `middleware.js` ahora es identica a la que ya tenia
+`index.html` en su propio guard (`Android|webOS|iPhone|iPad|iPod|BlackBerry|
+IEMobile|Opera Mini`). Eran dos listas decidiendo lo mismo y no coincidian:
+faltaban `iPad` y `webOS`, asi que una tablet Android recibia la app y un iPad
+la pagina de PC. Hay un chequeo en el scratchpad que compara las dos y prueba
+8 user-agents; si alguien edita una sola, deja de coincidir.
+
+**Sin resolver, y es decision tuya:** un iPhone con "Solicitar sitio web para
+computadora" **y cualquier iPad con iPadOS 13 o superior en su modo por
+defecto** mandan user-agent de Macintosh. Desde el servidor son
+indistinguibles de una Mac de verdad: no hay arreglo posible en
+`middleware.js`. Solo el navegador puede saberlo (ancho de viewport + puntero
+grueso).
+
+El riesgo de hacerlo del lado del navegador: `index.html` YA redirige a
+`/landing.html` cuando el user-agent no es movil. Si `landing.html` redirige a
+`/index.html` cuando el viewport es angosto, una ventana de escritorio angosta
+entra en **loop infinito** entre las dos paginas. Si se hace, tiene que ser con
+`pointer: coarse` ademas del ancho, y con una marca que corte el rebote. No lo
+implemente por eso.
+
+Mientras tanto el daño esta acotado: desde el overlay (8.1) esas tablets ven la
+pagina de marketing pero el wizard funciona bien.
+
 ### 9.6 Lo que NO esta en este lote
 
 - 8.8: auditar `mechanic.html`, `admin.html` y la SPA movil. Sigue abierto.
@@ -446,3 +475,28 @@ justamente por eso.
   quedaron **solo en desktop** por el alcance que pidio Diego. En movil la
   tarjeta de Emergency sigue igual que las demas y las filas del presupuesto
   siguen tocando el borde de la tarjeta. Decision pendiente de Diego.
+
+### 9.7 Lo que quedo abierto despues del lote (28-jul)
+
+**Los imports internos siguen sin `?v=`.** El 9.2 versiono los scripts que las
+paginas cargan con `<script src>`, pero los que un modulo importa a otro
+(`js/app.js` importa `./supabase.js`, `./router.js`, `./i18n.js`,
+`./rider-tier.js`, `./stripe.js`) se piden **sin query**, y `sw.js` los sirve
+cache-first igual. O sea: esos archivos solo se renuevan cuando cambia el
+nombre del cache en `sw.js`. Hoy la regla del proyecto ya obliga a bumpear
+`sw.js` cuando se toca `i18n.js`, asi que funciona - pero depende de que
+alguien se acuerde.
+
+El arreglo de fondo no es ponerle `?v=` a cada import (se desincronizan solos):
+es que `sw.js` deje de ser cache-first para el JS/CSS propio y pase a
+**stale-while-revalidate** (sirve el cacheado al toque y actualiza en segundo
+plano). Cambia la estrategia de cache de toda la PWA, asi que va en su propia
+rama y con su propia verificacion, incluido el modo offline - que hoy, dicho
+sea de paso, **no funciona** para el JS: la pagina pide `app.js?v=...`, el
+cache solo tenia `/js/app.js`, y sin red eso devuelve 408.
+
+**Duplicacion de modulos, el resto.** El 9.4 saco la doble instancia de
+`supabase.js`, que era la unica con estado peligroso (el cliente de auth).
+`router.js` y `components.js` siguen cargandose dos veces por la misma razon
+(tag con `?v=` + import sin query). No rompen nada porque no tienen estado
+propio, pero es la misma trampa esperando a que alguien le agregue estado.
