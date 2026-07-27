@@ -217,6 +217,23 @@ export function createBookingCard(booking) {
 </div>`;
 }
 
+// ── Brand Loader ──────────────────────────────────────────────────────────────
+// For screens that cannot paint anything until a network call answers. Those
+// used to render an empty box, which on a slow connection is indistinguishable
+// from a broken app - a client reported exactly that on 2026-07-27. Uses the
+// DB mark (a real alpha channel, so the glow follows the letters rather than a
+// rectangle) over a soft pulsing halo, with the tagline underneath. The
+// animation lives in css/main.css and stops under prefers-reduced-motion.
+export function createBrandLoader() {
+  return `
+<div class="brand-loader" role="status" aria-live="polite">
+  <div class="brand-loader__mark">
+    <img src="images/logo-db.png" alt="" width="88" height="62" fetchpriority="high">
+  </div>
+  <div class="brand-loader__tag">Healthy bikes, happy riders</div>
+</div>`;
+}
+
 // ── Empty State ───────────────────────────────────────────────────────────────
 export function createEmptyState(iconHtml, title, subtitle = '') {
   return `

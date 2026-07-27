@@ -1157,6 +1157,92 @@ body {
   white-space: nowrap;
 }
 
+/* ── Brand Loader ────────────────────────────────────────────────────────────
+   Waiting state for screens that need a network answer before they can render
+   anything (see createBrandLoader in js/components.js). The glow is deliberately
+   soft: the halo peaks at 22% and the drop-shadow at 55%, so it reads as the
+   mark being lit rather than as a neon sign. */
+.brand-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 55vh;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+.brand-loader__mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* the light behind the letters */
+.brand-loader__mark::before {
+  content: '';
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(37, 99, 235, 0.22) 0%,
+    rgba(37, 99, 235, 0.1) 42%,
+    rgba(37, 99, 235, 0) 70%
+  );
+  animation: brand-halo 2.4s ease-in-out infinite;
+}
+
+.brand-loader__mark img {
+  position: relative;
+  width: 88px;
+  height: auto;
+  /* the PNG has a real alpha channel, so this traces the D and the B */
+  animation: brand-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes brand-halo {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes brand-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(37, 99, 235, 0.55));
+  }
+}
+
+.brand-loader__tag {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray);
+  letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-loader__mark::before,
+  .brand-loader__mark img {
+    animation: none;
+  }
+  .brand-loader__mark img {
+    filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.45));
+  }
+}
+
 /* ── Empty State ─────────────────────────────────────────────────────────────── */
 .empty-state {
   display: flex;

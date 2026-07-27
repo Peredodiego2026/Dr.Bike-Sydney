@@ -58,6 +58,7 @@ import {
   createSummaryRow,
   createBookingCard,
   createEmptyState,
+  createBrandLoader,
   showToast,
   createTierBadge,
 } from './components.js';
@@ -1056,6 +1057,14 @@ async function renderServiceSummary() {
   if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'quote_summary' });
 
+  // getCalloutFee() below hits Supabase, so this screen has the same blank-box
+  // problem as Profile - and this one sits in the middle of the paid flow.
+  screen.innerHTML = `
+    ${createHeader('Your Quote', true, '#book-service')}
+    ${createBrandLoader()}
+    ${createBottomNav('home')}
+  `;
+
   const surcharged = isSurchargeDay(date);
   const serviceTotal = applySurcharge(Number(service.price || 0), date);
   const calloutFee = applySurcharge(await getCalloutFee(location), date);
@@ -1362,6 +1371,15 @@ async function renderPayment() {
   // possibly-abandoned booking should never silently carry over.
   window.appState.preferredMechanicId = null;
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'payment' });
+
+  // Four network calls run before this screen can paint (session, server
+  // price, callout zones, mechanic list). It is the last thing a client sees
+  // before paying, so it must never be an empty box.
+  screen.innerHTML = `
+    ${createHeader('Confirm Booking', true, '#service-summary')}
+    ${createBrandLoader()}
+    ${createBottomNav('home')}
+  `;
 
   const {
     data: { session: paySession },
@@ -3497,6 +3515,16 @@ async function renderProfile() {
   const screen = document.querySelector('[data-screen="profile"]');
   if (!screen) return;
 
+  // Painted before the first await, with the same header and nav the finished
+  // screen uses: sb.auth.getUser() is a network round trip, and until it came
+  // back this screen was an empty box. On a slow connection that is
+  // indistinguishable from the app being broken.
+  screen.innerHTML = `
+    ${createHeader('Profile', false)}
+    ${createBrandLoader()}
+    ${createBottomNav('profile')}
+  `;
+
   let user = null;
   try {
     const { data } = await sb.auth.getUser();
@@ -3896,6 +3924,14 @@ async function renderProfile() {
 async function renderMyBikes() {
   const screen = document.querySelector('[data-screen="my-bikes"]');
   if (!screen) return;
+
+  // Same reason as renderProfile: two network calls run before the first line
+  // of this screen's HTML exists.
+  screen.innerHTML = `
+    ${createHeader('My Bikes', false)}
+    ${createBrandLoader()}
+    ${createBottomNav('my-bikes')}
+  `;
 
   let user = null;
   try {
