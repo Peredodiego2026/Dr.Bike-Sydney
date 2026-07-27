@@ -1,6 +1,13 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-07-26) — read this first
+## Current state (2026-07-27) — read this first
+- **The live punch list is `docs/PENDIENTES.md`** (created 2026-07-27). It is the single place
+  that answers "what is left", split by who has to do it. This file stays the session journal.
+- **2026-07-27, later:** PRs #108-#114 all merged (send-push auth, the i18n gate's inline-script
+  blind spot, Service schema on the suburb pages, the Twilio env-name fix + schema prices from
+  Supabase, 5 dependabot bumps, 5 unused prod deps dropped, docs). No open PRs. All 64 local
+  branches deleted and 5 stale worktrees removed - local is `main` only. Verified green the same
+  day: `npm run check` and 121 unit tests.
 - **MERGED 2026-07-27 (PRs #105, #106, #107):** the three branches below all landed on main, plus
   `feat/multilingual-seo-pages` (#103) and `feat/i18n-guardrail` (#104) the day before. Live in
   production and verified over HTTP: `/es/<slug>` and `/zh/<slug>` return 200 with all 4 hreflang,
@@ -47,12 +54,18 @@
   `middleware.js` now sends `Vary: User-Agent` - it serves two different documents at `/` by UA
   and never told caches or Google. **Still English-only: business.html, bike-check.html and the
   5 blog posts** (mechanism is ready, it is translation work).
-- **Vercel env gap found 2026-07-26:** `CRON_SECRET` is NOT set, and both cron entry points fail
-  closed -> every scheduled email (2h reminder, birthday, re-engagement, abandoned, service
-  reminder) has been returning 401. Diego was told; confirm it is set. Also unused secrets in
-  Vercel (MAPBOX_TOKEN, GOOGLE_PLACES_API_KEY, POSTHOG_KEY - none referenced in code) and a name
-  mismatch: code reads `TWILIO_WHATSAPP_FROM`, Vercel has `TWILIO_WHATSAPP_NUMBER` (falls back to
-  the van_zones hack row).
+- **Vercel env gap found 2026-07-26, RESTATED 2026-07-27 because the original wording was wrong:**
+  the claim was "every scheduled email has been returning 401". That overstated it. Verified in
+  code: `CRON_SECRET` only guards the *scheduled* types - `send-reminders` (2h) and send-cron's
+  birthday/reengagement/abandoned/service/advance/noshow/all. The transactional mail (booking
+  confirmation, invoice, password reset, welcome, review request) and send-cron's public `b2b`
+  and `upsell` types never touch that guard, which is why Diego still receives mail normally.
+  Whether `CRON_SECRET` is actually set is **still unverified**: Vercel runtime logs retain ~1 day
+  on this plan and show no `/api/send-cron` requests and zero 401s in that window, so the logs
+  cannot answer it. Diego checks it in Settings > Environment Variables. Also unused secrets in
+  Vercel (MAPBOX_TOKEN, GOOGLE_PLACES_API_KEY, POSTHOG_KEY - none referenced in code). The
+  `TWILIO_WHATSAPP_FROM` vs `TWILIO_WHATSAPP_NUMBER` name mismatch listed here before was **fixed
+  2026-07-27 in PRs #111/#112**.
 - **IN PROGRESS 2026-07-26 (branch `fix/pricing-consistency`, 3 commits, NOT pushed, NOT deployed):**
   `191cb08` + `8a37257` pricing consistency (annual plan prices + the Sunday/NSW-holiday +20%
   surcharge disclosed on every surface incl. 20 suburb pages, terms in 3 languages, the chatbot's
