@@ -2043,9 +2043,12 @@ var _authMode = 'signin';
 }());
 
 document.addEventListener('DOMContentLoaded', function() {
-  _sb.auth.getSession().then(function(result) {
-    updateNavForSession(result.data.session);
-  });
+  // updateNavForSession is the ONLY thing that decides what the account button
+  // does, so it has to run even when the session lookup fails - otherwise the
+  // button would have no handler at all and sign-in would be unreachable.
+  _sb.auth.getSession()
+    .then(function(result) { updateNavForSession(result.data.session); })
+    .catch(function() { updateNavForSession(null); });
   _sb.auth.onAuthStateChange(function(event, session) {
     updateNavForSession(session);
     if (event === 'SIGNED_IN') {
@@ -3333,7 +3336,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (el) el.addEventListener('click', fn);
   };
 
-  wire('nav-auth-btn', function() { openAuthModal(); });
+  // nav-auth-btn is deliberately NOT wired here. updateNavForSession() owns it
+  // through btn.onclick, which it reassigns every time the session changes -
+  // sign-in modal when signed out, account panel when signed in. This line used
+  // to wire the signed-out behaviour as a second, permanent listener, so a
+  // signed-in click ran both: the account panel opened and the sign-in modal
+  // opened on top of it (z-index 10000 over 9999) and swallowed the next click.
   wire('toggle-monthly', function() { setBilling('monthly'); });
   wire('toggle-annual', function() { setBilling('annual'); });
   wire('giftcard-open-btn', function() { openGiftCardModal(); });
