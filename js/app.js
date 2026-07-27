@@ -492,8 +492,20 @@ async function renderBookService() {
   };
 
   // ── Step 1: Choose Service ────────────────────────────────────────────────
+  // router.js scrolls the new screen to the top, but only when the route
+  // actually changes. The wizard's three steps all re-render inside the same
+  // book-service screen without touching the hash, so stepping 1->2->3 (or
+  // back) left the reader wherever the previous step had put them - halfway
+  // down a service list, or mid-calendar. Same intent as the router's call,
+  // applied per step.
+  function scrollStepToTop() {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    screen.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+
   function renderStep1() {
     if (window.posthog) posthog.capture('booking_step_viewed', { step: 'select_service' });
+    scrollStepToTop();
     const groups = {};
     CAT_ORDER.forEach((c) => {
       groups[c] = [];
@@ -670,6 +682,7 @@ async function renderBookService() {
   // ── Step 2: Date & Time ───────────────────────────────────────────────────
   async function renderStep2() {
     if (window.posthog) posthog.capture('booking_step_viewed', { step: 'select_date' });
+    scrollStepToTop();
     if (!document.getElementById('cal-styles')) {
       const s = document.createElement('style');
       s.id = 'cal-styles';
@@ -806,6 +819,7 @@ async function renderBookService() {
   // ── Step 3: Address ───────────────────────────────────────────────────────
   function renderStep3() {
     if (window.posthog) posthog.capture('booking_step_viewed', { step: 'address' });
+    scrollStepToTop();
     const saved = window.appState.location !== 'Home' ? window.appState.location : '';
     screen.innerHTML = `
       ${createHeader('Your Address', true, '#book-service')}
