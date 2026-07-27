@@ -2,6 +2,16 @@
 // Vercel cron for 2h reminders calls /api/send-reminders?type=2h
 import { createClient } from '@supabase/supabase-js';
 import { guard, SELF_BASE_URL } from './_security.js';
+// Background jobs have nobody watching a screen, so a send that fails must
+// leave a trace or it is indistinguishable from "nobody matched today".
+// Callers here only ever tested `r.ok` and dropped everything else, which is
+// exactly how the VERCEL_URL/SSO bug survived weeks of "the emails are not
+// arriving": the cron reported 200 and sent: 0, every single day.
+function logSendFailure(label, r, ref) {
+  const why = r && r._err ? `threw ${r._err}` : `HTTP ${r && r.status}`;
+  console.error(`[cron:${label}] send failed${ref ? ` for ${ref}` : ''}: ${why}`);
+}
+
 import { isAdminEmail } from './auth.js';
 
 const sb = createClient(
@@ -84,7 +94,8 @@ async function handle2hReminders(req, res) {
         type: 'reminder2h',
         bookingId: b.id,
       }),
-    }).catch(() => ({ ok: false }));
+    }).catch((e) => ({ ok: false, _err: e.message }));
+    if (!r.ok) logSendFailure('reminder-2h', r, b.id);
     if (r.ok) {
       await sb.from('bookings').update({ reminder_2h_sent: true }).eq('id', b.id);
       sent++;

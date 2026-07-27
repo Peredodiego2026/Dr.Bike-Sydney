@@ -23,7 +23,37 @@ El codigo esta sano. Lo que sigue no son bugs: son cosas sin hacer.
 
 ## 1. Diego — bloqueantes
 
-### 1.1 Confirmar `CRON_SECRET` en Vercel
+### 1.1 ~~Confirmar `CRON_SECRET`~~ — CERRADO 2026-07-27, la causa era otra
+
+`CRON_SECRET` estaba puesto y andando todo el tiempo, e `INTERNAL_API_SECRET`
+tambien. Lo que impedia que salieran los mails programados era esto:
+
+```js
+const BASE = process.env.VERCEL_URL ? `https://${VERCEL_URL}` : <dominio propio>
+```
+
+`VERCEL_URL` SIEMPRE esta seteada en Vercel, asi que el fallback nunca corria, y
+su valor es el hostname del deploy (`dr-bike-sydney-<hash>-dr-bike.vercel.app`),
+no el dominio propio. Ese host responde `302 -> vercel.com/sso-api`: Deployment
+Protection rebota la llamada en el borde, antes de que llegue a la funcion. Por
+eso `/api/send-cron` registraba 200 y `/api/send-email` no registraba nada.
+
+Cinco call sites tenian la misma construccion, incluidos dos que no son crons:
+el WhatsApp que avisa a Diego que un cliente cancelo, y la push al cliente.
+Arreglado en el PR #118 (`SELF_BASE_URL` en `_security.js`) y **verificado en
+produccion**: Diego se puso el cumpleanos de hoy, apreto Run y recibio el mail.
+
+Daño en datos: **ninguno**. `select count(*) from profiles where
+birthday_promo_sent_year = 2026` devolvio 1, y era la prueba del propio Diego.
+Nadie quedo marcado como "ya enviado" sin haberlo recibido.
+
+La leccion, ya convertida en codigo (PR de `logSendFailure`): los callers solo
+miraban `r.ok` y se tragaban todo lo demas, asi que un envio fallido no dejaba
+rastro. Por eso el diagnostico anterior le echo la culpa a `CRON_SECRET`
+durante semanas. Un job de fondo que falla en silencio es indistinguible de uno
+que no tenia a quien escribirle.
+
+### 1.1-bis Texto historico (ya no aplica, se conserva por trazabilidad)
 
 **Estado: sin verificar.** Los logs de runtime de Vercel solo retienen ~1 dia en
 este plan y no muestran ninguna llamada a `/api/send-cron` ni ningun 401 en esa

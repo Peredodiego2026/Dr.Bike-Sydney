@@ -11,6 +11,16 @@ import { guard, verifyTurnstile, SELF_BASE_URL } from './_security.js';
 
 const SB_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const BASE = SELF_BASE_URL;
+// Background jobs have nobody watching a screen, so a send that fails must
+// leave a trace or it is indistinguishable from "nobody matched today".
+// Callers here only ever tested `r.ok` and dropped everything else, which is
+// exactly how the VERCEL_URL/SSO bug survived weeks of "the emails are not
+// arriving": the cron reported 200 and sent: 0, every single day.
+function logSendFailure(label, r, ref) {
+  const why = r && r._err ? `threw ${r._err}` : `HTTP ${r && r.status}`;
+  console.error(`[cron:${label}] send failed${ref ? ` for ${ref}` : ''}: ${why}`);
+}
+
 
 function makeSb() {
   return createClient(SB_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -66,11 +76,11 @@ async function handleBirthday(req, res) {
         // No browser in a cron, so the language comes off the profile.
         lang: p.preferred_lang || 'en',
       }),
-    }).catch(() => ({ ok: false }));
+    }).catch((e) => ({ ok: false, _err: e.message }));
     if (r.ok) {
       await sb.from('profiles').update({ birthday_promo_sent_year: thisYear }).eq('id', p.id);
       sent++;
-    }
+    } else logSendFailure('birthday', r, p.id);
   }
   return res.status(200).json({ sent, checked: targets.length });
 }
@@ -139,7 +149,8 @@ async function handleReengagement(req, res) {
         monthsAgo,
         lang: langByEmail.get(email) || 'en',
       }),
-    }).catch(() => ({ ok: false }));
+    }).catch((e) => ({ ok: false, _err: e.message }));
+    if (!r.ok) logSendFailure('reengagement', r, email);
     if (r.ok) {
       await sb
         .from('profiles')
@@ -196,11 +207,11 @@ async function handleAbandoned(req, res) {
         bookingId: b.id,
         type: 'abandoned_recovery',
       }),
-    }).catch(() => ({ ok: false }));
+    }).catch((e) => ({ ok: false, _err: e.message }));
     if (r.ok) {
       await sb.from('bookings').update({ abandoned_recovery_sent: true }).eq('id', b.id);
       sent++;
-    }
+    } else logSendFailure('abandoned', r, b.id);
   }
   return res.status(200).json({ sent, checked: (bookings || []).length });
 }
@@ -351,8 +362,9 @@ async function handleNoShowWatch(req, res) {
             bookingId: b.id,
           },
         }),
-      }).catch(() => ({ ok: false }));
+      }).catch((e) => ({ ok: false, _err: e.message }));
       if (r.ok) alerted++;
+      else logSendFailure('noshow', r, b.id);
     }
     await sb.from('bookings').update({ noshow_alert_sent: true }).eq('id', b.id);
   }
@@ -399,7 +411,8 @@ async function handleServiceReminders(req, res) {
           </div>
         </div>`,
       }),
-    }).catch(() => ({ ok: false }));
+    }).catch((e) => ({ ok: false, _err: e.message }));
+    if (!r.ok) logSendFailure('service-reminder', r, email);
     return r.ok;
   }
 
