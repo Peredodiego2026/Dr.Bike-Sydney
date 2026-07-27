@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { guard, verifyTurnstile } from './_security.js';
+import { guard, verifyTurnstile, SELF_BASE_URL } from './_security.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -10,9 +10,7 @@ import { guard, verifyTurnstile } from './_security.js';
 //   service:      0 9 1 * *   (monthly 1st)
 
 const SB_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
-const BASE = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'https://drbikesydney.com.au';
+const BASE = SELF_BASE_URL;
 
 function makeSb() {
   return createClient(SB_URL, process.env.SUPABASE_SERVICE_KEY);

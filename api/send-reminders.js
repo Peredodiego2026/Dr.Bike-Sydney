@@ -1,7 +1,7 @@
 ﻿// Also handles ?type=2h (2h-before reminders, formerly send-2h-reminders.js).
 // Vercel cron for 2h reminders calls /api/send-reminders?type=2h
 import { createClient } from '@supabase/supabase-js';
-import { guard } from './_security.js';
+import { guard, SELF_BASE_URL } from './_security.js';
 import { isAdminEmail } from './auth.js';
 
 const sb = createClient(
@@ -56,9 +56,7 @@ async function handle2hReminders(req, res) {
   if (error) return res.status(500).json({ error: error.message });
   if (!bookings?.length) return res.status(200).json({ sent: 0, message: 'No bookings due' });
 
-  const base = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'https://drbikesydney.com.au';
+  const base = SELF_BASE_URL;
   let sent = 0;
   for (const b of bookings) {
     const when = sydneyLocalToUtc(b.scheduled_date, b.scheduled_time);
@@ -148,7 +146,7 @@ export default async function handler(req, res) {
         (Date.now() - new Date(booking.completed_at)) / (1000 * 60 * 60 * 24 * 30)
       );
 
-      await fetch(`${process.env.VERCEL_URL || 'https://drbikesydney.com.au'}/api/send-email`, {
+      await fetch(`${SELF_BASE_URL}/api/send-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

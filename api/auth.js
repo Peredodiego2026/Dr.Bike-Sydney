@@ -11,6 +11,7 @@ import {
   clearLoginFailures,
   verifyMechanicToken,
   LOGIN_LOCK_MINUTES,
+  SELF_BASE_URL,
 } from './_security.js';
 import {
   createCalendarEvent,
@@ -1646,9 +1647,7 @@ async function notifyAdminCancellation(bk) {
     }
   }
 
-  const base = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'https://drbikesydney.com.au';
+  const base = SELF_BASE_URL;
   await fetch(`${base}/api/send-message?channel=whatsapp`, {
     method: 'POST',
     headers: {
@@ -2295,9 +2294,7 @@ async function notifyClientOfMechanicMessage(bookingId, message, SERVICE_KEY) {
   const clientId = bkData?.[0]?.client_id;
   if (!clientId) return;
 
-  const base = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'https://drbikesydney.com.au';
+  const base = SELF_BASE_URL;
   await fetch(`${base}/api/send-push`, {
     method: 'POST',
     headers: {
