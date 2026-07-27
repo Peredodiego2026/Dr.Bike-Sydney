@@ -725,3 +725,200 @@ input:-webkit-autofill:focus {
   box-shadow: 0 0 0px 1000px white inset !important;
   -webkit-text-fill-color: #111827 !important;
 }
+
+/* ══ Booking wizard: full-screen overlay (this page only) ═══════════════════
+   The [data-screen] wizard blocks are the mobile SPA's screens, rendered by
+   the same js/app.js. There each screen IS the viewport, so it can own a fixed
+   action bar at the bottom. Here they were rendered inline inside a ~9000px
+   marketing document, which is what produced four separate reports:
+   the action bar floated over the service cards and the quote, the newsletter
+   section (it lives outside [data-screen="home"], so hiding "home" does not
+   hide it) stayed visible above the wizard, and picking a time never brought
+   the button into view. Mounting the screens as a real overlay fixes all four.
+
+   Gated twice on purpose: this stylesheet is only loaded by landing.html, AND
+   every rule below is scoped to body[data-surface="landing"]. A width media
+   query alone would not do - a desktop can open index.html directly and must
+   still get the untouched SPA layout. */
+body[data-surface='landing'] .screen.active:not([data-screen='home']) {
+  position: fixed;
+  inset: 0;
+  /* above the sticky navbar (100) and the page; below the wizard's own
+     modals (emergency 5000, toast 9999) so those still open on top */
+  z-index: 900;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  /* Same 680px reading column css/main.css gives these screens on desktop, but
+     expressed as padding so the overlay's background covers the full width. */
+  max-width: none;
+  margin: 0;
+  padding: 16px max(16px, calc(50% - 340px)) 10rem;
+}
+
+/* Tracking owns its whole box (Leaflet needs an exact, unpadded layout). */
+body[data-surface='landing'] .screen.active[data-screen='tracking'] {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* The exit animation makes the leaving screen position:absolute, which would
+   drop it back into the document flow for one frame. Keep it in the overlay. */
+body[data-surface='landing'] .screen.screen--leaving:not([data-screen='home']) {
+  position: fixed;
+}
+
+/* The marketing page must not scroll behind the overlay. Added by js/router.js
+   only on this surface. */
+html.drbike-wizard-open,
+html.drbike-wizard-open body {
+  overflow: hidden;
+}
+
+/* Action bar: opaque, so the cards scrolling under it are hidden cleanly
+   instead of showing through the gradient, and aligned to the same column as
+   the content instead of spanning all 1280px. */
+body[data-surface='landing'] .sticky-bottom {
+  padding: 12px max(16px, calc(50% - 340px)) calc(12px + env(safe-area-inset-bottom));
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 24px rgba(13, 31, 60, 0.08);
+}
+@media (min-width: 768px) {
+  /* the 72px offset in css/main.css reserves room for the bottom nav, which is
+     display:none from 768px up */
+  body[data-surface='landing'] .sticky-bottom {
+    bottom: 0;
+  }
+}
+
+/* The chat bubble sits at bottom-right on top of the action bar once the
+   wizard covers the viewport. It comes back the moment the wizard closes. */
+html.drbike-wizard-open #faqbot-fab,
+html.drbike-wizard-open #faqbot-win {
+  display: none !important;
+}
+
+/* Quote card rows (Date / Time / Location): the shared .summary-row has no
+   horizontal padding, so on this page the labels sat on the card's left border
+   and a full street address ran into the right one. */
+body[data-surface='landing'] .summary-row {
+  align-items: baseline;
+  gap: 24px;
+  padding: 12px 16px;
+}
+body[data-surface='landing'] .summary-row__label {
+  flex-shrink: 0;
+}
+body[data-surface='landing'] .summary-row__value {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* Emergency Service is not a bookable service - it opens the contact modal -
+   so it must not read like the 31 cards around it. danger token at 8% plus a
+   left accent, the badge pattern from .claude/skills/drbike-design. */
+body[data-surface='landing'] .service-card--emergency {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.28);
+  border-left: 4px solid var(--red);
+}
+body[data-surface='landing'] .service-card--emergency:hover {
+  background: rgba(220, 38, 38, 0.13);
+  border-color: var(--red);
+}
+body[data-surface='landing'] .service-card--emergency .service-card__price {
+  color: var(--red);
+}
+body[data-surface='landing'] .service-card--emergency .service-card__amount {
+  color: var(--red);
+  font-size: 15px;
+}
+
+/* ── Language selector: one control that opens the three options ─────────── */
+.nav-lang {
+  position: relative;
+  margin-right: 8px;
+}
+.nav-lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    color 150ms,
+    border-color 150ms,
+    background 150ms;
+}
+.nav-lang-toggle:hover {
+  color: var(--navy);
+  border-color: var(--gray-lt);
+}
+.nav-lang-toggle[aria-expanded='true'] {
+  color: var(--blue);
+  border-color: var(--blue);
+  background: var(--blue-lt);
+}
+.nav-lang-caret {
+  transition: transform 150ms;
+}
+.nav-lang-toggle[aria-expanded='true'] .nav-lang-caret {
+  transform: rotate(180deg);
+}
+.nav-lang-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(13, 31, 60, 0.12);
+  z-index: 1100;
+}
+.nav-lang-menu[hidden] {
+  display: none;
+}
+.nav-lang-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.nav-lang-option:hover {
+  background: var(--surface);
+  color: var(--navy);
+}
+.nav-lang-option[aria-selected='true'] {
+  color: var(--blue);
+  background: var(--blue-lt);
+}
+.nav-lang-check {
+  flex-shrink: 0;
+  opacity: 0;
+}
+.nav-lang-option[aria-selected='true'] .nav-lang-check {
+  opacity: 1;
+}

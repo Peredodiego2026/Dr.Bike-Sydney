@@ -84,6 +84,18 @@ const router = {
       if (el !== prevScreen || !canAnimateExit) el.classList.remove('active');
     });
 
+    // landing.html marks itself with data-surface, and css/landing.css mounts
+    // every non-home screen there as a fixed full-screen overlay. Two things
+    // follow from that: the marketing page behind it must stop scrolling, and
+    // "scroll the new screen into view" no longer means anything - the overlay
+    // already fills the viewport, what has to go back to the top is its own
+    // scrollbar. The mobile SPA sets no data-surface, so nothing changes there.
+    const isLanding = document.body.dataset.surface === 'landing';
+    const isOverlay = isLanding && route !== 'home';
+    if (isLanding) {
+      document.documentElement.classList.toggle('drbike-wizard-open', isOverlay);
+    }
+
     if (nextScreen) {
       // If this screen is mid-exit from an interrupted transition, cancel that
       // pending cleanup or it would strip the 'active' we are about to add.
@@ -91,13 +103,17 @@ const router = {
       nextScreen.classList.add('active');
       // Nothing here ever moved the viewport to the new screen. On the SPA
       // that's invisible (the screen IS the viewport), but on landing.html
-      // these same screens sit inside one long marketing page - switching
+      // these same screens sat inside one long marketing page - switching
       // to "book-service" left the user wherever they'd scrolled to (as far
       // down as the footer newsletter box), on every step of the wizard,
       // not just on entry. scrollIntoView brings the *new* screen to the
-      // top regardless of where it lives in the surrounding page.
+      // top regardless of where it lives in the surrounding page. Landing now
+      // takes the overlay branch below instead; this path is the SPA's, plus
+      // landing's return to "home".
       if (prevRoute !== route) {
-        nextScreen.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+        if (isOverlay) nextScreen.scrollTop = 0;
+        else
+          nextScreen.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
       }
     }
 

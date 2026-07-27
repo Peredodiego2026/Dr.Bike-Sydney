@@ -504,6 +504,13 @@ async function renderBookService() {
   // applied per step.
   function scrollStepToTop() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // On landing.html this screen is a fixed full-screen overlay with its own
+    // scrollbar (css/landing.css), so scrollIntoView has nothing to scroll -
+    // the step would open wherever the previous one was left.
+    if (document.body.dataset.surface === 'landing') {
+      screen.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+      return;
+    }
     screen.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
