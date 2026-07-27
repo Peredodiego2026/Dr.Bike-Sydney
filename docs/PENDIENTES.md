@@ -476,7 +476,19 @@ pagina de marketing pero el wizard funciona bien.
   tarjeta de Emergency sigue igual que las demas y las filas del presupuesto
   siguen tocando el borde de la tarjeta. Decision pendiente de Diego.
 
-### 9.7 Lo que quedo abierto despues del lote (28-jul)
+### 9.7 Lo que quedo abierto despues del lote (28-jul) — CERRADO el mismo dia
+
+**Los dos puntos de abajo se resolvieron** cambiando la estrategia de `sw.js`:
+el JS y el CSS propios pasaron de cache-first a **stale-while-revalidate**
+(sirve lo cacheado al toque y actualiza en segundo plano para la proxima
+carga). Las imagenes y fuentes siguen cache-first, que es donde eso rinde.
+Con eso: un archivo editado llega al navegador **sin depender de que alguien
+bumpee el nombre del cache**, y el modo offline pasa a funcionar de verdad -
+verificado editando `js/rider-tier.js` sin tocar `sw.js` y despues cortando la
+red, con la app arrancando igual. Tambien se saco la ultima duplicacion de
+modulos (`router.js`, `components.js`, `stripe.js` e `i18n.js`).
+
+El texto original queda abajo porque explica POR QUE estaba mal.
 
 **Los imports internos siguen sin `?v=`.** El 9.2 versiono los scripts que las
 paginas cargan con `<script src>`, pero los que un modulo importa a otro

@@ -51,8 +51,10 @@ self.addEventListener('fetch', e => {
   if (url.hostname.includes('cdn.jsdelivr.net')) return;
   if (url.pathname.startsWith('/api/')) return;
 
-  // Static assets: cache first
-  if (url.pathname.match(/\.(js|css|png|svg|ico|woff2?|jpg|webp|gif)$/) && url.hostname === self.location.hostname) {
+  // Images and fonts: cache first. They are immutable in practice (a new logo
+  // gets a new filename) and they are the heavy ones, so serving them straight
+  // from the cache is the whole point.
+  if (url.pathname.match(/\.(png|svg|ico|woff2?|jpg|jpeg|webp|gif)$/) && url.hostname === self.location.hostname) {
     e.respondWith(
       caches.match(e.request).then(cached => {
         if (cached) return cached;
@@ -63,6 +65,36 @@ self.addEventListener('fetch', e => {
           }
           return res;
         }).catch(() => cached || new Response('', { status: 408 }));
+      })
+    );
+    return;
+  }
+
+  // Our own JS and CSS: stale-while-revalidate. Cache first was wrong for
+  // these. A page asks for `app.js?v=...`, so a `?v=` bump did dodge the cache
+  // - but everything a module imports (`./router.js`, `./i18n.js`) is asked
+  // for WITHOUT a query, and those URLs were frozen until CACHE_STATIC changed
+  // name. The whole class of "I deployed it and the phone still runs the old
+  // one" lived here, and it depended on a human remembering to bump this file.
+  //
+  // Now the cached copy is served immediately (so the app still starts fast,
+  // and works offline once a file has been fetched at least once - which cache
+  // first never actually managed for the JS, because the precache stored
+  // query-less URLs the pages never request), and the network copy replaces it
+  // in the background for the next load.
+  if (url.pathname.match(/\.(js|css)$/) && url.hostname === self.location.hostname) {
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        const fresh = fetch(e.request)
+          .then(res => {
+            if (res.ok) {
+              const clone = res.clone();
+              caches.open(CACHE_STATIC).then(c => c.put(e.request, clone)).catch(() => {});
+            }
+            return res;
+          })
+          .catch(() => cached || new Response('', { status: 408 }));
+        return cached || fresh;
       })
     );
     return;
