@@ -500,3 +500,50 @@ cache solo tenia `/js/app.js`, y sin red eso devuelve 408.
 `router.js` y `components.js` siguen cargandose dos veces por la misma razon
 (tag con `?v=` + import sin query). No rompen nada porque no tienen estado
 propio, pero es la misma trampa esperando a que alguien le agregue estado.
+
+---
+
+## 10. Panel de cuenta de la landing (28-jul)
+
+Diego reporto que con la sesion ya iniciada, apretar el boton de usuario abria
+el panel Y el modal de login encima. **CERRADO** en la PR #125, verificado en
+produccion. La causa: dos mecanismos se peleaban por el mismo boton.
+`updateNavForSession()` es el dueño (asigna `btn.onclick` segun haya sesion o
+no), y TASK-023 habia cableado ADEMAS el comportamiento de "sin sesion" como un
+listener permanente. Sin sesion los dos coincidian, por eso nadie lo vio.
+Segunda puerta al mismo sintoma, tambien cerrada: los botones de
+pausar/reanudar/cancelar membresia llamaban `openAccountPanel()` sin argumento
+y eso se leia como "no hay sesion".
+
+En la misma PR el panel paso a usar los tokens del sistema y a traducirse
+entero. Faltaban 4 estados en el diccionario (`Pending`, `In Progress`,
+`Completed`, `Cancelled`) y "Upcoming (N)" no podia traducirse con el numero
+adentro.
+
+### 10.1 El guardrail de i18n tiene un agujero — ABIERTO
+
+`scripts/i18n-check.mjs` **borra los bloques `<script>`** antes de buscar texto
+en las paginas HTML. `landing.html` construye media interfaz dentro de scripts
+inline (el panel de cuenta, el modal de reserva viejo, el chat, el bot de FAQ),
+asi que **nada de eso esta cubierto por el chequeo**. Por eso "UPCOMING (1)" y
+"Pending" llegaron a produccion en ingles sobre una pagina en español, con el
+check en verde.
+
+No es facil de arreglar bien: un parser ingenuo de strings dentro de JS levanta
+un monton de falsos positivos (selectores, claves, nombres de campos). Una
+opcion realista es extraer las cadenas que estan dentro de comillas y que
+tengan letras y espacios, con una lista de exclusiones. La otra, mas limpia, es
+sacar esa UI de los scripts inline. Mientras tanto: **cualquier texto que se
+escriba dentro de un `<script>` en landing.html hay que traducirlo a mano.**
+
+### 10.2 `confirm()` y `prompt()` del navegador — ABIERTO
+
+Cancelar y reprogramar una reserva desde el panel usan los cuadros de dialogo
+del sistema operativo (`confirm()`, y `prompt()` pidiendo la fecha escrita a
+mano en formato `YYYY-MM-DD` y despues la hora). Es lo menos profesional que
+queda en el panel, y ademas se puede escribir cualquier cosa.
+
+Reemplazarlos pide un selector de fecha/hora de verdad, con los horarios libres
+que ya devuelve `/api/auth?role=get-availability` - o sea, lo mismo que el paso
+2 del wizard. Es una feature, no un ajuste de estilo: rama aparte.
+Mismo problema en pausar/cancelar membresia, que usan `confirm()` + `alert()`.
