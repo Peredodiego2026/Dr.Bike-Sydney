@@ -1809,8 +1809,7 @@ function showDiagResult(data) {
   if (data.recommended_service_id) {
     var btn = resultEl.querySelector('#diag-book-btn');
     if (btn) btn.addEventListener('click', function() {
-      openBooking();
-      _bkState.preselect = data.recommended_service_id;
+      openBooking(data.recommended_service_id);
     });
   }
 }
@@ -2457,12 +2456,41 @@ function bkFormatDate(dateStr) {
   return '<span>' + BK_DAY_NAMES[d.getDay()] + '</span> ' + d.getDate() + ' <span>' + BK_MONTH_NAMES[d.getMonth()] + '</span> ' + parts[0];
 }
 
+// Every booking CTA on this page funnels through here. It used to open the
+// bk- modal below, which wrote the booking to Supabase but never charged the
+// call-out fee and never notified anyone, so Diego had to chase each desktop
+// booking by hand. It now hands over to the same wizard the mobile app runs
+// (the [data-screen] blocks near the end of this file, driven by js/app.js),
+// so desktop takes payment and fires the WhatsApp/SMS/email notifications
+// exactly like mobile does.
 function openBooking(preselect) {
-  _bkState.preselect = preselect || null;
-  document.getElementById('booking-panel').style.display = 'block';
-  document.body.style.overflow = 'hidden';
+  window.appState = window.appState || {};
+  window.appState.preselect = preselect || null;
   sessionStorage.setItem('drbike-booking-start', String(Date.now()));
-  bkShowStep(1);
+  // Already on #book-service (a second CTA, or a preselect after the wizard
+  // was opened once): assigning the same hash fires no hashchange, so ask the
+  // router to re-render instead or the new preselection never lands.
+  if (window.location.hash === '#book-service' && window.router) window.router.render();
+  else window.location.hash = 'book-service';
+}
+
+// The English service name the `services` table uses, read off a marketing
+// card. Two steps, the same ones js/live-prices.js takes to match these cards
+// against Supabase: undo the translation (the card reads Spanish or Chinese
+// once translateAll() has run), then bridge the marketing name to the internal
+// one ("Basic Tune-Up" is "Tune-Up" in the table).
+function bkServiceName(rendered) {
+  var text = (rendered || '').trim();
+  if (!text) return null;
+  var english = (window.__drbikeI18n && window.__drbikeI18n.sourceOf)
+    ? window.__drbikeI18n.sourceOf(text)
+    : text;
+  return (window.__drbikeServiceNames && window.__drbikeServiceNames[english]) || english;
+}
+
+function bkServiceNameFrom(card) {
+  var nameEl = card && card.querySelector('.svc-name');
+  return nameEl ? bkServiceName(nameEl.textContent) : null;
 }
 
 function closeBooking() {
@@ -3284,9 +3312,11 @@ document.addEventListener('DOMContentLoaded', function() {
   var lformContinueBtn = document.getElementById('lform-continue-btn');
   if (lformContinueBtn) {
     lformContinueBtn.addEventListener('click', function() {
+      // The <option>s carry no value attribute, so .value is their visible
+      // text - already translated on a Spanish or Chinese page. Same mapping
+      // back to the table's English name as the service cards use.
       var svcEl = document.getElementById('lform-service');
-      var svcName = svcEl && svcEl.value ? svcEl.value : null;
-      openBooking(svcName);
+      openBooking(svcEl && svcEl.value ? bkServiceName(svcEl.value) : null);
     });
   }
 
@@ -3379,8 +3409,10 @@ document.addEventListener('DOMContentLoaded', function() {
       e.stopPropagation();
       var modal = document.getElementById('services-modal');
       if (modal) modal.style.display = 'none';
-      var svcName = btn.closest('.service-card') && btn.closest('.service-card').querySelector('.svc-name');
-      openBooking(svcName ? svcName.textContent.trim() : null);
+      // .svc-card, not .service-card: these cards have never carried the
+      // latter class, so closest() returned null and every "Book Now" in the
+      // All Services modal opened the wizard with nothing preselected.
+      openBooking(bkServiceNameFrom(btn.closest('.svc-card')));
     });
   });
 
@@ -3950,7 +3982,7 @@ function openLandingChat(bookingId) {
 <script src="js/supabase.js?v=20260704" type="module"></script>
 <script src="js/components.js?v=20260704c" type="module"></script>
 <script src="js/stripe.js?v=20260704" type="module"></script>
-<script src="js/app.js?v=20260727a" type="module"></script>
+<script src="js/app.js?v=20260727b" type="module"></script>
 <script src="js/live-prices.js" defer></script>
 <script src="js/cta-tracking.js" defer></script>
 <script src="js/utm-capture.js"></script>

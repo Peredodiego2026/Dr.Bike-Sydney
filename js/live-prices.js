@@ -36,6 +36,11 @@
     'Bottom Bracket Service': 'Bottom Bracket Install',
   };
 
+  // landing.html's booking CTAs need the same bridge to preselect a service in
+  // the wizard from the name printed on a marketing card. Published rather than
+  // copied so there is one list to keep in step with the services table.
+  window.__drbikeServiceNames = NAME_MAP;
+
   async function syncPrices() {
     const cards = document.querySelectorAll('.service-card, .svc-card');
     if (!cards.length) return;
