@@ -1536,6 +1536,33 @@ async function renderPayment() {
   const currentUser = paySession?.user || null;
   const isTestAdmin = currentUser?.email === 'peredo.dm@gmail.com';
 
+  // Reaching this screen without paying is the one thing the abandoned-cart
+  // reminder could never see: no booking row exists until the charge succeeds,
+  // so api/send-cron.js had nothing to find. This is that missing trace.
+  //
+  // Signed-in clients only (Diego, 2026-07-28): we already have their email and
+  // their consent. One row each, upserted, so the table cannot grow without
+  // bound - and reminder_sent_at is cleared, because a second abandonment
+  // deserves its own reminder. Fire and forget: nothing here may delay or block
+  // the payment screen.
+  if (currentUser) {
+    sb.from('checkout_attempts')
+      .upsert({
+        client_id: currentUser.id,
+        service_name: service.name || null,
+        service_price: Number(service.price) || null,
+        scheduled_date: date || null,
+        scheduled_time: time || null,
+        address: location || null,
+        reached_payment_at: new Date().toISOString(),
+        reminder_sent_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .then(({ error }) => {
+        if (error) console.warn('[checkout_attempts] not recorded:', error.message);
+      });
+  }
+
   // Authoritative price from the server (membership waiver/discount + Sunday
   // surcharge already applied) - must match exactly what handleCreateBooking
   // will verify, or a paid charge gets rejected as "amount mismatch" and a
@@ -1686,6 +1713,20 @@ async function renderPayment() {
     // It exists in the database now - the draft has done its job.
     clearBookingDraft();
     window.__bookingDraftStep = null;
+    // And the checkout is no longer abandoned, so the row that would have
+    // triggered a "do you still need it?" email in three hours has to go. RLS
+    // limits the delete to their own row; best effort, because a booking that
+    // succeeded must never fail on its way out.
+    sb.auth.getSession().then(({ data }) => {
+      const uid = data?.session?.user?.id;
+      if (!uid) return;
+      sb.from('checkout_attempts')
+        .delete()
+        .eq('client_id', uid)
+        .then(({ error }) => {
+          if (error) console.warn('[checkout_attempts] not cleared:', error.message);
+        });
+    });
     const booking = { id: _bk.id, tracking_token: _bk.tracking_token };
     window.appState.bookingId = booking.id;
     window.appState.trackingToken = booking.tracking_token || null;

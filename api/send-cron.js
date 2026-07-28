@@ -6,7 +6,10 @@ import { guard, verifyTurnstile, SELF_BASE_URL } from './_security.js';
 // Cron schedule (vercel.json):
 //   birthday:     0 8 * * *   (daily 8am UTC)
 //   reengagement: 0 10 * * 1  (weekly Mon 10am)
-//   abandoned:    0 * * * *   (hourly)
+//   abandoned:    part of ?type=all, so daily - NOT hourly, whatever this
+//                 comment used to claim. Checked against vercel.json 28-jul.
+//   abandoned-checkout: 0 * * * * (hourly, its own entry) - it has to be, or
+//                 "three hours later" becomes "some time tomorrow"
 //   service:      0 9 1 * *   (monthly 1st)
 
 const SB_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
@@ -20,7 +23,6 @@ function logSendFailure(label, r, ref) {
   const why = r && r._err ? `threw ${r._err}` : `HTTP ${r && r.status}`;
   console.error(`[cron:${label}] send failed${ref ? ` for ${ref}` : ''}: ${why}`);
 }
-
 
 function makeSb() {
   return createClient(SB_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -214,6 +216,86 @@ async function handleAbandoned(req, res) {
     } else logSendFailure('abandoned', r, b.id);
   }
   return res.status(200).json({ sent, checked: (bookings || []).length });
+}
+
+// ── Abandoned checkout (reached the payment screen, never paid) ───────────────
+// handleAbandoned above only sees people who already have a booking row. Until
+// 2026-07-28 the ones who got as far as the payment screen and stopped were
+// invisible: the booking is only written after the charge succeeds, so there
+// was nothing to find. js/app.js now records the attempt in checkout_attempts
+// and deletes it the moment the booking exists, which makes anything left in
+// that table by definition an unfinished checkout.
+//
+// Three hours, not one: the window Diego asked for, long enough that we are not
+// emailing someone who simply went to find their card.
+async function handleAbandonedCheckout(req, res) {
+  const sb = makeSb();
+  const now = new Date();
+  const threeHoursAgo = new Date(now - 3 * 60 * 60 * 1000).toISOString();
+  const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: attempts, error } = await sb
+    .from('checkout_attempts')
+    .select('client_id, service_name, service_price, scheduled_date, scheduled_time')
+    .is('reminder_sent_at', null)
+    .lte('reached_payment_at', threeHoursAgo)
+    .gte('reached_payment_at', oneDayAgo);
+
+  if (error) return res.status(500).json({ error: error.message });
+  if (!attempts?.length) return res.status(200).json({ sent: 0, checked: 0 });
+
+  // The email and the language live on the profile, not on the attempt - one
+  // query for all of them rather than one per person.
+  const { data: profiles } = await sb
+    .from('profiles')
+    .select('id, full_name, email, preferred_lang')
+    .in(
+      'id',
+      attempts.map((a) => a.client_id)
+    );
+  const byId = new Map((profiles || []).map((p) => [p.id, p]));
+
+  let sent = 0;
+  for (const a of attempts) {
+    const p = byId.get(a.client_id);
+    if (!p?.email) continue;
+    const dateLabel = a.scheduled_date
+      ? new Date(a.scheduled_date).toLocaleDateString('en-AU', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        })
+      : '';
+    // Reuses the abandoned_recovery template: it already says "you started
+    // booking X and didn't finish", already exists in en/es/zh, and never used
+    // the booking id - it links to the site, which is exactly right here since
+    // there is no booking to link to.
+    const r = await fetch(`${BASE}/api/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
+      body: JSON.stringify({
+        to: p.email,
+        name: p.full_name || p.email.split('@')[0],
+        service: a.service_name || 'your service',
+        date: dateLabel,
+        time: a.scheduled_time || '',
+        price: a.service_price || 0,
+        lang: p.preferred_lang || 'en',
+        type: 'abandoned_recovery',
+      }),
+    }).catch((e) => ({ ok: false, _err: e.message }));
+    if (r.ok) {
+      await sb
+        .from('checkout_attempts')
+        .update({ reminder_sent_at: new Date().toISOString() })
+        .eq('client_id', a.client_id);
+      sent++;
+    } else logSendFailure('abandoned-checkout', r, a.client_id);
+  }
+  return res.status(200).json({ sent, checked: attempts.length });
 }
 
 // ── Advance reminder (3 days before the appointment) ──────────────────────────
@@ -721,6 +803,7 @@ export default async function handler(req, res) {
   if (type === 'birthday') return handleBirthday(req, res);
   if (type === 'reengagement') return handleReengagement(req, res);
   if (type === 'abandoned') return handleAbandoned(req, res);
+  if (type === 'abandoned-checkout') return handleAbandonedCheckout(req, res);
   if (type === 'service') return handleServiceReminders(req, res);
   if (type === 'advance') return handleAdvanceReminders(req, res);
   if (type === 'noshow') return handleNoShowWatch(req, res);
@@ -742,25 +825,29 @@ export default async function handler(req, res) {
         };
         fn(req, mockRes).catch((e) => resolve({ error: e.message }));
       });
-    const [birthday, reengagement, abandoned, service, advance, noshow] = await Promise.allSettled([
-      wrap((r) => handleBirthday(req, r)),
-      wrap((r) => handleReengagement(req, r)),
-      wrap((r) => handleAbandoned(req, r)),
-      wrap((r) => handleServiceReminders(req, r)),
-      wrap((r) => handleAdvanceReminders(req, r)),
-      wrap((r) => handleNoShowWatch(req, r)),
-    ]);
+    const [birthday, reengagement, abandoned, abandonedCheckout, service, advance, noshow] =
+      await Promise.allSettled([
+        wrap((r) => handleBirthday(req, r)),
+        wrap((r) => handleReengagement(req, r)),
+        wrap((r) => handleAbandoned(req, r)),
+        wrap((r) => handleAbandonedCheckout(req, r)),
+        wrap((r) => handleServiceReminders(req, r)),
+        wrap((r) => handleAdvanceReminders(req, r)),
+        wrap((r) => handleNoShowWatch(req, r)),
+      ]);
     return res.status(200).json({
       birthday: birthday.value || birthday.reason?.message,
       reengagement: reengagement.value || reengagement.reason?.message,
       abandoned: abandoned.value || abandoned.reason?.message,
+      abandonedCheckout: abandonedCheckout.value || abandonedCheckout.reason?.message,
       service: service.value || service.reason?.message,
       advance: advance.value || advance.reason?.message,
       noshow: noshow.value || noshow.reason?.message,
     });
   }
 
-  return res
-    .status(400)
-    .json({ error: 'Missing ?type= (birthday|reengagement|abandoned|service|upsell|b2b|all)' });
+  return res.status(400).json({
+    error:
+      'Missing ?type= (birthday|reengagement|abandoned|abandoned-checkout|service|upsell|b2b|all)',
+  });
 }

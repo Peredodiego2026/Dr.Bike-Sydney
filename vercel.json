@@ -1,7 +1,8 @@
 {
   "crons": [
     { "path": "/api/send-reminders?type=2h", "schedule": "0 22 * * *" },
-    { "path": "/api/send-cron?type=all",     "schedule": "0 9 * * *"  }
+    { "path": "/api/send-cron?type=all",     "schedule": "0 9 * * *"  },
+    { "path": "/api/send-cron?type=abandoned-checkout", "schedule": "0 * * * *" }
   ],
   "rewrites": [
     {
