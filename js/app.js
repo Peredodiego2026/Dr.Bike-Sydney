@@ -99,6 +99,75 @@ window.appState = {
 
 const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
 
+// ── The half-built booking ───────────────────────────────────────────────────
+// window.appState lives in the page and nowhere else, so any full page load
+// threw away everything the client had chosen. Moving between screens never
+// did - that was measured - but a reload does, and there are several ways to
+// cause one without meaning to: signing in with Google takes the whole page
+// and comes back at /, iOS reloads a tab it evicted while you were in another
+// app copying a code, a stray refresh. Diego lost a finished booking to this
+// on the way to look up his referral code.
+//
+// localStorage, not sessionStorage: the OAuth round trip and an evicted tab
+// both survive one and not the other.
+const BOOKING_DRAFT_KEY = 'drbike-booking-draft';
+const DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+function saveBookingDraft(step) {
+  try {
+    const { service, date, time, location, bikeId } = window.appState;
+    if (!service && !date && !time) return; // nothing worth keeping yet
+    localStorage.setItem(
+      BOOKING_DRAFT_KEY,
+      JSON.stringify({ service, date, time, location, bikeId, step, savedAt: Date.now() })
+    );
+  } catch {}
+}
+
+function loadBookingDraft() {
+  try {
+    const raw = localStorage.getItem(BOOKING_DRAFT_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    // A day-old draft is a different intention, and the slot it holds has
+    // probably been taken by someone else.
+    if (!d?.savedAt || Date.now() - d.savedAt > DRAFT_MAX_AGE_MS) {
+      localStorage.removeItem(BOOKING_DRAFT_KEY);
+      return null;
+    }
+    return d;
+  } catch {
+    return null;
+  }
+}
+
+function clearBookingDraft() {
+  try {
+    localStorage.removeItem(BOOKING_DRAFT_KEY);
+  } catch {}
+}
+
+// Restored before the router runs, so the first screen already knows what the
+// client had picked. The date is dropped if it has gone past - offering
+// yesterday would be worse than offering nothing.
+(function restoreBookingDraft() {
+  const d = loadBookingDraft();
+  if (!d) return;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const stillAhead = (ds) => {
+    if (!ds) return false;
+    const [y, m, day] = String(ds).split('-').map(Number);
+    return new Date(y, (m || 1) - 1, day || 1) >= today;
+  };
+  window.appState.service = d.service || null;
+  window.appState.date = stillAhead(d.date) ? d.date : null;
+  window.appState.time = window.appState.date ? d.time || null : null;
+  window.appState.location = d.location || 'Home';
+  window.appState.bikeId = d.bikeId || null;
+  window.__bookingDraftStep = window.appState.date && window.appState.time ? d.step : null;
+})();
+
 // Capture ?ref=CODE from URL and store for after login
 (function captureReferralCode() {
   const p = new URLSearchParams(window.location.search);
@@ -351,6 +420,7 @@ async function loadTimeSlots(screen, date, serviceId) {
       grid.querySelectorAll('.time-slot').forEach((s) => s.classList.remove('selected'));
       btn.classList.add('selected');
       window.appState.time = btn.dataset.time;
+      saveBookingDraft('time');
       updateContinueBtn(screen);
     });
   });
@@ -574,8 +644,30 @@ async function renderBookService() {
       'General & assembly': 'General',
     };
 
+    // Everything the client had picked is still here after a reload, but
+    // making them click through three steps to find that out is its own kind
+    // of loss. One tap back to where they were.
+    const draftStep = window.__bookingDraftStep;
+    const canResume =
+      draftStep &&
+      window.appState.service &&
+      window.appState.date &&
+      window.appState.time &&
+      window.appState.location;
+    const resumeHtml = canResume
+      ? `<div id="resume-draft" style="display:flex;align-items:center;gap:12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin:0 0 16px">
+           <span style="font-size:20px" aria-hidden="true">↩️</span>
+           <div style="flex:1;min-width:0">
+             <div style="font-size:13px;font-weight:700;color:#1E40AF">You have a booking in progress</div>
+             <div style="font-size:12px;color:#475569;margin-top:2px">${escapeHtml(window.appState.service.name || '')}</div>
+           </div>
+           <button id="resume-draft-btn" style="flex-shrink:0;min-height:36px;padding:8px 14px;background:#1E40AF;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Continue</button>
+         </div>`
+      : '';
+
     screen.innerHTML = `
       ${createHeader('Book a Service', true, '#home')}
+      ${resumeHtml}
       <div id="diag-block" style="background:#EFF6FF;border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #BFDBFE">
         <div style="font-size:13px;font-weight:700;color:#1E40AF;margin-bottom:6px">Not sure what your bike needs?</div>
         <div style="font-size:13px;color:#475569;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
@@ -600,6 +692,11 @@ async function renderBookService() {
       </div>
       ${createBottomNav('home')}
     `;
+
+    screen.querySelector('#resume-draft-btn')?.addEventListener('click', () => {
+      window.__bookingDraftStep = null; // one shot: taken, or dismissed by moving on
+      router.navigate('service-summary');
+    });
 
     const retryBtn = screen.querySelector('#retry-services-btn');
     if (retryBtn) {
@@ -654,6 +751,7 @@ async function renderBookService() {
         card.classList.add('selected');
         const prev = window.appState.service;
         window.appState.service = svc;
+        saveBookingDraft('service');
         if (!prev || prev.id !== window.appState.service?.id) {
           window.appState.date = null;
           window.appState.time = null;
@@ -851,6 +949,7 @@ async function renderBookService() {
         btn.addEventListener('click', () => {
           window.appState.date = btn.dataset.date;
           window.appState.time = null;
+          saveBookingDraft('date');
           screen.querySelector('#continue-btn').disabled = true;
           wrap.innerHTML = buildCal();
           wireCal();
@@ -988,6 +1087,7 @@ async function renderBookService() {
     screen.querySelector('#s3-continue').addEventListener('click', async () => {
       const addr = input.value.trim() || 'Home';
       window.appState.location = addr;
+      saveBookingDraft('address');
       const btn = screen.querySelector('#s3-continue');
       btn.textContent = 'Checking address...';
       btn.disabled = true;
@@ -1416,6 +1516,9 @@ async function renderPayment() {
   // Fresh each visit to this screen - an old selection from a previous,
   // possibly-abandoned booking should never silently carry over.
   window.appState.preferredMechanicId = null;
+  // Marks how far they got, so a restored draft can offer to come straight
+  // back here instead of walking the wizard again.
+  saveBookingDraft('payment');
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'payment' });
 
   // Four network calls run before this screen can paint (session, server
@@ -1580,6 +1683,9 @@ async function renderPayment() {
     const _bk = await resp.json();
     if (!resp.ok) throw new Error(_bk.error || 'Could not create booking');
     sessionStorage.removeItem('drbike-booking-start');
+    // It exists in the database now - the draft has done its job.
+    clearBookingDraft();
+    window.__bookingDraftStep = null;
     const booking = { id: _bk.id, tracking_token: _bk.tracking_token };
     window.appState.bookingId = booking.id;
     window.appState.trackingToken = booking.tracking_token || null;
