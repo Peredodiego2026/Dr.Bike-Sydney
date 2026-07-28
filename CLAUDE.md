@@ -149,11 +149,18 @@ NEVER DELETE without confirming with Diego first.
 
 ### Full coverage on every content/copy change
 
-**After editing `js/i18n.js` you MUST bump two things** or returning visitors
-keep the old dictionary and your new strings silently show in English:
-the `?v=` on the `js/i18n.js` import in `landing.html` and `track.html`, and the
-`sw.js` cache version (the SPA gets it through the service worker). This has
-already caused two false "the translation does not work" hunts.
+**After editing `js/i18n.js` you MUST bump the `sw.js` cache version** or
+returning visitors keep the old dictionary and your new strings silently show
+in English. This has already caused two false "the translation does not work"
+hunts.
+
+There used to be a second thing to bump, a `?v=` on the `js/i18n.js` import in
+`landing.html` and `track.html`. It was removed on 2026-07-28: `js/app.js`
+imports `./i18n.js` with no query, so the query made a *second copy of the
+module* with its own private `currentLang` - `setLang()` moved one and left the
+other behind. The file is served `must-revalidate`, so the browser cache never
+holds it; only the service worker can, which is why the `sw.js` bump is the one
+that matters. Do not put the `?v=` back.
 
 **Enforced, not remembered:** `npm run check` runs `scripts/i18n-check.mjs`,
 which fails (and blocks the CI quality-gate) if any user-visible string on

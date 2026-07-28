@@ -439,6 +439,12 @@ function showEmergencyServiceModal() {
   });
 }
 
+// Outside the function on purpose. Entering this screen can render it more
+// than once, and a fresh call starting from null would paint skeletons over an
+// error we already know about - leaving the reader with a spinner that never
+// resolves, which is the exact thing this is here to stop.
+let _servicesError = null;
+
 async function renderBookService() {
   const screen = document.querySelector('[data-screen="book-service"]');
   if (!screen) return;
@@ -538,7 +544,17 @@ async function renderBookService() {
           </div>`
           )
           .join('')
-      : '<div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
+      : _servicesError
+        ? // Skeletons that never resolve read as a frozen app. Say what
+          // happened, and separate "no signal" from "our end broke" - the
+          // reader can do something about the first one.
+          `<div style="grid-column:1/-1;padding:24px 0;text-align:center">
+             <div style="font-size:24px;margin-bottom:6px" aria-hidden="true">${navigator.onLine ? '⚠️' : '📡'}</div>
+             <div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">${navigator.onLine ? 'Could not load services' : "You're offline"}</div>
+             <div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>
+             <button id="retry-services-btn" style="padding:11px 20px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>
+           </div>`
+        : '<div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
 
     if (!document.getElementById('chip-styles')) {
       const s = document.createElement('style');
@@ -584,6 +600,21 @@ async function renderBookService() {
       </div>
       ${createBottomNav('home')}
     `;
+
+    const retryBtn = screen.querySelector('#retry-services-btn');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', async () => {
+        retryBtn.disabled = true;
+        retryBtn.textContent = 'Loading...';
+        try {
+          _services = await getServices();
+          _servicesError = null;
+        } catch (e) {
+          _servicesError = e;
+        }
+        renderStep1();
+      });
+    }
 
     const diagPhoto = screen.querySelector('#diag-photo');
     diagPhoto.addEventListener('change', () => runAIDiagnosis(screen));
@@ -987,7 +1018,14 @@ async function renderBookService() {
 
   // ── Init: render Step 1 immediately (skeleton), then load services ─────────
   renderStep1();
-  _services = await getServices();
+  try {
+    _services = await getServices();
+    _servicesError = null;
+  } catch (e) {
+    // getServices() used to answer with four hardcoded prices here, so a
+    // client with no signal was quoted a stale price list as if it were live.
+    _servicesError = e;
+  }
   renderStep1();
 }
 
@@ -3088,7 +3126,32 @@ async function renderMyBookings() {
     ${createBottomNav('my-bookings')}
   `;
 
-  const allBookings = await getMyBookings();
+  // null = not signed in, [] = signed in with none yet, throw = we could not
+  // find out. Each one reads differently, and until 2026-07-28 all three
+  // showed the same thing: two invented bookings.
+  let allBookings;
+  try {
+    allBookings = await getMyBookings();
+  } catch {
+    screen.querySelector('#bookings-list').innerHTML = createEmptyState(
+      `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"></path><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>`,
+      navigator.onLine ? 'Could not load your bookings' : "You're offline",
+      'Please check your connection and try again.'
+    );
+    translateScreen(screen);
+    return;
+  }
+  if (allBookings === null) {
+    screen.querySelector('#bookings-list').innerHTML =
+      createEmptyState(
+        '<div style="font-size:40px" aria-hidden="true">🔒</div>',
+        'Sign in to see your bookings',
+        'Your bookings will appear here'
+      ) +
+      '<div style="text-align:center;margin-top:4px"><a href="#login" class="btn btn--primary" style="text-decoration:none">Sign in</a></div>';
+    translateScreen(screen);
+    return;
+  }
   const ACTIVE = new Set([
     'pending',
     'confirmed',
@@ -3255,7 +3318,15 @@ async function renderMyBookings() {
           const btn = overlay.querySelector('#book-again-btn');
           btn.textContent = 'Loading...';
           btn.disabled = true;
-          const services = await getServices();
+          let services;
+          try {
+            services = await getServices();
+          } catch {
+            showToast('Could not load services', 'error');
+            btn.innerHTML = '<span aria-hidden="true">↻</span> <span>Book Again</span>';
+            btn.disabled = false;
+            return;
+          }
           const match = (services || []).find((s) => s.name === booking.service_name);
           if (!match) {
             showToast('That service is no longer available. Please pick a new one.', 'error');

@@ -34,24 +34,16 @@
   <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="icon" href="/icon-512.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/variables.css?v=20260713">
-  <link rel="stylesheet" href="css/main.css?v=20260728a">
+  <link rel="stylesheet" href="css/main.css?v=20260728c">
   <link rel="stylesheet" href="css/home.css?v=20260713">
   <!-- Google Analytics -->
-  <!-- Meta Pixel - replace PIXEL_ID_HERE with your actual Pixel ID from Meta Business Manager -->
-  <script>
-  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window,document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', 'PIXEL_ID_HERE');
-  fbq('track', 'PageView');
-  </script>
-  <noscript><img height="1" width="1" style="display:none"
-  src="https://www.facebook.com/tr?id=PIXEL_ID_HERE&ev=PageView&noscript=1"/></noscript>
-  <!-- End Meta Pixel -->
+  <!-- Meta Pixel removed 2026-07-28. It was initialising with the literal
+       string PIXEL_ID_HERE, so it collected nothing, logged "[Meta Pixel] -
+       Invalid PixelID: null" on every page view, and still loaded Facebook's
+       script and pinged their servers on every visit. To turn it on: paste
+       the loader from Meta Business Manager here with the real id. The
+       fbq('track', ...) calls in js/app.js are all guarded with `window.fbq &&`,
+       so they start working again on their own and need no edit. -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
@@ -631,14 +623,14 @@
 </div><!-- #app -->
 
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/router.js?v=20260727c"     type="module"></script>
-<!-- js/supabase.js is NOT loaded here on purpose. A module is one instance per
-     URL, and this tag's URL (with the ?v=) is a different URL from the
-     './supabase.js' that js/app.js imports - so the file ran twice and built
-     two Supabase clients over one auth token, which the console warned about
-     on every load. Everything that needs it imports it. -->
-<script src="js/components.js?v=20260728a" type="module"></script>
-<script src="js/app.js?v=20260728a"        type="module"></script>
+<!-- js/app.js is the only entry point, and it is deliberate. A module is one
+     instance per URL: a tag asking for `router.js?v=...` is a different URL
+     from the './router.js' app.js imports, so listing them here ran every one
+     of them twice. With supabase.js that built two auth clients over one token
+     (removed 2026-07-28); router.js and components.js got away with it only
+     because they hold no state of their own. app.js pulls in the whole graph -
+     router, supabase, components, i18n, rider-tier, stripe. -->
+<script src="js/app.js?v=20260728d"        type="module"></script>
 <script type="module">
 /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
 import { sb } from './js/supabase.js';

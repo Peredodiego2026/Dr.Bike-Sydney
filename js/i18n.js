@@ -148,6 +148,16 @@ const dict = {
     'In Progress': 'En curso',
     Completed: 'Completado',
     Cancelled: 'Cancelado',
+    // landing.html's own booking confirmation and its failure message
+    'Booking Confirmed!': '¡Reserva confirmada!',
+    'Something went wrong. Please call us at 0433 963 250.':
+      'Algo salió mal. Llamanos al 0433 963 250.',
+    // Honest failure states. They replaced the mock data that used to fill in
+    // for a failed query (2026-07-28).
+    'Could not load services': 'No pudimos cargar los servicios',
+    'Could not load your bookings': 'No pudimos cargar tus reservas',
+    "You're offline": 'Estás sin conexión',
+    'Sign in to see your bookings': 'Iniciá sesión para ver tus reservas',
     Arrived: 'Llegó',
     Done: 'Listo',
     Message: 'Mensaje',
@@ -1355,6 +1365,12 @@ const dict = {
     'In Progress': '进行中',
     Completed: '已完成',
     Cancelled: '已取消',
+    'Booking Confirmed!': '预订已确认！',
+    'Something went wrong. Please call us at 0433 963 250.': '出了点问题。请致电 0433 963 250。',
+    'Could not load services': '无法加载服务',
+    'Could not load your bookings': '无法加载您的预订',
+    "You're offline": '您已离线',
+    'Sign in to see your bookings': '登录后查看您的预订',
     Arrived: '已到达',
     Done: '完成',
     Message: '消息',

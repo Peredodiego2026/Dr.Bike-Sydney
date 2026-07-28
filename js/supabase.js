@@ -6,76 +6,47 @@ const SUPABASE_KEY =
 
 export const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── Mock data (fallback when tables don't exist or network fails) ──────────────
-const MOCK_SERVICES = [
-  {
-    id: '1',
-    name: 'Tune-Up',
-    price: 109,
-    description: 'Gears, brakes, wheels trued + safety check',
-    duration: '~1 hour',
-  },
-  {
-    id: '2',
-    name: 'Standard Service',
-    price: 149,
-    description: 'Full tune-up + drivetrain clean',
-    duration: '~1.5 hours',
-  },
-  {
-    id: '3',
-    name: 'Standard+ Service',
-    price: 199,
-    description: 'Comprehensive overhaul + parts check',
-    duration: '~2.5 hours',
-  },
-  {
-    id: '4',
-    name: 'Ultimate Overhaul',
-    price: 369,
-    description: 'Complete rebuild, all bearings serviced',
-    duration: '~4 hours',
-  },
-];
+// There used to be MOCK_SERVICES and MOCK_BOOKINGS here, returned whenever a
+// query failed or nobody was signed in. They are gone (2026-07-28) because
+// both of them lied to real clients on production:
+//
+//   - getServices() fell back to four hardcoded prices. The whole point of
+//     keeping prices in the `services` table is that they change; a network
+//     blip showed a stale price list as if it were current.
+//   - getMyBookings() handed MOCK_BOOKINGS to anyone without a session, so a
+//     logged-out visitor tapping "Bookings" saw a confirmed Tune-Up for today
+//     and a completed service from last week. Neither existed.
+//
+// The rule these broke is already in CLAUDE.md: no silent errors. A failure
+// has to reach the screen as a failure, which is what the callers now do.
 
-const _d0 = new Date();
-const _dateStr = (d) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const _daysAgo = (n) => {
-  const d = new Date(_d0);
-  d.setDate(d.getDate() - n);
-  return _dateStr(d);
-};
-const MOCK_BOOKINGS = [
-  {
-    id: 'mock-1',
-    service_name: 'Tune-Up',
-    scheduled_date: _dateStr(_d0),
-    scheduled_time: '10:00 AM',
-    total_price: 109,
-    status: 'confirmed',
-    rating: null,
-  },
-  {
-    id: 'mock-2',
-    service_name: 'Standard Service',
-    scheduled_date: _daysAgo(7),
-    scheduled_time: '2:00 PM',
-    total_price: 149,
-    status: 'completed',
-    rating: 5,
-  },
-];
+// On a bad mobile connection a request does not usually fail - it just sits
+// there, unanswered. Without a deadline that is a spinner the reader watches
+// forever, which is the same lie as mock data wearing a different hat. Twelve
+// seconds is long enough for a slow 3G round trip and short enough to still
+// feel like an answer.
+const REQUEST_TIMEOUT_MS = 12000;
+function withDeadline(promise, label) {
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise).finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(label + ' timed out')), REQUEST_TIMEOUT_MS);
+    }),
+  ]);
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+// Rejects rather than returning something plausible - same contract as
+// getAvailableSlots below, and for the same reason.
 export async function getServices() {
-  try {
-    const { data, error } = await sb.from('services').select('*').order('price');
-    if (error || !data?.length) return MOCK_SERVICES;
-    return data;
-  } catch {
-    return MOCK_SERVICES;
-  }
+  const { data, error } = await withDeadline(
+    sb.from('services').select('*').order('price'),
+    'services'
+  );
+  if (error) throw new Error(error.message || 'services fetch failed');
+  if (!data?.length) throw new Error('services table returned nothing');
+  return data;
 }
 
 export async function getAvailableSlots(date, serviceId) {
@@ -214,13 +185,16 @@ export function subscribeToMechanicLocation(bookingId, callback) {
   };
 }
 
+// Three outcomes the caller has to tell apart, because they read completely
+// differently on screen: null = nobody is signed in (ask them to), [] = signed
+// in with nothing booked yet, throw = we could not find out.
 export async function getMyBookings() {
-  try {
-    const {
-      data: { session },
-    } = await sb.auth.getSession();
-    if (!session) return MOCK_BOOKINGS;
-    const res = await fetch('/api/auth', {
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) return null;
+  const res = await withDeadline(
+    fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -228,10 +202,9 @@ export async function getMyBookings() {
         access_token: session.access_token,
         client_id: session.user.id,
       }),
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
-    return [];
-  }
+    }),
+    'bookings'
+  );
+  if (!res.ok) throw new Error('bookings fetch failed');
+  return await res.json();
 }

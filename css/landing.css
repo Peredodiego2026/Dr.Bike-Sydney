@@ -596,24 +596,11 @@ section.visible {
   opacity: 0.4;
   cursor: not-allowed;
 }
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
-  font-size: 15px;
-}
-.summary-row:last-child {
-  border-bottom: none;
-}
-.summary-row .sr-label {
-  color: #6b7280;
-}
-.summary-row .sr-value {
-  font-weight: 600;
-  color: #111827;
-}
+/* The .summary-row block that used to sit here belonged to the old bk- booking
+   modal and its .sr-label / .sr-value spans. That markup is gone - nothing in
+   the repo carries those classes any more - but the rules stayed, and because
+   this file loads after css/main.css they were quietly overriding the quote
+   card's real .summary-row on this page. Deleted 2026-07-28. */
 .summary-total {
   display: flex;
   justify-content: space-between;
@@ -799,41 +786,11 @@ html.drbike-wizard-open #faqbot-win {
   display: none !important;
 }
 
-/* Quote card rows (Date / Time / Location): the shared .summary-row has no
-   horizontal padding, so on this page the labels sat on the card's left border
-   and a full street address ran into the right one. */
-body[data-surface='landing'] .summary-row {
-  align-items: baseline;
-  gap: 24px;
-  padding: 12px 16px;
-}
-body[data-surface='landing'] .summary-row__label {
-  flex-shrink: 0;
-}
-body[data-surface='landing'] .summary-row__value {
-  text-align: right;
-  overflow-wrap: anywhere;
-}
-
-/* Emergency Service is not a bookable service - it opens the contact modal -
-   so it must not read like the 31 cards around it. danger token at 8% plus a
-   left accent, the badge pattern from .claude/skills/drbike-design. */
-body[data-surface='landing'] .service-card--emergency {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.28);
-  border-left: 4px solid var(--red);
-}
-body[data-surface='landing'] .service-card--emergency:hover {
-  background: rgba(220, 38, 38, 0.13);
-  border-color: var(--red);
-}
-body[data-surface='landing'] .service-card--emergency .service-card__price {
-  color: var(--red);
-}
-body[data-surface='landing'] .service-card--emergency .service-card__amount {
-  color: var(--red);
-  font-size: 15px;
-}
+/* The quote-card rows and the Emergency card tint used to be scoped to this
+   surface here. They now live unscoped in css/main.css, because Diego asked on
+   2026-07-28 for the mobile app to get them too - the reasons they were right
+   on the desktop (a label on the card border, one card that is not bookable
+   looking exactly like the 31 that are) were never desktop-specific. */
 
 /* ── Language selector: one control that opens the three options ─────────── */
 .nav-lang {
