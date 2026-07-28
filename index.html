@@ -37,21 +37,13 @@
   <link rel="stylesheet" href="css/main.css?v=20260728c">
   <link rel="stylesheet" href="css/home.css?v=20260713">
   <!-- Google Analytics -->
-  <!-- Meta Pixel - replace PIXEL_ID_HERE with your actual Pixel ID from Meta Business Manager -->
-  <script>
-  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window,document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', 'PIXEL_ID_HERE');
-  fbq('track', 'PageView');
-  </script>
-  <noscript><img height="1" width="1" style="display:none"
-  src="https://www.facebook.com/tr?id=PIXEL_ID_HERE&ev=PageView&noscript=1"/></noscript>
-  <!-- End Meta Pixel -->
+  <!-- Meta Pixel removed 2026-07-28. It was initialising with the literal
+       string PIXEL_ID_HERE, so it collected nothing, logged "[Meta Pixel] -
+       Invalid PixelID: null" on every page view, and still loaded Facebook's
+       script and pinged their servers on every visit. To turn it on: paste
+       the loader from Meta Business Manager here with the real id. The
+       fbq('track', ...) calls in js/app.js are all guarded with `window.fbq &&`,
+       so they start working again on their own and need no edit. -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
