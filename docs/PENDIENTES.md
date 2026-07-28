@@ -585,6 +585,90 @@ No hay nada sensible, pero es una maqueta con estados falsos ("Coming soon")
 accesible por cualquiera que adivine la URL. Opciones: moverlas fuera del
 directorio publicado, o agregarlas a las exclusiones de `vercel.json`.
 
+---
+
+## 11. Reserva a medio hacer y recordatorio de checkout (28-jul)
+
+### 11.1 El borrador se perdia con cualquier recarga — CERRADO
+
+Diego armo una reserva, fue a Perfil a copiar su codigo de referido y volvio:
+todo borrado. **Reproducido antes de tocar nada, y no era lo que parecia**:
+moverse entre pantallas nunca perdio nada. Lo que borraba todo era una
+**recarga completa de la pagina**, porque `window.appState` vivia solo en la
+memoria de la pagina. Y hay varias formas de provocar una sin querer: el login
+con Google se lleva la pagina entera y vuelve a `/`, iOS recarga una pestaña
+que descarto mientras estabas en otra app, un refresh accidental.
+
+Arreglado: el borrador se escribe en `localStorage` (`drbike-booking-draft`) en
+cada eleccion y se lee antes de que arranque el router. `localStorage` y no
+`sessionStorage` justamente porque la vuelta del OAuth y una pestaña
+descartada sobreviven a uno y no al otro. Se descarta a las 24h, y si la fecha
+ya paso se tira solo la fecha. El paso 1 muestra un boton "Continuar" que
+vuelve al resumen en un toque.
+
+### 11.2 Recordatorio 3h del checkout abandonado — FALTA CORRER EL SQL
+
+**Decision de Diego (28-jul): opcion A — solo clientes logueados.**
+
+El cron de abandono (`api/send-cron.js?type=abandoned`, cada hora) busca filas
+de `bookings` con estado `pending`. Un cliente que llega a la pantalla de pago
+y no paga **nunca crea una fila** - la reserva se escribe recien despues del
+cobro - asi que no hay nada que encontrar.
+
+Se descartaron: pedir el mail antes de pagar (un campo mas en el paso mas
+delicado cuesta conversion) y crear la reserva como `pending` antes de cobrar
+(ensucia `bookings`, y todo lo que cuenta reservas empieza a contar las que
+nunca se pagaron).
+
+**Bloqueante: Diego tiene que correr `scripts/add-checkout-attempts.sql` en
+Supabase.** Una tabla, una fila por cliente (upsert, asi no crece sin limite),
+con RLS: cada quien ve solo la suya, el cron entra con el service role.
+
+Despues de eso, del lado del codigo faltan tres cosas:
+1. `renderPayment()` hace upsert de la fila al abrir la pantalla de pago.
+2. `finalizeBooking()` borra la fila cuando la reserva existe.
+3. `api/send-cron.js` suma `type=abandoned-checkout`: filas con
+   `reached_payment_at` de mas de 3h, menos de 24h, `reminder_sent_at is null`.
+   Mail nuevo en `api/_email-i18n.js` (es/en/zh) preguntando si todavia lo
+   necesita, con link para retomar.
+
+### 11.3 Seccion de analitica en el admin — PENDIENTE, decidido hacerlo
+
+Diego (28-jul): un amigo en Francia busco "tienda de bicicletas" y Dr. Bike
+Sydney salio primero. Quiere ver en el panel: quien hace click, desde donde,
+retencion, cuantos entran al booking, que es lo mas clickeado y lo mas visto.
+Formato con barras y graficos, "futurista y minimalista a la vez".
+
+**Lo importante antes de elegir herramienta: los datos YA se estan
+capturando.** El proyecto tiene **PostHog corriendo en produccion** (clave real
+`phc_p3bN...`, host `eu.i.posthog.com`) en las tres superficies, con
+`capture_pageview` y `capture_pageleave` activos, mas eventos propios:
+`cta_clicked` (con texto del boton y seccion, desde `js/cta-tracking.js`),
+`booking_step_viewed` (con el paso), `experiment_viewed`. Tambien hay Google
+Analytics (`G-GXYD68JXZW`) y eventos de e-commerce por `gtag`
+(`begin_checkout`, `add_to_cart`, `checkout_progress`).
+
+O sea: **no falta herramienta, falta la pantalla que lea lo que ya hay.**
+
+Recomendacion: quedarse con **PostHog**, no agregar nada nuevo. Esta alojado en
+la UE (mejor para privacidad que GA, que manda todo a EEUU), ya trae embudos,
+retencion por cohorte y grabacion de sesiones, y tiene API de consulta - o sea
+que el panel puede pedirle numeros reales en vez de reimplementar el conteo.
+Alternativas miradas y descartadas para este caso: Plausible y Umami son mas
+simples y privadas pero no hacen embudos ni retencion por persona, que es
+justo lo que Diego pidio; Matomo es autoalojado y es mantener un servidor mas.
+
+Lo que falta hacer, en orden:
+1. Revisar que los eventos cubran lo que se quiere medir (hoy falta un evento
+   propio al **completar** una reserva; el embudo se corta en el paso de pago).
+2. Una funcion `/api/analytics` que consulte la API de PostHog con la clave
+   **del lado del servidor** - nunca desde el navegador.
+3. La pantalla en `admin.html`, con los tokens del sistema de diseño.
+
+**Ojo con una cosa**: el panel de admin mostrando metricas de negocio no puede
+quedar detras del PIN debil que menciona el punto 2.1. Antes de poner numeros
+de facturacion ahi, ese acceso tiene que estar cerrado.
+
 ### 10.2 `confirm()` y `prompt()` del navegador — ABIERTO
 
 Cancelar y reprogramar una reserva desde el panel usan los cuadros de dialogo
