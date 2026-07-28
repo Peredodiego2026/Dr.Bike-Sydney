@@ -20,6 +20,97 @@
   padding: 0 20px;
 }
 
+/* ── Language control in the mobile top bar ──────────────────────────────────
+   The same control landing.html carries in its header, restyled for the navy
+   bar it sits in: translucent white until it opens, brand blue while open. The
+   menu is a normal light popover. */
+.spa-lang {
+  position: relative;
+}
+.spa-lang__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* square icon button: measured at 375px, anything wider pushed "Iniciar
+     Sesión" onto a second line */
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 150ms,
+    border-color 150ms;
+}
+.spa-lang__toggle:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.spa-lang__toggle[aria-expanded='true'] {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+.spa-lang__caret {
+  transition: transform 150ms;
+}
+.spa-lang__toggle[aria-expanded='true'] .spa-lang__caret {
+  transform: rotate(180deg);
+}
+.spa-lang__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 168px;
+  padding: 4px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 6px 28px rgba(13, 31, 60, 0.22);
+  z-index: 200;
+}
+.spa-lang__menu[hidden] {
+  display: none;
+}
+.spa-lang__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  /* 44px: this one is only ever tapped with a thumb */
+  min-height: 44px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.spa-lang__option:hover {
+  background: var(--surface);
+  color: var(--navy);
+}
+.spa-lang__option[aria-selected='true'] {
+  color: var(--blue);
+  background: var(--blue-lt);
+}
+.spa-lang__check {
+  flex-shrink: 0;
+  opacity: 0;
+}
+.spa-lang__option[aria-selected='true'] .spa-lang__check {
+  opacity: 1;
+}
+
 /* ── Hero ──────────────────────────────────────────────────────────────────── */
 [data-screen='home'] .hero {
   padding: 48px 0 0;

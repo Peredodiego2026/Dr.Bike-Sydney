@@ -35,7 +35,7 @@
   <link rel="icon" href="/icon-512.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/variables.css?v=20260713">
   <link rel="stylesheet" href="css/main.css?v=20260728c">
-  <link rel="stylesheet" href="css/home.css?v=20260713">
+  <link rel="stylesheet" href="css/home.css?v=20260728e">
   <!-- Google Analytics -->
   <!-- Meta Pixel removed 2026-07-28. It was initialising with the literal
        string PIXEL_ID_HERE, so it collected nothing, logged "[Meta Pixel] -
@@ -79,8 +79,96 @@
     capture_pageleave: true,
   });
   </script>
+  <!-- Boot screen. Inline on purpose: it has to be able to paint before
+       js/app.js, its module graph and Supabase have loaded, which on a phone
+       is the stretch that used to be a white page. Same mark and tagline as
+       the in-app loader in js/components.js. -->
+  <style>
+    #boot-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: #f8fafc;
+      transition: opacity 260ms ease;
+    }
+    #boot-loader .boot-mark {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #boot-loader .boot-mark::before {
+      content: '';
+      position: absolute;
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(37, 99, 235, 0.22) 0%,
+        rgba(37, 99, 235, 0.1) 42%,
+        rgba(37, 99, 235, 0) 70%
+      );
+      animation: boot-halo 2.4s ease-in-out infinite;
+    }
+    #boot-loader img {
+      position: relative;
+      width: 88px;
+      height: auto;
+      display: block;
+      animation: boot-glow 2.4s ease-in-out infinite;
+    }
+    #boot-loader .boot-tag {
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+    }
+    @keyframes boot-halo {
+      0%, 100% { transform: scale(0.92); opacity: 0.55; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+    @keyframes boot-glow {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.35)); }
+      50% { filter: drop-shadow(0 0 16px rgba(37, 99, 235, 0.55)); }
+    }
+    #boot-loader.boot-gone { opacity: 0; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) {
+      #boot-loader .boot-mark::before, #boot-loader img { animation: none; }
+      #boot-loader img { filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.45)); }
+    }
+  </style>
 </head>
 <body>
+
+<div id="boot-loader" role="status" aria-live="polite">
+  <div class="boot-mark"><img src="images/logo-db.png" alt="" width="88" height="62" fetchpriority="high"></div>
+  <div class="boot-tag">Healthy bikes, happy riders</div>
+</div>
+<script>
+  // Comes down as soon as the router has painted a screen. The load listener
+  // and the 8s stop are there so a boot that fails can never leave a client
+  // staring at a logo forever - better the real page, broken, than a lie.
+  (function () {
+    var gone = false;
+    function hide() {
+      if (gone) return;
+      gone = true;
+      var el = document.getElementById('boot-loader');
+      if (!el) return;
+      el.classList.add('boot-gone');
+      setTimeout(function () { el.remove(); }, 300);
+    }
+    document.addEventListener('screenchange', hide, { once: true });
+    window.addEventListener('load', function () { setTimeout(hide, 200); });
+    setTimeout(hide, 8000);
+  })();
+</script>
 <div id="app">
 
   <!-- HOME ─────────────────────────────────────────────────────────────────── -->
@@ -92,7 +180,11 @@
         <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="28" style="width:auto;display:block">
         <span style="font-weight:700;font-size:16px;letter-spacing:-0.2px;color:#fff">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
       </div>
-      <a href="#login" id="home-mobile-auth-btn" style="background:#2563EB;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;min-height:36px;display:inline-flex;align-items:center;gap:6px"><span id="home-mobile-auth-icon"></span><span id="home-mobile-auth-label">Sign In</span></a>
+      <div style="display:flex;align-items:center;gap:8px">
+        <!-- filled by renderSpaLangSwitcher() in js/app.js -->
+        <div id="spa-lang" class="spa-lang"></div>
+        <a href="#login" id="home-mobile-auth-btn" style="background:#2563EB;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;min-height:36px;display:inline-flex;align-items:center;gap:6px"><span id="home-mobile-auth-icon"></span><span id="home-mobile-auth-label">Sign In</span></a>
+      </div>
     </div>
 
     <header id="home-desktop-nav" aria-label="Site navigation">
@@ -630,7 +722,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-<script src="js/app.js?v=20260728d"        type="module"></script>
+<script src="js/app.js?v=20260728e"        type="module"></script>
 <script type="module">
 /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
 import { sb } from './js/supabase.js';
