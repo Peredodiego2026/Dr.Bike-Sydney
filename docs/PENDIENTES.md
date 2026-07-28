@@ -548,6 +548,43 @@ tengan letras y espacios, con una lista de exclusiones. La otra, mas limpia, es
 sacar esa UI de los scripts inline. Mientras tanto: **cualquier texto que se
 escriba dentro de un `<script>` en landing.html hay que traducirlo a mano.**
 
+### 10.3 Limpieza de datos falsos y codigo muerto (28-jul) — HECHO
+
+Diego pidio: "borra todo lo que sea falso y antiguo que pueda generar errores
+en un futuro, pero antes analiza si sirve o no". Resultado del analisis:
+
+| Que | Veredicto | Por que |
+|---|---|---|
+| `MOCK_BOOKINGS` (`js/supabase.js`) | BORRADO | Se le devolvia a **cualquier visitante sin sesion**: veia un Tune-Up confirmado para hoy y un servicio completado la semana pasada con 5 estrellas. Ninguno existia. Estaba en produccion |
+| `MOCK_SERVICES` (`js/supabase.js`) | BORRADO | 4 precios hardcodeados que tapaban cualquier fallo de red. Los precios viven en la tabla `services` justamente porque cambian |
+| Flujo `bk-` completo en `landing.html` | BORRADO (918 lineas) | Muerto desde el PR #121. Traia su propia copia de precios falsos, su pantalla de "Online payments coming soon" (mentira desde que desktop cobra), su propia tabla de recargos y su propio formateador de fechas |
+| `submitBooking()` | BORRADO | Sin llamadores |
+| Meta Pixel con `PIXEL_ID_HERE` | BORRADO | Inicializaba con el string literal: no recolectaba nada, tiraba error en consola en cada carga, y igual cargaba el script de Facebook y les pegaba en cada visita |
+| Boton "Watch Video" | BORRADO | Prometia un video y respondia con `alert('Video coming soon!')` |
+| `GROWTHBOOK_KEY_HERE` | SE QUEDA | Ya tiene clave real y el guard funciona |
+| "Our mechanic profiles are coming soon" | SE QUEDA | Es un empty state legitimo, no un dato falso |
+| `docs/mockups/*.html` | SE QUEDA (por ahora) | Son maquetas de diseno en `docs/`. **Ojo: Vercel las sirve publicamente.** Ver 10.4 |
+
+**Como se probo que el flujo `bk-` estaba muerto** (antes de borrar): en
+estatico, nada pone visible `#booking-panel` - lo unico que toca su `display`
+es `closeBooking()` poniendolo en `none`. En vivo, un MutationObserver sobre el
+panel mientras se clickeaban todos los CTA de reserva visibles: **nunca** se
+mostro. El corte se hizo con aserciones sobre la primera y ultima linea de cada
+rango; una salto y evito que se comiera el comentario de `openBooking()`.
+
+Ademas, las dos consultas que quedaron (`getServices`, `getMyBookings`) ahora
+tienen **limite de 12 segundos**. En un celular con mala señal la request no
+falla: se queda colgada, y un spinner infinito es la misma mentira que el dato
+falso con otra ropa.
+
+### 10.4 Las maquetas de `docs/mockups/` son publicas — ABIERTO
+
+`docs/mockups/payments.html` y `notifications.html` son archivos estaticos en
+el repo, asi que Vercel los sirve en `drbikesydney.com.au/docs/mockups/...`.
+No hay nada sensible, pero es una maqueta con estados falsos ("Coming soon")
+accesible por cualquiera que adivine la URL. Opciones: moverlas fuera del
+directorio publicado, o agregarlas a las exclusiones de `vercel.json`.
+
 ### 10.2 `confirm()` y `prompt()` del navegador — ABIERTO
 
 Cancelar y reprogramar una reserva desde el panel usan los cuadros de dialogo
