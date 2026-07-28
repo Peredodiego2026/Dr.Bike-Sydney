@@ -195,13 +195,101 @@ let mechanic = null,
 const timerIntervals = {};
 let isOffline = !navigator.onLine;
 
+// ── OUTBOX ───────────────────────────────────────────────────────────────────
+// Jobs are already cached for reading offline, and the banner has always
+// promised "changes will sync when back online" - but nothing did. A status
+// tap in a basement hit the network, failed, showed an error and was lost.
+// This is the part that makes that promise true: the tap is applied locally,
+// parked here, and replayed when the signal comes back.
+//
+// Deliberately only status changes. Completing a job carries parts, a price
+// and a card charge; replaying money hours later, against a booking that may
+// have moved, is not something to do quietly in the background.
+const QUEUE_KEY = 'drbike-mech-outbox';
+let _queue = [];
+
+async function queueLoad() {
+  try {
+    _queue = JSON.parse((await _IDB.get(QUEUE_KEY)) || '[]');
+  } catch {
+    _queue = [];
+  }
+  return _queue;
+}
+async function queueSave() {
+  try {
+    await _IDB.set(QUEUE_KEY, JSON.stringify(_queue));
+  } catch {}
+  syncBanner();
+}
+async function queueAdd(item) {
+  _queue.push({ ...item, at: Date.now() });
+  await queueSave();
+}
+
+function syncBanner() {
+  const banner = document.getElementById('sync-banner');
+  const text = document.getElementById('sync-banner-text');
+  if (!banner || !text) return;
+  const n = _queue.length;
+  banner.style.display = n ? 'block' : 'none';
+  if (n) text.textContent = n === 1 ? '1 change waiting to sync' : n + ' changes waiting to sync';
+}
+
+// Replays in order and stops at the first network failure, so the queue keeps
+// its order and nothing is applied twice. A server rejection (4xx) is dropped
+// rather than retried forever - it is not going to start succeeding.
+let _flushing = false;
+async function queueFlush() {
+  if (_flushing || !_queue.length || !navigator.onLine) return;
+  _flushing = true;
+  const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  let sent = 0;
+  try {
+    while (_queue.length) {
+      const item = _queue[0];
+      let resp;
+      try {
+        resp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'mechanic-update-status',
+            token: stored.token || '',
+            booking_id: item.booking_id,
+            status: item.status,
+          }),
+        });
+      } catch {
+        break; // still no signal - leave the rest for next time
+      }
+      if (!resp.ok && resp.status >= 500) break; // server having a moment
+      if (!resp.ok) {
+        const e = await resp.json().catch(() => ({}));
+        toast('Could not sync one change: ' + (e.error || resp.status));
+      } else {
+        sent++;
+      }
+      _queue.shift();
+      await queueSave();
+    }
+  } finally {
+    _flushing = false;
+  }
+  if (sent) {
+    toast('✅ ' + sent + (sent === 1 ? ' change synced' : ' changes synced'));
+    if (mechanic) load();
+  }
+}
+
 // ── OFFLINE DETECTION ─────────────────────────────────────────────────────────
 function updateOnlineStatus() {
   isOffline = !navigator.onLine;
   const banner = document.getElementById('offline-banner');
   if (banner) banner.style.display = isOffline ? 'flex' : 'none';
+  syncBanner();
   if (!isOffline && mechanic) {
-    load();
+    queueFlush().then(() => load());
   } // auto-sync cuando vuelve internet
 }
 window.addEventListener('online', updateOnlineStatus);
@@ -252,6 +340,12 @@ async function init() {
   vanNum = mechanic.van_number || 1;
   go('s-main');
   updateUI();
+  // Anything parked from a previous session (the app was closed with no
+  // signal) goes out before the first load, so the list he sees is already
+  // reconciled.
+  await queueLoad();
+  syncBanner();
+  await queueFlush();
   const loadTimeout = setTimeout(() => {
     if (document.getElementById('jobs-list')?.innerHTML.includes('Loading')) {
       document.getElementById('jobs-list').innerHTML =
@@ -707,6 +801,7 @@ function card(j) {
 
 async function setStatus(id, status) {
   const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  let queued = false;
   try {
     const resp = await fetch('/api/auth', {
       method: 'POST',
@@ -719,19 +814,36 @@ async function setStatus(id, status) {
       }),
     });
     if (!resp.ok) {
+      // A rejection is an answer: the server heard and said no. Queuing that
+      // would just replay a no. Only an unreachable server gets parked.
       const err = await resp.json().catch(() => ({}));
       toast('Error: ' + (err.error || 'Could not update status'));
       return;
     }
-  } catch (e) {
-    toast('Error: ' + e.message);
-    return;
+  } catch {
+    // Never reached the server - park it and carry on as if it had worked,
+    // because from where the mechanic is standing it did.
+    await queueAdd({ booking_id: id, status });
+    queued = true;
   }
   const j = jobs.find((x) => x.id === id);
   if (j) j.status = status;
+  // Keep the cache in step with what he is looking at, or closing the app
+  // offline would show the old status back.
+  try {
+    localStorage.setItem('drbike-jobs-cache', JSON.stringify(jobs));
+  } catch {}
   render();
   badges();
-  toast(status === 'enroute' ? '🚐 En route' : 'Updated');
+  if (queued) {
+    toast('📵 Saved on your phone — syncs when the signal is back');
+  } else {
+    toast(status === 'enroute' ? '🚐 En route' : 'Updated');
+  }
+  // The client-facing half needs the network. Offline it is skipped rather
+  // than faked: the status still lands when the queue flushes, and the client
+  // app picks it up from the database - they just do not get the push.
+  if (queued) return;
   if (status === 'enroute') {
     startGPS(id);
     notifyClientEnroute(j);

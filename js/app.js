@@ -4652,8 +4652,99 @@ sb.auth.onAuthStateChange(async (event, session) => {
   } catch {}
 });
 
+// ── Language control in the top bar ──────────────────────────────────────────
+// The app already had a language picker, buried three taps deep in Profile.
+// This is the same one landing.html carries in its header: one control that
+// opens the three options, next to the sign-in button (Diego, 2026-07-28).
+const SPA_LANG_ICON =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+const SPA_LANG_CARET =
+  '<svg class="spa-lang__caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+const SPA_LANG_CHECK =
+  '<svg class="spa-lang__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+
+function renderSpaLangSwitcher() {
+  const wrap = document.getElementById('spa-lang');
+  if (!wrap) return;
+  const code = getLang();
+  const current = LANGUAGES.find((l) => l.code === code) || LANGUAGES[0];
+
+  // Icon only. This bar also holds the wordmark and the sign-in button, and at
+  // 375px any text here pushed "Iniciar Sesión" onto two lines - in Spanish
+  // and Chinese, which are exactly the readers who need this control. The
+  // globe is the standard mark for it, the menu spells all three out, and
+  // aria-label carries the name for a screen reader.
+  wrap.innerHTML = `
+    <button type="button" class="spa-lang__toggle" id="spa-lang-toggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="spa-lang-menu" aria-label="Language" title="${current.label}">
+      ${SPA_LANG_ICON}
+    </button>
+    <div class="spa-lang__menu" id="spa-lang-menu" role="listbox" aria-label="Language" hidden>
+      ${LANGUAGES.map(
+        (l) =>
+          `<button type="button" class="spa-lang__option" role="option" data-lang="${l.code}" aria-selected="${l.code === current.code}"><span>${l.label}</span>${SPA_LANG_CHECK}</button>`
+      ).join('')}
+    </div>`;
+
+  const toggle = wrap.querySelector('#spa-lang-toggle');
+  const menu = wrap.querySelector('#spa-lang-menu');
+  const options = [...menu.querySelectorAll('.spa-lang__option')];
+
+  // Bound on open, unbound on close: this re-renders on every language change,
+  // so a listener left on document would pile up one per switch.
+  const onOutside = (e) => {
+    if (!wrap.contains(e.target)) closeMenu(false);
+  };
+  function openMenu(index) {
+    menu.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+    document.addEventListener('mousedown', onOutside);
+    document.addEventListener('touchstart', onOutside);
+    const selected = options.findIndex((o) => o.getAttribute('aria-selected') === 'true');
+    options[typeof index === 'number' ? index : Math.max(0, selected)].focus();
+  }
+  function closeMenu(refocus) {
+    if (menu.hidden) return;
+    menu.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('mousedown', onOutside);
+    document.removeEventListener('touchstart', onOutside);
+    if (refocus) toggle.focus();
+  }
+
+  toggle.addEventListener('click', () => (menu.hidden ? openMenu() : closeMenu(true)));
+  toggle.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      openMenu(0);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      openMenu(options.length - 1);
+    }
+  });
+  options.forEach((opt, i) => {
+    opt.addEventListener('click', () => {
+      closeMenu(false);
+      setLang(opt.dataset.lang);
+      document.getElementById('spa-lang-toggle')?.focus();
+    });
+    opt.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeMenu(true);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        options[(i + 1) % options.length].focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        options[(i - 1 + options.length) % options.length].focus();
+      } else if (e.key === 'Tab') closeMenu(false);
+    });
+  });
+}
+
 router.init();
 document.dispatchEvent(new Event('routerinit'));
+renderSpaLangSwitcher();
 updateHomeNav();
 if (window._pendingReview) {
   setTimeout(() => router.navigate('review'), 200);
@@ -4682,4 +4773,5 @@ document.querySelectorAll('[data-screen]').forEach((screen) => {
 });
 document.addEventListener('langchange', () => {
   document.querySelectorAll('[data-screen]').forEach((screen) => translateScreen(screen));
+  renderSpaLangSwitcher();
 });
