@@ -1,5 +1,5 @@
-const CACHE_STATIC = 'drbike-static-v48';
-const CACHE_PAGES  = 'drbike-pages-v48';
+const CACHE_STATIC = 'drbike-static-v49';
+const CACHE_PAGES  = 'drbike-pages-v49';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
 // too, without their query, and every one of those entries was dead weight:

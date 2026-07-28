@@ -135,7 +135,12 @@
 
 <!-- Offline banner -->
 <div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:#D97706;color:#fff;padding:8px 16px;font-size:12px;font-weight:600;text-align:center">
-  ⚡ You're offline — showing cached jobs. Changes will sync when back online.
+  <span id="offline-banner-text">⚡ You're offline — showing cached jobs. Changes will sync when back online.</span>
+</div>
+<!-- Shown while there is a queue to send, online or not: the mechanic needs to
+     know his taps are still in the phone and not on the server yet. -->
+<div id="sync-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9997;background:#1E40AF;color:#fff;padding:8px 16px;font-size:12px;font-weight:600;text-align:center">
+  <span id="sync-banner-text"></span>
 </div>
 
 <!-- LOGIN -->
@@ -241,6 +246,6 @@
 </div>
 
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/mechanic.js?v=20260708a"></script>
+<script src="js/mechanic.js?v=20260728e"></script>
 </body>
 </html>
