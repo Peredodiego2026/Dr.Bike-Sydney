@@ -1,0 +1,24 @@
+# Anything listed here is not uploaded to Vercel, so it can never be served.
+#
+# docs/ is the project's own paper trail - PENDIENTES.md, the roadmap, design
+# notes, and docs/mockups/*.html, which are static HTML. Vercel serves whatever
+# static files it is given, so those mockups were reachable on the live domain
+# by anyone who guessed the URL: a fake payments screen with "Coming soon"
+# states, sitting on the same domain that takes real money. Nothing secret in
+# them, but nothing that belongs in public either.
+#
+# The only reference to docs/ from runtime code is one comment in landing.html
+# pointing at an audit file, which does not need the file to exist.
+docs/
+
+# Test and tooling output. Never needed at runtime, and playwright-report can
+# carry screenshots of test runs.
+tests/
+e2e/
+playwright-report/
+playwright.config.js
+test-results/
+
+# Database migrations are run by hand in the Supabase SQL editor. Publishing
+# them tells a reader the exact shape of every table.
+scripts/*.sql
