@@ -500,15 +500,41 @@ async function load() {
     badges();
   } catch (e) {
     console.error('load() CATCH ERROR:', e.message, e);
-    const cached = localStorage.getItem('drbike-jobs-cache');
+    // An EMPTY cache is not a cache. `localStorage.getItem` returns the string
+    // "[]" after any day that ended with no jobs, and "[]" is truthy - so a
+    // failed load fell into this branch, rendered zero jobs, and the mechanic
+    // got the cheerful "No jobs today - New bookings appear instantly" empty
+    // state while real bookings sat in the database. He reads that as "nothing
+    // on today" and goes home. Only fall back to the cache when it actually
+    // holds work; otherwise say the load failed.
+    let cached = null;
+    try {
+      const raw = localStorage.getItem('drbike-jobs-cache');
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed) && parsed.length) cached = parsed;
+    } catch {
+      cached = null; // corrupt cache reads the same as no cache
+    }
     if (cached) {
-      jobs = JSON.parse(cached);
+      jobs = cached;
       render();
       badges();
       toast('⚡ Offline — showing cached jobs');
     } else {
-      document.getElementById('jobs-list').innerHTML =
-        '<div style="text-align:center;padding:40px;color:red">Error: ' + e.message + '</div>';
+      const box = document.getElementById('jobs-list');
+      box.textContent = '';
+      const msg = document.createElement('div');
+      msg.style.cssText = 'text-align:center;padding:40px;color:var(--red)';
+      // textContent, not innerHTML: e.message went into markup unescaped.
+      msg.textContent = "Could not load your jobs — " + e.message;
+      const retry = document.createElement('button');
+      retry.textContent = 'Try again';
+      retry.style.cssText =
+        'margin-top:14px;padding:12px 22px;min-height:44px;background:var(--green);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer';
+      retry.addEventListener('click', () => load());
+      msg.appendChild(document.createElement('br'));
+      msg.appendChild(retry);
+      box.appendChild(msg);
     }
   }
 }
