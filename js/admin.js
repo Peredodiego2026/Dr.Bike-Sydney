@@ -2908,17 +2908,49 @@ async function loadAnalytics() {
   renderAnalytics();
 }
 
+// The token in localStorage is written once at login and never again, but a
+// Supabase access token only lives about an hour. restoreAdminSession() hands
+// the refresh token to supabase-js on every page load, which mints a fresh
+// access token - and because the client runs with persistSession:false, that
+// fresh one stays in memory while localStorage keeps the expired original.
+//
+// So the panel itself keeps working (its reads use the live session) while any
+// server call reading localStorage sends a dead JWT and gets "Invalid session"
+// back. That is exactly what the Analytics screen hit in production.
+//
+// Ask the client for the live session, and write the fresh token back so the
+// stored copy stops rotting for every other caller of this key too.
+async function adminAccessToken() {
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    if (session?.access_token) {
+      localStorage.setItem('drbike-admin-token', session.access_token);
+      if (session.refresh_token)
+        localStorage.setItem('drbike-admin-refresh', session.refresh_token);
+      return session.access_token;
+    }
+  } catch (e) {
+    console.warn('[admin] could not read the live session:', e.message);
+  }
+  return localStorage.getItem('drbike-admin-token') || '';
+}
+
 async function fetchAnalyticsServer() {
   try {
+    const token = await adminAccessToken();
+    if (!token) return { error: 'Your admin session has expired - reload the page and sign in.' };
     const r = await fetch('/api/analytics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        access_token: localStorage.getItem('drbike-admin-token') || '',
-        days: _anRange === 0 ? 730 : _anRange,
-      }),
+      body: JSON.stringify({ access_token: token, days: _anRange === 0 ? 730 : _anRange }),
     });
     const json = await r.json().catch(() => ({}));
+    // 401 back from the server means the session died between reading it and
+    // sending it. "Invalid session" is true but says nothing Diego can act on.
+    if (r.status === 401)
+      return { error: 'Your admin session has expired - reload the page and sign in again.' };
     if (!r.ok) return { error: json.error || `HTTP ${r.status}` };
     return json;
   } catch (e) {

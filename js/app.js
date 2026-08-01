@@ -235,7 +235,7 @@ function clearBookingDraft() {
           router.navigate('tracking');
         } catch (e) {
           showToast(
-            e.message || 'Payment could not be confirmed. Please contact us if you were charged.'
+            translateValue(e.message || 'Payment could not be confirmed. Please contact us if you were charged.')
           );
           router.navigate('book-service');
         }
@@ -406,7 +406,7 @@ async function loadTimeSlots(screen, date, serviceId) {
           '.</div>' +
           '</div>';
       } catch (e) {
-        msg.textContent = e.message;
+        msg.textContent = translateValue(e.message);
         msg.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Notify Me When a Slot Opens';
@@ -1386,7 +1386,7 @@ async function renderServiceSummary() {
     } catch (e) {
       _appliedDiscount = 0;
       msg.style.color = 'var(--color-error)';
-      msg.textContent = e.message || 'Invalid code';
+      msg.textContent = translateValue(e.message || 'Invalid code');
     }
   });
 
@@ -1406,7 +1406,7 @@ async function renderServiceSummary() {
       window.appState.isGuest = !user;
       router.navigate('payment');
     } catch (e) {
-      errEl.textContent = e.message || 'Please try again.';
+      errEl.textContent = translateValue(e.message || 'Please try again.');
       errEl.hidden = false;
       btn.disabled = false;
       btn.textContent = payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
@@ -1896,7 +1896,7 @@ async function renderPayment() {
       try {
         await finalizeBooking(null, { isTest: false });
       } catch (e) {
-        errEl.textContent = e.message || 'Could not confirm booking. Please try again.';
+        errEl.textContent = translateValue(e.message || 'Could not confirm booking. Please try again.');
         errEl.hidden = false;
         btn.disabled = false;
         btn.textContent = 'Confirm booking';
@@ -1914,7 +1914,7 @@ async function renderPayment() {
       } catch (e) {
         btn.disabled = false;
         btn.textContent = 'Test booking - no charge (admin only)';
-        showToast(e.message || 'Test booking failed');
+        showToast(translateValue(e.message || 'Test booking failed'));
       }
     });
   }
@@ -2960,7 +2960,7 @@ async function renderReview() {
       }
       await submitReview(bookingId || 'demo', currentRating, textarea.value.trim(), photoBase64);
     } catch (e) {
-      errEl.textContent = e.message || 'Could not submit review. Please try again.';
+      errEl.textContent = translateValue(e.message || 'Could not submit review. Please try again.');
       errEl.hidden = false;
       btn.disabled = false;
       btn.textContent = 'Submit Review';
@@ -3117,7 +3117,7 @@ async function renderLogin() {
       });
       if (error) throw error;
     } catch (e) {
-      errEl.textContent = e.message || 'Google login failed. Please try again.';
+      errEl.textContent = translateValue(e.message || 'Google login failed. Please try again.');
       errEl.hidden = false;
     }
   });
@@ -3148,7 +3148,7 @@ async function renderLogin() {
         if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
         renderResetSent(email);
       } catch (err) {
-        errEl.textContent = err.message || 'Could not send reset link. Please try again.';
+        errEl.textContent = translateValue(err.message || 'Could not send reset link. Please try again.');
         errEl.hidden = false;
         btn.disabled = false;
         btn.textContent = 'Send reset link';
@@ -3182,7 +3182,7 @@ async function renderLogin() {
       _loginMode = 'signin';
       router.navigate('home');
     } catch (err) {
-      errEl.textContent = err.message || 'Authentication failed. Please try again.';
+      errEl.textContent = translateValue(err.message || 'Authentication failed. Please try again.');
       errEl.hidden = false;
       btn.disabled = false;
       btn.textContent = isSignup ? 'Create Account' : 'Login';
@@ -3233,7 +3233,7 @@ function renderResetSent(email) {
     } catch (err) {
       resendBtn.disabled = false;
       resendBtn.textContent = 'Resend email';
-      showToast(err.message || 'Could not send reset link. Please try again.', 'error');
+      showToast(translateValue(err.message || 'Could not send reset link. Please try again.'), 'error');
     }
   });
 }
@@ -3280,7 +3280,7 @@ function promptNewPassword() {
       showToast('Password updated - you are signed in.', 'success');
       router.navigate('home');
     } catch (e) {
-      errEl.textContent = e.message || 'Could not update password. Please try again.';
+      errEl.textContent = translateValue(e.message || 'Could not update password. Please try again.');
       errEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Update password';
@@ -4076,7 +4076,7 @@ async function renderProfile() {
         showToast('Card saved', 'success');
         renderProfile();
       } catch (e) {
-        errEl.textContent = e.message || 'Could not save card. Please try again.';
+        errEl.textContent = translateValue(e.message || 'Could not save card. Please try again.');
         errEl.hidden = false;
         btn.disabled = false;
         btn.textContent = 'Save card';
@@ -4105,7 +4105,7 @@ async function renderProfile() {
       showToast('Card removed', 'success');
       renderProfile();
     } catch (e) {
-      showToast(e.message || 'Could not remove card', 'error');
+      showToast(translateValue(e.message || 'Could not remove card'), 'error');
       btn.disabled = false;
       btn.textContent = 'Remove';
     }
@@ -4143,7 +4143,7 @@ async function renderProfile() {
         showToast(isPaused ? 'Membership resumed' : 'Membership paused', 'success');
         renderProfile();
       } catch (e) {
-        showToast(e.message || 'Something went wrong', 'error');
+        showToast(translateValue(e.message || 'Something went wrong'), 'error');
         toggleBtn.disabled = false;
         toggleBtn.textContent = isPaused ? 'Resume membership' : 'Pause membership';
       }
@@ -4154,7 +4154,9 @@ async function renderProfile() {
     cancelBtn.addEventListener('click', async () => {
       if (
         !confirm(
-          'Cancel your membership? It will stay active until the end of the current billing period.'
+          translateValue(
+            'Cancel your membership? It will stay active until the end of the current billing period.'
+          )
         )
       )
         return;
@@ -4174,7 +4176,7 @@ async function renderProfile() {
         showToast('Membership will cancel at period end', 'success');
         renderProfile();
       } catch (e) {
-        showToast(e.message || 'Something went wrong', 'error');
+        showToast(translateValue(e.message || 'Something went wrong'), 'error');
         cancelBtn.disabled = false;
         cancelBtn.textContent = 'Cancel';
       }
@@ -4426,7 +4428,7 @@ async function renderMyBikes() {
           })();
 
           overlay.querySelector('#delete-bike-btn').addEventListener('click', async () => {
-            if (!confirm('Delete this bike?')) return;
+            if (!confirm(translateValue('Delete this bike?'))) return;
             const { error } = await sb
               .from('bikes')
               .delete()
@@ -4614,7 +4616,7 @@ async function renderMyBikes() {
     const errEl = screen.querySelector('#bike-form-error');
     const nickname = (screen.querySelector('#bike-nickname').value || '').trim();
     if (!nickname) {
-      errEl.textContent = 'Nickname is required';
+      errEl.textContent = translateValue('Nickname is required');
       return;
     }
     errEl.textContent = '';
