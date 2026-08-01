@@ -2135,3 +2135,446 @@ body {
     }
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANALYTICS (#page-analytics)
+   Chart tokens are scoped here rather than added to variables.css, which is
+   shared by every surface. Both modes are selected, not flipped: the dark
+   steps were validated against the dark card surface (#152035), not derived
+   from the light ones.
+   Ramps validated with the dataviz skill's validate_palette.js:
+     ordinal light  #60a5fa #3b82f6 #2563eb #1e40af  (lightest 2.54:1 on #fff)
+     ordinal dark   #2563eb #3b82f6 #60a5fa #93c5fd  (darkest  3.15:1 on #152035)
+     series light   #2563eb 5.17:1   series dark #60a5fa 6.40:1
+   ══════════════════════════════════════════════════════════════════════════ */
+#page-analytics {
+  --an-surface: #ffffff;
+  --an-ink: #0d1f3c;
+  --an-ink-2: #475569;
+  --an-muted: #64748b;
+  --an-grid: #eef2f7;
+  --an-axis: #cbd5e1;
+  --an-series: #2563eb;
+  --an-ctx: #64748b;
+  --an-track: #e9eefb;
+  --an-ord-1: #60a5fa;
+  --an-ord-2: #3b82f6;
+  --an-ord-3: #2563eb;
+  --an-ord-4: #1e40af;
+  --an-good: #059669;
+  --an-warn: #d97706;
+  --an-crit: #dc2626;
+}
+[data-theme='dark'] #page-analytics {
+  --an-surface: #152035;
+  --an-ink: #f2f2f7;
+  --an-ink-2: #c3ccd9;
+  --an-muted: #8b95a5;
+  --an-grid: #22304a;
+  --an-axis: #33425e;
+  --an-series: #60a5fa;
+  --an-ctx: #8b95a5;
+  --an-track: #1e2d47;
+  --an-ord-1: #2563eb;
+  --an-ord-2: #3b82f6;
+  --an-ord-3: #60a5fa;
+  --an-ord-4: #93c5fd;
+  --an-good: #34d399;
+  --an-warn: #fbbf24;
+  --an-crit: #f87171;
+}
+
+/* ── Filter row — one row above everything it scopes ─────────────────────── */
+.an-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.an-range {
+  display: inline-flex;
+  background: var(--an-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.an-range button {
+  border: none;
+  background: none;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--an-muted);
+  padding: 8px 14px;
+  min-height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.an-range button:hover {
+  color: var(--an-ink);
+  background: rgba(37, 99, 235, 0.06);
+}
+.an-range button[aria-pressed='true'] {
+  background: var(--an-series);
+  color: #fff;
+}
+[data-theme='dark'] .an-range button[aria-pressed='true'] {
+  color: #0d1b2e;
+}
+.an-actions {
+  display: flex;
+  gap: 8px;
+}
+.an-btn {
+  background: var(--an-surface);
+  color: var(--an-ink);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 16px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--sans);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.an-btn:hover {
+  border-color: var(--an-series);
+  color: var(--an-series);
+}
+
+/* ── Stat tiles ──────────────────────────────────────────────────────────── */
+.an-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 12px;
+}
+.an-tile {
+  background: var(--an-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.an-tile-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--an-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.an-tile-value {
+  font-family: var(--sans);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--an-ink);
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+.an-tile-value.is-empty {
+  color: var(--an-muted);
+  font-size: 22px;
+  font-weight: 600;
+}
+.an-tile-delta {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.an-tile-delta.up {
+  color: var(--an-good);
+}
+.an-tile-delta.down {
+  color: var(--an-crit);
+}
+.an-tile-delta.flat {
+  color: var(--an-muted);
+}
+.an-tile-note {
+  font-size: 11px;
+  color: var(--an-muted);
+  margin-top: 2px;
+}
+
+/* ── Card internals ──────────────────────────────────────────────────────── */
+.an-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 1100px) {
+  .an-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+.an-body {
+  padding: 18px 20px 20px;
+}
+.an-note {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--an-muted);
+  padding: 0 20px 16px;
+}
+.an-state {
+  padding: 34px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--an-muted);
+  line-height: 1.6;
+}
+.an-state strong {
+  display: block;
+  font-size: 14px;
+  color: var(--an-ink);
+  margin-bottom: 4px;
+}
+.an-state.is-error strong {
+  color: var(--an-crit);
+}
+.an-state-icon {
+  font-size: 26px;
+  display: block;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+/* ── Horizontal bar list — value is always a visible label, never colour
+      alone, so these need no separate table view ─────────────────────────── */
+.an-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.an-bar-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 34%) 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.an-bar-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--an-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.an-bar-track {
+  height: 10px;
+  background: var(--an-track);
+  border-radius: 5px;
+}
+.an-bar-fill {
+  height: 100%;
+  background: var(--an-series);
+  border-radius: 0 4px 4px 0;
+  transition: width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.an-bar-fill.is-ctx {
+  background: var(--an-ctx);
+}
+.an-bar-fill.is-zero {
+  background: transparent;
+}
+.an-bar-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--an-ink-2);
+  font-variant-numeric: tabular-nums;
+  min-width: 62px;
+  text-align: right;
+}
+.an-bar-val small {
+  color: var(--an-muted);
+  font-weight: 500;
+}
+
+/* ── Funnel — ordinal ramp, one step per stage ───────────────────────────── */
+.an-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.an-funnel-row .an-funnel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+.an-funnel-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--an-ink);
+}
+.an-funnel-meta {
+  font-size: 11.5px;
+  color: var(--an-muted);
+  font-variant-numeric: tabular-nums;
+}
+.an-funnel-track {
+  height: 16px;
+  background: var(--an-track);
+  border-radius: 8px;
+}
+.an-funnel-fill {
+  height: 100%;
+  border-radius: 0 6px 6px 0;
+  transition: width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ── SVG column charts ───────────────────────────────────────────────────── */
+.an-chart {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+.an-chart .an-gridline {
+  stroke: var(--an-grid);
+  stroke-width: 1;
+}
+.an-chart .an-baseline {
+  stroke: var(--an-axis);
+  stroke-width: 1;
+}
+.an-chart .an-tick {
+  fill: var(--an-muted);
+  font-size: 10px;
+  font-family: var(--sans);
+  font-variant-numeric: tabular-nums;
+}
+.an-chart .an-col {
+  fill: var(--an-series);
+}
+.an-chart .an-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.an-chart .an-hit:hover + .an-col,
+.an-chart .an-colgroup:hover .an-col {
+  fill: var(--an-ord-4);
+}
+[data-theme='dark'] .an-chart .an-colgroup:hover .an-col {
+  fill: var(--an-ord-4);
+}
+.an-tip {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  background: var(--an-ink);
+  color: var(--an-surface);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 7px 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.an-tip.on {
+  opacity: 1;
+}
+
+/* ── Table twin for the column charts ────────────────────────────────────── */
+.an-toggle {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--an-series);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  padding: 6px 8px;
+  min-height: 32px;
+}
+.an-toggle:hover {
+  text-decoration: underline;
+}
+.an-tablewrap {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.an-tablewrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.an-tablewrap th {
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--an-muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--an-grid);
+  position: sticky;
+  top: 0;
+  background: var(--an-surface);
+}
+.an-tablewrap td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--an-grid);
+  color: var(--an-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.an-tablewrap td:first-child {
+  color: var(--an-ink);
+  font-weight: 600;
+}
+
+/* ── Legend (present whenever a card shows 2+ colour meanings) ───────────── */
+.an-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 0 20px 16px;
+}
+.an-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--an-ink-2);
+}
+.an-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .an-range {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .an-range button {
+    flex: 1;
+    min-height: 44px;
+    padding: 8px 6px;
+  }
+  .an-btn {
+    min-height: 44px;
+  }
+  .an-bar-row {
+    grid-template-columns: minmax(80px, 40%) 1fr auto;
+  }
+}

@@ -354,7 +354,7 @@ const subs = {
   'mechanic-profile': 'What clients see when a mechanic accepts their job',
   clients: 'Client database',
   finance: 'Financial overview',
-  analytics: 'Funnel · heatmap · LTV · margins',
+  analytics: 'Sign-ups · bookings · revenue · funnel · traffic',
   zones: 'Assign suburbs to each van',
   claims: 'Warranty claims from clients - review evidence and resolve',
   settings: 'System settings',
@@ -385,7 +385,10 @@ function go(page, btn) {
     renderRouteMap();
   }
   if (page === 'mechanic-profile') loadMechanicProfiles();
-  if (page === 'analytics') loadAnalytics();
+  if (page === 'analytics') {
+    wireAnalytics();
+    loadAnalytics();
+  }
   if (page === 'contacts') loadContacts();
   if (page === 'bookings') loadBookings();
   if (page === 'clients') loadClients();
@@ -2745,29 +2748,296 @@ let _heatMap = null,
 
 let _analyticsData = null;
 
+// ── Analytics state ──────────────────────────────────────────────────────────
+// The one rule this whole section is written to: a number on screen is either
+// measured or it is absent. No zero stands in for "the query failed", no
+// average is computed over an empty denominator, and every card that cannot
+// answer says which of the two it is - no data yet, or the read broke.
+const BOOKINGS_FETCH_CAP = 5000;
+let _anRange = 30; // days; 0 = all time
+let _anServer = null; // /api/analytics payload (checkout_attempts + PostHog)
+const _anTables = {}; // chart id -> { rows, cols, showing }
+
+function anRangeLabel() {
+  return _anRange === 0
+    ? 'all time'
+    : _anRange === 365
+      ? 'last 12 months'
+      : `last ${_anRange} days`;
+}
+function anRangeStart() {
+  if (_anRange === 0) return null;
+  const d = new Date();
+  d.setDate(d.getDate() - _anRange);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function anInRange(iso, from, to) {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return false;
+  if (from && t < from.getTime()) return false;
+  if (to && t >= to.getTime()) return false;
+  return true;
+}
+function anMoney(n) {
+  return '$' + Math.round(n).toLocaleString('en-AU');
+}
+function anCompact(n) {
+  return n >= 1000000
+    ? (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
+    : n >= 10000
+      ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
+      : n.toLocaleString('en-AU');
+}
+// Revenue is recognised when the job is finished, so anything money-shaped is
+// dated by completed_at - not by when the booking was created. One helper for
+// the KPI tile and the chart both, because two definitions of "revenue this
+// month" on one screen is how a dashboard starts lying quietly.
+function anCompletedInRange(all, from, to) {
+  return all.filter(
+    (b) => b.status === 'completed' && anInRange(b.completed_at || b.created_at, from, to)
+  );
+}
+function anRevenueOf(rows) {
+  return rows.reduce((s, b) => s + (Number(b.service_price) || 0), 0);
+}
+
+function anState(html, kind) {
+  return `<div class="an-state${kind === 'error' ? ' is-error' : ''}">${html}</div>`;
+}
+function anEmpty(title, detail) {
+  return anState(
+    `<span class="an-state-icon">&#9675;</span><strong>${esc(title)}</strong>${esc(detail || '')}`
+  );
+}
+function anError(detail) {
+  return anState(
+    `<span class="an-state-icon">&#9888;</span><strong>Could not load this</strong>${esc(detail || '')}`
+  );
+}
+
 async function loadAnalytics() {
-  const [{ data, error }, { data: catalog }] = await Promise.all([
+  const errBox = document.getElementById('an-error');
+  if (errBox) errBox.style.display = 'none';
+
+  // profiles and bookings are read with the admin's own session (same as every
+  // other admin screen). checkout_attempts is not: its RLS policy is
+  // `auth.uid() = client_id`, so an admin session reads zero rows however many
+  // exist - that one, and PostHog, come back from /api/analytics.
+  const [bookingsRes, profilesRes, catalogRes, serverRes] = await Promise.all([
     sb
       .from('bookings')
       .select(
-        'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,mechanic_accepted_at,time_to_book_seconds,profiles(full_name,email)'
+        'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)'
       )
-      .limit(5000),
+      .order('created_at', { ascending: false })
+      .limit(BOOKINGS_FETCH_CAP),
+    sb.from('profiles').select('id,created_at').limit(20000),
     sb.from('services').select('name'),
+    fetchAnalyticsServer(),
   ]);
-  if (error) {
-    showToast('Analytics load error: ' + error.message);
-    return;
-  }
-  const all = data || [];
-  _analyticsData = { all, catalog: catalog || [] };
 
-  renderTargetMetrics(all);
-  renderFunnel(all);
+  const failures = [];
+  if (bookingsRes.error) failures.push('bookings: ' + bookingsRes.error.message);
+  if (profilesRes.error) failures.push('accounts: ' + profilesRes.error.message);
+  if (catalogRes.error) failures.push('services: ' + catalogRes.error.message);
+  // Hitting the row cap means every total on this screen is a floor, not a
+  // count. Silently truncated numbers that still look precise are worse than
+  // no numbers, so this says it out loud.
+  if ((bookingsRes.data || []).length >= BOOKINGS_FETCH_CAP)
+    failures.push(
+      `only the ${BOOKINGS_FETCH_CAP.toLocaleString('en-AU')} most recent bookings were read - totals below are undercounted`
+    );
+  if ((profilesRes.data || []).length >= 20000)
+    failures.push('only the first 20,000 accounts were read - sign-up totals are undercounted');
+  if (failures.length && errBox) {
+    errBox.textContent = 'Heads up - ' + failures.join(' · ');
+    errBox.style.display = 'block';
+  }
+
+  _analyticsData = {
+    all: bookingsRes.data || [],
+    bookingsError: bookingsRes.error ? bookingsRes.error.message : null,
+    profiles: profilesRes.data || [],
+    profilesError: profilesRes.error ? profilesRes.error.message : null,
+    catalog: catalogRes.data || [],
+    catalogError: catalogRes.error ? catalogRes.error.message : null,
+    truncated: (bookingsRes.data || []).length >= BOOKINGS_FETCH_CAP,
+  };
+  _anServer = serverRes;
+
+  renderAnalytics();
+}
+
+async function fetchAnalyticsServer() {
+  try {
+    const r = await fetch('/api/analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_token: localStorage.getItem('drbike-admin-token') || '',
+        days: _anRange === 0 ? 730 : _anRange,
+      }),
+    });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) return { error: json.error || `HTTP ${r.status}` };
+    return json;
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+// Everything below re-renders from the cached rows, so changing the range is
+// instant and never re-queries Supabase. Only the traffic half depends on the
+// server, and only that half is re-fetched.
+function renderAnalytics() {
+  const d = _analyticsData;
+  if (!d) return;
+  const from = anRangeStart();
+  const all = d.all;
+  const inRange = from ? all.filter((b) => anInRange(b.created_at, from, null)) : all;
+
+  renderAnalyticsKPIs(d, inRange, from);
+  renderFunnel(d, from);
+  renderRevenueChart(d, from);
+  renderSignupsChart(d, from);
+  renderServicePopularity(inRange, d.catalog, d);
+  renderSuburbs(inRange, d);
+  renderSources(inRange, d);
+  renderCheckoutCard();
+  renderTrafficCard();
+
+  // Lifetime by design - their subtitles say so.
   renderHeatmap(all);
-  renderServicePopularity(all, catalog || []);
   renderMargins(all);
   renderLTV(all);
+  renderTargetMetrics(all);
+
+  const sub = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  sub('an-revenue-sub', 'Completed bookings · ' + anRangeLabel());
+  sub('an-signups-sub', 'Sign-ups · ' + anRangeLabel());
+  sub('an-popularity-sub', 'Completed jobs per service · ' + anRangeLabel());
+  sub('an-suburbs-sub', 'Bookings created · ' + anRangeLabel());
+  sub('an-sources-sub', 'Bookings created · ' + anRangeLabel());
+  sub('an-heatmap-sub', 'Booking volume by suburb · lifetime, not filtered by the range above');
+
+  // A card that fell back to an empty state has no chart to swap, so its
+  // toggle must not still offer "Chart".
+  document.querySelectorAll('#page-analytics [data-an-table]').forEach((btn) => {
+    const t = _anTables[btn.dataset.anTable];
+    const live = document.getElementById(btn.dataset.anTable);
+    const hasChart = live && (live.querySelector('svg') || live.querySelector('table'));
+    btn.style.display = hasChart ? '' : 'none';
+    btn.textContent = t && t.showing ? 'Chart' : 'Table';
+  });
+}
+
+// ── KPI row ──────────────────────────────────────────────────────────────────
+// Deltas compare against the immediately preceding window of the same length.
+// "All time" has no preceding window, so it shows no delta rather than a
+// made-up one, and a previous window of zero reads as "first data" instead of
+// a +infinity percentage.
+function renderAnalyticsKPIs(d, inRange, from) {
+  const el = document.getElementById('an-kpis');
+  if (!el) return;
+
+  if (d.bookingsError && d.profilesError) {
+    el.innerHTML = `<div style="grid-column:1/-1">${anError(d.bookingsError)}</div>`;
+    return;
+  }
+
+  let prevFrom = null;
+  if (from) {
+    prevFrom = new Date(from);
+    prevFrom.setDate(prevFrom.getDate() - _anRange);
+  }
+  const prevBookings = prevFrom ? d.all.filter((b) => anInRange(b.created_at, prevFrom, from)) : [];
+  const prevProfiles = prevFrom
+    ? d.profiles.filter((p) => anInRange(p.created_at, prevFrom, from))
+    : [];
+
+  const signups = from ? d.profiles.filter((p) => anInRange(p.created_at, from, null)) : d.profiles;
+  const completed = anCompletedInRange(d.all, from, null);
+  const prevCompleted = prevFrom ? anCompletedInRange(d.all, prevFrom, from) : [];
+  const revenue = anRevenueOf(completed);
+  const prevRevenue = anRevenueOf(prevCompleted);
+
+  const tiles = [
+    {
+      label: 'New accounts',
+      value: d.profilesError ? null : anCompact(signups.length),
+      now: signups.length,
+      prev: prevProfiles.length,
+      error: d.profilesError,
+    },
+    {
+      label: 'Bookings',
+      value: d.bookingsError ? null : anCompact(inRange.length),
+      now: inRange.length,
+      prev: prevBookings.length,
+      error: d.bookingsError,
+    },
+    {
+      // Counted by when the job was finished, which is a different cohort from
+      // "Bookings" above (counted by when it was made). Deliberately not
+      // divided by it - that ratio would compare two different sets of jobs.
+      label: 'Jobs completed',
+      value: d.bookingsError ? null : anCompact(completed.length),
+      now: completed.length,
+      prev: prevCompleted.length,
+      error: d.bookingsError,
+      note: 'finished in this period',
+    },
+    {
+      label: 'Revenue',
+      value: d.bookingsError ? null : anMoney(revenue),
+      now: revenue,
+      prev: prevRevenue,
+      error: d.bookingsError,
+    },
+    {
+      label: 'Avg ticket',
+      // The one number most likely to become a lie: an average needs a
+      // non-zero denominator, so with no completed job it stays blank.
+      value: d.bookingsError ? null : completed.length ? anMoney(revenue / completed.length) : null,
+      empty: 'No completed jobs',
+      note: completed.length
+        ? `across ${completed.length} completed job${completed.length === 1 ? '' : 's'}`
+        : 'nothing to average yet',
+      error: d.bookingsError,
+      skipDelta: true,
+    },
+  ];
+
+  el.innerHTML = tiles
+    .map((t) => {
+      let body;
+      if (t.error) {
+        body = `<div class="an-tile-value is-empty">Unavailable</div><div class="an-tile-note">${esc(t.error)}</div>`;
+      } else if (t.value === null || t.value === undefined) {
+        body = `<div class="an-tile-value is-empty">${esc(t.empty || 'No data')}</div>${t.note ? `<div class="an-tile-note">${esc(t.note)}</div>` : ''}`;
+      } else {
+        body = `<div class="an-tile-value">${esc(t.value)}</div>${anDelta(t)}${t.note ? `<div class="an-tile-note">${esc(t.note)}</div>` : ''}`;
+      }
+      return `<div class="an-tile"><div class="an-tile-label">${esc(t.label)}</div>${body}</div>`;
+    })
+    .join('');
+}
+
+function anDelta(t) {
+  if (t.skipDelta || _anRange === 0)
+    return `<div class="an-tile-delta flat">${_anRange === 0 ? 'all time' : ''}</div>`;
+  if (!t.prev) {
+    return `<div class="an-tile-delta flat">${t.now ? 'no prior period to compare' : ''}</div>`;
+  }
+  const pct = Math.round(((t.now - t.prev) / t.prev) * 100);
+  const dir = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
+  const arrow = pct > 0 ? '&#9650;' : pct < 0 ? '&#9660;' : '&#8212;';
+  return `<div class="an-tile-delta ${dir}">${arrow} ${Math.abs(pct)}% vs previous ${_anRange} days</div>`;
 }
 
 // Diego's KPI scorecard: the 3 targets that had no measurement anywhere before
@@ -2864,6 +3134,14 @@ function exportAnalyticsCSV() {
 
   rows.push(['DR. BIKE SYDNEY - ANALYTICS EXPORT']);
   rows.push(['Generated', new Date().toISOString().slice(0, 10)]);
+  // The screen has a date filter; this file does not. Say so, or the numbers
+  // read as if they matched what was on screen when the button was pressed.
+  rows.push(['Scope', 'Lifetime - NOT the date range selected on screen']);
+  if (_analyticsData.truncated)
+    rows.push([
+      'Warning',
+      `only the ${BOOKINGS_FETCH_CAP} most recent bookings were read - totals are undercounted`,
+    ]);
   rows.push([]);
 
   rows.push(['CONVERSION FUNNEL']);
@@ -2959,72 +3237,576 @@ function exportAnalyticsCSV() {
   a.click();
 }
 
-// #24 Service popularity - most to least requested, including zero-demand services
-function renderServicePopularity(all, catalog) {
-  const el = document.getElementById('an-popularity');
-  if (!el) return;
-  const completed = all.filter((b) => b.status === 'completed');
-  const counts = {};
-  catalog.forEach((s) => {
-    counts[s.name] = 0;
-  });
-  completed.forEach((b) => {
-    const name = b.service_name || 'Other';
-    counts[name] = (counts[name] || 0) + 1;
-  });
-  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  if (!rows.length) {
-    el.innerHTML =
-      '<div style="color:var(--mgray);font-size:13px">No services in the catalog yet</div>';
-    return;
-  }
-  const max = Math.max(1, rows[0][1]);
-  el.innerHTML = rows
-    .map(([name, n]) => {
-      const pct = Math.round((n / max) * 100);
-      const color = n === 0 ? 'var(--mgray)' : n === rows[0][1] ? 'var(--green)' : 'var(--blue)';
-      return `
-    <div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-        <span style="font-weight:600;color:var(--navy)">${escapeHtml(name)}</span>
-        <span style="color:var(--mgray)">${n} job${n !== 1 ? 's' : ''}</span>
-      </div>
-      <div style="height:10px;background:var(--off);border-radius:5px;overflow:hidden"><div style="height:100%;width:${Math.max(pct, n > 0 ? 2 : 0)}%;background:${color};border-radius:5px"></div></div>
-    </div>`;
+// ── Horizontal bar list ──────────────────────────────────────────────────────
+// One series, so one colour for every bar (a darker-where-bigger ramp would
+// just re-encode the bar length and spend the only free channel). Every row
+// carries its value as visible text, which is also what makes a separate
+// table view unnecessary here.
+function anBarList(rows, opts = {}) {
+  const fmt = opts.format || ((n) => n.toLocaleString('en-AU'));
+  const max = Math.max(1, ...rows.map((r) => r.value));
+  return rows
+    .map((r) => {
+      const pct = (r.value / max) * 100;
+      const cls = r.value === 0 ? 'is-zero' : r.ctx ? 'is-ctx' : '';
+      return `<div class="an-bar-row">
+        <div class="an-bar-name" title="${esc(r.name)}">${esc(r.name)}</div>
+        <div class="an-bar-track"><div class="an-bar-fill ${cls}" style="width:${r.value === 0 ? 0 : Math.max(pct, 1.5)}%"></div></div>
+        <div class="an-bar-val">${fmt(r.value)}${r.sub ? ` <small>${esc(r.sub)}</small>` : ''}</div>
+      </div>`;
     })
     .join('');
 }
 
-// #20 Conversion funnel
-function renderFunnel(all) {
-  const el = document.getElementById('an-funnel');
+// ── Column chart (SVG, no library - the CSP allows no chart CDN) ─────────────
+// Specs from the dataviz skill: columns capped at 24px with a 2px surface gap,
+// 4px rounded cap and a square foot on the baseline, solid hairline gridlines,
+// no number on every column (only the peak is labelled), tooltip on hover.
+function anColumnChart(id, points, opts = {}) {
+  const fmt = opts.format || ((n) => n.toLocaleString('en-AU'));
+  const W = 700;
+  const H = 210;
+  const padL = 46;
+  const padR = 8;
+  const padT = 14;
+  const padB = 30;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const maxVal = Math.max(...points.map((p) => p.value), 0);
+  // Pick a clean tick *step* and let the top of the scale follow, rather than
+  // rounding the max and slicing it in four - that is what produces axis
+  // labels like $63 and $188.
+  const ticks = anTicks(maxVal, opts.integer);
+  const niceMax = ticks[ticks.length - 1];
+  const y = (v) => padT + plotH - (niceMax ? (v / niceMax) * plotH : 0);
+  const band = plotW / points.length;
+  const barW = Math.max(2, Math.min(24, band - 2)); // the 2px surface gap
+  const peak = points.reduce((best, p, i) => (p.value > points[best].value ? i : best), 0);
+
+  const grid = ticks
+    .map(
+      (t) =>
+        `<line class="an-gridline" x1="${padL}" x2="${W - padR}" y1="${y(t)}" y2="${y(t)}"></line>` +
+        `<text class="an-tick" x="${padL - 8}" y="${y(t) + 3.5}" text-anchor="end">${esc(opts.tickFormat ? opts.tickFormat(t) : anCompact(t))}</text>`
+    )
+    .join('');
+
+  // Label every Nth column so the axis never turns into a smear.
+  const step = Math.ceil(points.length / 8);
+  const cols = points
+    .map((p, i) => {
+      const x = padL + i * band + (band - barW) / 2;
+      const top = y(p.value);
+      const h = padT + plotH - top;
+      const r = Math.min(4, barW / 2, h);
+      const path =
+        h <= 0
+          ? ''
+          : `<path class="an-col" d="M${x},${padT + plotH} L${x},${top + r} Q${x},${top} ${x + r},${top} L${x + barW - r},${top} Q${x + barW},${top} ${x + barW},${top + r} L${x + barW},${padT + plotH} Z"></path>`;
+      const tick =
+        i % step === 0
+          ? `<text class="an-tick" x="${padL + i * band + band / 2}" y="${H - 10}" text-anchor="middle">${esc(p.label)}</text>`
+          : '';
+      const peakLabel =
+        i === peak && p.value > 0
+          ? `<text class="an-tick" x="${padL + i * band + band / 2}" y="${top - 5}" text-anchor="middle" style="font-weight:700">${esc(fmt(p.value))}</text>`
+          : '';
+      return `<g class="an-colgroup" data-tip="${esc(p.full || p.label)}: ${esc(fmt(p.value))}">
+        <rect class="an-hit" x="${padL + i * band}" y="${padT}" width="${band}" height="${plotH}"></rect>
+        ${path}${peakLabel}</g>${tick}`;
+    })
+    .join('');
+
+  _anTables[id] = {
+    cols: [opts.xLabel || 'Period', opts.yLabel || 'Value'],
+    rows: points.map((p) => [p.full || p.label, fmt(p.value)]),
+    showing: _anTables[id] ? _anTables[id].showing : false,
+  };
+
+  if (_anTables[id].showing) return anTableView(id);
+
+  return `<svg class="an-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria || 'Column chart')}">
+    ${grid}
+    <line class="an-baseline" x1="${padL}" x2="${W - padR}" y1="${padT + plotH}" y2="${padT + plotH}"></line>
+    ${cols}
+  </svg>`;
+}
+
+function anTableView(id) {
+  const t = _anTables[id];
+  if (!t) return '';
+  return `<div class="an-tablewrap"><table><thead><tr>${t.cols
+    .map((c) => `<th>${esc(c)}</th>`)
+    .join('')}</tr></thead><tbody>${t.rows
+    .map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`)
+    .join('')}</tbody></table></div>`;
+}
+
+// Ticks a person would write by hand: 0 / 50 / 100 / 150 / 200, never
+// 0 / 63 / 125 / 188. Aims for 4-5 gridlines.
+function anTicks(max, integer) {
+  if (!max || max <= 0) return [0, 1];
+  const raw = max / 4;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  let step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
+  // People and jobs come in whole units - a "1.5 accounts" gridline is noise.
+  if (integer) step = Math.max(1, Math.round(step));
+  const out = [];
+  for (let v = 0; v < max + step; v += step) out.push(Math.round(v * 1000) / 1000);
+  return out;
+}
+
+// Buckets: daily up to a month, weekly up to a quarter, monthly beyond. Empty
+// buckets are emitted as zero on purpose - a week with no revenue is a fact,
+// and dropping it would flatter the chart.
+function anBuckets(from, to) {
+  const spanDays = Math.round((to - from) / 86400000);
+  const mode = spanDays <= 31 ? 'day' : spanDays <= 120 ? 'week' : 'month';
+  const out = [];
+  const cur = new Date(from);
+  cur.setHours(0, 0, 0, 0);
+  if (mode === 'week') cur.setDate(cur.getDate() - ((cur.getDay() + 6) % 7));
+  if (mode === 'month') cur.setDate(1);
+  let guard = 0;
+  while (cur <= to && guard++ < 800) {
+    const start = new Date(cur);
+    if (mode === 'day') cur.setDate(cur.getDate() + 1);
+    else if (mode === 'week') cur.setDate(cur.getDate() + 7);
+    else cur.setMonth(cur.getMonth() + 1);
+    out.push({
+      start,
+      end: new Date(cur),
+      label:
+        mode === 'month'
+          ? start.toLocaleDateString('en-AU', { month: 'short' })
+          : start.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
+      full:
+        mode === 'month'
+          ? start.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+          : mode === 'week'
+            ? 'Week of ' + start.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+            : start.toLocaleDateString('en-AU', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              }),
+      value: 0,
+    });
+  }
+  return out;
+}
+
+function anSeriesFrom(records, dateKey, from, valueFn) {
+  const dates = records
+    .map((r) => new Date(r[dateKey]).getTime())
+    .filter((t) => Number.isFinite(t));
+  if (!dates.length) return [];
+  const start = from || new Date(Math.min(...dates));
+  const buckets = anBuckets(start, new Date());
+  records.forEach((r) => {
+    const t = new Date(r[dateKey]).getTime();
+    if (!Number.isFinite(t)) return;
+    const b = buckets.find((x) => t >= x.start.getTime() && t < x.end.getTime());
+    if (b) b.value += valueFn ? valueFn(r) : 1;
+  });
+  return buckets;
+}
+
+function renderRevenueChart(d, from) {
+  const el = document.getElementById('an-revenue');
   if (!el) return;
-  const total = all.length;
-  const confirmed = all.filter((b) =>
-    ['confirmed', 'enroute', 'en_route', 'in_progress', 'arrived', 'completed'].includes(b.status)
-  ).length;
-  const completed = all.filter((b) => b.status === 'completed').length;
-  const cancelled = all.filter((b) => b.status === 'cancelled').length;
+  if (d.bookingsError) return void (el.innerHTML = anError(d.bookingsError));
+  const completed = anCompletedInRange(d.all, from, null);
+  if (!completed.length) {
+    el.innerHTML = anEmpty(
+      'No completed bookings in this range',
+      'Nothing has been invoiced in the ' + anRangeLabel() + '.'
+    );
+    return;
+  }
+  const rows = completed.map((b) => ({
+    at: b.completed_at || b.created_at,
+    v: Number(b.service_price) || 0,
+  }));
+  const series = anSeriesFrom(rows, 'at', from, (r) => r.v);
+  el.innerHTML = anColumnChart('an-revenue', series, {
+    format: anMoney,
+    tickFormat: (t) => '$' + anCompact(t),
+    xLabel: 'Period',
+    yLabel: 'Revenue',
+    aria: 'Revenue by period',
+  });
+}
+
+function renderSignupsChart(d, from) {
+  const el = document.getElementById('an-signups');
+  if (!el) return;
+  if (d.profilesError) return void (el.innerHTML = anError(d.profilesError));
+  const rows = (
+    from ? d.profiles.filter((p) => anInRange(p.created_at, from, null)) : d.profiles
+  ).filter((p) => p.created_at);
+  if (!rows.length) {
+    el.innerHTML = anEmpty(
+      'No accounts created in this range',
+      'Nobody signed up in the ' + anRangeLabel() + '.'
+    );
+    return;
+  }
+  const series = anSeriesFrom(rows, 'created_at', from);
+  el.innerHTML = anColumnChart('an-signups', series, {
+    integer: true,
+    xLabel: 'Period',
+    yLabel: 'New accounts',
+    aria: 'New accounts by period',
+  });
+}
+
+// ── Acquisition funnel ───────────────────────────────────────────────────────
+// One unit the whole way down - people, not a mix of accounts and bookings -
+// so each percentage means something and the stages can only shrink. The
+// cohort is the accounts created inside the range; their bookings are counted
+// whenever they happened.
+function renderFunnel(d, from) {
+  const el = document.getElementById('an-funnel');
+  const note = document.getElementById('an-funnel-note');
+  const sub = document.getElementById('an-funnel-sub');
+  if (!el) return;
+  if (sub)
+    sub.textContent = 'Accounts created ' + anRangeLabel() + ', followed through to completion';
+
+  if (d.profilesError || d.bookingsError) {
+    el.innerHTML = anError(d.profilesError || d.bookingsError);
+    if (note) note.textContent = '';
+    return;
+  }
+
+  const cohort = from ? d.profiles.filter((p) => anInRange(p.created_at, from, null)) : d.profiles;
+  const ids = new Set(cohort.map((p) => p.id));
+  if (!ids.size) {
+    el.innerHTML = anEmpty(
+      'No accounts created in this range',
+      'The funnel starts from sign-ups, and there were none in the ' + anRangeLabel() + '.'
+    );
+    if (note) note.textContent = '';
+    return;
+  }
+
+  const booked = new Set();
+  const finished = new Set();
+  d.all.forEach((b) => {
+    if (!b.client_id || !ids.has(b.client_id)) return;
+    booked.add(b.client_id);
+    if (b.status === 'completed') finished.add(b.client_id);
+  });
+
+  const ord = ['var(--an-ord-1)', 'var(--an-ord-2)', 'var(--an-ord-3)', 'var(--an-ord-4)'];
   const steps = [
-    { label: 'Bookings created', val: total, color: '#1848C8' },
-    { label: 'Confirmed / assigned', val: confirmed, color: '#0A58CA' },
-    { label: 'Completed', val: completed, color: '#059669' },
+    { label: 'Created an account', n: ids.size },
+    { label: 'Made at least one booking', n: booked.size },
+    { label: 'Had a booking completed', n: finished.size },
   ];
-  const pct = (v) => (total ? Math.round((v / total) * 100) : 0);
+  el.innerHTML = steps
+    .map((s, i) => {
+      const pct = Math.round((s.n / ids.size) * 100);
+      const prev = i > 0 ? steps[i - 1].n : 0;
+      const ofPrev = i > 0 && prev ? ` · ${Math.round((s.n / prev) * 100)}% of previous step` : '';
+      return `<div class="an-funnel-row">
+        <div class="an-funnel-head">
+          <span class="an-funnel-label">${esc(s.label)}</span>
+          <span class="an-funnel-meta">${s.n.toLocaleString('en-AU')} · ${pct}%${ofPrev}</span>
+        </div>
+        <div class="an-funnel-track"><div class="an-funnel-fill" style="width:${Math.max(pct, s.n ? 1.5 : 0)}%;background:${ord[i]}"></div></div>
+      </div>`;
+    })
+    .join('');
+
+  const guests = d.all.filter((b) => !b.client_id).length;
+  if (note) {
+    note.textContent =
+      'Follows the ' +
+      ids.size.toLocaleString('en-AU') +
+      ' people who signed up in this range, wherever their bookings landed on the calendar. ' +
+      (guests
+        ? guests.toLocaleString('en-AU') +
+          ' booking(s) in the database have no account attached (desktop and phone bookings) and cannot appear here - the Bookings tile above counts them.'
+        : 'Every booking in the database is attached to an account.');
+  }
+}
+
+// ── Services sold ────────────────────────────────────────────────────────────
+function renderServicePopularity(inRange, catalog, d) {
+  const el = document.getElementById('an-popularity');
+  if (!el) return;
+  if (d && d.bookingsError) return void (el.innerHTML = anError(d.bookingsError));
+  if (d && d.catalogError) return void (el.innerHTML = anError(d.catalogError));
+  const completed = inRange.filter((b) => b.status === 'completed');
+  const counts = {};
+  (catalog || []).forEach((s) => {
+    counts[s.name] = 0;
+  });
+  completed.forEach((b) => {
+    const name = b.service_name || 'Unspecified';
+    counts[name] = (counts[name] || 0) + 1;
+  });
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (!rows.length) {
+    el.innerHTML = anEmpty('No services in the catalog', 'Add services under Services & Prices.');
+    return;
+  }
+  el.innerHTML = anBarList(
+    rows.map(([name, n]) => ({ name, value: n, sub: n === 1 ? 'job' : 'jobs' }))
+  );
+}
+
+// ── Bookings by suburb ───────────────────────────────────────────────────────
+function renderSuburbs(inRange, d) {
+  const el = document.getElementById('an-suburbs');
+  if (!el) return;
+  if (d.bookingsError) return void (el.innerHTML = anError(d.bookingsError));
+  if (!inRange.length) {
+    el.innerHTML = anEmpty(
+      'No bookings in this range',
+      'Nothing was booked in the ' + anRangeLabel() + '.'
+    );
+    return;
+  }
+  const counts = {};
+  inRange.forEach((b) => {
+    const key = (b.suburb || '').trim() || 'Not recorded';
+    if (!counts[key]) counts[key] = { n: 0, rev: 0 };
+    counts[key].n++;
+    if (b.status === 'completed') counts[key].rev += Number(b.service_price) || 0;
+  });
+  const rows = Object.entries(counts)
+    .sort((a, b) => b[1].n - a[1].n)
+    .map(([name, v]) => ({
+      name,
+      value: v.n,
+      ctx: name === 'Not recorded',
+      sub: v.rev ? anMoney(v.rev) : '',
+    }));
+  el.innerHTML = anBarList(rows);
+}
+
+// ── Where bookings come from ─────────────────────────────────────────────────
+// Untagged is its own bar in the context grey, never folded into "Direct" as
+// if it had been measured. A booking with no utm_source is a booking we do not
+// know the origin of.
+function renderSources(inRange, d) {
+  const el = document.getElementById('an-sources');
+  if (!el) return;
+  if (d.bookingsError) return void (el.innerHTML = anError(d.bookingsError));
+  if (!inRange.length) {
+    el.innerHTML = anEmpty(
+      'No bookings in this range',
+      'Nothing was booked in the ' + anRangeLabel() + '.'
+    );
+    return;
+  }
+  const counts = {};
+  let untagged = 0;
+  inRange.forEach((b) => {
+    const src = (b.utm_source || '').trim();
+    if (!src) {
+      untagged++;
+      return;
+    }
+    counts[src] = (counts[src] || 0) + 1;
+  });
+  const rows = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, n]) => ({ name, value: n }));
+  if (untagged) rows.push({ name: 'Direct / untagged', value: untagged, ctx: true });
+  el.innerHTML = anBarList(rows);
+}
+
+// ── Unpaid checkouts (server-side, see api/auth.js handleAdminAnalytics) ─────
+function renderCheckoutCard() {
+  const el = document.getElementById('an-checkout');
+  if (!el) return;
+  const s = _anServer;
+  if (!s) return void (el.innerHTML = anError('The analytics endpoint did not respond.'));
+  if (s.error) return void (el.innerHTML = anError(s.error));
+  const c = s.checkout;
+  if (!c) return void (el.innerHTML = anError('No checkout data in the response.'));
+  if (!c.available) return void (el.innerHTML = anError(c.reason));
+
+  if (!c.open) {
+    el.innerHTML = anEmpty(
+      'Nobody is stuck at payment',
+      'Zero open unpaid checkouts right now. Tracking has been live since 28 Jul 2026.'
+    );
+    return;
+  }
+
+  const tiles = [
+    ['Open now', String(c.open)],
+    ['Reminder sent', `${c.reminded} of ${c.open}`],
+    ['Value at risk', anMoney(c.value)],
+    ['Oldest', c.oldest_hours === null ? '—' : c.oldest_hours + 'h ago'],
+  ];
   el.innerHTML =
-    steps
+    `<div class="an-kpis" style="margin-bottom:16px">${tiles
       .map(
-        (s, i) => `
-    <div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-        <span style="font-weight:600;color:var(--navy)">${s.label}</span>
-        <span style="color:var(--mgray)">${s.val} · ${pct(s.val)}%${i > 0 && steps[i - 1].val ? ` · ${Math.round((s.val / steps[i - 1].val) * 100)}% of prev` : ''}</span>
-      </div>
-      <div style="height:14px;background:var(--off);border-radius:7px;overflow:hidden"><div style="height:100%;width:${pct(s.val)}%;background:${s.color};border-radius:7px"></div></div>
-    </div>`
+        ([l, v]) =>
+          `<div class="an-tile"><div class="an-tile-label">${esc(l)}</div><div class="an-tile-value" style="font-size:22px">${esc(v)}</div></div>`
       )
-      .join('') +
-    `<div style="font-size:13px;color:var(--red);margin-top:6px">${cancelled} cancelled (${pct(cancelled)}% of all bookings)</div>`;
+      .join('')}</div>` +
+    (c.by_service && c.by_service.length
+      ? `<div class="an-bars">${anBarList(c.by_service.map((r) => ({ name: r.name, value: r.n })))}</div>`
+      : '');
+}
+
+// ── Traffic (PostHog) ────────────────────────────────────────────────────────
+function renderTrafficCard() {
+  const el = document.getElementById('an-traffic');
+  const sub = document.getElementById('an-traffic-sub');
+  if (!el) return;
+  const s = _anServer;
+  if (!s) return void (el.innerHTML = anError('The analytics endpoint did not respond.'));
+  if (s.error) return void (el.innerHTML = anError(s.error));
+  const t = s.traffic;
+  if (!t) return void (el.innerHTML = anError('No traffic data in the response.'));
+
+  if (!t.configured) {
+    if (sub) sub.textContent = 'Not connected yet';
+    el.innerHTML = anState(
+      `<span class="an-state-icon">&#9679;</span><strong>PostHog is not connected to this panel</strong>
+       The site has been sending events to PostHog since July, so the history is already there &mdash; this screen just cannot read it yet.<br><br>
+       ${esc(t.reason)}.<br>
+       Add them in Vercel &rarr; Settings &rarr; Environment Variables, then redeploy:<br>
+       <code>POSTHOG_API_KEY</code> (Personal API Key, scope <em>Query: read</em>) and <code>POSTHOG_PROJECT_ID</code>.<br><br>
+       The key is only ever read on the server. It never reaches this page.`
+    );
+    return;
+  }
+  if (t.error) {
+    if (sub) sub.textContent = 'Connected, but the query failed';
+    el.innerHTML = anError(t.error);
+    return;
+  }
+
+  if (sub) sub.textContent = `PostHog · ${anRangeLabel()}`;
+  const pct = t.visitors ? Math.round((t.returning / t.visitors) * 100) : null;
+  const tiles = [
+    ['Visitors', anCompact(t.visitors)],
+    ['Page views', anCompact(t.views)],
+    [
+      'Came back',
+      pct === null ? 'No visits yet' : `${anCompact(t.returning)} · ${pct}%`,
+      'seen on 2+ separate days',
+    ],
+    ['Bookings tracked', anCompact(t.booking_completed)],
+  ];
+
+  const list = (title, rows, fmtName) =>
+    `<div><div class="an-tile-label" style="margin-bottom:10px">${esc(title)}</div>` +
+    (rows && rows.length
+      ? `<div class="an-bars">${anBarList(rows.map(fmtName))}</div>`
+      : anEmpty('Nothing recorded', '')) +
+    '</div>';
+
+  const stepOrder = ['select_service', 'select_date', 'address', 'quote_summary', 'payment'];
+  const stepNames = {
+    select_service: 'Chose a service',
+    select_date: 'Picked a date',
+    address: 'Entered address',
+    quote_summary: 'Saw the quote',
+    payment: 'Reached payment',
+  };
+  const byStep = Object.fromEntries((t.funnel || []).map((f) => [f.step, f.people]));
+  const funnelRows = stepOrder
+    .filter((s2) => byStep[s2] !== undefined)
+    .map((s2) => ({ name: stepNames[s2], value: byStep[s2] }));
+  if (t.booking_completed)
+    funnelRows.push({ name: 'Completed a booking', value: t.booking_completed });
+
+  el.innerHTML = `<div class="an-body">
+      <div class="an-kpis" style="margin-bottom:20px">${tiles
+        .map(
+          ([l, v, n]) =>
+            `<div class="an-tile"><div class="an-tile-label">${esc(l)}</div><div class="an-tile-value" style="font-size:24px">${esc(v)}</div>${n ? `<div class="an-tile-note">${esc(n)}</div>` : ''}</div>`
+        )
+        .join('')}</div>
+      <div class="an-grid-2" style="gap:24px">
+        ${list('Most viewed pages', t.pages, (r) => ({ name: r.path || 'unknown', value: r.views }))}
+        ${list('Countries', t.countries, (r) => ({ name: r.country || 'Unknown', value: r.visitors, ctx: !r.country }))}
+        ${list('Referrers', t.referrers, (r) => ({ name: r.source || 'Direct / none', value: r.visitors, ctx: !r.source || r.source === '$direct' }))}
+        ${list('Most clicked buttons', t.ctas, (r) => ({ name: `${r.label || 'unlabelled'} (${r.location || 'unknown'})`, value: r.clicks }))}
+      </div>
+      <div style="margin-top:24px">
+        <div class="an-tile-label" style="margin-bottom:10px">Booking flow, step by step</div>
+        ${funnelRows.length ? `<div class="an-bars">${anBarList(funnelRows)}</div>` : anEmpty('No booking steps recorded', '')}
+      </div>
+    </div>`;
+}
+
+// ── Wiring: range filter, refresh, table toggles, chart tooltip ─────────────
+// Delegated from #page-analytics and registered once, so re-rendering a card
+// never leaves a listener behind. No inline handlers anywhere.
+let _anWired = false;
+function wireAnalytics() {
+  if (_anWired) return;
+  const page = document.getElementById('page-analytics');
+  if (!page) return;
+  _anWired = true;
+
+  page.addEventListener('click', (ev) => {
+    const range = ev.target.closest('[data-an-range]');
+    if (range) {
+      const days = parseInt(range.dataset.anRange, 10);
+      if (days === _anRange) return;
+      _anRange = days;
+      page
+        .querySelectorAll('[data-an-range]')
+        .forEach((b) => b.setAttribute('aria-pressed', b === range ? 'true' : 'false'));
+      // The DB half re-renders from cache; only the traffic half needs the
+      // server again, because its window is baked into the PostHog query.
+      renderAnalytics();
+      fetchAnalyticsServer().then((s) => {
+        _anServer = s;
+        renderCheckoutCard();
+        renderTrafficCard();
+      });
+      return;
+    }
+    const toggle = ev.target.closest('[data-an-table]');
+    if (toggle) {
+      const id = toggle.dataset.anTable;
+      if (!_anTables[id]) return;
+      _anTables[id].showing = !_anTables[id].showing;
+      toggle.textContent = _anTables[id].showing ? 'Chart' : 'Table';
+      renderAnalytics();
+      // renderAnalytics rebuilt the card, so put the label back.
+      const fresh = page.querySelector(`[data-an-table="${id}"]`);
+      if (fresh) fresh.textContent = _anTables[id].showing ? 'Chart' : 'Table';
+      return;
+    }
+    if (ev.target.closest('#an-refresh')) loadAnalytics();
+  });
+
+  // Hover layer. One tooltip node for the whole page.
+  let tip = document.getElementById('an-tip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'an-tip';
+    tip.className = 'an-tip';
+    document.body.appendChild(tip);
+  }
+  page.addEventListener('mousemove', (ev) => {
+    const g = ev.target.closest('.an-colgroup');
+    if (!g) {
+      tip.classList.remove('on');
+      return;
+    }
+    tip.textContent = g.dataset.tip || '';
+    tip.style.left = ev.clientX + 14 + 'px';
+    tip.style.top = ev.clientY - 34 + 'px';
+    tip.classList.add('on');
+  });
+  page.addEventListener('mouseleave', () => tip.classList.remove('on'));
 }
 
 // #21 Geographic heatmap
@@ -3068,6 +3850,10 @@ function renderHeatmap(all) {
   });
   if (points.length) _heatMap.fitBounds(L.latLngBounds(points.map((p) => p.coord)).pad(0.2));
   setTimeout(() => _heatMap && _heatMap.invalidateSize(), 100);
+  // An empty map and a map of a quiet week look identical, so say which it is.
+  const sub = document.getElementById('an-heatmap-sub');
+  if (sub && !points.length)
+    sub.textContent = 'No bookings with a recognised suburb yet - nothing to plot';
 }
 
 // #23 Margins per service
@@ -3136,12 +3922,27 @@ function renderLTV(all) {
   const daysSince = (d) => (d ? Math.floor((now - new Date(d + 'T00:00:00')) / 86400000) : 9999);
   const churned = clients.filter((c) => daysSince(c.last) > CHURN_DAYS);
   const active = clients.length - churned.length;
-  const avgLtv = clients.length
-    ? Math.round(clients.reduce((s, c) => s + c.ltv, 0) / clients.length)
-    : 0;
-  const repeatRate = clients.length
-    ? Math.round((clients.filter((c) => c.jobs > 1).length / clients.length) * 100)
-    : 0;
+
+  // With no completed jobs there is no customer to average over. Showing
+  // "$0" and "0%" here would read as a measured result rather than an empty
+  // denominator - the same trap the Target metrics card already avoids.
+  if (!clients.length) {
+    if (subEl) subEl.textContent = 'No completed jobs yet - nothing to measure';
+    if (kpisEl)
+      kpisEl.innerHTML = ['Avg LTV', 'Active customers', 'Churned', 'Repeat rate']
+        .map(
+          (l) => `<div style="background:var(--off);border-radius:10px;padding:14px 16px">
+      <div style="font-size:11px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${l}</div>
+      <div style="font-size:20px;font-weight:600;color:var(--mgray)">No data yet</div></div>`
+        )
+        .join('');
+    rowsEl.innerHTML =
+      '<tr><td colspan="5" style="text-align:center;color:var(--mgray);padding:24px">No completed jobs yet</td></tr>';
+    return;
+  }
+
+  const avgLtv = Math.round(clients.reduce((s, c) => s + c.ltv, 0) / clients.length);
+  const repeatRate = Math.round((clients.filter((c) => c.jobs > 1).length / clients.length) * 100);
 
   if (subEl)
     subEl.textContent = `${clients.length} customers · churn after ${CHURN_DAYS} days inactive`;

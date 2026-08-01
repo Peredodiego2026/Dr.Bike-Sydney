@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <link rel="stylesheet" href="css/variables.css?v=20260628">
-<link rel="stylesheet" href="css/admin.css?v=20260704">
+<link rel="stylesheet" href="css/admin.css?v=20260801">
 <style>
 @media(max-width:768px){
   .content{padding:12px 10px !important}
@@ -712,41 +712,113 @@
 
     <!-- ANALYTICS -->
     <div id="page-analytics" class="page">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-        <button style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:6px" id="auto-wire-16">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Export CSV
-        </button>
-      </div>
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-hdr"><div><div class="card-title">Target metrics</div><div class="card-sub">Diego's KPI scorecard vs targets</div></div></div>
-        <div id="an-targets" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding:16px"><div style="color:var(--mgray);font-size:13px">Loading...</div></div>
-      </div>
-
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-hdr"><div><div class="card-title">Conversion funnel</div><div class="card-sub">All bookings · lifetime</div></div></div>
-        <div id="an-funnel" style="padding:18px;display:flex;flex-direction:column;gap:10px"><div style="color:var(--mgray);font-size:13px">Loading...</div></div>
-      </div>
-
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-hdr"><div><div class="card-title">Geographic heatmap</div><div class="card-sub">Booking volume by suburb</div></div></div>
-        <div id="an-heatmap" style="height:360px;border-radius:10px;overflow:hidden;background:#EEF2F6;margin:0 16px 16px"></div>
-      </div>
-
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-hdr"><div><div class="card-title">Service popularity</div><div class="card-sub">Most to least requested - all services in the catalog</div></div></div>
-        <div id="an-popularity" style="padding:18px;display:flex;flex-direction:column;gap:8px"><div style="color:var(--mgray);font-size:13px">Loading...</div></div>
+      <!-- One filter row above everything it scopes. Cards that ignore it say
+           so in their own subtitle rather than pretending to be filtered. -->
+      <div class="an-toolbar">
+        <div class="an-range" role="group" aria-label="Time range">
+          <button type="button" data-an-range="30" aria-pressed="true">30 days</button>
+          <button type="button" data-an-range="90" aria-pressed="false">90 days</button>
+          <button type="button" data-an-range="365" aria-pressed="false">12 months</button>
+          <button type="button" data-an-range="0" aria-pressed="false">All time</button>
+        </div>
+        <div class="an-actions">
+          <button type="button" class="an-btn" id="an-refresh">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            Refresh
+          </button>
+          <button type="button" class="an-btn" id="auto-wire-16">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export CSV
+          </button>
+        </div>
       </div>
 
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-hdr"><div><div class="card-title">Margins per service</div><div class="card-sub">Revenue, est. cost & margin by service type</div></div></div>
+      <!-- Fills in only when a query actually fails. Never a silent zero. -->
+      <div id="an-error" style="display:none;background:var(--red-lt);border:1px solid #FECACA;color:#B91C1C;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600"></div>
+
+      <div class="an-kpis" id="an-kpis">
+        <div class="an-tile"><div class="an-tile-label">Loading</div><div class="an-tile-value is-empty">&mdash;</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">Acquisition funnel</div><div class="card-sub" id="an-funnel-sub">Accounts created &rarr; booked &rarr; completed</div></div></div>
+        <div class="an-body"><div class="an-funnel" id="an-funnel"><div class="an-state">Loading&hellip;</div></div></div>
+        <div class="an-note" id="an-funnel-note"></div>
+      </div>
+
+      <div class="an-grid-2">
+        <div class="card">
+          <div class="card-hdr">
+            <div><div class="card-title">Revenue</div><div class="card-sub" id="an-revenue-sub">Completed bookings, by period</div></div>
+            <button type="button" class="an-toggle" data-an-table="an-revenue">Table</button>
+          </div>
+          <div class="an-body" id="an-revenue"><div class="an-state">Loading&hellip;</div></div>
+          <div class="an-note">Sums <code>service_price</code> as recorded on each completed booking &mdash; the amount actually charged, not today's price list.</div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <div><div class="card-title">New accounts</div><div class="card-sub" id="an-signups-sub">Sign-ups, by period</div></div>
+            <button type="button" class="an-toggle" data-an-table="an-signups">Table</button>
+          </div>
+          <div class="an-body" id="an-signups"><div class="an-state">Loading&hellip;</div></div>
+          <div class="an-note">One row per <code>profiles</code> record, counted by the day the account was created.</div>
+        </div>
+      </div>
+
+      <div class="an-grid-2">
+        <div class="card">
+          <div class="card-hdr"><div><div class="card-title">Services sold</div><div class="card-sub" id="an-popularity-sub">Completed jobs per service</div></div></div>
+          <div class="an-body"><div class="an-bars" id="an-popularity"><div class="an-state">Loading&hellip;</div></div></div>
+          <div class="an-note">Every service in the catalog is listed, including the ones nobody has booked &mdash; a zero here is a measured zero.</div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div><div class="card-title">Bookings by suburb</div><div class="card-sub" id="an-suburbs-sub">Where the work is</div></div></div>
+          <div class="an-body"><div class="an-bars" id="an-suburbs"><div class="an-state">Loading&hellip;</div></div></div>
+          <div class="an-note">Grouped on the suburb saved with the booking. Bookings with no suburb are grouped as "Not recorded".</div>
+        </div>
+      </div>
+
+      <div class="an-grid-2">
+        <div class="card">
+          <div class="card-hdr"><div><div class="card-title">Where bookings come from</div><div class="card-sub" id="an-sources-sub">UTM source on the booking record</div></div></div>
+          <div class="an-body"><div class="an-bars" id="an-sources"><div class="an-state">Loading&hellip;</div></div></div>
+          <div class="an-legend">
+            <span><i style="background:var(--an-series)"></i>Tagged campaign</span>
+            <span><i style="background:var(--an-ctx)"></i>Direct / untagged</span>
+          </div>
+          <div class="an-note">Only links carrying <code>utm_source</code> are attributed. Everything else is genuinely unknown, not "direct" &mdash; it is labelled that way.</div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div><div class="card-title">Unpaid checkouts</div><div class="card-sub">Open right now &mdash; not a rate</div></div></div>
+          <div class="an-body" id="an-checkout"><div class="an-state">Loading&hellip;</div></div>
+          <div class="an-note">A row is written when a signed-in client opens the payment screen and deleted the moment the booking is paid, so this is a live snapshot of who is stuck &mdash; it cannot produce an abandonment percentage, because the completed ones are already gone. Anonymous visitors are never recorded.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">Traffic</div><div class="card-sub" id="an-traffic-sub">Visits, pages, countries and referrers &mdash; from PostHog</div></div></div>
+        <div id="an-traffic"><div class="an-state">Loading&hellip;</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">Geographic heatmap</div><div class="card-sub" id="an-heatmap-sub">Booking volume by suburb</div></div></div>
+        <div id="an-heatmap" style="height:360px;border-radius:10px;overflow:hidden;background:var(--an-track);margin:0 20px 20px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">Margins per service</div><div class="card-sub">Revenue, est. cost &amp; margin by service type &mdash; lifetime, not filtered by the range above</div></div></div>
         <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Service</th><th>Jobs</th><th>Revenue</th><th>Avg ticket</th><th>Est. cost</th><th>Margin</th></tr></thead><tbody id="an-margins"></tbody></table></div>
       </div>
 
       <div class="card">
-        <div class="card-hdr"><div><div class="card-title">Customer LTV & churn</div><div class="card-sub" id="an-churn-sub">Lifetime value and retention</div></div></div>
+        <div class="card-hdr"><div><div class="card-title">Customer LTV &amp; churn</div><div class="card-sub" id="an-churn-sub">Lifetime value and retention</div></div></div>
         <div id="an-ltv-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding:16px"></div>
         <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Client</th><th>Jobs</th><th>LTV</th><th>Last service</th><th>Status</th></tr></thead><tbody id="an-ltv-rows"></tbody></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div><div class="card-title">Target metrics</div><div class="card-sub">KPI scorecard vs targets &mdash; lifetime, not filtered by the range above</div></div></div>
+        <div id="an-targets" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding:16px"><div style="color:var(--mgray);font-size:13px">Loading...</div></div>
       </div>
     </div>
 
@@ -1263,5 +1335,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=20260713c"></script>
+<script src="js/admin.js?v=20260801"></script>
 </body></html>
