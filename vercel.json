@@ -73,6 +73,10 @@
       "destination": "/api/auth?role=admin"
     },
     {
+      "source": "/api/analytics",
+      "destination": "/api/auth?role=admin-analytics"
+    },
+    {
       "source": "/api/mechanic-auth",
       "destination": "/api/auth?role=mechanic"
     },

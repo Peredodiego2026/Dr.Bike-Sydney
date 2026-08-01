@@ -3188,6 +3188,177 @@ async function handleAdminServicesDelete(req, res) {
   return res.status(200).json({ success: true });
 }
 
+// ── Admin: Analytics (?role=admin-analytics, reachable as /api/analytics) ────
+// Two things the Analytics screen cannot get from the browser:
+//
+//  1. `checkout_attempts` - RLS scopes it to `auth.uid() = client_id`, so an
+//     admin session reads zero rows no matter how many exist. Only the service
+//     role sees the table, which means only this file can count it.
+//  2. PostHog - the Personal API Key reads every event of the business. It is
+//     read here from the environment and never sent to the browser.
+//
+// Lives in auth.js rather than its own api/analytics.js because the Hobby plan
+// caps a deployment at 12 Serverless Functions and /api is already at 12 (same
+// reason api/chat.js carries reviews and api/send-message.js carries eta). The
+// vercel.json rewrite gives it the clean /api/analytics URL anyway.
+async function handleAdminAnalytics(req, res) {
+  const { access_token } = req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const days = Math.min(Math.max(parseInt(req.body?.days, 10) || 30, 1), 730);
+
+  const [checkout, traffic] = await Promise.all([readCheckoutAttempts(auth.sb), readPostHog(days)]);
+  return res.status(200).json({ checkout, traffic });
+}
+
+// A snapshot, NOT a running total: js/app.js upserts one row per client when
+// the payment screen opens and deletes it once the booking exists. So this
+// answers "who is sitting on an unpaid checkout right now", and an empty table
+// is the healthy state, not a broken one. Anything that framed it as an
+// abandonment *rate* would be inventing the denominator - the paid ones are
+// already gone.
+//
+// Deliberately returns no address and no client id: the screen only ever shows
+// counts, and the row holds where somebody lives.
+async function readCheckoutAttempts(sb) {
+  const { data, error } = await sb
+    .from('checkout_attempts')
+    .select('service_name, service_price, reached_payment_at, reminder_sent_at')
+    .order('reached_payment_at', { ascending: false })
+    .limit(500);
+
+  if (error) {
+    // 42P01 = undefined_table: the migration has not been run yet. That is a
+    // different answer from "nobody abandoned", and the screen says so.
+    const missing = error.code === '42P01' || /does not exist/i.test(error.message || '');
+    return {
+      available: false,
+      reason: missing
+        ? 'Table checkout_attempts does not exist yet - run scripts/add-checkout-attempts.sql'
+        : error.message,
+    };
+  }
+
+  const rows = data || [];
+  const now = Date.now();
+  const ages = rows
+    .map((r) => (r.reached_payment_at ? (now - new Date(r.reached_payment_at)) / 3600000 : null))
+    .filter((h) => Number.isFinite(h));
+
+  return {
+    available: true,
+    open: rows.length,
+    reminded: rows.filter((r) => r.reminder_sent_at).length,
+    oldest_hours: ages.length ? Math.round(Math.max(...ages)) : null,
+    value: rows.reduce((s, r) => s + (Number(r.service_price) || 0), 0),
+    by_service: Object.entries(
+      rows.reduce((acc, r) => {
+        const k = r.service_name || 'Unspecified';
+        acc[k] = (acc[k] || 0) + 1;
+        return acc;
+      }, {})
+    )
+      .map(([name, n]) => ({ name, n }))
+      .sort((a, b) => b.n - a.n),
+  };
+}
+
+// ── PostHog (traffic half) ───────────────────────────────────────────────────
+// UNVERIFIED AGAINST THE LIVE API: as of 2026-08-01 POSTHOG_API_KEY is not set
+// in Vercel, so this path has never returned real numbers. It is written and
+// wired so that setting the two env vars is the whole job, but the first run
+// with a real key should be watched rather than trusted.
+//
+// Needs both:
+//   POSTHOG_API_KEY     - Personal API Key (phx_...), scope "Query: read"
+//   POSTHOG_PROJECT_ID  - numeric project id from the PostHog URL
+const POSTHOG_HOST = 'https://eu.posthog.com';
+
+async function hogQuery(sql, key, projectId) {
+  const r = await fetch(`${POSTHOG_HOST}/api/projects/${projectId}/query/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: { kind: 'HogQLQuery', query: sql } }),
+  });
+  if (!r.ok) throw new Error(`PostHog HTTP ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  const json = await r.json();
+  return json.results || [];
+}
+
+async function readPostHog(days) {
+  const key = process.env.POSTHOG_API_KEY;
+  const projectId = process.env.POSTHOG_PROJECT_ID;
+  if (!key || !projectId) {
+    return {
+      configured: false,
+      reason:
+        !key && !projectId
+          ? 'POSTHOG_API_KEY and POSTHOG_PROJECT_ID are not set in Vercel'
+          : !key
+            ? 'POSTHOG_API_KEY is not set in Vercel'
+            : 'POSTHOG_PROJECT_ID is not set in Vercel',
+    };
+  }
+
+  const since = `now() - interval ${days} day`;
+  const q = {
+    totals: `select count() as views, count(distinct person_id) as visitors
+             from events where event = '$pageview' and timestamp > ${since}`,
+    pages: `select properties.$pathname as path, count() as views
+            from events where event = '$pageview' and timestamp > ${since}
+            group by path order by views desc limit 12`,
+    countries: `select properties.$geoip_country_name as country, count(distinct person_id) as visitors
+                from events where event = '$pageview' and timestamp > ${since}
+                group by country order by visitors desc limit 10`,
+    referrers: `select properties.$referring_domain as source, count(distinct person_id) as visitors
+                from events where event = '$pageview' and timestamp > ${since}
+                group by source order by visitors desc limit 10`,
+    // Returning = seen on 2+ distinct days inside the window. A plain
+    // "returning visitor" count from PostHog would also count someone who
+    // reloaded twice in one session.
+    returning: `select countIf(d >= 2) as returning, countIf(d = 1) as once from (
+                  select person_id, count(distinct toDate(timestamp)) as d
+                  from events where event = '$pageview' and timestamp > ${since}
+                  group by person_id)`,
+    funnel: `select properties.step as step, count(distinct person_id) as people
+             from events where event = 'booking_step_viewed' and timestamp > ${since}
+             group by step`,
+    completed: `select count(distinct person_id) as people
+                from events where event = 'booking_completed' and timestamp > ${since}`,
+    ctas: `select properties.button_text as label, properties.location as location, count() as clicks
+           from events where event = 'cta_clicked' and timestamp > ${since}
+           group by label, location order by clicks desc limit 12`,
+  };
+
+  try {
+    const [totals, pages, countries, referrers, returning, funnel, completed, ctas] =
+      await Promise.all(Object.values(q).map((sql) => hogQuery(sql, key, projectId)));
+
+    return {
+      configured: true,
+      days,
+      views: totals[0]?.[0] ?? 0,
+      visitors: totals[0]?.[1] ?? 0,
+      returning: returning[0]?.[0] ?? 0,
+      once: returning[0]?.[1] ?? 0,
+      pages: pages.map(([path, views]) => ({ path, views })),
+      countries: countries.map(([country, visitors]) => ({ country, visitors })),
+      referrers: referrers.map(([source, visitors]) => ({ source, visitors })),
+      ctas: ctas.map(([label, location, clicks]) => ({ label, location, clicks })),
+      // The screen orders these itself - PostHog has no idea the steps are a
+      // sequence, it just counts each value of the `step` property.
+      funnel: funnel.map(([step, people]) => ({ step, people })),
+      booking_completed: completed[0]?.[0] ?? 0,
+    };
+  } catch (e) {
+    // A failed query is reported as a failure. Returning zeros here would put
+    // "0 visitors" on screen next to real booking numbers.
+    return { configured: true, error: e.message };
+  }
+}
+
 import { withSentry } from './_sentry.js';
 export default withSentry(handler, 'auth');
 async function handler(req, res) {
@@ -3226,6 +3397,10 @@ async function handler(req, res) {
           role === 'apply-referral' ||
           role === 'create-booking' ||
           role === 'check-coverage' ||
+          // Analytics is one authenticated admin changing a date filter, not a
+          // login attempt - the default 5/min locks the screen out on the third
+          // range change.
+          role === 'admin-analytics' ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -3275,5 +3450,6 @@ async function handler(req, res) {
   if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
+  if (role === 'admin-analytics') return handleAdminAnalytics(req, res);
   return handleAdmin(req, res);
 }
