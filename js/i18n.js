@@ -1109,6 +1109,10 @@ const dict = {
     // ── Mobile SPA: dynamic button/status text ──────────────────────────────
     'Checking address...': 'Verificando dirección...',
     'Processing payment...': 'Procesando pago...',
+    'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.':
+      'Recibimos tu pago, pero no pudimos guardar la reserva. Tocá Pagar otra vez para reintentar, o escribinos.',
+    'Payment failed. Please check your card details and try again.':
+      'El pago no se pudo procesar. Revisá los datos de tu tarjeta e intentá de nuevo.',
     // Set by the inline scripts in landing.html / index.html
     'Processing...': 'Procesando...',
     'Redirecting to payment...': 'Redirigiendo al pago...',
@@ -2265,6 +2269,10 @@ const dict = {
     // ── Mobile SPA: dynamic button/status text ──────────────────────────────
     'Checking address...': '正在核实地址...',
     'Processing payment...': '正在处理付款...',
+    'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.':
+      '已收到付款，但预订未能保存。请再次点击"付款"重试，或与我们联系。',
+    'Payment failed. Please check your card details and try again.':
+      '付款失败。请检查您的银行卡信息后重试。',
     'Processing...': '处理中...',
     'Redirecting to payment...': '正在跳转到支付页面...',
     'Choose an amount between $20 and $1000.': '请选择 $20 至 $1000 之间的金额。',

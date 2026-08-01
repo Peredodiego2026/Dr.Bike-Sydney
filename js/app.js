@@ -1502,6 +1502,14 @@ function wireMechanicPreferencePicker(screen, mechanics) {
 }
 
 // ── Payment ───────────────────────────────────────────────────────────────────
+// A PaymentIntent that already went through, and the booking it was for. These
+// have to outlive renderPayment(): the screen is re-rendered on every
+// navigation to #payment, and a guard that lives inside it is no guard at all
+// once the client leaves the screen and comes back. Cleared as soon as the
+// booking exists, so the next booking pays for itself.
+let _paidIntent = null;
+let _paidBookingKey = null;
+
 async function renderPayment() {
   const screen = document.querySelector('[data-screen="payment"]');
   if (!screen) return;
@@ -1713,6 +1721,11 @@ async function renderPayment() {
     // It exists in the database now - the draft has done its job.
     clearBookingDraft();
     window.__bookingDraftStep = null;
+    // The charge has a booking attached, so it must stop standing in for the
+    // next one. Released here and not on leaving the screen: while the booking
+    // does not exist yet, this is the only record that the client already paid.
+    _paidIntent = null;
+    _paidBookingKey = null;
     // And the checkout is no longer abandoned, so the row that would have
     // triggered a "do you still need it?" email in three hours has to go. RLS
     // limits the delete to their own row; best effort, because a booking that
@@ -1805,15 +1818,32 @@ async function renderPayment() {
   // (e.g. the Payment Request Button fires, then the card form is also
   // submitted) - the second call reuses the first PaymentIntent instead of
   // charging again.
-  let paidIntent = null;
+  //
+  // The memo lives at module scope, NOT in this function. It used to be a local
+  // `let paidIntent`, and js/app.js's screen router calls renderPayment() on
+  // every navigation to #payment - so a client who paid, hit the "booking could
+  // not be saved" error, went back a screen and returned got a brand new
+  // closure with the guard reset, and paying again charged them a second time.
+  // Keyed to the booking so it only ever suppresses a repeat charge for the
+  // same one; a genuinely new booking gets a fresh charge.
+  const paymentKey = [
+    service?.id || service?.name || '',
+    date || '',
+    time || '',
+    location || '',
+    calloutFee,
+  ].join('|');
+  if (_paidBookingKey !== paymentKey) _paidIntent = null;
+  _paidBookingKey = paymentKey;
+
   async function chargeOnce(paymentMethodId) {
-    if (paidIntent) return paidIntent;
+    if (_paidIntent) return _paidIntent;
     const {
       data: { user: payingUser },
     } = await sb.auth.getUser();
     const email = payingUser?.email || 'guest@drbikesydney.com.au';
-    paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId);
-    return paidIntent;
+    _paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId);
+    return _paidIntent;
   }
 
   if (calloutFee > 0) {
@@ -1842,9 +1872,15 @@ async function renderPayment() {
         const paymentIntent = await chargeOnce();
         await finalizeBooking(paymentIntent, { isTest: false });
       } catch (e) {
-        errEl.textContent = paidIntent
-          ? 'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
-          : e.message || 'Payment failed. Please check your card details and try again.';
+        // translateValue, not a bare literal: this is the single most important
+        // sentence in the app - it tells a client their money left and their
+        // booking did not - and it was shipping in English to es/zh clients.
+        errEl.textContent = _paidIntent
+          ? translateValue(
+              'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
+            )
+          : e.message ||
+            translateValue('Payment failed. Please check your card details and try again.');
         errEl.hidden = false;
         btn.disabled = false;
         btn.textContent = payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee);
