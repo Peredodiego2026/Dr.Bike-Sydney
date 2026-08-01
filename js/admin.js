@@ -707,12 +707,12 @@ async function loadCashHandover() {
           <div style="font-size:13px;color:var(--mgray)">${g.jobs.length} cash job${g.jobs.length !== 1 ? 's' : ''} pending</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px;font-weight:800;color:#059669">$${g.total.toLocaleString()}</span>
+          <span style="font-size:20px;font-weight:800;color:#059669">$${g.total.toLocaleString('en-AU')}</span>
           <button data-cash-settle="${esc(key)}" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
         </div>
       </div>
       <div style="font-size:13px;color:var(--mgray)">
-        ${g.jobs.map((j) => `${esc(j.scheduled_date || '')} · ${esc(j.client_name || 'Client')} · ${esc(j.service_name || '')} · $${((j.final_charge_amount || 0) + (j.tip_amount || 0)).toLocaleString()}`).join('<br>')}
+        ${g.jobs.map((j) => `${esc(j.scheduled_date || '')} · ${esc(j.client_name || 'Client')} · ${esc(j.service_name || '')} · $${((j.final_charge_amount || 0) + (j.tip_amount || 0)).toLocaleString('en-AU')}`).join('<br>')}
       </div>
     </div>`
     )
@@ -724,7 +724,7 @@ async function loadCashHandover() {
       if (!g) return;
       if (
         !confirm(
-          `Confirm ${g.name} handed over $${g.total.toLocaleString()} in cash (${g.jobs.length} jobs)?`
+          `Confirm ${g.name} handed over $${g.total.toLocaleString('en-AU')} in cash (${g.jobs.length} jobs)?`
         )
       )
         return;
@@ -777,7 +777,7 @@ async function loadFinance() {
     .order('scheduled_date', { ascending: true });
 
   const jobs = bookings || [];
-  const revenue = jobs.reduce((s, j) => s + (j.service_price || 0), 0);
+  const revenue = anRevenueOf(jobs);
   const jobCount = jobs.length;
   const gst = Math.round(revenue / 11); // GST inclusive: 1/11
   const netRevenue = revenue - gst;
@@ -789,13 +789,22 @@ async function loadFinance() {
   const avgJob = jobCount > 0 ? Math.round(revenue / jobCount) : 0;
 
   // KPIs
-  document.getElementById('fk-revenue').textContent = '$' + revenue.toLocaleString();
-  document.getElementById('fk-jobs').textContent = jobCount + ' job' + (jobCount !== 1 ? 's' : '');
-  document.getElementById('fk-gst').textContent = '$' + gst.toLocaleString();
-  document.getElementById('fk-net').textContent = '$' + netRevenue.toLocaleString();
+  document.getElementById('fk-revenue').textContent = '$' + revenue.toLocaleString('en-AU');
+  // A booking with no callout_fee recorded contributes zero call-out, never an
+  // assumed $20 - inventing a fee here would land in a BAS lodgement. Say how
+  // many rows are in that state instead of quietly absorbing them, same as the
+  // Analytics screen does.
+  const calloutGaps = anCalloutGaps(jobs);
+  document.getElementById('fk-jobs').textContent =
+    jobCount +
+    ' job' +
+    (jobCount !== 1 ? 's' : '') +
+    (calloutGaps ? ` · ${calloutGaps} with no call-out fee recorded` : '');
+  document.getElementById('fk-gst').textContent = '$' + gst.toLocaleString('en-AU');
+  document.getElementById('fk-net').textContent = '$' + netRevenue.toLocaleString('en-AU');
   document.getElementById('fk-avg').textContent = 'avg $' + avgJob + ' / job';
   const profitEl = document.getElementById('fk-profit');
-  profitEl.textContent = (netProfit < 0 ? '-$' : '$') + Math.abs(netProfit).toLocaleString();
+  profitEl.textContent = (netProfit < 0 ? '-$' : '$') + Math.abs(netProfit).toLocaleString('en-AU');
   profitEl.style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
   document.getElementById('fk-margin').textContent = margin + '% margin';
 
@@ -835,7 +844,7 @@ async function loadFinance() {
     <div class="pl-row${r.sub ? ' subtotal' : ''}${r.total ? ' total' : ''}">
       <span class="pl-label${r.bold ? ' dark' : ''}">${esc(r.label)}</span>
       <span style="font-weight:${r.bold ? '700' : '500'};color:${r.color || (r.neg ? 'var(--red)' : 'var(--navy)')}">
-        ${r.val >= 0 ? '$' : '–$'}${Math.abs(r.val).toLocaleString()}
+        ${r.val >= 0 ? '$' : '–$'}${Math.abs(r.val).toLocaleString('en-AU')}
       </span>
     </div>`
     )
@@ -845,7 +854,7 @@ async function loadFinance() {
   const dailyMap = {};
   jobs.forEach((j) => {
     const d = j.scheduled_date;
-    dailyMap[d] = (dailyMap[d] || 0) + (j.service_price || 0);
+    dailyMap[d] = (dailyMap[d] || 0) + anBookingRevenue(j);
   });
   const days = Object.keys(dailyMap).sort();
   const maxVal = Math.max(...Object.values(dailyMap), 1);
@@ -865,17 +874,17 @@ async function loadFinance() {
     : '<div style="color:var(--mgray);font-size:13px;margin:auto">No completed jobs in this period</div>';
 
   // BAS
-  document.getElementById('bas-g1').textContent = '$' + revenue.toLocaleString();
-  document.getElementById('bas-1a').textContent = '$' + gst.toLocaleString();
+  document.getElementById('bas-g1').textContent = '$' + revenue.toLocaleString('en-AU');
+  document.getElementById('bas-1a').textContent = '$' + gst.toLocaleString('en-AU');
   document.getElementById('bas-1b').textContent = '$0'; // no GST on purchases yet
-  document.getElementById('bas-net').textContent = '$' + gst.toLocaleString();
+  document.getElementById('bas-net').textContent = '$' + gst.toLocaleString('en-AU');
 
   // Transactions table
   document.getElementById('fin-tx-sub').textContent = jobCount + ' completed jobs · ' + periodStr;
   document.getElementById('fin-tx-body').innerHTML = jobs.length
     ? jobs
         .map((j) => {
-          const price = j.service_price || 0;
+          const price = anBookingRevenue(j);
           const jGst = Math.round(price / 11);
           const jNet = price - jGst;
           const name =
@@ -884,7 +893,7 @@ async function loadFinance() {
       <td data-label="Date">${j.scheduled_date}</td>
       <td data-label="Client">${esc(name)}</td>
       <td data-label="Service">${esc(j.service_name || 'Service')}</td>
-      <td data-label="Amount" style="font-weight:600">$${price.toLocaleString()}</td>
+      <td data-label="Amount" style="font-weight:600">$${price.toLocaleString('en-AU')}</td>
       <td data-label="GST" style="color:var(--orange)">$${jGst}</td>
       <td data-label="Net">$${jNet}</td>
       <td data-label="Status"><span style="background:#D1FAE5;color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
@@ -904,6 +913,7 @@ async function loadFinance() {
     margin,
     jobCount,
     avgJob,
+    calloutGaps,
     periodStr,
     dateFrom,
     dateTo,
@@ -916,7 +926,7 @@ function exportFinanceCSV() {
   const rows = [
     ['Date', 'Client', 'Service', 'Amount (incl GST)', 'GST', 'Net Amount', 'Status'],
     ...d.jobs.map((j) => {
-      const price = j.service_price || 0;
+      const price = anBookingRevenue(j);
       const gst = Math.round(price / 11);
       return [
         j.scheduled_date,
@@ -953,18 +963,26 @@ Period: ${d.periodStr}
 ABN: [Your ABN here]
 Generated: ${new Date().toLocaleDateString('en-AU')}
 
-G1 — Total Sales (incl GST): $${d.revenue.toLocaleString()}
+G1 — Total Sales (incl GST): $${d.revenue.toLocaleString('en-AU')}
 G2 — Export Sales: $0
 G3 — Other GST-free Sales: $0
 G10 — Capital Purchases: $0
 G11 — Non-capital Purchases: $0
 
-1A — GST on Sales (G1/11): $${d.gst.toLocaleString()}
+1A — GST on Sales (G1/11): $${d.gst.toLocaleString('en-AU')}
 1B — GST Credits on Purchases: $0
-NET GST PAYABLE TO ATO: $${d.gst.toLocaleString()}
+NET GST PAYABLE TO ATO: $${d.gst.toLocaleString('en-AU')}
 
 Jobs completed: ${d.jobCount}
 Average job value: $${d.avgJob}
+Basis: service_price + callout_fee, as recorded on each completed booking.
+${
+  d.calloutGaps
+    ? `WARNING: ${d.calloutGaps} of those ${d.jobCount} bookings have no call-out fee
+recorded. They are counted with a $0 call-out, so G1 above is UNDERSTATED.
+Check those rows before lodging.`
+    : 'All completed bookings in this period have a call-out fee recorded.'
+}
 
 NOTE: This is an estimate. Please verify with your registered tax agent before lodging.`;
   const blob = new Blob([content], { type: 'text/plain' });
@@ -985,7 +1003,7 @@ function exportFinancePDF() {
   const svcMap = {};
   (d.jobs || []).forEach((j) => {
     const k = j.service_name || 'Other';
-    svcMap[k] = (svcMap[k] || 0) + (j.service_price || 0);
+    svcMap[k] = (svcMap[k] || 0) + anBookingRevenue(j);
   });
   const topSvcs = Object.entries(svcMap)
     .sort((a, b) => b[1] - a[1])
@@ -1048,10 +1066,10 @@ function exportFinancePDF() {
     </div>
 
     <div class="kpis">
-      <div class="kpi"><div class="kpi-label">Revenue (incl GST)</div><div class="kpi-val">$${d.revenue.toLocaleString()}</div><div class="kpi-sub">${(d.jobs || []).length} completed jobs</div></div>
-      <div class="kpi green"><div class="kpi-label">Net Revenue</div><div class="kpi-val">$${d.netRevenue.toLocaleString()}</div><div class="kpi-sub">excl. GST</div></div>
-      <div class="kpi orange"><div class="kpi-label">GST Collected</div><div class="kpi-val">$${d.gst.toLocaleString()}</div><div class="kpi-sub">payable to ATO</div></div>
-      <div class="kpi"><div class="kpi-label">Est. Net Profit</div><div class="kpi-val">$${d.netProfit.toLocaleString()}</div><div class="kpi-sub">after expenses</div></div>
+      <div class="kpi"><div class="kpi-label">Revenue (incl GST)</div><div class="kpi-val">$${d.revenue.toLocaleString('en-AU')}</div><div class="kpi-sub">${(d.jobs || []).length} completed jobs</div></div>
+      <div class="kpi green"><div class="kpi-label">Net Revenue</div><div class="kpi-val">$${d.netRevenue.toLocaleString('en-AU')}</div><div class="kpi-sub">excl. GST</div></div>
+      <div class="kpi orange"><div class="kpi-label">GST Collected</div><div class="kpi-val">$${d.gst.toLocaleString('en-AU')}</div><div class="kpi-sub">payable to ATO</div></div>
+      <div class="kpi"><div class="kpi-label">Est. Net Profit</div><div class="kpi-val">$${d.netProfit.toLocaleString('en-AU')}</div><div class="kpi-sub">after expenses</div></div>
     </div>
 
     <div class="two-col">
@@ -1074,11 +1092,11 @@ function exportFinancePDF() {
           <tbody>
             <tr><td>Total bookings</td><td class="bold" style="text-align:right">${(d.jobs || []).length}</td></tr>
             <tr><td>Avg order value</td><td class="bold" style="text-align:right">$${(d.jobs || []).length ? Math.round(d.revenue / (d.jobs || []).length) : 0}</td></tr>
-            <tr><td>Revenue (incl GST)</td><td class="blue" style="text-align:right">$${d.revenue.toLocaleString()}</td></tr>
-            <tr><td>GST (10%)</td><td class="bold" style="text-align:right">$${d.gst.toLocaleString()}</td></tr>
-            <tr><td>Net revenue</td><td class="bold" style="text-align:right">$${d.netRevenue.toLocaleString()}</td></tr>
-            <tr><td>Est. expenses</td><td class="bold" style="text-align:right">$${(d.netRevenue - d.netProfit).toLocaleString()}</td></tr>
-            <tr><td style="font-weight:700">Est. net profit</td><td class="blue" style="text-align:right;font-weight:800">$${d.netProfit.toLocaleString()}</td></tr>
+            <tr><td>Revenue (incl GST)</td><td class="blue" style="text-align:right">$${d.revenue.toLocaleString('en-AU')}</td></tr>
+            <tr><td>GST (10%)</td><td class="bold" style="text-align:right">$${d.gst.toLocaleString('en-AU')}</td></tr>
+            <tr><td>Net revenue</td><td class="bold" style="text-align:right">$${d.netRevenue.toLocaleString('en-AU')}</td></tr>
+            <tr><td>Est. expenses</td><td class="bold" style="text-align:right">$${(d.netRevenue - d.netProfit).toLocaleString('en-AU')}</td></tr>
+            <tr><td style="font-weight:700">Est. net profit</td><td class="blue" style="text-align:right;font-weight:800">$${d.netProfit.toLocaleString('en-AU')}</td></tr>
           </tbody>
         </table>
       </div>
@@ -1089,7 +1107,7 @@ function exportFinancePDF() {
       <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Van</th><th>Amount</th><th>GST</th><th>Net</th></tr></thead>
       <tbody>${(d.jobs || [])
         .map((j) => {
-          const p = j.service_price || 0,
+          const p = anBookingRevenue(j),
             g = Math.round(p / 11);
           return (
             '<tr><td>' +
@@ -1945,14 +1963,14 @@ async function loadDashboard() {
     { count: bikesCount },
   ] = results;
 
-  const todayRev = (todayJobs || []).reduce((s, b) => s + (b.service_price || 0), 0);
-  const monthRev = (monthJobs || []).reduce((s, b) => s + (b.service_price || 0), 0);
+  const todayRev = anRevenueOf(todayJobs || []);
+  const monthRev = anRevenueOf(monthJobs || []);
   const completedToday = (todayJobs || []).filter((b) => b.status === 'completed').length;
 
   const completedMonth = (monthJobs || []).filter((b) => b.status === 'completed');
   const avgOrder = completedMonth.length
     ? Math.round(
-        completedMonth.reduce((s, b) => s + (b.service_price || 0), 0) / completedMonth.length
+        anRevenueOf(completedMonth) / completedMonth.length
       )
     : 0;
   const cancelRate = (monthJobs || []).length
@@ -1965,7 +1983,7 @@ async function loadDashboard() {
 
   const kpis = document.querySelectorAll('#page-dashboard .kpi-value');
   if (kpis[0]) {
-    kpis[0].textContent = '$' + todayRev.toLocaleString();
+    kpis[0].textContent = '$' + todayRev.toLocaleString('en-AU');
     kpis[0].nextElementSibling.textContent =
       (todayJobs || []).length +
       ' jobs today · $' +
@@ -1973,7 +1991,7 @@ async function loadDashboard() {
       ' avg';
   }
   if (kpis[1]) {
-    kpis[1].textContent = '$' + monthRev.toLocaleString();
+    kpis[1].textContent = '$' + monthRev.toLocaleString('en-AU');
     kpis[1].nextElementSibling.textContent =
       completedMonth.length + ' completed · $' + avgOrder + ' avg order';
   }
@@ -2045,7 +2063,7 @@ async function loadDashboard() {
         <td data-label="Date">${b.scheduled_date || '—'}</td>
         <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
         <td data-label="Status"><span style="background:${stBg[st] || '#F3F4F6'};color:${stColors[st] || '#6B7280'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${stLabel[st] || st}</span></td>
-        <td data-label="Price" style="font-weight:700;color:var(--blue)">$${b.service_price || 0}</td>
+        <td data-label="Price" style="font-weight:700;color:var(--blue)">${anBookingRevenue(b)}</td>
       </tr>`;
         })
         .join('') ||
@@ -2101,7 +2119,7 @@ async function loadDashboard() {
           <td data-label="Time">${timeStr}</td>
           <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
           <td data-label="Status"><span style="background:${stBg2[st]};color:${stColors2[st]};padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600">${stLabel2[st] || st}</span></td>
-          <td data-label="Total" style="font-weight:700;color:var(--blue)">$${b.service_price || 0}</td>
+          <td data-label="Total" style="font-weight:700;color:var(--blue)">${anBookingRevenue(b)}</td>
         </tr>`;
         })
         .join('');
@@ -2140,7 +2158,7 @@ async function loadDashboard() {
             <div class="sch-name">${esc(b.profiles?.full_name || b.client_name || 'Client')}</div>
             <div class="sch-svc">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
           </div>
-          <div class="sch-price">$${b.service_price || 0}</div>
+          <div class="sch-price">${anBookingRevenue(b)}</div>
         </div>`
         )
         .join('');
@@ -2234,14 +2252,14 @@ function renderBookingsTable(data) {
   };
 
   const completed = (data || []).filter((b) => b.status === 'completed');
-  const revenue = completed.reduce((s, b) => s + (b.service_price || 0), 0);
+  const revenue = anRevenueOf(completed);
   const el = (id) => document.getElementById(id);
   if (el('bk-total')) el('bk-total').textContent = data.length;
   if (el('bk-confirmed'))
     el('bk-confirmed').textContent = data.filter((b) => b.status === 'confirmed').length;
   if (el('bk-pending'))
     el('bk-pending').textContent = data.filter((b) => b.status === 'pending').length;
-  if (el('bk-revenue')) el('bk-revenue').textContent = '$' + revenue.toLocaleString();
+  if (el('bk-revenue')) el('bk-revenue').textContent = '$' + revenue.toLocaleString('en-AU');
   if (el('bk-sub'))
     el('bk-sub').textContent = `${data.length} booking${data.length !== 1 ? 's' : ''} · filtered`;
 
@@ -2271,7 +2289,7 @@ function renderBookingsTable(data) {
       <td data-label="Suburb">${esc(b.suburb || '—')}</td>
       <td data-label="Van"><span class="mech-tag v${b.van_number || 1}">Van ${b.van_number || 1}</span></td>
       <td data-label="Status"><span class="status ${stClass[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
-      <td data-label="Price"><b>$${b.service_price || 0}</b></td>
+      <td data-label="Price"><b>${anBookingRevenue(b)}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
         ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:#ECFDF5;color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
@@ -2456,7 +2474,7 @@ async function loadRecentNotifications() {
         <span style="font-size:11px;color:#fff;background:${stColors[st] || '#6B7280'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
       </div>
       <div style="font-size:13px;color:var(--mgray)">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
-      <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price || 0}</div>
+      <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anBookingRevenue(b)}</div>
     </div>`;
     })
     .join('');
@@ -2475,7 +2493,7 @@ function prependNotification(b) {
     'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid #1848C8;animation:fadeSlideIn .3s';
   div.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--navy)">🔔 New booking</div>
     <div style="font-size:13px;color:var(--mgray)">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
-    <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · $${b.service_price || 0}</div>`;
+    <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anBookingRevenue(b)}</div>`;
   list.prepend(div);
 }
 
@@ -2504,7 +2522,7 @@ async function loadMechStats(vanNum) {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const { data } = await sb
     .from('bookings')
-    .select('service_price,client_rating,completed_at,scheduled_date,status')
+    .select('service_price,callout_fee,client_rating,completed_at,scheduled_date,status')
     .eq('van_number', vanNum)
     .eq('status', 'completed')
     .gte('scheduled_date', weekAgo);
@@ -4178,7 +4196,7 @@ async function renderMechStats() {
       .map((v, i) => {
         const data = allStats[i];
         const totalJobs = data.length;
-        const totalRev = data.reduce((s, b) => s + (b.service_price || 0), 0);
+        const totalRev = anRevenueOf(data);
         const ratings = data.filter((b) => b.client_rating);
         const avgRating = ratings.length
           ? (ratings.reduce((s, b) => s + (b.client_rating || 0), 0) / ratings.length).toFixed(1)
@@ -5604,6 +5622,32 @@ async function checkTwilioStatus() {
 }
 
 // ── MEMBERSHIPS ───────────────────────────────────────────────────────────────
+// List prices, monthly and annual. The same numbers as landing.html's
+// PLAN_PRICES and terms.html - Stripe is the real source and nothing serves
+// them to the browser, so they live in more than one place. That is exactly how
+// a $57/$147 bump once shipped while this screen kept doing its maths on the
+// old figures (CLAUDE.md, 2026-07-22). Change one, grep the number everywhere.
+const PLAN_PRICES = {
+  basic: { name: 'Basic', monthly: 67, annual: 643 },
+  standard: { name: 'Standard', monthly: 97, annual: 931 },
+  vip: { name: 'VIP', monthly: 197, annual: 1891 },
+};
+
+// What one active member is worth per month. An annual member contributes their
+// yearly price spread over twelve months: counting a $1,891/yr VIP at $197/mo
+// overstated MRR by $39.42 for every one of them. The term is in
+// `membership_billing` ('monthly' | 'annual', see api/_validate.js), written by
+// api/stripe-webhook.js and, until this change, read by nothing at all.
+//
+// No recorded term is treated as monthly, which is what the row was worth
+// before - it is the status quo, not a guess dressed up as data. An unknown
+// plan is worth zero and gets counted separately rather than silently dropped.
+function memberMonthlyValue(m) {
+  const p = PLAN_PRICES[m.membership_plan];
+  if (!p) return 0;
+  return m.membership_billing === 'annual' ? p.annual / 12 : p.monthly;
+}
+
 async function loadMemberships() {
   const tbody = document.getElementById('mem-tbody');
   if (!tbody) return;
@@ -5616,7 +5660,10 @@ async function loadMemberships() {
   let query = sb
     .from('profiles')
     .select(
-      'full_name,email,membership_plan,membership_status,membership_started_at,membership_renewed_at,stripe_subscription_id'
+      // membership_billing is what tells an annual member from a monthly one.
+      // It was missing here, so every annual subscriber arrived looking monthly
+      // and the MRR below could not have been right no matter how it was summed.
+      'full_name,email,membership_plan,membership_status,membership_billing,membership_started_at,membership_renewed_at,stripe_subscription_id'
     )
     .not('membership_status', 'is', null)
     .neq('membership_status', 'none');
@@ -5634,19 +5681,25 @@ async function loadMemberships() {
     return;
   }
 
-  const active = (data || []).filter((m) => m.membership_status === 'active').length;
+  const activeMembers = (data || []).filter((m) => m.membership_status === 'active');
+  const active = activeMembers.length;
   const pastDue = (data || []).filter((m) => m.membership_status === 'past_due').length;
-  const prices = { basic: 67, standard: 97, vip: 197 };
-  const mrr = (data || [])
-    .filter((m) => m.membership_status === 'active')
-    .reduce((s, m) => s + (prices[m.membership_plan] || 0), 0);
+  const mrr = activeMembers.reduce((s, m) => s + memberMonthlyValue(m), 0);
+  // Same idea as anCalloutGaps(): a plan we cannot price contributes zero and
+  // is named, rather than being absorbed into the total.
+  const unpriced = activeMembers.filter((m) => !PLAN_PRICES[m.membership_plan]).length;
 
   const kpiActive = document.getElementById('mem-kpi-active');
   const kpiPastdue = document.getElementById('mem-kpi-pastdue');
   const kpiMrr = document.getElementById('mem-kpi-mrr');
   if (kpiActive) kpiActive.textContent = active;
   if (kpiPastdue) kpiPastdue.textContent = pastDue;
-  if (kpiMrr) kpiMrr.textContent = '$' + mrr + '/mo';
+  if (kpiMrr) {
+    kpiMrr.textContent = '$' + Math.round(mrr).toLocaleString('en-AU') + '/mo';
+    kpiMrr.title = unpriced
+      ? `${unpriced} active membership(s) on an unknown plan are counted as $0`
+      : '';
+  }
 
   if (!data?.length) {
     tbody.innerHTML =
@@ -5654,7 +5707,10 @@ async function loadMemberships() {
     return;
   }
 
-  const planLabel = { basic: 'Basic $67', standard: 'Standard $97', vip: 'VIP $197' };
+  // Built from PLAN_PRICES so the label can never drift from the maths above.
+  const planLabel = Object.fromEntries(
+    Object.entries(PLAN_PRICES).map(([k, p]) => [k, `${p.name} $${p.monthly}`])
+  );
   const statusBadge = {
     active:
       '<span style="background:#ECFDF5;color:#059669;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
@@ -5669,7 +5725,15 @@ async function loadMemberships() {
   tbody.innerHTML = data
     .map((m) => {
       const name = m.full_name || m.email?.split('@')[0] || '—';
-      const plan = planLabel[m.membership_plan] || m.membership_plan || '—';
+      // Show what this member actually pays. Printing the monthly list price
+      // next to an annual subscriber is the display half of the same mistake
+      // the MRR sum was making.
+      const planInfo = PLAN_PRICES[m.membership_plan];
+      const plan = planInfo
+        ? m.membership_billing === 'annual'
+          ? `${planInfo.name} $${planInfo.annual.toLocaleString('en-AU')}/yr`
+          : `${planInfo.name} $${planInfo.monthly}/mo`
+        : planLabel[m.membership_plan] || m.membership_plan || '—';
       const badge = statusBadge[m.membership_status] || m.membership_status || '—';
       const started = m.membership_started_at
         ? new Date(m.membership_started_at).toLocaleDateString('en-AU', {
