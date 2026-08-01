@@ -1113,6 +1113,20 @@ const dict = {
       'Recibimos tu pago, pero no pudimos guardar la reserva. Tocá Pagar otra vez para reintentar, o escribinos.',
     'Payment failed. Please check your card details and try again.':
       'El pago no se pudo procesar. Revisá los datos de tu tarjeta e intentá de nuevo.',
+    'Nickname is required': 'El apodo es obligatorio',
+    'Delete this bike?': '¿Borrar esta bici?',
+    'Could not confirm booking. Please try again.':
+      'No pudimos confirmar la reserva. Intentá de nuevo.',
+    'Could not submit review. Please try again.':
+      'No pudimos enviar tu reseña. Intentá de nuevo.',
+    'Google login failed. Please try again.':
+      'No se pudo iniciar sesión con Google. Intentá de nuevo.',
+    'Invalid code': 'Código inválido',
+    'Payment could not be confirmed. Please contact us if you were charged.':
+      'No pudimos confirmar el pago. Escribinos si te hicieron el cargo.',
+    'Test booking failed': 'La reserva de prueba falló',
+    'Cancel your membership? It will stay active until the end of the current billing period.':
+      '¿Cancelar tu membresía? Seguirá activa hasta el final del período de facturación actual.',
     // Set by the inline scripts in landing.html / index.html
     'Processing...': 'Procesando...',
     'Redirecting to payment...': 'Redirigiendo al pago...',
@@ -2273,6 +2287,17 @@ const dict = {
       '已收到付款，但预订未能保存。请再次点击"付款"重试，或与我们联系。',
     'Payment failed. Please check your card details and try again.':
       '付款失败。请检查您的银行卡信息后重试。',
+    'Nickname is required': '请填写昵称',
+    'Delete this bike?': '要删除这辆自行车吗？',
+    'Could not confirm booking. Please try again.': '无法确认预订，请重试。',
+    'Could not submit review. Please try again.': '无法提交评价，请重试。',
+    'Google login failed. Please try again.': 'Google 登录失败，请重试。',
+    'Invalid code': '代码无效',
+    'Payment could not be confirmed. Please contact us if you were charged.':
+      '无法确认付款。如果已扣款，请联系我们。',
+    'Test booking failed': '测试预订失败',
+    'Cancel your membership? It will stay active until the end of the current billing period.':
+      '要取消会员资格吗？在当前计费周期结束前仍然有效。',
     'Processing...': '处理中...',
     'Redirecting to payment...': '正在跳转到支付页面...',
     'Choose an amount between $20 and $1000.': '请选择 $20 至 $1000 之间的金额。',

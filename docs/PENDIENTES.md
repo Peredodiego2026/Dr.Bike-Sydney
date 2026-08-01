@@ -748,6 +748,26 @@ hallazgo y no esta reportado. En la SPA si lo es.
 Orden: primero lo que cuesta plata, despues lo que le muestra algo falso a una
 persona, y lo cosmetico al final.
 
+### Estado 2026-08-02
+
+**CERRADOS** (PR #137, ya en produccion; mas la rama `fix/i18n-hole`): **12.2**
+(doble cobro),
+**12.7** (el mecanico veia "No jobs today" cuando fallaba la carga), **12.9**
+(el agujero del chequeo de i18n), **12.10** (los textos de error sin traducir
+que ese agujero dejaba pasar), **12.13** (`live-prices` mudo) y **12.15** (el
+contraste 1.03:1). Cada uno dice abajo como se verifico.
+
+**Bloqueados por trabajo en paralelo:** 12.4, 12.5, 12.11 y 12.12 viven en
+`admin.html` / `js/admin.js`, que otra sesion esta editando. **Son los dos
+numeros mas caros del documento** (12.4 y 12.5): no los toques desde dos lados
+a la vez, coordinar primero.
+
+**Esperan una decision de Diego:** 12.3 (hace falta dar de alta el evento
+`payment_intent.succeeded` en el panel de Stripe), 12.6 (que precio real tienen
+E-Bike Service y Bike Assembly) y 12.19 (permiso para borrar).
+
+**Abiertos, sin bloqueo:** 12.8, 12.14, 12.16, 12.17, 12.18.
+
 ---
 
 ### 12.1 CAUSA RAIZ de 12.2 y 12.3 — el estado del cobro vive en la pantalla
@@ -760,6 +780,12 @@ si el cliente la cierra, ese conocimiento desaparece.
 Arreglar esto de raiz cierra 12.2 y 12.3 juntos. Parcheados por separado, vuelven.
 
 ### 12.2 Se puede cobrar dos veces la misma reserva
+
+> **CERRADO 2026-08-02 (PR #137, en produccion).** El memo paso a scope de
+> modulo, atado a la reserva (servicio/fecha/hora/direccion/tarifa) y liberado
+> en cuanto la reserva existe. Verificado con Stripe stubbeado contando cobros:
+> `origin/main` cobraba DOS veces, la rama cobra UNA. Una reserva distinta si
+> vuelve a cobrar.
 
 **Sintoma.** El cliente paga, la reserva no se guarda (le aparece "Payment
 received but the booking could not be saved"), sale de la pantalla y vuelve a
@@ -875,6 +901,11 @@ copia de precio vieja en un lugar donde nadie penso en mirar.
 
 ### 12.7 Cuando falla la carga, el mecanico ve "No jobs today"
 
+> **CERRADO 2026-08-02 (PR #137, en produccion).** La cadena `"[]"` ya no
+> cuenta como cache valido: ahora dice que la carga fallo y ofrece Reintentar.
+> Con trabajos en cache sigue mostrandolos igual. `e.message` salio del
+> `innerHTML`.
+
 **Sintoma.** Si `load()` falla y el cache guardado esta vacio, el mecanico ve una
 pantalla alegre con un sol y **"No jobs today - New bookings appear instantly"**.
 Lo lee como "hoy no tengo trabajo" y se va. Las reservas existen; la app no pudo
@@ -921,6 +952,11 @@ encolado. El agujero es solo el guardado.
 
 ### 12.9 CAUSA RAIZ de 12.10 — el chequeo de i18n no mira como se escribe un error
 
+> **CERRADO 2026-08-02 (rama `fix/i18n-hole`).** `stringsFromJs()` ahora lee
+> `textContent`/`innerText` y los dialogos `confirm()`/`alert()`. Probado
+> inyectando dos strings sin traducir: el chequeo FALLA en la rama y pasaba en
+> `origin/main`. `throw new Error(...)` sigue fuera a proposito.
+
 `scripts/i18n-check.mjs::stringsFromJs()` (`:250-269`) lee de `js/app.js`
 **solo tres formas**: texto entre `>` y `<` dentro de template literals, los
 atributos `placeholder`/`aria-label`/`title`, y `showToast()`.
@@ -936,6 +972,13 @@ describe el mismo agujero en los scripts inline de la landing; este esta en un
 archivo que el checker **si** escanea, que es lo que lo hace mas engañoso.
 
 ### 12.10 41 textos de cara al cliente sin traducir, con el check en verde
+
+> **CERRADO en su mayor parte 2026-08-02** (PR #137 y rama `fix/i18n-hole`).
+> Los dos textos del pago, las dos confirmaciones destructivas y 16 sitios que
+> mostraban `e.message` crudo pasan por `translateValue()`, con es/zh. Siete de
+> esos textos YA tenian traduccion en el diccionario y el codigo no la usaba.
+> **Queda abierto** lo que se lanza con `throw new Error(...)` y nunca pasa por
+> un sitio de display cubierto.
 
 **Sintoma.** Un cliente en español o chino recibe en ingles **todos** los
 mensajes de error del pago y de la membresia, que es donde mas importa entender.
@@ -1003,6 +1046,9 @@ excepciones.
 
 ### 12.13 `live-prices.js` se rinde en silencio
 
+> **CERRADO 2026-08-02 (PR #137, en produccion).** Los tres caminos de
+> abandono avisan por consola. Verificado forzando un 503.
+
 **Sintoma.** Si la consulta de precios falla o devuelve un error HTTP, **toda la
 grilla de precios de marketing se queda con los numeros estaticos del HTML, sin
 un solo aviso** - ni en pantalla ni en consola.
@@ -1052,6 +1098,11 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto es la de `css/landing.css:2`.
 
 ### 12.15 "No jobs today" es literalmente ilegible: contraste 1.03:1
+
+> **CERRADO 2026-08-02 (PR #137, en produccion).** `.jobs-wrap` y
+> `.profile-wrap` usan `var(--off)`. Medido en Chromium: **1.03:1 -> 13.36:1**,
+> y el subtitulo 2.58:1 -> 5.33:1. Confirmado en produccion: el fondo llega
+> como `rgb(26,39,64)`.
 
 **Sintoma.** El titulo del estado vacio del mecanico se dibuja casi blanco sobre
 casi blanco. En la captura no se lee; el subtitulo, que deberia pesar menos, es lo

@@ -266,6 +266,27 @@ function stringsFromJs(file) {
     const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
     if (isCandidate(t) && !/[{}]/.test(t)) found.add(t);
   }
+  // Text assigned to a property, and the native dialogs. stringsFromInlineScripts
+  // has read the textContent/innerText shape since it was written; this function
+  // never did, so the same sentence was checked in landing.html's inline scripts
+  // and unchecked in js/app.js. That gap is how the payment errors - including
+  // the one telling a client their money left and their booking did not -
+  // shipped English-only with this check green (found 2026-08-01, audit 12.9).
+  //
+  // `throw new Error(...)` is deliberately NOT read: those strings are a mix of
+  // copy shown to the user and internal messages nobody sees, and there is no
+  // way to tell them apart here. The ones that do reach a screen arrive through
+  // showToast or textContent, which are both covered.
+  for (const m of src.matchAll(
+    /(?:textContent|innerText)\s*=\s*(['"])((?:[^'"\\]|\\.){3,200}?)\1/g
+  )) {
+    const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
+    if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
+  }
+  for (const m of src.matchAll(/\b(?:confirm|alert)\(\s*(['"])((?:[^'"\\]|\\.){3,300}?)\1/g)) {
+    const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
+    if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
+  }
   return found;
 }
 
