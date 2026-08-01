@@ -2812,8 +2812,12 @@ function anEmpty(title, detail) {
   );
 }
 function anError(detail) {
+  // The 'error' kind is what turns the heading red. Without it a failed query
+  // and an empty result render identically apart from the wording, which is
+  // the exact confusion this screen exists to prevent.
   return anState(
-    `<span class="an-state-icon">&#9888;</span><strong>Could not load this</strong>${esc(detail || '')}`
+    `<span class="an-state-icon">&#9888;</span><strong>Could not load this</strong>${esc(detail || '')}`,
+    'error'
   );
 }
 
@@ -2910,7 +2914,7 @@ function renderAnalytics() {
   renderTrafficCard();
 
   // Lifetime by design - their subtitles say so.
-  renderHeatmap(all);
+  const plotted = renderHeatmap(all);
   renderMargins(all);
   renderLTV(all);
   renderTargetMetrics(all);
@@ -2924,7 +2928,14 @@ function renderAnalytics() {
   sub('an-popularity-sub', 'Completed jobs per service · ' + anRangeLabel());
   sub('an-suburbs-sub', 'Bookings created · ' + anRangeLabel());
   sub('an-sources-sub', 'Bookings created · ' + anRangeLabel());
-  sub('an-heatmap-sub', 'Booking volume by suburb · lifetime, not filtered by the range above');
+  sub(
+    'an-heatmap-sub',
+    plotted === null
+      ? 'The map library did not load - reload the page to try again'
+      : plotted === 0
+        ? 'No bookings with a recognised suburb yet - the map has nothing to plot'
+        : 'Booking volume by suburb · lifetime, not filtered by the range above'
+  );
 
   // A card that fell back to an empty state has no chart to swap, so its
   // toggle must not still offer "Chart".
@@ -2951,10 +2962,15 @@ function renderAnalyticsKPIs(d, inRange, from) {
     return;
   }
 
+  // The current window runs from midnight N days ago to *now*, so it is N days
+  // plus however much of today has elapsed. Stepping the comparison back by a
+  // whole N days would measure the current period against a strictly shorter
+  // one and quietly inflate every delta by up to a day's trading. The previous
+  // window is therefore the same elapsed duration, not the same day count.
   let prevFrom = null;
   if (from) {
-    prevFrom = new Date(from);
-    prevFrom.setDate(prevFrom.getDate() - _anRange);
+    const spanMs = Date.now() - from.getTime();
+    prevFrom = new Date(from.getTime() - spanMs);
   }
   const prevBookings = prevFrom ? d.all.filter((b) => anInRange(b.created_at, prevFrom, from)) : [];
   const prevProfiles = prevFrom
@@ -3038,7 +3054,9 @@ function anDelta(t) {
   const pct = Math.round(((t.now - t.prev) / t.prev) * 100);
   const dir = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
   const arrow = pct > 0 ? '&#9650;' : pct < 0 ? '&#9660;' : '&#8212;';
-  return `<div class="an-tile-delta ${dir}">${arrow} ${Math.abs(pct)}% vs previous ${_anRange} days</div>`;
+  // "previous period", not "previous N days" - the window is N days plus the
+  // part of today that has happened, and the comparison matches that exactly.
+  return `<div class="an-tile-delta ${dir}">${arrow} ${Math.abs(pct)}% vs previous period</div>`;
 }
 
 // Diego's KPI scorecard: the 3 targets that had no measurement anywhere before
@@ -3756,24 +3774,38 @@ function renderTrafficCard() {
     return;
   }
 
-  if (sub) sub.textContent = `PostHog · ${anRangeLabel()}`;
-  const pct = t.visitors ? Math.round((t.returning / t.visitors) * 100) : null;
+  // Labelled from what the server actually queried, not from the button that
+  // was pressed: "All time" sends 730 days because PostHog needs a bound, and
+  // calling that "all time" would overstate how far back the numbers reach.
+  if (sub) sub.textContent = `PostHog · last ${Number(t.days || 0).toLocaleString('en-AU')} days`;
+
+  // null from the server means that one query failed; an empty array means it
+  // ran and found nothing. They must not look the same on screen.
+  const num = (v) => (v === null || v === undefined ? null : anCompact(v));
+  const pct =
+    t.visitors && t.returning !== null ? Math.round((t.returning / t.visitors) * 100) : null;
   const tiles = [
-    ['Visitors', anCompact(t.visitors)],
-    ['Page views', anCompact(t.views)],
+    ['Visitors', num(t.visitors)],
+    ['Page views', num(t.views)],
     [
       'Came back',
-      pct === null ? 'No visits yet' : `${anCompact(t.returning)} · ${pct}%`,
+      t.returning === null
+        ? null
+        : pct === null
+          ? 'No visits yet'
+          : `${anCompact(t.returning)} · ${pct}%`,
       'seen on 2+ separate days',
     ],
-    ['Bookings tracked', anCompact(t.booking_completed)],
+    ['Bookings tracked', num(t.booking_completed)],
   ];
 
   const list = (title, rows, fmtName) =>
     `<div><div class="an-tile-label" style="margin-bottom:10px">${esc(title)}</div>` +
-    (rows && rows.length
-      ? `<div class="an-bars">${anBarList(rows.map(fmtName))}</div>`
-      : anEmpty('Nothing recorded', '')) +
+    (rows === null || rows === undefined
+      ? anError('this query did not come back')
+      : rows.length
+        ? `<div class="an-bars">${anBarList(rows.map(fmtName))}</div>`
+        : anEmpty('Nothing recorded', '')) +
     '</div>';
 
   const stepOrder = ['select_service', 'select_date', 'address', 'quote_summary', 'payment'];
@@ -3791,22 +3823,52 @@ function renderTrafficCard() {
   if (t.booking_completed)
     funnelRows.push({ name: 'Completed a booking', value: t.booking_completed });
 
+  // Names the sections that did not come back, so a partial card is never
+  // mistaken for a complete one.
+  const failedNote = t.failed
+    ? `<div class="an-note" style="padding:0 0 14px;color:var(--an-crit)">Some queries failed and are shown as "could not load": ${esc(
+        Object.entries(t.failed)
+          .map(([k, v]) => `${k} (${v})`)
+          .join(' · ')
+      )}</div>`
+    : '';
+
   el.innerHTML = `<div class="an-body">
+      ${failedNote}
       <div class="an-kpis" style="margin-bottom:20px">${tiles
         .map(
           ([l, v, n]) =>
-            `<div class="an-tile"><div class="an-tile-label">${esc(l)}</div><div class="an-tile-value" style="font-size:24px">${esc(v)}</div>${n ? `<div class="an-tile-note">${esc(n)}</div>` : ''}</div>`
+            `<div class="an-tile"><div class="an-tile-label">${esc(l)}</div>${
+              v === null
+                ? '<div class="an-tile-value is-empty">Could not load</div>'
+                : `<div class="an-tile-value" style="font-size:24px">${esc(v)}</div>`
+            }${n && v !== null ? `<div class="an-tile-note">${esc(n)}</div>` : ''}</div>`
         )
         .join('')}</div>
       <div class="an-grid-2" style="gap:24px">
         ${list('Most viewed pages', t.pages, (r) => ({ name: r.path || 'unknown', value: r.views }))}
         ${list('Countries', t.countries, (r) => ({ name: r.country || 'Unknown', value: r.visitors, ctx: !r.country }))}
-        ${list('Referrers', t.referrers, (r) => ({ name: r.source || 'Direct / none', value: r.visitors, ctx: !r.source || r.source === '$direct' }))}
+        ${list('Referrers', t.referrers, (r) => {
+          // PostHog writes "$direct" for a visit with no referrer. Shown raw it
+          // reads like a broken value sitting next to real domain names.
+          const direct = !r.source || r.source === '$direct';
+          return {
+            name: direct ? 'Direct / no referrer' : r.source,
+            value: r.visitors,
+            ctx: direct,
+          };
+        })}
         ${list('Most clicked buttons', t.ctas, (r) => ({ name: `${r.label || 'unlabelled'} (${r.location || 'unknown'})`, value: r.clicks }))}
       </div>
       <div style="margin-top:24px">
         <div class="an-tile-label" style="margin-bottom:10px">Booking flow, step by step</div>
-        ${funnelRows.length ? `<div class="an-bars">${anBarList(funnelRows)}</div>` : anEmpty('No booking steps recorded', '')}
+        ${
+          t.funnel === null
+            ? anError('this query did not come back')
+            : funnelRows.length
+              ? `<div class="an-bars">${anBarList(funnelRows)}</div>`
+              : anEmpty('No booking steps recorded', '')
+        }
       </div>
     </div>`;
 }
@@ -3880,7 +3942,9 @@ function wireAnalytics() {
 // #21 Geographic heatmap
 function renderHeatmap(all) {
   const mapEl = document.getElementById('an-heatmap');
-  if (!mapEl || typeof L === 'undefined') return;
+  // null = could not render at all (Leaflet did not load); 0 = rendered, but
+  // nothing to plot. The caller tells those two apart in the subtitle.
+  if (!mapEl || typeof L === 'undefined') return null;
   const counts = {};
   all.forEach((b) => {
     const c = suburbCoord(b);
@@ -3919,9 +3983,9 @@ function renderHeatmap(all) {
   if (points.length) _heatMap.fitBounds(L.latLngBounds(points.map((p) => p.coord)).pad(0.2));
   setTimeout(() => _heatMap && _heatMap.invalidateSize(), 100);
   // An empty map and a map of a quiet week look identical, so say which it is.
-  const sub = document.getElementById('an-heatmap-sub');
-  if (sub && !points.length)
-    sub.textContent = 'No bookings with a recognised suburb yet - nothing to plot';
+  // Returned rather than written here: renderAnalytics sets this subtitle a few
+  // lines after calling us, so writing it directly was dead code.
+  return points.length;
 }
 
 // #23 Margins per service
