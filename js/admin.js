@@ -2799,8 +2799,24 @@ function anCompletedInRange(all, from, to) {
     (b) => b.status === 'completed' && anInRange(b.completed_at || b.created_at, from, to)
   );
 }
+// What the client was actually billed. `bookings` splits the amount across two
+// columns - `service_price` and `callout_fee`, the latter set per zone from
+// `callout_zones`, so it is NOT always $20 - and summing only the first
+// understated every revenue figure on this screen by roughly the call-out on
+// every job.
+//
+// A missing callout_fee is counted as zero, never as an assumed $20: the other
+// surfaces fall back to `?? 20` for display, but inventing a fee on a metrics
+// screen is exactly the failure this screen is built to avoid. How many rows
+// are in that state is reported instead - see anCalloutGaps().
+function anBookingRevenue(b) {
+  return (Number(b.service_price) || 0) + (Number(b.callout_fee) || 0);
+}
 function anRevenueOf(rows) {
-  return rows.reduce((s, b) => s + (Number(b.service_price) || 0), 0);
+  return rows.reduce((s, b) => s + anBookingRevenue(b), 0);
+}
+function anCalloutGaps(rows) {
+  return rows.filter((b) => b.callout_fee === null || b.callout_fee === undefined).length;
 }
 
 function anState(html, kind) {
@@ -2833,7 +2849,7 @@ async function loadAnalytics() {
     sb
       .from('bookings')
       .select(
-        'id,client_id,client_name,client_email,service_name,service_price,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)'
+        'id,client_id,client_name,client_email,service_name,service_price,callout_fee,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)'
       )
       .order('created_at', { ascending: false })
       .limit(BOOKINGS_FETCH_CAP),
@@ -2907,7 +2923,11 @@ function renderAnalytics() {
   renderBookingStatus(inRange, d);
   renderRevenueChart(d, from);
   renderSignupsChart(d, from);
-  renderServicePopularity(inRange, d.catalog, d);
+  // Completed-in-range, the same basis as Revenue. Filtering these by creation
+  // date instead would mean "Services sold" and "Revenue" summed two different
+  // sets of jobs under the same range label, and the services would not add up
+  // to the money.
+  renderServicePopularity(anCompletedInRange(all, from, null), d.catalog, d);
   renderSuburbs(inRange, d);
   renderSources(inRange, d);
   renderCheckoutCard();
@@ -2925,7 +2945,7 @@ function renderAnalytics() {
   };
   sub('an-revenue-sub', 'Completed bookings · ' + anRangeLabel());
   sub('an-signups-sub', 'Sign-ups · ' + anRangeLabel());
-  sub('an-popularity-sub', 'Completed jobs per service · ' + anRangeLabel());
+  sub('an-popularity-sub', 'Jobs completed per service · ' + anRangeLabel());
   sub('an-suburbs-sub', 'Bookings created · ' + anRangeLabel());
   sub('an-sources-sub', 'Bookings created · ' + anRangeLabel());
   sub(
@@ -3156,6 +3176,13 @@ function exportAnalyticsCSV() {
   // The screen has a date filter; this file does not. Say so, or the numbers
   // read as if they matched what was on screen when the button was pressed.
   rows.push(['Scope', 'Lifetime - NOT the date range selected on screen']);
+  rows.push(['Revenue basis', 'service_price + callout_fee, on completed bookings only']);
+  const gaps = anCalloutGaps(all.filter((b) => b.status === 'completed'));
+  if (gaps)
+    rows.push([
+      'Warning',
+      `${gaps} completed booking(s) have no callout_fee recorded and are counted at their service price only`,
+    ]);
   if (_analyticsData.truncated)
     rows.push([
       'Warning',
@@ -3198,7 +3225,7 @@ function exportAnalyticsCSV() {
     const key = (b.suburb || 'Unknown').trim();
     if (!bySuburb[key]) bySuburb[key] = { n: 0, rev: 0 };
     bySuburb[key].n++;
-    bySuburb[key].rev += b.service_price || 0;
+    bySuburb[key].rev += anBookingRevenue(b);
   });
   Object.entries(bySuburb)
     .sort((a, b) => b[1].n - a[1].n)
@@ -3212,7 +3239,7 @@ function exportAnalyticsCSV() {
     const name = b.service_name || 'Other';
     if (!byService[name]) byService[name] = { jobs: 0, rev: 0 };
     byService[name].jobs++;
-    byService[name].rev += b.service_price || 0;
+    byService[name].rev += anBookingRevenue(b);
   });
   Object.entries(byService)
     .sort((a, b) => b[1].rev - a[1].rev)
@@ -3238,7 +3265,7 @@ function exportAnalyticsCSV() {
         last: '',
       };
     byClient[key].jobs++;
-    byClient[key].ltv += b.service_price || 0;
+    byClient[key].ltv += anBookingRevenue(b);
     if (!byClient[key].last || b.scheduled_date > byClient[key].last)
       byClient[key].last = b.scheduled_date;
   });
@@ -3447,7 +3474,7 @@ function renderRevenueChart(d, from) {
   }
   const rows = completed.map((b) => ({
     at: b.completed_at || b.created_at,
-    v: Number(b.service_price) || 0,
+    v: anBookingRevenue(b),
   }));
   const series = anSeriesFrom(rows, 'at', from, (r) => r.v);
   el.innerHTML = anColumnChart('an-revenue', series, {
@@ -3457,6 +3484,18 @@ function renderRevenueChart(d, from) {
     yLabel: 'Revenue',
     aria: 'Revenue by period',
   });
+
+  // Rows written before callout_fee existed have no fee to add. They are
+  // counted at their service price rather than topped up with an assumed $20,
+  // and the shortfall is named instead of hidden.
+  const note = document.getElementById('an-revenue-note');
+  if (note) {
+    const gaps = anCalloutGaps(completed);
+    const basis = `Adds <code>service_price</code> and <code>callout_fee</code> as recorded on each completed booking &mdash; what was actually charged, not today's price list.`;
+    note.innerHTML = gaps
+      ? `${basis} <strong>${gaps} of ${completed.length} completed ${completed.length === 1 ? 'booking' : 'bookings'} in this range ${gaps === 1 ? 'has' : 'have'} no call-out fee recorded</strong>, so ${gaps === 1 ? 'it counts' : 'they count'} only the service price and the real total is higher.`
+      : basis;
+  }
 }
 
 function renderSignupsChart(d, from) {
@@ -3622,12 +3661,13 @@ function renderBookingStatus(inRange, d) {
 }
 
 // ── Services sold ────────────────────────────────────────────────────────────
-function renderServicePopularity(inRange, catalog, d) {
+// `completed` arrives already filtered to jobs finished inside the range - the
+// caller does it, so this shares one definition with the Revenue card.
+function renderServicePopularity(completed, catalog, d) {
   const el = document.getElementById('an-popularity');
   if (!el) return;
   if (d && d.bookingsError) return void (el.innerHTML = anError(d.bookingsError));
   if (d && d.catalogError) return void (el.innerHTML = anError(d.catalogError));
-  const completed = inRange.filter((b) => b.status === 'completed');
   const counts = {};
   (catalog || []).forEach((s) => {
     counts[s.name] = 0;
@@ -3663,7 +3703,7 @@ function renderSuburbs(inRange, d) {
     const key = (b.suburb || '').trim() || 'Not recorded';
     if (!counts[key]) counts[key] = { n: 0, rev: 0 };
     counts[key].n++;
-    if (b.status === 'completed') counts[key].rev += Number(b.service_price) || 0;
+    if (b.status === 'completed') counts[key].rev += anBookingRevenue(b);
   });
   const rows = Object.entries(counts)
     .sort((a, b) => b[1].n - a[1].n)
@@ -3952,7 +3992,7 @@ function renderHeatmap(all) {
     const key = (b.suburb || '').trim().toLowerCase() || c.join(',');
     if (!counts[key]) counts[key] = { coord: c, n: 0, name: b.suburb || 'Area', rev: 0 };
     counts[key].n++;
-    counts[key].rev += b.service_price || 0;
+    counts[key].rev += anBookingRevenue(b);
   });
   const points = Object.values(counts);
   if (!_heatMap) {
@@ -3976,7 +4016,7 @@ function renderHeatmap(all) {
     const color = intensity > 0.66 ? '#DC2626' : intensity > 0.33 ? '#D97706' : '#1848C8';
     L.circleMarker(p.coord, { radius, color, weight: 1, fillColor: color, fillOpacity: 0.45 })
       .bindPopup(
-        `<b>${esc(p.name)}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>$${p.rev.toLocaleString()} revenue`
+        `<b>${esc(p.name)}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>${anMoney(p.rev)} revenue`
       )
       .addTo(_heatLayer);
   });
@@ -3998,7 +4038,7 @@ function renderMargins(all) {
     const name = b.service_name || 'Other';
     if (!byService[name]) byService[name] = { jobs: 0, rev: 0 };
     byService[name].jobs++;
-    byService[name].rev += b.service_price || 0;
+    byService[name].rev += anBookingRevenue(b);
   });
   const rows = Object.entries(byService).sort((a, b) => b[1].rev - a[1].rev);
   if (!rows.length) {
@@ -4017,9 +4057,9 @@ function renderMargins(all) {
       return `<tr>
       <td data-label="Service"><b>${esc(name)}</b></td>
       <td data-label="Jobs">${d.jobs}</td>
-      <td data-label="Revenue">$${d.rev.toLocaleString()}</td>
-      <td data-label="Avg ticket">$${avg}</td>
-      <td data-label="Est. cost">$${cost.toLocaleString()}</td>
+      <td data-label="Revenue">${anMoney(d.rev)}</td>
+      <td data-label="Avg ticket">${anMoney(avg)}</td>
+      <td data-label="Est. cost">${anMoney(cost)}</td>
       <td data-label="Margin" style="color:${mColor};font-weight:700">${margin}%</td>
     </tr>`;
     })
@@ -4044,7 +4084,7 @@ function renderLTV(all) {
         last: '',
       };
     byClient[key].jobs++;
-    byClient[key].ltv += b.service_price || 0;
+    byClient[key].ltv += anBookingRevenue(b);
     if (!byClient[key].last || b.scheduled_date > byClient[key].last)
       byClient[key].last = b.scheduled_date;
   });
@@ -4080,7 +4120,7 @@ function renderLTV(all) {
     subEl.textContent = `${clients.length} customers · churn after ${CHURN_DAYS} days inactive`;
   if (kpisEl)
     kpisEl.innerHTML = [
-      ['Avg LTV', '$' + avgLtv.toLocaleString(), 'var(--green)'],
+      ['Avg LTV', anMoney(avgLtv), 'var(--green)'],
       ['Active customers', String(active), 'var(--blue)'],
       ['Churned', String(churned.length), 'var(--red)'],
       ['Repeat rate', repeatRate + '%', 'var(--navy)'],
@@ -4107,7 +4147,7 @@ function renderLTV(all) {
       return `<tr>
       <td data-label="Client"><b>${esc(c.name)}</b></td>
       <td data-label="Jobs">${c.jobs}</td>
-      <td data-label="LTV"><b style="color:var(--green)">$${c.ltv.toLocaleString()}</b></td>
+      <td data-label="LTV"><b style="color:var(--green)">${anMoney(c.ltv)}</b></td>
       <td data-label="Last service">${lastStr} <span style="color:var(--mgray);font-size:11px">(${ds > 9000 ? 'never' : ds <= 0 ? 'today' : ds + 'd ago'})</span></td>
       <td data-label="Status"><span class="status ${isChurned ? 'cancelled' : 'confirmed'}">${isChurned ? 'Churned' : 'Active'}</span></td>
     </tr>`;
