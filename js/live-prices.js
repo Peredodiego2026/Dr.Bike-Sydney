@@ -45,17 +45,29 @@
     const cards = document.querySelectorAll('.service-card, .svc-card');
     if (!cards.length) return;
 
+    // Every bail-out below leaves the whole grid on the static prices baked into
+    // the HTML. That is the right behaviour - a blank price is worse than a
+    // stale one - but it used to happen without a single trace, so a price list
+    // frozen for weeks looked exactly like one that had just synced. Same
+    // failure mode MOCK_SERVICES was deleted for; it must at least say so.
     let services;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,price`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.warn('[live-prices] services fetch returned ' + res.status + ' - showing static prices');
+        return;
+      }
       services = await res.json();
-    } catch {
+    } catch (e) {
+      console.warn('[live-prices] services fetch failed (' + e.message + ') - showing static prices');
       return; // keep whatever price is already in the static HTML
     }
-    if (!Array.isArray(services) || !services.length) return;
+    if (!Array.isArray(services) || !services.length) {
+      console.warn('[live-prices] services table returned nothing - showing static prices');
+      return;
+    }
 
     cards.forEach((card) => {
       const heading = card.querySelector('h3, .service-name, .svc-name');

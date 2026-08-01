@@ -325,11 +325,14 @@ body {
 .tab-badge.show {
   display: block;
 }
+/* var(--off), not a raw hex: the dark theme above can only redefine tokens, so
+   a hardcoded background stayed light while --navy flipped to near-white and
+   the empty state ("No jobs today") rendered at 1.03:1 - invisible. */
 .jobs-wrap {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
-  background: #f4f6f9;
+  background: var(--off);
 }
 .job-card {
   background: #fff;
@@ -475,7 +478,7 @@ body {
 }
 .profile-wrap {
   padding: 24px;
-  background: #f4f6f9;
+  background: var(--off); /* same reason as .jobs-wrap above */
   min-height: 100%;
 }
 .profile-av {
