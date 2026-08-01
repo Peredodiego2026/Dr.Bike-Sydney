@@ -2900,6 +2900,7 @@ function renderAnalytics() {
 
   renderAnalyticsKPIs(d, inRange, from);
   renderFunnel(d, from);
+  renderBookingStatus(inRange, d);
   renderRevenueChart(d, from);
   renderSignupsChart(d, from);
   renderServicePopularity(inRange, d.catalog, d);
@@ -3533,6 +3534,73 @@ function renderFunnel(d, from) {
           ' booking(s) in the database have no account attached (desktop and phone bookings) and cannot appear here - the Bookings tile above counts them.'
         : 'Every booking in the database is attached to an account.');
   }
+}
+
+// ── Booking status ───────────────────────────────────────────────────────────
+// Part-to-whole, so a single stacked bar rather than six bars that make the
+// reader add up. The two terminal states wear status colours (they mean good
+// and bad); the in-flight ones wear ordinal blue, because they mean "further
+// along", not "better". Every segment carries a label, so hue is never the
+// only channel. An unrecognised status gets its own labelled segment instead
+// of being quietly folded into "other".
+const AN_STATUS_GROUPS = [
+  { key: 'pending', label: 'Pending', match: ['pending'], color: 'var(--an-warn)' },
+  { key: 'confirmed', label: 'Scheduled', match: ['confirmed'], color: 'var(--an-ord-2)' },
+  {
+    key: 'active',
+    label: 'In progress',
+    match: ['enroute', 'en_route', 'in_progress', 'arrived'],
+    color: 'var(--an-ord-3)',
+  },
+  { key: 'completed', label: 'Completed', match: ['completed'], color: 'var(--an-good)' },
+  { key: 'cancelled', label: 'Cancelled', match: ['cancelled'], color: 'var(--an-crit)' },
+];
+
+function renderBookingStatus(inRange, d) {
+  const el = document.getElementById('an-status');
+  const sub = document.getElementById('an-status-sub');
+  if (!el) return;
+  if (sub) sub.textContent = 'Bookings created · ' + anRangeLabel();
+  if (d.bookingsError) return void (el.innerHTML = anError(d.bookingsError));
+  if (!inRange.length) {
+    el.innerHTML = anEmpty(
+      'No bookings in this range',
+      'Nothing was booked in the ' + anRangeLabel() + '.'
+    );
+    return;
+  }
+
+  const counts = {};
+  const unknown = {};
+  inRange.forEach((b) => {
+    const s = String(b.status || '').toLowerCase();
+    const g = AN_STATUS_GROUPS.find((x) => x.match.includes(s));
+    if (g) counts[g.key] = (counts[g.key] || 0) + 1;
+    else unknown[s || 'no status'] = (unknown[s || 'no status'] || 0) + 1;
+  });
+
+  const segs = AN_STATUS_GROUPS.filter((g) => counts[g.key]).map((g) => ({
+    label: g.label,
+    n: counts[g.key],
+    color: g.color,
+  }));
+  Object.entries(unknown).forEach(([label, n]) =>
+    segs.push({ label: label + ' (unrecognised)', n, color: 'var(--an-ctx)' })
+  );
+
+  const total = inRange.length;
+  el.innerHTML = `<div class="an-body"><div class="an-stack">${segs
+    .map(
+      (s) =>
+        `<div class="an-stack-seg" style="flex:${s.n};background:${s.color}" title="${esc(s.label)}: ${s.n}"></div>`
+    )
+    .join('')}</div></div>
+    <div class="an-legend">${segs
+      .map(
+        (s) =>
+          `<span><i style="background:${s.color}"></i>${esc(s.label)} &middot; ${s.n} (${Math.round((s.n / total) * 100)}%)</span>`
+      )
+      .join('')}</div>`;
 }
 
 // ── Services sold ────────────────────────────────────────────────────────────

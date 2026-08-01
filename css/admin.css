@@ -2578,3 +2578,23 @@ body {
     grid-template-columns: minmax(80px, 40%) 1fr auto;
   }
 }
+
+/* Stacked bar — part-to-whole. The 2px gap is the surface doing the
+   separating; never a stroke drawn around each segment. */
+.an-stack {
+  display: flex;
+  gap: 2px;
+  height: 22px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.an-stack-seg {
+  min-width: 3px;
+  transition: flex-grow 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.an-stack-seg:first-child {
+  border-radius: 6px 0 0 6px;
+}
+.an-stack-seg:last-child {
+  border-radius: 0 6px 6px 0;
+}
