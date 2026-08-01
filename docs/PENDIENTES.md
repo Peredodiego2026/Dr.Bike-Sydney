@@ -3,7 +3,8 @@
 > Lista maestra de lo que falta. Vive en el repo a proposito: sobrevive a que se
 > cierre un chat, se pierda el historial o se reinstale Claude.
 >
-> Ultima verificacion contra el sistema real: **2026-07-27**.
+> Ultima verificacion contra el sistema real: **2026-08-01** (seccion 12: SPA
+> movil, mechanic y admin en Chromium real; resto del documento, 2026-07-27).
 > Regla: si una linea de aqui contradice al codigo o a la base de datos, gana el
 > sistema. Corregir esta linea en el momento y anotar por que.
 
@@ -175,6 +176,11 @@ Para avanzar en diseno hace falta una auditoria nueva de las 5 superficies
 (SPA movil, landing, mechanic, admin, track) escrita en un documento. Sin eso se
 trabaja a ciegas.
 
+**Estado 2026-08-01: 4 de las 5 superficies ya tienen lista escrita.** `landing`
+esta en la seccion 8; `SPA movil`, `mechanic` y `admin` en la seccion 12. **Falta
+solo `track.html`**, que no entro en ninguna de las dos rondas. Este punto queda
+abierto hasta que se audite esa quinta.
+
 ### 3.2 Dieta de `landing.html`
 
 255 KB de HTML, ~2600 lineas, con estilos y scripts inline. `docs/PLAN-DISENO.md`
@@ -326,11 +332,15 @@ La tarjeta de Emergency Service se ve igual que las demas. Diego la quiere
 reservable, abre el modal de contacto. Usar el token de `danger` (#DC2626) con
 fondo al 8%, mismo patron que los badges del skill `drbike-design`.
 
-### 8.8 Falta revisar SPA movil, mechanic.html y admin.html
+### 8.8 ~~Falta revisar SPA movil, mechanic.html y admin.html~~ — HECHO 2026-08-01
 
-Diego reviso solo `landing.html`. Las otras tres superficies no se miraron
-todavia. Esto conecta con el punto 3.1: **no existe lista de hallazgos de
-diseno**, y esta seccion 8 es el primer pedazo real de esa auditoria pendiente.
+**Las tres superficies estan auditadas. Los hallazgos estan en la seccion 12.**
+No hace falta leer nada mas de este punto; el texto de abajo se conserva solo
+para explicar por que existia.
+
+> Diego reviso solo `landing.html`. Las otras tres superficies no se miraron
+> todavia. Esto conecta con el punto 3.1: **no existe lista de hallazgos de
+> diseno**, y esta seccion 8 es el primer pedazo real de esa auditoria pendiente.
 
 ### Como se cerraron 8.1 a 8.7 (2026-07-27)
 
@@ -712,4 +722,466 @@ queda en el panel, y ademas se puede escribir cualquier cosa.
 Reemplazarlos pide un selector de fecha/hora de verdad, con los horarios libres
 que ya devuelve `/api/auth?role=get-availability` - o sea, lo mismo que el paso
 2 del wizard. Es una feature, no un ajuste de estilo: rama aparte.
+
+---
+
+## 12. Auditoria de la SPA movil, mechanic y admin (2026-08-01)
+
+Esto es el punto 8.8 hecho, y la segunda mitad de lo que pedia el 3.1. Nadie
+habia mirado estas tres superficies: la seccion 8 fue solo `landing.html`.
+
+**Como se verifico.** Chromium real via Playwright contra un servidor estatico
+local, con Stripe bloqueado a nivel de red y toda escritura a Supabase abortada:
+nada de lo que sigue creo una reserva, un cobro ni una fila. La SPA se midio a
+390px, mechanic a 390px en los dos temas, admin a 1440px. Los precios reales se
+leyeron de la tabla `services` en vivo (GET publico con la clave anon, la misma
+request que hace la web en cada carga): **32 filas**.
+
+**Cada hallazgo dice si esta verificado en navegador, verificado en codigo, o si
+es sospecha.** No hay ninguno escrito de memoria. Donde no pude comprobar algo,
+lo digo en el propio hallazgo en vez de suavizarlo.
+
+**Ojo con el alcance:** `admin.html` y `mechanic.html` son **English-only por
+diseño** (`scripts/i18n-check.mjs` ni las escanea). Texto en ingles ahi no es un
+hallazgo y no esta reportado. En la SPA si lo es.
+
+Orden: primero lo que cuesta plata, despues lo que le muestra algo falso a una
+persona, y lo cosmetico al final.
+
+---
+
+### 12.1 CAUSA RAIZ de 12.2 y 12.3 — el estado del cobro vive en la pantalla
+
+Los dos hallazgos que siguen son la misma cosa vista dos veces: **lo unico que
+sabe que ya se cobro es una variable dentro de la funcion que dibuja la pantalla
+de pago.** No hay rastro en el servidor. Si esa pantalla se vuelve a dibujar, o
+si el cliente la cierra, ese conocimiento desaparece.
+
+Arreglar esto de raiz cierra 12.2 y 12.3 juntos. Parcheados por separado, vuelven.
+
+### 12.2 Se puede cobrar dos veces la misma reserva
+
+**Sintoma.** El cliente paga, la reserva no se guarda (le aparece "Payment
+received but the booking could not be saved"), sale de la pantalla y vuelve a
+entrar al paso de pago. El guardia anti-doble-cobro se reseteo: si aprieta Pagar
+otra vez, se le cobran **$20 mas**, sin reserva de por medio.
+
+**Donde.** `js/app.js:1808` declara `let paidIntent = null` **adentro** de
+`renderPayment()`. `js/app.js:4674` llama `renderPayment()` en **cada**
+navegacion a `#payment`.
+
+**Evidencia. VERIFICADO EN NAVEGADOR.** Navegue `#payment` -> `#service-summary`
+-> `#payment` y conte los renders: **2 renders, HTML nuevo identico las dos
+veces** (4944 caracteres cada uno). Cada render es un cierre nuevo, o sea un
+`paidIntent` nuevo en `null`. El comentario de `js/app.js:1804-1807` dice que
+`chargeOnce()` protege contra el doble cobro; protege, pero **solo dentro de una
+misma visita a la pantalla**.
+
+**Impacto: PLATA.** Cobro duplicado a un cliente real.
+
+### 12.3 Un cobro que salio bien puede quedarse sin reserva, y nadie se entera
+
+**Sintoma.** Stripe cobra los $20, `create-booking` falla, y el cliente cierra la
+app en vez de apretar Pagar de nuevo. Resultado: **plata cobrada, cero reserva,
+cero email al cliente, cero WhatsApp a Diego**. Diego no se entera nunca. El
+cliente si.
+
+**Donde.** `js/app.js:1842-1851`: el unico camino de recuperacion es que el
+cliente vuelva a tocar el boton en esa misma pantalla.
+`api/stripe-webhook.js:178-422`: el `switch` cubre `checkout.session.completed`,
+suscripciones e invoices - **no hay ningun caso `payment_intent.*`**.
+
+**Evidencia. VERIFICADO EN CODIGO.** Grep de todos los `case` del webhook: no
+existe `payment_intent.succeeded`. No hay reconciliacion del lado del servidor.
+
+**Impacto: PLATA.** Ademas de perder la reserva, es el caso que mas rapido
+termina en una devolucion pedida por chat.
+
+### 12.4 Toda la pestaña Finanzas suma solo la mitad de cada venta
+
+**Sintoma.** El call-out de $20 **no entra en ningun numero de Finanzas**. Con 50
+trabajos completados en el mes faltan **$1.000** de facturacion, y el GST
+declarado queda ~$91 corto. El campo `bas-g1` (el que Diego usa para el BAS) sale
+de ese mismo numero.
+
+**Donde.** `js/admin.js:780` - `revenue = jobs.reduce((s, j) => s + (j.service_price || 0), 0)`.
+De ahi cuelgan: GST (`:782`), neto (`:783`), ganancia bruta (`:786`), neta
+(`:787`), margen (`:788`), promedio por trabajo (`:789`), el KPI (`:792`), el BAS
+G1 (`:868`), el CSV (`:934`) y el reporte imprimible (`:1051-1079`).
+Mismo patron en `js/admin.js:1948-1949`, `:2237`, `:2803` y `:3953`.
+
+**Evidencia. VERIFICADO EN CODIGO, en el punto donde se escribe la fila.**
+`api/auth.js:744-745` guarda `service_price` y `callout_fee` en **dos columnas
+separadas**; `api/auth.js:599` calcula `servicePrice` como el precio del servicio
+mas el recargo de domingo/feriado, y `api/auth.js:602` arranca `calloutFee = 20`
+aparte. `service_price` no incluye el call-out.
+
+**Ademas, en la otra direccion:** `discount_applied` no se resta en ningun lado,
+asi que donde hubo codigo de descuento la facturacion queda inflada. Dos errores
+de signo contrario sobre el mismo total: no se puede auditar el numero.
+
+**Impacto: PLATA.** Es un numero que se presenta a la oficina de impuestos.
+
+### 12.5 El MRR cuenta a los socios anuales como si pagaran el precio mensual
+
+**Sintoma.** Un VIP anual paga $1.891/año = **$157,58/mes**, y el panel lo cuenta
+como **$197/mes**. Sobrestima $39,42 por cada VIP anual, $19,42 por cada Standard
+anual y $13,42 por cada Basic anual.
+
+**Donde.** `js/admin.js:5411-5414`:
+`const prices = { basic: 67, standard: 97, vip: 197 }`, y despues suma
+`prices[m.membership_plan]` para todo socio activo, sin mirar el plazo.
+
+**Evidencia. VERIFICADO EN CODIGO.** `api/stripe-webhook.js:196-197` guarda
+`membership_plan` y `membership_billing` en **columnas distintas**: el plazo
+(mensual/anual) vive en `membership_billing`, y el calculo del MRR nunca lo lee.
+
+**Segundo problema en la misma linea:** esos tres precios estan **hardcodeados en
+`js/admin.js`**. Es exactamente el incidente que ya documenta CLAUDE.md ("un
+cambio de precio $57/$147 estuvo live mientras la matematica de MRR de admin.js
+seguia con los numeros viejos"). La mina volvio a quedar armada.
+
+**Impacto: PLATA.** Es el numero con el que se decide si el negocio de membresias
+funciona.
+
+### 12.6 Tres precios publicados en la SPA no existen en la tabla `services`
+
+**Sintoma.** La pantalla de inicio de la SPA anuncia precios que **no
+corresponden a ningun servicio real**, y editarlos en Admin > Services no los
+cambia. El cliente ve un numero y el sistema cobra otro.
+
+| Tarjeta en `index.html` | Precio que muestra | Que hay en la tabla |
+|---|---|---|
+| E-Bike Service (`:319-321`) | **$129** | No existe. Lo mas parecido es `E-bike Diagnostic` a **$60** |
+| Bike Assembly (`:325-327`) | **$80** | No existe. Lo mas parecido es `Bike Build — New Bike` a **$75** |
+| Repairs (`:313-314`) | **"From $60"** | El servicio mas barato de la tabla esta a **$17** |
+
+**Donde.** `js/live-prices.js:76-83`: si el nombre de la tarjeta no matchea una
+fila, deja el precio estatico del HTML y escribe un `console.warn`. El `NAME_MAP`
+de `js/live-prices.js:25-37` no tiene entrada para ninguno de los tres.
+
+**Evidencia. VERIFICADO EN NAVEGADOR Y CONTRA LA BASE.** La consola imprimio,
+al cargar la SPA: `[live-prices] no Supabase match for "Repairs"`,
+`... "E-Bike Service"`, `... "Bike Assembly"`. Y las 32 filas leidas en vivo de
+`services` confirman que esos tres nombres no existen.
+
+**Alcance mas alla de esta auditoria:** "E-Bike Service" tambien aparece en
+`landing.html` y en `blog/electric-bike-laws-nsw-2026.html`.
+
+**Impacto: PLATA.** Es la clase de bug que CLAUDE.md ya marca como recurrente:
+copia de precio vieja en un lugar donde nadie penso en mirar.
+
+---
+
+### 12.7 Cuando falla la carga, el mecanico ve "No jobs today"
+
+**Sintoma.** Si `load()` falla y el cache guardado esta vacio, el mecanico ve una
+pantalla alegre con un sol y **"No jobs today - New bookings appear instantly"**.
+Lo lee como "hoy no tengo trabajo" y se va. Las reservas existen; la app no pudo
+traerlas.
+
+**Donde.** `js/mechanic.js:501-513`. El `catch` hace
+`const cached = localStorage.getItem('drbike-jobs-cache'); if (cached) {...}`.
+Cuando el ultimo dia bueno no tuvo trabajos, ahi quedo guardada la cadena `"[]"`,
+que **es truthy**, asi que un cache vacio se toma por cache valido y se pinta el
+estado vacio en vez del error rojo de la linea 511.
+
+**Evidencia. VERIFICADO EN NAVEGADOR.** Bloquee `/api` para forzar el fallo, con
+`drbike-jobs-cache` en `"[]"`. Captura: `scratchpad/mech/empty-cache-after-failure.png`
+y `mech-light.png`. Es la misma mentira que ya se borro dos veces
+(`MOCK_BOOKINGS`), en otra superficie.
+
+**Impacto: CONFIANZA, y plata indirecta** - un trabajo no atendido.
+
+**Aparte, en el mismo bloque:** `js/mechanic.js:511` mete `e.message` crudo
+dentro de `innerHTML`.
+
+### 12.8 "Saved on your phone" puede ser mentira
+
+**Sintoma.** Sin señal, el mecanico cambia el estado de un trabajo y la app le
+dice **"📵 Saved on your phone — syncs when the signal is back"** y le muestra
+"1 change waiting to sync". Si la escritura a IndexedDB fallo, ese cambio existe
+**solo en la memoria de la pagina**: cerrar la app o que iOS descarte la pestaña
+lo borra. El cliente se queda con el estado viejo y nadie se entera.
+
+**Donde.** `js/mechanic.js:219-222` - `queueSave()` envuelve el `_IDB.set` en un
+`try { ... } catch {}` vacio. Justo despues, `syncBanner()` (`:230-237`) dibuja
+el cartel contando `_queue.length`, que es **la lista en memoria**, no lo que
+quedo persistido. El toast de `js/mechanic.js:839` promete lo mismo.
+
+**Evidencia. VERIFICADO EN CODIGO.** No pude forzar un fallo real de IndexedDB en
+esta corrida, asi que **el disparador concreto (modo privado de Safari, cuota
+llena, origen desalojado) queda como sospecha**; lo verificado es que el fallo se
+traga entero y que el cartel no mira lo persistido.
+
+**Impacto: CONFIANZA.** El resto de la cola esta bien pensada: `queueFlush()`
+(`:243-283`) corta en el primer fallo de red, no reintenta los 4xx para siempre,
+y `setStatus()` (`:846`) evita fingir las notificaciones al cliente cuando esta
+encolado. El agujero es solo el guardado.
+
+### 12.9 CAUSA RAIZ de 12.10 — el chequeo de i18n no mira como se escribe un error
+
+`scripts/i18n-check.mjs::stringsFromJs()` (`:250-269`) lee de `js/app.js`
+**solo tres formas**: texto entre `>` y `<` dentro de template literals, los
+atributos `placeholder`/`aria-label`/`title`, y `showToast()`.
+
+No lee `elemento.textContent = '...'` - aunque `stringsFromInlineScripts()`
+(`:213-217`) **si** lo lee para los scripts inline de `landing.html`. O sea: el
+mismo patron esta cubierto en un archivo y no en el otro.
+
+Los mensajes de error y las confirmaciones se escriben justamente asi
+(`textContent =`, ternarios, `throw new Error(...)`, `confirm(...)`). Por eso son
+invisibles para `npm run check`. Es el hermano del punto **10.1**, que ya
+describe el mismo agujero en los scripts inline de la landing; este esta en un
+archivo que el checker **si** escanea, que es lo que lo hace mas engañoso.
+
+### 12.10 41 textos de cara al cliente sin traducir, con el check en verde
+
+**Sintoma.** Un cliente en español o chino recibe en ingles **todos** los
+mensajes de error del pago y de la membresia, que es donde mas importa entender.
+
+Los peores:
+
+| Linea | Texto |
+|---|---|
+| `js/app.js:1846` | "Payment received but the booking could not be saved. Tap Pay again to retry, or contact us." |
+| `js/app.js:1847` | "Payment failed. Please check your card details and try again." |
+| `js/app.js:238` | "Payment could not be confirmed. Please contact us if you were charged." |
+| `js/app.js:1863` | "Could not confirm booking. Please try again." |
+| `js/app.js:4121` | "Cancel your membership? It will stay active until the end of the current billing period." |
+| `js/app.js:4393` | "Delete this bike?" |
+| `js/app.js:3539` / `:3643` | "Could not cancel booking." / "Could not reschedule." |
+| `js/app.js:4026` / `:4039` | "Could not start card setup" / "Could not save card" |
+
+**Evidencia. VERIFICADO, MEDIDO CON UN SCRIPT.** Extraje los literales en ingles
+de `js/app.js` (sin comentarios) y los cruce contra las claves de `js/i18n.js`:
+**51 sin clave**, de los cuales 10 son datos `d=` de SVG y nombres de marca, o
+sea **41 reales**. Y `npm run i18n:check` pasa **en verde**
+(`954 keys in es and zh, 719 strings checked across 5 surfaces`). Ninguno de
+estos textos esta en la lista `ALLOWED`, asi que no son excepciones deliberadas.
+
+**Impacto: CONFIANZA.** Contradice la regla del proyecto de que ninguna copia
+llega a main sin es+zh. El guardrail existe y esta verde; el agujero es 12.9.
+
+### 12.11 El panel de admin se abre poniendo una clave cualquiera en localStorage
+
+**Sintoma.** Puse `localStorage['drbike-admin-token'] = 'stub-token'` - una cadena
+inventada - y el dashboard entero renderizo, sin pantalla de login: Dashboard,
+Bookings, Clients, **Finance**, Analytics, Memberships, Services & Prices,
+Discount Codes, Claims, Settings.
+
+**Donde.** `js/admin.js:1640` - `if (localStorage.getItem('drbike-admin-token')) return true;`.
+La puerta comprueba **que la clave exista**, no que valga.
+
+**Evidencia. VERIFICADO EN NAVEGADOR** (`scratchpad/admin/admin-1440.png`).
+**Limite honesto de esta prueba:** en mi corrida los `/api/auth` estaban
+stubbeados, asi que **lo probado es que la interfaz se destraba, no que los datos
+reales salgan**. Con un token falso de verdad las llamadas al servidor deberian
+dar 401. No lo probe contra produccion a proposito. Aun asi, el marco, los
+nombres de las pestañas y la estructura quedan expuestos con una linea de consola.
+
+Conecta directo con la advertencia del punto **11.3**: antes de poner numeros de
+facturacion en Analytics, este acceso tiene que estar cerrado de verdad.
+
+### 12.12 `saveVanZone()` borra todas las zonas de una van antes de insertar
+
+**Sintoma.** Guardar los suburbios de una van hace `DELETE` de todos y despues
+`INSERT`. Si el insert falla, **la van se queda sin ninguna zona** y no hay vuelta
+atras. Sin transaccion y sin confirmacion previa.
+
+**Donde.** `js/admin.js:4099-4107`.
+
+**Evidencia. VERIFICADO EN CODIGO.** No lo ejecute: escribir en `van_zones` contra
+produccion estaba prohibido en esta auditoria.
+
+**Contexto que lo empeora:** segun CLAUDE.md, el numero de WhatsApp del admin vive
+en `van_zones` con `van_number=0`. La tabla no guarda solo zonas.
+
+**El resto de los borrados del admin si preguntan** (`js/admin.js:1596`, `:4424`,
+`:4618`, `:4847`, `:5698`). Este y `js/admin.js:1254` (`availability`) son las
+excepciones.
+
+### 12.13 `live-prices.js` se rinde en silencio
+
+**Sintoma.** Si la consulta de precios falla o devuelve un error HTTP, **toda la
+grilla de precios de marketing se queda con los numeros estaticos del HTML, sin
+un solo aviso** - ni en pantalla ni en consola.
+
+**Donde.** `js/live-prices.js:53` (`if (!res.ok) return;`) y `:55-57`
+(`catch { return; }`).
+
+**Evidencia. VERIFICADO EN CODIGO.** Es el mismo modo de falla de `MOCK_SERVICES`,
+que se borro de `js/supabase.js` el 28-jul justamente por esto, sobreviviendo en
+otro archivo. Ahi el `catch` al menos deja rastro; aca no.
+
+**Impacto: CONFIANZA.**
+
+---
+
+### 12.14 CAUSA RAIZ de 12.15 y de la deriva visual — hay tres paletas distintas
+
+**No hay una fuente de verdad de color, hay tres, y no coinciden.** Peor: los dos
+documentos que se supone que guian el diseño describen paletas **distintas** de la
+que realmente cargan las paginas.
+
+| Fuente | `--gray` | `--border` | `--blue-dark` | `--green` |
+|---|---|---|---|---|
+| `css/variables.css` (la cargan las 4 superficies) | `#475569` | `#e2e8f0` | `#1e40af` | `#16a34a` |
+| `css/landing.css:2` (segundo `:root`, carga ultimo en landing) | `#6b7280` | `#e5e7eb` | `#1d4ed8` | - |
+| `track.html:15,18` y el skill `drbike-design` | - | `#E5E7EB` | `#1848C8` | `#059669` |
+
+Consecuencias verificadas:
+
+- `var(--border)` **renderiza distinto segun la pagina**: `#e5e7eb` en
+  `landing.html`, `#e2e8f0` en `index.html`, `admin.html` y `mechanic.html`.
+- El skill `drbike-design` documenta como canonicos `#1848C8` y `#059669`, que
+  **no estan definidos en ningun archivo de tokens**: seguir el skill al pie de la
+  letra *produce* hex fuera de token.
+- El bloque de diseño de `CLAUDE.md` (`Text: #111827`, `Border: #e5e7eb`)
+  describe la paleta de `landing.css`, no la de `variables.css`.
+
+**Cuanto se filtro, contado en las tres superficies auditadas:** `#6b7280` 126
+veces, `#059669` 70, `#1848c8` 52, `#e5e7eb` 48, `#f3f4f6` 22, `#111827` 11,
+`#f9fafb` 6. **335 apariciones** de hex que son casi-pero-no el token.
+
+**Evidencia. VERIFICADO CON GREP Y LEYENDO LOS TRES ARCHIVOS.**
+
+Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
+`css/admin.css:2-10` tambien redefinen tokens, pero **solo dentro de
+`[data-theme='dark']`**. Eso es tematizado correcto, no deriva. La unica
+redefinicion global en conflicto es la de `css/landing.css:2`.
+
+### 12.15 "No jobs today" es literalmente ilegible: contraste 1.03:1
+
+**Sintoma.** El titulo del estado vacio del mecanico se dibuja casi blanco sobre
+casi blanco. En la captura no se lee; el subtitulo, que deberia pesar menos, es lo
+unico visible. Jerarquia invertida y texto perdido a la vez.
+
+**Donde.** `css/mechanic.css:332` - `.jobs-wrap { background: #f4f6f9; }`, un hex
+crudo. El tema oscuro (`css/mechanic.css:2-14`) solo puede redefinir **tokens**,
+nunca un hex escrito a mano, asi que el fondo se queda claro mientras `--navy`
+pasa a `#f2f2f7` (casi blanco). Mismo defecto en `css/mechanic.css:478`
+(`.profile-wrap`), o sea la pestaña Profile tiene el mismo problema.
+
+**Evidencia. VERIFICADO EN NAVEGADOR, MEDIDO.**
+`rgb(242,242,247)` sobre `rgb(244,246,249)` = **1.03:1** (WCAG AA pide 4.5:1).
+El subtitulo esta a 2.58:1, tambien por debajo. Captura:
+`scratchpad/mech/empty-cache-after-failure.png`.
+
+Es la consecuencia visible de 12.14 y explica los `!important` de
+`css/mechanic.css:15-36`: estan parcheando hex hardcodeados selector por selector
+en lugar de usar tokens.
+
+**Nota sobre otra medicion:** mi sonda tambien marco "AR" y el badge "Confirmed"
+a 1.00:1, pero eso es **falso positivo mio** - compara contra un fondo `rgba(...)`
+translucido sin componerlo. Ese es el patron de badge que pide el propio skill.
+No es un hallazgo.
+
+Si un hallazgo real: el boton **"Accept"** queda a **3.77:1** (blanco sobre
+`#059669`) con letra de 13px - por debajo de AA. Y `#059669` es, otra vez, verde
+fuera de token (12.14).
+
+### 12.16 Targets tactiles chicos y listas que pueden crecer sin scroll
+
+**SPA a 390px - VERIFICADO EN NAVEGADOR, medido con `getBoundingClientRect()`:**
+**18 elementos interactivos por debajo de 44px** de alto. Los peores:
+`.footer-link` a **21px** (unos 8), `#spa-lang-toggle` a 36px,
+`#home-mobile-auth-btn` a 37px, `.btn-learn-more` a 33px (x3), `.footer-social` a
+34px. Ademas **5 elementos se desbordan horizontalmente**, uno llega a 754px de
+borde derecho contra un viewport de 390px.
+
+**mechanic a 390px:** mucho mas limpio. Solo 2 por debajo de 44px
+(`#status-btn` 30px, `#theme-btn-mech` 34px) y `.nav-tab` pasa. La tira de 7
+pestañas mide 583px contra 412px de viewport, pero **tiene `overflow-x:auto`**, o
+sea scrollea. Lo que no tiene es ninguna señal visual de que hay mas pestañas: en
+la captura se cortan justo despues de "PROFILE", y "Stock" y "Spare Parts" quedan
+fuera de vista. **Sospecha, no verificado con un mecanico real:** que esas dos
+pestañas practicamente no se usen porque no se ven.
+
+**admin a 1440px:** cero desbordes horizontales. Pero **11 tablas y listas sin
+contenedor de scroll propio** (`overflow-y: visible` y sin ancestro que scrollee):
+`.tbl`, `#dash-today-tbody`, `#dash-schedule-list`, `#route-list`,
+`#mech-profile-list` y 6 mas. Es el punto **5.1** (falta paginacion) visto desde
+el lado del diseño: hoy entra porque hay pocas filas.
+
+### 12.17 Handlers inline que quedan — corrige el conteo del punto 3.3
+
+Con lineas exactas, para que se puedan sacar de una:
+
+| Archivo | Lineas |
+|---|---|
+| `admin.html` (12) | 303, 311, 322, 390, 526, 532, 1072, 1104, 1145, 1151, 1217, 1275 |
+| `js/admin.js` (6) | 1655, 1658, 1884, 1895, 4129, 4141 |
+| `js/mechanic.js` (6) | 1277, 1287, 1294, 1391, 2757, 2759 |
+| `mechanic.html` (2) | 163, 215 |
+
+**La SPA esta limpia: 0 handlers inline** en `index.html`, `js/app.js` y
+`js/components.js`. Eso confirma la tabla del 3.3, que no las listaba.
+
+**Una correccion al 3.3:** dice "los `onclick` ya se eliminaron todos". Queda uno
+en `js/admin.js:1119` (`onclick="window.print()"`). No es un hallazgo nuevo -
+vive dentro del popup generado con `document.write()` que la **seccion 6** ya
+acepta como tradeoff, fuera de la superficie de CSP de `admin.html` - pero la
+frase del 3.3, tal como esta escrita, es falsa si alguien la greppea.
+
+### 12.18 `confirm()` y `alert()` nativos fuera del panel de la landing
+
+El punto **10.2** reporta esto solo para el panel de cuenta de `landing.html`.
+Tambien esta en las otras superficies:
+
+- `js/app.js:4120` (cancelar membresia) y `js/app.js:4393` ("Delete this bike?").
+  Las dos son destructivas **y** estan en ingles sin traducir (12.10).
+- `js/mechanic.js:423` (`confirm('Sign out?')`) y `js/mechanic.js:2478`
+  (`alert()` avisando que se encontraron items criticos y se mando un mail).
+
+**VERIFICADO EN CODIGO.**
+
+### 12.19 Codigo muerto
+
+- **`js/app.js:45`** importa `subscribeToMechanicLocation` y **no la llama nunca**.
+  Grep en todo el repo: solo aparece en su definicion (`js/supabase.js:139`), en
+  ese import, y en una nota de `CONTEXT.md:109` que la da por usada.
+- Eso mantiene viva **`js/supabase.js:139-186`**, una funcion de 48 lineas que
+  **simula el GPS del mecanico**: mueve un punto falso hacia el centro de Sydney
+  (-33.8688, 151.2093) cada 3 segundos hasta que llegue una posicion real. Hoy no
+  se ejecuta, pero es una trampa cargada: el dia que alguien la vuelva a
+  enchufar, un cliente que paga ve a su mecanico acercandose sin que se haya
+  movido nadie. Es de la misma familia que `MOCK_BOOKINGS`, y sobrevivio a la
+  limpieza del 28-jul (punto 10.3).
+
+**VERIFICADO EN CODIGO (grep en todo el repo).**
+
+### 12.20 Lo que se reviso y quedo limpio
+
+Para que "no hay hallazgo" se distinga de "no lo mire":
+
+- **SPA:** entrar directo a `#payment` sin reserva empezada redirige bien a
+  `#book-service`. La pantalla de tracking sin sesion muestra un estado vacio
+  correcto, no datos inventados. 0 handlers inline. `chargeOnce()` **si** evita el
+  doble cobro dentro de una misma visita (el agujero es salir y volver, 12.2).
+- **mechanic:** el tema oscuro no tiene ningun texto del mismo color que su fondo
+  (fuera del caso de 12.15). Las cards de trabajo cumplen la jerarquia del skill
+  (titulo 16px/800 a 14.59:1, meta 12px/400 a 5.82:1, precio destacado a 7.33:1).
+  La cola offline corta bien en el primer fallo, no reintenta 4xx eternamente y no
+  finge las notificaciones al cliente.
+- **admin:** cero desbordes horizontales a 1440px. Los borrados de codigos de
+  descuento, contactos, repuestos, servicios y numeros de notificacion **si**
+  piden confirmacion. El calculo del GST (`/11` sobre un total con IVA incluido)
+  es correcto.
+- **Transversal:** `npm run i18n:check` corre verde; el problema no es que falle,
+  es lo que no mira (12.9).
+
+### 12.21 Lo que esta auditoria NO cubrio
+
+- **`track.html`** - quinta superficie, sin auditar. Es lo unico que falta para
+  cerrar el punto 3.1.
+- **El navegador nunca ejecuto un cobro.** 12.2 y 12.3 estan probados por codigo
+  y, en el caso de 12.2, por el re-render medido en vivo; **la secuencia completa
+  de doble cobro con una tarjeta real no se ejecuto** y no deberia ejecutarse sin
+  decidirlo a proposito.
+- **Ninguna prueba corrio contra la base de produccion salvo un `SELECT` publico**
+  a `services`. No se creo ni modifico ninguna fila.
+- **`admin.html` y `js/admin.js` estaban siendo editados por otra sesion** (la
+  seccion de analitica del punto 11.3) mientras esto se escribia. Los numeros de
+  linea del admin son contra `origin/main` en `5dc95d8`.
 Mismo problema en pausar/cancelar membresia, que usan `confirm()` + `alert()`.
