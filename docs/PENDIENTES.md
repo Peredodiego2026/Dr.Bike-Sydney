@@ -261,7 +261,14 @@ Ver `docs/ROADMAP.md` para el detalle y las puertas de cada fase.
 
 ---
 
-## 8. Documentos a re-sincronizar
+## 7.5. Documentos a re-sincronizar
+
+<!-- Era un segundo "## 8", chocando con la seccion 8 de abajo, que es la que
+     todo el resto del documento referencia como 8.1 a 8.8. Renumerada a 7.5
+     (misma convencion que la 2.5) porque esta seccion no la referencia nadie,
+     mientras que renumerar la otra habria roto cada mencion a 8.x en el
+     documento y en el historial de commits. Detectado por otra sesion,
+     28-jul. -->
 
 - `tasks.md` dice que faltan correr `scripts/add-stripe-events.sql` y
   `scripts/harden-bookings-rls.sql`. `CONTEXT.md` dice que Diego los corrio el
@@ -489,6 +496,11 @@ red, con la app arrancando igual. Tambien se saco la ultima duplicacion de
 modulos (`router.js`, `components.js`, `stripe.js` e `i18n.js`).
 
 El texto original queda abajo porque explica POR QUE estaba mal.
+
+> **LEER LA NOTA DE ARRIBA ANTES QUE ESTO.** Lo que sigue describe el estado
+> ANTERIOR al arreglo y se conserva solo para explicar por que estaba mal. Otra
+> sesion leyo este texto sin la nota y reporto el offline como roto cuando ya
+> estaba arreglado y verificado cortando la red (28-jul).
 
 **Los imports internos siguen sin `?v=`.** El 9.2 versiono los scripts que las
 paginas cargan con `<script src>`, pero los que un modulo importa a otro
