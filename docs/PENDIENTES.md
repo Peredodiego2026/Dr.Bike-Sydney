@@ -618,7 +618,28 @@ descartada sobreviven a uno y no al otro. Se descarta a las 24h, y si la fecha
 ya paso se tira solo la fecha. El paso 1 muestra un boton "Continuar" que
 vuelve al resumen en un toque.
 
-### 11.2 Recordatorio 3h del checkout abandonado — FALTA CORRER EL SQL
+### 11.2 Recordatorio del checkout abandonado — HECHO Y EN PRODUCCION
+
+**Estado real (28-jul, PR #131 mergeada):** Diego corrio el SQL, la tabla
+`checkout_attempts` existe, y las tres piezas de codigo estan en produccion.
+Lo unico que quedo distinto de lo planeado es **el horario**: Vercel rechazo el
+deploy con "Hobby accounts are limited to daily cron jobs", asi que el
+recordatorio viaja dentro de `?type=all` y sale **una vez por dia** a las 09:00
+UTC, no cada hora. En la practica el cliente lo recibe unas 9 horas despues de
+abandonar, no 3.
+
+Por eso mismo la ventana de la consulta se abrio de 24 horas a 7 dias: con una
+corrida diaria, quien abandona en las 3 horas previas es demasiado nuevo para
+esa vuelta y para la siguiente ya tiene 27 horas, y se caia por el otro lado
+sin que nadie se enterara.
+
+Para las 3 horas de verdad hacen falta Vercel Pro o un disparador externo
+llamando a `/api/send-cron?type=abandoned-checkout` con el `CRON_SECRET`.
+**Decision pendiente de Diego.** Y todavia no se verifico una corrida real en
+produccion.
+
+El texto original de la decision se conserva abajo porque explica por que se
+eligio la opcion A.
 
 **Decision de Diego (28-jul): opcion A — solo clientes logueados.**
 
