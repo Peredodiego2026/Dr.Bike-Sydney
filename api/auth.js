@@ -3276,13 +3276,27 @@ async function readCheckoutAttempts(sb) {
 //   POSTHOG_PROJECT_ID  - numeric project id from the PostHog URL
 const POSTHOG_HOST = 'https://eu.posthog.com';
 
+// Anything PostHog says back is echoed to the admin's browser, so scrub
+// anything key-shaped out of it first. PostHog does not echo the key today,
+// but an error string is not the place to find out it started to.
+function scrubKeys(text) {
+  return String(text).replace(/\b(ph[a-z]_)[A-Za-z0-9_-]+/g, '$1[redacted]');
+}
+
+// The whole endpoint runs inside one Vercel function with a hard timeout, and
+// checkout_attempts shares it. Without a bound of its own, a slow PostHog
+// would take the unpaid-checkouts card down with it.
+const POSTHOG_TIMEOUT_MS = 6000;
+
 async function hogQuery(sql, key, projectId) {
   const r = await fetch(`${POSTHOG_HOST}/api/projects/${projectId}/query/`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: { kind: 'HogQLQuery', query: sql } }),
+    signal: AbortSignal.timeout(POSTHOG_TIMEOUT_MS),
   });
-  if (!r.ok) throw new Error(`PostHog HTTP ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  if (!r.ok)
+    throw new Error(`PostHog HTTP ${r.status}: ${scrubKeys((await r.text()).slice(0, 200))}`);
   const json = await r.json();
   return json.results || [];
 }
@@ -3332,31 +3346,52 @@ async function readPostHog(days) {
            group by label, location order by clicks desc limit 12`,
   };
 
-  try {
-    const [totals, pages, countries, referrers, returning, funnel, completed, ctas] =
-      await Promise.all(Object.values(q).map((sql) => hogQuery(sql, key, projectId)));
+  // allSettled, not all: these are eight independent questions, and one bad
+  // one should cost its own section rather than the whole card. This path has
+  // never run against the live API, so the first real query is exactly when a
+  // single wrong property name is most likely - and losing seven good answers
+  // to it would make the failure much harder to read.
+  const names = Object.keys(q);
+  const settled = await Promise.allSettled(
+    Object.values(q).map((sql) => hogQuery(sql, key, projectId))
+  );
+  const res = {};
+  const failed = {};
+  settled.forEach((s, i) => {
+    if (s.status === 'fulfilled') res[names[i]] = s.value;
+    else failed[names[i]] = scrubKeys(s.reason?.message || 'query failed');
+  });
 
-    return {
-      configured: true,
-      days,
-      views: totals[0]?.[0] ?? 0,
-      visitors: totals[0]?.[1] ?? 0,
-      returning: returning[0]?.[0] ?? 0,
-      once: returning[0]?.[1] ?? 0,
-      pages: pages.map(([path, views]) => ({ path, views })),
-      countries: countries.map(([country, visitors]) => ({ country, visitors })),
-      referrers: referrers.map(([source, visitors]) => ({ source, visitors })),
-      ctas: ctas.map(([label, location, clicks]) => ({ label, location, clicks })),
-      // The screen orders these itself - PostHog has no idea the steps are a
-      // sequence, it just counts each value of the `step` property.
-      funnel: funnel.map(([step, people]) => ({ step, people })),
-      booking_completed: completed[0]?.[0] ?? 0,
-    };
-  } catch (e) {
-    // A failed query is reported as a failure. Returning zeros here would put
-    // "0 visitors" on screen next to real booking numbers.
-    return { configured: true, error: e.message };
+  // Nothing at all came back: that is a connection problem, not empty data.
+  if (!Object.keys(res).length) {
+    return { configured: true, error: Object.values(failed)[0] || 'every PostHog query failed' };
   }
+
+  // A section that failed is reported as null, never as zero - the screen shows
+  // "could not load" for those and real numbers for the rest.
+  const rows = (k) => (res[k] ? res[k] : null);
+  const totals = rows('totals');
+  const returning = rows('returning');
+  const completed = rows('completed');
+  const list = (k, fn) => (res[k] ? res[k].map(fn) : null);
+
+  return {
+    configured: true,
+    days,
+    failed: Object.keys(failed).length ? failed : null,
+    views: totals ? (totals[0]?.[0] ?? 0) : null,
+    visitors: totals ? (totals[0]?.[1] ?? 0) : null,
+    returning: returning ? (returning[0]?.[0] ?? 0) : null,
+    once: returning ? (returning[0]?.[1] ?? 0) : null,
+    pages: list('pages', ([path, views]) => ({ path, views })),
+    countries: list('countries', ([country, visitors]) => ({ country, visitors })),
+    referrers: list('referrers', ([source, visitors]) => ({ source, visitors })),
+    ctas: list('ctas', ([label, location, clicks]) => ({ label, location, clicks })),
+    // The screen orders these itself - PostHog has no idea the steps are a
+    // sequence, it just counts each value of the `step` property.
+    funnel: list('funnel', ([step, people]) => ({ step, people })),
+    booking_completed: completed ? (completed[0]?.[0] ?? 0) : null,
+  };
 }
 
 import { withSentry } from './_sentry.js';
