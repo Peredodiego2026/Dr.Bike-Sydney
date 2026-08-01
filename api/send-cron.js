@@ -8,8 +8,11 @@ import { guard, verifyTurnstile, SELF_BASE_URL } from './_security.js';
 //   reengagement: 0 10 * * 1  (weekly Mon 10am)
 //   abandoned:    part of ?type=all, so daily - NOT hourly, whatever this
 //                 comment used to claim. Checked against vercel.json 28-jul.
-//   abandoned-checkout: 0 * * * * (hourly, its own entry) - it has to be, or
-//                 "three hours later" becomes "some time tomorrow"
+//   abandoned-checkout: also part of ?type=all, so also daily. It was given an
+//                 hourly entry of its own and Vercel refused the deploy:
+//                 "Hobby accounts are limited to daily cron jobs". Which means
+//                 "three hours later" is really "on the next daily run, at
+//                 least three hours later" - see the window below.
 //   service:      0 9 1 * *   (monthly 1st)
 
 const SB_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
@@ -226,20 +229,27 @@ async function handleAbandoned(req, res) {
 // and deletes it the moment the booking exists, which makes anything left in
 // that table by definition an unfinished checkout.
 //
-// Three hours, not one: the window Diego asked for, long enough that we are not
-// emailing someone who simply went to find their card.
+// Three hours is the floor Diego asked for - long enough that we are not
+// emailing someone who just went to find their card.
+//
+// The ceiling is seven days, and that number is the whole reason this comment
+// exists. It was one day, which is wrong for a job that runs once a day: a
+// checkout abandoned in the three hours before a run is too young for that
+// run, and by the next one it is 27 hours old and falls out the other side.
+// Those people would never have been emailed at all. A wide ceiling costs
+// nothing because reminder_sent_at already guarantees one email each.
 async function handleAbandonedCheckout(req, res) {
   const sb = makeSb();
   const now = new Date();
   const threeHoursAgo = new Date(now - 3 * 60 * 60 * 1000).toISOString();
-  const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: attempts, error } = await sb
     .from('checkout_attempts')
     .select('client_id, service_name, service_price, scheduled_date, scheduled_time')
     .is('reminder_sent_at', null)
     .lte('reached_payment_at', threeHoursAgo)
-    .gte('reached_payment_at', oneDayAgo);
+    .gte('reached_payment_at', sevenDaysAgo);
 
   if (error) return res.status(500).json({ error: error.message });
   if (!attempts?.length) return res.status(200).json({ sent: 0, checked: 0 });
