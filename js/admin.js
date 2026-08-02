@@ -6478,6 +6478,11 @@ function exportNewsletterCSV() {
   a.click();
 }
 
+// This one reads the raw key ON PURPOSE and must keep doing so: it runs at boot
+// to hand the stored pair to setSession() and create the session in the first
+// place. Routing it through adminAccessToken() would be circular - that helper
+// asks getSession() for the very session this function exists to restore - and
+// would leave a returning admin logged out.
 async function restoreAdminSession() {
   const access_token = localStorage.getItem('drbike-admin-token');
   const refresh_token = localStorage.getItem('drbike-admin-refresh');
@@ -6592,7 +6597,10 @@ byId('gcal-connect-btn').addEventListener('click', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         role: 'google-calendar-ticket',
-        access_token: localStorage.getItem('drbike-admin-token') || '',
+        // adminAccessToken(), not the raw key: the stored copy goes stale as
+        // soon as the client refreshes the session in memory, and this call
+        // then hands the server a dead JWT. Same bug the Analytics screen hit.
+        access_token: await adminAccessToken(),
       }),
     });
     const data = await resp.json();

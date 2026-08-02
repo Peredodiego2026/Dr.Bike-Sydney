@@ -42,7 +42,6 @@ import {
   getServices,
   getAvailableSlots,
   getCalloutFee,
-  subscribeToMechanicLocation,
   submitReview,
   signIn,
   signUp,

@@ -136,54 +136,17 @@ export async function signUp(email, password, name) {
   return data;
 }
 
-export function subscribeToMechanicLocation(bookingId, callback) {
-  let mockLat = -33.82,
-    mockLng = 151.18;
-  const targetLat = -33.8688,
-    targetLng = 151.2093;
-  let useRealData = false;
-
-  let channel = null;
-  try {
-    channel = sb
-      .channel(`mechanic-${bookingId || 'demo'}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'mechanic_locations',
-          filter: `booking_id=eq.${bookingId}`,
-        },
-        (payload) => {
-          const { latitude, longitude } = payload.new || {};
-          if (latitude && longitude) {
-            useRealData = true;
-            callback({ latitude, longitude });
-          }
-        }
-      )
-      .subscribe();
-  } catch {
-    /* no realtime available */
-  }
-
-  // Mock: slowly move mechanic toward client (used while no real data)
-  const interval = setInterval(() => {
-    if (useRealData) return;
-    mockLat += (targetLat - mockLat) * 0.08;
-    mockLng += (targetLng - mockLng) * 0.08;
-    callback({ latitude: mockLat, longitude: mockLng });
-  }, 3000);
-
-  return () => {
-    clearInterval(interval);
-    if (channel)
-      try {
-        sb.removeChannel(channel);
-      } catch {}
-  };
-}
+// subscribeToMechanicLocation() lived here until 2026-08-02. It was imported by
+// js/app.js and never called - grep across the repo found zero invocations - so
+// it shipped in every bundle without doing anything. Deleted rather than left
+// dormant because of WHAT it did: while no real GPS row arrived, it invented
+// one, walking a fake pin toward the centre of Sydney every 3 seconds. Any
+// future caller would have shown a paying client their mechanic driving over
+// when nobody had moved. Same family as MOCK_BOOKINGS and MOCK_SERVICES above,
+// and it survived the 2026-07-28 purge only because it was already unreachable.
+//
+// Live tracking, when it is built, reads `mechanic_locations` and shows nothing
+// until a real row exists.
 
 // Three outcomes the caller has to tell apart, because they read completely
 // differently on screen: null = nobody is signed in (ask them to), [] = signed

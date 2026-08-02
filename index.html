@@ -72,12 +72,33 @@
   <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
   <script>
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.people.toString()+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-  posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
-    api_host: 'https://eu.i.posthog.com',
-    person_profiles: 'identified_only',
-    capture_pageview: true,
-    capture_pageleave: true,
-  });
+  // Visit ?notrack=1 once on a device to keep it out of the numbers, ?notrack=0
+  // to undo it. This exists because there is no way to filter a person out in
+  // PostHog: identify() is never called anywhere (js/analytics.js has no
+  // importers), so no person property exists to filter on. Wrapped because
+  // localStorage throws outright in some privacy modes, and analytics must
+  // never be the thing that stops the page from booting.
+  try {
+    var _nt = new URLSearchParams(location.search).get('notrack');
+    if (_nt === '1') localStorage.setItem('drbike-no-track', '1');
+    else if (_nt === '0') localStorage.removeItem('drbike-no-track');
+  } catch (e) {}
+  var _noTrack = false;
+  try {
+    _noTrack = localStorage.getItem('drbike-no-track') === '1';
+  } catch (e) {}
+  // Production only. Without this guard PostHog counted localhost, file:// and
+  // Vercel previews as real traffic: production numbers showed pages like
+  // "/C:/Users/.../landing.html" and referrers "localhost:3000" sitting beside
+  // real visitors. Same guard as admin.html and mechanic.html.
+  if (!_noTrack && (location.hostname === 'drbikesydney.com.au' || location.hostname === 'www.drbikesydney.com.au')) {
+    posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
+      api_host: 'https://eu.i.posthog.com',
+      person_profiles: 'identified_only',
+      capture_pageview: true,
+      capture_pageleave: true,
+    });
+  }
   </script>
   <!-- Boot screen. Inline on purpose: it has to be able to paint before
        js/app.js, its module graph and Supabase have loaded, which on a phone
