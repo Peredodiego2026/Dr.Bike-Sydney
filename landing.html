@@ -2632,15 +2632,28 @@ document.addEventListener('DOMContentLoaded', function() {
   // any time risks caching an already-translated string as if it were the
   // English source (reproduced: switching languages after GrowthBook painted
   // left this button stuck in the previous language).
+  // The hero CTA is FIXED at "Book a Service" (Diego, 2026-08-03). It used to
+  // ask GrowthBook's `hero-cta-copy` feature, which was serving some visitors
+  // "Get Your Free Quote" - that is why the button read differently on
+  // different loads of the same page. It looked like a bug and it was not; it
+  // was a live A/B test nobody was reading the results of.
+  //
+  // Pinned here rather than only in the GrowthBook dashboard so that flipping
+  // the feature back on there cannot silently change the main CTA again. To run
+  // this experiment for real, put the getFeatureValue call back.
+  //
+  // The data attribute stays: it holds the English source so a language switch
+  // re-translates from known-good text instead of from an already-translated
+  // string (translateScreen() caches "original" text per DOM node, and
+  // assigning textContent makes a new node every time).
+  var HERO_CTA_COPY = 'Book a Service';
   function applyHeroCtaExperiment() {
-    if (!heroBk || !window.__growthbook) return;
-    var copy = window.__growthbook.getFeatureValue('hero-cta-copy', 'Book a Service');
-    heroBk.dataset.i18nSource = copy;
-    heroBk.textContent = copy;
+    if (!heroBk) return;
+    heroBk.dataset.i18nSource = HERO_CTA_COPY;
+    heroBk.textContent = HERO_CTA_COPY;
     if (window.__drbikeI18n) window.__drbikeI18n.translateScreen(heroBk);
   }
   applyHeroCtaExperiment();
-  document.addEventListener('growthbook-ready', applyHeroCtaExperiment);
   document.addEventListener('langchange', function() {
     if (!heroBk || !heroBk.dataset.i18nSource || !window.__drbikeI18n) return;
     heroBk.textContent = heroBk.dataset.i18nSource;
