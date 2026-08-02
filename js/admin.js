@@ -1963,11 +1963,17 @@ async function loadDashboard() {
     { count: bikesCount },
   ] = results;
 
-  const todayRev = anRevenueOf(todayJobs || []);
-  const monthRev = anRevenueOf(monthJobs || []);
-  const completedToday = (todayJobs || []).filter((b) => b.status === 'completed').length;
-
+  // Revenue is recognised when the job is finished. These two tiles used to sum
+  // EVERY booking in the period - a pending job scheduled for today, or a
+  // confirmed one nobody has ridden out to yet, counted as money already made.
+  // Finance filters on status='completed' and so does the Analytics screen, so
+  // the dashboard was the third screen with its own private definition of
+  // "revenue" and the only one that flattered the number.
+  const completedTodayJobs = (todayJobs || []).filter((b) => b.status === 'completed');
   const completedMonth = (monthJobs || []).filter((b) => b.status === 'completed');
+  const todayRev = anRevenueOf(completedTodayJobs);
+  const monthRev = anRevenueOf(completedMonth);
+  const completedToday = completedTodayJobs.length;
   const avgOrder = completedMonth.length
     ? Math.round(
         anRevenueOf(completedMonth) / completedMonth.length
@@ -1985,9 +1991,9 @@ async function loadDashboard() {
   if (kpis[0]) {
     kpis[0].textContent = '$' + todayRev.toLocaleString('en-AU');
     kpis[0].nextElementSibling.textContent =
-      (todayJobs || []).length +
-      ' jobs today · ' +
-      Math.round(todayRev / Math.max((todayJobs || []).length, 1)) +
+      completedToday +
+      ' completed today · ' +
+      anMoney(todayRev / Math.max(completedToday, 1)) +
       ' avg';
   }
   if (kpis[1]) {
@@ -4374,16 +4380,59 @@ async function loadVanZones() {
   renderVanZones();
 }
 
+// Saving a van's suburbs means replacing its rows, and there is no transaction
+// available from the browser client. This used to be a bare delete followed by
+// a bare insert with neither result checked, and a "saved" toast that fired
+// either way: one failed insert and the van silently ended up covering NO
+// suburbs, which is how a van stops being offered any jobs at all.
+//
+// So: keep a copy of the rows first, and if the insert fails put them back and
+// say what happened instead of claiming success.
 async function saveVanZone(vanId) {
   const van = vanZones.find((v) => v.id === vanId);
   if (!van) return;
-  await sb.from('van_zones').delete().eq('van_number', vanId);
+
+  const { data: previous, error: readErr } = await sb
+    .from('van_zones')
+    .select('*')
+    .eq('van_number', vanId);
+  if (readErr) {
+    showToast('Could not read the current zones: ' + readErr.message, 'error');
+    return;
+  }
+
+  const { error: delErr } = await sb.from('van_zones').delete().eq('van_number', vanId);
+  if (delErr) {
+    showToast('Could not save: ' + delErr.message, 'error');
+    return;
+  }
+
   if (van.suburbs.length > 0) {
-    await sb
+    const { error: insErr } = await sb
       .from('van_zones')
       .insert(
         van.suburbs.map((s) => ({ van_number: vanId, suburb: s, postcode: '', active: true }))
       );
+    if (insErr) {
+      // Put back exactly what was there, so a failure costs nothing.
+      let restored = false;
+      if (previous?.length) {
+        const { error: backErr } = await sb.from('van_zones').insert(previous);
+        restored = !backErr;
+      } else {
+        restored = true; // there was nothing to lose
+      }
+      showToast(
+        restored
+          ? 'Could not save the zones: ' + insErr.message + '. Nothing was changed.'
+          : 'Could not save the zones AND could not restore the old ones. Van ' +
+              vanId +
+              ' has no zones right now: ' +
+              insErr.message,
+        'error'
+      );
+      return;
+    }
   }
   showToast('Van ' + vanId + ' zones saved ✓');
 }
