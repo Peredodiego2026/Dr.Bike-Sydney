@@ -748,25 +748,73 @@ hallazgo y no esta reportado. En la SPA si lo es.
 Orden: primero lo que cuesta plata, despues lo que le muestra algo falso a una
 persona, y lo cosmetico al final.
 
-### Estado 2026-08-02
+### Estado — cierre de la sesion de auditoria, 2026-08-02
 
-**CERRADOS** (PR #137, ya en produccion; mas la rama `fix/i18n-hole`): **12.2**
-(doble cobro),
-**12.7** (el mecanico veia "No jobs today" cuando fallaba la carga), **12.9**
-(el agujero del chequeo de i18n), **12.10** (los textos de error sin traducir
-que ese agujero dejaba pasar), **12.13** (`live-prices` mudo) y **12.15** (el
-contraste 1.03:1). Cada uno dice abajo como se verifico.
+Esta es la foto final de esa sesion. **Todo lo marcado CERRADO se verifico vivo
+en `drbikesydney.com.au` el 2026-08-02**, no el dia que se mergeo: se pidieron
+los archivos al dominio y se busco el marcador de cada fix. Si retomas esto mas
+adelante, volve a correr esa comprobacion antes de fiarte - en este proyecto ya
+paso que un merge posterior tapara un arreglo.
 
-**Bloqueados por trabajo en paralelo:** 12.4, 12.5, 12.11 y 12.12 viven en
-`admin.html` / `js/admin.js`, que otra sesion esta editando. **Son los dos
-numeros mas caros del documento** (12.4 y 12.5): no los toques desde dos lados
-a la vez, coordinar primero.
+**CERRADOS: 12 de 21** (PRs #137, #140, #142, #145, #147, #149).
 
-**Esperan una decision de Diego:** 12.3 (hace falta dar de alta el evento
-`payment_intent.succeeded` en el panel de Stripe), 12.6 (que precio real tienen
-E-Bike Service y Bike Assembly) y 12.19 (permiso para borrar).
+| # | Que era | Como se comprobo |
+|---|---|---|
+| 12.2 | Doble cobro | Stripe stubbeado contando cobros: main cobraba 2, la rama 1 |
+| 12.4 | El call-out faltaba en TODOS los totales, BAS G1 incluido | Revenue $3570 -> $4,020 con call-outs de 200/250 y un NULL |
+| 12.5 | MRR contaba a los anuales al precio mensual | MRR $558 -> $499 sobre 4 socios, 2 anuales |
+| 12.7 | El mecanico veia "No jobs today" cuando fallaba la carga | Antes/despues en Chromium, con y sin cache |
+| 12.8 | El outbox prometia "guardado en tu telefono" sin comprobarlo | Con localStorage E IndexedDB fallando: banner rojo |
+| 12.9 | El chequeo de i18n no leia `textContent =` ni `confirm()` | Inyectar 2 strings sin traducir ahora hace fallar el check |
+| 12.10 | Errores de pago en ingles para clientes es/zh | Las 10 cadenas resuelven en es y zh |
+| 12.12 | `saveVanZone()` podia dejar una van sin zonas | Snapshot + rollback + deja de mentir en el toast |
+| 12.13 | `live-prices` se rendia sin dejar rastro | Forzando un 503 |
+| 12.15 | Contraste 1.03:1, texto invisible | Medido: 1.03:1 -> 13.36:1 |
+| 12.19 | GPS falso del mecanico | Borrado; cero invocaciones en el repo |
+| 12.14 | *(la mitad)* La doc describia una paleta inexistente | Los 10 hex de la doc coinciden ahora con `variables.css` |
 
-**Abiertos, sin bloqueo:** 12.8, 12.14, 12.16, 12.17, 12.18.
+**Ademas se arreglaron 3 bugs que NO estaban en la auditoria**, encontrados al
+releer lo ya cerrado:
+
+- 27 + 11 importes de `js/admin.js` sin locale o sin formato. En español
+  `25050` se imprime `25.050`, que se lee como veinticinco coma cero cinco.
+  Seis de ellos son el export del BAS.
+- Los KPI "Revenue today" y "Monthly revenue" del Dashboard sumaban reservas
+  **pendientes** como facturacion. Eran la tercera definicion de "revenue" en
+  la app y la unica que la inflaba.
+- Un bug introducido por el propio arreglo anterior: el Dashboard quedo
+  imprimiendo `1340 avg` sin signo de peso. **Se encontro mirando una captura,
+  no leyendo codigo.**
+
+**ESPERAN UNA DECISION DE DIEGO** (ninguno es trabajo de codigo bloqueado):
+
+- **12.6** — `E-Bike Service $129` y `Bike Assembly $80` no existen en
+  `services`. Lo real es `E-bike Diagnostic $60` y `Bike Build — New Bike $75`.
+  Hay que elegir: crear los servicios, o repuntar las tarjetas a los reales.
+  Ojo: es el mismo bug que el check de sincronizacion de servicios detecta desde
+  el otro lado - agregar o renombrar un servicio no llega a las 47 tarjetas de
+  marketing.
+- **12.3** — el cobro huerfano. El codigo lo puede hacer cualquier sesion; el
+  evento `payment_intent.succeeded` **lo tiene que dar de alta Diego en el panel
+  de Stripe**, y sin eso el arreglo no sirve.
+- **12.14 completo** — reemplazar los 335 hex fuera de token necesita elegir
+  que paleta gana. La doc ya no produce el error; el codigo sigue teniendolo.
+- **12.11** — la puerta del admin. El arreglo de verdad valida el token contra
+  el servidor antes de renderizar: cambia el flujo de auth, conviene hacerlo con
+  Diego mirando.
+
+**ABIERTOS, mecanicos, sin ninguna decision de por medio** — son los siguientes
+que deberia tomar una sesion nueva:
+
+- **12.16** targets tactiles (18 bajo 44px en la SPA, 5 desbordes a 390px)
+- **12.17** 26 handlers inline con linea exacta; bloquean sacar `unsafe-inline`
+- **12.18** `confirm()`/`alert()` nativos fuera del panel de la landing
+- **`track.html`** — la quinta superficie, nunca auditada. Es lo unico que falta
+  para cerrar el punto **3.1**.
+
+**Fuera de codigo, de Diego:** backups de Supabase (punto 1.2, nunca se
+verificaron) y una reserva real de punta a punta con tarjeta, porque 12.2 se
+probo con Stripe stubbeado - eso valida la logica, no el cobro.
 
 ---
 
