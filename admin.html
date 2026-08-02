@@ -53,12 +53,20 @@
   <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
   <script>
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.people.toString()+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-  posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
-    api_host: 'https://eu.i.posthog.com',
-    person_profiles: 'identified_only',
-    capture_pageview: true,
-    capture_pageleave: true,
-  });
+  // Only the live domain reports. Without this guard localhost, file:// and
+  // preview builds all wrote into the same project as real customers: the
+  // production numbers showed pages like
+  // "/C:/Users/.../landing.html" and referrers "localhost:3000" sitting beside
+  // real traffic, and every visitor count was inflated by whoever happened to
+  // be developing that week.
+  if (location.hostname === 'drbikesydney.com.au' || location.hostname === 'www.drbikesydney.com.au') {
+    posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
+      api_host: 'https://eu.i.posthog.com',
+      person_profiles: 'identified_only',
+      capture_pageview: true,
+      capture_pageleave: true,
+    });
+  }
   </script>
 
 </head>
@@ -803,6 +811,7 @@
       <div class="card">
         <div class="card-hdr"><div><div class="card-title">Traffic</div><div class="card-sub" id="an-traffic-sub">Visits, pages, countries and referrers &mdash; from PostHog</div></div></div>
         <div id="an-traffic"><div class="an-state">Loading&hellip;</div></div>
+        <div class="an-note">Counts only visits to <code>drbikesydney.com.au</code>. Traffic recorded from localhost, local files and preview builds is excluded, so these numbers are lower than PostHog's own dashboard &mdash; and closer to the truth.</div>
       </div>
 
       <div class="card">
