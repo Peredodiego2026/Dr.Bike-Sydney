@@ -3328,7 +3328,13 @@ async function readPostHog(days) {
   // because that one matches people, and this noise is mostly anonymous
   // pageviews from a hostname - there is no person to exclude.
   const LIVE_HOSTS = "('drbikesydney.com.au', 'www.drbikesydney.com.au')";
-  const live = `properties.$host in ${LIVE_HOSTS}`;
+  // The staff tools stopped reporting once PostHog was removed from
+  // admin.html and mechanic.html, but the views already recorded cannot be
+  // un-sent: /admin.html and /admin alone were 79 of 528 page views, and they
+  // sit on the live domain so the host filter does not touch them. Excluded by
+  // path so the history reads like customer traffic too.
+  const STAFF_PATHS = "('/admin', '/admin.html', '/mechanic', '/mechanic.html')";
+  const live = `properties.$host in ${LIVE_HOSTS} and properties.$pathname not in ${STAFF_PATHS}`;
   const q = {
     totals: `select count() as views, count(distinct person_id) as visitors
              from events where event = '$pageview' and timestamp > ${since} and ${live}`,
