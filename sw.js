@@ -1,5 +1,5 @@
-const CACHE_STATIC = 'drbike-static-v54';
-const CACHE_PAGES  = 'drbike-pages-v54';
+const CACHE_STATIC = 'drbike-static-v55';
+const CACHE_PAGES  = 'drbike-pages-v55';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
 // too, without their query, and every one of those entries was dead weight:
@@ -17,6 +17,7 @@ const STATIC_ASSETS = [
   '/icon-192.png',
   '/icon-512.png',
   '/icon-512.svg',
+  '/favicon-32.png',
   '/apple-touch-icon.png',
 ];
 
