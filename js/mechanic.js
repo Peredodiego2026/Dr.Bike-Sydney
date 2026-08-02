@@ -607,8 +607,8 @@ async function sendPushNotif(job) {
   const reg = await navigator.serviceWorker.ready;
   reg.showNotification('🔔 New job — Dr. Bike', {
     body: `${job.service_name || 'Service'} · ${job.suburb || ''} · $${job.service_price || 0}`,
-    icon: '/icon-mech-192.png',
-    badge: '/icon-mech-192.png',
+    icon: '/icon-mech-192.png?v=2',
+    badge: '/icon-mech-192.png?v=2',
     vibrate: [200, 100, 200],
     tag: 'new-job-' + job.id,
     renotify: true,
@@ -1117,8 +1117,8 @@ function notifyClientAccepted(j) {
       body: `${mechName} has accepted your ${esc(j.service)}${when ? ` for ${when}` : ''}. You'll get a message when they're on the way.`,
       url: `/?action=dashboard&tracking=${j.id}`,
       tag: 'booking-accepted-' + j.id,
-      badge: '/icon-mech-192.png',
-      icon: '/icon-512.svg',
+      badge: '/icon-mech-192.png?v=2',
+      icon: '/icon-512.svg?v=2',
     });
 
   if (j.phone)
@@ -1148,8 +1148,8 @@ function notifyClientArrived(j) {
       body: `${mechName} is at ${j.suburb || 'your address'} and starting your ${esc(j.service)}.`,
       url: `/?action=dashboard&tracking=${j.id}`,
       tag: 'mechanic-arrived-' + j.id,
-      badge: '/icon-mech-192.png',
-      icon: '/icon-512.svg',
+      badge: '/icon-mech-192.png?v=2',
+      icon: '/icon-512.svg?v=2',
     });
 
   if (j.phone)
@@ -1233,8 +1233,8 @@ async function notifyClientEnroute(j) {
       body: `Heading to ${j.suburb || 'your address'} for your ${esc(j.service)}.${etaMin ? ` Est. arrival: ~${etaMin} min.` : ''} Tap to track live 📍`,
       url: `/?action=dashboard&tracking=${j.id}`,
       tag: 'mechanic-enroute-' + j.id,
-      badge: '/icon-mech-192.png',
-      icon: '/icon-512.svg',
+      badge: '/icon-mech-192.png?v=2',
+      icon: '/icon-512.svg?v=2',
     });
   }
 }

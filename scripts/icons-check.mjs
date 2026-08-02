@@ -49,7 +49,7 @@ for (const file of manifests) {
     ...(m.screenshots || []).map(s => s.src),
   ];
   for (const src of srcs) {
-    const local = src.replace(/^\//, '');
+    const local = src.replace(/^\//, '').split('?')[0];
     if (!existsSync(local)) problems.push(`${file}: points at ${src}, which does not exist`);
   }
 

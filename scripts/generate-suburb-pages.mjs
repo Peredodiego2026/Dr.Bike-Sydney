@@ -511,9 +511,9 @@ function page(sub, lang) {
   <meta name="description" content="${description}">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="${url}">
-  <link rel="icon" href="/icon-512.svg" type="image/svg+xml">
-  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" href="/icon-512.svg?v=2" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
 ${alternates}
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
