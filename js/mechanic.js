@@ -146,14 +146,27 @@ const _IDB = (() => {
         return localStorage.getItem(k);
       }
     },
+    // Returns whether the value actually landed somewhere that survives the
+    // page. Both writes used to be swallowed by their own empty catch, so a
+    // caller had no way to tell a stored value from a lost one - and the
+    // mechanic's outbox was telling him his taps were safe on that basis.
+    // localStorage is the store that matters here; IndexedDB is the mirror and
+    // its put() is fire-and-forget, so it cannot confirm anything either way.
     async set(k, v) {
+      let stored = false;
       try {
         localStorage.setItem(k, v);
-      } catch (e) {}
+        stored = true;
+      } catch (e) {
+        console.error('_IDB.set: localStorage rejected "' + k + '":', e.message);
+      }
       try {
         const db = await open();
         db.transaction(ST, 'readwrite').objectStore(ST).put(v, k);
-      } catch {}
+      } catch (e) {
+        console.warn('_IDB.set: IndexedDB mirror failed for "' + k + '":', e.message);
+      }
+      return stored;
     },
     async remove(k) {
       try {
@@ -216,15 +229,29 @@ async function queueLoad() {
   }
   return _queue;
 }
+// True when the queue in memory is NOT the queue on disk. The IndexedDB write
+// used to be wrapped in an empty catch, so if it failed - private mode, storage
+// quota, an evicted origin - the change existed only in this page's memory
+// while the banner cheerfully said "1 change waiting to sync" and setStatus()
+// promised "Saved on your phone". Close the app, or let iOS discard the tab,
+// and the mechanic's tap was gone with nobody the wiser.
+let _queueUnsaved = false;
+
 async function queueSave() {
+  let stored = false;
   try {
-    await _IDB.set(QUEUE_KEY, JSON.stringify(_queue));
-  } catch {}
+    stored = await _IDB.set(QUEUE_KEY, JSON.stringify(_queue));
+  } catch (e) {
+    console.error('queueSave() threw:', e.message, e);
+  }
+  _queueUnsaved = !stored && _queue.length > 0;
+  if (_queueUnsaved) console.error('queueSave(): the outbox is memory-only right now');
   syncBanner();
+  return !_queueUnsaved;
 }
 async function queueAdd(item) {
   _queue.push({ ...item, at: Date.now() });
-  await queueSave();
+  return await queueSave();
 }
 
 function syncBanner() {
@@ -233,7 +260,18 @@ function syncBanner() {
   if (!banner || !text) return;
   const n = _queue.length;
   banner.style.display = n ? 'block' : 'none';
-  if (n) text.textContent = n === 1 ? '1 change waiting to sync' : n + ' changes waiting to sync';
+  if (!n) return;
+  if (_queueUnsaved) {
+    // Do not dress this up: it is the one state where closing the app loses work.
+    banner.style.background = '#DC2626';
+    text.textContent =
+      n === 1
+        ? '1 change NOT saved to this phone - keep the app open until it syncs'
+        : n + ' changes NOT saved to this phone - keep the app open until they sync';
+    return;
+  }
+  banner.style.background = '#1E40AF';
+  text.textContent = n === 1 ? '1 change waiting to sync' : n + ' changes waiting to sync';
 }
 
 // Replays in order and stops at the first network failure, so the queue keeps
@@ -828,6 +866,7 @@ function card(j) {
 async function setStatus(id, status) {
   const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
   let queued = false;
+  let persisted = false;
   try {
     const resp = await fetch('/api/auth', {
       method: 'POST',
@@ -849,7 +888,7 @@ async function setStatus(id, status) {
   } catch {
     // Never reached the server - park it and carry on as if it had worked,
     // because from where the mechanic is standing it did.
-    await queueAdd({ booking_id: id, status });
+    persisted = await queueAdd({ booking_id: id, status });
     queued = true;
   }
   const j = jobs.find((x) => x.id === id);
@@ -862,7 +901,12 @@ async function setStatus(id, status) {
   render();
   badges();
   if (queued) {
-    toast('📵 Saved on your phone — syncs when the signal is back');
+    // Only promise the phone kept it if the phone actually kept it.
+    toast(
+      persisted
+        ? '📵 Saved on your phone — syncs when the signal is back'
+        : '⚠️ Could not save to this phone — keep the app open until it syncs'
+    );
   } else {
     toast(status === 'enroute' ? '🚐 En route' : 'Updated');
   }
