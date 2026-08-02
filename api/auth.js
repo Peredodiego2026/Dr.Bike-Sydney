@@ -3266,10 +3266,10 @@ async function readCheckoutAttempts(sb) {
 }
 
 // ── PostHog (traffic half) ───────────────────────────────────────────────────
-// UNVERIFIED AGAINST THE LIVE API: as of 2026-08-01 POSTHOG_API_KEY is not set
-// in Vercel, so this path has never returned real numbers. It is written and
-// wired so that setting the two env vars is the whole job, but the first run
-// with a real key should be watched rather than trusted.
+// Verified live on 2026-08-02: with both env vars set, all eight queries came
+// back on the first run - 143 visitors, 528 views, the booking-step funnel and
+// the CTA breakdown all rendered. What that run also exposed is that the
+// project was recording our own dev traffic; see the $host filter below.
 //
 // Needs both:
 //   POSTHOG_API_KEY     - Personal API Key (phx_...), scope "Query: read"
@@ -3317,32 +3317,48 @@ async function readPostHog(days) {
   }
 
   const since = `now() - interval ${days} day`;
+
+  // Every query is scoped to the live domain. The pages guard added in
+  // admin/mechanic/index/landing stops NEW dev traffic from being recorded,
+  // but the events already in the project cannot be un-sent: the first real
+  // run showed "/C:/Users/.../landing.html" with 25 views and referrers of
+  // localhost:3000 and localhost:4173 sitting among real customers.
+  //
+  // Filtering here rather than in PostHog's "internal and test users" setting
+  // because that one matches people, and this noise is mostly anonymous
+  // pageviews from a hostname - there is no person to exclude.
+  const LIVE_HOSTS = "('drbikesydney.com.au', 'www.drbikesydney.com.au')";
+  const live = `properties.$host in ${LIVE_HOSTS}`;
   const q = {
     totals: `select count() as views, count(distinct person_id) as visitors
-             from events where event = '$pageview' and timestamp > ${since}`,
+             from events where event = '$pageview' and timestamp > ${since} and ${live}`,
     pages: `select properties.$pathname as path, count() as views
-            from events where event = '$pageview' and timestamp > ${since}
+            from events where event = '$pageview' and timestamp > ${since} and ${live}
             group by path order by views desc limit 12`,
     countries: `select properties.$geoip_country_name as country, count(distinct person_id) as visitors
-                from events where event = '$pageview' and timestamp > ${since}
+                from events where event = '$pageview' and timestamp > ${since} and ${live}
                 group by country order by visitors desc limit 10`,
     referrers: `select properties.$referring_domain as source, count(distinct person_id) as visitors
-                from events where event = '$pageview' and timestamp > ${since}
+                from events where event = '$pageview' and timestamp > ${since} and ${live}
                 group by source order by visitors desc limit 10`,
     // Returning = seen on 2+ distinct days inside the window. A plain
     // "returning visitor" count from PostHog would also count someone who
     // reloaded twice in one session.
+    //
+    // toDate() resolves in the PROJECT's timezone, so this only means Sydney
+    // days once the project timezone is set to Australia/Sydney - it is UTC
+    // today, which puts the day boundary at 10-11am Sydney time.
     returning: `select countIf(d >= 2) as returning, countIf(d = 1) as once from (
                   select person_id, count(distinct toDate(timestamp)) as d
-                  from events where event = '$pageview' and timestamp > ${since}
+                  from events where event = '$pageview' and timestamp > ${since} and ${live}
                   group by person_id)`,
     funnel: `select properties.step as step, count(distinct person_id) as people
-             from events where event = 'booking_step_viewed' and timestamp > ${since}
+             from events where event = 'booking_step_viewed' and timestamp > ${since} and ${live}
              group by step`,
     completed: `select count(distinct person_id) as people
-                from events where event = 'booking_completed' and timestamp > ${since}`,
+                from events where event = 'booking_completed' and timestamp > ${since} and ${live}`,
     ctas: `select properties.button_text as label, properties.location as location, count() as clicks
-           from events where event = 'cta_clicked' and timestamp > ${since}
+           from events where event = 'cta_clicked' and timestamp > ${since} and ${live}
            group by label, location order by clicks desc limit 12`,
   };
 
