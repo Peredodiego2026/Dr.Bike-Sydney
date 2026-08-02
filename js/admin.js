@@ -3192,10 +3192,25 @@ function renderTargetMetrics(all) {
   const retentionLabel = retention === null ? 'No data yet' : `${retention}%`;
   const retentionOk = retention !== null && retention >= 40;
 
+  // An average of one measurement is not an average. Naming the sample size
+  // stops a single slow booking from reading as a standing problem - which is
+  // exactly how "6m 52s, target < 60s" looked in red on the first real run,
+  // off one booking.
+  const n = (count) => (count ? ` · from ${count} booking${count === 1 ? '' : 's'}` : '');
   const cards = [
-    ['Avg time to book', bookLabel, 'Target: < 60s', bookOk],
-    ['Mechanic response time', responseLabel, 'Target: < 5 min', responseOk],
-    ['6-month retention', retentionLabel, 'Target: > 40%', retentionOk],
+    ['Avg time to book', bookLabel, 'Target: < 60s' + n(withTiming.length), bookOk],
+    [
+      'Mechanic response time',
+      responseLabel,
+      'Target: < 5 min' + n(withResponse.length),
+      responseOk,
+    ],
+    [
+      '6-month retention',
+      retentionLabel,
+      'Target: > 40%' + (cohort.size ? ` · from ${cohort.size} customers` : ''),
+      retentionOk,
+    ],
   ];
   el.innerHTML = cards
     .map(([label, val, target, ok]) => {
@@ -3886,7 +3901,7 @@ function renderTrafficCard() {
           : `${anCompact(t.returning)} · ${pct}%`,
       'seen on 2+ separate days',
     ],
-    ['Bookings tracked', num(t.booking_completed)],
+    ['Bookings started', num(t.booking_completed), 'reached the end of the booking flow'],
   ];
 
   const list = (title, rows, fmtName) =>
@@ -3910,8 +3925,12 @@ function renderTrafficCard() {
   const funnelRows = stepOrder
     .filter((s2) => byStep[s2] !== undefined)
     .map((s2) => ({ name: stepNames[s2], value: byStep[s2] }));
+  // The event is named booking_completed but fires when the booking is
+  // CREATED, not when the job is done (docs/tracking-plan.md). Labelling it
+  // "Completed a booking" put it next to a "Jobs completed: 0" tile reading
+  // 1, which looks like the screen contradicting itself.
   if (t.booking_completed)
-    funnelRows.push({ name: 'Completed a booking', value: t.booking_completed });
+    funnelRows.push({ name: 'Finished the booking flow', value: t.booking_completed });
 
   // Names the sections that did not come back, so a partial card is never
   // mistaken for a complete one.
@@ -4070,7 +4089,11 @@ function renderHeatmap(all) {
       )
       .addTo(_heatLayer);
   });
-  if (points.length) _heatMap.fitBounds(L.latLngBounds(points.map((p) => p.coord)).pad(0.2));
+  // maxZoom, because fitBounds on a single suburb zooms to street level and
+  // the card stops looking like a map of Sydney - which is what it did the
+  // first time it ran against real data holding one booking.
+  if (points.length)
+    _heatMap.fitBounds(L.latLngBounds(points.map((p) => p.coord)).pad(0.2), { maxZoom: 12 });
   setTimeout(() => _heatMap && _heatMap.invalidateSize(), 100);
   // An empty map and a map of a quiet week look identical, so say which it is.
   // Returned rather than written here: renderAnalytics sets this subtitle a few
