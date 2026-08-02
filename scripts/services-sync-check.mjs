@@ -134,7 +134,21 @@ for (const card of cards) {
   if (byName.get(lookup) !== card.price) priceDrift.push({ ...card, live: byName.get(lookup) });
 }
 
-const unadvertised = services.filter((s) => !advertised.has(s.name)).map((s) => s.name);
+// A $0 service has no price to put on a price card - Emergency Service is a
+// "call us and we quote you" path, and live-prices.js would stamp "$0" on any
+// card it found, which reads as free. Those are advertised as prose instead,
+// so they are checked for a mention rather than for a card.
+const pageText = pages.map((p) => readFileSync(p, 'utf8')).join('\n');
+const unadvertised = [];
+const unpricedMissing = [];
+for (const s of services) {
+  if (advertised.has(s.name)) continue;
+  if (Number(s.price) === 0) {
+    if (!pageText.includes(s.name)) unpricedMissing.push(s.name);
+    continue;
+  }
+  unadvertised.push(s.name);
+}
 
 // ── Report ──────────────────────────────────────────────────────────────────
 const groupByName = (rows) => {
@@ -164,6 +178,15 @@ if (unadvertised.length) {
   console.log('SERVICES ON NO MARKETING PAGE  (bookable, but nobody is told)');
   console.log('These work in the booking wizard and the chatbot already.\n');
   for (const n of unadvertised) console.log(`  ! ${n} ($${byName.get(n)})`);
+  console.log('');
+}
+
+if (unpricedMissing.length) {
+  bad++;
+  console.log('UNPRICED SERVICES NOT MENTIONED ANYWHERE');
+  console.log('These have no price, so they get prose rather than a price card -');
+  console.log('but right now no page names them at all.\n');
+  for (const n of unpricedMissing) console.log(`  ! ${n}`);
   console.log('');
 }
 

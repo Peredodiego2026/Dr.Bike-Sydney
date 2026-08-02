@@ -14,6 +14,46 @@ export const LANGUAGES = [
 
 const dict = {
   es: {
+    // Catalogue services added to the All Services modal (landing.html) and
+    // the mobile home (index.html) on 2026-08-02. Every one of these exists in
+    // the Supabase `services` table and was bookable already - they were just
+    // advertised nowhere, so nobody knew to ask for them.
+    // Two spellings of some descriptions on purpose: index.html's cards end in
+    // a full stop and landing.html's do not, and the dictionary is keyed on the
+    // exact rendered text.
+    'E-bike Diagnostic': 'Diagnóstico de e-bike',
+    'Full system scan, firmware check and error code review.':
+      'Escaneo completo del sistema, revisión de firmware y códigos de error.',
+    'Full system scan, firmware check and error code review':
+      'Escaneo completo del sistema, revisión de firmware y códigos de error',
+    'Firmware Update': 'Actualización de firmware',
+    'Software update for e-bike motor and display':
+      'Actualización de software del motor y la pantalla de la e-bike',
+    'Bike Build — New Bike': 'Armado de bici nueva',
+    'Full assembly of a new boxed bike.': 'Armado completo de una bici nueva en caja.',
+    'Full assembly of a new boxed bike': 'Armado completo de una bici nueva en caja',
+    'Tubeless Tyre Install': 'Instalación de cubierta tubeless',
+    'Tubeless conversion per wheel': 'Conversión a tubeless por rueda',
+    'Hydro Brake Install': 'Instalación de freno hidráulico',
+    'Full hydraulic brake system installation':
+      'Instalación completa del sistema de frenos hidráulicos',
+    'Derailleur Install': 'Instalación de descarrilador',
+    'Front or rear derailleur installation': 'Instalación de descarrilador delantero o trasero',
+    'True Hanger Derailleur': 'Alineación de patilla de cambio',
+    'Hanger straightened, gear setup included': 'Patilla enderezada, ajuste de cambios incluido',
+    'Handlebar Install': 'Instalación de manillar',
+    'Remove and refit handlebars': 'Desmontaje y montaje de manillar',
+    'Accessory / Part Install': 'Instalación de accesorio o pieza',
+    'Professional fitting of accessories': 'Montaje profesional de accesorios',
+    'E-Bike & Electronics': 'E-bikes y electrónica',
+    Assembly: 'Armado',
+    'Lower Leg Service': 'Service de barras inferiores',
+    'Full lower leg strip, clean and oil refresh':
+      'Desarme completo de barras, limpieza y cambio de aceite',
+    'Air Can Service': 'Service de cámara de aire',
+    'Air spring disassembly and new o-rings': 'Desarme del resorte neumático y o-rings nuevos',
+    'Urgent same-day help. Call us and we quote your repair on the spot.':
+      'Ayuda urgente el mismo día. Llamanos y te cotizamos la reparación al momento.',
     // Bottom nav
     Home: 'Inicio',
     Bookings: 'Reservas',
@@ -1117,8 +1157,7 @@ const dict = {
     'Delete this bike?': '¿Borrar esta bici?',
     'Could not confirm booking. Please try again.':
       'No pudimos confirmar la reserva. Intentá de nuevo.',
-    'Could not submit review. Please try again.':
-      'No pudimos enviar tu reseña. Intentá de nuevo.',
+    'Could not submit review. Please try again.': 'No pudimos enviar tu reseña. Intentá de nuevo.',
     'Google login failed. Please try again.':
       'No se pudo iniciar sesión con Google. Intentá de nuevo.',
     'Invalid code': 'Código inválido',
@@ -1262,6 +1301,37 @@ const dict = {
     'your@email.com': 'tu@correo.com',
   },
   zh: {
+    // Catalogue services added 2026-08-02 - see the note in the es block.
+    'E-bike Diagnostic': '电动车诊断',
+    'Full system scan, firmware check and error code review.':
+      '全面系统扫描、固件检查及错误代码排查。',
+    'Full system scan, firmware check and error code review':
+      '全面系统扫描、固件检查及错误代码排查',
+    'Firmware Update': '固件更新',
+    'Software update for e-bike motor and display': '电动车马达与显示器软件更新',
+    'Bike Build — New Bike': '新车组装',
+    'Full assembly of a new boxed bike.': '全新盒装自行车的完整组装。',
+    'Full assembly of a new boxed bike': '全新盒装自行车的完整组装',
+    'Tubeless Tyre Install': '无内胎轮胎安装',
+    'Tubeless conversion per wheel': '每个车轮的无内胎改装',
+    'Hydro Brake Install': '油压刹车安装',
+    'Full hydraulic brake system installation': '完整油压刹车系统安装',
+    'Derailleur Install': '变速器安装',
+    'Front or rear derailleur installation': '前或后变速器安装',
+    'True Hanger Derailleur': '变速勾爪校正',
+    'Hanger straightened, gear setup included': '勾爪校直，含变速调校',
+    'Handlebar Install': '车把安装',
+    'Remove and refit handlebars': '拆卸并重新安装车把',
+    'Accessory / Part Install': '配件／零件安装',
+    'Professional fitting of accessories': '专业配件安装',
+    'E-Bike & Electronics': '电动车与电子系统',
+    Assembly: '组装',
+    'Lower Leg Service': '前叉下管保养',
+    'Full lower leg strip, clean and oil refresh': '前叉下管完整拆解、清洁与换油',
+    'Air Can Service': '气室保养',
+    'Air spring disassembly and new o-rings': '气压弹簧拆解与更换O型圈',
+    'Urgent same-day help. Call us and we quote your repair on the spot.':
+      '紧急同日服务。致电我们，我们当场为您的维修报价。',
     // Bottom nav
     Home: '主页',
     Bookings: '预订',
