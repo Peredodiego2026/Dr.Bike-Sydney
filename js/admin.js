@@ -802,7 +802,7 @@ async function loadFinance() {
     (calloutGaps ? ` · ${calloutGaps} with no call-out fee recorded` : '');
   document.getElementById('fk-gst').textContent = '$' + gst.toLocaleString('en-AU');
   document.getElementById('fk-net').textContent = '$' + netRevenue.toLocaleString('en-AU');
-  document.getElementById('fk-avg').textContent = 'avg $' + avgJob + ' / job';
+  document.getElementById('fk-avg').textContent = 'avg ' + anMoney(avgJob) + ' / job';
   const profitEl = document.getElementById('fk-profit');
   profitEl.textContent = (netProfit < 0 ? '-$' : '$') + Math.abs(netProfit).toLocaleString('en-AU');
   profitEl.style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
@@ -865,7 +865,7 @@ async function loadFinance() {
           const v = dailyMap[d];
           const h = Math.max(8, Math.round((v / maxVal) * 140));
           const label = new Date(d + 'T00:00:00').getDate();
-          return `<div style="display:flex;flex-direction:column;align-items:center;flex:1 1 0;max-width:32px;gap:3px" title="${d}: $${v}">
+          return `<div style="display:flex;flex-direction:column;align-items:center;flex:1 1 0;max-width:32px;gap:3px" title="${d}: ${anMoney(v)}">
       <div style="width:100%;background:#1848C8;border-radius:3px 3px 0 0;height:${h}px;min-height:4px"></div>
       <div style="font-size:11px;color:var(--mgray)">${label}</div>
     </div>`;
@@ -894,8 +894,8 @@ async function loadFinance() {
       <td data-label="Client">${esc(name)}</td>
       <td data-label="Service">${esc(j.service_name || 'Service')}</td>
       <td data-label="Amount" style="font-weight:600">$${price.toLocaleString('en-AU')}</td>
-      <td data-label="GST" style="color:var(--orange)">$${jGst}</td>
-      <td data-label="Net">$${jNet}</td>
+      <td data-label="GST" style="color:var(--orange)">${anMoney(jGst)}</td>
+      <td data-label="Net">${anMoney(jNet)}</td>
       <td data-label="Status"><span style="background:#D1FAE5;color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
     </tr>`;
         })
@@ -974,7 +974,7 @@ G11 — Non-capital Purchases: $0
 NET GST PAYABLE TO ATO: $${d.gst.toLocaleString('en-AU')}
 
 Jobs completed: ${d.jobCount}
-Average job value: $${d.avgJob}
+Average job value: ${anMoney(d.avgJob)}
 Basis: service_price + callout_fee, as recorded on each completed booking.
 ${
   d.calloutGaps
@@ -1081,7 +1081,7 @@ function exportFinancePDF() {
           <div class="bar-row">
             <div class="bar-label">${name}</div>
             <div class="bar-bg"><div class="bar-fill" style="width:${Math.round((val / maxSvc) * 100)}%"></div></div>
-            <div class="bar-val">$${val}</div>
+            <div class="bar-val">${anMoney(val)}</div>
           </div>`
           )
           .join('')}
@@ -1986,14 +1986,14 @@ async function loadDashboard() {
     kpis[0].textContent = '$' + todayRev.toLocaleString('en-AU');
     kpis[0].nextElementSibling.textContent =
       (todayJobs || []).length +
-      ' jobs today · $' +
+      ' jobs today · ' +
       Math.round(todayRev / Math.max((todayJobs || []).length, 1)) +
       ' avg';
   }
   if (kpis[1]) {
     kpis[1].textContent = '$' + monthRev.toLocaleString('en-AU');
     kpis[1].nextElementSibling.textContent =
-      completedMonth.length + ' completed · $' + avgOrder + ' avg order';
+      completedMonth.length + ' completed · ' + anMoney(avgOrder) + ' avg order';
   }
   if (kpis[2]) {
     kpis[2].textContent = (pendingJobs || []).length;
@@ -4247,7 +4247,7 @@ async function renderMechStats() {
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🚐 Van ${v}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
           <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:${colors[v]}">${totalJobs}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Jobs done</div></div>
-          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">$${totalRev}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Revenue</div></div>
+          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">${anMoney(totalRev)}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Revenue</div></div>
           <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--gold)">${avgRating}${avgRating !== '—' ? '★' : ''}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Avg rating</div></div>
         </div>
         <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">Utilisation: ${util}% · ${totalJobs}/${maxSlots} slots</div>
@@ -4750,7 +4750,7 @@ function renderInventory() {
 
   document.getElementById('inv-total-parts').textContent = totalParts;
   document.getElementById('inv-low-stock').textContent = lowStock;
-  document.getElementById('inv-stock-value').textContent = '$' + stockValue.toFixed(0);
+  document.getElementById('inv-stock-value').textContent = anMoney(stockValue);
   document.getElementById('inv-used-month').textContent = '$0'; // updated from bookings later
 
   if (!inventoryData.length) {
@@ -4964,7 +4964,7 @@ function renderServices() {
 
   document.getElementById('svc-total').textContent = total;
   document.getElementById('svc-cats').textContent = cats;
-  document.getElementById('svc-avg').textContent = '$' + avg.toFixed(0);
+  document.getElementById('svc-avg').textContent = anMoney(avg);
   document.getElementById('svc-range').textContent = total
     ? '$' + Math.min(...prices) + ' - $' + Math.max(...prices)
     : '$—';
