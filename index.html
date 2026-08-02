@@ -98,6 +98,14 @@
       capture_pageview: true,
       capture_pageleave: true,
     });
+  } else {
+    // MUST clear the stub. The snippet above sets window.posthog to an array
+    // and only hangs capture/identify/etc on it INSIDE init(). Skip init and
+    // window.posthog is still truthy but has no capture, so every
+    // `if (window.posthog) posthog.capture(...)` guard in js/app.js passes and
+    // then throws - which blanked the whole booking screen for anyone who was
+    // opted out or on localhost. Eight guards depend on this being falsy.
+    window.posthog = undefined;
   }
   </script>
   <!-- Boot screen. Inline on purpose: it has to be able to paint before
