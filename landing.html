@@ -107,6 +107,11 @@
       capture_pageview: true,
       capture_pageleave: true,
     });
+  } else {
+    // MUST clear the stub - see the same comment in index.html. The snippet
+    // leaves window.posthog truthy but without capture() unless init() ran, and
+    // js/app.js guards on truthiness alone.
+    window.posthog = undefined;
   }
   </script>
   <!-- ── GrowthBook (A/B testing) ─────────────────────────────────────────
