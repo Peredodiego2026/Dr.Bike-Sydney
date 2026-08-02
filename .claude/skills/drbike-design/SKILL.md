@@ -17,19 +17,42 @@ Inspirado en el framework Taste + principios Impeccable. Evitar el look generico
 
 ## Tokens de diseño (del proyecto)
 
+**Usar SIEMPRE `var(--token)`, nunca el hex.** La unica fuente de verdad es
+`css/variables.css`, que cargan las cuatro superficies. Los hex de abajo estan
+solo para reconocerlos al leer codigo viejo.
+
 ```
-Primary:    #2563eb (electric blue)
-Primary-2:  #1848C8 (blue oscuro, headers mechanic/track)
-Success:    #059669 (green)
-Warning:    #D97706 (amber)
-Danger:     #DC2626 (red)
-Navy:       #0D1F3C (texto oscuro)
-Gray:       #6B7280 (texto secundario)
-Border:     #E5E7EB
-Border-lt:  #F3F4F6
-Surface:    #F9FAFB (fondo de cards)
-White:      #FFFFFF
+--blue:      #2563eb   (primary)
+--blue-dark: #1e40af
+--blue-lt:   #eff6ff
+--green:     #16a34a   (success)
+--amber:     #d97706   (warning)
+--red:       #dc2626   (danger)
+--navy:      #0d1f3c   (texto oscuro)
+--gray:      #475569   (texto secundario)
+--gray-lt:   #94a3b8
+--border:    #e2e8f0
+--border-lt: #f1f5f9
+--surface:   #f8fafc   (fondo de cards)  [alias: --off]
+--white:     #ffffff
 ```
+
+**Esta tabla estuvo MAL hasta el 2026-08-02** y ese error es el origen del
+punto 12.14 de `docs/PENDIENTES.md`. Decia `#1848C8`, `#059669`, `#6B7280`,
+`#E5E7EB`, `#F3F4F6` y `#F9FAFB` - valores que **no define ningun archivo de
+tokens**: son de `track.html` y de `css/landing.css`. Seguir este skill al pie
+de la letra *producia* hex fuera de token, 335 apariciones contadas en las tres
+superficies auditadas.
+
+Dos cosas que siguen abiertas y conviene saber al tocar CSS:
+
+- `css/landing.css:2` redefine `--gray`, `--border`, `--blue-dark` y `--radius`
+  en un segundo `:root` que carga despues. En `landing.html` esos cuatro valen
+  distinto que en el resto. Bug abierto.
+- `css/mechanic.css` y `css/admin.css` tambien redefinen tokens, pero **solo
+  dentro de `[data-theme='dark']`**. Eso es tematizado correcto, no deriva: un
+  hex crudo ahi no lo puede pisar el tema oscuro, que es lo que dejo
+  "No jobs today" a 1.03:1 de contraste (12.15).
 
 Status colors:
 ```

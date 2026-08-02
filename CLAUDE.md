@@ -14,11 +14,24 @@ Two-page bifurcation via `middleware.js` (Vercel Edge Function):
 - Mobile users -> `index.html` (SPA with hash router, light theme)
 
 Both pages use the same light/white design system:
-- Primary: #2563eb (electric blue)
-- Background: #ffffff
-- Text: #111827
-- Border: #e5e7eb
+- Primary: #2563eb (`--blue`)
+- Background: #ffffff (`--white`)
+- Text: #0d1f3c (`--navy`)
+- Border: #e2e8f0 (`--border`)
 - Font: Inter (Google Fonts)
+
+**Never copy hex out of this block into code - use `var(--token)`.** The single
+source of truth is `css/variables.css`, which all four surfaces load. This list
+is only a summary and it has drifted: until 2026-08-02 it said `#111827` and
+`#e5e7eb`, which are `css/landing.css`'s values, not the tokens'. Following the
+documentation literally is how 335 near-miss hex ended up across the app
+(see `docs/PENDIENTES.md` 12.14).
+
+**Open exception:** `css/landing.css:2` opens a second bare `:root` overriding
+`--gray`, `--border`, `--blue-dark` and `--radius`, and it loads *after*
+`variables.css`. So on `landing.html` those four resolve differently than
+anywhere else. Real bug, still open - do not use landing's rendering as the
+reference for anything.
 
 ### App surfaces
 - `index.html` - Mobile SPA (PRODUCTION). Hash router. ~450 lines HTML + js/app.js.
