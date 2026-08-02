@@ -50,24 +50,17 @@
     });
   });
   </script>
-  <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
-  <script>
-  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.people.toString()+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-  // Only the live domain reports. Without this guard localhost, file:// and
-  // preview builds all wrote into the same project as real customers: the
-  // production numbers showed pages like
-  // "/C:/Users/.../landing.html" and referrers "localhost:3000" sitting beside
-  // real traffic, and every visitor count was inflated by whoever happened to
-  // be developing that week.
-  if (location.hostname === 'drbikesydney.com.au' || location.hostname === 'www.drbikesydney.com.au') {
-    posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
-      api_host: 'https://eu.i.posthog.com',
-      person_profiles: 'identified_only',
-      capture_pageview: true,
-      capture_pageleave: true,
-    });
-  }
-  </script>
+  <!-- PostHog is deliberately NOT loaded here.
+       This is a staff tool, and its traffic was being counted as customer
+       traffic: the first real read of the production project showed
+       /admin.html at 40 views and /admin at 39 - about a quarter of every
+       page view in the account was Diego using his own dashboard, inflating
+       "Visitors" and burying the pages customers actually look at.
+       PostHog identifies nobody (identify() is never called anywhere), so
+       there is no person property to filter this out by afterwards - the
+       only place to stop it is here.
+       If staff usage ever needs measuring, it belongs in a separate PostHog
+       project, not mixed into the customer numbers. -->
 
 </head>
 <body>
@@ -811,7 +804,7 @@
       <div class="card">
         <div class="card-hdr"><div><div class="card-title">Traffic</div><div class="card-sub" id="an-traffic-sub">Visits, pages, countries and referrers &mdash; from PostHog</div></div></div>
         <div id="an-traffic"><div class="an-state">Loading&hellip;</div></div>
-        <div class="an-note">Counts only visits to <code>drbikesydney.com.au</code>. Traffic recorded from localhost, local files and preview builds is excluded, so these numbers are lower than PostHog's own dashboard &mdash; and closer to the truth.</div>
+        <div class="an-note">Counts only customer visits to <code>drbikesydney.com.au</code>. Excluded: localhost, local files, preview builds, and the staff tools (<code>/admin</code>, <code>/mechanic</code>). These numbers are lower than PostHog's own dashboard &mdash; and closer to the truth.</div>
       </div>
 
       <div class="card">
