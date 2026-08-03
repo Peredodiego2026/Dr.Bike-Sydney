@@ -32,6 +32,17 @@ gtag('config', 'G-GXYD68JXZW');
       if (btn && btn.dataset.tab) goTab(btn.dataset.tab, btn);
     });
   }
+
+  // Audit 12.17: the PIN field carried onkeydown. It is real DOM, so it wires
+  // here. #sp-search is NOT - it lives inside <template id="tpl-spareparts">,
+  // whose content is inert until cloned, so getElementById never finds it and
+  // this wiring would be a silent no-op. That one is delegated below instead.
+  const pinInp = byId('pin-inp');
+  if (pinInp) {
+    pinInp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLogin();
+    });
+  }
 })();
 
 // Everything else (job cards, parts picker, checklist rows, chat, etc.) is
@@ -92,6 +103,46 @@ document.addEventListener('click', (e) => {
       sendMechMessage();
       break;
   }
+});
+
+// Audit 12.17: the same dynamically-built markup also had onchange / oninput /
+// onkeydown. Separate attributes from data-action on purpose - reusing it would
+// make the click listener above fire on every click into these fields, and
+// 'send-mech-message' is a real case there.
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-change]');
+  if (!el) return;
+  switch (el.dataset.change) {
+    case 'preview-photo':
+      previewPhoto(el.dataset.which);
+      break;
+    case 'checklist-changed':
+      checklistChanged();
+      break;
+    case 'send-mech-photo':
+      sendMechPhoto();
+      break;
+  }
+});
+
+document.addEventListener('input', (e) => {
+  const el = e.target.closest('[data-input]');
+  if (!el) return;
+  switch (el.dataset.input) {
+    case 'set-mech-tip':
+      setMechTip(el.value);
+      break;
+    case 'render-spare-parts':
+      renderSpareParts();
+      break;
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const el = e.target.closest('[data-enter]');
+  if (!el) return;
+  if (el.dataset.enter === 'send-mech-message') sendMechMessage();
 });
 
 // ── HTML ESCAPE HELPER (XSS protection) ──────────────────────────────────────
@@ -1344,7 +1395,7 @@ function openCompleteModal(id) {
             <span style="font-size:15px;font-weight:700;color:var(--navy)">$</span>
             <input id="mech-tip-input" type="number" min="0" step="1" placeholder="0" inputmode="decimal"
               style="flex:1;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:var(--sans);background:var(--white);color:var(--navy)"
-              oninput="setMechTip(this.value)">
+              data-input="set-mech-tip">
           </div>
         </div>
         <div>
@@ -1354,14 +1405,14 @@ function openCompleteModal(id) {
               <div style="font-size:11px;color:#6B7280;margin-bottom:4px">Before</div>
               <label style="display:flex;align-items:center;justify-content:center;height:80px;border:2px dashed var(--border);border-radius:8px;cursor:pointer;background:var(--off);font-size:24px" id="before-label">
                 📷
-                <input type="file" accept="image/*" capture="environment" id="photo-before" aria-label="Before photo" style="display:none" onchange="previewPhoto('before')">
+                <input type="file" accept="image/*" capture="environment" id="photo-before" aria-label="Before photo" style="display:none" data-change="preview-photo" data-which="before">
               </label>
             </div>
             <div>
               <div style="font-size:11px;color:#6B7280;margin-bottom:4px">After</div>
               <label style="display:flex;align-items:center;justify-content:center;height:80px;border:2px dashed var(--border);border-radius:8px;cursor:pointer;background:var(--off);font-size:24px" id="after-label">
                 📷
-                <input type="file" accept="image/*" capture="environment" id="photo-after" aria-label="After photo" style="display:none" onchange="previewPhoto('after')">
+                <input type="file" accept="image/*" capture="environment" id="photo-after" aria-label="After photo" style="display:none" data-change="preview-photo" data-which="after">
               </label>
             </div>
           </div>
@@ -1458,7 +1509,7 @@ function openCompleteModal(id) {
         .map(
           (item, i) => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
-          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#DC2626' : '#059669'};flex-shrink:0" onchange="checklistChanged()">
+          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#DC2626' : '#059669'};flex-shrink:0" data-change="checklist-changed">
           <span>${item.label}${item.required ? '<span style="color:#DC2626;font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
         )
@@ -2824,9 +2875,9 @@ function openMechChat(bookingId) {
         <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
           <label style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;flex-shrink:0;font-size:18px;background:var(--off)" title="Send photo">
             📷
-            <input type="file" accept="image/*" capture="environment" id="mech-chat-photo-inp" aria-label="Send photo" style="display:none" onchange="sendMechPhoto()">
+            <input type="file" accept="image/*" capture="environment" id="mech-chat-photo-inp" aria-label="Send photo" style="display:none" data-change="send-mech-photo">
           </label>
-          <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." aria-label="Type a message" onkeydown="if(event.key==='Enter')sendMechMessage()">
+          <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." aria-label="Type a message" data-enter="send-mech-message">
           <button data-action="send-mech-message" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;cursor:pointer;font-size:18px">→</button>
         </div>
       </div>`;

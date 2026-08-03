@@ -303,7 +303,7 @@
           </div>
           <div>
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Van</div>
-            <select id="bk-f-van" class="inp" aria-label="Van" style="width:110px" onchange="applyBookingFilters()">
+            <select id="bk-f-van" class="inp" aria-label="Van" style="width:110px">
               <option value="">All vans</option>
               <option value="1">Van 1</option>
               <option value="2">Van 2</option>
@@ -311,7 +311,7 @@
           </div>
           <div>
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Status</div>
-            <select id="bk-f-status" class="inp" aria-label="Status" style="width:130px" onchange="applyBookingFilters()">
+            <select id="bk-f-status" class="inp" aria-label="Status" style="width:130px">
               <option value="">All statuses</option>
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
@@ -322,7 +322,7 @@
           </div>
           <div style="flex:1;min-width:180px">
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Client name</div>
-            <input type="text" id="bk-f-search" class="inp" placeholder="Search client..." aria-label="Search client" oninput="applyBookingFilters()">
+            <input type="text" id="bk-f-search" class="inp" placeholder="Search client..." aria-label="Search client">
           </div>
           <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-2">Filter</button>
           <button style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-3">Reset</button>
@@ -390,7 +390,7 @@
             <div class="card-sub" id="route-sub">Loading today's jobs...</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
-            <select id="route-van" onchange="renderRouteMap()" class="inp" aria-label="Van" style="margin:0;width:auto;padding:7px 10px;font-size:13px">
+            <select id="route-van" class="inp" aria-label="Van" style="margin:0;width:auto;padding:7px 10px;font-size:13px">
               <option value="">All vans</option>
               <option value="1">Van 1</option>
               <option value="2">Van 2</option>
@@ -526,13 +526,13 @@
       <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:20px;box-shadow:var(--shadow)">
         <!-- Fila 1: mes + año + view pills -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-          <select id="fin-month" class="inp" aria-label="Month" style="flex:1;min-width:100px;max-width:150px;font-weight:600" onchange="loadFinance()">
+          <select id="fin-month" class="inp" aria-label="Month" style="flex:1;min-width:100px;max-width:150px;font-weight:600">
             <option value="1">January</option><option value="2">February</option><option value="3">March</option>
             <option value="4">April</option><option value="5">May</option><option value="6">June</option>
             <option value="7">July</option><option value="8">August</option><option value="9">September</option>
             <option value="10">October</option><option value="11">November</option><option value="12">December</option>
           </select>
-          <select id="fin-year" class="inp" aria-label="Year" style="width:90px;font-weight:600" onchange="loadFinance()">
+          <select id="fin-year" class="inp" aria-label="Year" style="width:90px;font-weight:600">
             <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option>
           </select>
           <select id="fin-view" style="display:none">
@@ -1078,7 +1078,7 @@
       <!-- Search -->
       <div style="position:relative;margin-bottom:16px;max-width:360px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="inv-search" class="inp" placeholder="Search parts..." aria-label="Search parts" style="padding-left:36px" oninput="renderInventory()">
+        <input id="inv-search" class="inp" placeholder="Search parts..." aria-label="Search parts" style="padding-left:36px">
       </div>
       <!-- Grouped table -->
       <div class="card">
@@ -1110,7 +1110,7 @@
       <!-- Search -->
       <div style="position:relative;margin-bottom:12px;max-width:360px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="svc-search" class="inp" placeholder="Search services..." aria-label="Search services" style="padding-left:36px" oninput="renderServices()">
+        <input id="svc-search" class="inp" placeholder="Search services..." aria-label="Search services" style="padding-left:36px">
       </div>
       <!-- Category filter chips -->
       <div id="svc-cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
@@ -1151,13 +1151,13 @@
         <div class="kpi-card blue"><div class="kpi-label">MRR</div><div class="kpi-value" id="mem-kpi-mrr">—</div><div class="kpi-sub">Monthly recurring</div></div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-        <select id="mem-filter-plan" onchange="loadMemberships()" aria-label="Filter by plan" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);cursor:pointer">
+        <select id="mem-filter-plan" aria-label="Filter by plan" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);cursor:pointer">
           <option value="">All plans</option>
           <option value="basic">Basic ($67/mo)</option>
           <option value="standard">Standard ($97/mo)</option>
           <option value="vip">VIP ($197/mo)</option>
         </select>
-        <select id="mem-filter-status" onchange="loadMemberships()" aria-label="Filter by status" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);cursor:pointer">
+        <select id="mem-filter-status" aria-label="Filter by status" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);cursor:pointer">
           <option value="">All statuses</option>
           <option value="active">Active</option>
           <option value="past_due">Past Due</option>
@@ -1223,7 +1223,7 @@
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Role</div>
-            <select class="inp" id="notif-modal-role" onchange="updateZoneVisibility()" aria-label="Role" style="cursor:pointer">
+            <select class="inp" id="notif-modal-role" aria-label="Role" style="cursor:pointer">
               <option value="manager">⭐ Manager — receives all zones</option>
               <option value="mechanic">🔧 Mechanic — receives assigned zone only</option>
             </select>
@@ -1281,7 +1281,7 @@
             <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Photo</div>
             <div style="display:flex;align-items:center;gap:12px">
               <img id="mech-profile-modal-photo-preview" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--off);border:1px solid var(--border);display:none">
-              <input type="file" id="mech-profile-modal-photo-file" accept="image/*" aria-label="Photo" style="font-size:12px" onchange="previewMechProfilePhoto(this)">
+              <input type="file" id="mech-profile-modal-photo-file" accept="image/*" aria-label="Photo" style="font-size:12px">
             </div>
             <input type="hidden" id="mech-profile-modal-photo-url">
           </div>

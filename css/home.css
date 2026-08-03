@@ -34,7 +34,9 @@
   /* square icon button: measured at 375px, anything wider pushed "Iniciar
      Sesión" onto a second line */
   width: 36px;
-  height: 36px;
+  /* Audit 12.16: 36px tall was under the 44px minimum. Only the WIDTH is
+     constrained by the note above, so the height grows instead. */
+  height: 44px;
   padding: 0;
   font-family: inherit;
   font-size: 13px;
@@ -451,11 +453,16 @@
   margin-bottom: 14px;
   text-transform: uppercase;
 }
+/* Audit 12.16: was 20.8px tall with an 8px gap. Now a 44px row; the old
+   margin is absorbed into the row height so the footer grows by ~15px a link
+   instead of ~23px. */
 [data-screen='home'] .footer-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   color: #6b7280;
   font-size: 13px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   text-decoration: none;
   transition: color 150ms;
 }
@@ -470,9 +477,15 @@
   font-size: 13px;
   margin-bottom: 10px;
 }
+/* Audit 12.16: the phone and email links inside were 20.8px tall. */
+[data-screen='home'] .footer-contact-item a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
 [data-screen='home'] .footer-social {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid #374151;
   display: flex;

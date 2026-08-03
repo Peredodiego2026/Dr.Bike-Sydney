@@ -206,6 +206,45 @@ function byId(id) {
   byId('mbnav-more').addEventListener('click', function (event) {
     toggleSidebar();
   });
+
+  // Audit 12.17: the filter/search controls in admin.html carried onchange /
+  // oninput. Same elements, same functions, wired here instead.
+  byId('bk-f-van').addEventListener('change', function (event) {
+    applyBookingFilters();
+  });
+  byId('bk-f-status').addEventListener('change', function (event) {
+    applyBookingFilters();
+  });
+  byId('bk-f-search').addEventListener('input', function (event) {
+    applyBookingFilters();
+  });
+  byId('route-van').addEventListener('change', function (event) {
+    renderRouteMap();
+  });
+  byId('fin-month').addEventListener('change', function (event) {
+    loadFinance();
+  });
+  byId('fin-year').addEventListener('change', function (event) {
+    loadFinance();
+  });
+  byId('inv-search').addEventListener('input', function (event) {
+    renderInventory();
+  });
+  byId('svc-search').addEventListener('input', function (event) {
+    renderServices();
+  });
+  byId('mem-filter-plan').addEventListener('change', function (event) {
+    loadMemberships();
+  });
+  byId('mem-filter-status').addEventListener('change', function (event) {
+    loadMemberships();
+  });
+  byId('notif-modal-role').addEventListener('change', function (event) {
+    updateZoneVisibility();
+  });
+  byId('mech-profile-modal-photo-file').addEventListener('change', function (event) {
+    previewMechProfilePhoto(this);
+  });
 })();
 
 // Sidebar / quick-action / mobile-nav page navigation - all converted from
@@ -324,6 +363,44 @@ document.addEventListener('click', function (e) {
     case 'delete-contact':
       deleteContact(d.id);
       break;
+  }
+});
+
+// Audit 12.17: inputs inside those same template strings carried
+// onkeydown="if(event.key==='Enter')fn()". Deliberately NOT data-action: the
+// click listener above would then fire on every click into the field, and
+// 'submit-admin-login' is a real case there - clicking the password box would
+// submit the form. Separate attribute, separate listener.
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter') return;
+  const el = e.target.closest('[data-enter]');
+  if (!el) return;
+  switch (el.dataset.enter) {
+    case 'focus-admin-pass':
+      document.getElementById('admin-pass-inp')?.focus();
+      break;
+    case 'submit-admin-login':
+      submitAdminLogin();
+      break;
+    case 'submit-totp-code':
+      submitTOTPCode();
+      break;
+    case 'submit-mfa-setup-code':
+      submitMFASetupCode();
+      break;
+    case 'add-suburb':
+      addSuburb(parseInt(el.dataset.id));
+      break;
+  }
+});
+
+// onblur -> focusout, because blur does not bubble and this input is rendered
+// into the van cards long after the script runs.
+document.addEventListener('focusout', function (e) {
+  const el = e.target.closest('[data-blur]');
+  if (!el) return;
+  if (el.dataset.blur === 'save-driver-name') {
+    saveDriverName(parseInt(el.dataset.id), el.value);
   }
 });
 
@@ -1670,10 +1747,10 @@ function checkAdminAuth() {
       <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
         style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
-        onkeydown="if(event.key==='Enter')document.getElementById('admin-pass-inp').focus()">
+        data-enter="focus-admin-pass">
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
         style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
-        onkeydown="if(event.key==='Enter')submitAdminLogin()">
+        data-enter="submit-admin-login">
       <div id="admin-pass-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
       <button data-action="submit-admin-login" style="width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
     </div>`;
@@ -1899,7 +1976,7 @@ function _totpInputHTML() {
   return `<div style="font-size:13px;color:#6B7280;margin-bottom:28px">Enter the 6-digit code from your authenticator app</div>
   <input type="text" id="admin-totp-inp" placeholder="000000" aria-label="6-digit authentication code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:24px;font-weight:700;text-align:center;letter-spacing:10px"
-    onkeydown="if(event.key==='Enter')submitTOTPCode()">
+    data-enter="submit-totp-code">
   <div id="admin-totp-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none"></div>
   <button data-action="submit-totp-code" style="${_btn}">Verify →</button>`;
 }
@@ -1910,7 +1987,7 @@ function _enrollHTML(qrSvg, secret) {
   <div style="font-size:11px;color:#6B7280;margin-bottom:16px">Or enter manually: <code style="background:#F3F4F6;padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:1px">${secret}</code></div>
   <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" aria-label="6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
-    onkeydown="if(event.key==='Enter')submitMFASetupCode()">
+    data-enter="submit-mfa-setup-code">
   <div id="admin-enroll-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none"></div>
   <button data-action="submit-mfa-setup-code" style="${_btn}">Activate 2FA →</button>`;
 }
@@ -4476,7 +4553,7 @@ function renderVanZones() {
           <span style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap">👤</span>
           <input id="driver-${van.id}" value="${esc(van.driverName || '')}" placeholder="Mechanic name" aria-label="Mechanic name"
             style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:6px 10px;font-size:13px;color:#fff;font-family:Inter,sans-serif;outline:none;flex:1;min-width:0"
-            onblur="saveDriverName(${van.id},this.value)">
+            data-blur="save-driver-name" data-id="${van.id}">
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div style="font-size:11px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs</div>
@@ -4488,7 +4565,7 @@ function renderVanZones() {
           ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:#1848C8;border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
-          <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" onkeydown="if(event.key==='Enter')addSuburb(${van.id})"
+          <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" data-enter="add-suburb" data-id="${van.id}"
             style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:Inter,sans-serif;outline:none">
           <button data-action="add-suburb" data-id="${van.id}" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
         </div>
