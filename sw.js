@@ -1,5 +1,5 @@
-const CACHE_STATIC = 'drbike-static-v54';
-const CACHE_PAGES  = 'drbike-pages-v54';
+const CACHE_STATIC = 'drbike-static-v55';
+const CACHE_PAGES  = 'drbike-pages-v55';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
 // too, without their query, and every one of those entries was dead weight:
@@ -14,10 +14,19 @@ const CACHE_PAGES  = 'drbike-pages-v54';
 const STATIC_ASSETS = [
   '/index.html',
   '/mechanic.html',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/icon-512.svg',
-  '/apple-touch-icon.png',
+  // The `?v=` matters here: every .png and .svg is served
+  // `max-age=31536000, immutable` (vercel.json), so a browser that already
+  // holds the old icon will never revalidate it. The query is the only thing
+  // that dislodges it. Keep these identical to the hrefs in the pages and the
+  // srcs in manifest.json - caches.match() keys on the full URL, so a mismatch
+  // silently precaches a file that is never served.
+  // (Unrelated to the js/i18n.js `?v=` ban in CLAUDE.md: that one was about ES
+  // modules getting a second instance. These are images.)
+  '/icon-192.png?v=2',
+  '/icon-512.png?v=2',
+  '/icon-512.svg?v=2',
+  '/favicon-32.png?v=2',
+  '/apple-touch-icon.png?v=2',
 ];
 
 self.addEventListener('install', e => {
@@ -118,12 +127,12 @@ self.addEventListener('fetch', e => {
 });
 
 self.addEventListener('push', e => {
-  let p = { title: 'Dr. Bike', body: 'New update', icon: '/icon-512.png', url: '/' };
+  let p = { title: 'Dr. Bike', body: 'New update', icon: '/icon-512.png?v=2', url: '/' };
   try { p = Object.assign(p, e.data?.json()); } catch {}
   e.waitUntil(self.registration.showNotification(p.title, {
     body: p.body,
     icon: p.icon,
-    badge: '/icon-192.png',
+    badge: '/icon-192.png?v=2',
     vibrate: [200, 100, 200],
     tag: p.tag || 'drbike',
     renotify: true,

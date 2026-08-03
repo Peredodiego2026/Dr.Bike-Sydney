@@ -96,8 +96,8 @@ export default async function handler(req, res) {
   const payload = JSON.stringify({
     title: clamp(title, 80, 'Dr. Bike Sydney'),
     body: clamp(body, 300, 'Update on your booking'),
-    icon: safePath(icon || '/icon-192.png'),
-    badge: '/icon-192.png',
+    icon: safePath(icon || '/icon-192.png?v=2'),
+    badge: '/icon-192.png?v=2',
     tag: clamp(tag, 60, 'drbike-update'),
     url: safePath(url),
   });

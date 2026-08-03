@@ -13,11 +13,11 @@
   "lang": "en-AU",
   "dir": "ltr",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+    { "src": "/icon-192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/apple-touch-icon.png?v=2", "sizes": "180x180", "type": "image/png" }
   ],
   "shortcuts": [
     {
@@ -25,26 +25,26 @@
       "short_name": "Book",
       "url": "/?action=book",
       "description": "Book a bike repair right now",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png?v=2", "sizes": "192x192" }]
     },
     {
       "name": "My bookings",
       "short_name": "Bookings",
       "url": "/?action=dashboard",
       "description": "View and manage my bookings",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png?v=2", "sizes": "192x192" }]
     },
     {
       "name": "Track mechanic",
       "short_name": "Track",
       "url": "/track.html",
       "description": "Track your mechanic live",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png?v=2", "sizes": "192x192" }]
     }
   ],
   "screenshots": [
     {
-      "src": "/icon-512.png",
+      "src": "/icon-512.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",

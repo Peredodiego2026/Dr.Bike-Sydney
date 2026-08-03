@@ -1,6 +1,23 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-07-27) — read this first
+## Current state (2026-08-03) — read this first
+- **OPEN PR: `fix/unify-app-icon`** (commits `fc9388c`, `cb4dc3c`). One logo everywhere: the DB
+  monogram, traced from `images/logo-db.png` into vector paths. Replaces the bicycle-on-`#1848C8`
+  icon set, adds a favicon to the 74 of 77 pages that had none, splits the maskable icons into
+  their own files, and rebuilds `og-image` as a PNG (SVG never rendered as an `og:image`).
+  `sw.js` **v55**. New guardrail `scripts/icons-check.mjs` in `npm run check`.
+- **Icon colour, on purpose:** the mark keeps the logo file's `#0055de`, which is NOT `--blue`
+  (`#2563eb`). The icon has to match the logo in the page header. Reconciling the brand blue with
+  the token is still Diego's call and is not done.
+- **Cache finding, verified against production:** every `.png/.jpg/.webp/.gif/.svg/.ico/.woff` is
+  served `max-age=31536000, immutable`. A browser holding an old image never revalidates it, so
+  changing an image without changing its URL reaches nobody. Every icon reference now carries
+  `?v=2`. This is why "Diego sees an old page" happened in Firefox with no service worker
+  registered - but it only explains stale *images*. HTML is `max-age=0, s-maxage=0,
+  must-revalidate` and production serves the current build, so **stale text is still undiagnosed.**
+- Older entries below.
+
+## Current state (2026-07-27)
 - **The live punch list is `docs/PENDIENTES.md`** (created 2026-07-27). It is the single place
   that answers "what is left", split by who has to do it. This file stays the session journal.
 - **2026-07-27, later:** PRs #108-#114 all merged (send-push auth, the i18n gate's inline-script

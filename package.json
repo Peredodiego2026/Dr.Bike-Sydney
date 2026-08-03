@@ -33,7 +33,7 @@
     "format:check": "prettier --check api/ js/ css/",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "node scripts/check.mjs && node scripts/i18n-check.mjs && node scripts/plan-prices-check.mjs",
+    "check": "node scripts/check.mjs && node scripts/i18n-check.mjs && node scripts/plan-prices-check.mjs && node scripts/icons-check.mjs",
     "predeploy": "npm run check && vitest run --passWithNoTests",
     "deploy": "npx vercel --prod --yes",
     "test:e2e": "playwright test",
@@ -41,6 +41,7 @@
     "audit:security": "npm audit --audit-level=high",
     "i18n:check": "node scripts/i18n-check.mjs",
     "prices:check": "node scripts/plan-prices-check.mjs",
+    "icons:check": "node scripts/icons-check.mjs",
     "services:check": "node scripts/services-sync-check.mjs"
   },
   "lint-staged": {

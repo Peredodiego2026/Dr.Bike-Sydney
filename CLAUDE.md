@@ -160,6 +160,28 @@ NEVER reference columns that don't exist -> verify with SELECT before INSERT/UPD
 ### No deletes without confirmation
 NEVER DELETE without confirming with Diego first.
 
+### App icons: one mark, and maskable gets its own file
+
+Every icon is the DB monogram, traced from `images/logo-db.png` into vector
+paths (2026-08-03). Blue `#0055de` and ink `#061f42` are the logo file's own
+colours, deliberately NOT `css/variables.css` tokens - the icon has to be the
+same blue as the logo rendered in the page header, and `--blue` (`#2563eb`) is
+not that blue. Backgrounds DO use tokens: white, `--navy` (admin), `--green`
+(mechanic).
+
+- `icon-*.png` / `icon-*.svg` - purpose `any`, rounded corners, hairline
+  `--border` edge so a white icon still has a silhouette on a light wallpaper.
+- `icon-maskable-*.png` - **separate files.** Android crops a maskable icon to
+  a circle at 80% of the canvas, so the mark sits smaller and full-bleed. Never
+  point `any` and `maskable` at the same PNG; `npm run check` now rejects it.
+- Regenerating them is not a hand edit - the sources and the pipeline are
+  described in the PR that introduced them (`fix/unify-app-icon`).
+
+`npm run check` runs `scripts/icons-check.mjs`, which fails if any HTML page
+ships without a `<link rel="icon">` (74 of 77 pages did until 2026-08-03), if a
+manifest or page points at an icon file that does not exist, or if `#1848C8`
+comes back into a brand asset.
+
 ### Full coverage on every content/copy change
 
 **After editing `js/i18n.js` you MUST bump the `sw.js` cache version** or
