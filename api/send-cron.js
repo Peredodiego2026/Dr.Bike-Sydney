@@ -464,6 +464,134 @@ async function handleNoShowWatch(req, res) {
 }
 
 // ── Service reminders ─────────────────────────────────────────────────────────
+// ── Orphan payments (?type=orphan-payments) ─────────────────────────────────
+// The $20 call-out is charged BEFORE the booking row is written. If
+// create-booking then fails and the client closes the app instead of pressing
+// Pay again, Stripe has the money and there is no booking, no confirmation
+// email and no WhatsApp. Diego never finds out; the client does (PENDIENTES
+// 12.3).
+//
+// Stripe is the source of truth for payments and bookings is the source of
+// truth for bookings, so this needs no table of its own: sweep one, cross-check
+// the other. Dedup lives in the PaymentIntent's own metadata, which is
+// writable - without it this would re-alert about the same payment every day.
+const ORPHAN_GRACE_MINUTES = 15; // a booking mid-flight is not an orphan
+const ORPHAN_LOOKBACK_HOURS = 48;
+
+// Exported so the filtering can be tested without a Stripe account. Every
+// false here is a payment we must NOT wake Diego about; every true is a
+// payment that still has to be checked against the bookings table.
+export function isOrphanCandidate(pi, { nowSeconds, graceMinutes = ORPHAN_GRACE_MINUTES } = {}) {
+  if (!pi || pi.status !== 'succeeded') return false;
+  if (!(pi.amount_received > 0)) return false;
+  // Inside the grace window the booking may simply still be being written.
+  if (pi.created > nowSeconds - graceMinutes * 60) return false;
+  // Refunded already, e.g. handleCreateBooking's out-of-zone path: money taken
+  // and given back is not money kept without a booking. `charges` was dropped
+  // from the PaymentIntent object in newer Stripe API versions, so read
+  // latest_charge and fall back rather than trusting either one to exist.
+  const charge = pi.latest_charge && typeof pi.latest_charge === 'object' ? pi.latest_charge : null;
+  if (charge && (charge.refunded || charge.amount_refunded > 0)) return false;
+  if (pi.charges?.data?.some((c) => c.refunded || c.amount_refunded > 0)) return false;
+  if (pi.invoice) return false; // subscription invoices, not call-out fees
+  if (pi.metadata?.giftCard === 'true') return false;
+  if (pi.metadata?.orphan_alerted) return false; // Diego has already been told
+  return true;
+}
+
+async function handleOrphanPayments(req, res) {
+  if (!process.env.STRIPE_SECRET_KEY)
+    return res.status(200).json({ skipped: 'no STRIPE_SECRET_KEY' });
+
+  const { default: Stripe } = await import('stripe');
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const sb = makeSb();
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const since = nowSeconds - ORPHAN_LOOKBACK_HOURS * 3600;
+
+  let intents;
+  try {
+    intents = await stripe.paymentIntents.list({
+      created: { gte: since },
+      limit: 100,
+      expand: ['data.latest_charge'], // so a refund is visible without a second call
+    });
+  } catch (e) {
+    console.error('[orphan-payments] could not list from Stripe:', e.message);
+    return res.status(502).json({ error: e.message });
+  }
+
+  const candidates = (intents.data || []).filter((pi) => isOrphanCandidate(pi, { nowSeconds }));
+
+  if (!candidates.length) return res.status(200).json({ checked: intents.data?.length || 0, orphans: 0 });
+
+  // One query for all of them rather than one per payment.
+  const ids = candidates.map((pi) => pi.id);
+  const { data: matched, error } = await sb
+    .from('bookings')
+    .select('stripe_payment_intent_id')
+    .in('stripe_payment_intent_id', ids);
+  if (error) {
+    console.error('[orphan-payments] booking lookup failed:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+  const booked = new Set((matched || []).map((b) => b.stripe_payment_intent_id));
+  const orphans = candidates.filter((pi) => !booked.has(pi.id));
+
+  const { data: waRow } = await sb
+    .from('van_zones')
+    .select('postcode')
+    .eq('van_number', 0)
+    .eq('suburb', '__whatsapp__')
+    .maybeSingle();
+  const adminPhone = waRow?.postcode;
+
+  let alerted = 0;
+  for (const pi of orphans) {
+    const amount = (pi.amount_received / 100).toFixed(2);
+    const email = pi.metadata?.email || pi.receipt_email || 'unknown';
+    const when = new Date(pi.created * 1000).toISOString().replace('T', ' ').slice(0, 16);
+    const msg =
+      `ORPHAN PAYMENT: $${amount} AUD charged with no booking behind it.\n` +
+      `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
+      `Either create the booking manually or refund it in Stripe.`;
+
+    if (adminPhone) {
+      const r = await fetch(`${BASE}/api/send-whatsapp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+        },
+        body: JSON.stringify({ to: adminPhone, message: msg }),
+      });
+      logSendFailure('orphan-payment', r, pi.id);
+      if (!r.ok) continue; // no mark, so the next run tries again
+    } else {
+      console.error('[orphan-payments] no admin WhatsApp configured; not marking', pi.id);
+      continue;
+    }
+
+    // Marked only after Diego has actually been told.
+    try {
+      await stripe.paymentIntents.update(pi.id, {
+        metadata: { ...pi.metadata, orphan_alerted: String(Math.floor(Date.now() / 1000)) },
+      });
+    } catch (e) {
+      console.error('[orphan-payments] could not mark', pi.id, e.message);
+    }
+    alerted++;
+  }
+
+  return res.status(200).json({
+    checked: intents.data?.length || 0,
+    orphans: orphans.length,
+    alerted,
+    ids: orphans.map((pi) => pi.id),
+  });
+}
+
 async function handleServiceReminders(req, res) {
   const sb = makeSb();
   const now = new Date();
@@ -817,6 +945,7 @@ export default async function handler(req, res) {
   if (type === 'service') return handleServiceReminders(req, res);
   if (type === 'advance') return handleAdvanceReminders(req, res);
   if (type === 'noshow') return handleNoShowWatch(req, res);
+  if (type === 'orphan-payments') return handleOrphanPayments(req, res);
 
   // Consolidated daily cron: runs all background jobs in sequence
   if (type === 'all') {
@@ -835,16 +964,25 @@ export default async function handler(req, res) {
         };
         fn(req, mockRes).catch((e) => resolve({ error: e.message }));
       });
-    const [birthday, reengagement, abandoned, abandonedCheckout, service, advance, noshow] =
-      await Promise.allSettled([
-        wrap((r) => handleBirthday(req, r)),
-        wrap((r) => handleReengagement(req, r)),
-        wrap((r) => handleAbandoned(req, r)),
-        wrap((r) => handleAbandonedCheckout(req, r)),
-        wrap((r) => handleServiceReminders(req, r)),
-        wrap((r) => handleAdvanceReminders(req, r)),
-        wrap((r) => handleNoShowWatch(req, r)),
-      ]);
+    const [
+      birthday,
+      reengagement,
+      abandoned,
+      abandonedCheckout,
+      service,
+      advance,
+      noshow,
+      orphanPayments,
+    ] = await Promise.allSettled([
+      wrap((r) => handleBirthday(req, r)),
+      wrap((r) => handleReengagement(req, r)),
+      wrap((r) => handleAbandoned(req, r)),
+      wrap((r) => handleAbandonedCheckout(req, r)),
+      wrap((r) => handleServiceReminders(req, r)),
+      wrap((r) => handleAdvanceReminders(req, r)),
+      wrap((r) => handleNoShowWatch(req, r)),
+      wrap((r) => handleOrphanPayments(req, r)),
+    ]);
     return res.status(200).json({
       birthday: birthday.value || birthday.reason?.message,
       reengagement: reengagement.value || reengagement.reason?.message,
@@ -853,6 +991,7 @@ export default async function handler(req, res) {
       service: service.value || service.reason?.message,
       advance: advance.value || advance.reason?.message,
       noshow: noshow.value || noshow.reason?.message,
+      orphanPayments: orphanPayments.value || orphanPayments.reason?.message,
     });
   }
 
