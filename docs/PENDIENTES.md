@@ -794,7 +794,7 @@ deployados, pero **no se re-verificaron contra el dominio**. Si retomas esto mas
 adelante, volve a correr esa comprobacion antes de fiarte - en este proyecto ya
 paso que un merge posterior tapara un arreglo.
 
-**CERRADOS: 14 de 21** (PRs #137, #140, #142, #145, #147, #149, #160, #161).
+**CERRADOS: 17 de 21** (PRs #137, #140, #142, #145, #147, #149, #160, #161, #164, #165, y `fix/orphan-payments`). Se sumaron 12.17, 12.6, 12.18, 12.16 y 12.3.
 
 | # | Que era | Como se comprobo |
 |---|---|---|
@@ -837,9 +837,10 @@ releer lo ya cerrado:
 
 **ESPERAN UNA DECISION DE DIEGO** (ninguno es trabajo de codigo bloqueado):
 
-- **12.3** — el cobro huerfano. El codigo lo puede hacer cualquier sesion; el
-  evento `payment_intent.succeeded` **lo tiene que dar de alta Diego en el panel
-  de Stripe**, y sin eso el arreglo no sirve.
+- ~~**12.3** — el cobro huerfano~~ **CERRADO 2026-08-03 (`fix/orphan-payments`),
+  y sin necesitar nada de Stripe.** Resulto no ser trabajo de webhook: es una
+  barrida diaria que cruza los pagos de Stripe contra `bookings`. Ver el punto
+  12.3 para por que el webhook era el lugar equivocado.
 - **12.14 completo** — reemplazar los 335 hex fuera de token necesita elegir
   que paleta gana. La doc ya no produce el error; el codigo sigue teniendolo.
 - **12.11** — la puerta del admin. El arreglo de verdad valida el token contra
@@ -904,6 +905,35 @@ misma visita a la pantalla**.
 **Impacto: PLATA.** Cobro duplicado a un cliente real.
 
 ### 12.3 Un cobro que salio bien puede quedarse sin reserva, y nadie se entera
+
+> **CERRADO 2026-08-03 (`fix/orphan-payments`), y NO como decia este punto.**
+> El diagnostico era correcto; el arreglo propuesto no. Aca decia que hacia
+> falta un `case 'payment_intent.succeeded'` en el webhook y que Diego diera de
+> alta ese evento en Stripe. Diego lo dio de alta el 03-ago, pero el webhook es
+> el peor lugar para esto: llega **segundos** despues del cobro, cuando
+> `create-booking` todavia puede estar corriendo, asi que no puede distinguir
+> un huerfano de una reserva en vuelo sin inventarse una espera.
+>
+> Lo que se hizo: **una barrida diaria** (`?type=orphan-payments`, dentro del
+> `?type=all` que ya corre a las 9). Stripe es la fuente de verdad de los pagos
+> y `bookings` la de las reservas, asi que se recorre una y se cruza contra la
+> otra. Un pago cuenta como huerfano si esta cobrado, tiene mas de **15
+> minutos**, no fue devuelto, no es una suscripcion ni una gift card, y ninguna
+> reserva lo referencia en `stripe_payment_intent_id`. Diego recibe un WhatsApp
+> con el monto, el email y el id de Stripe.
+>
+> **Sin tabla nueva.** La marca de "ya avise" vive en la metadata del propio
+> PaymentIntent (`orphan_alerted`), que Stripe deja escribir. Sin eso, el mismo
+> pago generaria un WhatsApp por dia hasta el fin de los tiempos.
+>
+> Se marca **despues** de que el WhatsApp salio bien: si el envio falla, el pago
+> queda sin marcar y la barrida del dia siguiente lo reintenta.
+>
+> **El evento `payment_intent.succeeded` que Diego registro en Stripe ya no hace
+> falta.** No molesta - `api/stripe-webhook.js` lo manda al `default` y escribe
+> `Unhandled event type` - pero se puede sacar del endpoint sin perder nada.
+>
+> El texto original queda abajo.
 
 **Sintoma.** Stripe cobra los $20, `create-booking` falla, y el cliente cierra la
 app en vez de apretar Pagar de nuevo. Resultado: **plata cobrada, cero reserva,
