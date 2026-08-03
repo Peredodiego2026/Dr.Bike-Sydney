@@ -748,15 +748,16 @@ hallazgo y no esta reportado. En la SPA si lo es.
 Orden: primero lo que cuesta plata, despues lo que le muestra algo falso a una
 persona, y lo cosmetico al final.
 
-### Estado — cierre de la sesion de auditoria, 2026-08-02
+### Estado — actualizado 2026-08-03, despues de los PRs #160 y #161
 
-Esta es la foto final de esa sesion. **Todo lo marcado CERRADO se verifico vivo
-en `drbikesydney.com.au` el 2026-08-02**, no el dia que se mergeo: se pidieron
-los archivos al dominio y se busco el marcador de cada fix. Si retomas esto mas
+**Los 12 primeros CERRADOS se verificaron vivos en `drbikesydney.com.au` el
+2026-08-02**, no el dia que se mergeo: se pidieron los archivos al dominio y se
+busco el marcador de cada fix. Los dos ultimos (12.17 y 12.6) estan en `main` y
+deployados, pero **no se re-verificaron contra el dominio**. Si retomas esto mas
 adelante, volve a correr esa comprobacion antes de fiarte - en este proyecto ya
 paso que un merge posterior tapara un arreglo.
 
-**CERRADOS: 12 de 21** (PRs #137, #140, #142, #145, #147, #149).
+**CERRADOS: 14 de 21** (PRs #137, #140, #142, #145, #147, #149, #160, #161).
 
 | # | Que era | Como se comprobo |
 |---|---|---|
@@ -772,6 +773,8 @@ paso que un merge posterior tapara un arreglo.
 | 12.15 | Contraste 1.03:1, texto invisible | Medido: 1.03:1 -> 13.36:1 |
 | 12.19 | GPS falso del mecanico | Borrado; cero invocaciones en el repo |
 | 12.14 | *(la mitad)* La doc describia una paleta inexistente | Los 10 hex de la doc coinciden ahora con `variables.css` |
+| 12.17 | 26 handlers inline bloqueaban sacar `unsafe-inline` del CSP | PR #160: cero handlers inline en las 4 superficies |
+| 12.6 | Precios publicados que no existian en `services` | PR #161: `data-price-from` lee el piso de la tabla viva. **El codigo esta; falta que Diego cargue los servicios** (ver abajo) |
 
 **Ademas se arreglaron 3 bugs que NO estaban en la auditoria**, encontrados al
 releer lo ya cerrado:
@@ -786,14 +789,17 @@ releer lo ya cerrado:
   imprimiendo `1340 avg` sin signo de peso. **Se encontro mirando una captura,
   no leyendo codigo.**
 
+**ACCION CONCRETA DE DIEGO, no una decision** (el codigo ya se mergeo):
+
+- **12.6, la mitad que falta** — en **Admin > Services & Prices**: renombrar
+  `Bike Build — New Bike` a `Bike Assembly` y ponerle precio **80**, y crear
+  `E-Bike Service` a **129**, categoria `Electronic & e-bike` (el formulario de
+  contacto de la landing lo viene ofreciendo desde siempre sin fila detras).
+  Hasta que eso pase, `npm run services:check` reporta los dos lados del
+  desajuste: eso es el check funcionando, no una regresion.
+
 **ESPERAN UNA DECISION DE DIEGO** (ninguno es trabajo de codigo bloqueado):
 
-- **12.6** — `E-Bike Service $129` y `Bike Assembly $80` no existen en
-  `services`. Lo real es `E-bike Diagnostic $60` y `Bike Build — New Bike $75`.
-  Hay que elegir: crear los servicios, o repuntar las tarjetas a los reales.
-  Ojo: es el mismo bug que el check de sincronizacion de servicios detecta desde
-  el otro lado - agregar o renombrar un servicio no llega a las 47 tarjetas de
-  marketing.
 - **12.3** — el cobro huerfano. El codigo lo puede hacer cualquier sesion; el
   evento `payment_intent.succeeded` **lo tiene que dar de alta Diego en el panel
   de Stripe**, y sin eso el arreglo no sirve.
@@ -806,8 +812,10 @@ releer lo ya cerrado:
 **ABIERTOS, mecanicos, sin ninguna decision de por medio** — son los siguientes
 que deberia tomar una sesion nueva:
 
-- **12.16** targets tactiles (18 bajo 44px en la SPA, 5 desbordes a 390px)
-- **12.17** 26 handlers inline con linea exacta; bloquean sacar `unsafe-inline`
+- **12.16, lo que queda** — el PR #160 subio **10 de los 18** targets bajo 44px.
+  Siguen abiertos los otros 8, los **5 desbordes horizontales** a 390px (uno
+  llega a 754px de borde derecho) y las 11 tablas del admin sin contenedor de
+  scroll propio.
 - **12.18** `confirm()`/`alert()` nativos fuera del panel de la landing
 - **`track.html`** — la quinta superficie, nunca auditada. Es lo unico que falta
   para cerrar el punto **3.1**.
@@ -919,6 +927,12 @@ seguia con los numeros viejos"). La mina volvio a quedar armada.
 funciona.
 
 ### 12.6 Tres precios publicados en la SPA no existen en la tabla `services`
+
+> **CERRADO EN CODIGO 2026-08-03 (PR #161, mergeado).** `js/live-prices.js`
+> soporta `data-price-from`, y las tarjetas Repairs y Bike Assembly toman el
+> piso de la tabla viva en vez de un numero estatico. **Falta la carga de datos
+> de Diego** en Admin > Services & Prices, descrita en el bloque de Estado de
+> arriba. La tabla que sigue es el diagnostico original.
 
 **Sintoma.** La pantalla de inicio de la SPA anuncia precios que **no
 corresponden a ningun servicio real**, y editarlos en Admin > Services no los
@@ -1182,6 +1196,13 @@ fuera de token (12.14).
 
 ### 12.16 Targets tactiles chicos y listas que pueden crecer sin scroll
 
+> **PARCIAL 2026-08-03 (PR #160, mergeado).** Diez targets subieron a 44px:
+> `.footer-link`, `.footer-social`, los contactos del footer, el boton de auth
+> movil, los tres `.btn-learn-more`, y en mechanic el toggle de tema y
+> `#status-btn`. **Siguen abiertos** los otros 8 de los 18, los 5 desbordes
+> horizontales y las 11 tablas del admin sin scroll propio. El detalle de abajo
+> es la medicion original.
+
 **SPA a 390px - VERIFICADO EN NAVEGADOR, medido con `getBoundingClientRect()`:**
 **18 elementos interactivos por debajo de 44px** de alto. Los peores:
 `.footer-link` a **21px** (unos 8), `#spa-lang-toggle` a 36px,
@@ -1204,6 +1225,9 @@ contenedor de scroll propio** (`overflow-y: visible` y sin ancestro que scrollee
 el lado del diseño: hoy entra porque hay pocas filas.
 
 ### 12.17 Handlers inline que quedan — corrige el conteo del punto 3.3
+
+> **CERRADO 2026-08-03 (PR #160, mergeado).** Los 26 salieron. La tabla de
+> abajo es el inventario original y ya no describe el codigo actual.
 
 Con lineas exactas, para que se puedan sacar de una:
 

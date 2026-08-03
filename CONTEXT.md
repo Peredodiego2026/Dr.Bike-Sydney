@@ -1,11 +1,33 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
 ## Current state (2026-08-03) — read this first
-- **OPEN PR: `fix/unify-app-icon`** (commits `fc9388c`, `cb4dc3c`). One logo everywhere: the DB
-  monogram, traced from `images/logo-db.png` into vector paths. Replaces the bicycle-on-`#1848C8`
+- **No open PRs.** #159 (`fix/unify-app-icon`), #160 (`fix/audit-batch-5`) and #161
+  (`fix/phantom-prices`) are all merged and live. `main` is `edda6b9`. The only unmerged remote
+  branches are 5 dependabot bumps. An earlier version of this block called #159 an OPEN PR: it
+  was written before the merge and stayed wrong for a day.
+- **Three parallel sessions ran in three worktrees** (`drbike-wt-logo`, `Dr.Bike-Sydney-wt-ui`,
+  `drbike-wt-prices`). All three are clean and their branches merged - reuse or delete them, but
+  do not assume another chat still holds work in them.
+- **`gh` is not installed on this machine** (searched all of `C:` on 2026-08-03). Branch
+  protection rejects direct pushes to main, so PRs have to be opened from the web until it is
+  reinstalled.
+- **#159 - one logo everywhere** (commits `fc9388c`, `cb4dc3c`). The DB monogram, traced from
+  `images/logo-db.png` into vector paths. Replaces the bicycle-on-`#1848C8`
   icon set, adds a favicon to the 74 of 77 pages that had none, splits the maskable icons into
   their own files, and rebuilds `og-image` as a PNG (SVG never rendered as an `og:image`).
   `sw.js` **v55**. New guardrail `scripts/icons-check.mjs` in `npm run check`.
+- **#160 - audit batch 5:** `docs/PENDIENTES.md` **12.17 closed** (the last 26 inline handlers in
+  `admin.html`, `js/admin.js`, `js/mechanic.js`, `mechanic.html`) and **12.16 partial** - ten of
+  the eighteen touch targets under 44px. The other eight and all five horizontal overflows at
+  390px are still open.
+- **#161 - phantom prices: code is in, but it needs Diego to finish.** `data-price-from` now
+  drives the floor prices from the live `services` table. Until Diego edits **Admin > Services &
+  Prices** to rename `Bike Build — New Bike` to `Bike Assembly` at 80 and create `E-Bike Service`
+  at 129, `npm run services:check` reports both sides of the mismatch. That is the check working,
+  not a regression.
+- **Next mechanical work, no decision needed:** the 12.16 remainder, 12.18 (`confirm()`/`alert()`
+  in `js/app.js` and `js/mechanic.js`), and auditing `track.html` - the fifth surface, never
+  looked at, and the last thing between us and closing point 3.1.
 - **Icon colour, on purpose:** the mark keeps the logo file's `#0055de`, which is NOT `--blue`
   (`#2563eb`). The icon has to match the logo in the page header. Reconciling the brand blue with
   the token is still Diego's call and is not done.
