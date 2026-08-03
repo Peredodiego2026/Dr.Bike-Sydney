@@ -60,6 +60,7 @@ import {
   createBrandLoader,
   showToast,
   createTierBadge,
+  confirmDialog,
 } from './components.js';
 import { getRiderTier } from './rider-tier.js';
 import {
@@ -4151,14 +4152,14 @@ async function renderProfile() {
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', async () => {
-      if (
-        !confirm(
-          translateValue(
-            'Cancel your membership? It will stay active until the end of the current billing period.'
-          )
-        )
-      )
-        return;
+      const goAhead = await confirmDialog({
+        title: 'Cancel your membership?',
+        message: 'It will stay active until the end of the current billing period.',
+        confirmLabel: 'Cancel membership',
+        cancelLabel: 'Keep it',
+        destructive: true,
+      });
+      if (!goAhead) return;
       cancelBtn.disabled = true;
       cancelBtn.textContent = 'Cancelling...';
       try {
@@ -4427,7 +4428,14 @@ async function renderMyBikes() {
           })();
 
           overlay.querySelector('#delete-bike-btn').addEventListener('click', async () => {
-            if (!confirm(translateValue('Delete this bike?'))) return;
+            const goAhead = await confirmDialog({
+              title: 'Delete this bike?',
+              message: 'This cannot be undone.',
+              confirmLabel: 'Delete',
+              cancelLabel: 'Cancel',
+              destructive: true,
+            });
+            if (!goAhead) return;
             const { error } = await sb
               .from('bikes')
               .delete()

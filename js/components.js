@@ -259,6 +259,57 @@ export function showToast(message, type = 'success') {
   }, 3000);
 }
 
+// ── Confirm dialog ────────────────────────────────────────────────────────────
+// Promise<boolean>. Replaces confirm(), which renders in the browser's own
+// language regardless of setLang() - so "Delete this bike?" was translated but
+// its OK/Cancel buttons were not, and on iOS the dialog announced the domain
+// instead of the app.
+export function confirmDialog({
+  title,
+  message = '',
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  destructive = false,
+}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+<div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+  <h2 class="confirm-box__title" id="confirm-title">${translateValue(title)}</h2>
+  ${message ? `<p class="confirm-box__msg">${translateValue(message)}</p>` : ''}
+  <div class="confirm-box__actions">
+    <button type="button" class="confirm-box__btn confirm-box__btn--cancel" data-act="no">${translateValue(cancelLabel)}</button>
+    <button type="button" class="confirm-box__btn confirm-box__btn--${destructive ? 'danger' : 'go'}" data-act="yes">${translateValue(confirmLabel)}</button>
+  </div>
+</div>`;
+
+    const previouslyFocused = document.activeElement;
+    const close = (answer) => {
+      document.removeEventListener('keydown', onKey);
+      overlay.classList.add('confirm-overlay--closing');
+      // Plain timeout, not transitionend: that event does not fire under
+      // reduced motion, and an overlay left in the DOM keeps eating taps.
+      setTimeout(() => overlay.remove(), 250);
+      previouslyFocused?.focus?.();
+      resolve(answer);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close(false);
+    };
+
+    overlay.addEventListener('click', (e) => {
+      const act = e.target.closest('[data-act]')?.dataset.act;
+      if (act) return close(act === 'yes');
+      if (e.target === overlay) close(false); // tap outside = cancel, never confirm
+    });
+    document.addEventListener('keydown', onKey);
+
+    document.body.appendChild(overlay);
+    overlay.querySelector('[data-act="no"]').focus();
+  });
+}
+
 // ── Star Rating ───────────────────────────────────────────────────────────────
 export function createStarRating(rating = 0, interactive = false) {
   const stars = Array.from({ length: 5 }, (_, i) => {
