@@ -83,11 +83,40 @@ con cualquier cadena larga y aleatoria en el entorno Production. Vercel la manda
 sola como `Authorization: Bearer` en cada ejecucion de cron. Alternativa: la
 pestana Crons del proyecto muestra la ultima corrida y su codigo de estado.
 
-### 1.2 Backups de Supabase (TASK-003)
+### 1.2 Backups de Supabase (TASK-003) — RESUELTO 2026-08-03, falta probar la restauracion
 
-Nunca se confirmo que esten activos ni se probo una restauracion. El negocio
-cobra dinero real. Verificar: Supabase -> Database -> Backups, y hacer una
-restauracion de prueba a un proyecto scratch contando filas.
+**La respuesta a "estan activos" era no, y no podian estarlo.** El proyecto esta
+en plan **Free**, y el plan Free de Supabase no genera ningun backup automatico.
+El dashboard lo decia textual: `LAST BACKUP: No backups`. No era que nadie lo
+hubiera verificado - no habia nada que verificar.
+
+**Lo que hay ahora.** Un repo **privado** aparte,
+[`Peredodiego2026/Dr.Bike-Sydney-backups`](https://github.com/Peredodiego2026/Dr.Bike-Sydney-backups),
+con un GitHub Action que corre todas las noches a las 02:00 de Sydney y
+commitea `schema.sql`, `data.sql` y `roles.sql`. El historial de git es la
+retencion: cada noche es un commit. Costo $0, sin pasar a Pro.
+
+**Por que en otro repo:** este repo es publico. Un dump de la base son los
+nombres, emails, telefonos y direcciones de los clientes. Ni como artifact de
+Actions ni en ninguna rama de aca. Ademas asi la contraseña de la base nunca
+entra a un repo publico.
+
+**Verificado el 2026-08-03, no "deberia andar":** el run
+[30809271924](https://github.com/Peredodiego2026/Dr.Bike-Sydney-backups/actions/runs/30809271924)
+termino verde y dejo el commit `c7ca423` con 47K de schema (25 tablas, 39
+policies de RLS), 386K de datos y los roles. Conteos leidos del propio dump:
+`services` 33 filas, `van_zones` 48, `auth.users` 12, `profiles` 11, `bikes` 4.
+Las 33 de `services` cuadran con las 32 que midio la auditoria del 01-ago mas el
+`E-Bike Service` que Diego creo ese mismo dia - o sea, el dump es de la base
+viva y actual, no de una copia vieja.
+
+**Lo que sigue abierto de este punto:** la restauracion de prueba. Tener el dump
+no prueba que restaure. Falta levantarlo en un proyecto scratch de Supabase y
+contar filas contra produccion. Hasta que eso pase, esto es un backup **no
+probado**.
+
+Detalle operativo, incluido el guardrail que hace fallar el job en vez de
+commitear un dump vacio, en el README de ese repo.
 
 ---
 
@@ -820,9 +849,10 @@ que deberia tomar una sesion nueva:
 - **`track.html`** — la quinta superficie, nunca auditada. Es lo unico que falta
   para cerrar el punto **3.1**.
 
-**Fuera de codigo, de Diego:** backups de Supabase (punto 1.2, nunca se
-verificaron) y una reserva real de punta a punta con tarjeta, porque 12.2 se
-probo con Stripe stubbeado - eso valida la logica, no el cobro.
+**Fuera de codigo, de Diego:** una reserva real de punta a punta con tarjeta,
+porque 12.2 se probo con Stripe stubbeado - eso valida la logica, no el cobro.
+(Los backups de Supabase, que estaban en esta linea, se resolvieron el
+2026-08-03: ver punto **1.2**. Queda pendiente la restauracion de prueba.)
 
 ---
 

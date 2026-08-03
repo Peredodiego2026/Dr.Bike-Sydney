@@ -25,6 +25,17 @@
   Prices** to rename `Bike Build — New Bike` to `Bike Assembly` at 80 and create `E-Bike Service`
   at 129, `npm run services:check` reports both sides of the mismatch. That is the check working,
   not a regression.
+- **Backups exist now (2026-08-03), and they did not before.** The project is on Supabase's free
+  plan, which takes *no* automatic backups - the dashboard said `LAST BACKUP: No backups`. A
+  separate **private** repo, `Peredodiego2026/Dr.Bike-Sydney-backups`, now runs a nightly Action
+  that commits `schema.sql` / `data.sql` / `roles.sql`. Private and separate because this repo is
+  public and a dump is customer PII, and so the database password never touches a public repo.
+  First run verified green, commit `c7ca423`. **The restore has not been tested** - see
+  `docs/PENDIENTES.md` 1.2.
+- **Stripe:** Diego registered `payment_intent.succeeded` on the live webhook endpoint
+  (2026-08-03). `api/stripe-webhook.js` still has no case for it, so today it lands in the
+  `default` and logs `Unhandled event type`. That is expected until 12.3's code is written; the
+  half only Diego could do is done.
 - **Next mechanical work, no decision needed:** the 12.16 remainder, 12.18 (`confirm()`/`alert()`
   in `js/app.js` and `js/mechanic.js`), and auditing `track.html` - the fifth surface, never
   looked at, and the last thing between us and closing point 3.1.
