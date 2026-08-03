@@ -298,6 +298,14 @@ function stringsFromJs(file) {
     const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
     if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
   }
+  // tVal('...') - track.html's own wrapper around translateValue. It is the
+  // most explicit "this string gets translated" marker in the codebase and the
+  // check was not reading it: the ETA string only had entries because someone
+  // added them by hand, with nothing to catch the next one.
+  for (const m of src.matchAll(/\btVal\(\s*(['"])((?:[^'"\\]|\\.){3,300}?)\1/g)) {
+    const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
+    if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
+  }
   return found;
 }
 

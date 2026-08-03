@@ -10,8 +10,16 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<!-- integrity, because this is the one page that puts a customer's home address
+     on screen: without it a compromised CDN runs arbitrary JS right next to it.
+     Hashes are of leaflet 1.9.4 exactly - bumping the version means recomputing
+     them or the map stops loading. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"
+      integrity="sha384-b8ANgTJvdlAnWM5YGMpKn7Kodm+1k7NYNG9zdjTCcZcKatzYHwZ0RLdWarbJJVzU"
+      crossorigin="anonymous"/>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"
+        integrity="sha384-u5N8qJeJOO2iqNjIKTdl6KeKsEikMAmCUBPc6sC6uGpgL34aPJ4VgNhuhumedpEk"
+        crossorigin="anonymous"></script>
 <style>
 :root{
   --sans:'Inter',-apple-system,sans-serif;
@@ -97,17 +105,26 @@ async function init(){
     return;
   }
 
-  let bkg = null;
+  // A dead network and a bad token are NOT the same answer. They used to share
+  // one empty catch, so a client on a bad signal with a perfectly valid link
+  // was told their booking does not exist. Same bug as 12.7 on the mechanic app.
+  let bkg = null, reachedServer = false;
   try {
     const resp = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role: 'public-track', tracking_token: trackingToken }),
     });
+    reachedServer = true;
     if(resp.ok) bkg = await resp.json();
-  } catch {}
+  } catch (e) {
+    console.error('[track] could not reach /api/auth:', e.message);
+  }
   if(!bkg){
-    content.innerHTML = '<div class="card"><div class="err">Booking not found.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>';
+    content.innerHTML = reachedServer
+      ? '<div class="card"><div class="err">Booking not found.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>'
+      : '<div class="card"><div class="err">We could not reach Dr. Bike. Check your connection and try again - your booking is safe.<br><br><button id="track-retry" style="margin-top:14px;min-height:44px;padding:0 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Try again</button></div></div>';
+    document.getElementById('track-retry')?.addEventListener('click', () => window.location.reload());
     return;
   }
 
@@ -153,7 +170,12 @@ async function init(){
          <span class="status-chip ${statusClass}">${escHtml(statusLabel)}</span>
        </div>
        <div class="row"><span class="lbl">Address</span><span>${escHtml(bkg.address||'—')}</span></div>
-       <div class="row"><span class="lbl">Van</span><span>Van ${Number(bkg.van_number)||1} · Mechanic ${Number(bkg.van_number)||1}</span></div>
+       <!-- The value used to be "Van 1 · Mechanic 1": the word Van repeated the
+            label beside it, "Mechanic 1" named nobody, and both were built by
+            interpolation so they could never match a dictionary key - they read
+            in English on a Spanish page. The label already says Van, so the
+            value is the number and the person. -->
+       <div class="row"><span class="lbl">Van</span><span>${Number(bkg.van_number)||1}${mech.name?' · '+escHtml(mech.name):''}</span></div>
        <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue)">$${Number(bkg.service_price)||0}</span></div>
        ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div><div id="track-eta" style="display:none;font-size:13px;font-weight:700;color:var(--blue);text-align:center;margin-top:6px"></div>`:''}
      </div>
@@ -173,8 +195,8 @@ async function init(){
        </div>
        ${mechStatsRowHTML}
        <div style="display:flex;gap:8px;padding:16px 20px 20px">
-         <a href="tel:+61433963250" style="flex:1;text-align:center;background:var(--blue);color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
-         <a href="https://wa.me/61433963250" style="flex:1;text-align:center;background:#25D366;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
+         <a href="tel:+61433963250" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;background:var(--blue);color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+         <a href="https://wa.me/61433963250" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;background:#25D366;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
        </div>
      </div>
      <div class="card" style="background:var(--green-lt);border-color:#6EE7B7">
@@ -193,8 +215,8 @@ async function init(){
 
     <div class="card" style="text-align:center">
       <div style="font-size:13px;color:var(--mgray);margin-bottom:12px">Questions? Contact us</div>
-      <a href="tel:+61433963250" style="display:block;background:var(--blue);color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:8px">📞 Call +61 433 963 250</a>
-      <a href="https://wa.me/61433963250" style="display:block;background:#25D366;color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px">💬 WhatsApp</a>
+      <a href="tel:+61433963250" style="display:flex;align-items:center;justify-content:center;min-height:44px;background:var(--blue);color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:8px">📞 Call +61 433 963 250</a>
+      <a href="https://wa.me/61433963250" style="display:flex;align-items:center;justify-content:center;min-height:44px;background:#25D366;color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px">💬 WhatsApp</a>
     </div>`;
 
   // Live map if enroute or in_progress
@@ -267,24 +289,46 @@ async function init(){
       .catch(() => { etaFetching = false; });
   }
 
-  // Poll every 15s: update status + mechanic position (server-side, bypasses RLS)
-  setInterval(async () => {
-    try {
-      const resp = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'public-track', tracking_token: trackingToken }),
-      });
-      if(!resp.ok) return;
-      const updated = await resp.json();
-      if(updated.status !== bkg.status) { window.location.reload(); return; }
-      if(updated.mechanic_location?.lat && updated.mechanic_location?.lng) {
-        placeMarker(updated.mechanic_location.lat, updated.mechanic_location.lng);
-        const ms = document.getElementById('map-status');
-        if(ms) ms.style.display = 'none';
+  // Poll every 15s: update status + mechanic position (server-side, bypasses RLS).
+  // Only while the booking can still change. This used to run for any status,
+  // so a completed booking left open on a phone kept hitting /api/auth every
+  // 15 seconds forever, asking about something that was never going to move.
+  const LIVE_STATUSES = ['pending', 'confirmed', 'enroute', 'in_progress'];
+  if (LIVE_STATUSES.includes(bkg.status)) {
+    let failures = 0;
+    const poll = setInterval(async () => {
+      try {
+        const resp = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'public-track', tracking_token: trackingToken }),
+        });
+        if(!resp.ok) throw new Error('HTTP ' + resp.status);
+        failures = 0;
+        const updated = await resp.json();
+        if(updated.status !== bkg.status) { window.location.reload(); return; }
+        if(updated.mechanic_location?.lat && updated.mechanic_location?.lng) {
+          placeMarker(updated.mechanic_location.lat, updated.mechanic_location.lng);
+          const ms = document.getElementById('map-status');
+          if(ms) ms.style.display = 'none';
+        }
+      } catch (e) {
+        // The old empty catch let this die in silence while the green card kept
+        // promising "This page updates automatically". Say so instead.
+        failures++;
+        console.error('[track] poll failed (' + failures + '):', e.message);
+        if (failures >= 4) {
+          clearInterval(poll);
+          const ms = document.getElementById('map-status');
+          if (ms) {
+            ms.textContent = 'Live updates stopped. Reload to try again.';
+            ms.style.color = 'var(--red)';
+            ms.style.display = 'block';
+          }
+        }
       }
-    } catch {}
-  }, 15000);
+    }, 15000);
+  }
 }
 
 function showEmailForm(content) {
@@ -292,8 +336,8 @@ function showEmailForm(content) {
     <div class="card">
       <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">Track your booking</div>
       <div style="font-size:13px;color:var(--mgray);margin-bottom:16px">Enter the email you used to book</div>
-      <input id="track-email" type="email" placeholder="your@email.com" aria-label="Email" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);outline:none;margin-bottom:10px">
-      <button id="track-email-btn" style="width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Find my bookings →</button>
+      <input id="track-email" type="email" placeholder="your@email.com" aria-label="Email" style="width:100%;min-height:44px;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);outline:none;margin-bottom:10px">
+      <button id="track-email-btn" style="width:100%;min-height:44px;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Find my bookings →</button>
       <div id="track-email-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px;text-align:center"></div>
     </div>`;
 

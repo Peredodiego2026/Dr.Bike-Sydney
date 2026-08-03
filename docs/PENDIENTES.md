@@ -1396,6 +1396,37 @@ en es y zh.
 Orden: primero lo que expone datos, despues lo que le miente a una persona, y lo
 cosmetico al final.
 
+### Estado — 2026-08-03, mismo dia que la auditoria
+
+**CERRADOS: 6 de 10** (PR de `fix/track-findings`). Verificados en Chromium a
+390px contra la rama, no solo escritos:
+
+| # | Que era | Como se comprobo |
+|---|---|---|
+| 13.2 | "No encontramos la reserva" cuando fallaba la red | Con `fetch` rechazando: ahora dice que no se pudo conectar, y ofrece reintentar |
+| 13.3 | 6 targets bajo 44px | Los 6 miden 44 en los dos estados |
+| 13.4 | `Van 1 · Mechanic 1` en ingles | Renderiza `Camioneta / 1 · Diego Peredo` |
+| 13.6 | Leaflet sin SRI | `integrity` + `crossorigin`; Leaflet 1.9.4 sigue cargando |
+| 13.7 | El poll no paraba nunca | Pollers registrados: enroute 1, pending 1, **completed 0, cancelled 0** |
+| 13.8 | El poll moria en silencio | 4 fallos seguidos cortan el intervalo y lo dicen en pantalla |
+
+**ABIERTO, y necesita una decision de Diego:**
+
+- **13.1** — la direccion del cliente hacia Nominatim y OSRM. El arreglo no es
+  mecanico: o se proxyean las dos llamadas por un endpoint propio en `/api`
+  (mas codigo, mas costo, sigue saliendo el dato pero desde nuestro servidor y
+  bajo nuestro control), o se saca el ETA y el mapa se queda solo con la
+  posicion del mecanico. Es una decision de producto, no de codigo.
+- **13.5** — la tercera paleta. Es el punto **12.14**: hay que elegir que paleta
+  gana antes de tocar un solo hex.
+
+**ABIERTO, sin decision:**
+
+- **13.9** — el contraste al limite (4.83:1). Pasa AA; subirlo es cambiar
+  `--mgray`, que es parte de 13.5.
+- **13.10** — lo que la auditoria no cubrio. Sigue sin cubrirse: **nadie miro
+  todavia que devuelve de verdad `/api/auth` con `role: 'public-track'`.**
+
 ### 13.1 La direccion del cliente se le manda a dos servidores de terceros
 
 **VERIFICADO EN NAVEGADOR**, leido del log de red, no del codigo:
