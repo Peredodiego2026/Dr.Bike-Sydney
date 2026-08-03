@@ -841,8 +841,20 @@ releer lo ya cerrado:
   y sin necesitar nada de Stripe.** Resulto no ser trabajo de webhook: es una
   barrida diaria que cruza los pagos de Stripe contra `bookings`. Ver el punto
   12.3 para por que el webhook era el lugar equivocado.
-- **12.14 completo** — reemplazar los 335 hex fuera de token necesita elegir
-  que paleta gana. La doc ya no produce el error; el codigo sigue teniendolo.
+- **12.14 completo** — ~~necesita elegir que paleta gana~~ **DECIDIDO 2026-08-03:
+  gana `css/variables.css` tal cual esta, con `--blue` en `#2563eb`.** El logo y
+  los iconos se quedan con su `#0055de`: son dos azules a proposito, no deriva.
+  Ya no hay decision pendiente, lo que queda es mecanico y lo puede tomar
+  cualquier sesion:
+  1. `track.html` tiene que cargar `css/variables.css` en vez de declarar su
+     propio `:root` (hoy sigue trayendo el `#1848C8` retirado, y el
+     `<meta name="theme-color">` tambien). Eso es tambien el punto **13.5**.
+  2. `css/landing.css:2` tiene que dejar de reabrir `:root` para pisar
+     `--gray`, `--border`, `--blue-dark` y `--radius`.
+  3. Los 335 hex escritos a mano pasan a `var(--token)`.
+  Ojo con el orden: 1 y 2 cambian pixeles en pantalla, asi que conviene
+  medirlos antes y despues. El 3 no deberia cambiar ninguno - si cambia alguno,
+  ese hex no era el que decia el token y es un hallazgo, no un error de tipeo.
 - **12.11** — la puerta del admin. El arreglo de verdad valida el token contra
   el servidor antes de renderizar: cambia el flujo de auth, conviene hacerlo con
   Diego mirando.
@@ -1462,10 +1474,13 @@ sale con los numeros puestos y no le pregunta a nadie donde queda nada.
 haga: las reservas nuevas se crean normal y sin coordenadas, y el seguimiento
 funciona sin ETA. Nada se rompe, el codigo tolera que las columnas no existan.
 
-**ABIERTO, y necesita una decision de Diego:**
+**ABIERTO, ya sin decision de por medio:**
 
-- **13.5** — la tercera paleta. Es el punto **12.14**: hay que elegir que paleta
-  gana antes de tocar un solo hex.
+- **13.5** — la tercera paleta. **La decision se tomo el 2026-08-03: gana
+  `css/variables.css`, `--blue` = `#2563eb`.** `track.html` tiene que dejar de
+  declarar su propio `:root` y cargar el archivo de tokens; hoy sigue trayendo
+  el `#1848C8` retirado, tambien en `<meta name="theme-color">`. Detalle y orden
+  de trabajo en el punto **12.14**.
 
 **ABIERTO, sin decision:**
 
