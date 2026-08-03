@@ -78,10 +78,25 @@ for (const { page, href } of referenced) {
 
 // ── 3. no ghost hex in the brand assets ────────────────────────────────────
 // #1848C8 was never a token - see docs/PENDIENTES.md 12.14.
-const assets = readdirSync('.').filter(f => /^(icon|og-image|favicon).*\.svg$/.test(f));
+const assets = [
+  ...readdirSync('.').filter(f => /^(icon|og-image|favicon).*\.svg$/.test(f)),
+  ...(existsSync('images/brand') ? readdirSync('images/brand').filter(f => f.endsWith('.svg')).map(f => 'images/brand/' + f) : []),
+];
 for (const f of assets) {
   const text = readFileSync(f, 'utf8');
   if (/#1848c8/i.test(text)) problems.push(`${f}: contains #1848C8, which is not a token (docs/PENDIENTES.md 12.14)`);
+}
+
+// ── 4. the brand set is complete ───────────────────────────────────────────
+// Every circle is generated from images/brand/db-mark.svg by
+// scripts/build-brand-assets.mjs. A missing one means someone deleted a file
+// instead of regenerating the set.
+const BRAND = ['db-mark', 'db-circle-white', 'db-circle-blue', 'db-circle-navy', 'db-circle-green'];
+for (const name of BRAND) {
+  for (const ext of ['svg', 'png']) {
+    const p = `images/brand/${name}.${ext}`;
+    if (!existsSync(p)) problems.push(`${p}: missing - regenerate with scripts/build-brand-assets.mjs`);
+  }
 }
 
 if (problems.length) {
