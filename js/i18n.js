@@ -1294,6 +1294,13 @@ const dict = {
     'Look up your booking by email →': 'Busca tu reserva por correo →',
     'Booking not found.': 'No encontramos la reserva.',
     '← Back to Dr. Bike': '← Volver a Dr. Bike',
+    // A dead network is not a missing booking - track.html used to say the
+    // second thing when the first happened.
+    'We could not reach Dr. Bike. Check your connection and try again - your booking is safe.':
+      'No pudimos conectar con Dr. Bike. Revisá tu conexión y probá de nuevo: tu reserva está a salvo.',
+    'Try again': 'Probar de nuevo',
+    'Live updates stopped. Reload to try again.':
+      'Las actualizaciones en vivo se detuvieron. Recargá para reintentar.',
     '⏳ Pending confirmation': '⏳ Pendiente de confirmación',
     '✅ Confirmed': '✅ Confirmada',
     '🚐 Mechanic on the way!': '🚐 ¡El mecánico está en camino!',
@@ -2494,6 +2501,10 @@ const dict = {
     'Look up your booking by email →': '用邮箱查找您的预订 →',
     'Booking not found.': '未找到预订。',
     '← Back to Dr. Bike': '← 返回 Dr. Bike',
+    'We could not reach Dr. Bike. Check your connection and try again - your booking is safe.':
+      '无法连接 Dr. Bike。请检查网络后重试，您的预订不会丢失。',
+    'Try again': '重试',
+    'Live updates stopped. Reload to try again.': '实时更新已停止。请重新加载后重试。',
     '⏳ Pending confirmation': '⏳ 等待确认',
     '✅ Confirmed': '✅ 已确认',
     '🚐 Mechanic on the way!': '🚐 技师正在路上！',
