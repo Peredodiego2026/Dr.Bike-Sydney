@@ -271,6 +271,12 @@ body {
   font-weight: 600;
   cursor: pointer;
   font-family: var(--sans);
+  /* Audit 12.16: was 30px tall. Grown for real rather than with an invisible
+     overlay - it sits 8px from #theme-btn-mech, so overlays sized to 44px
+     would overlap and one button would swallow the other's taps. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 .status-btn.online {
   background: rgba(5, 150, 105, 0.15);
