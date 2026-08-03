@@ -681,8 +681,8 @@ async function renderBookService() {
         </div>
         <div id="diag-result" style="margin-top:10px;display:none"></div>
       </div>
-      <div id="cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0">
-        ${CAT_ORDER.map((cat) => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;height:32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap;transition:all 150ms ease"><span aria-hidden="true">${CAT_ICON[cat] || ''}</span>${CAT_SHORT[cat]}</button>`).join('')}
+      <div id="cat-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:4px 0">
+        ${CAT_ORDER.map((cat) => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;min-height:44px;background:#fff;border:1px solid #E2E8F0;border-radius:22px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap;transition:all 150ms ease"><span aria-hidden="true">${CAT_ICON[cat] || ''}</span>${CAT_SHORT[cat]}</button>`).join('')}
       </div>
       <div class="section-label">Select Service</div>
       <div id="step1-services">${categoriesHtml}</div>
