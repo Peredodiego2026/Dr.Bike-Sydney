@@ -193,7 +193,13 @@ peredo.dm@gmail.com) y confirmar que llegan las 3 notificaciones.
 
 ## 3. Diseno
 
-### 3.1 No existe lista de hallazgos de diseno — hay que auditar de nuevo
+### 3.1 ~~No existe lista de hallazgos de diseno~~ — CERRADO 2026-08-03
+
+> **Las 5 superficies estan auditadas y escritas.** `landing` en la seccion 8,
+> `SPA movil` + `mechanic` + `admin` en la seccion 12, y `track.html` en la
+> **seccion 13**, la ultima que faltaba. Ya no se trabaja a ciegas en diseno:
+> lo que sigue es ejecutar esas listas, no volver a mirar. El texto original
+> queda abajo por trazabilidad.
 
 Durante semanas se repitio "quedan ~14 de 36 hallazgos de diseno pendientes".
 El 27-jul se verifico: **esa lista no esta en ningun lado del repo**. Los 15
@@ -209,6 +215,8 @@ trabaja a ciegas.
 esta en la seccion 8; `SPA movil`, `mechanic` y `admin` en la seccion 12. **Falta
 solo `track.html`**, que no entro en ninguna de las dos rondas. Este punto queda
 abierto hasta que se audite esa quinta.
+
+**Estado 2026-08-03: `track.html` auditada, seccion 13. Punto cerrado.**
 
 ### 3.2 Dieta de `landing.html`
 
@@ -848,8 +856,10 @@ que deberia tomar una sesion nueva:
 - ~~**12.18** `confirm()`/`alert()` nativos fuera del panel de la landing~~
   **CERRADO 2026-08-03 (PR #164).** Los cuatro son ahora `confirmDialog()` /
   `mechConfirm()`. El chequeo de i18n aprendio a leerlos de paso.
-- **`track.html`** — la quinta superficie, nunca auditada. Es lo unico que falta
-  para cerrar el punto **3.1**.
+- ~~**`track.html`** — la quinta superficie, nunca auditada~~ **AUDITADA
+  2026-08-03: seccion 13.** Cierra el punto 3.1. Diez hallazgos, ninguno
+  arreglado todavia; el mas serio es que la direccion del cliente sale hacia dos
+  servidores de terceros en un query string (13.1).
 
 **Fuera de codigo, de Diego:** una reserva real de punta a punta con tarjeta,
 porque 12.2 se probo con Stripe stubbeado - eso valida la logica, no el cobro.
@@ -1357,3 +1367,155 @@ Para que "no hay hallazgo" se distinga de "no lo mire":
   seccion de analitica del punto 11.3) mientras esto se escribia. Los numeros de
   linea del admin son contra `origin/main` en `5dc95d8`.
 Mismo problema en pausar/cancelar membresia, que usan `confirm()` + `alert()`.
+
+---
+
+## 13. Auditoria de `track.html` (2026-08-03)
+
+La quinta superficie, la unica que nunca se habia mirado. Con esto queda
+cubierto el punto **3.1**: landing (seccion 8), SPA movil + mechanic + admin
+(seccion 12) y ahora track.
+
+**Que es esta pagina.** El link publico que recibe un cliente para seguir su
+reserva. No pide login: el token de la URL **es** la credencial. Muestra la
+direccion del cliente, el precio, el nombre y la foto del mecanico, y su
+posicion en vivo en un mapa.
+
+**Como se verifico.** Chromium a 390px contra `origin/main` en `beeea7b`, con el
+repo servido en local. La pagina tiene tres estados y se midieron dos:
+el formulario de email (sin token) y la vista de reserva con `status: enroute`,
+renderizada **interceptando `fetch` con una reserva falsa** - el DOM y el CSS son
+reales, los datos no. No hay captura de pantalla: el panel del navegador estaba
+cerrado, asi que nada de esto es una afirmacion sobre pixeles.
+
+**Lo bueno, para que no se pierda:** cero handlers inline (la unica superficie
+junto con la SPA), todo lo que se escribe en el DOM pasa por `escHtml()`, no
+carga el SDK de Supabase ni la anon key, y las cadenas estaticas estan completas
+en es y zh.
+
+Orden: primero lo que expone datos, despues lo que le miente a una persona, y lo
+cosmetico al final.
+
+### 13.1 La direccion del cliente se le manda a dos servidores de terceros
+
+**VERIFICADO EN NAVEGADOR**, leido del log de red, no del codigo:
+
+```
+https://nominatim.openstreetmap.org/search?q=12%20Test%20Street%2C%20Bondi%20NSW%202026&format=json&limit=1
+```
+
+`track.html:221` geocodifica la direccion del cliente contra Nominatim, y
+`:256` le manda a `router.project-osrm.org` **las coordenadas de la casa del
+cliente y la posicion en vivo del mecanico** para calcular el ETA. Los dos son
+servicios publicos gratuitos operados por terceros, y en los dos el dato viaja
+en el **query string**, que es lo que todo servidor loguea por defecto.
+
+Nadie le dijo al cliente que su direccion sale de nuestra infraestructura. No
+hay proxy propio, no hay consentimiento, y la politica de uso de Nominatim
+pide identificarse y limitar el volumen.
+
+**Impacto: DATOS PERSONALES.** Es el hallazgo mas serio de esta pagina.
+
+### 13.2 Si falla la red, al cliente se le dice que su reserva no existe
+
+**VERIFICADO EN NAVEGADOR** forzando `fetch` a rechazar: la pagina muestra
+*"No encontramos la reserva."*
+
+`track.html:108` es un `catch {}` vacio - lo que CLAUDE.md prohibe
+explicitamente. Un fallo de red y un token invalido terminan en la misma rama,
+asi que un cliente con un link perfectamente valido, en el subte o con mala
+señal, lee que su reserva no existe. Es la misma clase de bug que **12.7** (el
+mecanico veia "No jobs today" cuando fallaba la carga).
+
+### 13.3 Seis targets bajo 44px, incluidos los dos botones de contacto
+
+**VERIFICADO EN NAVEGADOR**, medido a 390px:
+
+| Elemento | Alto | Donde |
+|---|---|---|
+| `#track-email` | 41.3px | formulario de busqueda por email |
+| `#track-email-btn` | 40.7px | formulario de busqueda por email |
+| Llamar / WhatsApp | 39.3px (x2) | tarjeta del mecanico |
+| Llamar / WhatsApp | 42.7px (x2) | tarjeta de contacto del pie |
+
+Los dos primeros son **lo unico interactivo de la pagina** para alguien que
+perdio su link. Los otros cuatro son los botones que aprieta un cliente que
+esta esperando al mecanico. Es el mismo criterio de **12.16**, que ya se cerro
+en la SPA.
+
+### 13.4 `Van 1 · Mechanic 1` queda en ingles
+
+**VERIFICADO EN NAVEGADOR**: renderizado con la pagina en español, entre
+"Camioneta" y "Precio del servicio", se lee `Van 1 · Mechanic 1`.
+
+`track.html:156` construye la cadena por interpolacion
+(`Van ${n} · Mechanic ${n}`), asi que nunca coincide con una clave del
+diccionario y **`scripts/i18n-check.mjs` no lo puede ver**. Misma clase que
+12.9 y 12.10: el check en verde y texto sin traducir en pantalla.
+
+Aparte, dice "Mechanic 1" con un numero cuando la tarjeta de abajo muestra el
+nombre real del mecanico.
+
+### 13.5 La tercera paleta, y el azul retirado
+
+**VERIFICADO EN NAVEGADOR** leyendo las variables computadas:
+
+| Token en track.html | Valor | Valor en `css/variables.css` |
+|---|---|---|
+| `--blue` | `#1848C8` | `#2563eb` |
+| `--green` | `#059669` | `#16a34a` |
+| `--mgray` / `--gray` | `#6B7280` | `#475569` |
+| `--border` | `#E5E7EB` | `#e2e8f0` |
+
+`track.html` **no carga `css/variables.css`**: abre su propio `:root` con 12
+valores propios. Es literalmente la tercera paleta del punto **12.14**, y la
+fuente de la que salieron los valores equivocados que el skill `drbike-design`
+documento como correctos hasta el 02-ago.
+
+Ademas `<meta name="theme-color" content="#1848C8">`: el azul que
+`scripts/icons-check.mjs` bloquea explicitamente si vuelve a un asset de marca.
+El check no mira `theme-color`, asi que entro por la ventana.
+
+### 13.6 Leaflet viene de un CDN sin SRI
+
+**VERIFICADO EN CODIGO.** `track.html:13-14` carga CSS y JS de
+`cdn.jsdelivr.net/npm/leaflet@1.9.4` sin atributo `integrity` y sin
+`crossorigin`.
+
+Un CDN comprometido ejecuta JavaScript arbitrario en la unica pagina de la app
+que muestra la direccion de un cliente y la posicion en vivo de un mecanico, sin
+que nada lo detecte. El arreglo es un `integrity="sha384-..."`, o servir Leaflet
+desde el propio dominio.
+
+### 13.7 El poll de 15 segundos no se detiene nunca
+
+**VERIFICADO EN CODIGO.** El `setInterval` de `track.html:271` esta fuera del
+`if` de estado, asi que corre para **cualquier** reserva - incluida una
+`completed`, donde no hay nada que actualizar - y nunca se limpia. Una pestaña
+olvidada abierta en un celular pega a `/api/auth` cada 15 segundos
+indefinidamente.
+
+### 13.8 El segundo `catch {}` puede dejar la pagina muerta en silencio
+
+**VERIFICADO EN CODIGO.** `track.html:286` se traga cualquier fallo del poll. La
+tarjeta verde sigue diciendo *"This page updates automatically"* mientras la
+pagina ya no se actualiza. Nadie se entera: ni el cliente ni nosotros.
+
+### 13.9 Contraste al limite
+
+**VERIFICADO EN NAVEGADOR**, medido: el gris `--mgray` sobre blanco da
+**4.83:1**. Pasa AA (4.5) pero por poco, y se usa tambien en las etiquetas de
+**10px** en mayuscula de la fila de estadisticas del mecanico
+("Rating" / "Jobs done" / "Location"). No es un fallo como el 1.03:1 de 12.15,
+pero es el texto mas chico de la app en el limite del minimo.
+
+### 13.10 Lo que esta auditoria NO cubrio
+
+- **La respuesta real de `/api/auth` con `role: 'public-track'`.** Se
+  intercepto `fetch` con una reserva falsa porque no habia un token vivo a mano.
+  Que campos devuelve de verdad el servidor, y si manda de mas, **no se
+  verifico**. Es lo primero que deberia mirar quien retome esto.
+- **El estado `completed`** y el estado de link invalido (`?id=` suelto) no se
+  renderizaron.
+- **El mapa de Leaflet** no se pudo evaluar visualmente: el panel del navegador
+  estaba cerrado y no compone frames.
