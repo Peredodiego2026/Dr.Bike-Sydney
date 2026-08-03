@@ -987,10 +987,12 @@ function lpDateLocale() {
     <!-- Assembly -->
     <h3 style="font-size:1.1rem;font-weight:700;color:#2563eb;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB">Assembly</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
-      <div class="svc-card">
+      <!-- Same card as index.html: a floor, not a fixed price. See the comment
+           there and the data-price-from block in js/live-prices.js. -->
+      <div class="svc-card" data-price-from>
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></div>
-        <div class="svc-name">Bike Build &mdash; New Bike</div>
-        <div class="svc-price">$75</div>
+        <div class="svc-name">Bike Assembly</div>
+        <div class="svc-price">From $80</div>
         <p class="svc-desc">Full assembly of a new boxed bike</p>
         <button class="svc-btn">Book Now</button>
       </div>

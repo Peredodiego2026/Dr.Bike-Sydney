@@ -66,6 +66,9 @@ function decodeEntities(s) {
 }
 
 // The three card shapes on the site, all documented in js/live-prices.js.
+// The optional "From" covers cards that advertise a floor (data-price-from)
+// instead of a fixed price. Without it those cards match no pattern at all and
+// drop silently out of this check - the exact blindness it exists to remove.
 function cardsIn(file) {
   const html = readFileSync(file, 'utf8');
   const out = [];
@@ -73,21 +76,37 @@ function cardsIn(file) {
   // Suburb pages (incl. es/ and zh/, whose headings are translated but which
   // carry the English name in data-service).
   for (const m of html.matchAll(
-    /data-service="([^"]+)"[\s\S]{0,400}?class="price"[^>]*>\$?([\d,]+)/g
+    /data-service="([^"]+)"[\s\S]{0,400}?class="price"[^>]*>(?:From\s+)?\$?([\d,]+)/g
   )) {
     out.push({ file, name: decodeEntities(m[1]), price: Number(m[2].replace(/,/g, '')) });
   }
   // index.html
   for (const m of html.matchAll(
-    /class="service-name"[^>]*>([^<]+)<[\s\S]{0,400}?class="service-price"[^>]*>\$?([\d,]+)/g
+    /class="service-name"[^>]*>([^<]+)<[\s\S]{0,400}?class="service-price"[^>]*>(?:From\s+)?\$?([\d,]+)/g
   )) {
     out.push({ file, name: decodeEntities(m[1]).trim(), price: Number(m[2].replace(/,/g, '')) });
   }
   // landing.html "All Services" modal
   for (const m of html.matchAll(
-    /class="svc-name"[^>]*>([^<]+)<[\s\S]{0,400}?class="svc-price"[^>]*>\$?([\d,]+)/g
+    /class="svc-name"[^>]*>([^<]+)<[\s\S]{0,400}?class="svc-price"[^>]*>(?:From\s+)?\$?([\d,]+)/g
   )) {
     out.push({ file, name: decodeEntities(m[1]).trim(), price: Number(m[2].replace(/,/g, '')) });
+  }
+  return out;
+}
+
+// A card carrying data-price-from="cheapest" names a CATEGORY, not a bookable
+// service - "Repairs" is the only one today. live-prices.js computes its floor
+// from the whole table, so having no row of its own is correct. Listing it as
+// broken would be a permanent false alarm, and a check with a permanent false
+// alarm is one nobody reads.
+function categoryCardNames(file) {
+  const html = readFileSync(file, 'utf8');
+  const out = new Set();
+  for (const m of html.matchAll(
+    /data-price-from="cheapest"[\s\S]{0,600}?class="(?:service|svc)-name"[^>]*>([^<]+)</g
+  )) {
+    out.add(decodeEntities(m[1]).trim());
   }
   return out;
 }
@@ -120,6 +139,7 @@ for (const dir of ['.', 'es', 'zh']) {
 }
 
 const cards = pages.flatMap(cardsIn);
+const categoryNames = new Set(pages.flatMap((f) => [...categoryCardNames(f)]));
 const unmatched = [];
 const priceDrift = [];
 const advertised = new Set();
@@ -127,7 +147,7 @@ const advertised = new Set();
 for (const card of cards) {
   const lookup = NAME_MAP[card.name] || card.name;
   if (!byName.has(lookup)) {
-    unmatched.push({ ...card, lookup });
+    if (!categoryNames.has(card.name)) unmatched.push({ ...card, lookup });
     continue;
   }
   advertised.add(lookup);
