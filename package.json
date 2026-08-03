@@ -16,7 +16,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.1",
     "eslint": "^10.8.0",
     "eslint-plugin-n": "^18.2.2",
     "eslint-plugin-security": "^4.0.1",
