@@ -156,6 +156,58 @@ function esc(str) {
     .replace(/'/g, '&#39;');
 }
 
+// ── DIALOGS ──────────────────────────────────────────────────────────────────
+// Replaces confirm() and alert(). A native dialog ignores the dark theme the
+// mechanic works in and, on iOS, puts the domain in its title - it reads like
+// the browser talking, not the app. Styles live in css/mechanic.css.
+// Same markup as the SPA's confirmDialog(); duplicated because this file is a
+// classic script and cannot import js/components.js.
+function _dialog({ title, message = '', confirmLabel, cancelLabel, destructive = false }) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+<div class="confirm-box" role="alertdialog" aria-modal="true">
+  <h2 class="confirm-box__title">${esc(title)}</h2>
+  ${message ? `<p class="confirm-box__msg">${esc(message)}</p>` : ''}
+  <div class="confirm-box__actions">
+    ${cancelLabel ? `<button type="button" class="confirm-box__btn confirm-box__btn--cancel" data-act="no">${esc(cancelLabel)}</button>` : ''}
+    <button type="button" class="confirm-box__btn confirm-box__btn--${destructive ? 'danger' : 'go'}" data-act="yes">${esc(confirmLabel)}</button>
+  </div>
+</div>`;
+
+    const close = (answer) => {
+      document.removeEventListener('keydown', onKey);
+      overlay.classList.add('confirm-overlay--closing');
+      setTimeout(() => overlay.remove(), 250);
+      resolve(answer);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close(false);
+    };
+
+    overlay.addEventListener('click', (e) => {
+      const act = e.target.closest('[data-act]')?.dataset.act;
+      if (act) return close(act === 'yes');
+      if (e.target === overlay) close(false); // tap outside = cancel, never confirm
+    });
+    document.addEventListener('keydown', onKey);
+
+    document.body.appendChild(overlay);
+    overlay.querySelector('[data-act="no"], [data-act="yes"]').focus();
+  });
+}
+
+function mechConfirm(opts) {
+  return _dialog({ cancelLabel: 'Cancel', confirmLabel: 'Confirm', ...opts });
+}
+
+// One button. Blocking on purpose: it reports that an email went to the client,
+// which the mechanic must not scroll past.
+function mechNotice(title, message) {
+  return _dialog({ title, message, confirmLabel: 'Got it', cancelLabel: '' });
+}
+
 // ── PERSISTENT STORAGE ADAPTER (IndexedDB + localStorage) ───────────────────
 const _IDB = (() => {
   const DB = 'dr-bike-mech-auth',
@@ -508,8 +560,14 @@ function err(msg) {
   e.style.display = 'block';
   setTimeout(() => (e.style.display = 'none'), 3000);
 }
-function doLogout() {
-  if (!confirm('Sign out?')) return;
+async function doLogout() {
+  const goAhead = await mechConfirm({
+    title: 'Sign out?',
+    message: 'Your jobs stay on this phone until you sign back in.',
+    confirmLabel: 'Sign out',
+    destructive: true,
+  });
+  if (!goAhead) return;
   stopGPS();
   stopBackgroundGPS();
   _gpsOk = false;
@@ -2596,7 +2654,10 @@ async function saveChecklist() {
     } catch (e) {}
     setTimeout(
       () =>
-        alert('⚠️ ' + criticals.length + ' critical item(s) found. Upsell email sent to client.'),
+        mechNotice(
+          '⚠️ ' + criticals.length + ' critical item' + (criticals.length === 1 ? '' : 's') + ' found',
+          'An upsell email has been sent to the client.'
+        ),
       500
     );
   }

@@ -1368,3 +1368,100 @@ body {
 .bike-card:active {
   transform: scale(0.98);
 }
+
+/* ── Confirm dialog ──────────────────────────────────────────────────────────
+   Replaces the browser's confirm(). A native dialog cannot be translated,
+   ignores the design system, and on iOS names the site in the title bar - so a
+   destructive action was being confirmed in English for es/zh riders.
+   The scrim is the navy of --elevation-*, not a brand colour. */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(13, 31, 60, 0.45);
+  /* Visible is the DEFAULT state, and the animation is only decoration on top
+     of it. The first version faded in from a class added inside
+     requestAnimationFrame - and rAF does not fire while the document is
+     hidden, which left a fullscreen overlay at opacity 0 still swallowing
+     every tap. No fill-mode either: a `both` fill would hold the from-state
+     for the same reason. */
+  animation: confirm-overlay-in var(--motion-fast);
+}
+.confirm-overlay--closing {
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+.confirm-box {
+  width: 100%;
+  max-width: 320px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-2);
+  padding: var(--space-5);
+  animation: confirm-box-in var(--motion-fast);
+}
+@keyframes confirm-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes confirm-box-in {
+  from {
+    transform: scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confirm-overlay,
+  .confirm-box {
+    animation: none;
+  }
+}
+.confirm-box__title {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+.confirm-box__msg {
+  font-size: var(--font-size-sm);
+  color: var(--gray);
+  margin: var(--space-2) 0 0;
+  line-height: 1.45;
+}
+.confirm-box__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+.confirm-box__btn {
+  flex: 1;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--motion-fast);
+}
+.confirm-box__btn:active {
+  transform: scale(0.97);
+}
+.confirm-box__btn--cancel {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--navy);
+}
+.confirm-box__btn--go {
+  background: var(--blue);
+  border: 1.5px solid var(--blue);
+  color: var(--white);
+}
+.confirm-box__btn--danger {
+  background: var(--red);
+  border: 1.5px solid var(--red);
+  color: var(--white);
+}

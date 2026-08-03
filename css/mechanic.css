@@ -567,3 +567,93 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ── Confirm / notice dialog ─────────────────────────────────────────────────
+   Same job as the SPA's .confirm-* (css/main.css). Duplicated rather than
+   shared because mechanic.html does not load main.css and js/mechanic.js is a
+   classic script, so it cannot import the component. Tokens only, so the dark
+   theme's --white / --navy overrides at the top of this file apply. */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(13, 31, 60, 0.55);
+  /* Visible by default; see the note in css/main.css. A fade-in driven from
+     requestAnimationFrame leaves the overlay invisible and still blocking
+     whenever the document is hidden when it opens. */
+  animation: confirm-overlay-in var(--motion-fast);
+}
+.confirm-overlay--closing {
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+.confirm-box {
+  width: 100%;
+  max-width: 320px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-2);
+  padding: var(--space-5);
+  animation: confirm-box-in var(--motion-fast);
+}
+@keyframes confirm-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes confirm-box-in {
+  from {
+    transform: scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confirm-overlay,
+  .confirm-box {
+    animation: none;
+  }
+}
+.confirm-box__title {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+.confirm-box__msg {
+  font-size: var(--font-size-sm);
+  color: var(--mgray);
+  margin: var(--space-2) 0 0;
+  line-height: 1.45;
+}
+.confirm-box__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+.confirm-box__btn {
+  flex: 1;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  font-family: var(--sans);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+.confirm-box__btn--cancel {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--navy);
+}
+.confirm-box__btn--go {
+  background: var(--blue);
+  border: 1.5px solid var(--blue);
+  color: #fff;
+}
+.confirm-box__btn--danger {
+  background: var(--red);
+  border: 1.5px solid var(--red);
+  color: #fff;
+}

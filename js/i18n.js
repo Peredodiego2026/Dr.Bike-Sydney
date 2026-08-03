@@ -1171,8 +1171,21 @@ const dict = {
     'Payment could not be confirmed. Please contact us if you were charged.':
       'No pudimos confirmar el pago. Escribinos si te hicieron el cargo.',
     'Test booking failed': 'La reserva de prueba falló',
-    'Cancel your membership? It will stay active until the end of the current billing period.':
-      '¿Cancelar tu membresía? Seguirá activa hasta el final del período de facturación actual.',
+    // Confirm dialog (js/components.js). The one-sentence version of the
+    // membership warning was the old confirm() text; it is split now because a
+    // dialog has a title and a body.
+    Confirm: 'Confirmar',
+    Delete: 'Borrar',
+    'Keep it': 'Dejarla',
+    'This cannot be undone.': 'Esto no se puede deshacer.',
+    'Cancel your membership?': '¿Cancelar tu membresía?',
+    'Cancel membership': 'Cancelar membresía',
+    'It will stay active until the end of the current billing period.':
+      'Seguirá activa hasta el final del período de facturación actual.',
+    // navigator.share() title - it is what the recipient sees in the share
+    // sheet, so it is UI copy. Missed until the check learned to read
+    // `title:` properties (2026-08-03).
+    'Track my Dr. Bike service': 'Seguimiento de mi servicio Dr. Bike',
     // Set by the inline scripts in landing.html / index.html
     'Processing...': 'Procesando...',
     'Redirecting to payment...': 'Redirigiendo al pago...',
@@ -2375,8 +2388,16 @@ const dict = {
     'Payment could not be confirmed. Please contact us if you were charged.':
       '无法确认付款。如果已扣款，请联系我们。',
     'Test booking failed': '测试预订失败',
-    'Cancel your membership? It will stay active until the end of the current billing period.':
-      '要取消会员资格吗？在当前计费周期结束前仍然有效。',
+    // Confirm dialog (js/components.js)
+    Confirm: '确认',
+    Delete: '删除',
+    'Keep it': '保留',
+    'This cannot be undone.': '此操作无法撤销。',
+    'Cancel your membership?': '要取消会员资格吗？',
+    'Cancel membership': '取消会员资格',
+    'It will stay active until the end of the current billing period.':
+      '在当前计费周期结束前仍然有效。',
+    'Track my Dr. Bike service': '追踪我的 Dr. Bike 服务',
     'Processing...': '处理中...',
     'Redirecting to payment...': '正在跳转到支付页面...',
     'Choose an amount between $20 and $1000.': '请选择 $20 至 $1000 之间的金额。',

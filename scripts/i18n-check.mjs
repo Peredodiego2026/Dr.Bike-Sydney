@@ -287,6 +287,17 @@ function stringsFromJs(file) {
     const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
     if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
   }
+  // confirmDialog({ title, message, confirmLabel, cancelLabel }) - the
+  // replacement for the native dialogs above. Without this the check went
+  // green on the very commit that removed the confirm() calls it used to
+  // watch: four new customer-facing strings, none of them in the dictionary,
+  // nothing failing. Every one of these is passed through translateValue().
+  for (const m of src.matchAll(
+    /\b(?:title|message|confirmLabel|cancelLabel)\s*:\s*(['"])((?:[^'"\\]|\\.){3,300}?)\1/g
+  )) {
+    const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
+    if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
+  }
   return found;
 }
 
