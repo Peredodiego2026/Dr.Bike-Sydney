@@ -418,7 +418,14 @@ const dict = {
     'Standard Service': 'Servicio Estándar',
     'Standard+ Service': 'Servicio Estándar+',
     Repairs: 'Reparaciones',
-    'From $60': 'Desde $60',
+    // The static fallbacks the HTML ships with. live-prices.js overwrites both
+    // numbers from the services table on load and translates the word on its
+    // own through the bare 'From' key below, so these two only ever render if
+    // the table cannot be reached. 'From $60' was retired with audit 12.6: it
+    // was a floor that matched no service and that Admin could not change.
+    'From $17': 'Desde $17',
+    'From $80': 'Desde $80',
+    From: 'Desde',
     'E-Bike Service': 'Servicio de E-Bike',
     'Bike Assembly': 'Ensamblaje de Bici',
     'Perfect for regular maintenance and safety checks.':
@@ -1671,7 +1678,9 @@ const dict = {
     'Standard Service': '标准服务',
     'Standard+ Service': '标准+服务',
     Repairs: '维修',
-    'From $60': '起价 $60',
+    'From $17': '起价 $17',
+    'From $80': '起价 $80',
+    From: '起价',
     'E-Bike Service': '电动车服务',
     'Bike Assembly': '自行车组装',
     'Perfect for regular maintenance and safety checks.': '适合日常保养和安全检查。',

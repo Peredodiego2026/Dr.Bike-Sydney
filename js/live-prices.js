@@ -15,8 +15,17 @@
 // Some marketing names intentionally differ from the internal Supabase
 // name (e.g. "Chain Replacement" reads friendlier than "Chain Install") -
 // NAME_MAP bridges those so the price still syncs. Cards with no match
-// (Custom Quote, Repairs, etc - not a single priced service) keep their
-// static price and log a warning.
+// (Custom Quote, etc - not a single priced service) keep their static price
+// and log a warning.
+//
+// A card can also advertise a floor instead of a fixed price, with
+// data-price-from:
+//   data-price-from            -> "From $<that service's price>"
+//   data-price-from="cheapest" -> "From $<cheapest priced service>", for a card
+//                                 like Repairs that names a category rather
+//                                 than one bookable service.
+// Before this existed, Repairs said "From $60": a number matching no row in the
+// table, that editing Admin > Services could not change (audit 12.6).
 (function () {
   const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
   const SUPABASE_KEY =
@@ -40,6 +49,26 @@
   // the wizard from the name printed on a marketing card. Published rather than
   // copied so there is one list to keep in step with the services table.
   window.__drbikeServiceNames = NAME_MAP;
+
+  // "$75" needs no translation; "From $75" has a word in it, and by the time
+  // this runs the page may already have been rendered in Spanish or Chinese.
+  // translateValue returns the original when the dictionary has no entry or
+  // the language is English, so the fallback is the English word either way.
+  function fromLabel() {
+    try {
+      return window.__drbikeI18n?.translateValue?.('From') || 'From';
+    } catch {
+      return 'From';
+    }
+  }
+
+  // Emergency Service is priced 0 - it is a "call us and we quote you" path,
+  // not a free job - so a plain minimum would publish "From $0", which reads as
+  // free. Zero-priced rows are excluded rather than assumed away.
+  function cheapestPrice(services) {
+    const priced = services.map((s) => Number(s.price)).filter((p) => p > 0);
+    return priced.length ? Math.min(...priced) : null;
+  }
 
   async function syncPrices() {
     const cards = document.querySelectorAll('.service-card, .svc-card');
@@ -73,6 +102,19 @@
       const heading = card.querySelector('h3, .service-name, .svc-name');
       const priceEl = card.querySelector('.price, .service-price, .svc-price');
       if (!heading || !priceEl) return;
+
+      // A category card has no service to look up, so it is resolved before
+      // the name matching below rather than inside it.
+      if (card.dataset.priceFrom === 'cheapest') {
+        const min = cheapestPrice(services);
+        if (min === null) {
+          console.warn('[live-prices] no priced service to compute a floor - showing static price');
+          return;
+        }
+        priceEl.textContent = fromLabel() + ' $' + min;
+        return;
+      }
+      const showsFloor = card.hasAttribute('data-price-from');
       // Three ways to get the English name the Supabase `services` table uses:
       //  1. data-service on the card - the translated suburb pages carry it,
       //     since their headings are authored in Spanish/Chinese;
@@ -87,7 +129,9 @@
       const lookupName = NAME_MAP[cardName] || cardName;
       const match = services.find((s) => s.name === lookupName);
       if (match && typeof match.price === 'number') {
-        priceEl.textContent = '$' + match.price;
+        priceEl.textContent = showsFloor
+          ? fromLabel() + ' $' + match.price
+          : '$' + match.price;
       } else {
         console.warn(
           '[live-prices] no Supabase match for "' + cardName + '" - showing static price'

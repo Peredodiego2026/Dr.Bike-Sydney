@@ -338,10 +338,13 @@
             <div class="service-price">$199</div>
             <p class="service-desc">Complete overhaul and performance optimization.</p>
           </div>
-          <div class="service-card">
+          <!-- Repairs names a category, not a bookable service, so its floor is
+               computed from the cheapest priced row instead of being typed in.
+               It used to read "From $60" while the cheapest real job was $17. -->
+          <div class="service-card" data-price-from="cheapest">
             <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></div>
             <div class="service-name">Repairs</div>
-            <div class="service-price">From $60</div>
+            <div class="service-price">From $17</div>
             <p class="service-desc">Fast and reliable repair at your doorstep.</p>
           </div>
           <div class="service-card">
@@ -350,10 +353,13 @@
             <div class="service-price">$60</div>
             <p class="service-desc">Full system scan, firmware check and error code review.</p>
           </div>
-          <div class="service-card">
+          <!-- A floor, not a fixed price: an e-bike takes far longer to build
+               than a kid's bike. data-price-from keeps the number itself coming
+               from the services table. -->
+          <div class="service-card" data-price-from>
             <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-4"/><path d="M12 6l1 5.5-6.5 2 2-7.5"/><path d="M18.5 17.5L15 6"/><path d="M5.5 17.5L9 11l4.5-1"/></svg></div>
-            <div class="service-name">Bike Build &mdash; New Bike</div>
-            <div class="service-price">$75</div>
+            <div class="service-name">Bike Assembly</div>
+            <div class="service-price">From $80</div>
             <p class="service-desc">Full assembly of a new boxed bike.</p>
           </div>
         </div>
