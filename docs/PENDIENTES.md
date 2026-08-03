@@ -841,11 +841,13 @@ releer lo ya cerrado:
 **ABIERTOS, mecanicos, sin ninguna decision de por medio** — son los siguientes
 que deberia tomar una sesion nueva:
 
-- **12.16, lo que queda** — el PR #160 subio **10 de los 18** targets bajo 44px.
-  Siguen abiertos los otros 8, los **5 desbordes horizontales** a 390px (uno
-  llega a 754px de borde derecho) y las 11 tablas del admin sin contenedor de
-  scroll propio.
-- **12.18** `confirm()`/`alert()` nativos fuera del panel de la landing
+- **12.16, lo que queda** — la SPA esta cerrada (todo a 44px) y los 5 desbordes
+  eran un artefacto de medicion, no un bug: ver el bloque del punto 12.16.
+  Queda solo lo del admin: **11 tablas y listas sin contenedor de scroll**, que
+  no se pudo medir en local porque `admin.html` autentica contra `/api/auth`.
+- ~~**12.18** `confirm()`/`alert()` nativos fuera del panel de la landing~~
+  **CERRADO 2026-08-03 (PR #164).** Los cuatro son ahora `confirmDialog()` /
+  `mechConfirm()`. El chequeo de i18n aprendio a leerlos de paso.
 - **`track.html`** — la quinta superficie, nunca auditada. Es lo unico que falta
   para cerrar el punto **3.1**.
 
@@ -1226,12 +1228,29 @@ fuera de token (12.14).
 
 ### 12.16 Targets tactiles chicos y listas que pueden crecer sin scroll
 
-> **PARCIAL 2026-08-03 (PR #160, mergeado).** Diez targets subieron a 44px:
-> `.footer-link`, `.footer-social`, los contactos del footer, el boton de auth
+> **SPA CERRADA 2026-08-03.** El PR #160 subio diez targets
+> (`.footer-link`, `.footer-social`, los contactos del footer, el boton de auth
 > movil, los tres `.btn-learn-more`, y en mechanic el toggle de tema y
-> `#status-btn`. **Siguen abiertos** los otros 8 de los 18, los 5 desbordes
-> horizontales y las 11 tablas del admin sin scroll propio. El detalle de abajo
-> es la medicion original.
+> `#status-btn`). Los que quedaban se midieron de nuevo a 390px y resultaron
+> ser **cinco componentes, no ocho elementos sueltos**: `.header-back` (36px),
+> `.cat-chip` (32px x9), `.password-toggle` (26px), `.link-btn` (20.8px) y
+> `.tab-btn` (36.8px x2). Los cinco estan a 44px.
+>
+> **Los "5 desbordes horizontales" NO EXISTEN.** Son un artefacto de medicion.
+> `.screen.active` lleva `animation: slideInRight`, cuyo primer keyframe es
+> `translateX(100%)`. Si se mide antes de que la animacion termine - o en un
+> documento oculto, donde no corre nunca - la pantalla entera aparece corrida
+> exactamente un viewport a la derecha, y todo lo que hay dentro "desborda".
+> Eso explica el `754px` del texto de abajo: 390 de offset + 364 de posicion
+> real. Neutralizando la animacion, las seis pantallas alcanzables asientan en
+> `left: 0` con `scrollWidth` 390 contra un viewport de 390: **cero desbordes**.
+>
+> **Sigue abierto:** las 11 tablas del admin sin contenedor de scroll. No se
+> pudieron medir - `admin.html` autentica contra `/api/auth`, que no existe en
+> un servidor estatico local. Y `profile` / `my-bikes` de la SPA redirigen a
+> login sin sesion, asi que sus pantallas propias tampoco se midieron.
+>
+> El detalle de abajo es la medicion original del 01-ago.
 
 **SPA a 390px - VERIFICADO EN NAVEGADOR, medido con `getBoundingClientRect()`:**
 **18 elementos interactivos por debajo de 44px** de alto. Los peores:

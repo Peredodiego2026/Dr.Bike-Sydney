@@ -127,8 +127,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  /* 44, not 36: it is the only way back out of a booking flow on a phone.
+     Grown for real rather than with an invisible ::after - an overlay larger
+     than its button starts eating the taps meant for whatever sits beside it
+     (12.16). */
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
   background: var(--color-surface);
   color: var(--color-text);
@@ -1047,6 +1051,11 @@ body {
   padding: var(--space-1);
   display: flex;
   align-items: center;
+  /* Was 26px tall. It sits inside the field, so growing it costs no layout -
+     the icon just centres in a bigger box. */
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 .forgot-wrap {
   display: flex;
@@ -1069,8 +1078,16 @@ body {
   cursor: pointer;
   font: inherit;
   font-size: var(--font-size-sm);
-  padding: 0;
   text-decoration: underline;
+  /* 20.8px tall, and it is the switch between signing in and signing up.
+     inline-flex, not block: it lives inside a sentence ("Already have an
+     account? Sign in") and must not break the line. No negative margin to
+     hide the extra height either - that is how two targets end up overlapping. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-1);
+  vertical-align: middle;
 }
 
 .google-btn {
@@ -1110,7 +1127,7 @@ body {
   font-size: var(--font-size-sm);
   font-weight: 600;
   padding: var(--space-2) var(--space-3);
-  min-height: 36px;
+  min-height: 44px;
   transition:
     background var(--transition-fast),
     color var(--transition-fast);
