@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import crypto from 'crypto';
+import { geocodeAddress } from './_eta.js';
 import {
   guard,
   rateLimit,
@@ -641,6 +642,12 @@ async function handleCreateBooking(req, res) {
   // charged) bookings no mechanic could actually reach. The admin test
   // account keeps the van-1 fallback so test addresses don't have to match
   // a real suburb.
+  // Start the geocode now, not after the insert: it runs while Stripe is being
+  // verified below, so by the time step 5b needs it there is nothing to wait
+  // for. Deliberately not awaited here - a map service must never be able to
+  // delay taking a booking.
+  const geoPromise = geocodeAddress(address);
+
   let vanNumber = await matchVanZone(sb, address);
   if (!vanNumber && isAdmin) vanNumber = 1;
   if (!vanNumber) {
@@ -789,6 +796,30 @@ async function handleCreateBooking(req, res) {
       });
     }
     return res.status(500).json({ error: 'Could not create booking', detail: insErr.message });
+  }
+
+  // 5b. Store the address as coordinates, so the tracking page can draw an ETA
+  // without ever sending the address anywhere (PENDIENTES 13.1). The lookup was
+  // started back at step 3 and has been running while Stripe was verified, so
+  // this usually resolves immediately.
+  //
+  // Written by UPDATE rather than included in the INSERT above on purpose: if
+  // scripts/add-address-coordinates.sql has not been run yet, the columns do
+  // not exist. As an INSERT field that would fail the whole booking; as a
+  // separate UPDATE it costs the ETA and nothing else. Not fire-and-forget
+  // either - a serverless function is frozen once it responds, so an
+  // un-awaited promise here would simply never finish.
+  try {
+    const coords = await geoPromise;
+    if (coords) {
+      const { error: geoErr } = await sb
+        .from('bookings')
+        .update({ address_lat: coords.lat, address_lng: coords.lng })
+        .eq('id', booking.id);
+      if (geoErr) console.error('[create-booking] could not store coordinates:', geoErr.message);
+    }
+  } catch (e) {
+    console.error('[create-booking] geocode step failed:', e.message);
   }
 
   // 6. Discount/gift code (server-authoritative): atomic consume via RPC -
@@ -2325,13 +2356,25 @@ async function handlePublicTrack(req, res) {
   if (!tracking_token) return res.status(400).json({ error: 'tracking_token required' });
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-  const cols =
+  const baseCols =
     'id,status,scheduled_date,scheduled_time,service_name,service_price,address,van_number,mechanic_id,mechanic_notes,parts_used,next_service_date,tracking_token,client_rating,client_review,arrival_pin';
   const filter = `tracking_token=eq.${encodeURIComponent(tracking_token)}`;
+  const headers = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
 
-  const resp = await fetch(`${SUPABASE_URL}/rest/v1/bookings?select=${cols}&${filter}&limit=1`, {
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
-  });
+  // address_lat/address_lng feed the tracking page's ETA without the client's
+  // browser ever having to geocode the address itself (PENDIENTES 13.1). They
+  // are asked for separately-tolerantly because PostgREST 400s the WHOLE query
+  // on an unknown column: until scripts/add-address-coordinates.sql has been
+  // run, requesting them unconditionally would break tracking outright. One
+  // request in the normal case, two only while that migration is pending.
+  const get = (cols) =>
+    fetch(`${SUPABASE_URL}/rest/v1/bookings?select=${cols}&${filter}&limit=1`, { headers });
+
+  let resp = await get(baseCols + ',address_lat,address_lng');
+  if (!resp.ok) {
+    console.warn('[public-track] coordinate columns unavailable, falling back without ETA');
+    resp = await get(baseCols);
+  }
   if (!resp.ok) return res.status(500).json({ error: 'Database error' });
   const data = await resp.json();
   if (!data?.length) return res.status(404).json({ error: 'Booking not found' });
@@ -2423,12 +2466,17 @@ async function handlePublicTrack(req, res) {
     }
   }
 
-  return res.status(200).json({
-    ...booking,
-    mechanic_location,
-    mechanic_profile,
-    _dbg: { van: booking.van_number, mechId: booking.mechanic_id, active: isActive },
-  });
+  // _dbg used to ride along here: { van, mechId, active }. It was a debug aid
+  // shipped to production, re-sent on every 15-second poll, and it put the
+  // mechanic's internal UUID in a response that anyone holding a forwarded
+  // tracking link can read. Nothing consumed it (PENDIENTES 13.10).
+  //
+  // The rest of the row stays: track.html and the SPA's tracking screen
+  // between them read status, address, service_name, mechanic_id,
+  // tracking_token and arrival_pin. arrival_pin belongs here - it is the code
+  // the client reads out to the mechanic on arrival, so the client is exactly
+  // who is meant to have it.
+  return res.status(200).json({ ...booking, mechanic_location, mechanic_profile });
 }
 
 // Increment uses_count on a discount/gift code after it is actually used in a booking.

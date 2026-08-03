@@ -25,6 +25,28 @@ async function geocode(address, signal) {
   return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 }
 
+// Same lookup, on its own, for the one caller that wants coordinates rather
+// than a duration: handleCreateBooking stores them on the booking so the
+// tracking page never has to geocode from the client's browser
+// (docs/PENDIENTES.md 13.1). Kept here rather than copied into api/auth.js so
+// there stays exactly one Nominatim caller, with one User-Agent and one
+// countrycodes filter, as the note at the top of this file intends.
+//
+// Never throws: a map service must not be able to stop a booking.
+export async function geocodeAddress(address, { timeoutMs = 4000 } = {}) {
+  if (!address || String(address).trim().length < 4) return null;
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    return await geocode(String(address).trim(), ctl.signal);
+  } catch (e) {
+    console.warn('[geocode] could not resolve address:', e.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Returns whole minutes of driving time, or null if it could not be worked out.
 export async function drivingEtaMinutes({ fromLat, fromLng, address, timeoutMs = 5000 }) {
   const lat = Number(fromLat);

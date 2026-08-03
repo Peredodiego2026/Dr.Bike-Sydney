@@ -238,18 +238,22 @@ async function init(){
       }
     }, 300);
 
-    // Geocode the client's address once, so we can compute a real driving ETA
-    if(bkg.address) {
-      fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(bkg.address) + '&format=json&limit=1', {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' }
-      }).then(r => r.json()).then(data => {
-        if(data?.length) {
-          destLat = parseFloat(data[0].lat);
-          destLng = parseFloat(data[0].lon);
-          if(trackMap) destMarker = L.marker([destLat, destLng], {icon: L.divIcon({html:'🏠', className:'', iconSize:[22,22]})}).addTo(trackMap);
-          if(mechMarker) updateETA(mechMarker.getLatLng().lat, mechMarker.getLatLng().lng);
-        }
-      }).catch(() => {});
+    // The destination comes from the booking itself. This used to send the
+    // client's full street address to nominatim.openstreetmap.org from their
+    // phone, in a query string, on every load of this page - a third-party
+    // server, and a query string is what every server logs by default
+    // (PENDIENTES 13.1). api/auth.js now geocodes it once when the booking is
+    // created and stores the result, so nothing about where this person lives
+    // leaves their browser. The routing call below still happens, but it only
+    // ever carries two pairs of numbers.
+    //
+    // No coordinates - a booking made before that shipped - means no ETA. It
+    // must NEVER fall back to geocoding here: that fallback IS the leak.
+    if(Number.isFinite(bkg.address_lat) && Number.isFinite(bkg.address_lng)) {
+      destLat = bkg.address_lat;
+      destLng = bkg.address_lng;
+      if(trackMap) destMarker = L.marker([destLat, destLng], {icon: L.divIcon({html:'🏠', className:'', iconSize:[22,22]})}).addTo(trackMap);
+      if(mechMarker) updateETA(mechMarker.getLatLng().lat, mechMarker.getLatLng().lng);
     }
   }
 

@@ -1398,8 +1398,10 @@ cosmetico al final.
 
 ### Estado — 2026-08-03, mismo dia que la auditoria
 
-**CERRADOS: 6 de 10** (PR de `fix/track-findings`). Verificados en Chromium a
-390px contra la rama, no solo escritos:
+**CERRADOS: 8 de 10.** 13.2-13.4 y 13.6-13.8 en `fix/track-findings`; **13.1 y
+13.10 en `fix/address-privacy`**, que ademas necesita que Diego corra
+`scripts/add-address-coordinates.sql`. Verificados en Chromium a 390px contra
+la rama, no solo escritos:
 
 | # | Que era | Como se comprobo |
 |---|---|---|
@@ -1410,13 +1412,28 @@ cosmetico al final.
 | 13.7 | El poll no paraba nunca | Pollers registrados: enroute 1, pending 1, **completed 0, cancelled 0** |
 | 13.8 | El poll moria en silencio | 4 fallos seguidos cortan el intervalo y lo dicen en pantalla |
 
+**13.1 — CERRADO 2026-08-03, y ninguna de las dos opciones que se plantearon.**
+
+Diego decidio que el ETA se queda. Las dos salidas que se le habian ofrecido
+(proxy propio, o sacar el ETA) eran las dos malas. La tercera es mejor que las
+dos: **guardar las coordenadas cuando se crea la reserva.**
+
+El servidor ya conoce la direccion en ese momento, asi que la traduce una sola
+vez y la guarda en `bookings.address_lat/address_lng`. La pagina de seguimiento
+sale con los numeros puestos y no le pregunta a nadie donde queda nada.
+
+- El cliente ve el mismo ETA de siempre
+- La direccion escrita **deja de salir del navegador**
+- Al servicio de ruta solo le llegan dos pares de coordenadas
+- Sin coordenadas (reservas viejas) **no hay ETA, y no hay fallback**: volver a
+  geocodificar en el navegador *es* la fuga que esto elimino
+
+**Necesita que Diego corra `scripts/add-address-coordinates.sql`.** Hasta que lo
+haga: las reservas nuevas se crean normal y sin coordenadas, y el seguimiento
+funciona sin ETA. Nada se rompe, el codigo tolera que las columnas no existan.
+
 **ABIERTO, y necesita una decision de Diego:**
 
-- **13.1** — la direccion del cliente hacia Nominatim y OSRM. El arreglo no es
-  mecanico: o se proxyean las dos llamadas por un endpoint propio en `/api`
-  (mas codigo, mas costo, sigue saliendo el dato pero desde nuestro servidor y
-  bajo nuestro control), o se saca el ETA y el mapa se queda solo con la
-  posicion del mecanico. Es una decision de producto, no de codigo.
 - **13.5** — la tercera paleta. Es el punto **12.14**: hay que elegir que paleta
   gana antes de tocar un solo hex.
 
@@ -1424,8 +1441,21 @@ cosmetico al final.
 
 - **13.9** — el contraste al limite (4.83:1). Pasa AA; subirlo es cambiar
   `--mgray`, que es parte de 13.5.
-- **13.10** — lo que la auditoria no cubrio. Sigue sin cubrirse: **nadie miro
-  todavia que devuelve de verdad `/api/auth` con `role: 'public-track'`.**
+- **13.10 — REVISADO 2026-08-03. No habia fuga, pero si un objeto de debug.**
+  Se leyo `api/auth.js:handlePublicTrack` entero. Devolvia la fila completa de
+  la reserva mas `_dbg: { van, mechId, active }`, un ayudante de depuracion que
+  llego a produccion y viajaba en cada poll de 15 segundos con el UUID interno
+  del mecanico. **Eliminado.**
+
+  Lo demas se reviso y se queda, con motivo:
+  - `arrival_pin` es correcto que se devuelva: la SPA se lo muestra al cliente
+    (`js/app.js:2339`) y el mecanico se lo pide al llegar. El cliente es
+    justamente quien tiene que tenerlo.
+  - Las reseñas de otros clientes pasan por `shortClientName()`, que es lo que
+    se publica a proposito.
+  - `mechanic_id` y `tracking_token` **los usa la SPA** (`js/app.js:2270` y
+    `:3464`). La idea original de "devolver solo lo que usa la pagina" era mas
+    corta de lo debido: `track.html` no es el unico consumidor.
 
 ### 13.1 La direccion del cliente se le manda a dos servidores de terceros
 
