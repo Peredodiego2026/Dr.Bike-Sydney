@@ -1,6 +1,43 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-08-03) — read this first
+## Current state (2026-08-04) — read this first
+
+- **No open PRs.** `main` is `1234254`. Everything below shipped on 2026-08-03/04:
+  #163 docs, #164 (12.18 dialogs), #165 (12.16 touch targets), #166 (track.html audit = section
+  13, closes 3.1), #167 (13.2-13.4, 13.6-13.8), #168 (13.1 + 13.10), #169 (12.3).
+  Section 12 is **17 of 21**, section 13 is **8 of 10**.
+
+- **THE BLUE IS DECIDED (2026-08-03). The app keeps `--blue` `#2563eb`.** The logo and the app
+  icons keep their own `#0055de`. That split is deliberate now, not drift: do not "unify" them,
+  do not recolour the logo to the token or the token to the logo. This unblocks 12.14 / 13.5 /
+  13.9 - the winning palette is `css/variables.css` exactly as written, and what is left is
+  mechanical.
+
+- **Backups exist and did not before.** Private repo `Peredodiego2026/Dr.Bike-Sydney-backups`
+  runs a nightly Action (02:00 Sydney) that commits `schema.sql` / `data.sql` / `roles.sql`.
+  Supabase is on the free plan, which takes none. **The restore has never been tested** -
+  `docs/PENDIENTES.md` 1.2.
+
+- **`bookings.address_lat/address_lng` exist** (Diego ran `scripts/add-address-coordinates.sql`
+  on 2026-08-04, verified: two rows, `double precision`). Bookings created from now on geocode
+  server-side once, so `track.html` no longer sends the customer's address to Nominatim.
+  Bookings made before that have no coordinates and correctly show no ETA.
+
+- **`gh` IS installed and authenticated** as `Peredodiego2026`, scopes `repo` + `workflow`. It is
+  at `C:\Program Files\GitHub CLI\gh.exe` but **not on PATH** for tool shells - prepend it. An
+  earlier version of this block said it was not installed; that was wrong.
+
+- **ffmpeg and Pillow were installed on Diego's machine on 2026-08-04** to build Instagram story
+  assets (`C:\Users\Usuario\Desktop\DrBike-IG`). Neither is a project dependency.
+
+- **What is left needs Diego, not code:** 12.11 (the admin door - changes the auth flow, he wants
+  to watch), 12.16's last piece (11 admin tables with no scroll container - unmeasurable locally
+  because `admin.html` authenticates against `/api/auth`), 1.2's restore test, and a real
+  end-to-end booking with a card.
+
+- Older entries below.
+
+## Current state (2026-08-03)
 - **No open PRs.** #159 (`fix/unify-app-icon`), #160 (`fix/audit-batch-5`) and #161
   (`fix/phantom-prices`) are all merged and live. `main` is `edda6b9`. The only unmerged remote
   branches are 5 dependabot bumps. An earlier version of this block called #159 an OPEN PR: it
