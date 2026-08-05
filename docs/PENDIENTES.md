@@ -1625,3 +1625,68 @@ pero es el texto mas chico de la app en el limite del minimo.
   renderizaron.
 - **El mapa de Leaflet** no se pudo evaluar visualmente: el panel del navegador
   estaba cerrado y no compone frames.
+
+---
+
+## 14. Incidente 2026-08-05: se cobraba a quien no podia reservar
+
+**No salio de una auditoria. Salio de una clienta real que pago y no recibio
+nada**, y le escribio a Diego por WhatsApp porque fue lo unico que le quedo.
+
+**Que paso.** Thais Rocha Guimaraes pago $20 con Apple Pay a las 13:29 del
+05-ago (`pi_3U0vVzPPGSm5cT7J0SRAoVUW`, Stripe la marca como `Customer: Guest`).
+No hubo reserva, ni email, ni WhatsApp a Diego. A las 13:30 lo intento de nuevo
+y ese segundo pago quedo `Incomplete`. Diego lo devolvio el mismo dia.
+
+**La causa, VERIFICADA EN CODIGO Y EN NAVEGADOR.** Dos mitades del sistema se
+contradecian:
+
+| Donde | Que decia |
+|---|---|
+| `js/app.js:1404` | `// Allow guest checkout - no login required` y a pagar |
+| `js/app.js:1680` | `finalizeBooking()` tiraba error en su primera linea sin sesion |
+| `api/auth.js:568` | `create-booking` responde 401 `Sign in required` sin token |
+
+El corte real estaba en el **navegador**, no en el servidor: `finalizeBooking()`
+cortaba antes de mandar la peticion, asi que la reserva no llegaba a intentarse.
+
+**No era un fallo ocasional. Le pasaba al 100% de los visitantes sin cuenta.**
+
+**Desde cuando.** Los dos cambios entraron el **mismo dia, con 83 minutos de
+diferencia**, y nadie los cruzo:
+
+- `7812310`, 04-jul 13:03 — endurecimiento de seguridad: el servidor exige sesion
+- `345c573`, 04-jul 14:26 — el front habilita pagar sin cuenta
+
+**Un mes exacto en produccion.** Cuantos pagos huerfanos hubo en ese mes no se
+sabe: hay que cruzar los $20 de Stripe desde el 04-jul contra `bookings`. La
+barrida del punto **12.3** lo hace automaticamente de ahora en adelante, pero
+solo mira 48 horas hacia atras.
+
+### 14.1 Lo que se arreglo
+
+La sesion se comprueba **antes** de la tarjeta, no despues. Sin cuenta, el boton
+de la pantalla de resumen manda a crear cuenta en vez de a pagar, guarda a donde
+volver, y el borrador de la reserva sobrevive.
+
+Esto **no quita nada que funcionara**: ninguna reserva de invitado se completo
+jamas desde el 04-jul. Solo deja de cobrar por una puerta que no abre.
+
+Verificado en navegador contra la rama:
+
+- **Sin sesion:** el click va a `login`, **cero llamadas de red** - ni una a
+  Stripe. El toast sale traducido.
+- **Con sesion:** llega a `payment` como siempre.
+
+### 14.2 Lo que queda abierto
+
+- **El checkout de invitado de verdad** sigue sin existir. Es una feature, no un
+  bug: hay que enseñarle al servidor a guardar una reserva sin `user_id`, con
+  email y telefono, y decidir como esa persona sigue despues su reserva. Toca
+  RLS. **Decision de Diego** si lo quiere.
+- **Contar los huerfanos del mes** (04-jul a 05-ago) cruzando Stripe contra
+  `bookings`, y devolverle a cada uno.
+- El mensaje de `finalizeBooking()` era `throw new Error('Please sign in...')`
+  y **no estaba traducido**: el chequeo de i18n ignora los `throw new Error(...)`
+  a proposito, asi que una clienta con el telefono en español lo veia en ingles.
+  Ya esta en el diccionario, pero el hueco del chequeo sigue ahi.
