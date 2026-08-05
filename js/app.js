@@ -113,6 +113,25 @@ const CHECKOUT_DRAFT_KEY = 'dbs_checkout_draft';
 const BOOKING_DRAFT_KEY = 'drbike-booking-draft';
 const DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
+// Where to go back to after signing in. Set when the summary sends someone to
+// create an account, so they land back on their booking instead of on the home
+// screen wondering what happened to it. localStorage rather than session
+// storage for the same reason as the draft above: the Google round trip
+// reloads the whole page.
+const RETURN_TO_KEY = 'drbike-return-to';
+
+// Consumed once. If nothing was pending, signing in lands on home as before.
+function goAfterLogin() {
+  let dest = null;
+  try {
+    dest = localStorage.getItem(RETURN_TO_KEY);
+    localStorage.removeItem(RETURN_TO_KEY);
+  } catch {
+    /* private mode: fall through to home */
+  }
+  router.navigate(dest || 'home');
+}
+
 function saveBookingDraft(step) {
   try {
     const { service, date, time, location, bikeId } = window.appState;
@@ -1400,10 +1419,42 @@ async function renderServiceSummary() {
       const {
         data: { user },
       } = await sb.auth.getUser();
-      // Allow guest checkout - no login required for $20 call-out
-      // If logged in, associate booking with user; if not, create as guest
+
+      // THE SESSION IS CHECKED BEFORE THE CARD, NOT AFTER.
+      //
+      // This used to read "Allow guest checkout - no login required" and send
+      // anyone straight to the payment screen. But finalizeBooking() - the
+      // function that actually creates the booking - throws on its very first
+      // line without a session, and create-booking answers 401 without an
+      // access_token. So a visitor with no account was charged $20 and then
+      // told to sign in, with no booking, no email and no WhatsApp to Diego.
+      //
+      // It was not a rare failure: it happened to EVERY guest, every time,
+      // from 2026-07-04 (when the front opened guest checkout 83 minutes after
+      // the server was locked to signed-in users) until 2026-08-05, when a real
+      // customer paid, got nothing, and had to message Diego on WhatsApp.
+      //
+      // Requiring the account here takes away nothing that worked: no guest
+      // booking has ever succeeded. Real guest checkout is a feature, and it
+      // means teaching the server to store a booking with no user_id - not
+      // leaving the charge in front of a door that does not open.
+      if (!user) {
+        // The draft is already in localStorage, so the summary rebuilds itself
+        // after signing in - they do not lose what they picked.
+        try {
+          localStorage.setItem(RETURN_TO_KEY, 'service-summary');
+        } catch {
+          /* private mode: they come back to home and resume from the draft */
+        }
+        showToast('Please create an account or sign in to finish your booking', 'error');
+        btn.disabled = false;
+        btn.textContent = payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
+        router.navigate('login');
+        return;
+      }
+
       window.appState.bookingId = null;
-      window.appState.isGuest = !user;
+      window.appState.isGuest = false;
       router.navigate('payment');
     } catch (e) {
       errEl.textContent = translateValue(e.message || 'Please try again.');
@@ -3178,7 +3229,14 @@ async function renderLogin() {
         await signIn(email, password);
         if (window.gtag) gtag('event', 'login', { method: 'email' });
         showToast('Welcome back!', 'success');
+        _loginMode = 'signin';
+        // Back to the booking they were sending us to sign in for, if any.
+        goAfterLogin();
+        return;
       }
+      // Sign-up has no session until the email is verified, so there is
+      // nothing to go back TO yet - sending them to the summary would just
+      // bounce off the same check and land them back here.
       _loginMode = 'signin';
       router.navigate('home');
     } catch (err) {
@@ -4829,6 +4887,13 @@ sb.auth.onAuthStateChange(async (event, session) => {
     return;
   }
   if (event !== 'SIGNED_IN' || !session) return;
+
+  // Google takes the whole page and comes back at /, so the email form's own
+  // goAfterLogin() never runs for that route. The key is only ever set when
+  // the summary sent someone here to sign in, and it is consumed once, so
+  // this cannot hijack an ordinary sign-in.
+  if (localStorage.getItem(RETURN_TO_KEY)) goAfterLogin();
+
   const pendingRef = localStorage.getItem('dbs_pending_ref');
   if (!pendingRef) return;
   localStorage.removeItem('dbs_pending_ref');
