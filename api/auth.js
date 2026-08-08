@@ -565,19 +565,45 @@ async function handleCreateBooking(req, res) {
     client_lang,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-  if (!access_token) return res.status(401).json({ error: 'Sign in required' });
   if (!scheduled_date || !scheduled_time)
     return res.status(400).json({ error: 'Date and time required' });
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
-  // 1. Verify the user from their token
-  const {
-    data: { user },
-    error: uErr,
-  } = await sb.auth.getUser(access_token);
-  if (uErr || !user) return res.status(401).json({ error: 'Invalid session' });
-  const isAdmin = (user.email || '').toLowerCase() === ADMIN_TEST_EMAIL;
+  // 1. Who is booking.
+  //
+  // An account is no longer required. Being asked to register is the barrier,
+  // not being asked for an email - and until 2026-08-05 this endpoint answered
+  // 401 to anyone without one while the front let them pay first, which took
+  // $20 off a real customer and gave her nothing (docs/PENDIENTES.md 14).
+  //
+  // For a guest the PAYMENT is the credential. Step 4 below retrieves the
+  // PaymentIntent from Stripe and refuses to continue unless it really
+  // succeeded for the right amount, so a booking cannot be conjured without
+  // paying for it - and bookings_unique_payment_intent stops one payment being
+  // spent twice.
+  let user = null;
+  if (access_token) {
+    const { data, error: uErr } = await sb.auth.getUser(access_token);
+    if (uErr || !data?.user) return res.status(401).json({ error: 'Invalid session' });
+    user = data.user;
+  }
+
+  const guestEmail = String(req.body.client_email || '').trim();
+  const isGuest = !user;
+  if (isGuest) {
+    // We do not need an account, but we do need a way to reach them: the
+    // receipt, the confirmation and the tracking link all go to this address.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail))
+      return res.status(400).json({ error: 'An email is required so we can confirm your booking' });
+    // Membership pricing is looked up by account, so a guest can never reach a
+    // waived $0 call-out - and with no charge there would be nothing
+    // authenticating the request at all.
+    if (!payment_intent_id && !checkout_session_id)
+      return res.status(402).json({ error: 'Payment required' });
+  }
+
+  const isAdmin = !isGuest && (user.email || '').toLowerCase() === ADMIN_TEST_EMAIL;
 
   // 2. Authoritative service price from the services table
   let svc = null;
@@ -621,7 +647,8 @@ async function handleCreateBooking(req, res) {
   // calloutFee of $0 means there's no Stripe charge to verify at all.
   let membershipPlan = null;
   let isIncludedVisit = false;
-  if (!isAdmin) {
+  // Guests have no membership to price against - a membership needs an account.
+  if (!isAdmin && !isGuest) {
     const priced = await applyMembershipPricing(
       sb,
       user.id,
@@ -738,15 +765,18 @@ async function handleCreateBooking(req, res) {
   }
 
   // 5. Insert with server-set fields only
-  const meta = user.user_metadata || {};
+  const meta = (user && user.user_metadata) || {};
+  // A guest booking carries no account, only a way to reach the person.
+  // bookings.user_id became nullable in scripts/add-guest-bookings.sql.
   const { data: booking, error: insErr } = await sb
     .from('bookings')
     .insert([
       {
-        user_id: user.id,
-        client_id: user.id,
-        client_name: meta.full_name || meta.name || '',
-        client_email: user.email || '',
+        user_id: user ? user.id : null,
+        client_id: user ? user.id : null,
+        client_name: meta.full_name || meta.name || String(req.body.client_name || '').trim(),
+        client_email: user ? user.email || '' : guestEmail,
+        client_phone: String(req.body.client_phone || '').trim() || null,
         service_name: svc.name,
         service_price: servicePrice,
         callout_fee: calloutFee,
@@ -757,7 +787,10 @@ async function handleCreateBooking(req, res) {
         van_number: vanNumber,
         preferred_mechanic_id: preferredMechanicId,
         stripe_payment_intent_id: verifiedPI,
-        bike_id: bike_id || null,
+        // A bike belongs to an account (bikes.client_id), so a guest has none -
+        // and must not be able to attach their booking to somebody else's by
+        // passing an id.
+        bike_id: (!isGuest && bike_id) || null,
         utm_source: utm_source || null,
         utm_medium: utm_medium || null,
         utm_campaign: utm_campaign || null,

@@ -306,6 +306,15 @@ function stringsFromJs(file) {
     const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
     if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
   }
+  // translateValue('...') - the SPA's own translate call, and the plainest
+  // possible statement that a string is meant to be translated. The check was
+  // not reading it: the guest contact sheet added ten customer-facing strings
+  // and this file stayed green. Same blind spot as tVal() above, one surface
+  // over.
+  for (const m of src.matchAll(/\btranslateValue\(\s*(['"])((?:[^'"\\]|\\.){3,300}?)\1/g)) {
+    const t = clean(m[2].replace(/\\'/g, "'").replace(/\\"/g, '"'));
+    if (isCandidate(t) && !/[{}]/.test(t) && !looksLikeCode(t)) found.add(t);
+  }
   return found;
 }
 

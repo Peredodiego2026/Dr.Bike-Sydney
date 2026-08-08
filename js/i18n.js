@@ -1150,6 +1150,17 @@ const dict = {
       'Ese servicio ya no está disponible. Por favor, elegí uno nuevo.',
     'Tracking link copied!': '¡Enlace de rastreo copiado!',
     'Welcome back!': '¡Bienvenido de nuevo!',
+    // Guest checkout: booking without an account (docs/PENDIENTES.md 14).
+    'Where do we send your booking?': '¿A dónde te mandamos la reserva?',
+    'No account needed. We only use this to confirm your booking and let the mechanic reach you.':
+      'No hace falta cuenta. Solo lo usamos para confirmarte la reserva y que el mecánico te pueda contactar.',
+    Mobile: 'Celular',
+    'I already have an account': 'Ya tengo cuenta',
+    'Please enter your name': 'Escribí tu nombre',
+    'Please enter a valid email': 'Escribí un email válido',
+    'Please enter a valid mobile number': 'Escribí un celular válido',
+    'Jane Smith': 'Juana Pérez',
+    'you@email.com': 'tu@email.com',
     // Shown at the summary when someone without an account tries to pay. It
     // used to let them pay first and only then ask, which took $20 off a real
     // customer on 2026-08-05 - and the message she got was hardcoded English.
@@ -2385,6 +2396,16 @@ const dict = {
       '该服务已不可用，请选择新的服务。',
     'Tracking link copied!': '追踪链接已复制！',
     'Welcome back!': '欢迎回来！',
+    'Where do we send your booking?': '预订确认发送到哪里？',
+    'No account needed. We only use this to confirm your booking and let the mechanic reach you.':
+      '无需账户。我们仅用它来确认您的预订，并让技师能联系到您。',
+    Mobile: '手机号',
+    'I already have an account': '我已有账户',
+    'Please enter your name': '请输入您的姓名',
+    'Please enter a valid email': '请输入有效的邮箱',
+    'Please enter a valid mobile number': '请输入有效的手机号',
+    'Jane Smith': '张三',
+    'you@email.com': 'you@email.com',
     'Please create an account or sign in to finish your booking':
       '请创建账户或登录以完成预订',
     'Please sign in to complete your booking.': '请登录以完成您的预订。',
