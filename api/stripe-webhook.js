@@ -5,11 +5,14 @@
 //   SUPABASE_URL             → https://tgpipbloisahufaywhqb.supabase.co
 //
 // Webhook URL to register: https://drbikesydney.com.au/api/stripe-webhook
-// Events to enable: checkout.session.completed, customer.subscription.created,
-//   customer.subscription.updated, customer.subscription.deleted,
-//   customer.subscription.trial_will_end, customer.subscription.paused,
-//   customer.subscription.resumed, invoice.paid, invoice.payment_failed,
-//   invoice.payment_action_required
+// Events to enable: payment_intent.succeeded, checkout.session.completed,
+//   customer.subscription.created, customer.subscription.updated,
+//   customer.subscription.deleted, customer.subscription.trial_will_end,
+//   customer.subscription.paused, customer.subscription.resumed, invoice.paid,
+//   invoice.payment_failed, invoice.payment_action_required
+//
+// payment_intent.succeeded is the one that makes a booking survive its own
+// browser. Diego registered it on 2026-08-03; it did nothing until now.
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
@@ -139,6 +142,196 @@ async function handleGiftCardPurchase(session) {
 }
 
 // ---------------------------------------------------------------------------
+// A paid call-out that has no booking behind it
+// ---------------------------------------------------------------------------
+// Until now the whole chain hung off the customer's browser reaching the end:
+// pay, create the booking, fire the notifications, all from their phone. Close
+// the app and nothing happened and nobody found out. On 2026-08-05 that cost a
+// real customer her booking and Diego his first sale (docs/PENDIENTES.md 14).
+//
+// Stripe telling us the money arrived is a fact that does not depend on anyone
+// holding a phone. So the booking gets built from here instead.
+//
+// The browser still does it first, because a client staring at a spinner wants
+// an answer now. This is what happens when the browser does not come back.
+// bookings_unique_payment_intent decides who wins if both try at once.
+
+const ADMIN_PHONE = '0433963250';
+const SELF = 'https://drbikesydney.com.au';
+
+// The price is looked up here, never read from the payment. Metadata is set by
+// the browser, and anything a browser sends can be edited by whoever holds it.
+// Every lookup below THROWS on a database error rather than returning null.
+// The outer handler answers 500 to a throw, and Stripe retries a 500 - so a
+// database that blinked gets another go. Swallowing it would mark the event
+// processed forever and write a booking with a $0 service price.
+async function priceForService({ id, name }) {
+  let q = sb.from('services').select('name,price').limit(1);
+  q = id ? q.eq('id', id) : q.ilike('name', name || '');
+  const { data, error } = await q;
+  if (error) throw new Error(`services lookup failed: ${error.message}`);
+  return data?.[0] || null;
+}
+
+// Same rule the booking flow uses: an address outside every configured zone is
+// not serviceable. Kept deliberately simple and identical in spirit to
+// matchVanZone() in api/auth.js.
+async function vanForAddress(address) {
+  const { data, error } = await sb
+    .from('van_zones')
+    .select('van_number,suburb')
+    .neq('van_number', 0);
+  if (error) throw new Error(`van_zones lookup failed: ${error.message}`);
+  const addr = String(address || '').toLowerCase();
+  const hit = (data || []).find((z) => z.suburb && addr.includes(String(z.suburb).toLowerCase()));
+  return hit && Number(hit.van_number) ? Number(hit.van_number) : null;
+}
+
+// A guest booking has no user_id. But if this email already belongs to an
+// account, the booking belongs in that account - otherwise a signed-in client
+// whose browser died would find their own booking missing from their history.
+async function accountForEmail(email) {
+  if (!email) return null;
+  const { data, error } = await sb.from('profiles').select('id').ilike('email', email).limit(1);
+  if (error) throw new Error(`profiles lookup failed: ${error.message}`);
+  return data?.[0]?.id || null;
+}
+
+// Best effort, and loudly. A booking that exists but whose notifications failed
+// is recoverable; silence is what made the 05-aug incident invisible for two
+// days.
+async function notifyNewBooking(booking, lang) {
+  const post = (path, body) =>
+    fetch(`${SELF}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then(
+      (r) => {
+        if (!r.ok) console.error(`[webhook-notify] ${path} -> HTTP ${r.status}`);
+        return r.ok;
+      },
+      (e) => {
+        console.error(`[webhook-notify] ${path} threw:`, e.message);
+        return false;
+      }
+    );
+
+  const total = Number(booking.service_price || 0) + Number(booking.callout_fee || 0);
+  const common = {
+    service: booking.service_name,
+    date: booking.scheduled_date,
+    time: booking.scheduled_time,
+    address: booking.address,
+    price: total,
+  };
+
+  const results = await Promise.allSettled([
+    post('/api/send-message?channel=whatsapp', {
+      to: ADMIN_PHONE,
+      template: 'new_booking',
+      data: { ...common, clientName: booking.client_name, trackUrl: `${SELF}/index.html#tracking` },
+    }),
+    post('/api/send-message', {
+      to: ADMIN_PHONE,
+      name: booking.client_name,
+      ...common,
+      type: 'new_booking',
+      bookingId: booking.id,
+    }),
+    booking.client_email
+      ? post('/api/send-email', {
+          to: booking.client_email,
+          name: booking.client_name,
+          ...common,
+          bookingId: booking.id,
+          type: 'confirmation',
+          lang: lang || 'en',
+        })
+      : Promise.resolve(false),
+  ]);
+  return results.map((r) => (r.status === 'fulfilled' ? r.value : false));
+}
+
+// Should this payment become a booking at all? Exported and pure so the
+// decision can be tested without a database.
+//
+// Both mistakes are expensive. Refusing a real call-out recreates the bug this
+// exists to fix. Accepting a subscription renewal or a gift card would invent a
+// booking nobody asked for and send a mechanic to an address that came from
+// nowhere.
+export function shouldCreateBookingFor(pi) {
+  if (!pi || typeof pi !== 'object') return { ok: false, reason: 'not a payment' };
+  if (pi.invoice) return { ok: false, reason: 'subscription invoice' };
+  if (pi.metadata?.giftCard === 'true') return { ok: false, reason: 'gift card' };
+  const md = pi.metadata || {};
+  if (!md.bk_service_name && !md.bk_service_id)
+    return { ok: false, reason: 'no booking metadata' };
+  // Metadata without a slot cannot become a row: scheduled_date and
+  // scheduled_time are what the mechanic's day is built from.
+  if (!md.bk_date || !md.bk_time) return { ok: false, reason: 'incomplete metadata' };
+  if (!(pi.amount_received > 0)) return { ok: false, reason: 'nothing was captured' };
+  return { ok: true };
+}
+
+async function handlePaymentIntentSucceeded(pi) {
+  const verdict = shouldCreateBookingFor(pi);
+  if (!verdict.ok) return { skipped: verdict.reason };
+  const md = pi.metadata;
+
+  // Did the browser already do it? Cheap check first; the unique index is the
+  // one that actually decides, below.
+  const { data: existing, error: findErr } = await sb
+    .from('bookings')
+    .select('id')
+    .eq('stripe_payment_intent_id', pi.id)
+    .limit(1);
+  if (findErr) throw new Error(`bookings lookup failed: ${findErr.message}`);
+  if (existing?.length) return { alreadyBooked: existing[0].id };
+
+  const svc = await priceForService({ id: md.bk_service_id, name: md.bk_service_name });
+  const vanNumber = await vanForAddress(md.bk_address);
+  const email = md.email || pi.receipt_email || null;
+  const accountId = await accountForEmail(email);
+
+  const row = {
+    user_id: accountId,
+    client_id: accountId,
+    client_name: md.bk_name || '',
+    client_email: email,
+    client_phone: md.bk_phone || null,
+    service_name: svc?.name || md.bk_service_name || 'Service',
+    service_price: Number(svc?.price) || 0,
+    callout_fee: pi.amount_received / 100,
+    scheduled_date: md.bk_date || null,
+    scheduled_time: md.bk_time || null,
+    address: md.bk_address || 'Home',
+    status: 'pending',
+    van_number: vanNumber,
+    stripe_payment_intent_id: pi.id,
+    bike_id: md.bk_bike_id || null,
+    client_lang: ['en', 'es', 'zh'].includes(md.bk_lang) ? md.bk_lang : 'en',
+  };
+
+  const { data: created, error } = await sb.from('bookings').insert([row]).select().single();
+  if (error) {
+    // 23505 on bookings_unique_payment_intent: the browser got there between
+    // our check and our insert. That is the index doing its job, not a fault.
+    if (error.code === '23505') return { alreadyBooked: 'race' };
+    // Anything else is thrown so Stripe retries. A paid call-out with no
+    // booking is the exact failure this whole thing exists to end - it must
+    // never be given up on quietly.
+    throw new Error(`booking insert failed for ${pi.id}: ${error.message}`);
+  }
+
+  // Only the writer notifies, so a booking the browser made does not get a
+  // second WhatsApp from here.
+  const sent = await notifyNewBooking(created, row.client_lang);
+  console.log('[webhook] booking', created.id, 'created from payment', pi.id, 'notified:', sent);
+  return { created: created.id, notified: sent };
+}
+
+// ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
 
@@ -176,6 +369,12 @@ async function handler(req, res) {
 
   try {
     switch (event.type) {
+      case 'payment_intent.succeeded': {
+        const out = await handlePaymentIntentSucceeded(event.data.object);
+        console.log('[Stripe webhook] payment_intent.succeeded ->', JSON.stringify(out));
+        break;
+      }
+
       case 'checkout.session.completed': {
         const session = event.data.object;
 

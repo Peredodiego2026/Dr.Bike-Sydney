@@ -1819,8 +1819,8 @@ acepta, y recien ahi le aparece al mecanico.
 |---|---|---|
 | 1 | `user_id` nullable + indice unico por pago (`scripts/add-guest-bookings.sql`) | en `feat/payment-drives-the-chain` |
 | 2 | Los datos de la reserva viajan dentro del PaymentIntent | en `feat/payment-drives-the-chain` |
-| 3 | El webhook crea la reserva y dispara la cadena | pendiente |
-| 4 | Paso de contacto para invitados en el front | pendiente |
+| 3 | El webhook crea la reserva y dispara la cadena | **en `feat/webhook-creates-booking`** |
+| 4 | Paso de contacto para invitados en el front | pendiente - es lo unico que falta |
 
 Los pasos 1-3 arreglan los huerfanos **tambien para gente con cuenta**. El paso 4
 es lo que suma al invitado.
@@ -1833,3 +1833,22 @@ definicion; el arbitro tiene que ser la base. El segundo en llegar choca contra
 
 **El precio NO viaja en la metadata.** El servidor lo busca el mismo. Todo lo que
 llega desde un navegador lo puede editar quien tiene el navegador en la mano.
+
+**Paso 3, detalle de como quedo.** `payment_intent.succeeded` en
+`api/stripe-webhook.js`:
+
+- **Filtra primero** (`shouldCreateBookingFor`, exportada y con 8 tests): una
+  factura de suscripcion, una gift card, un cobro hecho a mano desde el panel de
+  Stripe o una metadata sin fecha/hora **no** generan reserva. Aceptar de mas
+  mandaria un mecanico a una direccion que no existe.
+- **El precio se busca en `services`**, no se lee del pago.
+- **Si el email ya tiene cuenta, la reserva se le adjunta.** Si no, va sin
+  `user_id`: es una reserva de invitado y punto.
+- **Solo notifica quien escribio la fila.** Si el navegador ya la creo, el
+  webhook se retira sin mandar un segundo WhatsApp.
+- **Todo error de base se lanza, no se devuelve.** El handler contesta 500 y
+  Stripe reintenta. Devolverlo marcaria el evento como procesado para siempre y
+  dejaria el cobro sin reserva - justo lo que esto viene a terminar.
+
+Diego ya habia dado de alta `payment_intent.succeeded` en Stripe el 03-ago. No
+hacia nada hasta ahora.
