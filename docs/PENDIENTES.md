@@ -1690,3 +1690,99 @@ Verificado en navegador contra la rama:
   y **no estaba traducido**: el chequeo de i18n ignora los `throw new Error(...)`
   a proposito, asi que una clienta con el telefono en español lo veia en ingles.
   Ya esta en el diccionario, pero el hueco del chequeo sigue ahi.
+
+### 14.3 Ella no recibio NINGUN email, y no fue por el mismo motivo
+
+Diego pregunto por que la clienta no recibio ni un correo. La respuesta es que
+habia **cuatro** canales para hablarle y **los cuatro** asumian que tenia
+cuenta, mientras la puerta de entrada dejaba pasar sin una.
+
+| Canal | Por que no llego |
+|---|---|
+| Recibo de Stripe | `receipt_email` salia de `js/app.js:1844`, que sin sesion mandaba `guest@drbikesydney.com.au` — **un buzon del propio dominio de Diego**. El recibo le llego a el. |
+| Confirmacion de reserva (Resend) | Se manda **despues** de que `create-booking` responde OK. Como la reserva nunca se creo, nunca se mando. |
+| **Aviso de la devolucion** | Stripe lo manda al mismo `receipt_email`. **Diego le devolvio el dinero y ella no se entero.** |
+| Recordatorio de checkout abandonado | `js/app.js:1607` solo registra en `checkout_attempts` `if (currentUser)`. Sin cuenta no hay fila, asi que el cron no tenia nada que encontrar. |
+
+**VERIFICADO EN CODIGO.** La cadena del recibo es
+`js/app.js:1844` -> `js/stripe.js:106` -> `api/create-payment-session.js:167`
+(`receipt_email: email`).
+
+**Lo que se arreglo.** El fallback murio: si no hay email de sesion, se corta con
+un error en vez de inventar una direccion. Y el servidor ahora rechaza como
+`receipt_email` cualquier cosa que no parezca un email **o que sea de nuestro
+propio dominio** — el dominio entero, no solo `guest@`, para que la proxima
+direccion inventada no pueda repetirlo. `isValidReceiptEmail()` esta exportada
+y tiene 5 tests.
+
+**Efecto secundario a tener en cuenta:** con esto, una reserva hecha con una
+direccion `@drbikesydney.com.au` se rechaza. Se comprobo que no existe ninguna
+cuenta de cliente asi; Diego usa su Gmail.
+
+**Lo que NO se arreglo, y sigue abierto:**
+
+- El recordatorio de checkout abandonado sigue siendo solo para gente con
+  cuenta. Hoy no importa, porque sin cuenta ya no se llega a pagar. Volvera a
+  importar el dia que exista el checkout de invitado de verdad (14.2).
+- **Nadie le aviso a la clienta que le devolvieron el dinero.** Eso lo tiene
+  que hacer Diego a mano, por WhatsApp.
+
+### 14.4 Por que Diego no vio NADA: una causa, cinco sintomas
+
+Diego pregunto por que no aparecio en el admin, ni en la app del mecanico, ni le
+llego el WhatsApp, ni el mail, ni figura en la analitica. **Es todo lo mismo.**
+
+Las tres notificaciones viven en un `Promise.allSettled` que arranca en
+`js/app.js:1811`, **despues** de `if (!resp.ok) throw` (`js/app.js:1770`). Sin
+fila de reserva no se ejecuta ninguna:
+
+| Lo que Diego no vio | Por que |
+|---|---|
+| La reserva en el admin | No hay fila en `bookings` |
+| El trabajo en la app del mecanico | Lee la misma tabla |
+| WhatsApp a Diego | `send-message?channel=whatsapp`, despues del throw |
+| SMS al mecanico | `send-message`, despues del throw |
+| Mail a la clienta | `send-email`, despues del throw |
+| **La analitica del admin** | El funnel lee `checkout_attempts`, y `js/app.js:1607` solo escribe `if (currentUser)`. **Un invitado tampoco existe en el embudo.** La otra mitad viene de PostHog, que si ve visitantes anonimos - pero el evento `booking_completed` tampoco se disparo. |
+
+**VERIFICADO EN CODIGO.** El endpoint del panel es
+`/api/analytics` -> rewrite -> `/api/auth?role=admin-analytics`, y lee
+`readCheckoutAttempts()` + `readPostHog()`.
+
+### 14.5 La base YA soporta reservas sin cuenta, salvo por una columna
+
+Leido del **schema.sql del backup nocturno** - primera vez que ese repo sirve
+para algo concreto:
+
+| Columna de `bookings` | Estado |
+|---|---|
+| `client_name`, `client_email`, `client_phone` | **ya existen, nullable** |
+| `client_id` | nullable, FK -> `profiles(id)` |
+| **`user_id`** | **NOT NULL**, FK -> `auth.users(id)` |
+
+**`user_id NOT NULL` es el unico bloqueo real.** Todo lo demas ya esta.
+
+Las policies de RLS de `bookings` son `SELECT`/`UPDATE` sobre
+`auth.uid() = client_id` mas la rama de admin. Una reserva de invitado con
+`client_id` NULL queda invisible para cualquier usuario logueado, que es
+correcto: el invitado la ve por su link de seguimiento, que pasa por el
+servidor con la service key. No hay policy de `INSERT` porque las reservas se
+insertan server-side, que tambien salta RLS. **Nada de eso hay que tocarlo.**
+
+### 14.6 Reconstruir la reserva de Thais para el historial fiscal
+
+Diego la necesita en el Excel: es la primera clienta real.
+
+**No se puede insertar hoy**: `user_id` es NOT NULL y ella no tiene cuenta.
+Atribuirsela al usuario de Diego seria falsear el registro. O sale primero el
+`DROP NOT NULL` de 14.5, o no sale.
+
+**Y ojo con el importe: se le devolvio.** A efectos fiscales el neto es $0 -
+$0.64 de comision de Stripe, que no se devuelve. Cargarla como una venta
+completada inflaria la facturacion del ano. El registro honesto es una reserva
+con estado `cancelled` y el pago marcado como reembolsado.
+
+Datos para reconstruirla, de Stripe:
+`pi_3U0vVzPPGSm5cT7J0SRAoVUW`, 05-ago 13:29, $20.00 AUD, Apple Pay / Visa
+4481, `thaixguimaraes@gmail.com`, `Customer: Guest`. **Que servicio eligio no
+esta en ningun lado** - no llego a grabarse. Hay que preguntarselo a ella.
