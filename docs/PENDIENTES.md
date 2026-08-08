@@ -1896,3 +1896,61 @@ cerrado, asi que nada de esto es una afirmacion sobre pixeles):
 | Metadata del pago | Servicio, fecha, hora, direccion, contacto e idioma |
 | "Ya tengo cuenta" | Va a `login` y recuerda volver al resumen |
 | Con sesion iniciada | Va directo a `payment`, la hoja no aparece |
+
+---
+
+## 15. Recuperar la contraseña era imposible desde una computadora (2026-08-06)
+
+Diego pregunto por que no aparece el boton de "olvide mi contraseña" en la
+landing. Aparecio eso y algo peor detras.
+
+### 15.1 Dos fallas encadenadas, las dos CERRADAS
+
+**Primera: el boton no existia.** `landing.html` tenia **cero** apariciones de
+`forgot` / `reset-password`. Un cliente que olvidaba su clave en la computadora
+no tenia por donde empezar. La SPA movil si lo tenia (`js/app.js:3224`).
+
+**Segunda, y peor: aunque lo empezara desde el celular, el link llegaba sin
+credencial.** El link de recuperacion apunta a
+`https://drbikesydney.com.au/index.html` (`api/auth.js:1855`) y Supabase manda
+el token en el **`#hash`**. En escritorio, `index.html` hacia
+`window.location.replace('/landing.html')` - y `replace()` **no arrastra el
+hash**. El cliente aterrizaba en la pagina de marketing sin token y sin
+explicacion.
+
+O sea: recuperar la contraseña funcionaba **solo en celular**. En computadora
+era imposible por los dos extremos.
+
+**Arreglo.** `index.html` no redirige cuando detecta un token de recuperacion en
+el hash - la SPA ya sabe terminar el flujo (`PASSWORD_RECOVERY` en
+`js/app.js`). Y la landing tiene su boton, contra el mismo endpoint que usa la
+SPA, en los 3 idiomas.
+
+**VERIFICADO EN NAVEGADOR** contra la rama (sin captura: el panel estaba
+cerrado):
+
+| Caso | Resultado |
+|---|---|
+| Boton en la landing | Aparece, 44px, "¿Olvidaste tu contraseña?" |
+| Sin email | Corta con el mensaje correcto, en español |
+| Con email | Manda `{role:'request-password-reset', email}` y muestra la confirmacion |
+| En "Crear cuenta" | Oculto, no hay nada que recuperar |
+| Link de recuperacion en escritorio | **Se queda en la SPA y el token sobrevive** |
+| Visita normal de escritorio | **Sigue yendo a la landing** - sin regresion |
+
+### 15.2 Lo que Diego pidio y NO se hizo aca
+
+- **"Olvide mi email".** No existe en ninguna superficie, y no es lo mismo que
+  olvidar la contraseña: para recuperar un email hace falta otro identificador,
+  normalmente el telefono. Hoy lo mas parecido es la busqueda por email de
+  `track.html`, que resuelve "perdi mi link", no "no se con que email me
+  registre". **Es una decision de producto, no un bug.**
+- **Revisar que la factura en PDF llegue.** Revisado, no tocado: `send-invoice.js`
+  arma un PDF real con `pdfkit` y lo adjunta. Lo dispara el mecanico al
+  completar el trabajo (`js/mechanic.js:2113`), y solo si la reserva tiene
+  `client_email` - que las reservas de invitado ahora si tienen (seccion 14).
+  Si el PDF falla, el mail **igual sale** sin adjunto y solo queda un
+  `console.warn`: nadie se entera. Eso ultimo si es un hallazgo, sin arreglar.
+- **"Un mail bonito, sin demoras".** Sin especificar todavia. El camino de envio
+  esta bien elegido: **no** usa el mailer de Supabase (que nunca se configuro y
+  reporta exito aunque no entregue), sino Resend, igual que el resto.
