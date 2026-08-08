@@ -1900,12 +1900,12 @@ async function renderPayment() {
     // booking), and not even the refund notice, because that goes to the same
     // address. Four ways to reach her, all silent.
     //
-    // Never invent an address for somebody. Since the summary now requires an
-    // account before the payment screen, there is always a real one; if that
-    // ever stops being true, this must fail loudly instead of quietly mailing
-    // the wrong person.
-    const email = payingUser?.email;
-    if (!email) throw new Error('Please sign in to complete your booking.');
+    // Never invent an address for somebody. The rule is about the ADDRESS, not
+    // about being signed in: when guest checkout lands (PENDIENTES 14.2) this
+    // reads the address the guest gave at the contact step instead, and the
+    // rule still holds unchanged - no address, no charge.
+    const email = payingUser?.email || window.appState?.guestEmail || null;
+    if (!email) throw new Error('We need an email to send your receipt.');
 
     _paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId);
     return _paidIntent;

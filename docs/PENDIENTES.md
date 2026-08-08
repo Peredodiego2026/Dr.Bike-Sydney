@@ -1726,3 +1726,63 @@ cuenta de cliente asi; Diego usa su Gmail.
   importar el dia que exista el checkout de invitado de verdad (14.2).
 - **Nadie le aviso a la clienta que le devolvieron el dinero.** Eso lo tiene
   que hacer Diego a mano, por WhatsApp.
+
+### 14.4 Por que Diego no vio NADA: una causa, cinco sintomas
+
+Diego pregunto por que no aparecio en el admin, ni en la app del mecanico, ni le
+llego el WhatsApp, ni el mail, ni figura en la analitica. **Es todo lo mismo.**
+
+Las tres notificaciones viven en un `Promise.allSettled` que arranca en
+`js/app.js:1811`, **despues** de `if (!resp.ok) throw` (`js/app.js:1770`). Sin
+fila de reserva no se ejecuta ninguna:
+
+| Lo que Diego no vio | Por que |
+|---|---|
+| La reserva en el admin | No hay fila en `bookings` |
+| El trabajo en la app del mecanico | Lee la misma tabla |
+| WhatsApp a Diego | `send-message?channel=whatsapp`, despues del throw |
+| SMS al mecanico | `send-message`, despues del throw |
+| Mail a la clienta | `send-email`, despues del throw |
+| **La analitica del admin** | El funnel lee `checkout_attempts`, y `js/app.js:1607` solo escribe `if (currentUser)`. **Un invitado tampoco existe en el embudo.** La otra mitad viene de PostHog, que si ve visitantes anonimos - pero el evento `booking_completed` tampoco se disparo. |
+
+**VERIFICADO EN CODIGO.** El endpoint del panel es
+`/api/analytics` -> rewrite -> `/api/auth?role=admin-analytics`, y lee
+`readCheckoutAttempts()` + `readPostHog()`.
+
+### 14.5 La base YA soporta reservas sin cuenta, salvo por una columna
+
+Leido del **schema.sql del backup nocturno** - primera vez que ese repo sirve
+para algo concreto:
+
+| Columna de `bookings` | Estado |
+|---|---|
+| `client_name`, `client_email`, `client_phone` | **ya existen, nullable** |
+| `client_id` | nullable, FK -> `profiles(id)` |
+| **`user_id`** | **NOT NULL**, FK -> `auth.users(id)` |
+
+**`user_id NOT NULL` es el unico bloqueo real.** Todo lo demas ya esta.
+
+Las policies de RLS de `bookings` son `SELECT`/`UPDATE` sobre
+`auth.uid() = client_id` mas la rama de admin. Una reserva de invitado con
+`client_id` NULL queda invisible para cualquier usuario logueado, que es
+correcto: el invitado la ve por su link de seguimiento, que pasa por el
+servidor con la service key. No hay policy de `INSERT` porque las reservas se
+insertan server-side, que tambien salta RLS. **Nada de eso hay que tocarlo.**
+
+### 14.6 Reconstruir la reserva de Thais para el historial fiscal
+
+Diego la necesita en el Excel: es la primera clienta real.
+
+**No se puede insertar hoy**: `user_id` es NOT NULL y ella no tiene cuenta.
+Atribuirsela al usuario de Diego seria falsear el registro. O sale primero el
+`DROP NOT NULL` de 14.5, o no sale.
+
+**Y ojo con el importe: se le devolvio.** A efectos fiscales el neto es $0 -
+$0.64 de comision de Stripe, que no se devuelve. Cargarla como una venta
+completada inflaria la facturacion del ano. El registro honesto es una reserva
+con estado `cancelled` y el pago marcado como reembolsado.
+
+Datos para reconstruirla, de Stripe:
+`pi_3U0vVzPPGSm5cT7J0SRAoVUW`, 05-ago 13:29, $20.00 AUD, Apple Pay / Visa
+4481, `thaixguimaraes@gmail.com`, `Customer: Guest`. **Que servicio eligio no
+esta en ningun lado** - no llego a grabarse. Hay que preguntarselo a ella.
