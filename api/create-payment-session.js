@@ -7,6 +7,26 @@ const BASE_URL = 'https://drbikesydney.com.au';
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
 const SERVICE_KEY = () => process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
+// Whatever the client sends as `email` becomes Stripe's receipt_email, so a
+// wrong value means a real customer's receipt is delivered to somebody else.
+// Not hypothetical: until 2026-08-05 the app sent 'guest@drbikesydney.com.au'
+// for anyone without an account, and those receipts arrived in Diego's own
+// catch-all while the customer heard nothing - not the receipt, not a booking
+// confirmation, not even the refund notice, which goes to the same address.
+//
+// Our own domain is refused outright. Nobody paying us is @drbikesydney.com.au,
+// and the whole domain rather than that one sentinel so the next invented
+// address (noreply@, hello@) cannot repeat it. Staff booking for themselves use
+// a personal address, as Diego does.
+export function isValidReceiptEmail(email) {
+  const addr = String(email ?? '')
+    .trim()
+    .toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) return false;
+  if (addr.endsWith('@drbikesydney.com.au')) return false;
+  return true;
+}
+
 // Verify Supabase JWT and return user's subscription from profiles
 async function getUserSubscription(access_token) {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY());
@@ -155,6 +175,11 @@ async function handler(req, res) {
   }
   if (typeof priceCents !== 'number' || priceCents < 50) {
     return res.status(400).json({ error: 'Invalid amount' });
+  }
+
+  if (!isValidReceiptEmail(email)) {
+    console.error('[create-payment-intent] refused as receipt_email:', String(email).slice(0, 80));
+    return res.status(400).json({ error: 'A valid email is required for the receipt' });
   }
 
   // PaymentIntent mode: /api/create-payment-intent -> here via vercel.json rewrite

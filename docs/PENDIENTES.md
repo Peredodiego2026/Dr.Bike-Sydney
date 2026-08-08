@@ -1690,3 +1690,39 @@ Verificado en navegador contra la rama:
   y **no estaba traducido**: el chequeo de i18n ignora los `throw new Error(...)`
   a proposito, asi que una clienta con el telefono en español lo veia en ingles.
   Ya esta en el diccionario, pero el hueco del chequeo sigue ahi.
+
+### 14.3 Ella no recibio NINGUN email, y no fue por el mismo motivo
+
+Diego pregunto por que la clienta no recibio ni un correo. La respuesta es que
+habia **cuatro** canales para hablarle y **los cuatro** asumian que tenia
+cuenta, mientras la puerta de entrada dejaba pasar sin una.
+
+| Canal | Por que no llego |
+|---|---|
+| Recibo de Stripe | `receipt_email` salia de `js/app.js:1844`, que sin sesion mandaba `guest@drbikesydney.com.au` — **un buzon del propio dominio de Diego**. El recibo le llego a el. |
+| Confirmacion de reserva (Resend) | Se manda **despues** de que `create-booking` responde OK. Como la reserva nunca se creo, nunca se mando. |
+| **Aviso de la devolucion** | Stripe lo manda al mismo `receipt_email`. **Diego le devolvio el dinero y ella no se entero.** |
+| Recordatorio de checkout abandonado | `js/app.js:1607` solo registra en `checkout_attempts` `if (currentUser)`. Sin cuenta no hay fila, asi que el cron no tenia nada que encontrar. |
+
+**VERIFICADO EN CODIGO.** La cadena del recibo es
+`js/app.js:1844` -> `js/stripe.js:106` -> `api/create-payment-session.js:167`
+(`receipt_email: email`).
+
+**Lo que se arreglo.** El fallback murio: si no hay email de sesion, se corta con
+un error en vez de inventar una direccion. Y el servidor ahora rechaza como
+`receipt_email` cualquier cosa que no parezca un email **o que sea de nuestro
+propio dominio** — el dominio entero, no solo `guest@`, para que la proxima
+direccion inventada no pueda repetirlo. `isValidReceiptEmail()` esta exportada
+y tiene 5 tests.
+
+**Efecto secundario a tener en cuenta:** con esto, una reserva hecha con una
+direccion `@drbikesydney.com.au` se rechaza. Se comprobo que no existe ninguna
+cuenta de cliente asi; Diego usa su Gmail.
+
+**Lo que NO se arreglo, y sigue abierto:**
+
+- El recordatorio de checkout abandonado sigue siendo solo para gente con
+  cuenta. Hoy no importa, porque sin cuenta ya no se llega a pagar. Volvera a
+  importar el dia que exista el checkout de invitado de verdad (14.2).
+- **Nadie le aviso a la clienta que le devolvieron el dinero.** Eso lo tiene
+  que hacer Diego a mano, por WhatsApp.

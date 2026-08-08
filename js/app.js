@@ -1892,7 +1892,21 @@ async function renderPayment() {
     const {
       data: { user: payingUser },
     } = await sb.auth.getUser();
-    const email = payingUser?.email || 'guest@drbikesydney.com.au';
+
+    // This used to fall back to 'guest@drbikesydney.com.au'. That address goes
+    // to Diego's own catch-all, and it is what Stripe puts in receipt_email -
+    // so on 2026-08-05 a customer paid $20 and her receipt was delivered to
+    // Diego. She got nothing: not the receipt, not a confirmation (there was no
+    // booking), and not even the refund notice, because that goes to the same
+    // address. Four ways to reach her, all silent.
+    //
+    // Never invent an address for somebody. Since the summary now requires an
+    // account before the payment screen, there is always a real one; if that
+    // ever stops being true, this must fail loudly instead of quietly mailing
+    // the wrong person.
+    const email = payingUser?.email;
+    if (!email) throw new Error('Please sign in to complete your booking.');
+
     _paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId);
     return _paidIntent;
   }
