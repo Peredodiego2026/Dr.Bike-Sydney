@@ -1409,6 +1409,87 @@ async function renderServiceSummary() {
     }
   });
 
+  // Booking without an account. Three fields, not a sign-up: the mechanic is
+  // driving to a stranger's address, so a name and a phone are operational
+  // necessities, and the email is where the receipt, the confirmation and the
+  // tracking link go. An account is offered afterwards, never demanded.
+  //
+  // Same shell as confirmDialog() so the scrim, the sizing, the 44px targets
+  // and the reduced-motion behaviour are the ones already reviewed.
+  function askGuestContact() {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    const field = (id, label, type, placeholder, autocomplete) => `
+      <label for="${id}" style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px">${translateValue(label)}</label>
+      <input id="${id}" type="${type}" autocomplete="${autocomplete}" placeholder="${translateValue(placeholder)}"
+             style="width:100%;min-height:44px;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font-family);outline:none">`;
+    overlay.innerHTML = `
+<div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="guest-title">
+  <h2 class="confirm-box__title" id="guest-title">${translateValue('Where do we send your booking?')}</h2>
+  <p class="confirm-box__msg">${translateValue('No account needed. We only use this to confirm your booking and let the mechanic reach you.')}</p>
+  ${field('guest-name', 'Your name', 'text', 'Jane Smith', 'name')}
+  ${field('guest-email', 'Email', 'email', 'you@email.com', 'email')}
+  ${field('guest-phone', 'Mobile', 'tel', '0400 000 000', 'tel')}
+  <div id="guest-err" style="display:none;color:var(--red);font-size:13px;margin-top:10px"></div>
+  <div class="confirm-box__actions">
+    <button type="button" class="confirm-box__btn confirm-box__btn--go" data-act="go">${translateValue('Continue')}</button>
+  </div>
+  <button type="button" data-act="signin"
+          style="display:block;width:100%;min-height:44px;margin-top:8px;background:none;border:none;color:var(--blue);font-family:var(--font-family);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline">
+    ${translateValue('I already have an account')}
+  </button>
+</div>`;
+
+    const close = () => {
+      document.removeEventListener('keydown', onKey);
+      overlay.classList.add('confirm-overlay--closing');
+      setTimeout(() => overlay.remove(), 250);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('keydown', onKey);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) return close();
+      const act = e.target.closest('[data-act]')?.dataset.act;
+      if (act === 'signin') {
+        try {
+          localStorage.setItem(RETURN_TO_KEY, 'service-summary');
+        } catch {
+          /* private mode: they resume from the draft on the home screen */
+        }
+        close();
+        router.navigate('login');
+        return;
+      }
+      if (act !== 'go') return;
+
+      const name = overlay.querySelector('#guest-name').value.trim();
+      const email = overlay.querySelector('#guest-email').value.trim();
+      const phone = overlay.querySelector('#guest-phone').value.trim();
+      const err = overlay.querySelector('#guest-err');
+      const fail = (msg) => {
+        err.textContent = translateValue(msg);
+        err.style.display = 'block';
+      };
+      if (!name) return fail('Please enter your name');
+      // The same shape the server enforces. Better to say so here than to take
+      // the card and bounce afterwards.
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email');
+      if (phone.replace(/\D/g, '').length < 8) return fail('Please enter a valid mobile number');
+
+      window.appState.guestName = name;
+      window.appState.guestEmail = email;
+      window.appState.guestPhone = phone;
+      close();
+      screen.querySelector('#proceed-btn')?.click();
+    });
+
+    document.body.appendChild(overlay);
+    overlay.querySelector('#guest-name').focus();
+  }
+
   screen.querySelector('#proceed-btn').addEventListener('click', async () => {
     const btn = screen.querySelector('#proceed-btn');
     const errEl = screen.querySelector('#booking-error');
@@ -1420,36 +1501,22 @@ async function renderServiceSummary() {
         data: { user },
       } = await sb.auth.getUser();
 
-      // THE SESSION IS CHECKED BEFORE THE CARD, NOT AFTER.
+      // NOTHING IS CHARGED UNTIL WE HAVE A WAY TO REACH THE PERSON.
       //
-      // This used to read "Allow guest checkout - no login required" and send
-      // anyone straight to the payment screen. But finalizeBooking() - the
-      // function that actually creates the booking - throws on its very first
-      // line without a session, and create-booking answers 401 without an
-      // access_token. So a visitor with no account was charged $20 and then
-      // told to sign in, with no booking, no email and no WhatsApp to Diego.
+      // The rule is about the contact details, not about having an account.
+      // Being asked to register is the barrier - being asked for an email is
+      // not - so someone who never signs up can book, and still gets their
+      // receipt, their confirmation and their tracking link.
       //
-      // It was not a rare failure: it happened to EVERY guest, every time,
-      // from 2026-07-04 (when the front opened guest checkout 83 minutes after
-      // the server was locked to signed-in users) until 2026-08-05, when a real
-      // customer paid, got nothing, and had to message Diego on WhatsApp.
-      //
-      // Requiring the account here takes away nothing that worked: no guest
-      // booking has ever succeeded. Real guest checkout is a feature, and it
-      // means teaching the server to store a booking with no user_id - not
-      // leaving the charge in front of a door that does not open.
-      if (!user) {
-        // The draft is already in localStorage, so the summary rebuilds itself
-        // after signing in - they do not lose what they picked.
-        try {
-          localStorage.setItem(RETURN_TO_KEY, 'service-summary');
-        } catch {
-          /* private mode: they come back to home and resume from the draft */
-        }
-        showToast('Please create an account or sign in to finish your booking', 'error');
+      // The old version let anyone pay and only then asked them to sign in.
+      // create-booking answered 401, so the charge went through and the booking
+      // never existed. That happened to every guest, every time, between
+      // 2026-07-04 and 2026-08-05, when a real customer paid $20 and got
+      // nothing (docs/PENDIENTES.md 14).
+      if (!user && !window.appState.guestEmail) {
         btn.disabled = false;
         btn.textContent = payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
-        router.navigate('login');
+        askGuestContact();
         return;
       }
 
@@ -1729,10 +1796,16 @@ async function renderPayment() {
     const {
       data: { session },
     } = await sb.auth.getSession();
-    if (!session?.user) throw new Error('Please sign in to complete your booking.');
-    const user = session.user;
-    const meta = user.user_metadata || {};
-    const _clientName = meta.full_name || meta.name || '';
+    const user = session?.user || null;
+    // No session is fine now - it means a guest, who gave their details at the
+    // contact step. What is NOT fine is having neither, because then there is
+    // nobody to send the confirmation to and nobody for the mechanic to call.
+    const guestEmail = window.appState.guestEmail || null;
+    if (!user && !guestEmail) throw new Error('We need an email to send your receipt.');
+    const meta = (user && user.user_metadata) || {};
+    const _clientName =
+      meta.full_name || meta.name || window.appState.guestName || '';
+    const _clientEmail = user ? user.email : guestEmail;
     const fee = feeOverride !== null ? feeOverride : calloutFee;
     // Real Stripe payment id only (admin test passes a fake "test_" id → no payment).
     const realPI =
@@ -1745,7 +1818,12 @@ async function renderPayment() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         role: 'create-booking',
-        access_token: session.access_token,
+        // Absent for a guest. The server treats the verified Stripe payment as
+        // the credential in that case - no payment, no booking.
+        access_token: session?.access_token || null,
+        client_name: _clientName,
+        client_email: _clientEmail,
+        client_phone: window.appState.guestPhone || null,
         client_lang: getLang(),
         service_id: service.id || null,
         service_name: service.name,
@@ -1845,7 +1923,7 @@ async function renderPayment() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: user.email,
+          to: _clientEmail,
           name: _clientName,
           service: service.name,
           date,

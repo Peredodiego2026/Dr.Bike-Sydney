@@ -1820,7 +1820,7 @@ acepta, y recien ahi le aparece al mecanico.
 | 1 | `user_id` nullable + indice unico por pago (`scripts/add-guest-bookings.sql`) | en `feat/payment-drives-the-chain` |
 | 2 | Los datos de la reserva viajan dentro del PaymentIntent | en `feat/payment-drives-the-chain` |
 | 3 | El webhook crea la reserva y dispara la cadena | **en `feat/webhook-creates-booking`** |
-| 4 | Paso de contacto para invitados en el front | pendiente - es lo unico que falta |
+| 4 | Paso de contacto para invitados en el front | **en `feat/guest-checkout`** |
 
 Los pasos 1-3 arreglan los huerfanos **tambien para gente con cuenta**. El paso 4
 es lo que suma al invitado.
@@ -1852,3 +1852,47 @@ llega desde un navegador lo puede editar quien tiene el navegador en la mano.
 
 Diego ya habia dado de alta `payment_intent.succeeded` en Stripe el 03-ago. No
 hacia nada hasta ahora.
+
+**Paso 4, y con esto la seccion 14 queda cerrada.** Se puede reservar sin cuenta.
+
+**La regla ya no es "hay que estar logueado", es "tiene que haber a quien
+avisarle".** Sin sesion, el boton del resumen abre una hoja de contacto con tres
+campos - nombre, email, celular - y no cobra nada hasta tenerlos. No es un
+registro: no hay contraseña, no hay verificacion, no hay cuenta.
+
+Por que tres y no solo el email: el mecanico maneja hasta la casa de un
+desconocido, asi que el nombre y el telefono son necesidades operativas, no
+marketing. El email es donde van el recibo, la confirmacion y el link de
+seguimiento.
+
+**Del lado del servidor, el pago ES la credencial.** `handleCreateBooking` ya no
+responde 401 sin token: si no hay sesion exige un email valido y un
+`payment_intent_id`, y el paso 4 de esa misma funcion le pregunta a Stripe si
+ese cobro existe de verdad y por el importe correcto. Sin pago no hay reserva, y
+`bookings_unique_payment_intent` impide gastar el mismo pago dos veces.
+
+Decisiones que conviene no perder:
+
+- **Un invitado nunca llega a un call-out de $0.** El precio de socio se busca
+  por cuenta, asi que sin cuenta no hay descuento - y con $0 no habria cobro que
+  autenticara la peticion.
+- **`bike_id` se ignora para invitados.** Una bici pertenece a una cuenta
+  (`bikes.client_id`); aceptar un id suelto dejaria colgar la reserva de la bici
+  de otra persona.
+- **El chequeo de i18n tenia un tercer agujero.** No leia `translateValue(...)`,
+  que es la llamada de traduccion propia de la SPA. Las diez cadenas nuevas de
+  la hoja de contacto pasaron en verde hasta que se lo enseño. Es el mismo
+  agujero que `tVal(` en track (14.3) y que las props de `confirmDialog` (12.18).
+
+**Verificado en Chromium a 390px** (sin captura: el panel del navegador estaba
+cerrado, asi que nada de esto es una afirmacion sobre pixeles):
+
+| Camino | Resultado |
+|---|---|
+| Sin sesion, click en pagar | Abre la hoja. **Cero llamadas de red** |
+| Campos vacios o invalidos | Corta con el mensaje correcto, en español, sin cobrar |
+| Datos completos | Va a `payment` con nombre, email y telefono guardados |
+| Que email viaja al cobro | `thaix@example.com`, **no** el buzon de Diego |
+| Metadata del pago | Servicio, fecha, hora, direccion, contacto e idioma |
+| "Ya tengo cuenta" | Va a `login` y recuerda volver al resumen |
+| Con sesion iniciada | Va directo a `payment`, la hoja no aparece |
