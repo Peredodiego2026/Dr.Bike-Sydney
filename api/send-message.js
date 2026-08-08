@@ -136,6 +136,11 @@ async function handleSMS(req, res) {
       etaMin,
       trackUrl,
       reviewLink,
+      // Already masked by the caller (api/auth.js maskEmail) - a full address
+      // must never travel in an SMS.
+      maskedEmail: String(req.body?.maskedEmail || '')
+        .replace(/[\r\n]/g, '')
+        .slice(0, 80),
       time: type === 'accepted' ? safeTime(40) : safeTime(60),
     }) ??
     smsBody('confirmation', lang, {

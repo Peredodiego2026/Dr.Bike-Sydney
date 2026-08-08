@@ -45,6 +45,9 @@ const SMS = {
     reminder: (v) => `Hi ${v.name}! Time for a bike check-up. Book your next service at ${SITE}`,
     review_request: (v) =>
       `Hi ${v.name}! Your ${v.service} is done. How did we do? ${v.reviewLink || SITE}`,
+    // Reply to "I forgot which email I used". The address is masked: whoever
+    // is holding this phone should be reminded, not handed the full address.
+    email_recovery: (v) => `Dr. Bike Sydney: your account email is ${v.maskedEmail}. Sign in at ${SITE}`,
   },
 
   es: {
@@ -64,6 +67,8 @@ const SMS = {
       `¡Hola ${v.name}! Es hora de revisar tu bici. Reservá tu próximo servicio en ${SITE}`,
     review_request: (v) =>
       `¡Hola ${v.name}! Tu ${v.service} está terminado. ¿Cómo nos fue? ${v.reviewLink || SITE}`,
+    email_recovery: (v) =>
+      `Dr. Bike Sydney: tu email de la cuenta es ${v.maskedEmail}. Iniciá sesión en ${SITE}`,
   },
 
   zh: {
@@ -82,6 +87,7 @@ const SMS = {
     reminder: (v) => `${v.name} 您好！该给自行车做保养了。在 ${SITE} 预订下次服务。`,
     review_request: (v) =>
       `${v.name} 您好！您的${v.service}已完成。您觉得怎么样？${v.reviewLink || SITE}`,
+    email_recovery: (v) => `Dr. Bike Sydney：您账户的邮箱是 ${v.maskedEmail}。登录：${SITE}`,
   },
 };
 

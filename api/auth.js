@@ -13,6 +13,7 @@ import {
   verifyMechanicToken,
   LOGIN_LOCK_MINUTES,
   SELF_BASE_URL,
+  normalizeAUPhone,
 } from './_security.js';
 import {
   createCalendarEvent,
@@ -1832,6 +1833,77 @@ async function handleJoinWaitlist(req, res) {
 // sb.auth.resetPasswordForEmail() always reports success client-side even
 // when delivery silently fails, so this bypasses it entirely rather than
 // depending on a second, unconfigured email pathway.
+// "I forgot which email I signed up with." Not the same problem as forgetting
+// a password: an address cannot be reset, only recalled, so it needs a second
+// identifier - the phone number on the account.
+//
+// The answer goes to that phone by SMS and never to the screen. Otherwise
+// anyone could type numbers into a form and harvest addresses. It also always
+// replies the same way, registered or not, for the same reason the password
+// reset does: never confirm to a stranger whether an account exists.
+//
+// The address is masked (t***s@gmail.com). Whoever holds the phone should be
+// reminded which address they used, not handed a full one to reuse elsewhere.
+export function maskEmail(email) {
+  const [name, domain] = String(email || '').split('@');
+  if (!name || !domain) return '';
+  const shown = name.length <= 2 ? name.slice(0, 1) : name.slice(0, 1) + '***' + name.slice(-1);
+  return `${shown}@${domain}`;
+}
+
+async function handleRecoverEmail(req, res) {
+  // Tighter than the shared guard: a hit here sends a real SMS to a real
+  // person, so this is the one endpoint where abuse costs money and annoys
+  // somebody who did nothing.
+  if (await rateLimit(req, res, { max: 3, windowMs: 600000, key: 'recover-email' })) return;
+
+  const phone = normalizeAUPhone(req.body?.phone);
+  // Same answer either way - this must never become a way to test which
+  // numbers have accounts.
+  const genericOk = () => res.status(200).json({ ok: true });
+  if (!phone) return genericOk();
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  if (!SERVICE_KEY) {
+    console.error('[recover-email] missing SERVICE_KEY');
+    return genericOk();
+  }
+
+  try {
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+    // Stored formats vary by how the profile was created, so ask for the ones
+    // that actually occur rather than scanning every profile.
+    const local = '0' + phone.slice(3);
+    const { data, error } = await sb
+      .from('profiles')
+      .select('email,full_name')
+      .in('phone', [phone, local, phone.slice(1), local.replace(/^0/, '')])
+      .limit(1);
+    if (error) {
+      console.error('[recover-email] profiles lookup:', error.message);
+      return genericOk();
+    }
+    const hit = data?.[0];
+    if (!hit?.email) return genericOk();
+
+    const r = await fetch(`${SELF_BASE_URL}/api/send-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: phone,
+        type: 'email_recovery',
+        name: hit.full_name || '',
+        lang: ['en', 'es', 'zh'].includes(req.body?.lang) ? req.body.lang : 'en',
+        maskedEmail: maskEmail(hit.email),
+      }),
+    });
+    if (!r.ok) console.error('[recover-email] SMS send failed:', r.status, await r.text());
+  } catch (e) {
+    console.error('[recover-email] failed:', e.message);
+  }
+  return genericOk();
+}
+
 async function handleRequestPasswordReset(req, res) {
   const { email } = req.body;
   if (!email || typeof email !== 'string') return res.status(400).json({ error: 'email required' });
@@ -3569,6 +3641,7 @@ async function handler(req, res) {
   if (role === 'client-cancel') return handleClientCancel(req, res);
   if (role === 'join-waitlist') return handleJoinWaitlist(req, res);
   if (role === 'request-password-reset') return handleRequestPasswordReset(req, res);
+  if (role === 'recover-email') return handleRecoverEmail(req, res);
   if (role === 'mechanic-preference-status') return handleMechanicPreferenceStatus(req, res);
   if (role === 'apply-referral') return handleApplyReferral(req, res);
   if (role === 'client-reschedule') return handleClientReschedule(req, res);

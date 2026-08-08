@@ -264,20 +264,34 @@ export function showToast(message, type = 'success') {
 // language regardless of setLang() - so "Delete this bike?" was translated but
 // its OK/Cancel buttons were not, and on iOS the dialog announced the domain
 // instead of the app.
+// `prompt` turns this into a one-field dialog: it resolves to the trimmed
+// value instead of `true`, and still resolves false on cancel, so callers that
+// do not pass it are unaffected. Added rather than reaching for window.prompt(),
+// which 12.18 removed from the app for the same reasons as confirm().
 export function confirmDialog({
   title,
   message = '',
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   destructive = false,
+  prompt = null,
 }) {
   return new Promise((resolve) => {
     const overlay = document.createElement('div');
     overlay.className = 'confirm-overlay';
     overlay.innerHTML = `
-<div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+<div class="confirm-box" role="${prompt ? 'dialog' : 'alertdialog'}" aria-modal="true" aria-labelledby="confirm-title">
   <h2 class="confirm-box__title" id="confirm-title">${translateValue(title)}</h2>
   ${message ? `<p class="confirm-box__msg">${translateValue(message)}</p>` : ''}
+  ${
+    prompt
+      ? `<input id="${prompt.id || 'confirm-prompt'}" type="${prompt.type || 'text'}"
+                inputmode="${prompt.type === 'tel' ? 'tel' : 'text'}"
+                placeholder="${translateValue(prompt.placeholder || '')}"
+                aria-label="${translateValue(title)}"
+                style="width:100%;min-height:44px;margin-top:14px;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font-family);outline:none">`
+      : ''
+  }
   <div class="confirm-box__actions">
     <button type="button" class="confirm-box__btn confirm-box__btn--cancel" data-act="no">${translateValue(cancelLabel)}</button>
     <button type="button" class="confirm-box__btn confirm-box__btn--${destructive ? 'danger' : 'go'}" data-act="yes">${translateValue(confirmLabel)}</button>
@@ -300,13 +314,20 @@ export function confirmDialog({
 
     overlay.addEventListener('click', (e) => {
       const act = e.target.closest('[data-act]')?.dataset.act;
+      if (act === 'yes' && prompt) {
+        // An empty field is not an answer - keep the dialog open rather than
+        // resolving with nothing and leaving the caller to guess.
+        const v = overlay.querySelector('input')?.value.trim() || '';
+        if (!v) return overlay.querySelector('input')?.focus();
+        return close(v);
+      }
       if (act) return close(act === 'yes');
       if (e.target === overlay) close(false); // tap outside = cancel, never confirm
     });
     document.addEventListener('keydown', onKey);
 
     document.body.appendChild(overlay);
-    overlay.querySelector('[data-act="no"]').focus();
+    (overlay.querySelector('input') || overlay.querySelector('[data-act="no"]')).focus();
   });
 }
 

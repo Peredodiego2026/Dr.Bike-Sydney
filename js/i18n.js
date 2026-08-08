@@ -1157,6 +1157,14 @@ const dict = {
       'Escribí tu email primero y después tocá "Olvidé mi contraseña".',
     'Could not send the reset link. Please try again.':
       'No pudimos enviar el link. Probá de nuevo.',
+    // "Olvide con que email me registre" (seccion 15.3). Un email no se
+    // resetea, se recuerda: hace falta el telefono de la cuenta.
+    'Forgot your email?': '¿Olvidaste tu email?',
+    'Enter the mobile number on your account and we will text you the email you signed up with.':
+      'Escribí el celular de tu cuenta y te mandamos por SMS el email con el que te registraste.',
+    'Send it to me': 'Enviármelo',
+    'If that number has an account, we just texted you the email':
+      'Si ese número tiene cuenta, acabamos de enviarte el email por SMS',
     // Guest checkout: booking without an account (docs/PENDIENTES.md 14).
     'Where do we send your booking?': '¿A dónde te mandamos la reserva?',
     'No account needed. We only use this to confirm your booking and let the mechanic reach you.':
@@ -2408,6 +2416,12 @@ const dict = {
     'Enter your email first, then tap Forgot Password.':
       '请先输入邮箱，然后点击"忘记密码"。',
     'Could not send the reset link. Please try again.': '无法发送重置链接，请重试。',
+    'Forgot your email?': '忘记邮箱了？',
+    'Enter the mobile number on your account and we will text you the email you signed up with.':
+      '请输入您账户的手机号，我们会以短信发送您注册时使用的邮箱。',
+    'Send it to me': '发送给我',
+    'If that number has an account, we just texted you the email':
+      '如果该号码已注册，我们刚刚以短信发送了邮箱地址',
     'Where do we send your booking?': '预订确认发送到哪里？',
     'No account needed. We only use this to confirm your booking and let the mechanic reach you.':
       '无需账户。我们仅用它来确认您的预订，并让技师能联系到您。',
