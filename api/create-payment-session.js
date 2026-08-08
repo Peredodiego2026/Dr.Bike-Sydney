@@ -27,6 +27,38 @@ export function isValidReceiptEmail(email) {
   return true;
 }
 
+// What the booking is FOR, packed small enough to ride inside a PaymentIntent.
+//
+// Stripe allows 50 metadata keys of up to 500 characters each, and hands the
+// whole thing back on the payment_intent.succeeded webhook. That is what lets
+// the server reconstruct a booking whose browser never came back - the failure
+// that lost a real customer's booking on 2026-08-05 (docs/PENDIENTES.md 14).
+//
+// Only fields the server needs to rebuild the row. The price is NOT taken from
+// here: the server looks it up itself, because anything that arrives from a
+// browser can be edited by whoever is holding it.
+export function bookingMetadata(booking) {
+  if (!booking || typeof booking !== 'object') return {};
+  const s = (v, max = 200) =>
+    v === null || v === undefined ? '' : String(v).trim().slice(0, max);
+  const out = {
+    bk_service_id: s(booking.serviceId, 60),
+    bk_service_name: s(booking.serviceName, 120),
+    bk_date: s(booking.date, 20),
+    bk_time: s(booking.time, 10),
+    bk_address: s(booking.address, 300),
+    bk_name: s(booking.clientName, 120),
+    bk_phone: s(booking.clientPhone, 40),
+    bk_lang: ['en', 'es', 'zh'].includes(booking.lang) ? booking.lang : 'en',
+    bk_bike_id: s(booking.bikeId, 60),
+    bk_guest: booking.isGuest ? '1' : '0',
+  };
+  // Stripe rejects empty-string values on some API versions, and they carry no
+  // information anyway.
+  for (const k of Object.keys(out)) if (out[k] === '') delete out[k];
+  return out;
+}
+
 // Verify Supabase JWT and return user's subscription from profiles
 async function getUserSubscription(access_token) {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY());
@@ -169,7 +201,7 @@ async function handler(req, res) {
     }
   }
 
-  const { bookingId, priceCents, description, email } = req.body;
+  const { bookingId, priceCents, description, email, booking } = req.body;
   if (!bookingId || !priceCents || !email) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -190,7 +222,7 @@ async function handler(req, res) {
         currency: 'aud',
         payment_method_types: ['card'],
         receipt_email: email,
-        metadata: { bookingId, email },
+        metadata: { bookingId, email, ...bookingMetadata(booking) },
       });
       return res.status(200).json({ clientSecret: paymentIntent.client_secret });
     } catch (err) {
