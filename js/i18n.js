@@ -1150,6 +1150,13 @@ const dict = {
       'Ese servicio ya no está disponible. Por favor, elegí uno nuevo.',
     'Tracking link copied!': '¡Enlace de rastreo copiado!',
     'Welcome back!': '¡Bienvenido de nuevo!',
+    // Recuperar contraseña desde la landing (no existia hasta 2026-08-06).
+    'If that email has an account, we just sent a reset link.':
+      'Si ese email tiene cuenta, acabamos de enviarte un link para restablecerla.',
+    'Enter your email first, then tap Forgot Password.':
+      'Escribí tu email primero y después tocá "Olvidé mi contraseña".',
+    'Could not send the reset link. Please try again.':
+      'No pudimos enviar el link. Probá de nuevo.',
     // Guest checkout: booking without an account (docs/PENDIENTES.md 14).
     'Where do we send your booking?': '¿A dónde te mandamos la reserva?',
     'No account needed. We only use this to confirm your booking and let the mechanic reach you.':
@@ -2396,6 +2403,11 @@ const dict = {
       '该服务已不可用，请选择新的服务。',
     'Tracking link copied!': '追踪链接已复制！',
     'Welcome back!': '欢迎回来！',
+    'If that email has an account, we just sent a reset link.':
+      '如果该邮箱已注册，我们刚刚发送了重置链接。',
+    'Enter your email first, then tap Forgot Password.':
+      '请先输入邮箱，然后点击"忘记密码"。',
+    'Could not send the reset link. Please try again.': '无法发送重置链接，请重试。',
     'Where do we send your booking?': '预订确认发送到哪里？',
     'No account needed. We only use this to confirm your booking and let the mechanic reach you.':
       '无需账户。我们仅用它来确认您的预订，并让技师能联系到您。',

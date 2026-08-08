@@ -2002,7 +2002,15 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
     <div style="margin-bottom:14px">
       <input id="auth-password" type="password" placeholder="Password" aria-label="Password" autocomplete="current-password" style="width:100%;padding:11px 14px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit">
     </div>
+    <!-- There was no way to recover a password from a computer at all: this
+         modal had no such link, and the recovery email pointed at index.html,
+         whose desktop redirect dropped the token out of the #hash. Both halves
+         fixed 2026-08-06. -->
+    <div id="auth-forgot-wrap" style="text-align:right;margin-top:-6px;margin-bottom:12px">
+      <button id="auth-forgot-btn" type="button" style="background:none;border:none;padding:6px 0;min-height:44px;color:#0A58CA;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">Forgot Password?</button>
+    </div>
     <div id="auth-error" style="display:none;color:#DC2626;font-size:13px;margin-bottom:10px;padding:10px 12px;background:#FEF2F2;border-radius:6px;border:1px solid #FECACA"></div>
+    <div id="auth-reset-sent" style="display:none;text-align:center;margin-bottom:10px;padding:12px;background:#ECFDF5;border-radius:8px;color:#065F46;font-size:14px;font-weight:600">If that email has an account, we just sent a reset link.</div>
     <button id="auth-submit" style="width:100%;padding:13px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;font-family:inherit">Sign In</button>
     <div style="position:relative;text-align:center;margin-bottom:14px">
       <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:#E5E7EB"></div>
@@ -2446,6 +2454,43 @@ function showAuthTab(mode) {
   document.getElementById('auth-title').textContent = isSignup ? 'Create your account' : 'Sign in to your account';
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-confirm-msg').style.display = 'none';
+  document.getElementById('auth-reset-sent').style.display = 'none';
+  // Nothing to recover when you are creating an account.
+  document.getElementById('auth-forgot-wrap').style.display = isSignup ? 'none' : 'block';
+}
+
+// Same endpoint the mobile app uses: a real Supabase recovery link, sent
+// through Resend. Always answers the same way whether or not the address is
+// registered, so this cannot be used to find out who has an account.
+async function requestPasswordReset() {
+  var email = (document.getElementById('auth-email').value || '').trim();
+  var errEl = document.getElementById('auth-error');
+  var okEl = document.getElementById('auth-reset-sent');
+  var btn = document.getElementById('auth-forgot-btn');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+  if (!email || email.indexOf('@') === -1) {
+    errEl.textContent = 'Enter your email first, then tap Forgot Password.';
+    errEl.style.display = 'block';
+    return;
+  }
+  var original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'request-password-reset', email: email }),
+    });
+    okEl.style.display = 'block';
+  } catch (e) {
+    errEl.textContent = 'Could not send the reset link. Please try again.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
 }
 
 async function submitAuth() {
@@ -2595,6 +2640,7 @@ document.addEventListener('DOMContentLoaded', function() {
   wire('tab-signin', function() { showAuthTab('signin'); });
   wire('tab-signup', function() { showAuthTab('signup'); });
   wire('auth-submit', function() { submitAuth(); });
+  wire('auth-forgot-btn', function() { requestPasswordReset(); });
   wire('google-signin-btn', function() { signInGoogle(); });
 
   // Modal backdrops: click outside the panel closes it (was inline onclick

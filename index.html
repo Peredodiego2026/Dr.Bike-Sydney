@@ -12,7 +12,17 @@
         if (v) sessionStorage.setItem(f, v);
       });
     })();
-    if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    // A Supabase recovery link lands here with its token in the #hash, and
+    // location.replace() does not carry a hash - so on a desktop the redirect
+    // below threw the token away and dropped the customer on the marketing
+    // page. Password recovery was impossible from a computer. The SPA already
+    // knows how to finish the flow (PASSWORD_RECOVERY in js/app.js), so when a
+    // recovery token is present we simply stay here and let it.
+    var isRecovery = /type=recovery|access_token=/.test(window.location.hash || '');
+    if (
+      !isRecovery &&
+      !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    ) {
       window.location.replace('/landing.html');
     }
   </script>
