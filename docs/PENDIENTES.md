@@ -1784,5 +1784,52 @@ con estado `cancelled` y el pago marcado como reembolsado.
 
 Datos para reconstruirla, de Stripe:
 `pi_3U0vVzPPGSm5cT7J0SRAoVUW`, 05-ago 13:29, $20.00 AUD, Apple Pay / Visa
-4481, `thaixguimaraes@gmail.com`, `Customer: Guest`. **Que servicio eligio no
-esta en ningun lado** - no llego a grabarse. Hay que preguntarselo a ella.
+4481, `thaixguimaraes@gmail.com`, `Customer: Guest`. El servicio lo confirmo Diego
+despues de hablar con ella por WhatsApp: **Tyre and Tube Installed**. No quedo
+registrado en ningun sistema, que es exactamente el problema.
+
+### 14.7 El cobro pasa a disparar la cadena, no el navegador
+
+Decision de Diego, 05-ago: **cuando en Stripe entra un pago, de forma automatica
+tienen que empezar a funcionar todas las aplicaciones**. Es el arreglo de fondo,
+no un parche.
+
+**El problema estructural.** Hoy toda la cadena cuelga de que el navegador del
+cliente llegue vivo hasta el final: cobrar -> `create-booking` -> notificaciones,
+todo desde el telefono. Si se cierra la app, se cae la señal o falla un paso, no
+ocurre nada y nadie se entera. Eso no es un bug dentro de la cadena: **es** la
+cadena, y es la que perdio la reserva del 05-ago.
+
+**Lo que la reemplaza.** El aviso `payment_intent.succeeded` de Stripe crea la
+reserva y dispara todo desde el servidor. El navegador pasa a ser una comodidad,
+no un requisito.
+
+```
+ANTES   navegador: cobrar -> crear reserva -> notificar   (si el navegador muere, se pierde todo)
+AHORA   navegador: cobrar
+        Stripe -> webhook -> crear reserva -> notificar   (el navegador ya no importa)
+```
+
+La cadena que pidio Diego se mantiene: la reserva entra `pending`, el admin la
+acepta, y recien ahi le aparece al mecanico.
+
+**Los cuatro pasos, cada uno mergeable solo:**
+
+| # | Que | Estado |
+|---|---|---|
+| 1 | `user_id` nullable + indice unico por pago (`scripts/add-guest-bookings.sql`) | en `feat/payment-drives-the-chain` |
+| 2 | Los datos de la reserva viajan dentro del PaymentIntent | en `feat/payment-drives-the-chain` |
+| 3 | El webhook crea la reserva y dispara la cadena | pendiente |
+| 4 | Paso de contacto para invitados en el front | pendiente |
+
+Los pasos 1-3 arreglan los huerfanos **tambien para gente con cuenta**. El paso 4
+es lo que suma al invitado.
+
+**Por que hace falta un indice unico.** Durante un tiempo van a existir dos
+escritores: el navegador (para respuesta inmediata) y el webhook (por si el
+navegador no volvio). Preguntar "¿ya existe?" en codigo pierde la carrera por
+definicion; el arbitro tiene que ser la base. El segundo en llegar choca contra
+`bookings_unique_payment_intent` y se retira.
+
+**El precio NO viaja en la metadata.** El servidor lo busca el mismo. Todo lo que
+llega desde un navegador lo puede editar quien tiene el navegador en la mano.

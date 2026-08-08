@@ -96,14 +96,31 @@ export async function createPaymentRequestButton(
   return true;
 }
 
-export async function processPayment(amountCents, bookingId, email, paymentMethodId = null) {
+// `booking` carries what the booking is FOR - service, when, where, who - so
+// that it rides along inside the PaymentIntent. Stripe hands it back on the
+// payment_intent.succeeded webhook, which is what lets the server build the
+// booking even if the customer's browser never comes back. On 2026-08-05 a
+// browser did exactly that and a paid booking evaporated (docs/PENDIENTES.md
+// section 14).
+export async function processPayment(
+  amountCents,
+  bookingId,
+  email,
+  paymentMethodId = null,
+  booking = null
+) {
   const stripe = await initStripe();
   if (!_card && !paymentMethodId) throw new Error('Card element not ready');
 
   const resp = await fetch('/api/create-payment-intent', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ bookingId: bookingId || 'demo', priceCents: amountCents, email }),
+    body: JSON.stringify({
+      bookingId: bookingId || 'demo',
+      priceCents: amountCents,
+      email,
+      booking,
+    }),
   });
 
   if (!resp.ok) {

@@ -1907,7 +1907,23 @@ async function renderPayment() {
     const email = payingUser?.email || window.appState?.guestEmail || null;
     if (!email) throw new Error('We need an email to send your receipt.');
 
-    _paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId);
+    // What the booking is for travels WITH the payment. Stripe hands it back
+    // on the webhook, so the server can build the booking even if this browser
+    // never gets to ask for it - which is how a paid booking was lost on
+    // 2026-08-05 (docs/PENDIENTES.md 14).
+    const meta = (payingUser?.user_metadata || {});
+    _paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId, {
+      serviceId: service?.id || null,
+      serviceName: service?.name || null,
+      date,
+      time,
+      address: location || 'Home',
+      clientName: meta.full_name || meta.name || window.appState?.guestName || '',
+      clientPhone: meta.phone || window.appState?.guestPhone || '',
+      bikeId: window.appState?.bikeId || null,
+      lang: getLang(),
+      isGuest: !payingUser,
+    });
     return _paidIntent;
   }
 
