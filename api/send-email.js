@@ -106,27 +106,17 @@ export default async function handler(req, res) {
             </p>
           </div>
 
-          <!-- Tax Invoice section -->
-          <div style="border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;margin-bottom:20px">
-            <div style="background:#F8FAFC;padding:12px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em">Tax Invoice</span>
-              <span style="font-size:11px;color:#475569;font-weight:600">DRBK-${bookingId ? bookingId.slice(0, 8).toUpperCase() : 'PENDING'}</span>
-            </div>
-            <div style="padding:16px">
-              <table style="width:100%;border-collapse:collapse;font-size:13px">
-                <tr><td style="color:#475569;padding:5px 0">Service</td><td style="text-align:right;font-weight:600;color:#0D1F3C">${service}</td></tr>
-                <tr><td style="color:#475569;padding:5px 0;border-top:1px solid #F1F5F9">Date & time</td><td style="text-align:right;font-weight:600;color:#0D1F3C;border-top:1px solid #F1F5F9">${date}${time ? ' at ' + time : ''}</td></tr>
-                <tr><td style="color:#475569;padding:5px 0;border-top:1px solid #F1F5F9">Location</td><td style="text-align:right;font-weight:600;color:#0D1F3C;border-top:1px solid #F1F5F9">${address || '—'}</td></tr>
-                <tr><td style="color:#475569;padding:5px 0;border-top:1px solid #F1F5F9">Subtotal (excl. GST)</td><td style="text-align:right;color:#475569;border-top:1px solid #F1F5F9">$${net}</td></tr>
-                <tr><td style="color:#475569;padding:5px 0;border-top:1px solid #F1F5F9">GST (10%)</td><td style="text-align:right;color:#475569;border-top:1px solid #F1F5F9">$${gst}</td></tr>
-                <tr style="border-top:2px solid #E2E8F0">
-                  <td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px">Total (AUD)</td>
-                  <td style="padding:10px 0 0;text-align:right;font-weight:800;color:#2563EB;font-size:18px">$${price}</td>
-                </tr>
-              </table>
-              <p style="font-size:10px;color:#94A3B8;margin:12px 0 0">ABN: 87 654 025 287 · Dr. Bike Sydney · drbikesydney.com.au</p>
-            </div>
-          </div>
+          <!-- There used to be a "Tax Invoice" block here, and it was wrong
+               twice over. It repeated, line for line, the six figures the
+               booking table above already shows - Diego's words: "no tiene
+               sentido". And it called them a tax invoice at a moment when
+               nothing had been invoiced: at booking we charge the call-out fee
+               only, and the email itself says "Payment collected on
+               completion" three lines further up.
+
+               The real tax invoice, for the real amount, is the PDF that
+               api/send-invoice.js attaches when the mechanic completes the
+               job. That is the document the client keeps. -->
 
           <!-- Referral code -->
           ${
