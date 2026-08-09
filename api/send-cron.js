@@ -1,5 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { guard, verifyTurnstile, SELF_BASE_URL } from './_security.js';
+import {
+  buildCompletionCalls,
+  pendingCalls,
+  dispatchCompletionCalls,
+  recordCompletionOutcome,
+} from './_completion-notify.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -499,6 +505,108 @@ export function isOrphanCandidate(pi, { nowSeconds, graceMinutes = ORPHAN_GRACE_
   return true;
 }
 
+// ── Completion notifications that did not land ───────────────────────────────
+// api/auth.js sends the invoice, the review email and the review SMS itself now
+// (14.8 step A), which fixed the mechanic's phone dropping out mid-chain. It did
+// not fix OUR side failing: Resend down, Twilio down, the function cut short. In
+// that case the client still has no invoice.
+//
+// So every send writes its outcome onto the booking, and this sweep re-sends
+// only the entries that are not 'sent'. Never the ones that landed - a failed
+// SMS must not produce a second invoice.
+//
+// Daily, because Vercel Hobby only allows daily crons (see the header of this
+// file). A missing invoice is therefore repaired within a day, not within
+// minutes. It can also be triggered by hand at /api/retry-completion.
+const COMPLETION_RETRY_LOOKBACK_DAYS = 14;
+
+async function handleCompletionRetry(req, res) {
+  const sb = makeSb();
+  const since = new Date(Date.now() - COMPLETION_RETRY_LOOKBACK_DAYS * 86400000).toISOString();
+
+  const { data: rows, error } = await sb
+    .from('bookings')
+    .select(
+      'id, client_name, client_email, client_phone, service_name, service_price, callout_fee, ' +
+        'scheduled_date, scheduled_time, address, suburb, discount_applied, parts_charged, ' +
+        'tip_amount, mechanic_notes, next_service_date, mechanic_id, completion_notifications'
+    )
+    .eq('status', 'completed')
+    .gte('completed_at', since)
+    .not('completion_notifications', 'is', null)
+    .limit(200);
+
+  // A missing column means scripts/add-completion-notifications.sql has not been
+  // run yet. Say so instead of reporting a clean zero, which is what "the cron
+  // returned 200 and sent: 0 every day" looked like the last time (see
+  // logSendFailure above).
+  if (error) {
+    console.error('[completion-retry]', error.message);
+    return res.status(200).json({ skipped: 'query failed', detail: error.message });
+  }
+
+  const stale = (rows || []).filter((b) =>
+    Object.values(b.completion_notifications || {}).some((v) => v !== 'sent')
+  );
+  if (!stale.length) return res.status(200).json({ checked: rows?.length || 0, retried: 0 });
+
+  // One name lookup for the whole batch rather than one per booking.
+  const mechIds = [...new Set(stale.map((b) => b.mechanic_id).filter(Boolean))];
+  const names = new Map();
+  if (mechIds.length) {
+    const { data: mechs } = await sb
+      .from('escalation_contacts')
+      .select('id, first_name, last_name')
+      .in('id', mechIds);
+    (mechs || []).forEach((m) =>
+      names.set(m.id, [m.first_name, m.last_name].filter(Boolean).join(' ').trim())
+    );
+  }
+
+  let recovered = 0;
+  let stillFailing = 0;
+  for (const b of stale) {
+    const calls = pendingCalls(
+      buildCompletionCalls({
+        booking: b,
+        mechanicName: names.get(b.mechanic_id) || '',
+        partsCharged: b.parts_charged,
+        tipAmount: b.tip_amount,
+        mechanicNotes: b.mechanic_notes,
+        nextServiceDate: b.next_service_date,
+      }),
+      b.completion_notifications
+    );
+    if (!calls.length) continue;
+    const summary = await dispatchCompletionCalls(calls, {
+      baseUrl: BASE,
+      internalToken: process.env.INTERNAL_API_SECRET,
+      bookingId: b.id,
+    });
+    recovered += summary.sent.length;
+    stillFailing += summary.failed.length;
+    await recordCompletionOutcome({
+      bookingId: b.id,
+      // Merge, never replace: the entries that succeeded on the first attempt
+      // are not in this batch and must keep their 'sent'.
+      outcome: { ...b.completion_notifications, ...summary.outcome },
+      supabaseUrl: SB_URL,
+      sbHdr: {
+        apikey: process.env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  if (stillFailing) {
+    console.error('[completion-retry] still failing after retry:', stillFailing, 'notifications');
+  }
+  return res
+    .status(200)
+    .json({ checked: rows.length, bookings: stale.length, recovered, stillFailing });
+}
+
 async function handleOrphanPayments(req, res) {
   if (!process.env.STRIPE_SECRET_KEY)
     return res.status(200).json({ skipped: 'no STRIPE_SECRET_KEY' });
@@ -947,6 +1055,7 @@ export default async function handler(req, res) {
   if (type === 'advance') return handleAdvanceReminders(req, res);
   if (type === 'noshow') return handleNoShowWatch(req, res);
   if (type === 'orphan-payments') return handleOrphanPayments(req, res);
+  if (type === 'completion-retry') return handleCompletionRetry(req, res);
 
   // Consolidated daily cron: runs all background jobs in sequence
   if (type === 'all') {
@@ -974,6 +1083,7 @@ export default async function handler(req, res) {
       advance,
       noshow,
       orphanPayments,
+      completionRetry,
     ] = await Promise.allSettled([
       wrap((r) => handleBirthday(req, r)),
       wrap((r) => handleReengagement(req, r)),
@@ -983,6 +1093,7 @@ export default async function handler(req, res) {
       wrap((r) => handleAdvanceReminders(req, r)),
       wrap((r) => handleNoShowWatch(req, r)),
       wrap((r) => handleOrphanPayments(req, r)),
+      wrap((r) => handleCompletionRetry(req, r)),
     ]);
     return res.status(200).json({
       birthday: birthday.value || birthday.reason?.message,
@@ -993,11 +1104,12 @@ export default async function handler(req, res) {
       advance: advance.value || advance.reason?.message,
       noshow: noshow.value || noshow.reason?.message,
       orphanPayments: orphanPayments.value || orphanPayments.reason?.message,
+      completionRetry: completionRetry.value || completionRetry.reason?.message,
     });
   }
 
   return res.status(400).json({
     error:
-      'Missing ?type= (birthday|reengagement|abandoned|abandoned-checkout|service|upsell|b2b|all)',
+      'Missing ?type= (birthday|reengagement|abandoned|abandoned-checkout|service|upsell|b2b|completion-retry|all)',
   });
 }
