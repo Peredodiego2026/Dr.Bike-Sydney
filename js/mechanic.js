@@ -2078,102 +2078,17 @@ async function submitComplete(id) {
 
   stopGPS();
 
-  // Send completion email + SMS review request (non-blocking, parallel)
-  try {
-    let clientEmail = j?.email || '';
-    let clientPhone = j?.phone || '';
-    const clientName = j?.client || 'Client';
-    const reviewLink = `https://drbikesydney.com.au/?review=${id}`;
-
-    // Si no tenemos email, buscar en el booking directo
-    if (!clientEmail) {
-      const { data: bkgFull } = await sb
-        .from('bookings')
-        .select('client_email, client_phone, client_id')
-        .eq('id', id)
-        .single();
-      clientEmail = bkgFull?.client_email || '';
-      clientPhone = bkgFull?.client_phone || clientPhone;
-      if (!clientEmail)
-        console.warn(
-          '[submitComplete] no client email on file for booking',
-          id,
-          '- invoice/review email skipped'
-        );
-    }
-    const nextSvcMsg = nextDate
-      ? `Your next recommended service is on ${new Date(nextDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`
-      : 'We recommend a service check every 3–6 months.';
-
-    console.log('📧 Sending notifications to:', clientEmail, clientPhone);
-    // Fire all notifications in parallel
-    await Promise.allSettled([
-      // 1. Invoice/receipt email
-      clientEmail
-        ? fetch('/api/send-invoice', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bookingId: id,
-              to: clientEmail,
-              clientName,
-              service: j?.service_name || j?.service,
-              date: j?.scheduled_date,
-              time: j?.scheduled_time,
-              address: j?.address || j?.suburb,
-              price: Math.max(0, (j?.price || 0) - (j?.discount_applied || 0)),
-              discount: j?.discount_applied || 0,
-              calloutFee: breakdown?.calloutFee ?? 20,
-              partsCharged: partsCharged,
-              mechDiscountCode: _mechDiscount?.code || null,
-              mechDiscountAmount: _mechDiscount?.amount || 0,
-              finalChargeAmount: breakdown?.chargeNow ?? null,
-              tipAmount: breakdown?.tip || 0,
-              mechNotes: notes || null,
-              mechName: ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim(),
-              nextService: nextSvcMsg,
-              bookingRef: id.slice(0, 8).toUpperCase(),
-            }),
-          })
-        : Promise.resolve(),
-      // 2. Review request email
-      clientEmail
-        ? fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'review_request',
-              to: clientEmail,
-              name: clientName,
-              service: j?.service_name || j?.service,
-              bookingId: id,
-            }),
-          })
-        : Promise.resolve(),
-      // 3. SMS review request
-      clientPhone
-        ? fetch('/api/send-sms', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: clientPhone,
-              name: clientName,
-              service: j?.service,
-              price: j?.price,
-              type: 'review_request',
-              bookingId: id,
-              reviewLink,
-            }),
-          })
-        : Promise.resolve(),
-      // A 4th call sent the review request over WhatsApp too, but it passed the
-      // SMS shape ({to, type, ...}) to an endpoint that takes {to, template,
-      // data} and 'review_request' is not one of its templates - so it 400'd
-      // every single time and never sent anything. Removed rather than left as
-      // console noise; the SMS and the email above already ask for the review.
-    ]);
-  } catch (e) {
-    console.log('Notification error', e);
+  // The invoice, the review email and the review SMS used to be fired from
+  // here - three fetch() calls from this phone, AFTER the job was already
+  // marked completed on the server. Lose signal in that window and the client
+  // got no invoice and nobody found out, because the whole block sat inside a
+  // Promise.allSettled whose catch was a console.log.
+  //
+  // They now go out from api/auth.js, in the same request that completes the
+  // job (see api/_completion-notify.js). The response tells us how it went.
+  const failed = okData?.notified?.failed || [];
+  if (failed.length) {
+    setTimeout(() => toast('⚠️ Could not send: ' + failed.join(', ') + ' — tell Diego'), 2500);
   }
 }
 

@@ -1642,11 +1642,14 @@ usaba `Subtotal (excl. GST)` como ejemplo de "clave larga que contiene a una
 corta"; se cambio al par `at checkout` / `&bull; Enter code at checkout`, que
 sigue existiendo, con el porque escrito en el test.
 
-**Lo que NO se verifico:** el email nuevo **no se mando**. El cambio no esta
-desplegado, asi que un envio de prueba hoy sigue mostrando el bloque viejo.
-Hay que mandar uno **despues** de mergear.
+**Verificado en produccion el 2026-08-10.** Se mando el envio que faltaba
+(Resend id `cdecb204-7a34-42f4-ae21-c64992393284`, a
+`contact@drbikesydney.com.au`) y se leyo el correo que llego. El bloque
+`TAX INVOICE` **ya no esta**. Lo que queda es: tabla de la reserva (Service,
+Date & time, Address, Net amount $132, GST $13, Total $145), "What happens
+next" y el boton. **Cada cifra aparece una sola vez.**
 
-### 12.22 El boton "View your booking" del email de confirmacion puede estar roto — ABIERTO
+### 12.22 El boton "View your booking" del email de confirmacion NO estaba roto — CERRADO 2026-08-10
 
 **Salio de mandar un email de prueba de verdad**, no de leer codigo. Se envio un
 `confirmation` desde produccion a `contact@drbikesydney.com.au` (Resend id
@@ -1676,11 +1679,26 @@ verdad en el correo (y entonces le pasa a **todos** los clientes) o si es la API
 de Gmail la que decodifica de mas al entregarnos el cuerpo. Las dos hipotesis
 explican lo observado.
 
-**Como confirmarlo en 10 segundos, y solo lo puede hacer Diego:** abrir ese
-email en Gmail y pasar el mouse por "View your booking". Si la barra de estado
-muestra `?action=dashboard`, es artefacto de la API y no hay bug. Si muestra la
-URL cortada, **todo cliente que reciba una confirmacion tiene el boton roto** y
-hay que arreglar la codificacion del envio, no la URL (la URL es correcta).
+**Resuelto el 2026-08-10: gana la segunda hipotesis. No hay bug.** Diego abrio
+"Mostrar original" (el MIME crudo, antes de que nadie lo decodifique) sobre el
+envio `cdecb204-7a34-42f4-ae21-c64992393284` y el link viaja asi:
+
+```
+Content-Transfer-Encoding: quoted-printable
+View your booking =E2=86=92 https://drbikesydney.com.au/?action=3Ddashboard
+```
+
+`=3D` es exactamente el escape correcto del `=`. Amazon SES codifica bien, el
+correo sale bien y **el boton le funciona a todo el mundo**. Lo que estaba mal
+era el instrumento de medicion: la API de Gmail nos devolvia el cuerpo
+decodificado de mas, y ese `<CARACTER INVALIDO>` nunca existio en el mensaje
+real.
+
+**Lo que deja como leccion:** un correo leido por API no es el correo. Cuando la
+sospecha es de transporte o de codificacion, la prueba es el MIME crudo
+("Mostrar original" / "Show original"), no el cuerpo que devuelve una API ni el
+render del cliente de correo. La tabla de arriba se conserva porque la aritmetica
+de quoted-printable sigue siendo cierta - simplemente no se estaba dando.
 
 #### Las apps de staff, la mitad que NO era una decision (2026-08-09)
 
@@ -2638,6 +2656,73 @@ cerrado, asi que nada de esto es una afirmacion sobre pixeles):
 | Metadata del pago | Servicio, fecha, hora, direccion, contacto e idioma |
 | "Ya tengo cuenta" | Va a `login` y recuerda volver al resumen |
 | Con sesion iniciada | Va directo a `payment`, la hoja no aparece |
+
+### 14.8 La factura tampoco puede depender del celular del mecanico — PASO A HECHO 2026-08-10
+
+Lo pidio Diego el 10-ago, y es la misma falla estructural que 14.7 pero en el
+**otro extremo** del trabajo. 14.7 saco del navegador del *cliente* la cadena
+que arranca al cobrar. Esto saca del navegador del *mecanico* la cadena que
+arranca al completar.
+
+**Como estaba.** `js/mechanic.js` marcaba el trabajo completado contra el
+servidor y **despues**, desde el telefono, disparaba tres `fetch` sueltos:
+
+```
+telefono -> /api/auth (mechanic-complete)   <- esto si quedaba guardado
+telefono -> /api/send-invoice               <- la factura en PDF
+telefono -> /api/send-email (review_request)
+telefono -> /api/send-sms   (review_request)
+```
+
+Los tres ultimos vivian dentro de un `Promise.allSettled` cuyo `catch` era un
+`console.log`. Un mecanico que perdia senal en esa ventana - un garage, un
+sotano, un ascensor - dejaba el trabajo **completado y al cliente sin factura**,
+y **nadie se enteraba**: ni el cliente, que no sabe que esperaba un PDF, ni
+Diego, que no tenia donde verlo.
+
+**Como quedo.** Los tres salen de `api/auth.js`, en la misma peticion que
+completa el trabajo. El telefono manda una sola cosa y se puede apagar en el
+segundo siguiente.
+
+- `api/_completion-notify.js` es nuevo y **no tiene red adentro**: solo la
+  aritmetica y la forma de los tres payloads, para que las cifras de la factura
+  de un cliente se puedan afirmar en un test. 15 tests en
+  `tests/unit/completion-notify.test.js`.
+- Las cifras **reproducen `calcChargeBreakdown()` linea por linea**. Fue una
+  mudanza, no una nueva tarifa. La propina sigue fuera de todo total con GST.
+- **La fila se lee ANTES del PATCH.** El bloque de descuento de completado esta
+  a punto de pisar `discount_applied`, y la factura necesita el descuento de la
+  *reserva*, que es con el que la calculaba el navegador.
+- **El envio se espera (`await`), no se dispara y se olvida.** Esta peticion es
+  el ultimo momento en que hay algo corriendo con certeza. Pero **no puede
+  hacer fallar la completacion**: el trabajo ya esta completado, y contestar 500
+  ahi le mostraria al mecanico "no se pudo completar" un trabajo que si se
+  completo, invitandolo a completarlo dos veces.
+- Si algo falla, `console.error` con el `booking_id` **y** un aviso al mecanico
+  en pantalla. Que esto se callara es todo el motivo del cambio.
+
+**Un bug de arrastre que se arreglo solo al mudarlo.** El navegador mandaba
+`date: j.scheduled_date` y `time: j.scheduled_time` sobre un objeto cuyos campos
+se llaman `date` y `time` (`js/mechanic.js:626-627`). Los dos viajaban
+`undefined`: **todas las facturas en PDF emitidas hasta hoy salieron sin fecha
+ni hora**. Al leer la fila directa, llegan. Hay un test que lo fija.
+
+**Lo que este paso NO arregla, y es el paso B:** si falla el propio servidor
+(Resend caido, Twilio caido, la funcion se corta), la factura se sigue
+perdiendo - ahora con un `console.error`, pero perdida. Falta la marca en la
+base + la barrida del cron que reintente. Decidido con Diego el 10-ago: A
+primero, B despues.
+
+**Y lo que NO arregla ninguno de los dos:** si el mecanico **no tiene senal en
+el momento de tocar "Completar"**, no pasa nada en absoluto - ni siquiera se
+marca el trabajo. Eso necesita una cola offline en la app del mecanico
+(guardar la completacion en el telefono y reenviarla cuando vuelve la senal).
+Es un tercer trabajo, todavia sin decidir.
+
+**Verificado:** `npm run check` 5/5, `npx vitest run` 175/175 (15 nuevos).
+**NO verificado:** no se completo un trabajo de verdad contra produccion — hace
+falta un `booking_id` real y el PIN del mecanico. Queda pendiente de hacerlo
+despues de mergear.
 
 ---
 

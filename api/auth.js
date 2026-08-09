@@ -22,6 +22,7 @@ import {
   isGoogleCalendarConfigured,
   saveGoogleRefreshToken,
 } from './_google-calendar.js';
+import { buildCompletionCalls } from './_completion-notify.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
@@ -1612,6 +1613,12 @@ async function handleMechanicComplete(req, res) {
     } catch {}
   }
 
+  // Read the booking BEFORE the PATCH: the discount block above may be about to
+  // overwrite discount_applied with the completion-time discount, and the
+  // invoice needs the booking-time one, exactly as the browser used to compute
+  // it from its own pre-completion copy of the row.
+  const notifyRow = await readBookingForNotifications(booking_id, sbHdr);
+
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
     {
@@ -1630,11 +1637,93 @@ async function handleMechanicComplete(req, res) {
     console.error('complete patch error:', updateResp.status, errText);
     return res.status(500).json({ error: 'Failed to complete booking', detail: errText });
   }
+
+  // The invoice, the review email and the review SMS. Awaited on purpose: this
+  // request is the last moment we are certain something is running. It can
+  // never fail the completion, though - the job IS completed at this point, and
+  // answering 500 here would show the mechanic "could not complete job" for a
+  // job that is done, and invite a second completion.
+  const notified = await sendCompletionNotifications({
+    booking: notifyRow,
+    mechanicName: mechanicName(auth.mechanic),
+    partsCharged: parts_charged,
+    tipAmount: tip_amount,
+    mechanicNotes: mechanic_notes,
+    nextServiceDate: next_service_date,
+  });
+
   return res.status(200).json({
     ok: true,
     low_stock: lowStock,
     auto_charged: !!autoChargeResult?.charged,
+    notified,
   });
+}
+
+const NOTIFY_COLS =
+  'id,client_name,client_email,client_phone,service_name,service_price,callout_fee,scheduled_date,scheduled_time,address,suburb';
+
+// discount_applied is behind a migration that may not have run on every
+// environment - same try-then-fall-back handleMechanicJobs uses for it.
+async function readBookingForNotifications(bookingId, sbHdr) {
+  const url = (cols) =>
+    `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&id=eq.${encodeURIComponent(bookingId)}&limit=1`;
+  try {
+    let r = await fetch(url(`${NOTIFY_COLS},discount_applied`), { headers: sbHdr });
+    if (!r.ok) r = await fetch(url(NOTIFY_COLS), { headers: sbHdr });
+    if (!r.ok) return null;
+    return (await r.json())?.[0] || null;
+  } catch (e) {
+    console.error('[mechanic-complete] could not read booking for notifications:', e.message);
+    return null;
+  }
+}
+
+async function sendCompletionNotifications(args) {
+  const summary = { sent: [], failed: [], skipped: [] };
+  if (!args.booking) {
+    console.error(
+      '[mechanic-complete] booking row unavailable - no invoice, no review request sent'
+    );
+    summary.failed.push('booking-read');
+    return summary;
+  }
+  if (!args.booking.client_email) summary.skipped.push('email:no-address-on-file');
+  if (!args.booking.client_phone) summary.skipped.push('sms:no-number-on-file');
+
+  const calls = buildCompletionCalls(args);
+  const results = await Promise.allSettled(
+    calls.map((c) =>
+      fetch(`${SELF_BASE_URL}${c.path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+        },
+        body: JSON.stringify(c.body),
+      })
+    )
+  );
+  results.forEach((r, i) => {
+    const name = calls[i].path.replace('/api/', '');
+    if (r.status === 'fulfilled' && r.value.ok) {
+      summary.sent.push(name);
+    } else {
+      summary.failed.push(name);
+      const why =
+        r.status === 'rejected' ? r.reason?.message || String(r.reason) : `HTTP ${r.value.status}`;
+      // Loud on purpose. This going quiet is the whole reason the chain moved
+      // off the mechanic's phone.
+      console.error(
+        '[mechanic-complete] notification failed:',
+        name,
+        'booking',
+        args.booking.id,
+        why
+      );
+    }
+  });
+  return summary;
 }
 
 async function handleClientCancel(req, res) {
