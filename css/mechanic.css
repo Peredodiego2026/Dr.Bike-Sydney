@@ -450,7 +450,7 @@ body {
 }
 .abtn.primary.done,
 .abtn.primary.accept {
-  background: #059669;
+  background: var(--green);
 }
 .abtn.danger {
   background: transparent;

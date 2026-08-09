@@ -232,7 +232,7 @@ body {
 .btn--danger {
   background: var(--white);
   color: var(--red);
-  border: 1.5px solid #fee2e2;
+  border: 1.5px solid var(--red-lt);
 }
 .btn--danger:hover:not(:disabled) {
   background: var(--red-lt);
