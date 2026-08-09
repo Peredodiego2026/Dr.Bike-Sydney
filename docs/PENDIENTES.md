@@ -851,10 +851,18 @@ releer lo ya cerrado:
      `<meta name="theme-color">` tambien). Eso es tambien el punto **13.5**.
   2. `css/landing.css:2` tiene que dejar de reabrir `:root` para pisar
      `--gray`, `--border`, `--blue-dark` y `--radius`.
-  3. Los 335 hex escritos a mano pasan a `var(--token)`.
+  3. Los hex escritos a mano pasan a `var(--token)`, **solo en las 5
+     superficies de app** (decision de Diego 2026-08-09; emails y paginas de
+     suburbio, PR aparte).
   Ojo con el orden: 1 y 2 cambian pixeles en pantalla, asi que conviene
   medirlos antes y despues. El 3 no deberia cambiar ninguno - si cambia alguno,
   ese hex no era el que decia el token y es un hallazgo, no un error de tipeo.
+  **Ojo con el tamaño del 3:** el "335" era un recuento acotado (7 valores, 3
+  superficies). Recontado el 2026-08-09 sobre las 5 superficies completas son
+  **2389 hex, de los cuales solo 1121 valen lo mismo que un token**; los otros
+  1268 son 128 colores que no existen en `variables.css` y cada uno es una
+  decision, no un reemplazo. El detalle, y lo que no se puede tokenizar ni
+  verificar, esta en el punto 12.14.
 - **12.11** — la puerta del admin. El arreglo de verdad valida el token contra
   el servidor antes de renderizar: cambia el flujo de auth, conviene hacerlo con
   Diego mirando.
@@ -1237,6 +1245,68 @@ veces, `#059669` 70, `#1848c8` 52, `#e5e7eb` 48, `#f3f4f6` 22, `#111827` 11,
 `#f9fafb` 6. **335 apariciones** de hex que son casi-pero-no el token.
 
 **Evidencia. VERIFICADO CON GREP Y LEYENDO LOS TRES ARCHIVOS.**
+
+#### RECONTADO 2026-08-09: el 335 estaba acotado, no mal
+
+Ese 335 cuenta **7 valores concretos** casi-token sobre **3 superficies**. Antes
+de empezar el paso 3 se recontaron **las 5 superficies completas**
+(`index.html`, `landing.html`, `track.html`, `admin.html`, `mechanic.html` mas
+`css/main.css`, `home.css`, `landing.css`, `admin.css`, `mechanic.css` y
+`js/app.js`, `admin.js`, `mechanic.js`, `components.js`, `stripe.js`),
+contando **cualquier** hex, no solo los 7:
+
+| | |
+|---|---|
+| Hex escritos a mano | **2389** |
+| ...que son exactamente el valor de un token | 1121 |
+| ...que no son el valor de ningun token | **1268** |
+| Valores distintos | 147 |
+| ...que no son ningun token | **128** |
+| Tokens de color que define `variables.css` | 20 |
+
+**El hallazgo no es el tamaño, es que el paso 3 NO es mecanico.** Solo el 47%
+de los hex se puede reemplazar por el token que ya vale lo mismo. Los otros
+**1268 son 128 colores que ningun archivo de tokens define**: cada uno es una
+decision (mapear al token mas cercano y aceptar el cambio de pixel, o ascenderlo
+a token nuevo). Los mas repetidos: `#6b7280` 187, `#e5e7eb` 121, `#059669` 108,
+`#1848c8` 58, `#f2f2f7` 58, `#374151` 55, `#9ca3af` 43, `#f3f4f6` 30,
+`#111827` 29, `#60a5fa` 26.
+
+**El azul retirado `#1848C8` no vive solo en `track.html`.** 58 apariciones en
+las 5 superficies y **~80 archivos** en todo el repo: `js/admin.js` 33,
+**`api/send-email.js` 33** (o sea los emails al cliente salen con el azul
+viejo), `js/mechanic.js` 7, `api/send-invoice.js` 7, `landing.html` 5,
+`admin.html` 5, `js/app.js` 3, `api/auth.js` 3, `api/send-cron.js` 2,
+`track.html` 2, `css/admin.css` 2, `business.html` 3, `cycling-map.html` 2,
+`bike-check.html` 1, y 2 en **cada una** de las ~60 paginas de suburbio
+(en/es/zh) y las 5 del blog.
+
+**Evidencia:** conteo con un script propio (regex de hex de 3/4/6/8 digitos,
+shorthand normalizado a 6, anclas `href="#..."` descartadas) corrido contra
+`origin/main` en `db5515d`. No vive en el repo: es una medicion, no un check.
+
+#### Alcance del paso 3 — DECIDIDO POR DIEGO 2026-08-09
+
+El paso 3 se limita a **las 5 superficies de app**. Los emails
+(`api/send-email.js` 250 hex, `api/send-invoice.js` 107) y las ~60 paginas de
+suburbio (54 hex cada una) van en un **PR aparte**, porque juntos dan un diff
+que no se puede revisar.
+
+**Lo que NO puede volverse token, por como funciona el navegador** — no es
+pereza, hay que dejarlo en hex y decirlo en el PR:
+
+- `<meta name="theme-color">` y `manifest.json` no aceptan `var()`.
+- Los HTML de email van por Gmail / Outlook, que no soportan variables CSS.
+  Ahi el hex es obligatorio; lo unico que se puede hacer es que coincida con el
+  token.
+
+**Lo que NO se va a poder verificar en pantalla** — tiene que quedar escrito en
+el PR, no disimulado:
+
+- **`admin.html`** autentica contra `/api/auth` y no carga en local, asi que sus
+  391 + 309 hex se cambian sin comprobacion de pixel.
+- **`track.html`** sin un `booking_id` real solo muestra el shell y el estado de
+  error: el mapa y los chips `en-route` / `completed` no se pueden medir.
 
 Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 `css/admin.css:2-10` tambien redefinen tokens, pero **solo dentro de
