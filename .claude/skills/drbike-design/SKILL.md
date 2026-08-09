@@ -18,16 +18,21 @@ Inspirado en el framework Taste + principios Impeccable. Evitar el look generico
 ## Tokens de diseño (del proyecto)
 
 **Usar SIEMPRE `var(--token)`, nunca el hex.** La unica fuente de verdad es
-`css/variables.css`, que cargan las cuatro superficies. Los hex de abajo estan
-solo para reconocerlos al leer codigo viejo.
+`css/variables.css`, que cargan las **cinco** superficies. Los hex de abajo
+estan solo para reconocerlos al leer codigo viejo.
+
+**No copies un hex de esta tabla a codigo nuevo.** `npm run check` corre
+`scripts/color-check.mjs`, que tiene un presupuesto de hex por archivo y falla
+si sube. Esa es la razon por la que esta tabla ya no puede hacer el daño que
+hizo (12.14).
 
 ```
 --blue:      #2563eb   (primary)
 --blue-dark: #1e40af
 --blue-lt:   #eff6ff
---green:     #16a34a   (success)
---amber:     #d97706   (warning)
---red:       #dc2626   (danger)
+--green:     #15803d   (success)
+--amber:     #b45309   (warning)
+--red:       #cf2020   (danger)
 --navy:      #0d1f3c   (texto oscuro)
 --gray:      #475569   (texto secundario)
 --gray-lt:   #94a3b8
@@ -44,25 +49,42 @@ tokens**: son de `track.html` y de `css/landing.css`. Seguir este skill al pie
 de la letra *producia* hex fuera de token, 335 apariciones contadas en las tres
 superficies auditadas.
 
-Dos cosas que siguen abiertas y conviene saber al tocar CSS:
+**Cerrado el 2026-08-09:** `css/landing.css:2` ya no abre un segundo `:root`, y
+`track.html` ya no declara paleta propia. **Las cinco superficies resuelven
+todos los tokens al mismo valor**, asi que cualquier pagina sirve de
+referencia. Este skill mentia sobre eso hasta hoy.
 
-- `css/landing.css:2` redefine `--gray`, `--border`, `--blue-dark` y `--radius`
-  en un segundo `:root` que carga despues. En `landing.html` esos cuatro valen
-  distinto que en el resto. Bug abierto.
-- `css/mechanic.css` y `css/admin.css` tambien redefinen tokens, pero **solo
+Ademas hay **16 tokens mas** que antes se escribian a mano en varias
+superficies a la vez: `--purple` / `--purple-lt`, `--blue-soft`, `--blue-edge`,
+`--blue-deep`, `--blue-tint`, `--amber-bright` / `--amber-ink` /
+`--amber-tint`, `--red-bright` / `--red-edge`, `--green-bright` /
+`--green-ink` / `--green-tint`, `--slate`, `--cyan`. **No los colapses** contra
+`--amber` / `--green` / `--red`: `--amber-bright` es el ambar de una estrella
+de rating, `--green-bright` es "va en camino", no "terminado".
+
+Una cosa que conviene saber al tocar CSS:
+
+- `css/mechanic.css` y `css/admin.css` redefinen tokens, pero **solo
   dentro de `[data-theme='dark']`**. Eso es tematizado correcto, no deriva: un
   hex crudo ahi no lo puede pisar el tema oscuro, que es lo que dejo
   "No jobs today" a 1.03:1 de contraste (12.15).
 
-Status colors:
+Status colors. **Estos son los nombres, no los hex** - los seis eran hex
+sueltos hasta el 2026-08-09:
+
 ```
-pending:     #F59E0B (amber)
-confirmed:   #0A58CA (blue)
-enroute:     #22C55E (green)
-in_progress: #22C55E (green)
-completed:   #6B7280 (gray)
-cancelled:   #EF4444 (red)
+pending:     var(--amber-bright)
+confirmed:   var(--blue-deep)
+enroute:     var(--green-bright)
+in_progress: var(--green-bright)
+completed:   var(--slate)
+cancelled:   var(--red-bright)
 ```
+
+El texto de un chip va sobre su `-lt`, no sobre blanco: `var(--green-ink)`
+sobre `var(--green-lt)`, `var(--amber-ink)` sobre `var(--amber-lt)`. Los chips
+son 12px en negrita, que para WCAG es texto normal: el minimo es **4.5:1**, no
+3:1 (13.11).
 
 ---
 
@@ -70,7 +92,7 @@ cancelled:   #EF4444 (red)
 
 ### Tipografia
 - Titulo/accion principal: 15-16px, font-weight:700, color navy
-- Subtitulo/meta: 12-13px, font-weight:400, color gray (#6B7280)
+- Subtitulo/meta: 12-13px, font-weight:400, color gray (var(--gray))
 - Badge/label: 11-12px, font-weight:600, color segun status
 - Nunca mismo peso visual entre titulo y subtitulo
 
@@ -101,9 +123,9 @@ cancelled:   #EF4444 (red)
 - Hover: background levemente mas oscuro (rgba(0,0,0,0.02))
 
 ### Botones
-- Primary: background #2563eb, color #fff, padding 12px 20px, border-radius:8px, font-weight:700
-- Secondary: background transparent, border:1.5px solid #E5E7EB, color navy
-- Destructivo: border:1.5px solid #fee2e2, color #DC2626
+- Primary: background var(--blue), color var(--white), padding 12px 20px, border-radius:8px, font-weight:700
+- Secondary: background transparent, border:1.5px solid var(--border), color var(--navy)
+- Destructivo: border:1.5px solid var(--red-lt), color var(--red)
 - Nunca disabled sin razon visual clara (opacity:0.5 + cursor:not-allowed)
 
 ### Estados vacios (empty state)
@@ -123,9 +145,15 @@ padding: 3px 10px;
 border-radius: 20px;
 font-size: 11px;
 font-weight: 600;
-background: [color]15;  /* 15 = ~8% opacity hex */
-color: [color];
+background: var(--green-lt);
+color: var(--green-ink);
 ```
+
+**La receta vieja era `background: [color]15`** - pegarle `15` al final de un
+hex para sacar un 8% de opacidad. **Eso no funciona con `var()`**: no se puede
+concatenar. Por eso existen los `-lt` y los `-ink`. Si hace falta una opacidad
+que no tiene token, `color-mix(in srgb, var(--green) 8%, transparent)`, nunca
+un hex nuevo.
 
 ---
 
