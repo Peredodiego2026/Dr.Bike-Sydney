@@ -21,17 +21,19 @@ Both pages use the same light/white design system:
 - Font: Inter (Google Fonts)
 
 **Never copy hex out of this block into code - use `var(--token)`.** The single
-source of truth is `css/variables.css`, which all four surfaces load. This list
-is only a summary and it has drifted: until 2026-08-02 it said `#111827` and
-`#e5e7eb`, which are `css/landing.css`'s values, not the tokens'. Following the
-documentation literally is how 335 near-miss hex ended up across the app
-(see `docs/PENDIENTES.md` 12.14).
+source of truth is `css/variables.css`, which all **five** surfaces load. This
+list is only a summary and it has drifted: until 2026-08-02 it said `#111827`
+and `#e5e7eb`, which are `css/landing.css`'s values, not the tokens'. Following
+the documentation literally is how thousands of near-miss hex ended up across
+the app (see `docs/PENDIENTES.md` 12.14 - the "335" in the older text was a
+narrow count; the real number in the five surfaces is 2389).
 
-**Open exception:** `css/landing.css:2` opens a second bare `:root` overriding
-`--gray`, `--border`, `--blue-dark` and `--radius`, and it loads *after*
-`variables.css`. So on `landing.html` those four resolve differently than
-anywhere else. Real bug, still open - do not use landing's rendering as the
-reference for anything.
+**No more exceptions, as of 2026-08-09.** `css/landing.css:2` used to open a
+second bare `:root` overriding `--gray`, `--border`, `--blue-dark`, `--radius`
+and both shadows, and `track.html` used to declare a third palette of its own.
+Both are gone (`fix/track-loads-the-tokens`, `fix/landing-stops-overriding-the-tokens`).
+Every surface now resolves every token to the same value, so any page is a
+valid reference. What is left of 12.14 is step 3: the hex still written by hand.
 
 ### App surfaces
 - `index.html` - Mobile SPA (PRODUCTION). Hash router. ~450 lines HTML + js/app.js.

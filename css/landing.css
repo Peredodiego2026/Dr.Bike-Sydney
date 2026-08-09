@@ -1,20 +1,13 @@
 /* ── Variables ────────────────────────────────────────────────────────────── */
-:root {
-  --blue: #2563eb;
-  --blue-dark: #1d4ed8;
-  --blue-light: #eff6ff;
-  --dark: #111827;
-  --gray: #6b7280;
-  --gray-light: #f9fafb;
-  --border: #e5e7eb;
-  --white: #ffffff;
-  --radius: 8px;
-  --radius-lg: 12px;
-  --radius-full: 9999px;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
-  --transition: all 200ms ease;
-}
+/* There is no :root here any more. This file loads AFTER css/variables.css, so
+   the block that used to sit here re-declared --gray, --border, --blue-dark,
+   --radius, both shadows and --transition with different values - which is why
+   var(--border) rendered #e5e7eb on this page and #e2e8f0 on the other four.
+   One page, one palette: docs/PENDIENTES.md 12.14, step 2.
+
+   --dark, --blue-light and --gray-light used to be defined here and nowhere
+   else, even though css/home.css and index.html reference them too. They now
+   live in css/variables.css as legacy aliases. */
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 *,
