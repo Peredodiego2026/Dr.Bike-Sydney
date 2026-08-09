@@ -927,7 +927,11 @@ body {
 }
 .status.completed {
   background: var(--border-lt);
-  color: var(--slate);
+  /* --slate on --border-lt is 4.34:1 and the chip is 11px/600, so the WCAG
+     threshold is 4.5:1. Measured in the browser after 13.11 shipped, which is
+     how it was found: the other five chips pass and this one did not.
+     --gray takes it to 6.92:1. */
+  color: var(--gray);
 }
 .status.cancelled {
   background: #fef2f2;

@@ -1586,6 +1586,30 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
 2026-08-09 ya no existe: **no queda ninguna**.
 
+### 12.23 El chip `completed` seguia fallando AA — CERRADO 2026-08-09
+
+**Salio de renderizarlo, no de la aritmetica.** Cuando se libero un slot de dev
+server se midieron los **seis** chips de `admin.html` en el navegador, con
+`data-theme` fijado y reescribiendo el `href` de cada hoja de estilo primero:
+
+| Chip | Antes | Ahora |
+|---|---|---|
+| `pending` | 4.84:1 | 4.84:1 |
+| `enroute` / `in_progress` | 4.79:1 | 4.79:1 |
+| `confirmed` | 8.01:1 | 8.01:1 |
+| `cancelled` | 4.95:1 | 4.95:1 |
+| **`completed`** | **4.34:1 falla** | **6.92:1** |
+
+`css/admin.css:928` usaba `--slate` (`#64748b`) sobre `--border-lt`
+(`#f1f5f9`): 4.34:1, y el chip es 11px/600, asi que el minimo es 4.5:1. Pasa a
+`--gray`. **13.11 no lo cubria** porque 13.11 salio de `track.html`, que no
+tiene chip `completed`.
+
+**Los seis dan igual en modo oscuro**, comprobado inyectando el chip dentro de
+`.main` con `data-theme='dark'`. No es casualidad: esos chips usan hex literal
+(`#fffbeb`, `#f0fdf4`...), que es exactamente lo que el conversor dejo quieto
+porque `--amber-lt` y `--green-lt` **si** se redefinen en oscuro.
+
 ### 12.22 El boton "View your booking" del email de confirmacion puede estar roto — ABIERTO
 
 **Salio de mandar un email de prueba de verdad**, no de leer codigo. Se envio un
