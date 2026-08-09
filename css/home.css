@@ -236,7 +236,7 @@
 [data-screen='home'] .trust-label {
   font-size: 10px;
   letter-spacing: 1.5px;
-  color: #9ca3af;
+  color: var(--gray-lt);
   font-weight: 600;
   white-space: nowrap;
   text-transform: uppercase;
