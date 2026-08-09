@@ -34,6 +34,16 @@
   --sans: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* ── Legacy aliases (backward compat) ───────────────────────────────────── */
+  /* These three were declared ONLY in css/landing.css's second :root, which
+     landing.html is the only page that loads. css/home.css and index.html
+     reference them too, so on the mobile SPA they resolved to nothing and the
+     property was dropped - the membership prices lost their colour and
+     inherited instead. Defining them here fixes that page and lets landing.css
+     stop re-opening :root (docs/PENDIENTES.md 12.14). */
+  --dark: var(--navy);
+  --blue-light: var(--blue-lt);
+  --gray-light: var(--surface);
+
   --color-primary: var(--blue);
   --color-primary-hover: var(--blue-dark);
   --color-primary-light: var(--blue-lt);

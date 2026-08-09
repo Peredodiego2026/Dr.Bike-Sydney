@@ -850,8 +850,11 @@ releer lo ya cerrado:
      (`fix/track-loads-the-tokens`)**, con las diferencias de pixel medidas en
      el punto **13.5**. De paso salio el punto **13.11**: los chips de estado
      no pasan WCAG AA y la paleta ganadora empeora el verde.
-  2. `css/landing.css:2` tiene que dejar de reabrir `:root` para pisar
-     `--gray`, `--border`, `--blue-dark` y `--radius`.
+  2. ~~`css/landing.css:2` tiene que dejar de reabrir `:root`~~ **HECHO
+     2026-08-09 (`fix/landing-stops-overriding-the-tokens`)**. Eran 4 tokens
+     pisados mas los dos `--shadow-*` y `--transition`, y **499 de los 1097
+     elementos de la landing cambiaron de pixel**: el detalle medido esta abajo,
+     en el bloque de este mismo punto. Ya no hay tres paletas: hay una.
   3. Los hex escritos a mano pasan a `var(--token)`, **solo en las 5
      superficies de app** (decision de Diego 2026-08-09; emails y paginas de
      suburbio, PR aparte).
@@ -1308,11 +1311,52 @@ el PR, no disimulado:
   391 + 309 hex se cambian sin comprobacion de pixel.
 - **`track.html`** sin un `booking_id` real solo muestra el shell y el estado de
   error: el mapa y los chips `en-route` / `completed` no se pueden medir.
+#### Paso 2 HECHO 2026-08-09: la landing ya no pisa los tokens
+
+`css/landing.css` no abre mas un `:root`. **MEDIDO EN NAVEGADOR**, comparando
+las 9 propiedades de color/forma de **los 1097 elementos** de `landing.html`
+antes y despues: **cambian 499**.
+
+| Token | Antes (landing) | Despues (el token) |
+|---|---|---|
+| `--dark` | `#111827` | `#0d1f3c` |
+| `--gray` | `#6b7280` | `#475569` |
+| `--border` | `#e5e7eb` | `#e2e8f0` |
+| `--blue-dark` | `#1d4ed8` | `#1e40af` |
+| `--gray-light` | `#f9fafb` | `#f8fafc` |
+| `--radius` | `8px` | `12px` |
+| `--shadow-sm` / `--shadow-md` | 1 capa | 2 capas |
+| `--transition` | `all 200ms ease` | `150ms ease` |
+
+Que cambia, por cantidad de elementos:
+
+| Cambio | Elementos |
+|---|---|
+| texto `#111827` -> `#0d1f3c` (hereda del `body`) | 452 |
+| gris `#6b7280` -> `#475569` | 27 |
+| bordes `#e5e7eb` -> `#e2e8f0` | 19 |
+| **esquinas `8px` -> `12px`** | 16 |
+
+**El contraste mejora en todo menos en el texto principal, que sigue de sobra:**
+principal 17.74:1 -> 16.43:1, gris sobre blanco **4.83:1 -> 7.58:1**, gris sobre
+el fondo gris **4.63:1 -> 7.24:1**.
+
+**HALLAZGO aparte, arreglado en el mismo PR.** `--dark`, `--blue-light` y
+`--gray-light` estaban declarados **solo** dentro de ese `:root` de
+`css/landing.css`, que es el archivo que carga **una sola pagina**. Pero
+`css/home.css` y `index.html` los usan igual: los precios de las membresias de
+la SPA son `color: var(--dark)`. En la SPA ese nombre no existia, asi que la
+propiedad se descartaba y el elemento **heredaba**. Hoy no se nota porque lo que
+hereda es el `--navy` del `body`, que es casi el mismo color - **verificado en
+navegador**: un hijo de un padre rojo con `color: var(--dark)` salia **rojo**
+sin el alias y navy con el. Era una bomba de tiempo, no un sintoma. Los tres
+nombres ahora viven en `css/variables.css` como alias legacy.
 
 Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 `css/admin.css:2-10` tambien redefinen tokens, pero **solo dentro de
 `[data-theme='dark']`**. Eso es tematizado correcto, no deriva. La unica
-redefinicion global en conflicto es la de `css/landing.css:2`.
+redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
+2026-08-09 ya no existe: **no queda ninguna**.
 
 ### 12.15 "No jobs today" es literalmente ilegible: contraste 1.03:1
 
