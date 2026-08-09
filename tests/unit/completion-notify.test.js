@@ -12,7 +12,9 @@ import { describe, it, expect } from 'vitest';
 import {
   buildCompletionCalls,
   calcCompletionTotals,
+  dispatchCompletionCalls,
   nextServiceMessage,
+  pendingCalls,
 } from '../../api/_completion-notify.js';
 
 const booking = {
@@ -143,6 +145,96 @@ describe('buildCompletionCalls', () => {
     expect(invoice.body.mechDiscountCode).toBe('MECH10');
     expect(invoice.body.mechDiscountAmount).toBe(10);
     expect(invoice.body.finalChargeAmount).toBe(165);
+  });
+});
+
+describe('pendingCalls', () => {
+  const calls = () => buildCompletionCalls({ booking, partsCharged: parts, tipAmount: 0 });
+
+  it('retries only what failed - a failed SMS never resends the invoice', () => {
+    const pending = pendingCalls(calls(), {
+      'send-invoice': 'sent',
+      'send-email': 'sent',
+      'send-sms': 'failed',
+    });
+    expect(pending.map((c) => c.path)).toEqual(['/api/send-sms']);
+  });
+
+  it('retries nothing when everything landed', () => {
+    expect(
+      pendingCalls(calls(), {
+        'send-invoice': 'sent',
+        'send-email': 'sent',
+        'send-sms': 'sent',
+      })
+    ).toEqual([]);
+  });
+
+  it('leaves bookings completed before the column existed alone', () => {
+    // NULL cannot be told apart from "sent before we tracked it". Guessing
+    // would mail an old client a second invoice.
+    expect(pendingCalls(calls(), null)).toEqual([]);
+    expect(pendingCalls(calls(), {})).toEqual([]);
+  });
+
+  it('does not invent a channel the booking has no contact point for', () => {
+    const noPhone = buildCompletionCalls({
+      booking: { ...booking, client_phone: '' },
+      partsCharged: parts,
+      tipAmount: 0,
+    });
+    const pending = pendingCalls(noPhone, {
+      'send-invoice': 'failed',
+      'send-sms': 'failed',
+    });
+    expect(pending.map((c) => c.path)).toEqual(['/api/send-invoice']);
+  });
+});
+
+describe('dispatchCompletionCalls', () => {
+  const okRes = { ok: true, status: 200 };
+
+  it('records sent and failed per channel', async () => {
+    const seen = [];
+    const fakeFetch = (url) => {
+      seen.push(url);
+      return url.includes('send-sms')
+        ? Promise.resolve({ ok: false, status: 500 })
+        : Promise.resolve(okRes);
+    };
+    const original = globalThis.fetch;
+    globalThis.fetch = fakeFetch;
+    try {
+      const summary = await dispatchCompletionCalls(
+        buildCompletionCalls({ booking, partsCharged: parts, tipAmount: 0 }),
+        { baseUrl: 'https://example.test', internalToken: 't', bookingId: booking.id }
+      );
+      expect(summary.sent).toEqual(['send-invoice', 'send-email']);
+      expect(summary.failed).toEqual(['send-sms']);
+      expect(summary.outcome).toEqual({
+        'send-invoice': 'sent',
+        'send-email': 'sent',
+        'send-sms': 'failed',
+      });
+      expect(seen).toHaveLength(3);
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+
+  it('survives a rejected request instead of throwing at the caller', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = () => Promise.reject(new Error('network down'));
+    try {
+      const summary = await dispatchCompletionCalls(
+        buildCompletionCalls({ booking, partsCharged: parts, tipAmount: 0 }),
+        { baseUrl: 'https://example.test' }
+      );
+      expect(summary.sent).toEqual([]);
+      expect(summary.failed).toHaveLength(3);
+    } finally {
+      globalThis.fetch = original;
+    }
   });
 });
 
