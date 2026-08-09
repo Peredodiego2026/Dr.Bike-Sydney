@@ -1102,28 +1102,28 @@ function exportFinancePDF() {
     .report-title{font-size:15px;font-weight:700;color:#0D1F3C}
     .report-period{font-size:13px;color:#6B7280;margin-top:2px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
-    .kpi{background:#F7F8FA;border-radius:12px;padding:16px;border-left:3px solid #2563eb}
+    .kpi{background:var(--surface);border-radius:12px;padding:16px;border-left:3px solid #2563eb}
     .kpi.green{border-left-color:#059669}
     .kpi.orange{border-left-color:#D97706}
     .kpi.red{border-left-color:#DC2626}
     .kpi-label{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
     .kpi-val{font-size:24px;font-weight:800;color:#0D1F3C}
-    .kpi-sub{font-size:11px;color:#9CA3AF;margin-top:3px}
-    .section-title{font-size:13px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid #E5E7EB}
+    .kpi-sub{font-size:11px;color:var(--gray-lt);margin-top:3px}
+    .section-title{font-size:13px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
     .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
     .bar-label{font-size:11px;color:#374151;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .bar-bg{flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden}
+    .bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
     .bar-fill{height:100%;background:#2563eb;border-radius:4px}
     .bar-val{font-size:11px;font-weight:700;color:#0D1F3C;min-width:44px;text-align:right}
     table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px}
     thead th{background:#0D1F3C;color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em}
-    tbody tr:nth-child(even){background:#F9FAFB}
-    tbody td{padding:9px 12px;border-bottom:1px solid #F3F4F6;color:#374151}
+    tbody tr:nth-child(even){background:var(--surface)}
+    tbody td{padding:9px 12px;border-bottom:1px solid var(--border-lt);color:#374151}
     tbody td.bold{font-weight:700;color:#0D1F3C}
     tbody td.blue{font-weight:700;color:#2563eb}
-    .footer{margin-top:24px;padding-top:16px;border-top:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center}
-    .footer-left{font-size:11px;color:#9CA3AF}
+    .footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .footer-left{font-size:11px;color:var(--gray-lt)}
     .print-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer}
     @media print{.print-btn{display:none}.page{padding:20px}}
   </style></head>
@@ -1205,7 +1205,7 @@ function exportFinancePDF() {
           );
         })
         .join('')}
-      ${!(d.jobs || []).length ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:#9CA3AF">No completed bookings in this period</td></tr>' : ''}
+      ${!(d.jobs || []).length ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray-lt)">No completed bookings in this period</td></tr>' : ''}
       </tbody>
     </table>
 
@@ -1742,14 +1742,14 @@ function checkAdminAuth() {
     'position:fixed;inset:0;background:#0D1F3C;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-      <div style="width:56px;height:56px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
+      <div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
       <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
-        style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
         data-enter="focus-admin-pass">
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
-        style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         data-enter="submit-admin-login">
       <div id="admin-pass-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
       <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
@@ -1964,7 +1964,7 @@ function _showLoginCard(innerHtml) {
 }
 
 function _loginCardHeader() {
-  return '<div style="width:56px;height:56px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
+  return '<div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
 }
 
 const _inp =
@@ -1984,7 +1984,7 @@ function _totpInputHTML() {
 function _enrollHTML(qrSvg, secret) {
   return `<div style="font-size:13px;color:#6B7280;margin-bottom:16px">Scan with Google Authenticator or Authy to enable 2FA on this account</div>
   <div style="margin:0 auto 12px;max-width:180px">${qrSvg}</div>
-  <div style="font-size:11px;color:#6B7280;margin-bottom:16px">Or enter manually: <code style="background:#F3F4F6;padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:1px">${secret}</code></div>
+  <div style="font-size:11px;color:#6B7280;margin-bottom:16px">Or enter manually: <code style="background:var(--border-lt);padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:1px">${secret}</code></div>
   <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" aria-label="6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
     data-enter="submit-mfa-setup-code">
@@ -2372,7 +2372,7 @@ function renderBookingsTable(data) {
       <td data-label="Status"><span class="status ${stClass[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
       <td data-label="Price"><b>${anBookingRevenue(b)}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
-        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:#ECFDF5;color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
+        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
         ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
@@ -4560,7 +4560,7 @@ function renderVanZones() {
       </div>
       <div style="padding:16px 20px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:var(--blue);border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
+          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--blue-lt);color:var(--blue);border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
           <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" data-enter="add-suburb" data-id="${van.id}"
@@ -5892,13 +5892,13 @@ async function loadMemberships() {
   );
   const statusBadge = {
     active:
-      '<span style="background:#ECFDF5;color:#059669;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
+      '<span style="background:var(--green-lt);color:#059669;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
     past_due:
       '<span style="background:#FEF3C7;color:#D97706;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
     cancelled:
       '<span style="background:#FEE2E2;color:#DC2626;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
     paused:
-      '<span style="background:#F3F4F6;color:#6B7280;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
+      '<span style="background:var(--border-lt);color:#6B7280;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
   };
 
   tbody.innerHTML = data
@@ -6211,7 +6211,7 @@ async function loadMechanicProfiles() {
       const roleTag =
         c.role === 'manager'
           ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ Manager</span>'
-          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#ECFDF5;color:#059669">🔧 Mechanic</span>';
+          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-lt);color:#059669">🔧 Mechanic</span>';
 
       return `
     <div class="card" style="padding:0;overflow:hidden;width:300px;position:relative">

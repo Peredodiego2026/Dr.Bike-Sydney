@@ -236,12 +236,12 @@
 
       <div class="quick-actions">
         <div class="qa" data-page="bookings">
-          <div class="qa-icon" style="background:#EEF3FC"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+          <div class="qa-icon" style="background:var(--blue-lt)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
           <div class="qa-label">New booking</div>
           <div class="qa-sub">Schedule a job</div>
         </div>
         <div class="qa" data-page="clients">
-          <div class="qa-icon" style="background:#ECFDF5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg></div>
+          <div class="qa-icon" style="background:var(--green-lt)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg></div>
           <div class="qa-label">Add client</div>
           <div class="qa-sub">New customer</div>
         </div>
@@ -374,7 +374,7 @@
         <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Reassign to van</div>
         <input type="hidden" id="reassign-booking-id">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          <button style="padding:16px;border:2px solid var(--blue);border-radius:10px;background:#EEF3FC;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-6">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
+          <button style="padding:16px;border:2px solid var(--blue);border-radius:10px;background:var(--blue-lt);color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-6">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
           <button style="padding:16px;border:2px solid #D97706;border-radius:10px;background:#FEF3C7;color:#D97706;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-7">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
         </div>
         <button style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-8">Cancel</button>
@@ -398,7 +398,7 @@
             <button id="route-mode-btn" style="padding:7px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Optimise by distance</button>
           </div>
         </div>
-        <div id="route-map" style="height:340px;border-radius:10px;overflow:hidden;background:#EEF2F6;margin-bottom:14px"></div>
+        <div id="route-map" style="height:340px;border-radius:10px;overflow:hidden;background:var(--border-lt);margin-bottom:14px"></div>
         <div id="route-list" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
       <div class="vans">
@@ -703,7 +703,7 @@
     <!-- ZONES -->
     <div id="page-zones" class="page">
       <div id="zones-container"></div>
-      <button class="add-van-btn" style="display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed #E5E7EB;border-radius:12px;padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:Inter,sans-serif;transition:all .15s;width:100%;margin-top:8px" id="auto-wire-15">
+      <button class="add-van-btn" style="display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:Inter,sans-serif;transition:all .15s;width:100%;margin-top:8px" id="auto-wire-15">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add another van
       </button>
@@ -970,7 +970,7 @@
 
           <!-- Zone legend -->
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#EEF3FC;color:var(--blue)">🚐 Van 1 — Inner West / Eastern / CBD</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--blue-lt);color:var(--blue)">🚐 Van 1 — Inner West / Eastern / CBD</span>
             <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#F0FDF4;color:#15803D">🚐 Van 2 — North Shore / Manly / Beaches</span>
             <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ All zones — Manager</span>
           </div>

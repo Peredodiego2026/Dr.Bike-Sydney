@@ -13,7 +13,7 @@
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 [data-theme='dark'] .job-card {
-  background: #152035 !important;
+  background: undefined !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 [data-theme='dark'] .job-card .job-client {
@@ -51,7 +51,7 @@
 }
 [data-theme='dark'] .abtn.primary.done,
 [data-theme='dark'] .abtn.primary.accept {
-  background: #059669 !important;
+  background: undefined !important;
 }
 [data-theme='dark'] .abtn.danger {
   background: transparent !important;
@@ -90,7 +90,7 @@
   background: #0d1f3c !important;
 }
 [data-theme='dark'] .kpi-card {
-  background: #152035 !important;
+  background: undefined !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 [data-theme='dark'] .kpi-val {
@@ -286,7 +286,7 @@ body {
 .nav-tabs {
   display: flex;
   background: #fff;
-  border-bottom: 1px solid #e8ecf0;
+  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -345,7 +345,7 @@ body {
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 10px;
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   transition: background 150ms ease;
 }
 .job-card.done {
@@ -434,7 +434,7 @@ body {
 .abtn.secondary {
   background: transparent;
   color: var(--navy);
-  border: 1.5px solid #e8ecf0;
+  border: 1.5px solid var(--border);
   font-weight: 600;
 }
 .abtn.secondary:hover {
@@ -465,11 +465,11 @@ body {
 .abtn.undo {
   background: #f8fafc;
   color: #64748b;
-  border: 1.5px solid #e8ecf0;
+  border: 1.5px solid var(--border);
 }
 .notes-inp {
   width: 100%;
-  border: 1.5px solid #e8ecf0;
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 12px;
@@ -510,7 +510,7 @@ body {
   background: #fff;
   border-radius: 12px;
   padding: 18px 16px;
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   text-align: center;
 }
 .kpi-val {

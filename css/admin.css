@@ -15,7 +15,7 @@
 }
 body {
   font-family: var(--sans);
-  background: #f4f6f9;
+  background: var(--border-lt);
   color: #0d1f3c;
   -webkit-font-smoothing: antialiased;
   display: flex;
@@ -289,7 +289,7 @@ body {
   color: #f2f2f7;
 }
 [data-theme='dark'] .cl-stat-l {
-  color: #9ca3af;
+  color: var(--gray-lt);
 }
 [data-theme='dark'] .cl-stat {
   background: #1a2740;
@@ -409,12 +409,12 @@ body {
   background: #1a2740 !important;
 }
 [data-theme='dark'] [style*='background:var(--white)'] {
-  background: #152035 !important;
+  background: undefined !important;
 }
 [data-theme='dark'] [style*='border-color:var(--border)'] {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
-[data-theme='dark'] [style*='color:#E5E7EB'] {
+[data-theme='dark'] [style*='color:var(--border)'] {
   color: #38383a !important;
 }
 /* Toggle/switch labels */
@@ -446,7 +446,7 @@ body {
   color: #fff !important;
 }
 [data-theme='dark'] #page-vans [style*='background:var(--white)'] {
-  background: #242426 !important;
+  background: undefined !important;
   color: #f2f2f7 !important;
 }
 [data-theme='dark'] #page-vans [style*='border:1px solid var(--border)'] {
@@ -461,10 +461,10 @@ body {
 }
 
 /* FIX 3: Coupon card hardcoded light backgrounds - dark mode */
-[data-theme='dark'] #coupons-grid [style*='background:#EEF3FC'] {
+[data-theme='dark'] #coupons-grid [style*='background:var(--blue-lt)'] {
   background: rgba(24, 72, 200, 0.2) !important;
 }
-[data-theme='dark'] #coupons-grid [style*='background:#ECFDF5'] {
+[data-theme='dark'] #coupons-grid [style*='background:var(--green-lt)'] {
   background: rgba(5, 150, 105, 0.2) !important;
 }
 [data-theme='dark'] #coupons-grid [style*='background:#DCFCE7'] {
@@ -655,7 +655,7 @@ body {
 }
 .topbar {
   background: #fff;
-  border-bottom: 1px solid #e8ecf0;
+  border-bottom: 1px solid var(--border);
   padding: 0 28px;
   height: 64px;
   display: flex;
@@ -722,7 +722,7 @@ body {
 .content {
   padding: 24px 28px;
   flex: 1;
-  background: #f4f6f9;
+  background: var(--border-lt);
 }
 .page {
   display: none;
@@ -746,7 +746,7 @@ body {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.06),
     0 1px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
   transition: box-shadow 0.15s;
@@ -832,7 +832,7 @@ body {
 .card {
   background: #fff;
   border-radius: 12px;
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.06),
     0 1px 8px rgba(0, 0, 0, 0.04);
@@ -1017,7 +1017,7 @@ body {
 .qa {
   background: #fff;
   border-radius: 12px;
-  border: 1.5px solid #e8ecf0;
+  border: 1.5px solid var(--border);
   padding: 18px 18px 16px;
   cursor: pointer;
   transition: all 0.15s;
@@ -1059,7 +1059,7 @@ body {
 .van-card {
   background: #fff;
   border-radius: 12px;
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
@@ -1107,7 +1107,7 @@ body {
   color: #16a34a;
 }
 .van-online.off {
-  background: #f3f4f6;
+  background: var(--border-lt);
   color: #94a3b8;
 }
 .van-stats {
@@ -1167,7 +1167,7 @@ body {
 .client-card {
   background: #fff;
   border-radius: 12px;
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   padding: 18px;
   transition: border-color 0.15s;
 }
@@ -1217,12 +1217,12 @@ body {
 .seg-reg {
   background: transparent;
   color: #6b7280;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
 }
 .seg-new {
   background: transparent;
-  color: #9ca3af;
-  border: 1px solid #f3f4f6;
+  color: var(--gray-lt);
+  border: 1px solid var(--border-lt);
 }
 .seg-risk {
   background: #fef2f2;
@@ -1345,7 +1345,7 @@ body {
   color: var(--navy);
 }
 .bas-cell--gst-sales {
-  background: #fff7ed;
+  background: var(--amber-lt);
 }
 .bas-cell--gst-sales .bas-cell-label {
   color: #92400e;
@@ -1363,7 +1363,7 @@ body {
   color: #059669;
 }
 .bas-cell--net {
-  background: #eef3fc;
+  background: var(--blue-lt);
 }
 .bas-cell--net .bas-cell-label {
   color: var(--blue);
@@ -1452,7 +1452,7 @@ body {
 .setting-card {
   background: #fff;
   border-radius: 12px;
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   padding: 22px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
@@ -1822,7 +1822,7 @@ body {
     left: 0;
     right: 0;
     background: #fff;
-    border-top: 1px solid #e8ecf0;
+    border-top: 1px solid var(--border);
     z-index: 60;
     height: 60px;
     padding-bottom: env(safe-area-inset-bottom);

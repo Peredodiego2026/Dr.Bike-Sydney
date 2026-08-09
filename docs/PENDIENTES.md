@@ -1341,6 +1341,36 @@ proposito: el script solo entra en CSS, en `<style>`, en `style="..."` y en
 JS que no son CSS, `theme-color` ni `manifest.json`. Sacarlos de ahi es trabajo
 del PR B, uno por uno.
 
+#### Paso 3 / PR B-3 HECHO 2026-08-09: "casi igual" en admin y mechanic, con el tema FIJADO
+
+**59 apariciones** de 11 colores claros en `admin.html`, `mechanic.html` y sus
+CSS/JS. Las mas repetidas: `#e8ecf0` 14, `#e5e7eb` 11, `#9ca3af` 9, `#eef3fc` 7.
+
+**Se destrabo la medicion.** El problema no era que estas paginas no se pudieran
+medir: era que **elegian el tema solas** (`js/admin.js:12` lee `localStorage` y
+si no hay nada cae en `prefers-color-scheme`; `js/mechanic.js:304` fuerza dark),
+asi que dos cargas no eran comparables. La solucion es de una linea: **fijar
+`data-theme` en el iframe DESPUES de cargar y ANTES de medir**, y hacerlo igual
+de los dos lados. Con eso las dos superficies quedan medibles para siempre.
+
+| Pagina y tema | Elementos | Cambian |
+|---|---|---|
+| `admin.html` claro | 1260 | 96 |
+| `admin.html` **oscuro** | 1260 | **6** |
+| `mechanic.html` claro | 95 | 1 |
+| `mechanic.html` oscuro | 95 | 0 |
+
+**Los 6 del modo oscuro son un ARREGLO, no un efecto colateral.** Eran bordes y
+fondos escritos a mano que se quedaban claros mientras el resto de la pantalla
+se ponia oscura: `#e5e7eb -> #38383a` y `#eef3fc -> rgba(24,72,200,.18)`. Es
+exactamente el defecto del punto **12.15**, en chiquito, y cada hex que se
+convierte lo arregla en su lugar.
+
+**Lo que NO se toco, y no se debe tocar:** los colores propios del modo oscuro
+(`#f2f2f7` 58 veces, `#152035` 19, `#1a2740` 16, `#0d1b2e` 7, `#8e9bb5` 5,
+`#98989f`, `#2e2e33`, `#22304a`, `#1e2d47`). Esos **son** lo que pinta
+`[data-theme='dark']`. Mapearlos a un token claro daria vuelta el tema.
+
 #### Paso 3 / PR B-2 HECHO 2026-08-09: el grupo "casi igual", superficies de cliente
 
 **170 apariciones de 13 colores** que estaban a menos de 30 de distancia

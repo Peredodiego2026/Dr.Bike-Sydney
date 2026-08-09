@@ -1412,7 +1412,7 @@ function openCompleteModal(id) {
       <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);font-size:15px">✅ Complete job — ${esc(j.service)}</div>
       ${
         j.discount_applied > 0
-          ? `<div style="margin:16px 16px 0;background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:10px;padding:12px 14px">
+          ? `<div style="margin:16px 16px 0;background:var(--green-lt);border:1.5px solid #A7F3D0;border-radius:10px;padding:12px 14px">
         <div style="font-size:13px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
         <div style="font-size:15px;color:#065F46">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
       </div>`
@@ -1433,7 +1433,7 @@ function openCompleteModal(id) {
             <span id="parts-used-label" style="font-size:13px;font-weight:600;color:var(--navy)">Add parts used</span>
             <span style="display:flex;align-items:center;gap:8px">
               <span id="parts-used-count" style="display:none;font-size:11px;font-weight:700;color:#1E40AF;background:#1E40AF15;padding:2px 9px;border-radius:20px">0</span>
-              <span style="color:#9CA3AF;font-size:18px;line-height:1">›</span>
+              <span style="color:var(--gray-lt);font-size:18px;line-height:1">›</span>
             </span>
           </button>
           <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
@@ -1843,7 +1843,7 @@ function renderChargeBreakdown() {
   const b = calcChargeBreakdown();
   if (!b) return;
   let rows = '';
-  rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#9CA3AF;text-decoration:line-through;margin-bottom:6px"><span>Call-out fee (paid at booking)</span><span>$${b.calloutFee.toFixed(2)}</span></div>`;
+  rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gray-lt);text-decoration:line-through;margin-bottom:6px"><span>Call-out fee (paid at booking)</span><span>$${b.calloutFee.toFixed(2)}</span></div>`;
   rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--navy);margin-bottom:6px"><span>Service</span><span>$${b.service.toFixed(2)}</span></div>`;
   if (b.partsItems.length) {
     b.partsItems.forEach((p) => {
@@ -2252,7 +2252,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
     }
     const totalSpent = history.reduce((s, b) => s + (b.service_price || 0), 0);
     el.innerHTML = `
-      <div style="background:#EEF3FC;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between">
+      <div style="background:var(--blue-lt);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between">
         <div style="text-align:center">
           <div style="font-size:20px;font-weight:800;color:var(--navy)">${history.length}</div>
           <div style="font-size:11px;color:var(--mgray)">Services</div>
@@ -2276,7 +2276,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
               })
             : '—';
           const stars = b.client_rating ? '⭐'.repeat(b.client_rating) : '';
-          return `<div style="border-bottom:1px solid #F3F4F6;padding:12px 0">
+          return `<div style="border-bottom:1px solid var(--border-lt);padding:12px 0">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(b.service_name || 'Service')}</div>
             <div style="font-size:13px;font-weight:700;color:#059669">$${b.service_price || 0}</div>
@@ -2576,7 +2576,7 @@ function openChecklist(bookingId) {
           ${['ok', 'warn', 'critical']
             .map(
               (s) => `<button data-action="set-check" data-id="${item.id}" data-status="${s}"
-            style="padding:4px 8px;border-radius:6px;border:1px solid #E5E7EB;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#374151"
+            style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#374151"
             id="cb-${item.id}-${s}">${s === 'ok' ? '✅ OK' : s === 'warn' ? '⚠️ Warn' : '🔴 Critical'}</button>`
             )
             .join('')}
@@ -2835,7 +2835,7 @@ function renderAgenda() {
       </div>`;
 
     if (!dayJobs.length) {
-      html += `<div style="padding:12px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;font-size:13px;color:#9CA3AF">No jobs scheduled</div>`;
+      html += `<div style="padding:12px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;font-size:13px;color:var(--gray-lt)">No jobs scheduled</div>`;
     } else {
       // Timeline view
       const times = [
@@ -2875,7 +2875,7 @@ function renderAgenda() {
         .forEach((j) => {
           const color = stColors[j.status] || '#6B7280';
           html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
-          <div style="width:52px;font-size:11px;color:#9CA3AF;padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
+          <div style="width:52px;font-size:11px;color:var(--gray-lt);padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">
             <div style="font-size:13px;font-weight:600;color:#0D1F3C">${esc(j.service)}</div>
             <div style="font-size:13px;color:#6B7280;margin-top:2px">${esc(j.client)} · ${j.suburb || j.address || '—'}</div>
