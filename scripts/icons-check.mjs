@@ -12,14 +12,17 @@
 // generated letter icon and nobody finds out until a phone shows it.
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { IGNORED_DIRS } from './lib/ignored-dirs.mjs';
 
 const problems = [];
 
 // ── 1. every HTML page declares an icon ────────────────────────────────────
 function htmlFiles(dir, acc = []) {
   for (const name of readdirSync(dir)) {
-    // docs/ holds internal design mockups, never served to anyone.
-    if (name === 'node_modules' || name === '.git' || name === 'docs' || name.startsWith('${')) continue;
+    // docs/ holds internal design mockups, never served to anyone. Everything
+    // else comes from .gitignore: playwright-report/ alone ships four generated
+    // HTML files with no favicon, and this check used to count them.
+    if (IGNORED_DIRS.has(name) || name === 'docs' || name.startsWith('${')) continue;
     const p = join(dir, name);
     if (statSync(p).isDirectory()) htmlFiles(p, acc);
     else if (name.endsWith('.html')) acc.push(p.replace(/\\/g, '/').replace('./', ''));

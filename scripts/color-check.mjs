@@ -21,6 +21,7 @@
 // months.
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { IGNORED_DIRS } from './lib/ignored-dirs.mjs';
 
 // ── what counts as a colour ────────────────────────────────────────────────
 // 3, 4, 6 or 8 hex digits. Not 5 or 7: those are only ever HTML entities
@@ -40,9 +41,10 @@ const FOREIGN_BRAND = new Set([
   '25d366', // WhatsApp
 ]);
 
-// Files the sweep below never reads: dependencies, git internals, and docs -
-// where #1848C8 appears on purpose, in prose explaining that it is retired.
-const SWEEP_SKIP_DIR = new Set(['node_modules', '.git', 'docs']);
+// Directories the sweep below never reads: everything git ignores - build
+// output, coverage, playwright-report - plus docs/, where #1848C8 appears on
+// purpose, in prose explaining that it is retired.
+const SWEEP_SKIP_DIR = new Set([...IGNORED_DIRS, 'docs']);
 // This file names the colour it bans, and icons-check.mjs bans it in brand
 // assets. Neither is an occurrence.
 const SWEEP_SKIP_FILE = new Set(['scripts/color-check.mjs', 'scripts/icons-check.mjs']);
