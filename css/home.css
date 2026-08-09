@@ -460,7 +460,7 @@
   display: flex;
   align-items: center;
   min-height: 44px;
-  color: #6b7280;
+  color: var(--gray);
   font-size: 13px;
   margin-bottom: 0;
   text-decoration: none;
@@ -473,7 +473,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #6b7280;
+  color: var(--gray);
   font-size: 13px;
   margin-bottom: 10px;
 }

@@ -1093,20 +1093,20 @@ function exportFinancePDF() {
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;color:#0D1F3C;background:#fff}
     .page{max-width:820px;margin:0 auto;padding:48px 40px}
-    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #2563eb}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid var(--blue)}
     .brand{display:flex;align-items:center;gap:12px}
-    .brand-icon{width:42px;height:42px;background:#2563eb;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800}
+    .brand-icon{width:42px;height:42px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800}
     .brand-name{font-size:20px;font-weight:800;color:#0D1F3C}
-    .brand-sub{font-size:13px;color:#6B7280;margin-top:1px}
+    .brand-sub{font-size:13px;color:var(--gray);margin-top:1px}
     .report-info{text-align:right}
     .report-title{font-size:15px;font-weight:700;color:#0D1F3C}
-    .report-period{font-size:13px;color:#6B7280;margin-top:2px}
+    .report-period{font-size:13px;color:var(--gray);margin-top:2px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
-    .kpi{background:var(--surface);border-radius:12px;padding:16px;border-left:3px solid #2563eb}
+    .kpi{background:var(--surface);border-radius:12px;padding:16px;border-left:3px solid var(--blue)}
     .kpi.green{border-left-color:var(--green)}
     .kpi.orange{border-left-color:#D97706}
     .kpi.red{border-left-color:#DC2626}
-    .kpi-label{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+    .kpi-label{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
     .kpi-val{font-size:24px;font-weight:800;color:#0D1F3C}
     .kpi-sub{font-size:11px;color:var(--gray-lt);margin-top:3px}
     .section-title{font-size:13px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
@@ -1114,17 +1114,17 @@ function exportFinancePDF() {
     .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
     .bar-label{font-size:11px;color:var(--gray);min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
-    .bar-fill{height:100%;background:#2563eb;border-radius:4px}
+    .bar-fill{height:100%;background:var(--blue);border-radius:4px}
     .bar-val{font-size:11px;font-weight:700;color:#0D1F3C;min-width:44px;text-align:right}
     table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px}
     thead th{background:#0D1F3C;color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em}
     tbody tr:nth-child(even){background:var(--surface)}
     tbody td{padding:9px 12px;border-bottom:1px solid var(--border-lt);color:var(--gray)}
     tbody td.bold{font-weight:700;color:#0D1F3C}
-    tbody td.blue{font-weight:700;color:#2563eb}
+    tbody td.blue{font-weight:700;color:var(--blue)}
     .footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
     .footer-left{font-size:11px;color:var(--gray-lt)}
-    .print-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer}
+    .print-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer}
     @media print{.print-btn{display:none}.page{padding:20px}}
   </style></head>
   <body><div class="page">
@@ -1744,7 +1744,7 @@ function checkAdminAuth() {
     <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
       <div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
       <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
-      <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
         style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
         data-enter="focus-admin-pass">
@@ -1874,7 +1874,7 @@ async function submitTOTPCode() {
 
 async function _startMFAEnrollment() {
   _showLoginCard(
-    '<div style="font-size:13px;color:#6B7280;margin:20px 0">Loading QR code...</div>'
+    '<div style="font-size:13px;color:var(--gray);margin:20px 0">Loading QR code...</div>'
   );
   try {
     const resp = await fetch('/api/auth', {
@@ -1973,7 +1973,7 @@ const _btn =
   'width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
 
 function _totpInputHTML() {
-  return `<div style="font-size:13px;color:#6B7280;margin-bottom:28px">Enter the 6-digit code from your authenticator app</div>
+  return `<div style="font-size:13px;color:var(--gray);margin-bottom:28px">Enter the 6-digit code from your authenticator app</div>
   <input type="text" id="admin-totp-inp" placeholder="000000" aria-label="6-digit authentication code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:24px;font-weight:700;text-align:center;letter-spacing:10px"
     data-enter="submit-totp-code">
@@ -1982,9 +1982,9 @@ function _totpInputHTML() {
 }
 
 function _enrollHTML(qrSvg, secret) {
-  return `<div style="font-size:13px;color:#6B7280;margin-bottom:16px">Scan with Google Authenticator or Authy to enable 2FA on this account</div>
+  return `<div style="font-size:13px;color:var(--gray);margin-bottom:16px">Scan with Google Authenticator or Authy to enable 2FA on this account</div>
   <div style="margin:0 auto 12px;max-width:180px">${qrSvg}</div>
-  <div style="font-size:11px;color:#6B7280;margin-bottom:16px">Or enter manually: <code style="background:var(--border-lt);padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:1px">${secret}</code></div>
+  <div style="font-size:11px;color:var(--gray);margin-bottom:16px">Or enter manually: <code style="background:var(--border-lt);padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:1px">${secret}</code></div>
   <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" aria-label="6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
     data-enter="submit-mfa-setup-code">
@@ -5898,7 +5898,7 @@ async function loadMemberships() {
     cancelled:
       '<span style="background:var(--red-lt);color:#DC2626;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
     paused:
-      '<span style="background:var(--border-lt);color:#6B7280;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
+      '<span style="background:var(--border-lt);color:var(--gray);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
   };
 
   tbody.innerHTML = data

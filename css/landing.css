@@ -472,7 +472,7 @@ section.visible {
 }
 .footer-link {
   display: block;
-  color: #6b7280;
+  color: var(--gray);
   font-size: 14px;
   margin-bottom: 10px;
   transition: color 150ms;
@@ -484,7 +484,7 @@ section.visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #6b7280;
+  color: var(--gray);
   font-size: 14px;
   margin-bottom: 12px;
 }
@@ -533,7 +533,7 @@ section.visible {
   font-size: 16px;
 }
 .service-option .so-desc {
-  color: #6b7280;
+  color: var(--gray);
   font-size: 13px;
   margin-top: 2px;
 }
@@ -678,7 +678,7 @@ section.visible {
 }
 .svc-desc {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--gray);
   flex: 1;
 }
 .svc-btn {

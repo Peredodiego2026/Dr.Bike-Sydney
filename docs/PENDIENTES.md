@@ -1341,6 +1341,48 @@ proposito: el script solo entra en CSS, en `<style>`, en `style="..."` y en
 JS que no son CSS, `theme-color` ni `manifest.json`. Sacarlos de ahi es trabajo
 del PR B, uno por uno.
 
+#### Paso 3 / PR B-5 HECHO 2026-08-09: los atributos SVG y el gris viejo de la landing
+
+**263 apariciones.** Dos cosas que ningun PR anterior habia podido tocar:
+
+1. **`#6b7280`, 191 veces.** Era el `--gray` que declaraba `css/landing.css`
+   hasta que el PR #182 borro ese bloque. Desde entonces todo lo que usa
+   `var(--gray)` renderiza `#475569` y estos, escritos a mano, se quedaron en el
+   gris viejo: **el mismo texto en la misma pagina tenia dos grises**. Ahora no.
+2. **Los atributos `fill=` y `stroke=` de los SVG.** Se parsean como CSS, asi
+   que `var()` resuelve. Eran el grueso de los "211 que valen lo mismo que un
+   token" que el PR A dejo afuera a proposito.
+
+| Pagina | Elementos | Cambian |
+|---|---|---|
+| `landing.html` | 1097 | 109 |
+| `index.html` (SPA) | 524 | 24 |
+| `admin.html` claro / oscuro | 1268 | 7 / 6 |
+| `track.html`, `mechanic.html` | 30 / 95 | 0 |
+
+**HALLAZGO - `#ffffff` y `#0d1f3c` NO se pueden tokenizar en admin ni mechanic.**
+Se probo y se midio: en modo oscuro `var(--white)` vale `#1c1c1e` y
+`var(--navy)` vale `#f2f2f7`, asi que convertir los blancos escritos a mano
+volvia **oscuro** el texto de 277 propiedades en `admin.html` y 62 en
+`mechanic.html`. Son blancos que van sobre botones de color y tienen que
+quedarse blancos pase lo que pase. **Quedan en hex, y esta bien que queden.**
+En las tres superficies de cliente si se convirtieron, porque ahi `--white` es
+blanco siempre.
+
+**HALLAZGO DE METODO, vale para cualquier medicion futura en este repo.** La
+sonda cargaba cada pagina en un iframe con `?t=` para saltear la cache... pero
+eso solo saltea la cache del **HTML**. Las hojas de estilo llevan un `?v=` fijo,
+asi que el navegador servia **la copia de la corrida anterior** y el
+antes/despues salia mezclado: aparecian cambios en las dos direcciones a la vez
+(`#6b7280 -> #475569` y `#475569 -> #6b7280` en la misma pagina), que es
+imposible. Hay que **reescribir el `href` de cada `<link rel=stylesheet>` con
+una query nueva y esperar su `load`** antes de medir. Los numeros de este bloque
+estan tomados con la sonda ya corregida.
+
+**Sin explicar:** en `admin.html` en tema claro quedan **5 propiedades** que van
+`#475569 -> #6b7280`, o sea al reves de lo que hace este PR. Son 5 sobre 1268
+elementos y no se pudo aislar de donde salen. **Queda anotado, no tapado.**
+
 #### Paso 3 / PR B-4 HECHO 2026-08-09: el grupo "parecido", las 5 superficies
 
 **192 apariciones de 15 colores.** Los tres grandes son el verde viejo
