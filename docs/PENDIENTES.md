@@ -846,9 +846,10 @@ releer lo ya cerrado:
   los iconos se quedan con su `#0055de`: son dos azules a proposito, no deriva.
   Ya no hay decision pendiente, lo que queda es mecanico y lo puede tomar
   cualquier sesion:
-  1. `track.html` tiene que cargar `css/variables.css` en vez de declarar su
-     propio `:root` (hoy sigue trayendo el `#1848C8` retirado, y el
-     `<meta name="theme-color">` tambien). Eso es tambien el punto **13.5**.
+  1. ~~`track.html` tiene que cargar `css/variables.css`~~ **HECHO 2026-08-09
+     (`fix/track-loads-the-tokens`)**, con las diferencias de pixel medidas en
+     el punto **13.5**. De paso salio el punto **13.11**: los chips de estado
+     no pasan WCAG AA y la paleta ganadora empeora el verde.
   2. `css/landing.css:2` tiene que dejar de reabrir `:root` para pisar
      `--gray`, `--border`, `--blue-dark` y `--radius`.
   3. Los hex escritos a mano pasan a `var(--token)`, **solo en las 5
@@ -1634,6 +1635,35 @@ nombre real del mecanico.
 
 ### 13.5 La tercera paleta, y el azul retirado
 
+> **CERRADO 2026-08-09 (`fix/track-loads-the-tokens`).** `track.html` carga
+> `css/variables.css` y ya no abre su propio `:root`. Los 12 valores propios
+> desaparecieron; los dos nombres que el token file no definia (`--bg`,
+> `--card-bg`) pasaron a `--surface` y `--white`. El `theme-color` es `#2563eb`,
+> y **`scripts/icons-check.mjs` ahora falla si vuelve el `#1848C8`** en un
+> `theme-color` de cualquier pagina - la ventana por la que habia entrado.
+> Quedan tres paletas menos una: falta `css/landing.css:2` (paso 2 de 12.14).
+>
+> **Diferencias medidas en navegador**, antes y despues (variables computadas):
+>
+> | | Antes | Despues |
+> |---|---|---|
+> | fondo de pagina | `#F7F8FA` | `#f8fafc` |
+> | bordes (`.top`, `.card`) | `#E5E7EB` | `#e2e8f0` |
+> | etiquetas y errores | `#6B7280` | `#475569` |
+> | chip Confirmed | `#1848C8` sobre `#EEF3FC` | `#2563eb` sobre `#eff6ff` |
+> | chip En route / Completed | `#059669` sobre `#ECFDF5` | `#16a34a` sobre `#f0fdf4` |
+> | chip Pending | `#D97706` sobre `#FEF3C7` | igual sobre `#fffbeb` |
+> | navy, rojo, ambar, blanco | sin cambio | sin cambio |
+>
+> **HALLAZGO que sale de la medicion, y no lo arregla este PR:** el contraste
+> de las etiquetas mejora mucho (**4.83:1 -> 7.58:1**), pero los chips de estado
+> **ya fallaban WCAG AA antes y siguen fallando**, y uno empeora:
+> En route **3.58 -> 3.15**, Pending **2.86 -> 3.07**, Confirmed **6.74 -> 4.75**.
+> Son 12px en negrita, o sea texto normal para WCAG: piden 4.5:1. El verde y el
+> ambar del token file tienen menos contraste sobre su propio `-lt` que los que
+> `track.html` habia inventado. **Es un problema de la paleta ganadora, no de
+> `track.html`**, y afecta a cualquier chip de las 5 superficies. Ver 13.11.
+
 **VERIFICADO EN NAVEGADOR** leyendo las variables computadas:
 
 | Token en track.html | Valor | Valor en `css/variables.css` |
@@ -1694,7 +1724,39 @@ pero es el texto mas chico de la app en el limite del minimo.
 - **El estado `completed`** y el estado de link invalido (`?id=` suelto) no se
   renderizaron.
 - **El mapa de Leaflet** no se pudo evaluar visualmente: el panel del navegador
-  estaba cerrado y no compone frames.
+  estaba cerrado y no compone frames. **Diego lo probo en produccion el
+  2026-08-09 y funciona.** Lo que sigue sin poder medirse en local son los
+  *colores* de esa pantalla, que necesitan una reserva viva.
+
+### 13.11 Los chips de estado no pasan WCAG AA, y la paleta ganadora los empeora
+
+**Sale de medir 13.5, no de una auditoria.** Al pasar `track.html` a los tokens
+se midio el contraste antes y despues, y aparecio algo que no es de
+`track.html`: **el verde y el ambar de `css/variables.css` tienen menos
+contraste sobre su propio `-lt` que los hex que `track.html` habia inventado.**
+
+| Chip | Antes (paleta propia) | Despues (tokens) | WCAG AA |
+|---|---|---|---|
+| Pending `--amber` sobre `--amber-lt` | 2.86:1 | 3.07:1 | falla |
+| En route / Completed `--green` sobre `--green-lt` | 3.58:1 | **3.15:1** | falla |
+| Confirmed `--blue` sobre `--blue-lt` | 6.74:1 | 4.75:1 | pasa |
+
+Son **12px en negrita**: para WCAG eso es texto normal (el umbral de "texto
+grande" es 18.66px en negrita), asi que el minimo es **4.5:1**, no 3:1.
+
+**No lo introdujo el paso 1 de 12.14** - Pending ya fallaba con 2.86:1 y nadie
+lo habia medido. Pero el paso 3 va a extender esta combinacion a las 5
+superficies, asi que conviene resolverlo **antes**, no despues: hoy los badges
+de `admin.html`, `mechanic.html` y la SPA usan el mismo patron
+`background: [color]-lt; color: [color]`.
+
+**Arreglo probable:** oscurecer `--green` y `--amber` (o aclarar sus `-lt`) en
+`css/variables.css` hasta 4.5:1, que es un cambio de **una linea por color** y
+arregla las 5 superficies de una. **Es una decision de Diego**, porque cambia
+el color de la marca en pantalla.
+
+**Medido en navegador** (formula de luminancia relativa de WCAG 2.1) contra
+`fix/track-loads-the-tokens`, no estimado.
 
 ---
 
