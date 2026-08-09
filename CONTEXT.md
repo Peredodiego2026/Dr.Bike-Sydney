@@ -1,6 +1,42 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-08-08) — read this first
+## Current state (2026-08-09) — read this first
+
+- **12.14 and 13.11 are done.** `main` is at the merge of #201. Shipped today:
+  #195 (the colour ratchet), #197 (the retired blue, 183 occurrences in 73
+  files), #198 (the chips pass WCAG AA), #199 (16 new tokens, zero pixel
+  change), #200 (870 leftovers of the dead palettes, mapped), #201 (the design
+  skill stops teaching hex).
+
+- **The palette changed on screen and it was deliberate.** `--green` `#16a34a`
+  -> `#15803d`, `--amber` `#d97706` -> `#b45309`, `--red` `#dc2626` ->
+  `#cf2020`. The status chips were failing WCAG AA at 3.15:1 and 3.07:1; the
+  red was failing too at 4.41:1 and nobody had measured it. Do not "fix" these
+  back.
+
+- **There are 16 more tokens** (`--purple`, `--blue-soft`, `--amber-bright`,
+  `--green-ink`, `--slate`...). They are NOT duplicates of `--amber`/`--green`/
+  `--red` - read the comment block in `css/variables.css` before collapsing any
+  of them.
+
+- **`npm run check` is now 5 checks.** The new one is
+  `scripts/color-check.mjs`: a per-file BUDGET of hand-written hex that fails
+  if it goes up **and also if it goes down** without lowering the number. That
+  second half is on purpose. `#1848C8` fails everywhere, repo-wide.
+
+- **A stacked PR merged seconds after its parent goes into the PARENT branch,
+  not `main`.** That is how #196 shipped nothing while showing MERGED and
+  green. It had already happened with #189-#193. Always check with
+  `git merge-base --is-ancestor <sha> origin/main`.
+
+- **Nothing in this batch was seen rendered.** All five dev-server slots for
+  the folder belonged to other chats and the Vercel previews need a login. The
+  evidence is contrast arithmetic and a script that re-reads the diff. Worth a
+  look at `bondi.html` and a status chip when someone can.
+
+- Older entries below.
+
+## Current state (2026-08-08)
 
 - **`main` is `d3f9745`. One PR open: #177** (`feat/recover-email`, rebased and mergeable).
   Shipped since 04-aug: #171-#172 (the guest-charged-without-booking incident), #173-#175
