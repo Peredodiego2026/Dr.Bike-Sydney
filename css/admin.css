@@ -426,7 +426,7 @@ body {
 }
 /* Notification badges */
 [data-theme='dark'] .sb-badge {
-  background: #dc2626;
+  background: #cf2020;
 }
 /* Btn ghost */
 [data-theme='dark'] .btn-save {
@@ -769,10 +769,10 @@ body {
   background: var(--green);
 }
 .kpi-card.orange::before {
-  background: #d97706;
+  background: #b45309;
 }
 .kpi-card.red::before {
-  background: #dc2626;
+  background: #cf2020;
 }
 /* purple/teal/indigo folded into the 4 real tokens above - no more one-off hues */
 .kpi-card.purple::before {
@@ -816,7 +816,7 @@ body {
   border-radius: 20px;
 }
 .kpi-trend.up {
-  color: #16a34a;
+  color: #15803d;
   background: #f0fdf4;
 }
 .kpi-trend.dn {
@@ -911,19 +911,19 @@ body {
 }
 .status.pending {
   background: #fffbeb;
-  color: #d97706;
+  color: #b45309;
 }
 .status.enroute {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 .status.in_progress {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 .status.arrived {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 .status.completed {
   background: #f1f5f9;
@@ -931,7 +931,7 @@ body {
 }
 .status.cancelled {
   background: #fef2f2;
-  color: #dc2626;
+  color: #cf2020;
 }
 .status-dot {
   width: 5px;
@@ -954,7 +954,7 @@ body {
 }
 .mech-tag.v2 {
   background: var(--amber-lt);
-  color: #d97706;
+  color: #b45309;
 }
 
 /* SCHEDULE */
@@ -1104,7 +1104,7 @@ body {
 }
 .van-online.on {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 .van-online.off {
   background: var(--border-lt);
@@ -1226,7 +1226,7 @@ body {
 }
 .seg-risk {
   background: #fef2f2;
-  color: #dc2626;
+  color: #cf2020;
 }
 .cl-stats {
   display: grid;
@@ -1301,7 +1301,7 @@ body {
   color: #f2f2f7;
 }
 .pl-val.pos {
-  color: #16a34a;
+  color: #15803d;
   font-weight: 600;
 }
 .pl-val.neg {
@@ -1998,13 +1998,13 @@ body {
     border-left: 3px solid #1e40af;
   }
   .kpi.green {
-    border-left-color: #16a34a;
+    border-left-color: #15803d;
   }
   .kpi.orange {
-    border-left-color: #d97706;
+    border-left-color: #b45309;
   }
   .kpi.red {
-    border-left-color: #dc2626;
+    border-left-color: #cf2020;
   }
   .kpi-label {
     font-size: 10px;
@@ -2162,8 +2162,8 @@ body {
   --an-ord-3: #2563eb;
   --an-ord-4: #1e40af;
   --an-good: #059669;
-  --an-warn: #d97706;
-  --an-crit: #dc2626;
+  --an-warn: #b45309;
+  --an-crit: #cf2020;
 }
 [data-theme='dark'] #page-analytics {
   --an-surface: #152035;

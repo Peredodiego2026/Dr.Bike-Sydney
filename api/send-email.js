@@ -132,9 +132,9 @@ export default async function handler(req, res) {
           ${
             referralCode
               ? `<div style="background:#FEF3C7;border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
-            <p style="font-size:12px;color:#D97706;font-weight:700;margin:0 0 4px">🎁 Share Dr. Bike — earn $15 off your next service</p>
-            <p style="font-size:16px;font-weight:800;color:#D97706;letter-spacing:0.12em;margin:0 0 4px">${referralCode}</p>
-            <p style="font-size:11px;color:#D97706;margin:0;opacity:0.8">You and your friend each get $15 off when they use your code</p>
+            <p style="font-size:12px;color:#B45309;font-weight:700;margin:0 0 4px">🎁 Share Dr. Bike — earn $15 off your next service</p>
+            <p style="font-size:16px;font-weight:800;color:#B45309;letter-spacing:0.12em;margin:0 0 4px">${referralCode}</p>
+            <p style="font-size:11px;color:#B45309;margin:0;opacity:0.8">You and your friend each get $15 off when they use your code</p>
           </div>`
               : ''
           }
@@ -210,7 +210,7 @@ export default async function handler(req, res) {
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your <strong>${service}</strong> is complete! We'd love to hear how it went.</p>
           <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
-            <p style="font-size:13px;color:#D97706;font-weight:600;margin:0 0 12px">Rate your experience</p>
+            <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 12px">Rate your experience</p>
             <div style="font-size:32px;letter-spacing:4px">⭐⭐⭐⭐⭐</div>
           </div>
           <a href="https://drbikesydney.com.au/?review=${bookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Leave a review →</a>
@@ -250,26 +250,26 @@ export default async function handler(req, res) {
     },
     cancellation_client: {
       subject: `❌ Booking cancelled — ${service} · ${date}`,
-      html: `${header('#DC2626', '❌', 'Booking cancelled')}
+      html: `${header('#CF2020', '❌', 'Booking cancelled')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your booking has been cancelled as requested.</p>
           ${bookingTable()}
           <div style="background:#FEF2F2;border-radius:12px;padding:16px;margin-bottom:20px">
-            <p style="font-size:13px;color:#DC2626;font-weight:600;margin:0 0 4px">Refund information</p>
-            <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">If you paid online, your refund will be processed within 5–7 business days. For questions contact contact@drbikesydney.com.au</p>
+            <p style="font-size:13px;color:#CF2020;font-weight:600;margin:0 0 4px">Refund information</p>
+            <p style="font-size:12px;color:#CF2020;margin:0;opacity:0.8">If you paid online, your refund will be processed within 5–7 business days. For questions contact contact@drbikesydney.com.au</p>
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book again →</a>
         </div>${footer()}`,
     },
     cancellation_admin: {
       subject: `❌ Booking cancelled — ${name} · ${service} · ${date}`,
-      html: `${header('#DC2626', '❌', 'Booking cancelled by client')}
+      html: `${header('#CF2020', '❌', 'Booking cancelled by client')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6"><strong style="color:#0D1F3C">${name}</strong> cancelled their booking.</p>
           ${bookingTable()}
           <div style="background:#FEF2F2;border-radius:12px;padding:16px;margin-top:16px">
-            <p style="font-size:13px;color:#DC2626;font-weight:600;margin:0 0 4px">Action required</p>
-            <p style="font-size:12px;color:#DC2626;margin:0;opacity:0.8">This slot is now free. Consider reaching out to waitlisted clients or updating the schedule.</p>
+            <p style="font-size:13px;color:#CF2020;font-weight:600;margin:0 0 4px">Action required</p>
+            <p style="font-size:12px;color:#CF2020;margin:0;opacity:0.8">This slot is now free. Consider reaching out to waitlisted clients or updating the schedule.</p>
           </div>
         </div>${footer()}`,
     },
@@ -316,14 +316,14 @@ export default async function handler(req, res) {
     },
     payment_failed: {
       subject: `⚠️ Payment failed — Dr. Bike Sydney membership`,
-      html: `${header('#D97706', '⚠️', 'Payment failed')}
+      html: `${header('#B45309', '⚠️', 'Payment failed')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, we couldn't process your membership payment of <strong>$${price}</strong>. This is attempt ${typeof attemptCount !== 'undefined' ? attemptCount : 1}.</p>
           <div style="background:#FEF9C3;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #FCD34D">
-            <p style="font-size:13px;color:#D97706;font-weight:600;margin:0 0 4px">⚡ Action needed</p>
-            <p style="font-size:12px;color:#D97706;margin:0;line-height:1.6">Please update your payment method to keep your membership active. Your access will be paused if payment fails again.</p>
+            <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 4px">⚡ Action needed</p>
+            <p style="font-size:12px;color:#B45309;margin:0;line-height:1.6">Please update your payment method to keep your membership active. Your access will be paused if payment fails again.</p>
           </div>
-          <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#D97706;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Update payment method →</a>
+          <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#B45309;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Update payment method →</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">Questions? Reply to this email or WhatsApp us at +61 433 963 250</p>
         </div>${footer()}`,
     },
@@ -376,9 +376,9 @@ export default async function handler(req, res) {
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, wishing you an amazing birthday from the whole Dr. Bike team! 🚲</p>
           <div style="background:#FFFBEB;border-radius:16px;padding:28px;margin-bottom:24px;text-align:center;border:2px dashed #FCD34D">
             <div style="font-size:42px;margin-bottom:8px">🎁</div>
-            <div style="font-size:13px;color:#D97706;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">Your birthday gift</div>
-            <div style="font-size:32px;font-weight:900;color:#D97706;margin-bottom:4px">$20 OFF</div>
-            <div style="font-size:13px;color:#D97706;margin-bottom:16px;opacity:0.8">any service booked this week</div>
+            <div style="font-size:13px;color:#B45309;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">Your birthday gift</div>
+            <div style="font-size:32px;font-weight:900;color:#B45309;margin-bottom:4px">$20 OFF</div>
+            <div style="font-size:13px;color:#B45309;margin-bottom:16px;opacity:0.8">any service booked this week</div>
             <div style="background:#fff;border-radius:10px;padding:10px 20px;display:inline-block;border:2px solid #FCD34D">
               <span style="font-size:20px;font-weight:900;color:#0D1F3C;letter-spacing:0.16em">BDAY20</span>
             </div>

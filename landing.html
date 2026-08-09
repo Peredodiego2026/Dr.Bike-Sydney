@@ -1861,8 +1861,8 @@ function showDiagResult(data) {
   var resultEl = document.getElementById('diag-result');
   if (!resultEl) return;
   var sev = data.severity || 'medium';
-  var sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
-  var urgColor = data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
+  var sevColor = sev === 'high' ? '#CF2020' : sev === 'low' ? '#059669' : '#B45309';
+  var urgColor = data.urgency === 'Urgent' ? '#CF2020' : data.urgency === 'Book soon' ? '#B45309' : '#059669';
   var bookLabel = data.recommended_service_name
     ? 'Book ' + data.recommended_service_name + (data.recommended_service_price ? ' - $' + data.recommended_service_price : '') + ' →'
     : '';
@@ -2038,7 +2038,7 @@ var _authMode = 'signin';
 
 /* ── Real reviews (public_reviews view) ────────────────────────────────── */
 (function () {
-  var AVATAR_COLORS = ['#0A58CA', '#059669', '#7C3AED', '#D97706', '#DC2626'];
+  var AVATAR_COLORS = ['#0A58CA', '#059669', '#7C3AED', '#B45309', '#CF2020'];
 
   function timeAgo(iso) {
     var days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
@@ -2392,7 +2392,7 @@ function openAccountPanel(session) {
           '<div style="margin-top:12px">' + statusBadge + '</div>' +
           '</div>' +
           '<div style="display:flex;gap:8px">' +
-          '<button id="acct-membership-toggle" data-paused="' + (isPaused?'1':'0') + '" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ' + (isPaused?'#059669':'#D97706') + ';color:' + (isPaused?'#059669':'#D97706') + ';background:#fff">' + (isPaused?'Resume':'Pause') + '</button>' +
+          '<button id="acct-membership-toggle" data-paused="' + (isPaused?'1':'0') + '" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ' + (isPaused?'#059669':'#B45309') + ';color:' + (isPaused?'#059669':'#B45309') + ';background:#fff">' + (isPaused?'Resume':'Pause') + '</button>' +
           '<button id="acct-membership-cancel" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:var(--gray);background:var(--white)">Cancel</button>' +
           '</div>';
         // Wire up buttons after HTML is set
@@ -2896,7 +2896,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function starHTML(n) {
     return [1,2,3,4,5].map(function(i) {
       var active = i <= n;
-      return '<button data-val="'+i+'" style="background:none;border:none;font-size:38px;cursor:pointer;padding:3px;line-height:1;color:'+(active?'#D97706':'#E5E7EB')+';transition:color .1s,transform .1s;transform:'+(active?'scale(1.08)':'scale(1)')+'">'+(active?'★':'★')+'</button>';
+      return '<button data-val="'+i+'" style="background:none;border:none;font-size:38px;cursor:pointer;padding:3px;line-height:1;color:'+(active?'#B45309':'#E5E7EB')+';transition:color .1s,transform .1s;transform:'+(active?'scale(1.08)':'scale(1)')+'">'+(active?'★':'★')+'</button>';
     }).join('');
   }
 
@@ -2962,7 +2962,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('rv-stars').innerHTML = starHTML(currentRating);
     var lbl = document.getElementById('rv-label');
     lbl.textContent = LABELS[currentRating];
-    lbl.style.color = currentRating === 5 ? '#059669' : currentRating >= 3 ? '#D97706' : '#DC2626';
+    lbl.style.color = currentRating === 5 ? '#059669' : currentRating >= 3 ? '#B45309' : '#CF2020';
   });
 
   // Char counter

@@ -366,7 +366,7 @@ function syncBanner() {
   if (!n) return;
   if (_queueUnsaved) {
     // Do not dress this up: it is the one state where closing the app loses work.
-    banner.style.background = '#DC2626';
+    banner.style.background = '#CF2020';
     text.textContent =
       n === 1
         ? '1 change NOT saved to this phone - keep the app open until it syncs'
@@ -953,7 +953,7 @@ function card(j) {
         ? `<div style="padding:0 18px 6px"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${MEMBERSHIP_BADGE[j.membership_plan].color}15;color:${MEMBERSHIP_BADGE[j.membership_plan].color}">${MEMBERSHIP_BADGE[j.membership_plan].label}</span></div>`
         : ''
     }
-    ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:#D97706;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
+    ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:#B45309;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
     <div class="job-service">${esc(j.service)}</div>
     <div class="job-addr">${j.address || j.suburb || '—'}</div>
     ${j.phone ? `<div class="job-addr">${esc(j.phone)}</div>` : ''}
@@ -967,7 +967,7 @@ function card(j) {
       ${!done ? `${isPending || (st === 'confirmed' && !j.mechanic_id) ? `<button class="abtn primary accept" data-action="accept" data-id="${j.id}">Accept</button><button class="abtn danger" data-action="reject" data-id="${j.id}">Reject</button>` : st === 'confirmed' ? `<button class="abtn primary go" data-action="enroute" data-id="${j.id}">En route</button>` : isEnroute ? `<button class="abtn primary accept" data-action="arrived" data-id="${j.id}">Arrived</button>` : st === 'arrived' || st === 'inprogress' || st === 'in_progress' ? `<button class="abtn primary done" data-action="complete" data-id="${j.id}">Complete</button>` : ``}` : `<button class="abtn undo" data-action="undo" data-id="${j.id}">Undo</button>`}
     </div>
     ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." aria-label="Mechanic notes" value="${esc(j.mnotes)}" data-notes-id="${j.id}">` : ''}
-    ${isPending ? `<div style="text-align:center;font-size:11px;color:#16A34A;padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
+    ${isPending ? `<div style="text-align:center;font-size:11px;color:#15803D;padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
     </div>
   </div>`;
 }
@@ -1147,7 +1147,7 @@ function promptArrivalPin(id) {
       <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Ask the client for their 4-digit code and enter it below.</div>
       <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="4-digit arrival code"
         style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy);background:var(--off)">
-      <div id="pin-error" style="display:none;color:#DC2626;font-size:13px;margin-top:8px"></div>
+      <div id="pin-error" style="display:none;color:#CF2020;font-size:13px;margin-top:8px"></div>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button id="pin-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
         <button id="pin-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirm arrival</button>
@@ -1480,7 +1480,7 @@ function openCompleteModal(id) {
           <input id="comp-next" type="date" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
         </div>
         <div>
-          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:#DC2626">*</span></label>
+          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:#CF2020">*</span></label>
           <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
@@ -1567,8 +1567,8 @@ function openCompleteModal(id) {
         .map(
           (item, i) => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
-          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#DC2626' : '#059669'};flex-shrink:0" data-change="checklist-changed">
-          <span>${item.label}${item.required ? '<span style="color:#DC2626;font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
+          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#CF2020' : '#059669'};flex-shrink:0" data-change="checklist-changed">
+          <span>${item.label}${item.required ? '<span style="color:#CF2020;font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
         )
         .join('');
@@ -1635,9 +1635,9 @@ const CATEGORY_META = {
   cockpit: { label: 'Cockpit', icon: '🎯', color: '#2563EB' },
   wheels: { label: 'Wheels', icon: '🛞', color: '#059669' },
   'wheels & tyres': { label: 'Wheels & Tyres', icon: '🛞', color: '#059669' },
-  cables: { label: 'Cables', icon: '🔗', color: '#D97706' },
+  cables: { label: 'Cables', icon: '🔗', color: '#B45309' },
   drivetrain: { label: 'Drivetrain', icon: '⚙️', color: '#7C3AED' },
-  brakes: { label: 'Brakes', icon: '🛑', color: '#DC2626' },
+  brakes: { label: 'Brakes', icon: '🛑', color: '#CF2020' },
   suspension: { label: 'Suspension', icon: '🏔️', color: '#0891B2' },
   lubrication: { label: 'Lubrication', icon: '🧴', color: '#15803D' },
   general: { label: 'General', icon: '🔨', color: '#6B7280' },
@@ -1720,7 +1720,7 @@ function renderPartsPicker(parts) {
         html += `<div id="pp-row-${p.id}" style="display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid ${qty > 0 ? m.color : 'var(--border)'};border-left:3px solid ${m.color};border-radius:10px;padding:11px 12px;margin-bottom:7px">
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.name)}</div>
-          <div style="font-size:11px;color:${low ? '#DC2626' : '#6B7280'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
+          <div style="font-size:11px;color:${low ? '#CF2020' : '#6B7280'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           <button data-action="parts-step" data-id="${p.id}" data-delta="-1" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
@@ -1891,7 +1891,7 @@ async function applyMechDiscount() {
     renderChargeBreakdown();
   } catch (e) {
     _mechDiscount = null;
-    msg.style.color = '#DC2626';
+    msg.style.color = '#CF2020';
     msg.textContent = e.message || 'Invalid code';
     renderChargeBreakdown();
   }
@@ -2292,7 +2292,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
     const el = document.getElementById('history-content');
     if (el)
       el.innerHTML =
-        '<div style="text-align:center;padding:24px;color:#DC2626;font-size:13px">Error loading history</div>';
+        '<div style="text-align:center;padding:24px;color:#CF2020;font-size:13px">Error loading history</div>';
   }
 }
 
@@ -2375,7 +2375,7 @@ async function loadInventory() {
         html += `<div class="inv-row${low ? ' low' : ''}">
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(item.name)}</div>
-            ${low ? '<div style="font-size:11px;color:#DC2626;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
+            ${low ? '<div style="font-size:11px;color:#CF2020;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:44px;height:44px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
@@ -2596,7 +2596,7 @@ function setCheck(itemId, status) {
     const b = document.getElementById(`cb-${itemId}-${s}`);
     if (!b) return;
     b.style.background =
-      s === status ? (s === 'ok' ? '#059669' : s === 'warn' ? '#D97706' : '#DC2626') : '#fff';
+      s === status ? (s === 'ok' ? '#059669' : s === 'warn' ? '#B45309' : '#CF2020') : '#fff';
     b.style.color = s === status ? '#fff' : '#374151';
   });
 }

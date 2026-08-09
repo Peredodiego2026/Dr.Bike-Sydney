@@ -2065,6 +2065,37 @@ pero es el texto mas chico de la app en el limite del minimo.
 
 ### 13.11 Los chips de estado no pasan WCAG AA, y la paleta ganadora los empeora
 
+> **CERRADO 2026-08-09. DECIDIDO POR DIEGO: se oscurecen los tres.**
+>
+> | Token | Antes | Ahora | Sobre su `-lt` | Blanco encima |
+> |---|---|---|---|---|
+> | `--green` | `#16a34a` | **`#15803d`** | 3.15 -> **4.79:1** | 3.30 -> **5.02:1** |
+> | `--amber` | `#d97706` | **`#b45309`** | 3.07 -> **4.84:1** | 3.19 -> **5.02:1** |
+> | `--red` | `#dc2626` | **`#cf2020`** | 4.41 -> **4.95:1** | 4.83 -> **5.41:1** |
+>
+> **El rojo tambien fallaba y no estaba en este punto:** 4.41:1 contra el
+> minimo de 4.5. Salio al medir los tres juntos, no de la auditoria.
+>
+> **No alcanzaba con cambiar los tokens.** `var(--green)` se usa 134 veces pero
+> habia **178 hex escritos a mano** con el valor viejo en las 5 superficies y
+> los emails. Oscurecer solo el token hubiera partido el color en dos: los
+> chips nuevos y los viejos conviviendo. Se cambiaron los **311** juntos, en 82
+> archivos (incluye las 60 paginas de suburbio y los 5 posts).
+>
+> `--gold` y `--orange`, que son alias de `--amber`, se movieron con el.
+>
+> **Los dos usos en modo oscuro mejoran, no empeoran:** `css/admin.css:429`
+> (`.sb-badge`) y `css/mechanic.css:50` (`.abtn.primary.go`) son fondo con
+> texto blanco, y el blanco encima sube de 4.83 y 3.19 a 5.41 y 5.02.
+>
+> **Lo que NO se verifico:** no se vio un chip renderizado. Los chips viven en
+> `track.html` (necesita un `booking_id` real), en el admin y en el mecanico
+> (necesitan sesion), y los 5 slots de dev server de la carpeta estaban
+> ocupados por otros chats. Los contrastes son la formula de luminancia
+> relativa de WCAG 2.1 calculada sobre los valores exactos - es aritmetica, no
+> una estimacion, pero nadie miro la pantalla.
+
+
 **Sale de medir 13.5, no de una auditoria.** Al pasar `track.html` a los tokens
 se midio el contraste antes y despues, y aparecio algo que no es de
 `track.html`: **el verde y el ambar de `css/variables.css` tienen menos

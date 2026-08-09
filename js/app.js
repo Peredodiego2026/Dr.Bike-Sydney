@@ -2110,26 +2110,26 @@ async function geocodeAddress(address) {
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  pending: { dot: '#D97706', label: 'Booking received - assigning mechanic...' },
+  pending: { dot: '#B45309', label: 'Booking received - assigning mechanic...' },
   confirmed: { dot: '#1E40AF', label: 'Mechanic assigned - preparing to depart' },
-  enroute: { dot: '#16A34A', label: 'Mechanic is on the way!' },
-  en_route: { dot: '#16A34A', label: 'Mechanic is on the way!' },
-  in_progress: { dot: '#16A34A', label: 'Mechanic has arrived!' },
-  inprogress: { dot: '#16A34A', label: 'Mechanic has arrived!' },
-  arrived: { dot: '#16A34A', label: 'Mechanic has arrived!' },
+  enroute: { dot: '#15803D', label: 'Mechanic is on the way!' },
+  en_route: { dot: '#15803D', label: 'Mechanic is on the way!' },
+  in_progress: { dot: '#15803D', label: 'Mechanic has arrived!' },
+  inprogress: { dot: '#15803D', label: 'Mechanic has arrived!' },
+  arrived: { dot: '#15803D', label: 'Mechanic has arrived!' },
   completed: { dot: '#64748B', label: 'Service completed' },
 };
 
 async function renderTrackingPicker(screen) {
   const ST_COLORS = {
-    pending: '#D97706',
+    pending: '#B45309',
     confirmed: '#1E40AF',
-    enroute: '#16A34A',
-    en_route: '#16A34A',
-    in_progress: '#16A34A',
-    arrived: '#16A34A',
+    enroute: '#15803D',
+    en_route: '#15803D',
+    in_progress: '#15803D',
+    arrived: '#15803D',
     completed: '#64748B',
-    cancelled: '#DC2626',
+    cancelled: '#CF2020',
   };
   const ST_LABELS = {
     pending: 'Pending',
@@ -3577,15 +3577,15 @@ async function renderMyBookings() {
         const booking = allBookings.find((b) => String(b.id) === card.dataset.bookingId);
         if (!booking) return;
         const STATUS_COLORS = {
-          pending: '#D97706',
+          pending: '#B45309',
           confirmed: '#1E40AF',
-          enroute: '#16A34A',
-          en_route: '#16A34A',
-          in_progress: '#16A34A',
-          inprogress: '#16A34A',
-          arrived: '#16A34A',
+          enroute: '#15803D',
+          en_route: '#15803D',
+          in_progress: '#15803D',
+          inprogress: '#15803D',
+          arrived: '#15803D',
           completed: '#64748B',
-          cancelled: '#DC2626',
+          cancelled: '#CF2020',
         };
         const STATUS_LABELS = {
           pending: 'Pending',
@@ -4123,7 +4123,7 @@ async function renderProfile() {
             <div style="margin-top:8px">${statusBadge}</div>
           </div>
           <div style="display:flex;gap:8px">
-            <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
+            <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#B45309'};color:${isPaused ? '#059669' : '#B45309'};background:#fff">
               ${isPaused ? 'Resume membership' : 'Pause membership'}
             </button>
             <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:var(--gray);background:var(--white)">Cancel</button>
@@ -4696,7 +4696,7 @@ async function renderMyBikes() {
                 general: 'Frame',
               };
               const SCORE = { ok: 100, warn: 50, critical: 0 };
-              const COLOR = { ok: '#059669', warn: '#D97706', critical: '#DC2626' };
+              const COLOR = { ok: '#059669', warn: '#B45309', critical: '#CF2020' };
               const LABEL = { ok: 'OK', warn: 'Warn', critical: 'Critical' };
 
               const scored = Object.entries(COMP_LABELS)
@@ -4711,7 +4711,7 @@ async function renderMyBikes() {
               const avg = Math.round(
                 scored.reduce((s, c) => s + SCORE[c.status], 0) / scored.length
               );
-              const scoreColor = avg >= 75 ? '#059669' : avg >= 50 ? '#D97706' : '#DC2626';
+              const scoreColor = avg >= 75 ? '#059669' : avg >= 50 ? '#B45309' : '#CF2020';
               const scoreLabel =
                 avg >= 75 ? 'Good' : avg >= 50 ? 'Needs attention' : 'Critical issues';
               const lastDate = new Date(bkgs[0].scheduled_date).toLocaleDateString(dateLocale(), {
@@ -4979,9 +4979,9 @@ function showDiagResult(screen, data) {
   const resultEl = screen.querySelector('#diag-result');
   if (!resultEl) return;
   const sev = data.severity || 'medium';
-  const sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
+  const sevColor = sev === 'high' ? '#CF2020' : sev === 'low' ? '#059669' : '#B45309';
   const urgColor =
-    data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
+    data.urgency === 'Urgent' ? '#CF2020' : data.urgency === 'Book soon' ? '#B45309' : '#059669';
   const bookLabel = data.recommended_service_name
     ? 'Book ' +
       data.recommended_service_name +

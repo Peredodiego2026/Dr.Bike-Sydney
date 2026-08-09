@@ -38,9 +38,9 @@ function statusBadge(s) {
   if (s === 'ok')
     return '<span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">✅ OK</span>';
   if (s === 'warn')
-    return '<span style="background:#FFFBEB;color:#D97706;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">⚠️ Warn</span>';
+    return '<span style="background:#FFFBEB;color:#B45309;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">⚠️ Warn</span>';
   if (s === 'critical')
-    return '<span style="background:#FEF2F2;color:#DC2626;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">🔴 Critical</span>';
+    return '<span style="background:#FEF2F2;color:#CF2020;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">🔴 Critical</span>';
   return '<span style="color:#9CA3AF;font-size:11px">—</span>';
 }
 
@@ -89,8 +89,8 @@ function buildPDF({
     const BLUE = '#2563EB';
     const GRAY = '#6B7280';
     const GREEN = '#059669';
-    const AMBER = '#D97706';
-    const RED = '#DC2626';
+    const AMBER = '#B45309';
+    const RED = '#CF2020';
     const W = 495; // usable width
 
     // Header bar
@@ -665,7 +665,7 @@ export default async function handler(req, res) {
     ${nextService ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#2563EB;margin-bottom:24px">🔧 <strong>Next service reminder:</strong> ${nextService}</div>` : ''}
 
     <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
-      <p style="font-size:13px;color:#D97706;font-weight:600;margin:0 0 10px">How was your service?</p>
+      <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 10px">How was your service?</p>
       <div style="font-size:24px;letter-spacing:4px;margin-bottom:12px">⭐⭐⭐⭐⭐</div>
       <a href="https://drbikesydney.com.au/?review=${safeBookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:12px;border-radius:8px;font-weight:700;font-size:13px">Rate your mechanic →</a>
     </div>

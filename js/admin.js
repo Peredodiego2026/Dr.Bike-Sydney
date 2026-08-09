@@ -1104,8 +1104,8 @@ function exportFinancePDF() {
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
     .kpi{background:var(--surface);border-radius:12px;padding:16px;border-left:3px solid var(--blue)}
     .kpi.green{border-left-color:var(--green)}
-    .kpi.orange{border-left-color:#D97706}
-    .kpi.red{border-left-color:#DC2626}
+    .kpi.orange{border-left-color:#B45309}
+    .kpi.red{border-left-color:#CF2020}
     .kpi-label{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
     .kpi-val{font-size:24px;font-weight:800;color:#0D1F3C}
     .kpi-sub{font-size:11px;color:var(--gray-lt);margin-top:3px}
@@ -1544,7 +1544,7 @@ async function loadCoupons() {
         <!-- Code + status -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;margin-top:4px">
           <div style="font-size:18px;font-weight:800;color:var(--navy);letter-spacing:0.08em;font-variant-numeric:tabular-nums">${esc(c.code)}</div>
-          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive && !expired ? '#DCFCE7' : '#FEE2E2'};color:${isActive && !expired ? '#15803D' : '#DC2626'}">${expired ? 'Expired' : isActive ? 'Active' : 'Inactive'}</span>
+          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive && !expired ? '#DCFCE7' : '#FEE2E2'};color:${isActive && !expired ? '#15803D' : '#CF2020'}">${expired ? 'Expired' : isActive ? 'Active' : 'Inactive'}</span>
         </div>
 
         <!-- Big value display -->
@@ -1567,10 +1567,10 @@ async function loadCoupons() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? '#DC2626' : '#16A34A'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? '#CF2020' : '#15803D'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             ${isActive ? 'Deactivate' : 'Activate'}
           </button>
-          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#DC2626;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:#CF2020;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -1751,7 +1751,7 @@ function checkAdminAuth() {
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
         style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         data-enter="submit-admin-login">
-      <div id="admin-pass-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
+      <div id="admin-pass-err" style="color:#CF2020;font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
       <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
     </div>`;
   document.body.appendChild(overlay);
@@ -1814,7 +1814,7 @@ async function submitAdminLogin() {
     const inp = document.getElementById('admin-pass-inp');
     if (inp) {
       inp.value = '';
-      inp.style.borderColor = '#DC2626';
+      inp.style.borderColor = '#CF2020';
       inp.focus();
     }
     if (btn) {
@@ -1862,7 +1862,7 @@ async function submitTOTPCode() {
     const inp = document.getElementById('admin-totp-inp');
     if (inp) {
       inp.value = '';
-      inp.style.borderColor = '#DC2626';
+      inp.style.borderColor = '#CF2020';
       inp.focus();
     }
     if (btn) {
@@ -1894,7 +1894,7 @@ async function _startMFAEnrollment() {
       _completeAdminLogin({ access_token: _mfaTempToken, refresh_token: _mfaTempRefresh });
     } else {
       _showLoginCard(
-        '<div style="color:#DC2626;padding:20px;font-size:13px">' +
+        '<div style="color:#CF2020;padding:20px;font-size:13px">' +
           (e.message || 'Setup failed') +
           '</div>'
       );
@@ -1939,7 +1939,7 @@ async function submitMFASetupCode() {
     const inp = document.getElementById('admin-enroll-inp');
     if (inp) {
       inp.value = '';
-      inp.style.borderColor = '#DC2626';
+      inp.style.borderColor = '#CF2020';
       inp.focus();
     }
     if (btn) {
@@ -1977,7 +1977,7 @@ function _totpInputHTML() {
   <input type="text" id="admin-totp-inp" placeholder="000000" aria-label="6-digit authentication code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:24px;font-weight:700;text-align:center;letter-spacing:10px"
     data-enter="submit-totp-code">
-  <div id="admin-totp-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none"></div>
+  <div id="admin-totp-err" style="color:#CF2020;font-size:13px;margin-bottom:10px;display:none"></div>
   <button data-action="submit-totp-code" style="${_btn}">Verify →</button>`;
 }
 
@@ -1988,7 +1988,7 @@ function _enrollHTML(qrSvg, secret) {
   <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" aria-label="6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
     data-enter="submit-mfa-setup-code">
-  <div id="admin-enroll-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none"></div>
+  <div id="admin-enroll-err" style="color:#CF2020;font-size:13px;margin-bottom:10px;display:none"></div>
   <button data-action="submit-mfa-setup-code" style="${_btn}">Activate 2FA →</button>`;
 }
 
@@ -2116,11 +2116,11 @@ async function loadDashboard() {
             .toUpperCase();
           const st = b.status || 'pending';
           const stColors = {
-            pending: '#D97706',
+            pending: '#B45309',
             confirmed: 'var(--blue)',
             enroute: '#059669',
             completed: '#6B7280',
-            cancelled: '#DC2626',
+            cancelled: '#CF2020',
           };
           const stBg = {
             pending: '#FEF3C7',
@@ -2136,7 +2136,7 @@ async function loadDashboard() {
             completed: 'Completed',
             cancelled: 'Cancelled',
           };
-          const vanColors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+          const vanColors = { 1: 'var(--blue)', 2: '#B45309', 3: '#7C3AED', 4: '#CF2020' };
           const vanNum = b.van_number || 1;
           return `<tr>
         <td data-label="Client" style="font-weight:700">${esc(name)}</td>
@@ -2164,11 +2164,11 @@ async function loadDashboard() {
   const todayTbody = document.getElementById('dash-today-tbody');
   if (todayTbody) {
     const stColors2 = {
-      pending: '#D97706',
+      pending: '#B45309',
       confirmed: 'var(--blue)',
       enroute: '#059669',
       completed: '#6B7280',
-      cancelled: '#DC2626',
+      cancelled: '#CF2020',
     };
     const stBg2 = {
       pending: '#FEF3C7',
@@ -2226,7 +2226,7 @@ async function loadDashboard() {
       confirmed: 'var(--blue)',
       enroute: '#059669',
       completed: '#6B7280',
-      cancelled: '#DC2626',
+      cancelled: '#CF2020',
     };
     if (upcoming.length > 0) {
       schList.innerHTML = upcoming
@@ -2375,7 +2375,7 @@ function renderBookingsTable(data) {
         ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
         ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
+        ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:#CF2020;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
       </td>
     </tr>`;
     })
@@ -2533,11 +2533,11 @@ async function loadRecentNotifications() {
     return;
   }
   const stColors = {
-    pending: '#D97706',
+    pending: '#B45309',
     confirmed: '#059669',
     enroute: 'var(--blue)',
     completed: '#6B7280',
-    cancelled: '#DC2626',
+    cancelled: '#CF2020',
   };
   list.innerHTML = data
     .map((b) => {
@@ -2787,7 +2787,7 @@ async function renderRouteMap(useCache) {
   }
   _routeLayer = L.layerGroup().addTo(_routeMap);
 
-  const VAN_COLORS = { 1: 'var(--blue)', 2: '#D97706' };
+  const VAN_COLORS = { 1: 'var(--blue)', 2: '#B45309' };
   const latlngs = [];
   stops.forEach((s, i) => {
     const color = VAN_COLORS[s.van_number] || 'var(--blue)';
@@ -4163,7 +4163,7 @@ function renderHeatmap(all) {
   points.forEach((p) => {
     const intensity = p.n / maxN;
     const radius = 12 + intensity * 28;
-    const color = intensity > 0.66 ? '#DC2626' : intensity > 0.33 ? '#D97706' : 'var(--blue)';
+    const color = intensity > 0.66 ? '#CF2020' : intensity > 0.33 ? '#B45309' : 'var(--blue)';
     L.circleMarker(p.coord, { radius, color, weight: 1, fillColor: color, fillOpacity: 0.45 })
       .bindPopup(
         `<b>${esc(p.name)}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>${anMoney(p.rev)} revenue`
@@ -4346,7 +4346,7 @@ async function renderMechStats() {
         });
         const vals = Object.values(byDay);
         const maxVal = Math.max(...vals, 1);
-        const colors = { 1: 'var(--blue)', 2: '#D97706' };
+        const colors = { 1: 'var(--blue)', 2: '#B45309' };
         return `<div style="background:var(--off);border-radius:10px;padding:16px">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🚐 Van ${v}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
@@ -4383,7 +4383,7 @@ async function loadClients() {
     .order('created_at', { ascending: false });
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
-  const colors = ['var(--blue)', '#059669', '#D97706', '#7C3AED', '#0891B2', '#DC2626'];
+  const colors = ['var(--blue)', '#059669', '#B45309', '#7C3AED', '#0891B2', '#CF2020'];
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
@@ -4456,7 +4456,7 @@ async function loadVanZones() {
     const grouped = {};
     data.forEach((row) => {
       if (!grouped[row.van_number]) {
-        const colors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+        const colors = { 1: 'var(--blue)', 2: '#B45309', 3: '#7C3AED', 4: '#CF2020' };
         grouped[row.van_number] = {
           id: row.van_number,
           name: 'Van ' + row.van_number,
@@ -4608,7 +4608,7 @@ function removeSuburb(vanId, suburb) {
 
 function addVan() {
   const newId = vanZones.length > 0 ? Math.max(...vanZones.map((v) => v.id)) + 1 : 1;
-  const colors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+  const colors = { 1: 'var(--blue)', 2: '#B45309', 3: '#7C3AED', 4: '#CF2020' };
   vanZones.push({
     id: newId,
     name: 'Van ' + newId,
@@ -4632,10 +4632,10 @@ function removeVan(vanId) {
 // claims table has RLS with no public policies - the anon-key client used for
 // most other admin reads can't see it.
 const CLAIM_STATUS = {
-  new: { label: 'New', color: '#D97706', bg: '#FEF9C3' },
+  new: { label: 'New', color: '#B45309', bg: '#FEF9C3' },
   reviewing: { label: 'Reviewing', color: 'var(--blue)', bg: '#EEF3FC' },
   resolved: { label: 'Resolved', color: '#059669', bg: '#ECFDF5' },
-  rejected: { label: 'Rejected', color: '#DC2626', bg: '#FEF2F2' },
+  rejected: { label: 'Rejected', color: '#CF2020', bg: '#FEF2F2' },
 };
 
 async function loadClaims() {
@@ -4780,7 +4780,7 @@ async function loadContacts() {
       </div>
       <div style="display:flex;gap:8px">
         <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
-        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
+        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#CF2020;border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`
     )
@@ -4930,10 +4930,10 @@ function renderInventory() {
     const isOut = p.stock === 0;
     const statusTxt = isOut ? '🔴 Out of stock' : isLow ? '🟡 Low stock' : '🟢 OK';
     const statusBg = isOut ? '#FEF2F2' : isLow ? '#FEF9C3' : '#F0FDF4';
-    const statusCl = isOut ? '#DC2626' : isLow ? '#92400E' : '#15803D';
+    const statusCl = isOut ? '#CF2020' : isLow ? '#92400E' : '#15803D';
     return `<tr>
       <td data-label="Part" style="font-weight:600">${escapeHtml(p.name)}</td>
-      <td data-label="Stock" style="font-weight:700;font-size:15px;color:${isLow ? '#DC2626' : 'var(--navy)'}">${p.stock}</td>
+      <td data-label="Stock" style="font-weight:700;font-size:15px;color:${isLow ? '#CF2020' : 'var(--navy)'}">${p.stock}</td>
       <td data-label="Min" style="color:var(--mgray)">${p.min_stock}</td>
       <td data-label="Cost">$${parseFloat(p.cost_price || 0).toFixed(2)}</td>
       <td data-label="Client price" style="font-weight:700;color:var(--blue)">${p.sell_price !== null && p.sell_price !== undefined ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
@@ -4943,7 +4943,7 @@ function renderInventory() {
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">−</button>
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">+</button>
           <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-part" data-id="${p.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="delete-part" data-id="${p.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#CF2020;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -5164,7 +5164,7 @@ function renderServices() {
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
           <button data-action="open-service-modal" data-id="${s.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-service" data-id="${s.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="delete-service" data-id="${s.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#CF2020;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -5894,9 +5894,9 @@ async function loadMemberships() {
     active:
       '<span style="background:var(--green-lt);color:var(--green);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
     past_due:
-      '<span style="background:var(--amber-lt);color:#D97706;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
+      '<span style="background:var(--amber-lt);color:#B45309;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
     cancelled:
-      '<span style="background:var(--red-lt);color:#DC2626;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
+      '<span style="background:var(--red-lt);color:#CF2020;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
     paused:
       '<span style="background:var(--border-lt);color:var(--gray);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
   };
@@ -6008,7 +6008,7 @@ async function loadNotifNumbers() {
         <button data-action="edit-notif-number" data-id="${c.id}"
           style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
         <button data-action="delete-notif-number" data-id="${c.id}"
-          style="background:#FEF2F2;border:1.5px solid #FECACA;color:#DC2626;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
+          style="background:#FEF2F2;border:1.5px solid #FECACA;color:#CF2020;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
       </div>
     </div>`;
     })
@@ -6525,7 +6525,7 @@ async function loadNewsletter() {
         <td style="font-size:13px">${esc(s.name || '—')}</td>
         <td style="font-size:13px">${esc(s.source || 'website')}</td>
         <td style="font-size:13px">${new Date(s.subscribed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-        <td><span style="background:${s.active ? '#ECFDF5' : '#FEF2F2'};color:${s.active ? '#059669' : '#DC2626'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
+        <td><span style="background:${s.active ? '#ECFDF5' : '#FEF2F2'};color:${s.active ? '#059669' : '#CF2020'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
       </tr>`
         )
         .join('')}</tbody>
@@ -6589,7 +6589,7 @@ function handleUrlParams() {
     statusEl.style.color = 'var(--green)';
   } else if (statusEl && calendar === 'error') {
     statusEl.textContent = '✗ Connection failed - try again';
-    statusEl.style.color = '#DC2626';
+    statusEl.style.color = '#CF2020';
   }
   if (page || calendar) history.replaceState(null, '', location.pathname);
 }

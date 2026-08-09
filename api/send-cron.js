@@ -674,7 +674,7 @@ async function handleServiceReminders(req, res) {
         `<h2 style="color:#0D1F3C;margin:0 0 12px">Hi ${name}!</h2>
          <p style="color:#374151;line-height:1.7;margin:0 0 16px">
            Your mechanic recommended scheduling your next <strong>${svc}</strong> service soon.
-           ${daysLeft <= 2 ? '<br><span style="color:#DC2626;font-weight:600">Your recommended service date is in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</span>' : 'The recommended date is in <strong>' + daysLeft + ' days</strong> (' + dateLabel + ').'}
+           ${daysLeft <= 2 ? '<br><span style="color:#CF2020;font-weight:600">Your recommended service date is in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</span>' : 'The recommended date is in <strong>' + daysLeft + ' days</strong> (' + dateLabel + ').'}
          </p>
          <div style="background:#EEF3FC;border-left:3px solid #2563EB;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#2563EB">
            Regular servicing keeps your bike safe and extends the life of components.

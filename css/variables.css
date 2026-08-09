@@ -6,11 +6,11 @@
   --blue: #2563eb;
   --blue-dark: #1e40af;
   --blue-lt: #eff6ff;
-  --green: #16a34a;
+  --green: #15803d;
   --green-lt: #f0fdf4;
-  --amber: #d97706;
+  --amber: #b45309;
   --amber-lt: #fffbeb;
-  --red: #dc2626;
+  --red: #cf2020;
   --red-lt: #fef2f2;
   --navy: #0d1f3c;
   --gray: #475569;
@@ -24,8 +24,8 @@
   --off: #f8fafc; /* = --surface   */
   --mgray: #475569; /* = --gray      */
   --blue2: #1e3a8a; /* = --blue-dark */
-  --gold: #d97706; /* = --amber     */
-  --orange: #d97706; /* = --amber     */
+  --gold: #b45309; /* = --amber     */
+  --orange: #b45309; /* = --amber     */
   --navy2: #1e293b; /* slate-800     */
   --wa: #25d366; /* WhatsApp green */
   --wa-lt: #edfbf3;

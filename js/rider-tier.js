@@ -37,7 +37,7 @@ export function getRiderTier(completed) {
       label: 'Gold Rider',
       image: 'images/medals/gold.svg',
       iconType: 'photo',
-      color: '#D97706',
+      color: '#B45309',
     },
     {
       min: 20,
