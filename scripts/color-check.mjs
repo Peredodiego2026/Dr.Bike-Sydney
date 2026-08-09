@@ -19,7 +19,8 @@
 // telling you to lower the number - that is deliberate, it is the only way the
 // budget stays honest instead of drifting into a ceiling nobody has met in
 // months.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 // ── what counts as a colour ────────────────────────────────────────────────
 // 3, 4, 6 or 8 hex digits. Not 5 or 7: those are only ever HTML entities
@@ -39,17 +40,12 @@ const FOREIGN_BRAND = new Set([
   '25d366', // WhatsApp
 ]);
 
-// The blue this project retired. It is not "a colour we still use somewhere":
-// every occurrence is a leftover, so it fails hard instead of sitting in a
-// budget. See 12.14 and 13.5.
-const RETIRED_BLUE = '1848c8';
-
-// The two email builders still send the retired blue to real customers (41
-// occurrences). They are exempt from the hard failure ONLY because converting
-// them is a separate PR that Diego asked to keep apart - the diff is 357 hex
-// on its own. They are not exempt from the budget, so the number cannot grow.
-// When that PR lands, delete this and the two entries below it.
-const EMAIL = /^api\/send-(email|invoice)\.js$/;
+// Files the sweep below never reads: dependencies, git internals, and docs -
+// where #1848C8 appears on purpose, in prose explaining that it is retired.
+const SWEEP_SKIP_DIR = new Set(['node_modules', '.git', 'docs']);
+// This file names the colour it bans, and icons-check.mjs bans it in brand
+// assets. Neither is an occurrence.
+const SWEEP_SKIP_FILE = new Set(['scripts/color-check.mjs', 'scripts/icons-check.mjs']);
 
 // The staff apps re-declare --white, --navy and --blue-lt inside
 // [data-theme='dark'] (css/admin.css:2-10, css/mechanic.css:2-14). There, a
@@ -127,10 +123,6 @@ const wins = [];
 for (const [file, budget] of Object.entries(BUDGET)) {
   let counted = 0;
   for (const hit of colours(file)) {
-    if (hit.value === RETIRED_BLUE && !EMAIL.test(file)) {
-      problems.push(`${file}:${hit.line}: #1848c8 is the retired blue - use var(--blue) (#2563eb). See docs/PENDIENTES.md 13.5`);
-      continue;
-    }
     if (FOREIGN_BRAND.has(hit.value)) continue;
     // `--name: #hex` is a definition, not a use. Converting it to var() makes
     // the property reference itself, which is invalid and wipes the colour off
@@ -151,6 +143,31 @@ for (const [file, budget] of Object.entries(BUDGET)) {
   } else if (counted < budget) {
     wins.push(`${file}: down to ${counted} from ${budget} - lower BUDGET in scripts/color-check.mjs to ${counted}`);
   }
+}
+
+// ── the retired blue, everywhere, not just in the budgeted files ───────────
+// #1848C8 is not "a colour we still use somewhere". It was the third palette's
+// blue and it is gone as of 2026-08-09 - but it had reached 74 files, including
+// every customer email and all ~60 suburb pages, so the ban has to cover the
+// whole repo or it comes back through a file nobody budgeted.
+function sweep(dir, acc = []) {
+  for (const name of readdirSync(dir)) {
+    if (SWEEP_SKIP_DIR.has(name)) continue;
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) sweep(p, acc);
+    else if (/\.(html|css|js|mjs|json)$/.test(name)) acc.push(p.replace(/\\/g, '/').replace(/^\.\//, ''));
+  }
+  return acc;
+}
+
+for (const file of sweep('.')) {
+  if (SWEEP_SKIP_FILE.has(file)) continue;
+  const src = stripComments(readFileSync(file, 'utf8'));
+  src.split('\n').forEach((line, i) => {
+    if (/#1848c8\b/i.test(line)) {
+      problems.push(`${file}:${i + 1}: #1848C8 is the retired blue - use #2563EB / var(--blue). See docs/PENDIENTES.md 13.5`);
+    }
+  });
 }
 
 if (wins.length) {
