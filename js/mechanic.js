@@ -673,7 +673,7 @@ async function load() {
       const msg = document.createElement('div');
       msg.style.cssText = 'text-align:center;padding:40px;color:var(--red)';
       // textContent, not innerHTML: e.message went into markup unescaped.
-      msg.textContent = "Could not load your jobs — " + e.message;
+      msg.textContent = 'Could not load your jobs — ' + e.message;
       const retry = document.createElement('button');
       retry.textContent = 'Try again';
       retry.style.cssText =
@@ -1495,7 +1495,7 @@ function openCompleteModal(id) {
               : `<label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
               <div style="display:flex;gap:8px">
                 <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
-                  <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:#1848C8"> 💳 Card (EFTPOS)
+                  <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:var(--blue)"> 💳 Card (EFTPOS)
                 </label>
                 <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
                   <input type="radio" name="pay-method" value="cash" style="accent-color:#059669"> 💵 Cash
@@ -2034,7 +2034,7 @@ async function submitComplete(id) {
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
           <div style="display:flex;gap:8px">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
-              <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:#1848C8"> 💳 Card (EFTPOS)
+              <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:var(--blue)"> 💳 Card (EFTPOS)
             </label>
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
               <input type="radio" name="pay-method" value="cash" style="accent-color:#059669"> 💵 Cash
@@ -2283,7 +2283,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
           </div>
           <div style="font-size:11px;color:var(--mgray);margin-bottom:4px">${d} ${stars ? '· ' + stars : ''}</div>
           ${b.client_review ? `<div style="font-size:13px;color:#6B7280;font-style:italic">&ldquo;${esc(b.client_review)}&rdquo;</div>` : ''}
-          ${b.mechanic_notes ? `<div style="font-size:11px;color:#1848C8;margin-top:4px">📝 ${esc(b.mechanic_notes)}</div>` : ''}
+          ${b.mechanic_notes ? `<div style="font-size:11px;color:var(--blue);margin-top:4px">📝 ${esc(b.mechanic_notes)}</div>` : ''}
         </div>`;
         })
         .join('')}
@@ -2655,7 +2655,11 @@ async function saveChecklist() {
     setTimeout(
       () =>
         mechNotice(
-          '⚠️ ' + criticals.length + ' critical item' + (criticals.length === 1 ? '' : 's') + ' found',
+          '⚠️ ' +
+            criticals.length +
+            ' critical item' +
+            (criticals.length === 1 ? '' : 's') +
+            ' found',
           'An upsell email has been sent to the client.'
         ),
       500
@@ -2735,7 +2739,7 @@ function profile() {
     <div style="padding:0 16px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6">Earnings</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div style="background:linear-gradient(135deg,#1848C8,#0D1F3C);border-radius:14px;padding:16px;color:#fff">
+        <div style="background:linear-gradient(135deg,var(--blue),#0D1F3C);border-radius:14px;padding:16px;color:#fff">
           <div style="font-size:11px;opacity:0.7;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Today</div>
           <div style="font-size:24px;font-weight:800;margin-top:4px">$${todayRev}</div>
           <div style="font-size:13px;opacity:0.7;margin-top:2px">${td.length} job${td.length !== 1 ? 's' : ''}</div>
@@ -2826,7 +2830,7 @@ function renderAgenda() {
 
     html += `<div style="margin-top:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:700;color:${isToday ? '#1848C8' : '#0D1F3C'}">${label}</div>
+        <div style="font-size:13px;font-weight:700;color:${isToday ? 'var(--blue)' : '#0D1F3C'}">${label}</div>
         ${dayJobs.length ? `<div style="font-size:13px;color:#6B7280">${dayJobs.length} job${dayJobs.length !== 1 ? 's' : ''} · $${revenue}</div>` : ''}
       </div>`;
 
@@ -2939,7 +2943,7 @@ function openMechChat(bookingId) {
             <input type="file" accept="image/*" capture="environment" id="mech-chat-photo-inp" aria-label="Send photo" style="display:none" data-change="send-mech-photo">
           </label>
           <input id="mech-chat-inp" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)" placeholder="Type a message..." aria-label="Type a message" data-enter="send-mech-message">
-          <button data-action="send-mech-message" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;cursor:pointer;font-size:18px">→</button>
+          <button data-action="send-mech-message" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;cursor:pointer;font-size:18px">→</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
@@ -2984,7 +2988,7 @@ function appendMechMessage(msg, scroll = true) {
   const div = document.createElement('div');
   div.style.cssText = `display:flex;flex-direction:column;align-items:${isMech ? 'flex-end' : 'flex-start'};gap:2px;margin-bottom:6px`;
   const bubble = document.createElement('div');
-  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? '#1848C8' : '#fff'};color:${isMech ? '#fff' : '#0D1F3C'};border:${isMech ? 'none' : '1px solid #E5E7EB'}`;
+  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? 'var(--blue)' : '#fff'};color:${isMech ? '#fff' : '#0D1F3C'};border:${isMech ? 'none' : '1px solid #E5E7EB'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
   if (photoMatch) {
     const img = document.createElement('img');

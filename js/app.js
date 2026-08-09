@@ -254,7 +254,9 @@ function clearBookingDraft() {
           router.navigate('tracking');
         } catch (e) {
           showToast(
-            translateValue(e.message || 'Payment could not be confirmed. Please contact us if you were charged.')
+            translateValue(
+              e.message || 'Payment could not be confirmed. Please contact us if you were charged.'
+            )
           );
           router.navigate('book-service');
         }
@@ -1316,7 +1318,7 @@ async function renderServiceSummary() {
       <!-- Payment split note -->
       <div style="display:flex;gap:10px;background:#EEF3FC;border-radius:10px;padding:12px 14px;margin-bottom:16px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div style="font-size:13px;color:#1848C8;line-height:1.55">
+        <div style="font-size:13px;color:var(--blue);line-height:1.55">
           <strong>How payment works:</strong> ${translateValue(
             'The $CALLOUT call-out fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.'
           )
@@ -1803,8 +1805,7 @@ async function renderPayment() {
     const guestEmail = window.appState.guestEmail || null;
     if (!user && !guestEmail) throw new Error('We need an email to send your receipt.');
     const meta = (user && user.user_metadata) || {};
-    const _clientName =
-      meta.full_name || meta.name || window.appState.guestName || '';
+    const _clientName = meta.full_name || meta.name || window.appState.guestName || '';
     const _clientEmail = user ? user.email : guestEmail;
     const fee = feeOverride !== null ? feeOverride : calloutFee;
     // Real Stripe payment id only (admin test passes a fake "test_" id → no payment).
@@ -1989,7 +1990,7 @@ async function renderPayment() {
     // on the webhook, so the server can build the booking even if this browser
     // never gets to ask for it - which is how a paid booking was lost on
     // 2026-08-05 (docs/PENDIENTES.md 14).
-    const meta = (payingUser?.user_metadata || {});
+    const meta = payingUser?.user_metadata || {};
     _paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId, {
       serviceId: service?.id || null,
       serviceName: service?.name || null,
@@ -2055,7 +2056,9 @@ async function renderPayment() {
       try {
         await finalizeBooking(null, { isTest: false });
       } catch (e) {
-        errEl.textContent = translateValue(e.message || 'Could not confirm booking. Please try again.');
+        errEl.textContent = translateValue(
+          e.message || 'Could not confirm booking. Please try again.'
+        );
         errEl.hidden = false;
         btn.disabled = false;
         btn.textContent = 'Confirm booking';
@@ -2298,7 +2301,7 @@ async function renderTracking() {
       </div>
       <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid #F3F4F6">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <div style="font-size:13px;color:#1848C8"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
+        <div style="font-size:13px;color:var(--blue)"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
       </div>
       <div style="display:flex;gap:4px;padding:10px 16px">
         ${['Confirmed', 'En Route', 'Arrived', 'Done']
@@ -3336,7 +3339,9 @@ async function renderLogin() {
         if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
         renderResetSent(email);
       } catch (err) {
-        errEl.textContent = translateValue(err.message || 'Could not send reset link. Please try again.');
+        errEl.textContent = translateValue(
+          err.message || 'Could not send reset link. Please try again.'
+        );
         errEl.hidden = false;
         btn.disabled = false;
         btn.textContent = 'Send reset link';
@@ -3428,7 +3433,10 @@ function renderResetSent(email) {
     } catch (err) {
       resendBtn.disabled = false;
       resendBtn.textContent = 'Resend email';
-      showToast(translateValue(err.message || 'Could not send reset link. Please try again.'), 'error');
+      showToast(
+        translateValue(err.message || 'Could not send reset link. Please try again.'),
+        'error'
+      );
     }
   });
 }
@@ -3475,7 +3483,9 @@ function promptNewPassword() {
       showToast('Password updated - you are signed in.', 'success');
       router.navigate('home');
     } catch (e) {
-      errEl.textContent = translateValue(e.message || 'Could not update password. Please try again.');
+      errEl.textContent = translateValue(
+        e.message || 'Could not update password. Please try again.'
+      );
       errEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Update password';
@@ -4107,7 +4117,7 @@ async function renderProfile() {
                 ? '<span style="background:rgba(255,255,255,0.2);color:var(--white);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">Paused</span>'
                 : '<span style="background:rgba(255,255,255,0.2);color:var(--white);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block"></span>Active</span>';
               return `<div style="margin-bottom:20px">
-          <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:var(--white);margin-bottom:10px;box-shadow:var(--elevation-1)">
+          <div style="background:linear-gradient(135deg,${planColor},var(--blue));border-radius:16px;padding:18px;color:var(--white);margin-bottom:10px;box-shadow:var(--elevation-1)">
             <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Membership</div>
             <div style="font-size:20px;font-weight:800"><span>${planLabel}</span> <span>Plan</span></div>
             <div style="margin-top:8px">${statusBadge}</div>

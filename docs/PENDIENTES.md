@@ -1341,6 +1341,29 @@ proposito: el script solo entra en CSS, en `<style>`, en `style="..."` y en
 JS que no son CSS, `theme-color` ni `manifest.json`. Sacarlos de ahi es trabajo
 del PR B, uno por uno.
 
+#### Paso 3 / PR B-1 HECHO 2026-08-09: muere el azul retirado
+
+**Las 57 apariciones de `#1848C8` en las 5 superficies ya no existen.** No hacia
+falta ninguna decision nueva: el azul de la app es `#2563eb` desde el 2026-08-03
+(y el logo se queda con `#0055de`), asi que cada `#1848C8` era deriva, no una
+eleccion. **Esto SI cambia pixeles**, a proposito.
+
+No fue un reemplazo unico, porque el contexto manda:
+
+| Donde | Cuantos | A que paso | Por que |
+|---|---|---|---|
+| CSS, `<style>`, `style="..."` de las 5 superficies | 50 | `var(--blue)` | el token existe y resuelve ahi |
+| `js/admin.js` 1090-1135 | 6 | **`#2563eb` literal** | es el `<style>` de un `window.open()`: documento nuevo, sin `variables.css`, ahi `var(--blue)` no existe |
+| `landing.html` hover de Fleet | 1 | **`var(--blue-dark)`** | ese `onmouseover` buscaba un azul MAS oscuro que el boton. Mapearlo a `var(--blue)` habria dejado el hover sin efecto |
+
+La unica mencion que queda de `#1848C8` en las superficies es el comentario de
+`track.html` que explica de donde venia. Es documentacion, no color.
+
+**El hallazgo del literal en la ventana de impresion vale para el resto del PR
+B:** cualquier CSS que se escriba dentro de un `window.open()` o de un email
+esta fuera del alcance de `css/variables.css`. Ahi el hex es obligatorio, y lo
+unico que se puede hacer es que coincida con el token.
+
 **HALLAZGO 1 - la trampa de la auto-referencia.** La primera version del script
 reescribio `--white: #ffffff` (en `css/home.css:12`) como
 `--white: var(--white)`. Una custom property que se referencia a si misma es
