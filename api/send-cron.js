@@ -524,7 +524,8 @@ async function handleOrphanPayments(req, res) {
 
   const candidates = (intents.data || []).filter((pi) => isOrphanCandidate(pi, { nowSeconds }));
 
-  if (!candidates.length) return res.status(200).json({ checked: intents.data?.length || 0, orphans: 0 });
+  if (!candidates.length)
+    return res.status(200).json({ checked: intents.data?.length || 0, orphans: 0 });
 
   // One query for all of them rather than one per payment.
   const ids = candidates.map((pi) => pi.id);
@@ -675,7 +676,7 @@ async function handleServiceReminders(req, res) {
            Your mechanic recommended scheduling your next <strong>${svc}</strong> service soon.
            ${daysLeft <= 2 ? '<br><span style="color:#DC2626;font-weight:600">Your recommended service date is in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</span>' : 'The recommended date is in <strong>' + daysLeft + ' days</strong> (' + dateLabel + ').'}
          </p>
-         <div style="background:#EEF3FC;border-left:3px solid #2563EB;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#1848C8">
+         <div style="background:#EEF3FC;border-left:3px solid #2563EB;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#2563EB">
            Regular servicing keeps your bike safe and extends the life of components.
          </div>`
       );
@@ -735,7 +736,7 @@ async function handleServiceReminders(req, res) {
              It's been about <strong>${months} months</strong> since your <strong>${svc}</strong>.
              Regular servicing keeps your bike running smoothly and prevents costly repairs.
            </p>
-           <div style="background:#EEF3FC;border-left:3px solid #2563EB;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#1848C8">
+           <div style="background:#EEF3FC;border-left:3px solid #2563EB;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#2563EB">
              Book now and we'll come to you — home, office or local park across Sydney.
            </div>`
         );

@@ -82,7 +82,7 @@ export default async function handler(req, res) {
         ${address ? `<tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Address</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${address}</td></tr>` : ''}
         <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Net amount</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">$${net} AUD</td></tr>
         <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">GST (10%)</td><td style="padding:8px 0;font-weight:600;color:#6B7280;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">$${gst} AUD</td></tr>
-        <tr><td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px;border-top:2px solid #E5E7EB">Total</td><td style="padding:10px 0 0;font-weight:800;color:#1848C8;font-size:18px;text-align:right;border-top:2px solid #E5E7EB">$${price} AUD</td></tr>
+        <tr><td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px;border-top:2px solid #E5E7EB">Total</td><td style="padding:10px 0 0;font-weight:800;color:#2563EB;font-size:18px;text-align:right;border-top:2px solid #E5E7EB">$${price} AUD</td></tr>
       </table>
     </div>`;
 
@@ -98,8 +98,8 @@ export default async function handler(req, res) {
 
           <!-- What to expect -->
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
-            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 8px">📍 What happens next</p>
-            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.8;opacity:0.9">
+            <p style="font-size:13px;color:#2563EB;font-weight:600;margin:0 0 8px">📍 What happens next</p>
+            <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.8;opacity:0.9">
               1. Your mechanic will be assigned shortly<br>
               2. You'll get a notification when they're on the way<br>
               3. Payment collected on completion
@@ -121,7 +121,7 @@ export default async function handler(req, res) {
                 <tr><td style="color:#6B7280;padding:5px 0;border-top:1px solid #F3F4F6">GST (10%)</td><td style="text-align:right;color:#6B7280;border-top:1px solid #F3F4F6">$${gst}</td></tr>
                 <tr style="border-top:2px solid #E5E7EB">
                   <td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px">Total (AUD)</td>
-                  <td style="padding:10px 0 0;text-align:right;font-weight:800;color:#1848C8;font-size:18px">$${price}</td>
+                  <td style="padding:10px 0 0;text-align:right;font-weight:800;color:#2563EB;font-size:18px">$${price}</td>
                 </tr>
               </table>
               <p style="font-size:10px;color:#9CA3AF;margin:12px 0 0">ABN: 87 654 025 287 · Dr. Bike Sydney · drbikesydney.com.au</p>
@@ -144,26 +144,26 @@ export default async function handler(req, res) {
     },
     mechanic_new_booking: {
       subject: `🔔 New booking — ${service} · ${date}`,
-      html: `${header('#1848C8', '🔔', 'New booking!')}
+      html: `${header('#2563EB', '🔔', 'New booking!')}
         <div style="padding:32px 28px">
           <h1 style="font-size:20px;font-weight:700;color:#0D1F3C;margin:0 0 16px">New job assigned to you</h1>
           ${bookingTable()}
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:16px">
-            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 4px">📱 Open your mechanic app</p>
-            <p style="font-size:12px;color:#1848C8;margin:0">Log in to accept and see full client details</p>
+            <p style="font-size:13px;color:#2563EB;font-weight:600;margin:0 0 4px">📱 Open your mechanic app</p>
+            <p style="font-size:12px;color:#2563EB;margin:0">Log in to accept and see full client details</p>
           </div>
-          <a href="https://drbikesydney.com.au/mechanic.html" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
+          <a href="https://drbikesydney.com.au/mechanic.html" style="display:block;background:#2563EB;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open mechanic app →</a>
         </div>${footer()}`,
     },
     reminder2h: {
       subject: `⏰ Reminder — your Dr. Bike service is in ~2 hours`,
-      html: `${header('#1848C8', '⏰', 'See you soon!')}
+      html: `${header('#2563EB', '⏰', 'See you soon!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, just a friendly reminder that your booking is coming up in about <strong style="color:#0D1F3C">2 hours</strong>. Your mechanic will contact you ~30 min before arrival.</p>
           ${bookingTable()}
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
-            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 8px">✅ Quick checklist</p>
-            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.8;opacity:0.9">
+            <p style="font-size:13px;color:#2563EB;font-weight:600;margin:0 0 8px">✅ Quick checklist</p>
+            <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.8;opacity:0.9">
               • Have your bike accessible at the address<br>
               • Clear a small space for the mechanic to work<br>
               • Need to change something? Free to cancel up to 2h before
@@ -175,13 +175,13 @@ export default async function handler(req, res) {
     },
     upcoming: {
       subject: `📅 Your Dr. Bike service is coming up`,
-      html: `${header('#1848C8', '📅', 'See you soon!')}
+      html: `${header('#2563EB', '📅', 'See you soon!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, a reminder that your booking with Dr. Bike Sydney is coming up. We'll message you again on the day, and your mechanic will let you know when they're on the way.</p>
           ${bookingTable()}
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
-            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 8px">✅ Before the day</p>
-            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.8;opacity:0.9">
+            <p style="font-size:13px;color:#2563EB;font-weight:600;margin:0 0 8px">✅ Before the day</p>
+            <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.8;opacity:0.9">
               • Make sure the bike will be accessible at the address<br>
               • Let us know now if the time no longer works<br>
               • Free to cancel or reschedule up to 2h before
@@ -197,8 +197,8 @@ export default async function handler(req, res) {
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 24px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, it's been 6+ months since your last service. Regular maintenance keeps your bike safe and riding smoothly!</p>
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:24px">
-            <p style="font-size:13px;color:#1848C8;font-weight:700;margin:0 0 8px">🔧 Why regular servicing matters</p>
-            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6;opacity:0.8">Worn brake pads, stretched cables and dirty drivetrains reduce performance and can be dangerous. A quick tune-up extends your bike's life significantly.</p>
+            <p style="font-size:13px;color:#2563EB;font-weight:700;margin:0 0 8px">🔧 Why regular servicing matters</p>
+            <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6;opacity:0.8">Worn brake pads, stretched cables and dirty drivetrains reduce performance and can be dangerous. A quick tune-up extends your bike's life significantly.</p>
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#059669;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Book a service now →</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you — home, work or park · Mon–Sat</p>
@@ -229,7 +229,7 @@ export default async function handler(req, res) {
           </div>`
               : ''
           }
-          <div style="background:linear-gradient(135deg,#7C3AED,#1848C8);border-radius:16px;padding:28px 24px;margin-bottom:20px;text-align:center">
+          <div style="background:linear-gradient(135deg,#7C3AED,#2563EB);border-radius:16px;padding:28px 24px;margin-bottom:20px;text-align:center">
             <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Gift card value</div>
             <div style="font-size:42px;font-weight:900;color:#fff;margin-bottom:16px">$${amount}</div>
             <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:12px;display:inline-block">
@@ -293,14 +293,14 @@ export default async function handler(req, res) {
     },
     waitlist_confirmation: {
       subject: `🔔 You're on the waitlist — Dr. Bike Sydney`,
-      html: `${header('#1848C8', '🔔', 'On the waitlist!')}
+      html: `${header('#2563EB', '🔔', 'On the waitlist!')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, you're on the waitlist for <strong>${date}</strong>.</p>
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
-            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 4px">What happens next?</p>
-            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6">We'll send you an email the moment a slot opens up on that day. You'll have 30 minutes to complete your booking before it's offered to the next person on the list.</p>
+            <p style="font-size:13px;color:#2563EB;font-weight:600;margin:0 0 4px">What happens next?</p>
+            <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6">We'll send you an email the moment a slot opens up on that day. You'll have 30 minutes to complete your booking before it's offered to the next person on the list.</p>
           </div>
-          <a href="https://drbikesydney.com.au/?action=book" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Check other dates →</a>
+          <a href="https://drbikesydney.com.au/?action=book" style="display:block;background:#2563EB;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Check other dates →</a>
         </div>${footer()}`,
     },
     tip_received: {
@@ -334,10 +334,10 @@ export default async function handler(req, res) {
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, it's been a while since your last service with us${typeof monthsAgo !== 'undefined' && monthsAgo ? ' (' + monthsAgo + ' months ago)' : ''}. Your bike misses the open road!</p>
           <div style="background:#EEF3FC;border-radius:16px;padding:28px;margin-bottom:24px;text-align:center">
             <div style="font-size:42px;margin-bottom:8px">🎁</div>
-            <div style="font-size:13px;color:#1848C8;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">Welcome back offer</div>
-            <div style="font-size:32px;font-weight:900;color:#1848C8;margin-bottom:4px">$15 OFF</div>
-            <div style="font-size:13px;color:#1848C8;margin-bottom:16px;opacity:0.8">your next service — valid 14 days</div>
-            <div style="background:#fff;border-radius:10px;padding:10px 20px;display:inline-block;border:2px solid #1848C8">
+            <div style="font-size:13px;color:#2563EB;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">Welcome back offer</div>
+            <div style="font-size:32px;font-weight:900;color:#2563EB;margin-bottom:4px">$15 OFF</div>
+            <div style="font-size:13px;color:#2563EB;margin-bottom:16px;opacity:0.8">your next service — valid 14 days</div>
+            <div style="background:#fff;border-radius:10px;padding:10px 20px;display:inline-block;border:2px solid #2563EB">
               <span style="font-size:20px;font-weight:900;color:#0D1F3C;letter-spacing:0.16em">BACK15</span>
             </div>
           </div>
@@ -360,10 +360,10 @@ export default async function handler(req, res) {
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, you started booking a <strong>${service}</strong>${date ? ' for ' + date : ''} but didn't complete it. Your bike is waiting!</p>
           <div style="background:#EEF3FC;border-radius:16px;padding:24px;margin-bottom:24px;text-align:center">
-            <div style="font-size:13px;color:#1848C8;font-weight:700;margin-bottom:4px">Your booking details</div>
+            <div style="font-size:13px;color:#2563EB;font-weight:700;margin-bottom:4px">Your booking details</div>
             <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">${service}</div>
-            ${date ? `<div style="font-size:13px;color:#1848C8;margin-bottom:12px">${date}${time ? ' at ' + time : ''}</div>` : ''}
-            <div style="font-size:24px;font-weight:900;color:#1848C8">$${price}</div>
+            ${date ? `<div style="font-size:13px;color:#2563EB;margin-bottom:12px">${date}${time ? ' at ' + time : ''}</div>` : ''}
+            <div style="font-size:24px;font-weight:900;color:#2563EB">$${price}</div>
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Complete my booking &rarr;</a>
           <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; 0433 963 250</p>
@@ -397,14 +397,14 @@ export default async function handler(req, res) {
     },
     payment_action_required: {
       subject: `🔐 Action required — verify your Dr. Bike payment`,
-      html: `${header('#1848C8', '🔐', 'Payment verification needed')}
+      html: `${header('#2563EB', '🔐', 'Payment verification needed')}
         <div style="padding:32px 28px">
           <p style="color:#6B7280;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your bank requires additional verification for your membership renewal.</p>
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
-            <p style="font-size:13px;color:#1848C8;font-weight:600;margin:0 0 4px">🔐 One more step</p>
-            <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6">Your bank uses 3D Secure authentication. Click below to complete verification and keep your membership active.</p>
+            <p style="font-size:13px;color:#2563EB;font-weight:600;margin:0 0 4px">🔐 One more step</p>
+            <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6">Your bank uses 3D Secure authentication. Click below to complete verification and keep your membership active.</p>
           </div>
-          <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#1848C8;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Complete verification →</a>
+          <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#2563EB;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Complete verification →</a>
         </div>${footer()}`,
     },
     booking_confirmation: {
@@ -419,7 +419,7 @@ export default async function handler(req, res) {
               <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Service</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${service}</td></tr>
               <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Date</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${date}${time ? ' at ' + time : ''}</td></tr>
               <tr><td style="padding:8px 0;color:#6B7280;font-size:13px;border-top:1px solid #E5E7EB">Address</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E5E7EB">${address || '—'}</td></tr>
-              <tr><td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px;border-top:2px solid #E5E7EB">Price</td><td style="padding:10px 0 0;font-weight:800;color:#1848C8;font-size:18px;text-align:right;border-top:2px solid #E5E7EB">$${price} AUD</td></tr>
+              <tr><td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px;border-top:2px solid #E5E7EB">Price</td><td style="padding:10px 0 0;font-weight:800;color:#2563EB;font-size:18px;text-align:right;border-top:2px solid #E5E7EB">$${price} AUD</td></tr>
             </table>
           </div>
           <a href="https://drbikesydney.com.au/admin.html" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Open admin panel →</a>

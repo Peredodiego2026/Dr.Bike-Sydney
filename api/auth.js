@@ -1943,7 +1943,7 @@ async function handleRequestPasswordReset(req, res) {
         to: [cleanEmail],
         subject: '🔐 Reset your Dr. Bike Sydney password',
         html: `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
-          <div style="background:#1848C8;padding:32px 28px;text-align:center">
+          <div style="background:#2563EB;padding:32px 28px;text-align:center">
             <div style="display:inline-block;background:#fff;border-radius:14px;padding:10px 18px;margin-bottom:14px">
               <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="26" style="display:block;width:auto">
             </div>
@@ -1961,7 +1961,7 @@ async function handleRequestPasswordReset(req, res) {
               <p style="color:#2563EB;font-size:11px;word-break:break-all;margin:0">${actionLink}</p>
             </div>
             <div style="background:#EEF3FC;border-radius:12px;padding:16px">
-              <p style="font-size:12px;color:#1848C8;margin:0;line-height:1.6;opacity:0.9">Didn't request this? No action needed - you can safely ignore this email and your password will stay the same.</p>
+              <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6;opacity:0.9">Didn't request this? No action needed - you can safely ignore this email and your password will stay the same.</p>
             </div>
           </div>
           <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E5E7EB">
@@ -2676,7 +2676,7 @@ async function handlePublicBookingList(req, res) {
         to: [cleanEmail],
         subject: 'Your Dr. Bike Sydney booking tracking links',
         html: `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
-          <div style="background:#1848C8;padding:32px 28px;text-align:center">
+          <div style="background:#2563EB;padding:32px 28px;text-align:center">
             <div style="display:inline-block;background:#fff;border-radius:14px;padding:10px 18px;margin-bottom:14px">
               <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="26" style="display:block;width:auto">
             </div>

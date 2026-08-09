@@ -1279,6 +1279,18 @@ a token nuevo). Los mas repetidos: `#6b7280` 187, `#e5e7eb` 121, `#059669` 108,
 `#1848c8` 58, `#f2f2f7` 58, `#374151` 55, `#9ca3af` 43, `#f3f4f6` 30,
 `#111827` 29, `#60a5fa` 26.
 
+> **CERRADO 2026-08-09.** El azul retirado ya no existe en ningun archivo que
+> se sirva: **183 apariciones en 73 archivos** pasaron a `#2563EB`, incluidos
+> los **40 de los emails** (`api/send-email.js`, `send-invoice.js`,
+> `send-cron.js`, `auth.js`), las 60 paginas de suburbio en los 3 idiomas, los
+> 5 posts del blog, `business.html`, `bike-check.html`, `cycling-map.html` y
+> `scripts/generate-suburb-pages.mjs` - el generador tambien, o volveria a
+> entrar en la proxima regeneracion. `scripts/color-check.mjs` ahora barre
+> **todo el repo** buscandolo, no solo los archivos con presupuesto. Lo unico
+> que queda escrito es la prosa que explica que esta retirado (`track.html:13`,
+> este documento, el skill `drbike-design`), y los comentarios se descartan.
+> El parrafo original queda abajo por trazabilidad.
+
 **El azul retirado `#1848C8` no vive solo en `track.html`.** 58 apariciones en
 las 5 superficies y **~80 archivos** en todo el repo: `js/admin.js` 33,
 **`api/send-email.js` 33** (o sea los emails al cliente salen con el azul
@@ -1610,10 +1622,11 @@ excluye por regla, no por presupuesto.
 
 **Ademas, dos reglas duras que no dependen del presupuesto:**
 
-- `#1848c8`, el azul retirado, **falla siempre**. Excepcion temporal en
-  `api/send-email.js` y `api/send-invoice.js`, donde quedan 41 apariciones que
-  salen a clientes reales: van en el PR de emails. Ahi si cuentan para el
-  presupuesto, asi que no pueden crecer.
+- `#1848c8`, el azul retirado, **falla siempre y en todo el repo**, no solo en
+  los archivos con presupuesto: el barrido lee todo `.html/.css/.js/.mjs/.json`
+  fuera de `node_modules` y `docs/`. Tenia que ser asi porque habia llegado a
+  73 archivos, incluidos los emails y las 60 paginas de suburbio, y un
+  presupuesto por archivo no lo hubiera alcanzado.
 - Excepciones que **nunca** cuentan, y por que:
   `--nombre: #hex` (es una definicion, convertirla es la auto-referencia del
   HALLAZGO 1), `<meta name="theme-color">` (no acepta `var()`), los cuatro
