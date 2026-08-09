@@ -236,7 +236,7 @@
 [data-screen='home'] .trust-label {
   font-size: 10px;
   letter-spacing: 1.5px;
-  color: #9ca3af;
+  color: var(--gray-lt);
   font-weight: 600;
   white-space: nowrap;
   text-transform: uppercase;
@@ -251,7 +251,7 @@
 [data-screen='home'] .trust-brand {
   font-size: 13px;
   font-weight: 700;
-  color: #374151;
+  color: var(--gray);
 }
 [data-screen='home'] .trust-sep {
   color: var(--border);
@@ -460,7 +460,7 @@
   display: flex;
   align-items: center;
   min-height: 44px;
-  color: #6b7280;
+  color: var(--gray);
   font-size: 13px;
   margin-bottom: 0;
   text-decoration: none;
@@ -473,7 +473,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #6b7280;
+  color: var(--gray);
   font-size: 13px;
   margin-bottom: 10px;
 }
@@ -487,7 +487,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid #374151;
+  border: 1px solid var(--gray);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -636,7 +636,7 @@
 }
 [data-screen='home'] .review-text {
   font-size: 14px;
-  color: #374151;
+  color: var(--gray);
   line-height: 1.6;
   margin-bottom: 14px;
   font-style: italic;

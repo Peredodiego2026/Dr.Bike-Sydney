@@ -83,7 +83,7 @@ img {
 }
 .nav-links a {
   font-size: 14px;
-  color: #374151;
+  color: var(--gray);
   transition: color 150ms;
 }
 .nav-links a:hover {
@@ -93,7 +93,7 @@ img {
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--gray-lt);
   background: transparent;
   border: none;
   padding: 6px 8px;
@@ -104,7 +104,7 @@ img {
     background 150ms;
 }
 .nav-lang-btn:hover {
-  color: #374151;
+  color: var(--gray);
   background: var(--gray-light);
 }
 .nav-lang-btn.active {
@@ -181,7 +181,7 @@ img {
 .btn-outline {
   background: transparent;
   border: 2px solid var(--border);
-  color: #374151;
+  color: var(--gray);
   padding: 14px 28px;
   border-radius: var(--radius);
   font-weight: 600;
@@ -189,7 +189,7 @@ img {
   transition: var(--transition);
 }
 .btn-outline:hover {
-  border-color: #9ca3af;
+  border-color: var(--gray-lt);
   background: var(--gray-light);
 }
 .hero-stats {
@@ -204,7 +204,7 @@ img {
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #374151;
+  color: var(--gray);
 }
 .hero-image {
   border-radius: 16px;
@@ -265,7 +265,7 @@ img {
 .trust-label {
   font-size: 11px;
   letter-spacing: 1.5px;
-  color: #9ca3af;
+  color: var(--gray-lt);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -278,7 +278,7 @@ img {
 .trust-brand {
   font-size: 14px;
   font-weight: 700;
-  color: #374151;
+  color: var(--gray);
 }
 .trust-sep {
   color: var(--border);
@@ -472,7 +472,7 @@ section.visible {
 }
 .footer-link {
   display: block;
-  color: #6b7280;
+  color: var(--gray);
   font-size: 14px;
   margin-bottom: 10px;
   transition: color 150ms;
@@ -484,7 +484,7 @@ section.visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #6b7280;
+  color: var(--gray);
   font-size: 14px;
   margin-bottom: 12px;
 }
@@ -492,7 +492,7 @@ section.visible {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid #374151;
+  border: 1px solid var(--gray);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -505,7 +505,7 @@ section.visible {
 /* ── Booking Modal ───────────────────────────────────────────────────────── */
 .service-option {
   padding: 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
   transition: all 200ms ease;
@@ -524,7 +524,7 @@ section.visible {
 }
 .service-option .so-name {
   font-weight: 700;
-  color: #111827;
+  color: var(--navy);
   font-size: 15px;
 }
 .service-option .so-price {
@@ -533,13 +533,13 @@ section.visible {
   font-size: 16px;
 }
 .service-option .so-desc {
-  color: #6b7280;
+  color: var(--gray);
   font-size: 13px;
   margin-top: 2px;
 }
 .date-pill {
   padding: 10px 14px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
   text-align: center;
@@ -569,7 +569,7 @@ section.visible {
 }
 .time-slot {
   padding: 12px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
   text-align: center;
@@ -599,13 +599,13 @@ section.visible {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #f9fafb;
+  background: var(--surface);
   border-radius: 10px;
   margin-top: 16px;
 }
 .summary-total .st-label {
   font-weight: 700;
-  color: #111827;
+  color: var(--navy);
   font-size: 16px;
 }
 .summary-total .st-amount {
@@ -640,7 +640,7 @@ section.visible {
   }
 }
 .svc-card {
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
@@ -669,7 +669,7 @@ section.visible {
 .svc-name {
   font-weight: 700;
   font-size: 15px;
-  color: #111827;
+  color: var(--navy);
 }
 .svc-price {
   font-weight: 800;
@@ -678,7 +678,7 @@ section.visible {
 }
 .svc-desc {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--gray);
   flex: 1;
 }
 .svc-btn {
@@ -695,7 +695,7 @@ section.visible {
   transition: background 150ms;
 }
 .svc-btn:hover {
-  background: #1d4ed8;
+  background: var(--blue-dark);
 }
 
 input:-webkit-autofill,
@@ -703,7 +703,7 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px white inset !important;
   box-shadow: 0 0 0px 1000px white inset !important;
-  -webkit-text-fill-color: #111827 !important;
+  -webkit-text-fill-color: undefined !important;
 }
 
 /* ══ Booking wizard: full-screen overlay (this page only) ═══════════════════

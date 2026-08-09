@@ -13,7 +13,7 @@
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 [data-theme='dark'] .job-card {
-  background: #152035 !important;
+  background: undefined !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 [data-theme='dark'] .job-card .job-client {
@@ -51,7 +51,7 @@
 }
 [data-theme='dark'] .abtn.primary.done,
 [data-theme='dark'] .abtn.primary.accept {
-  background: #059669 !important;
+  background: undefined !important;
 }
 [data-theme='dark'] .abtn.danger {
   background: transparent !important;
@@ -79,8 +79,8 @@
   background: #0d1f3c;
 }
 [data-theme='dark'] .nav-tab.on {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: var(--blue);
+  border-bottom-color: var(--blue);
 }
 [data-theme='dark'] .nav-tabs {
   background: #0d1f3c;
@@ -90,7 +90,7 @@
   background: #0d1f3c !important;
 }
 [data-theme='dark'] .kpi-card {
-  background: #152035 !important;
+  background: undefined !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 [data-theme='dark'] .kpi-val {
@@ -133,7 +133,7 @@ body {
 .login-logo {
   width: 64px;
   height: 64px;
-  background: #2563eb;
+  background: var(--blue);
   border-radius: 18px;
   display: flex;
   align-items: center;
@@ -189,7 +189,7 @@ body {
   transition: all 0.15s;
 }
 .van-opt.sel {
-  border-color: #2563eb;
+  border-color: var(--blue);
   background: rgba(37, 99, 235, 0.2);
   color: #fff;
 }
@@ -216,7 +216,7 @@ body {
 }
 .login-btn {
   width: 100%;
-  background: #2563eb;
+  background: var(--blue);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -286,7 +286,7 @@ body {
 .nav-tabs {
   display: flex;
   background: #fff;
-  border-bottom: 1px solid #e8ecf0;
+  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -315,12 +315,12 @@ body {
   letter-spacing: 0.04em;
 }
 .nav-tab.on {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: var(--blue);
+  border-bottom-color: var(--blue);
   font-weight: 700;
 }
 .tab-badge {
-  background: #2563eb;
+  background: var(--blue);
   color: #fff;
   border-radius: 10px;
   padding: 1px 6px;
@@ -345,7 +345,7 @@ body {
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 10px;
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   transition: background 150ms ease;
 }
 .job-card.done {
@@ -365,7 +365,7 @@ body {
 }
 .job-meta {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--gray);
   margin-top: 2px;
   font-weight: 400;
 }
@@ -377,13 +377,13 @@ body {
 }
 .job-addr {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--gray);
   margin-bottom: 8px;
   font-weight: 400;
 }
 .job-notes {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--gray);
   margin-bottom: 8px;
   font-style: italic;
 }
@@ -434,7 +434,7 @@ body {
 .abtn.secondary {
   background: transparent;
   color: var(--navy);
-  border: 1.5px solid #e8ecf0;
+  border: 1.5px solid var(--border);
   font-weight: 600;
 }
 .abtn.secondary:hover {
@@ -450,7 +450,7 @@ body {
 }
 .abtn.primary.done,
 .abtn.primary.accept {
-  background: #059669;
+  background: var(--green);
 }
 .abtn.danger {
   background: transparent;
@@ -465,11 +465,11 @@ body {
 .abtn.undo {
   background: #f8fafc;
   color: #64748b;
-  border: 1.5px solid #e8ecf0;
+  border: 1.5px solid var(--border);
 }
 .notes-inp {
   width: 100%;
-  border: 1.5px solid #e8ecf0;
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 12px;
@@ -480,7 +480,7 @@ body {
   background: #fff;
 }
 .notes-inp:focus {
-  border-color: #2563eb;
+  border-color: var(--blue);
 }
 .profile-wrap {
   padding: 24px;
@@ -490,7 +490,7 @@ body {
 .profile-av {
   width: 72px;
   height: 72px;
-  background: #2563eb;
+  background: var(--blue);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -510,7 +510,7 @@ body {
   background: #fff;
   border-radius: 12px;
   padding: 18px 16px;
-  border: 1px solid #e8ecf0;
+  border: 1px solid var(--border);
   text-align: center;
 }
 .kpi-val {

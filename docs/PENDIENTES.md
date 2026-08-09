@@ -1341,6 +1341,165 @@ proposito: el script solo entra en CSS, en `<style>`, en `style="..."` y en
 JS que no son CSS, `theme-color` ni `manifest.json`. Sacarlos de ahi es trabajo
 del PR B, uno por uno.
 
+#### Paso 3 / PR B-5 HECHO 2026-08-09: los atributos SVG y el gris viejo de la landing
+
+**263 apariciones.** Dos cosas que ningun PR anterior habia podido tocar:
+
+1. **`#6b7280`, 191 veces.** Era el `--gray` que declaraba `css/landing.css`
+   hasta que el PR #182 borro ese bloque. Desde entonces todo lo que usa
+   `var(--gray)` renderiza `#475569` y estos, escritos a mano, se quedaron en el
+   gris viejo: **el mismo texto en la misma pagina tenia dos grises**. Ahora no.
+2. **Los atributos `fill=` y `stroke=` de los SVG.** Se parsean como CSS, asi
+   que `var()` resuelve. Eran el grueso de los "211 que valen lo mismo que un
+   token" que el PR A dejo afuera a proposito.
+
+| Pagina | Elementos | Cambian |
+|---|---|---|
+| `landing.html` | 1097 | 109 |
+| `index.html` (SPA) | 524 | 24 |
+| `admin.html` claro / oscuro | 1268 | 7 / 6 |
+| `track.html`, `mechanic.html` | 30 / 95 | 0 |
+
+**HALLAZGO - `#ffffff` y `#0d1f3c` NO se pueden tokenizar en admin ni mechanic.**
+Se probo y se midio: en modo oscuro `var(--white)` vale `#1c1c1e` y
+`var(--navy)` vale `#f2f2f7`, asi que convertir los blancos escritos a mano
+volvia **oscuro** el texto de 277 propiedades en `admin.html` y 62 en
+`mechanic.html`. Son blancos que van sobre botones de color y tienen que
+quedarse blancos pase lo que pase. **Quedan en hex, y esta bien que queden.**
+En las tres superficies de cliente si se convirtieron, porque ahi `--white` es
+blanco siempre.
+
+**HALLAZGO DE METODO, vale para cualquier medicion futura en este repo.** La
+sonda cargaba cada pagina en un iframe con `?t=` para saltear la cache... pero
+eso solo saltea la cache del **HTML**. Las hojas de estilo llevan un `?v=` fijo,
+asi que el navegador servia **la copia de la corrida anterior** y el
+antes/despues salia mezclado: aparecian cambios en las dos direcciones a la vez
+(`#6b7280 -> #475569` y `#475569 -> #6b7280` en la misma pagina), que es
+imposible. Hay que **reescribir el `href` de cada `<link rel=stylesheet>` con
+una query nueva y esperar su `load`** antes de medir. Los numeros de este bloque
+estan tomados con la sonda ya corregida.
+
+**Sin explicar:** en `admin.html` en tema claro quedan **5 propiedades** que van
+`#475569 -> #6b7280`, o sea al reves de lo que hace este PR. Son 5 sobre 1268
+elementos y no se pudo aislar de donde salen. **Queda anotado, no tapado.**
+
+#### Paso 3 / PR B-4 HECHO 2026-08-09: el grupo "parecido", las 5 superficies
+
+**192 apariciones de 15 colores.** Los tres grandes son el verde viejo
+`#059669` (71), el gris de texto `#374151` (51) y el negro de texto `#111827`
+(24). **Cambian pixeles, y se nota si los ponés al lado.**
+
+| Pagina | Elementos | Cambian |
+|---|---|---|
+| `landing.html` | 1097 | 95 |
+| `index.html` (SPA) | 524 | 28 |
+| `admin.html` claro / oscuro | 1260 | 14 / 14 |
+| `mechanic.html` oscuro | 95 | 2 |
+| `track.html` | 30 | 0 |
+
+**La mitad del grupo NO se toco, y cada exclusion tiene una razon distinta:**
+
+1. **Colores de marca ajena.** `#34a853`, `#ea4335`, `#1877f2` son el verde y
+   el rojo de Google y el azul de Facebook, en los botones de OAuth.
+   Recolorear el logo de otro no es limpieza, es romperlo.
+2. **La paleta del modo oscuro** de las apps de staff: `#98989f`, `#8e8e93`,
+   `#48484a`, `#38383a`, `#2c2c2e`, `#242426`, `#1c1c1e`, `#3a3a3f`, `#636366`,
+   `#8b95a5`, `#33425e`, `#0f172a`. Igual que en B-3.
+3. **Colores cuyo vecino mas cercano es de OTRO tono.** `#bfdbfe` y `#bae6fd`
+   son celestes y su token mas cercano es un gris; `#221155` es violeta y le
+   toca un navy; `#1e3a5f` y `#1a3a6b` son azules propios del hero y del mapa.
+   Esos son colores de verdad, no deriva: van al grupo "distinto".
+
+#### Paso 3 / PR B-3 HECHO 2026-08-09: "casi igual" en admin y mechanic, con el tema FIJADO
+
+**59 apariciones** de 11 colores claros en `admin.html`, `mechanic.html` y sus
+CSS/JS. Las mas repetidas: `#e8ecf0` 14, `#e5e7eb` 11, `#9ca3af` 9, `#eef3fc` 7.
+
+**Se destrabo la medicion.** El problema no era que estas paginas no se pudieran
+medir: era que **elegian el tema solas** (`js/admin.js:12` lee `localStorage` y
+si no hay nada cae en `prefers-color-scheme`; `js/mechanic.js:304` fuerza dark),
+asi que dos cargas no eran comparables. La solucion es de una linea: **fijar
+`data-theme` en el iframe DESPUES de cargar y ANTES de medir**, y hacerlo igual
+de los dos lados. Con eso las dos superficies quedan medibles para siempre.
+
+| Pagina y tema | Elementos | Cambian |
+|---|---|---|
+| `admin.html` claro | 1260 | 96 |
+| `admin.html` **oscuro** | 1260 | **6** |
+| `mechanic.html` claro | 95 | 1 |
+| `mechanic.html` oscuro | 95 | 0 |
+
+**Los 6 del modo oscuro son un ARREGLO, no un efecto colateral.** Eran bordes y
+fondos escritos a mano que se quedaban claros mientras el resto de la pantalla
+se ponia oscura: `#e5e7eb -> #38383a` y `#eef3fc -> rgba(24,72,200,.18)`. Es
+exactamente el defecto del punto **12.15**, en chiquito, y cada hex que se
+convierte lo arregla en su lugar.
+
+**Lo que NO se toco, y no se debe tocar:** los colores propios del modo oscuro
+(`#f2f2f7` 58 veces, `#152035` 19, `#1a2740` 16, `#0d1b2e` 7, `#8e9bb5` 5,
+`#98989f`, `#2e2e33`, `#22304a`, `#1e2d47`). Esos **son** lo que pinta
+`[data-theme='dark']`. Mapearlos a un token claro daria vuelta el tema.
+
+#### Paso 3 / PR B-2 HECHO 2026-08-09: el grupo "casi igual", superficies de cliente
+
+**170 apariciones de 13 colores** que estaban a menos de 30 de distancia
+perceptual de un token pasaron a ese token, en `index.html`, `landing.html`,
+`track.html` y el CSS/JS que comparten.
+
+| Color | Veces | Pasa a |
+|---|---|---|
+| `#e5e7eb` | 95 | `--border` |
+| `#9ca3af` | 24 | `--gray-lt` |
+| `#f3f4f6` | 14 | `--border-lt` |
+| `#f9fafb` | 13 | `--surface` |
+| `#eef3fc` | 5 | `--blue-lt` |
+| `#ecfdf5` | 4 | `--green-lt` |
+| `#1f2937` | 4 | `--navy2` |
+| `#f0f9ff` | 3 | `--blue-lt` |
+| `#f7f8fa`, `#f8faff` | 3 | `--surface` |
+| `#fff7ed`, `#fef9ee` | 3 | `--amber-lt` |
+| `#4b5563` | 2 | `--gray` |
+
+**MEDIDO:** cambian **87 de 1097** elementos en `landing.html`, **18 de 524**
+en la SPA y **0 de 30** en `track.html`. Los corrimientos mas repetidos son
+`#e5e7eb -> #e2e8f0` (140 propiedades) y `#9ca3af -> #94a3b8` (136). Ninguno
+pasa de un tono; es exactamente lo que "casi igual" queria decir.
+
+**La distancia perceptual NO alcanza para decidir: la tabla se escribio a
+mano.** Tres casos lo prueban:
+
+- `#ecfdf5` tiene como vecino mas cercano a `--wa-lt` (el verde de WhatsApp),
+  pero es obviamente el `--green-lt` viejo. **Gana la semantica, no el numero.**
+- `#dbeafe` (azul 200) y `#f5f3ff` (violeta) tienen como vecino mas cercano un
+  token **gris**. Mapearlos habria cambiado el color de verdad, asi que
+  **quedan afuera** y se tratan como "distinto".
+
+Quien siga con "parecido" y "distinto" tiene que revisar cada color igual: una
+tabla generada por distancia y aplicada sin leer va a romper algo.
+
+#### Paso 3 / PR B-1 HECHO 2026-08-09: muere el azul retirado
+
+**Las 57 apariciones de `#1848C8` en las 5 superficies ya no existen.** No hacia
+falta ninguna decision nueva: el azul de la app es `#2563eb` desde el 2026-08-03
+(y el logo se queda con `#0055de`), asi que cada `#1848C8` era deriva, no una
+eleccion. **Esto SI cambia pixeles**, a proposito.
+
+No fue un reemplazo unico, porque el contexto manda:
+
+| Donde | Cuantos | A que paso | Por que |
+|---|---|---|---|
+| CSS, `<style>`, `style="..."` de las 5 superficies | 50 | `var(--blue)` | el token existe y resuelve ahi |
+| `js/admin.js` 1090-1135 | 6 | **`#2563eb` literal** | es el `<style>` de un `window.open()`: documento nuevo, sin `variables.css`, ahi `var(--blue)` no existe |
+| `landing.html` hover de Fleet | 1 | **`var(--blue-dark)`** | ese `onmouseover` buscaba un azul MAS oscuro que el boton. Mapearlo a `var(--blue)` habria dejado el hover sin efecto |
+
+La unica mencion que queda de `#1848C8` en las superficies es el comentario de
+`track.html` que explica de donde venia. Es documentacion, no color.
+
+**El hallazgo del literal en la ventana de impresion vale para el resto del PR
+B:** cualquier CSS que se escriba dentro de un `window.open()` o de un email
+esta fuera del alcance de `css/variables.css`. Ahi el hex es obligatorio, y lo
+unico que se puede hacer es que coincida con el token.
+
 **HALLAZGO 1 - la trampa de la auto-referencia.** La primera version del script
 reescribio `--white: #ffffff` (en `css/home.css:12`) como
 `--white: var(--white)`. Una custom property que se referencia a si misma es

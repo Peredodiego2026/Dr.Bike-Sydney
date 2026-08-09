@@ -254,7 +254,9 @@ function clearBookingDraft() {
           router.navigate('tracking');
         } catch (e) {
           showToast(
-            translateValue(e.message || 'Payment could not be confirmed. Please contact us if you were charged.')
+            translateValue(
+              e.message || 'Payment could not be confirmed. Please contact us if you were charged.'
+            )
           );
           router.navigate('book-service');
         }
@@ -334,8 +336,8 @@ async function loadTimeSlots(screen, date, serviceId) {
     grid.innerHTML =
       '<div style="grid-column:1/-1;padding:20px 0;text-align:center">' +
       '<div style="font-size:24px;margin-bottom:6px">⚠️</div>' +
-      '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Could not load available times</div>' +
-      '<div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>' +
+      '<div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">Could not load available times</div>' +
+      '<div style="font-size:13px;color:var(--gray);margin-bottom:14px">Please check your connection and try again.</div>' +
       '<button id="retry-slots-btn" style="padding:11px 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>' +
       '</div>';
     screen
@@ -349,19 +351,19 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="grid-column:1/-1;padding:20px 0">' +
       '<div style="text-align:center;margin-bottom:16px">' +
       '<div style="font-size:24px;margin-bottom:6px">😔</div>' +
-      '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Fully booked on this date</div>' +
-      '<div style="font-size:13px;color:#6B7280">Please choose another day or join the waitlist</div></div>' +
+      '<div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">Fully booked on this date</div>' +
+      '<div style="font-size:13px;color:var(--gray)">Please choose another day or join the waitlist</div></div>' +
       '<button id="waitlist-btn" style="width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' +
       '<span>Join Waitlist for</span> ' +
       date +
       '</button>' +
-      '<div id="waitlist-form" style="display:none;margin-top:14px;background:#F8FAFF;border:1px solid #DBEAFE;border-radius:10px;padding:16px">' +
+      '<div id="waitlist-form" style="display:none;margin-top:14px;background:var(--surface);border:1px solid #DBEAFE;border-radius:10px;padding:16px">' +
       '<div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:10px">Which times work for you?</div>' +
       '<div id="waitlist-times" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">' +
       slots
         .map(
           (s) =>
-            '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray);cursor:pointer">' +
             '<input type="checkbox" value="' +
             s.time +
             '" style="accent-color:var(--blue)"> ' +
@@ -371,7 +373,7 @@ async function loadTimeSlots(screen, date, serviceId) {
         .join('') +
       '</div>' +
       '<div id="waitlist-msg" style="font-size:13px;color:var(--red);margin-bottom:10px;display:none"></div>' +
-      '<button id="waitlist-submit" style="width:100%;padding:12px;background:#059669;color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
+      '<button id="waitlist-submit" style="width:100%;padding:12px;background:var(--green);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
       '</div></div>';
 
     screen.querySelector('#waitlist-btn').addEventListener('click', () => {
@@ -417,8 +419,8 @@ async function loadTimeSlots(screen, date, serviceId) {
         screen.querySelector('#waitlist-form').innerHTML =
           '<div style="text-align:center;padding:8px 0">' +
           '<div style="font-size:24px;margin-bottom:8px">✅</div>' +
-          '<div style="font-weight:700;color:#059669;font-size:15px">You\'re on the waitlist!</div>' +
-          '<div style="font-size:13px;color:#6B7280;margin-top:4px"><span>We\'ll email</span> ' +
+          '<div style="font-weight:700;color:var(--green);font-size:15px">You\'re on the waitlist!</div>' +
+          '<div style="font-size:13px;color:var(--gray);margin-top:4px"><span>We\'ll email</span> ' +
           user.email +
           ' <span>if a slot opens up on</span> ' +
           date +
@@ -512,7 +514,7 @@ function showEmergencyServiceModal() {
     <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:360px;text-align:center">
       <div style="font-size:32px;margin-bottom:8px" aria-hidden="true">🚨</div>
       <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:6px">Emergency Service</div>
-      <div style="font-size:13px;color:#6B7280;margin-bottom:20px;line-height:1.5;text-align:left">Emergency visits depend on where our mechanic already is, so we confirm these directly - call or WhatsApp us and we'll tell you right away if we can help and what it'll cost.</div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.5;text-align:left">Emergency visits depend on where our mechanic already is, so we confirm these directly - call or WhatsApp us and we'll tell you right away if we can help and what it'll cost.</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <a href="tel:+61433963250" style="flex:1;text-align:center;background:var(--blue);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
         <a href="https://wa.me/61433963250?text=${waText}" style="flex:1;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
@@ -639,8 +641,8 @@ async function renderBookService() {
           // reader can do something about the first one.
           `<div style="grid-column:1/-1;padding:24px 0;text-align:center">
              <div style="font-size:24px;margin-bottom:6px" aria-hidden="true">${navigator.onLine ? '⚠️' : '📡'}</div>
-             <div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">${navigator.onLine ? 'Could not load services' : "You're offline"}</div>
-             <div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>
+             <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">${navigator.onLine ? 'Could not load services' : "You're offline"}</div>
+             <div style="font-size:13px;color:var(--gray);margin-bottom:14px">Please check your connection and try again.</div>
              <button id="retry-services-btn" style="padding:11px 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>
            </div>`
         : '<div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
@@ -1275,7 +1277,7 @@ async function renderServiceSummary() {
           : ''
       }
 
-      ${surcharged ? `<div style="background:#FEF9EE;border:1px solid #FDE9C8;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
+      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
       <!-- Pricing breakdown -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
@@ -1314,9 +1316,9 @@ async function renderServiceSummary() {
       </div>
 
       <!-- Payment split note -->
-      <div style="display:flex;gap:10px;background:#EEF3FC;border-radius:10px;padding:12px 14px;margin-bottom:16px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div style="font-size:13px;color:#1848C8;line-height:1.55">
+      <div style="display:flex;gap:10px;background:var(--blue-lt);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div style="font-size:13px;color:var(--blue);line-height:1.55">
           <strong>How payment works:</strong> ${translateValue(
             'The $CALLOUT call-out fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.'
           )
@@ -1575,16 +1577,16 @@ async function loadMechanicPreferencePicker() {
             style="flex-shrink:0;width:104px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:12px;border:1.5px solid var(--color-border);background:var(--white);cursor:pointer">
             ${avatarHTML}
             <div style="font-size:13px;font-weight:700;color:var(--navy);text-align:center;line-height:1.3">${escapeHtml(m.name)}</div>
-            ${metaHTML.length ? `<div style="font-size:11px;color:#6B7280">${metaHTML.join(' · ')}</div>` : ''}
+            ${metaHTML.length ? `<div style="font-size:11px;color:var(--gray)">${metaHTML.join(' · ')}</div>` : ''}
           </button>`;
       })
       .join('');
 
     const html = `
       <div style="margin-bottom:20px">
-        <div style="font-size:13px;color:#6B7280;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Prefer a specific mechanic? (optional)</div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Prefer a specific mechanic? (optional)</div>
         <div id="mechanic-pref-row" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">${cards}</div>
-        <div id="mechanic-pref-note" style="font-size:11px;color:#9CA3AF;margin-top:8px" hidden>We'll try to send your job to them first.</div>
+        <div id="mechanic-pref-note" style="font-size:11px;color:var(--gray-lt);margin-top:8px" hidden>We'll try to send your job to them first.</div>
       </div>`;
     return { html, mechanics };
   } catch {
@@ -1731,16 +1733,16 @@ async function renderPayment() {
   screen.innerHTML = `
     ${createHeader('Confirm Booking', true, '#service-summary')}
     <div style="padding:0 16px 24px">
-      <div style="background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:20px">
-        <div style="font-size:13px;color:#6B7280;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Your selection</div>
+      <div style="background:var(--blue-lt);border:1px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:20px">
+        <div style="font-size:13px;color:var(--gray);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Your selection</div>
         <div style="font-weight:700;color:var(--navy);font-size:15px">${service.name}</div>
-        <div style="font-size:13px;color:#374151;margin-top:4px">${date} &bull; ${time}</div>
-        <div style="font-size:13px;color:#374151">${location}</div>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:13px;color:#6B7280">Call-out fee</span>
+        <div style="font-size:13px;color:var(--gray);margin-top:4px">${date} &bull; ${time}</div>
+        <div style="font-size:13px;color:var(--gray)">${location}</div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--gray)">Call-out fee</span>
           ${
             isIncludedVisit
-              ? `<span style="font-size:11px;font-weight:700;color:#059669;background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
+              ? `<span style="font-size:11px;font-weight:700;color:var(--green);background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
               : `<span style="font-weight:700;color:var(--navy)">$${calloutFee.toFixed(2)}</span>`
           }
         </div>
@@ -1756,8 +1758,8 @@ async function renderPayment() {
           : `
       <div id="payment-request-btn" style="margin-bottom:12px" hidden></div>
       <div class="payment-divider" id="card-divider" hidden><span>or pay by card</span></div>
-      <div style="background:var(--white);border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">Card details</div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">Card details</div>
         <div id="card-element" class="card-element"></div>
       </div>
       <div id="payment-error" class="booking-error" hidden style="margin-bottom:12px"></div>
@@ -1770,7 +1772,7 @@ async function renderPayment() {
       <button class="btn btn--primary btn--full" id="pay-btn">${payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee)}</button>`
       }
 
-      <div style="text-align:center;margin-top:16px;font-size:13px;color:#9CA3AF">
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--gray-lt)">
         Prefer to book manually?
         <a href="https://wa.me/61433963250?text=${waText}" style="color:var(--blue);font-weight:600">WhatsApp us</a>
         or
@@ -1803,8 +1805,7 @@ async function renderPayment() {
     const guestEmail = window.appState.guestEmail || null;
     if (!user && !guestEmail) throw new Error('We need an email to send your receipt.');
     const meta = (user && user.user_metadata) || {};
-    const _clientName =
-      meta.full_name || meta.name || window.appState.guestName || '';
+    const _clientName = meta.full_name || meta.name || window.appState.guestName || '';
     const _clientEmail = user ? user.email : guestEmail;
     const fee = feeOverride !== null ? feeOverride : calloutFee;
     // Real Stripe payment id only (admin test passes a fake "test_" id → no payment).
@@ -1989,7 +1990,7 @@ async function renderPayment() {
     // on the webhook, so the server can build the booking even if this browser
     // never gets to ask for it - which is how a paid booking was lost on
     // 2026-08-05 (docs/PENDIENTES.md 14).
-    const meta = (payingUser?.user_metadata || {});
+    const meta = payingUser?.user_metadata || {};
     _paidIntent = await processPayment(Math.round(calloutFee * 100), null, email, paymentMethodId, {
       serviceId: service?.id || null,
       serviceName: service?.name || null,
@@ -2055,7 +2056,9 @@ async function renderPayment() {
       try {
         await finalizeBooking(null, { isTest: false });
       } catch (e) {
-        errEl.textContent = translateValue(e.message || 'Could not confirm booking. Please try again.');
+        errEl.textContent = translateValue(
+          e.message || 'Could not confirm booking. Please try again.'
+        );
         errEl.hidden = false;
         btn.disabled = false;
         btn.textContent = 'Confirm booking';
@@ -2160,7 +2163,7 @@ async function renderTrackingPicker(screen) {
         <div style="text-align:center;padding:40px 0">
           <div style="font-size:40px;margin-bottom:12px">🔒</div>
           <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">Sign in to track bookings</div>
-          <div style="font-size:13px;color:#6B7280;margin-bottom:20px">Your bookings will appear here</div>
+          <div style="font-size:13px;color:var(--gray);margin-bottom:20px">Your bookings will appear here</div>
           <button class="btn btn--primary" id="picker-signin-btn" style="padding:12px 28px;font-size:15px;font-weight:700">Sign in</button>
         </div>`;
       listEl
@@ -2186,7 +2189,7 @@ async function renderTrackingPicker(screen) {
         <div style="text-align:center;padding:40px 0">
           <div style="font-size:40px;margin-bottom:12px">📋</div>
           <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">No bookings yet</div>
-          <div style="font-size:13px;color:#6B7280">Book a service to track it here</div>
+          <div style="font-size:13px;color:var(--gray)">Book a service to track it here</div>
         </div>`;
       return;
     }
@@ -2196,7 +2199,7 @@ async function renderTrackingPicker(screen) {
 
     let html = '';
     if (upcoming.length) {
-      html += `<div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Active</div>`;
+      html += `<div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Active</div>`;
       upcoming.forEach((b) => {
         const color = ST_COLORS[b.status] || '#64748B';
         html += `
@@ -2215,7 +2218,7 @@ async function renderTrackingPicker(screen) {
     }
 
     if (past.length) {
-      html += `<div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px">History</div>`;
+      html += `<div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px">History</div>`;
       past.slice(0, 5).forEach((b) => {
         const color = ST_COLORS[b.status] || '#64748B';
         html += `
@@ -2264,7 +2267,7 @@ async function renderTracking() {
   // Screen is 100dvh flex-column with no padding/animation (see CSS override for [data-screen="tracking"].active)
   screen.innerHTML = `
     <!-- Header -->
-    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid #E5E7EB">
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid var(--border)">
       <div style="font-size:18px;font-weight:700;color:var(--navy)">Live Tracking</div>
       <button id="change-booking-btn" style="background:none;border:none;font-size:13px;color:var(--blue);cursor:pointer;font-weight:600;font-family:inherit;padding:8px 0;display:flex;align-items:center;gap:4px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -2273,7 +2276,7 @@ async function renderTracking() {
     </div>
 
     <!-- Status bar -->
-    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--white);border-bottom:1px solid #F3F4F6">
+    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--white);border-bottom:1px solid var(--border-lt)">
       <div id="status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--blue-dark);flex-shrink:0;transition:background 0.3s"></div>
       <span id="status-text" style="font-size:13px;font-weight:600;color:var(--navy)">Loading booking...</span>
     </div>
@@ -2282,38 +2285,38 @@ async function renderTracking() {
     <div id="tracking-map" style="flex:1;min-height:0;display:block"></div>
 
     <!-- Bottom panel -->
-    <div style="flex-shrink:0;background:var(--white);border-top:1px solid #E5E7EB">
-      <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #F3F4F6">
+    <div style="flex-shrink:0;background:var(--white);border-top:1px solid var(--border)">
+      <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border-lt)">
         <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
         <div style="min-width:0">
           <div id="mechanic-name" style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div>
-          <div id="mechanic-meta" style="font-size:13px;color:#6B7280;margin-top:1px"></div>
+          <div id="mechanic-meta" style="font-size:13px;color:var(--gray);margin-top:1px"></div>
         </div>
         <div id="eta-badge" style="margin-left:auto;flex-shrink:0;text-align:right">
-          <div id="eta-text" style="font-size:13px;color:#6B7280">On the way to you</div>
+          <div id="eta-text" style="font-size:13px;color:var(--gray)">On the way to you</div>
         </div>
-        <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-lt)" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid #F3F4F6">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <div style="font-size:13px;color:#1848C8"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
+      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid var(--border-lt)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div style="font-size:13px;color:var(--blue)"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
       </div>
       <div style="display:flex;gap:4px;padding:10px 16px">
         ${['Confirmed', 'En Route', 'Arrived', 'Done']
           .map(
             (s, i) =>
-              `<div id="step-${i}" style="flex:1;padding:5px 2px;text-align:center;font-size:11px;font-weight:700;border-radius:6px;background:#F3F4F6;color:#9CA3AF;transition:all 0.3s">${s}</div>`
+              `<div id="step-${i}" style="flex:1;padding:5px 2px;text-align:center;font-size:11px;font-weight:700;border-radius:6px;background:var(--border-lt);color:var(--gray-lt);transition:all 0.3s">${s}</div>`
           )
           .join('')}
       </div>
       <div style="display:flex;gap:8px;padding:0 16px 12px">
-        <button id="message-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
+        <button id="message-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Message
         </button>
-        <button id="share-tracking-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
+        <button id="share-tracking-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           Share link
         </button>
@@ -2359,13 +2362,13 @@ async function renderTracking() {
 
   const clientIcon = window.L.divIcon({
     className: '',
-    html: `<div style="width:32px;height:32px;background:#0A58CA;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>`,
+    html: `<div style="width:32px;height:32px;background:var(--blue);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 32],
   });
   const mechIcon = window.L.divIcon({
     className: '',
-    html: `<div style="width:40px;height:40px;background:#22C55E;border-radius:50%;border:3px solid var(--white);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)"><svg width="20" height="14" viewBox="0 0 24 16" fill="white"><rect x="0" y="3" width="16" height="13" rx="1"/><path d="M16 6h5l3 4v6h-8V6z"/><circle cx="5" cy="16" r="3" fill="white"/><circle cx="19" cy="16" r="3" fill="white"/></svg></div>`,
+    html: `<div style="width:40px;height:40px;background:var(--green);border-radius:50%;border:3px solid var(--white);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)"><svg width="20" height="14" viewBox="0 0 24 16" fill="white"><rect x="0" y="3" width="16" height="13" rx="1"/><path d="M16 6h5l3 4v6h-8V6z"/><circle cx="5" cy="16" r="3" fill="white"/><circle cx="19" cy="16" r="3" fill="white"/></svg></div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });
@@ -2638,14 +2641,14 @@ function renderReviewSection(booking) {
   if (booking.status !== 'completed') return '';
   if (booking.client_rating) {
     return `
-    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
-      <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Your review</div>
+    <div style="border-top:1px solid var(--border);padding:16px 20px">
+      <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Your review</div>
       <div style="font-size:18px;color:#F59E0B;letter-spacing:2px">${renderMiniStars(booking.client_rating)}</div>
-      ${booking.client_review ? `<div style="font-size:13px;color:#374151;margin-top:6px;line-height:1.5">"${escapeHtml(booking.client_review)}"</div>` : ''}
+      ${booking.client_review ? `<div style="font-size:13px;color:var(--gray);margin-top:6px;line-height:1.5">"${escapeHtml(booking.client_review)}"</div>` : ''}
     </div>`;
   }
   return `
-    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
+    <div style="border-top:1px solid var(--border);padding:16px 20px">
       <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:#F59E0B;color:var(--white);border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
     </div>`;
 }
@@ -2653,9 +2656,9 @@ function renderReviewSection(booking) {
 function renderMechanicTrackRecord(p) {
   if (!p.reviews || !p.reviews.length) return '';
   return `
-    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
+    <div style="border-top:1px solid var(--border);padding:16px 20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Client reviews</div>
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.04em">Client reviews</div>
         ${p.rating ? `<div style="font-size:13px;color:#F59E0B;font-weight:700">★ ${p.rating}</div>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:12px">
@@ -2667,7 +2670,7 @@ function renderMechanicTrackRecord(p) {
               <span style="font-size:13px;font-weight:600;color:var(--navy)">${escapeHtml(r.client_name)}</span>
               ${r.rating ? `<span style="color:#F59E0B;font-size:13px">${renderMiniStars(r.rating)}</span>` : ''}
             </div>
-            <p style="font-size:13px;color:#374151;line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
+            <p style="font-size:13px;color:var(--gray);line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
           </div>`
           )
           .join('')}
@@ -2700,11 +2703,11 @@ function openMechanicProfile(p, booking, screen) {
   const statParts = [];
   if (p.jobs_completed > 0)
     statParts.push(
-      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">${p.jobs_completed}</div><div style="font-size:11px;color:#6B7280">Jobs done</div></div>`
+      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">${p.jobs_completed}</div><div style="font-size:11px;color:var(--gray)">Jobs done</div></div>`
     );
   if (p.rating)
     statParts.push(
-      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">★ ${p.rating}</div><div style="font-size:11px;color:#6B7280">Rating</div></div>`
+      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">★ ${p.rating}</div><div style="font-size:11px;color:var(--gray)">Rating</div></div>`
     );
 
   const panel = document.createElement('div');
@@ -2712,8 +2715,8 @@ function openMechanicProfile(p, booking, screen) {
   panel.style.cssText =
     'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
   panel.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
-      <button id="close-mech-profile-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close">
+    <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)">
+      <button id="close-mech-profile-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:var(--gray)" aria-label="Close">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <span style="font-size:15px;font-weight:700;color:var(--navy)">Mechanic profile</span>
@@ -2725,8 +2728,8 @@ function openMechanicProfile(p, booking, screen) {
       <div style="display:flex;justify-content:center;margin-top:-44px">${avatarHTML}</div>
       <div style="text-align:center;padding:10px 20px 0">
         <div style="font-size:18px;font-weight:700;color:var(--navy)">${escapeHtml(p.name)}</div>
-        <div style="font-size:13px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
-        ${p.bio ? `<div style="font-size:13px;color:#374151;margin-top:10px;line-height:1.5">${escapeHtml(p.bio)}</div>` : ''}
+        <div style="font-size:13px;color:var(--gray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
+        ${p.bio ? `<div style="font-size:13px;color:var(--gray);margin-top:10px;line-height:1.5">${escapeHtml(p.bio)}</div>` : ''}
       </div>
       ${statParts.length ? `<div style="display:flex;justify-content:center;gap:32px;padding:16px 20px">${statParts.join('')}</div>` : ''}
       <div style="display:flex;gap:8px;padding:16px 20px">
@@ -2763,19 +2766,19 @@ function openClientChat(bookingId, screen) {
     panel.style.cssText =
       'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
     panel.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;padding:0 12px 0 6px;height:56px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
-        <button id="close-chat-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close chat">
+      <div style="display:flex;align-items:center;gap:12px;padding:0 12px 0 6px;height:56px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)">
+        <button id="close-chat-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:var(--gray)" aria-label="Close chat">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div style="width:38px;height:38px;border-radius:50%;background:var(--blue-dark);display:flex;align-items:center;justify-content:center;color:var(--white);flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></div>
         <div style="min-width:0;flex:1">
           <div style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div>
-          <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:#059669"><span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block"></span>Online now</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Online now</div>
         </div>
       </div>
-      <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:#F9FAFB"></div>
-      <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
-        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:15px;outline:none;color:var(--navy);background:var(--white)" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
+      <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)"></div>
+      <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white)">
+        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-family:inherit;font-size:15px;outline:none;color:var(--navy);background:var(--white)" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
         <button id="client-chat-send" style="background:var(--blue);color:var(--white);border:none;border-radius:50%;width:40px;height:40px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -2855,7 +2858,7 @@ function openClientChat(bookingId, screen) {
   (async () => {
     const msgs = panel.querySelector('#client-chat-msgs');
     msgs.innerHTML =
-      '<div style="text-align:center;font-size:13px;color:#6B7280;padding:20px">Loading messages...</div>';
+      '<div style="text-align:center;font-size:13px;color:var(--gray);padding:20px">Loading messages...</div>';
     let data = [];
     try {
       const {
@@ -2878,7 +2881,7 @@ function openClientChat(bookingId, screen) {
     msgs.innerHTML = '';
     if (!data?.length) {
       msgs.innerHTML =
-        '<div data-empty style="text-align:center;padding:40px 20px;color:#6B7280;margin:auto"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:15px;font-weight:600;color:var(--navy)">No messages yet</div><div style="font-size:13px;margin-top:4px">Send a message to your mechanic</div></div>';
+        '<div data-empty style="text-align:center;padding:40px 20px;color:var(--gray);margin:auto"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:15px;font-weight:600;color:var(--navy)">No messages yet</div><div style="font-size:13px;margin-top:4px">Send a message to your mechanic</div></div>';
     } else {
       data.forEach((m) => appendClientMsg(m, msgs, false));
     }
@@ -3034,16 +3037,16 @@ async function renderReview() {
       <div class="char-counter"><span id="char-count">0</span>/500</div>
     </div>
     <div style="margin:0 24px 16px">
-      <div style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Add a photo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9CA3AF">(optional)</span></div>
-      <label id="review-photo-label" style="display:flex;align-items:center;gap:10px;height:56px;padding:0 14px;border:1.5px dashed #E5E7EB;border-radius:10px;cursor:pointer;background:#F9FAFB">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        <span id="review-photo-txt" style="font-size:13px;color:#6B7280">Tap to add a photo (optional)</span>
+      <div style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Add a photo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--gray-lt)">(optional)</span></div>
+      <label id="review-photo-label" style="display:flex;align-items:center;gap:10px;height:56px;padding:0 14px;border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;background:var(--surface)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gray-lt)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span id="review-photo-txt" style="font-size:13px;color:var(--gray)">Tap to add a photo (optional)</span>
         <input type="file" accept="image/*" capture="environment" id="review-photo-inp" style="display:none">
       </label>
       <div id="review-photo-preview" style="display:none;margin-top:10px;position:relative;width:80px;height:80px">
         <img id="review-photo-img" style="width:80px;height:80px;object-fit:cover;border-radius:10px;display:block" alt="Your photo">
         <button type="button" id="review-photo-remove" aria-label="Remove photo" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.55);border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--white)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
     </div>
@@ -3086,7 +3089,7 @@ async function renderReview() {
     screen.querySelector('#review-photo-txt').textContent = 'Photo selected — tap to change';
     const lbl = screen.querySelector('#review-photo-label');
     lbl.style.borderColor = 'var(--color-primary)';
-    lbl.style.background = '#EEF3FC';
+    lbl.style.background = 'var(--blue-lt)';
   });
 
   screen.querySelector('#review-photo-remove').addEventListener('click', function (e) {
@@ -3096,8 +3099,8 @@ async function renderReview() {
     screen.querySelector('#review-photo-inp').value = '';
     screen.querySelector('#review-photo-txt').textContent = 'Tap to add a photo (optional)';
     const lbl = screen.querySelector('#review-photo-label');
-    lbl.style.borderColor = '#E5E7EB';
-    lbl.style.background = '#F9FAFB';
+    lbl.style.borderColor = 'var(--border)';
+    lbl.style.background = 'var(--surface)';
   });
 
   screen.querySelector('#submit-review-btn').addEventListener('click', async () => {
@@ -3137,13 +3140,13 @@ async function renderReview() {
           </p>
           <div style="display:flex;flex-direction:column;gap:12px;max-width:280px;margin:0 auto">
             <a id="google-review-link" href="https://g.page/r/drbikesydney/review" target="_blank" rel="noopener"
-              style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--white);border:2px solid #E5E7EB;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#374151">
+              style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--white);border:2px solid var(--border);border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:var(--gray)">
               <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               Leave a Google Review
             </a>
             <a id="fb-share-link" href="https://www.facebook.com/drbikesydney" target="_blank" rel="noopener"
               style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1877F2;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:var(--white)">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--white)"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
               Share on Facebook
             </a>
             <button id="review-skip-home-btn" style="background:transparent;border:none;color:var(--color-text-secondary);font-size:13px;cursor:pointer;padding:8px">
@@ -3336,7 +3339,9 @@ async function renderLogin() {
         if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
         renderResetSent(email);
       } catch (err) {
-        errEl.textContent = translateValue(err.message || 'Could not send reset link. Please try again.');
+        errEl.textContent = translateValue(
+          err.message || 'Could not send reset link. Please try again.'
+        );
         errEl.hidden = false;
         btn.disabled = false;
         btn.textContent = 'Send reset link';
@@ -3389,7 +3394,7 @@ async function renderLogin() {
 function renderResetSent(email) {
   const screen = document.querySelector('[data-screen="login"]');
   if (!screen) return;
-  const mailIcon = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>`;
+  const mailIcon = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>`;
 
   screen.innerHTML = `
     <div class="login-wrap">
@@ -3428,7 +3433,10 @@ function renderResetSent(email) {
     } catch (err) {
       resendBtn.disabled = false;
       resendBtn.textContent = 'Resend email';
-      showToast(translateValue(err.message || 'Could not send reset link. Please try again.'), 'error');
+      showToast(
+        translateValue(err.message || 'Could not send reset link. Please try again.'),
+        'error'
+      );
     }
   });
 }
@@ -3445,9 +3453,9 @@ function promptNewPassword() {
   modal.innerHTML = `
     <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:360px">
       <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:6px">Set a new password</div>
-      <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Choose a new password for your account.</div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Choose a new password for your account.</div>
       <input id="reset-pw-inp" type="password" placeholder="New password" aria-label="New password" autocomplete="new-password"
-        style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1.5px solid #E5E7EB;border-radius:10px;font-family:inherit;margin-bottom:10px">
+        style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;margin-bottom:10px">
       <div id="reset-pw-err" style="display:none;color:var(--red);font-size:13px;margin-bottom:10px"></div>
       <button id="reset-pw-btn" class="btn btn--primary btn--full">Update password</button>
     </div>
@@ -3475,7 +3483,9 @@ function promptNewPassword() {
       showToast('Password updated - you are signed in.', 'success');
       router.navigate('home');
     } catch (e) {
-      errEl.textContent = translateValue(e.message || 'Could not update password. Please try again.');
+      errEl.textContent = translateValue(
+        e.message || 'Could not update password. Please try again.'
+      );
       errEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'Update password';
@@ -3610,13 +3620,13 @@ async function renderMyBookings() {
               booking.status === 'completed' &&
               (booking.photo_before_url || booking.photo_after_url)
                 ? `<div style="margin-bottom:16px">
-                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#6B7280;margin-bottom:8px">Photos</div>
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--gray);margin-bottom:8px">Photos</div>
                     <div style="display:flex;gap:8px">
                       ${
                         booking.photo_before_url
                           ? `<a href="${escapeHtml(booking.photo_before_url)}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
                               <img src="${escapeHtml(booking.photo_before_url)}" alt="Before" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid var(--border);display:block">
-                              <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">Before</div>
+                              <div style="font-size:11px;color:var(--gray);text-align:center;margin-top:4px">Before</div>
                             </a>`
                           : ''
                       }
@@ -3624,7 +3634,7 @@ async function renderMyBookings() {
                         booking.photo_after_url
                           ? `<a href="${escapeHtml(booking.photo_after_url)}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
                               <img src="${escapeHtml(booking.photo_after_url)}" alt="After" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid var(--border);display:block">
-                              <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">After</div>
+                              <div style="font-size:11px;color:var(--gray);text-align:center;margin-top:4px">After</div>
                             </a>`
                           : ''
                       }
@@ -3681,9 +3691,9 @@ async function renderMyBookings() {
                 <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
                   ${avatarHTML}
                   <div style="min-width:0">
-                    <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Your mechanic</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.04em">Your mechanic</div>
                     <div style="font-size:15px;font-weight:700;color:var(--navy)">${escapeHtml(p.name)}</div>
-                    ${metaParts.length ? `<div style="font-size:13px;color:#6B7280">${metaParts.join('  ·  ')}</div>` : ''}
+                    ${metaParts.length ? `<div style="font-size:13px;color:var(--gray)">${metaParts.join('  ·  ')}</div>` : ''}
                   </div>
                 </div>
                 ${renderReviewSection(booking)}
@@ -4052,15 +4062,15 @@ async function renderProfile() {
       <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;box-shadow:var(--elevation-0)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           ${createTierBadge(riderTier, 'lg')}
-          <div style="font-size:13px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
+          <div style="font-size:13px;color:var(--gray)"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
         </div>
         ${
           riderTier.nextAt
-            ? `<div style="height:6px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:6px">
+            ? `<div style="height:6px;background:var(--border-lt);border-radius:4px;overflow:hidden;margin-bottom:6px">
                  <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px;transition:width var(--motion-base)"></div>
                </div>
-               <div style="font-size:13px;color:#6B7280"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
-            : `<div style="font-size:13px;color:#6B7280">You've reached our highest tier - thank you for riding with us!</div>`
+               <div style="font-size:13px;color:var(--gray)"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
+            : `<div style="font-size:13px;color:var(--gray)">You've reached our highest tier - thank you for riding with us!</div>`
         }
       </div>
 
@@ -4107,7 +4117,7 @@ async function renderProfile() {
                 ? '<span style="background:rgba(255,255,255,0.2);color:var(--white);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">Paused</span>'
                 : '<span style="background:rgba(255,255,255,0.2);color:var(--white);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block"></span>Active</span>';
               return `<div style="margin-bottom:20px">
-          <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:var(--white);margin-bottom:10px;box-shadow:var(--elevation-1)">
+          <div style="background:linear-gradient(135deg,${planColor},var(--blue));border-radius:16px;padding:18px;color:var(--white);margin-bottom:10px;box-shadow:var(--elevation-1)">
             <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Membership</div>
             <div style="font-size:20px;font-weight:800"><span>${planLabel}</span> <span>Plan</span></div>
             <div style="margin-top:8px">${statusBadge}</div>
@@ -4116,7 +4126,7 @@ async function renderProfile() {
             <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
               ${isPaused ? 'Resume membership' : 'Pause membership'}
             </button>
-            <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:var(--white)">Cancel</button>
+            <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:var(--gray);background:var(--white)">Cancel</button>
           </div>
         </div>`;
             })()
@@ -4124,7 +4134,7 @@ async function renderProfile() {
       }
 
       <div style="margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Language</div>
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Language</div>
         <div style="display:flex;gap:8px" id="lang-switcher">
           ${LANGUAGES.map(
             (l) =>
@@ -4134,21 +4144,21 @@ async function renderProfile() {
       </div>
 
       <div style="margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Payment Method</div>
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Payment Method</div>
         <div id="card-on-file-section" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
           ${
             savedCardId
               ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
                   <div style="font-size:15px;font-weight:600;color:var(--navy)">💳 Card on file</div>
-                  <div style="font-size:13px;color:#6B7280;margin-top:2px">Auto-charged when your mechanic completes a job</div>
+                  <div style="font-size:13px;color:var(--gray);margin-top:2px">Auto-charged when your mechanic completes a job</div>
                 </div>
                 <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--red);color:var(--red);background:var(--white);white-space:nowrap">Remove</button>
               </div>`
               : `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
                   <div style="font-size:15px;font-weight:600;color:var(--navy)">No card saved</div>
-                  <div style="font-size:13px;color:#6B7280;margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
+                  <div style="font-size:13px;color:var(--gray);margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
                 </div>
                 <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Add card</button>
               </div>`
@@ -4157,15 +4167,15 @@ async function renderProfile() {
       </div>
 
       <div style="margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
           <div style="min-width:0">
             <div style="font-size:15px;font-weight:600;color:var(--navy)">Mechanic messages</div>
-            <div style="font-size:13px;color:#6B7280;margin-top:2px">Get a phone alert when your mechanic messages you</div>
+            <div style="font-size:13px;color:var(--gray);margin-top:2px">Get a phone alert when your mechanic messages you</div>
           </div>
           ${
             typeof Notification !== 'undefined' && Notification.permission === 'granted'
-              ? '<span style="flex-shrink:0;font-size:13px;font-weight:600;color:#059669;white-space:nowrap">✓ <span>Enabled</span></span>'
+              ? '<span style="flex-shrink:0;font-size:13px;font-weight:600;color:var(--green);white-space:nowrap">✓ <span>Enabled</span></span>'
               : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Enable</button>'
           }
         </div>
@@ -4223,7 +4233,7 @@ async function renderProfile() {
   screen.querySelector('#add-card-btn')?.addEventListener('click', async () => {
     const section = screen.querySelector('#card-on-file-section');
     section.innerHTML = `
-      <div style="background:var(--white);border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
         <div id="new-card-element" class="card-element"></div>
       </div>
       <div id="add-card-error" class="booking-error" hidden style="margin-bottom:10px"></div>
@@ -4792,7 +4802,7 @@ async function renderMyBikes() {
           <span style="font-size:18px">${overdue ? '⚠️' : '📊'}</span>
           <span style="font-size:13px;font-weight:700;color:var(--navy)">${overdue ? "You're likely due for a service" : 'Predicted next service'}</span>
         </div>
-        <div style="font-size:13px;color:#374151;line-height:1.5">
+        <div style="font-size:13px;color:var(--gray);line-height:1.5">
           <span>We recommend a service roughly every 3 months.</span>
           <span>${overdue ? 'You were due around' : 'Your next one is around'}</span>
           <b>${dateLabel}</b>.

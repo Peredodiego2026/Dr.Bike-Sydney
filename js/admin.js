@@ -777,15 +777,15 @@ async function loadCashHandover() {
   el.innerHTML = Object.entries(groups)
     .map(
       ([key, g]) => `
-    <div style="border:1px solid var(--border);border-left:3px solid #059669;border-radius:12px;padding:14px 16px;margin-bottom:10px">
+    <div style="border:1px solid var(--border);border-left:3px solid var(--green);border-radius:12px;padding:14px 16px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <div>
           <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(g.name)}</div>
           <div style="font-size:13px;color:var(--mgray)">${g.jobs.length} cash job${g.jobs.length !== 1 ? 's' : ''} pending</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px;font-weight:800;color:#059669">$${g.total.toLocaleString('en-AU')}</span>
-          <button data-cash-settle="${esc(key)}" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
+          <span style="font-size:20px;font-weight:800;color:var(--green)">$${g.total.toLocaleString('en-AU')}</span>
+          <button data-cash-settle="${esc(key)}" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
         </div>
       </div>
       <div style="font-size:13px;color:var(--mgray)">
@@ -943,7 +943,7 @@ async function loadFinance() {
           const h = Math.max(8, Math.round((v / maxVal) * 140));
           const label = new Date(d + 'T00:00:00').getDate();
           return `<div style="display:flex;flex-direction:column;align-items:center;flex:1 1 0;max-width:32px;gap:3px" title="${d}: ${anMoney(v)}">
-      <div style="width:100%;background:#1848C8;border-radius:3px 3px 0 0;height:${h}px;min-height:4px"></div>
+      <div style="width:100%;background:var(--blue);border-radius:3px 3px 0 0;height:${h}px;min-height:4px"></div>
       <div style="font-size:11px;color:var(--mgray)">${label}</div>
     </div>`;
         })
@@ -973,7 +973,7 @@ async function loadFinance() {
       <td data-label="Amount" style="font-weight:600">$${price.toLocaleString('en-AU')}</td>
       <td data-label="GST" style="color:var(--orange)">${anMoney(jGst)}</td>
       <td data-label="Net">${anMoney(jNet)}</td>
-      <td data-label="Status"><span style="background:#D1FAE5;color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
+      <td data-label="Status"><span style="background:var(--green-lt);color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
     </tr>`;
         })
         .join('')
@@ -1093,38 +1093,38 @@ function exportFinancePDF() {
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;color:#0D1F3C;background:#fff}
     .page{max-width:820px;margin:0 auto;padding:48px 40px}
-    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #1848C8}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid var(--blue)}
     .brand{display:flex;align-items:center;gap:12px}
-    .brand-icon{width:42px;height:42px;background:#1848C8;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800}
+    .brand-icon{width:42px;height:42px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800}
     .brand-name{font-size:20px;font-weight:800;color:#0D1F3C}
-    .brand-sub{font-size:13px;color:#6B7280;margin-top:1px}
+    .brand-sub{font-size:13px;color:var(--gray);margin-top:1px}
     .report-info{text-align:right}
     .report-title{font-size:15px;font-weight:700;color:#0D1F3C}
-    .report-period{font-size:13px;color:#6B7280;margin-top:2px}
+    .report-period{font-size:13px;color:var(--gray);margin-top:2px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
-    .kpi{background:#F7F8FA;border-radius:12px;padding:16px;border-left:3px solid #1848C8}
-    .kpi.green{border-left-color:#059669}
+    .kpi{background:var(--surface);border-radius:12px;padding:16px;border-left:3px solid var(--blue)}
+    .kpi.green{border-left-color:var(--green)}
     .kpi.orange{border-left-color:#D97706}
     .kpi.red{border-left-color:#DC2626}
-    .kpi-label{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+    .kpi-label{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
     .kpi-val{font-size:24px;font-weight:800;color:#0D1F3C}
-    .kpi-sub{font-size:11px;color:#9CA3AF;margin-top:3px}
-    .section-title{font-size:13px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid #E5E7EB}
+    .kpi-sub{font-size:11px;color:var(--gray-lt);margin-top:3px}
+    .section-title{font-size:13px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
     .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-    .bar-label{font-size:11px;color:#374151;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .bar-bg{flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden}
-    .bar-fill{height:100%;background:#1848C8;border-radius:4px}
+    .bar-label{font-size:11px;color:var(--gray);min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+    .bar-fill{height:100%;background:var(--blue);border-radius:4px}
     .bar-val{font-size:11px;font-weight:700;color:#0D1F3C;min-width:44px;text-align:right}
     table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px}
     thead th{background:#0D1F3C;color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em}
-    tbody tr:nth-child(even){background:#F9FAFB}
-    tbody td{padding:9px 12px;border-bottom:1px solid #F3F4F6;color:#374151}
+    tbody tr:nth-child(even){background:var(--surface)}
+    tbody td{padding:9px 12px;border-bottom:1px solid var(--border-lt);color:var(--gray)}
     tbody td.bold{font-weight:700;color:#0D1F3C}
-    tbody td.blue{font-weight:700;color:#1848C8}
-    .footer{margin-top:24px;padding-top:16px;border-top:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center}
-    .footer-left{font-size:11px;color:#9CA3AF}
-    .print-btn{background:#1848C8;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer}
+    tbody td.blue{font-weight:700;color:var(--blue)}
+    .footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .footer-left{font-size:11px;color:var(--gray-lt)}
+    .print-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer}
     @media print{.print-btn{display:none}.page{padding:20px}}
   </style></head>
   <body><div class="page">
@@ -1205,7 +1205,7 @@ function exportFinancePDF() {
           );
         })
         .join('')}
-      ${!(d.jobs || []).length ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:#9CA3AF">No completed bookings in this period</td></tr>' : ''}
+      ${!(d.jobs || []).length ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray-lt)">No completed bookings in this period</td></tr>' : ''}
       </tbody>
     </table>
 
@@ -1742,17 +1742,17 @@ function checkAdminAuth() {
     'position:fixed;inset:0;background:#0D1F3C;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-      <div style="width:56px;height:56px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
+      <div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
       <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
-      <div style="font-size:13px;color:#6B7280;margin-bottom:28px">Operations dashboard</div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
-        style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
         data-enter="focus-admin-pass">
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
-        style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         data-enter="submit-admin-login">
       <div id="admin-pass-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
-      <button data-action="submit-admin-login" style="width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
+      <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
     </div>`;
   document.body.appendChild(overlay);
   setTimeout(() => document.getElementById('admin-email-inp')?.focus(), 100);
@@ -1874,7 +1874,7 @@ async function submitTOTPCode() {
 
 async function _startMFAEnrollment() {
   _showLoginCard(
-    '<div style="font-size:13px;color:#6B7280;margin:20px 0">Loading QR code...</div>'
+    '<div style="font-size:13px;color:var(--gray);margin:20px 0">Loading QR code...</div>'
   );
   try {
     const resp = await fetch('/api/auth', {
@@ -1964,16 +1964,16 @@ function _showLoginCard(innerHtml) {
 }
 
 function _loginCardHeader() {
-  return '<div style="width:56px;height:56px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
+  return '<div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
 }
 
 const _inp =
   'width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
 const _btn =
-  'width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
+  'width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
 
 function _totpInputHTML() {
-  return `<div style="font-size:13px;color:#6B7280;margin-bottom:28px">Enter the 6-digit code from your authenticator app</div>
+  return `<div style="font-size:13px;color:var(--gray);margin-bottom:28px">Enter the 6-digit code from your authenticator app</div>
   <input type="text" id="admin-totp-inp" placeholder="000000" aria-label="6-digit authentication code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:24px;font-weight:700;text-align:center;letter-spacing:10px"
     data-enter="submit-totp-code">
@@ -1982,9 +1982,9 @@ function _totpInputHTML() {
 }
 
 function _enrollHTML(qrSvg, secret) {
-  return `<div style="font-size:13px;color:#6B7280;margin-bottom:16px">Scan with Google Authenticator or Authy to enable 2FA on this account</div>
+  return `<div style="font-size:13px;color:var(--gray);margin-bottom:16px">Scan with Google Authenticator or Authy to enable 2FA on this account</div>
   <div style="margin:0 auto 12px;max-width:180px">${qrSvg}</div>
-  <div style="font-size:11px;color:#6B7280;margin-bottom:16px">Or enter manually: <code style="background:#F3F4F6;padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:1px">${secret}</code></div>
+  <div style="font-size:11px;color:var(--gray);margin-bottom:16px">Or enter manually: <code style="background:var(--border-lt);padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:1px">${secret}</code></div>
   <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" aria-label="6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
     data-enter="submit-mfa-setup-code">
@@ -2052,9 +2052,7 @@ async function loadDashboard() {
   const monthRev = anRevenueOf(completedMonth);
   const completedToday = completedTodayJobs.length;
   const avgOrder = completedMonth.length
-    ? Math.round(
-        anRevenueOf(completedMonth) / completedMonth.length
-      )
+    ? Math.round(anRevenueOf(completedMonth) / completedMonth.length)
     : 0;
   const cancelRate = (monthJobs || []).length
     ? Math.round(
@@ -2119,7 +2117,7 @@ async function loadDashboard() {
           const st = b.status || 'pending';
           const stColors = {
             pending: '#D97706',
-            confirmed: '#1848C8',
+            confirmed: 'var(--blue)',
             enroute: '#059669',
             completed: '#6B7280',
             cancelled: '#DC2626',
@@ -2138,7 +2136,7 @@ async function loadDashboard() {
             completed: 'Completed',
             cancelled: 'Cancelled',
           };
-          const vanColors = { 1: '#1848C8', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+          const vanColors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
           const vanNum = b.van_number || 1;
           return `<tr>
         <td data-label="Client" style="font-weight:700">${esc(name)}</td>
@@ -2167,7 +2165,7 @@ async function loadDashboard() {
   if (todayTbody) {
     const stColors2 = {
       pending: '#D97706',
-      confirmed: '#1848C8',
+      confirmed: 'var(--blue)',
       enroute: '#059669',
       completed: '#6B7280',
       cancelled: '#DC2626',
@@ -2225,7 +2223,7 @@ async function loadDashboard() {
     if (schSub) schSub.textContent = `${upcoming.length} upcoming today`;
     const stDotColors = {
       pending: '#F59E0B',
-      confirmed: '#1848C8',
+      confirmed: 'var(--blue)',
       enroute: '#059669',
       completed: '#6B7280',
       cancelled: '#DC2626',
@@ -2374,9 +2372,9 @@ function renderBookingsTable(data) {
       <td data-label="Status"><span class="status ${stClass[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
       <td data-label="Price"><b>${anBookingRevenue(b)}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
-        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:#ECFDF5;color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
+        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
-        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:#1848C8;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
+        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
       </td>
     </tr>`;
@@ -2537,7 +2535,7 @@ async function loadRecentNotifications() {
   const stColors = {
     pending: '#D97706',
     confirmed: '#059669',
-    enroute: '#1848C8',
+    enroute: 'var(--blue)',
     completed: '#6B7280',
     cancelled: '#DC2626',
   };
@@ -2573,7 +2571,7 @@ function prependNotification(b) {
   });
   const div = document.createElement('div');
   div.style.cssText =
-    'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid #1848C8;animation:fadeSlideIn .3s';
+    'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid var(--blue);animation:fadeSlideIn .3s';
   div.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--navy)">🔔 New booking</div>
     <div style="font-size:13px;color:var(--mgray)">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
     <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anBookingRevenue(b)}</div>`;
@@ -2789,10 +2787,10 @@ async function renderRouteMap(useCache) {
   }
   _routeLayer = L.layerGroup().addTo(_routeMap);
 
-  const VAN_COLORS = { 1: '#1848C8', 2: '#D97706' };
+  const VAN_COLORS = { 1: 'var(--blue)', 2: '#D97706' };
   const latlngs = [];
   stops.forEach((s, i) => {
-    const color = VAN_COLORS[s.van_number] || '#1848C8';
+    const color = VAN_COLORS[s.van_number] || 'var(--blue)';
     const icon = L.divIcon({
       className: '',
       html: `<div style="width:26px;height:26px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3)">${i + 1}</div>`,
@@ -2807,7 +2805,7 @@ async function renderRouteMap(useCache) {
     latlngs.push(s.coord);
   });
   if (latlngs.length > 1)
-    L.polyline(latlngs, { color: '#1848C8', weight: 3, opacity: 0.5, dashArray: '6 6' }).addTo(
+    L.polyline(latlngs, { color: 'var(--blue)', weight: 3, opacity: 0.5, dashArray: '6 6' }).addTo(
       _routeLayer
     );
   if (latlngs.length) _routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2));
@@ -2828,7 +2826,7 @@ async function renderRouteMap(useCache) {
           const leg = routeDistKm(prev, s.coord);
           totalKm += leg;
           prev = s.coord;
-          const color = VAN_COLORS[s.van_number] || '#1848C8';
+          const color = VAN_COLORS[s.van_number] || 'var(--blue)';
           return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--off);border-radius:8px;border-left:3px solid ${color}">
         <div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</div>
         <div style="flex:1;min-width:0">
@@ -4165,7 +4163,7 @@ function renderHeatmap(all) {
   points.forEach((p) => {
     const intensity = p.n / maxN;
     const radius = 12 + intensity * 28;
-    const color = intensity > 0.66 ? '#DC2626' : intensity > 0.33 ? '#D97706' : '#1848C8';
+    const color = intensity > 0.66 ? '#DC2626' : intensity > 0.33 ? '#D97706' : 'var(--blue)';
     L.circleMarker(p.coord, { radius, color, weight: 1, fillColor: color, fillOpacity: 0.45 })
       .bindPopup(
         `<b>${esc(p.name)}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>${anMoney(p.rev)} revenue`
@@ -4348,7 +4346,7 @@ async function renderMechStats() {
         });
         const vals = Object.values(byDay);
         const maxVal = Math.max(...vals, 1);
-        const colors = { 1: '#1848C8', 2: '#D97706' };
+        const colors = { 1: 'var(--blue)', 2: '#D97706' };
         return `<div style="background:var(--off);border-radius:10px;padding:16px">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🚐 Van ${v}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
@@ -4385,11 +4383,11 @@ async function loadClients() {
     .order('created_at', { ascending: false });
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
-  const colors = ['#1848C8', '#059669', '#D97706', '#7C3AED', '#0891B2', '#DC2626'];
+  const colors = ['var(--blue)', '#059669', '#D97706', '#7C3AED', '#0891B2', '#DC2626'];
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
-    grid.innerHTML = `<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
     return;
   }
   if (!data || data.length === 0) {
@@ -4458,11 +4456,11 @@ async function loadVanZones() {
     const grouped = {};
     data.forEach((row) => {
       if (!grouped[row.van_number]) {
-        const colors = { 1: '#1848C8', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+        const colors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
         grouped[row.van_number] = {
           id: row.van_number,
           name: 'Van ' + row.van_number,
-          color: colors[row.van_number] || '#1848C8',
+          color: colors[row.van_number] || 'var(--blue)',
           suburbs: [],
           driverName: '',
         };
@@ -4562,12 +4560,12 @@ function renderVanZones() {
       </div>
       <div style="padding:16px 20px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:#1848C8;border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
+          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--blue-lt);color:var(--blue);border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
           <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" data-enter="add-suburb" data-id="${van.id}"
             style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:Inter,sans-serif;outline:none">
-          <button data-action="add-suburb" data-id="${van.id}" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
+          <button data-action="add-suburb" data-id="${van.id}" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
         </div>
       </div>
     </div>`;
@@ -4610,7 +4608,7 @@ function removeSuburb(vanId, suburb) {
 
 function addVan() {
   const newId = vanZones.length > 0 ? Math.max(...vanZones.map((v) => v.id)) + 1 : 1;
-  const colors = { 1: '#1848C8', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+  const colors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
   vanZones.push({
     id: newId,
     name: 'Van ' + newId,
@@ -4635,7 +4633,7 @@ function removeVan(vanId) {
 // most other admin reads can't see it.
 const CLAIM_STATUS = {
   new: { label: 'New', color: '#D97706', bg: '#FEF9C3' },
-  reviewing: { label: 'Reviewing', color: '#1848C8', bg: '#EEF3FC' },
+  reviewing: { label: 'Reviewing', color: 'var(--blue)', bg: '#EEF3FC' },
   resolved: { label: 'Resolved', color: '#059669', bg: '#ECFDF5' },
   rejected: { label: 'Rejected', color: '#DC2626', bg: '#FEF2F2' },
 };
@@ -4696,7 +4694,7 @@ async function loadClaims() {
         </div>
         <span style="background:${st.bg};color:${st.color};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${st.label}</span>
       </div>
-      <div style="font-size:13px;color:#374151;margin:10px 0;white-space:pre-wrap">${esc(c.description)}</div>
+      <div style="font-size:13px;color:var(--gray);margin:10px 0;white-space:pre-wrap">${esc(c.description)}</div>
       ${photos ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${photos}</div>` : ''}
       <div style="margin-bottom:12px">${invoice}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -4763,7 +4761,7 @@ async function loadContacts() {
       '<div style="text-align:center;color:var(--mgray);padding:48px;font-size:15px">No contacts yet. Add your first contact above.</div>';
     return;
   }
-  const roleColors = { manager: '#1848C8', mechanic: '#059669' };
+  const roleColors = { manager: 'var(--blue)', mechanic: '#059669' };
   const roleBg = { manager: '#EEF3FC', mechanic: '#ECFDF5' };
   list.innerHTML = data
     .map(
@@ -5374,7 +5372,7 @@ async function loadCalendar() {
     const jobs = bookings || [];
     const stColors = {
       pending: '#F59E0B',
-      confirmed: '#1848C8',
+      confirmed: 'var(--blue)',
       enroute: '#059669',
       completed: '#6B7280',
     };
@@ -5473,7 +5471,7 @@ async function loadCalendar() {
 
   const stColors = {
     pending: '#F59E0B',
-    confirmed: '#1848C8',
+    confirmed: 'var(--blue)',
     enroute: '#059669',
     completed: '#6B7280',
   };
@@ -5674,12 +5672,12 @@ async function loadSettings() {
     if (waInput) waInput.value = map['__whatsapp__'];
     if (waStatus) {
       waStatus.textContent = `Active ✓ — messages sent from ${map['__whatsapp__']}`;
-      waStatus.style.color = '#059669';
+      waStatus.style.color = 'var(--green)';
     }
     const twilioEl = document.getElementById('integ-twilio');
     if (twilioEl) {
       twilioEl.textContent = '✓ Active';
-      twilioEl.style.color = '#059669';
+      twilioEl.style.color = 'var(--green)';
     }
   } else {
     if (waStatus) {
@@ -5734,12 +5732,12 @@ async function saveWhatsappNumber() {
   const waStatus = document.getElementById('wa-status');
   if (waStatus) {
     waStatus.textContent = `Active ✓ — messages sent from ${normalized}`;
-    waStatus.style.color = '#059669';
+    waStatus.style.color = 'var(--green)';
   }
   const twilioEl = document.getElementById('integ-twilio');
   if (twilioEl) {
     twilioEl.textContent = '✓ Active';
-    twilioEl.style.color = '#059669';
+    twilioEl.style.color = 'var(--green)';
   }
   showToast('WhatsApp number saved ✓');
 }
@@ -5787,10 +5785,10 @@ async function checkTwilioStatus() {
         .maybeSingle();
       if (waRow?.postcode) {
         el.textContent = '✓ SMS + WhatsApp';
-        el.style.color = '#059669';
+        el.style.color = 'var(--green)';
       } else {
         el.textContent = '✓ SMS active';
-        el.style.color = '#059669';
+        el.style.color = 'var(--green)';
       }
     } else {
       el.textContent = '⚠ Needs keys';
@@ -5894,13 +5892,13 @@ async function loadMemberships() {
   );
   const statusBadge = {
     active:
-      '<span style="background:#ECFDF5;color:#059669;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
+      '<span style="background:var(--green-lt);color:var(--green);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
     past_due:
-      '<span style="background:#FEF3C7;color:#D97706;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
+      '<span style="background:var(--amber-lt);color:#D97706;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
     cancelled:
-      '<span style="background:#FEE2E2;color:#DC2626;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
+      '<span style="background:var(--red-lt);color:#DC2626;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
     paused:
-      '<span style="background:#F3F4F6;color:#6B7280;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
+      '<span style="background:var(--border-lt);color:var(--gray);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
   };
 
   tbody.innerHTML = data
@@ -5987,7 +5985,7 @@ async function loadNotifNumbers() {
 
   const zoneLabel = { 1: 'Van 1', 2: 'Van 2', all: 'All zones', '': 'All zones' };
   const zoneBg = { 1: '#EEF3FC', 2: '#F0FDF4', all: '#FEF9C3', '': '#FEF9C3' };
-  const zoneColor = { 1: '#1848C8', 2: '#15803D', all: '#92400E', '': '#92400E' };
+  const zoneColor = { 1: 'var(--blue)', 2: '#15803D', all: '#92400E', '': '#92400E' };
   const channelIcon = { sms: '📱', whatsapp: '💬', both: '📱💬' };
   const roleIcon = { manager: '⭐', mechanic: '🔧' };
 
@@ -6212,8 +6210,8 @@ async function loadMechanicProfiles() {
         : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
       const roleTag =
         c.role === 'manager'
-          ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ Manager</span>'
-          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#ECFDF5;color:#059669">🔧 Mechanic</span>';
+          ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--amber-lt);color:#92400E">⭐ Manager</span>'
+          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-lt);color:var(--green)">🔧 Mechanic</span>';
 
       return `
     <div class="card" style="padding:0;overflow:hidden;width:300px;position:relative">
@@ -6225,7 +6223,7 @@ async function loadMechanicProfiles() {
       <div style="text-align:center;padding:10px 20px 0">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(name)}</div>
         <div style="font-size:13px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
-        <div style="font-size:13px;color:#374151;margin-top:8px;min-height:20px">${esc(c.bio) || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
+        <div style="font-size:13px;color:var(--gray);margin-top:8px;min-height:20px">${esc(c.bio) || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
       </div>
       <div style="display:flex;justify-content:center;gap:24px;padding:14px 20px;margin-top:8px;border-top:1px solid var(--border)">
         <div style="text-align:center"><div style="font-weight:800;font-size:15px;color:var(--navy)">${jobs.length}</div><div style="font-size:11px;color:var(--mgray)">Jobs done</div></div>
@@ -6588,7 +6586,7 @@ function handleUrlParams() {
   const statusEl = document.getElementById('gcal-status');
   if (statusEl && calendar === 'connected') {
     statusEl.textContent = '✓ Connected';
-    statusEl.style.color = '#059669';
+    statusEl.style.color = 'var(--green)';
   } else if (statusEl && calendar === 'error') {
     statusEl.textContent = '✗ Connection failed - try again';
     statusEl.style.color = '#DC2626';
