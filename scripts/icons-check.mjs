@@ -87,6 +87,17 @@ for (const f of assets) {
   if (/#1848c8/i.test(text)) problems.push(`${f}: contains #1848C8, which is not a token (docs/PENDIENTES.md 12.14)`);
 }
 
+// The same blue also paints the phone's status bar, and this check did not look
+// there: `track.html` shipped `<meta name="theme-color" content="#1848C8">`
+// long after the icons were rebuilt (docs/PENDIENTES.md 13.5). It came in
+// through the window the check left open, so close the window.
+for (const page of pages) {
+  const m = readFileSync(page, 'utf8').match(/<meta[^>]+name=["']theme-color["'][^>]*content=["']([^"']+)["']/i);
+  if (m && /^#1848c8$/i.test(m[1].trim())) {
+    problems.push(`${page}: <meta name="theme-color"> is #1848C8, the retired blue (docs/PENDIENTES.md 12.14)`);
+  }
+}
+
 // ── 4. the brand set is complete ───────────────────────────────────────────
 // Every circle is generated from images/brand/db-mark.svg by
 // scripts/build-brand-assets.mjs. A missing one means someone deleted a file
