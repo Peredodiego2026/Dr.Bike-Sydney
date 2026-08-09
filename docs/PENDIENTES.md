@@ -1574,6 +1574,68 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
 2026-08-09 ya no existe: **no queda ninguna**.
 
+#### El guardrail HECHO 2026-08-09: `scripts/color-check.mjs`
+
+Hasta hoy nada impedia que entrara un hex nuevo. Los pasos 1 a 3 movieron ~900
+hex a tokens y el repo podia volver a ensuciarse el lunes siguiente sin que
+nadie se enterara, exactamente como paso la primera vez: un hex por linea, cada
+uno razonable por si solo.
+
+**Es un trinquete, no una puerta.** No exige cero hex, porque cero hex es
+imposible hoy: quedan **1138** en las 5 superficies y la mayoria **no se puede
+convertir** (los dos hallazgos de arriba: un hex que es el VALOR de una custom
+property nunca se toca, y en las apps de staff con tema oscuro `#fff` y
+`var(--white)` son colores distintos de verdad). Un check que pidiera cero se
+hubiera desactivado en una semana.
+
+En vez de eso cada archivo tiene un **presupuesto igual a lo que tiene hoy**:
+
+| Archivo | Presupuesto | Archivo | Presupuesto |
+|---|---|---|---|
+| `index.html` | 20 | `css/admin.css` | 257 |
+| `landing.html` | 118 | `css/mechanic.css` | 39 |
+| `track.html` | 3 | `js/app.js` | 106 |
+| `admin.html` | 28 | `js/admin.js` | 185 |
+| `mechanic.html` | 12 | `js/mechanic.js` | 76 |
+| `css/variables.css` | **0** | `js/components.js` | 28 |
+| `css/main.css` | 3 | `js/stripe.js` | 5 |
+| `css/home.css` | 3 | `api/send-email.js` | 250 |
+| `css/landing.css` | 4 | `api/send-invoice.js` | 107 |
+
+Agregar un hex **rompe el build**. Sacar uno **tambien lo rompe**, con el
+mensaje de bajar el numero. Eso es a proposito: es lo unico que evita que el
+presupuesto se convierta en un techo que nadie toca. `css/variables.css` esta
+en 0 porque ahi los hex **son** las definiciones de los tokens, y el script las
+excluye por regla, no por presupuesto.
+
+**Ademas, dos reglas duras que no dependen del presupuesto:**
+
+- `#1848c8`, el azul retirado, **falla siempre**. Excepcion temporal en
+  `api/send-email.js` y `api/send-invoice.js`, donde quedan 41 apariciones que
+  salen a clientes reales: van en el PR de emails. Ahi si cuentan para el
+  presupuesto, asi que no pueden crecer.
+- Excepciones que **nunca** cuentan, y por que:
+  `--nombre: #hex` (es una definicion, convertirla es la auto-referencia del
+  HALLAZGO 1), `<meta name="theme-color">` (no acepta `var()`), los cuatro
+  colores de Google, el azul de Facebook y el verde de WhatsApp (son marcas
+  ajenas), y `#fff` dentro de las 6 fuentes de admin/mechanic (HALLAZGO 2).
+
+**Tres cosas que parecen hex y no lo son**, cada una salio como falso positivo
+mientras se escribia el script: `&#215;` y `&#10003;` (entidades HTML),
+`#add-card-btn` (un selector de id que empieza con letras hex) y
+`href="#pricing"` (un ancla). Los comentarios tambien se descartan: el propio
+`track.html:13` es un comentario que **explica** que ahi vivia `#1848C8`.
+
+**Verificado, no supuesto:** `npm run check` da 5/5 en verde, `npx vitest run`
+160/160, y se probo que falla de verdad metiendo un `#123456` en
+`css/main.css` (dio "4 hand-written hex, budget is 3") y un `#1848C8` (dio la
+regla dura del azul retirado). Ambas pruebas se revirtieron.
+
+**Lo que el guardrail NO cubre, dicho sin adornos:** las ~60 paginas de
+suburbio y las 5 del blog (54 hex cada una) no estan en la tabla. Se generan
+con `scripts/generate-suburb-pages.mjs`, asi que el lugar donde hay que
+atajarlas es el generador, y eso va con el PR de emails y paginas.
+
 ### 12.15 "No jobs today" es literalmente ilegible: contraste 1.03:1
 
 > **CERRADO 2026-08-02 (PR #137, en produccion).** `.jobs-wrap` y
