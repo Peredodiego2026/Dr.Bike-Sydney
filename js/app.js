@@ -3221,7 +3221,7 @@ async function renderLogin() {
           </button>
         </div>`
         }
-        ${!isSignup && !isReset ? `<div class="forgot-wrap"><button type="button" class="btn btn--ghost forgot-link" id="forgot-btn">Forgot Password?</button></div>` : ''}
+        ${!isSignup && !isReset ? `<div class="forgot-wrap" style="gap:14px"><button type="button" class="btn btn--ghost forgot-link" id="forgot-email-btn">Forgot your email?</button><button type="button" class="btn btn--ghost forgot-link" id="forgot-btn">Forgot Password?</button></div>` : ''}
         <div id="login-error" class="booking-error" hidden></div>
         <div id="login-info" class="booking-success" hidden></div>
         <button type="submit" class="btn btn--primary btn--full mt-4" id="login-submit">${isReset ? 'Send reset link' : isSignup ? 'Create Account' : 'Login'}</button>
@@ -3264,6 +3264,35 @@ async function renderLogin() {
   screen.querySelector('#forgot-btn')?.addEventListener('click', () => {
     _loginMode = 'reset';
     renderLogin();
+  });
+
+  // "I forgot which email I used." An address cannot be reset, only recalled,
+  // so this asks for the phone on the account and texts the masked address
+  // back. It never appears on screen: otherwise anyone could type numbers into
+  // a form and harvest addresses.
+  screen.querySelector('#forgot-email-btn')?.addEventListener('click', async () => {
+    const phone = await confirmDialog({
+      title: 'Forgot your email?',
+      message:
+        'Enter the mobile number on your account and we will text you the email you signed up with.',
+      confirmLabel: 'Send it to me',
+      cancelLabel: 'Cancel',
+      prompt: { id: 'recover-phone', type: 'tel', placeholder: '0400 000 000' },
+    });
+    if (!phone) return;
+    try {
+      await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'recover-email', phone, lang: getLang() }),
+      });
+    } catch (e) {
+      /* the message below is deliberately the same either way */
+    }
+    // Always the same answer, registered or not - the server works the same
+    // way, and saying "no account with that number" would confirm to a
+    // stranger which numbers are on file.
+    showToast('If that number has an account, we just texted you the email', 'success');
   });
 
   googleBtn?.addEventListener('click', async () => {

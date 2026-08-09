@@ -1954,3 +1954,38 @@ cerrado):
 - **"Un mail bonito, sin demoras".** Sin especificar todavia. El camino de envio
   esta bien elegido: **no** usa el mailer de Supabase (que nunca se configuro y
   reporta exito aunque no entregue), sino Resend, igual que el resto.
+### 15.3 "Olvide con que email me registre" — NUEVO, decidido por Diego
+
+Un email no se resetea, se **recuerda**: hace falta un segundo identificador. El
+unico que tenemos es el telefono de la cuenta (`profiles.phone`).
+
+**Como funciona.** El cliente pone su celular y **la respuesta va por SMS, nunca
+a la pantalla** - si apareciera en pantalla, cualquiera podria tipear numeros en
+un formulario y cosechar direcciones. La direccion va **enmascarada**
+(`t***s@gmail.com`): a quien tiene el telefono hay que recordarle cual uso, no
+entregarle una direccion completa para usar en otro lado.
+
+**El servidor siempre contesta lo mismo**, este o no registrado el numero, por
+el mismo motivo que el reset de contraseña. Y tiene su propio limite de **3
+intentos cada 10 minutos**, mas estricto que el general: cada acierto manda un
+SMS de verdad a una persona de verdad, asi que el abuso aca cuesta plata y
+molesta a alguien que no hizo nada.
+
+**De paso, `confirmDialog()` aprendio a pedir un dato.** Con la opcion `prompt`
+devuelve el texto en vez de `true`, y sigue devolviendo `false` al cancelar, asi
+que los que ya lo usaban no cambian. Se agrego en vez de recurrir a
+`window.prompt()`, que el punto 12.18 saco de la app por los mismos motivos que
+`confirm()`.
+
+**VERIFICADO EN NAVEGADOR** (sin captura: el panel estaba cerrado):
+
+| Caso | Resultado |
+|---|---|
+| Los dos botones en el login | 44px, "¿Olvidaste tu email?" y "¿Olvidaste tu contraseña?" |
+| El dialogo | Campo `tel` de 45px, botones "Cancelar" / "Enviármelo" |
+| Campo vacio | **No cierra y no envia nada** |
+| Con telefono | Manda `{role:'recover-email', phone, lang}` |
+| El aviso al cliente | Generico: "Si ese número tiene cuenta..." |
+| Regresion de `confirmDialog` | Sin `prompt` no hay input; confirmar devuelve `true`, cancelar `false` |
+
+El SMS esta en los 3 idiomas (`api/_message-i18n.js`).
