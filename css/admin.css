@@ -501,7 +501,7 @@ body {
 }
 [data-theme='dark'] .mech-tag.v2 {
   background: rgba(217, 119, 6, 0.2);
-  color: #fcd34d;
+  color: var(--amber-edge);
 }
 
 /* SIDEBAR */

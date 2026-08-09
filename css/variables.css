@@ -45,6 +45,8 @@
   --green-bright: #22c55e; /* en-route: moving, not finished */
   --green-ink: #065f46; /* text ON --green-lt             */
   --green-tint: #ecfdf5; /* soft green panel background    */
+  --blue-pale: #93c5fd; /* label on navy, focus border    */
+  --amber-edge: #fcd34d; /* the edge of an attention box   */
   --slate: #64748b; /* between --gray and --gray-lt   */
   --cyan: #0891b2; /* avatars                        */
 
