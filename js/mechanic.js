@@ -366,14 +366,14 @@ function syncBanner() {
   if (!n) return;
   if (_queueUnsaved) {
     // Do not dress this up: it is the one state where closing the app loses work.
-    banner.style.background = '#CF2020';
+    banner.style.background = 'var(--red)';
     text.textContent =
       n === 1
         ? '1 change NOT saved to this phone - keep the app open until it syncs'
         : n + ' changes NOT saved to this phone - keep the app open until they sync';
     return;
   }
-  banner.style.background = '#1E40AF';
+  banner.style.background = 'var(--blue-dark)';
   text.textContent = n === 1 ? '1 change waiting to sync' : n + ' changes waiting to sync';
 }
 
@@ -953,7 +953,7 @@ function card(j) {
         ? `<div style="padding:0 18px 6px"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${MEMBERSHIP_BADGE[j.membership_plan].color}15;color:${MEMBERSHIP_BADGE[j.membership_plan].color}">${MEMBERSHIP_BADGE[j.membership_plan].label}</span></div>`
         : ''
     }
-    ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:#B45309;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
+    ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:var(--amber);font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
     <div class="job-service">${esc(j.service)}</div>
     <div class="job-addr">${j.address || j.suburb || '—'}</div>
     ${j.phone ? `<div class="job-addr">${esc(j.phone)}</div>` : ''}
@@ -967,7 +967,7 @@ function card(j) {
       ${!done ? `${isPending || (st === 'confirmed' && !j.mechanic_id) ? `<button class="abtn primary accept" data-action="accept" data-id="${j.id}">Accept</button><button class="abtn danger" data-action="reject" data-id="${j.id}">Reject</button>` : st === 'confirmed' ? `<button class="abtn primary go" data-action="enroute" data-id="${j.id}">En route</button>` : isEnroute ? `<button class="abtn primary accept" data-action="arrived" data-id="${j.id}">Arrived</button>` : st === 'arrived' || st === 'inprogress' || st === 'in_progress' ? `<button class="abtn primary done" data-action="complete" data-id="${j.id}">Complete</button>` : ``}` : `<button class="abtn undo" data-action="undo" data-id="${j.id}">Undo</button>`}
     </div>
     ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." aria-label="Mechanic notes" value="${esc(j.mnotes)}" data-notes-id="${j.id}">` : ''}
-    ${isPending ? `<div style="text-align:center;font-size:11px;color:#15803D;padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
+    ${isPending ? `<div style="text-align:center;font-size:11px;color:var(--green);padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
     </div>
   </div>`;
 }
@@ -1147,7 +1147,7 @@ function promptArrivalPin(id) {
       <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Ask the client for their 4-digit code and enter it below.</div>
       <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="4-digit arrival code"
         style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy);background:var(--off)">
-      <div id="pin-error" style="display:none;color:#CF2020;font-size:13px;margin-top:8px"></div>
+      <div id="pin-error" style="display:none;color:var(--red);font-size:13px;margin-top:8px"></div>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button id="pin-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
         <button id="pin-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirm arrival</button>
@@ -1432,7 +1432,7 @@ function openCompleteModal(id) {
           <button type="button" data-action="open-parts-picker" id="parts-used-btn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--off);cursor:pointer;font-family:var(--sans)">
             <span id="parts-used-label" style="font-size:13px;font-weight:600;color:var(--navy)">Add parts used</span>
             <span style="display:flex;align-items:center;gap:8px">
-              <span id="parts-used-count" style="display:none;font-size:11px;font-weight:700;color:#1E40AF;background:#1E40AF15;padding:2px 9px;border-radius:20px">0</span>
+              <span id="parts-used-count" style="display:none;font-size:11px;font-weight:700;color:var(--blue-dark);background:#1E40AF15;padding:2px 9px;border-radius:20px">0</span>
               <span style="color:var(--gray-lt);font-size:18px;line-height:1">›</span>
             </span>
           </button>
@@ -1480,7 +1480,7 @@ function openCompleteModal(id) {
           <input id="comp-next" type="date" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
         </div>
         <div>
-          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:#CF2020">*</span></label>
+          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:var(--red)">*</span></label>
           <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
@@ -1490,7 +1490,7 @@ function openCompleteModal(id) {
             j.has_card_on_file
               ? `<div style="background:#EFF6FF;border:1.5px solid var(--blue-edge);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
                 <span style="font-size:18px" aria-hidden="true">💳</span>
-                <div style="font-size:13px;color:#1E40AF;font-weight:600">Will auto-charge the client's card on file - no EFTPOS needed.</div>
+                <div style="font-size:13px;color:var(--blue-dark);font-weight:600">Will auto-charge the client's card on file - no EFTPOS needed.</div>
               </div>`
               : `<label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
               <div style="display:flex;gap:8px">
@@ -1568,7 +1568,7 @@ function openCompleteModal(id) {
           (item, i) => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
           <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#CF2020' : '#15803D'};flex-shrink:0" data-change="checklist-changed">
-          <span>${item.label}${item.required ? '<span style="color:#CF2020;font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
+          <span>${item.label}${item.required ? '<span style="color:var(--red);font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
         )
         .join('');
@@ -1670,7 +1670,7 @@ async function openPartsPicker() {
       <div style="text-align:center;color:var(--gray);font-size:13px;padding:30px">Loading parts...</div>
     </div>
     <div style="padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white);display:flex;flex-direction:column;gap:8px">
-      <button data-action="confirm-parts" data-value="true" id="pp-done" disabled style="width:100%;padding:13px;background:#1E40AF;color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;opacity:0.5">Confirm parts</button>
+      <button data-action="confirm-parts" data-value="true" id="pp-done" disabled style="width:100%;padding:13px;background:var(--blue-dark);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;opacity:0.5">Confirm parts</button>
       <button data-action="confirm-parts" data-value="false" style="width:100%;padding:11px;background:none;border:1.5px solid var(--border);color:var(--navy);border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">No parts used in this service</button>
     </div>`;
   document.body.appendChild(panel);
@@ -1891,7 +1891,7 @@ async function applyMechDiscount() {
     renderChargeBreakdown();
   } catch (e) {
     _mechDiscount = null;
-    msg.style.color = '#CF2020';
+    msg.style.color = 'var(--red)';
     msg.textContent = e.message || 'Invalid code';
     renderChargeBreakdown();
   }
@@ -2292,7 +2292,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
     const el = document.getElementById('history-content');
     if (el)
       el.innerHTML =
-        '<div style="text-align:center;padding:24px;color:#CF2020;font-size:13px">Error loading history</div>';
+        '<div style="text-align:center;padding:24px;color:var(--red);font-size:13px">Error loading history</div>';
   }
 }
 
@@ -2375,7 +2375,7 @@ async function loadInventory() {
         html += `<div class="inv-row${low ? ' low' : ''}">
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(item.name)}</div>
-            ${low ? '<div style="font-size:11px;color:#CF2020;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
+            ${low ? '<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:44px;height:44px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>

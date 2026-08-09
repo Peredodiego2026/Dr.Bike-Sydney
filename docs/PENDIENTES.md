@@ -1586,6 +1586,124 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
 2026-08-09 ya no existe: **no queda ninguna**.
 
+### 12.23 El chip `completed` seguia fallando AA — CERRADO 2026-08-09
+
+**Salio de renderizarlo, no de la aritmetica.** Cuando se libero un slot de dev
+server se midieron los **seis** chips de `admin.html` en el navegador, con
+`data-theme` fijado y reescribiendo el `href` de cada hoja de estilo primero:
+
+| Chip | Antes | Ahora |
+|---|---|---|
+| `pending` | 4.84:1 | 4.84:1 |
+| `enroute` / `in_progress` | 4.79:1 | 4.79:1 |
+| `confirmed` | 8.01:1 | 8.01:1 |
+| `cancelled` | 4.95:1 | 4.95:1 |
+| **`completed`** | **4.34:1 falla** | **6.92:1** |
+
+`css/admin.css:928` usaba `--slate` (`#64748b`) sobre `--border-lt`
+(`#f1f5f9`): 4.34:1, y el chip es 11px/600, asi que el minimo es 4.5:1. Pasa a
+`--gray`. **13.11 no lo cubria** porque 13.11 salio de `track.html`, que no
+tiene chip `completed`.
+
+**Los seis dan igual en modo oscuro**, comprobado inyectando el chip dentro de
+`.main` con `data-theme='dark'`. No es casualidad: esos chips usan hex literal
+(`#fffbeb`, `#f0fdf4`...), que es exactamente lo que el conversor dejo quieto
+porque `--amber-lt` y `--green-lt` **si** se redefinen en oscuro.
+
+### 12.22 El boton "View your booking" del email de confirmacion puede estar roto — ABIERTO
+
+**Salio de mandar un email de prueba de verdad**, no de leer codigo. Se envio un
+`confirmation` desde produccion a `contact@drbikesydney.com.au` (Resend id
+`af636c13-02d4-474f-b690-c338f1e3a2d0`) y se leyo el mensaje que llego. El link
+del boton principal llego asi:
+
+```
+https://drbikesydney.com.au/?action<CARACTER INVALIDO>shboard
+```
+
+**El codigo fuente esta bien:** `api/send-email.js:142` dice
+`?action=dashboard`. Lo que se rompe es el transporte. En *quoted-printable*,
+`=` empieza una secuencia de escape: `=da` se decodifica como el byte `0xDA`,
+que no es UTF-8 valido y se convierte en el caracter de reemplazo. Si el `=` no
+se escapa como `=3D`, el link muere.
+
+**Solo un link del repo esta expuesto**, y es justo el mas importante:
+
+| Link | `=` seguido de | Riesgo |
+|---|---|---|
+| `?action=dashboard` | `da` — **los dos hex** | **roto** |
+| `?action=book` | `bo` — `o` no es hex | a salvo |
+| `?action=membership` | `me` — `m` no es hex | a salvo |
+
+**Lo que NO se pudo determinar desde aca:** si el `=` sin escapar viaja de
+verdad en el correo (y entonces le pasa a **todos** los clientes) o si es la API
+de Gmail la que decodifica de mas al entregarnos el cuerpo. Las dos hipotesis
+explican lo observado.
+
+**Como confirmarlo en 10 segundos, y solo lo puede hacer Diego:** abrir ese
+email en Gmail y pasar el mouse por "View your booking". Si la barra de estado
+muestra `?action=dashboard`, es artefacto de la API y no hay bug. Si muestra la
+URL cortada, **todo cliente que reciba una confirmacion tiene el boton roto** y
+hay que arreglar la codificacion del envio, no la URL (la URL es correcta).
+
+#### Las apps de staff, la mitad que NO era una decision (2026-08-09)
+
+12.14 aparco `admin` y `mechanic` diciendo que **cada uno de sus hex es una
+decision** sobre si ese elemento debe seguir al tema oscuro. Es cierto para
+algunos. **No lo es para los que usan un token que `[data-theme='dark']` nunca
+redefine**: ahi `var(--x)` y el hex resuelven al mismo color en **los dos**
+temas, asi que convertirlos no puede cambiar un pixel ni en claro ni en oscuro.
+
+Los 12 tokens que el modo oscuro **si** redefine (y que por lo tanto siguen
+prohibidos): `--white`, `--off`, `--mgray`, `--border`, `--shadow`,
+`--shadow-lg`, `--blue-lt`, `--navy`, `--green-lt`, `--amber-lt`, `--red-lt`,
+`--wa-lt`.
+
+**95 hex convertidos.** Los 7 tokens introducidos son `--amber`, `--blue`,
+`--blue-dark`, `--border-lt`, `--gray-lt`, `--green` y `--red`, y **ninguno de
+los 7 esta en esa lista** - comprobado por script contra el diff, no de
+memoria.
+
+| Archivo | Antes | Ahora |
+|---|---|---|
+| `css/admin.css` | 238 | **190** |
+| `js/admin.js` | 163 | **147** |
+| `css/mechanic.css` | 36 | **31** |
+| `js/mechanic.js` | 68 | **55** |
+| `admin.html` | 17 | **10** |
+| `mechanic.html` | 12 | **8** |
+
+**HALLAZGO - el hex de 8 digitos lleva alfa y no hay token que lo tenga.**
+La primera version del conversor reescribio `#1E40AF15` (la receta
+`[color]15` del skill `drbike-design`: color + 8% de opacidad) como
+`var(--blue-dark)`, **volviendo opaco un badge translucido**. Lo agarro la
+asercion de identidad de valor, no la lectura del diff. Regla: **3 o 6
+digitos, nunca 8.**
+
+Lo que queda en esos archivos (190 + 147 + ...) **si** es decision una por
+una: son `#fff` y los valores propios del tema oscuro.
+
+#### Los dos ultimos colores, nombrados 2026-08-09
+
+Quedaban `#93c5fd` (7 usos) y `#fcd34d` (3) sin token porque ningun nombre
+convencia. Mirando **donde se usan** salieron solos:
+
+- **`--blue-pale` `#93c5fd`** - el texto de las etiquetas sobre navy
+  (`OUR TEAM` en `landing.html:363`), y el `border-color` de los estados de
+  foco de `css/landing.css:518,550,581`. Es un escalon **mas claro** que
+  `--blue-soft`, y mas oscuro que `--blue-edge`.
+- **`--amber-edge` `#fcd34d`** - siempre es el **borde** de algo que pide
+  atencion: la caja de "vencido" del SPA, el borde punteado de la gift card,
+  el borde del aviso en el email. Sigue la convencion de `--red-edge` y
+  `--blue-edge`.
+
+8 de las 10 apariciones pasaron a `var()`. Las otras 2 quedan fuera por las
+reglas de siempre: una es `--an-ord-4: #93c5fd`, una **definicion** de custom
+property, y la otra vive en `api/send-email.js`, donde `var()` no existe.
+
+Si los nombres no gustan, cambiarlos es **una linea** en `css/variables.css`
+mas un buscar-y-reemplazar: el valor no se toca.
+
 #### Emails HECHO 2026-08-09: el hex coincide con el token
 
 El PR aparte que Diego pidio para los emails resulto **mucho mas chico de lo

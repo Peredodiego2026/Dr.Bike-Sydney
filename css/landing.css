@@ -515,7 +515,7 @@ section.visible {
   margin-bottom: 10px;
 }
 .service-option:hover {
-  border-color: #93c5fd;
+  border-color: var(--blue-pale);
   background: var(--blue-lt);
 }
 .service-option.selected {
@@ -547,7 +547,7 @@ section.visible {
   min-width: 64px;
 }
 .date-pill:hover {
-  border-color: #93c5fd;
+  border-color: var(--blue-pale);
 }
 .date-pill.selected {
   border-color: var(--blue);
@@ -578,7 +578,7 @@ section.visible {
   transition: all 200ms ease;
 }
 .time-slot:hover {
-  border-color: #93c5fd;
+  border-color: var(--blue-pale);
 }
 .time-slot.selected {
   border-color: var(--blue);

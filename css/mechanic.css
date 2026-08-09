@@ -303,7 +303,7 @@ body {
   border-bottom: 2.5px solid transparent;
   font-size: 12px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gray-lt);
   cursor: pointer;
   font-family: var(--sans);
   transition: all 0.15s;
@@ -390,7 +390,7 @@ body {
 .job-price {
   font-size: 18px;
   font-weight: 800;
-  color: #15803d;
+  color: var(--green);
   margin-bottom: 14px;
   letter-spacing: -0.02em;
 }
@@ -446,7 +446,7 @@ body {
   font-weight: 700;
 }
 .abtn.primary.go {
-  background: #b45309;
+  background: var(--amber);
 }
 .abtn.primary.done,
 .abtn.primary.accept {
@@ -454,7 +454,7 @@ body {
 }
 .abtn.danger {
   background: transparent;
-  color: #cf2020;
+  color: var(--red);
   border: 1.5px solid var(--red-edge);
   font-weight: 600;
 }
@@ -521,7 +521,7 @@ body {
 }
 .kpi-lbl {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-top: 6px;
   font-weight: 600;
   text-transform: uppercase;
