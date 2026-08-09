@@ -14,7 +14,7 @@ export function renderLangSwitcher() {
   const current = getLang();
   return `<div id="legal-lang-switcher" style="display:flex;gap:6px">${LANGUAGES.map(
     (l) =>
-      `<button type="button" data-lang="${l.code}" class="legal-lang-btn" style="padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid ${l.code === current ? '#2563eb' : '#e5e7eb'};background:${l.code === current ? '#eff6ff' : '#fff'};color:${l.code === current ? '#2563eb' : '#374151'}">${l.code.toUpperCase()}</button>`
+      `<button type="button" data-lang="${l.code}" class="legal-lang-btn" style="padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid ${l.code === current ? '#2563eb' : '#E2E8F0'};background:${l.code === current ? '#eff6ff' : '#fff'};color:${l.code === current ? '#2563eb' : '#475569'}">${l.code.toUpperCase()}</button>`
   ).join('')}</div>`;
 }
 
@@ -22,9 +22,9 @@ function paintSwitcher() {
   const current = getLang();
   document.querySelectorAll('.legal-lang-btn').forEach((btn) => {
     const active = btn.dataset.lang === current;
-    btn.style.borderColor = active ? '#2563eb' : '#e5e7eb';
+    btn.style.borderColor = active ? '#2563eb' : '#E2E8F0';
     btn.style.background = active ? '#eff6ff' : '#fff';
-    btn.style.color = active ? '#2563eb' : '#374151';
+    btn.style.color = active ? '#2563eb' : '#475569';
   });
 }
 

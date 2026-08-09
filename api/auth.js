@@ -1762,11 +1762,11 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
         <div style="background:#0D1F3C;border-radius:12px 12px 0 0;padding:20px 24px">
           <span style="color:#fff;font-weight:800;font-size:18px">Dr. Bike Sydney</span>
         </div>
-        <div style="border:1px solid #E5E7EB;border-top:none;border-radius:0 0 12px 12px;padding:28px 24px">
+        <div style="border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;padding:28px 24px">
           <p style="font-size:16px;font-weight:700;color:#0D1F3C;margin:0 0 8px">Good news, ${entry.client_name || 'there'}!</p>
-          <p style="color:#374151;margin:0 0 20px">A slot just opened up on <strong>${date}</strong> at <strong>${time}</strong>${entry.service_name ? ' for ' + entry.service_name : ''}. Book now before it fills up again.</p>
+          <p style="color:#475569;margin:0 0 20px">A slot just opened up on <strong>${date}</strong> at <strong>${time}</strong>${entry.service_name ? ' for ' + entry.service_name : ''}. Book now before it fills up again.</p>
           <a href="https://drbikesydney.com.au" style="display:inline-block;background:#2563EB;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Book Now</a>
-          <p style="color:#9CA3AF;font-size:12px;margin-top:24px">You're receiving this because you joined the waitlist for ${date}.</p>
+          <p style="color:#94A3B8;font-size:12px;margin-top:24px">You're receiving this because you joined the waitlist for ${date}.</p>
         </div>
       </div>`,
     }),
@@ -1951,21 +1951,21 @@ async function handleRequestPasswordReset(req, res) {
             <div style="font-size:22px;font-weight:800;color:#fff">Reset your password</div>
           </div>
           <div style="padding:36px 28px">
-            <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 28px;text-align:center">We received a request to reset the password for your Dr. Bike Sydney account. Click below to choose a new one.</p>
+            <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px;text-align:center">We received a request to reset the password for your Dr. Bike Sydney account. Click below to choose a new one.</p>
             <div style="text-align:center;margin-bottom:22px">
               <a href="${actionLink}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px">Reset password</a>
             </div>
-            <p style="color:#9CA3AF;font-size:12px;text-align:center;margin:0 0 28px">This link expires in 1 hour, for your security.</p>
-            <div style="border-top:1px solid #E5E7EB;padding-top:18px;margin-bottom:20px">
-              <p style="color:#9CA3AF;font-size:11px;margin:0 0 6px">Button not working? Paste this link into your browser:</p>
+            <p style="color:#94A3B8;font-size:12px;text-align:center;margin:0 0 28px">This link expires in 1 hour, for your security.</p>
+            <div style="border-top:1px solid #E2E8F0;padding-top:18px;margin-bottom:20px">
+              <p style="color:#94A3B8;font-size:11px;margin:0 0 6px">Button not working? Paste this link into your browser:</p>
               <p style="color:#2563EB;font-size:11px;word-break:break-all;margin:0">${actionLink}</p>
             </div>
             <div style="background:#EEF3FC;border-radius:12px;padding:16px">
               <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6;opacity:0.9">Didn't request this? No action needed - you can safely ignore this email and your password will stay the same.</p>
             </div>
           </div>
-          <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E5E7EB">
-            <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
+          <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E2E8F0">
+            <p style="font-size:12px;color:#94A3B8;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
             <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
           </div>
         </div>`,
@@ -2657,9 +2657,9 @@ async function handlePublicBookingList(req, res) {
     const rows = bookings
       .map(
         (b) => `
-        <div style="padding:14px 0;border-top:1px solid #E5E7EB">
+        <div style="padding:14px 0;border-top:1px solid #E2E8F0">
           <div style="font-weight:700;color:#0D1F3C;font-size:14px">${b.service_name || 'Service'}</div>
-          <div style="color:#6B7280;font-size:13px;margin:2px 0 8px">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''} · ${b.status}</div>
+          <div style="color:#475569;font-size:13px;margin:2px 0 8px">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''} · ${b.status}</div>
           <a href="https://drbikesydney.com.au/track.html?token=${b.tracking_token}" style="color:#2563EB;font-size:13px;font-weight:600">Track this booking →</a>
         </div>`
       )
@@ -2684,12 +2684,12 @@ async function handlePublicBookingList(req, res) {
             <div style="font-size:22px;font-weight:800;color:#fff">Your booking links</div>
           </div>
           <div style="padding:28px">
-            <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 8px">Here's every active booking on file for this email:</p>
+            <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 8px">Here's every active booking on file for this email:</p>
             ${rows}
-            <p style="color:#9CA3AF;font-size:11px;margin:20px 0 0">Didn't request this? You can safely ignore this email.</p>
+            <p style="color:#94A3B8;font-size:11px;margin:20px 0 0">Didn't request this? You can safely ignore this email.</p>
           </div>
-          <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E5E7EB">
-            <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
+          <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E2E8F0">
+            <p style="font-size:12px;color:#94A3B8;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
             <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
           </div>
         </div>`,

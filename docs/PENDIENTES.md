@@ -1586,6 +1586,36 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
 2026-08-09 ya no existe: **no queda ninguna**.
 
+#### Grupo A HECHO 2026-08-09: los restos de las paletas muertas, mapeados
+
+Los 7 valores que quedaban de los `:root` que ya no existen. **870
+apariciones** en todo el repo, no solo en las 5 superficies: 542 pasan a
+`var(--token)` donde el navegador parsea CSS, y **328 al valor del token** en
+los emails, el generador de suburbios y los atributos de SVG, donde `var()` no
+resuelve nunca.
+
+| Antes | Ahora | Cuantos | Contraste sobre blanco |
+|---|---|---|---|
+| `#6b7280` | `--gray` `#475569` | 417 | **4.83 -> 7.58:1** |
+| `#e5e7eb` | `--border` `#e2e8f0` | 190 | borde, no aplica |
+| `#059669` | `--green` `#15803d` | 177 | **3.77 -> 5.02:1** |
+| `#374151` | `--gray` `#475569` | 37 | 10.31 -> 7.58:1 |
+| `#9ca3af` | `--gray-lt` `#94a3b8` | 34 | 2.54 -> 2.56:1 |
+| `#f3f4f6` | `--border-lt` `#f1f5f9` | 20 | fondo, no aplica |
+| `#111827` | `--navy` `#0d1f3c` | 6 | 17.74 -> 16.43:1 |
+
+**Dos bajan y hay que decirlo:** `#374151` pierde contraste (10.31 -> 7.58) y
+`#111827` tambien (17.74 -> 16.43). Los dos siguen muy por encima de AA, y el
+punto es que ahora **hay un solo gris y un solo navy**, no tres parecidos.
+
+El verde es el cambio mas visible: `#059669` era esmeralda y `--green` es mas
+oscuro. De paso pasa AA sobre `--green-lt` (3.60 -> 4.79:1).
+
+**Todas las paginas afectadas cargan `css/variables.css`** - se comprobo con
+`grep -L` sobre las 60 de suburbio, `business.html`, `bike-check.html`,
+`cycling-map.html` y el blog: ninguna se quedo sin la hoja de tokens, que es lo
+que hubiera hecho desaparecer el color.
+
 #### Grupo B HECHO 2026-08-09: 16 colores reales pasan a token
 
 **Los 128 valores fuera de token no eran todos lo mismo.** Unos son restos de

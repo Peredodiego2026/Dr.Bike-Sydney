@@ -627,8 +627,8 @@ async function handleServiceReminders(req, res) {
               <a href="https://drbikesydney.com.au" style="display:inline-block;background:#2563EB;color:#fff;padding:13px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:700">Book Your Next Service →</a>
             </div>
           </div>
-          <div style="padding:16px 32px;background:#F7F8FA;font-size:12px;color:#9CA3AF;text-align:center">
-            Dr. Bike Sydney · <a href="mailto:contact@drbikesydney.com.au" style="color:#6B7280;text-decoration:none">contact@drbikesydney.com.au</a> · 0433 963 250
+          <div style="padding:16px 32px;background:#F7F8FA;font-size:12px;color:#94A3B8;text-align:center">
+            Dr. Bike Sydney · <a href="mailto:contact@drbikesydney.com.au" style="color:#475569;text-decoration:none">contact@drbikesydney.com.au</a> · 0433 963 250
           </div>
         </div>`,
       }),
@@ -672,7 +672,7 @@ async function handleServiceReminders(req, res) {
         svc,
         `Your mechanic recommends a service soon — ${dateLabel}`,
         `<h2 style="color:#0D1F3C;margin:0 0 12px">Hi ${name}!</h2>
-         <p style="color:#374151;line-height:1.7;margin:0 0 16px">
+         <p style="color:#475569;line-height:1.7;margin:0 0 16px">
            Your mechanic recommended scheduling your next <strong>${svc}</strong> service soon.
            ${daysLeft <= 2 ? '<br><span style="color:#CF2020;font-weight:600">Your recommended service date is in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</span>' : 'The recommended date is in <strong>' + daysLeft + ' days</strong> (' + dateLabel + ').'}
          </p>
@@ -732,7 +732,7 @@ async function handleServiceReminders(req, res) {
           svc,
           `Time for your next bike service — ${months} months since your ${svc}`,
           `<h2 style="color:#0D1F3C;margin:0 0 12px">Hi ${name}, time for a service! 🔧</h2>
-           <p style="color:#374151;line-height:1.7;margin:0 0 16px">
+           <p style="color:#475569;line-height:1.7;margin:0 0 16px">
              It's been about <strong>${months} months</strong> since your <strong>${svc}</strong>.
              Regular servicing keeps your bike running smoothly and prevents costly repairs.
            </p>
@@ -825,7 +825,7 @@ async function handleUpsell(req, res) {
     .filter((i) => ITEMS[i])
     .map((i) => {
       const u = ITEMS[i];
-      return `<tr><td style="padding:10px 12px;border-bottom:1px solid #E5E7EB"><strong>${u.label}</strong><br><span style="font-size:12px;color:#6B7280">${u.desc}</span></td><td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:700;color:#0A58CA">$${u.price}</td></tr>`;
+      return `<tr><td style="padding:10px 12px;border-bottom:1px solid #E2E8F0"><strong>${u.label}</strong><br><span style="font-size:12px;color:#475569">${u.desc}</span></td><td style="padding:10px 12px;border-bottom:1px solid #E2E8F0;text-align:right;font-weight:700;color:#0A58CA">$${u.price}</td></tr>`;
     })
     .join('');
   if (!rows) return res.status(200).json({ success: true, sent: false });
@@ -844,11 +844,11 @@ async function handleUpsell(req, res) {
         <div style="background:#0D1F3C;padding:24px;text-align:center"><h1 style="color:#fff;font-size:20px;margin:0">DR BIKE SYDNEY</h1></div>
         <div style="padding:32px 24px">
           <h2 style="color:#0D1F3C">Hi ${name}, your mechanic found some things that need attention 🔧</h2>
-          <table style="width:100%;border-collapse:collapse;margin:20px 0;border:1px solid #E5E7EB"><thead><tr style="background:#F7F8FA"><th style="padding:10px 12px;text-align:left;font-size:13px;color:#6B7280">Recommended Service</th><th style="padding:10px 12px;text-align:right;font-size:13px;color:#6B7280">Price</th></tr></thead><tbody>${rows}</tbody></table>
-          <p style="color:#374151;line-height:1.7;font-size:14px">Call <a href="tel:+61433963250">0433 963 250</a> to add these to your current service.</p>
+          <table style="width:100%;border-collapse:collapse;margin:20px 0;border:1px solid #E2E8F0"><thead><tr style="background:#F7F8FA"><th style="padding:10px 12px;text-align:left;font-size:13px;color:#475569">Recommended Service</th><th style="padding:10px 12px;text-align:right;font-size:13px;color:#475569">Price</th></tr></thead><tbody>${rows}</tbody></table>
+          <p style="color:#475569;line-height:1.7;font-size:14px">Call <a href="tel:+61433963250">0433 963 250</a> to add these to your current service.</p>
           <a href="https://drbikesydney.com.au" style="display:inline-block;background:#0A58CA;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700">Book Follow-Up →</a>
         </div>
-        <div style="padding:16px;background:#F7F8FA;font-size:12px;color:#9CA3AF;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
+        <div style="padding:16px;background:#F7F8FA;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
       </div>`,
     }),
   });
@@ -914,9 +914,9 @@ async function handleB2B(req, res) {
         <div style="background:#0D1F3C;padding:24px;text-align:center"><h1 style="color:#fff;font-size:20px;margin:0">DR BIKE SYDNEY</h1></div>
         <div style="padding:32px 24px">
           <h2>Thanks for your enquiry, ${contactName}!</h2>
-          <p style="color:#374151;line-height:1.7">We received your fleet enquiry for <strong>${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong>2 business hours</strong> (Mon–Sat 8am–6pm AEST).</p>
+          <p style="color:#475569;line-height:1.7">We received your fleet enquiry for <strong>${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong>2 business hours</strong> (Mon–Sat 8am–6pm AEST).</p>
         </div>
-        <div style="padding:16px;background:#F7F8FA;font-size:12px;color:#9CA3AF;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
+        <div style="padding:16px;background:#F7F8FA;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
       </div>`,
     });
   } catch (e) {

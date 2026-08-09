@@ -728,7 +728,7 @@ async function sendPushNotif(job) {
 function alert2(j) {
   const d = document.createElement('div');
   d.style.cssText =
-    'position:fixed;top:80px;left:16px;right:16px;background:#059669;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
+    'position:fixed;top:80px;left:16px;right:16px;background:#15803D;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
   d.innerHTML = `<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${j.service_name} · ${esc(j.suburb)} · $${j.service_price}</span>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d);
@@ -915,7 +915,7 @@ function card(j) {
     in_progress: '#22C55E',
     inprogress: '#22C55E',
     arrived: '#22C55E',
-    completed: '#6B7280',
+    completed: '#475569',
     cancelled: '#EF4444',
   };
   const sl = {
@@ -933,7 +933,7 @@ function card(j) {
   const isPending = st === 'pending';
   const isEnroute = st === 'enroute';
   const isConfirmedNoMechanic = st === 'confirmed' && !j.mechanic_id;
-  const borderColor = sc[st] || '#6B7280';
+  const borderColor = sc[st] || '#475569';
   return `<div class="job-card${done ? ' done' : ''}" data-job-id="${j.id}" style="overflow:hidden;position:relative;border-left:4px solid ${borderColor}">
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
@@ -1567,7 +1567,7 @@ function openCompleteModal(id) {
         .map(
           (item, i) => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
-          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#CF2020' : '#059669'};flex-shrink:0" data-change="checklist-changed">
+          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#CF2020' : '#15803D'};flex-shrink:0" data-change="checklist-changed">
           <span>${item.label}${item.required ? '<span style="color:#CF2020;font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
         )
@@ -1633,20 +1633,20 @@ function openCompleteModal(id) {
 // ── Parts-used picker (grouped by category, deducts stock on complete) ───────
 const CATEGORY_META = {
   cockpit: { label: 'Cockpit', icon: '🎯', color: '#2563EB' },
-  wheels: { label: 'Wheels', icon: '🛞', color: '#059669' },
-  'wheels & tyres': { label: 'Wheels & Tyres', icon: '🛞', color: '#059669' },
+  wheels: { label: 'Wheels', icon: '🛞', color: '#15803D' },
+  'wheels & tyres': { label: 'Wheels & Tyres', icon: '🛞', color: '#15803D' },
   cables: { label: 'Cables', icon: '🔗', color: '#B45309' },
   drivetrain: { label: 'Drivetrain', icon: '⚙️', color: '#7C3AED' },
   brakes: { label: 'Brakes', icon: '🛑', color: '#CF2020' },
   suspension: { label: 'Suspension', icon: '🏔️', color: '#0891B2' },
   lubrication: { label: 'Lubrication', icon: '🧴', color: '#15803D' },
-  general: { label: 'General', icon: '🔨', color: '#6B7280' },
+  general: { label: 'General', icon: '🔨', color: '#475569' },
 };
 function catMeta(cat) {
   const key = String(cat || '')
     .toLowerCase()
     .trim();
-  return CATEGORY_META[key] || { label: cat || 'Other', icon: '📦', color: '#6B7280' };
+  return CATEGORY_META[key] || { label: cat || 'Other', icon: '📦', color: '#475569' };
 }
 
 async function openPartsPicker() {
@@ -1720,7 +1720,7 @@ function renderPartsPicker(parts) {
         html += `<div id="pp-row-${p.id}" style="display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid ${qty > 0 ? m.color : 'var(--border)'};border-left:3px solid ${m.color};border-radius:10px;padding:11px 12px;margin-bottom:7px">
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.name)}</div>
-          <div style="font-size:11px;color:${low ? '#CF2020' : '#6B7280'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
+          <div style="font-size:11px;color:${low ? '#CF2020' : '#475569'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           <button data-action="parts-step" data-id="${p.id}" data-delta="-1" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
@@ -1805,7 +1805,7 @@ function updatePartsSummary() {
     count.style.display = items.length ? 'inline-block' : 'none';
     count.textContent = totalQty;
   }
-  if (btn) btn.style.borderColor = _partsConfirmed ? '#059669' : 'var(--border)';
+  if (btn) btn.style.borderColor = _partsConfirmed ? '#15803D' : 'var(--border)';
   renderChargeBreakdown();
 }
 
@@ -2596,8 +2596,8 @@ function setCheck(itemId, status) {
     const b = document.getElementById(`cb-${itemId}-${s}`);
     if (!b) return;
     b.style.background =
-      s === status ? (s === 'ok' ? '#059669' : s === 'warn' ? '#B45309' : '#CF2020') : '#fff';
-    b.style.color = s === status ? '#fff' : '#374151';
+      s === status ? (s === 'ok' ? '#15803D' : s === 'warn' ? '#B45309' : '#CF2020') : '#fff';
+    b.style.color = s === status ? '#fff' : '#475569';
   });
 }
 
@@ -2866,14 +2866,14 @@ function renderAgenda() {
         in_progress: '#22C55E',
         inprogress: '#22C55E',
         arrived: '#22C55E',
-        completed: '#6B7280',
+        completed: '#475569',
         cancelled: '#EF4444',
       };
 
       dayJobs
         .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
         .forEach((j) => {
-          const color = stColors[j.status] || '#6B7280';
+          const color = stColors[j.status] || '#475569';
           html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
           <div style="width:52px;font-size:11px;color:var(--gray-lt);padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">
@@ -2988,7 +2988,7 @@ function appendMechMessage(msg, scroll = true) {
   const div = document.createElement('div');
   div.style.cssText = `display:flex;flex-direction:column;align-items:${isMech ? 'flex-end' : 'flex-start'};gap:2px;margin-bottom:6px`;
   const bubble = document.createElement('div');
-  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? 'var(--blue)' : '#fff'};color:${isMech ? '#fff' : '#0D1F3C'};border:${isMech ? 'none' : '1px solid #E5E7EB'}`;
+  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? 'var(--blue)' : '#fff'};color:${isMech ? '#fff' : '#0D1F3C'};border:${isMech ? 'none' : '1px solid #E2E8F0'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
   if (photoMatch) {
     const img = document.createElement('img');
@@ -3001,7 +3001,7 @@ function appendMechMessage(msg, scroll = true) {
     bubble.textContent = msg.message;
   }
   const time = document.createElement('div');
-  time.style.cssText = 'font-size:11px;color:#6B7280';
+  time.style.cssText = 'font-size:11px;color:var(--gray)';
   time.textContent = new Date(msg.created_at).toLocaleTimeString('en-AU', {
     hour: '2-digit',
     minute: '2-digit',

@@ -39,12 +39,12 @@ export async function createPaymentForm(containerId) {
     hidePostalCode: true,
     style: {
       base: {
-        color: '#111827',
+        color: '#0D1F3C',
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
         fontSize: '15px',
         fontSmoothing: 'antialiased',
-        '::placeholder': { color: '#9ca3af' },
-        iconColor: '#6b7280',
+        '::placeholder': { color: '#94A3B8' },
+        iconColor: '#475569',
       },
       invalid: { color: '#EF4444', iconColor: '#EF4444' },
     },

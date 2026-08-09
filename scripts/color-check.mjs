@@ -57,7 +57,7 @@ const DARK_THEMED = /^(admin\.html|mechanic\.html|css\/admin\.css|css\/mechanic\
 // script tells you the new number when you do.
 const BUDGET = {
   'index.html': 8,
-  'landing.html': 96,
+  'landing.html': 94,
   'track.html': 2,
   'admin.html': 17,
   'mechanic.html': 10,
@@ -67,9 +67,9 @@ const BUDGET = {
   'css/landing.css': 4,
   'css/admin.css': 238,
   'css/mechanic.css': 36,
-  'js/app.js': 98,
+  'js/app.js': 97,
   'js/admin.js': 163,
-  'js/mechanic.js': 69,
+  'js/mechanic.js': 68,
   'js/components.js': 28,
   'js/stripe.js': 5,
   // Emails cannot use var() at all - Gmail and Outlook drop custom properties -

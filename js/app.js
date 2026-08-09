@@ -2916,7 +2916,7 @@ function appendClientMsg(msg, container, scroll) {
   const wrap = document.createElement('div');
   wrap.style.cssText = `display:flex;flex-direction:column;align-items:${isClient ? 'flex-end' : 'flex-start'};gap:2px`;
   const bubble = document.createElement('div');
-  bubble.style.cssText = `max-width:75%;padding:9px 13px;border-radius:${isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};font-size:15px;line-height:1.4;word-break:break-word;background:${isClient ? '#2563EB' : '#fff'};color:${isClient ? '#fff' : '#0D1F3C'};border:${isClient ? 'none' : '1px solid #E5E7EB'}`;
+  bubble.style.cssText = `max-width:75%;padding:9px 13px;border-radius:${isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};font-size:15px;line-height:1.4;word-break:break-word;background:${isClient ? '#2563EB' : '#fff'};color:${isClient ? '#fff' : '#0D1F3C'};border:${isClient ? 'none' : '1px solid #E2E8F0'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
   if (photoMatch) {
     const img = document.createElement('img');
@@ -2930,7 +2930,7 @@ function appendClientMsg(msg, container, scroll) {
     bubble.textContent = msg.message;
   }
   const time = document.createElement('div');
-  time.style.cssText = 'font-size:11px;color:#9CA3AF';
+  time.style.cssText = 'font-size:11px;color:var(--gray-lt)';
   time.textContent = new Date(msg.created_at).toLocaleTimeString(dateLocale(), {
     hour: '2-digit',
     minute: '2-digit',
@@ -4123,7 +4123,7 @@ async function renderProfile() {
             <div style="margin-top:8px">${statusBadge}</div>
           </div>
           <div style="display:flex;gap:8px">
-            <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#B45309'};color:${isPaused ? '#059669' : '#B45309'};background:#fff">
+            <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#15803D' : '#B45309'};color:${isPaused ? '#15803D' : '#B45309'};background:#fff">
               ${isPaused ? 'Resume membership' : 'Pause membership'}
             </button>
             <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:var(--gray);background:var(--white)">Cancel</button>
@@ -4138,7 +4138,7 @@ async function renderProfile() {
         <div style="display:flex;gap:8px" id="lang-switcher">
           ${LANGUAGES.map(
             (l) =>
-              `<button data-lang="${l.code}" class="lang-btn" style="flex:1;padding:10px 8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${l.code === getLang() ? '#2563EB' : '#E5E7EB'};background:${l.code === getLang() ? '#EFF6FF' : '#fff'};color:${l.code === getLang() ? '#2563EB' : '#374151'}">${l.label}</button>`
+              `<button data-lang="${l.code}" class="lang-btn" style="flex:1;padding:10px 8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${l.code === getLang() ? '#2563EB' : '#E2E8F0'};background:${l.code === getLang() ? '#EFF6FF' : '#fff'};color:${l.code === getLang() ? '#2563EB' : '#475569'}">${l.label}</button>`
           ).join('')}
         </div>
       </div>
@@ -4199,9 +4199,9 @@ async function renderProfile() {
       const chosen = btn.dataset.lang;
       screen.querySelectorAll('.lang-btn').forEach((b) => {
         const active = b.dataset.lang === chosen;
-        b.style.borderColor = active ? '#2563EB' : '#E5E7EB';
+        b.style.borderColor = active ? '#2563EB' : '#E2E8F0';
         b.style.background = active ? '#EFF6FF' : '#fff';
-        b.style.color = active ? '#2563EB' : '#374151';
+        b.style.color = active ? '#2563EB' : '#475569';
       });
       setLang(chosen);
       // Persist it on the profile too: the reminder/birthday/re-engagement
@@ -4607,7 +4607,7 @@ async function renderMyBikes() {
                 return;
               }
               const SC = {
-                completed: '#6B7280',
+                completed: '#475569',
                 confirmed: '#0A58CA',
                 pending: '#F59E0B',
                 enroute: '#22C55E',
@@ -4621,7 +4621,7 @@ async function renderMyBikes() {
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--color-border)">
                   <div style="min-width:0">
                     <div style="font-size:13px;font-weight:600;color:var(--color-text)">${b.service_name || 'Service'}</div>
-                    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">${b.scheduled_date || ''} · <span style="color:${SC[b.status] || '#6B7280'};font-weight:600">${(b.status || '').replace('_', ' ')}</span></div>
+                    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">${b.scheduled_date || ''} · <span style="color:${SC[b.status] || '#475569'};font-weight:600">${(b.status || '').replace('_', ' ')}</span></div>
                   </div>
                   <div style="font-size:13px;font-weight:700;flex-shrink:0">$${b.service_price || 0}</div>
                 </div>`
@@ -4696,7 +4696,7 @@ async function renderMyBikes() {
                 general: 'Frame',
               };
               const SCORE = { ok: 100, warn: 50, critical: 0 };
-              const COLOR = { ok: '#059669', warn: '#B45309', critical: '#CF2020' };
+              const COLOR = { ok: '#15803D', warn: '#B45309', critical: '#CF2020' };
               const LABEL = { ok: 'OK', warn: 'Warn', critical: 'Critical' };
 
               const scored = Object.entries(COMP_LABELS)
@@ -4711,7 +4711,7 @@ async function renderMyBikes() {
               const avg = Math.round(
                 scored.reduce((s, c) => s + SCORE[c.status], 0) / scored.length
               );
-              const scoreColor = avg >= 75 ? '#059669' : avg >= 50 ? '#B45309' : '#CF2020';
+              const scoreColor = avg >= 75 ? '#15803D' : avg >= 50 ? '#B45309' : '#CF2020';
               const scoreLabel =
                 avg >= 75 ? 'Good' : avg >= 50 ? 'Needs attention' : 'Critical issues';
               const lastDate = new Date(bkgs[0].scheduled_date).toLocaleDateString(dateLocale(), {
@@ -4979,9 +4979,9 @@ function showDiagResult(screen, data) {
   const resultEl = screen.querySelector('#diag-result');
   if (!resultEl) return;
   const sev = data.severity || 'medium';
-  const sevColor = sev === 'high' ? '#CF2020' : sev === 'low' ? '#059669' : '#B45309';
+  const sevColor = sev === 'high' ? '#CF2020' : sev === 'low' ? '#15803D' : '#B45309';
   const urgColor =
-    data.urgency === 'Urgent' ? '#CF2020' : data.urgency === 'Book soon' ? '#B45309' : '#059669';
+    data.urgency === 'Urgent' ? '#CF2020' : data.urgency === 'Book soon' ? '#B45309' : '#15803D';
   const bookLabel = data.recommended_service_name
     ? 'Book ' +
       data.recommended_service_name +

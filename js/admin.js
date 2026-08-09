@@ -528,13 +528,13 @@ function applyDarkModeInline() {
       if (
         el.getAttribute('style')?.includes('border-color:var(--border)') ||
         el.getAttribute('style')?.includes('border:1px solid var(--border)') ||
-        el.getAttribute('style')?.includes('border: 1px solid #E5E7EB')
+        el.getAttribute('style')?.includes('border: 1px solid #E2E8F0')
       ) {
         el.style.setProperty('border-color', '#38383A', 'important');
       }
       if (
         el.getAttribute('style')?.includes('color:var(--mgray)') ||
-        el.getAttribute('style')?.includes('color: #6B7280')
+        el.getAttribute('style')?.includes('color: #475569')
       ) {
         el.style.setProperty('color', '#8E8E93', 'important');
       }
@@ -1549,7 +1549,7 @@ async function loadCoupons() {
 
         <!-- Big value display -->
         <div style="background:${isPct ? '#EEF3FC' : '#ECFDF5'};border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
-          <div style="font-size:28px;font-weight:800;color:${isPct ? 'var(--blue)' : '#059669'}">${valDisplay}</div>
+          <div style="font-size:28px;font-weight:800;color:${isPct ? 'var(--blue)' : '#15803D'}">${valDisplay}</div>
           <div style="font-size:13px;color:var(--mgray);line-height:1.4">${isPct ? 'percentage<br>discount' : 'fixed amount<br>discount'}</div>
         </div>
 
@@ -1968,7 +1968,7 @@ function _loginCardHeader() {
 }
 
 const _inp =
-  'width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
+  'width:100%;padding:13px 16px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
 const _btn =
   'width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
 
@@ -2118,15 +2118,15 @@ async function loadDashboard() {
           const stColors = {
             pending: '#B45309',
             confirmed: 'var(--blue)',
-            enroute: '#059669',
-            completed: '#6B7280',
+            enroute: '#15803D',
+            completed: '#475569',
             cancelled: '#CF2020',
           };
           const stBg = {
             pending: '#FEF3C7',
             confirmed: '#EEF3FC',
             enroute: '#ECFDF5',
-            completed: '#F3F4F6',
+            completed: '#F1F5F9',
             cancelled: '#FEF2F2',
           };
           const stLabel = {
@@ -2143,7 +2143,7 @@ async function loadDashboard() {
         <td data-label="Service">${esc(b.service_name || '—')}</td>
         <td data-label="Date">${b.scheduled_date || '—'}</td>
         <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
-        <td data-label="Status"><span style="background:${stBg[st] || '#F3F4F6'};color:${stColors[st] || '#6B7280'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${stLabel[st] || st}</span></td>
+        <td data-label="Status"><span style="background:${stBg[st] || '#F1F5F9'};color:${stColors[st] || '#475569'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${stLabel[st] || st}</span></td>
         <td data-label="Price" style="font-weight:700;color:var(--blue)">${anBookingRevenue(b)}</td>
       </tr>`;
         })
@@ -2166,15 +2166,15 @@ async function loadDashboard() {
     const stColors2 = {
       pending: '#B45309',
       confirmed: 'var(--blue)',
-      enroute: '#059669',
-      completed: '#6B7280',
+      enroute: '#15803D',
+      completed: '#475569',
       cancelled: '#CF2020',
     };
     const stBg2 = {
       pending: '#FEF3C7',
       confirmed: '#EEF3FC',
       enroute: '#ECFDF5',
-      completed: '#F3F4F6',
+      completed: '#F1F5F9',
       cancelled: '#FEF2F2',
     };
     const stLabel2 = {
@@ -2224,8 +2224,8 @@ async function loadDashboard() {
     const stDotColors = {
       pending: '#F59E0B',
       confirmed: 'var(--blue)',
-      enroute: '#059669',
-      completed: '#6B7280',
+      enroute: '#15803D',
+      completed: '#475569',
       cancelled: '#CF2020',
     };
     if (upcoming.length > 0) {
@@ -2534,9 +2534,9 @@ async function loadRecentNotifications() {
   }
   const stColors = {
     pending: '#B45309',
-    confirmed: '#059669',
+    confirmed: '#15803D',
     enroute: 'var(--blue)',
-    completed: '#6B7280',
+    completed: '#475569',
     cancelled: '#CF2020',
   };
   list.innerHTML = data
@@ -2552,7 +2552,7 @@ async function loadRecentNotifications() {
       return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" data-page="bookings">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
         <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(name)}</div>
-        <span style="font-size:11px;color:#fff;background:${stColors[st] || '#6B7280'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
+        <span style="font-size:11px;color:#fff;background:${stColors[st] || '#475569'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
       </div>
       <div style="font-size:13px;color:var(--mgray)">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
       <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anBookingRevenue(b)}</div>
@@ -4364,7 +4364,7 @@ async function renderMechStats() {
               const day = new Date(d + 'T00:00:00')
                 .toLocaleDateString('en-AU', { weekday: 'short' })
                 .slice(0, 2);
-              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:100%;height:${h}%;background:${v2 > 0 ? colors[v] : '#E5E7EB'};border-radius:3px 3px 0 0;transition:height .4s" title="${v2} job${v2 !== 1 ? 's' : ''}"></div><div style="font-size:11px;color:var(--mgray)">${day}</div></div>`;
+              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:100%;height:${h}%;background:${v2 > 0 ? colors[v] : '#E2E8F0'};border-radius:3px 3px 0 0;transition:height .4s" title="${v2} job${v2 !== 1 ? 's' : ''}"></div><div style="font-size:11px;color:var(--mgray)">${day}</div></div>`;
             })
             .join('')}
         </div>
@@ -4383,7 +4383,7 @@ async function loadClients() {
     .order('created_at', { ascending: false });
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
-  const colors = ['var(--blue)', '#059669', '#B45309', 'var(--purple)', 'var(--cyan)', '#CF2020'];
+  const colors = ['var(--blue)', '#15803D', '#B45309', 'var(--purple)', 'var(--cyan)', '#CF2020'];
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
@@ -4612,7 +4612,7 @@ function addVan() {
   vanZones.push({
     id: newId,
     name: 'Van ' + newId,
-    color: colors[newId] || '#6B7280',
+    color: colors[newId] || '#475569',
     suburbs: [],
   });
   renderVanZones();
@@ -4634,7 +4634,7 @@ function removeVan(vanId) {
 const CLAIM_STATUS = {
   new: { label: 'New', color: '#B45309', bg: '#FEF9C3' },
   reviewing: { label: 'Reviewing', color: 'var(--blue)', bg: 'var(--blue-tint)' },
-  resolved: { label: 'Resolved', color: '#059669', bg: '#ECFDF5' },
+  resolved: { label: 'Resolved', color: '#15803D', bg: '#ECFDF5' },
   rejected: { label: 'Rejected', color: '#CF2020', bg: '#FEF2F2' },
 };
 
@@ -4761,14 +4761,14 @@ async function loadContacts() {
       '<div style="text-align:center;color:var(--mgray);padding:48px;font-size:15px">No contacts yet. Add your first contact above.</div>';
     return;
   }
-  const roleColors = { manager: 'var(--blue)', mechanic: '#059669' };
+  const roleColors = { manager: 'var(--blue)', mechanic: '#15803D' };
   const roleBg = { manager: '#EEF3FC', mechanic: '#ECFDF5' };
   list.innerHTML = data
     .map(
       (c) => `
     <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || '#F3F4F6'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role] || '#6B7280'};flex-shrink:0">
+        <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || '#F1F5F9'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role] || '#475569'};flex-shrink:0">
           ${c.first_name[0]}${c.last_name[0]}
         </div>
         <div style="flex:1;min-width:0">
@@ -4776,7 +4776,7 @@ async function loadContacts() {
           <div style="font-size:13px;color:var(--mgray)">${c.phone}</div>
           ${c.email ? `<div style="font-size:13px;color:var(--mgray)">${c.email}</div>` : ''}
         </div>
-        <span style="background:${roleBg[c.role] || '#F3F4F6'};color:${roleColors[c.role] || '#6B7280'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
+        <span style="background:${roleBg[c.role] || '#F1F5F9'};color:${roleColors[c.role] || '#475569'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
       <div style="display:flex;gap:8px">
         <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
@@ -5373,14 +5373,14 @@ async function loadCalendar() {
     const stColors = {
       pending: '#F59E0B',
       confirmed: 'var(--blue)',
-      enroute: '#059669',
-      completed: '#6B7280',
+      enroute: '#15803D',
+      completed: '#475569',
     };
     const stBg = {
       pending: '#FEF9C3',
       confirmed: '#EEF3FC',
       enroute: '#ECFDF5',
-      completed: '#F3F4F6',
+      completed: '#F1F5F9',
     };
     const today = new Date().toISOString().split('T')[0];
     const startDate = new Date(firstDay);
@@ -5406,7 +5406,7 @@ async function loadCalendar() {
             const st = j.status || 'pending';
             const nm = j.profiles?.full_name?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
-            return `<div style="font-size:11px;background:${stBg[st] || '#F3F4F6'};border-left:2px solid ${stColors[st] || '#6B7280'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${esc(nm)}</div>`;
+            return `<div style="font-size:11px;background:${stBg[st] || '#F1F5F9'};border-left:2px solid ${stColors[st] || '#475569'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${esc(nm)}</div>`;
           })
           .join('')}
         ${dayJobs.length > 3 ? `<div style="font-size:11px;color:var(--mgray)">+${dayJobs.length - 3} more</div>` : ''}
@@ -5472,14 +5472,14 @@ async function loadCalendar() {
   const stColors = {
     pending: '#F59E0B',
     confirmed: 'var(--blue)',
-    enroute: '#059669',
-    completed: '#6B7280',
+    enroute: '#15803D',
+    completed: '#475569',
   };
   const stBg = {
     pending: '#FEF9C3',
     confirmed: '#EEF3FC',
     enroute: '#ECFDF5',
-    completed: '#F3F4F6',
+    completed: '#F1F5F9',
   };
   const today = new Date().toISOString().split('T')[0];
 
@@ -5512,8 +5512,8 @@ async function loadCalendar() {
                   const name = j.profiles?.full_name?.split(' ')[0] || 'Client';
                   const time = j.scheduled_time || '';
                   const van = j.van_number || 1;
-                  return `<div style="background:${stBg[st] || '#F3F4F6'};border-left:3px solid ${stColors[st] || '#6B7280'};border-radius:6px;padding:6px 8px;cursor:pointer" data-page="bookings">
-              <div style="font-size:11px;font-weight:700;color:${stColors[st] || '#6B7280'}">${time}</div>
+                  return `<div style="background:${stBg[st] || '#F1F5F9'};border-left:3px solid ${stColors[st] || '#475569'};border-radius:6px;padding:6px 8px;cursor:pointer" data-page="bookings">
+              <div style="font-size:11px;font-weight:700;color:${stColors[st] || '#475569'}">${time}</div>
               <div style="font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
               <div style="font-size:11px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.service_name || '')}</div>
               <div style="font-size:11px;font-weight:600;color:${stColors[st]};margin-top:2px">Van ${van}</div>
@@ -6530,7 +6530,7 @@ async function loadNewsletter() {
         <td style="font-size:13px">${esc(s.name || '—')}</td>
         <td style="font-size:13px">${esc(s.source || 'website')}</td>
         <td style="font-size:13px">${new Date(s.subscribed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-        <td><span style="background:${s.active ? '#ECFDF5' : '#FEF2F2'};color:${s.active ? '#059669' : '#CF2020'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
+        <td><span style="background:${s.active ? '#ECFDF5' : '#FEF2F2'};color:${s.active ? '#15803D' : '#CF2020'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
       </tr>`
         )
         .join('')}</tbody>

@@ -1616,7 +1616,7 @@ window.addEventListener('scroll', function() {
   var cur = '';
   secs.forEach(function(s) { if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
   nls.forEach(function(a) {
-    a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--blue)' : '#374151';
+    a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--blue)' : '#475569';
   });
 }, { passive: true });
 
@@ -1647,9 +1647,9 @@ function setBilling(type) {
   _membershipBilling = type;
   var isAnnual = type === 'annual';
   document.getElementById('toggle-monthly').style.background = isAnnual ? 'transparent' : '#2563eb';
-  document.getElementById('toggle-monthly').style.color = isAnnual ? '#6B7280' : 'white';
+  document.getElementById('toggle-monthly').style.color = isAnnual ? '#475569' : 'white';
   document.getElementById('toggle-annual').style.background = isAnnual ? '#2563eb' : 'transparent';
-  document.getElementById('toggle-annual').style.color = isAnnual ? 'white' : '#6B7280';
+  document.getElementById('toggle-annual').style.color = isAnnual ? 'white' : '#475569';
   ['basic','standard','vip'].forEach(function(plan) {
     var price = _membershipPrices[plan][type];
     var priceEl = document.getElementById('price-' + plan);
@@ -1688,7 +1688,7 @@ function openMembershipModal(plan) {
       var cardEl = document.getElementById('membership-card-element');
       if (cardEl && !_membershipCard) {
         _membershipCard = window.stripeElements.create('card', {
-          style: { base: { fontSize: '16px', color: '#111827', '::placeholder': { color: '#9CA3AF' } } }
+          style: { base: { fontSize: '16px', color: '#0D1F3C', '::placeholder': { color: '#94A3B8' } } }
         });
         _membershipCard.mount('#membership-card-element');
       }
@@ -1721,9 +1721,9 @@ function selectGiftAmount(amt) {
   document.getElementById('gift-amount-custom').value = '';
   document.querySelectorAll('.gift-amt-btn').forEach(function(b) {
     var on = Number(b.dataset.amt) === amt;
-    b.style.borderColor = on ? '#7C3AED' : '#E5E7EB';
+    b.style.borderColor = on ? '#7C3AED' : '#E2E8F0';
     b.style.background = on ? '#F5F3FF' : '#fff';
-    b.style.color = on ? '#7C3AED' : '#111827';
+    b.style.color = on ? '#7C3AED' : '#0D1F3C';
   });
 }
 function clearGiftPreset() {
@@ -1861,8 +1861,8 @@ function showDiagResult(data) {
   var resultEl = document.getElementById('diag-result');
   if (!resultEl) return;
   var sev = data.severity || 'medium';
-  var sevColor = sev === 'high' ? '#CF2020' : sev === 'low' ? '#059669' : '#B45309';
-  var urgColor = data.urgency === 'Urgent' ? '#CF2020' : data.urgency === 'Book soon' ? '#B45309' : '#059669';
+  var sevColor = sev === 'high' ? '#CF2020' : sev === 'low' ? '#15803D' : '#B45309';
+  var urgColor = data.urgency === 'Urgent' ? '#CF2020' : data.urgency === 'Book soon' ? '#B45309' : '#15803D';
   var bookLabel = data.recommended_service_name
     ? 'Book ' + data.recommended_service_name + (data.recommended_service_price ? ' - $' + data.recommended_service_price : '') + ' →'
     : '';
@@ -2038,7 +2038,7 @@ var _authMode = 'signin';
 
 /* ── Real reviews (public_reviews view) ────────────────────────────────── */
 (function () {
-  var AVATAR_COLORS = ['#0A58CA', '#059669', '#7C3AED', '#B45309', '#CF2020'];
+  var AVATAR_COLORS = ['#0A58CA', '#15803D', '#7C3AED', '#B45309', '#CF2020'];
 
   function timeAgo(iso) {
     var days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
@@ -2178,7 +2178,7 @@ function openAccountPanel(session) {
   var panelTop = btnRect.top + (btn ? btn.offsetHeight : 0) + 8;
   var maxH = Math.max(300, window.innerHeight - panelTop - 24);
 
-  var STATUS_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#6B7280', cancelled:'#EF4444' };
+  var STATUS_COLORS = { pending:'#F59E0B', confirmed:'#0A58CA', enroute:'#22C55E', in_progress:'#22C55E', completed:'#475569', cancelled:'#EF4444' };
   var STATUS_LABELS = { pending:'Pending', confirmed:'Confirmed', enroute:'En Route', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
 
   // Same segmented control the app uses for Upcoming/History (.tabs-row and
@@ -2274,7 +2274,7 @@ function openAccountPanel(session) {
         html += '<div style="font-size:11px;font-weight:700;color:var(--gray-lt);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px"><span>Upcoming</span> (' + upcoming.length + ')</div>';
         upcoming.forEach(function(b) {
           var canEdit = b.status === 'pending' || b.status === 'confirmed';
-          var sc = STATUS_COLORS[b.status]||'#6B7280';
+          var sc = STATUS_COLORS[b.status]||'#475569';
           html += '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid ' + sc + ';border-radius:12px;padding:12px;margin-bottom:10px">';
           html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
           html += '<div style="font-size:13px;font-weight:700;color:var(--navy)">' + esc(b.service_name || 'Service') + '</div>';
@@ -2296,7 +2296,7 @@ function openAccountPanel(session) {
       if (past.length) {
         html += '<div style="font-size:11px;font-weight:700;color:var(--gray-lt);text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px">History</div>';
         past.slice(0, 5).forEach(function(b) {
-          var sc = STATUS_COLORS[b.status]||'#6B7280';
+          var sc = STATUS_COLORS[b.status]||'#475569';
           html += '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid ' + sc + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">';
           html += '<div><div style="font-size:13px;font-weight:600;color:var(--navy)">' + esc(b.service_name||'Service') + '</div><div style="font-size:11px;color:var(--gray-lt);margin-top:2px">' + esc(acctWhen(b.scheduled_date, '')) + '</div></div>';
           html += '<span style="font-size:11px;font-weight:600;color:' + sc + '">' + (STATUS_LABELS[b.status]||b.status) + '</span>';
@@ -2392,7 +2392,7 @@ function openAccountPanel(session) {
           '<div style="margin-top:12px">' + statusBadge + '</div>' +
           '</div>' +
           '<div style="display:flex;gap:8px">' +
-          '<button id="acct-membership-toggle" data-paused="' + (isPaused?'1':'0') + '" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ' + (isPaused?'#059669':'#B45309') + ';color:' + (isPaused?'#059669':'#B45309') + ';background:#fff">' + (isPaused?'Resume':'Pause') + '</button>' +
+          '<button id="acct-membership-toggle" data-paused="' + (isPaused?'1':'0') + '" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ' + (isPaused?'#15803D':'#B45309') + ';color:' + (isPaused?'#15803D':'#B45309') + ';background:#fff">' + (isPaused?'Resume':'Pause') + '</button>' +
           '<button id="acct-membership-cancel" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:var(--gray);background:var(--white)">Cancel</button>' +
           '</div>';
         // Wire up buttons after HTML is set
@@ -2446,9 +2446,9 @@ function showAuthTab(mode) {
   _authMode = mode;
   var isSignup = mode === 'signup';
   document.getElementById('tab-signin').style.background = isSignup ? 'transparent' : '#0A58CA';
-  document.getElementById('tab-signin').style.color = isSignup ? '#6B7280' : '#fff';
+  document.getElementById('tab-signin').style.color = isSignup ? '#475569' : '#fff';
   document.getElementById('tab-signup').style.background = isSignup ? '#0A58CA' : 'transparent';
-  document.getElementById('tab-signup').style.color = isSignup ? '#fff' : '#6B7280';
+  document.getElementById('tab-signup').style.color = isSignup ? '#fff' : '#475569';
   document.getElementById('auth-name-wrap').style.display = isSignup ? 'block' : 'none';
   document.getElementById('auth-submit').textContent = isSignup ? 'Create Account' : 'Sign In';
   document.getElementById('auth-title').textContent = isSignup ? 'Create your account' : 'Sign in to your account';
@@ -2896,7 +2896,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function starHTML(n) {
     return [1,2,3,4,5].map(function(i) {
       var active = i <= n;
-      return '<button data-val="'+i+'" style="background:none;border:none;font-size:38px;cursor:pointer;padding:3px;line-height:1;color:'+(active?'#B45309':'#E5E7EB')+';transition:color .1s,transform .1s;transform:'+(active?'scale(1.08)':'scale(1)')+'">'+(active?'★':'★')+'</button>';
+      return '<button data-val="'+i+'" style="background:none;border:none;font-size:38px;cursor:pointer;padding:3px;line-height:1;color:'+(active?'#B45309':'#E2E8F0')+';transition:color .1s,transform .1s;transform:'+(active?'scale(1.08)':'scale(1)')+'">'+(active?'★':'★')+'</button>';
     }).join('');
   }
 
@@ -2962,7 +2962,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('rv-stars').innerHTML = starHTML(currentRating);
     var lbl = document.getElementById('rv-label');
     lbl.textContent = LABELS[currentRating];
-    lbl.style.color = currentRating === 5 ? '#059669' : currentRating >= 3 ? '#B45309' : '#CF2020';
+    lbl.style.color = currentRating === 5 ? '#15803D' : currentRating >= 3 ? '#B45309' : '#CF2020';
   });
 
   // Char counter
@@ -3083,7 +3083,7 @@ function openLandingChat(bookingId) {
     var wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex;justify-content:' + (isClient ? 'flex-end' : 'flex-start');
     var bubble = document.createElement('div');
-    bubble.style.cssText = 'max-width:75%;padding:9px 13px;border-radius:' + (isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:15px;line-height:1.4;word-break:break-word;background:' + (isClient ? '#2563eb' : '#fff') + ';color:' + (isClient ? '#fff' : '#0D1F3C') + ';border:' + (isClient ? 'none' : '1px solid #E5E7EB');
+    bubble.style.cssText = 'max-width:75%;padding:9px 13px;border-radius:' + (isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:15px;line-height:1.4;word-break:break-word;background:' + (isClient ? '#2563eb' : '#fff') + ';color:' + (isClient ? '#fff' : '#0D1F3C') + ';border:' + (isClient ? 'none' : '1px solid #E2E8F0');
     var pm = (m.message || '').match(/^\[PHOTO:(.*)\]$/);
     if (pm) { var img = document.createElement('img'); img.src = pm[1]; img.style.cssText = 'max-width:200px;border-radius:10px;display:block;cursor:pointer'; img.addEventListener('click', function() { window.open(pm[1], '_blank'); }); bubble.style.padding = '4px'; bubble.appendChild(img); }
     else bubble.textContent = m.message;
@@ -3135,7 +3135,7 @@ function openLandingChat(bookingId) {
 
   var win = document.createElement('div');
   win.id = 'faqbot-win';
-  win.style.cssText = 'position:fixed;bottom:88px;right:20px;z-index:9998;width:min(380px,calc(100vw-32px));height:min(560px,calc(100vh-130px));background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,0.22);border:1px solid #E5E7EB;display:none;flex-direction:column;overflow:hidden';
+  win.style.cssText = 'position:fixed;bottom:88px;right:20px;z-index:9998;width:min(380px,calc(100vw-32px));height:min(560px,calc(100vh-130px));background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,0.22);border:1px solid var(--border);display:none;flex-direction:column;overflow:hidden';
   win.innerHTML = ''
     + '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--navy);flex-shrink:0">'
     +   '<div style="width:38px;height:38px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px">&#128692;</div>'
@@ -3160,7 +3160,7 @@ function openLandingChat(bookingId) {
     var wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex;justify-content:' + (isUser ? 'flex-end' : 'flex-start');
     var b = document.createElement('div');
-    b.style.cssText = 'max-width:80%;padding:10px 14px;border-radius:' + (isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:15px;line-height:1.45;word-break:break-word;background:' + (isUser ? '#2563eb' : '#fff') + ';color:' + (isUser ? '#fff' : '#0D1F3C') + ';border:' + (isUser ? 'none' : '1px solid #E5E7EB');
+    b.style.cssText = 'max-width:80%;padding:10px 14px;border-radius:' + (isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:15px;line-height:1.45;word-break:break-word;background:' + (isUser ? '#2563eb' : '#fff') + ';color:' + (isUser ? '#fff' : '#0D1F3C') + ';border:' + (isUser ? 'none' : '1px solid #E2E8F0');
     b.textContent = text;
     wrap.appendChild(b); msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
     return b;
@@ -3173,7 +3173,7 @@ function openLandingChat(bookingId) {
     FAQS.forEach(function(q) {
       var c = document.createElement('button');
       c.textContent = q;
-      c.style.cssText = 'padding:7px 11px;border:1px solid #E5E7EB;border-radius:16px;background:#fff;color:#1E40AF;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+      c.style.cssText = 'padding:7px 11px;border:1px solid var(--border);border-radius:16px;background:#fff;color:#1E40AF;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
       c.addEventListener('click', function() { send(q); });
       chipsBar.appendChild(c);
     });
