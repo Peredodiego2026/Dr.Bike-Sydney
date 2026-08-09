@@ -263,7 +263,7 @@ body {
 }
 .status-btn {
   background: rgba(37, 99, 235, 0.15);
-  color: #60a5fa;
+  color: var(--blue-soft);
   border: 1px solid rgba(37, 99, 235, 0.3);
   border-radius: 20px;
   padding: 6px 14px;
@@ -455,7 +455,7 @@ body {
 .abtn.danger {
   background: transparent;
   color: #cf2020;
-  border: 1.5px solid #fecaca;
+  border: 1.5px solid var(--red-edge);
   font-weight: 600;
 }
 .abtn.chat {
@@ -464,7 +464,7 @@ body {
 }
 .abtn.undo {
   background: #f8fafc;
-  color: #64748b;
+  color: var(--slate);
   border: 1.5px solid var(--border);
 }
 .notes-inp {

@@ -973,7 +973,7 @@ async function loadFinance() {
       <td data-label="Amount" style="font-weight:600">$${price.toLocaleString('en-AU')}</td>
       <td data-label="GST" style="color:var(--orange)">${anMoney(jGst)}</td>
       <td data-label="Net">${anMoney(jNet)}</td>
-      <td data-label="Status"><span style="background:var(--green-lt);color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
+      <td data-label="Status"><span style="background:var(--green-lt);color:var(--green-ink);border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
     </tr>`;
         })
         .join('')
@@ -1284,7 +1284,7 @@ function openBlockModal() {
         </div>
         <div style="display:flex;gap:10px;margin-top:4px">
           <button data-action="save-blocks" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
-          <button data-action="unblock-date" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid #FECACA;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock all</button>
+          <button data-action="unblock-date" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid var(--red-edge);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock all</button>
         </div>
       </div>
     </div>`;
@@ -1537,7 +1537,7 @@ async function loadCoupons() {
         const expired = c.expires_at && new Date(c.expires_at) < new Date();
 
         return `
-      <div style="background:var(--white);border:1.5px solid ${isActive && !expired ? 'var(--border)' : '#FECACA'};border-radius:16px;padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:box-shadow .2s">
+      <div style="background:var(--white);border:1.5px solid ${isActive && !expired ? 'var(--border)' : 'var(--red-edge)'};border-radius:16px;padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:box-shadow .2s">
         <!-- Color accent top bar -->
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${isActive && !expired ? 'linear-gradient(90deg,var(--blue),#6366F1)' : '#FCA5A5'}"></div>
 
@@ -2136,7 +2136,7 @@ async function loadDashboard() {
             completed: 'Completed',
             cancelled: 'Cancelled',
           };
-          const vanColors = { 1: 'var(--blue)', 2: '#B45309', 3: '#7C3AED', 4: '#CF2020' };
+          const vanColors = { 1: 'var(--blue)', 2: '#B45309', 3: 'var(--purple)', 4: '#CF2020' };
           const vanNum = b.van_number || 1;
           return `<tr>
         <td data-label="Client" style="font-weight:700">${esc(name)}</td>
@@ -2373,7 +2373,7 @@ function renderBookingsTable(data) {
       <td data-label="Price"><b>${anBookingRevenue(b)}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
         ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
+        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:var(--purple);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
         ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:#CF2020;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
       </td>
@@ -2571,7 +2571,7 @@ function prependNotification(b) {
   });
   const div = document.createElement('div');
   div.style.cssText =
-    'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid var(--blue);animation:fadeSlideIn .3s';
+    'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--blue-tint);border-left:3px solid var(--blue);animation:fadeSlideIn .3s';
   div.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--navy)">🔔 New booking</div>
     <div style="font-size:13px;color:var(--mgray)">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
     <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anBookingRevenue(b)}</div>`;
@@ -4383,11 +4383,11 @@ async function loadClients() {
     .order('created_at', { ascending: false });
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
-  const colors = ['var(--blue)', '#059669', '#B45309', '#7C3AED', '#0891B2', '#CF2020'];
+  const colors = ['var(--blue)', '#059669', '#B45309', 'var(--purple)', 'var(--cyan)', '#CF2020'];
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
-    grid.innerHTML = `<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
     return;
   }
   if (!data || data.length === 0) {
@@ -4456,7 +4456,7 @@ async function loadVanZones() {
     const grouped = {};
     data.forEach((row) => {
       if (!grouped[row.van_number]) {
-        const colors = { 1: 'var(--blue)', 2: '#B45309', 3: '#7C3AED', 4: '#CF2020' };
+        const colors = { 1: 'var(--blue)', 2: '#B45309', 3: 'var(--purple)', 4: '#CF2020' };
         grouped[row.van_number] = {
           id: row.van_number,
           name: 'Van ' + row.van_number,
@@ -4608,7 +4608,7 @@ function removeSuburb(vanId, suburb) {
 
 function addVan() {
   const newId = vanZones.length > 0 ? Math.max(...vanZones.map((v) => v.id)) + 1 : 1;
-  const colors = { 1: 'var(--blue)', 2: '#B45309', 3: '#7C3AED', 4: '#CF2020' };
+  const colors = { 1: 'var(--blue)', 2: '#B45309', 3: 'var(--purple)', 4: '#CF2020' };
   vanZones.push({
     id: newId,
     name: 'Van ' + newId,
@@ -4633,7 +4633,7 @@ function removeVan(vanId) {
 // most other admin reads can't see it.
 const CLAIM_STATUS = {
   new: { label: 'New', color: '#B45309', bg: '#FEF9C3' },
-  reviewing: { label: 'Reviewing', color: 'var(--blue)', bg: '#EEF3FC' },
+  reviewing: { label: 'Reviewing', color: 'var(--blue)', bg: 'var(--blue-tint)' },
   resolved: { label: 'Resolved', color: '#059669', bg: '#ECFDF5' },
   rejected: { label: 'Rejected', color: '#CF2020', bg: '#FEF2F2' },
 };
@@ -4780,7 +4780,7 @@ async function loadContacts() {
       </div>
       <div style="display:flex;gap:8px">
         <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
-        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid #FECACA;color:#CF2020;border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
+        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid var(--red-edge);color:#CF2020;border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`
     )
@@ -4943,7 +4943,7 @@ function renderInventory() {
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">−</button>
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">+</button>
           <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-part" data-id="${p.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#CF2020;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="delete-part" data-id="${p.id}" style="background:#FEF2F2;border:1.5px solid var(--red-edge);color:#CF2020;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -5164,7 +5164,7 @@ function renderServices() {
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
           <button data-action="open-service-modal" data-id="${s.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-service" data-id="${s.id}" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#CF2020;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="delete-service" data-id="${s.id}" style="background:#FEF2F2;border:1.5px solid var(--red-edge);color:#CF2020;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -5687,7 +5687,7 @@ async function loadSettings() {
     const twilioEl = document.getElementById('integ-twilio');
     if (twilioEl) {
       twilioEl.textContent = 'SMS only (no WhatsApp number)';
-      twilioEl.style.color = '#F59E0B';
+      twilioEl.style.color = 'var(--amber-bright)';
     }
   }
 
@@ -5792,11 +5792,11 @@ async function checkTwilioStatus() {
       }
     } else {
       el.textContent = '⚠ Needs keys';
-      el.style.color = '#F59E0B';
+      el.style.color = 'var(--amber-bright)';
     }
   } catch (e) {
     el.textContent = '⚠ Needs keys';
-    el.style.color = '#F59E0B';
+    el.style.color = 'var(--amber-bright)';
   }
 }
 
@@ -5985,7 +5985,12 @@ async function loadNotifNumbers() {
 
   const zoneLabel = { 1: 'Van 1', 2: 'Van 2', all: 'All zones', '': 'All zones' };
   const zoneBg = { 1: '#EEF3FC', 2: '#F0FDF4', all: '#FEF9C3', '': '#FEF9C3' };
-  const zoneColor = { 1: 'var(--blue)', 2: '#15803D', all: '#92400E', '': '#92400E' };
+  const zoneColor = {
+    1: 'var(--blue)',
+    2: '#15803D',
+    all: 'var(--amber-ink)',
+    '': 'var(--amber-ink)',
+  };
   const channelIcon = { sms: '📱', whatsapp: '💬', both: '📱💬' };
   const roleIcon = { manager: '⭐', mechanic: '🔧' };
 
@@ -6008,7 +6013,7 @@ async function loadNotifNumbers() {
         <button data-action="edit-notif-number" data-id="${c.id}"
           style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
         <button data-action="delete-notif-number" data-id="${c.id}"
-          style="background:#FEF2F2;border:1.5px solid #FECACA;color:#CF2020;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
+          style="background:#FEF2F2;border:1.5px solid var(--red-edge);color:#CF2020;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
       </div>
     </div>`;
     })
@@ -6210,7 +6215,7 @@ async function loadMechanicProfiles() {
         : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
       const roleTag =
         c.role === 'manager'
-          ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--amber-lt);color:#92400E">⭐ Manager</span>'
+          ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--amber-lt);color:var(--amber-ink)">⭐ Manager</span>'
           : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-lt);color:var(--green)">🔧 Mechanic</span>';
 
       return `

@@ -1586,6 +1586,38 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
 2026-08-09 ya no existe: **no queda ninguna**.
 
+#### Grupo B HECHO 2026-08-09: 16 colores reales pasan a token
+
+**Los 128 valores fuera de token no eran todos lo mismo.** Unos son restos de
+las paletas muertas (grupo A: `#6b7280`, `#e5e7eb`, `#059669`, `#111827`,
+`#374151`, `#9ca3af`, `#f3f4f6`); esos hay que **mapearlos** al token, y cambia
+pixeles. Otros son **colores reales que la paleta nunca nombro**, y esos solo
+necesitan un nombre. Diego eligio nombrarlos (2026-08-09).
+
+Los 16 nuevos en `css/variables.css`: `--purple` / `--purple-lt`,
+`--blue-soft`, `--blue-edge`, `--blue-deep`, `--blue-tint`, `--amber-bright`,
+`--amber-ink`, `--amber-tint`, `--red-bright`, `--red-edge`, `--green-bright`,
+`--green-ink`, `--green-tint`, `--slate`, `--cyan`.
+
+**No se colapsan contra los tokens de arriba, a proposito.** `--amber-bright`
+es el ambar de una estrella de rating, que tiene que leerse mas brillante que
+el `--amber` de un aviso; `--green-bright` es el verde de "va en camino", no el
+de "terminado".
+
+**117 hex** pasaron a `var(--token)`. **Verificado que ninguno cambia un
+pixel**, y no de palabra: un script releyo **el diff real** (no la intencion),
+expandio cada `var()` de los dos lados contra el valor que tiene en
+`variables.css` y comparo las lineas. **114 lineas resuelven exactamente al
+valor viejo, 0 diferencias.** Las 3 restantes son la insercion de los tokens.
+
+**Lo que NO se convirtio, y por que.** 82 apariciones se dejaron quietas: son
+hex dentro de strings de JavaScript que no se puede probar que terminen en un
+contexto CSS (`pending: '#F59E0B'` en un mapa de estados), atributos de
+presentacion de SVG (`fill="#..."`, que **no** acepta `var()`) y definiciones
+de custom property. Si se convirtieron las 10 lineas donde **el propio codigo
+ya demuestra** que el valor llega a CSS, porque una entrada hermana del mismo
+literal ya decia `var(--blue)`.
+
 #### El guardrail HECHO 2026-08-09: `scripts/color-check.mjs`
 
 Hasta hoy nada impedia que entrara un hex nuevo. Los pasos 1 a 3 movieron ~900

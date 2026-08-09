@@ -149,16 +149,16 @@ body {
   border: 1px solid;
 }
 .coupon-btn-deactivate {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--red-bright);
+  border-color: var(--red-bright);
 }
 .coupon-btn-activate {
   color: var(--green);
   border-color: var(--green);
 }
 .coupon-btn-delete {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--red-bright);
+  border-color: var(--red-bright);
   background: rgba(239, 68, 68, 0.08);
 }
 [data-theme='dark'] .coupon-btn-deactivate {
@@ -183,7 +183,7 @@ body {
   color: #98989f;
 }
 [data-theme='dark'] .card-action {
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .topbar {
   background: #1a2740;
@@ -239,7 +239,7 @@ body {
 [data-theme='dark'] .suburb-tag {
   background: rgba(37, 99, 235, 0.2);
   border-color: rgba(37, 99, 235, 0.3);
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .add-suburb-inp {
   background: #1a2740;
@@ -273,7 +273,7 @@ body {
   color: #636366;
 }
 [data-theme='dark'] .mobile-bottom-nav a.active {
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .sb-overlay {
   background: rgba(0, 0, 0, 0.75);
@@ -312,7 +312,7 @@ body {
   color: #98989f;
 }
 [data-theme='dark'] .seg-vip {
-  background: #7c3aed;
+  background: var(--purple);
   color: #fff;
 }
 [data-theme='dark'] .seg-reg {
@@ -497,7 +497,7 @@ body {
 }
 [data-theme='dark'] .mech-tag.v1 {
   background: rgba(24, 72, 200, 0.2);
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .mech-tag.v2 {
   background: rgba(217, 119, 6, 0.2);
@@ -605,7 +605,7 @@ body {
 }
 .sb-badge {
   margin-left: auto;
-  background: #ef4444;
+  background: var(--red-bright);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -705,7 +705,7 @@ body {
   right: 6px;
   width: 8px;
   height: 8px;
-  background: #ef4444;
+  background: var(--red-bright);
   border-radius: 50%;
   border: 2px solid var(--white);
 }
@@ -820,7 +820,7 @@ body {
   background: #f0fdf4;
 }
 .kpi-trend.dn {
-  color: #ef4444;
+  color: var(--red-bright);
   background: #fef2f2;
 }
 
@@ -927,7 +927,7 @@ body {
 }
 .status.completed {
   background: #f1f5f9;
-  color: #64748b;
+  color: var(--slate);
 }
 .status.cancelled {
   background: #fef2f2;
@@ -1211,7 +1211,7 @@ body {
    for the rest - so one colour carries one meaning per screen. Red stays on
    at-risk, where "something is wrong" matches what red means everywhere else. */
 .seg-vip {
-  background: #7c3aed;
+  background: var(--purple);
   color: #fff;
 }
 .seg-reg {
@@ -1305,7 +1305,7 @@ body {
   font-weight: 600;
 }
 .pl-val.neg {
-  color: #ef4444;
+  color: var(--red-bright);
 }
 .pl-val.total {
   color: var(--blue);
@@ -1348,7 +1348,7 @@ body {
   background: var(--amber-lt);
 }
 .bas-cell--gst-sales .bas-cell-label {
-  color: #92400e;
+  color: var(--amber-ink);
 }
 .bas-cell--gst-sales .bas-cell-value {
   color: #b45309;
@@ -1357,7 +1357,7 @@ body {
   background: #f0fdf4;
 }
 .bas-cell--gst-purchases .bas-cell-label {
-  color: #065f46;
+  color: var(--green-ink);
 }
 .bas-cell--gst-purchases .bas-cell-value {
   color: var(--green);
@@ -1377,7 +1377,7 @@ body {
   background: var(--amber-lt);
   border-radius: 8px;
   font-size: 12px;
-  color: #92400e;
+  color: var(--amber-ink);
 }
 [data-theme='dark'] .bas-cell--sales {
   background: #152035;
@@ -1404,7 +1404,7 @@ body {
 }
 [data-theme='dark'] .bas-cell--net .bas-cell-label,
 [data-theme='dark'] .bas-cell--net .bas-cell-value {
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .bas-warn {
   background: rgba(245, 158, 11, 0.12);
@@ -2143,9 +2143,9 @@ body {
    steps were validated against the dark card surface (#152035), not derived
    from the light ones.
    Ramps validated with the dataviz skill's validate_palette.js:
-     ordinal light  #60a5fa #3b82f6 #2563eb #1e40af  (lightest 2.54:1 on #fff)
-     ordinal dark   #2563eb #3b82f6 #60a5fa #93c5fd  (darkest  3.15:1 on #152035)
-     series light   #2563eb 5.17:1   series dark #60a5fa 6.40:1
+     ordinal light  var(--blue-soft) #3b82f6 #2563eb #1e40af  (lightest 2.54:1 on #fff)
+     ordinal dark   #2563eb #3b82f6 var(--blue-soft) #93c5fd  (darkest  3.15:1 on #152035)
+     series light   #2563eb 5.17:1   series dark var(--blue-soft) 6.40:1
    ══════════════════════════════════════════════════════════════════════════ */
 #page-analytics {
   --an-surface: #ffffff;

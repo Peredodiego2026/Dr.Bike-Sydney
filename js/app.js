@@ -676,7 +676,7 @@ async function renderBookService() {
       window.appState.time &&
       window.appState.location;
     const resumeHtml = canResume
-      ? `<div id="resume-draft" style="display:flex;align-items:center;gap:12px;background:var(--blue-lt);border:1px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin:0 0 16px">
+      ? `<div id="resume-draft" style="display:flex;align-items:center;gap:12px;background:var(--blue-lt);border:1px solid var(--blue-edge);border-radius:12px;padding:12px 14px;margin:0 0 16px">
            <span style="font-size:20px" aria-hidden="true">↩️</span>
            <div style="flex:1;min-width:0">
              <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">You have a booking in progress</div>
@@ -689,15 +689,15 @@ async function renderBookService() {
     screen.innerHTML = `
       ${createHeader('Book a Service', true, '#home')}
       ${resumeHtml}
-      <div id="diag-block" style="background:var(--blue-lt);border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #BFDBFE">
+      <div id="diag-block" style="background:var(--blue-lt);border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid var(--blue-edge)">
         <div style="font-size:13px;font-weight:700;color:var(--blue-dark);margin-bottom:6px">Not sure what your bike needs?</div>
         <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
         <div style="display:flex;align-items:center;gap:8px;width:100%">
           <label style="flex-shrink:0;cursor:pointer">
             <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
-            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:var(--blue-dark);cursor:pointer;white-space:nowrap">Photo</div>
+            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid var(--blue-edge);border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:var(--blue-dark);cursor:pointer;white-space:nowrap">Photo</div>
           </label>
-          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;background:var(--white)">
+          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid var(--blue-edge);border-radius:8px;padding:0 12px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;background:var(--white)">
           <button id="diag-ask-btn" style="flex-shrink:0;height:44px;background:var(--blue-dark);color:white;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Ask AI</button>
         </div>
         <div id="diag-result" style="margin-top:10px;display:none"></div>
@@ -1277,7 +1277,7 @@ async function renderServiceSummary() {
           : ''
       }
 
-      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
+      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--amber-ink);margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
       <!-- Pricing breakdown -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
@@ -2643,13 +2643,13 @@ function renderReviewSection(booking) {
     return `
     <div style="border-top:1px solid var(--border);padding:16px 20px">
       <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Your review</div>
-      <div style="font-size:18px;color:#F59E0B;letter-spacing:2px">${renderMiniStars(booking.client_rating)}</div>
+      <div style="font-size:18px;color:var(--amber-bright);letter-spacing:2px">${renderMiniStars(booking.client_rating)}</div>
       ${booking.client_review ? `<div style="font-size:13px;color:var(--gray);margin-top:6px;line-height:1.5">"${escapeHtml(booking.client_review)}"</div>` : ''}
     </div>`;
   }
   return `
     <div style="border-top:1px solid var(--border);padding:16px 20px">
-      <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:#F59E0B;color:var(--white);border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
+      <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:var(--amber-bright);color:var(--white);border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
     </div>`;
 }
 
@@ -2659,7 +2659,7 @@ function renderMechanicTrackRecord(p) {
     <div style="border-top:1px solid var(--border);padding:16px 20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.04em">Client reviews</div>
-        ${p.rating ? `<div style="font-size:13px;color:#F59E0B;font-weight:700">★ ${p.rating}</div>` : ''}
+        ${p.rating ? `<div style="font-size:13px;color:var(--amber-bright);font-weight:700">★ ${p.rating}</div>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:12px">
         ${p.reviews
@@ -2668,7 +2668,7 @@ function renderMechanicTrackRecord(p) {
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
               <span style="font-size:13px;font-weight:600;color:var(--navy)">${escapeHtml(r.client_name)}</span>
-              ${r.rating ? `<span style="color:#F59E0B;font-size:13px">${renderMiniStars(r.rating)}</span>` : ''}
+              ${r.rating ? `<span style="color:var(--amber-bright);font-size:13px">${renderMiniStars(r.rating)}</span>` : ''}
             </div>
             <p style="font-size:13px;color:var(--gray);line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
           </div>`
@@ -3615,7 +3615,7 @@ async function renderMyBookings() {
               <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${booking.address || '--'}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Call-out fee</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
             </div>
-            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
+            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid var(--red-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
             ${
               booking.status === 'completed' &&
               (booking.photo_before_url || booking.photo_after_url)
@@ -4085,7 +4085,7 @@ async function renderProfile() {
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div style="background:var(--blue-lt);border-radius:12px;padding:16px;text-align:center;border:1px solid #BFDBFE">
+        <div style="background:var(--blue-lt);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--blue-edge)">
           <div style="font-size:28px;font-weight:800;color:var(--blue-dark)">${referralCount}</div>
           <div style="font-size:13px;color:var(--gray);margin-top:2px;font-weight:600">Friends referred</div>
         </div>

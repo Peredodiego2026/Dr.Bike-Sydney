@@ -1414,7 +1414,7 @@ function openCompleteModal(id) {
         j.discount_applied > 0
           ? `<div style="margin:16px 16px 0;background:var(--green-lt);border:1.5px solid #A7F3D0;border-radius:10px;padding:12px 14px">
         <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
-        <div style="font-size:15px;color:#065F46">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
+        <div style="font-size:15px;color:var(--green-ink)">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
       </div>`
           : ''
       }
@@ -1436,7 +1436,7 @@ function openCompleteModal(id) {
               <span style="color:var(--gray-lt);font-size:18px;line-height:1">›</span>
             </span>
           </button>
-          <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
+          <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">💳 Payment breakdown</label>
@@ -1484,11 +1484,11 @@ function openCompleteModal(id) {
           <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
-        <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
+        <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
         <div id="pay-method-section">
           ${
             j.has_card_on_file
-              ? `<div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+              ? `<div style="background:#EFF6FF;border:1.5px solid var(--blue-edge);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
                 <span style="font-size:18px" aria-hidden="true">💳</span>
                 <div style="font-size:13px;color:#1E40AF;font-weight:600">Will auto-charge the client's card on file - no EFTPOS needed.</div>
               </div>`
@@ -2030,7 +2030,7 @@ async function submitComplete(id) {
       const section = document.getElementById('pay-method-section');
       if (section) {
         section.innerHTML = `
-          <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
+          <div style="background:#FEF2F2;border:1.5px solid var(--red-edge);border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
           <div style="display:flex;gap:8px">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
@@ -2262,7 +2262,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
           <div style="font-size:11px;color:var(--mgray)">Total spent</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:20px;font-weight:800;color:#F59E0B">${history.filter((b) => b.client_rating).length > 0 ? (history.filter((b) => b.client_rating).reduce((s, b) => s + (b.client_rating || 0), 0) / history.filter((b) => b.client_rating).length).toFixed(1) : '—'}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--amber-bright)">${history.filter((b) => b.client_rating).length > 0 ? (history.filter((b) => b.client_rating).reduce((s, b) => s + (b.client_rating || 0), 0) / history.filter((b) => b.client_rating).length).toFixed(1) : '—'}</div>
           <div style="font-size:11px;color:var(--mgray)">Avg rating</div>
         </div>
       </div>
@@ -2784,7 +2784,7 @@ function profile() {
     <div style="padding:0 16px;margin-bottom:20px">${ratingHTML(jobs)}</div>
 
     <div style="padding:0 16px">
-      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
+      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid var(--red-edge);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
     </div>
   </div>`;
 }
