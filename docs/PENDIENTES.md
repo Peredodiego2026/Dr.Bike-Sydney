@@ -1586,6 +1586,34 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
 2026-08-09 ya no existe: **no queda ninguna**.
 
+#### Emails HECHO 2026-08-09: el hex coincide con el token
+
+El PR aparte que Diego pidio para los emails resulto **mucho mas chico de lo
+que decia este documento** (357 hex), porque el azul retirado y el grupo A ya
+habian pasado por ahi. Al medirlo quedaban **385 hex que ya coincidian** con un
+token y solo **56 que no**.
+
+En un email `var()` no existe: Gmail y Outlook descartan las custom properties.
+Lo unico posible es que el **valor** coincida. **53 lo hacen ahora**:
+
+`#f7f8fa` y `#f5f5f7` -> `--surface`, `#f0f0f0` -> `--border-lt`, `#eee` y
+`#d1d1d6` -> `--border`, `#6e6e73` y `#666666` -> `--gray`, `#1d1d1f` ->
+`--navy`, `#6d28d9` -> `--purple`, `#c7d9f8` -> `--blue-edge`, `#fef3c7` ->
+`--amber-tint`.
+
+**7 quedan a proposito**, porque ningun token les queda bien: `#d1d5db` (4,
+texto gris claro sobre la cabecera azul - los grises del sistema son mas claros
+que `--gray-lt`) y `#fcd34d` (3, el dorado de una estrella y de un borde
+punteado, que no tiene token).
+
+**`api/send-cron.js` y `api/auth.js` entran al presupuesto** (49 y 39). Estaban
+fuera, y por eso `auth.js` se quedo con 3 apariciones del azul retirado
+mientras todo lo demas ya estaba limpio. Ese agujero esta cerrado.
+
+**Lo que NO se verifico: no se mando ni un email de prueba.** El cambio esta en
+el HTML que arma Resend y en el PDF que arma PDFKit (`#f7f8fa` son 24
+`doc.rect().fill()` de la factura, no HTML). Nadie miro una bandeja de entrada.
+
 #### Grupo A HECHO 2026-08-09: los restos de las paletas muertas, mapeados
 
 Los 7 valores que quedaban de los `:root` que ya no existen. **870

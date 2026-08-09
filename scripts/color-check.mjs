@@ -19,7 +19,7 @@
 // telling you to lower the number - that is deliberate, it is the only way the
 // budget stays honest instead of drifting into a ceiling nobody has met in
 // months.
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 // ── what counts as a colour ────────────────────────────────────────────────
@@ -72,12 +72,39 @@ const BUDGET = {
   'js/mechanic.js': 68,
   'js/components.js': 28,
   'js/stripe.js': 5,
-  // Emails cannot use var() at all - Gmail and Outlook drop custom properties -
-  // so these two will never reach zero. They are here so they cannot get worse
-  // while the separate email PR is pending.
+  // The four files that build customer email. Gmail and Outlook drop custom
+  // properties, so these will NEVER reach zero: the only thing possible here is
+  // that the hex matches the token, which it now does except for 7 occurrences
+  // (#d1d5db light text on a blue header, #fcd34d the gold of a star).
+  // send-cron.js and auth.js were outside the budget until 2026-08-09, which is
+  // how auth.js kept 3 occurrences of the retired blue while everything else
+  // was cleaned.
   'api/send-email.js': 250,
   'api/send-invoice.js': 107,
+  'api/send-cron.js': 49,
+  'api/auth.js': 39,
 };
+
+// ── the generated pages ────────────────────────────────────────────────────
+// The 20 suburb pages exist three times over (root, es/, zh/) and the 5 blog
+// posts alongside them: 65 files, all written by
+// scripts/generate-suburb-pages.mjs. Budgeting them one by one would be 65
+// near-identical numbers that nobody would ever read, and editing one by hand
+// is the wrong fix anyway - the generator is the file to change.
+//
+// So they share ONE budget. It exists because they were outside the check
+// entirely until 2026-08-09, and #1848C8 had reached all 60 of them.
+const GENERATED_BUDGET = 2969;
+
+function generatedPages() {
+  const suburbs = readdirSync('es').filter(f => f.endsWith('.html'));
+  const pages = [];
+  for (const s of suburbs) {
+    for (const p of [s, `es/${s}`, `zh/${s}`]) if (existsSync(p)) pages.push(p);
+  }
+  for (const b of readdirSync('blog').filter(f => f.endsWith('.html'))) pages.push(`blog/${b}`);
+  return pages;
+}
 
 function normalise(hex) {
   const h = hex.toLowerCase();
@@ -142,6 +169,28 @@ for (const [file, budget] of Object.entries(BUDGET)) {
     );
   } else if (counted < budget) {
     wins.push(`${file}: down to ${counted} from ${budget} - lower BUDGET in scripts/color-check.mjs to ${counted}`);
+  }
+}
+
+// ── the generated pages, as one number ─────────────────────────────────────
+{
+  const pages = generatedPages();
+  let counted = 0;
+  for (const page of pages) {
+    for (const hit of colours(page)) {
+      if (FOREIGN_BRAND.has(hit.value)) continue;
+      if (/(^|[;{*/\s])--[\w-]+\s*:\s*[^;]*$/.test(hit.text.slice(0, hit.text.indexOf('#')))) continue;
+      if (/theme-color/.test(hit.text)) continue;
+      counted++;
+    }
+  }
+  if (counted > GENERATED_BUDGET) {
+    problems.push(
+      `the ${pages.length} generated pages hold ${counted} hand-written hex, budget is ${GENERATED_BUDGET}. ` +
+      `Do NOT edit them one by one - change scripts/generate-suburb-pages.mjs and regenerate.`
+    );
+  } else if (counted < GENERATED_BUDGET) {
+    wins.push(`the ${pages.length} generated pages: down to ${counted} from ${GENERATED_BUDGET} - lower GENERATED_BUDGET to ${counted}`);
   }
 }
 

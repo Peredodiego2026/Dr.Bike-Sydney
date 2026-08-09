@@ -188,7 +188,7 @@ function buildPDF({
 
     y += 8;
     const boxH = 20 + totalRows.length * 16 + 26;
-    doc.rect(50, y, W, boxH).fill('#F7F8FA');
+    doc.rect(50, y, W, boxH).fill('#F8FAFC');
     let rowY = y + 12;
     totalRows.forEach((r) => {
       const color = r.green ? GREEN : r.muted ? GRAY : NAVY;
@@ -257,9 +257,9 @@ function buildPDF({
       y += 8;
       doc.fontSize(8).fillColor(GRAY).text('WORK COMPLETED', 50, y);
       y += 14;
-      doc.rect(50, y, W, 0).fill('#F7F8FA');
+      doc.rect(50, y, W, 0).fill('#F8FAFC');
       const notesH = doc.heightOfString(mechNotes, { width: W - 32, fontSize: 10 }) + 20;
-      doc.rect(50, y, W, notesH).fill('#F7F8FA');
+      doc.rect(50, y, W, notesH).fill('#F8FAFC');
       doc
         .fontSize(10)
         .fillColor('#475569')
@@ -316,7 +316,7 @@ function buildPDF({
         doc.fontSize(8).fillColor(GRAY).text('INSPECTION NOTES', 50, y);
         y += 14;
         const nh = doc.heightOfString(checklistNotes, { width: W - 32, fontSize: 10 }) + 20;
-        doc.rect(50, y, W, nh).fill('#F7F8FA');
+        doc.rect(50, y, W, nh).fill('#F8FAFC');
         doc
           .fontSize(10)
           .fillColor('#475569')
@@ -485,21 +485,21 @@ export default async function handler(req, res) {
 
         <!-- Summary row -->
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
-          <div style="flex:1;min-width:160px;background:#F7F8FA;border-radius:10px;padding:14px 16px">
+          <div style="flex:1;min-width:160px;background:#F8FAFC;border-radius:10px;padding:14px 16px">
             <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Client</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${clientName}</div>
           </div>
-          <div style="flex:1;min-width:160px;background:#F7F8FA;border-radius:10px;padding:14px 16px">
+          <div style="flex:1;min-width:160px;background:#F8FAFC;border-radius:10px;padding:14px 16px">
             <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Service</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${service}</div>
           </div>
-          <div style="flex:1;min-width:160px;background:#F7F8FA;border-radius:10px;padding:14px 16px">
+          <div style="flex:1;min-width:160px;background:#F8FAFC;border-radius:10px;padding:14px 16px">
             <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Date</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${date || invoiceDate}</div>
           </div>
           ${
             durationSecs
-              ? `<div style="flex:1;min-width:160px;background:#F7F8FA;border-radius:10px;padding:14px 16px">
+              ? `<div style="flex:1;min-width:160px;background:#F8FAFC;border-radius:10px;padding:14px 16px">
             <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Duration</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${formatDuration(durationSecs)}</div>
           </div>`
@@ -507,7 +507,7 @@ export default async function handler(req, res) {
           }
           ${
             bikeName
-              ? `<div style="flex:1;min-width:160px;background:#EEF3FC;border-radius:10px;padding:14px 16px;border:1px solid #C7D9F8">
+              ? `<div style="flex:1;min-width:160px;background:#EEF3FC;border-radius:10px;padding:14px 16px;border:1px solid #BFDBFE">
             <div style="font-size:11px;color:#2563EB;font-weight:600;text-transform:uppercase;margin-bottom:4px">Bike</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${bikeName}</div>
           </div>`
@@ -530,7 +530,7 @@ export default async function handler(req, res) {
           checklistNotes
             ? `<div style="margin-bottom:24px">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin-bottom:8px">Inspection Notes</div>
-          <div style="background:#F7F8FA;border-radius:10px;padding:14px 16px;font-size:13px;color:#475569;line-height:1.7">${checklistNotes}</div>
+          <div style="background:#F8FAFC;border-radius:10px;padding:14px 16px;font-size:13px;color:#475569;line-height:1.7">${checklistNotes}</div>
         </div>`
             : ''
         }
@@ -539,7 +539,7 @@ export default async function handler(req, res) {
           mechNotes
             ? `<div style="margin-bottom:24px">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin-bottom:8px">Work Completed</div>
-          <div style="background:#F7F8FA;border-radius:10px;padding:14px 16px;font-size:13px;color:#475569;line-height:1.7">${mechNotes}</div>
+          <div style="background:#F8FAFC;border-radius:10px;padding:14px 16px;font-size:13px;color:#475569;line-height:1.7">${mechNotes}</div>
         </div>`
             : ''
         }
@@ -588,7 +588,7 @@ export default async function handler(req, res) {
 <head>
 <meta charset="utf-8">
 <style>
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:0;background:#f5f5f7;color:#1d1d1f}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:0;background:#F8FAFC;color:#0D1F3C}
   .wrap{max-width:600px;margin:0 auto;background:#fff}
   .header{background:#0D1F3C;padding:32px 40px}
   .logo{display:flex;align-items:center;gap:12px;margin-bottom:20px}
@@ -598,16 +598,16 @@ export default async function handler(req, res) {
   .invoice-num{color:#fff;font-size:28px;font-weight:700;margin-top:4px}
   .body{padding:32px 40px}
   .section{margin-bottom:28px}
-  .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6e6e73;margin-bottom:12px}
-  .info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:14px}
+  .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin-bottom:12px}
+  .info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1F5F9;font-size:14px}
   .info-row:last-child{border-bottom:none}
-  .info-label{color:#6e6e73}
-  .info-val{font-weight:500;color:#1d1d1f}
-  .total-box{background:#f5f5f7;border-radius:12px;padding:20px 24px;margin:24px 0}
+  .info-label{color:#475569}
+  .info-val{font-weight:500;color:#0D1F3C}
+  .total-box{background:#F8FAFC;border-radius:12px;padding:20px 24px;margin:24px 0}
   .total-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}
-  .total-final{display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:#0D1F3C;margin-top:12px;padding-top:12px;border-top:2px solid #d1d1d6}
+  .total-final{display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:#0D1F3C;margin-top:12px;padding-top:12px;border-top:2px solid #E2E8F0}
   .badge{display:inline-block;background:#ECFDF5;color:#15803D;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
-  .footer{background:#f5f5f7;padding:24px 40px;text-align:center;font-size:12px;color:#6e6e73}
+  .footer{background:#F8FAFC;padding:24px 40px;text-align:center;font-size:12px;color:#475569}
   .footer a{color:#2563EB;text-decoration:none}
 </style>
 </head>
@@ -630,12 +630,12 @@ export default async function handler(req, res) {
       <div>
         <div class="section-label">Billed to</div>
         <div style="font-size:15px;font-weight:600">${clientName}</div>
-        <div style="font-size:13px;color:#6e6e73;margin-top:4px">${address}</div>
+        <div style="font-size:13px;color:#475569;margin-top:4px">${address}</div>
       </div>
       <div style="text-align:right">
         <div class="section-label">Invoice details</div>
-        <div style="font-size:13px"><span style="color:#6e6e73">Date:</span> ${invoiceDate}</div>
-        <div style="font-size:13px;margin-top:4px"><span style="color:#6e6e73">Ref:</span> ${invoiceNumber}</div>
+        <div style="font-size:13px"><span style="color:#475569">Date:</span> ${invoiceDate}</div>
+        <div style="font-size:13px;margin-top:4px"><span style="color:#475569">Ref:</span> ${invoiceNumber}</div>
         <div style="margin-top:8px"><span class="badge">✓ Paid</span></div>
       </div>
     </div>
@@ -657,7 +657,7 @@ export default async function handler(req, res) {
       ${partsRows.map((p) => `<div class="total-row"><span style="padding-left:12px">${p.label}</span><span>$${p.value.toFixed(2)}</span></div>`).join('')}
       ${discountAmt > 0 ? `<div class="total-row"><span style="color:#15803D">Discount (at booking)</span><span style="color:#15803D">−$${discountAmt.toFixed(2)}</span></div>` : ''}
       ${mechDiscount > 0 ? `<div class="total-row"><span style="color:#15803D">Discount${mechDiscountCode ? ' (' + mechDiscountCode + ')' : ''}</span><span style="color:#15803D">−$${mechDiscount.toFixed(2)}</span></div>` : ''}
-      <div class="total-row"><span style="color:#6e6e73">GST included</span><span style="color:#6e6e73">$${gst.toFixed(2)}</span></div>
+      <div class="total-row"><span style="color:#475569">GST included</span><span style="color:#475569">$${gst.toFixed(2)}</span></div>
       <div class="total-final"><span>Total general (AUD)</span><span>$${grandTotal.toFixed(2)}</span></div>
       ${tip > 0 ? `<div class="total-row" style="margin-top:8px"><span>💚 Tip for your mechanic</span><span>$${tip.toFixed(2)}</span></div><div class="total-final"><span>Total charged (AUD)</span><span>$${totalCollected.toFixed(2)}</span></div>` : ''}
     </div>
@@ -670,9 +670,9 @@ export default async function handler(req, res) {
       <a href="https://drbikesydney.com.au/?review=${safeBookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:12px;border-radius:8px;font-weight:700;font-size:13px">Rate your mechanic →</a>
     </div>
 
-    <div style="text-align:center;padding:24px 0;border-top:1px solid #f0f0f0">
+    <div style="text-align:center;padding:24px 0;border-top:1px solid #F1F5F9">
       <div style="font-size:14px;font-weight:600;color:#0D1F3C;margin-bottom:8px">Thank you for choosing Dr. Bike Sydney!</div>
-      <div style="font-size:13px;color:#6e6e73">We come to you — home, office or park across Sydney.</div>
+      <div style="font-size:13px;color:#475569">We come to you — home, office or park across Sydney.</div>
       <div style="margin-top:16px">
         <a href="https://drbikesydney.com.au" style="background:#2563EB;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Book next service →</a>
       </div>

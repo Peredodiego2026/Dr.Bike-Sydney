@@ -69,13 +69,13 @@ export default async function handler(req, res) {
     </div>`;
 
   const footer = () => `
-    <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E2E8F0">
+    <div style="background:#F8FAFC;padding:20px 28px;text-align:center;border-top:1px solid #E2E8F0">
       <p style="font-size:12px;color:#94A3B8;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
       <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
     </div></div>`;
 
   const bookingTable = () => `
-    <div style="background:#F7F8FA;border-radius:12px;padding:20px;margin-bottom:24px">
+    <div style="background:#F8FAFC;border-radius:12px;padding:20px;margin-bottom:24px">
       <table style="width:100%;border-collapse:collapse">
         <tr><td style="padding:8px 0;color:#475569;font-size:13px">Service</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right">${service}</td></tr>
         ${date ? `<tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Date & time</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">${date}${time ? ' · ' + time : ''}</td></tr>` : ''}
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
 
           <!-- Tax Invoice section -->
           <div style="border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;margin-bottom:20px">
-            <div style="background:#F7F8FA;padding:12px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center">
+            <div style="background:#F8FAFC;padding:12px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center">
               <span style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em">Tax Invoice</span>
               <span style="font-size:11px;color:#475569;font-weight:600">DRBK-${bookingId ? bookingId.slice(0, 8).toUpperCase() : 'PENDING'}</span>
             </div>
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
           <!-- Referral code -->
           ${
             referralCode
-              ? `<div style="background:#FEF3C7;border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
+              ? `<div style="background:#FEF9C3;border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
             <p style="font-size:12px;color:#B45309;font-weight:700;margin:0 0 4px">🎁 Share Dr. Bike — earn $15 off your next service</p>
             <p style="font-size:16px;font-weight:800;color:#B45309;letter-spacing:0.12em;margin:0 0 4px">${referralCode}</p>
             <p style="font-size:11px;color:#B45309;margin:0;opacity:0.8">You and your friend each get $15 off when they use your code</p>
@@ -225,7 +225,7 @@ export default async function handler(req, res) {
           ${
             message
               ? `<div style="background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:8px;padding:14px 16px;margin-bottom:20px">
-            <p style="font-size:13px;color:#6D28D9;font-style:italic;margin:0;line-height:1.6">"${message}"</p>
+            <p style="font-size:13px;color:#7C3AED;font-style:italic;margin:0;line-height:1.6">"${message}"</p>
           </div>`
               : ''
           }
@@ -237,7 +237,7 @@ export default async function handler(req, res) {
               <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:0.18em;font-family:monospace">${code}</div>
             </div>
           </div>
-          <div style="background:#F7F8FA;border-radius:12px;padding:16px;margin-bottom:20px">
+          <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:20px">
             <p style="font-size:13px;color:#0D1F3C;font-weight:600;margin:0 0 8px">How to redeem</p>
             <p style="font-size:12px;color:#475569;margin:0;line-height:1.8">
               1. Book any service at drbikesydney.com.au<br>
@@ -283,7 +283,7 @@ export default async function handler(req, res) {
             <div style="font-size:20px;font-weight:800;color:#15803D">$15 credit earned</div>
             <div style="font-size:13px;color:#15803D;margin-top:4px;opacity:0.8">Applied automatically to your next service</div>
           </div>
-          <div style="background:#F7F8FA;border-radius:10px;padding:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+          <div style="background:#F8FAFC;border-radius:10px;padding:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-size:13px;color:#475569">Total referrals</span>
             <span style="font-size:18px;font-weight:800;color:#0D1F3C">${referralCount || 1}</span>
           </div>
@@ -341,7 +341,7 @@ export default async function handler(req, res) {
               <span style="font-size:20px;font-weight:900;color:#0D1F3C;letter-spacing:0.16em">BACK15</span>
             </div>
           </div>
-          <div style="background:#F7F8FA;border-radius:12px;padding:16px;margin-bottom:24px">
+          <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:24px">
             <p style="font-size:13px;color:#0D1F3C;font-weight:600;margin:0 0 8px">🔧 Your bike may need some love after ${typeof monthsAgo !== 'undefined' && monthsAgo ? monthsAgo + ' months' : 'this time'}</p>
             <p style="font-size:12px;color:#475569;margin:0;line-height:1.8">
               &bull; Brake pads wear out and can become unsafe<br>
@@ -383,7 +383,7 @@ export default async function handler(req, res) {
               <span style="font-size:20px;font-weight:900;color:#0D1F3C;letter-spacing:0.16em">BDAY20</span>
             </div>
           </div>
-          <div style="background:#F7F8FA;border-radius:12px;padding:16px;margin-bottom:24px">
+          <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:24px">
             <p style="font-size:12px;color:#475569;margin:0;line-height:1.8">
               &bull; Valid for 7 days from your birthday<br>
               &bull; Applies to any service $109+<br>
@@ -412,7 +412,7 @@ export default async function handler(req, res) {
       subject: `New Booking - ${service} - ${clientName || name}`,
       html: `${header('#0D1F3C', '📋', 'New Booking Request')}
         <div style="padding:32px 28px">
-          <div style="background:#F7F8FA;border-radius:12px;padding:20px;margin-bottom:24px">
+          <div style="background:#F8FAFC;border-radius:12px;padding:20px;margin-bottom:24px">
             <table style="width:100%;border-collapse:collapse">
               <tr><td style="padding:8px 0;color:#475569;font-size:13px">Client</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right">${clientName || name}</td></tr>
               <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Phone</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">${phone || '—'}</td></tr>

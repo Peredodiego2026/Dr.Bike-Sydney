@@ -627,7 +627,7 @@ async function handleServiceReminders(req, res) {
               <a href="https://drbikesydney.com.au" style="display:inline-block;background:#2563EB;color:#fff;padding:13px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:700">Book Your Next Service →</a>
             </div>
           </div>
-          <div style="padding:16px 32px;background:#F7F8FA;font-size:12px;color:#94A3B8;text-align:center">
+          <div style="padding:16px 32px;background:#F8FAFC;font-size:12px;color:#94A3B8;text-align:center">
             Dr. Bike Sydney · <a href="mailto:contact@drbikesydney.com.au" style="color:#475569;text-decoration:none">contact@drbikesydney.com.au</a> · 0433 963 250
           </div>
         </div>`,
@@ -844,11 +844,11 @@ async function handleUpsell(req, res) {
         <div style="background:#0D1F3C;padding:24px;text-align:center"><h1 style="color:#fff;font-size:20px;margin:0">DR BIKE SYDNEY</h1></div>
         <div style="padding:32px 24px">
           <h2 style="color:#0D1F3C">Hi ${name}, your mechanic found some things that need attention 🔧</h2>
-          <table style="width:100%;border-collapse:collapse;margin:20px 0;border:1px solid #E2E8F0"><thead><tr style="background:#F7F8FA"><th style="padding:10px 12px;text-align:left;font-size:13px;color:#475569">Recommended Service</th><th style="padding:10px 12px;text-align:right;font-size:13px;color:#475569">Price</th></tr></thead><tbody>${rows}</tbody></table>
+          <table style="width:100%;border-collapse:collapse;margin:20px 0;border:1px solid #E2E8F0"><thead><tr style="background:#F8FAFC"><th style="padding:10px 12px;text-align:left;font-size:13px;color:#475569">Recommended Service</th><th style="padding:10px 12px;text-align:right;font-size:13px;color:#475569">Price</th></tr></thead><tbody>${rows}</tbody></table>
           <p style="color:#475569;line-height:1.7;font-size:14px">Call <a href="tel:+61433963250">0433 963 250</a> to add these to your current service.</p>
           <a href="https://drbikesydney.com.au" style="display:inline-block;background:#0A58CA;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700">Book Follow-Up →</a>
         </div>
-        <div style="padding:16px;background:#F7F8FA;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
+        <div style="padding:16px;background:#F8FAFC;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
       </div>`,
     }),
   });
@@ -899,12 +899,12 @@ async function handleB2B(req, res) {
       to: 'contact@drbikesydney.com.au',
       subject: `New B2B Fleet Enquiry — ${businessName} (${fleetSize} bikes)`,
       html: `<h2>New B2B Fleet Enquiry</h2><table style="border-collapse:collapse;width:100%">
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600">Business</td><td style="padding:8px;border-bottom:1px solid #eee">${businessName}</td></tr>
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600">Contact</td><td style="padding:8px;border-bottom:1px solid #eee">${contactName}</td></tr>
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600">Email</td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600">Fleet / Frequency</td><td style="padding:8px;border-bottom:1px solid #eee">${fleetSize} bikes · ${frequency || 'N/A'}</td></tr>
+        <tr><td style="padding:8px;border-bottom:1px solid #E2E8F0;font-weight:600">Business</td><td style="padding:8px;border-bottom:1px solid #E2E8F0">${businessName}</td></tr>
+        <tr><td style="padding:8px;border-bottom:1px solid #E2E8F0;font-weight:600">Contact</td><td style="padding:8px;border-bottom:1px solid #E2E8F0">${contactName}</td></tr>
+        <tr><td style="padding:8px;border-bottom:1px solid #E2E8F0;font-weight:600">Email</td><td style="padding:8px;border-bottom:1px solid #E2E8F0">${email}</td></tr>
+        <tr><td style="padding:8px;border-bottom:1px solid #E2E8F0;font-weight:600">Fleet / Frequency</td><td style="padding:8px;border-bottom:1px solid #E2E8F0">${fleetSize} bikes · ${frequency || 'N/A'}</td></tr>
         <tr><td style="padding:8px;font-weight:600">Notes</td><td style="padding:8px">${notes || 'N/A'}</td></tr>
-      </table><p style="color:#666;margin-top:16px">Reply within 2 business hours.</p>`,
+      </table><p style="color:#475569;margin-top:16px">Reply within 2 business hours.</p>`,
     });
     await send({
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
@@ -916,7 +916,7 @@ async function handleB2B(req, res) {
           <h2>Thanks for your enquiry, ${contactName}!</h2>
           <p style="color:#475569;line-height:1.7">We received your fleet enquiry for <strong>${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong>2 business hours</strong> (Mon–Sat 8am–6pm AEST).</p>
         </div>
-        <div style="padding:16px;background:#F7F8FA;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
+        <div style="padding:16px;background:#F8FAFC;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
       </div>`,
     });
   } catch (e) {

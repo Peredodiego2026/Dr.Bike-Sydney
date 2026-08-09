@@ -1964,7 +1964,7 @@ async function handleRequestPasswordReset(req, res) {
               <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6;opacity:0.9">Didn't request this? No action needed - you can safely ignore this email and your password will stay the same.</p>
             </div>
           </div>
-          <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E2E8F0">
+          <div style="background:#F8FAFC;padding:20px 28px;text-align:center;border-top:1px solid #E2E8F0">
             <p style="font-size:12px;color:#94A3B8;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
             <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
           </div>
@@ -2688,7 +2688,7 @@ async function handlePublicBookingList(req, res) {
             ${rows}
             <p style="color:#94A3B8;font-size:11px;margin:20px 0 0">Didn't request this? You can safely ignore this email.</p>
           </div>
-          <div style="background:#F7F8FA;padding:20px 28px;text-align:center;border-top:1px solid #E2E8F0">
+          <div style="background:#F8FAFC;padding:20px 28px;text-align:center;border-top:1px solid #E2E8F0">
             <p style="font-size:12px;color:#94A3B8;margin:0 0 4px">Dr. Bike Sydney · drbikesydney.com.au · Sydney NSW</p>
             <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
           </div>
