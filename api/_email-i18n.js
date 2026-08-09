@@ -35,12 +35,9 @@ const dict = {
     'Date & time': 'Fecha y hora',
     'Net amount': 'Importe neto',
     'GST (10%)': 'GST (10%)',
-    'Total (AUD)': 'Total (AUD)',
-    'Subtotal (excl. GST)': 'Subtotal (sin GST)',
     'Tax Invoice': 'Factura',
     Service: 'Servicio',
     Address: 'Dirección',
-    Location: 'Ubicación',
 
     // ── confirmation ────────────────────────────────────────────────────────
     ', your booking is confirmed ✅ Your mechanic will contact you 30 min before arrival.':
@@ -189,12 +186,9 @@ const dict = {
     'Date & time': '日期和时间',
     'Net amount': '不含税金额',
     'GST (10%)': 'GST（10%）',
-    'Total (AUD)': '总计（澳元）',
-    'Subtotal (excl. GST)': '小计（不含 GST）',
     'Tax Invoice': '税务发票',
     Service: '服务',
     Address: '地址',
-    Location: '地点',
 
     ', your booking is confirmed ✅ Your mechanic will contact you 30 min before arrival.':
       '，您的预订已确认 ✅ 技师会在到达前 30 分钟与您联系。',

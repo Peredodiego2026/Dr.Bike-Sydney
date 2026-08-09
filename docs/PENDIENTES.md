@@ -1610,6 +1610,42 @@ tiene chip `completed`.
 (`#fffbeb`, `#f0fdf4`...), que es exactamente lo que el conversor dejo quieto
 porque `--amber-lt` y `--green-lt` **si** se redefinen en oscuro.
 
+### 12.24 El email de confirmacion mostraba las mismas cifras dos veces — CERRADO 2026-08-09
+
+**Lo vio Diego en el email de prueba**, no una auditoria. El `confirmation`
+traia dos bloques con **los mismos seis numeros**: la tabla de la reserva
+arriba, y debajo un bloque `TAX INVOICE` que repetia Service, Date & time,
+Location, Subtotal, GST y Total. Palabras de Diego: *"no tiene sentido"*.
+
+**Y estaba mal por una segunda razon, mas seria.** Ese bloque se llamaba a si
+mismo *tax invoice* por el **total del servicio**, en un momento en que no se
+facturo ni se cobro ese total:
+
+- al reservar se cobra **solo el call-out** — el boton dice literalmente
+  `Confirm & Pay $CALLOUT Call-out Fee` (`js/app.js:1331`);
+- el email manda `price: _total` (`js/app.js:1931`), que es
+  `serviceTotal + calloutFee`;
+- y el propio email dice **"Payment collected on completion"** tres lineas mas
+  arriba.
+
+**La factura de verdad ya existe y ya se manda:** `api/send-invoice.js` arma un
+PDF con PDFKit y lo adjunta como `DrBike-<nro>.pdf` cuando el mecanico completa
+el trabajo (`js/mechanic.js:2113`). Ese es el documento que el cliente guarda.
+
+Se borro el bloque. La tabla de arriba queda, "What happens next" queda, el
+boton queda. **27 hex menos** en `api/send-email.js` (250 -> 223).
+
+**Tres claves de traduccion quedaron muertas** y las agarro
+`tests/unit/email-i18n.test.js`, no la lectura del diff: `Total (AUD)`,
+`Subtotal (excl. GST)` y `Location`. Borradas de `es` y `zh`. Un segundo test
+usaba `Subtotal (excl. GST)` como ejemplo de "clave larga que contiene a una
+corta"; se cambio al par `at checkout` / `&bull; Enter code at checkout`, que
+sigue existiendo, con el porque escrito en el test.
+
+**Lo que NO se verifico:** el email nuevo **no se mando**. El cambio no esta
+desplegado, asi que un envio de prueba hoy sigue mostrando el bloque viejo.
+Hay que mandar uno **despues** de mergear.
+
 ### 12.22 El boton "View your booking" del email de confirmacion puede estar roto — ABIERTO
 
 **Salio de mandar un email de prueba de verdad**, no de leer codigo. Se envio un

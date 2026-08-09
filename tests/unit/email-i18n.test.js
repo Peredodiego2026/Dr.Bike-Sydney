@@ -67,10 +67,19 @@ describe('translateEmailHtml', () => {
   });
 
   it('replaces the longest key first, so a short key cannot eat a longer phrase', () => {
-    // "Service" is a key on its own and also a word inside longer keys
-    const out = translateEmailHtml('<td>Subtotal (excl. GST)</td><td>Service</td>', 'es');
-    expect(out).toContain('Subtotal (sin GST)');
-    expect(out).toContain('Servicio');
+    // "at checkout" is a key on its own AND a substring of the longer
+    // "&bull; Enter code at checkout". Replace the short one first and the long
+    // one can never match again.
+    //
+    // This used to use "Subtotal (excl. GST)" vs "Service". That pair stopped
+    // existing when the duplicated tax-invoice block came out of the
+    // confirmation email and its three keys became dead. Any pair works as long
+    // as one key really contains the other - if this test ever fails to find
+    // one, the dictionary has no overlapping keys and the ordering it guards
+    // stopped mattering.
+    const out = translateEmailHtml('<p>&bull; Enter code at checkout</p><p>at checkout</p>', 'es');
+    expect(out).toContain('&bull; Ingresa el código al pagar');
+    expect(out).toContain('al pagar');
   });
 });
 
@@ -102,7 +111,7 @@ describe('dictionary matches the real templates', () => {
         // names, which stay as-is in Spanish.
         .filter(
           ([k]) =>
-            !['ABN: 87 654 025 287 · contact@drbikesydney.com.au', 'GST (10%)', 'Total (AUD)'].includes(
+            !['ABN: 87 654 025 287 · contact@drbikesydney.com.au', 'GST (10%)'].includes(
               k
             )
         )
