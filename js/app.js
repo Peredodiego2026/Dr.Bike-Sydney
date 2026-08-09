@@ -336,7 +336,7 @@ async function loadTimeSlots(screen, date, serviceId) {
     grid.innerHTML =
       '<div style="grid-column:1/-1;padding:20px 0;text-align:center">' +
       '<div style="font-size:24px;margin-bottom:6px">⚠️</div>' +
-      '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Could not load available times</div>' +
+      '<div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">Could not load available times</div>' +
       '<div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>' +
       '<button id="retry-slots-btn" style="padding:11px 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>' +
       '</div>';
@@ -351,7 +351,7 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="grid-column:1/-1;padding:20px 0">' +
       '<div style="text-align:center;margin-bottom:16px">' +
       '<div style="font-size:24px;margin-bottom:6px">😔</div>' +
-      '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Fully booked on this date</div>' +
+      '<div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">Fully booked on this date</div>' +
       '<div style="font-size:13px;color:#6B7280">Please choose another day or join the waitlist</div></div>' +
       '<button id="waitlist-btn" style="width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' +
       '<span>Join Waitlist for</span> ' +
@@ -363,7 +363,7 @@ async function loadTimeSlots(screen, date, serviceId) {
       slots
         .map(
           (s) =>
-            '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray);cursor:pointer">' +
             '<input type="checkbox" value="' +
             s.time +
             '" style="accent-color:var(--blue)"> ' +
@@ -373,7 +373,7 @@ async function loadTimeSlots(screen, date, serviceId) {
         .join('') +
       '</div>' +
       '<div id="waitlist-msg" style="font-size:13px;color:var(--red);margin-bottom:10px;display:none"></div>' +
-      '<button id="waitlist-submit" style="width:100%;padding:12px;background:#059669;color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
+      '<button id="waitlist-submit" style="width:100%;padding:12px;background:var(--green);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
       '</div></div>';
 
     screen.querySelector('#waitlist-btn').addEventListener('click', () => {
@@ -419,7 +419,7 @@ async function loadTimeSlots(screen, date, serviceId) {
         screen.querySelector('#waitlist-form').innerHTML =
           '<div style="text-align:center;padding:8px 0">' +
           '<div style="font-size:24px;margin-bottom:8px">✅</div>' +
-          '<div style="font-weight:700;color:#059669;font-size:15px">You\'re on the waitlist!</div>' +
+          '<div style="font-weight:700;color:var(--green);font-size:15px">You\'re on the waitlist!</div>' +
           '<div style="font-size:13px;color:#6B7280;margin-top:4px"><span>We\'ll email</span> ' +
           user.email +
           ' <span>if a slot opens up on</span> ' +
@@ -641,7 +641,7 @@ async function renderBookService() {
           // reader can do something about the first one.
           `<div style="grid-column:1/-1;padding:24px 0;text-align:center">
              <div style="font-size:24px;margin-bottom:6px" aria-hidden="true">${navigator.onLine ? '⚠️' : '📡'}</div>
-             <div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">${navigator.onLine ? 'Could not load services' : "You're offline"}</div>
+             <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">${navigator.onLine ? 'Could not load services' : "You're offline"}</div>
              <div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>
              <button id="retry-services-btn" style="padding:11px 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>
            </div>`
@@ -1277,7 +1277,7 @@ async function renderServiceSummary() {
           : ''
       }
 
-      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid #FDE9C8;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
+      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
       <!-- Pricing breakdown -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
@@ -1736,13 +1736,13 @@ async function renderPayment() {
       <div style="background:var(--blue-lt);border:1px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:20px">
         <div style="font-size:13px;color:#6B7280;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Your selection</div>
         <div style="font-weight:700;color:var(--navy);font-size:15px">${service.name}</div>
-        <div style="font-size:13px;color:#374151;margin-top:4px">${date} &bull; ${time}</div>
-        <div style="font-size:13px;color:#374151">${location}</div>
+        <div style="font-size:13px;color:var(--gray);margin-top:4px">${date} &bull; ${time}</div>
+        <div style="font-size:13px;color:var(--gray)">${location}</div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;color:#6B7280">Call-out fee</span>
           ${
             isIncludedVisit
-              ? `<span style="font-size:11px;font-weight:700;color:#059669;background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
+              ? `<span style="font-size:11px;font-weight:700;color:var(--green);background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
               : `<span style="font-weight:700;color:var(--navy)">$${calloutFee.toFixed(2)}</span>`
           }
         </div>
@@ -2362,13 +2362,13 @@ async function renderTracking() {
 
   const clientIcon = window.L.divIcon({
     className: '',
-    html: `<div style="width:32px;height:32px;background:#0A58CA;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>`,
+    html: `<div style="width:32px;height:32px;background:var(--blue);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 32],
   });
   const mechIcon = window.L.divIcon({
     className: '',
-    html: `<div style="width:40px;height:40px;background:#22C55E;border-radius:50%;border:3px solid var(--white);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)"><svg width="20" height="14" viewBox="0 0 24 16" fill="white"><rect x="0" y="3" width="16" height="13" rx="1"/><path d="M16 6h5l3 4v6h-8V6z"/><circle cx="5" cy="16" r="3" fill="white"/><circle cx="19" cy="16" r="3" fill="white"/></svg></div>`,
+    html: `<div style="width:40px;height:40px;background:var(--green);border-radius:50%;border:3px solid var(--white);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)"><svg width="20" height="14" viewBox="0 0 24 16" fill="white"><rect x="0" y="3" width="16" height="13" rx="1"/><path d="M16 6h5l3 4v6h-8V6z"/><circle cx="5" cy="16" r="3" fill="white"/><circle cx="19" cy="16" r="3" fill="white"/></svg></div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });
@@ -2644,7 +2644,7 @@ function renderReviewSection(booking) {
     <div style="border-top:1px solid var(--border);padding:16px 20px">
       <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Your review</div>
       <div style="font-size:18px;color:#F59E0B;letter-spacing:2px">${renderMiniStars(booking.client_rating)}</div>
-      ${booking.client_review ? `<div style="font-size:13px;color:#374151;margin-top:6px;line-height:1.5">"${escapeHtml(booking.client_review)}"</div>` : ''}
+      ${booking.client_review ? `<div style="font-size:13px;color:var(--gray);margin-top:6px;line-height:1.5">"${escapeHtml(booking.client_review)}"</div>` : ''}
     </div>`;
   }
   return `
@@ -2670,7 +2670,7 @@ function renderMechanicTrackRecord(p) {
               <span style="font-size:13px;font-weight:600;color:var(--navy)">${escapeHtml(r.client_name)}</span>
               ${r.rating ? `<span style="color:#F59E0B;font-size:13px">${renderMiniStars(r.rating)}</span>` : ''}
             </div>
-            <p style="font-size:13px;color:#374151;line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
+            <p style="font-size:13px;color:var(--gray);line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
           </div>`
           )
           .join('')}
@@ -2716,7 +2716,7 @@ function openMechanicProfile(p, booking, screen) {
     'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
   panel.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)">
-      <button id="close-mech-profile-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close">
+      <button id="close-mech-profile-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:var(--gray)" aria-label="Close">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <span style="font-size:15px;font-weight:700;color:var(--navy)">Mechanic profile</span>
@@ -2729,7 +2729,7 @@ function openMechanicProfile(p, booking, screen) {
       <div style="text-align:center;padding:10px 20px 0">
         <div style="font-size:18px;font-weight:700;color:var(--navy)">${escapeHtml(p.name)}</div>
         <div style="font-size:13px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
-        ${p.bio ? `<div style="font-size:13px;color:#374151;margin-top:10px;line-height:1.5">${escapeHtml(p.bio)}</div>` : ''}
+        ${p.bio ? `<div style="font-size:13px;color:var(--gray);margin-top:10px;line-height:1.5">${escapeHtml(p.bio)}</div>` : ''}
       </div>
       ${statParts.length ? `<div style="display:flex;justify-content:center;gap:32px;padding:16px 20px">${statParts.join('')}</div>` : ''}
       <div style="display:flex;gap:8px;padding:16px 20px">
@@ -2767,13 +2767,13 @@ function openClientChat(bookingId, screen) {
       'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
     panel.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px;padding:0 12px 0 6px;height:56px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)">
-        <button id="close-chat-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close chat">
+        <button id="close-chat-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:var(--gray)" aria-label="Close chat">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div style="width:38px;height:38px;border-radius:50%;background:var(--blue-dark);display:flex;align-items:center;justify-content:center;color:var(--white);flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></div>
         <div style="min-width:0;flex:1">
           <div style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div>
-          <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:#059669"><span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block"></span>Online now</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Online now</div>
         </div>
       </div>
       <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)"></div>
@@ -3140,7 +3140,7 @@ async function renderReview() {
           </p>
           <div style="display:flex;flex-direction:column;gap:12px;max-width:280px;margin:0 auto">
             <a id="google-review-link" href="https://g.page/r/drbikesydney/review" target="_blank" rel="noopener"
-              style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--white);border:2px solid var(--border);border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#374151">
+              style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--white);border:2px solid var(--border);border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:var(--gray)">
               <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               Leave a Google Review
             </a>
@@ -4175,7 +4175,7 @@ async function renderProfile() {
           </div>
           ${
             typeof Notification !== 'undefined' && Notification.permission === 'granted'
-              ? '<span style="flex-shrink:0;font-size:13px;font-weight:600;color:#059669;white-space:nowrap">✓ <span>Enabled</span></span>'
+              ? '<span style="flex-shrink:0;font-size:13px;font-weight:600;color:var(--green);white-space:nowrap">✓ <span>Enabled</span></span>'
               : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Enable</button>'
           }
         </div>
@@ -4802,7 +4802,7 @@ async function renderMyBikes() {
           <span style="font-size:18px">${overdue ? '⚠️' : '📊'}</span>
           <span style="font-size:13px;font-weight:700;color:var(--navy)">${overdue ? "You're likely due for a service" : 'Predicted next service'}</span>
         </div>
-        <div style="font-size:13px;color:#374151;line-height:1.5">
+        <div style="font-size:13px;color:var(--gray);line-height:1.5">
           <span>We recommend a service roughly every 3 months.</span>
           <span>${overdue ? 'You were due around' : 'Your next one is around'}</span>
           <b>${dateLabel}</b>.

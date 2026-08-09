@@ -777,15 +777,15 @@ async function loadCashHandover() {
   el.innerHTML = Object.entries(groups)
     .map(
       ([key, g]) => `
-    <div style="border:1px solid var(--border);border-left:3px solid #059669;border-radius:12px;padding:14px 16px;margin-bottom:10px">
+    <div style="border:1px solid var(--border);border-left:3px solid var(--green);border-radius:12px;padding:14px 16px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <div>
           <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(g.name)}</div>
           <div style="font-size:13px;color:var(--mgray)">${g.jobs.length} cash job${g.jobs.length !== 1 ? 's' : ''} pending</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px;font-weight:800;color:#059669">$${g.total.toLocaleString('en-AU')}</span>
-          <button data-cash-settle="${esc(key)}" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
+          <span style="font-size:20px;font-weight:800;color:var(--green)">$${g.total.toLocaleString('en-AU')}</span>
+          <button data-cash-settle="${esc(key)}" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
         </div>
       </div>
       <div style="font-size:13px;color:var(--mgray)">
@@ -973,7 +973,7 @@ async function loadFinance() {
       <td data-label="Amount" style="font-weight:600">$${price.toLocaleString('en-AU')}</td>
       <td data-label="GST" style="color:var(--orange)">${anMoney(jGst)}</td>
       <td data-label="Net">${anMoney(jNet)}</td>
-      <td data-label="Status"><span style="background:#D1FAE5;color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
+      <td data-label="Status"><span style="background:var(--green-lt);color:#065F46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
     </tr>`;
         })
         .join('')
@@ -1103,7 +1103,7 @@ function exportFinancePDF() {
     .report-period{font-size:13px;color:#6B7280;margin-top:2px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
     .kpi{background:var(--surface);border-radius:12px;padding:16px;border-left:3px solid #2563eb}
-    .kpi.green{border-left-color:#059669}
+    .kpi.green{border-left-color:var(--green)}
     .kpi.orange{border-left-color:#D97706}
     .kpi.red{border-left-color:#DC2626}
     .kpi-label{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
@@ -1112,14 +1112,14 @@ function exportFinancePDF() {
     .section-title{font-size:13px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
     .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-    .bar-label{font-size:11px;color:#374151;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bar-label{font-size:11px;color:var(--gray);min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
     .bar-fill{height:100%;background:#2563eb;border-radius:4px}
     .bar-val{font-size:11px;font-weight:700;color:#0D1F3C;min-width:44px;text-align:right}
     table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px}
     thead th{background:#0D1F3C;color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em}
     tbody tr:nth-child(even){background:var(--surface)}
-    tbody td{padding:9px 12px;border-bottom:1px solid var(--border-lt);color:#374151}
+    tbody td{padding:9px 12px;border-bottom:1px solid var(--border-lt);color:var(--gray)}
     tbody td.bold{font-weight:700;color:#0D1F3C}
     tbody td.blue{font-weight:700;color:#2563eb}
     .footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
@@ -2372,7 +2372,7 @@ function renderBookingsTable(data) {
       <td data-label="Status"><span class="status ${stClass[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
       <td data-label="Price"><b>${anBookingRevenue(b)}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
-        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
+        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
         ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
@@ -4387,7 +4387,7 @@ async function loadClients() {
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
-    grid.innerHTML = `<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
     return;
   }
   if (!data || data.length === 0) {
@@ -4694,7 +4694,7 @@ async function loadClaims() {
         </div>
         <span style="background:${st.bg};color:${st.color};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${st.label}</span>
       </div>
-      <div style="font-size:13px;color:#374151;margin:10px 0;white-space:pre-wrap">${esc(c.description)}</div>
+      <div style="font-size:13px;color:var(--gray);margin:10px 0;white-space:pre-wrap">${esc(c.description)}</div>
       ${photos ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${photos}</div>` : ''}
       <div style="margin-bottom:12px">${invoice}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -5672,12 +5672,12 @@ async function loadSettings() {
     if (waInput) waInput.value = map['__whatsapp__'];
     if (waStatus) {
       waStatus.textContent = `Active ✓ — messages sent from ${map['__whatsapp__']}`;
-      waStatus.style.color = '#059669';
+      waStatus.style.color = 'var(--green)';
     }
     const twilioEl = document.getElementById('integ-twilio');
     if (twilioEl) {
       twilioEl.textContent = '✓ Active';
-      twilioEl.style.color = '#059669';
+      twilioEl.style.color = 'var(--green)';
     }
   } else {
     if (waStatus) {
@@ -5732,12 +5732,12 @@ async function saveWhatsappNumber() {
   const waStatus = document.getElementById('wa-status');
   if (waStatus) {
     waStatus.textContent = `Active ✓ — messages sent from ${normalized}`;
-    waStatus.style.color = '#059669';
+    waStatus.style.color = 'var(--green)';
   }
   const twilioEl = document.getElementById('integ-twilio');
   if (twilioEl) {
     twilioEl.textContent = '✓ Active';
-    twilioEl.style.color = '#059669';
+    twilioEl.style.color = 'var(--green)';
   }
   showToast('WhatsApp number saved ✓');
 }
@@ -5785,10 +5785,10 @@ async function checkTwilioStatus() {
         .maybeSingle();
       if (waRow?.postcode) {
         el.textContent = '✓ SMS + WhatsApp';
-        el.style.color = '#059669';
+        el.style.color = 'var(--green)';
       } else {
         el.textContent = '✓ SMS active';
-        el.style.color = '#059669';
+        el.style.color = 'var(--green)';
       }
     } else {
       el.textContent = '⚠ Needs keys';
@@ -5892,11 +5892,11 @@ async function loadMemberships() {
   );
   const statusBadge = {
     active:
-      '<span style="background:var(--green-lt);color:#059669;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
+      '<span style="background:var(--green-lt);color:var(--green);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
     past_due:
-      '<span style="background:#FEF3C7;color:#D97706;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
+      '<span style="background:var(--amber-lt);color:#D97706;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
     cancelled:
-      '<span style="background:#FEE2E2;color:#DC2626;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
+      '<span style="background:var(--red-lt);color:#DC2626;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
     paused:
       '<span style="background:var(--border-lt);color:#6B7280;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
   };
@@ -6210,8 +6210,8 @@ async function loadMechanicProfiles() {
         : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
       const roleTag =
         c.role === 'manager'
-          ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ Manager</span>'
-          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-lt);color:#059669">🔧 Mechanic</span>';
+          ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--amber-lt);color:#92400E">⭐ Manager</span>'
+          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-lt);color:var(--green)">🔧 Mechanic</span>';
 
       return `
     <div class="card" style="padding:0;overflow:hidden;width:300px;position:relative">
@@ -6223,7 +6223,7 @@ async function loadMechanicProfiles() {
       <div style="text-align:center;padding:10px 20px 0">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(name)}</div>
         <div style="font-size:13px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
-        <div style="font-size:13px;color:#374151;margin-top:8px;min-height:20px">${esc(c.bio) || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
+        <div style="font-size:13px;color:var(--gray);margin-top:8px;min-height:20px">${esc(c.bio) || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
       </div>
       <div style="display:flex;justify-content:center;gap:24px;padding:14px 20px;margin-top:8px;border-top:1px solid var(--border)">
         <div style="text-align:center"><div style="font-weight:800;font-size:15px;color:var(--navy)">${jobs.length}</div><div style="font-size:11px;color:var(--mgray)">Jobs done</div></div>
@@ -6586,7 +6586,7 @@ function handleUrlParams() {
   const statusEl = document.getElementById('gcal-status');
   if (statusEl && calendar === 'connected') {
     statusEl.textContent = '✓ Connected';
-    statusEl.style.color = '#059669';
+    statusEl.style.color = 'var(--green)';
   } else if (statusEl && calendar === 'error') {
     statusEl.textContent = '✗ Connection failed - try again';
     statusEl.style.color = '#DC2626';

@@ -1413,7 +1413,7 @@ function openCompleteModal(id) {
       ${
         j.discount_applied > 0
           ? `<div style="margin:16px 16px 0;background:var(--green-lt);border:1.5px solid #A7F3D0;border-radius:10px;padding:12px 14px">
-        <div style="font-size:13px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
+        <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
         <div style="font-size:15px;color:#065F46">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
       </div>`
           : ''
@@ -1436,14 +1436,14 @@ function openCompleteModal(id) {
               <span style="color:var(--gray-lt);font-size:18px;line-height:1">›</span>
             </span>
           </button>
-          <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
+          <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">💳 Payment breakdown</label>
           <div id="charge-breakdown" style="background:var(--off);border:1px solid var(--border);border-radius:12px;padding:14px 16px"></div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <input id="mech-disc-code" placeholder="Discount code (optional)" aria-label="Discount code" style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--white);color:var(--navy);text-transform:uppercase" />
-            <button type="button" data-action="apply-mech-discount" id="mech-disc-btn" style="flex-shrink:0;padding:0 16px;background:#0A58CA;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Apply</button>
+            <button type="button" data-action="apply-mech-discount" id="mech-disc-btn" style="flex-shrink:0;padding:0 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Apply</button>
           </div>
           <div id="mech-disc-msg" style="display:none;font-size:13px;font-weight:600;margin-top:6px"></div>
         </div>
@@ -1484,7 +1484,7 @@ function openCompleteModal(id) {
           <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
           <button data-action="clear-sig" style="font-size:13px;color:#6B7280;background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
-        <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
+        <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
         <div id="pay-method-section">
           ${
             j.has_card_on_file
@@ -1498,14 +1498,14 @@ function openCompleteModal(id) {
                   <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:var(--blue)"> 💳 Card (EFTPOS)
                 </label>
                 <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
-                  <input type="radio" name="pay-method" value="cash" style="accent-color:#059669"> 💵 Cash
+                  <input type="radio" name="pay-method" value="cash" style="accent-color:var(--green)"> 💵 Cash
                 </label>
               </div>`
           }
         </div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button data-action="close-complete-modal" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--sans);cursor:pointer;font-size:13px;color:var(--navy)">Cancel</button>
-          <button data-action="submit-complete" data-id="${id}" style="flex:2;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">💳 Mark as Charged (EFTPOS) and Complete</button>
+          <button data-action="submit-complete" data-id="${id}" style="flex:2;padding:12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">💳 Mark as Charged (EFTPOS) and Complete</button>
         </div>
       </div>
     </div>`;
@@ -1658,7 +1658,7 @@ async function openPartsPicker() {
     'position:fixed;inset:0;background:var(--white);z-index:1100;display:flex;flex-direction:column';
   panel.innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;padding:0 12px;height:56px;border-bottom:1px solid var(--border);flex-shrink:0">
-      <button data-action="close-parts-picker" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Back">
+      <button data-action="close-parts-picker" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:var(--gray)" aria-label="Back">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div style="flex:1;min-width:0">
@@ -1851,13 +1851,13 @@ function renderChargeBreakdown() {
     });
   }
   if (b.mechDiscountAmount > 0) {
-    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#059669;font-weight:600;margin-bottom:6px"><span>Discount (${esc(_mechDiscount.code)})</span><span>−$${b.mechDiscountAmount.toFixed(2)}</span></div>`;
+    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--green);font-weight:600;margin-bottom:6px"><span>Discount (${esc(_mechDiscount.code)})</span><span>−$${b.mechDiscountAmount.toFixed(2)}</span></div>`;
   }
   if (b.tip > 0) {
-    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:#059669;margin-bottom:6px"><span>💚 Tip (yours, 100%)</span><span>$${b.tip.toFixed(2)}</span></div>`;
+    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--green);margin-bottom:6px"><span>💚 Tip (yours, 100%)</span><span>$${b.tip.toFixed(2)}</span></div>`;
   }
   rows += `<div style="height:1px;background:var(--border);margin:8px 0"></div>`;
-  rows += `<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--navy)">TOTAL TO CHARGE (EFTPOS)</span><span style="font-size:20px;font-weight:800;color:#059669">$${b.totalToCollect.toFixed(2)}</span></div>`;
+  rows += `<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--navy)">TOTAL TO CHARGE (EFTPOS)</span><span style="font-size:20px;font-weight:800;color:var(--green)">$${b.totalToCollect.toFixed(2)}</span></div>`;
   el.innerHTML = rows;
 }
 
@@ -1884,7 +1884,7 @@ async function applyMechDiscount() {
         ? Math.round(((base * data.discount_value) / 100) * 100) / 100
         : Math.min(data.discount_value, base);
     _mechDiscount = { code, type: data.discount_type, value: data.discount_value, amount };
-    msg.style.color = '#059669';
+    msg.style.color = 'var(--green)';
     msg.textContent = `Code applied! −$${amount.toFixed(2)} off`;
     input.disabled = true;
     document.getElementById('mech-disc-btn').disabled = true;
@@ -2030,14 +2030,14 @@ async function submitComplete(id) {
       const section = document.getElementById('pay-method-section');
       if (section) {
         section.innerHTML = `
-          <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:10px 12px;color:#B91C1C;font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
+          <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
           <label style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
           <div style="display:flex;gap:8px">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
               <input type="radio" name="pay-method" value="charged_manual" checked style="accent-color:var(--blue)"> 💳 Card (EFTPOS)
             </label>
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
-              <input type="radio" name="pay-method" value="cash" style="accent-color:#059669"> 💵 Cash
+              <input type="radio" name="pay-method" value="cash" style="accent-color:var(--green)"> 💵 Cash
             </label>
           </div>`;
         section.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2258,7 +2258,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
           <div style="font-size:11px;color:var(--mgray)">Services</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:20px;font-weight:800;color:#059669">$${totalSpent}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--green)">$${totalSpent}</div>
           <div style="font-size:11px;color:var(--mgray)">Total spent</div>
         </div>
         <div style="text-align:center">
@@ -2279,7 +2279,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
           return `<div style="border-bottom:1px solid var(--border-lt);padding:12px 0">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(b.service_name || 'Service')}</div>
-            <div style="font-size:13px;font-weight:700;color:#059669">$${b.service_price || 0}</div>
+            <div style="font-size:13px;font-weight:700;color:var(--green)">$${b.service_price || 0}</div>
           </div>
           <div style="font-size:11px;color:var(--mgray);margin-bottom:4px">${d} ${stars ? '· ' + stars : ''}</div>
           ${b.client_review ? `<div style="font-size:13px;color:#6B7280;font-style:italic">&ldquo;${esc(b.client_review)}&rdquo;</div>` : ''}
@@ -2576,7 +2576,7 @@ function openChecklist(bookingId) {
           ${['ok', 'warn', 'critical']
             .map(
               (s) => `<button data-action="set-check" data-id="${item.id}" data-status="${s}"
-            style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#374151"
+            style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:var(--gray)"
             id="cb-${item.id}-${s}">${s === 'ok' ? '✅ OK' : s === 'warn' ? '⚠️ Warn' : '🔴 Critical'}</button>`
             )
             .join('')}

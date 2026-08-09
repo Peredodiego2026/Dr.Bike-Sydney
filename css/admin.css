@@ -153,8 +153,8 @@ body {
   border-color: #ef4444;
 }
 .coupon-btn-activate {
-  color: #22c55e;
-  border-color: #22c55e;
+  color: var(--green);
+  border-color: var(--green);
 }
 .coupon-btn-delete {
   color: #ef4444;
@@ -467,11 +467,11 @@ body {
 [data-theme='dark'] #coupons-grid [style*='background:var(--green-lt)'] {
   background: rgba(5, 150, 105, 0.2) !important;
 }
-[data-theme='dark'] #coupons-grid [style*='background:#DCFCE7'] {
+[data-theme='dark'] #coupons-grid [style*='background:var(--green-lt)'] {
   background: rgba(21, 128, 61, 0.2) !important;
   color: #4ade80 !important;
 }
-[data-theme='dark'] #coupons-grid [style*='background:#FEE2E2'] {
+[data-theme='dark'] #coupons-grid [style*='background:var(--red-lt)'] {
   background: rgba(220, 38, 38, 0.15) !important;
   color: #f87171 !important;
 }
@@ -766,7 +766,7 @@ body {
   background: #2563eb;
 }
 .kpi-card.green::before {
-  background: #059669;
+  background: var(--green);
 }
 .kpi-card.orange::before {
   background: #d97706;
@@ -779,7 +779,7 @@ body {
   background: #2563eb;
 }
 .kpi-card.teal::before {
-  background: #059669;
+  background: var(--green);
 }
 .kpi-card.indigo::before {
   background: #2563eb;
@@ -862,7 +862,7 @@ body {
   font-weight: 600;
 }
 .card-action:hover {
-  color: #1d4ed8;
+  color: var(--blue-dark);
 }
 .card-body {
   padding: 0;
@@ -953,7 +953,7 @@ body {
   color: var(--blue);
 }
 .mech-tag.v2 {
-  background: #fef3c7;
+  background: var(--amber-lt);
   color: #d97706;
 }
 
@@ -1172,7 +1172,7 @@ body {
   transition: border-color 0.15s;
 }
 .client-card:hover {
-  border-color: #d5dbe2;
+  border-color: var(--border);
 }
 .cl-av {
   width: 42px;
@@ -1360,7 +1360,7 @@ body {
   color: #065f46;
 }
 .bas-cell--gst-purchases .bas-cell-value {
-  color: #059669;
+  color: var(--green);
 }
 .bas-cell--net {
   background: var(--blue-lt);
@@ -1374,7 +1374,7 @@ body {
 .bas-warn {
   margin-top: 12px;
   padding: 10px;
-  background: #fef3c7;
+  background: var(--amber-lt);
   border-radius: 8px;
   font-size: 12px;
   color: #92400e;
@@ -1556,7 +1556,7 @@ body {
   transition: background 0.15s;
 }
 .btn-save:hover {
-  background: #1d4ed8;
+  background: var(--blue-dark);
 }
 
 /* MOBILE TOGGLE */
@@ -2048,7 +2048,7 @@ body {
   }
   .bar-label {
     font-size: 11px;
-    color: #374151;
+    color: var(--gray);
     min-width: 140px;
     white-space: nowrap;
     overflow: hidden;
@@ -2094,7 +2094,7 @@ body {
   tbody td {
     padding: 9px 12px;
     border-bottom: 1px solid #f1f5f9;
-    color: #374151;
+    color: var(--gray);
   }
   tbody td.bold {
     font-weight: 700;

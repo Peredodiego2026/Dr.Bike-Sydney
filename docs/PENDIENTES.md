@@ -1341,6 +1341,33 @@ proposito: el script solo entra en CSS, en `<style>`, en `style="..."` y en
 JS que no son CSS, `theme-color` ni `manifest.json`. Sacarlos de ahi es trabajo
 del PR B, uno por uno.
 
+#### Paso 3 / PR B-4 HECHO 2026-08-09: el grupo "parecido", las 5 superficies
+
+**192 apariciones de 15 colores.** Los tres grandes son el verde viejo
+`#059669` (71), el gris de texto `#374151` (51) y el negro de texto `#111827`
+(24). **Cambian pixeles, y se nota si los ponés al lado.**
+
+| Pagina | Elementos | Cambian |
+|---|---|---|
+| `landing.html` | 1097 | 95 |
+| `index.html` (SPA) | 524 | 28 |
+| `admin.html` claro / oscuro | 1260 | 14 / 14 |
+| `mechanic.html` oscuro | 95 | 2 |
+| `track.html` | 30 | 0 |
+
+**La mitad del grupo NO se toco, y cada exclusion tiene una razon distinta:**
+
+1. **Colores de marca ajena.** `#34a853`, `#ea4335`, `#1877f2` son el verde y
+   el rojo de Google y el azul de Facebook, en los botones de OAuth.
+   Recolorear el logo de otro no es limpieza, es romperlo.
+2. **La paleta del modo oscuro** de las apps de staff: `#98989f`, `#8e8e93`,
+   `#48484a`, `#38383a`, `#2c2c2e`, `#242426`, `#1c1c1e`, `#3a3a3f`, `#636366`,
+   `#8b95a5`, `#33425e`, `#0f172a`. Igual que en B-3.
+3. **Colores cuyo vecino mas cercano es de OTRO tono.** `#bfdbfe` y `#bae6fd`
+   son celestes y su token mas cercano es un gris; `#221155` es violeta y le
+   toca un navy; `#1e3a5f` y `#1a3a6b` son azules propios del hero y del mapa.
+   Esos son colores de verdad, no deriva: van al grupo "distinto".
+
 #### Paso 3 / PR B-3 HECHO 2026-08-09: "casi igual" en admin y mechanic, con el tema FIJADO
 
 **59 apariciones** de 11 colores claros en `admin.html`, `mechanic.html` y sus

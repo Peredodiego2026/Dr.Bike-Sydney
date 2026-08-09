@@ -83,7 +83,7 @@ img {
 }
 .nav-links a {
   font-size: 14px;
-  color: #374151;
+  color: var(--gray);
   transition: color 150ms;
 }
 .nav-links a:hover {
@@ -104,7 +104,7 @@ img {
     background 150ms;
 }
 .nav-lang-btn:hover {
-  color: #374151;
+  color: var(--gray);
   background: var(--gray-light);
 }
 .nav-lang-btn.active {
@@ -181,7 +181,7 @@ img {
 .btn-outline {
   background: transparent;
   border: 2px solid var(--border);
-  color: #374151;
+  color: var(--gray);
   padding: 14px 28px;
   border-radius: var(--radius);
   font-weight: 600;
@@ -204,7 +204,7 @@ img {
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #374151;
+  color: var(--gray);
 }
 .hero-image {
   border-radius: 16px;
@@ -278,7 +278,7 @@ img {
 .trust-brand {
   font-size: 14px;
   font-weight: 700;
-  color: #374151;
+  color: var(--gray);
 }
 .trust-sep {
   color: var(--border);
@@ -492,7 +492,7 @@ section.visible {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid #374151;
+  border: 1px solid var(--gray);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -524,7 +524,7 @@ section.visible {
 }
 .service-option .so-name {
   font-weight: 700;
-  color: #111827;
+  color: var(--navy);
   font-size: 15px;
 }
 .service-option .so-price {
@@ -605,7 +605,7 @@ section.visible {
 }
 .summary-total .st-label {
   font-weight: 700;
-  color: #111827;
+  color: var(--navy);
   font-size: 16px;
 }
 .summary-total .st-amount {
@@ -669,7 +669,7 @@ section.visible {
 .svc-name {
   font-weight: 700;
   font-size: 15px;
-  color: #111827;
+  color: var(--navy);
 }
 .svc-price {
   font-weight: 800;
@@ -695,7 +695,7 @@ section.visible {
   transition: background 150ms;
 }
 .svc-btn:hover {
-  background: #1d4ed8;
+  background: var(--blue-dark);
 }
 
 input:-webkit-autofill,

@@ -195,7 +195,7 @@
 
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
-      <div id="dash-error" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px"></div>
+      <div id="dash-error" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px"></div>
       <div class="kpis">
         <div class="kpi-card blue">
           <div class="kpi-label">Revenue today</div>
@@ -246,7 +246,7 @@
           <div class="qa-sub">New customer</div>
         </div>
         <div class="qa" data-page="vans">
-          <div class="qa-icon" style="background:#FEF3C7"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
+          <div class="qa-icon" style="background:var(--amber-lt)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
           <div class="qa-label">Van status</div>
           <div class="qa-sub">2 vans online</div>
         </div>
@@ -375,7 +375,7 @@
         <input type="hidden" id="reassign-booking-id">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
           <button style="padding:16px;border:2px solid var(--blue);border-radius:10px;background:var(--blue-lt);color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-6">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
-          <button style="padding:16px;border:2px solid #D97706;border-radius:10px;background:#FEF3C7;color:#D97706;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-7">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
+          <button style="padding:16px;border:2px solid #D97706;border-radius:10px;background:var(--amber-lt);color:#D97706;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-7">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
         </div>
         <button style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-8">Cancel</button>
       </div>
@@ -459,7 +459,7 @@
         </div>
         <div class="client-card">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            <div class="cl-av" style="background:#059669">OP</div>
+            <div class="cl-av" style="background:var(--green)">OP</div>
             <div style="flex:1"><div class="cl-name">Olivia P.</div><div class="cl-suburb">Manly · Van 2</div></div>
             <span class="cl-seg seg-vip">VIP</span>
           </div>
@@ -737,7 +737,7 @@
       </div>
 
       <!-- Fills in only when a query actually fails. Never a silent zero. -->
-      <div id="an-error" style="display:none;background:var(--red-lt);border:1px solid #FECACA;color:#B91C1C;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600"></div>
+      <div id="an-error" style="display:none;background:var(--red-lt);border:1px solid #FECACA;color:var(--red);padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600"></div>
 
       <div class="an-kpis" id="an-kpis">
         <div class="an-tile"><div class="an-tile-label">Loading</div><div class="an-tile-value is-empty">&mdash;</div></div>
@@ -924,7 +924,7 @@
               <option value="/?action=dashboard">My dashboard</option>
             </select>
           </div>
-          <button style="background:#059669;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-19">
+          <button style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-19">
             📢 Send to all subscribers
           </button>
           <div id="bc-result" style="font-size:13px;display:none"></div>
@@ -971,8 +971,8 @@
           <!-- Zone legend -->
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
             <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--blue-lt);color:var(--blue)">🚐 Van 1 — Inner West / Eastern / CBD</span>
-            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#F0FDF4;color:#15803D">🚐 Van 2 — North Shore / Manly / Beaches</span>
-            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#92400E">⭐ All zones — Manager</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#F0FDF4;color:var(--green)">🚐 Van 2 — North Shore / Manly / Beaches</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--amber-lt);color:#92400E">⭐ All zones — Manager</span>
           </div>
 
           <div id="notif-numbers-list" style="display:flex;flex-direction:column;gap:8px">
@@ -1028,12 +1028,12 @@
         <div class="setting-card">
           <div class="setting-title">Integrations</div>
           <div class="setting-sub">Live status of connected services</div>
-          <div class="setting-row"><span class="setting-label">Stripe payments</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Active (live)</span></div>
-          <div class="setting-row"><span class="setting-label">Supabase database</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Connected</span></div>
-          <div class="setting-row"><span class="setting-label">Google Sign-In</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Active</span></div>
-          <div class="setting-row"><span class="setting-label">Resend email</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Active</span></div>
+          <div class="setting-row"><span class="setting-label">Stripe payments</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Active (live)</span></div>
+          <div class="setting-row"><span class="setting-label">Supabase database</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Connected</span></div>
+          <div class="setting-row"><span class="setting-label">Google Sign-In</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Active</span></div>
+          <div class="setting-row"><span class="setting-label">Resend email</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Active</span></div>
           <div class="setting-row"><span class="setting-label">Twilio SMS/WhatsApp</span><span id="integ-twilio" class="setting-val" style="color:#F59E0B;font-weight:500">⚠ Needs keys</span></div>
-          <div class="setting-row"><span class="setting-label">Vercel hosting</span><span class="setting-val" style="color:#059669;font-weight:500">✓ Live</span></div>
+          <div class="setting-row"><span class="setting-label">Vercel hosting</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Live</span></div>
           <button style="margin-top:10px;width:100%;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-24">📱 Send test SMS to your number</button>
         </div>
 
@@ -1131,7 +1131,7 @@
         <button style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)" id="auto-wire-27">← Prev</button>
         <div style="flex:1;text-align:center;font-size:16px;font-weight:700;color:var(--navy)" id="cal-title">Week</div>
         <button style="background:var(--off);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:var(--sans)" id="auto-wire-28">Next →</button>
-        <button style="background:#FEF3C7;color:#D97706;border:1.5px solid #FCD34D;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap" id="auto-wire-29">🚫 Block slots</button>
+        <button style="background:var(--amber-lt);color:#D97706;border:1.5px solid #FCD34D;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap" id="auto-wire-29">🚫 Block slots</button>
         <div style="display:flex;background:var(--off);border-radius:8px;padding:3px;gap:2px">
           <button id="cv-month" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:var(--blue);color:#fff">Month</button>
           <button id="cv-week" style="padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray)">Week</button>
