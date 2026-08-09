@@ -86,7 +86,7 @@ function buildPDF({
     doc.on('error', reject);
 
     const NAVY = '#0D1F3C';
-    const BLUE = '#1848C8';
+    const BLUE = '#2563EB';
     const GRAY = '#6B7280';
     const GREEN = '#059669';
     const AMBER = '#D97706';
@@ -508,7 +508,7 @@ export default async function handler(req, res) {
           ${
             bikeName
               ? `<div style="flex:1;min-width:160px;background:#EEF3FC;border-radius:10px;padding:14px 16px;border:1px solid #C7D9F8">
-            <div style="font-size:11px;color:#1848C8;font-weight:600;text-transform:uppercase;margin-bottom:4px">Bike</div>
+            <div style="font-size:11px;color:#2563EB;font-weight:600;text-transform:uppercase;margin-bottom:4px">Bike</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${bikeName}</div>
           </div>`
               : ''
@@ -572,7 +572,7 @@ export default async function handler(req, res) {
 
         ${
           nextService
-            ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#1848C8;margin-bottom:8px">
+            ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#2563EB;margin-bottom:8px">
           🔧 <strong>Next service recommendation:</strong> ${nextService}
         </div>`
             : ''
@@ -592,7 +592,7 @@ export default async function handler(req, res) {
   .wrap{max-width:600px;margin:0 auto;background:#fff}
   .header{background:#0D1F3C;padding:32px 40px}
   .logo{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-  .logo-icon{width:40px;height:40px;background:#1848C8;border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .logo-icon{width:40px;height:40px;background:#2563EB;border-radius:10px;display:flex;align-items:center;justify-content:center}
   .logo-name{color:#fff;font-size:20px;font-weight:700}
   .invoice-title{color:rgba(255,255,255,0.6);font-size:12px;text-transform:uppercase;letter-spacing:0.1em}
   .invoice-num{color:#fff;font-size:28px;font-weight:700;margin-top:4px}
@@ -608,7 +608,7 @@ export default async function handler(req, res) {
   .total-final{display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:#0D1F3C;margin-top:12px;padding-top:12px;border-top:2px solid #d1d1d6}
   .badge{display:inline-block;background:#ECFDF5;color:#059669;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
   .footer{background:#f5f5f7;padding:24px 40px;text-align:center;font-size:12px;color:#6e6e73}
-  .footer a{color:#1848C8;text-decoration:none}
+  .footer a{color:#2563EB;text-decoration:none}
 </style>
 </head>
 <body>
@@ -662,7 +662,7 @@ export default async function handler(req, res) {
       ${tip > 0 ? `<div class="total-row" style="margin-top:8px"><span>💚 Tip for your mechanic</span><span>$${tip.toFixed(2)}</span></div><div class="total-final"><span>Total charged (AUD)</span><span>$${totalCollected.toFixed(2)}</span></div>` : ''}
     </div>
 
-    ${nextService ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#1848C8;margin-bottom:24px">🔧 <strong>Next service reminder:</strong> ${nextService}</div>` : ''}
+    ${nextService ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#2563EB;margin-bottom:24px">🔧 <strong>Next service reminder:</strong> ${nextService}</div>` : ''}
 
     <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
       <p style="font-size:13px;color:#D97706;font-weight:600;margin:0 0 10px">How was your service?</p>
@@ -674,7 +674,7 @@ export default async function handler(req, res) {
       <div style="font-size:14px;font-weight:600;color:#0D1F3C;margin-bottom:8px">Thank you for choosing Dr. Bike Sydney!</div>
       <div style="font-size:13px;color:#6e6e73">We come to you — home, office or park across Sydney.</div>
       <div style="margin-top:16px">
-        <a href="https://drbikesydney.com.au" style="background:#1848C8;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Book next service →</a>
+        <a href="https://drbikesydney.com.au" style="background:#2563EB;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Book next service →</a>
       </div>
     </div>
 
