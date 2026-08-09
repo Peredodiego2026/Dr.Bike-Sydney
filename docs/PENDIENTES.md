@@ -1586,6 +1586,43 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
 2026-08-09 ya no existe: **no queda ninguna**.
 
+#### Las apps de staff, la mitad que NO era una decision (2026-08-09)
+
+12.14 aparco `admin` y `mechanic` diciendo que **cada uno de sus hex es una
+decision** sobre si ese elemento debe seguir al tema oscuro. Es cierto para
+algunos. **No lo es para los que usan un token que `[data-theme='dark']` nunca
+redefine**: ahi `var(--x)` y el hex resuelven al mismo color en **los dos**
+temas, asi que convertirlos no puede cambiar un pixel ni en claro ni en oscuro.
+
+Los 12 tokens que el modo oscuro **si** redefine (y que por lo tanto siguen
+prohibidos): `--white`, `--off`, `--mgray`, `--border`, `--shadow`,
+`--shadow-lg`, `--blue-lt`, `--navy`, `--green-lt`, `--amber-lt`, `--red-lt`,
+`--wa-lt`.
+
+**95 hex convertidos.** Los 7 tokens introducidos son `--amber`, `--blue`,
+`--blue-dark`, `--border-lt`, `--gray-lt`, `--green` y `--red`, y **ninguno de
+los 7 esta en esa lista** - comprobado por script contra el diff, no de
+memoria.
+
+| Archivo | Antes | Ahora |
+|---|---|---|
+| `css/admin.css` | 238 | **190** |
+| `js/admin.js` | 163 | **147** |
+| `css/mechanic.css` | 36 | **31** |
+| `js/mechanic.js` | 68 | **55** |
+| `admin.html` | 17 | **10** |
+| `mechanic.html` | 12 | **8** |
+
+**HALLAZGO - el hex de 8 digitos lleva alfa y no hay token que lo tenga.**
+La primera version del conversor reescribio `#1E40AF15` (la receta
+`[color]15` del skill `drbike-design`: color + 8% de opacidad) como
+`var(--blue-dark)`, **volviendo opaco un badge translucido**. Lo agarro la
+asercion de identidad de valor, no la lectura del diff. Regla: **3 o 6
+digitos, nunca 8.**
+
+Lo que queda en esos archivos (190 + 147 + ...) **si** es decision una por
+una: son `#fff` y los valores propios del tema oscuro.
+
 #### Emails HECHO 2026-08-09: el hex coincide con el token
 
 El PR aparte que Diego pidio para los emails resulto **mucho mas chico de lo

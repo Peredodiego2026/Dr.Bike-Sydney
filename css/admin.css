@@ -769,10 +769,10 @@ body {
   background: var(--green);
 }
 .kpi-card.orange::before {
-  background: #b45309;
+  background: var(--amber);
 }
 .kpi-card.red::before {
-  background: #cf2020;
+  background: var(--red);
 }
 /* purple/teal/indigo folded into the 4 real tokens above - no more one-off hues */
 .kpi-card.purple::before {
@@ -787,7 +787,7 @@ body {
 .kpi-label {
   font-size: 10px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--gray-lt);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 10px;
@@ -801,7 +801,7 @@ body {
 }
 .kpi-sub {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-top: 6px;
   font-weight: 400;
 }
@@ -816,7 +816,7 @@ body {
   border-radius: 20px;
 }
 .kpi-trend.up {
-  color: #15803d;
+  color: var(--green);
   background: #f0fdf4;
 }
 .kpi-trend.dn {
@@ -839,7 +839,7 @@ body {
 }
 .card-hdr {
   padding: 18px 20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-lt);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -852,7 +852,7 @@ body {
 }
 .card-sub {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-top: 2px;
 }
 .card-action {
@@ -876,12 +876,12 @@ body {
 .tbl th {
   font-size: 10px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--gray-lt);
   text-transform: uppercase;
   letter-spacing: 0.07em;
   padding: 10px 16px;
   text-align: left;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-lt);
   background: #f8fafc;
 }
 .tbl td {
@@ -907,31 +907,31 @@ body {
 }
 .status.confirmed {
   background: #eff6ff;
-  color: #1e40af;
+  color: var(--blue-dark);
 }
 .status.pending {
   background: #fffbeb;
-  color: #b45309;
+  color: var(--amber);
 }
 .status.enroute {
   background: #f0fdf4;
-  color: #15803d;
+  color: var(--green);
 }
 .status.in_progress {
   background: #f0fdf4;
-  color: #15803d;
+  color: var(--green);
 }
 .status.arrived {
   background: #f0fdf4;
-  color: #15803d;
+  color: var(--green);
 }
 .status.completed {
-  background: #f1f5f9;
+  background: var(--border-lt);
   color: var(--slate);
 }
 .status.cancelled {
   background: #fef2f2;
-  color: #cf2020;
+  color: var(--red);
 }
 .status-dot {
   width: 5px;
@@ -954,7 +954,7 @@ body {
 }
 .mech-tag.v2 {
   background: var(--amber-lt);
-  color: #b45309;
+  color: var(--amber);
 }
 
 /* SCHEDULE */
@@ -997,7 +997,7 @@ body {
 }
 .sch-svc {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-top: 1px;
 }
 .sch-price {
@@ -1046,7 +1046,7 @@ body {
 }
 .qa-sub {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   font-weight: 400;
 }
 
@@ -1089,7 +1089,7 @@ body {
 }
 .van-zone {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-top: 2px;
 }
 .van-online {
@@ -1104,11 +1104,11 @@ body {
 }
 .van-online.on {
   background: #f0fdf4;
-  color: #15803d;
+  color: var(--green);
 }
 .van-online.off {
   background: var(--border-lt);
-  color: #94a3b8;
+  color: var(--gray-lt);
 }
 .van-stats {
   display: grid;
@@ -1121,7 +1121,7 @@ body {
   border-radius: 8px;
   padding: 10px;
   text-align: center;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--border-lt);
 }
 .vs-n {
   font-size: 18px;
@@ -1130,7 +1130,7 @@ body {
 }
 .vs-l {
   font-size: 10px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-top: 2px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1138,7 +1138,7 @@ body {
 }
 .progress-bar {
   height: 5px;
-  background: #f1f5f9;
+  background: var(--border-lt);
   border-radius: 3px;
   margin-top: 14px;
   overflow: hidden;
@@ -1194,7 +1194,7 @@ body {
 }
 .cl-suburb {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-top: 2px;
 }
 .cl-seg {
@@ -1226,7 +1226,7 @@ body {
 }
 .seg-risk {
   background: #fef2f2;
-  color: #cf2020;
+  color: var(--red);
 }
 .cl-stats {
   display: grid;
@@ -1239,7 +1239,7 @@ body {
   border-radius: 8px;
   padding: 8px;
   text-align: center;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--border-lt);
 }
 .cl-stat-n {
   font-size: 16px;
@@ -1248,7 +1248,7 @@ body {
 }
 .cl-stat-l {
   font-size: 9px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-top: 2px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1292,7 +1292,7 @@ body {
   background: rgba(255, 255, 255, 0.04);
 }
 .pl-label {
-  color: #94a3b8;
+  color: var(--gray-lt);
 }
 .pl-label.dark {
   color: #0d1f3c;
@@ -1301,7 +1301,7 @@ body {
   color: #f2f2f7;
 }
 .pl-val.pos {
-  color: #15803d;
+  color: var(--green);
   font-weight: 600;
 }
 .pl-val.neg {
@@ -1351,7 +1351,7 @@ body {
   color: var(--amber-ink);
 }
 .bas-cell--gst-sales .bas-cell-value {
-  color: #b45309;
+  color: var(--amber);
 }
 .bas-cell--gst-purchases {
   background: #f0fdf4;
@@ -1438,7 +1438,7 @@ body {
 }
 .bar-label {
   font-size: 9px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   text-align: center;
   font-weight: 600;
 }
@@ -1465,7 +1465,7 @@ body {
 }
 .setting-sub {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--gray-lt);
   margin-bottom: 18px;
   font-weight: 400;
   line-height: 1.6;
@@ -1486,7 +1486,7 @@ body {
   font-weight: 500;
 }
 .setting-val {
-  color: #94a3b8;
+  color: var(--gray-lt);
   font-weight: 400;
 }
 .toggle {
@@ -1837,7 +1837,7 @@ body {
     gap: 3px;
     font-size: 9px;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--gray-lt);
     cursor: pointer;
     text-decoration: none;
     border: none;
@@ -1943,7 +1943,7 @@ body {
     justify-content: space-between;
     margin-bottom: 36px;
     padding-bottom: 24px;
-    border-bottom: 2px solid #1e40af;
+    border-bottom: 2px solid var(--blue-dark);
   }
   .brand {
     display: flex;
@@ -1953,7 +1953,7 @@ body {
   .brand-icon {
     width: 42px;
     height: 42px;
-    background: #1e40af;
+    background: var(--blue-dark);
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -1995,16 +1995,16 @@ body {
     background: #f8fafc;
     border-radius: 12px;
     padding: 16px;
-    border-left: 3px solid #1e40af;
+    border-left: 3px solid var(--blue-dark);
   }
   .kpi.green {
-    border-left-color: #15803d;
+    border-left-color: var(--green);
   }
   .kpi.orange {
-    border-left-color: #b45309;
+    border-left-color: var(--amber);
   }
   .kpi.red {
-    border-left-color: #cf2020;
+    border-left-color: var(--red);
   }
   .kpi-label {
     font-size: 10px;
@@ -2021,7 +2021,7 @@ body {
   }
   .kpi-sub {
     font-size: 11px;
-    color: #94a3b8;
+    color: var(--gray-lt);
     margin-top: 3px;
   }
   .section-title {
@@ -2063,7 +2063,7 @@ body {
   }
   .bar-fill {
     height: 100%;
-    background: #1e40af;
+    background: var(--blue-dark);
     border-radius: 4px;
   }
   .bar-val {
@@ -2093,7 +2093,7 @@ body {
   }
   tbody td {
     padding: 9px 12px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-lt);
     color: var(--gray);
   }
   tbody td.bold {
@@ -2102,7 +2102,7 @@ body {
   }
   tbody td.blue {
     font-weight: 700;
-    color: #1e40af;
+    color: var(--blue-dark);
   }
   .footer {
     margin-top: 24px;
@@ -2114,10 +2114,10 @@ body {
   }
   .footer-left {
     font-size: 11px;
-    color: #94a3b8;
+    color: var(--gray-lt);
   }
   .print-btn {
-    background: #1e40af;
+    background: var(--blue-dark);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -2143,9 +2143,9 @@ body {
    steps were validated against the dark card surface (#152035), not derived
    from the light ones.
    Ramps validated with the dataviz skill's validate_palette.js:
-     ordinal light  var(--blue-soft) #3b82f6 #2563eb #1e40af  (lightest 2.54:1 on #fff)
-     ordinal dark   #2563eb #3b82f6 var(--blue-soft) #93c5fd  (darkest  3.15:1 on #152035)
-     series light   #2563eb 5.17:1   series dark var(--blue-soft) 6.40:1
+     ordinal light  var(--blue-soft) #3b82f6 var(--blue) var(--blue-dark)  (lightest 2.54:1 on #fff)
+     ordinal dark   var(--blue) #3b82f6 var(--blue-soft) #93c5fd  (darkest  3.15:1 on #152035)
+     series light   var(--blue) 5.17:1   series dark var(--blue-soft) 6.40:1
    ══════════════════════════════════════════════════════════════════════════ */
 #page-analytics {
   --an-surface: #ffffff;
