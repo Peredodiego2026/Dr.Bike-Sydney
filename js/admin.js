@@ -943,7 +943,7 @@ async function loadFinance() {
           const h = Math.max(8, Math.round((v / maxVal) * 140));
           const label = new Date(d + 'T00:00:00').getDate();
           return `<div style="display:flex;flex-direction:column;align-items:center;flex:1 1 0;max-width:32px;gap:3px" title="${d}: ${anMoney(v)}">
-      <div style="width:100%;background:#1848C8;border-radius:3px 3px 0 0;height:${h}px;min-height:4px"></div>
+      <div style="width:100%;background:var(--blue);border-radius:3px 3px 0 0;height:${h}px;min-height:4px"></div>
       <div style="font-size:11px;color:var(--mgray)">${label}</div>
     </div>`;
         })
@@ -1093,16 +1093,16 @@ function exportFinancePDF() {
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;color:#0D1F3C;background:#fff}
     .page{max-width:820px;margin:0 auto;padding:48px 40px}
-    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #1848C8}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #2563eb}
     .brand{display:flex;align-items:center;gap:12px}
-    .brand-icon{width:42px;height:42px;background:#1848C8;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800}
+    .brand-icon{width:42px;height:42px;background:#2563eb;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800}
     .brand-name{font-size:20px;font-weight:800;color:#0D1F3C}
     .brand-sub{font-size:13px;color:#6B7280;margin-top:1px}
     .report-info{text-align:right}
     .report-title{font-size:15px;font-weight:700;color:#0D1F3C}
     .report-period{font-size:13px;color:#6B7280;margin-top:2px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
-    .kpi{background:#F7F8FA;border-radius:12px;padding:16px;border-left:3px solid #1848C8}
+    .kpi{background:#F7F8FA;border-radius:12px;padding:16px;border-left:3px solid #2563eb}
     .kpi.green{border-left-color:#059669}
     .kpi.orange{border-left-color:#D97706}
     .kpi.red{border-left-color:#DC2626}
@@ -1114,17 +1114,17 @@ function exportFinancePDF() {
     .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
     .bar-label{font-size:11px;color:#374151;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .bar-bg{flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden}
-    .bar-fill{height:100%;background:#1848C8;border-radius:4px}
+    .bar-fill{height:100%;background:#2563eb;border-radius:4px}
     .bar-val{font-size:11px;font-weight:700;color:#0D1F3C;min-width:44px;text-align:right}
     table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px}
     thead th{background:#0D1F3C;color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em}
     tbody tr:nth-child(even){background:#F9FAFB}
     tbody td{padding:9px 12px;border-bottom:1px solid #F3F4F6;color:#374151}
     tbody td.bold{font-weight:700;color:#0D1F3C}
-    tbody td.blue{font-weight:700;color:#1848C8}
+    tbody td.blue{font-weight:700;color:#2563eb}
     .footer{margin-top:24px;padding-top:16px;border-top:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center}
     .footer-left{font-size:11px;color:#9CA3AF}
-    .print-btn{background:#1848C8;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer}
+    .print-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer}
     @media print{.print-btn{display:none}.page{padding:20px}}
   </style></head>
   <body><div class="page">
@@ -1752,7 +1752,7 @@ function checkAdminAuth() {
         style="width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         data-enter="submit-admin-login">
       <div id="admin-pass-err" style="color:#DC2626;font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
-      <button data-action="submit-admin-login" style="width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
+      <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
     </div>`;
   document.body.appendChild(overlay);
   setTimeout(() => document.getElementById('admin-email-inp')?.focus(), 100);
@@ -1970,7 +1970,7 @@ function _loginCardHeader() {
 const _inp =
   'width:100%;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
 const _btn =
-  'width:100%;padding:13px;background:#1848C8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
+  'width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
 
 function _totpInputHTML() {
   return `<div style="font-size:13px;color:#6B7280;margin-bottom:28px">Enter the 6-digit code from your authenticator app</div>
@@ -2052,9 +2052,7 @@ async function loadDashboard() {
   const monthRev = anRevenueOf(completedMonth);
   const completedToday = completedTodayJobs.length;
   const avgOrder = completedMonth.length
-    ? Math.round(
-        anRevenueOf(completedMonth) / completedMonth.length
-      )
+    ? Math.round(anRevenueOf(completedMonth) / completedMonth.length)
     : 0;
   const cancelRate = (monthJobs || []).length
     ? Math.round(
@@ -2119,7 +2117,7 @@ async function loadDashboard() {
           const st = b.status || 'pending';
           const stColors = {
             pending: '#D97706',
-            confirmed: '#1848C8',
+            confirmed: 'var(--blue)',
             enroute: '#059669',
             completed: '#6B7280',
             cancelled: '#DC2626',
@@ -2138,7 +2136,7 @@ async function loadDashboard() {
             completed: 'Completed',
             cancelled: 'Cancelled',
           };
-          const vanColors = { 1: '#1848C8', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+          const vanColors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
           const vanNum = b.van_number || 1;
           return `<tr>
         <td data-label="Client" style="font-weight:700">${esc(name)}</td>
@@ -2167,7 +2165,7 @@ async function loadDashboard() {
   if (todayTbody) {
     const stColors2 = {
       pending: '#D97706',
-      confirmed: '#1848C8',
+      confirmed: 'var(--blue)',
       enroute: '#059669',
       completed: '#6B7280',
       cancelled: '#DC2626',
@@ -2225,7 +2223,7 @@ async function loadDashboard() {
     if (schSub) schSub.textContent = `${upcoming.length} upcoming today`;
     const stDotColors = {
       pending: '#F59E0B',
-      confirmed: '#1848C8',
+      confirmed: 'var(--blue)',
       enroute: '#059669',
       completed: '#6B7280',
       cancelled: '#DC2626',
@@ -2376,7 +2374,7 @@ function renderBookingsTable(data) {
       <td data-label="Actions" style="white-space:nowrap">
         ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:#ECFDF5;color:#059669;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:#7C3AED;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
-        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:#1848C8;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
+        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
       </td>
     </tr>`;
@@ -2537,7 +2535,7 @@ async function loadRecentNotifications() {
   const stColors = {
     pending: '#D97706',
     confirmed: '#059669',
-    enroute: '#1848C8',
+    enroute: 'var(--blue)',
     completed: '#6B7280',
     cancelled: '#DC2626',
   };
@@ -2573,7 +2571,7 @@ function prependNotification(b) {
   });
   const div = document.createElement('div');
   div.style.cssText =
-    'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid #1848C8;animation:fadeSlideIn .3s';
+    'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:#EEF3FC;border-left:3px solid var(--blue);animation:fadeSlideIn .3s';
   div.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--navy)">🔔 New booking</div>
     <div style="font-size:13px;color:var(--mgray)">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
     <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anBookingRevenue(b)}</div>`;
@@ -2789,10 +2787,10 @@ async function renderRouteMap(useCache) {
   }
   _routeLayer = L.layerGroup().addTo(_routeMap);
 
-  const VAN_COLORS = { 1: '#1848C8', 2: '#D97706' };
+  const VAN_COLORS = { 1: 'var(--blue)', 2: '#D97706' };
   const latlngs = [];
   stops.forEach((s, i) => {
-    const color = VAN_COLORS[s.van_number] || '#1848C8';
+    const color = VAN_COLORS[s.van_number] || 'var(--blue)';
     const icon = L.divIcon({
       className: '',
       html: `<div style="width:26px;height:26px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3)">${i + 1}</div>`,
@@ -2807,7 +2805,7 @@ async function renderRouteMap(useCache) {
     latlngs.push(s.coord);
   });
   if (latlngs.length > 1)
-    L.polyline(latlngs, { color: '#1848C8', weight: 3, opacity: 0.5, dashArray: '6 6' }).addTo(
+    L.polyline(latlngs, { color: 'var(--blue)', weight: 3, opacity: 0.5, dashArray: '6 6' }).addTo(
       _routeLayer
     );
   if (latlngs.length) _routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2));
@@ -2828,7 +2826,7 @@ async function renderRouteMap(useCache) {
           const leg = routeDistKm(prev, s.coord);
           totalKm += leg;
           prev = s.coord;
-          const color = VAN_COLORS[s.van_number] || '#1848C8';
+          const color = VAN_COLORS[s.van_number] || 'var(--blue)';
           return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--off);border-radius:8px;border-left:3px solid ${color}">
         <div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</div>
         <div style="flex:1;min-width:0">
@@ -4165,7 +4163,7 @@ function renderHeatmap(all) {
   points.forEach((p) => {
     const intensity = p.n / maxN;
     const radius = 12 + intensity * 28;
-    const color = intensity > 0.66 ? '#DC2626' : intensity > 0.33 ? '#D97706' : '#1848C8';
+    const color = intensity > 0.66 ? '#DC2626' : intensity > 0.33 ? '#D97706' : 'var(--blue)';
     L.circleMarker(p.coord, { radius, color, weight: 1, fillColor: color, fillOpacity: 0.45 })
       .bindPopup(
         `<b>${esc(p.name)}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>${anMoney(p.rev)} revenue`
@@ -4348,7 +4346,7 @@ async function renderMechStats() {
         });
         const vals = Object.values(byDay);
         const maxVal = Math.max(...vals, 1);
-        const colors = { 1: '#1848C8', 2: '#D97706' };
+        const colors = { 1: 'var(--blue)', 2: '#D97706' };
         return `<div style="background:var(--off);border-radius:10px;padding:16px">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🚐 Van ${v}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
@@ -4385,7 +4383,7 @@ async function loadClients() {
     .order('created_at', { ascending: false });
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
-  const colors = ['#1848C8', '#059669', '#D97706', '#7C3AED', '#0891B2', '#DC2626'];
+  const colors = ['var(--blue)', '#059669', '#D97706', '#7C3AED', '#0891B2', '#DC2626'];
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
@@ -4458,11 +4456,11 @@ async function loadVanZones() {
     const grouped = {};
     data.forEach((row) => {
       if (!grouped[row.van_number]) {
-        const colors = { 1: '#1848C8', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+        const colors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
         grouped[row.van_number] = {
           id: row.van_number,
           name: 'Van ' + row.van_number,
-          color: colors[row.van_number] || '#1848C8',
+          color: colors[row.van_number] || 'var(--blue)',
           suburbs: [],
           driverName: '',
         };
@@ -4562,12 +4560,12 @@ function renderVanZones() {
       </div>
       <div style="padding:16px 20px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:#1848C8;border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
+          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FC;color:var(--blue);border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
           <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" data-enter="add-suburb" data-id="${van.id}"
             style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:Inter,sans-serif;outline:none">
-          <button data-action="add-suburb" data-id="${van.id}" style="background:#1848C8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
+          <button data-action="add-suburb" data-id="${van.id}" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
         </div>
       </div>
     </div>`;
@@ -4610,7 +4608,7 @@ function removeSuburb(vanId, suburb) {
 
 function addVan() {
   const newId = vanZones.length > 0 ? Math.max(...vanZones.map((v) => v.id)) + 1 : 1;
-  const colors = { 1: '#1848C8', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
+  const colors = { 1: 'var(--blue)', 2: '#D97706', 3: '#7C3AED', 4: '#DC2626' };
   vanZones.push({
     id: newId,
     name: 'Van ' + newId,
@@ -4635,7 +4633,7 @@ function removeVan(vanId) {
 // most other admin reads can't see it.
 const CLAIM_STATUS = {
   new: { label: 'New', color: '#D97706', bg: '#FEF9C3' },
-  reviewing: { label: 'Reviewing', color: '#1848C8', bg: '#EEF3FC' },
+  reviewing: { label: 'Reviewing', color: 'var(--blue)', bg: '#EEF3FC' },
   resolved: { label: 'Resolved', color: '#059669', bg: '#ECFDF5' },
   rejected: { label: 'Rejected', color: '#DC2626', bg: '#FEF2F2' },
 };
@@ -4763,7 +4761,7 @@ async function loadContacts() {
       '<div style="text-align:center;color:var(--mgray);padding:48px;font-size:15px">No contacts yet. Add your first contact above.</div>';
     return;
   }
-  const roleColors = { manager: '#1848C8', mechanic: '#059669' };
+  const roleColors = { manager: 'var(--blue)', mechanic: '#059669' };
   const roleBg = { manager: '#EEF3FC', mechanic: '#ECFDF5' };
   list.innerHTML = data
     .map(
@@ -5374,7 +5372,7 @@ async function loadCalendar() {
     const jobs = bookings || [];
     const stColors = {
       pending: '#F59E0B',
-      confirmed: '#1848C8',
+      confirmed: 'var(--blue)',
       enroute: '#059669',
       completed: '#6B7280',
     };
@@ -5473,7 +5471,7 @@ async function loadCalendar() {
 
   const stColors = {
     pending: '#F59E0B',
-    confirmed: '#1848C8',
+    confirmed: 'var(--blue)',
     enroute: '#059669',
     completed: '#6B7280',
   };
@@ -5987,7 +5985,7 @@ async function loadNotifNumbers() {
 
   const zoneLabel = { 1: 'Van 1', 2: 'Van 2', all: 'All zones', '': 'All zones' };
   const zoneBg = { 1: '#EEF3FC', 2: '#F0FDF4', all: '#FEF9C3', '': '#FEF9C3' };
-  const zoneColor = { 1: '#1848C8', 2: '#15803D', all: '#92400E', '': '#92400E' };
+  const zoneColor = { 1: 'var(--blue)', 2: '#15803D', all: '#92400E', '': '#92400E' };
   const channelIcon = { sms: '📱', whatsapp: '💬', both: '📱💬' };
   const roleIcon = { manager: '⭐', mechanic: '🔧' };
 

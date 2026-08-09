@@ -1366,10 +1366,10 @@ body {
   background: #eef3fc;
 }
 .bas-cell--net .bas-cell-label {
-  color: #1848c8;
+  color: var(--blue);
 }
 .bas-cell--net .bas-cell-value {
-  color: #1848c8;
+  color: var(--blue);
 }
 .bas-warn {
   margin-top: 12px;
