@@ -72,11 +72,17 @@ const BUDGET = {
   'js/mechanic.js': 68,
   'js/components.js': 28,
   'js/stripe.js': 5,
-  // Emails cannot use var() at all - Gmail and Outlook drop custom properties -
-  // so these two will never reach zero. They are here so they cannot get worse
-  // while the separate email PR is pending.
+  // The four files that build customer email. Gmail and Outlook drop custom
+  // properties, so these will NEVER reach zero: the only thing possible here is
+  // that the hex matches the token, which it now does except for 7 occurrences
+  // (#d1d5db light text on a blue header, #fcd34d the gold of a star).
+  // send-cron.js and auth.js were outside the budget until 2026-08-09, which is
+  // how auth.js kept 3 occurrences of the retired blue while everything else
+  // was cleaned.
   'api/send-email.js': 250,
   'api/send-invoice.js': 107,
+  'api/send-cron.js': 49,
+  'api/auth.js': 39,
 };
 
 function normalise(hex) {
