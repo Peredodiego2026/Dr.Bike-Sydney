@@ -857,7 +857,10 @@ releer lo ya cerrado:
      en el bloque de este mismo punto. Ya no hay tres paletas: hay una.
   3. Los hex escritos a mano pasan a `var(--token)`, **solo en las 5
      superficies de app** (decision de Diego 2026-08-09; emails y paginas de
-     suburbio, PR aparte).
+     suburbio, PR aparte). Partido en dos: **PR A HECHO 2026-08-09** - los 482
+     que no cambian un pixel, en las 3 superficies de cliente. **PR B abierto** -
+     los que no coinciden con ningun token, mas los 743 de `admin`/`mechanic`,
+     donde el modo oscuro hace que `#fff` y `var(--white)` sean cosas distintas.
   Ojo con el orden: 1 y 2 cambian pixeles en pantalla, asi que conviene
   medirlos antes y despues. El 3 no deberia cambiar ninguno - si cambia alguno,
   ese hex no era el que decia el token y es un hallazgo, no un error de tipeo.
@@ -1307,10 +1310,64 @@ pereza, hay que dejarlo en hex y decirlo en el PR:
 **Lo que NO se va a poder verificar en pantalla** — tiene que quedar escrito en
 el PR, no disimulado:
 
-- **`admin.html`** autentica contra `/api/auth` y no carga en local, asi que sus
-  391 + 309 hex se cambian sin comprobacion de pixel.
+- ~~**`admin.html`** autentica contra `/api/auth` y no carga en local~~
+  **FALSO, corregido 2026-08-09: `admin.html` SI carga en local** y se pueden
+  leer sus 1260 elementos. Lo que no se puede es *comparar* antes y despues (ver
+  el bloque del PR A, mas abajo).
 - **`track.html`** sin un `booking_id` real solo muestra el shell y el estado de
   error: el mapa y los chips `en-route` / `completed` no se pueden medir.
+
+#### Paso 3 / PR A HECHO 2026-08-09: los reemplazos que no cambian un pixel
+
+**482 hex** pasaron a `var(--token)` en las **tres superficies de cliente**
+(`index.html`, `landing.html`, `track.html` + `css/main.css`, `css/home.css`,
+`css/landing.css`, `js/app.js`, `js/components.js`, `js/stripe.js`).
+
+**Verificado: cero cambio de pixel.** Se comparo, antes y despues, el valor
+computado de 15 propiedades (`color`, `background-color`, `background-image`,
+los 4 colores de borde, `border-radius`, `box-shadow`, `outline-color`, `fill`,
+`stroke`, `text-decoration-color`, `caret-color`, `transition-duration`) de
+**todos** los elementos:
+
+| Pagina | Elementos | Diferencias |
+|---|---|---|
+| `landing.html` | 1097 | **0** |
+| `index.html` (SPA) | 524 | **0** |
+| `track.html` | 30 | **0** |
+
+**Quedan 211 hex que valen lo mismo que un token y NO se tocaron**, a
+proposito: el script solo entra en CSS, en `<style>`, en `style="..."` y en
+`el.style.x = '#hex'`. No toca atributos `fill=` de SVG, colores en strings de
+JS que no son CSS, `theme-color` ni `manifest.json`. Sacarlos de ahi es trabajo
+del PR B, uno por uno.
+
+**HALLAZGO 1 - la trampa de la auto-referencia.** La primera version del script
+reescribio `--white: #ffffff` (en `css/home.css:12`) como
+`--white: var(--white)`. Una custom property que se referencia a si misma es
+**invalida en tiempo de computo**, asi que `--white` quedo indefinida en ese
+elemento y en todos sus descendientes: **12 titulos blancos de la landing se
+volvieron navy.** Lo encontro la medicion, no la lectura del diff. Regla para
+el PR B: **un hex que es el VALOR de una custom property nunca se toca** - es
+una definicion o un alias, no un uso. El comentario de `css/home.css:6-8` ya
+avisaba de esto para `--blue`/`--gray`/`--border`; ahora lo hace el script.
+
+**HALLAZGO 2 - en admin y mechanic, `#fff` y `var(--white)` NO son lo mismo.**
+`css/admin.css:2-10` y `css/mechanic.css:2-14` redefinen tokens dentro de
+`[data-theme='dark']`: ahi `--white` vale `#1c1c1e` y `#152035`, `--blue-lt`
+vale `rgba(24,72,200,.18)`, y en mechanic `--navy` vale `#f2f2f7`. En modo
+oscuro, entonces, un `#fff` escrito a mano se queda blanco y un `var(--white)`
+se vuelve oscuro. **Por eso las dos apps de staff quedan fuera del PR A**: cada
+uno de sus 743 hex es una decision sobre si ese elemento debe seguir al tema
+oscuro o quedarse fijo. Es exactamente la causa raiz del punto **12.15** (el
+"No jobs today" ilegible), y convertirlos **arreglaria** medio modo oscuro - pero
+cambia pixeles, asi que es PR B.
+
+**Limite de la medicion, dicho sin adornos:** `admin.html` y `mechanic.html`
+**si** cargan en local, pero su estado de tema no es igual en la primera carga
+que en las siguientes, asi que una comparacion antes/despues de esas dos paginas
+da diferencias que no vienen del cambio. Se comprobo dejando los dos archivos
+**sin tocar** y midiendo igual: seguian dando 30 y 17 diferencias. Cualquier
+medicion de esas dos superficies tiene que fijar el tema primero.
 #### Paso 2 HECHO 2026-08-09: la landing ya no pisa los tokens
 
 `css/landing.css` no abre mas un `:root`. **MEDIDO EN NAVEGADOR**, comparando

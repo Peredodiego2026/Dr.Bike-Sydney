@@ -212,7 +212,7 @@ body {
 
 .btn--primary {
   background: var(--blue);
-  color: #fff;
+  color: var(--white);
   border: none;
 }
 .btn--primary:hover:not(:disabled) {
@@ -319,7 +319,7 @@ body {
 .time-slot.selected {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--white);
 }
 .time-slot--unavailable {
   opacity: 0.35;
@@ -596,10 +596,10 @@ body {
 .date-item.selected {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--white);
 }
 .date-item.selected .date-item__num {
-  color: #fff;
+  color: var(--white);
 }
 
 /* ── Time Grid ───────────────────────────────────────────────────────────────── */
@@ -1094,7 +1094,7 @@ body {
   /* border lives here, not in the inline style attribute, so :hover below can
      actually win - an inline style's border shorthand has higher specificity
      than any external rule and would silently block border-color changes */
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--border);
   transition:
     border-color var(--motion-fast),
     box-shadow var(--motion-fast);
@@ -1134,7 +1134,7 @@ body {
 }
 .tab-btn.active {
   background: var(--blue);
-  color: #fff;
+  color: var(--white);
 }
 .bookings-list {
   display: flex;
