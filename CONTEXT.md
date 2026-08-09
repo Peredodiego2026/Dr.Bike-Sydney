@@ -1,6 +1,43 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-08-04) — read this first
+## Current state (2026-08-08) — read this first
+
+- **`main` is `d3f9745`. One PR open: #177** (`feat/recover-email`, rebased and mergeable).
+  Shipped since 04-aug: #171-#172 (the guest-charged-without-booking incident), #173-#175
+  (guest checkout in four steps), #176 (password recovery on desktop).
+
+- **A REAL CUSTOMER WAS CHARGED AND GOT NOTHING, 2026-08-05.** Thais Rocha Guimaraes paid $20
+  by Apple Pay, no booking was created, no email or WhatsApp went anywhere, and she had to
+  message Diego to find out. Diego refunded it. The whole story, cause and fixes are
+  **`docs/PENDIENTES.md` section 14** - read it before touching payment or booking code. One
+  cause, five symptoms: every channel assumed an account while the front door let people in
+  without one.
+
+- **Booking without an account now works end to end.** The contact sheet asks for name, email
+  and mobile - not a sign-up - and the server treats the verified Stripe payment as the
+  credential. `bookings.user_id` is nullable and there is a unique index on
+  `stripe_payment_intent_id`; both migrations are **applied** (Diego ran them 04 and 06-aug).
+
+- **The payment now drives the chain, not the browser.** `payment_intent.succeeded` builds the
+  booking server-side and fires the WhatsApp, the SMS and the client's email, so closing the app
+  can no longer lose a booking. The browser still goes first; the unique index picks the winner
+  and only the writer notifies.
+
+- **NEVER VERIFIED END TO END: a real card booking without an account.** Every link was checked
+  on its own; the chain as a whole was not. It is the single most valuable thing left and only
+  Diego can do it - `docs/PENDIENTES.md` 14 and 12.2.
+
+- **The i18n gate has had three blind spots, all now closed:** `confirmDialog` props (12.18),
+  `tVal(` in track.html (14.3) and `translateValue(` in the SPA (14.x). Each one let
+  customer-facing English ship with the check green. If you add a new translate wrapper, teach
+  `scripts/i18n-check.mjs` about it in the same commit.
+
+- **The blue is settled: the app keeps `#2563eb`, the logo and icons keep `#0055de`.** Two blues
+  on purpose. Do not unify them. What is left of 12.14 is mechanical and is the next job.
+
+- Older entries below.
+
+## Current state (2026-08-04)
 
 - **No open PRs.** `main` is `1234254`. Everything below shipped on 2026-08-03/04:
   #163 docs, #164 (12.18 dialogs), #165 (12.16 touch targets), #166 (track.html audit = section
