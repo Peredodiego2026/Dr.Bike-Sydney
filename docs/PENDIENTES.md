@@ -1341,6 +1341,43 @@ proposito: el script solo entra en CSS, en `<style>`, en `style="..."` y en
 JS que no son CSS, `theme-color` ni `manifest.json`. Sacarlos de ahi es trabajo
 del PR B, uno por uno.
 
+#### Paso 3 / PR B-2 HECHO 2026-08-09: el grupo "casi igual", superficies de cliente
+
+**170 apariciones de 13 colores** que estaban a menos de 30 de distancia
+perceptual de un token pasaron a ese token, en `index.html`, `landing.html`,
+`track.html` y el CSS/JS que comparten.
+
+| Color | Veces | Pasa a |
+|---|---|---|
+| `#e5e7eb` | 95 | `--border` |
+| `#9ca3af` | 24 | `--gray-lt` |
+| `#f3f4f6` | 14 | `--border-lt` |
+| `#f9fafb` | 13 | `--surface` |
+| `#eef3fc` | 5 | `--blue-lt` |
+| `#ecfdf5` | 4 | `--green-lt` |
+| `#1f2937` | 4 | `--navy2` |
+| `#f0f9ff` | 3 | `--blue-lt` |
+| `#f7f8fa`, `#f8faff` | 3 | `--surface` |
+| `#fff7ed`, `#fef9ee` | 3 | `--amber-lt` |
+| `#4b5563` | 2 | `--gray` |
+
+**MEDIDO:** cambian **87 de 1097** elementos en `landing.html`, **18 de 524**
+en la SPA y **0 de 30** en `track.html`. Los corrimientos mas repetidos son
+`#e5e7eb -> #e2e8f0` (140 propiedades) y `#9ca3af -> #94a3b8` (136). Ninguno
+pasa de un tono; es exactamente lo que "casi igual" queria decir.
+
+**La distancia perceptual NO alcanza para decidir: la tabla se escribio a
+mano.** Tres casos lo prueban:
+
+- `#ecfdf5` tiene como vecino mas cercano a `--wa-lt` (el verde de WhatsApp),
+  pero es obviamente el `--green-lt` viejo. **Gana la semantica, no el numero.**
+- `#dbeafe` (azul 200) y `#f5f3ff` (violeta) tienen como vecino mas cercano un
+  token **gris**. Mapearlos habria cambiado el color de verdad, asi que
+  **quedan afuera** y se tratan como "distinto".
+
+Quien siga con "parecido" y "distinto" tiene que revisar cada color igual: una
+tabla generada por distancia y aplicada sin leer va a romper algo.
+
 #### Paso 3 / PR B-1 HECHO 2026-08-09: muere el azul retirado
 
 **Las 57 apariciones de `#1848C8` en las 5 superficies ya no existen.** No hacia

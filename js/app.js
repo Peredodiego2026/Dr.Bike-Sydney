@@ -357,7 +357,7 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<span>Join Waitlist for</span> ' +
       date +
       '</button>' +
-      '<div id="waitlist-form" style="display:none;margin-top:14px;background:#F8FAFF;border:1px solid #DBEAFE;border-radius:10px;padding:16px">' +
+      '<div id="waitlist-form" style="display:none;margin-top:14px;background:var(--surface);border:1px solid #DBEAFE;border-radius:10px;padding:16px">' +
       '<div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:10px">Which times work for you?</div>' +
       '<div id="waitlist-times" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">' +
       slots
@@ -1277,7 +1277,7 @@ async function renderServiceSummary() {
           : ''
       }
 
-      ${surcharged ? `<div style="background:#FEF9EE;border:1px solid #FDE9C8;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
+      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid #FDE9C8;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
       <!-- Pricing breakdown -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
@@ -1316,7 +1316,7 @@ async function renderServiceSummary() {
       </div>
 
       <!-- Payment split note -->
-      <div style="display:flex;gap:10px;background:#EEF3FC;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+      <div style="display:flex;gap:10px;background:var(--blue-lt);border-radius:10px;padding:12px 14px;margin-bottom:16px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <div style="font-size:13px;color:var(--blue);line-height:1.55">
           <strong>How payment works:</strong> ${translateValue(
@@ -1586,7 +1586,7 @@ async function loadMechanicPreferencePicker() {
       <div style="margin-bottom:20px">
         <div style="font-size:13px;color:#6B7280;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Prefer a specific mechanic? (optional)</div>
         <div id="mechanic-pref-row" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">${cards}</div>
-        <div id="mechanic-pref-note" style="font-size:11px;color:#9CA3AF;margin-top:8px" hidden>We'll try to send your job to them first.</div>
+        <div id="mechanic-pref-note" style="font-size:11px;color:var(--gray-lt);margin-top:8px" hidden>We'll try to send your job to them first.</div>
       </div>`;
     return { html, mechanics };
   } catch {
@@ -1733,12 +1733,12 @@ async function renderPayment() {
   screen.innerHTML = `
     ${createHeader('Confirm Booking', true, '#service-summary')}
     <div style="padding:0 16px 24px">
-      <div style="background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="background:var(--blue-lt);border:1px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:20px">
         <div style="font-size:13px;color:#6B7280;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Your selection</div>
         <div style="font-weight:700;color:var(--navy);font-size:15px">${service.name}</div>
         <div style="font-size:13px;color:#374151;margin-top:4px">${date} &bull; ${time}</div>
         <div style="font-size:13px;color:#374151">${location}</div>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center">
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;color:#6B7280">Call-out fee</span>
           ${
             isIncludedVisit
@@ -1758,7 +1758,7 @@ async function renderPayment() {
           : `
       <div id="payment-request-btn" style="margin-bottom:12px" hidden></div>
       <div class="payment-divider" id="card-divider" hidden><span>or pay by card</span></div>
-      <div style="background:var(--white);border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
         <div style="font-size:13px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">Card details</div>
         <div id="card-element" class="card-element"></div>
       </div>
@@ -1772,7 +1772,7 @@ async function renderPayment() {
       <button class="btn btn--primary btn--full" id="pay-btn">${payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee)}</button>`
       }
 
-      <div style="text-align:center;margin-top:16px;font-size:13px;color:#9CA3AF">
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--gray-lt)">
         Prefer to book manually?
         <a href="https://wa.me/61433963250?text=${waText}" style="color:var(--blue);font-weight:600">WhatsApp us</a>
         or
@@ -2267,7 +2267,7 @@ async function renderTracking() {
   // Screen is 100dvh flex-column with no padding/animation (see CSS override for [data-screen="tracking"].active)
   screen.innerHTML = `
     <!-- Header -->
-    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid #E5E7EB">
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid var(--border)">
       <div style="font-size:18px;font-weight:700;color:var(--navy)">Live Tracking</div>
       <button id="change-booking-btn" style="background:none;border:none;font-size:13px;color:var(--blue);cursor:pointer;font-weight:600;font-family:inherit;padding:8px 0;display:flex;align-items:center;gap:4px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -2276,7 +2276,7 @@ async function renderTracking() {
     </div>
 
     <!-- Status bar -->
-    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--white);border-bottom:1px solid #F3F4F6">
+    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--white);border-bottom:1px solid var(--border-lt)">
       <div id="status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--blue-dark);flex-shrink:0;transition:background 0.3s"></div>
       <span id="status-text" style="font-size:13px;font-weight:600;color:var(--navy)">Loading booking...</span>
     </div>
@@ -2285,8 +2285,8 @@ async function renderTracking() {
     <div id="tracking-map" style="flex:1;min-height:0;display:block"></div>
 
     <!-- Bottom panel -->
-    <div style="flex-shrink:0;background:var(--white);border-top:1px solid #E5E7EB">
-      <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #F3F4F6">
+    <div style="flex-shrink:0;background:var(--white);border-top:1px solid var(--border)">
+      <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border-lt)">
         <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
@@ -2299,7 +2299,7 @@ async function renderTracking() {
         </div>
         <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid #F3F4F6">
+      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid var(--border-lt)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <div style="font-size:13px;color:var(--blue)"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
       </div>
@@ -2307,16 +2307,16 @@ async function renderTracking() {
         ${['Confirmed', 'En Route', 'Arrived', 'Done']
           .map(
             (s, i) =>
-              `<div id="step-${i}" style="flex:1;padding:5px 2px;text-align:center;font-size:11px;font-weight:700;border-radius:6px;background:#F3F4F6;color:#9CA3AF;transition:all 0.3s">${s}</div>`
+              `<div id="step-${i}" style="flex:1;padding:5px 2px;text-align:center;font-size:11px;font-weight:700;border-radius:6px;background:var(--border-lt);color:var(--gray-lt);transition:all 0.3s">${s}</div>`
           )
           .join('')}
       </div>
       <div style="display:flex;gap:8px;padding:0 16px 12px">
-        <button id="message-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
+        <button id="message-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Message
         </button>
-        <button id="share-tracking-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
+        <button id="share-tracking-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           Share link
         </button>
@@ -2641,14 +2641,14 @@ function renderReviewSection(booking) {
   if (booking.status !== 'completed') return '';
   if (booking.client_rating) {
     return `
-    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
+    <div style="border-top:1px solid var(--border);padding:16px 20px">
       <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Your review</div>
       <div style="font-size:18px;color:#F59E0B;letter-spacing:2px">${renderMiniStars(booking.client_rating)}</div>
       ${booking.client_review ? `<div style="font-size:13px;color:#374151;margin-top:6px;line-height:1.5">"${escapeHtml(booking.client_review)}"</div>` : ''}
     </div>`;
   }
   return `
-    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
+    <div style="border-top:1px solid var(--border);padding:16px 20px">
       <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:#F59E0B;color:var(--white);border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
     </div>`;
 }
@@ -2656,7 +2656,7 @@ function renderReviewSection(booking) {
 function renderMechanicTrackRecord(p) {
   if (!p.reviews || !p.reviews.length) return '';
   return `
-    <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
+    <div style="border-top:1px solid var(--border);padding:16px 20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Client reviews</div>
         ${p.rating ? `<div style="font-size:13px;color:#F59E0B;font-weight:700">★ ${p.rating}</div>` : ''}
@@ -2715,7 +2715,7 @@ function openMechanicProfile(p, booking, screen) {
   panel.style.cssText =
     'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
   panel.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
+    <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)">
       <button id="close-mech-profile-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
@@ -2766,7 +2766,7 @@ function openClientChat(bookingId, screen) {
     panel.style.cssText =
       'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
     panel.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;padding:0 12px 0 6px;height:56px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
+      <div style="display:flex;align-items:center;gap:12px;padding:0 12px 0 6px;height:56px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)">
         <button id="close-chat-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close chat">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
@@ -2776,9 +2776,9 @@ function openClientChat(bookingId, screen) {
           <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:#059669"><span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block"></span>Online now</div>
         </div>
       </div>
-      <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:#F9FAFB"></div>
-      <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
-        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:15px;outline:none;color:var(--navy);background:var(--white)" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
+      <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)"></div>
+      <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white)">
+        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-family:inherit;font-size:15px;outline:none;color:var(--navy);background:var(--white)" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
         <button id="client-chat-send" style="background:var(--blue);color:var(--white);border:none;border-radius:50%;width:40px;height:40px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -3037,8 +3037,8 @@ async function renderReview() {
       <div class="char-counter"><span id="char-count">0</span>/500</div>
     </div>
     <div style="margin:0 24px 16px">
-      <div style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Add a photo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9CA3AF">(optional)</span></div>
-      <label id="review-photo-label" style="display:flex;align-items:center;gap:10px;height:56px;padding:0 14px;border:1.5px dashed #E5E7EB;border-radius:10px;cursor:pointer;background:#F9FAFB">
+      <div style="font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Add a photo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--gray-lt)">(optional)</span></div>
+      <label id="review-photo-label" style="display:flex;align-items:center;gap:10px;height:56px;padding:0 14px;border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;background:var(--surface)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span id="review-photo-txt" style="font-size:13px;color:#6B7280">Tap to add a photo (optional)</span>
         <input type="file" accept="image/*" capture="environment" id="review-photo-inp" style="display:none">
@@ -3089,7 +3089,7 @@ async function renderReview() {
     screen.querySelector('#review-photo-txt').textContent = 'Photo selected — tap to change';
     const lbl = screen.querySelector('#review-photo-label');
     lbl.style.borderColor = 'var(--color-primary)';
-    lbl.style.background = '#EEF3FC';
+    lbl.style.background = 'var(--blue-lt)';
   });
 
   screen.querySelector('#review-photo-remove').addEventListener('click', function (e) {
@@ -3099,8 +3099,8 @@ async function renderReview() {
     screen.querySelector('#review-photo-inp').value = '';
     screen.querySelector('#review-photo-txt').textContent = 'Tap to add a photo (optional)';
     const lbl = screen.querySelector('#review-photo-label');
-    lbl.style.borderColor = '#E5E7EB';
-    lbl.style.background = '#F9FAFB';
+    lbl.style.borderColor = 'var(--border)';
+    lbl.style.background = 'var(--surface)';
   });
 
   screen.querySelector('#submit-review-btn').addEventListener('click', async () => {
@@ -3140,7 +3140,7 @@ async function renderReview() {
           </p>
           <div style="display:flex;flex-direction:column;gap:12px;max-width:280px;margin:0 auto">
             <a id="google-review-link" href="https://g.page/r/drbikesydney/review" target="_blank" rel="noopener"
-              style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--white);border:2px solid #E5E7EB;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#374151">
+              style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--white);border:2px solid var(--border);border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#374151">
               <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               Leave a Google Review
             </a>
@@ -3455,7 +3455,7 @@ function promptNewPassword() {
       <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:6px">Set a new password</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Choose a new password for your account.</div>
       <input id="reset-pw-inp" type="password" placeholder="New password" aria-label="New password" autocomplete="new-password"
-        style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1.5px solid #E5E7EB;border-radius:10px;font-family:inherit;margin-bottom:10px">
+        style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;margin-bottom:10px">
       <div id="reset-pw-err" style="display:none;color:var(--red);font-size:13px;margin-bottom:10px"></div>
       <button id="reset-pw-btn" class="btn btn--primary btn--full">Update password</button>
     </div>
@@ -4066,7 +4066,7 @@ async function renderProfile() {
         </div>
         ${
           riderTier.nextAt
-            ? `<div style="height:6px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:6px">
+            ? `<div style="height:6px;background:var(--border-lt);border-radius:4px;overflow:hidden;margin-bottom:6px">
                  <div style="height:100%;width:${riderTier.progressPct}%;background:${riderTier.color};border-radius:4px;transition:width var(--motion-base)"></div>
                </div>
                <div style="font-size:13px;color:#6B7280"><span>${riderTier.nextAt - completedJobs}</span> <span>${riderTier.nextAt - completedJobs === 1 ? 'more service to reach' : 'more services to reach'}</span> <span>${riderTier.nextLabel}</span></div>`
@@ -4126,7 +4126,7 @@ async function renderProfile() {
             <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
               ${isPaused ? 'Resume membership' : 'Pause membership'}
             </button>
-            <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:var(--white)">Cancel</button>
+            <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:#6B7280;background:var(--white)">Cancel</button>
           </div>
         </div>`;
             })()
@@ -4233,7 +4233,7 @@ async function renderProfile() {
   screen.querySelector('#add-card-btn')?.addEventListener('click', async () => {
     const section = screen.querySelector('#card-on-file-section');
     section.innerHTML = `
-      <div style="background:var(--white);border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
         <div id="new-card-element" class="card-element"></div>
       </div>
       <div id="add-card-error" class="booking-error" hidden style="margin-bottom:10px"></div>

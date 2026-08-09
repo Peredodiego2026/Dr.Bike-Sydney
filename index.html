@@ -249,13 +249,13 @@
     </header>
 
     <!-- Trust badges -->
-    <div style="background:#F7F8FA;border-bottom:1px solid #E5E7EB;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+    <div style="background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
       <div style="display:flex;align-items:center;gap:8px;padding:10px 20px;white-space:nowrap;width:max-content;min-width:100%">
-        <span style="background:#ECFDF5;border:1px solid #059669;border-radius:20px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#065F46;flex-shrink:0">
+        <span style="background:var(--green-lt);border:1px solid #059669;border-radius:20px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#065F46;flex-shrink:0">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
           100% Satisfaction
         </span>
-        <span style="background:#EEF3FC;border:1px solid #0A58CA;border-radius:20px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--blue-dark);flex-shrink:0">
+        <span style="background:var(--blue-lt);border:1px solid #0A58CA;border-radius:20px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--blue-dark);flex-shrink:0">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0A58CA" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><polyline points="16 3 18 5 22 1"/></svg>
           Verified Mechanic
         </span>
@@ -597,25 +597,25 @@
     <!-- Membership payment modal -->
     <div id="ms-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);overflow-y:auto;padding:24px 16px">
       <div style="background:white;border-radius:16px;max-width:480px;margin:0 auto;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.2)">
-        <div style="padding:24px 28px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">
+        <div style="padding:24px 28px;border-bottom:1px solid var(--border-lt);display:flex;justify-content:space-between;align-items:center">
           <div>
             <div id="ms-plan-name" style="font-size:12px;color:#6b7280;font-weight:600;letter-spacing:1px;text-transform:uppercase">Basic Plan</div>
             <h2 style="font-size:20px;font-weight:800;color:#111827;margin-top:4px">Start Your Membership</h2>
           </div>
-          <button id="ms-close" style="width:36px;height:36px;border-radius:50%;border:1px solid #e5e7eb;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7280">&#215;</button>
+          <button id="ms-close" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7280">&#215;</button>
         </div>
         <div id="ms-form" style="padding:28px">
-          <div style="background:#f0f9ff;border-radius:10px;padding:14px 18px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
+          <div style="background:var(--blue-lt);border-radius:10px;padding:14px 18px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-weight:600;color:#111827">Monthly Total</span>
             <span id="ms-price" style="font-size:20px;font-weight:800;color:var(--blue)">$67/month</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:14px">
-            <input id="ms-name" type="text" placeholder="Full Name" aria-label="Full Name" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
-            <input id="ms-email" type="email" placeholder="Email Address" aria-label="Email Address" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
-            <input id="ms-phone" type="tel" placeholder="Phone Number (04XX XXX XXX)" aria-label="Phone Number" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+            <input id="ms-name" type="text" placeholder="Full Name" aria-label="Full Name" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+            <input id="ms-email" type="email" placeholder="Email Address" aria-label="Email Address" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
+            <input id="ms-phone" type="tel" placeholder="Phone Number (04XX XXX XXX)" aria-label="Phone Number" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
             <div id="ms-error" style="display:none;color:#ef4444;font-size:13px"></div>
             <button id="ms-submit" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Start Membership</button>
-            <p style="font-size:11px;color:#9ca3af;text-align:center;margin:0;display:flex;align-items:center;justify-content:center;gap:6px">
+            <p style="font-size:11px;color:var(--gray-lt);text-align:center;margin:0;display:flex;align-items:center;justify-content:center;gap:6px">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               Secured by Stripe &middot; 3-month minimum &middot; Cancel anytime after
             </p>
@@ -635,19 +635,19 @@
     <!-- Plan info modal -->
     <div id="pi-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);overflow-y:auto;padding:24px 16px">
       <div style="background:white;border-radius:16px;max-width:480px;margin:0 auto;box-shadow:0 24px 64px rgba(0,0,0,0.2)">
-        <div style="padding:24px 28px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">
+        <div style="padding:24px 28px;border-bottom:1px solid var(--border-lt);display:flex;justify-content:space-between;align-items:center">
           <div>
             <div id="pi-plan-label" style="font-size:12px;color:#6b7280;font-weight:600;letter-spacing:1px;text-transform:uppercase">Basic Plan</div>
             <div id="pi-price" style="font-size:24px;font-weight:800;color:var(--blue);margin-top:4px">$67/month</div>
           </div>
-          <button id="pi-close" style="width:36px;height:36px;border-radius:50%;border:1px solid #e5e7eb;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7280">&#215;</button>
+          <button id="pi-close" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7280">&#215;</button>
         </div>
         <div style="padding:28px">
           <div style="margin-bottom:20px">
             <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">INCLUDES</div>
             <ul id="pi-includes-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;color:#374151"></ul>
           </div>
-          <div style="margin-bottom:20px;padding:14px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa">
+          <div style="margin-bottom:20px;padding:14px;background:var(--amber-lt);border-radius:8px;border:1px solid #fed7aa">
             <div style="font-size:11px;font-weight:700;color:#c2410c;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">DOES NOT INCLUDE</div>
             <p id="pi-excludes-text" style="font-size:13px;color:#7c2d12;margin:0"></p>
           </div>
@@ -715,8 +715,8 @@
             </div>
           </div>
         </div>
-        <div style="border-top:1px solid #1f2937;padding-top:20px;text-align:center">
-          <p style="color:#4b5563;font-size:12px">&copy; 2026 Dr. Bike Sydney. All rights reserved. &middot; ABN: 87 654 025 287</p>
+        <div style="border-top:1px solid var(--navy2);padding-top:20px;text-align:center">
+          <p style="color:var(--gray);font-size:12px">&copy; 2026 Dr. Bike Sydney. All rights reserved. &middot; ABN: 87 654 025 287</p>
         </div>
       </div>
     </footer>

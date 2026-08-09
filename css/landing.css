@@ -93,7 +93,7 @@ img {
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--gray-lt);
   background: transparent;
   border: none;
   padding: 6px 8px;
@@ -189,7 +189,7 @@ img {
   transition: var(--transition);
 }
 .btn-outline:hover {
-  border-color: #9ca3af;
+  border-color: var(--gray-lt);
   background: var(--gray-light);
 }
 .hero-stats {
@@ -265,7 +265,7 @@ img {
 .trust-label {
   font-size: 11px;
   letter-spacing: 1.5px;
-  color: #9ca3af;
+  color: var(--gray-lt);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -505,7 +505,7 @@ section.visible {
 /* ── Booking Modal ───────────────────────────────────────────────────────── */
 .service-option {
   padding: 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
   transition: all 200ms ease;
@@ -539,7 +539,7 @@ section.visible {
 }
 .date-pill {
   padding: 10px 14px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
   text-align: center;
@@ -569,7 +569,7 @@ section.visible {
 }
 .time-slot {
   padding: 12px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
   text-align: center;
@@ -599,7 +599,7 @@ section.visible {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #f9fafb;
+  background: var(--surface);
   border-radius: 10px;
   margin-top: 16px;
 }
@@ -640,7 +640,7 @@ section.visible {
   }
 }
 .svc-card {
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
@@ -703,7 +703,7 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px white inset !important;
   box-shadow: 0 0 0px 1000px white inset !important;
-  -webkit-text-fill-color: #111827 !important;
+  -webkit-text-fill-color: undefined !important;
 }
 
 /* ══ Booking wizard: full-screen overlay (this page only) ═══════════════════
