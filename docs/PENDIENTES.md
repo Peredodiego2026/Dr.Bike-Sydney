@@ -2707,11 +2707,42 @@ se llaman `date` y `time` (`js/mechanic.js:626-627`). Los dos viajaban
 `undefined`: **todas las facturas en PDF emitidas hasta hoy salieron sin fecha
 ni hora**. Al leer la fila directa, llegan. Hay un test que lo fija.
 
-**Lo que este paso NO arregla, y es el paso B:** si falla el propio servidor
-(Resend caido, Twilio caido, la funcion se corta), la factura se sigue
-perdiendo - ahora con un `console.error`, pero perdida. Falta la marca en la
-base + la barrida del cron que reintente. Decidido con Diego el 10-ago: A
-primero, B despues.
+**Paso B: la factura se reintenta hasta que sale — 2026-08-10.**
+
+El paso A cierra el agujero del telefono. No cierra el nuestro: si Resend o
+Twilio estan caidos en ese segundo, el cliente sigue sin factura y la unica
+huella es un `console.error` que nadie lee.
+
+Ahora cada envio deja escrito **en la reserva** que paso, por canal:
+
+```json
+{"send-invoice":"sent","send-email":"sent","send-sms":"failed"}
+```
+
+y `api/send-cron.js?type=completion-retry` reenvia **solo** lo que no diga
+`sent`. Nunca lo que ya salio: un SMS fallido no puede producir una segunda
+factura. La columna es `bookings.completion_notifications` (JSONB), migracion en
+`scripts/add-completion-notifications.sql`.
+
+Decisiones:
+
+- **`NULL` se ignora a proposito.** Una reserva completada antes de que la
+  columna existiera no se puede distinguir de "no se mando nada", y adivinar
+  significaria mandarle a un cliente viejo una segunda factura.
+- **El reintento fusiona, no pisa.** Lo que salio bien en el primer intento no
+  esta en el lote del reintento y tiene que conservar su `sent`.
+- **Grabar es best-effort.** Si la migracion no se corrio, el envio del paso A
+  igual ocurrio; lo que falta es la red de seguridad, no la factura. Queda un
+  `console.warn` que nombra el SQL.
+- **Es diario, no cada hora.** Vercel Hobby solo admite crons diarios (esta
+  escrito en la cabecera de `api/send-cron.js`, y ya hizo fallar un deploy
+  antes). Asi que una factura perdida se repara **dentro del dia**, no en
+  minutos. Se puede forzar a mano en `/api/retry-completion`.
+- Mira 14 dias hacia atras y como maximo 200 reservas por pasada.
+
+**Falta que Diego corra `scripts/add-completion-notifications.sql`** en el editor
+SQL de Supabase. Sin eso, el paso B no hace nada (y lo dice en los logs); el paso
+A sigue funcionando igual.
 
 **Y lo que NO arregla ninguno de los dos:** si el mecanico **no tiene senal en
 el momento de tocar "Completar"**, no pasa nada en absoluto - ni siquiera se

@@ -22,7 +22,11 @@ import {
   isGoogleCalendarConfigured,
   saveGoogleRefreshToken,
 } from './_google-calendar.js';
-import { buildCompletionCalls } from './_completion-notify.js';
+import {
+  buildCompletionCalls,
+  dispatchCompletionCalls,
+  recordCompletionOutcome,
+} from './_completion-notify.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
@@ -1643,14 +1647,17 @@ async function handleMechanicComplete(req, res) {
   // never fail the completion, though - the job IS completed at this point, and
   // answering 500 here would show the mechanic "could not complete job" for a
   // job that is done, and invite a second completion.
-  const notified = await sendCompletionNotifications({
-    booking: notifyRow,
-    mechanicName: mechanicName(auth.mechanic),
-    partsCharged: parts_charged,
-    tipAmount: tip_amount,
-    mechanicNotes: mechanic_notes,
-    nextServiceDate: next_service_date,
-  });
+  const notified = await sendCompletionNotifications(
+    {
+      booking: notifyRow,
+      mechanicName: mechanicName(auth.mechanic),
+      partsCharged: parts_charged,
+      tipAmount: tip_amount,
+      mechanicNotes: mechanic_notes,
+      nextServiceDate: next_service_date,
+    },
+    sbHdr
+  );
 
   return res.status(200).json({
     ok: true,
@@ -1679,51 +1686,35 @@ async function readBookingForNotifications(bookingId, sbHdr) {
   }
 }
 
-async function sendCompletionNotifications(args) {
-  const summary = { sent: [], failed: [], skipped: [] };
+async function sendCompletionNotifications(args, sbHdr) {
   if (!args.booking) {
     console.error(
       '[mechanic-complete] booking row unavailable - no invoice, no review request sent'
     );
-    summary.failed.push('booking-read');
-    return summary;
+    return { sent: [], failed: ['booking-read'], skipped: [] };
   }
-  if (!args.booking.client_email) summary.skipped.push('email:no-address-on-file');
-  if (!args.booking.client_phone) summary.skipped.push('sms:no-number-on-file');
+  const skipped = [];
+  if (!args.booking.client_email) skipped.push('email:no-address-on-file');
+  if (!args.booking.client_phone) skipped.push('sms:no-number-on-file');
 
   const calls = buildCompletionCalls(args);
-  const results = await Promise.allSettled(
-    calls.map((c) =>
-      fetch(`${SELF_BASE_URL}${c.path}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
-        },
-        body: JSON.stringify(c.body),
-      })
-    )
-  );
-  results.forEach((r, i) => {
-    const name = calls[i].path.replace('/api/', '');
-    if (r.status === 'fulfilled' && r.value.ok) {
-      summary.sent.push(name);
-    } else {
-      summary.failed.push(name);
-      const why =
-        r.status === 'rejected' ? r.reason?.message || String(r.reason) : `HTTP ${r.value.status}`;
-      // Loud on purpose. This going quiet is the whole reason the chain moved
-      // off the mechanic's phone.
-      console.error(
-        '[mechanic-complete] notification failed:',
-        name,
-        'booking',
-        args.booking.id,
-        why
-      );
-    }
+  const summary = await dispatchCompletionCalls(calls, {
+    baseUrl: SELF_BASE_URL,
+    internalToken: process.env.INTERNAL_API_SECRET,
+    bookingId: args.booking.id,
   });
-  return summary;
+
+  // Written down even when everything succeeded: the sweep needs to be able to
+  // tell "all three landed" from "this booking predates the column", and only a
+  // stored record can say that.
+  await recordCompletionOutcome({
+    bookingId: args.booking.id,
+    outcome: summary.outcome,
+    supabaseUrl: SUPABASE_URL,
+    sbHdr,
+  });
+
+  return { ...summary, skipped };
 }
 
 async function handleClientCancel(req, res) {

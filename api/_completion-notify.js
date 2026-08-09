@@ -11,8 +11,12 @@
 // section 14): a chain of steps hanging off a browser staying alive.
 //
 // So the chain moved to api/auth.js, next to the write that completes the job.
-// This file holds only the arithmetic and the payload shapes, with no network in
-// it, so the numbers on a client's invoice can be asserted in a unit test.
+//
+// The arithmetic and the payload shapes are pure functions with no network in
+// them, so the numbers on a client's invoice can be asserted in a unit test.
+// The dispatch and the bookkeeping live here too, at the bottom, because two
+// callers need the exact same behaviour: api/auth.js on completion, and
+// api/send-cron.js?type=completion-retry when that first attempt failed.
 //
 // The figures deliberately reproduce calcChargeBreakdown() in js/mechanic.js
 // line for line - this was a move, not a re-pricing. The one thing that does
@@ -131,4 +135,85 @@ export function buildCompletionCalls({
   }
 
   return calls;
+}
+
+// ── What still has to go out ─────────────────────────────────────────────────
+
+export function callName(path) {
+  return path.replace('/api/', '');
+}
+
+// Given what the booking already recorded, which of the calls still need
+// sending. Anything already 'sent' is never resent - that is the whole point of
+// storing the outcome per channel instead of a single "notified: yes/no" flag.
+// A booking with no record at all (completed before the column existed) yields
+// nothing: we cannot tell "nothing was sent" from "sent before we tracked it",
+// and guessing would mail an old client a second invoice.
+export function pendingCalls(calls, recorded) {
+  if (!recorded || typeof recorded !== 'object') return [];
+  return calls.filter((c) => recorded[callName(c.path)] && recorded[callName(c.path)] !== 'sent');
+}
+
+// Fires the calls and returns { sent, failed, outcome }. Never throws: a
+// notification failing must not take down whatever asked for it.
+export async function dispatchCompletionCalls(calls, { baseUrl, internalToken, bookingId } = {}) {
+  const summary = { sent: [], failed: [], outcome: {} };
+  const results = await Promise.allSettled(
+    calls.map((c) =>
+      fetch(`${baseUrl}${c.path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-token': internalToken || '',
+        },
+        body: JSON.stringify(c.body),
+      })
+    )
+  );
+  results.forEach((r, i) => {
+    const name = callName(calls[i].path);
+    if (r.status === 'fulfilled' && r.value.ok) {
+      summary.sent.push(name);
+      summary.outcome[name] = 'sent';
+    } else {
+      summary.failed.push(name);
+      summary.outcome[name] = 'failed';
+      const why =
+        r.status === 'rejected' ? r.reason?.message || String(r.reason) : `HTTP ${r.value.status}`;
+      // Loud on purpose. This going quiet is the whole reason the chain moved
+      // off the mechanic's phone.
+      console.error('[completion-notify] failed:', name, 'booking', bookingId, why);
+    }
+  });
+  return summary;
+}
+
+// Best-effort: the column is behind scripts/add-completion-notifications.sql.
+// If that migration has not been run, this quietly does nothing and the send
+// above still happened - the retry net is what is missing, not the invoice.
+export async function recordCompletionOutcome({ bookingId, outcome, supabaseUrl, sbHdr }) {
+  if (!bookingId || !outcome || !Object.keys(outcome).length) return false;
+  try {
+    const r = await fetch(
+      `${supabaseUrl}/rest/v1/bookings?id=eq.${encodeURIComponent(bookingId)}`,
+      {
+        method: 'PATCH',
+        headers: { ...sbHdr, Prefer: 'return=minimal' },
+        body: JSON.stringify({ completion_notifications: outcome }),
+      }
+    );
+    if (!r.ok) {
+      console.warn(
+        '[completion-notify] could not record outcome for',
+        bookingId,
+        '- has scripts/add-completion-notifications.sql been run?',
+        r.status
+      );
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('[completion-notify] could not record outcome:', e.message);
+    return false;
+  }
 }

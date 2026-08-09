@@ -1,7 +1,7 @@
 {
   "crons": [
     { "path": "/api/send-reminders?type=2h", "schedule": "0 22 * * *" },
-    { "path": "/api/send-cron?type=all",     "schedule": "0 9 * * *"  }
+    { "path": "/api/send-cron?type=all", "schedule": "0 9 * * *" }
   ],
   "rewrites": [
     {
@@ -27,6 +27,10 @@
     {
       "source": "/api/send-service-reminders",
       "destination": "/api/send-cron?type=service"
+    },
+    {
+      "source": "/api/retry-completion",
+      "destination": "/api/send-cron?type=completion-retry"
     },
     {
       "source": "/api/cancel-subscription",
