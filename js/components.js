@@ -171,15 +171,15 @@ export function createBookingCard(booking) {
     rating,
   } = booking;
   const STATUS_MAP = {
-    pending: { label: 'Pending', bg: '#D977061A', color: '#D97706', border: '#D97706' },
+    pending: { label: 'Pending', bg: '#D977061A', color: '#B45309', border: '#B45309' },
     confirmed: { label: 'Confirmed', bg: '#1E40AF1A', color: '#1E40AF', border: '#1E40AF' },
-    enroute: { label: 'En Route', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
-    en_route: { label: 'En Route', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
-    in_progress: { label: 'In Progress', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
-    inprogress: { label: 'In Progress', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
-    arrived: { label: 'Arrived', bg: '#16A34A1A', color: '#16A34A', border: '#16A34A' },
+    enroute: { label: 'En Route', bg: '#16A34A1A', color: '#15803D', border: '#15803D' },
+    en_route: { label: 'En Route', bg: '#16A34A1A', color: '#15803D', border: '#15803D' },
+    in_progress: { label: 'In Progress', bg: '#16A34A1A', color: '#15803D', border: '#15803D' },
+    inprogress: { label: 'In Progress', bg: '#16A34A1A', color: '#15803D', border: '#15803D' },
+    arrived: { label: 'Arrived', bg: '#16A34A1A', color: '#15803D', border: '#15803D' },
     completed: { label: 'Completed', bg: '#64748B1A', color: '#64748B', border: '#64748B' },
-    cancelled: { label: 'Cancelled', bg: '#DC26261A', color: '#DC2626', border: '#DC2626' },
+    cancelled: { label: 'Cancelled', bg: '#DC26261A', color: '#CF2020', border: '#CF2020' },
   };
   const s = STATUS_MAP[status] || STATUS_MAP.pending;
   const MONTHS = [

@@ -36,12 +36,12 @@ const CHECKLIST_LABELS = {
 
 function statusBadge(s) {
   if (s === 'ok')
-    return '<span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">✅ OK</span>';
+    return '<span style="background:#ECFDF5;color:#15803D;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">✅ OK</span>';
   if (s === 'warn')
-    return '<span style="background:#FFFBEB;color:#D97706;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">⚠️ Warn</span>';
+    return '<span style="background:#FFFBEB;color:#B45309;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">⚠️ Warn</span>';
   if (s === 'critical')
-    return '<span style="background:#FEF2F2;color:#DC2626;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">🔴 Critical</span>';
-  return '<span style="color:#9CA3AF;font-size:11px">—</span>';
+    return '<span style="background:#FEF2F2;color:#CF2020;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">🔴 Critical</span>';
+  return '<span style="color:#94A3B8;font-size:11px">—</span>';
 }
 
 function formatDuration(secs) {
@@ -87,10 +87,10 @@ function buildPDF({
 
     const NAVY = '#0D1F3C';
     const BLUE = '#2563EB';
-    const GRAY = '#6B7280';
-    const GREEN = '#059669';
-    const AMBER = '#D97706';
-    const RED = '#DC2626';
+    const GRAY = '#475569';
+    const GREEN = '#15803D';
+    const AMBER = '#B45309';
+    const RED = '#CF2020';
     const W = 495; // usable width
 
     // Header bar
@@ -135,7 +135,7 @@ function buildPDF({
 
     // Divider
     const yDiv = yMeta + 80;
-    doc.moveTo(50, yDiv).lineTo(545, yDiv).stroke('#E5E7EB');
+    doc.moveTo(50, yDiv).lineTo(545, yDiv).stroke('#E2E8F0');
 
     // Service details
     let y = yDiv + 16;
@@ -226,7 +226,7 @@ function buildPDF({
     if (tip > 0) {
       doc
         .fontSize(10)
-        .fillColor('#059669')
+        .fillColor('#15803D')
         .font('Helvetica')
         .text('Tip for your mechanic', 66, y)
         .text(`$${tip.toFixed(2)}`, 66, y, { width: W - 32, align: 'right' });
@@ -262,7 +262,7 @@ function buildPDF({
       doc.rect(50, y, W, notesH).fill('#F7F8FA');
       doc
         .fontSize(10)
-        .fillColor('#374151')
+        .fillColor('#475569')
         .text(mechNotes, 66, y + 10, { width: W - 32 });
       y += notesH + 8;
     }
@@ -297,7 +297,7 @@ function buildPDF({
         if (!status) return;
         const color = STATUS_COLOR[status] || GRAY;
         const badge = STATUS_LABEL[status] || status.toUpperCase();
-        doc.fontSize(10).fillColor('#374151').text(label, 50, y, { width: 300 });
+        doc.fontSize(10).fillColor('#475569').text(label, 50, y, { width: 300 });
         doc
           .fontSize(8)
           .fillColor(color)
@@ -307,7 +307,7 @@ function buildPDF({
           .moveTo(50, y - 4)
           .lineTo(545, y - 4)
           .lineWidth(0.3)
-          .stroke('#F3F4F6')
+          .stroke('#F1F5F9')
           .lineWidth(1);
       });
 
@@ -319,7 +319,7 @@ function buildPDF({
         doc.rect(50, y, W, nh).fill('#F7F8FA');
         doc
           .fontSize(10)
-          .fillColor('#374151')
+          .fillColor('#475569')
           .text(checklistNotes, 66, y + 10, { width: W - 32 });
         y += nh + 8;
       }
@@ -459,8 +459,8 @@ export default async function handler(req, res) {
         const status = checklist[id];
         if (!status) return '';
         return `<tr>
-        <td style="padding:6px 12px;border-bottom:1px solid #F3F4F6;font-size:13px;color:#374151">${label}</td>
-        <td style="padding:6px 12px;border-bottom:1px solid #F3F4F6;text-align:right">${statusBadge(status)}</td>
+        <td style="padding:6px 12px;border-bottom:1px solid #F1F5F9;font-size:13px;color:#475569">${label}</td>
+        <td style="padding:6px 12px;border-bottom:1px solid #F1F5F9;text-align:right">${statusBadge(status)}</td>
       </tr>`;
       })
       .filter(Boolean)
@@ -486,21 +486,21 @@ export default async function handler(req, res) {
         <!-- Summary row -->
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
           <div style="flex:1;min-width:160px;background:#F7F8FA;border-radius:10px;padding:14px 16px">
-            <div style="font-size:11px;color:#6B7280;font-weight:600;text-transform:uppercase;margin-bottom:4px">Client</div>
+            <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Client</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${clientName}</div>
           </div>
           <div style="flex:1;min-width:160px;background:#F7F8FA;border-radius:10px;padding:14px 16px">
-            <div style="font-size:11px;color:#6B7280;font-weight:600;text-transform:uppercase;margin-bottom:4px">Service</div>
+            <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Service</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${service}</div>
           </div>
           <div style="flex:1;min-width:160px;background:#F7F8FA;border-radius:10px;padding:14px 16px">
-            <div style="font-size:11px;color:#6B7280;font-weight:600;text-transform:uppercase;margin-bottom:4px">Date</div>
+            <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Date</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${date || invoiceDate}</div>
           </div>
           ${
             durationSecs
               ? `<div style="flex:1;min-width:160px;background:#F7F8FA;border-radius:10px;padding:14px 16px">
-            <div style="font-size:11px;color:#6B7280;font-weight:600;text-transform:uppercase;margin-bottom:4px">Duration</div>
+            <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Duration</div>
             <div style="font-size:14px;font-weight:600;color:#0D1F3C">${formatDuration(durationSecs)}</div>
           </div>`
               : ''
@@ -516,12 +516,12 @@ export default async function handler(req, res) {
         </div>
 
         <!-- Mechanic -->
-        <div style="font-size:12px;color:#6B7280;margin-bottom:20px">Mechanic: <strong style="color:#0D1F3C">${mechName}</strong></div>
+        <div style="font-size:12px;color:#475569;margin-bottom:20px">Mechanic: <strong style="color:#0D1F3C">${mechName}</strong></div>
 
         <!-- Checklist -->
         <div style="margin-bottom:24px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B7280;margin-bottom:10px">Pre-Service Inspection</div>
-          <table style="width:100%;border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin-bottom:10px">Pre-Service Inspection</div>
+          <table style="width:100%;border-collapse:collapse;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
             ${rows}
           </table>
         </div>
@@ -529,8 +529,8 @@ export default async function handler(req, res) {
         ${
           checklistNotes
             ? `<div style="margin-bottom:24px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B7280;margin-bottom:8px">Inspection Notes</div>
-          <div style="background:#F7F8FA;border-radius:10px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${checklistNotes}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin-bottom:8px">Inspection Notes</div>
+          <div style="background:#F7F8FA;border-radius:10px;padding:14px 16px;font-size:13px;color:#475569;line-height:1.7">${checklistNotes}</div>
         </div>`
             : ''
         }
@@ -538,8 +538,8 @@ export default async function handler(req, res) {
         ${
           mechNotes
             ? `<div style="margin-bottom:24px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B7280;margin-bottom:8px">Work Completed</div>
-          <div style="background:#F7F8FA;border-radius:10px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${mechNotes}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin-bottom:8px">Work Completed</div>
+          <div style="background:#F7F8FA;border-radius:10px;padding:14px 16px;font-size:13px;color:#475569;line-height:1.7">${mechNotes}</div>
         </div>`
             : ''
         }
@@ -547,21 +547,21 @@ export default async function handler(req, res) {
         ${
           photoBeforeUrl || photoAfterUrl
             ? `<div style="margin-bottom:24px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B7280;margin-bottom:10px">Photos</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin-bottom:10px">Photos</div>
           <div style="display:flex;gap:16px;flex-wrap:wrap">
             ${
               photoBeforeUrl
                 ? `<div style="flex:1;min-width:200px">
-              <div style="font-size:11px;color:#6B7280;margin-bottom:6px">Before</div>
-              <img src="${photoBeforeUrl}" alt="Before" style="width:100%;border-radius:8px;border:1px solid #E5E7EB"/>
+              <div style="font-size:11px;color:#475569;margin-bottom:6px">Before</div>
+              <img src="${photoBeforeUrl}" alt="Before" style="width:100%;border-radius:8px;border:1px solid #E2E8F0"/>
             </div>`
                 : ''
             }
             ${
               photoAfterUrl
                 ? `<div style="flex:1;min-width:200px">
-              <div style="font-size:11px;color:#6B7280;margin-bottom:6px">After</div>
-              <img src="${photoAfterUrl}" alt="After" style="width:100%;border-radius:8px;border:1px solid #E5E7EB"/>
+              <div style="font-size:11px;color:#475569;margin-bottom:6px">After</div>
+              <img src="${photoAfterUrl}" alt="After" style="width:100%;border-radius:8px;border:1px solid #E2E8F0"/>
             </div>`
                 : ''
             }
@@ -606,7 +606,7 @@ export default async function handler(req, res) {
   .total-box{background:#f5f5f7;border-radius:12px;padding:20px 24px;margin:24px 0}
   .total-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}
   .total-final{display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:#0D1F3C;margin-top:12px;padding-top:12px;border-top:2px solid #d1d1d6}
-  .badge{display:inline-block;background:#ECFDF5;color:#059669;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge{display:inline-block;background:#ECFDF5;color:#15803D;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
   .footer{background:#f5f5f7;padding:24px 40px;text-align:center;font-size:12px;color:#6e6e73}
   .footer a{color:#2563EB;text-decoration:none}
 </style>
@@ -652,11 +652,11 @@ export default async function handler(req, res) {
     </div>
 
     <div class="total-box">
-      <div class="total-row"><span style="color:#9CA3AF;text-decoration:line-through">Call-out fee (paid at booking)</span><span style="color:#9CA3AF;text-decoration:line-through">$${calloutFeeVal.toFixed(2)}</span></div>
+      <div class="total-row"><span style="color:#94A3B8;text-decoration:line-through">Call-out fee (paid at booking)</span><span style="color:#94A3B8;text-decoration:line-through">$${calloutFeeVal.toFixed(2)}</span></div>
       <div class="total-row"><span>Service</span><span>$${finalPrice.toFixed(2)}</span></div>
       ${partsRows.map((p) => `<div class="total-row"><span style="padding-left:12px">${p.label}</span><span>$${p.value.toFixed(2)}</span></div>`).join('')}
-      ${discountAmt > 0 ? `<div class="total-row"><span style="color:#059669">Discount (at booking)</span><span style="color:#059669">−$${discountAmt.toFixed(2)}</span></div>` : ''}
-      ${mechDiscount > 0 ? `<div class="total-row"><span style="color:#059669">Discount${mechDiscountCode ? ' (' + mechDiscountCode + ')' : ''}</span><span style="color:#059669">−$${mechDiscount.toFixed(2)}</span></div>` : ''}
+      ${discountAmt > 0 ? `<div class="total-row"><span style="color:#15803D">Discount (at booking)</span><span style="color:#15803D">−$${discountAmt.toFixed(2)}</span></div>` : ''}
+      ${mechDiscount > 0 ? `<div class="total-row"><span style="color:#15803D">Discount${mechDiscountCode ? ' (' + mechDiscountCode + ')' : ''}</span><span style="color:#15803D">−$${mechDiscount.toFixed(2)}</span></div>` : ''}
       <div class="total-row"><span style="color:#6e6e73">GST included</span><span style="color:#6e6e73">$${gst.toFixed(2)}</span></div>
       <div class="total-final"><span>Total general (AUD)</span><span>$${grandTotal.toFixed(2)}</span></div>
       ${tip > 0 ? `<div class="total-row" style="margin-top:8px"><span>💚 Tip for your mechanic</span><span>$${tip.toFixed(2)}</span></div><div class="total-final"><span>Total charged (AUD)</span><span>$${totalCollected.toFixed(2)}</span></div>` : ''}
@@ -665,7 +665,7 @@ export default async function handler(req, res) {
     ${nextService ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#2563EB;margin-bottom:24px">🔧 <strong>Next service reminder:</strong> ${nextService}</div>` : ''}
 
     <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
-      <p style="font-size:13px;color:#D97706;font-weight:600;margin:0 0 10px">How was your service?</p>
+      <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 10px">How was your service?</p>
       <div style="font-size:24px;letter-spacing:4px;margin-bottom:12px">⭐⭐⭐⭐⭐</div>
       <a href="https://drbikesydney.com.au/?review=${safeBookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:12px;border-radius:8px;font-weight:700;font-size:13px">Rate your mechanic →</a>
     </div>

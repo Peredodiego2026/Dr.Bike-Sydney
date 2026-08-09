@@ -47,17 +47,17 @@ export default async function handler(req, res) {
       </div>
       <div style="padding:32px 24px">
         <h2 style="color:#0D1F3C">Thanks for subscribing${name ? ', ' + name : ''}! 🚲</h2>
-        <p style="color:#374151;line-height:1.7;margin-top:12px">
+        <p style="color:#475569;line-height:1.7;margin-top:12px">
           You'll receive cycling tips, maintenance reminders and exclusive offers for Dr. Bike Sydney members.
         </p>
         <div style="margin:24px 0">
           <a href="https://drbikesydney.com.au" style="background:#0A58CA;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block">Book a Service →</a>
         </div>
-        <p style="font-size:13px;color:#9CA3AF">Use code <strong>WELCOME10</strong> for 10% off your first booking.</p>
+        <p style="font-size:13px;color:#94A3B8">Use code <strong>WELCOME10</strong> for 10% off your first booking.</p>
       </div>
-      <div style="padding:16px 24px;background:#F7F8FA;font-size:12px;color:#9CA3AF;text-align:center">
+      <div style="padding:16px 24px;background:#F7F8FA;font-size:12px;color:#94A3B8;text-align:center">
         Dr. Bike Sydney · 0433 963 250 · contact@drbikesydney.com.au<br>
-        <a href="https://drbikesydney.com.au/unsubscribe?email=${encodeURIComponent(email)}" style="color:#9CA3AF">Unsubscribe</a>
+        <a href="https://drbikesydney.com.au/unsubscribe?email=${encodeURIComponent(email)}" style="color:#94A3B8">Unsubscribe</a>
       </div>
     </div>`;
 

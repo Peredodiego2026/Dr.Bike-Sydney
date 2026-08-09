@@ -46,11 +46,11 @@
     /* Progress bar */
     .progress-wrap{max-width:600px;margin:32px auto 0;padding:0 24px}
     .progress-bar{height:6px;background:rgba(255,255,255,.25);border-radius:3px;overflow:hidden}
-    .progress-fill{height:100%;background:#059669;border-radius:3px;transition:width .4s}
+    .progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
     .progress-label{font-size:12px;opacity:.7;margin-top:6px;text-align:right}
     /* Quiz */
     .quiz-section{max-width:640px;margin:0 auto;padding:40px 24px}
-    .question-card{background:#fff;border:2px solid #E5E7EB;border-radius:16px;padding:28px;margin-bottom:24px;display:none}
+    .question-card{background:#fff;border:2px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px;display:none}
     .question-card.active{display:block;animation:fadeIn .3s}
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .q-icon{font-size:40px;margin-bottom:12px;display:block}
@@ -58,7 +58,7 @@
     .q-title{font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:8px}
     .q-desc{font-size:14px;color:#4B5563;line-height:1.6;margin-bottom:24px}
     .options{display:grid;gap:10px}
-    .opt-btn{width:100%;padding:14px 16px;border-radius:10px;border:2px solid #E5E7EB;background:#F9FAFB;cursor:pointer;text-align:left;font-size:14px;font-weight:600;color:#0D1F3C;transition:.2s;display:flex;align-items:center;gap:10px}
+    .opt-btn{width:100%;padding:14px 16px;border-radius:10px;border:2px solid var(--border);background:#F9FAFB;cursor:pointer;text-align:left;font-size:14px;font-weight:600;color:#0D1F3C;transition:.2s;display:flex;align-items:center;gap:10px}
     .opt-btn:hover{border-color:#0A58CA;background:#EEF3FC}
     .opt-btn .opt-icon{font-size:18px;width:24px;flex-shrink:0}
     /* Result */
@@ -67,15 +67,15 @@
     .result-icon{font-size:64px;margin-bottom:16px}
     .result-title{font-size:28px;font-weight:900;margin-bottom:10px}
     .result-desc{font-size:15px;line-height:1.7;max-width:480px;margin:0 auto 28px;opacity:.85}
-    .result-green{background:#ECFDF5;border:2px solid #059669;color:#065F46}
-    .result-yellow{background:#FFFBEB;border:2px solid #D97706;color:#92400E}
-    .result-red{background:#FEF2F2;border:2px solid #DC2626;color:#991B1B}
+    .result-green{background:#ECFDF5;border:2px solid var(--green);color:#065F46}
+    .result-yellow{background:#FFFBEB;border:2px solid #B45309;color:#92400E}
+    .result-red{background:#FEF2F2;border:2px solid #CF2020;color:#991B1B}
     .cta-book{display:inline-block;background:#0A58CA;color:#fff;padding:16px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;margin:8px}
     .cta-call{display:inline-block;background:#0D1F3C;color:#fff;padding:16px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;margin:8px}
     .issues-list{background:rgba(255,255,255,.6);border-radius:10px;padding:16px;margin:20px auto;max-width:400px;text-align:left}
     .issues-list h4{font-size:13px;font-weight:700;text-transform:uppercase;margin-bottom:10px;opacity:.7}
     .issues-list li{font-size:14px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.08);list-style:none;display:flex;align-items:center;gap:8px}
-    .restart-btn{background:transparent;border:none;font-size:13px;color:#6B7280;cursor:pointer;margin-top:16px;text-decoration:underline}
+    .restart-btn{background:transparent;border:none;font-size:13px;color:var(--gray);cursor:pointer;margin-top:16px;text-decoration:underline}
     /* Info section */
     .info-section{background:#F7F8FA;padding:56px 24px}
     .info-inner{max-width:860px;margin:0 auto}
@@ -331,7 +331,7 @@ function restart(){
       <input type="email" id="bcc-nl-email" placeholder="Email address" aria-label="Email address"
         style="flex:1;padding:12px;border:none;border-radius:8px;font-size:14px">
       <button onclick="bcNL()"
-        style="background:#059669;color:#fff;border:none;border-radius:8px;padding:12px 16px;font-weight:700;cursor:pointer;font-size:13px">
+        style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:12px 16px;font-weight:700;cursor:pointer;font-size:13px">
         Join
       </button>
     </div>

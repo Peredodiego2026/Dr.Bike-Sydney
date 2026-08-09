@@ -6,11 +6,11 @@
   --blue: #2563eb;
   --blue-dark: #1e40af;
   --blue-lt: #eff6ff;
-  --green: #16a34a;
+  --green: #15803d;
   --green-lt: #f0fdf4;
-  --amber: #d97706;
+  --amber: #b45309;
   --amber-lt: #fffbeb;
-  --red: #dc2626;
+  --red: #cf2020;
   --red-lt: #fef2f2;
   --navy: #0d1f3c;
   --gray: #475569;
@@ -20,12 +20,40 @@
   --surface: #f8fafc;
   --white: #ffffff;
 
+  /* ── Colours the palette did not have a name for ─────────────────────────
+     These are NOT new colours. Every one of them was already shipping, written
+     by hand, in two to five surfaces at once - a purple badge here, a star
+     rating there - with nothing tying them together. Naming them is a rename,
+     not a redesign: docs/PENDIENTES.md 12.14 measured the before and after and
+     no pixel moves.
+
+     Do NOT collapse these into the tokens above. They are deliberately
+     different colours: --amber-bright is the amber of a star rating, which has
+     to read as brighter than the --amber of a warning chip, and --green-bright
+     is the "moving now" green of an en-route job, not the "done" green. */
+  --purple: #7c3aed; /* premium / plan badges          */
+  --purple-lt: #f5f3ff; /* their background               */
+  --blue-soft: #60a5fa; /* blue that reads on dark navy   */
+  --blue-edge: #bfdbfe; /* border of an info panel        */
+  --blue-deep: #0a58ca; /* avatars, confirmed status      */
+  --blue-tint: #eef3fc; /* soft blue panel background     */
+  --amber-bright: #f59e0b; /* star ratings, pending status   */
+  --amber-ink: #92400e; /* text ON --amber-lt             */
+  --amber-tint: #fef9c3; /* soft amber panel background    */
+  --red-bright: #ef4444; /* inline error text              */
+  --red-edge: #fecaca; /* border of an error panel       */
+  --green-bright: #22c55e; /* en-route: moving, not finished */
+  --green-ink: #065f46; /* text ON --green-lt             */
+  --green-tint: #ecfdf5; /* soft green panel background    */
+  --slate: #64748b; /* between --gray and --gray-lt   */
+  --cyan: #0891b2; /* avatars                        */
+
   /* ── Shorthand aliases (mechanic.css / admin.css compat) ───────────────── */
   --off: #f8fafc; /* = --surface   */
   --mgray: #475569; /* = --gray      */
   --blue2: #1e3a8a; /* = --blue-dark */
-  --gold: #d97706; /* = --amber     */
-  --orange: #d97706; /* = --amber     */
+  --gold: #b45309; /* = --amber     */
+  --orange: #b45309; /* = --amber     */
   --navy2: #1e293b; /* slate-800     */
   --wa: #25d366; /* WhatsApp green */
   --wa-lt: #edfbf3;

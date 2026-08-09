@@ -12,19 +12,19 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,sans-serif}
 body{background:#0D1F3C;color:#fff;padding:20px;line-height:1.5}
 h1{font-size:22px;margin-bottom:16px;color:#fff}
-.subtitle{font-size:13px;color:#9CA3AF;margin-bottom:24px}
-.step{background:#1E2D4D;border-left:4px solid #6B7280;border-radius:8px;padding:14px 16px;margin-bottom:10px}
-.step.pending{border-color:#6B7280}
+.subtitle{font-size:13px;color:var(--gray-lt);margin-bottom:24px}
+.step{background:#1E2D4D;border-left:4px solid var(--gray);border-radius:8px;padding:14px 16px;margin-bottom:10px}
+.step.pending{border-color:var(--gray)}
 .step.ok{border-color:#10B981;background:#0F3D2C}
 .step.fail{border-color:#EF4444;background:#3D1515}
 .step.warn{border-color:#F59E0B;background:#3D2A0F}
 .step .label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;opacity:0.7}
 .step .value{font-size:14px;font-weight:600;word-break:break-all}
-.step .detail{font-size:11px;color:#9CA3AF;margin-top:6px;word-break:break-all}
+.step .detail{font-size:11px;color:var(--gray-lt);margin-top:6px;word-break:break-all}
 .pr-button-area{margin-top:24px;padding:16px;background:#fff;border-radius:10px;min-height:60px}
 .pr-button-area-title{color:#0D1F3C;font-size:13px;font-weight:700;margin-bottom:8px}
 #pr-button{min-height:48px}
-.final{margin-top:20px;padding:14px;background:#1E2D4D;border-radius:8px;font-size:12px;color:#9CA3AF}
+.final{margin-top:20px;padding:14px;background:#1E2D4D;border-radius:8px;font-size:12px;color:var(--gray-lt)}
 </style>
 </head>
 <body>
@@ -36,7 +36,7 @@ h1{font-size:22px;margin-bottom:16px;color:#fff}
 <div class="pr-button-area">
   <div class="pr-button-area-title">If Apple Pay is supported, it appears below:</div>
   <div id="pr-button"></div>
-  <div id="pr-status" style="font-size:11px;color:#6B7280;margin-top:8px"></div>
+  <div id="pr-status" style="font-size:11px;color:var(--gray);margin-top:8px"></div>
 </div>
 
 <div class="final" id="conclusion">Running checks…</div>

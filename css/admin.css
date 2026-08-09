@@ -149,16 +149,16 @@ body {
   border: 1px solid;
 }
 .coupon-btn-deactivate {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--red-bright);
+  border-color: var(--red-bright);
 }
 .coupon-btn-activate {
   color: var(--green);
   border-color: var(--green);
 }
 .coupon-btn-delete {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--red-bright);
+  border-color: var(--red-bright);
   background: rgba(239, 68, 68, 0.08);
 }
 [data-theme='dark'] .coupon-btn-deactivate {
@@ -183,7 +183,7 @@ body {
   color: #98989f;
 }
 [data-theme='dark'] .card-action {
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .topbar {
   background: #1a2740;
@@ -239,7 +239,7 @@ body {
 [data-theme='dark'] .suburb-tag {
   background: rgba(37, 99, 235, 0.2);
   border-color: rgba(37, 99, 235, 0.3);
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .add-suburb-inp {
   background: #1a2740;
@@ -273,7 +273,7 @@ body {
   color: #636366;
 }
 [data-theme='dark'] .mobile-bottom-nav a.active {
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .sb-overlay {
   background: rgba(0, 0, 0, 0.75);
@@ -312,7 +312,7 @@ body {
   color: #98989f;
 }
 [data-theme='dark'] .seg-vip {
-  background: #7c3aed;
+  background: var(--purple);
   color: #fff;
 }
 [data-theme='dark'] .seg-reg {
@@ -426,7 +426,7 @@ body {
 }
 /* Notification badges */
 [data-theme='dark'] .sb-badge {
-  background: #dc2626;
+  background: #cf2020;
 }
 /* Btn ghost */
 [data-theme='dark'] .btn-save {
@@ -497,7 +497,7 @@ body {
 }
 [data-theme='dark'] .mech-tag.v1 {
   background: rgba(24, 72, 200, 0.2);
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .mech-tag.v2 {
   background: rgba(217, 119, 6, 0.2);
@@ -605,7 +605,7 @@ body {
 }
 .sb-badge {
   margin-left: auto;
-  background: #ef4444;
+  background: var(--red-bright);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -705,7 +705,7 @@ body {
   right: 6px;
   width: 8px;
   height: 8px;
-  background: #ef4444;
+  background: var(--red-bright);
   border-radius: 50%;
   border: 2px solid var(--white);
 }
@@ -769,10 +769,10 @@ body {
   background: var(--green);
 }
 .kpi-card.orange::before {
-  background: #d97706;
+  background: #b45309;
 }
 .kpi-card.red::before {
-  background: #dc2626;
+  background: #cf2020;
 }
 /* purple/teal/indigo folded into the 4 real tokens above - no more one-off hues */
 .kpi-card.purple::before {
@@ -816,11 +816,11 @@ body {
   border-radius: 20px;
 }
 .kpi-trend.up {
-  color: #16a34a;
+  color: #15803d;
   background: #f0fdf4;
 }
 .kpi-trend.dn {
-  color: #ef4444;
+  color: var(--red-bright);
   background: #fef2f2;
 }
 
@@ -911,27 +911,27 @@ body {
 }
 .status.pending {
   background: #fffbeb;
-  color: #d97706;
+  color: #b45309;
 }
 .status.enroute {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 .status.in_progress {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 .status.arrived {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 .status.completed {
   background: #f1f5f9;
-  color: #64748b;
+  color: var(--slate);
 }
 .status.cancelled {
   background: #fef2f2;
-  color: #dc2626;
+  color: #cf2020;
 }
 .status-dot {
   width: 5px;
@@ -954,7 +954,7 @@ body {
 }
 .mech-tag.v2 {
   background: var(--amber-lt);
-  color: #d97706;
+  color: #b45309;
 }
 
 /* SCHEDULE */
@@ -1104,7 +1104,7 @@ body {
 }
 .van-online.on {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 .van-online.off {
   background: var(--border-lt);
@@ -1211,7 +1211,7 @@ body {
    for the rest - so one colour carries one meaning per screen. Red stays on
    at-risk, where "something is wrong" matches what red means everywhere else. */
 .seg-vip {
-  background: #7c3aed;
+  background: var(--purple);
   color: #fff;
 }
 .seg-reg {
@@ -1226,7 +1226,7 @@ body {
 }
 .seg-risk {
   background: #fef2f2;
-  color: #dc2626;
+  color: #cf2020;
 }
 .cl-stats {
   display: grid;
@@ -1301,11 +1301,11 @@ body {
   color: #f2f2f7;
 }
 .pl-val.pos {
-  color: #16a34a;
+  color: #15803d;
   font-weight: 600;
 }
 .pl-val.neg {
-  color: #ef4444;
+  color: var(--red-bright);
 }
 .pl-val.total {
   color: var(--blue);
@@ -1348,7 +1348,7 @@ body {
   background: var(--amber-lt);
 }
 .bas-cell--gst-sales .bas-cell-label {
-  color: #92400e;
+  color: var(--amber-ink);
 }
 .bas-cell--gst-sales .bas-cell-value {
   color: #b45309;
@@ -1357,7 +1357,7 @@ body {
   background: #f0fdf4;
 }
 .bas-cell--gst-purchases .bas-cell-label {
-  color: #065f46;
+  color: var(--green-ink);
 }
 .bas-cell--gst-purchases .bas-cell-value {
   color: var(--green);
@@ -1377,7 +1377,7 @@ body {
   background: var(--amber-lt);
   border-radius: 8px;
   font-size: 12px;
-  color: #92400e;
+  color: var(--amber-ink);
 }
 [data-theme='dark'] .bas-cell--sales {
   background: #152035;
@@ -1404,7 +1404,7 @@ body {
 }
 [data-theme='dark'] .bas-cell--net .bas-cell-label,
 [data-theme='dark'] .bas-cell--net .bas-cell-value {
-  color: #60a5fa;
+  color: var(--blue-soft);
 }
 [data-theme='dark'] .bas-warn {
   background: rgba(245, 158, 11, 0.12);
@@ -1998,13 +1998,13 @@ body {
     border-left: 3px solid #1e40af;
   }
   .kpi.green {
-    border-left-color: #16a34a;
+    border-left-color: #15803d;
   }
   .kpi.orange {
-    border-left-color: #d97706;
+    border-left-color: #b45309;
   }
   .kpi.red {
-    border-left-color: #dc2626;
+    border-left-color: #cf2020;
   }
   .kpi-label {
     font-size: 10px;
@@ -2143,9 +2143,9 @@ body {
    steps were validated against the dark card surface (#152035), not derived
    from the light ones.
    Ramps validated with the dataviz skill's validate_palette.js:
-     ordinal light  #60a5fa #3b82f6 #2563eb #1e40af  (lightest 2.54:1 on #fff)
-     ordinal dark   #2563eb #3b82f6 #60a5fa #93c5fd  (darkest  3.15:1 on #152035)
-     series light   #2563eb 5.17:1   series dark #60a5fa 6.40:1
+     ordinal light  var(--blue-soft) #3b82f6 #2563eb #1e40af  (lightest 2.54:1 on #fff)
+     ordinal dark   #2563eb #3b82f6 var(--blue-soft) #93c5fd  (darkest  3.15:1 on #152035)
+     series light   #2563eb 5.17:1   series dark var(--blue-soft) 6.40:1
    ══════════════════════════════════════════════════════════════════════════ */
 #page-analytics {
   --an-surface: #ffffff;
@@ -2162,8 +2162,8 @@ body {
   --an-ord-3: #2563eb;
   --an-ord-4: #1e40af;
   --an-good: #059669;
-  --an-warn: #d97706;
-  --an-crit: #dc2626;
+  --an-warn: #b45309;
+  --an-crit: #cf2020;
 }
 [data-theme='dark'] #page-analytics {
   --an-surface: #152035;

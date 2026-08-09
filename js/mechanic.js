@@ -366,7 +366,7 @@ function syncBanner() {
   if (!n) return;
   if (_queueUnsaved) {
     // Do not dress this up: it is the one state where closing the app loses work.
-    banner.style.background = '#DC2626';
+    banner.style.background = '#CF2020';
     text.textContent =
       n === 1
         ? '1 change NOT saved to this phone - keep the app open until it syncs'
@@ -728,7 +728,7 @@ async function sendPushNotif(job) {
 function alert2(j) {
   const d = document.createElement('div');
   d.style.cssText =
-    'position:fixed;top:80px;left:16px;right:16px;background:#059669;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
+    'position:fixed;top:80px;left:16px;right:16px;background:#15803D;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
   d.innerHTML = `<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${j.service_name} · ${esc(j.suburb)} · $${j.service_price}</span>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d);
@@ -915,7 +915,7 @@ function card(j) {
     in_progress: '#22C55E',
     inprogress: '#22C55E',
     arrived: '#22C55E',
-    completed: '#6B7280',
+    completed: '#475569',
     cancelled: '#EF4444',
   };
   const sl = {
@@ -933,7 +933,7 @@ function card(j) {
   const isPending = st === 'pending';
   const isEnroute = st === 'enroute';
   const isConfirmedNoMechanic = st === 'confirmed' && !j.mechanic_id;
-  const borderColor = sc[st] || '#6B7280';
+  const borderColor = sc[st] || '#475569';
   return `<div class="job-card${done ? ' done' : ''}" data-job-id="${j.id}" style="overflow:hidden;position:relative;border-left:4px solid ${borderColor}">
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
@@ -953,7 +953,7 @@ function card(j) {
         ? `<div style="padding:0 18px 6px"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${MEMBERSHIP_BADGE[j.membership_plan].color}15;color:${MEMBERSHIP_BADGE[j.membership_plan].color}">${MEMBERSHIP_BADGE[j.membership_plan].label}</span></div>`
         : ''
     }
-    ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:#D97706;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
+    ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:#B45309;font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
     <div class="job-service">${esc(j.service)}</div>
     <div class="job-addr">${j.address || j.suburb || '—'}</div>
     ${j.phone ? `<div class="job-addr">${esc(j.phone)}</div>` : ''}
@@ -967,7 +967,7 @@ function card(j) {
       ${!done ? `${isPending || (st === 'confirmed' && !j.mechanic_id) ? `<button class="abtn primary accept" data-action="accept" data-id="${j.id}">Accept</button><button class="abtn danger" data-action="reject" data-id="${j.id}">Reject</button>` : st === 'confirmed' ? `<button class="abtn primary go" data-action="enroute" data-id="${j.id}">En route</button>` : isEnroute ? `<button class="abtn primary accept" data-action="arrived" data-id="${j.id}">Arrived</button>` : st === 'arrived' || st === 'inprogress' || st === 'in_progress' ? `<button class="abtn primary done" data-action="complete" data-id="${j.id}">Complete</button>` : ``}` : `<button class="abtn undo" data-action="undo" data-id="${j.id}">Undo</button>`}
     </div>
     ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." aria-label="Mechanic notes" value="${esc(j.mnotes)}" data-notes-id="${j.id}">` : ''}
-    ${isPending ? `<div style="text-align:center;font-size:11px;color:#16A34A;padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
+    ${isPending ? `<div style="text-align:center;font-size:11px;color:#15803D;padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
     </div>
   </div>`;
 }
@@ -1147,7 +1147,7 @@ function promptArrivalPin(id) {
       <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Ask the client for their 4-digit code and enter it below.</div>
       <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="4-digit arrival code"
         style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy);background:var(--off)">
-      <div id="pin-error" style="display:none;color:#DC2626;font-size:13px;margin-top:8px"></div>
+      <div id="pin-error" style="display:none;color:#CF2020;font-size:13px;margin-top:8px"></div>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button id="pin-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
         <button id="pin-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirm arrival</button>
@@ -1414,7 +1414,7 @@ function openCompleteModal(id) {
         j.discount_applied > 0
           ? `<div style="margin:16px 16px 0;background:var(--green-lt);border:1.5px solid #A7F3D0;border-radius:10px;padding:12px 14px">
         <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
-        <div style="font-size:15px;color:#065F46">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
+        <div style="font-size:15px;color:var(--green-ink)">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
       </div>`
           : ''
       }
@@ -1436,7 +1436,7 @@ function openCompleteModal(id) {
               <span style="color:var(--gray-lt);font-size:18px;line-height:1">›</span>
             </span>
           </button>
-          <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
+          <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">💳 Payment breakdown</label>
@@ -1480,15 +1480,15 @@ function openCompleteModal(id) {
           <input id="comp-next" type="date" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
         </div>
         <div>
-          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:#DC2626">*</span></label>
+          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:#CF2020">*</span></label>
           <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
-        <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
+        <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
         <div id="pay-method-section">
           ${
             j.has_card_on_file
-              ? `<div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+              ? `<div style="background:#EFF6FF;border:1.5px solid var(--blue-edge);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
                 <span style="font-size:18px" aria-hidden="true">💳</span>
                 <div style="font-size:13px;color:#1E40AF;font-weight:600">Will auto-charge the client's card on file - no EFTPOS needed.</div>
               </div>`
@@ -1567,8 +1567,8 @@ function openCompleteModal(id) {
         .map(
           (item, i) => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
-          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#DC2626' : '#059669'};flex-shrink:0" data-change="checklist-changed">
-          <span>${item.label}${item.required ? '<span style="color:#DC2626;font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
+          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#CF2020' : '#15803D'};flex-shrink:0" data-change="checklist-changed">
+          <span>${item.label}${item.required ? '<span style="color:#CF2020;font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
         )
         .join('');
@@ -1633,20 +1633,20 @@ function openCompleteModal(id) {
 // ── Parts-used picker (grouped by category, deducts stock on complete) ───────
 const CATEGORY_META = {
   cockpit: { label: 'Cockpit', icon: '🎯', color: '#2563EB' },
-  wheels: { label: 'Wheels', icon: '🛞', color: '#059669' },
-  'wheels & tyres': { label: 'Wheels & Tyres', icon: '🛞', color: '#059669' },
-  cables: { label: 'Cables', icon: '🔗', color: '#D97706' },
+  wheels: { label: 'Wheels', icon: '🛞', color: '#15803D' },
+  'wheels & tyres': { label: 'Wheels & Tyres', icon: '🛞', color: '#15803D' },
+  cables: { label: 'Cables', icon: '🔗', color: '#B45309' },
   drivetrain: { label: 'Drivetrain', icon: '⚙️', color: '#7C3AED' },
-  brakes: { label: 'Brakes', icon: '🛑', color: '#DC2626' },
+  brakes: { label: 'Brakes', icon: '🛑', color: '#CF2020' },
   suspension: { label: 'Suspension', icon: '🏔️', color: '#0891B2' },
   lubrication: { label: 'Lubrication', icon: '🧴', color: '#15803D' },
-  general: { label: 'General', icon: '🔨', color: '#6B7280' },
+  general: { label: 'General', icon: '🔨', color: '#475569' },
 };
 function catMeta(cat) {
   const key = String(cat || '')
     .toLowerCase()
     .trim();
-  return CATEGORY_META[key] || { label: cat || 'Other', icon: '📦', color: '#6B7280' };
+  return CATEGORY_META[key] || { label: cat || 'Other', icon: '📦', color: '#475569' };
 }
 
 async function openPartsPicker() {
@@ -1720,7 +1720,7 @@ function renderPartsPicker(parts) {
         html += `<div id="pp-row-${p.id}" style="display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid ${qty > 0 ? m.color : 'var(--border)'};border-left:3px solid ${m.color};border-radius:10px;padding:11px 12px;margin-bottom:7px">
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.name)}</div>
-          <div style="font-size:11px;color:${low ? '#DC2626' : '#6B7280'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
+          <div style="font-size:11px;color:${low ? '#CF2020' : '#475569'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           <button data-action="parts-step" data-id="${p.id}" data-delta="-1" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
@@ -1805,7 +1805,7 @@ function updatePartsSummary() {
     count.style.display = items.length ? 'inline-block' : 'none';
     count.textContent = totalQty;
   }
-  if (btn) btn.style.borderColor = _partsConfirmed ? '#059669' : 'var(--border)';
+  if (btn) btn.style.borderColor = _partsConfirmed ? '#15803D' : 'var(--border)';
   renderChargeBreakdown();
 }
 
@@ -1891,7 +1891,7 @@ async function applyMechDiscount() {
     renderChargeBreakdown();
   } catch (e) {
     _mechDiscount = null;
-    msg.style.color = '#DC2626';
+    msg.style.color = '#CF2020';
     msg.textContent = e.message || 'Invalid code';
     renderChargeBreakdown();
   }
@@ -2030,7 +2030,7 @@ async function submitComplete(id) {
       const section = document.getElementById('pay-method-section');
       if (section) {
         section.innerHTML = `
-          <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
+          <div style="background:#FEF2F2;border:1.5px solid var(--red-edge);border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
           <div style="display:flex;gap:8px">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
@@ -2262,7 +2262,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
           <div style="font-size:11px;color:var(--mgray)">Total spent</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:20px;font-weight:800;color:#F59E0B">${history.filter((b) => b.client_rating).length > 0 ? (history.filter((b) => b.client_rating).reduce((s, b) => s + (b.client_rating || 0), 0) / history.filter((b) => b.client_rating).length).toFixed(1) : '—'}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--amber-bright)">${history.filter((b) => b.client_rating).length > 0 ? (history.filter((b) => b.client_rating).reduce((s, b) => s + (b.client_rating || 0), 0) / history.filter((b) => b.client_rating).length).toFixed(1) : '—'}</div>
           <div style="font-size:11px;color:var(--mgray)">Avg rating</div>
         </div>
       </div>
@@ -2292,7 +2292,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
     const el = document.getElementById('history-content');
     if (el)
       el.innerHTML =
-        '<div style="text-align:center;padding:24px;color:#DC2626;font-size:13px">Error loading history</div>';
+        '<div style="text-align:center;padding:24px;color:#CF2020;font-size:13px">Error loading history</div>';
   }
 }
 
@@ -2375,7 +2375,7 @@ async function loadInventory() {
         html += `<div class="inv-row${low ? ' low' : ''}">
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(item.name)}</div>
-            ${low ? '<div style="font-size:11px;color:#DC2626;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
+            ${low ? '<div style="font-size:11px;color:#CF2020;font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:44px;height:44px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
@@ -2596,8 +2596,8 @@ function setCheck(itemId, status) {
     const b = document.getElementById(`cb-${itemId}-${s}`);
     if (!b) return;
     b.style.background =
-      s === status ? (s === 'ok' ? '#059669' : s === 'warn' ? '#D97706' : '#DC2626') : '#fff';
-    b.style.color = s === status ? '#fff' : '#374151';
+      s === status ? (s === 'ok' ? '#15803D' : s === 'warn' ? '#B45309' : '#CF2020') : '#fff';
+    b.style.color = s === status ? '#fff' : '#475569';
   });
 }
 
@@ -2784,7 +2784,7 @@ function profile() {
     <div style="padding:0 16px;margin-bottom:20px">${ratingHTML(jobs)}</div>
 
     <div style="padding:0 16px">
-      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid #FECACA;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
+      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid var(--red-edge);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
     </div>
   </div>`;
 }
@@ -2866,14 +2866,14 @@ function renderAgenda() {
         in_progress: '#22C55E',
         inprogress: '#22C55E',
         arrived: '#22C55E',
-        completed: '#6B7280',
+        completed: '#475569',
         cancelled: '#EF4444',
       };
 
       dayJobs
         .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
         .forEach((j) => {
-          const color = stColors[j.status] || '#6B7280';
+          const color = stColors[j.status] || '#475569';
           html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
           <div style="width:52px;font-size:11px;color:var(--gray-lt);padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">
@@ -2988,7 +2988,7 @@ function appendMechMessage(msg, scroll = true) {
   const div = document.createElement('div');
   div.style.cssText = `display:flex;flex-direction:column;align-items:${isMech ? 'flex-end' : 'flex-start'};gap:2px;margin-bottom:6px`;
   const bubble = document.createElement('div');
-  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? 'var(--blue)' : '#fff'};color:${isMech ? '#fff' : '#0D1F3C'};border:${isMech ? 'none' : '1px solid #E5E7EB'}`;
+  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? 'var(--blue)' : '#fff'};color:${isMech ? '#fff' : '#0D1F3C'};border:${isMech ? 'none' : '1px solid #E2E8F0'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
   if (photoMatch) {
     const img = document.createElement('img');
@@ -3001,7 +3001,7 @@ function appendMechMessage(msg, scroll = true) {
     bubble.textContent = msg.message;
   }
   const time = document.createElement('div');
-  time.style.cssText = 'font-size:11px;color:#6B7280';
+  time.style.cssText = 'font-size:11px;color:var(--gray)';
   time.textContent = new Date(msg.created_at).toLocaleTimeString('en-AU', {
     hour: '2-digit',
     minute: '2-digit',

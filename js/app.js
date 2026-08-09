@@ -676,7 +676,7 @@ async function renderBookService() {
       window.appState.time &&
       window.appState.location;
     const resumeHtml = canResume
-      ? `<div id="resume-draft" style="display:flex;align-items:center;gap:12px;background:var(--blue-lt);border:1px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin:0 0 16px">
+      ? `<div id="resume-draft" style="display:flex;align-items:center;gap:12px;background:var(--blue-lt);border:1px solid var(--blue-edge);border-radius:12px;padding:12px 14px;margin:0 0 16px">
            <span style="font-size:20px" aria-hidden="true">↩️</span>
            <div style="flex:1;min-width:0">
              <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">You have a booking in progress</div>
@@ -689,15 +689,15 @@ async function renderBookService() {
     screen.innerHTML = `
       ${createHeader('Book a Service', true, '#home')}
       ${resumeHtml}
-      <div id="diag-block" style="background:var(--blue-lt);border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #BFDBFE">
+      <div id="diag-block" style="background:var(--blue-lt);border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid var(--blue-edge)">
         <div style="font-size:13px;font-weight:700;color:var(--blue-dark);margin-bottom:6px">Not sure what your bike needs?</div>
         <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
         <div style="display:flex;align-items:center;gap:8px;width:100%">
           <label style="flex-shrink:0;cursor:pointer">
             <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
-            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:var(--blue-dark);cursor:pointer;white-space:nowrap">Photo</div>
+            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid var(--blue-edge);border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:var(--blue-dark);cursor:pointer;white-space:nowrap">Photo</div>
           </label>
-          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;background:var(--white)">
+          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid var(--blue-edge);border-radius:8px;padding:0 12px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;background:var(--white)">
           <button id="diag-ask-btn" style="flex-shrink:0;height:44px;background:var(--blue-dark);color:white;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Ask AI</button>
         </div>
         <div id="diag-result" style="margin-top:10px;display:none"></div>
@@ -1277,7 +1277,7 @@ async function renderServiceSummary() {
           : ''
       }
 
-      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:#92400E;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
+      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--amber-ink);margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
       <!-- Pricing breakdown -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
@@ -2110,26 +2110,26 @@ async function geocodeAddress(address) {
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  pending: { dot: '#D97706', label: 'Booking received - assigning mechanic...' },
+  pending: { dot: '#B45309', label: 'Booking received - assigning mechanic...' },
   confirmed: { dot: '#1E40AF', label: 'Mechanic assigned - preparing to depart' },
-  enroute: { dot: '#16A34A', label: 'Mechanic is on the way!' },
-  en_route: { dot: '#16A34A', label: 'Mechanic is on the way!' },
-  in_progress: { dot: '#16A34A', label: 'Mechanic has arrived!' },
-  inprogress: { dot: '#16A34A', label: 'Mechanic has arrived!' },
-  arrived: { dot: '#16A34A', label: 'Mechanic has arrived!' },
+  enroute: { dot: '#15803D', label: 'Mechanic is on the way!' },
+  en_route: { dot: '#15803D', label: 'Mechanic is on the way!' },
+  in_progress: { dot: '#15803D', label: 'Mechanic has arrived!' },
+  inprogress: { dot: '#15803D', label: 'Mechanic has arrived!' },
+  arrived: { dot: '#15803D', label: 'Mechanic has arrived!' },
   completed: { dot: '#64748B', label: 'Service completed' },
 };
 
 async function renderTrackingPicker(screen) {
   const ST_COLORS = {
-    pending: '#D97706',
+    pending: '#B45309',
     confirmed: '#1E40AF',
-    enroute: '#16A34A',
-    en_route: '#16A34A',
-    in_progress: '#16A34A',
-    arrived: '#16A34A',
+    enroute: '#15803D',
+    en_route: '#15803D',
+    in_progress: '#15803D',
+    arrived: '#15803D',
     completed: '#64748B',
-    cancelled: '#DC2626',
+    cancelled: '#CF2020',
   };
   const ST_LABELS = {
     pending: 'Pending',
@@ -2643,13 +2643,13 @@ function renderReviewSection(booking) {
     return `
     <div style="border-top:1px solid var(--border);padding:16px 20px">
       <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Your review</div>
-      <div style="font-size:18px;color:#F59E0B;letter-spacing:2px">${renderMiniStars(booking.client_rating)}</div>
+      <div style="font-size:18px;color:var(--amber-bright);letter-spacing:2px">${renderMiniStars(booking.client_rating)}</div>
       ${booking.client_review ? `<div style="font-size:13px;color:var(--gray);margin-top:6px;line-height:1.5">"${escapeHtml(booking.client_review)}"</div>` : ''}
     </div>`;
   }
   return `
     <div style="border-top:1px solid var(--border);padding:16px 20px">
-      <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:#F59E0B;color:var(--white);border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
+      <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:var(--amber-bright);color:var(--white);border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
     </div>`;
 }
 
@@ -2659,7 +2659,7 @@ function renderMechanicTrackRecord(p) {
     <div style="border-top:1px solid var(--border);padding:16px 20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.04em">Client reviews</div>
-        ${p.rating ? `<div style="font-size:13px;color:#F59E0B;font-weight:700">★ ${p.rating}</div>` : ''}
+        ${p.rating ? `<div style="font-size:13px;color:var(--amber-bright);font-weight:700">★ ${p.rating}</div>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:12px">
         ${p.reviews
@@ -2668,7 +2668,7 @@ function renderMechanicTrackRecord(p) {
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
               <span style="font-size:13px;font-weight:600;color:var(--navy)">${escapeHtml(r.client_name)}</span>
-              ${r.rating ? `<span style="color:#F59E0B;font-size:13px">${renderMiniStars(r.rating)}</span>` : ''}
+              ${r.rating ? `<span style="color:var(--amber-bright);font-size:13px">${renderMiniStars(r.rating)}</span>` : ''}
             </div>
             <p style="font-size:13px;color:var(--gray);line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
           </div>`
@@ -2916,7 +2916,7 @@ function appendClientMsg(msg, container, scroll) {
   const wrap = document.createElement('div');
   wrap.style.cssText = `display:flex;flex-direction:column;align-items:${isClient ? 'flex-end' : 'flex-start'};gap:2px`;
   const bubble = document.createElement('div');
-  bubble.style.cssText = `max-width:75%;padding:9px 13px;border-radius:${isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};font-size:15px;line-height:1.4;word-break:break-word;background:${isClient ? '#2563EB' : '#fff'};color:${isClient ? '#fff' : '#0D1F3C'};border:${isClient ? 'none' : '1px solid #E5E7EB'}`;
+  bubble.style.cssText = `max-width:75%;padding:9px 13px;border-radius:${isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};font-size:15px;line-height:1.4;word-break:break-word;background:${isClient ? '#2563EB' : '#fff'};color:${isClient ? '#fff' : '#0D1F3C'};border:${isClient ? 'none' : '1px solid #E2E8F0'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
   if (photoMatch) {
     const img = document.createElement('img');
@@ -2930,7 +2930,7 @@ function appendClientMsg(msg, container, scroll) {
     bubble.textContent = msg.message;
   }
   const time = document.createElement('div');
-  time.style.cssText = 'font-size:11px;color:#9CA3AF';
+  time.style.cssText = 'font-size:11px;color:var(--gray-lt)';
   time.textContent = new Date(msg.created_at).toLocaleTimeString(dateLocale(), {
     hour: '2-digit',
     minute: '2-digit',
@@ -3577,15 +3577,15 @@ async function renderMyBookings() {
         const booking = allBookings.find((b) => String(b.id) === card.dataset.bookingId);
         if (!booking) return;
         const STATUS_COLORS = {
-          pending: '#D97706',
+          pending: '#B45309',
           confirmed: '#1E40AF',
-          enroute: '#16A34A',
-          en_route: '#16A34A',
-          in_progress: '#16A34A',
-          inprogress: '#16A34A',
-          arrived: '#16A34A',
+          enroute: '#15803D',
+          en_route: '#15803D',
+          in_progress: '#15803D',
+          inprogress: '#15803D',
+          arrived: '#15803D',
           completed: '#64748B',
-          cancelled: '#DC2626',
+          cancelled: '#CF2020',
         };
         const STATUS_LABELS = {
           pending: 'Pending',
@@ -3615,7 +3615,7 @@ async function renderMyBookings() {
               <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${booking.address || '--'}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Call-out fee</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
             </div>
-            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
+            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid var(--red-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
             ${
               booking.status === 'completed' &&
               (booking.photo_before_url || booking.photo_after_url)
@@ -4085,7 +4085,7 @@ async function renderProfile() {
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div style="background:var(--blue-lt);border-radius:12px;padding:16px;text-align:center;border:1px solid #BFDBFE">
+        <div style="background:var(--blue-lt);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--blue-edge)">
           <div style="font-size:28px;font-weight:800;color:var(--blue-dark)">${referralCount}</div>
           <div style="font-size:13px;color:var(--gray);margin-top:2px;font-weight:600">Friends referred</div>
         </div>
@@ -4123,7 +4123,7 @@ async function renderProfile() {
             <div style="margin-top:8px">${statusBadge}</div>
           </div>
           <div style="display:flex;gap:8px">
-            <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
+            <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#15803D' : '#B45309'};color:${isPaused ? '#15803D' : '#B45309'};background:#fff">
               ${isPaused ? 'Resume membership' : 'Pause membership'}
             </button>
             <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:var(--gray);background:var(--white)">Cancel</button>
@@ -4138,7 +4138,7 @@ async function renderProfile() {
         <div style="display:flex;gap:8px" id="lang-switcher">
           ${LANGUAGES.map(
             (l) =>
-              `<button data-lang="${l.code}" class="lang-btn" style="flex:1;padding:10px 8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${l.code === getLang() ? '#2563EB' : '#E5E7EB'};background:${l.code === getLang() ? '#EFF6FF' : '#fff'};color:${l.code === getLang() ? '#2563EB' : '#374151'}">${l.label}</button>`
+              `<button data-lang="${l.code}" class="lang-btn" style="flex:1;padding:10px 8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${l.code === getLang() ? '#2563EB' : '#E2E8F0'};background:${l.code === getLang() ? '#EFF6FF' : '#fff'};color:${l.code === getLang() ? '#2563EB' : '#475569'}">${l.label}</button>`
           ).join('')}
         </div>
       </div>
@@ -4199,9 +4199,9 @@ async function renderProfile() {
       const chosen = btn.dataset.lang;
       screen.querySelectorAll('.lang-btn').forEach((b) => {
         const active = b.dataset.lang === chosen;
-        b.style.borderColor = active ? '#2563EB' : '#E5E7EB';
+        b.style.borderColor = active ? '#2563EB' : '#E2E8F0';
         b.style.background = active ? '#EFF6FF' : '#fff';
-        b.style.color = active ? '#2563EB' : '#374151';
+        b.style.color = active ? '#2563EB' : '#475569';
       });
       setLang(chosen);
       // Persist it on the profile too: the reminder/birthday/re-engagement
@@ -4607,7 +4607,7 @@ async function renderMyBikes() {
                 return;
               }
               const SC = {
-                completed: '#6B7280',
+                completed: '#475569',
                 confirmed: '#0A58CA',
                 pending: '#F59E0B',
                 enroute: '#22C55E',
@@ -4621,7 +4621,7 @@ async function renderMyBikes() {
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--color-border)">
                   <div style="min-width:0">
                     <div style="font-size:13px;font-weight:600;color:var(--color-text)">${b.service_name || 'Service'}</div>
-                    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">${b.scheduled_date || ''} · <span style="color:${SC[b.status] || '#6B7280'};font-weight:600">${(b.status || '').replace('_', ' ')}</span></div>
+                    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">${b.scheduled_date || ''} · <span style="color:${SC[b.status] || '#475569'};font-weight:600">${(b.status || '').replace('_', ' ')}</span></div>
                   </div>
                   <div style="font-size:13px;font-weight:700;flex-shrink:0">$${b.service_price || 0}</div>
                 </div>`
@@ -4696,7 +4696,7 @@ async function renderMyBikes() {
                 general: 'Frame',
               };
               const SCORE = { ok: 100, warn: 50, critical: 0 };
-              const COLOR = { ok: '#059669', warn: '#D97706', critical: '#DC2626' };
+              const COLOR = { ok: '#15803D', warn: '#B45309', critical: '#CF2020' };
               const LABEL = { ok: 'OK', warn: 'Warn', critical: 'Critical' };
 
               const scored = Object.entries(COMP_LABELS)
@@ -4711,7 +4711,7 @@ async function renderMyBikes() {
               const avg = Math.round(
                 scored.reduce((s, c) => s + SCORE[c.status], 0) / scored.length
               );
-              const scoreColor = avg >= 75 ? '#059669' : avg >= 50 ? '#D97706' : '#DC2626';
+              const scoreColor = avg >= 75 ? '#15803D' : avg >= 50 ? '#B45309' : '#CF2020';
               const scoreLabel =
                 avg >= 75 ? 'Good' : avg >= 50 ? 'Needs attention' : 'Critical issues';
               const lastDate = new Date(bkgs[0].scheduled_date).toLocaleDateString(dateLocale(), {
@@ -4979,9 +4979,9 @@ function showDiagResult(screen, data) {
   const resultEl = screen.querySelector('#diag-result');
   if (!resultEl) return;
   const sev = data.severity || 'medium';
-  const sevColor = sev === 'high' ? '#DC2626' : sev === 'low' ? '#059669' : '#D97706';
+  const sevColor = sev === 'high' ? '#CF2020' : sev === 'low' ? '#15803D' : '#B45309';
   const urgColor =
-    data.urgency === 'Urgent' ? '#DC2626' : data.urgency === 'Book soon' ? '#D97706' : '#059669';
+    data.urgency === 'Urgent' ? '#CF2020' : data.urgency === 'Book soon' ? '#B45309' : '#15803D';
   const bookLabel = data.recommended_service_name
     ? 'Book ' +
       data.recommended_service_name +

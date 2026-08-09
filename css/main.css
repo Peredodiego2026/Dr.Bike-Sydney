@@ -853,7 +853,7 @@ body {
   background: var(--green);
 }
 .status-dot--completed {
-  background: #64748b;
+  background: var(--slate);
 }
 .status-dot--completed::after {
   display: none;
@@ -1341,8 +1341,8 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 .toast--error {
-  border-color: #ef4444;
-  color: #ef4444;
+  border-color: var(--red-bright);
+  color: var(--red-bright);
 }
 .toast--success {
   border-color: var(--color-primary);

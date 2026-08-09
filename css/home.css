@@ -629,7 +629,7 @@
   box-shadow: var(--elevation-0);
 }
 [data-screen='home'] .review-stars {
-  color: #f59e0b;
+  color: var(--amber-bright);
   font-size: 15px;
   letter-spacing: 2px;
   margin-bottom: 10px;

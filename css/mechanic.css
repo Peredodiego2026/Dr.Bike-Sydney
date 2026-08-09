@@ -47,7 +47,7 @@
   color: #fff !important;
 }
 [data-theme='dark'] .abtn.primary.go {
-  background: #d97706 !important;
+  background: #b45309 !important;
 }
 [data-theme='dark'] .abtn.primary.done,
 [data-theme='dark'] .abtn.primary.accept {
@@ -263,7 +263,7 @@ body {
 }
 .status-btn {
   background: rgba(37, 99, 235, 0.15);
-  color: #60a5fa;
+  color: var(--blue-soft);
   border: 1px solid rgba(37, 99, 235, 0.3);
   border-radius: 20px;
   padding: 6px 14px;
@@ -390,7 +390,7 @@ body {
 .job-price {
   font-size: 18px;
   font-weight: 800;
-  color: #16a34a;
+  color: #15803d;
   margin-bottom: 14px;
   letter-spacing: -0.02em;
 }
@@ -446,7 +446,7 @@ body {
   font-weight: 700;
 }
 .abtn.primary.go {
-  background: #d97706;
+  background: #b45309;
 }
 .abtn.primary.done,
 .abtn.primary.accept {
@@ -454,8 +454,8 @@ body {
 }
 .abtn.danger {
   background: transparent;
-  color: #dc2626;
-  border: 1.5px solid #fecaca;
+  color: #cf2020;
+  border: 1.5px solid var(--red-edge);
   font-weight: 600;
 }
 .abtn.chat {
@@ -464,7 +464,7 @@ body {
 }
 .abtn.undo {
   background: #f8fafc;
-  color: #64748b;
+  color: var(--slate);
   border: 1.5px solid var(--border);
 }
 .notes-inp {
