@@ -64,16 +64,16 @@ img {
   font-weight: 700;
   font-size: 17px;
   letter-spacing: -0.2px;
-  color: #0d1f3c;
+  color: var(--navy);
 }
 .nav-logo .wm-blue {
-  color: #2563eb;
+  color: var(--blue);
 }
 .nav-logo .wm-tag {
   display: block;
   font-size: 11px;
   font-weight: 400;
-  color: #2563eb;
+  color: var(--blue);
   letter-spacing: 0;
   margin-top: -2px;
 }
@@ -388,7 +388,7 @@ img {
   margin-top: 4px;
 }
 .about-image {
-  background: linear-gradient(160deg, #1e3a5f, #2563eb);
+  background: linear-gradient(160deg, #1e3a5f, var(--blue));
   border-radius: 16px;
   aspect-ratio: 3/4;
   display: flex;
@@ -516,11 +516,11 @@ section.visible {
 }
 .service-option:hover {
   border-color: #93c5fd;
-  background: #eff6ff;
+  background: var(--blue-lt);
 }
 .service-option.selected {
-  border-color: #2563eb;
-  background: #eff6ff;
+  border-color: var(--blue);
+  background: var(--blue-lt);
 }
 .service-option .so-name {
   font-weight: 700;
@@ -529,7 +529,7 @@ section.visible {
 }
 .service-option .so-price {
   font-weight: 800;
-  color: #2563eb;
+  color: var(--blue);
   font-size: 16px;
 }
 .service-option .so-desc {
@@ -550,8 +550,8 @@ section.visible {
   border-color: #93c5fd;
 }
 .date-pill.selected {
-  border-color: #2563eb;
-  background: #2563eb;
+  border-color: var(--blue);
+  background: var(--blue);
   color: white;
 }
 .date-pill .dp-day {
@@ -581,8 +581,8 @@ section.visible {
   border-color: #93c5fd;
 }
 .time-slot.selected {
-  border-color: #2563eb;
-  background: #2563eb;
+  border-color: var(--blue);
+  background: var(--blue);
   color: white;
 }
 .time-slot.unavailable {
@@ -610,7 +610,7 @@ section.visible {
 }
 .summary-total .st-amount {
   font-weight: 800;
-  color: #2563eb;
+  color: var(--blue);
   font-size: 24px;
 }
 /* ── All Services section ─────────────────────────────────────────────────── */
@@ -650,16 +650,16 @@ section.visible {
   transition:
     border-color 200ms,
     box-shadow 200ms;
-  background: #fff;
+  background: var(--white);
 }
 .svc-card:hover {
-  border-color: #2563eb;
+  border-color: var(--blue);
   box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
 }
 .svc-icon {
   width: 40px;
   height: 40px;
-  background: #eff6ff;
+  background: var(--blue-lt);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -674,7 +674,7 @@ section.visible {
 .svc-price {
   font-weight: 800;
   font-size: 18px;
-  color: #2563eb;
+  color: var(--blue);
 }
 .svc-desc {
   font-size: 13px;
@@ -684,8 +684,8 @@ section.visible {
 .svc-btn {
   margin-top: 10px;
   padding: 9px 0;
-  background: #2563eb;
-  color: #fff;
+  background: var(--blue);
+  color: var(--white);
   border: none;
   border-radius: 8px;
   font-size: 14px;

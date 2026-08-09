@@ -336,7 +336,7 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="font-size:24px;margin-bottom:6px">⚠️</div>' +
       '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Could not load available times</div>' +
       '<div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>' +
-      '<button id="retry-slots-btn" style="padding:11px 20px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>' +
+      '<button id="retry-slots-btn" style="padding:11px 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>' +
       '</div>';
     screen
       .querySelector('#retry-slots-btn')
@@ -351,12 +351,12 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="font-size:24px;margin-bottom:6px">😔</div>' +
       '<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">Fully booked on this date</div>' +
       '<div style="font-size:13px;color:#6B7280">Please choose another day or join the waitlist</div></div>' +
-      '<button id="waitlist-btn" style="width:100%;padding:13px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' +
+      '<button id="waitlist-btn" style="width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' +
       '<span>Join Waitlist for</span> ' +
       date +
       '</button>' +
       '<div id="waitlist-form" style="display:none;margin-top:14px;background:#F8FAFF;border:1px solid #DBEAFE;border-radius:10px;padding:16px">' +
-      '<div style="font-weight:700;color:#0D1F3C;font-size:15px;margin-bottom:10px">Which times work for you?</div>' +
+      '<div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:10px">Which times work for you?</div>' +
       '<div id="waitlist-times" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">' +
       slots
         .map(
@@ -364,14 +364,14 @@ async function loadTimeSlots(screen, date, serviceId) {
             '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">' +
             '<input type="checkbox" value="' +
             s.time +
-            '" style="accent-color:#2563EB"> ' +
+            '" style="accent-color:var(--blue)"> ' +
             s.time +
             '</label>'
         )
         .join('') +
       '</div>' +
-      '<div id="waitlist-msg" style="font-size:13px;color:#DC2626;margin-bottom:10px;display:none"></div>' +
-      '<button id="waitlist-submit" style="width:100%;padding:12px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
+      '<div id="waitlist-msg" style="font-size:13px;color:var(--red);margin-bottom:10px;display:none"></div>' +
+      '<button id="waitlist-submit" style="width:100%;padding:12px;background:#059669;color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
       '</div></div>';
 
     screen.querySelector('#waitlist-btn').addEventListener('click', () => {
@@ -509,13 +509,13 @@ function showEmergencyServiceModal() {
     'Hi Dr. Bike! I need emergency service - can you help me right away?'
   );
   modal.innerHTML = `
-    <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;text-align:center">
+    <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:360px;text-align:center">
       <div style="font-size:32px;margin-bottom:8px" aria-hidden="true">🚨</div>
-      <div style="font-weight:700;color:#0D1F3C;font-size:15px;margin-bottom:6px">Emergency Service</div>
+      <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:6px">Emergency Service</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:20px;line-height:1.5;text-align:left">Emergency visits depend on where our mechanic already is, so we confirm these directly - call or WhatsApp us and we'll tell you right away if we can help and what it'll cost.</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <a href="tel:+61433963250" style="flex:1;text-align:center;background:#2563EB;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
-        <a href="https://wa.me/61433963250?text=${waText}" style="flex:1;text-align:center;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
+        <a href="tel:+61433963250" style="flex:1;text-align:center;background:var(--blue);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+        <a href="https://wa.me/61433963250?text=${waText}" style="flex:1;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
       </div>
       <button id="emergency-modal-close" class="btn btn--secondary btn--full">Back to services</button>
     </div>
@@ -641,7 +641,7 @@ async function renderBookService() {
              <div style="font-size:24px;margin-bottom:6px" aria-hidden="true">${navigator.onLine ? '⚠️' : '📡'}</div>
              <div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:4px">${navigator.onLine ? 'Could not load services' : "You're offline"}</div>
              <div style="font-size:13px;color:#6B7280;margin-bottom:14px">Please check your connection and try again.</div>
-             <button id="retry-services-btn" style="padding:11px 20px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>
+             <button id="retry-services-btn" style="padding:11px 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>
            </div>`
         : '<div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
 
@@ -674,34 +674,34 @@ async function renderBookService() {
       window.appState.time &&
       window.appState.location;
     const resumeHtml = canResume
-      ? `<div id="resume-draft" style="display:flex;align-items:center;gap:12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin:0 0 16px">
+      ? `<div id="resume-draft" style="display:flex;align-items:center;gap:12px;background:var(--blue-lt);border:1px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin:0 0 16px">
            <span style="font-size:20px" aria-hidden="true">↩️</span>
            <div style="flex:1;min-width:0">
-             <div style="font-size:13px;font-weight:700;color:#1E40AF">You have a booking in progress</div>
-             <div style="font-size:12px;color:#475569;margin-top:2px">${escapeHtml(window.appState.service.name || '')}</div>
+             <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">You have a booking in progress</div>
+             <div style="font-size:12px;color:var(--gray);margin-top:2px">${escapeHtml(window.appState.service.name || '')}</div>
            </div>
-           <button id="resume-draft-btn" style="flex-shrink:0;min-height:36px;padding:8px 14px;background:#1E40AF;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Continue</button>
+           <button id="resume-draft-btn" style="flex-shrink:0;min-height:36px;padding:8px 14px;background:var(--blue-dark);color:var(--white);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Continue</button>
          </div>`
       : '';
 
     screen.innerHTML = `
       ${createHeader('Book a Service', true, '#home')}
       ${resumeHtml}
-      <div id="diag-block" style="background:#EFF6FF;border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #BFDBFE">
-        <div style="font-size:13px;font-weight:700;color:#1E40AF;margin-bottom:6px">Not sure what your bike needs?</div>
-        <div style="font-size:13px;color:#475569;margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
+      <div id="diag-block" style="background:var(--blue-lt);border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid #BFDBFE">
+        <div style="font-size:13px;font-weight:700;color:var(--blue-dark);margin-bottom:6px">Not sure what your bike needs?</div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
         <div style="display:flex;align-items:center;gap:8px;width:100%">
           <label style="flex-shrink:0;cursor:pointer">
             <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
-            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:#1E40AF;cursor:pointer;white-space:nowrap">Photo</div>
+            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:var(--blue-dark);cursor:pointer;white-space:nowrap">Photo</div>
           </label>
-          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff">
-          <button id="diag-ask-btn" style="flex-shrink:0;height:44px;background:#1E40AF;color:white;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Ask AI</button>
+          <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid #BFDBFE;border-radius:8px;padding:0 12px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;background:var(--white)">
+          <button id="diag-ask-btn" style="flex-shrink:0;height:44px;background:var(--blue-dark);color:white;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Ask AI</button>
         </div>
         <div id="diag-result" style="margin-top:10px;display:none"></div>
       </div>
       <div id="cat-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:4px 0">
-        ${CAT_ORDER.map((cat) => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;min-height:44px;background:#fff;border:1px solid #E2E8F0;border-radius:22px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap;transition:all 150ms ease"><span aria-hidden="true">${CAT_ICON[cat] || ''}</span>${CAT_SHORT[cat]}</button>`).join('')}
+        ${CAT_ORDER.map((cat) => `<button class="cat-chip" data-cat="${cat}" style="flex-shrink:0;display:inline-flex;align-items:center;gap:5px;min-height:44px;background:var(--white);border:1px solid var(--border);border-radius:22px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray);font-family:inherit;white-space:nowrap;transition:all 150ms ease"><span aria-hidden="true">${CAT_ICON[cat] || ''}</span>${CAT_SHORT[cat]}</button>`).join('')}
       </div>
       <div class="section-label">Select Service</div>
       <div id="step1-services">${categoriesHtml}</div>
@@ -819,19 +819,19 @@ async function renderBookService() {
         wrap.innerHTML = `
           <div class="section-label" style="margin-top:8px">Which bike?</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0" id="bike-chips">
-            <button class="bike-chip active" data-bike-id="" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:#1E40AF;color:#fff;border:1px solid #1E40AF;border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Skip</button>
-            ${bikes.map((b) => `<button class="bike-chip" data-bike-id="${b.id}" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:#475569;font-family:inherit;white-space:nowrap">${b.name}${b.brand ? ' · ' + b.brand : ''}</button>`).join('')}
+            <button class="bike-chip active" data-bike-id="" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:var(--blue-dark);color:var(--white);border:1px solid var(--blue-dark);border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Skip</button>
+            ${bikes.map((b) => `<button class="bike-chip" data-bike-id="${b.id}" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray);font-family:inherit;white-space:nowrap">${b.name}${b.brand ? ' · ' + b.brand : ''}</button>`).join('')}
           </div>`;
         wrap.querySelectorAll('.bike-chip').forEach((chip) => {
           chip.addEventListener('click', () => {
             wrap.querySelectorAll('.bike-chip').forEach((c) => {
-              c.style.background = '#fff';
-              c.style.color = '#475569';
-              c.style.borderColor = '#E2E8F0';
+              c.style.background = 'var(--white)';
+              c.style.color = 'var(--gray)';
+              c.style.borderColor = 'var(--border)';
             });
-            chip.style.background = '#1E40AF';
-            chip.style.color = '#fff';
-            chip.style.borderColor = '#1E40AF';
+            chip.style.background = 'var(--blue-dark)';
+            chip.style.color = 'var(--white)';
+            chip.style.borderColor = 'var(--blue-dark)';
             window.appState.bikeId = chip.dataset.bikeId || null;
           });
         });
@@ -932,7 +932,7 @@ async function renderBookService() {
     screen.innerHTML = `
       ${createHeader('Choose Date & Time', true, '#book-service')}
       <div class="section-label">Select Date</div>
-      <div id="cal-wrap" style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:20px">${buildCal()}</div>
+      <div id="cal-wrap" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">${buildCal()}</div>
       <div class="section-label">Select Time</div>
       <div class="time-grid" id="time-grid">
         <div class="skeleton" style="height:44px;grid-column:1/-1"></div>
@@ -1002,7 +1002,7 @@ async function renderBookService() {
       ${createHeader('Your Address', true, '#book-service')}
       <div style="padding-top:8px">
         <div class="section-label">Where should we come?</div>
-        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px;margin-bottom:16px">
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
           <div style="display:flex;align-items:flex-start;gap:12px">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:14px">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -1019,7 +1019,7 @@ async function renderBookService() {
             </div>
           </div>
         </div>
-        <div style="font-size:13px;color:#475569;padding:0 4px;line-height:1.6">The $20 call-out fee covers the mechanic's trip. Most areas in Sydney are covered.</div>
+        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The $20 call-out fee covers the mechanic's trip. Most areas in Sydney are covered.</div>
       </div>
       <div class="sticky-bottom">
         <button class="btn btn--primary btn--full" id="s3-continue">Continue to Summary</button>
@@ -1243,10 +1243,10 @@ async function renderServiceSummary() {
 
       <!-- Quote card -->
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
-        <div style="background:#0D1F3C;padding:14px 16px;display:flex;align-items:center;gap:10px">
+        <div style="background:var(--navy);padding:14px 16px;display:flex;align-items:center;gap:10px">
           <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="20" style="width:auto;display:block">
           <div>
-            <div style="color:#fff;font-size:15px;font-weight:700">${service.name}</div>
+            <div style="color:var(--white);font-size:15px;font-weight:700">${service.name}</div>
             ${dur ? `<div style="color:rgba(255,255,255,0.65);font-size:11px;margin-top:1px">Est. ${dur}</div>` : ''}
           </div>
         </div>
@@ -1561,7 +1561,7 @@ async function loadMechanicPreferencePicker() {
           .toUpperCase();
         const avatarHTML = m.photo_url
           ? `<img src="${escapeHtml(m.photo_url)}" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover">`
-          : `<div style="width:52px;height:52px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#2563EB">${escapeHtml(initials)}</div>`;
+          : `<div style="width:52px;height:52px;border-radius:50%;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--blue)">${escapeHtml(initials)}</div>`;
         // "jobs" stays its own text node (not pre-translated into the string)
         // so translateScreen's automatic re-walk can still catch it if the
         // user switches language after this card is already on screen -
@@ -1572,9 +1572,9 @@ async function loadMechanicPreferencePicker() {
         if (m.rating) metaHTML.push(`★ ${m.rating}`);
         return `
           <button type="button" class="mechanic-pref-card" data-mechanic-id="${escapeHtml(m.id)}"
-            style="flex-shrink:0;width:104px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:12px;border:1.5px solid var(--color-border);background:#fff;cursor:pointer">
+            style="flex-shrink:0;width:104px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:12px;border:1.5px solid var(--color-border);background:var(--white);cursor:pointer">
             ${avatarHTML}
-            <div style="font-size:13px;font-weight:700;color:#0D1F3C;text-align:center;line-height:1.3">${escapeHtml(m.name)}</div>
+            <div style="font-size:13px;font-weight:700;color:var(--navy);text-align:center;line-height:1.3">${escapeHtml(m.name)}</div>
             ${metaHTML.length ? `<div style="font-size:11px;color:#6B7280">${metaHTML.join(' · ')}</div>` : ''}
           </button>`;
       })
@@ -1605,14 +1605,14 @@ function wireMechanicPreferencePicker(screen, mechanics) {
     row.querySelectorAll('.mechanic-pref-card').forEach((c) => {
       c.classList.remove('is-selected');
       c.style.borderColor = 'var(--color-border)';
-      c.style.background = '#fff';
+      c.style.background = 'var(--white)';
     });
     if (wasSelected) {
       window.appState.preferredMechanicId = null;
     } else {
       card.classList.add('is-selected');
-      card.style.borderColor = '#2563EB';
-      card.style.background = '#EFF6FF';
+      card.style.borderColor = 'var(--blue)';
+      card.style.background = 'var(--blue-lt)';
       window.appState.preferredMechanicId = id;
     }
     if (note) note.hidden = !window.appState.preferredMechanicId;
@@ -1733,7 +1733,7 @@ async function renderPayment() {
     <div style="padding:0 16px 24px">
       <div style="background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;padding:16px;margin-bottom:20px">
         <div style="font-size:13px;color:#6B7280;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Your selection</div>
-        <div style="font-weight:700;color:#0D1F3C;font-size:15px">${service.name}</div>
+        <div style="font-weight:700;color:var(--navy);font-size:15px">${service.name}</div>
         <div style="font-size:13px;color:#374151;margin-top:4px">${date} &bull; ${time}</div>
         <div style="font-size:13px;color:#374151">${location}</div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center">
@@ -1741,7 +1741,7 @@ async function renderPayment() {
           ${
             isIncludedVisit
               ? `<span style="font-size:11px;font-weight:700;color:#059669;background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
-              : `<span style="font-weight:700;color:#0D1F3C">$${calloutFee.toFixed(2)}</span>`
+              : `<span style="font-weight:700;color:var(--navy)">$${calloutFee.toFixed(2)}</span>`
           }
         </div>
       </div>
@@ -1756,7 +1756,7 @@ async function renderPayment() {
           : `
       <div id="payment-request-btn" style="margin-bottom:12px" hidden></div>
       <div class="payment-divider" id="card-divider" hidden><span>or pay by card</span></div>
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="background:var(--white);border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:16px">
         <div style="font-size:13px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">Card details</div>
         <div id="card-element" class="card-element"></div>
       </div>
@@ -1772,9 +1772,9 @@ async function renderPayment() {
 
       <div style="text-align:center;margin-top:16px;font-size:13px;color:#9CA3AF">
         Prefer to book manually?
-        <a href="https://wa.me/61433963250?text=${waText}" style="color:#2563EB;font-weight:600">WhatsApp us</a>
+        <a href="https://wa.me/61433963250?text=${waText}" style="color:var(--blue);font-weight:600">WhatsApp us</a>
         or
-        <a href="tel:+61433963250" style="color:#2563EB;font-weight:600">call 0433 963 250</a>
+        <a href="tel:+61433963250" style="color:var(--blue);font-weight:600">call 0433 963 250</a>
       </div>
     </div>
     ${
@@ -2159,7 +2159,7 @@ async function renderTrackingPicker(screen) {
       listEl.innerHTML = `
         <div style="text-align:center;padding:40px 0">
           <div style="font-size:40px;margin-bottom:12px">🔒</div>
-          <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:6px">Sign in to track bookings</div>
+          <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">Sign in to track bookings</div>
           <div style="font-size:13px;color:#6B7280;margin-bottom:20px">Your bookings will appear here</div>
           <button class="btn btn--primary" id="picker-signin-btn" style="padding:12px 28px;font-size:15px;font-weight:700">Sign in</button>
         </div>`;
@@ -2185,7 +2185,7 @@ async function renderTrackingPicker(screen) {
       listEl.innerHTML = `
         <div style="text-align:center;padding:40px 0">
           <div style="font-size:40px;margin-bottom:12px">📋</div>
-          <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:6px">No bookings yet</div>
+          <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">No bookings yet</div>
           <div style="font-size:13px;color:#6B7280">Book a service to track it here</div>
         </div>`;
       return;
@@ -2201,10 +2201,10 @@ async function renderTrackingPicker(screen) {
         const color = ST_COLORS[b.status] || '#64748B';
         html += `
           <div class="booking-pick-item" data-id="${b.id}" data-token="${b.tracking_token || ''}"
-            style="background:#fff;border:1px solid #E2E8F0;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
+            style="background:var(--white);border:1px solid var(--border);border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
             <div style="flex:1;min-width:0">
-              <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
-              <div style="font-size:13px;color:#475569">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''}</div>
+              <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
+              <div style="font-size:13px;color:var(--gray)">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
               <span style="font-size:11px;font-weight:600;color:${color};background:${color}1A;padding:3px 10px;border-radius:20px;white-space:nowrap">${ST_LABELS[b.status] || b.status}</span>
@@ -2220,10 +2220,10 @@ async function renderTrackingPicker(screen) {
         const color = ST_COLORS[b.status] || '#64748B';
         html += `
           <div class="booking-pick-item" data-id="${b.id}" data-token="${b.tracking_token || ''}"
-            style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
+            style="background:var(--surface);border:1px solid var(--border);border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
             <div style="flex:1;min-width:0">
-              <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
-              <div style="font-size:13px;color:#475569">${b.scheduled_date || ''}</div>
+              <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
+              <div style="font-size:13px;color:var(--gray)">${b.scheduled_date || ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
               <span style="font-size:11px;font-weight:600;color:${color};background:${color}1A;padding:3px 10px;border-radius:20px;white-space:nowrap">${ST_LABELS[b.status] || b.status}</span>
@@ -2242,7 +2242,7 @@ async function renderTrackingPicker(screen) {
       });
     });
   } catch (e) {
-    listEl.innerHTML = `<div style="text-align:center;padding:32px 0;color:#DC2626;font-size:13px">Could not load bookings. Try again.</div>`;
+    listEl.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--red);font-size:13px">Could not load bookings. Try again.</div>`;
   }
 }
 
@@ -2264,31 +2264,31 @@ async function renderTracking() {
   // Screen is 100dvh flex-column with no padding/animation (see CSS override for [data-screen="tracking"].active)
   screen.innerHTML = `
     <!-- Header -->
-    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:#fff;border-bottom:1px solid #E5E7EB">
-      <div style="font-size:18px;font-weight:700;color:#0D1F3C">Live Tracking</div>
-      <button id="change-booking-btn" style="background:none;border:none;font-size:13px;color:#2563EB;cursor:pointer;font-weight:600;font-family:inherit;padding:8px 0;display:flex;align-items:center;gap:4px">
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid #E5E7EB">
+      <div style="font-size:18px;font-weight:700;color:var(--navy)">Live Tracking</div>
+      <button id="change-booking-btn" style="background:none;border:none;font-size:13px;color:var(--blue);cursor:pointer;font-weight:600;font-family:inherit;padding:8px 0;display:flex;align-items:center;gap:4px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         Change booking
       </button>
     </div>
 
     <!-- Status bar -->
-    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:9px 16px;background:#fff;border-bottom:1px solid #F3F4F6">
-      <div id="status-dot" style="width:8px;height:8px;border-radius:50%;background:#1E40AF;flex-shrink:0;transition:background 0.3s"></div>
-      <span id="status-text" style="font-size:13px;font-weight:600;color:#0D1F3C">Loading booking...</span>
+    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--white);border-bottom:1px solid #F3F4F6">
+      <div id="status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--blue-dark);flex-shrink:0;transition:background 0.3s"></div>
+      <span id="status-text" style="font-size:13px;font-weight:600;color:var(--navy)">Loading booking...</span>
     </div>
 
     <!-- Map: flex:1 fills all remaining space between status bar and bottom panel -->
     <div id="tracking-map" style="flex:1;min-height:0;display:block"></div>
 
     <!-- Bottom panel -->
-    <div style="flex-shrink:0;background:#fff;border-top:1px solid #E5E7EB">
+    <div style="flex-shrink:0;background:var(--white);border-top:1px solid #E5E7EB">
       <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #F3F4F6">
-        <div id="mechanic-avatar" style="width:40px;height:40px;background:#EFF6FF;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:#2563EB">
+        <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
         <div style="min-width:0">
-          <div id="mechanic-name" style="font-size:15px;font-weight:700;color:#0D1F3C">Your mechanic</div>
+          <div id="mechanic-name" style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div>
           <div id="mechanic-meta" style="font-size:13px;color:#6B7280;margin-top:1px"></div>
         </div>
         <div id="eta-badge" style="margin-left:auto;flex-shrink:0;text-align:right">
@@ -2296,7 +2296,7 @@ async function renderTracking() {
         </div>
         <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:#EFF6FF;border-bottom:1px solid #F3F4F6">
+      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid #F3F4F6">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <div style="font-size:13px;color:#1848C8"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
       </div>
@@ -2309,11 +2309,11 @@ async function renderTracking() {
           .join('')}
       </div>
       <div style="display:flex;gap:8px;padding:0 16px 12px">
-        <button id="message-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:#fff;border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:#0D1F3C;cursor:pointer;font-family:inherit">
+        <button id="message-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Message
         </button>
-        <button id="share-tracking-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:#fff;border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:#0D1F3C;cursor:pointer;font-family:inherit">
+        <button id="share-tracking-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           Share link
         </button>
@@ -2359,13 +2359,13 @@ async function renderTracking() {
 
   const clientIcon = window.L.divIcon({
     className: '',
-    html: `<div style="width:32px;height:32px;background:#0A58CA;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>`,
+    html: `<div style="width:32px;height:32px;background:#0A58CA;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 32],
   });
   const mechIcon = window.L.divIcon({
     className: '',
-    html: `<div style="width:40px;height:40px;background:#22C55E;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)"><svg width="20" height="14" viewBox="0 0 24 16" fill="white"><rect x="0" y="3" width="16" height="13" rx="1"/><path d="M16 6h5l3 4v6h-8V6z"/><circle cx="5" cy="16" r="3" fill="white"/><circle cx="19" cy="16" r="3" fill="white"/></svg></div>`,
+    html: `<div style="width:40px;height:40px;background:#22C55E;border-radius:50%;border:3px solid var(--white);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)"><svg width="20" height="14" viewBox="0 0 24 16" fill="white"><rect x="0" y="3" width="16" height="13" rx="1"/><path d="M16 6h5l3 4v6h-8V6z"/><circle cx="5" cy="16" r="3" fill="white"/><circle cx="19" cy="16" r="3" fill="white"/></svg></div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });
@@ -2646,7 +2646,7 @@ function renderReviewSection(booking) {
   }
   return `
     <div style="border-top:1px solid #E5E7EB;padding:16px 20px">
-      <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:#F59E0B;color:#fff;border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
+      <button data-rate-booking-id="${booking.id}" class="rate-mechanic-btn" style="width:100%;background:#F59E0B;color:var(--white);border:none;border-radius:10px;padding:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">⭐ Rate this mechanic</button>
     </div>`;
 }
 
@@ -2664,7 +2664,7 @@ function renderMechanicTrackRecord(p) {
             (r) => `
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
-              <span style="font-size:13px;font-weight:600;color:#0D1F3C">${escapeHtml(r.client_name)}</span>
+              <span style="font-size:13px;font-weight:600;color:var(--navy)">${escapeHtml(r.client_name)}</span>
               ${r.rating ? `<span style="color:#F59E0B;font-size:13px">${renderMiniStars(r.rating)}</span>` : ''}
             </div>
             <p style="font-size:13px;color:#374151;line-height:1.5;margin:0">"${escapeHtml(r.comment)}"</p>
@@ -2694,17 +2694,17 @@ function openMechanicProfile(p, booking, screen) {
     .join('')
     .toUpperCase();
   const avatarHTML = p.photo_url
-    ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
-    : `<div style="width:88px;height:88px;border-radius:50%;background:#EFF6FF;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#2563EB">${escapeHtml(initials)}</div>`;
+    ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
+    : `<div style="width:88px;height:88px;border-radius:50%;background:var(--blue-lt);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--blue)">${escapeHtml(initials)}</div>`;
 
   const statParts = [];
   if (p.jobs_completed > 0)
     statParts.push(
-      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:#0D1F3C">${p.jobs_completed}</div><div style="font-size:11px;color:#6B7280">Jobs done</div></div>`
+      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">${p.jobs_completed}</div><div style="font-size:11px;color:#6B7280">Jobs done</div></div>`
     );
   if (p.rating)
     statParts.push(
-      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:#0D1F3C">★ ${p.rating}</div><div style="font-size:11px;color:#6B7280">Rating</div></div>`
+      `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">★ ${p.rating}</div><div style="font-size:11px;color:#6B7280">Rating</div></div>`
     );
 
   const panel = document.createElement('div');
@@ -2712,26 +2712,26 @@ function openMechanicProfile(p, booking, screen) {
   panel.style.cssText =
     'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
   panel.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:#fff">
+    <div style="display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
       <button id="close-mech-profile-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <span style="font-size:15px;font-weight:700;color:#0D1F3C">Mechanic profile</span>
+      <span style="font-size:15px;font-weight:700;color:var(--navy)">Mechanic profile</span>
     </div>
     <div style="flex:1;overflow-y:auto">
-      <div style="height:84px;width:100%;overflow:hidden;background:#EFF6FF">
+      <div style="height:84px;width:100%;overflow:hidden;background:var(--blue-lt)">
         <img src="images/mechanic-working.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
       </div>
       <div style="display:flex;justify-content:center;margin-top:-44px">${avatarHTML}</div>
       <div style="text-align:center;padding:10px 20px 0">
-        <div style="font-size:18px;font-weight:700;color:#0D1F3C">${escapeHtml(p.name)}</div>
+        <div style="font-size:18px;font-weight:700;color:var(--navy)">${escapeHtml(p.name)}</div>
         <div style="font-size:13px;color:#6B7280;margin-top:2px">Dr. Bike Mobile Mechanic</div>
         ${p.bio ? `<div style="font-size:13px;color:#374151;margin-top:10px;line-height:1.5">${escapeHtml(p.bio)}</div>` : ''}
       </div>
       ${statParts.length ? `<div style="display:flex;justify-content:center;gap:32px;padding:16px 20px">${statParts.join('')}</div>` : ''}
       <div style="display:flex;gap:8px;padding:16px 20px">
-        <a href="tel:+61433963250" style="flex:1;text-align:center;background:#2563EB;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
-        <a href="https://wa.me/61433963250" style="flex:1;text-align:center;background:#25D366;color:#fff;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
+        <a href="tel:+61433963250" style="flex:1;text-align:center;background:var(--blue);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+        <a href="https://wa.me/61433963250" style="flex:1;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
       </div>
       ${renderMechanicTrackRecord(p)}
       ${renderReviewSection(booking)}
@@ -2763,20 +2763,20 @@ function openClientChat(bookingId, screen) {
     panel.style.cssText =
       'position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:2000';
     panel.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;padding:0 12px 0 6px;height:56px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:#fff">
+      <div style="display:flex;align-items:center;gap:12px;padding:0 12px 0 6px;height:56px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
         <button id="close-chat-btn" style="background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#374151" aria-label="Close chat">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div style="width:38px;height:38px;border-radius:50%;background:#1E40AF;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></div>
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--blue-dark);display:flex;align-items:center;justify-content:center;color:var(--white);flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></div>
         <div style="min-width:0;flex:1">
-          <div style="font-size:15px;font-weight:700;color:#0D1F3C">Your mechanic</div>
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div>
           <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:#059669"><span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block"></span>Online now</div>
         </div>
       </div>
       <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:#F9FAFB"></div>
-      <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #E5E7EB;flex-shrink:0;background:#fff">
-        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:15px;outline:none;color:#0D1F3C;background:#fff" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
-        <button id="client-chat-send" style="background:#2563EB;color:#fff;border:none;border-radius:50%;width:40px;height:40px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #E5E7EB;flex-shrink:0;background:var(--white)">
+        <input id="client-chat-inp" style="flex:1;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:20px;font-family:inherit;font-size:15px;outline:none;color:var(--navy);background:var(--white)" placeholder="Type a message..." aria-label="Type a message" maxlength="500">
+        <button id="client-chat-send" style="background:var(--blue);color:var(--white);border:none;border-radius:50%;width:40px;height:40px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -2878,7 +2878,7 @@ function openClientChat(bookingId, screen) {
     msgs.innerHTML = '';
     if (!data?.length) {
       msgs.innerHTML =
-        '<div data-empty style="text-align:center;padding:40px 20px;color:#6B7280;margin:auto"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:15px;font-weight:600;color:#0D1F3C">No messages yet</div><div style="font-size:13px;margin-top:4px">Send a message to your mechanic</div></div>';
+        '<div data-empty style="text-align:center;padding:40px 20px;color:#6B7280;margin:auto"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:15px;font-weight:600;color:var(--navy)">No messages yet</div><div style="font-size:13px;margin-top:4px">Send a message to your mechanic</div></div>';
     } else {
       data.forEach((m) => appendClientMsg(m, msgs, false));
     }
@@ -3137,12 +3137,12 @@ async function renderReview() {
           </p>
           <div style="display:flex;flex-direction:column;gap:12px;max-width:280px;margin:0 auto">
             <a id="google-review-link" href="https://g.page/r/drbikesydney/review" target="_blank" rel="noopener"
-              style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:2px solid #E5E7EB;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#374151">
+              style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--white);border:2px solid #E5E7EB;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#374151">
               <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               Leave a Google Review
             </a>
             <a id="fb-share-link" href="https://www.facebook.com/drbikesydney" target="_blank" rel="noopener"
-              style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1877F2;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:#fff">
+              style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1877F2;border-radius:10px;padding:14px 20px;text-decoration:none;font-weight:600;font-size:15px;color:var(--white)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
               Share on Facebook
             </a>
@@ -3183,15 +3183,15 @@ async function renderLogin() {
     <div class="login-wrap">
       <div class="login-logo" style="letter-spacing:-0.3px;font-size:24px">
         <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="32" style="width:auto;display:block">
-        <span>Dr. <span style="color:#2563EB">Bike</span> Sydney</span>
+        <span>Dr. <span style="color:var(--blue)">Bike</span> Sydney</span>
       </div>
-      <p style="text-align:center;font-size:13px;font-weight:600;color:#2563EB;margin:0 0 12px">Healthy bikes, happy riders</p>
+      <p style="text-align:center;font-size:13px;font-weight:600;color:var(--blue);margin:0 0 12px">Healthy bikes, happy riders</p>
       <h2 class="login-title">${isReset ? 'Reset Password' : isSignup ? 'Create Account' : 'Welcome Back!'}</h2>
       <p class="login-sub text-secondary text-center">${isReset ? "Enter your email and we'll send you a reset link" : isSignup ? 'Join Dr. Bike Sydney' : 'Login to your account'}</p>
       ${
         isReset
           ? ''
-          : `<button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:#fff;border-radius:10px;color:#0D1F3C;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
+          : `<button type="button" id="google-btn" class="google-btn" style="width:100%;padding:14px;min-height:48px;background:var(--white);border-radius:10px;color:var(--navy);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -3238,7 +3238,7 @@ async function renderLogin() {
       ${
         isReset
           ? `<div style="text-align:center;margin-top:14px">
-        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:#2563EB;font-weight:600">WhatsApp us</span></a>
+        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:var(--blue);font-weight:600">WhatsApp us</span></a>
       </div>`
           : ''
       }
@@ -3402,7 +3402,7 @@ function renderResetSent(email) {
         <button class="link-btn" id="back-to-signin-btn">Back to sign in</button>
       </div>
       <div style="text-align:center;margin-top:14px">
-        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:#2563EB;font-weight:600">WhatsApp us</span></a>
+        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:var(--blue);font-weight:600">WhatsApp us</span></a>
       </div>
     </div>
     ${createBottomNav('profile')}
@@ -3443,12 +3443,12 @@ function promptNewPassword() {
   modal.style.cssText =
     'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.innerHTML = `
-    <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px">
-      <div style="font-weight:700;color:#0D1F3C;font-size:15px;margin-bottom:6px">Set a new password</div>
+    <div style="background:var(--white);border-radius:16px;padding:24px;width:100%;max-width:360px">
+      <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:6px">Set a new password</div>
       <div style="font-size:13px;color:#6B7280;margin-bottom:16px">Choose a new password for your account.</div>
       <input id="reset-pw-inp" type="password" placeholder="New password" aria-label="New password" autocomplete="new-password"
         style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1.5px solid #E5E7EB;border-radius:10px;font-family:inherit;margin-bottom:10px">
-      <div id="reset-pw-err" style="display:none;color:#DC2626;font-size:13px;margin-bottom:10px"></div>
+      <div id="reset-pw-err" style="display:none;color:var(--red);font-size:13px;margin-bottom:10px"></div>
       <button id="reset-pw-btn" class="btn btn--primary btn--full">Update password</button>
     </div>
   `;
@@ -3595,17 +3595,17 @@ async function renderMyBookings() {
         const sc = STATUS_COLORS[booking.status] || '#64748B';
         const sl = STATUS_LABELS[booking.status] || booking.status;
         overlay.innerHTML = `
-          <div id="detail-panel" style="background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--elevation-2)">
-            <div style="width:36px;height:4px;background:#E2E8F0;border-radius:4px;margin:0 auto 20px"></div>
-            <div style="font-size:18px;font-weight:800;color:#0D1F3C;margin-bottom:4px">${booking.service_name || 'Service'}</div>
+          <div id="detail-panel" style="background:var(--white);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--elevation-2)">
+            <div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px"></div>
+            <div style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px">${booking.service_name || 'Service'}</div>
             <div style="display:inline-block;font-size:11px;font-weight:600;color:${sc};background:${sc}1A;padding:3px 10px;border-radius:20px;margin-bottom:20px">${sl}</div>
-            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;background:#F8FAFC;border-radius:12px;padding:16px;border:1px solid #E2E8F0">
-              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:#475569">Date</span><span style="font-weight:600;color:#0D1F3C">${booking.scheduled_date || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:#475569">Time</span><span style="font-weight:600;color:#0D1F3C">${booking.scheduled_time || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:#475569">Address</span><span style="font-weight:600;color:#0D1F3C;text-align:right;max-width:60%">${booking.address || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:#475569">Call-out fee</span><span style="font-weight:600;color:#0D1F3C">$${booking.callout_fee ?? 20}</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Date</span><span style="font-weight:600;color:var(--navy)">${booking.scheduled_date || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Time</span><span style="font-weight:600;color:var(--navy)">${booking.scheduled_time || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${booking.address || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Call-out fee</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
             </div>
-            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#DC2626;margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
+            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
             ${
               booking.status === 'completed' &&
               (booking.photo_before_url || booking.photo_after_url)
@@ -3615,7 +3615,7 @@ async function renderMyBookings() {
                       ${
                         booking.photo_before_url
                           ? `<a href="${escapeHtml(booking.photo_before_url)}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
-                              <img src="${escapeHtml(booking.photo_before_url)}" alt="Before" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
+                              <img src="${escapeHtml(booking.photo_before_url)}" alt="Before" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid var(--border);display:block">
                               <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">Before</div>
                             </a>`
                           : ''
@@ -3623,7 +3623,7 @@ async function renderMyBookings() {
                       ${
                         booking.photo_after_url
                           ? `<a href="${escapeHtml(booking.photo_after_url)}" target="_blank" rel="noopener" style="flex:1;min-width:0;text-decoration:none">
-                              <img src="${escapeHtml(booking.photo_after_url)}" alt="After" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid #E2E8F0;display:block">
+                              <img src="${escapeHtml(booking.photo_after_url)}" alt="After" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid var(--border);display:block">
                               <div style="font-size:11px;color:#6B7280;text-align:center;margin-top:4px">After</div>
                             </a>`
                           : ''
@@ -3671,7 +3671,7 @@ async function renderMyBookings() {
                 .toUpperCase();
               const avatarHTML = p.photo_url
                 ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
-                : `<div style="width:44px;height:44px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#2563EB">${escapeHtml(initials)}</div>`;
+                : `<div style="width:44px;height:44px;border-radius:50%;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--blue)">${escapeHtml(initials)}</div>`;
               const metaParts = [];
               if (p.jobs_completed > 0) metaParts.push(`${p.jobs_completed} services`);
               if (p.rating) metaParts.push(`★ ${p.rating}`);
@@ -3682,7 +3682,7 @@ async function renderMyBookings() {
                   ${avatarHTML}
                   <div style="min-width:0">
                     <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em">Your mechanic</div>
-                    <div style="font-size:15px;font-weight:700;color:#0D1F3C">${escapeHtml(p.name)}</div>
+                    <div style="font-size:15px;font-weight:700;color:var(--navy)">${escapeHtml(p.name)}</div>
                     ${metaParts.length ? `<div style="font-size:13px;color:#6B7280">${metaParts.join('  ·  ')}</div>` : ''}
                   </div>
                 </div>
@@ -4049,7 +4049,7 @@ async function renderProfile() {
       <div class="fw-600 text-center">${name}</div>
       <div class="text-secondary text-sm text-center">${user.email}</div>
 
-      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-top:16px;box-shadow:var(--elevation-0)">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;box-shadow:var(--elevation-0)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           ${createTierBadge(riderTier, 'lg')}
           <div style="font-size:13px;color:#6B7280"><span>${completedJobs}</span> <span>${completedJobs === 1 ? 'service completed' : 'services completed'}</span></div>
@@ -4064,30 +4064,30 @@ async function renderProfile() {
         }
       </div>
 
-      <div style="background:linear-gradient(135deg,#1E40AF,#1E3A8A);border-radius:16px;padding:20px;margin:20px 0;text-align:center">
+      <div style="background:linear-gradient(135deg,var(--blue-dark),var(--blue2));border-radius:16px;padding:20px;margin:20px 0;text-align:center">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Your referral code</div>
-        <div id="ref-code-display" style="font-size:28px;font-weight:900;color:#fff;letter-spacing:0.18em;margin-bottom:4px">${refCode}</div>
+        <div id="ref-code-display" style="font-size:28px;font-weight:900;color:var(--white);letter-spacing:0.18em;margin-bottom:4px">${refCode}</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:16px">You and your friend each get $15 off</div>
         <div style="display:flex;gap:8px;justify-content:center">
-          <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Copy code</button>
-          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px"><span aria-hidden="true">📱</span><span>Share</span></a>
+          <button id="copy-code-btn" style="background:rgba(255,255,255,0.15);color:var(--white);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">Copy code</button>
+          <a href="https://wa.me/?text=${shareMsg}" target="_blank" style="background:var(--wa);color:var(--white);border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px"><span aria-hidden="true">📱</span><span>Share</span></a>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div style="background:#EFF6FF;border-radius:12px;padding:16px;text-align:center;border:1px solid #BFDBFE">
-          <div style="font-size:28px;font-weight:800;color:#1E40AF">${referralCount}</div>
-          <div style="font-size:13px;color:#475569;margin-top:2px;font-weight:600">Friends referred</div>
+        <div style="background:var(--blue-lt);border-radius:12px;padding:16px;text-align:center;border:1px solid #BFDBFE">
+          <div style="font-size:28px;font-weight:800;color:var(--blue-dark)">${referralCount}</div>
+          <div style="font-size:13px;color:var(--gray);margin-top:2px;font-weight:600">Friends referred</div>
         </div>
-        <div style="background:#F0FDF4;border-radius:12px;padding:16px;text-align:center;border:1px solid #BBF7D0">
-          <div style="font-size:28px;font-weight:800;color:#16A34A">$${credits}</div>
-          <div style="font-size:13px;color:#475569;margin-top:2px;font-weight:600">Credits earned</div>
+        <div style="background:var(--green-lt);border-radius:12px;padding:16px;text-align:center;border:1px solid #BBF7D0">
+          <div style="font-size:28px;font-weight:800;color:var(--green)">$${credits}</div>
+          <div style="font-size:13px;color:var(--gray);margin-top:2px;font-weight:600">Credits earned</div>
         </div>
       </div>
 
-      <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #E2E8F0">
-        <div style="font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:10px">How it works</div>
-        <div style="font-size:13px;color:#475569;line-height:1.8">
+      <div style="background:var(--surface);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid var(--border)">
+        <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:10px">How it works</div>
+        <div style="font-size:13px;color:var(--gray);line-height:1.8">
           1. Share your code with friends<br>
           2. They get $15 off their first service<br>
           3. You get $15 credit when they book
@@ -4104,10 +4104,10 @@ async function renderProfile() {
               const planLabel = membershipPlan.charAt(0).toUpperCase() + membershipPlan.slice(1);
               const isPaused = membershipStatus === 'paused';
               const statusBadge = isPaused
-                ? '<span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">Paused</span>'
-                : '<span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block"></span>Active</span>';
+                ? '<span style="background:rgba(255,255,255,0.2);color:var(--white);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">Paused</span>'
+                : '<span style="background:rgba(255,255,255,0.2);color:var(--white);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block"></span>Active</span>';
               return `<div style="margin-bottom:20px">
-          <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:#fff;margin-bottom:10px;box-shadow:var(--elevation-1)">
+          <div style="background:linear-gradient(135deg,${planColor},#1848C8);border-radius:16px;padding:18px;color:var(--white);margin-bottom:10px;box-shadow:var(--elevation-1)">
             <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Membership</div>
             <div style="font-size:20px;font-weight:800"><span>${planLabel}</span> <span>Plan</span></div>
             <div style="margin-top:8px">${statusBadge}</div>
@@ -4116,7 +4116,7 @@ async function renderProfile() {
             <button id="membership-toggle-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${isPaused ? '#059669' : '#D97706'};color:${isPaused ? '#059669' : '#D97706'};background:#fff">
               ${isPaused ? 'Resume membership' : 'Pause membership'}
             </button>
-            <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:#fff">Cancel</button>
+            <button id="membership-cancel-btn" class="btn-press" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #E5E7EB;color:#6B7280;background:var(--white)">Cancel</button>
           </div>
         </div>`;
             })()
@@ -4135,22 +4135,22 @@ async function renderProfile() {
 
       <div style="margin-bottom:20px">
         <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Payment Method</div>
-        <div id="card-on-file-section" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
+        <div id="card-on-file-section" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
           ${
             savedCardId
               ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
-                  <div style="font-size:15px;font-weight:600;color:#0D1F3C">💳 Card on file</div>
+                  <div style="font-size:15px;font-weight:600;color:var(--navy)">💳 Card on file</div>
                   <div style="font-size:13px;color:#6B7280;margin-top:2px">Auto-charged when your mechanic completes a job</div>
                 </div>
-                <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #DC2626;color:#DC2626;background:#fff;white-space:nowrap">Remove</button>
+                <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--red);color:var(--red);background:var(--white);white-space:nowrap">Remove</button>
               </div>`
               : `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
-                  <div style="font-size:15px;font-weight:600;color:#0D1F3C">No card saved</div>
+                  <div style="font-size:15px;font-weight:600;color:var(--navy)">No card saved</div>
                   <div style="font-size:13px;color:#6B7280;margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
                 </div>
-                <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Add card</button>
+                <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Add card</button>
               </div>`
           }
         </div>
@@ -4158,15 +4158,15 @@ async function renderProfile() {
 
       <div style="margin-bottom:20px">
         <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Notifications</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
           <div style="min-width:0">
-            <div style="font-size:15px;font-weight:600;color:#0D1F3C">Mechanic messages</div>
+            <div style="font-size:15px;font-weight:600;color:var(--navy)">Mechanic messages</div>
             <div style="font-size:13px;color:#6B7280;margin-top:2px">Get a phone alert when your mechanic messages you</div>
           </div>
           ${
             typeof Notification !== 'undefined' && Notification.permission === 'granted'
               ? '<span style="flex-shrink:0;font-size:13px;font-weight:600;color:#059669;white-space:nowrap">✓ <span>Enabled</span></span>'
-              : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #2563EB;color:#2563EB;background:#fff;white-space:nowrap">Enable</button>'
+              : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Enable</button>'
           }
         </div>
       </div>
@@ -4223,7 +4223,7 @@ async function renderProfile() {
   screen.querySelector('#add-card-btn')?.addEventListener('click', async () => {
     const section = screen.querySelector('#card-on-file-section');
     section.innerHTML = `
-      <div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="background:var(--white);border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:10px">
         <div id="new-card-element" class="card-element"></div>
       </div>
       <div id="add-card-error" class="booking-error" hidden style="margin-bottom:10px"></div>
@@ -4423,7 +4423,7 @@ async function renderMyBikes() {
       <div id="predicted-service-card" style="margin-bottom:16px"></div>
       <div id="bikes-list" style="margin-bottom:16px">
         <div style="text-align:center;padding:40px 0;color:var(--color-text-secondary)">
-          <div style="width:88px;height:88px;border-radius:20px;background:#2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5">
+          <div style="width:88px;height:88px;border-radius:20px;background:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.5">
             <span style="display:inline-block;width:56px;height:38px;background-color:#fff;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
           <div style="margin-top:12px;font-size:15px">Loading bikes...</div>
@@ -4482,7 +4482,7 @@ async function renderMyBikes() {
       if (error) throw error;
       if (!data || data.length === 0) {
         list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--color-text-secondary)">
-          <div style="width:88px;height:88px;border-radius:20px;background:#2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto">
+          <div style="width:88px;height:88px;border-radius:20px;background:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto">
             <span style="display:inline-block;width:56px;height:38px;background-color:#fff;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
           <div style="margin-top:14px;font-size:15px">No bikes added yet</div>
@@ -4501,7 +4501,7 @@ async function renderMyBikes() {
       list.innerHTML = data
         .map(
           (bike) => `
-        <div data-bike-id="${bike.id}" class="bike-card" style="cursor:pointer;background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
+        <div data-bike-id="${bike.id}" class="bike-card" style="cursor:pointer;background:var(--white);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--color-border);display:flex;align-items:center;gap:14px">
           <div style="width:44px;height:44px;border-radius:12px;background:var(--color-primary-alpha,rgba(10,88,202,0.12));display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <span style="display:inline-block;width:26px;height:18px;background-color:var(--color-primary);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
           </div>
@@ -4574,7 +4574,7 @@ async function renderMyBikes() {
               hEl.style.textAlign = 'left';
               hEl.style.padding = '0';
               hEl.innerHTML = `
-                <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+                <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
                   <span style="font-size:20px" aria-hidden="true">🔒</span>
                   <div style="min-width:0">
                     <div style="font-size:13px;font-weight:600;color:var(--color-text)">Service history is a Standard/VIP perk</div>
@@ -4790,7 +4790,7 @@ async function renderMyBikes() {
       <div style="background:${overdue ? '#FFFBEB' : '#EFF6FF'};border:1px solid ${overdue ? '#FCD34D' : '#BFDBFE'};border-radius:14px;padding:16px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <span style="font-size:18px">${overdue ? '⚠️' : '📊'}</span>
-          <span style="font-size:13px;font-weight:700;color:#0D1F3C">${overdue ? "You're likely due for a service" : 'Predicted next service'}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--navy)">${overdue ? "You're likely due for a service" : 'Predicted next service'}</span>
         </div>
         <div style="font-size:13px;color:#374151;line-height:1.5">
           <span>We recommend a service roughly every 3 months.</span>
@@ -4980,7 +4980,7 @@ function showDiagResult(screen, data) {
     : '';
   const bookHtml =
     data.recommended_service_id && bookLabel
-      ? `<button id="diag-book-btn" style="width:100%;margin-top:10px;background:var(--color-primary);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;text-align:left">${bookLabel}</button>`
+      ? `<button id="diag-book-btn" style="width:100%;margin-top:10px;background:var(--color-primary);color:var(--white);border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;text-align:left">${bookLabel}</button>`
       : '';
   resultEl.innerHTML = `
     <div style="background:var(--color-bg);border-radius:8px;padding:12px;border:1px solid var(--color-border)">

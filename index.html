@@ -133,7 +133,7 @@
       align-items: center;
       justify-content: center;
       gap: 18px;
-      background: #f8fafc;
+      background: var(--surface);
       transition: opacity 260ms ease;
     }
     #boot-loader .boot-mark {
@@ -167,7 +167,7 @@
       font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-size: 13px;
       font-weight: 600;
-      color: #475569;
+      color: var(--gray);
     }
     @keyframes boot-halo {
       0%, 100% { transform: scale(0.92); opacity: 0.55; }
@@ -215,15 +215,15 @@
   <div data-screen="home" class="screen active">
 
     <!-- Mobile-only top bar (hidden ≥768px where desktop nav takes over) -->
-    <div id="home-mobile-bar" style="background:#0D1F3C;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100">
+    <div id="home-mobile-bar" style="background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100">
       <div style="display:flex;align-items:center;gap:8px">
         <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="28" style="width:auto;display:block">
-        <span style="font-weight:700;font-size:16px;letter-spacing:-0.2px;color:#fff">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
+        <span style="font-weight:700;font-size:16px;letter-spacing:-0.2px;color:var(--white)">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <!-- filled by renderSpaLangSwitcher() in js/app.js -->
         <div id="spa-lang" class="spa-lang"></div>
-        <a href="#login" id="home-mobile-auth-btn" style="background:#2563EB;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;display:inline-flex;align-items:center;gap:6px"><span id="home-mobile-auth-icon"></span><span id="home-mobile-auth-label">Sign In</span></a>
+        <a href="#login" id="home-mobile-auth-btn" style="background:var(--blue);color:var(--white);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;display:inline-flex;align-items:center;gap:6px"><span id="home-mobile-auth-icon"></span><span id="home-mobile-auth-label">Sign In</span></a>
       </div>
     </div>
 
@@ -232,7 +232,7 @@
         <a href="#home" class="home-nav-logo">
           <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="34" style="width:auto;display:block">
           <div>
-            <span style="font-weight:700;font-size:17px;letter-spacing:-0.2px;color:#fff">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
+            <span style="font-weight:700;font-size:17px;letter-spacing:-0.2px;color:var(--white)">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
             <span style="display:block;font-size:11px;font-weight:400;color:#60A5FA;margin-top:-2px">Healthy bikes, happy riders</span>
           </div>
         </a>
@@ -255,11 +255,11 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
           100% Satisfaction
         </span>
-        <span style="background:#EEF3FC;border:1px solid #0A58CA;border-radius:20px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#1e40af;flex-shrink:0">
+        <span style="background:#EEF3FC;border:1px solid #0A58CA;border-radius:20px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--blue-dark);flex-shrink:0">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0A58CA" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><polyline points="16 3 18 5 22 1"/></svg>
           Verified Mechanic
         </span>
-        <span style="background:#FFFBEB;border:1px solid #D97706;border-radius:20px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#92400e;flex-shrink:0">
+        <span style="background:var(--amber-lt);border:1px solid var(--amber);border-radius:20px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#92400e;flex-shrink:0">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           Background Checked
         </span>
@@ -322,7 +322,7 @@
     </div>
 
     <!-- Services -->
-    <section id="services" style="padding:64px 0;background:#fff">
+    <section id="services" style="padding:64px 0;background:var(--white)">
       <div class="lp-container">
         <div class="section-center">
           <span class="section-badge">OUR SERVICES</span>
@@ -465,7 +465,7 @@
     </section>
 
     <!-- Testimonials -->
-    <section id="reviews" style="padding:56px 0;background:#fff">
+    <section id="reviews" style="padding:56px 0;background:var(--white)">
       <div class="lp-container">
         <div class="section-center">
           <span class="section-badge">TESTIMONIALS</span>
@@ -475,7 +475,7 @@
         <div class="reviews-grid" id="reviews-grid"></div>
         <div id="reviews-empty" style="display:none;text-align:center;padding:28px 16px">
           <div style="font-size:28px;margin-bottom:10px">&#128172;</div>
-          <p style="font-weight:700;font-size:15px;color:#0D1F3C;margin-bottom:6px">Be the first to leave a review</p>
+          <p style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:6px">Be the first to leave a review</p>
           <p style="font-size:13px;color:#6B7280;max-width:340px;margin:0 auto">Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.</p>
         </div>
       </div>
@@ -493,10 +493,10 @@
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">Basic</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$67</span><span style="color:var(--gray);font-size:14px">/month</span></div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>1 free minor repair (under $60) + 1 free bike wash per month</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>5% off extra services</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>$20 call-out fee applies</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (72hs)</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>1 free minor repair (under $60) + 1 free bike wash per month</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>5% off extra services</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>$20 call-out fee applies</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (72hs)</li>
             </ul>
             <button class="btn-get-started" data-plan="basic" style="display:block;width:100%;margin-top:20px;padding:11px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit">Get Started</button>
             <button class="btn-learn-more" data-plan="basic" style="display:flex;align-items:center;justify-content:center;min-height:44px;width:100%;margin-top:8px;padding:7px;border:none;color:var(--gray);background:transparent;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
@@ -507,12 +507,12 @@
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">Standard</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$97</span><span style="color:var(--gray);font-size:14px">/month</span></div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Call-out fee included</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>10% off extra services</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (48hs)</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>1 emergency callout per month (call-out fee applies)</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>Call-out fee included</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>10% off extra services</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (48hs)</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>1 emergency callout per month (call-out fee applies)</li>
             </ul>
             <button class="btn-get-started" data-plan="standard" style="display:block;width:100%;margin-top:20px;padding:11px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit">Get Started</button>
             <button class="btn-learn-more" data-plan="standard" style="display:flex;align-items:center;justify-content:center;min-height:44px;width:100%;margin-top:8px;padding:7px;border:none;color:var(--gray);background:transparent;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
@@ -522,13 +522,13 @@
             <h3 style="font-weight:700;font-size:17px;color:var(--dark)">VIP</h3>
             <div style="margin:14px 0"><span style="font-size:2.25rem;font-weight:800;color:var(--dark)">$197</span><span style="color:var(--gray);font-size:14px">/month</span></div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;margin-bottom:4px">
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Call-out fee included</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>15% off extra services, plus 5% more</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (24hs)</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>1 emergency callout per month (call-out fee waived in your zone)</li>
-              <li><span style="color:#16a34a;font-weight:700;margin-right:6px">&#10003;</span>Dedicated mechanic</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>Call-out fee included</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>15% off extra services, plus 5% more</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>Priority scheduling (24hs)</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>Digital bike history</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>1 emergency callout per month (call-out fee waived in your zone)</li>
+              <li><span style="color:var(--green);font-weight:700;margin-right:6px">&#10003;</span>Dedicated mechanic</li>
             </ul>
             <button class="btn-get-started" data-plan="vip" style="display:block;width:100%;margin-top:20px;padding:11px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit">Get Started</button>
             <button class="btn-learn-more" data-plan="vip" style="display:flex;align-items:center;justify-content:center;min-height:44px;width:100%;margin-top:8px;padding:7px;border:none;color:var(--gray);background:transparent;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
@@ -539,7 +539,7 @@
     </section>
 
     <!-- FAQ -->
-    <section id="faq" style="padding:56px 0;background:#fff">
+    <section id="faq" style="padding:56px 0;background:var(--white)">
       <div class="lp-container">
         <div style="max-width:720px;margin:0 auto">
           <div class="section-center">
@@ -570,7 +570,7 @@
           </div>
           <div style="text-align:center;margin-top:36px;padding:28px;background:var(--surface);border-radius:12px;border:1px solid var(--border)">
             <p style="font-weight:700;font-size:16px;color:var(--navy);margin-bottom:4px">Still have questions? We're here to help!</p>
-            <a href="tel:+61433963250" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:12px 24px;background:var(--blue);color:#fff;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;min-height:44px">
+            <a href="tel:+61433963250" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:12px 24px;background:var(--blue);color:var(--white);border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;min-height:44px">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               Contact Us
             </a>
@@ -582,11 +582,11 @@
     <!-- CTA Banner -->
     <section style="padding:64px 20px;background:var(--navy);text-align:center">
       <div style="max-width:580px;margin:0 auto">
-        <h2 style="font-size:clamp(1.5rem,5vw,2rem);font-weight:800;color:#fff;line-height:1.25;margin-bottom:12px">Ready to Experience<br>Premium Bike Service?</h2>
+        <h2 style="font-size:clamp(1.5rem,5vw,2rem);font-weight:800;color:var(--white);line-height:1.25;margin-bottom:12px">Ready to Experience<br>Premium Bike Service?</h2>
         <p style="color:rgba(255,255,255,0.7);font-size:15px;margin-bottom:32px">Book your service today and join hundreds of satisfied cyclists across Sydney.</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-          <a href="#book-service" style="display:inline-flex;align-items:center;justify-content:center;padding:14px 32px;background:#fff;color:var(--navy);border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;min-height:48px;cursor:pointer">Book Now</a>
-          <a href="tel:+61433963250" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border:2px solid rgba(255,255,255,0.35);color:#fff;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;min-height:48px">
+          <a href="#book-service" style="display:inline-flex;align-items:center;justify-content:center;padding:14px 32px;background:var(--white);color:var(--navy);border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;min-height:48px;cursor:pointer">Book Now</a>
+          <a href="tel:+61433963250" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border:2px solid rgba(255,255,255,0.35);color:var(--white);border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;min-height:48px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             Call 0433 963 250
           </a>
@@ -607,14 +607,14 @@
         <div id="ms-form" style="padding:28px">
           <div style="background:#f0f9ff;border-radius:10px;padding:14px 18px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-weight:600;color:#111827">Monthly Total</span>
-            <span id="ms-price" style="font-size:20px;font-weight:800;color:#2563eb">$67/month</span>
+            <span id="ms-price" style="font-size:20px;font-weight:800;color:var(--blue)">$67/month</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:14px">
             <input id="ms-name" type="text" placeholder="Full Name" aria-label="Full Name" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
             <input id="ms-email" type="email" placeholder="Email Address" aria-label="Email Address" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
             <input id="ms-phone" type="tel" placeholder="Phone Number (04XX XXX XXX)" aria-label="Phone Number" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box">
             <div id="ms-error" style="display:none;color:#ef4444;font-size:13px"></div>
-            <button id="ms-submit" style="width:100%;padding:14px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Start Membership</button>
+            <button id="ms-submit" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Start Membership</button>
             <p style="font-size:11px;color:#9ca3af;text-align:center;margin:0;display:flex;align-items:center;justify-content:center;gap:6px">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               Secured by Stripe &middot; 3-month minimum &middot; Cancel anytime after
@@ -627,7 +627,7 @@
           </div>
           <h3 style="font-size:22px;font-weight:800;color:#111827;margin-bottom:8px">You're all set!</h3>
           <p style="color:#6b7280;font-size:15px;margin-bottom:24px">We'll be in touch shortly to confirm your membership and schedule your first service.</p>
-          <button id="ms-done" style="padding:12px 32px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Done</button>
+          <button id="ms-done" style="padding:12px 32px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Done</button>
         </div>
       </div>
     </div>
@@ -638,24 +638,24 @@
         <div style="padding:24px 28px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">
           <div>
             <div id="pi-plan-label" style="font-size:12px;color:#6b7280;font-weight:600;letter-spacing:1px;text-transform:uppercase">Basic Plan</div>
-            <div id="pi-price" style="font-size:24px;font-weight:800;color:#2563eb;margin-top:4px">$67/month</div>
+            <div id="pi-price" style="font-size:24px;font-weight:800;color:var(--blue);margin-top:4px">$67/month</div>
           </div>
           <button id="pi-close" style="width:36px;height:36px;border-radius:50%;border:1px solid #e5e7eb;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7280">&#215;</button>
         </div>
         <div style="padding:28px">
           <div style="margin-bottom:20px">
-            <div style="font-size:11px;font-weight:700;color:#16a34a;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">INCLUDES</div>
+            <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">INCLUDES</div>
             <ul id="pi-includes-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;color:#374151"></ul>
           </div>
           <div style="margin-bottom:20px;padding:14px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa">
             <div style="font-size:11px;font-weight:700;color:#c2410c;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">DOES NOT INCLUDE</div>
             <p id="pi-excludes-text" style="font-size:13px;color:#7c2d12;margin:0"></p>
           </div>
-          <div style="padding:14px;background:#eff6ff;border-radius:8px;border:1px solid #bfdbfe;margin-bottom:24px">
+          <div style="padding:14px;background:var(--blue-lt);border-radius:8px;border:1px solid #bfdbfe;margin-bottom:24px">
             <div style="font-size:11px;font-weight:700;color:#1d4ed8;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">SAVINGS EXAMPLE</div>
-            <p id="pi-savings" style="font-size:13px;color:#1e3a8a;margin:0"></p>
+            <p id="pi-savings" style="font-size:13px;color:var(--blue2);margin:0"></p>
           </div>
-          <button id="pi-get-started" class="btn-get-started" data-plan="basic" style="width:100%;padding:13px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Get Started - $67/month</button>
+          <button id="pi-get-started" class="btn-get-started" data-plan="basic" style="width:100%;padding:13px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Get Started - $67/month</button>
         </div>
       </div>
     </div>
@@ -668,7 +668,7 @@
           <div>
             <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
               <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="28" style="width:auto;display:block">
-              <span style="font-weight:700;font-size:17px;letter-spacing:-0.2px;color:#fff">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
+              <span style="font-weight:700;font-size:17px;letter-spacing:-0.2px;color:var(--white)">Dr. <span style="color:#60A5FA">Bike</span> Sydney</span>
             </div>
             <p style="color:#60A5FA;font-size:13px;font-weight:600;margin-bottom:8px">Healthy bikes, happy riders</p>
             <p style="color:#6b7280;font-size:13px;line-height:1.6;margin-bottom:16px">Professional bike service at your doorstep. Sydney&rsquo;s mobile bicycle mechanic.</p>

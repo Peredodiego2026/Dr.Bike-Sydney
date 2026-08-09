@@ -203,15 +203,15 @@ export function createBookingCard(booking) {
   }
   return `
 <div class="booking-card" data-booking-id="${id}" style="border-left:4px solid ${s.border}">
-  <div class="booking-card__date" style="font-size:18px;font-weight:800;color:#0D1F3C;text-align:center;line-height:1.1;flex-shrink:0;width:44px">${dateLabel}</div>
+  <div class="booking-card__date" style="font-size:18px;font-weight:800;color:var(--navy);text-align:center;line-height:1.1;flex-shrink:0;width:44px">${dateLabel}</div>
   <div class="booking-card__info">
     <div class="booking-card__service">${service_name || 'Service'}</div>
-    <div style="font-size:12px;color:#475569;margin-top:2px">${scheduled_time || ''}</div>
+    <div style="font-size:12px;color:var(--gray);margin-top:2px">${scheduled_time || ''}</div>
     ${rating ? `<div class="booking-card__rating" style="margin-top:4px">${createStarRating(rating, false)}</div>` : ''}
   </div>
   <div class="booking-card__right">
     <span class="booking-chip" style="background:${s.bg};color:${s.color}">${s.label}</span>
-    <span style="font-size:13px;color:#475569;font-weight:600">$${service_price || 0}</span>
+    <span style="font-size:13px;color:var(--gray);font-weight:600">$${service_price || 0}</span>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
   </div>
 </div>`;
@@ -362,6 +362,6 @@ export function createTierBadge(riderTier, size = 'sm') {
   return `
 <span class="tier-badge tier-badge--lg" style="display:inline-flex;align-items:center;gap:10px">
   ${iconHTML}
-  <span class="tier-badge__label" style="font-size:14px;font-weight:700;color:#0D1F3C">${label}</span>
+  <span class="tier-badge__label" style="font-size:14px;font-weight:700;color:var(--navy)">${label}</span>
 </span>`;
 }

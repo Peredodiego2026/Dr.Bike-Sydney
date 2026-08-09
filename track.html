@@ -116,7 +116,7 @@ async function init(){
   if(!bkg){
     content.innerHTML = reachedServer
       ? '<div class="card"><div class="err">Booking not found.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>'
-      : '<div class="card"><div class="err">We could not reach Dr. Bike. Check your connection and try again - your booking is safe.<br><br><button id="track-retry" style="margin-top:14px;min-height:44px;padding:0 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Try again</button></div></div>';
+      : '<div class="card"><div class="err">We could not reach Dr. Bike. Check your connection and try again - your booking is safe.<br><br><button id="track-retry" style="margin-top:14px;min-height:44px;padding:0 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Try again</button></div></div>';
     document.getElementById('track-retry')?.addEventListener('click', () => window.location.reload());
     return;
   }
@@ -130,7 +130,7 @@ async function init(){
   const mechName = escHtml(mech.name || 'Diego Peredo');
   const mechAvatarHTML = mech.photo_url
     ? `<img src="${escHtml(mech.photo_url)}" alt="${mechName}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--white);display:block">`
-    : `<div style="width:68px;height:68px;border-radius:50%;background:var(--blue);border:3px solid var(--white);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:700">${mechName.charAt(0)}</div>`;
+    : `<div style="width:68px;height:68px;border-radius:50%;background:var(--blue);border:3px solid var(--white);display:flex;align-items:center;justify-content:center;color:var(--white);font-size:24px;font-weight:700">${mechName.charAt(0)}</div>`;
   const mechBioHTML = mech.bio
     ? `<div style="font-size:12px;color:var(--mgray);margin-top:6px;line-height:1.4;padding:0 8px">${escHtml(mech.bio)}</div>`
     : '';
@@ -188,8 +188,8 @@ async function init(){
        </div>
        ${mechStatsRowHTML}
        <div style="display:flex;gap:8px;padding:16px 20px 20px">
-         <a href="tel:+61433963250" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;background:var(--blue);color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
-         <a href="https://wa.me/61433963250" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;background:#25D366;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
+         <a href="tel:+61433963250" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;background:var(--blue);color:var(--white);padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">📞 Call</a>
+         <a href="https://wa.me/61433963250" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;background:var(--wa);color:var(--white);padding:11px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
        </div>
      </div>
      <div class="card" style="background:var(--green-lt);border-color:#6EE7B7">
@@ -208,8 +208,8 @@ async function init(){
 
     <div class="card" style="text-align:center">
       <div style="font-size:13px;color:var(--mgray);margin-bottom:12px">Questions? Contact us</div>
-      <a href="tel:+61433963250" style="display:flex;align-items:center;justify-content:center;min-height:44px;background:var(--blue);color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:8px">📞 Call +61 433 963 250</a>
-      <a href="https://wa.me/61433963250" style="display:flex;align-items:center;justify-content:center;min-height:44px;background:#25D366;color:#fff;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px">💬 WhatsApp</a>
+      <a href="tel:+61433963250" style="display:flex;align-items:center;justify-content:center;min-height:44px;background:var(--blue);color:var(--white);text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:8px">📞 Call +61 433 963 250</a>
+      <a href="https://wa.me/61433963250" style="display:flex;align-items:center;justify-content:center;min-height:44px;background:var(--wa);color:var(--white);text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:14px">💬 WhatsApp</a>
     </div>`;
 
   // Live map if enroute or in_progress
@@ -334,7 +334,7 @@ function showEmailForm(content) {
       <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">Track your booking</div>
       <div style="font-size:13px;color:var(--mgray);margin-bottom:16px">Enter the email you used to book</div>
       <input id="track-email" type="email" placeholder="your@email.com" aria-label="Email" style="width:100%;min-height:44px;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);outline:none;margin-bottom:10px">
-      <button id="track-email-btn" style="width:100%;min-height:44px;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Find my bookings →</button>
+      <button id="track-email-btn" style="width:100%;min-height:44px;padding:12px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Find my bookings →</button>
       <div id="track-email-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px;text-align:center"></div>
     </div>`;
 

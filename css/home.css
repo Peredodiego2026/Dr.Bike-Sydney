@@ -41,7 +41,7 @@
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: var(--white);
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 8px;
@@ -54,8 +54,8 @@
   background: rgba(255, 255, 255, 0.22);
 }
 .spa-lang__toggle[aria-expanded='true'] {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--blue);
+  border-color: var(--blue);
 }
 .spa-lang__caret {
   transition: transform 150ms;
@@ -116,7 +116,7 @@
 /* ── Hero ──────────────────────────────────────────────────────────────────── */
 [data-screen='home'] .hero {
   padding: 48px 0 0;
-  background: #0d1f3c;
+  background: var(--navy);
 }
 [data-screen='home'] .hero .lp-container {
   display: grid;
@@ -139,7 +139,7 @@
 [data-screen='home'] .hero-h1 {
   font-size: clamp(1.75rem, 5vw, 2.75rem);
   font-weight: 800;
-  color: #fff;
+  color: var(--white);
   line-height: 1.15;
 }
 [data-screen='home'] .hero-p {
@@ -156,7 +156,7 @@
 }
 [data-screen='home'] .btn-primary {
   background: var(--blue);
-  color: #fff;
+  color: var(--white);
   padding: 12px 24px;
   border-radius: var(--radius);
   font-weight: 700;
@@ -176,7 +176,7 @@
 [data-screen='home'] .btn-outline {
   background: transparent;
   border: 1.5px solid rgba(255, 255, 255, 0.35);
-  color: #fff;
+  color: var(--white);
   padding: 12px 24px;
   border-radius: var(--radius);
   font-weight: 700;
@@ -225,7 +225,7 @@
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   padding: 16px 0;
-  background: #fff;
+  background: var(--white);
 }
 [data-screen='home'] .trust-bar .lp-container {
   display: flex;
@@ -268,7 +268,7 @@
   padding: 20px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--white);
   cursor: pointer;
   box-shadow: var(--elevation-0);
   transition:
@@ -363,7 +363,7 @@
 }
 [data-screen='home'] .btn-outline-blue:hover {
   background: var(--blue);
-  color: #fff;
+  color: var(--white);
 }
 
 /* ── About ─────────────────────────────────────────────────────────────────── */
@@ -413,7 +413,7 @@
 [data-screen='home'] .stat-mini {
   text-align: center;
   padding: 12px 8px;
-  background: #fff;
+  background: var(--white);
   border-radius: var(--radius);
   box-shadow: var(--elevation-0);
 }
@@ -446,7 +446,7 @@
   margin-bottom: 40px;
 }
 [data-screen='home'] .footer-h4 {
-  color: #fff;
+  color: var(--white);
   font-size: 11px;
   letter-spacing: 1px;
   font-weight: 600;
@@ -467,7 +467,7 @@
   transition: color 150ms;
 }
 [data-screen='home'] .footer-link:hover {
-  color: #fff;
+  color: var(--white);
 }
 [data-screen='home'] .footer-contact-item {
   display: flex;
@@ -579,7 +579,7 @@
   margin-top: 36px;
 }
 [data-screen='home'] .hiw-step {
-  background: #fff;
+  background: var(--white);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 22px 16px;
@@ -589,7 +589,7 @@
   width: 32px;
   height: 32px;
   background: var(--blue);
-  color: #fff;
+  color: var(--white);
   border-radius: 50%;
   font-size: 13px;
   font-weight: 700;
@@ -622,7 +622,7 @@
   margin-top: 36px;
 }
 [data-screen='home'] .review-card {
-  background: #fff;
+  background: var(--white);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px;
@@ -650,7 +650,7 @@
   width: 36px;
   height: 36px;
   background: var(--blue);
-  color: #fff;
+  color: var(--white);
   border-radius: 50%;
   font-size: 12px;
   font-weight: 700;
@@ -677,7 +677,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   margin-bottom: 10px;
-  background: #fff;
+  background: var(--white);
   overflow: hidden;
 }
 [data-screen='home'] .faq-q {
@@ -757,7 +757,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    background: #0d1f3c;
+    background: var(--navy);
     border-bottom: none;
     height: 64px;
   }
@@ -777,7 +777,7 @@
     font-weight: 700;
     font-size: 15px;
     letter-spacing: 0.5px;
-    color: #fff;
+    color: var(--white);
   }
   .home-nav-links {
     display: flex;
@@ -789,11 +789,11 @@
     transition: color 150ms;
   }
   .home-nav-links a:hover {
-    color: #fff;
+    color: var(--white);
   }
   .home-nav-book {
     background: var(--blue);
-    color: #fff;
+    color: var(--white);
     padding: 10px 20px;
     border-radius: var(--radius);
     font-weight: 700;
@@ -814,7 +814,7 @@
 
 /* ── Membership plan cards ─────────────────────────────────────────────────── */
 [data-screen='home'] .plan-card {
-  background: #fff;
+  background: var(--white);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 28px;
