@@ -2530,18 +2530,68 @@ correcto: el invitado la ve por su link de seguimiento, que pasa por el
 servidor con la service key. No hay policy de `INSERT` porque las reservas se
 insertan server-side, que tambien salta RLS. **Nada de eso hay que tocarlo.**
 
+**CERRADO 2026-08-10.** El `DROP NOT NULL` esta en
+`scripts/add-guest-bookings.sql` y **ya corrio contra produccion** - lo
+confirmo Diego con la consulta del [RUNBOOK-SQL](RUNBOOK-SQL.md) (ver 16.5).
+La tabla de arriba se conserva como estaba el 05-ago; hoy `user_id` es
+nullable.
+
+Se reviso ademas lo que el 14.5 pedia revisar - que nada asuma que siempre hay
+`user_id`. **No rompe nada**, y la razon es que la columna practicamente no se
+usa:
+
+| Que se busco | Resultado |
+|---|---|
+| Lecturas de `bookings.user_id` en la app | **Ninguna.** Las unicas menciones en `api/` y `js/` son las dos escrituras (`api/auth.js:783` y `api/stripe-webhook.js:298`) y dos comentarios. Ninguna consulta filtra por esa columna |
+| Quien identifica al cliente | `client_id`, siempre: `api/auth.js:250`, `:1243`, `:1785`, `:2189`, y el panel de admin en `api/auth.js:1127` |
+| RLS | Las policies son sobre `auth.uid() = client_id`. `user_id` no aparece en ninguna |
+| Los dos indices unicos | `bookings_unique_slot` (van+fecha+hora, excluye `cancelled`) y `bookings_unique_payment_intent` (parcial, solo cuando hay pago). Ninguno toca `user_id` |
+
+O sea que `user_id` quedo como un espejo historico de `client_id` que nadie
+lee. Vaciarlo no deja huerfano a nadie.
+
 ### 14.6 Reconstruir la reserva de Thais para el historial fiscal
 
 Diego la necesita en el Excel: es la primera clienta real.
 
-**No se puede insertar hoy**: `user_id` es NOT NULL y ella no tiene cuenta.
-Atribuirsela al usuario de Diego seria falsear el registro. O sale primero el
-`DROP NOT NULL` de 14.5, o no sale.
+**Ya se puede insertar** desde que corrio el `DROP NOT NULL` de 14.5. El script
+esta escrito: **`scripts/restore-thais-booking-2026-08-05.sql`**. Lo corre
+Diego, como todo el SQL de este proyecto.
+
+El script tiene cuatro secciones y **no escribe nada hasta la tercera**:
+comprueba que `user_id` sea nullable y que la fila no exista ya, muestra la
+fila exacta en un `select` de prueba, recien despues inserta (con un
+`where not exists` sobre el `payment_intent`, asi correrlo dos veces no
+duplica), y termina verificando que la facturacion del ano no se movio.
+
+**El precio no va escrito a mano**: sale de un subselect a `services` por
+nombre, porque los precios viven ahi y se mueven.
+
+**Dos datos son reconstruidos, no registrados**, y estan marcados en el
+script para que Diego los cambie si se acuerda de otra cosa: la **hora del
+turno** (`13:30`, tomada del minuto del cobro - el horario que ella eligio se
+perdio con la reserva) y el **numero de van** (`1`, nunca se asigno ninguna).
+El telefono queda NULL a proposito: Diego tiene su WhatsApp, pero nunca entro
+al sistema.
 
 **Y ojo con el importe: se le devolvio.** A efectos fiscales el neto es $0 -
 $0.64 de comision de Stripe, que no se devuelve. Cargarla como una venta
 completada inflaria la facturacion del ano. El registro honesto es una reserva
 con estado `cancelled` y el pago marcado como reembolsado.
+
+**Como se marca el reembolso, y por que asi.** `bookings` **no tiene columna de
+estado de pago**: se buscaron `payment_status` y `refunded` en todo el schema y
+no existen - el estado del dinero vive en Stripe, y el codigo lo consulta ahi
+(`api/_orphan-audit.js:36`). Asi que el reembolso se deja escrito en
+`cancellation_reason`, con el id del PaymentIntent, el importe, el medio de pago
+y la fecha. Es texto, no un campo estructurado, pero es donde el panel de admin
+ya lo muestra.
+
+Que `cancelled` alcance para no inflar la facturacion **esta verificado en
+codigo, no supuesto**: todos los numeros de plata filtran por
+`status === 'completed'` (`js/admin.js:2054`, `:2340`, `:3258`, `:3322`, y la
+linea `:3330` que lo declara como la base del calculo). Y `bookings_unique_slot`
+excluye las canceladas, asi que la fila tampoco bloquea ese hueco de agenda.
 
 Datos para reconstruirla, de Stripe:
 `pi_3U0vVzPPGSm5cT7J0SRAoVUW`, 05-ago 13:29, $20.00 AUD, Apple Pay / Visa
