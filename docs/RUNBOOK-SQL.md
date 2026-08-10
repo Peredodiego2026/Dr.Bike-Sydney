@@ -5,6 +5,39 @@ copia, se pega, se lee el resultado.
 
 ---
 
+## 0. RESULTADO: el 2026-08-10 no faltaba ninguno
+
+Diego corrio la consulta de la seccion 3 contra produccion el mismo dia. **Las
+30 migraciones dieron `OK`.** Ademas:
+
+- `backfill-referral-codes-2026-07-20.sql`: **0** perfiles sin `referral_code`,
+  o sea hecho.
+- `add-completion-notifications.sql` (llego despues de escribir esto, del otro
+  chat): la columna `bookings.completion_notifications` **existe**.
+
+O sea que los tres que `docs/PENDIENTES.md` daba por pendientes -
+`add-address-coordinates.sql` (13.1), `add-guest-bookings.sql` (seccion 14) y
+`add-checkout-attempts.sql` (11.2) - **ya estaban corridos**. El documento
+estaba desactualizado, no la base.
+
+**Que sigue faltando entonces.** Nada de SQL. Lo que queda son pruebas de
+verdad, que la base sola no puede demostrar y que solo puede hacer Diego:
+
+1. Una reserva **sin iniciar sesion** desde el celular, de punta a punta, y
+   comprobar que llegan el email al cliente y el WhatsApp a Diego.
+2. La pagina de seguimiento de una reserva **nueva**: tiene que mostrar ETA
+   (las reservas viejas quedan sin coordenadas para siempre y nunca lo van a
+   mostrar).
+3. El simulacro de restauracion del backup, en
+   [RUNBOOK-BACKUP-RESTORE.md](RUNBOOK-BACKUP-RESTORE.md).
+
+**El resto del documento se conserva** como esta: sirve para la proxima vez, y
+para cualquier maquina o proyecto nuevo donde haya que rehacer la base desde
+cero. Cuando se agregue una migracion nueva, se agrega una fila a la consulta de
+la seccion 3 y se vuelve a correr.
+
+---
+
 ## 1. Para que existe este documento
 
 Hay codigo que ya esta en produccion y que **no funciona hasta que alguien
@@ -125,13 +158,15 @@ with
     exists (select 1 from idx where i = 'bookings_unique_slot')
   union all select 36, 'migrate-inventory-push.sql', 'tabla parts_inventory + profiles.push_subscription',
     (exists (select 1 from tbl where t='parts_inventory') and exists (select 1 from col where t='profiles' and c='push_subscription'))
+  union all select 37, 'add-completion-notifications.sql', 'bookings.completion_notifications',
+    exists (select 1 from col where t='bookings' and c='completion_notifications')
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 30 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 31 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
@@ -191,6 +226,10 @@ mas.
 ---
 
 ## 5. Orden en que se corren, y que se rompe si no
+
+> **Al 2026-08-10 no hay que correr ninguno** (ver seccion 0). Todo lo que sigue
+> queda como referencia: para cuando aparezca una migracion nueva, y como
+> registro de para que sirve cada una y que se pierde si falta.
 
 El orden importa poco entre migraciones distintas, pero **importa mucho dentro
 del paso 1**. La lista va de mayor a menor daño.
@@ -353,7 +392,7 @@ que paso a `OK`. Resumen de que se pierde en cada caso:
 
 ## 6. Chequeo final, despues de correr todo
 
-Volver a pegar la consulta de la seccion 3. **Las 30 filas tienen que decir
+Volver a pegar la consulta de la seccion 3. **Las 31 filas tienen que decir
 `OK`.** Eso es la prueba de que la base quedo como el codigo espera.
 
 Despues, tres pruebas de las de verdad, que la base sola no puede demostrar:
