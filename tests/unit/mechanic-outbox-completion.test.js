@@ -220,4 +220,58 @@ describe('submitComplete falls back to the outbox', () => {
   it('tells the mechanic when the phone could not even save it', () => {
     expect(fn).toMatch(/could not save it/);
   });
+
+  it('clears any older completion for the job, on both paths', () => {
+    // Without this, an item parked on a failed charge stays in the queue for
+    // good - nothing else removes it, so the banner stays red forever and a
+    // superseded price sits on the phone.
+    const catchAt = fn.indexOf('queueAdd({ type:');
+    const online = fn.slice(0, fn.indexOf('let resp')) + fn.slice(fn.indexOf('const okData'));
+    expect(fn.slice(0, catchAt).lastIndexOf('queueDropCompletions(id)')).toBeGreaterThan(-1);
+    expect(online).toMatch(/queueDropCompletions\(id\)/);
+  });
+});
+
+describe('a parked completion can be cleared', () => {
+  const dropSrc = grab(
+    /async function queueDropCompletions\(bookingId\) \{[\s\S]*?\r?\n\}/,
+    'queueDropCompletions'
+  );
+  const build = (queue) => {
+    const saves = [];
+    const factory = new Function(
+      'deps',
+      `
+      let _queue = deps.queue;
+      const queueSave = async () => { deps.saves.push(_queue.length); return true; };
+      ${dropSrc}
+      return { queueDropCompletions, read: () => _queue };
+    `
+    );
+    return { ...factory({ queue, saves }), saves };
+  };
+
+  it('removes a parked completion so the red banner can clear', async () => {
+    const { queueDropCompletions, read } = build([
+      { type: 'complete', booking_id: 'b1', body: {}, needs_payment: true },
+    ]);
+    expect(await queueDropCompletions('b1')).toBe(1);
+    expect(read()).toHaveLength(0);
+  });
+
+  it('leaves status changes and other jobs alone', async () => {
+    const { queueDropCompletions, read } = build([
+      { type: 'status', booking_id: 'b1', status: 'enroute' },
+      { type: 'complete', booking_id: 'b2', body: {} },
+      { type: 'complete', booking_id: 'b1', body: {} },
+    ]);
+    await queueDropCompletions('b1');
+    expect(read().map((i) => i.type + ':' + i.booking_id)).toEqual(['status:b1', 'complete:b2']);
+  });
+
+  it('does not write to storage when there was nothing to drop', async () => {
+    const { queueDropCompletions, saves } = build([{ type: 'status', booking_id: 'b1' }]);
+    expect(await queueDropCompletions('b1')).toBe(0);
+    expect(saves).toHaveLength(0);
+  });
 });

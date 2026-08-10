@@ -1477,6 +1477,18 @@ async function handleMechanicComplete(req, res) {
     { headers: sbHdr }
   ).catch(() => null);
   const guardRow = guardResp?.ok ? (await guardResp.json().catch(() => []))?.[0] : null;
+  if (!guardRow) {
+    // Fail-open is the right call (a completion must not be blocked by a failed
+    // SELECT) but it means the guard is doing NOTHING on this request, so say
+    // so loudly. A silently dead guard is how a double charge comes back.
+    console.error(
+      '[mechanic-complete] duplicate guard could not read booking',
+      booking_id,
+      '- HTTP',
+      guardResp?.status ?? 'no response',
+      '- proceeding UNGUARDED'
+    );
+  }
   const verdict = completionVerdict(guardRow);
   if (verdict.action !== 'proceed') {
     console.warn(

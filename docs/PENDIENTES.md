@@ -2880,8 +2880,21 @@ candado tiene que frenar.
   ahora recorre con indice en vez de hacer `shift`.
 - **Solo se encola cuando no hay red** (el `fetch` tira). Un 500 sigue mostrando
   error como antes.
+- **Un item aparcado se limpia cuando el mecanico rehace el trabajo**
+  (`queueDropCompletions`). Encontrado revisando antes del merge: como los
+  flushes lo saltean, nada mas lo sacaba de la cola. El mecanico cobraba por
+  EFTPOS, completaba de nuevo con exito, y el item viejo se quedaba ahi para
+  siempre - banner rojo permanente y un precio ya corregido durmiendo en el
+  telefono. Ahora toda completacion nueva de esa reserva borra las anteriores,
+  en las dos ramas (la que sale y la que se encola).
 
-Verificado: 27 tests nuevos (`tests/unit/completion-guard.test.js`,
+Un detalle del servidor que vale escribir: si el SELECT del candado falla, se
+**sigue de largo a proposito**, pero eso deja el candado sin hacer nada en ese
+request. Por eso ese caso ahora escribe `console.error(... proceeding
+UNGUARDED)`: un candado muerto en silencio es exactamente como vuelve el doble
+cobro.
+
+Verificado: 31 tests nuevos (`tests/unit/completion-guard.test.js`,
 `tests/unit/mechanic-outbox-completion.test.js`, que levantan las funciones
 reales del archivo del navegador), suite completa 221/221, `npm run check`, y
 las cuatro rutas ejecutadas en un navegador real contra `mechanic.html`

@@ -371,6 +371,21 @@ async function queueAdd(item) {
   return await queueSave();
 }
 
+// Forget any completion we are still holding for this booking. Called whenever
+// a NEWER completion for the same job is submitted - which is the only way a
+// `needs_payment` item ever leaves the queue: it is skipped by every flush, so
+// without this it would sit there for good, keeping the banner red forever and
+// carrying a price the mechanic has since corrected. Dropping it cannot lose a
+// completion: the newer one either just reached the server or is being queued
+// in its place, and the server refuses duplicates anyway
+// (api/_completion-guard.js).
+async function queueDropCompletions(bookingId) {
+  const before = _queue.length;
+  _queue = _queue.filter((i) => !(i.type === 'complete' && i.booking_id === bookingId));
+  if (_queue.length !== before) await queueSave();
+  return before - _queue.length;
+}
+
 // The body of the /api/auth call an outbox item stands for. The token is NOT
 // stored with the item - it is read fresh at flush time, so an item parked
 // overnight does not carry an expired one (and the outbox never holds a
@@ -394,18 +409,6 @@ function syncBanner() {
   const n = _queue.length;
   banner.style.display = n ? 'block' : 'none';
   if (!n) return;
-  // A parked completion outranks the count: the phone is done trying, and only
-  // the mechanic can move it forward by collecting the payment again.
-  const parked = _queue.filter((i) => i.needs_payment);
-  if (parked.length) {
-    banner.style.background = 'var(--red)';
-    text.textContent =
-      parked.length === 1
-        ? '1 job could not be charged - open it and collect payment, then tap Complete again'
-        : parked.length +
-          ' jobs could not be charged - open them and collect payment, then tap Complete again';
-    return;
-  }
   if (_queueUnsaved) {
     // Do not dress this up: it is the one state where closing the app loses work.
     banner.style.background = 'var(--red)';
@@ -413,6 +416,19 @@ function syncBanner() {
       n === 1
         ? '1 change NOT saved to this phone - keep the app open until it syncs'
         : n + ' changes NOT saved to this phone - keep the app open until they sync';
+    return;
+  }
+  // A parked completion outranks the plain count: the phone is done trying and
+  // only the mechanic can move it forward. It does NOT outrank the warning
+  // above, which is the one state where closing the app loses work outright.
+  const parked = _queue.filter((i) => i.needs_payment).length;
+  if (parked) {
+    banner.style.background = 'var(--red)';
+    text.textContent =
+      parked === 1
+        ? '1 job could not be charged - open it and collect payment, then tap Complete again'
+        : parked +
+          ' jobs could not be charged - open them and collect payment, then tap Complete again';
     return;
   }
   banner.style.background = 'var(--blue-dark)';
@@ -2107,6 +2123,9 @@ async function submitComplete(id) {
     // the phone and replayed by queueFlush() when the signal comes back; the
     // server refuses the duplicate if this request did in fact land
     // (api/_completion-guard.js).
+    // This payload supersedes anything we were still holding for this job -
+    // including an item parked on a failed charge, which nothing else removes.
+    await queueDropCompletions(id);
     const savedToPhone = await queueAdd({ type: 'complete', booking_id: id, body: completeBody });
     finishCompleteUI(id);
     // The photos went to Supabase Storage directly and there is no signal for
@@ -2160,6 +2179,10 @@ async function submitComplete(id) {
   }
 
   const okData = await resp.json().catch(() => ({}));
+  // The job is done on the server, so anything still queued for it is stale -
+  // in particular an item parked on a failed charge, which the mechanic has
+  // just resolved by collecting payment and completing again.
+  await queueDropCompletions(id);
   finishCompleteUI(id);
   if (okData.auto_charged) toast('✅ Charged to card on file');
   toast('✅ Job completed!' + (photoBeforeUrl || photoAfterUrl ? ' Photos saved.' : ''));
