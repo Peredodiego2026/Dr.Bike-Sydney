@@ -3311,3 +3311,73 @@ Comprobado renombrando `SERVICE_KEYS` en el generador: corta con el motivo.
 
 Sigue **fuera de `npm run check`** a proposito, como el resto de este script:
 necesita red y la tabla viva, y el CI no puede depender de eso.
+
+### 17.3 El catalogo de precios del desktop era inalcanzable desde el 04-jul
+
+Salio de una tarea chica: Diego pidio anunciar `E-bike service` ($129), el unico
+servicio que el 17.1 encontro reservable y sin tarjeta. Al ir a agregarla se vio
+que **la tarjeta no la iba a ver nadie**.
+
+**Lo que estaba pasando.** `landing.html` tiene 33 tarjetas de servicio con sus
+precios dentro de `#services-modal`. Ese modal se abre con `openServicesModal()`,
+que estaba cableada a un boton con id `home-view-all-btn`. **Ese boton no
+existia en el HTML.** Medido en el navegador contra la rama, y confirmado contra
+**produccion** (`curl` a drbikesydney.com.au: `id="home-view-all-btn"` aparece
+**0 veces**):
+
+| Medicion | Resultado |
+|---|---|
+| Tarjetas `.svc-card` en la pagina | 33 |
+| Visibles | **0** |
+| Botones que abren el modal | **0** |
+| Tarjetas de precio en la seccion `#services` | **0** |
+
+O sea: **un visitante de escritorio no podia ver un solo precio en toda la
+pagina.** La seccion "Nuestros Servicios" tiene titulo, un parrafo y un boton de
+reservar, y nada mas.
+
+**Desde cuando y por que.** `git log -S` lo ubica exacto: el commit `0c639c1`
+(04-jul-2026, del bot de opencode, el mismo de la unificacion de rutas que este
+documento llama "Session 5 - PARTIAL") cambio esto:
+
+```
+-  <button id="home-view-all-btn" class="btn-outline-blue">View All Services →</button>
++  <a href="#book-service" class="btn-outline-blue">Book a Service →</a>
+```
+
+Cambio el CTA y **dejo huerfanos el modal, sus 33 tarjetas y la funcion que los
+abre**. Un mes y medio sin precios visibles en desktop, sin que nada fallara:
+ningun error de consola, ningun check en rojo. Las tarjetas seguian existiendo
+en el HTML, asi que hasta `services-sync-check.mjs` las contaba como
+"anunciadas" - es el punto ciego que hizo que `E-bike service` figurara como el
+unico servicio sin anunciar cuando en realidad no se anunciaba **ninguno**.
+
+**Como quedo.** Los dos CTA conviven: reservar (solido, la accion que cobra) y
+ver el catalogo (contorneado). El string `'View All Services →'` seguia en el
+diccionario es/zh de cuando el boton existia, asi que no hizo falta traducir
+nada nuevo.
+
+Dos cosas que se encontraron al ponerlo y conviene no repetir:
+
+- **`btn-outline` es la clase del HERO**, texto blanco sobre borde blanco
+  translucido, para fondo oscuro. En esta seccion blanca el boton quedaba
+  **invisible**. La clase correcta para fondo claro es `btn-outline-blue`.
+- Un hijo de un contenedor flex sin `align-items` se estira al alto de la fila:
+  el boton quedaba de **96px** contra los 48px del de al lado.
+
+**Verificado en Chromium** contra la rama, sin captura porque el panel del
+navegador estaba cerrado - nada de esto es una afirmacion sobre pixeles:
+
+| Camino | Resultado |
+|---|---|
+| Click en "Ver Todos los Servicios" | El modal pasa de `none` a `flex` |
+| La tarjeta de E-bike dentro | Visible, 255px de alto, `$129` |
+| Los dos botones | 46px y 48px de alto, ambos sobre 44px |
+| Colores | Azul `--blue` sobre blanco y blanco sobre `--blue`: 5.17:1, pasa AA |
+| Los 3 idiomas | `View All Services →` / `Ver Todos los Servicios →` / `查看所有服务 →`, y la tarjeta traducida en los tres |
+| "Book Now" de la tarjeta | Resuelve a `E-bike service`, o sea que preselecciona bien en el wizard |
+| `npm run services:check` | `Everything in the catalog is advertised and matched` - por primera vez limpio |
+
+**Lo que este punto NO reviso**, y queda para quien siga: si hay otros
+elementos huerfanos de la misma unificacion del 04-jul. Se busco `getElementById`
+sin elemento **solo** para este caso, no en toda la pagina.

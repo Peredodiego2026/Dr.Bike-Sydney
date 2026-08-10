@@ -29,6 +29,9 @@ const dict = {
     'Firmware Update': 'Actualización de firmware',
     'Software update for e-bike motor and display':
       'Actualización de software del motor y la pantalla de la e-bike',
+    'E-bike Service': 'Service de e-bike',
+    'Cable connections, bolts, and a full brake and gear adjustment':
+      'Conexiones de cables, tornillería y ajuste completo de frenos y cambios',
     'Bike Build — New Bike': 'Armado de bici nueva',
     'Full assembly of a new boxed bike.': 'Armado completo de una bici nueva en caja.',
     'Full assembly of a new boxed bike': 'Armado completo de una bici nueva en caja',
@@ -1181,10 +1184,8 @@ const dict = {
     // customer on 2026-08-05 - and the message she got was hardcoded English.
     'Please create an account or sign in to finish your booking':
       'Creá una cuenta o iniciá sesión para terminar tu reserva',
-    'Please sign in to complete your booking.':
-      'Iniciá sesión para completar tu reserva.',
-    'We need an email to send your receipt.':
-      'Necesitamos un email para enviarte el recibo.',
+    'Please sign in to complete your booking.': 'Iniciá sesión para completar tu reserva.',
+    'We need an email to send your receipt.': 'Necesitamos un email para enviarte el recibo.',
     "Sorry, we don't currently service that address. Try a different address or contact us.":
       'Lo sentimos, no cubrimos esa dirección por ahora. Probá con otra dirección o contactanos.',
 
@@ -1371,6 +1372,9 @@ const dict = {
       '全面系统扫描、固件检查及错误代码排查',
     'Firmware Update': '固件更新',
     'Software update for e-bike motor and display': '电动车马达与显示器软件更新',
+    'E-bike Service': '电动车保养',
+    'Cable connections, bolts, and a full brake and gear adjustment':
+      '线缆接头、螺栓检查，以及刹车与变速的完整调校',
     'Bike Build — New Bike': '新车组装',
     'Full assembly of a new boxed bike.': '全新盒装自行车的完整组装。',
     'Full assembly of a new boxed bike': '全新盒装自行车的完整组装',
@@ -2413,8 +2417,7 @@ const dict = {
     'Welcome back!': '欢迎回来！',
     'If that email has an account, we just sent a reset link.':
       '如果该邮箱已注册，我们刚刚发送了重置链接。',
-    'Enter your email first, then tap Forgot Password.':
-      '请先输入邮箱，然后点击"忘记密码"。',
+    'Enter your email first, then tap Forgot Password.': '请先输入邮箱，然后点击"忘记密码"。',
     'Could not send the reset link. Please try again.': '无法发送重置链接，请重试。',
     'Forgot your email?': '忘记邮箱了？',
     'Enter the mobile number on your account and we will text you the email you signed up with.':
@@ -2432,8 +2435,7 @@ const dict = {
     'Please enter a valid mobile number': '请输入有效的手机号',
     'Jane Smith': '张三',
     'you@email.com': 'you@email.com',
-    'Please create an account or sign in to finish your booking':
-      '请创建账户或登录以完成预订',
+    'Please create an account or sign in to finish your booking': '请创建账户或登录以完成预订',
     'Please sign in to complete your booking.': '请登录以完成您的预订。',
     'We need an email to send your receipt.': '我们需要一个邮箱来发送收据。',
     "Sorry, we don't currently service that address. Try a different address or contact us.":

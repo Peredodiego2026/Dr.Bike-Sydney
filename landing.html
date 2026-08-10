@@ -718,8 +718,22 @@ function lpDateLocale() {
       <p class="section-sub">We bring a fully equipped mobile workshop to your door — no bike shop queues, no expensive tow-ins.</p>
     </div>
 
-    <div style="text-align:center;padding:12px 0">
-      <a href="#book-service" class="btn-outline-blue">Book a Service &rarr;</a>
+    <!-- Two CTAs, not one: booking stays the emphasised path, and the price
+         catalogue gets its way back in. The "View All Services" button existed
+         until 0c639c1 (4 Jul 2026) swapped it for the booking link, which left
+         #services-modal, its 33 price cards and the openServicesModal() wiring
+         with no way to reach them - a desktop visitor could not see a single
+         price anywhere on the page. -->
+    <!-- align-items:center, not the default stretch: a flex item left to
+         stretch takes the row's height, which made this button twice as tall
+         as the link beside it.
+         btn-outline is the HERO's style - white text on a translucent white
+         border, for a dark background. On this white section it renders
+         invisible, so the pair below uses the light-background classes:
+         solid for the booking action, outlined for the catalogue. -->
+    <div style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0">
+      <a href="#book-service" class="btn-primary">Book a Service &rarr;</a>
+      <button id="home-view-all-btn" type="button" class="btn-outline-blue">View All Services &rarr;</button>
     </div>
 
   </div>
@@ -961,6 +975,13 @@ function lpDateLocale() {
         <div class="svc-name">Firmware Update</div>
         <div class="svc-price">$50</div>
         <p class="svc-desc">Software update for e-bike motor and display</p>
+        <button class="svc-btn">Book Now</button>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M12 2v6"/><path d="m4.9 7.1 4.2 4.2"/><path d="M2 16h6"/><circle cx="16" cy="16" r="5"/><path d="m16 13 2 3h-4l2 3"/></svg></div>
+        <div class="svc-name">E-bike Service</div>
+        <div class="svc-price">$129</div>
+        <p class="svc-desc">Cable connections, bolts, and a full brake and gear adjustment</p>
         <button class="svc-btn">Book Now</button>
       </div>
     </div>
