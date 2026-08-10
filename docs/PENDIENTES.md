@@ -3242,7 +3242,7 @@ y la tabla viva. Se corre a mano despues de tocar servicios:
 npm run services:check
 ```
 
-### 17.2 La excepcion: el bloque `application/ld+json`
+### 17.2 La excepcion: el bloque `application/ld+json` — CERRADO 2026-08-10
 
 Hay **61 archivos HTML** con un bloque `<script type="application/ld+json">`
 que declara servicios y precios - es lo que lee Google para mostrar precios en
@@ -3266,6 +3266,48 @@ un precio en Admin, Google va a seguir mostrando el viejo** y nada va a avisar.
 Es exactamente el patron de 12.6 y del bug de precios del 2026-07-22, en el
 unico lugar donde todavia queda.
 
-Lo natural es sumarle al `services-sync-check.mjs` que ya existe la lectura de
-los bloques JSON-LD, para que 62 paginas se comprueben con el mismo comando. No
-se hizo aca porque excede lo que se pidio; queda escrito para que no se pierda.
+**ARREGLADO EL MISMO DIA.** `npm run services:check` ahora lee tambien los
+bloques JSON-LD. El mismo comando de siempre, sin nada nuevo que recordar:
+
+```
+Checked 277 cards on 62 pages, and 244 structured-data offers on 63 pages,
+against 33 services.
+```
+
+Tres cosas que antes no miraba nadie, y cada una con su mensaje:
+
+| Que detecta | Por que importa |
+|---|---|
+| Un precio del JSON-LD distinto al de `services` | Es el numero que Google imprime en los resultados |
+| El `priceRange` (`$109-$369`) fuera de los extremos reales | Es lo primero que Google muestra al lado del negocio |
+| Un `Offer` cuyo nombre no existe en el catalogo | Se anuncia algo que no se puede reservar |
+
+**El problema tecnico que habia que resolver, y como se resolvio.** Las paginas
+de suburbio declaran sus ofertas **en el idioma de la pagina** - `Ajuste`,
+`基础保养` - asi que buscar contra el catalogo en ingles fallaba en **240 de las
+244** ofertas. La traduccion **no se copio**: se lee de
+`scripts/generate-suburb-pages.mjs`, que ya la tiene alineada posicionalmente
+con `SERVICE_KEYS`, igual que el `NAME_MAP` se lee de `js/live-prices.js`. Una
+segunda copia habria derivado del generador y empezado a mentir.
+
+**Matiz que la version anterior de este punto tenia mal.** Decia que los
+precios del JSON-LD estaban "escritos a mano". Los de las paginas de suburbio
+**no**: `generate-suburb-pages.mjs:712` los lee de Supabase **al generar**. El
+agujero real es mas fino: quedan congelados desde que Diego cambia un precio
+hasta que alguien regenera. Por eso el mensaje del check dice
+`npm run suburbs:generate` (script nuevo, el generador no tenia uno). Los de
+`landing.html` e `index.html` si son a mano.
+
+**Verificado rompiendo cosas a proposito**, no solo mirando que diera verde: se
+bajo un precio en `bondi.html`, se ensucio el `priceRange` de `es/cbd.html` y
+se renombro una oferta a `Ajuste Mistico`. Los tres saltaron con el archivo y
+el numero exactos, y despues se restauraron.
+
+**Y un guardarrail contra el modo de fallo de esta casa:** si la barrida
+encuentra 0 paginas, 0 ofertas o 0 traducciones, el check **falla** en vez de
+felicitarse. Un parser que deja de matchear en silencio es exactamente como el
+chequeo de i18n paso en verde por tres agujeros distintos (12.9, 14.3, 14.7).
+Comprobado renombrando `SERVICE_KEYS` en el generador: corta con el motivo.
+
+Sigue **fuera de `npm run check`** a proposito, como el resto de este script:
+necesita red y la tabla viva, y el CI no puede depender de eso.
