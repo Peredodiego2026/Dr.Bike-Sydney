@@ -1241,20 +1241,20 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
 </section>
 
 <!-- ── FLEET / CORPORATE ─────────────────────────────────────────────────────── -->
-<section id="fleet" style="padding:96px 0;background:var(--navy)">
-  <div class="container" style="max-width:1100px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start">
+<section id="fleet" class="fleet" style="background:var(--navy)">
+  <div class="container" style="max-width:1180px">
+    <div class="fleet-grid">
 
       <!-- Left: pitch -->
       <div>
-        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.25);border:1px solid rgba(37,99,235,0.4);border-radius:99px;padding:6px 16px;margin-bottom:24px">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.25);border:1px solid rgba(37,99,235,0.4);border-radius:99px;padding:6px 16px;margin-bottom:18px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
           <span style="font-size:13px;font-weight:700;color:var(--blue-pale);letter-spacing:0.06em;text-transform:uppercase">For businesses</span>
         </div>
-        <h2 style="color:var(--white);font-size:clamp(1.8rem,2.5vw,2.8rem);font-weight:800;line-height:1.15;margin:0 0 20px">Keep your whole fleet rolling</h2>
-        <p style="color:var(--gray-lt);font-size:15px;line-height:1.7;margin:0 0 36px">One mechanic, your entire team. We come to your office or depot and service all bikes in a single visit — no downtime, no logistics hassle.</p>
+        <h2 style="color:var(--white);font-size:clamp(1.8rem,2.5vw,2.8rem);font-weight:800;line-height:1.15;margin:0 0 14px">Keep your whole fleet rolling</h2>
+        <p style="color:var(--gray-lt);font-size:15px;line-height:1.65;margin:0 0 26px">One mechanic, your entire team. We come to your office or depot and service all bikes in a single visit — no downtime, no logistics hassle.</p>
 
-        <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:40px">
+        <div class="fleet-features">
           <div style="display:flex;gap:14px;align-items:flex-start">
             <div style="width:36px;height:36px;border-radius:10px;background:rgba(37,99,235,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1293,7 +1293,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
           </div>
         </div>
 
-        <div style="display:flex;gap:32px">
+        <div style="display:flex;gap:32px;margin-top:26px">
           <div style="text-align:center">
             <div style="font-size:2rem;font-weight:900;color:var(--blue)">50+</div>
             <div style="font-size:13px;color:var(--gray-lt);font-weight:600">bikes serviced</div>
@@ -1310,11 +1310,11 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       </div>
 
       <!-- Right: form -->
-      <div style="background:var(--white);border-radius:20px;padding:36px">
+      <div style="background:var(--white);border-radius:20px;padding:28px">
         <div style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px">Get a fleet quote</div>
-        <div style="font-size:13px;color:var(--gray);margin-bottom:24px">We'll reply within 2 business hours</div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:18px">We'll reply within 2 business hours</div>
 
-        <form id="fleet-form" style="display:flex;flex-direction:column;gap:14px">
+        <form id="fleet-form" style="display:flex;flex-direction:column;gap:12px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
               <label style="font-size:13px;font-weight:700;color:var(--gray);display:block;margin-bottom:5px">Business name *</label>
@@ -1360,7 +1360,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
           </div>
           <div>
             <label style="font-size:13px;font-weight:700;color:var(--gray);display:block;margin-bottom:5px">Notes</label>
-            <textarea name="notes" rows="3" placeholder="Types of bikes, location, any specific issues..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <textarea name="notes" rows="2" placeholder="Types of bikes, location, any specific issues..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></textarea>
           </div>
           <div id="fleet-turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAAD46XeEV_Dvk2GA9"></div>
           <div id="fleet-msg" style="display:none;font-size:13px;padding:10px 14px;border-radius:8px"></div>

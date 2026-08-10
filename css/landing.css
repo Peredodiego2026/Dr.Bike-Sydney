@@ -238,6 +238,48 @@ img {
   }
 }
 
+/* ── Fleet / corporate ────────────────────────────────────────────────────── */
+/* The section is an anchor target (#fleet), so it has to fit one screen: the
+   pitch column used to run 905px on its own and pushed the form's submit
+   button below the fold on any 800px-tall laptop. The features go 2x2 instead
+   of a 4-item stack, which is where most of the height came from. */
+.fleet {
+  padding: 56px 0;
+}
+.fleet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+.fleet-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 20px;
+}
+@media (max-width: 1024px) {
+  .fleet-features {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 900px) {
+  .fleet {
+    padding: 48px 0;
+  }
+  .fleet-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .fleet-features {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .fleet-features {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Clickable feedback ───────────────────────────────────────────────────── */
 /* 68 of the 73 cursor:pointer elements on this page are <button>s carrying
    inline styles and no class, so a generic rule is the only way to cover them
