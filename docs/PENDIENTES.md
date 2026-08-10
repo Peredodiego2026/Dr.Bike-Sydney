@@ -2902,6 +2902,40 @@ servido: sin senal queda encolado, 402 lo aparca en rojo, un item aparcado no
 se reintenta, y `already_completed` lo da por bueno y lo saca. **NO** verificado:
 ningun cobro real de Stripe, ni un reenvio contra produccion.
 
+### 14.11 El trabajo aparcado tenia que verse, y decia "Done" — 2026-08-10
+
+Revisando el 14.10 ya mergeado. El banner rojo decia "1 job could not be
+charged - **open it** and collect payment", y ahi terminaba la ayuda:
+
+1. **No decia cual.** Con seis trabajos en la lista, el mecanico tenia que
+   adivinar en un problema de plata. Ahora la card del trabajo lleva el aviso
+   con el motivo real del rechazo ("Card declined (insufficient funds)"), borde
+   izquierdo rojo, y ninguna otra card se toca.
+2. **Y el trabajo decia "Done".** Peor que no verse: `finishCompleteUI()` lo
+   marca completado en el telefono en cuanto se encola, pero el servidor
+   despues rechazo el cobro y **nunca lo completo**. Como `queueFlush()` solo
+   llamaba a `load()` cuando algo se habia enviado, la card se quedaba en "Done"
+   con solo el boton **Undo** - es decir, el banner mandaba a abrir un trabajo
+   que la pantalla mostraba como terminado y sin forma de completarlo. Ahora
+   tambien recarga cuando algo queda aparcado, y el trabajo vuelve a lo que el
+   servidor realmente tiene, que es donde vive el boton **Complete**.
+
+**El aviso es una clase CSS (`.pay-warn`), no un estilo inline, y la razon es
+medible:** sobre la card oscura, `var(--red)` encima del panel rojo al 15% da
+**2.76:1** - la misma forma en que "No jobs today" quedo invisible (12.15). Un
+estilo inline no puede llevar el override de `[data-theme='dark']`. Con la clase
+mide **4.95:1 en claro y 10.34:1 en oscuro**, los dos medidos en el navegador,
+no estimados.
+
+Se subieron los dos `?v=` de `mechanic.html` (js y css). Sin eso el cambio no se
+ve en un telefono que ya tenia la app: paso en esta misma sesion de verificacion
+- el service worker sirvio el `mechanic.js` viejo y la card salio sin el aviso.
+
+Verificado: 232 tests (7 nuevos), `npm run check`, y en navegador real - solo la
+card correcta marcada, el boton Complete presente, el contraste de los dos temas
+medido, y el `load()` tras aparcar. **NO** verificado: nada contra produccion ni
+contra Stripe.
+
 ---
 
 ## 15. Recuperar la contraseña era imposible desde una computadora (2026-08-06)

@@ -35,14 +35,15 @@ const flushSrc = grab(/async function queueFlush\(\) \{[\s\S]*?\n\}/, 'queueFlus
 function makeFlush({ queue, responses }) {
   const toasts = [];
   const calls = [];
+  const loads = [];
   const factory = new Function(
     'deps',
     `
-    const { toast, queueSave, respond, calls, navigator, localStorage } = deps;
+    const { toast, queueSave, respond, calls, loads, navigator, localStorage } = deps;
     let _flushing = false;
     let _queue = deps.queue;
-    let mechanic = null;
-    const load = () => {};
+    let mechanic = { id: 'm1' };
+    const load = () => loads.push(1);
     const fetch = async (url, opts) => {
       calls.push(JSON.parse(opts.body));
       return respond();
@@ -64,10 +65,11 @@ function makeFlush({ queue, responses }) {
     queueSave: async () => true,
     respond,
     calls,
+    loads,
     navigator: { onLine: true },
     localStorage: { getItem: () => JSON.stringify({ token: 'tok-123' }) },
   });
-  return { queueFlush, queue, toasts, calls };
+  return { queueFlush, queue, toasts, calls, loads };
 }
 
 describe('outboxRequestBody', () => {
@@ -143,6 +145,29 @@ describe('queueFlush with completions', () => {
     expect(queue).toHaveLength(1);
     expect(queue[0].needs_payment).toBe(true);
     expect(queue[0].error).toBe('Card declined');
+  });
+
+  it('reloads the jobs after parking one, so it stops showing as Done', async () => {
+    // The phone marked the job completed when it was queued. The server then
+    // refused the charge and never completed it, so the card would sit there
+    // saying "Done" with only an Undo button while the banner says to open it
+    // and collect payment. Only a reload puts the Complete button back.
+    const { queueFlush, loads, toasts } = makeFlush({
+      queue: [{ type: 'complete', booking_id: 'b1', body: {} }],
+      responses: [{ status: 402, body: { code: 'AUTO_CHARGE_FAILED', error: 'Card declined' } }],
+    });
+    await queueFlush();
+    expect(loads).toHaveLength(1);
+    expect(toasts.join(' ')).toContain('could not be charged');
+  });
+
+  it('does not reload when nothing happened', async () => {
+    const { queueFlush, loads } = makeFlush({
+      queue: [{ type: 'complete', booking_id: 'b1', body: {}, needs_payment: true }],
+      responses: [],
+    });
+    await queueFlush();
+    expect(loads).toHaveLength(0);
   });
 
   it('does not retry a parked completion on later flushes', async () => {
@@ -229,6 +254,52 @@ describe('submitComplete falls back to the outbox', () => {
     const online = fn.slice(0, fn.indexOf('let resp')) + fn.slice(fn.indexOf('const okData'));
     expect(fn.slice(0, catchAt).lastIndexOf('queueDropCompletions(id)')).toBeGreaterThan(-1);
     expect(online).toMatch(/queueDropCompletions\(id\)/);
+  });
+});
+
+describe('the card names the job that could not be charged', () => {
+  const findSrc = grab(
+    /function parkedCompletionFor\(bookingId\) \{[\s\S]*?\r?\n\}/,
+    'parkedCompletionFor'
+  );
+  const build = (queue) =>
+    new Function('q', `let _queue = q; ${findSrc}; return parkedCompletionFor;`)(queue);
+
+  it('finds the parked completion for that job', () => {
+    const find = build([{ type: 'complete', booking_id: 'b1', body: {}, needs_payment: true }]);
+    expect(find('b1')?.booking_id).toBe('b1');
+  });
+
+  it('ignores a completion that is merely waiting to sync', () => {
+    // Still queued but not parked: that one is going out by itself, and telling
+    // the mechanic to collect payment for it would be wrong.
+    const find = build([{ type: 'complete', booking_id: 'b1', body: {} }]);
+    expect(find('b1')).toBeUndefined();
+  });
+
+  it('ignores other jobs and status changes', () => {
+    const find = build([
+      { type: 'complete', booking_id: 'b2', body: {}, needs_payment: true },
+      { type: 'status', booking_id: 'b1', status: 'enroute', needs_payment: true },
+    ]);
+    expect(find('b1')).toBeUndefined();
+  });
+
+  it('card() renders the warning, with the reason, on that job only', () => {
+    const cardSrc = grab(/function card\(j\) \{[\s\S]*?\r?\n\}\r?\n/, 'card');
+    expect(cardSrc).toMatch(/parkedCompletionFor\(j\.id\)/);
+    expect(cardSrc).toMatch(/Payment not collected/);
+    expect(cardSrc).toMatch(/esc\(parked\.error/); // the decline reason, escaped
+    expect(cardSrc).toMatch(/class="pay-warn"/);
+  });
+
+  it('styles it from CSS so the dark theme can fix the contrast', () => {
+    // Inline styles cannot carry a [data-theme='dark'] override, and var(--red)
+    // on the dark red panel measures 2.76:1 - unreadable.
+    const css = readFileSync(join(root, 'css/mechanic.css'), 'utf8');
+    expect(css).toMatch(/\.pay-warn\s*\{/);
+    expect(css).toMatch(/\[data-theme='dark'\]\s*\.pay-warn\s*\{[^}]*--red-edge/);
+    expect(css).not.toMatch(/\.pay-warn[^}]*#[0-9a-fA-F]{3,6}/); // tokens only
   });
 });
 

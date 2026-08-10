@@ -386,6 +386,14 @@ async function queueDropCompletions(bookingId) {
   return before - _queue.length;
 }
 
+// The completion we are holding for this job because its charge failed, if
+// any. The sync banner says "1 job could not be charged"; this is what lets the
+// card say WHICH one, which the banner alone never could - a mechanic with six
+// jobs in the list was left guessing on a money problem.
+function parkedCompletionFor(bookingId) {
+  return _queue.find((i) => i.type === 'complete' && i.booking_id === bookingId && i.needs_payment);
+}
+
 // The body of the /api/auth call an outbox item stands for. The token is NOT
 // stored with the item - it is read fresh at flush time, so an item parked
 // overnight does not carry an expired one (and the outbox never holds a
@@ -451,6 +459,7 @@ async function queueFlush() {
   _flushing = true;
   const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
   let sent = 0;
+  let parkedNow = 0;
   try {
     let i = 0;
     while (i < _queue.length) {
@@ -476,6 +485,7 @@ async function queueFlush() {
           item.needs_payment = true;
           item.error = e.error || 'Card on file could not be charged';
           await queueSave();
+          parkedNow++;
           i++;
           continue;
         }
@@ -491,8 +501,17 @@ async function queueFlush() {
   }
   if (sent) {
     toast('✅ ' + sent + (sent === 1 ? ' change synced' : ' changes synced'));
-    if (mechanic) load();
   }
+  if (parkedNow) {
+    toast('⚠️ ' + (parkedNow === 1 ? 'A job' : parkedNow + ' jobs') + ' could not be charged');
+  }
+  // Reload on a park too, not only on a send. The phone showed the job as done
+  // the moment it was queued; the server then refused the charge and never
+  // completed it, so without this the mechanic is looking at a card that says
+  // "Done" (with only an Undo button) while the banner tells him to open the
+  // job and collect payment. The reload brings the job back to what the server
+  // actually holds, which is where the Complete button lives.
+  if ((sent || parkedNow) && mechanic) load();
 }
 
 // ── OFFLINE DETECTION ─────────────────────────────────────────────────────────
@@ -1005,7 +1024,10 @@ function card(j) {
   const isPending = st === 'pending';
   const isEnroute = st === 'enroute';
   const isConfirmedNoMechanic = st === 'confirmed' && !j.mechanic_id;
-  const borderColor = sc[st] || '#475569';
+  // A completion of this job is sitting in the outbox because its charge was
+  // declined. The banner counts those; the card is what names them.
+  const parked = parkedCompletionFor(j.id);
+  const borderColor = parked ? 'var(--red)' : sc[st] || '#475569';
   return `<div class="job-card${done ? ' done' : ''}" data-job-id="${j.id}" style="overflow:hidden;position:relative;border-left:4px solid ${borderColor}">
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
@@ -1023,6 +1045,11 @@ function card(j) {
     ${
       j.membership_status === 'active' && MEMBERSHIP_BADGE[j.membership_plan]
         ? `<div style="padding:0 18px 6px"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${MEMBERSHIP_BADGE[j.membership_plan].color}15;color:${MEMBERSHIP_BADGE[j.membership_plan].color}">${MEMBERSHIP_BADGE[j.membership_plan].label}</span></div>`
+        : ''
+    }
+    ${
+      parked
+        ? `<div class="pay-warn">💳 Payment not collected — ${esc(parked.error || 'the card on file was declined')}<div class="pay-warn-cta">Collect payment, then tap Complete again.</div></div>`
         : ''
     }
     ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:var(--amber);font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
