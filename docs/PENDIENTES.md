@@ -2550,13 +2550,38 @@ usa:
 O sea que `user_id` quedo como un espejo historico de `client_id` que nadie
 lee. Vaciarlo no deja huerfano a nadie.
 
-### 14.6 Reconstruir la reserva de Thais para el historial fiscal
+### 14.6 Reconstruir la reserva de Thais para el historial fiscal — HECHO 2026-08-10
 
 Diego la necesita en el Excel: es la primera clienta real.
 
-**Ya se puede insertar** desde que corrio el `DROP NOT NULL` de 14.5. El script
-esta escrito: **`scripts/restore-thais-booking-2026-08-05.sql`**. Lo corre
-Diego, como todo el SQL de este proyecto.
+**LA FILA ESTA EN PRODUCCION.** Diego corrio el script el 2026-08-10 y la
+verifico en Supabase:
+
+| Campo | Valor |
+|---|---|
+| `id` | `6046292f-a27d-49e1-84b6-09362d21077a` |
+| `status` | **`cancelled`** |
+| `user_id` / `client_id` | **NULL** - la primera reserva de invitado real de la base |
+| `service_name` / `service_price` | `Tyre / Tube Install` / **27**, salido de `services`, no escrito a mano |
+| `callout_fee` | 20 |
+| `scheduled_date` / `scheduled_time` | 2026-08-05 / 13:29 |
+| `created_at` | 2026-08-05 03:29:00+00, o sea 13:29 de Sydney |
+
+Dos cosas que dejo la corrida y conviene no perder:
+
+- La hora quedo **13:29**, no el `13:30` que traia el script. Es mas fiel al
+  minuto del cobro; no se toca.
+- La corrida final del `insert` devolvio `Success. No rows returned`: la fila ya
+  estaba de un intento anterior y el `where not exists` la freno. **El
+  guardarrail funciono y no hay duplicado** - comprobado con un `select`, que
+  devuelve exactamente una fila.
+
+Control de que no inflo nada: la suma sobre `status = 'completed'` de 2026 dio
+**0**, igual que antes de insertar.
+
+El script queda en **`scripts/restore-thais-booking-2026-08-05.sql`**, sin
+borrar: es el registro de como se reconstruyo la fila, y el molde para el dia
+que aparezca otro pago huerfano de los que busca 14.9.
 
 El script tiene cuatro secciones y **no escribe nada hasta la tercera**:
 comprueba que `user_id` sea nullable y que la fila no exista ya, muestra la
@@ -2596,8 +2621,18 @@ excluye las canceladas, asi que la fila tampoco bloquea ese hueco de agenda.
 Datos para reconstruirla, de Stripe:
 `pi_3U0vVzPPGSm5cT7J0SRAoVUW`, 05-ago 13:29, $20.00 AUD, Apple Pay / Visa
 4481, `thaixguimaraes@gmail.com`, `Customer: Guest`. El servicio lo confirmo Diego
-despues de hablar con ella por WhatsApp: **Tyre and Tube Installed**. No quedo
+despues de hablar con ella por WhatsApp: **Tyre / Tube Install**. No quedo
 registrado en ningun sistema, que es exactamente el problema.
+
+**Correccion 2026-08-10 sobre el nombre del servicio.** Este punto decia
+"Tyre and Tube Installed", escrito de memoria. **Ese servicio no existe.** En el
+catalogo real - Admin > Services & Prices, o sea la tabla `services` - se llama
+**`Tyre / Tube Install`, $27, categoria Wheels & tyres**, comprobado por Diego
+en el panel. La diferencia no es cosmetica: el script busca el precio con un
+subselect por nombre, asi que con el nombre viejo habria insertado
+`service_price` NULL. Es el mismo patron que este documento ya venia
+registrando - un dato escrito de memoria en un doc no es evidencia de nada, y
+la unica fuente que no miente es el sistema.
 
 ### 14.7 El cobro pasa a disparar la cadena, no el navegador
 
@@ -3170,3 +3205,67 @@ segundos y es la unica fuente que no miente.
 3. El simulacro de restauracion del backup
    ([RUNBOOK-BACKUP-RESTORE.md](RUNBOOK-BACKUP-RESTORE.md)). Sigue siendo un
    backup no probado, que es lo que dice el punto 1.2.
+
+---
+
+## 17. Un precio se edita en un solo lugar - salvo el que lee Google (2026-08-10)
+
+Lo pregunto Diego mientras reconstruia la reserva de 14.6: "esto con los precios
+no lo tengo que hacer uno por uno, ¿o si?".
+
+### 17.1 La respuesta corta es NO, y esta verificado contra el catalogo real
+
+Se edita **una vez** en Admin > Services & Prices - que es la tabla `services` -
+y viaja solo a todos lados. `js/live-prices.js` reescribe las tarjetas de las
+paginas de marketing en el navegador, y el asistente de reserva y el chatbot
+consultan `services` en vivo.
+
+No es una promesa del documento: existe `npm run services:check`
+(`scripts/services-sync-check.mjs`), que lee la tabla de verdad y compara. Se
+corrio el 2026-08-10:
+
+```
+Checked 277 cards on 62 pages against 33 services.
+```
+
+**Cero tarjetas despegadas.** Ninguna quedo con un precio que Admin no pueda
+cambiar. Lo unico que reporto:
+
+- `E-bike service` ($129) **se puede reservar y no esta en ninguna pagina de
+  marketing**. No es un precio viejo, es un servicio que nadie anuncia. Decision
+  de Diego si quiere una tarjeta para el.
+
+Esa herramienta ya existia y **no corre en CI a proposito**, porque necesita red
+y la tabla viva. Se corre a mano despues de tocar servicios:
+
+```
+npm run services:check
+```
+
+### 17.2 La excepcion: el bloque `application/ld+json`
+
+Hay **61 archivos HTML** con un bloque `<script type="application/ld+json">`
+que declara servicios y precios - es lo que lee Google para mostrar precios en
+los resultados de busqueda. **`js/live-prices.js` no lo toca**: solo reescribe
+tarjetas del DOM. Y **ningun check lo mira**: `plan-prices-check.mjs` vigila los
+precios de membresia, `services-sync-check.mjs` vigila las tarjetas, nadie
+vigila el JSON-LD.
+
+**Hoy estan bien**, comprobado contra `services` el 2026-08-10:
+
+| En el JSON-LD | En el catalogo |
+|---|---|
+| Tune-Up $109 | 109 |
+| Standard Service $149 | 149 |
+| Standard+ Service $199 | 199 |
+| Flat Tyre Repair $27 | `Tyre / Tube Install` 27 |
+| Ultimate Overhaul $369 (paginas de suburbio) | 369 |
+
+Pero estan escritos a mano y sin vigilancia, asi que **el dia que Diego cambie
+un precio en Admin, Google va a seguir mostrando el viejo** y nada va a avisar.
+Es exactamente el patron de 12.6 y del bug de precios del 2026-07-22, en el
+unico lugar donde todavia queda.
+
+Lo natural es sumarle al `services-sync-check.mjs` que ya existe la lectura de
+los bloques JSON-LD, para que 62 paginas se comprueben con el mismo comando. No
+se hizo aca porque excede lo que se pidio; queda escrito para que no se pierda.

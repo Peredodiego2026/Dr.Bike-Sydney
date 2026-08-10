@@ -35,9 +35,16 @@ where  stripe_payment_intent_id = 'pi_3U0vVzPPGSm5cT7J0SRAoVUW';
 
 -- ── 2. PREVIEW. Shows the exact row without writing anything. ──────────────
 -- The service price is read from the `services` table, never typed in by
--- hand - prices live there and drift. If `service_price` comes back NULL, the
--- name in `services` is spelled differently; fix the name in section 3 rather
--- than inventing a number.
+-- hand - that table is what Admin > Services & Prices edits, so this row stays
+-- connected to the catalog like every other booking.
+--
+-- The name is `Tyre / Tube Install`, which is how it is spelled in the catalog
+-- (Admin > Services & Prices, $27, Wheels & tyres). docs/PENDIENTES.md 14.6
+-- wrote it from memory as "Tyre and Tube Installed", which matches nothing and
+-- would have made this subselect return NULL.
+--
+-- If `service_price` still comes back NULL, the catalog was renamed: fix the
+-- name in section 3 rather than typing a number.
 
 select
   null::uuid                                as user_id,        -- no account: guest
@@ -45,9 +52,9 @@ select
   'Thais Rocha Guimaraes'                   as client_name,
   'thaixguimaraes@gmail.com'                as client_email,
   null                                      as client_phone,   -- never captured
-  'Tyre and Tube Installed'                 as service_name,
+  'Tyre / Tube Install'                     as service_name,
   (select price from public.services
-    where name = 'Tyre and Tube Installed'
+    where name = 'Tyre / Tube Install'
     limit 1)                                as service_price,
   20.00                                     as callout_fee,
   '2026-08-05'::date                        as scheduled_date,
@@ -85,8 +92,8 @@ insert into public.bookings (
 )
 select
   null, null, 'Thais Rocha Guimaraes', 'thaixguimaraes@gmail.com', null,
-  'Tyre and Tube Installed',
-  (select price from public.services where name = 'Tyre and Tube Installed' limit 1),
+  'Tyre / Tube Install',
+  (select price from public.services where name = 'Tyre / Tube Install' limit 1),
   20.00,
   '2026-08-05', '13:30',
   'The Palladium, 102 Miller Street, Pyrmont, Sydney', 'Pyrmont',
