@@ -2445,7 +2445,8 @@ Verificado en navegador contra la rama:
   email y telefono, y decidir como esa persona sigue despues su reserva. Toca
   RLS. **Decision de Diego** si lo quiere.
 - **Contar los huerfanos del mes** (04-jul a 05-ago) cruzando Stripe contra
-  `bookings`, y devolverle a cada uno.
+  `bookings`, y devolverle a cada uno. **La herramienta ya existe desde el
+  2026-08-10** (ver 14.9); falta que Diego la corra y decida cada devolucion.
 - El mensaje de `finalizeBooking()` era `throw new Error('Please sign in...')`
   y **no estaba traducido**: el chequeo de i18n ignora los `throw new Error(...)`
   a proposito, asi que una clienta con el telefono en español lo veia en ingles.
@@ -2754,6 +2755,68 @@ Es un tercer trabajo, todavia sin decidir.
 **NO verificado:** no se completo un trabajo de verdad contra produccion — hace
 falta un `booking_id` real y el PIN del mecanico. Queda pendiente de hacerlo
 despues de mergear.
+
+### 14.9 Admin > Orphan Payments: quien pago y no recibio nada — 2026-08-10
+
+14.2 dejo abierto "contar los huerfanos del mes". No se podia contar desde un
+chat: hace falta la clave de Stripe y la service key de Supabase, y ninguna de
+las dos sale del servidor. Asi que lo que se construyo es la **herramienta**, y
+la corre Diego.
+
+**Admin > Orphan Payments.** Dos fechas (ya vienen puestas en 04-jul y 05-ago) y
+un boton. Lee todos los pagos de Stripe en ese rango, los cruza contra
+`bookings`, y lista los que nadie reclamo: importe, email, fecha, id de Stripe y
+un link directo al pago.
+
+**No devuelve plata, y no es un descuido.** Cada fila abre Stripe en otra
+pestaña y ahi Diego decide. Devolver dinero automaticamente sobre un cruce de
+datos que puede estar mal es exactamente el tipo de cosa que no se automatiza.
+
+Decisiones que conviene no perder:
+
+- **El filtro es el mismo que el del cron diario**, movido a
+  `api/_orphan-audit.js` y compartido, para que la auditoria y la barrida no
+  puedan discrepar sobre que es un huerfano.
+- **Con una diferencia deliberada:** el cron esconde los pagos que ya avisaron
+  (`orphan_alerted`) para no despertar a Diego dos veces. La auditoria los
+  muestra igual, marcados `alerted before` - un aviso de julio sin resolver es
+  justo lo que se esta buscando.
+- **Si se acaban las paginas de Stripe, lo dice arriba de todo y en ambar.** Una
+  lista parcial leida como completa dejaria gente sin devolucion, que es lo
+  unico que esta pagina viene a terminar.
+- **Si falla el cruce contra `bookings`, tira error en vez de devolver la
+  lista.** Tragarse ese error reportaria *todos* los pagos como huerfanos: la
+  peor respuesta posible aca.
+- Las consultas van de a 50 ids: un mes de ids en un solo `in.()` es una URL lo
+  bastante larga como para que la rechacen.
+
+**Un bug de contraste, encontrado midiendo y no mirando.** El boton primario
+salio con `color:var(--white)`, y en modo oscuro `--white` es casi negro: tinta
+oscura sobre azul, **2.9:1**. Quedo en `#fff` literal, que es la excepcion
+documentada para admin/mechanic. Medido despues del cambio: **5.17:1 en los dos
+temas**.
+
+**Verificado en navegador** (sin captura: el panel estaba cerrado, asi que nada
+de esto es una afirmacion sobre pixeles, son valores calculados):
+
+| Que | Resultado |
+|---|---|
+| El item del menu abre la pagina | titulo y subtitulo correctos |
+| Contraste boton / titulo / cuerpo, tema claro | 5.17 / 16.43 / 7.58 |
+| Contraste boton / titulo / cuerpo, tema oscuro | 5.17 / 15.25 / 5.22 |
+| Render con datos de ejemplo | cabecera + 2 filas, y el aviso de truncado arriba cuando toca |
+| Los links a Stripe | `target=_blank` con `rel="noopener noreferrer"` |
+
+**NO verificado, y conviene no confundirlo con verificado:**
+
+- **No se corrio contra Stripe de verdad.** Cuantos huerfanos hay sigue sin
+  saberse hasta que Diego apriete el boton.
+- **Nada que dependa del ancho.** Con el panel del navegador cerrado el viewport
+  reporta `clientWidth: 0`, asi que el flex se apila y el boton mide 75px de
+  alto en vez de 44 (ver la nota del punto 12.x sobre este artefacto). El
+  contraste no depende del ancho y por eso si vale; los 44px de alto tactil y la
+  ausencia de scroll horizontal **no se pudieron comprobar** y hay que mirarlos
+  con el panel abierto.
 
 ---
 

@@ -277,6 +277,9 @@ document.addEventListener('click', function (e) {
     case 'save-blocks':
       saveBlocks();
       break;
+    case 'run-orphan-audit':
+      runOrphanAudit();
+      break;
     case 'unblock-date':
       unblockDate();
       break;
@@ -415,6 +418,7 @@ const titles = {
   finance: 'Finance',
   zones: 'Zone Manager',
   claims: 'Claims',
+  orphans: 'Orphan Payments',
   settings: 'Settings',
   coupons: 'Discount Codes',
   reminders: 'Service Reminders',
@@ -434,6 +438,7 @@ const subs = {
   analytics: 'Sign-ups · bookings · revenue · funnel · traffic',
   zones: 'Assign suburbs to each van',
   claims: 'Warranty claims from clients - review evidence and resolve',
+  orphans: 'Money Stripe took with no booking behind it - read-only, refunds stay in Stripe',
   settings: 'System settings',
   memberships: 'Active plans · Stripe subscriptions',
   inventory: 'Stock, internal cost and client price per part',
@@ -4637,6 +4642,127 @@ const CLAIM_STATUS = {
   resolved: { label: 'Resolved', color: '#15803D', bg: '#ECFDF5' },
   rejected: { label: 'Rejected', color: '#CF2020', bg: '#FEF2F2' },
 };
+
+// Payments Stripe took that no booking ever claimed. Read-only on purpose:
+// every row links out to Stripe, and the refund is Diego's decision made
+// there. Nothing in this file gives money back.
+async function runOrphanAudit() {
+  const box = document.getElementById('orphan-results');
+  const btn = document.getElementById('orphan-run');
+  if (!box) return;
+  const from = document.getElementById('orphan-from')?.value;
+  const to = document.getElementById('orphan-to')?.value;
+  if (!from || !to) {
+    box.innerHTML = orphanNote('Pick both dates first.', 'amber');
+    return;
+  }
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) {
+    box.innerHTML = orphanNote('Admin session expired - sign in again.', 'red');
+    return;
+  }
+
+  const label = btn?.textContent;
+  if (btn) {
+    btn.textContent = 'Checking Stripe...';
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  }
+  box.innerHTML =
+    '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Reading every payment in that range and cross-checking bookings...</div>';
+
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-orphan-audit',
+        access_token: session.access_token,
+        from,
+        to,
+      }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      box.innerHTML = orphanNote(data.error || 'Could not read from Stripe.', 'red');
+      return;
+    }
+    renderOrphanResults(box, data);
+  } catch (e) {
+    box.innerHTML = orphanNote(e.message, 'red');
+  } finally {
+    if (btn) {
+      btn.textContent = label || 'Check this range';
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.cursor = 'pointer';
+    }
+  }
+}
+
+function orphanNote(msg, tone) {
+  const bg = tone === 'red' ? 'var(--red-lt)' : 'var(--amber-lt)';
+  const fg = tone === 'red' ? 'var(--red)' : 'var(--amber-ink)';
+  return `<div style="background:${bg};color:${fg};border-radius:8px;padding:12px 14px;font-size:13px;font-weight:600">${esc(msg)}</div>`;
+}
+
+function renderOrphanResults(box, data) {
+  const orphans = data.orphans || [];
+  const scanned = `<div style="font-size:12px;color:var(--mgray);padding:2px 2px 0">Checked ${data.checked} payments between ${esc(data.from)} and ${esc(data.to)}.</div>`;
+
+  if (!orphans.length) {
+    box.innerHTML =
+      '<div style="text-align:center;padding:48px;color:var(--mgray)"><div style="font-size:36px;margin-bottom:8px">✅</div><div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">No orphan payments in this range</div><div style="font-size:13px">Every payment Stripe accepted has a booking behind it.</div></div>' +
+      scanned;
+    return;
+  }
+
+  // The truncation warning goes FIRST and is loud: a partial list read as
+  // complete would leave real people unrefunded, which is the exact failure
+  // this whole page exists to end.
+  const truncated = data.truncated
+    ? orphanNote(
+        'That range has more payments than one pass can read. This list is INCOMPLETE - narrow the dates and run it again.',
+        'amber'
+      )
+    : '';
+
+  const header = `<div style="background:var(--red-lt);border-left:4px solid var(--red);border-radius:8px;padding:14px 16px">
+      <div style="font-size:15px;font-weight:700;color:var(--navy)">${orphans.length} payment${orphans.length === 1 ? '' : 's'} with no booking</div>
+      <div style="font-size:13px;color:var(--gray);margin-top:2px">$${data.total.toFixed(2)} AUD taken from people who got nothing.</div>
+    </div>`;
+
+  const rows = orphans
+    .map((o) => {
+      const when = new Date(o.created).toLocaleString('en-AU', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const flag = o.alertedBefore
+        ? '<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--amber-lt);color:var(--amber-ink);margin-left:8px">alerted before</span>'
+        : '';
+      const who = o.email
+        ? esc(o.email)
+        : '<span style="color:var(--red)">no email on the payment</span>';
+      return `<a href="${esc(o.stripeUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:12px;text-decoration:none;background:var(--white);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:12px;padding:14px 16px;cursor:pointer">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">$${o.amount.toFixed(2)} ${esc(o.currency)}${flag}</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px">${who}${o.name ? ' &middot; ' + esc(o.name) : ''}</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${esc(when)} &middot; ${esc(o.id)}</div>
+        </div>
+        <div style="color:var(--mgray);font-size:18px">&rsaquo;</div>
+      </a>`;
+    })
+    .join('');
+
+  box.innerHTML = truncated + header + rows + scanned;
+}
 
 async function loadClaims() {
   const list = document.getElementById('claims-list');

@@ -6,6 +6,7 @@ import {
   dispatchCompletionCalls,
   recordCompletionOutcome,
 } from './_completion-notify.js';
+import { isOrphanCandidate } from './_orphan-audit.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -481,29 +482,13 @@ async function handleNoShowWatch(req, res) {
 // truth for bookings, so this needs no table of its own: sweep one, cross-check
 // the other. Dedup lives in the PaymentIntent's own metadata, which is
 // writable - without it this would re-alert about the same payment every day.
-const ORPHAN_GRACE_MINUTES = 15; // a booking mid-flight is not an orphan
 const ORPHAN_LOOKBACK_HOURS = 48;
 
-// Exported so the filtering can be tested without a Stripe account. Every
-// false here is a payment we must NOT wake Diego about; every true is a
-// payment that still has to be checked against the bookings table.
-export function isOrphanCandidate(pi, { nowSeconds, graceMinutes = ORPHAN_GRACE_MINUTES } = {}) {
-  if (!pi || pi.status !== 'succeeded') return false;
-  if (!(pi.amount_received > 0)) return false;
-  // Inside the grace window the booking may simply still be being written.
-  if (pi.created > nowSeconds - graceMinutes * 60) return false;
-  // Refunded already, e.g. handleCreateBooking's out-of-zone path: money taken
-  // and given back is not money kept without a booking. `charges` was dropped
-  // from the PaymentIntent object in newer Stripe API versions, so read
-  // latest_charge and fall back rather than trusting either one to exist.
-  const charge = pi.latest_charge && typeof pi.latest_charge === 'object' ? pi.latest_charge : null;
-  if (charge && (charge.refunded || charge.amount_refunded > 0)) return false;
-  if (pi.charges?.data?.some((c) => c.refunded || c.amount_refunded > 0)) return false;
-  if (pi.invoice) return false; // subscription invoices, not call-out fees
-  if (pi.metadata?.giftCard === 'true') return false;
-  if (pi.metadata?.orphan_alerted) return false; // Diego has already been told
-  return true;
-}
+// The filter moved to api/_orphan-audit.js, unchanged, so the admin panel's
+// one-off audit over an arbitrary date range and this daily sweep can never
+// disagree about what counts as an orphan. Re-exported because
+// tests/unit/orphan-payments.test.js imports it from here.
+export { isOrphanCandidate };
 
 // ── Completion notifications that did not land ───────────────────────────────
 // api/auth.js sends the invoice, the review email and the review SMS itself now

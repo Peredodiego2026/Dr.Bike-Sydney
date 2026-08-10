@@ -150,6 +150,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
       Claims
     </button>
+    <button class="sb-item" data-page="orphans">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line><line x1="6" y1="15" x2="10" y2="15"></line></svg>
+      Orphan Payments
+    </button>
     <div class="sb-section">System</div>
     <button class="sb-item" data-page="settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -698,6 +702,34 @@
       <div id="claims-list" style="display:flex;flex-direction:column;gap:12px">
         <div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading claims...</div>
       </div>
+    </div>
+
+    <!-- ORPHAN PAYMENTS -->
+    <div id="page-orphans" class="page">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px">Payments with no booking behind them</div>
+        <div style="font-size:13px;color:var(--mgray);line-height:1.5;margin-bottom:14px">
+          Stripe took the money and no booking was ever written - the client paid and got nothing.
+          The dates below are pre-set to the month guest checkout was broken.
+          <strong style="color:var(--navy)">Nothing is refunded from here.</strong> Each row links to Stripe, where you decide.
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <label style="display:block">
+            <span style="display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">From</span>
+            <input type="date" id="orphan-from" value="2026-07-04" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:Inter,sans-serif;color:var(--navy);background:var(--white);min-height:44px">
+          </label>
+          <label style="display:block">
+            <span style="display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">To</span>
+            <input type="date" id="orphan-to" value="2026-08-05" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:Inter,sans-serif;color:var(--navy);background:var(--white);min-height:44px">
+          </label>
+          <!-- color:#fff, not var(--white): dark mode redefines --white to near-black,
+               which put dark ink on the blue button - measured at 2.9:1 before this
+               line changed. The literal hex is the documented exception for
+               admin/mechanic (see CLAUDE.md). -->
+          <button id="orphan-run" data-action="run-orphan-audit" style="background:var(--blue);color:#fff;border:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:14px;font-family:Inter,sans-serif;cursor:pointer;min-height:44px">Check this range</button>
+        </div>
+      </div>
+      <div id="orphan-results" style="display:flex;flex-direction:column;gap:12px;overflow-y:auto"></div>
     </div>
 
     <!-- ZONES -->
