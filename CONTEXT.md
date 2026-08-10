@@ -1,6 +1,52 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-08-09) — read this first
+## Current state (2026-08-10) — read this first
+
+- **`main` is at the merge of #217.** Shipped today, in order: #214 (the SQL
+  runbook), #215 (Admin > Orphan Payments), #216 (the mechanic's offline
+  completion queue + the server guard against the replay), #217 (the parked job
+  is named on its card and stops saying "Done"). The last two were confirmed
+  live on `drbikesydney.com.au`, not just merged.
+
+- **Completing a job now survives having no signal.** `js/mechanic.js` parks the
+  completion in the outbox and resends it. That was excluded on purpose before,
+  so the thing that makes it safe lives on the server: `api/_completion-guard.js`
+  refuses any completion of a booking that is already `completed` (200, does
+  nothing) or `cancelled` (409), **before** Stripe, the stock decrement and the
+  invoice. Do not queue anything else that spends money without the same kind of
+  guard on the other end.
+
+- **The guard keys on `bookings.status`, so there is NO SQL to run.** That was
+  the deciding factor over a dedicated idempotency column: a migration nobody
+  runs is a lock that does not exist (see section 16 of `docs/PENDIENTES.md` and
+  `docs/RUNBOOK-SQL.md`).
+
+- **Known limit, written down so nobody "discovers" it as a bug:** read-then-act
+  is not atomic. Two completions in the same second can both read "not
+  completed". That window is covered by the Stripe idempotency key
+  (`complete-charge-<booking_id>`), not by the guard. The guard is for the
+  replay minutes or hours later, once that key has expired.
+
+- **A completion whose card is declined on replay is NOT dropped.** It stays in
+  the outbox flagged `needs_payment`, is skipped by every later flush, names
+  itself on its job card, and only leaves when the mechanic completes that job
+  again. Two bugs in that path were found by review, not by tests: it could
+  never leave the queue at all, and the job showed as "Done" with only an Undo
+  button while the banner told the mechanic to go open it.
+
+- **Photos do not survive an offline completion.** They upload straight to
+  Supabase Storage, and the outbox cannot hold them: `_IDB.set` only counts a
+  write as stored if **localStorage** accepted it, and a phone photo blows past
+  5 MB. The mechanic is told so. Fixing it means a real IndexedDB blob queue.
+
+- **Never verified, and it needs Diego:** no real Stripe charge, no replay
+  against production, and the mechanic app was never driven with a real login on
+  a real phone. Everything above was proven with 232 unit tests and a local
+  browser, which is not the same thing.
+
+- Older entries below.
+
+## Current state (2026-08-09)
 
 - **12.14 and 13.11 are done.** `main` is at the merge of #201. Shipped today:
   #195 (the colour ratchet), #197 (the retired blue, 183 occurrences in 73
