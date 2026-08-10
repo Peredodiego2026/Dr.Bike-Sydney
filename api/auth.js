@@ -27,6 +27,7 @@ import {
   dispatchCompletionCalls,
   recordCompletionOutcome,
 } from './_completion-notify.js';
+import { completionVerdict } from './_completion-guard.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
@@ -1459,6 +1460,35 @@ async function handleMechanicComplete(req, res) {
     Authorization: `Bearer ${SERVICE_KEY}`,
     'Content-Type': 'application/json',
   };
+
+  // Is this the same completion arriving twice? The mechanic's phone parks a
+  // completion in an offline outbox and resends it when the signal comes back,
+  // so the second delivery must not charge the card again, must not decrement
+  // the parts stock again, and must not send a second invoice. Everything below
+  // this point runs at most once per booking. See api/_completion-guard.js.
+  //
+  // Read-then-act is not atomic: two requests fired within the same second can
+  // both read "not completed". That window is still covered by the Stripe
+  // idempotency key further down (keyed on booking_id), which is what it was
+  // always for. This guard is for the other case - the replay minutes or hours
+  // later, once that key has expired.
+  const guardResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=status,final_charge_status&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    { headers: sbHdr }
+  ).catch(() => null);
+  const guardRow = guardResp?.ok ? (await guardResp.json().catch(() => []))?.[0] : null;
+  const verdict = completionVerdict(guardRow);
+  if (verdict.action !== 'proceed') {
+    console.warn(
+      '[mechanic-complete]',
+      verdict.action,
+      'for booking',
+      booking_id,
+      '- status is',
+      guardRow?.status
+    );
+    return res.status(verdict.status).json(verdict.body);
+  }
 
   // Card-on-file auto-charge (Diego, 2026-07-22): if the client has a saved
   // card, charge them automatically here - no mechanic confirmation, matching

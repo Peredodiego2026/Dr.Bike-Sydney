@@ -318,9 +318,23 @@ let isOffline = !navigator.onLine;
 // This is the part that makes that promise true: the tap is applied locally,
 // parked here, and replayed when the signal comes back.
 //
-// Deliberately only status changes. Completing a job carries parts, a price
-// and a card charge; replaying money hours later, against a booking that may
-// have moved, is not something to do quietly in the background.
+// Completions live here too, since 2026-08-10 (Diego: "si el mecanico no tiene
+// senal al tocar Completar, hoy no pasa NADA"). That used to be excluded on
+// purpose, because replaying money hours later is not something to do quietly
+// in the background - the server would have charged the card a second time and
+// emailed a second invoice. It is only in here now because the server refuses
+// the replay: api/_completion-guard.js short-circuits any completion of a
+// booking that is already `completed`, before Stripe, the stock decrement and
+// the invoice. Do not queue anything else that spends money without the same
+// kind of guard on the other end.
+//
+// Item shapes:
+//   { type: 'status',   booking_id, status }
+//   { type: 'complete', booking_id, body }   <- body = the mechanic-complete
+//                                               payload, minus the token
+// Items written before this comment existed have no `type` at all and are
+// status changes; outboxRequestBody() treats a missing type as such, so a
+// mechanic who updates the app with a full outbox does not lose it.
 const QUEUE_KEY = 'drbike-mech-outbox';
 let _queue = [];
 
@@ -357,6 +371,22 @@ async function queueAdd(item) {
   return await queueSave();
 }
 
+// The body of the /api/auth call an outbox item stands for. The token is NOT
+// stored with the item - it is read fresh at flush time, so an item parked
+// overnight does not carry an expired one (and the outbox never holds a
+// credential on disk).
+function outboxRequestBody(item, token) {
+  if (item?.type === 'complete') {
+    return { ...item.body, role: 'mechanic-complete', token: token || '' };
+  }
+  return {
+    role: 'mechanic-update-status',
+    token: token || '',
+    booking_id: item?.booking_id,
+    status: item?.status,
+  };
+}
+
 function syncBanner() {
   const banner = document.getElementById('sync-banner');
   const text = document.getElementById('sync-banner-text');
@@ -364,6 +394,18 @@ function syncBanner() {
   const n = _queue.length;
   banner.style.display = n ? 'block' : 'none';
   if (!n) return;
+  // A parked completion outranks the count: the phone is done trying, and only
+  // the mechanic can move it forward by collecting the payment again.
+  const parked = _queue.filter((i) => i.needs_payment);
+  if (parked.length) {
+    banner.style.background = 'var(--red)';
+    text.textContent =
+      parked.length === 1
+        ? '1 job could not be charged - open it and collect payment, then tap Complete again'
+        : parked.length +
+          ' jobs could not be charged - open them and collect payment, then tap Complete again';
+    return;
+  }
   if (_queueUnsaved) {
     // Do not dress this up: it is the one state where closing the app loses work.
     banner.style.background = 'var(--red)';
@@ -380,6 +422,13 @@ function syncBanner() {
 // Replays in order and stops at the first network failure, so the queue keeps
 // its order and nothing is applied twice. A server rejection (4xx) is dropped
 // rather than retried forever - it is not going to start succeeding.
+//
+// One exception, and it is the whole reason this walks an index instead of
+// shifting: a completion whose card charge fails (402 AUTO_CHARGE_FAILED) is
+// NOT dropped. Nobody is looking at the screen when the outbox flushes, and
+// silently discarding it would lose both the job and the money. It stays in the
+// queue flagged `needs_payment`, is skipped by every later flush, and turns the
+// sync banner red until the mechanic reopens the job and collects payment.
 let _flushing = false;
 async function queueFlush() {
   if (_flushing || !_queue.length || !navigator.onLine) return;
@@ -387,19 +436,19 @@ async function queueFlush() {
   const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
   let sent = 0;
   try {
-    while (_queue.length) {
-      const item = _queue[0];
+    let i = 0;
+    while (i < _queue.length) {
+      const item = _queue[i];
+      if (item.needs_payment) {
+        i++; // parked: only the mechanic can move this one
+        continue;
+      }
       let resp;
       try {
         resp = await fetch('/api/auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            role: 'mechanic-update-status',
-            token: stored.token || '',
-            booking_id: item.booking_id,
-            status: item.status,
-          }),
+          body: JSON.stringify(outboxRequestBody(item, stored.token)),
         });
       } catch {
         break; // still no signal - leave the rest for next time
@@ -407,11 +456,18 @@ async function queueFlush() {
       if (!resp.ok && resp.status >= 500) break; // server having a moment
       if (!resp.ok) {
         const e = await resp.json().catch(() => ({}));
+        if (item.type === 'complete' && e.code === 'AUTO_CHARGE_FAILED') {
+          item.needs_payment = true;
+          item.error = e.error || 'Card on file could not be charged';
+          await queueSave();
+          i++;
+          continue;
+        }
         toast('Could not sync one change: ' + (e.error || resp.status));
       } else {
         sent++;
       }
-      _queue.shift();
+      _queue.splice(i, 1);
       await queueSave();
     }
   } finally {
@@ -1934,6 +1990,25 @@ async function uploadPhoto(bookingId, file, type) {
   }
 }
 
+// Everything the screen does once a completion is out of the mechanic's hands -
+// whether it reached the server or only the outbox. Shared on purpose: an
+// offline completion that still showed the job as pending would invite a second
+// tap, which is the exact duplicate the server guard exists to stop.
+function finishCompleteUI(id) {
+  document.getElementById('complete-modal')?.remove();
+  const j = jobs.find((x) => x.id === id);
+  if (j) j.status = 'completed';
+  render();
+  badges();
+  stopGPS();
+  // Fire-and-forget push to the client; offline it simply does not go out.
+  try {
+    if (j) notifyClientComplete(j);
+  } catch (e) {
+    console.warn('notifyClientComplete failed:', e.message);
+  }
+}
+
 async function submitComplete(id) {
   const notes = document.getElementById('comp-notes')?.value || '';
   const partsArr = Object.values(_partsUsed)
@@ -1993,32 +2068,59 @@ async function submitComplete(id) {
       ? Math.floor((Date.now() - serviceStartTime) / 1000)
       : null;
 
-  const resp = await fetch('/api/auth', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      role: 'mechanic-complete',
-      token: stored.token || '',
-      booking_id: id,
-      mechanic_notes: notes || null,
-      parts_used: partsArr,
-      parts_charged: {
-        items: partsCharged,
-        discount_code: _mechDiscount?.code || null,
-        discount_amount: _mechDiscount?.amount || null,
-      },
-      final_charge_amount: breakdown ? breakdown.chargeNow : null,
-      tip_amount: breakdown?.tip || 0,
-      final_charge_status:
-        document.querySelector('input[name="pay-method"]:checked')?.value || 'charged_manual',
-      skip_auto_charge: _skipAutoCharge,
-      photo_before_url: photoBeforeUrl || null,
-      photo_after_url: photoAfterUrl || null,
-      client_signature_url: signature || null,
-      next_service_date: nextDate || null,
-      duration_seconds: duration,
-    }),
-  });
+  // Built as an object, not inlined into the fetch, because if there is no
+  // signal this exact payload goes into the outbox and is replayed later.
+  // The token is deliberately NOT part of it (see outboxRequestBody).
+  const completeBody = {
+    booking_id: id,
+    mechanic_notes: notes || null,
+    parts_used: partsArr,
+    parts_charged: {
+      items: partsCharged,
+      discount_code: _mechDiscount?.code || null,
+      discount_amount: _mechDiscount?.amount || null,
+    },
+    final_charge_amount: breakdown ? breakdown.chargeNow : null,
+    tip_amount: breakdown?.tip || 0,
+    final_charge_status:
+      document.querySelector('input[name="pay-method"]:checked')?.value || 'charged_manual',
+    skip_auto_charge: _skipAutoCharge,
+    photo_before_url: photoBeforeUrl || null,
+    photo_after_url: photoAfterUrl || null,
+    client_signature_url: signature || null,
+    next_service_date: nextDate || null,
+    duration_seconds: duration,
+  };
+
+  let resp;
+  try {
+    resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(
+        outboxRequestBody({ type: 'complete', body: completeBody }, stored.token)
+      ),
+    });
+  } catch {
+    // No signal. Before today this threw out of submitComplete and the job was
+    // simply not completed - no error, no retry, nothing. Now it is parked on
+    // the phone and replayed by queueFlush() when the signal comes back; the
+    // server refuses the duplicate if this request did in fact land
+    // (api/_completion-guard.js).
+    const savedToPhone = await queueAdd({ type: 'complete', booking_id: id, body: completeBody });
+    finishCompleteUI(id);
+    // The photos went to Supabase Storage directly and there is no signal for
+    // that either, so they are gone - say so instead of letting the mechanic
+    // believe they were kept.
+    const lostPhotos = (beforeFile && !photoBeforeUrl) || (afterFile && !photoAfterUrl);
+    toast(
+      savedToPhone
+        ? '📡 No signal - job saved on this phone, it will send itself' +
+            (lostPhotos ? ' (photos could not be saved)' : '')
+        : '⚠️ No signal AND this phone could not save it - keep the app open'
+    );
+    return;
+  }
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
     if (err.code === 'AUTO_CHARGE_FAILED') {
@@ -2058,13 +2160,8 @@ async function submitComplete(id) {
   }
 
   const okData = await resp.json().catch(() => ({}));
-  document.getElementById('complete-modal').remove();
-  const j = jobs.find((x) => x.id === id);
-  if (j) j.status = 'completed';
-  render();
-  badges();
+  finishCompleteUI(id);
   if (okData.auto_charged) toast('✅ Charged to card on file');
-  stopGPS();
   toast('✅ Job completed!' + (photoBeforeUrl || photoAfterUrl ? ' Photos saved.' : ''));
   if (Array.isArray(okData.low_stock) && okData.low_stock.length) {
     setTimeout(
@@ -2072,12 +2169,6 @@ async function submitComplete(id) {
       1500
     );
   }
-  // Push al cliente
-  const jDone = jobs.find((x) => x.id === id);
-  if (jDone) notifyClientComplete(jDone);
-
-  stopGPS();
-
   // The invoice, the review email and the review SMS used to be fired from
   // here - three fetch() calls from this phone, AFTER the job was already
   // marked completed on the server. Lose signal in that window and the client

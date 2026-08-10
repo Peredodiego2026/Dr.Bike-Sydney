@@ -2818,6 +2818,77 @@ de esto es una afirmacion sobre pixeles, son valores calculados):
   ausencia de scroll horizontal **no se pudieron comprobar** y hay que mirarlos
   con el panel abierto.
 
+### 14.10 Completar sin senal: la cola offline del mecanico — 2026-08-10
+
+Lo pidio Diego el mismo dia que el 14.8. Es el hueco que quedaba: 14.8 saco la
+factura del telefono del mecanico, pero si el mecanico **no tenia senal en el
+momento de tocar "Completar"**, no pasaba absolutamente nada. El `fetch` de
+`submitComplete()` tiraba excepcion, la excepcion salia de la funcion sin
+`catch`, y el trabajo quedaba sin completar: sin error en pantalla, sin
+reintento, sin registro. Un garage o un sotano bastaba.
+
+**Ya existia una cola** (`drbike-mech-outbox`, `js/mechanic.js`), y su
+comentario decia explicitamente que las completaciones quedaban fuera **a
+proposito**: "replaying money hours later... is not something to do quietly in
+the background". Tenia razon. Por eso el trabajo fue mitad servidor.
+
+**El candado, primero.** `api/_completion-guard.js` (nuevo, sin red adentro) y
+su llamada al principio de `handleMechanicComplete`, **antes** del cobro, del
+descuento de stock y de las notificaciones:
+
+- reserva ya `completed` -> `200 {already_completed:true}` y **no se hace
+  nada**. Sin esto, el reenvio volvia a cobrar la tarjeta (la idempotency key de
+  Stripe deja de deduplicar a las 24h, y una cola que sale a la manana
+  siguiente ya esta afuera de esa ventana), volvia a descontar los repuestos y
+  mandaba una **segunda factura** en PDF mas un segundo email y SMS de reseña.
+- reserva `cancelled` -> `409 JOB_CANCELLED`. Completada en un sotano,
+  cancelada por Diego antes de que el telefono encontrara senal: cobrar eso
+  horas despues es la peor version del bug, no un caso raro.
+- fila ilegible (`null`) -> **sigue de largo**. Negarse a completar un trabajo
+  real porque fallo un SELECT es peor que el duplicado del que nos cuidamos.
+
+Se eligio la columna `status`, que ya existe en todos los entornos, y no una
+columna de idempotencia nueva: una migracion a mano que nadie corre es un
+candado que no existe (ver seccion 16 y `docs/RUNBOOK-SQL.md`). **Este cambio
+no necesita SQL.**
+
+**Limite conocido, escrito para que nadie lo lea como resuelto:** leer y despues
+actuar no es atomico. Dos requests dentro del mismo segundo pueden leer los dos
+"no completado". Esa ventana la sigue cubriendo la idempotency key de Stripe,
+que es para lo que estaba. El candado es para el otro caso: el reenvio de
+minutos u horas mas tarde.
+
+**La cola, despues.** `submitComplete()` arma el payload como objeto, y si el
+`fetch` tira, lo mete en la cola (`{type:'complete', booking_id, body}`) y
+cierra el trabajo en pantalla igual que si hubiera salido - un trabajo que sigue
+figurando pendiente invita a un segundo toque, que es justo el duplicado que el
+candado tiene que frenar.
+
+- **El token no se guarda con el item.** Se lee fresco al reenviar
+  (`outboxRequestBody`): un item que durmio toda la noche no viaja con un token
+  vencido, y la cola no guarda una credencial en disco.
+- **Las fotos no sobreviven.** `uploadPhoto()` va directo a Supabase Storage y
+  tampoco tiene senal; se encola sin fotos y **se le dice al mecanico**. Meter
+  las fotos en base64 en la cola no es opcion: `_IDB.set` solo considera
+  "guardado" si lo acepto **localStorage**, y una foto de celular revienta los
+  5 MB, con lo cual cada completacion offline mostraria el banner rojo de "no
+  se guardo en este telefono".
+- **Un cobro que falla al reenviar NO se descarta.** Nadie esta mirando la
+  pantalla cuando la cola se vacia. Un `402 AUTO_CHARGE_FAILED` deja el item en
+  la cola marcado `needs_payment`, las vueltas siguientes lo saltean, y el
+  banner de sync se pone rojo: "1 job could not be charged". Por eso `queueFlush`
+  ahora recorre con indice en vez de hacer `shift`.
+- **Solo se encola cuando no hay red** (el `fetch` tira). Un 500 sigue mostrando
+  error como antes.
+
+Verificado: 27 tests nuevos (`tests/unit/completion-guard.test.js`,
+`tests/unit/mechanic-outbox-completion.test.js`, que levantan las funciones
+reales del archivo del navegador), suite completa 221/221, `npm run check`, y
+las cuatro rutas ejecutadas en un navegador real contra `mechanic.html`
+servido: sin senal queda encolado, 402 lo aparca en rojo, un item aparcado no
+se reintenta, y `already_completed` lo da por bueno y lo saca. **NO** verificado:
+ningun cobro real de Stripe, ni un reenvio contra produccion.
+
 ---
 
 ## 15. Recuperar la contraseña era imposible desde una computadora (2026-08-06)
