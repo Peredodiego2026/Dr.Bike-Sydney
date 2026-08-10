@@ -2596,8 +2596,18 @@ excluye las canceladas, asi que la fila tampoco bloquea ese hueco de agenda.
 Datos para reconstruirla, de Stripe:
 `pi_3U0vVzPPGSm5cT7J0SRAoVUW`, 05-ago 13:29, $20.00 AUD, Apple Pay / Visa
 4481, `thaixguimaraes@gmail.com`, `Customer: Guest`. El servicio lo confirmo Diego
-despues de hablar con ella por WhatsApp: **Tyre and Tube Installed**. No quedo
+despues de hablar con ella por WhatsApp: **Tyre / Tube Install**. No quedo
 registrado en ningun sistema, que es exactamente el problema.
+
+**Correccion 2026-08-10 sobre el nombre del servicio.** Este punto decia
+"Tyre and Tube Installed", escrito de memoria. **Ese servicio no existe.** En el
+catalogo real - Admin > Services & Prices, o sea la tabla `services` - se llama
+**`Tyre / Tube Install`, $27, categoria Wheels & tyres**, comprobado por Diego
+en el panel. La diferencia no es cosmetica: el script busca el precio con un
+subselect por nombre, asi que con el nombre viejo habria insertado
+`service_price` NULL. Es el mismo patron que este documento ya venia
+registrando - un dato escrito de memoria en un doc no es evidencia de nada, y
+la unica fuente que no miente es el sistema.
 
 ### 14.7 El cobro pasa a disparar la cadena, no el navegador
 
