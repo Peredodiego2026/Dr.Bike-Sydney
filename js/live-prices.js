@@ -33,6 +33,12 @@
 
   const NAME_MAP = {
     'Basic Tune-Up': 'Tune-Up',
+    // Not a marketing rename like the rest of this map - only the case differs.
+    // The catalog row is "E-bike service"; the card says "E-Bike Service",
+    // which is how the footer link and the booking dropdown already spell it.
+    // Matching is case-sensitive, so without this line the card detaches from
+    // the table and freezes at its hardcoded price forever.
+    'E-Bike Service': 'E-bike service',
     'Flat Tyre Repair': 'Tyre / Tube Install',
     'Wheel Truing - Minor': 'Wheel Truing — Minor',
     'Wheel Truing - Major': 'Wheel Truing — Major',
@@ -85,12 +91,16 @@
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
       });
       if (!res.ok) {
-        console.warn('[live-prices] services fetch returned ' + res.status + ' - showing static prices');
+        console.warn(
+          '[live-prices] services fetch returned ' + res.status + ' - showing static prices'
+        );
         return;
       }
       services = await res.json();
     } catch (e) {
-      console.warn('[live-prices] services fetch failed (' + e.message + ') - showing static prices');
+      console.warn(
+        '[live-prices] services fetch failed (' + e.message + ') - showing static prices'
+      );
       return; // keep whatever price is already in the static HTML
     }
     if (!Array.isArray(services) || !services.length) {
@@ -129,9 +139,7 @@
       const lookupName = NAME_MAP[cardName] || cardName;
       const match = services.find((s) => s.name === lookupName);
       if (match && typeof match.price === 'number') {
-        priceEl.textContent = showsFloor
-          ? fromLabel() + ' $' + match.price
-          : '$' + match.price;
+        priceEl.textContent = showsFloor ? fromLabel() + ' $' + match.price : '$' + match.price;
       } else {
         console.warn(
           '[live-prices] no Supabase match for "' + cardName + '" - showing static price'
