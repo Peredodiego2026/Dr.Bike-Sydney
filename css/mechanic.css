@@ -387,6 +387,30 @@ body {
   margin-bottom: 8px;
   font-style: italic;
 }
+/* "Payment not collected" on a job whose completion is parked in the outbox.
+   A class and not an inline style because it needs the dark theme: on the dark
+   card, var(--red) over the 15%-alpha red panel measures 2.76:1 - the same way
+   "No jobs today" ended up invisible (12.15). var(--red-edge) is 10.32:1 there
+   and 1.2:1 on the light panel, so the two themes genuinely need different
+   values, which an inline style cannot express. */
+.pay-warn {
+  margin: 0 18px 8px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--red-edge);
+  border-radius: 8px;
+  background: var(--red-lt);
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.pay-warn-cta {
+  font-weight: 600;
+  margin-top: 2px;
+}
+[data-theme='dark'] .pay-warn {
+  color: var(--red-edge);
+}
 .job-price {
   font-size: 18px;
   font-weight: 800;
