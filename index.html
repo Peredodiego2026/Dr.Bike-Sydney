@@ -367,7 +367,7 @@
                than a kid's bike. data-price-from keeps the number itself coming
                from the services table. -->
           <div class="service-card" data-price-from>
-            <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-4"/><path d="M12 6l1 5.5-6.5 2 2-7.5"/><path d="M18.5 17.5L15 6"/><path d="M5.5 17.5L9 11l4.5-1"/></svg></div>
+            <div class="service-icon"><span style="display:inline-block;width:22px;height:22px;background-color:var(--blue);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span></div>
             <div class="service-name">Bike Assembly</div>
             <div class="service-price">From $80</div>
             <p class="service-desc">Full assembly of a new boxed bike.</p>
@@ -412,7 +412,10 @@
           </div>
           <div class="hiw-step">
             <div class="hiw-num">4</div>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-4"/><path d="M12 6l1 5.5-6.5 2 2-7.5"/><path d="M18.5 17.5L15 6"/><path d="M5.5 17.5L9 11l4.5-1"/></svg>
+            <!-- Same bike the My Bikes tab uses: images/bike-icon.png as a CSS
+                 mask, tinted. The inline SVG here drew an open quadrilateral
+                 for a frame and read as a lump at this size. -->
+            <span style="display:inline-block;width:28px;height:28px;background-color:var(--blue);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>
             <div class="hiw-title">Ride Happy</div>
             <p class="hiw-desc">Your bike is ready to go!</p>
           </div>
