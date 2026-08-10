@@ -34,11 +34,11 @@
   const NAME_MAP = {
     'Basic Tune-Up': 'Tune-Up',
     // Not a marketing rename like the rest of this map - only the case differs.
-    // The catalog row is "E-bike service", and a card spelled that way next to
-    // "E-bike Diagnostic" and "Firmware Update" reads as a typo. Matching is
-    // case-sensitive, so without this line the card detaches from the table and
-    // freezes at its hardcoded price forever.
-    'E-bike Service': 'E-bike service',
+    // The catalog row is "E-bike service"; the card says "E-Bike Service",
+    // which is how the footer link and the booking dropdown already spell it.
+    // Matching is case-sensitive, so without this line the card detaches from
+    // the table and freezes at its hardcoded price forever.
+    'E-Bike Service': 'E-bike service',
     'Flat Tyre Repair': 'Tyre / Tube Install',
     'Wheel Truing - Minor': 'Wheel Truing — Minor',
     'Wheel Truing - Major': 'Wheel Truing — Major',

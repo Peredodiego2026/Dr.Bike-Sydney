@@ -3357,13 +3357,30 @@ ver el catalogo (contorneado). El string `'View All Services →'` seguia en el
 diccionario es/zh de cuando el boton existia, asi que no hizo falta traducir
 nada nuevo.
 
-Dos cosas que se encontraron al ponerlo y conviene no repetir:
+Cuatro cosas que se encontraron al ponerlo y conviene no repetir:
 
 - **`btn-outline` es la clase del HERO**, texto blanco sobre borde blanco
   translucido, para fondo oscuro. En esta seccion blanca el boton quedaba
   **invisible**. La clase correcta para fondo claro es `btn-outline-blue`.
 - Un hijo de un contenedor flex sin `align-items` se estira al alto de la fila:
   el boton quedaba de **96px** contra los 48px del de al lado.
+- **El servicio ya tenia nombre en el sitio y la tarjeta le puso otro.** La
+  primera version la llamo `E-bike Service` (b minuscula, como las tarjetas
+  vecinas `E-bike Diagnostic` y `Firmware Update`) y le escribio traducciones
+  nuevas: `Service de e-bike`. Pero el enlace del pie (`landing.html:1485`) y la
+  opcion del desplegable de reserva (`landing.html:1157`) **ya decian
+  `E-Bike Service`**, con su entrada en el diccionario desde antes:
+  `Servicio de E-Bike` y `电动车服务`. Un cliente hubiera visto el mismo servicio
+  con dos nombres distintos en español en la misma pagina. Se unifico a
+  `E-Bike Service` y se borraron las dos entradas nuevas: el nombre ya no suma
+  ninguna traduccion, solo la descripcion. Grepear el nombre antes de escribirlo
+  es la regla que este proyecto ya tiene para los precios; vale igual para los
+  nombres.
+- **El icono lo eligio Diego.** La primera version traia un rayo dentro de un
+  circulo y el veredicto fue "es horrible". Quedo el icono de bicicleta que ya
+  usa el archivo (`landing.html:328` y la tarjeta de `Basic Tune-Up`), o sea que
+  **hay dos tarjetas con el mismo icono** - decidido asi a proposito, un dibujo
+  reconocible repetido es mejor que uno abstracto propio.
 
 **Verificado en Chromium** contra la rama, sin captura porque el panel del
 navegador estaba cerrado - nada de esto es una afirmacion sobre pixeles:
@@ -3374,9 +3391,18 @@ navegador estaba cerrado - nada de esto es una afirmacion sobre pixeles:
 | La tarjeta de E-bike dentro | Visible, 255px de alto, `$129` |
 | Los dos botones | 46px y 48px de alto, ambos sobre 44px |
 | Colores | Azul `--blue` sobre blanco y blanco sobre `--blue`: 5.17:1, pasa AA |
-| Los 3 idiomas | `View All Services →` / `Ver Todos los Servicios →` / `查看所有服务 →`, y la tarjeta traducida en los tres |
+| Los 3 idiomas | Boton: `View All Services →` / `Ver Todos los Servicios →` / `查看所有服务 →`. Tarjeta: `E-Bike Service` / `Servicio de E-Bike` / `电动车服务` |
 | "Book Now" de la tarjeta | Resuelve a `E-bike service`, o sea que preselecciona bien en el wizard |
 | `npm run services:check` | `Everything in the catalog is advertised and matched` - por primera vez limpio |
+| Consola en una pestaña nueva | Solo el aviso preexistente de `Custom Quote`. **Ninguno de la tarjeta nueva**: el precio lo toma de la tabla, no del HTML |
+
+**Un susto que no era.** Durante la verificacion aparecio
+`[live-prices] no Supabase match for "E-Bike Service"`, que es exactamente el
+sintoma de una tarjeta despegada. Era el navegador sirviendo el
+`js/live-prices.js` viejo desde cache. Se confirmo abriendo una **pestaña
+nueva**, con consola limpia: el aviso no vuelve. El buffer de consola no se
+vacia al recargar, asi que un aviso viejo se lee igual que uno nuevo - por eso
+la pestaña nueva y no una recarga mas.
 
 **Lo que este punto NO reviso**, y queda para quien siga: si hay otros
 elementos huerfanos de la misma unificacion del 04-jul. Se busco `getElementById`

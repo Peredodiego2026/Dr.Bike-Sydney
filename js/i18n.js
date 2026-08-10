@@ -29,7 +29,6 @@ const dict = {
     'Firmware Update': 'Actualización de firmware',
     'Software update for e-bike motor and display':
       'Actualización de software del motor y la pantalla de la e-bike',
-    'E-bike Service': 'Service de e-bike',
     'Cable connections, bolts, and a full brake and gear adjustment':
       'Conexiones de cables, tornillería y ajuste completo de frenos y cambios',
     'Bike Build — New Bike': 'Armado de bici nueva',
@@ -1372,7 +1371,6 @@ const dict = {
       '全面系统扫描、固件检查及错误代码排查',
     'Firmware Update': '固件更新',
     'Software update for e-bike motor and display': '电动车马达与显示器软件更新',
-    'E-bike Service': '电动车保养',
     'Cable connections, bolts, and a full brake and gear adjustment':
       '线缆接头、螺栓检查，以及刹车与变速的完整调校',
     'Bike Build — New Bike': '新车组装',
