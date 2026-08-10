@@ -27,6 +27,7 @@ import {
   dispatchCompletionCalls,
   recordCompletionOutcome,
 } from './_completion-notify.js';
+import { auditOrphanPayments } from './_orphan-audit.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
@@ -3311,6 +3312,44 @@ async function handleAdminSetMechanicPin(req, res) {
   return res.status(200).json({ ok: true, pin: finalPin });
 }
 
+// Payments Stripe took that no booking ever claimed, over a date range Diego
+// picks. Read-only: it never refunds and never writes to Stripe. Giving money
+// back stays a decision made by hand, in Stripe's own dashboard, one payment at
+// a time - see PENDIENTES section 14 for why this exists.
+async function handleAdminOrphanAudit(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!process.env.STRIPE_SECRET_KEY)
+    return res.status(503).json({ error: 'Stripe is not configured on this deployment' });
+
+  const from = String(req.body?.from || '');
+  const to = String(req.body?.to || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to))
+    return res.status(400).json({ error: 'from and to must be YYYY-MM-DD' });
+
+  // Inclusive of the whole `to` day, so picking the same date twice reads as
+  // "that day" rather than as an empty range.
+  const fromSeconds = Math.floor(new Date(`${from}T00:00:00Z`).getTime() / 1000);
+  const toSeconds = Math.floor(new Date(`${to}T23:59:59Z`).getTime() / 1000);
+  if (!Number.isFinite(fromSeconds) || !Number.isFinite(toSeconds) || toSeconds < fromSeconds)
+    return res.status(400).json({ error: 'Invalid date range' });
+
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const result = await auditOrphanPayments({
+      stripe,
+      sb: auth.sb,
+      fromSeconds,
+      toSeconds,
+    });
+    return res.status(200).json({ from, to, ...result });
+  } catch (e) {
+    console.error('[admin-orphan-audit]', e.message);
+    return res.status(502).json({ error: e.message });
+  }
+}
+
 async function handleAdminClaimsList(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
@@ -3738,6 +3777,7 @@ async function handler(req, res) {
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   if (role === 'submit-claim') return handleSubmitClaim(req, res);
+  if (role === 'admin-orphan-audit') return handleAdminOrphanAudit(req, res);
   if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
