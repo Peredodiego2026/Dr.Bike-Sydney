@@ -2910,3 +2910,32 @@ que se despliega las toca.
 
 `npm audit fix` solo cambio `package-lock.json`; `package.json` quedo igual y
 ninguna version mayor se movio. Rama `chore/audit-fix-dev-deps`.
+
+### 16.5 VERIFICADO 2026-08-10: no faltaba ningun script SQL
+
+Diego corrio la consulta del [RUNBOOK-SQL](RUNBOOK-SQL.md) contra produccion.
+**Las 30 migraciones dieron `OK`**, mas `0` perfiles sin `referral_code` y la
+columna `bookings.completion_notifications` presente.
+
+Los tres que este documento daba por pendientes ya estaban corridos:
+
+| Script | Lo daba por pendiente | Estado real |
+|---|---|---|
+| `add-address-coordinates.sql` | 13.1 | corrido |
+| `add-guest-bookings.sql` | seccion 14 | corrido |
+| `add-checkout-attempts.sql` | 11.2 | corrido |
+
+O sea que la base estaba al dia y lo desactualizado era el documento. Vale la
+pena registrar el patron, porque se repite: **un punto marcado "pendiente" en
+`PENDIENTES.md` no es evidencia de nada.** La consulta del runbook tarda diez
+segundos y es la unica fuente que no miente.
+
+**Lo que si queda abierto**, y solo lo puede hacer Diego:
+
+1. Una reserva sin iniciar sesion, de punta a punta, comprobando el email al
+   cliente y el WhatsApp al admin. El SQL esta, la prueba real no.
+2. El ETA en la pagina de seguimiento de una reserva **nueva** (las viejas no
+   tienen coordenadas y nunca lo van a mostrar).
+3. El simulacro de restauracion del backup
+   ([RUNBOOK-BACKUP-RESTORE.md](RUNBOOK-BACKUP-RESTORE.md)). Sigue siendo un
+   backup no probado, que es lo que dice el punto 1.2.
