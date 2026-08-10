@@ -2847,3 +2847,66 @@ que los que ya lo usaban no cambian. Se agrego en vez de recurrir a
 | Regresion de `confirmDialog` | Sin `prompt` no hay input; confirmar devuelve `true`, cancelar `false` |
 
 El SMS esta en los 3 idiomas (`api/_message-i18n.js`).
+
+---
+
+## 16. El SQL que falta correr, y la correccion al 14.7 (2026-08-10)
+
+Seccion nueva, agregada sin tocar nada de lo anterior.
+
+### 16.1 Hay dos runbooks nuevos, y son los documentos operativos
+
+- **[RUNBOOK-SQL.md](RUNBOOK-SQL.md)** - que scripts de `scripts/*.sql` hay que
+  correr en Supabase, en que orden, que se rompe si no, y como se verifica
+  despues. Arranca con una sola consulta que le pregunta a la base cuales
+  faltan, para no depender de lo que este documento recuerde.
+- **[RUNBOOK-BACKUP-RESTORE.md](RUNBOOK-BACKUP-RESTORE.md)** - el simulacro de
+  restauracion que el punto 1.2 dejo abierto, paso a paso y sin tocar
+  produccion.
+
+Los dos los corre Diego. Ninguna IA tiene ni debe tener esas credenciales.
+
+### 16.2 CORRECCION al 14.7: los cuatro pasos ya estan en `main`
+
+La tabla del punto 14.7 lista los cuatro pasos como "en `feat/...`", es decir
+sin mergear. **Esta desactualizada.** Verificado el 2026-08-10 leyendo el codigo
+en `main`:
+
+| Paso | Estado real |
+|---|---|
+| 1. `user_id` nullable + indice unico por pago | El script existe (`scripts/add-guest-bookings.sql`). **El SQL puede seguir sin correrse contra produccion** - es el paso 1 del RUNBOOK-SQL |
+| 2. Los datos de la reserva viajan en el PaymentIntent | En `main`: metadata `bk_*`, leida en `api/stripe-webhook.js:292` en adelante |
+| 3. El webhook crea la reserva y dispara la cadena | En `main`: `api/stripe-webhook.js:372`, `case 'payment_intent.succeeded'`. El filtro `shouldCreateBookingFor()` en la linea 263 |
+| 4. Paso de contacto para invitados | En `main`: `js/app.js:1429`, la hoja "Where do we send your booking?" |
+
+**No hay que reimplementar nada de esto.** La distincion que la tabla vieja
+borraba, y que es la razon de ser del RUNBOOK-SQL: que el codigo este mergeado
+no quiere decir que la base este lista. El paso 1 es mitad codigo (hecho) y
+mitad SQL (a confirmar contra produccion).
+
+### 16.3 El falso positivo de `npm run check` - CERRADO
+
+`scripts/icons-check.mjs` recorria carpetas que git ignora. Despues de correr
+la suite de Playwright quedaba un `playwright-report/` con HTML generado sin
+`<link rel="icon">`, y el check fallaba en local con problemas que no existen
+en el repo. El CI siempre estuvo verde porque esa carpeta nunca llega al
+repositorio, asi que la falla solo la veia quien habia corrido los e2e.
+
+Arreglado en `fix/icons-check-respects-gitignore`: `scripts/lib/ignored-dirs.mjs`
+lee `.gitignore` y exporta los nombres de directorio a saltear, mas
+`node_modules` y `.git` siempre. `color-check.mjs` tenia el mismo agujero en su
+`sweep()` y comparte el set. Tres tests en `tests/unit/ignored-dirs.test.js`
+fijan la lista.
+
+### 16.4 Las 2 vulnerabilidades high de `npm audit` - CERRADAS
+
+Las dos eran transitivas y las dos colgaban de `devDependencies`: nada de lo
+que se despliega las toca.
+
+| Paquete | Cadena | Antes | Despues |
+|---|---|---|---|
+| `brace-expansion` | `eslint` -> `minimatch` | 5.0.8 | 5.0.9 |
+| `nanoid` | `vitest` -> `vite` -> `postcss` | 3.3.16 | 3.3.18 |
+
+`npm audit fix` solo cambio `package-lock.json`; `package.json` quedo igual y
+ninguna version mayor se movio. Rama `chore/audit-fix-dev-deps`.
