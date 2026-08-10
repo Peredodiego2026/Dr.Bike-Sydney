@@ -95,6 +95,96 @@ function cardsIn(file) {
   return out;
 }
 
+// ── Structured data (JSON-LD), the half nothing was watching ────────────────
+// Every page carries <script type="application/ld+json"> blocks declaring the
+// services and their prices. That is what Google prints in search results.
+//
+// js/live-prices.js does NOT touch them - it rewrites cards in the DOM, and
+// Google reads the served HTML anyway, not the page after our script ran. The
+// suburb pages do read the live table, but only at GENERATION time, so from the
+// moment Diego edits a price in Admin the structured data of 60-odd pages is
+// stale until someone regenerates them. landing.html's block is hand-written
+// and does not even have that.
+//
+// Nothing caught this before: plan-prices-check.mjs watches membership prices,
+// the card sweep above watches cards, and the JSON-LD sat between the two.
+
+// The suburb pages declare their offers in the language of the page ("Ajuste",
+// "基础保养"), so a lookup against the English catalog would miss 240 of the 244
+// blocks. The generator already holds those translations, positionally aligned
+// with the English keys - read them from there rather than keeping a second
+// copy that could drift from what actually gets generated.
+function loadSuburbNameMap() {
+  const src = readFileSync('scripts/generate-suburb-pages.mjs', 'utf8');
+  const keys = src.match(/const SERVICE_KEYS = \[([\s\S]*?)\];/);
+  if (!keys) {
+    console.error(
+      'x Could not read SERVICE_KEYS out of scripts/generate-suburb-pages.mjs.\n' +
+        '  Fix this parser before trusting the result: an empty map would report\n' +
+        '  every translated offer as broken.'
+    );
+    process.exit(1);
+  }
+  const english = [...keys[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  const map = {};
+  for (const block of src.matchAll(/serviceNames: \[([\s\S]*?)\]/g)) {
+    const names = [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    // The two lists are positional. A misaligned one would map prices onto the
+    // wrong services and report drift that does not exist.
+    if (names.length !== english.length) {
+      console.error(
+        `x A serviceNames list in generate-suburb-pages.mjs has ${names.length} entries ` +
+          `but SERVICE_KEYS has ${english.length}. The two are positional; fix the generator.`
+      );
+      process.exit(1);
+    }
+    names.forEach((n, i) => (map[n] = english[i]));
+  }
+  return map;
+}
+
+// Walks a parsed block for anything carrying a price. Offers nest differently
+// depending on the schema (`offers[]`, `hasOfferCatalog.itemListElement[]`), so
+// this finds the price first and then asks where the name is, instead of
+// assuming one shape and silently skipping the other.
+function jsonLdIn(file) {
+  const html = readFileSync(file, 'utf8');
+  const offers = [];
+  const unreadable = [];
+  const ranges = [];
+  for (const m of html.matchAll(
+    /<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g
+  )) {
+    let parsed;
+    try {
+      parsed = JSON.parse(m[1]);
+    } catch (e) {
+      // Loudly: a block Node cannot read is a block Google cannot read either.
+      unreadable.push({ file, why: e.message.slice(0, 80) });
+      continue;
+    }
+    (function walk(node) {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (!node || typeof node !== 'object') return;
+      if (node.price !== undefined) {
+        const price = Number(String(node.price).replace(/[$,]/g, ''));
+        const name = node.itemOffered?.name || node.name;
+        if (name && Number.isFinite(price)) offers.push({ file, name, price });
+      }
+      // priceRange is prose ("$109-$369"), not an offer, but it is the first
+      // number Google shows and it is hardcoded in the generator.
+      if (typeof node.priceRange === 'string') {
+        const nums = [...node.priceRange.matchAll(/\$?([\d,]+)/g)].map((x) =>
+          Number(x[1].replace(/,/g, ''))
+        );
+        if (nums.length === 2) ranges.push({ file, from: nums[0], to: nums[1] });
+      }
+      for (const v of Object.values(node)) walk(v);
+    })(parsed);
+  }
+  return { offers, unreadable, ranges };
+}
+
 // A card carrying data-price-from="cheapest" names a CATEGORY, not a bookable
 // service - "Repairs" is the only one today. live-prices.js computes its floor
 // from the whole table, so having no row of its own is correct. Listing it as
@@ -152,6 +242,81 @@ for (const card of cards) {
   }
   advertised.add(lookup);
   if (byName.get(lookup) !== card.price) priceDrift.push({ ...card, live: byName.get(lookup) });
+}
+
+// ── The JSON-LD sweep ───────────────────────────────────────────────────────
+// A separate page list from the card one: a page can carry structured data
+// without carrying a price card, and landing.html does exactly that.
+const ldPages = [];
+for (const dir of ['.', 'es', 'zh']) {
+  if (!existsSync(dir)) continue;
+  for (const f of readdirSync(dir)) {
+    if (!f.endsWith('.html')) continue;
+    const path = dir === '.' ? f : `${dir}/${f}`;
+    if (readFileSync(path, 'utf8').includes('application/ld+json')) ldPages.push(path);
+  }
+}
+
+const SUBURB_MAP = loadSuburbNameMap();
+const ldOffers = [];
+const ldUnreadable = [];
+const ldRanges = [];
+for (const p of ldPages) {
+  const r = jsonLdIn(p);
+  ldOffers.push(...r.offers);
+  ldUnreadable.push(...r.unreadable);
+  ldRanges.push(...r.ranges);
+}
+
+// A parser that quietly stops matching is the failure mode this project keeps
+// hitting: the i18n check passed green through three separate blind spots
+// because "found nothing" and "nothing to find" printed the same. There are 63
+// pages of structured data in this repo and there is no version of it being
+// right for that sweep to come back empty.
+if (!ldPages.length || !ldOffers.length || !Object.keys(SUBURB_MAP).length) {
+  console.error(
+    `x The structured-data sweep found ${ldPages.length} page(s), ${ldOffers.length} offer(s) ` +
+      `and ${Object.keys(SUBURB_MAP).length} translated name(s).\n` +
+      '  Any of those being zero means the parser broke, not that the site is clean.\n' +
+      '  Fix it before trusting a green run.'
+  );
+  process.exit(1);
+}
+
+// Same resolution order the browser would use, plus the generator's
+// translations: exact catalog name, then the marketing alias, then the
+// per-language name.
+const resolve = (name) => {
+  if (byName.has(name)) return name;
+  if (NAME_MAP[name] && byName.has(NAME_MAP[name])) return NAME_MAP[name];
+  if (SUBURB_MAP[name] && byName.has(SUBURB_MAP[name])) return SUBURB_MAP[name];
+  return null;
+};
+
+const ldDrift = [];
+const ldUnmatched = [];
+for (const o of ldOffers) {
+  const key = resolve(o.name);
+  if (!key) {
+    ldUnmatched.push(o);
+    continue;
+  }
+  if (byName.get(key) !== o.price) ldDrift.push({ ...o, key, live: byName.get(key) });
+}
+
+// The range Google prints next to the business. Its ends are the cheapest and
+// dearest of the four headline services the pages actually advertise, not of
+// the whole table - a $17 wheel true is not what "from" means here.
+const headline = [...new Set(Object.values(SUBURB_MAP))]
+  .map((n) => byName.get(n))
+  .filter((p) => typeof p === 'number');
+const rangeDrift = [];
+if (headline.length) {
+  const lo = Math.min(...headline);
+  const hi = Math.max(...headline);
+  for (const r of ldRanges) {
+    if (r.from !== lo || r.to !== hi) rangeDrift.push({ ...r, lo, hi });
+  }
 }
 
 // A $0 service has no price to put on a price card - Emergency Service is a
@@ -220,8 +385,51 @@ if (priceDrift.length) {
   console.log('');
 }
 
+// The JSON-LD problems are reported apart from the card ones and worded harder
+// on purpose. A stale CARD is cosmetic - live-prices.js rewrites it on load.
+// A stale OFFER is what Google prints, and nothing rewrites it ever.
+if (ldUnreadable.length) {
+  bad++;
+  console.log('STRUCTURED DATA THAT DOES NOT PARSE  (Google cannot read it either)\n');
+  for (const u of ldUnreadable) console.log(`  x ${u.file}: ${u.why}`);
+  console.log('');
+}
+
+if (ldDrift.length) {
+  bad++;
+  console.log('GOOGLE IS BEING TOLD THE WRONG PRICE  (JSON-LD, nothing rewrites this)');
+  console.log('These are the numbers that show up in search results. live-prices.js');
+  console.log('does not touch structured data.\n');
+  for (const d of ldDrift.slice(0, 12)) {
+    console.log(`  x ${d.file}: "${d.name}" says $${d.price}, table says $${d.live}`);
+  }
+  if (ldDrift.length > 12) console.log(`  ...and ${ldDrift.length - 12} more`);
+  console.log('\n  fix: regenerate the suburb pages -> npm run suburbs:generate');
+  console.log('       landing.html and index.html are hand-written: edit those by hand.\n');
+}
+
+if (rangeDrift.length) {
+  bad++;
+  console.log('THE PRICE RANGE GOOGLE SHOWS IS STALE  (priceRange in JSON-LD)\n');
+  const r = rangeDrift[0];
+  console.log(`  x says $${r.from}-$${r.to}, the headline services are $${r.lo}-$${r.hi}`);
+  console.log(`      on ${rangeDrift.length} page(s)`);
+  console.log('      fix: priceRange in scripts/generate-suburb-pages.mjs is hardcoded,');
+  console.log('           unlike the offers. Update it there, then regenerate.\n');
+}
+
+if (ldUnmatched.length) {
+  bad++;
+  console.log('OFFERS ADVERTISED TO GOOGLE THAT MATCH NO SERVICE\n');
+  for (const [name, files] of groupByName(ldUnmatched)) {
+    console.log(`  x "${name}" on ${files.length} page(s): ${files.slice(0, 3).join(', ')}`);
+  }
+  console.log('');
+}
+
 console.log(
-  `Checked ${cards.length} cards on ${pages.length} pages against ${services.length} services.`
+  `Checked ${cards.length} cards on ${pages.length} pages, and ${ldOffers.length} structured-data ` +
+    `offers on ${ldPages.length} pages, against ${services.length} services.`
 );
 if (!bad && !priceDrift.length) console.log('Everything in the catalog is advertised and matched.');
 // Deliberately never fails the build: this is a report for Diego, and a

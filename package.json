@@ -43,7 +43,8 @@
     "prices:check": "node scripts/plan-prices-check.mjs",
     "icons:check": "node scripts/icons-check.mjs",
     "color:check": "node scripts/color-check.mjs",
-    "services:check": "node scripts/services-sync-check.mjs"
+    "services:check": "node scripts/services-sync-check.mjs",
+    "suburbs:generate": "node scripts/generate-suburb-pages.mjs"
   },
   "lint-staged": {
     "api/**/*.js": [
