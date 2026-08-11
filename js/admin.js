@@ -642,6 +642,19 @@ const EXPENSE_LABELS = {
 };
 let _expenses = null; // {available, expenses[]} | {available:false, reason}
 
+// Real parts spend divided by jobs done, set by loadFinance() from the expenses
+// table. It replaces VAR_COST_PER_JOB, a hardcoded $10 a job that was deleted
+// with the rest of the invented costs - but these two readers were missed, and
+// referencing a const that no longer exists is a ReferenceError, not a wrong
+// number: it broke the margin table on Finance and the Analytics CSV export.
+// node --check cannot see it (it does not resolve identifiers) and no test
+// covers either function, which is exactly how it reached production.
+//
+// 0 until loadFinance() has run, and 0 when nothing is loaded under "parts".
+// That is honest - no parts expenses means no parts cost - and the P&L already
+// says out loud when nothing is loaded at all.
+let _partsPerJob = 0;
+
 // Every 'YYYY-MM' the range touches. A quarter view spans three, a year twelve,
 // and a recurring expense has to be counted once in each of them.
 function expMonthsInRange(dateFrom, dateTo) {
@@ -1060,6 +1073,7 @@ async function loadFinance() {
   );
   // Parts is a category like any other now, not jobCount x $10.
   const varCosts = exp.byCat.parts || 0;
+  _partsPerJob = jobCount > 0 ? varCosts / jobCount : 0;
   const fixedTotal = exp.total - varCosts;
   const grossProfit = netRevenue - varCosts;
   const netProfit = grossProfit - fixedTotal;
@@ -3643,7 +3657,7 @@ function exportAnalyticsCSV() {
     .sort((a, b) => b[1].rev - a[1].rev)
     .forEach(([name, d]) => {
       const avg = Math.round(d.rev / d.jobs);
-      const cost = d.jobs * VAR_COST_PER_JOB;
+      const cost = Math.round(d.jobs * _partsPerJob);
       const net = d.rev - Math.round(d.rev / 11);
       const margin = net > 0 ? Math.round(((net - cost) / net) * 100) : 0;
       rows.push([name, d.jobs, d.rev, avg, cost, margin]);
@@ -4549,7 +4563,7 @@ function renderMargins(all) {
   tbody.innerHTML = rows
     .map(([name, d]) => {
       const avg = Math.round(d.rev / d.jobs);
-      const cost = d.jobs * VAR_COST_PER_JOB; // variable parts cost
+      const cost = Math.round(d.jobs * _partsPerJob); // variable parts cost
       const net = d.rev - Math.round(d.rev / 11); // ex-GST
       const profit = net - cost;
       const margin = net > 0 ? Math.round((profit / net) * 100) : 0;
