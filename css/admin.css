@@ -645,6 +645,20 @@ body {
   white-space: nowrap;
   color: var(--red);
 }
+/* The big numbers on the Expenses summary. NO `color` on purpose - it inherits.
+   The first version said `color: var(--navy)` with a comment claiming 16.43:1
+   light and 14.59:1 dark. The light number was right; the dark one was measured
+   on the ANALYTICS card, which has a different background. Measured on THIS
+   card it was 1.04:1 - navy text on the dark card, invisible.
+   Inheriting is what fixes it without inventing a colour: the body carries
+   --navy in light and `[data-theme='dark'] .main` already repaints to #f2f2f7,
+   so both themes get the ink they were designed with and no hex is added. */
+.exp-total-value {
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 4px;
+  white-space: nowrap;
+}
 [data-theme='dark'] .exp-amount {
   color: var(--red-bright);
 }

@@ -929,6 +929,78 @@ async function fetchExpenses() {
   }
 }
 
+// Two numbers, never one. A one-off row's amount IS what was spent; a recurring
+// row's amount is what is spent EVERY MONTH, so adding the two columns together
+// produces a total that means nothing - it would count the Claude subscription
+// once no matter how many months it has been running. So: "spent so far" counts
+// the one-offs, "every month" is the standing commitment, and they are labelled
+// as the different things they are.
+function renderExpenseTotals(rows) {
+  const box = document.getElementById('exp-totals');
+  if (!box) return;
+  if (!rows.length) {
+    box.innerHTML = '';
+    return;
+  }
+  const money = (n) => '$' + Number(n).toLocaleString('en-AU', { minimumFractionDigits: 2 });
+  let oneOff = 0;
+  let monthly = 0;
+  const byCat = {};
+  for (const e of rows) {
+    const amount = Number(e.amount) || 0;
+    if (e.recurring_monthly) monthly += amount;
+    else oneOff += amount;
+    const cat = EXPENSE_LABELS[e.category] ? e.category : 'other';
+    byCat[cat] = (byCat[cat] || 0) + amount;
+  }
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+
+  const tile = (label, value, note) => `
+    <div style="flex:1;min-width:150px">
+      <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:.05em">${esc(label)}</div>
+      <div class="exp-total-value">${esc(value)}</div>
+      <div style="font-size:12px;color:var(--mgray);margin-top:2px">${esc(note)}</div>
+    </div>`;
+
+  box.innerHTML = `
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:${cats.length ? '14px' : '0'}">
+        ${tile(
+          'Spent so far',
+          money(oneOff),
+          rows.filter((e) => !e.recurring_monthly).length + ' one-off expense' +
+            (rows.filter((e) => !e.recurring_monthly).length === 1 ? '' : 's')
+        )}
+        ${
+          monthly
+            ? tile(
+                'Every month',
+                money(monthly),
+                'standing cost, not a total — ' +
+                  rows.filter((e) => e.recurring_monthly).length +
+                  ' recurring'
+              )
+            : ''
+        }
+      </div>
+      ${
+        cats.length
+          ? `<div style="border-top:1px solid var(--border-lt);padding-top:12px">
+               <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">By category</div>
+               ${cats
+                 .map(
+                   ([c, v]) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:4px 0;font-size:13px">
+                     <span>${esc(EXPENSE_LABELS[c])}</span>
+                     <span style="font-weight:700;white-space:nowrap">${esc(money(v))}</span>
+                   </div>`
+                 )
+                 .join('')}
+             </div>`
+          : ''
+      }
+    </div>`;
+}
+
 async function loadExpenses() {
   const box = document.getElementById('exp-list');
   if (!box) return;
@@ -936,12 +1008,16 @@ async function loadExpenses() {
   const dateEl = document.getElementById('exp-date');
   if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
 
+  const totalsBox = document.getElementById('exp-totals');
+  if (totalsBox) totalsBox.innerHTML = '';
+
   _expenses = await fetchExpenses();
   if (!_expenses.available) {
     box.innerHTML = `<div style="color:var(--red);font-size:13px;line-height:1.6;padding:16px 0">${esc(_expenses.reason || 'Could not read the expenses')}</div>`;
     return;
   }
   const rows = _expenses.expenses || [];
+  renderExpenseTotals(rows);
   if (!rows.length) {
     box.innerHTML =
       '<div style="text-align:center;padding:40px 16px"><div style="font-size:32px;margin-bottom:8px">&#128179;</div>' +
