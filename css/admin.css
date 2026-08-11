@@ -1,4 +1,32 @@
-/* tokens from variables.css */
+/* tokens from variables.css
+   ─────────────────────────────────────────────────────────────────────────────
+   Why this file still holds 173 hand-written hex, and why that is not debt
+   (docs/PENDIENTES.md 12.14, step 3).
+
+   admin.html loads exactly two stylesheets: variables.css and this one. The
+   block right below re-declares SEVEN tokens for dark mode. Inside that block a
+   hand-written `#fff` stays white and `var(--white)` turns #1c1c1e - they are
+   different colours here, so the hex is a decision, not a leftover.
+
+   What is left breaks down into four groups, none of which var() can express:
+
+   1. The dark theme's OWN palette (~140). #f2f2f7, #98989f, #152035, #1a2740,
+      #0d1b2e, #8e8e93, #636366, #48484a, #3a3a3f, #2e2e33, #6e6e76, #38383a,
+      and the bright ramp #f87171 / #4ade80 / #fbbf24 / #34d399. These ARE what
+      [data-theme='dark'] paints. Mapping them to a light token inverts the
+      theme - that is defect 12.15, and it is how "No jobs today" ended up at
+      1.03:1.
+   2. Tokens the dark block redefines: --white, --off, --mgray, --border,
+      --shadow, --shadow-lg, --blue-lt. Converting a hex to one of these is
+      forbidden: it would follow the theme when the author meant it not to.
+   3. Selector strings, not colours. `[style*='background:#FEF2F2']` (line ~478)
+      and `[style*='background:#F0FDF4']` (~481) MATCH the inline style that
+      js/admin.js writes. If that hex ever becomes var() in the JS, these rules
+      stop matching and dark mode silently breaks. They are coupled on purpose.
+   4. Custom property VALUES - the whole --an-* chart ramp at the bottom. A
+      definition that references itself is invalid and wipes the colour off
+      every descendant (12.14, HALLAZGO 1).
+   ────────────────────────────────────────────────────────────────────────── */
 [data-theme='dark'] {
   --white: #1c1c1e;
   --off: #242426;
@@ -426,7 +454,7 @@ body {
 }
 /* Notification badges */
 [data-theme='dark'] .sb-badge {
-  background: #cf2020;
+  background: var(--red);
 }
 /* Btn ghost */
 [data-theme='dark'] .btn-save {
@@ -882,19 +910,19 @@ body {
   padding: 10px 16px;
   text-align: left;
   border-bottom: 1px solid var(--border-lt);
-  background: #f8fafc;
+  background: var(--surface);
 }
 .tbl td {
   padding: 12px 16px;
   font-size: 13px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--surface);
   color: #0d1f3c;
 }
 .tbl tr:last-child td {
   border-bottom: none;
 }
 .tbl tr:hover td {
-  background: #f8fafc;
+  background: var(--surface);
 }
 .status {
   display: inline-flex;
@@ -971,7 +999,7 @@ body {
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--surface);
   transition: background 0.13s;
   cursor: pointer;
 }
@@ -979,7 +1007,7 @@ body {
   border-bottom: none;
 }
 .sch-item:hover {
-  background: #f8fafc;
+  background: var(--surface);
 }
 .sch-time {
   font-size: 12px;
@@ -1121,7 +1149,7 @@ body {
   margin-top: 4px;
 }
 .vs-item {
-  background: #f8fafc;
+  background: var(--surface);
   border-radius: 8px;
   padding: 10px;
   text-align: center;
@@ -1239,7 +1267,7 @@ body {
   margin-top: 14px;
 }
 .cl-stat {
-  background: #f8fafc;
+  background: var(--surface);
   border-radius: 8px;
   padding: 8px;
   text-align: center;
@@ -1273,7 +1301,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 9px 20px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--surface);
   font-size: 13px;
 }
 .pl-row:last-child {
@@ -1286,7 +1314,7 @@ body {
   border-radius: 0 0 12px 12px;
 }
 .pl-row.subtotal {
-  background: #f8fafc;
+  background: var(--surface);
   font-weight: 600;
 }
 [data-theme='dark'] .pl-row.total {
@@ -1479,7 +1507,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--surface);
   font-size: 13px;
 }
 .setting-row:last-child {
@@ -1973,7 +2001,7 @@ body {
   }
   .brand-sub {
     font-size: 12px;
-    color: #475569;
+    color: var(--gray);
     margin-top: 1px;
   }
   .report-info {
@@ -1986,7 +2014,7 @@ body {
   }
   .report-period {
     font-size: 12px;
-    color: #475569;
+    color: var(--gray);
     margin-top: 2px;
   }
   .kpis {
@@ -1996,7 +2024,7 @@ body {
     margin-bottom: 32px;
   }
   .kpi {
-    background: #f8fafc;
+    background: var(--surface);
     border-radius: 12px;
     padding: 16px;
     border-left: 3px solid var(--blue-dark);
@@ -2013,7 +2041,7 @@ body {
   .kpi-label {
     font-size: 10px;
     font-weight: 600;
-    color: #475569;
+    color: var(--gray);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     margin-bottom: 6px;
@@ -2093,7 +2121,7 @@ body {
     letter-spacing: 0.04em;
   }
   tbody tr:nth-child(even) {
-    background: #f8fafc;
+    background: var(--surface);
   }
   tbody td {
     padding: 9px 12px;
