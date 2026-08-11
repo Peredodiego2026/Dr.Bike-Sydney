@@ -1969,6 +1969,67 @@ eventos tambien en escritorio. Se detecto leyendo `landing.html` antes de
 escribir el codigo, no despues. Las dos lineas de `CLAUDE.md` quedaron
 corregidas con el porque al lado.
 
+### 12.29 Dos defectos que introdujeron los PR de esta misma sesion — CERRADO 2026-08-11
+
+**Salieron de releer lo propio, no de una pantalla rota.** Los dos son cosas que
+`node --check` no puede ver y los tests no cubren: uno solo aparece cuando algo
+falla, el otro solo con un rango largo.
+
+#### A. `_completeAdminLogin()` podia quedar como unhandled rejection (del PR #227)
+
+El PR #227 la convirtio en `async` para poder esperar a `setSession()` y mostrar
+el error. Correcto — pero **sus cuatro llamadores la invocan sin `await`**
+(lineas 1826, 1874, 1912 y 1951), y estan dentro de su propio `try/catch`, que
+una promesa suelta **no atraviesa**.
+
+`setSession()` puede **lanzar** en vez de devolver `{error}` (una caida de red,
+por ejemplo). En ese caso la promesa quedaba rechazada sin nadie escuchando: el
+overlay de login se quedaba mudo y los tokens seguian en `localStorage`. Es
+**exactamente el callejon sin salida que ese PR existia para cerrar**, entrando
+por la otra puerta.
+
+Ahora el `await` va envuelto y un throw se convierte en el mismo mensaje visible
+que un error devuelto.
+
+**VERIFICADO en el navegador**, rompiendo `fetch` dentro del iframe y llamando a
+la funcion:
+
+| | antes | ahora |
+|---|---|---|
+| La promesa rechaza | si | **no** |
+| `unhandledrejection` | si | **ninguno** |
+| Mensaje en pantalla | ninguno | *"Signed in, but the session could not be opened: …"* |
+| Token muerto | se quedaba | **se borra** |
+
+#### B. La reconciliacion podia tumbar la tarjeta de trafico (del PR #228)
+
+`readReconciliation()` llamaba a `auditOrphanPayments()` **sin acotar
+`maxPages`**, y el default son 20 paginas: hasta 2000 pagos y 20 viajes a
+Stripe, encadenados. Eso corre **dentro de la misma funcion de Vercel** que las
+8 consultas de PostHog y la tarjeta de checkouts, y esa funcion tiene un timeout
+duro. Con "All time" (730 dias) el rango es lo bastante grande como para que se
+note.
+
+El archivo **ya avisaba de esta trampa** tres funciones mas arriba, sobre
+`POSTHOG_TIMEOUT_MS`: *"sin un limite propio, un PostHog lento se lleva puesta
+la tarjeta de checkouts"*. Se escribio el mismo defecto al lado del comentario
+que lo describe.
+
+Acotado a **5 paginas** (500 pagos). La pantalla de Orphan Payments conserva las
+20: es una pantalla propia y no comparte presupuesto con nadie. Cuando se corta,
+`truncated` ya lo dice en pantalla en vez de que falle la tarjeta entera.
+
+#### Lo que se reviso y estaba bien
+
+- `isOrphanCandidate` **no** quedo referenciado sin importar en `api/auth.js`
+  (una version intermedia lo usaba; la reescritura lo saco limpio). Comprobado
+  por grep, que es lo unico que lo detecta: `node --check` no valida
+  identificadores.
+- `loadAvgServiceTime()`: `sub` esta declarado una sola vez y guardado con
+  `if (sub)` en las tres ramas.
+- El bloque de reconciliacion aguanta datos ausentes: `orphans_value` sin valor
+  no rompe el `.toFixed(2)`, y `funnel` en `null` da `—`, no `0`.
+
 ### 12.23 El chip `completed` seguia fallando AA — CERRADO 2026-08-09
 
 **Salio de renderizarlo, no de la aritmetica.** Cuando se libero un slot de dev
