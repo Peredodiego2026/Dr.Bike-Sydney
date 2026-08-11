@@ -139,9 +139,17 @@ with
     (exists (select 1 from tbl where t='bikes') and exists (select 1 from col where t='bookings' and c='bike_id'))
   union all select 27, 'add-tracking-token.sql', 'bookings.tracking_token',
     exists (select 1 from col where t='bookings' and c='tracking_token')
-  union all select 28, 'add-service-timing-columns.sql', 'las 5 columnas de tiempos de servicio',
-    (select count(*) = 5 from col where t='bookings' and c in ('started_at','completed_at',
+  -- Las 5 columnas Y el indice. Mirar solo las columnas daba VERDE con la
+  -- migracion a medias: hasta 2026-08-11 la linea 13 del .sql creaba el indice
+  -- sobre `service_type`, columna que no existe, y Postgres aborta el script
+  -- ahi - los ALTER de arriba aplicaron y el indice y los COMMENT no. Un
+  -- chequeo que no mira lo ultimo que hace un script no puede detectar que se
+  -- corto por la mitad (docs/PENDIENTES.md 12.28).
+  union all select 28, 'add-service-timing-columns.sql', 'las 5 columnas de tiempos + el indice',
+    ((select count(*) = 5 from col where t='bookings' and c in ('started_at','completed_at',
       'service_duration_seconds','pre_service_checklist','pre_service_notes'))
+     and exists (select 1 from pg_indexes where schemaname='public'
+                 and indexname='idx_bookings_service_timing'))
   union all select 29, 'add-service-reminder-column.sql', 'bookings.next_service_reminder_sent',
     exists (select 1 from col where t='bookings' and c='next_service_reminder_sent')
   union all select 30, 'add-mechanic-profile-columns.sql', 'las 5 columnas de perfil del mecanico',
