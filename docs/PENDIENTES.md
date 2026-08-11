@@ -1766,6 +1766,85 @@ Aclaracion para no perseguir un fantasma: `css/mechanic.css:2-14` y
 redefinicion global en conflicto era la de `css/landing.css:2`, y desde el
 2026-08-09 ya no existe: **no queda ninguna**.
 
+### 12.25 Siete declaraciones CSS que no hacian nada — CERRADO 2026-08-11
+
+**Aparecieron mientras se cerraba el paso 3 de 12.14**, no en una auditoria de
+bugs. Son dos defectos distintos y los dos se ven en pantalla.
+
+#### A. `X: undefined !important`, seis veces
+
+Un template literal interpolo una variable JS vacia cuando se escribieron estas
+reglas. `undefined` no es un valor CSS valido, asi que **la declaracion se
+descarta entera**:
+
+| Archivo | Regla | Consecuencia |
+|---|---|---|
+| `css/mechanic.css:16` | `[data-theme='dark'] .job-card` | **la tarjeta de trabajo se quedaba BLANCA en modo oscuro** |
+| `css/mechanic.css:93` | `[data-theme='dark'] .kpi-card` | idem, las tarjetas de KPI |
+| `css/mechanic.css:54` | `.abtn.primary.done/.accept` | ninguna: `--green` no se redefine en oscuro |
+| `css/admin.css:440` | `[style*='background:var(--white)']` | ninguna: el `var(--white)` inline ya sigue al tema |
+| `css/admin.css:477` | idem, en `#page-vans` | ninguna, por lo mismo |
+| `css/landing.css:748` | `-webkit-text-fill-color` de autofill | el texto autocompletado usaba el color del navegador |
+
+**Las dos primeras son el defecto 12.15 otra vez, y en la app que el mecanico
+usa en la calle.** Medido en el navegador sobre `mechanic.html` con
+`data-theme='dark'` fijado:
+
+| | antes | ahora |
+|---|---|---|
+| `.job-card` fondo | `#ffffff` | `#152035` |
+| `.job-card` texto | `#f2f2f7` | `#f2f2f7` |
+| **contraste** | **1.12:1** | **14.59:1** |
+| `.kpi-card` | igual | igual |
+| en tema claro | 16.43:1 | **16.43:1, sin cambio** |
+
+**La causa raiz no era la regla rota, era la de al lado.** `.job-card` y
+`.kpi-card` declaraban `background: #fff` **en hex**. `--white` es uno de los
+diez tokens que `css/mechanic.css` redefine para oscuro (`#152035`), asi que
+con `var(--white)` la tarjeta se oscurece sola y la regla de override nunca
+hizo falta. El arreglo son dos lineas: el hex pasa a token y la regla muerta se
+borra. Es exactamente lo contrario de la regla general de 12.14 - aca **queremos**
+que siga al tema.
+
+Las tres inocuas se borraron igual, con un comentario en su lugar diciendo por
+que no hace falta ninguna regla ahi. Dejar `undefined` en el archivo invita a
+que alguien "lo complete" con un valor y rompa algo que hoy funciona.
+
+#### B. El reporte de finanzas de admin usa `var()` donde no existe
+
+`js/admin.js:1096` abre `window.open('', '_blank')` y escribe el reporte con
+`document.write`. **Es un documento nuevo: no carga `css/variables.css`.** Ahi
+habia **21 `var(--x)`** y las 21 se descartaban.
+
+Verificado con un `srcdoc` que reproduce el caso, midiendo el valor computado:
+
+| Elemento | sin `variables.css` (hoy) | con el `:root` inyectado |
+|---|---|---|
+| `.brand-icon` fondo | `rgba(0,0,0,0)` **transparente** | `rgb(37,99,235)` |
+| `.brand-sub` color | hereda del `body` | `rgb(71,85,105)` |
+| `.kpi` fondo | `rgba(0,0,0,0)` **transparente** | `rgb(248,250,252)` |
+
+O sea el reporte salia impreso sin el azul de marca, sin fondo en los KPI y con
+los subtitulos en el color heredado.
+
+**El PR B-1 ya habia avisado de esto** ("en un `window.open()` el hex es
+obligatorio") y convirtio 6 apariciones a hex literal. Un PR posterior las
+volvio a pasar a `var()` sin notar el contexto. **Por eso el arreglo no es
+volver al hex:** se inyecta un `:root` con los 7 tokens que el reporte usa
+dentro de su propio `<style>`. Queda autocontenido, no agrega hex al presupuesto
+(un `--x: #hex` es una definicion y `color-check.mjs` no la cuenta) y la proxima
+conversion masiva no lo puede romper otra vez.
+
+**Verificado que no se movio nada mas.** Histograma de los 12 valores de color
+computados de todos los elementos, dos servidores, descartando la corrida de
+calentamiento:
+
+| Pagina | main | la rama |
+|---|---|---|
+| `admin.html` claro | 1271 el., navy 3599 / border 635 / white 500 | **identico** |
+| `admin.html` oscuro | digest `84942984` | **`84942984`** |
+| `landing.html` | digest `b0728d1a`, 1091 el. | **`b0728d1a`** |
+
 ### 12.23 El chip `completed` seguia fallando AA — CERRADO 2026-08-09
 
 **Salio de renderizarlo, no de la aritmetica.** Cuando se libero un slot de dev

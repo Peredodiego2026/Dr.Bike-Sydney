@@ -29,7 +29,6 @@
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 [data-theme='dark'] .job-card {
-  background: undefined !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 [data-theme='dark'] .job-card .job-client {
@@ -65,10 +64,9 @@
 [data-theme='dark'] .abtn.primary.go {
   background: var(--amber) !important;
 }
-[data-theme='dark'] .abtn.primary.done,
-[data-theme='dark'] .abtn.primary.accept {
-  background: undefined !important;
-}
+/* No dark override for .abtn.primary.done/.accept: --green is not redefined by
+   [data-theme='dark'], so the button is already the same green in both themes.
+   The rule that used to sit here said `background: undefined !important`. */
 [data-theme='dark'] .abtn.danger {
   background: transparent !important;
   color: #f87171 !important;
@@ -106,7 +104,6 @@
   background: #0d1f3c !important;
 }
 [data-theme='dark'] .kpi-card {
-  background: undefined !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 [data-theme='dark'] .kpi-val {
@@ -357,7 +354,10 @@ body {
   background: var(--off);
 }
 .job-card {
-  background: #fff;
+  /* var(--white), NOT #fff: this is one of the ten tokens [data-theme='dark']
+     re-declares, so the token is what turns the card #152035 in dark mode. The
+     hex kept it white while the text went #f2f2f7 - white on white, 1.12:1. */
+  background: var(--white);
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 10px;
@@ -547,7 +547,8 @@ body {
   margin-bottom: 24px;
 }
 .kpi-card {
-  background: #fff;
+  /* var(--white), not #fff - same reason as .job-card above. */
+  background: var(--white);
   border-radius: 12px;
   padding: 18px 16px;
   border: 1px solid var(--border);
