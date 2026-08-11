@@ -841,7 +841,8 @@ releer lo ya cerrado:
   y sin necesitar nada de Stripe.** Resulto no ser trabajo de webhook: es una
   barrida diaria que cruza los pagos de Stripe contra `bookings`. Ver el punto
   12.3 para por que el webhook era el lugar equivocado.
-- **12.14 completo** — ~~necesita elegir que paleta gana~~ **DECIDIDO 2026-08-03:
+- **12.14 completo — CERRADO 2026-08-11.** Los tres pasos hechos; el detalle de
+  cada uno abajo. ~~necesita elegir que paleta gana~~ **DECIDIDO 2026-08-03:
   gana `css/variables.css` tal cual esta, con `--blue` en `#2563eb`.** El logo y
   los iconos se quedan con su `#0055de`: son dos azules a proposito, no deriva.
   Ya no hay decision pendiente, lo que queda es mecanico y lo puede tomar
@@ -855,12 +856,19 @@ releer lo ya cerrado:
      pisados mas los dos `--shadow-*` y `--transition`, y **499 de los 1097
      elementos de la landing cambiaron de pixel**: el detalle medido esta abajo,
      en el bloque de este mismo punto. Ya no hay tres paletas: hay una.
-  3. Los hex escritos a mano pasan a `var(--token)`, **solo en las 5
-     superficies de app** (decision de Diego 2026-08-09; emails y paginas de
-     suburbio, PR aparte). Partido en dos: **PR A HECHO 2026-08-09** - los 482
-     que no cambian un pixel, en las 3 superficies de cliente. **PR B abierto** -
-     los que no coinciden con ningun token, mas los 743 de `admin`/`mechanic`,
-     donde el modo oscuro hace que `#fff` y `var(--white)` sean cosas distintas.
+  3. ~~Los hex escritos a mano pasan a `var(--token)`~~ **HECHO 2026-08-11.
+     EL PUNTO 12.14 QUEDA CERRADO.** Las superficies de cliente se cerraron el
+     2026-08-09 (PR A y los cinco PR B). Las de staff el 2026-08-11: 16 en
+     `css/admin.css` (PR #224) y 151 mas en las seis superficies (PR #225),
+     despues de que Diego levantara la prohibicion de los 12 tokens con la
+     condicion de **medir primero** — la lista era la union de admin y mechanic
+     y por eso prohibia de mas (admin redefine 5 tokens, mechanic 10).
+     Lo que sigue escrito a mano **ya no es deuda**: es la paleta propia del
+     modo oscuro, los tokens que el tema redefine, los selectores
+     `[style*='#HEX']` acoplados a `js/admin.js`, las agujas de busqueda de
+     `js/admin.js:540`, el canvas de `js/mechanic.js:1689` y el `window.open()`
+     del reporte de finanzas. **Cada grupo tiene su comentario en el archivo
+     donde vive.** El presupuesto por archivo vive en `scripts/color-check.mjs`.
   Ojo con el orden: 1 y 2 cambian pixeles en pantalla, asi que conviene
   medirlos antes y despues. El 3 no deberia cambiar ninguno - si cambia alguno,
   ese hex no era el que decia el token y es un hallazgo, no un error de tipeo.

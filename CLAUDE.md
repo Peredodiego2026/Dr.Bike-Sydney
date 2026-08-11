@@ -33,7 +33,17 @@ second bare `:root` overriding `--gray`, `--border`, `--blue-dark`, `--radius`
 and both shadows, and `track.html` used to declare a third palette of its own.
 Both are gone (`fix/track-loads-the-tokens`, `fix/landing-stops-overriding-the-tokens`).
 Every surface now resolves every token to the same value, so any page is a
-valid reference. What is left of 12.14 is step 3: the hex still written by hand.
+valid reference.
+
+**12.14 is CLOSED as of 2026-08-11.** Step 3 - the hex written by hand - was
+finished across all six app surfaces. What is still written as hex is no longer
+debt: it is the dark theme's own palette, the tokens `[data-theme='dark']`
+redefines, the `[style*='#HEX']` selectors in `css/admin.css` that match what
+`js/admin.js` writes, the search needles at `js/admin.js:540`, the canvas at
+`js/mechanic.js:1689` and the `window.open()` report. **Each group carries a
+comment in the file where it lives** - read that before "cleaning up" any of
+them. `scripts/color-check.mjs` holds the per-file budget; lower it when you
+convert, never raise it.
 
 ### App surfaces
 - `index.html` - Mobile SPA (PRODUCTION). Hash router. ~450 lines HTML + js/app.js.
