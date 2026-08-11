@@ -44,7 +44,7 @@
 body {
   font-family: var(--sans);
   background: var(--border-lt);
-  color: #0d1f3c;
+  color: var(--navy);
   -webkit-font-smoothing: antialiased;
   display: flex;
   min-height: 100vh;
@@ -294,7 +294,7 @@ body {
   color: #f2f2f7;
 }
 [data-theme='dark'] .mobile-bottom-nav {
-  background: #0d1f3c;
+  background: var(--navy);
   border-color: rgba(255, 255, 255, 0.08);
 }
 [data-theme='dark'] .mobile-bottom-nav a {
@@ -535,7 +535,7 @@ body {
 /* SIDEBAR */
 .sidebar {
   width: 240px;
-  background: #0d1f3c;
+  background: var(--navy);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -633,7 +633,11 @@ body {
 }
 .sb-badge {
   margin-left: auto;
-  background: var(--red-bright);
+  /* --red, not --red-bright: this is 10px/700 text on a small pill, so WCAG
+     wants 4.5:1. --red-bright gave 3.76:1 in light mode while the dark rule
+     below already used --red and passed at 5.41:1 - the same badge was legible
+     in dark and not in light. Both themes now read 5.41:1. */
+  background: var(--red);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -697,7 +701,7 @@ body {
 .topbar-title {
   font-size: 17px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
   letter-spacing: -0.01em;
 }
 .topbar-sub {
@@ -823,7 +827,7 @@ body {
 .kpi-value {
   font-size: 30px;
   font-weight: 800;
-  color: #0d1f3c;
+  color: var(--navy);
   letter-spacing: -0.03em;
   line-height: 1;
 }
@@ -845,11 +849,11 @@ body {
 }
 .kpi-trend.up {
   color: var(--green);
-  background: #f0fdf4;
+  background: var(--green-lt);
 }
 .kpi-trend.dn {
   color: var(--red-bright);
-  background: #fef2f2;
+  background: var(--red-lt);
 }
 
 .row2 {
@@ -875,7 +879,7 @@ body {
 .card-title {
   font-size: 14px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
   letter-spacing: -0.01em;
 }
 .card-sub {
@@ -916,7 +920,7 @@ body {
   padding: 12px 16px;
   font-size: 13px;
   border-bottom: 1px solid var(--surface);
-  color: #0d1f3c;
+  color: var(--navy);
 }
 .tbl tr:last-child td {
   border-bottom: none;
@@ -938,19 +942,19 @@ body {
   color: var(--blue-dark);
 }
 .status.pending {
-  background: #fffbeb;
+  background: var(--amber-lt);
   color: var(--amber);
 }
 .status.enroute {
-  background: #f0fdf4;
+  background: var(--green-lt);
   color: var(--green);
 }
 .status.in_progress {
-  background: #f0fdf4;
+  background: var(--green-lt);
   color: var(--green);
 }
 .status.arrived {
-  background: #f0fdf4;
+  background: var(--green-lt);
   color: var(--green);
 }
 .status.completed {
@@ -962,7 +966,7 @@ body {
   color: var(--gray);
 }
 .status.cancelled {
-  background: #fef2f2;
+  background: var(--red-lt);
   color: var(--red);
 }
 .status-dot {
@@ -1012,7 +1016,7 @@ body {
 .sch-time {
   font-size: 12px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
   width: 56px;
   flex-shrink: 0;
 }
@@ -1025,7 +1029,7 @@ body {
 .sch-name {
   font-size: 13px;
   font-weight: 600;
-  color: #0d1f3c;
+  color: var(--navy);
 }
 .sch-svc {
   font-size: 11px;
@@ -1073,7 +1077,7 @@ body {
 .qa-label {
   font-size: 13px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
   margin-bottom: 3px;
 }
 .qa-sub {
@@ -1116,7 +1120,7 @@ body {
 .van-name {
   font-size: 15px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
   letter-spacing: -0.01em;
 }
 .van-zone {
@@ -1135,7 +1139,7 @@ body {
   margin-left: auto;
 }
 .van-online.on {
-  background: #f0fdf4;
+  background: var(--green-lt);
   color: var(--green);
 }
 .van-online.off {
@@ -1158,7 +1162,7 @@ body {
 .vs-n {
   font-size: 18px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
 }
 .vs-l {
   font-size: 10px;
@@ -1221,7 +1225,7 @@ body {
 .cl-name {
   font-size: 14px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
   letter-spacing: -0.01em;
 }
 .cl-suburb {
@@ -1257,7 +1261,7 @@ body {
   border: 1px solid var(--border-lt);
 }
 .seg-risk {
-  background: #fef2f2;
+  background: var(--red-lt);
   color: var(--red);
 }
 .cl-stats {
@@ -1276,7 +1280,7 @@ body {
 .cl-stat-n {
   font-size: 16px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
 }
 .cl-stat-l {
   font-size: 9px;
@@ -1327,7 +1331,7 @@ body {
   color: var(--gray-lt);
 }
 .pl-label.dark {
-  color: #0d1f3c;
+  color: var(--navy);
 }
 [data-theme='dark'] .pl-label.dark {
   color: #f2f2f7;
@@ -1386,7 +1390,7 @@ body {
   color: var(--amber);
 }
 .bas-cell--gst-purchases {
-  background: #f0fdf4;
+  background: var(--green-lt);
 }
 .bas-cell--gst-purchases .bas-cell-label {
   color: var(--green-ink);
@@ -1491,7 +1495,7 @@ body {
 .setting-title {
   font-size: 14px;
   font-weight: 700;
-  color: #0d1f3c;
+  color: var(--navy);
   margin-bottom: 4px;
   letter-spacing: -0.01em;
 }
@@ -1514,7 +1518,7 @@ body {
   border-bottom: none;
 }
 .setting-label {
-  color: #0d1f3c;
+  color: var(--navy);
   font-weight: 500;
 }
 .setting-val {
@@ -1555,7 +1559,7 @@ body {
   border: 1.5px solid #e2e8f0;
   border-radius: 8px;
   font-size: 13px;
-  color: #0d1f3c;
+  color: var(--navy);
   font-family: var(--sans);
   outline: none;
   transition: border-color 0.15s;
@@ -1568,7 +1572,7 @@ body {
 .ham-line {
   width: 14px;
   height: 1.5px;
-  background: #0d1f3c;
+  background: var(--navy);
   border-radius: 2px;
   display: block;
 }
@@ -1603,7 +1607,7 @@ body {
   z-index: 9999;
   width: 42px;
   height: 42px;
-  background: #0d1f3c;
+  background: var(--navy);
   border-radius: 10px;
   border: none;
   cursor: pointer;
