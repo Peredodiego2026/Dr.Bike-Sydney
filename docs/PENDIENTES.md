@@ -2131,6 +2131,40 @@ anterior, sin la clase. Reescribir el `href` de las hojas de estilo no alcanza �
 **el JS tambien va por la misma cache**. Hay que desregistrar el SW y vaciar
 `caches` antes de medir cualquier cosa que dependa de codigo nuevo.
 
+### 12.31 Total en Expenses, y un contraste que casi se va invisible — CERRADO 2026-08-11
+
+Pedido de Diego: *"falta una seccion en expenses con el total"*.
+
+**Son DOS numeros, no uno, y esa es la decision.** El monto de un gasto suelto
+ES lo que se gasto; el de un recurrente es lo que se gasta CADA MES. Sumar las
+dos columnas da un total que no significa nada: contaria la suscripcion de
+Claude una sola vez sin importar cuantos meses lleva corriendo. Asi que la
+tarjeta muestra **"Spent so far"** (los sueltos) y **"Every month"** (el
+compromiso fijo), etiquetados como las dos cosas distintas que son, mas un
+desglose por categoria.
+
+**Verificado con los 11 pagos reales de Anthropic**, leidos de los recibos del
+correo: **$211.36**, 11 gastos sueltos, todo en Software & phone. Coincide con
+la suma a mano.
+
+#### El error: dar por buena una medicion hecha en OTRA tarjeta
+
+La primera version puso `color: var(--navy)` con un comentario que afirmaba
+16.43:1 en claro y 14.59:1 en oscuro. El de claro era cierto. **El de oscuro
+estaba medido en la tarjeta de Analytics, que tiene otro fondo.** Medido en la
+tarjeta de Expenses daba **1.04:1** - navy sobre la tarjeta oscura, invisible.
+
+El arreglo no fue elegir otro token: fue **no declarar `color` y heredar**. El
+body lleva `--navy` en claro y `[data-theme='dark'] .main` ya repinta a
+`#f2f2f7`, asi que los dos temas reciben la tinta con la que fueron disenados y
+no se agrega ni un hex. Medido despues: **16.43:1 claro, 15.25:1 oscuro**.
+
+Es la tercera vez en el mismo dia que una afirmacion sobre algo que no se volvio
+a mirar sale mal - `CLAUDE.md:70` con `bkProceed()` (12.27), el timezone de
+PostHog (12.29-C), y esta. Aca lo no verificado fue **el fondo**: un ratio no es
+propiedad de un token, es de la pareja token + fondo. Medir uno y citarlo en
+otra pantalla es exactamente el mismo error que copiar un hex de la doc.
+
 ### 12.23 El chip `completed` seguia fallando AA — CERRADO 2026-08-09
 
 **Salio de renderizarlo, no de la aritmetica.** Cuando se libero un slot de dev
