@@ -166,6 +166,8 @@ with
     exists (select 1 from idx where i = 'bookings_unique_slot')
   union all select 36, 'migrate-inventory-push.sql', 'tabla parts_inventory + profiles.push_subscription',
     (exists (select 1 from tbl where t='parts_inventory') and exists (select 1 from col where t='profiles' and c='push_subscription'))
+  union all select 38, 'add-expenses-table.sql', 'tabla expenses (la que alimenta el P&L)',
+    exists (select 1 from tbl where t='expenses')
   union all select 37, 'add-completion-notifications.sql', 'bookings.completion_notifications',
     exists (select 1 from col where t='bookings' and c='completion_notifications')
 )
@@ -391,6 +393,7 @@ que paso a `OK`. Resumen de que se pierde en cada caso:
 | 30 | `add-mechanic-profile-columns.sql` | Foto, bio y zona del mecanico. |
 | 31 | `add-reengagement-to-profiles.sql` | El email a clientes que hace mucho no vuelven. |
 | 32 | `add-birthday-to-profiles.sql` | El email de cumpleaños. |
+| 38 | `add-expenses-table.sql` | Los gastos reales. Sin ella el P&L no tiene costos que restar y muestra ingresos, no ganancia. |
 | 33 | `add-abandoned-recovery-to-bookings.sql` | La marca de "ya le mande el email de recupero" - sin ella se podria mandar repetido. |
 | 34 | `add-bookings-rls.sql` + `harden-bookings-rls.sql` | Seguridad grave: sin RLS, un cliente puede leer las reservas de otro. Si sale FALTA, es lo primero de todo. |
 | 35 | `add-booking-unique-constraint.sql` | Dos clientes pueden reservar el mismo horario con la misma van. |

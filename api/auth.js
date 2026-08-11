@@ -3490,6 +3490,90 @@ async function handleAdminServicesSave(req, res) {
   return res.status(200).json({ service: data });
 }
 
+// ── Admin: Expenses ─────────────────────────────────────────────────────────
+// The table is RLS-on with no policy, so nothing but the service role can read
+// it - which is why these three exist rather than the panel querying Supabase
+// directly the way it does for bookings (scripts/add-expenses-table.sql).
+const EXPENSE_CATEGORIES = [
+  'payroll',
+  'fleet',
+  'insurance',
+  'marketing',
+  'software',
+  'parts',
+  'other',
+];
+
+async function handleAdminExpensesList(req, res) {
+  const { access_token } = req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const { data, error } = await auth.sb
+    .from('expenses')
+    .select('id, spent_on, description, amount, category, recurring_monthly, notes')
+    .order('spent_on', { ascending: false })
+    .limit(500);
+  if (error) {
+    // 42P01 = undefined_table. "The migration has not been run" is a different
+    // answer from "you have not spent anything", and the screen says which.
+    const missing = error.code === '42P01' || /does not exist/i.test(error.message || '');
+    return res.status(200).json({
+      available: false,
+      reason: missing
+        ? 'Table expenses does not exist yet - run scripts/add-expenses-table.sql'
+        : error.message,
+    });
+  }
+  return res.status(200).json({ available: true, expenses: data || [] });
+}
+
+async function handleAdminExpensesSave(req, res) {
+  const { access_token, id, spent_on, description, amount, category, recurring_monthly, notes } =
+    req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const cleanDesc = String(description || '').trim();
+  if (!cleanDesc) return res.status(400).json({ error: 'A description is required' });
+  const cleanAmount = Number(amount);
+  // > 0, not >= 0: a zero-dollar expense is a typo, and it would sit in the P&L
+  // looking like a real line.
+  if (!Number.isFinite(cleanAmount) || cleanAmount <= 0)
+    return res.status(400).json({ error: 'Amount must be a number greater than zero' });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(spent_on || '')))
+    return res.status(400).json({ error: 'A date (YYYY-MM-DD) is required' });
+
+  const payload = {
+    spent_on,
+    description: cleanDesc,
+    amount: Math.round(cleanAmount * 100) / 100,
+    category: EXPENSE_CATEGORIES.includes(category) ? category : 'other',
+    recurring_monthly: !!recurring_monthly,
+    notes: notes ? String(notes).trim() : null,
+  };
+
+  const { data, error } = id
+    ? await auth.sb.from('expenses').update(payload).eq('id', id).select().maybeSingle()
+    : await auth.sb.from('expenses').insert(payload).select().maybeSingle();
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ expense: data });
+}
+
+async function handleAdminExpensesDelete(req, res) {
+  const { access_token, id } = req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!id) return res.status(400).json({ error: 'Expense id is required' });
+
+  const { error } = await auth.sb.from('expenses').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ success: true });
+}
+
 async function handleAdminServicesDelete(req, res) {
   const { access_token, id } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -3877,6 +3961,9 @@ async function handler(req, res) {
           // login attempt - the default 5/min locks the screen out on the third
           // range change.
           role === 'admin-analytics' ||
+          // Same reason: the Finance screen re-reads the expenses on every
+          // change of month, quarter or year, and 5/min locks it on the third.
+          role === 'admin-expenses-list' ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -3925,6 +4012,9 @@ async function handler(req, res) {
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   if (role === 'submit-claim') return handleSubmitClaim(req, res);
   if (role === 'admin-orphan-audit') return handleAdminOrphanAudit(req, res);
+  if (role === 'admin-expenses-list') return handleAdminExpensesList(req, res);
+  if (role === 'admin-expenses-save') return handleAdminExpensesSave(req, res);
+  if (role === 'admin-expenses-delete') return handleAdminExpensesDelete(req, res);
   if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);

@@ -325,6 +325,12 @@ document.addEventListener('click', function (e) {
     case 'save-part':
       savePart(d.id);
       break;
+    case 'save-expense':
+      saveExpense();
+      break;
+    case 'delete-expense':
+      deleteExpense(d.id, d.desc);
+      break;
     case 'set-service-category-filter':
       setServiceCategoryFilter(d.cat || null);
       break;
@@ -419,6 +425,7 @@ const titles = {
   zones: 'Zone Manager',
   claims: 'Claims',
   orphans: 'Orphan Payments',
+  expenses: 'Expenses',
   settings: 'Settings',
   coupons: 'Discount Codes',
   reminders: 'Service Reminders',
@@ -439,6 +446,7 @@ const subs = {
   zones: 'Assign suburbs to each van',
   claims: 'Warranty claims from clients - review evidence and resolve',
   orphans: 'Money Stripe took with no booking behind it - read-only, refunds stay in Stripe',
+  expenses: 'What the business actually spent - this is what the P&L subtracts',
   settings: 'System settings',
   memberships: 'Active plans · Stripe subscriptions',
   inventory: 'Stock, internal cost and client price per part',
@@ -456,6 +464,7 @@ function go(page, btn) {
   document.getElementById('sb-overlay').classList.remove('open');
   if (page === 'zones') loadVanZones();
   if (page === 'claims') loadClaims();
+  if (page === 'expenses') loadExpenses();
   if (page === 'finance') {
     const now = new Date();
     document.getElementById('fin-month').value = now.getMonth() + 1;
@@ -613,16 +622,69 @@ function closeSidebar() {
 }
 
 // ── FINANCE ───────────────────────────────────────────────────────────────────
-const FIXED_COSTS = {
-  payroll: 0,
-  fleet: 960,
-  insurance: 360,
-  marketing: 400,
-  software: 120,
-  other: 360,
+// Every cost below used to be a constant written here by hand - fleet 960,
+// insurance 360, marketing 400, software 120, other 360, payroll 0, plus $10 of
+// "parts" per job. They summed to exactly the -$2,200 the P&L showed with zero
+// revenue. Nobody had ever entered them, they had never changed, and they did
+// not correspond to a dollar anyone had spent: the card was not calculating,
+// it was subtracting a constant.
+//
+// They now come from the `expenses` table (scripts/add-expenses-table.sql),
+// loaded through /api/auth because that table is RLS-on with no policy.
+const EXPENSE_LABELS = {
+  payroll: 'Payroll',
+  fleet: 'Fleet & van',
+  insurance: 'Insurance',
+  marketing: 'Marketing',
+  software: 'Software & phone',
+  parts: 'Parts & supplies',
+  other: 'Other',
 };
-// Payroll: Phase 1 solo = $0 salary, Phase 2 = $16,100
-const VAR_COST_PER_JOB = 10; // parts/supplies per job
+let _expenses = null; // {available, expenses[]} | {available:false, reason}
+
+// Every 'YYYY-MM' the range touches. A quarter view spans three, a year twelve,
+// and a recurring expense has to be counted once in each of them.
+function expMonthsInRange(dateFrom, dateTo) {
+  const out = [];
+  const [fy, fm] = dateFrom.split('-').map(Number);
+  const [ty, tm] = dateTo.split('-').map(Number);
+  let y = fy;
+  let m = fm;
+  while (y < ty || (y === ty && m <= tm)) {
+    out.push(`${y}-${String(m).padStart(2, '0')}`);
+    m++;
+    if (m > 12) {
+      m = 1;
+      y++;
+    }
+  }
+  return out;
+}
+
+// A one-off counts only if it falls inside the range. A recurring one counts
+// once per month of the range from the month it started - that is the whole
+// difference between "the Claude subscription" and "the van".
+//
+// ISO dates compare correctly as strings, which is why there is no Date() here:
+// building one from 'YYYY-MM-DD' parses as UTC and shifts the day in Sydney.
+function expTotalsInRange(rows, dateFrom, dateTo) {
+  const months = expMonthsInRange(dateFrom, dateTo);
+  const byCat = {};
+  let total = 0;
+  for (const e of rows || []) {
+    const amount = Number(e.amount) || 0;
+    const times = e.recurring_monthly
+      ? months.filter((mm) => String(e.spent_on).slice(0, 7) <= mm).length
+      : e.spent_on >= dateFrom && e.spent_on <= dateTo
+        ? 1
+        : 0;
+    if (!times || !amount) continue;
+    const cat = EXPENSE_LABELS[e.category] ? e.category : 'other';
+    byCat[cat] = (byCat[cat] || 0) + amount * times;
+    total += amount * times;
+  }
+  return { byCat, total };
+}
 
 // ── ALERT TRIGGERS (persistentes en Supabase) ────────────────────────────────
 const TRIGGER_KEYS = [
@@ -836,6 +898,128 @@ async function loadCashHandover() {
   });
 }
 
+// ── Expenses screen ─────────────────────────────────────────────────────────
+async function fetchExpenses() {
+  try {
+    const token = await adminAccessToken();
+    if (!token) return { available: false, reason: 'Your admin session expired - reload and sign in' };
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'admin-expenses-list', access_token: token }),
+    });
+    const d = await r.json();
+    if (!r.ok) return { available: false, reason: d.error || `HTTP ${r.status}` };
+    return d;
+  } catch (e) {
+    return { available: false, reason: e.message };
+  }
+}
+
+async function loadExpenses() {
+  const box = document.getElementById('exp-list');
+  if (!box) return;
+  box.innerHTML = '<div style="color:var(--mgray);font-size:13px;padding:20px 0">Loading...</div>';
+  const dateEl = document.getElementById('exp-date');
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+
+  _expenses = await fetchExpenses();
+  if (!_expenses.available) {
+    box.innerHTML = `<div style="color:var(--red);font-size:13px;line-height:1.6;padding:16px 0">${esc(_expenses.reason || 'Could not read the expenses')}</div>`;
+    return;
+  }
+  const rows = _expenses.expenses || [];
+  if (!rows.length) {
+    box.innerHTML =
+      '<div style="text-align:center;padding:40px 16px"><div style="font-size:32px;margin-bottom:8px">&#128179;</div>' +
+      '<div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">Nothing loaded yet</div>' +
+      '<div style="font-size:13px;color:var(--mgray);line-height:1.5">Until you add something here, the P&amp;L shows revenue with no costs against it.</div></div>';
+    return;
+  }
+  box.innerHTML = rows
+    .map(
+      (e) => `
+      <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-lt)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.description)}</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:2px">
+            ${esc(e.spent_on)} · ${esc(EXPENSE_LABELS[e.category] || 'Other')}${
+              e.recurring_monthly ? ' · every month' : ''
+            }
+          </div>
+        </div>
+        <div class="exp-amount">–$${Number(e.amount).toLocaleString('en-AU', { minimumFractionDigits: 2 })}</div>
+        <button data-action="delete-expense" data-id="${esc(e.id)}" data-desc="${esc(e.description)}" title="Delete"
+          style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;min-width:34px;min-height:34px;font-size:14px;cursor:pointer">&#10005;</button>
+      </div>`
+    )
+    .join('');
+}
+
+async function saveExpense() {
+  const err = document.getElementById('exp-form-err');
+  const show = (m) => {
+    if (err) {
+      err.textContent = m;
+      err.style.display = 'block';
+    }
+  };
+  if (err) err.style.display = 'none';
+
+  const payload = {
+    role: 'admin-expenses-save',
+    access_token: await adminAccessToken(),
+    spent_on: document.getElementById('exp-date')?.value,
+    description: document.getElementById('exp-desc')?.value,
+    amount: document.getElementById('exp-amount')?.value,
+    category: document.getElementById('exp-category')?.value,
+    recurring_monthly: !!document.getElementById('exp-recurring')?.checked,
+  };
+  if (!payload.access_token) return show('Your admin session expired - reload and sign in');
+
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (!r.ok) return show(d.error || `Could not save (HTTP ${r.status})`);
+    showToast('Expense added ✓');
+    document.getElementById('exp-desc').value = '';
+    document.getElementById('exp-amount').value = '';
+    document.getElementById('exp-recurring').checked = false;
+    _expenses = null; // the P&L has to re-read
+    loadExpenses();
+  } catch (e) {
+    show(e.message);
+  }
+}
+
+async function deleteExpense(id, description) {
+  if (!id) return;
+  // Deleting changes what the P&L says the business spent, so it asks first.
+  if (!confirm(`Delete "${description || 'this expense'}"?\n\nThe P&L will stop counting it.`)) return;
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-expenses-delete',
+        access_token: await adminAccessToken(),
+        id,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) return showToast(d.error || `Could not delete (HTTP ${r.status})`);
+    showToast('Expense deleted');
+    _expenses = null;
+    loadExpenses();
+  } catch (e) {
+    showToast(e.message);
+  }
+}
+
 async function loadFinance() {
   loadCashHandover();
   const month = parseInt(document.getElementById('fin-month')?.value || new Date().getMonth() + 1);
@@ -868,8 +1052,15 @@ async function loadFinance() {
   const jobCount = jobs.length;
   const gst = Math.round(revenue / 11); // GST inclusive: 1/11
   const netRevenue = revenue - gst;
-  const varCosts = jobCount * VAR_COST_PER_JOB;
-  const fixedTotal = Object.values(FIXED_COSTS).reduce((a, b) => a + b, 0);
+  if (!_expenses) _expenses = await fetchExpenses();
+  const exp = expTotalsInRange(
+    _expenses.available ? _expenses.expenses : [],
+    dateFrom,
+    dateTo
+  );
+  // Parts is a category like any other now, not jobCount x $10.
+  const varCosts = exp.byCat.parts || 0;
+  const fixedTotal = exp.total - varCosts;
   const grossProfit = netRevenue - varCosts;
   const netProfit = grossProfit - fixedTotal;
   const margin = netRevenue > 0 ? Math.round((netProfit / netRevenue) * 100) : 0;
@@ -902,12 +1093,12 @@ async function loadFinance() {
     { label: 'Net revenue (ex GST)', val: netRevenue, bold: true, sub: true },
     { label: 'Variable costs (parts)', val: -varCosts, neg: true },
     { label: 'Gross profit', val: grossProfit, bold: true, color: 'var(--green)' },
-    { label: 'Payroll', val: -FIXED_COSTS.payroll, neg: true },
-    { label: 'Fleet & van', val: -FIXED_COSTS.fleet, neg: true },
-    { label: 'Insurance', val: -FIXED_COSTS.insurance, neg: true },
-    { label: 'Marketing', val: -FIXED_COSTS.marketing, neg: true },
-    { label: 'Software & phone', val: -FIXED_COSTS.software, neg: true },
-    { label: 'Other fixed', val: -FIXED_COSTS.other, neg: true },
+    // Only the categories that actually have something in them. A row of six
+    // zeros reads like six costs the business has and is not paying; an absent
+    // row reads like what it is - nothing loaded under that heading.
+    ...Object.keys(EXPENSE_LABELS)
+      .filter((c) => c !== 'parts' && exp.byCat[c])
+      .map((c) => ({ label: EXPENSE_LABELS[c], val: -exp.byCat[c], neg: true })),
     {
       label: 'Net profit',
       val: netProfit,
@@ -925,7 +1116,13 @@ async function loadFinance() {
         : `FY ${year}`;
 
   document.getElementById('fin-pl-period').textContent = periodStr;
-  document.getElementById('fin-pl-rows').innerHTML = plRows
+  // Never let an unreadable expense table look like a business with no costs.
+  const expNote = !_expenses.available
+    ? `<div class="pl-row" style="color:var(--red);font-size:13px;line-height:1.5;display:block">Costs are missing from this P&amp;L: ${esc(_expenses.reason || 'the expenses could not be read')}</div>`
+    : exp.total === 0
+      ? '<div class="pl-row" style="color:var(--mgray);font-size:13px;line-height:1.5;display:block">No expenses loaded for this period. Add them on the Expenses screen - until then this is revenue, not profit.</div>'
+      : '';
+  document.getElementById('fin-pl-rows').innerHTML = expNote + plRows
     .map(
       (r) => `
     <div class="pl-row${r.sub ? ' subtotal' : ''}${r.total ? ' total' : ''}">
