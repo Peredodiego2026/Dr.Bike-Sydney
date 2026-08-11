@@ -1845,6 +1845,53 @@ calentamiento:
 | `admin.html` oscuro | digest `84942984` | **`84942984`** |
 | `landing.html` | digest `b0728d1a`, 1091 el. | **`b0728d1a`** |
 
+### 12.26 El panel de admin quedaba "logueado" sin sesion, sin salida — CERRADO 2026-08-11
+
+**Lo reporto Diego con una captura de produccion**, no una auditoria: la pagina
+Orphan Payments decia *"Admin session expired - sign in again"* mientras la
+barra lateral mostraba su nombre y su rol. Palabras suyas: *"esto sigue asi no
+puedo ver nada"*.
+
+**No hay forma de volver a entrar.** Ese es el punto. `checkAdminAuth()`
+(`js/admin.js:1755`) devuelve `true` con que **exista** la clave
+`drbike-admin-token` en `localStorage` - nunca comprueba que siga sirviendo. Asi
+que cuando la sesion de Supabase muere, el panel se dibuja entero, con el nombre
+puesto, y cada pantalla que necesita identidad contesta "session expired". El
+formulario de login **no vuelve a aparecer nunca**, y sin el no se puede
+renovar nada.
+
+**Por que muere la sesion:** `restoreAdminSession()` hacia
+`await sb.auth.setSession({ access_token, refresh_token })` y **descartaba lo
+que devolvia**. Los refresh token de Supabase rotan y caducan; cuando el par
+guardado ya no vale, `setSession()` falla, no guarda nada, y nadie se entera.
+Es exactamente la regla "No silent errors" de `CLAUDE.md` incumplida en el peor
+lugar posible.
+
+**REPRODUCIDO**, sembrando un par de tokens invalidos y recargando:
+
+| | antes | ahora |
+|---|---|---|
+| Overlay de login | **no aparece** | **aparece** |
+| Token muerto en `localStorage` | **se queda** | **se borra** |
+| Claves de Supabase en `localStorage` | **ninguna** | - |
+| Click en "Check this range" | *"Admin session expired - sign in again."* | pide contraseña |
+
+El caso "sin token" sigue igual que siempre: overlay de login. Comprobados los
+dos en el navegador, no de memoria.
+
+**Segundo defecto, encontrado leyendo lo de al lado.** `_completeAdminLogin()`
+llamaba a `setSession()` **sin `await`** y sin mirar el error, y acto seguido
+hacia `go('dashboard')` y `subscribeToBookings()`. O sea la primera pantalla
+despues de firmar y el canal de realtime podian arrancar antes de que existiera
+la sesion, y un login que no creaba sesion se veia como un login correcto - la
+misma trampa, un paso antes.
+
+**Salida de emergencia, por si vuelve a pasar antes de que esto este
+desplegado:** en la consola del navegador, sobre `/admin.html`,
+`localStorage.removeItem('drbike-admin-token')` +
+`localStorage.removeItem('drbike-admin-refresh')` + recargar. Vuelve el
+formulario.
+
 ### 12.23 El chip `completed` seguia fallando AA — CERRADO 2026-08-09
 
 **Salio de renderizarlo, no de la aritmetica.** Cuando se libero un slot de dev

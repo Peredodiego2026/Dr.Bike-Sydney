@@ -1967,10 +1967,34 @@ async function submitMFASetupCode() {
   }
 }
 
-function _completeAdminLogin(data) {
+async function _completeAdminLogin(data) {
   localStorage.setItem('drbike-admin-token', data.access_token);
   localStorage.setItem('drbike-admin-refresh', data.refresh_token);
-  sb.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
+  // await, not fire-and-forget: without it the dashboard starts loading and
+  // subscribeToBookings() opens its realtime channel before the session exists,
+  // so the first screen after signing in can hit RLS with no identity. Any
+  // failure here has to be visible - a login that silently produced no session
+  // is exactly how the panel ended up "logged in" with nothing working.
+  const { error } = await sb.auth.setSession({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+  });
+  if (error) {
+    localStorage.removeItem('drbike-admin-token');
+    localStorage.removeItem('drbike-admin-refresh');
+    // whichever step of the login is on screen right now
+    const errEl =
+      document.getElementById('admin-enroll-err') ||
+      document.getElementById('admin-totp-err') ||
+      document.getElementById('admin-pass-err');
+    if (errEl) {
+      errEl.textContent = 'Signed in, but the session could not be opened: ' + error.message;
+      errEl.style.display = 'block';
+    } else {
+      alert('Signed in, but the session could not be opened: ' + error.message);
+    }
+    return;
+  }
   document.getElementById('admin-login-overlay')?.remove();
   go('dashboard');
   subscribeToBookings();
@@ -6702,21 +6726,51 @@ function exportNewsletterCSV() {
 // place. Routing it through adminAccessToken() would be circular - that helper
 // asks getSession() for the very session this function exists to restore - and
 // would leave a returning admin logged out.
+// Returns true only if there is a LIVE Supabase session afterwards.
+//
+// It used to ignore what setSession() returned, and that was a dead end: a
+// refresh token dies (they rotate, and an unused one expires), setSession fails
+// silently, and checkAdminAuth() keeps saying "logged in" because it only looks
+// at whether the localStorage key EXISTS. The panel then renders the sidebar
+// with your name on it while every Supabase-authenticated screen answers
+// "Admin session expired - sign in again" - and nothing ever shows the login
+// form again, so there is no way to sign in again short of clearing storage by
+// hand. Reproduced with a deliberately stale token pair: the login overlay
+// never appeared and Supabase had stored no session at all.
 async function restoreAdminSession() {
   const access_token = localStorage.getItem('drbike-admin-token');
   const refresh_token = localStorage.getItem('drbike-admin-refresh');
-  if (!access_token || !refresh_token) return;
-  await sb.auth.setSession({ access_token, refresh_token });
+  if (!access_token || !refresh_token) return false;
+  let session = null;
+  let why = '';
+  try {
+    const { data, error } = await sb.auth.setSession({ access_token, refresh_token });
+    session = data?.session || null;
+    why = error?.message || '';
+  } catch (e) {
+    why = e.message;
+  }
+  if (session) return true;
+  // The stored pair is dead. Drop it, so checkAdminAuth() stops claiming we are
+  // signed in and puts the password form back on screen.
+  console.warn('[admin] stored session could not be restored:', why || 'no session returned');
+  localStorage.removeItem('drbike-admin-token');
+  localStorage.removeItem('drbike-admin-refresh');
+  return false;
 }
 
 async function initAdmin() {
   // Auth via Supabase (api/admin-auth.js). Token stored in localStorage.
-  if (checkAdminAuth()) {
-    await restoreAdminSession();
-    go('dashboard');
-    subscribeToBookings();
-    handleUrlParams();
+  if (!checkAdminAuth()) return;
+  if (!(await restoreAdminSession())) {
+    // restoreAdminSession() just cleared the dead tokens, so this second call
+    // takes the other branch and shows the login overlay.
+    checkAdminAuth();
+    return;
   }
+  go('dashboard');
+  subscribeToBookings();
+  handleUrlParams();
 }
 
 // Reads ?page= and ?calendar= set by the Google Calendar OAuth callback
