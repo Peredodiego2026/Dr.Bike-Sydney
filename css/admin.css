@@ -633,6 +633,21 @@ body {
 .sb-item.on svg {
   opacity: 1;
 }
+/* The amount on the Expenses list. It lives in CSS rather than in the inline
+   style js/admin.js writes because the two themes need DIFFERENT reds, and an
+   inline colour cannot be overridden by a theme rule. Measured on the card each
+   one actually sits on: --red is 5.41:1 on white but only 3.14:1 on the dark
+   card; --red-bright is the other way round, 3.76:1 light and 4.52:1 dark. Each
+   theme gets the one that passes AA - this is 15px/700, so the bar is 4.5:1. */
+.exp-amount {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--red);
+}
+[data-theme='dark'] .exp-amount {
+  color: var(--red-bright);
+}
 .sb-badge {
   margin-left: auto;
   /* --red, not --red-bright: this is 10px/700 text on a small pill, so WCAG

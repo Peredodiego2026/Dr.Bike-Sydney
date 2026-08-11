@@ -2057,6 +2057,80 @@ abrilo y mira. Es la misma clase de deriva que `CLAUDE.md:70` con `bkProceed()`
 - El bloque de reconciliacion aguanta datos ausentes: `orphans_value` sin valor
   no rompe el `.toFixed(2)`, y `funnel` en `null` da `—`, no `0`.
 
+### 12.30 El P&L no calculaba nada: restaba una constante — CERRADO 2026-08-11
+
+**Lo vio Diego mirando la tarjeta:** *"esos numeros no son reales"*. Tenia razon,
+y era peor de lo que parecia.
+
+De las once lineas del P&L Summary, **solo tres salian de la base**: Revenue,
+GST y Net revenue. Las otras ocho eran constantes escritas a mano en
+`js/admin.js`:
+
+```
+payroll 0 · fleet 960 · insurance 360 · marketing 400 · software 120 · other 360
+```
+
+Suman exactamente **2200**, que es el `Net profit -$2,200` que mostraba con
+revenue en cero. Mas `Variable costs (parts)`, que era `nº de trabajos x $10`.
+Nadie las cargo nunca, nunca cambiaron, y no correspondian a un peso gastado.
+**La tarjeta no estaba calculando: estaba restando una constante.**
+
+#### No se podia "conectar": no habia con que
+
+Buscado en las migraciones y en la base: **no existia ninguna tabla de gastos**.
+`parts_inventory` es stock, no plata. Y no hay ningun contable conectado. Para
+mostrar gastos reales primero tenia que haber donde vivieran.
+
+**Decidido por Diego 2026-08-11:** tabla en Supabase + pantalla en el admin.
+`scripts/add-expenses-table.sql` (migracion 38 del runbook), RLS encendido sin
+politica — solo el service role la lee, igual que `checkout_attempts`.
+
+#### La camioneta: gasto unico, decision de Diego
+
+Los $17.500 entran **enteros en el mes que se compro**, no repartidos. Se le
+advirtio lo que eso implica y lo eligio igual: **ese mes da una perdida enorme y
+no es comparable con los demas**. Queda escrito aca porque el que mire el P&L de
+julio 2026 sin este parrafo va a pensar que el negocio se hundio.
+
+El modelo soporta las dos cosas: `recurring_monthly` distingue "la suscripcion de
+Claude, todos los meses" de "la camioneta, una vez". Si mañana el contador pide
+depreciacion, se carga como recurrente y listo — no hay que tocar codigo.
+
+#### Lo que se midio
+
+La aritmetica del rango, con los gastos de Diego cargados:
+
+| Rango | Total | Por que |
+|---|---|---|
+| agosto 2026 | **$235,50** | Claude 30 + seguro 120 + nafta 85,50. La camioneta **no** aparece |
+| julio 2026 | **$17.650** | la camioneta entera + los dos recurrentes |
+| trimestre jul-sep | **$18.035,50** | camioneta x1, recurrentes x3 |
+| mayo 2026 | **$0** | los recurrentes **no** cuentan hacia atras |
+
+El ultimo es el caso sutil y es el que estaba facil de errar.
+
+**Contraste del monto en la lista, medido sobre la tarjeta real de cada tema:**
+
+| | claro | oscuro |
+|---|---|---|
+| `--red` | **5,41:1** | 3,14:1 falla |
+| `--red-bright` | 3,76:1 falla | **4,52:1** |
+
+Ninguno de los dos sirve para los dos temas, asi que el color vive en
+`css/admin.css` (`.exp-amount`) y no en el `style` inline que escribe el JS: un
+color inline no lo puede pisar una regla de tema. Los dos son tokens, no suma
+hex al presupuesto.
+
+**Estados verificados los tres:** con datos, con la tabla sin crear (dice que
+falta correr la migracion, no cero), y vacio (dice que el P&L esta mostrando
+ingresos y no ganancia).
+
+**HALLAZGO de medicion, otra vez el service worker.** La primera tanda de
+mediciones dio "no encontrado" para `.exp-amount`: el SW servia el `js/admin.js`
+anterior, sin la clase. Reescribir el `href` de las hojas de estilo no alcanza —
+**el JS tambien va por la misma cache**. Hay que desregistrar el SW y vaciar
+`caches` antes de medir cualquier cosa que dependa de codigo nuevo.
+
 ### 12.23 El chip `completed` seguia fallando AA — CERRADO 2026-08-09
 
 **Salio de renderizarlo, no de la aritmetica.** Cuando se libero un slot de dev
