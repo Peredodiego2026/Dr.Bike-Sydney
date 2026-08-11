@@ -436,9 +436,10 @@ body {
 [data-theme='dark'] [style*='background:var(--off)'] {
   background: #1a2740 !important;
 }
-[data-theme='dark'] [style*='background:var(--white)'] {
-  background: undefined !important;
-}
+/* No rule for [style*='background:var(--white)'] here: the inline style already
+   says var(--white), and this file re-declares --white as #1c1c1e for dark, so
+   the element follows the theme on its own. The rule that used to sit here said
+   `background: undefined !important` and did nothing. */
 [data-theme='dark'] [style*='border-color:var(--border)'] {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
@@ -474,7 +475,8 @@ body {
   color: #fff !important;
 }
 [data-theme='dark'] #page-vans [style*='background:var(--white)'] {
-  background: undefined !important;
+  /* background is deliberately absent - see the note further up: var(--white)
+     already follows the theme. Only the text colour needs forcing. */
   color: #f2f2f7 !important;
 }
 [data-theme='dark'] #page-vans [style*='border:1px solid var(--border)'] {

@@ -1095,6 +1095,14 @@ function exportFinancePDF() {
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Dr. Bike Sydney — Finance Report</title>
   <style>
+    /* window.open('') is a BRAND NEW document: it does not load
+       css/variables.css, so every var(--x) below this line resolved to nothing
+       and the declaration was dropped - the report printed with no brand blue,
+       no KPI backgrounds and no grey subtitles (docs/PENDIENTES.md 12.14).
+       Re-declaring the seven tokens the report uses keeps it self-contained and
+       keeps the values in one place. These are DEFINITIONS: never turn them
+       into var() themselves. */
+    :root{--blue:#2563EB;--green:#15803D;--gray:#475569;--gray-lt:#94A3B8;--border:#E2E8F0;--border-lt:#F1F5F9;--surface:#F8FAFC}
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;color:#0D1F3C;background:#fff}
     .page{max-width:820px;margin:0 auto;padding:48px 40px}
