@@ -6914,23 +6914,43 @@ setTimeout(() => {
 })();
 
 // ── Avg Service Time KPI (T02) ────────────────────────────────────────────────
+// `service_name`, not `service_type`. There is no service_type column on
+// bookings - the real one is service_name (see the column list in
+// scripts/restore-thais-booking-2026-08-05.sql, an insert that ran against
+// production). PostgREST answers an unknown column with 400, so this query
+// never returned a row, and because the destructuring took only `data` and
+// dropped `error`, the KPI simply stayed blank and said nothing. Diego found
+// it as a red 400 in the browser console, not from the screen.
+//
+// The same typo is in scripts/add-service-timing-columns.sql, which is why the
+// index that migration creates does not exist either.
 async function loadAvgServiceTime() {
+  const sub = document.getElementById('kpi-avg-time-sub');
   try {
-    const { data } = await sb
+    const { data, error } = await sb
       .from('bookings')
-      .select('service_type, service_duration_seconds')
+      .select('service_name, service_duration_seconds')
       .not('service_duration_seconds', 'is', null)
       .eq('status', 'completed');
-    if (!data?.length) return;
+    // Say it out loud. A KPI that cannot be read is not the same as a KPI with
+    // nothing in it, and for a year this screen showed both as blank.
+    if (error) {
+      if (sub) sub.textContent = 'Could not read: ' + error.message;
+      console.error('[admin] average service time query failed:', error.message);
+      return;
+    }
+    if (!data?.length) {
+      if (sub) sub.textContent = 'No completed jobs with a recorded duration yet';
+      return;
+    }
     const byType = {};
     data.forEach((b) => {
-      const t = (b.service_type || 'Other').replace(/\s+/g, '_');
+      const t = (b.service_name || 'Other').replace(/\s+/g, '_');
       if (!byType[t]) byType[t] = [];
       byType[t].push(b.service_duration_seconds);
     });
     const overall = data.reduce((a, b) => a + b.service_duration_seconds, 0) / data.length;
     const el = document.getElementById('kpi-avg-time');
-    const sub = document.getElementById('kpi-avg-time-sub');
     if (el) el.textContent = Math.round(overall / 60) + ' min';
     if (sub)
       sub.textContent = Object.entries(byType)
@@ -6943,7 +6963,8 @@ async function loadAvgServiceTime() {
         )
         .join(' · ');
   } catch (e) {
-    /* non-fatal */
+    if (sub) sub.textContent = 'Could not read: ' + e.message;
+    console.error('[admin] average service time failed:', e.message);
   }
 }
 document.addEventListener('DOMContentLoaded', () => {

@@ -2199,9 +2199,19 @@ body {
   --an-ord-2: #3b82f6;
   --an-ord-3: #2563eb;
   --an-ord-4: #1e40af;
-  --an-good: #059669;
-  --an-warn: #b45309;
-  --an-crit: #cf2020;
+  /* The light trio is the palette's own semantics, so it says so instead of
+     repeating the values. --an-warn and --an-crit already held #b45309 and
+     #cf2020, exactly --amber and --red. --an-good did NOT: it held #059669,
+     the retired emerald that grupo A moved everywhere else to --green
+     (docs/PENDIENTES.md 12.14). It survived because a hex that is the VALUE of
+     a custom property is never rewritten by the colour work, and the ratchet
+     does not count definitions either - so the one place the old green was
+     still shipping was the analytics chart ramp. It also failed AA: #059669 on
+     white is 3.77:1, --green is 5.02:1.
+     The DARK trio below stays literal: it is a different ramp on purpose. */
+  --an-good: var(--green);
+  --an-warn: var(--amber);
+  --an-crit: var(--red);
 }
 [data-theme='dark'] #page-analytics {
   --an-surface: #152035;

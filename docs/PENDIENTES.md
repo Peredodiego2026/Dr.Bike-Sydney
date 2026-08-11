@@ -1993,6 +1993,66 @@ tiene chip `completed`.
 (`#fffbeb`, `#f0fdf4`...), que es exactamente lo que el conversor dejo quieto
 porque `--amber-lt` y `--green-lt` **si** se redefinen en oscuro.
 
+### 12.28 `service_type` no existe: el KPI de tiempo promedio nunca funciono — CERRADO 2026-08-11
+
+**Lo vio Diego como un 400 rojo en la consola**, no en la pantalla. La pantalla
+no decia nada, que es la mitad del problema.
+
+`js/admin.js` `loadAvgServiceTime()` pedia `bookings.service_type`. **Esa columna
+no existe.** Preguntado a la base de produccion por PostgREST, con la clave anon:
+
+| `select=` | HTTP | respuesta |
+|---|---|---|
+| `service_name` | **200** | `[]` |
+| `service_type` | **400** | `42703 · column bookings.service_type does not exist` · hint: *"Perhaps you meant to reference the column bookings.service_name"* |
+
+**Postgres sugiere el nombre correcto en el propio error.** Nadie lo leyo nunca
+porque el codigo hacia `const { data } = await sb...` — se quedaba con `data` y
+**tiraba `error`**. Con la consulta fallando, `data` es `undefined`, el
+`if (!data?.length) return;` se iba en silencio, y el recuadro quedaba en blanco
+para siempre. "No hay trabajos con duracion registrada" y "no puedo leer la
+tabla" se veian exactamente igual. Es la regla "No silent errors" de `CLAUDE.md`
+otra vez, y van tres en esta sesion (12.26 la sesion de admin, 12.27 el conteo
+de reservas, esta).
+
+Ahora el recuadro dice cual de las dos cosas pasa.
+
+#### La misma falta de ortografia dejo la migracion 28 a medias
+
+`scripts/add-service-timing-columns.sql:13` creaba el indice sobre
+`...,service_type)`. Postgres **aborta el script en la sentencia que falla**, asi
+que de esa migracion corrio la mitad: los cinco `ALTER TABLE` de arriba si
+(verificado: las cinco columnas responden 200), y **nada** de la linea 13 para
+abajo — ni el indice `idx_bookings_service_timing` ni los cuatro `COMMENT ON
+COLUMN`.
+
+El archivo queda corregido y **hay que volver a correrlo**. Todo lo que contiene
+es idempotente (`IF NOT EXISTS`), asi que re-ejecutarlo es seguro; solo replica
+la cola que nunca se ejecuto. Anotado tambien en `docs/RUNBOOK-SQL.md`, cuyo
+chequeo numero 28 solo mira las 5 columnas y por eso daba **verde** con el
+indice ausente.
+
+#### `--an-good` era el ultimo verde retirado que seguia en produccion
+
+`css/admin.css` definia `--an-good: #059669` dentro de `#page-analytics`. Ese es
+el esmeralda que el grupo A de 12.14 movio a `--green` en todo el resto del
+repo. Sobrevivio por dos reglas que se cruzaron: **un hex que es el VALOR de una
+custom property nunca se reescribe**, y el ratchet **tampoco cuenta las
+definiciones**. O sea era invisible para las dos mitades del trabajo de color.
+
+Medido en el navegador, sobre `#page-analytics`:
+
+| | main | ahora |
+|---|---|---|
+| `--an-good` claro | `#059669` — **3.77:1, falla AA** | `#15803d` — **5.02:1** |
+| `--an-warn` claro | `#b45309` | `#b45309`, sin cambio |
+| `--an-crit` claro | `#cf2020` | `#cf2020`, sin cambio |
+| el trio oscuro | 8.47:1 | 8.47:1, sin cambio |
+
+Los tres claros pasan a `var(--green)` / `var(--amber)` / `var(--red)`: los otros
+dos ya valian exactamente eso, asi que solo se mueve el verde. **El trio oscuro
+se queda literal a proposito** - es otra rampa, no una copia.
+
 ### 12.24 El email de confirmacion mostraba las mismas cifras dos veces — CERRADO 2026-08-09
 
 **Lo vio Diego en el email de prueba**, no una auditoria. El `confirmation`
