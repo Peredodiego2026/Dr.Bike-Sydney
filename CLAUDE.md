@@ -67,7 +67,15 @@ valid reference. What is left of 12.14 is step 3: the hex still written by hand.
 ## Payments
 - Stripe LIVE keys active in production
 - Mobile (index.html): $20 call-out fee charged via Stripe at booking step 3 (PaymentIntent)
-- Desktop (landing.html): NO Stripe charge - bkProceed() creates booking in Supabase and Diego contacts client manually
+- Desktop (landing.html): **the same flow.** `landing.html:3389` loads `js/app.js`
+  and `openBooking()` opens the SPA wizard in-page (hash `#book-service`), so
+  desktop charges the same PaymentIntent, fires the same analytics events and
+  sends the same notifications. **`bkProceed()` no longer exists** - grep it and
+  the only hits are documentation. Until 2026-08-11 this line said "NO Stripe
+  charge - bkProceed() creates booking in Supabase and Diego contacts client
+  manually", which is how a session concluded the analytics funnel was
+  mobile-only. Verify against `landing.html`'s script tags before trusting any
+  claim that the two surfaces differ.
 - Subscriptions: Basic $67/mo ($643/yr), Standard $97/mo ($931/yr), VIP $197/mo ($1,891/yr) - all annual options are the same 20% off (3-month min commitment either way). stripe-webhook.js handles events. Verified live in terms.html/index.html/landing.html 2026-07-26 - re-check here before quoting if it's been a while, these have drifted before (see the note two paragraphs below).
 
 ## Notifications (working as of Jun 2026)
@@ -76,7 +84,9 @@ When a booking is created via mobile SPA (finalizeBooking()):
 - SMS to assigned mechanic via Twilio
 - Email confirmation to client via Resend
 
-Desktop booking (landing.html bkProceed()) does NOT trigger notifications - manual process.
+Desktop books through the same `finalizeBooking()`, so it triggers the same
+three. (This line used to say desktop was a manual process - see the Payments
+section above for why that was wrong.)
 
 ## Database tables (Supabase)
 profiles, bookings, services, bikes, van_zones, escalation_contacts,

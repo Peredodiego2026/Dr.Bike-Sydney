@@ -1892,6 +1892,83 @@ desplegado:** en la consola del navegador, sobre `/admin.html`,
 `localStorage.removeItem('drbike-admin-refresh')` + recargar. Vuelve el
 formulario.
 
+### 12.27 Analytics decia "0 reservas" sobre un embudo con 5 personas pagando — CERRADO 2026-08-11
+
+**Lo pregunto Diego mirando la pantalla:** *"la seccion traffic esta mostrando
+datos reales?"*. La respuesta corta es si — PostHog esta conectado y las 8
+consultas vuelven. La larga es que **el numero de reservas no se podia creer**,
+y por dos motivos distintos.
+
+#### 1. El recuadro estaba mal etiquetado
+
+`js/admin.js` mostraba `booking_completed` bajo el titulo **"Bookings started"**,
+con el subtitulo *"reached the end of the booking flow"*. El recuadro se
+contradecia solo: decia "empezadas" y contaba "terminadas". Y como daba **0**
+justo encima de un embudo que decia *"Chose a service: 22"*, la pantalla parecia
+rota.
+
+#### 2. Peor: el numero venia del navegador, que no es la fuente de verdad
+
+`booking_completed` se emite desde `js/app.js` (`:249` y `:1884`) **despues** de
+que vuelve el pago. Si el cliente cierra la pestaña — o si la reserva la escribe
+el webhook de Stripe en el servidor — la fila existe y el evento no sale nunca.
+
+La prueba estaba en la pantalla de al lado: la auditoria de huerfanos dijo
+*"Checked 6 payments between 2026-07-04 and 2026-08-05"* con **1 huerfano**, o
+sea **5 pagos con reserva detras**, mientras PostHog reportaba **0** reservas en
+una ventana que se solapa. Tres numeros, tres fuentes, y ninguna pantalla que
+los pusiera al lado.
+
+**El recuadro ahora cuenta filas de `bookings`**, no eventos. El evento sigue
+mostrandose, una fila mas abajo, como lo que es.
+
+#### 3. Lo nuevo: "Do the three sources agree?", arriba del embudo
+
+Misma ventana de fechas, tres preguntas:
+
+| Fuente | Que responde |
+|---|---|
+| PostHog | cuantos llegaron a la pantalla de pago (intencion) |
+| Stripe | cuantos pagos devuelve el rango (plata) |
+| `bookings` | cuantas filas se escribieron (**la verdad**) |
+
+Y debajo, las diferencias **con nombre**: un huerfano es plata cobrada sin nada
+escrito; un evento faltante debajo de una fila real es un agujero de medicion,
+no una venta perdida. Son problemas distintos y hasta hoy se veian igual.
+
+**La mitad de Stripe llama a `auditOrphanPayments()`**, la misma funcion que usan
+el cron diario y la pantalla Orphan Payments. Una segunda definicion de
+"huerfano" viviendo en `handleAdminAnalytics` habria derivado de esas dos y las
+tres pantallas empezarian a contradecirse. De paso hereda dos cosas que una
+implementacion nueva hace mal: pagina Stripe, y **trocea la busqueda de ids**,
+porque un mes de ids en un solo `in.()` da una URL lo bastante larga como para
+ser rechazada — y una busqueda rechazada reporta **todos** los pagos como
+huerfanos.
+
+**Sin avisos automaticos, decision de Diego (2026-08-11):** el cron de las 9:00
+ya avisa de los huerfanos, que es el caso donde hay plata en juego. Un segundo
+aviso por "los numeros no cuadran" seria ruido diario sin accion asociada.
+
+**Verificado renderizando la tarjeta** con tres escenarios inyectados (los tres
+cuadran / el caso real de Diego / Stripe caido). Contraste medido en los dos
+temas: titulo 16.43:1 claro y 14.59:1 oscuro, nota 4.76:1 y 5.38:1, la linea de
+alerta 5.41:1 y 5.89:1. Todo por encima de AA.
+
+#### 4. HALLAZGO — `CLAUDE.md` decia que el escritorio era otro flujo, y no lo es
+
+`CLAUDE.md:70` afirmaba *"Desktop (landing.html): NO Stripe charge - bkProceed()
+creates booking in Supabase and Diego contacts client manually"*. **Falso.**
+`landing.html:3389` carga `js/app.js` y `openBooking()` abre el asistente de la
+SPA en la misma pagina. `bkProceed()` **no existe**: grepearlo solo devuelve
+documentacion (este archivo, `CONTEXT.md`, `tasks.md`, comentarios de
+`js/i18n.js`).
+
+Esa linea costo caro en esta misma sesion: llevo a concluir — y a decirselo a
+Diego — que el embudo de analytics era **solo movil** y que habia que emitir los
+eventos tambien en escritorio. Se detecto leyendo `landing.html` antes de
+escribir el codigo, no despues. Las dos lineas de `CLAUDE.md` quedaron
+corregidas con el porque al lado.
+
 ### 12.23 El chip `completed` seguia fallando AA — CERRADO 2026-08-09
 
 **Salio de renderizarlo, no de la aritmetica.** Cuando se libero un slot de dev

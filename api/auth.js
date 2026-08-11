@@ -3523,8 +3523,14 @@ async function handleAdminAnalytics(req, res) {
 
   const days = Math.min(Math.max(parseInt(req.body?.days, 10) || 30, 1), 730);
 
-  const [checkout, traffic] = await Promise.all([readCheckoutAttempts(auth.sb), readPostHog(days)]);
-  return res.status(200).json({ checkout, traffic });
+  // allSettled-style independence: reconciliation talks to Stripe, and a slow
+  // or down Stripe must not take the traffic card with it.
+  const [checkout, traffic, recon] = await Promise.all([
+    readCheckoutAttempts(auth.sb),
+    readPostHog(days),
+    readReconciliation(auth.sb, days).catch((e) => ({ days, error: e.message })),
+  ]);
+  return res.status(200).json({ checkout, traffic, recon });
 }
 
 // A snapshot, NOT a running total: js/app.js upserts one row per client when
@@ -3577,6 +3583,83 @@ async function readCheckoutAttempts(sb) {
       .map(([name, n]) => ({ name, n }))
       .sort((a, b) => b.n - a.n),
   };
+}
+
+// ── Reconciliation: three sources, one date range ────────────────────────────
+// The funnel is a BROWSER measurement, and the browser is not the system of
+// record. `booking_completed` fires from js/app.js after the payment returns;
+// if the client closes the tab first - or the Stripe webhook writes the row
+// server-side - the booking exists and the event never leaves the page.
+//
+// That is exactly how the Analytics screen came to show "0 bookings" above a
+// funnel where 5 people reached payment, while the orphan audit found SIX real
+// charges in an overlapping window with five bookings behind them. Three
+// numbers, three sources, and no screen that put them side by side.
+//
+// So this asks all three for the same window and reports the gaps by name
+// rather than picking a winner:
+//   PostHog          - intent    (how many reached the payment screen)
+//   Stripe           - money     (how many charges actually succeeded)
+//   bookings table   - the truth (how many rows were actually written)
+//
+// It reads. It never writes and never refunds.
+//
+// The Stripe half calls auditOrphanPayments() - the SAME function the daily
+// cron and the Orphan Payments screen use - rather than listing payments here.
+// A second definition of "orphan" would drift from those two and the screens
+// would start contradicting each other. It also already solves two things a
+// fresh implementation gets wrong: it pages through Stripe, and it chunks the
+// id lookup, because a month of ids in one `in.()` makes a URL long enough to
+// be rejected - and a rejected lookup reports EVERY payment as an orphan.
+async function readReconciliation(sb, days) {
+  const sinceIso = new Date(Date.now() - days * 86400000).toISOString();
+  const out = { days };
+
+  // 1. What was actually written. Service role, so RLS hides nothing.
+  const counted = async (q) => {
+    const { count, error } = await q;
+    if (error) throw new Error(error.message);
+    return count ?? 0;
+  };
+  try {
+    out.bookings = await counted(
+      sb.from('bookings').select('id', { count: 'exact', head: true }).gte('created_at', sinceIso)
+    );
+    out.bookings_paid = await counted(
+      sb
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', sinceIso)
+        .not('stripe_payment_intent_id', 'is', null)
+    );
+  } catch (e) {
+    out.bookings = null;
+    out.bookings_error = e.message;
+  }
+
+  // 2. What Stripe charged, and how much of it has a booking behind it.
+  if (!process.env.STRIPE_SECRET_KEY) {
+    out.stripe_error = 'STRIPE_SECRET_KEY is not set in Vercel';
+    return out;
+  }
+  try {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const audit = await auditOrphanPayments({
+      stripe: new Stripe(process.env.STRIPE_SECRET_KEY),
+      sb,
+      fromSeconds: nowSeconds - days * 86400,
+      toSeconds: nowSeconds,
+      nowSeconds,
+    });
+    out.payments_checked = audit.checked;
+    out.orphans = audit.orphans.length;
+    out.orphans_value = audit.total;
+    // Said out loud rather than quietly returning a number that is too low.
+    out.truncated = audit.truncated;
+  } catch (e) {
+    out.stripe_error = e.message;
+  }
+  return out;
 }
 
 // ── PostHog (traffic half) ───────────────────────────────────────────────────
