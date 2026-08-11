@@ -3611,6 +3611,8 @@ async function readCheckoutAttempts(sb) {
 // fresh implementation gets wrong: it pages through Stripe, and it chunks the
 // id lookup, because a month of ids in one `in.()` makes a URL long enough to
 // be rejected - and a rejected lookup reports EVERY payment as an orphan.
+const RECON_MAX_STRIPE_PAGES = 5; // 100 per page — see the note at the call
+
 async function readReconciliation(sb, days) {
   const sinceIso = new Date(Date.now() - days * 86400000).toISOString();
   const out = { days };
@@ -3650,6 +3652,16 @@ async function readReconciliation(sb, days) {
       fromSeconds: nowSeconds - days * 86400,
       toSeconds: nowSeconds,
       nowSeconds,
+      // A BOUND OF ITS OWN, for the same reason POSTHOG_TIMEOUT_MS exists a few
+      // lines down: this shares one Vercel function with the PostHog half and
+      // the checkout card, and the function has a hard timeout. The default 20
+      // pages is 2000 payments and an unbounded number of round trips to
+      // Stripe - fine on the Orphan Payments screen, which is a screen of its
+      // own, but here a long range ("All time" sends 730 days) could burn the
+      // budget and take the traffic card down with it. Five pages is 500
+      // payments; past that `truncated` says so on screen instead of the whole
+      // card failing.
+      maxPages: RECON_MAX_STRIPE_PAGES,
     });
     out.payments_checked = audit.checked;
     out.orphans = audit.orphans.length;

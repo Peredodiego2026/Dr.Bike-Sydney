@@ -1975,10 +1975,23 @@ async function _completeAdminLogin(data) {
   // so the first screen after signing in can hit RLS with no identity. Any
   // failure here has to be visible - a login that silently produced no session
   // is exactly how the panel ended up "logged in" with nothing working.
-  const { error } = await sb.auth.setSession({
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-  });
+  //
+  // It must also never REJECT. All four callers invoke it without `await`
+  // (they are inside their own try/catch, which a floating promise does not
+  // reach), so a throw here - setSession can throw on a network failure rather
+  // than returning {error} - would become an unhandled rejection: the overlay
+  // would sit there saying nothing while the tokens stayed in localStorage.
+  // That is the same dead end this whole function exists to close, so the
+  // throw is turned into the same visible message as a returned error.
+  let error = null;
+  try {
+    ({ error } = await sb.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    }));
+  } catch (e) {
+    error = e;
+  }
   if (error) {
     localStorage.removeItem('drbike-admin-token');
     localStorage.removeItem('drbike-admin-refresh');
