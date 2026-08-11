@@ -1329,6 +1329,96 @@ el PR, no disimulado:
 - **`track.html`** sin un `booking_id` real solo muestra el shell y el estado de
   error: el mapa y los chips `en-route` / `completed` no se pueden medir.
 
+#### Paso 3 / PR C-1 HECHO 2026-08-11: `css/admin.css`, y por que 173 se quedan
+
+**16 de 189.** Ese es el resultado honesto de mirar `css/admin.css` hex por hex.
+Pasan a token `#f8fafc` (12, `--surface`), `#475569` (3, `--gray`, los tres en
+`@media print`) y `#cf2020` (1, `--red`, el badge de notificaciones en oscuro).
+**189 -> 173** en `scripts/color-check.mjs`.
+
+**Los tres tokens elegidos son los unicos que no cambian entre temas.** Medido
+en `admin.html` cargado de verdad, sobre un elemento sintetico, con `data-theme`
+fijado:
+
+| Token | claro | oscuro | sirve? |
+|---|---|---|---|
+| `--surface` | `#f8fafc` | `#f8fafc` | **si** |
+| `--gray` | `#475569` | `#475569` | **si** |
+| `--red` | `#cf2020` | `#cf2020` | **si** |
+| `--navy` | `#0d1f3c` | `#0d1f3c` | si, pero prohibido (ver abajo) |
+| `--white` | `#ffffff` | **`#1c1c1e`** | no |
+| `--border` | `#e2e8f0` | **`#38383a`** | no |
+| `--off` | `#f8fafc` | **`#242426`** | no |
+| `--blue-lt` | `#eff6ff` | **`rgba(24,72,200,.18)`** | no |
+
+**Los 173 que quedan, agrupados, con el motivo de cada grupo** (esto tambien
+quedo escrito como comentario en `css/admin.css:1`, que es donde lo va a leer
+el que siga):
+
+| Grupo | Cuantos | Por que se queda |
+|---|---|---|
+| Paleta propia del modo oscuro | ~140 | `#f2f2f7`, `#98989f`, `#152035`, `#1a2740`, `#0d1b2e`, `#8e8e93`, `#636366`, `#48484a`, `#3a3a3f`, `#2e2e33`, `#6e6e76`, `#38383a` y la rampa brillante `#f87171` / `#4ade80` / `#fbbf24` / `#34d399`. **Son** lo que pinta `[data-theme='dark']`; mapearlos da vuelta el tema (12.15) |
+| Tokens que el oscuro redefine | 14 | `#e2e8f0` (5), `#eff6ff` (4), `#f0fdf4` (7), `#fef2f2` (4), `#fffbeb` (1) - convertirlos los haria seguir al tema cuando el autor quiso que no |
+| `#0d1f3c` | 21 | `--navy` esta en la lista de 12 prohibidos de 12.14. **En `admin.html` es demostrablemente seguro** (la tabla de arriba lo mide: mismo valor en los dos temas, porque `admin.html` no carga `css/mechanic.css`, que es quien redefine `--navy`). Decision de Diego si se levanta la prohibicion para este archivo |
+| Selectores, no colores | 2 | `[style*='background:#FEF2F2']` y `[style*='background:#F0FDF4']` **matchean** el `style` inline que escribe `js/admin.js`. Si ese hex se tokeniza en el JS, estas reglas dejan de matchear y el modo oscuro se rompe en silencio. Estan acoplados a proposito |
+
+**Por que `#e2e8f0` en `@media print` NO paso a `--border`, aunque tentaba.** Si
+Diego imprime con el tema oscuro puesto, `[data-theme='dark']` sigue en el
+`<html>` durante la impresion y `var(--border)` valdria `#38383a`: bordes casi
+negros en un papel blanco. `--gray` y `--border-lt` no se redefinen, por eso
+esos si.
+
+**Verificacion: cero cambio de pixel, medido en las dos copias.** Servidor con
+`origin/main` en `:3000` y servidor con la rama en `:3014`, mismo probe en los
+dos, `data-theme` fijado despues de cargar y con el `href` de cada hoja de
+estilo reescrito antes de medir.
+
+| Selector | claro antes / despues | oscuro antes / despues |
+|---|---|---|
+| `.tbl td` borde | `#475569` / `#475569` | `#8e8e93` / `#8e8e93` |
+| `.cl-stat` fondo | `#f8fafc` / `#f8fafc` | `#1a2740` / `#1a2740` |
+| `.setting-row` borde | `#f8fafc`+`#0d1f3c` / idem | `#f8fafc`+`#f2f2f7` / idem |
+| `.sb-badge` fondo | `#ef4444` / `#ef4444` | `#cf2020` / `#cf2020` |
+
+**HALLAZGO DE METODO - el digest de pagina completa no sirve en `admin.html`.**
+Se intento primero comparar las 14 propiedades de color de **todos** los
+elementos, como en el PR A. No funciona: la pagina renderiza async y **dos
+cargas de la copia SIN TOCAR dan 1271 y 1279 elementos**, con digests distintos.
+El PR A pudo hacerlo en `landing.html`/`index.html` porque ahi el DOM es
+estable. En `admin.html` hay que medir **por selector y repitiendo**: una
+corrida suelta dio una vez `#8e8e93` donde las otras seis dieron `#475569`
+(`js/admin.js:12` vuelve a aplicar su tema despues de que el probe fija el
+suyo). Con 3 repeticiones por lado los dos servidores coinciden 3/3.
+
+**Contraste, medido en las dos copias - identico, y con dos fallos AA que ya
+estaban ahi.** No los introduce este PR (los colores son los mismos byte a
+byte); quedan anotados, no tapados:
+
+| Elemento | claro | oscuro |
+|---|---|---|
+| `.cl-stat-n` 16px/700 | 15.70:1 | 13.36:1 |
+| `.setting-label` 13px/500 | 16.43:1 | 14.59:1 |
+| `.setting-sub` 12px/400 | **2.56:1 falla** | 5.68:1 |
+| `.cl-stat-l` 9px/600 | **2.45:1 falla** | 5.82:1 |
+| `.sb-badge` 10px/700 | **3.76:1 falla** | **5.41:1 pasa** |
+| `@media print .brand-sub` 12px | 7.58:1 | 7.58:1 (no se redefine) |
+| `@media print .kpi-label` 10px/600 | 7.24:1 | 7.24:1 |
+
+Los dos primeros fallos son `--gray-lt` (`#94a3b8`) sobre blanco, el 2.56:1 que
+ya aparece en la tabla del grupo A. **El tercero es mas raro y vale mirarlo: el
+badge de notificaciones se lee PEOR en claro (3.76) que en oscuro (5.41)**,
+porque en claro usa `--red-bright` y en oscuro `--red`.
+
+**BUG encontrado de paso, NO arreglado aca** (`css/admin.css:449`):
+`[data-theme='dark'] #page-vans [style*='background:var(--white)']` declara
+`background: undefined !important`. `undefined` no es un valor CSS valido, asi
+que la declaracion se descarta: en modo oscuro esas tarjetas de la pagina Vans
+se quedan con el fondo claro. Parece un template literal que interpolo una
+variable JS vacia cuando se escribio la regla.
+
+**Fuera de este PR:** `js/admin.js` (147), `js/mechanic.js` (55),
+`admin.html` (9), `mechanic.html` (8), `css/mechanic.css` (31).
+
 #### Paso 3 / PR A HECHO 2026-08-09: los reemplazos que no cambian un pixel
 
 **482 hex** pasaron a `var(--token)` en las **tres superficies de cliente**
