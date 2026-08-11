@@ -2019,6 +2019,25 @@ Acotado a **5 paginas** (500 pagos). La pantalla de Orphan Payments conserva las
 20: es una pantalla propia y no comparte presupuesto con nadie. Cuando se corta,
 `truncated` ya lo dice en pantalla en vez de que falle la tarjeta entera.
 
+#### C. Un comentario sobre configuracion EXTERNA se quedo viejo y engaño
+
+`api/auth.js`, en la consulta `returning`, decia: *"toDate() resuelve en la zona
+horaria del PROYECTO... **es UTC hoy**, lo que pone el corte de dia a las 10-11am
+de Sydney"*. Escrito cuando era cierto, nunca actualizado despues de que Diego
+cambiara el ajuste.
+
+El 2026-08-11 una sesion lo leyo, lo creyo, y le dijo a Diego que el
+**"Came back 9 · 9%" estaba inflado** y habia que arreglarlo — con instrucciones
+paso a paso incluidas. Diego abrio PostHog y ahi decia
+**"Australia / Sydney (UTC+10:00)"**: ya estaba puesto desde hacia tiempo. **El
+numero era correcto y no habia nada que arreglar.**
+
+El comentario queda corregido, con la fecha en que se miro y la advertencia:
+**este ajuste vive fuera del repo y nada de aca lo puede mantener honesto.** Si
+vas a repetir una afirmacion sobre la configuracion del proyecto de PostHog,
+abrilo y mira. Es la misma clase de deriva que `CLAUDE.md:70` con `bkProceed()`
+(12.27), y van dos en la misma sesion.
+
 #### Lo que se reviso y estaba bien
 
 - `isOrphanCandidate` **no** quedo referenciado sin importar en `api/auth.js`

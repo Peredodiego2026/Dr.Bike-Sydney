@@ -3760,9 +3760,19 @@ async function readPostHog(days) {
     // "returning visitor" count from PostHog would also count someone who
     // reloaded twice in one session.
     //
-    // toDate() resolves in the PROJECT's timezone, so this only means Sydney
-    // days once the project timezone is set to Australia/Sydney - it is UTC
-    // today, which puts the day boundary at 10-11am Sydney time.
+    // toDate() resolves in the PROJECT's timezone, so this means Sydney days
+    // only because the project is set to Australia/Sydney (UTC+10). CHECKED IN
+    // THE POSTHOG UI on 2026-08-11: Project settings > Date & time > Time zone
+    // reads "Australia / Sydney (UTC+10:00)". So the number is right as it
+    // stands and needs no correction.
+    //
+    // This comment used to end "- it is UTC today, which puts the day boundary
+    // at 10-11am Sydney time", written when that was true and never updated
+    // after Diego changed the setting. On 2026-08-11 a session read it,
+    // believed it, and told him the "Came back" figure was inflated and had to
+    // be fixed. It was not. If you are about to repeat a claim about the
+    // PostHog project's configuration, open the project and look: the setting
+    // lives outside this repo and nothing here can keep it honest.
     returning: `select countIf(d >= 2) as returning, countIf(d = 1) as once from (
                   select person_id, count(distinct toDate(timestamp)) as d
                   from events where event = '$pageview' and timestamp > ${since} and ${live}
