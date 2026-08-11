@@ -819,7 +819,7 @@ async function sendPushNotif(job) {
 function alert2(j) {
   const d = document.createElement('div');
   d.style.cssText =
-    'position:fixed;top:80px;left:16px;right:16px;background:#15803D;color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
+    'position:fixed;top:80px;left:16px;right:16px;background:var(--green);color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
   d.innerHTML = `<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${j.service_name} · ${esc(j.suburb)} · $${j.service_price}</span>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d);
@@ -983,9 +983,9 @@ function checklistChanged() {
 // file is server-only). Lets the mechanic see at a glance whether - and how
 // much - to discount this client's job before charging via EFTPOS.
 const MEMBERSHIP_BADGE = {
-  basic: { label: 'Basic member · 5% off', color: '#0A58CA' },
-  standard: { label: 'Standard member · 10% off', color: '#2563EB' },
-  vip: { label: 'VIP member · 15%+5% off', color: '#7C3AED' },
+  basic: { label: 'Basic member · 5% off', color: 'var(--blue-deep)' },
+  standard: { label: 'Standard member · 10% off', color: 'var(--blue)' },
+  vip: { label: 'VIP member · 15%+5% off', color: 'var(--purple)' },
 };
 
 function card(j) {
@@ -1000,14 +1000,14 @@ function card(j) {
     : '';
   const done = j.status === 'completed';
   const sc = {
-    pending: '#F59E0B',
-    confirmed: '#0A58CA',
-    enroute: '#22C55E',
-    in_progress: '#22C55E',
-    inprogress: '#22C55E',
-    arrived: '#22C55E',
-    completed: '#475569',
-    cancelled: '#EF4444',
+    pending: 'var(--amber-bright)',
+    confirmed: 'var(--blue-deep)',
+    enroute: 'var(--green-bright)',
+    in_progress: 'var(--green-bright)',
+    inprogress: 'var(--green-bright)',
+    arrived: 'var(--green-bright)',
+    completed: 'var(--gray)',
+    cancelled: 'var(--red-bright)',
   };
   const sl = {
     pending: 'Pending',
@@ -1027,7 +1027,7 @@ function card(j) {
   // A completion of this job is sitting in the outbox because its charge was
   // declined. The banner counts those; the card is what names them.
   const parked = parkedCompletionFor(j.id);
-  const borderColor = parked ? 'var(--red)' : sc[st] || '#475569';
+  const borderColor = parked ? 'var(--red)' : sc[st] || 'var(--gray)';
   return `<div class="job-card${done ? ' done' : ''}" data-job-id="${j.id}" style="overflow:hidden;position:relative;border-left:4px solid ${borderColor}">
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
@@ -1666,7 +1666,7 @@ function openCompleteModal(id) {
         .map(
           (item, i) => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
-          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? '#CF2020' : '#15803D'};flex-shrink:0" data-change="checklist-changed">
+          <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? 'var(--red)' : 'var(--green)'};flex-shrink:0" data-change="checklist-changed">
           <span>${item.label}${item.required ? '<span style="color:var(--red);font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
         )
@@ -1686,6 +1686,10 @@ function openCompleteModal(id) {
     canvas.style.height = '120px';
     const ctx = canvas.getContext('2d');
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    // Canvas, not CSS: ctx.strokeStyle parses a colour string, it does not
+    // resolve custom properties. var(--navy) here silently keeps the previous
+    // stroke colour and the signature draws in the wrong colour, or not at all.
+    // The only ctx.*Style in the repo - leave it hex (docs/PENDIENTES.md 12.14).
     ctx.strokeStyle = '#0D1F3C';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
@@ -1731,21 +1735,21 @@ function openCompleteModal(id) {
 
 // ── Parts-used picker (grouped by category, deducts stock on complete) ───────
 const CATEGORY_META = {
-  cockpit: { label: 'Cockpit', icon: '🎯', color: '#2563EB' },
-  wheels: { label: 'Wheels', icon: '🛞', color: '#15803D' },
-  'wheels & tyres': { label: 'Wheels & Tyres', icon: '🛞', color: '#15803D' },
-  cables: { label: 'Cables', icon: '🔗', color: '#B45309' },
-  drivetrain: { label: 'Drivetrain', icon: '⚙️', color: '#7C3AED' },
-  brakes: { label: 'Brakes', icon: '🛑', color: '#CF2020' },
-  suspension: { label: 'Suspension', icon: '🏔️', color: '#0891B2' },
-  lubrication: { label: 'Lubrication', icon: '🧴', color: '#15803D' },
-  general: { label: 'General', icon: '🔨', color: '#475569' },
+  cockpit: { label: 'Cockpit', icon: '🎯', color: 'var(--blue)' },
+  wheels: { label: 'Wheels', icon: '🛞', color: 'var(--green)' },
+  'wheels & tyres': { label: 'Wheels & Tyres', icon: '🛞', color: 'var(--green)' },
+  cables: { label: 'Cables', icon: '🔗', color: 'var(--amber)' },
+  drivetrain: { label: 'Drivetrain', icon: '⚙️', color: 'var(--purple)' },
+  brakes: { label: 'Brakes', icon: '🛑', color: 'var(--red)' },
+  suspension: { label: 'Suspension', icon: '🏔️', color: 'var(--cyan)' },
+  lubrication: { label: 'Lubrication', icon: '🧴', color: 'var(--green)' },
+  general: { label: 'General', icon: '🔨', color: 'var(--gray)' },
 };
 function catMeta(cat) {
   const key = String(cat || '')
     .toLowerCase()
     .trim();
-  return CATEGORY_META[key] || { label: cat || 'Other', icon: '📦', color: '#475569' };
+  return CATEGORY_META[key] || { label: cat || 'Other', icon: '📦', color: 'var(--gray)' };
 }
 
 async function openPartsPicker() {
@@ -1819,7 +1823,7 @@ function renderPartsPicker(parts) {
         html += `<div id="pp-row-${p.id}" style="display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid ${qty > 0 ? m.color : 'var(--border)'};border-left:3px solid ${m.color};border-radius:10px;padding:11px 12px;margin-bottom:7px">
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.name)}</div>
-          <div style="font-size:11px;color:${low ? '#CF2020' : '#475569'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
+          <div style="font-size:11px;color:${low ? 'var(--red)' : 'var(--gray)'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           <button data-action="parts-step" data-id="${p.id}" data-delta="-1" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
@@ -1904,7 +1908,7 @@ function updatePartsSummary() {
     count.style.display = items.length ? 'inline-block' : 'none';
     count.textContent = totalQty;
   }
-  if (btn) btn.style.borderColor = _partsConfirmed ? '#15803D' : 'var(--border)';
+  if (btn) btn.style.borderColor = _partsConfirmed ? 'var(--green)' : 'var(--border)';
   renderChargeBreakdown();
 }
 
@@ -2652,8 +2656,8 @@ function setCheck(itemId, status) {
     const b = document.getElementById(`cb-${itemId}-${s}`);
     if (!b) return;
     b.style.background =
-      s === status ? (s === 'ok' ? '#15803D' : s === 'warn' ? '#B45309' : '#CF2020') : '#fff';
-    b.style.color = s === status ? '#fff' : '#475569';
+      s === status ? (s === 'ok' ? 'var(--green)' : s === 'warn' ? 'var(--amber)' : 'var(--red)') : '#fff';
+    b.style.color = s === status ? '#fff' : 'var(--gray)';
   });
 }
 
@@ -2857,7 +2861,7 @@ function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.style.cssText =
-    'background:#1e293b;color:#ffffff;border-radius:12px;padding:12px 20px;font-weight:600;font-size:13px;';
+    'background:var(--navy2);color:#ffffff;border-radius:12px;padding:12px 20px;font-weight:600;font-size:13px;';
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
@@ -2916,20 +2920,20 @@ function renderAgenda() {
         '5:00 pm',
       ];
       const stColors = {
-        pending: '#F59E0B',
-        confirmed: '#0A58CA',
-        enroute: '#22C55E',
-        in_progress: '#22C55E',
-        inprogress: '#22C55E',
-        arrived: '#22C55E',
-        completed: '#475569',
-        cancelled: '#EF4444',
+        pending: 'var(--amber-bright)',
+        confirmed: 'var(--blue-deep)',
+        enroute: 'var(--green-bright)',
+        in_progress: 'var(--green-bright)',
+        inprogress: 'var(--green-bright)',
+        arrived: 'var(--green-bright)',
+        completed: 'var(--gray)',
+        cancelled: 'var(--red-bright)',
       };
 
       dayJobs
         .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
         .forEach((j) => {
-          const color = stColors[j.status] || '#475569';
+          const color = stColors[j.status] || 'var(--gray)';
           html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
           <div style="width:52px;font-size:11px;color:var(--gray-lt);padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">

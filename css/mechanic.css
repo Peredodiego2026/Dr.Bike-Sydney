@@ -1,4 +1,20 @@
-/* tokens from variables.css */
+/* tokens from variables.css
+   ─────────────────────────────────────────────────────────────────────────────
+   Why only 2 of this file's hex could become tokens (docs/PENDIENTES.md 12.14).
+
+   The mechanic app is the MOST theme-sensitive surface in the repo: the block
+   below re-declares TEN tokens for dark mode, three more than admin.css does,
+   and one of them is --navy. Measured on the real page, both themes:
+   --navy #0d1f3c -> #f2f2f7, --white #ffffff -> #152035, --off -> #1a2740,
+   --mgray -> #8e9bb5, --border/--blue-lt/--green-lt/--amber-lt/--red-lt/--wa-lt
+   -> rgba(). Writing var(--navy) where the author wrote #0d1f3c would flip that
+   text from dark to near-white the moment the theme changes.
+
+   So the 29 that remain are: #0d1f3c (10) and #f2f2f7 (8) - the two ends of
+   that swap, each deliberately pinned - plus the dark palette's own colours
+   (#8e9bb5, #1a2740), the iOS green #34c759 and two reds (#f87171, #fca5a5)
+   that no token names.
+   ────────────────────────────────────────────────────────────────────────── */
 [data-theme='dark'] {
   --white: #152035;
   --off: #1a2740;
@@ -47,7 +63,7 @@
   color: #fff !important;
 }
 [data-theme='dark'] .abtn.primary.go {
-  background: #b45309 !important;
+  background: var(--amber) !important;
 }
 [data-theme='dark'] .abtn.primary.done,
 [data-theme='dark'] .abtn.primary.accept {
@@ -487,7 +503,7 @@ body {
   color: var(--wa);
 }
 .abtn.undo {
-  background: #f8fafc;
+  background: var(--surface);
   color: var(--slate);
   border: 1.5px solid var(--border);
 }

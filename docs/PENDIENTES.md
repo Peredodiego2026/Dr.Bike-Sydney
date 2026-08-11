@@ -1329,6 +1329,96 @@ el PR, no disimulado:
 - **`track.html`** sin un `booking_id` real solo muestra el shell y el estado de
   error: el mapa y los chips `en-route` / `completed` no se pueden medir.
 
+#### Paso 3 / PR C-2 HECHO 2026-08-11: se cierra el paso 3 — las 5 superficies de staff
+
+**151 hex mas a token.** Con esto el paso 3 del 12.14 queda cerrado: lo que
+sigue escrito a mano en admin y mechanic ya no es deuda, es una lista de
+decisiones con su motivo al lado, cada una comentada en su archivo.
+
+| Archivo | Antes | Ahora | Convertidos |
+|---|---|---|---|
+| `css/admin.css` | 173 | **143** | 30 |
+| `js/admin.js` | 147 | **72** | 75 |
+| `js/mechanic.js` | 55 | **13** | 42 |
+| `admin.html` | 9 | **7** | 2 |
+| `css/mechanic.css` | 31 | **29** | 2 |
+| `mechanic.html` | 8 | **8** | 0 |
+
+**Diego levanto la prohibicion de la lista de 12 el 2026-08-11**, con una
+condicion: *medir primero*. La lista era la **union** de admin y mechanic, y
+por eso prohibia de mas. Medido en el navegador, en la pagina real, con
+`data-theme` fijado, sobre un elemento sintetico, los 45 tokens de color:
+
+| Superficie | Hojas que carga | Tokens que cambian entre temas |
+|---|---|---|
+| `admin.html` | `variables.css` + `admin.css` | **5**: `--blue-lt`, `--border`, `--white`, `--off`, `--mgray` |
+| `mechanic.html` | `variables.css` + `mechanic.css` | **10**: los 5 de arriba + `--green-lt`, `--amber-lt`, `--red-lt`, `--navy`, `--wa-lt` |
+
+O sea: `--navy`, `--green-lt`, `--amber-lt` y `--red-lt` **son seguros en admin
+y prohibidos en mechanic**. Esa asimetria es la que la lista de 12 no podia
+expresar y es de donde salen 30 de las 151 conversiones.
+
+**Segundo criterio, y es el que mas trabajo dio: el acoplamiento por
+`[style*='...']`.** `css/admin.css` tiene **18 selectores** que matchean el
+TEXTO del atributo `style` que escribe `js/admin.js`. Convertir un hex ahi no
+cambia un color, cambia **que reglas matchean**. Ejemplos reales:
+
+- `background:#FEF2F2` -> `background:var(--red-lt)` haria pasar de la regla
+  `[style*='background:#FEF2F2']` (fondo `rgba(220,38,38,.12)`) a
+  `[style*='background:var(--red-lt)']` (`rgba(220,38,38,.15)`). Otro color.
+- `background:#F0FDF4` -> `var(--green-lt)`: de `rgba(5,150,105,.12)` a
+  `rgba(21,128,61,.2)`. Bastante mas verde.
+
+Por eso **en `js/admin.js` y `admin.html` estan prohibidos ademas** los tokens
+que aparecen dentro de un `[style*=]`: `--navy`, `--gray`, `--green-lt`,
+`--red-lt`. En el `.css` no, porque ahi no se escribe ningun atributo `style`.
+En mechanic no aplica: `css/mechanic.css` no tiene ni un `[style*=]`.
+
+**Verificado por script, no de memoria:** se contaron los 18 patrones en los 4
+archivos que escriben `style`, antes y despues. **Ninguno cambia de cantidad.**
+
+**Tres exclusiones mas, cada una por una razon distinta:**
+
+1. **`js/admin.js:540-552`** - `el.getAttribute('style')?.includes('color: #475569')`.
+   Esos hex son **agujas de busqueda**, no colores. Tokenizarlos rompe el
+   repintado de modo oscuro sin cambiar un pixel en claro. Comentado en el archivo.
+2. **`js/admin.js:1096-1221`** - el `<style>` del `window.open()` del reporte de
+   finanzas. Documento nuevo, no carga `variables.css`. Ahi `var()` no existe.
+3. **`js/mechanic.js:1689`** - `ctx.strokeStyle`. Es **canvas**, no CSS: parsea
+   un string de color y no resuelve custom properties. Es el unico `ctx.*Style`
+   del repo. Comentado en el archivo.
+
+**Verificacion: cero cambio de pixel salvo el badge, medido en dos servidores**
+(`origin/main` en `:3000`, la rama en `:3015`), histograma de los 12 valores de
+color computados de **todos** los elementos, con `data-theme` fijado:
+
+| Pagina y tema | Elementos | Antes | Despues |
+|---|---|---|---|
+| `admin.html` claro | 1271 | navy 3599, border 635, white 500, surface 99 | **identicos** |
+| `admin.html` oscuro | 1271 | navy 171, border 22, white 345, surface 12 | **identicos** |
+| `mechanic.html` claro | 103 | histograma completo | **identico** |
+| `mechanic.html` oscuro | 103 | histograma completo | **identico** |
+
+Lo unico que se mueve es el badge, a proposito: `--red-bright` **2 -> 1** y
+`--red` **34 -> 35** en tema claro.
+
+**HALLAZGO DE METODO - la primera corrida de `admin.html` siempre miente.**
+La medicion se estabiliza recien en la segunda: la primera da **1074-1279**
+elementos y valores distintos (navy 3129 o 3235 en vez de 3599). Con una
+corrida de calentamiento descartada, tres corridas seguidas dan exactamente lo
+mismo, en los dos servidores. El PR C-1 casi reporta un cambio de color que no
+existia por comparar dos renders a medio hacer.
+
+**El badge del sidebar: 3.76:1 -> 5.41:1 en claro.** `.sb-badge` usaba
+`--red-bright` en claro y `--red` en oscuro, asi que el mismo badge pasaba AA
+en oscuro y no en claro. Es texto de 10px/700, o sea el minimo es 4.5:1. Ahora
+los dos temas leen 5.41:1.
+
+**Lo que queda, y ya no es deuda:** 272 hex en las 6 superficies de staff. Son
+la paleta propia del modo oscuro (~200), los tokens que el tema redefine, los
+selectores `[style*=]`, las agujas de busqueda, el canvas y el
+`window.open()`. Cada grupo tiene su comentario en el archivo donde vive.
+
 #### Paso 3 / PR C-1 HECHO 2026-08-11: `css/admin.css`, y por que 173 se quedan
 
 **16 de 189.** Ese es el resultado honesto de mirar `css/admin.css` hex por hex.

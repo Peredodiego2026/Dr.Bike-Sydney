@@ -537,6 +537,11 @@ function applyDarkModeInline() {
       ) {
         el.style.setProperty('border-color', '#38383A', 'important');
       }
+      // The four hex in this block are NEEDLES, not colours: they are compared
+      // against the text of a style attribute. Turning one into var(--gray) or
+      // var(--navy) does not change a colour, it makes the test stop matching
+      // and dark mode stops repainting these elements (docs/PENDIENTES.md
+      // 12.14). Same coupling as the [style*='...'] rules in css/admin.css.
       if (
         el.getAttribute('style')?.includes('color:var(--mgray)') ||
         el.getAttribute('style')?.includes('color: #475569')
@@ -1549,12 +1554,12 @@ async function loadCoupons() {
         <!-- Code + status -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;margin-top:4px">
           <div style="font-size:18px;font-weight:800;color:var(--navy);letter-spacing:0.08em;font-variant-numeric:tabular-nums">${esc(c.code)}</div>
-          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive && !expired ? '#DCFCE7' : '#FEE2E2'};color:${isActive && !expired ? '#15803D' : '#CF2020'}">${expired ? 'Expired' : isActive ? 'Active' : 'Inactive'}</span>
+          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive && !expired ? '#DCFCE7' : '#FEE2E2'};color:${isActive && !expired ? 'var(--green)' : 'var(--red)'}">${expired ? 'Expired' : isActive ? 'Active' : 'Inactive'}</span>
         </div>
 
         <!-- Big value display -->
-        <div style="background:${isPct ? '#EEF3FC' : '#ECFDF5'};border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
-          <div style="font-size:28px;font-weight:800;color:${isPct ? 'var(--blue)' : '#15803D'}">${valDisplay}</div>
+        <div style="background:${isPct ? 'var(--blue-tint)' : 'var(--green-tint)'};border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:28px;font-weight:800;color:${isPct ? 'var(--blue)' : 'var(--green)'}">${valDisplay}</div>
           <div style="font-size:13px;color:var(--mgray);line-height:1.4">${isPct ? 'percentage<br>discount' : 'fixed amount<br>discount'}</div>
         </div>
 
@@ -1572,7 +1577,7 @@ async function loadCoupons() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? '#CF2020' : '#15803D'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? 'var(--red)' : 'var(--green)'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             ${isActive ? 'Deactivate' : 'Activate'}
           </button>
           <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
@@ -2121,17 +2126,17 @@ async function loadDashboard() {
             .toUpperCase();
           const st = b.status || 'pending';
           const stColors = {
-            pending: '#B45309',
+            pending: 'var(--amber)',
             confirmed: 'var(--blue)',
-            enroute: '#15803D',
+            enroute: 'var(--green)',
             completed: '#475569',
-            cancelled: '#CF2020',
+            cancelled: 'var(--red)',
           };
           const stBg = {
             pending: '#FEF3C7',
-            confirmed: '#EEF3FC',
-            enroute: '#ECFDF5',
-            completed: '#F1F5F9',
+            confirmed: 'var(--blue-tint)',
+            enroute: 'var(--green-tint)',
+            completed: 'var(--border-lt)',
             cancelled: '#FEF2F2',
           };
           const stLabel = {
@@ -2141,14 +2146,14 @@ async function loadDashboard() {
             completed: 'Completed',
             cancelled: 'Cancelled',
           };
-          const vanColors = { 1: 'var(--blue)', 2: '#B45309', 3: 'var(--purple)', 4: '#CF2020' };
+          const vanColors = { 1: 'var(--blue)', 2: 'var(--amber)', 3: 'var(--purple)', 4: 'var(--red)' };
           const vanNum = b.van_number || 1;
           return `<tr>
         <td data-label="Client" style="font-weight:700">${esc(name)}</td>
         <td data-label="Service">${esc(b.service_name || '—')}</td>
         <td data-label="Date">${b.scheduled_date || '—'}</td>
         <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
-        <td data-label="Status"><span style="background:${stBg[st] || '#F1F5F9'};color:${stColors[st] || '#475569'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${stLabel[st] || st}</span></td>
+        <td data-label="Status"><span style="background:${stBg[st] || 'var(--border-lt)'};color:${stColors[st] || '#475569'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${stLabel[st] || st}</span></td>
         <td data-label="Price" style="font-weight:700;color:var(--blue)">${anBookingRevenue(b)}</td>
       </tr>`;
         })
@@ -2169,17 +2174,17 @@ async function loadDashboard() {
   const todayTbody = document.getElementById('dash-today-tbody');
   if (todayTbody) {
     const stColors2 = {
-      pending: '#B45309',
+      pending: 'var(--amber)',
       confirmed: 'var(--blue)',
-      enroute: '#15803D',
+      enroute: 'var(--green)',
       completed: '#475569',
-      cancelled: '#CF2020',
+      cancelled: 'var(--red)',
     };
     const stBg2 = {
       pending: '#FEF3C7',
-      confirmed: '#EEF3FC',
-      enroute: '#ECFDF5',
-      completed: '#F1F5F9',
+      confirmed: 'var(--blue-tint)',
+      enroute: 'var(--green-tint)',
+      completed: 'var(--border-lt)',
       cancelled: '#FEF2F2',
     };
     const stLabel2 = {
@@ -2227,11 +2232,11 @@ async function loadDashboard() {
       .sort((a, b) => (a.scheduled_time || '').localeCompare(b.scheduled_time || ''));
     if (schSub) schSub.textContent = `${upcoming.length} upcoming today`;
     const stDotColors = {
-      pending: '#F59E0B',
+      pending: 'var(--amber-bright)',
       confirmed: 'var(--blue)',
-      enroute: '#15803D',
+      enroute: 'var(--green)',
       completed: '#475569',
-      cancelled: '#CF2020',
+      cancelled: 'var(--red)',
     };
     if (upcoming.length > 0) {
       schList.innerHTML = upcoming
@@ -2538,11 +2543,11 @@ async function loadRecentNotifications() {
     return;
   }
   const stColors = {
-    pending: '#B45309',
-    confirmed: '#15803D',
+    pending: 'var(--amber)',
+    confirmed: 'var(--green)',
     enroute: 'var(--blue)',
     completed: '#475569',
-    cancelled: '#CF2020',
+    cancelled: 'var(--red)',
   };
   list.innerHTML = data
     .map((b) => {
@@ -2792,7 +2797,7 @@ async function renderRouteMap(useCache) {
   }
   _routeLayer = L.layerGroup().addTo(_routeMap);
 
-  const VAN_COLORS = { 1: 'var(--blue)', 2: '#B45309' };
+  const VAN_COLORS = { 1: 'var(--blue)', 2: 'var(--amber)' };
   const latlngs = [];
   stops.forEach((s, i) => {
     const color = VAN_COLORS[s.van_number] || 'var(--blue)';
@@ -4168,7 +4173,7 @@ function renderHeatmap(all) {
   points.forEach((p) => {
     const intensity = p.n / maxN;
     const radius = 12 + intensity * 28;
-    const color = intensity > 0.66 ? '#CF2020' : intensity > 0.33 ? '#B45309' : 'var(--blue)';
+    const color = intensity > 0.66 ? 'var(--red)' : intensity > 0.33 ? 'var(--amber)' : 'var(--blue)';
     L.circleMarker(p.coord, { radius, color, weight: 1, fillColor: color, fillOpacity: 0.45 })
       .bindPopup(
         `<b>${esc(p.name)}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>${anMoney(p.rev)} revenue`
@@ -4351,7 +4356,7 @@ async function renderMechStats() {
         });
         const vals = Object.values(byDay);
         const maxVal = Math.max(...vals, 1);
-        const colors = { 1: 'var(--blue)', 2: '#B45309' };
+        const colors = { 1: 'var(--blue)', 2: 'var(--amber)' };
         return `<div style="background:var(--off);border-radius:10px;padding:16px">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🚐 Van ${v}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
@@ -4388,7 +4393,7 @@ async function loadClients() {
     .order('created_at', { ascending: false });
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
-  const colors = ['var(--blue)', '#15803D', '#B45309', 'var(--purple)', 'var(--cyan)', '#CF2020'];
+  const colors = ['var(--blue)', 'var(--green)', 'var(--amber)', 'var(--purple)', 'var(--cyan)', 'var(--red)'];
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
@@ -4461,7 +4466,7 @@ async function loadVanZones() {
     const grouped = {};
     data.forEach((row) => {
       if (!grouped[row.van_number]) {
-        const colors = { 1: 'var(--blue)', 2: '#B45309', 3: 'var(--purple)', 4: '#CF2020' };
+        const colors = { 1: 'var(--blue)', 2: 'var(--amber)', 3: 'var(--purple)', 4: 'var(--red)' };
         grouped[row.van_number] = {
           id: row.van_number,
           name: 'Van ' + row.van_number,
@@ -4613,7 +4618,7 @@ function removeSuburb(vanId, suburb) {
 
 function addVan() {
   const newId = vanZones.length > 0 ? Math.max(...vanZones.map((v) => v.id)) + 1 : 1;
-  const colors = { 1: 'var(--blue)', 2: '#B45309', 3: 'var(--purple)', 4: '#CF2020' };
+  const colors = { 1: 'var(--blue)', 2: 'var(--amber)', 3: 'var(--purple)', 4: 'var(--red)' };
   vanZones.push({
     id: newId,
     name: 'Van ' + newId,
@@ -4637,10 +4642,10 @@ function removeVan(vanId) {
 // claims table has RLS with no public policies - the anon-key client used for
 // most other admin reads can't see it.
 const CLAIM_STATUS = {
-  new: { label: 'New', color: '#B45309', bg: '#FEF9C3' },
+  new: { label: 'New', color: 'var(--amber)', bg: 'var(--amber-tint)' },
   reviewing: { label: 'Reviewing', color: 'var(--blue)', bg: 'var(--blue-tint)' },
-  resolved: { label: 'Resolved', color: '#15803D', bg: '#ECFDF5' },
-  rejected: { label: 'Rejected', color: '#CF2020', bg: '#FEF2F2' },
+  resolved: { label: 'Resolved', color: 'var(--green)', bg: 'var(--green-tint)' },
+  rejected: { label: 'Rejected', color: 'var(--red)', bg: '#FEF2F2' },
 };
 
 // Payments Stripe took that no booking ever claimed. Read-only on purpose:
@@ -4887,14 +4892,14 @@ async function loadContacts() {
       '<div style="text-align:center;color:var(--mgray);padding:48px;font-size:15px">No contacts yet. Add your first contact above.</div>';
     return;
   }
-  const roleColors = { manager: 'var(--blue)', mechanic: '#15803D' };
-  const roleBg = { manager: '#EEF3FC', mechanic: '#ECFDF5' };
+  const roleColors = { manager: 'var(--blue)', mechanic: 'var(--green)' };
+  const roleBg = { manager: 'var(--blue-tint)', mechanic: 'var(--green-tint)' };
   list.innerHTML = data
     .map(
       (c) => `
     <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || '#F1F5F9'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role] || '#475569'};flex-shrink:0">
+        <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || 'var(--border-lt)'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role] || '#475569'};flex-shrink:0">
           ${c.first_name[0]}${c.last_name[0]}
         </div>
         <div style="flex:1;min-width:0">
@@ -4902,7 +4907,7 @@ async function loadContacts() {
           <div style="font-size:13px;color:var(--mgray)">${c.phone}</div>
           ${c.email ? `<div style="font-size:13px;color:var(--mgray)">${c.email}</div>` : ''}
         </div>
-        <span style="background:${roleBg[c.role] || '#F1F5F9'};color:${roleColors[c.role] || '#475569'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
+        <span style="background:${roleBg[c.role] || 'var(--border-lt)'};color:${roleColors[c.role] || '#475569'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
       <div style="display:flex;gap:8px">
         <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
@@ -5055,11 +5060,11 @@ function renderInventory() {
     const isLow = p.stock <= p.min_stock;
     const isOut = p.stock === 0;
     const statusTxt = isOut ? '🔴 Out of stock' : isLow ? '🟡 Low stock' : '🟢 OK';
-    const statusBg = isOut ? '#FEF2F2' : isLow ? '#FEF9C3' : '#F0FDF4';
-    const statusCl = isOut ? '#CF2020' : isLow ? '#92400E' : '#15803D';
+    const statusBg = isOut ? '#FEF2F2' : isLow ? 'var(--amber-tint)' : '#F0FDF4';
+    const statusCl = isOut ? 'var(--red)' : isLow ? 'var(--amber-ink)' : 'var(--green)';
     return `<tr>
       <td data-label="Part" style="font-weight:600">${escapeHtml(p.name)}</td>
-      <td data-label="Stock" style="font-weight:700;font-size:15px;color:${isLow ? '#CF2020' : 'var(--navy)'}">${p.stock}</td>
+      <td data-label="Stock" style="font-weight:700;font-size:15px;color:${isLow ? 'var(--red)' : 'var(--navy)'}">${p.stock}</td>
       <td data-label="Min" style="color:var(--mgray)">${p.min_stock}</td>
       <td data-label="Cost">$${parseFloat(p.cost_price || 0).toFixed(2)}</td>
       <td data-label="Client price" style="font-weight:700;color:var(--blue)">${p.sell_price !== null && p.sell_price !== undefined ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
@@ -5497,16 +5502,16 @@ async function loadCalendar() {
       .order('scheduled_time');
     const jobs = bookings || [];
     const stColors = {
-      pending: '#F59E0B',
+      pending: 'var(--amber-bright)',
       confirmed: 'var(--blue)',
-      enroute: '#15803D',
+      enroute: 'var(--green)',
       completed: '#475569',
     };
     const stBg = {
-      pending: '#FEF9C3',
-      confirmed: '#EEF3FC',
-      enroute: '#ECFDF5',
-      completed: '#F1F5F9',
+      pending: 'var(--amber-tint)',
+      confirmed: 'var(--blue-tint)',
+      enroute: 'var(--green-tint)',
+      completed: 'var(--border-lt)',
     };
     const today = new Date().toISOString().split('T')[0];
     const startDate = new Date(firstDay);
@@ -5532,7 +5537,7 @@ async function loadCalendar() {
             const st = j.status || 'pending';
             const nm = j.profiles?.full_name?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
-            return `<div style="font-size:11px;background:${stBg[st] || '#F1F5F9'};border-left:2px solid ${stColors[st] || '#475569'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${esc(nm)}</div>`;
+            return `<div style="font-size:11px;background:${stBg[st] || 'var(--border-lt)'};border-left:2px solid ${stColors[st] || '#475569'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${esc(nm)}</div>`;
           })
           .join('')}
         ${dayJobs.length > 3 ? `<div style="font-size:11px;color:var(--mgray)">+${dayJobs.length - 3} more</div>` : ''}
@@ -5596,16 +5601,16 @@ async function loadCalendar() {
   }
 
   const stColors = {
-    pending: '#F59E0B',
+    pending: 'var(--amber-bright)',
     confirmed: 'var(--blue)',
-    enroute: '#15803D',
+    enroute: 'var(--green)',
     completed: '#475569',
   };
   const stBg = {
-    pending: '#FEF9C3',
-    confirmed: '#EEF3FC',
-    enroute: '#ECFDF5',
-    completed: '#F1F5F9',
+    pending: 'var(--amber-tint)',
+    confirmed: 'var(--blue-tint)',
+    enroute: 'var(--green-tint)',
+    completed: 'var(--border-lt)',
   };
   const today = new Date().toISOString().split('T')[0];
 
@@ -5638,7 +5643,7 @@ async function loadCalendar() {
                   const name = j.profiles?.full_name?.split(' ')[0] || 'Client';
                   const time = j.scheduled_time || '';
                   const van = j.van_number || 1;
-                  return `<div style="background:${stBg[st] || '#F1F5F9'};border-left:3px solid ${stColors[st] || '#475569'};border-radius:6px;padding:6px 8px;cursor:pointer" data-page="bookings">
+                  return `<div style="background:${stBg[st] || 'var(--border-lt)'};border-left:3px solid ${stColors[st] || '#475569'};border-radius:6px;padding:6px 8px;cursor:pointer" data-page="bookings">
               <div style="font-size:11px;font-weight:700;color:${stColors[st] || '#475569'}">${time}</div>
               <div style="font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
               <div style="font-size:11px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.service_name || '')}</div>
@@ -6110,10 +6115,10 @@ async function loadNotifNumbers() {
   }
 
   const zoneLabel = { 1: 'Van 1', 2: 'Van 2', all: 'All zones', '': 'All zones' };
-  const zoneBg = { 1: '#EEF3FC', 2: '#F0FDF4', all: '#FEF9C3', '': '#FEF9C3' };
+  const zoneBg = { 1: 'var(--blue-tint)', 2: '#F0FDF4', all: 'var(--amber-tint)', '': 'var(--amber-tint)' };
   const zoneColor = {
     1: 'var(--blue)',
-    2: '#15803D',
+    2: 'var(--green)',
     all: 'var(--amber-ink)',
     '': 'var(--amber-ink)',
   };
@@ -6656,7 +6661,7 @@ async function loadNewsletter() {
         <td style="font-size:13px">${esc(s.name || '—')}</td>
         <td style="font-size:13px">${esc(s.source || 'website')}</td>
         <td style="font-size:13px">${new Date(s.subscribed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-        <td><span style="background:${s.active ? '#ECFDF5' : '#FEF2F2'};color:${s.active ? '#15803D' : '#CF2020'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
+        <td><span style="background:${s.active ? 'var(--green-tint)' : '#FEF2F2'};color:${s.active ? 'var(--green)' : 'var(--red)'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
       </tr>`
         )
         .join('')}</tbody>
