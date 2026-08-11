@@ -4010,6 +4010,8 @@ function renderTrafficCard() {
   // null from the server means that one query failed; an empty array means it
   // ran and found nothing. They must not look the same on screen.
   const num = (v) => (v === null || v === undefined ? null : anCompact(v));
+  // `rec`, not `r`: the list() callbacks below all take a row called `r`.
+  const rec = s.recon || null;
   const pct =
     t.visitors && t.returning !== null ? Math.round((t.returning / t.visitors) * 100) : null;
   const tiles = [
@@ -4024,7 +4026,18 @@ function renderTrafficCard() {
           : `${anCompact(t.returning)} · ${pct}%`,
       'seen on 2+ separate days',
     ],
-    ['Bookings started', num(t.booking_completed), 'reached the end of the booking flow'],
+    // Counted in the bookings table, NOT from booking_completed. That event
+    // fires in the browser after the payment returns, so a client who closes
+    // the tab - or a booking the Stripe webhook writes server-side - leaves a
+    // real row and no event. The tile used to read booking_completed under the
+    // title "Bookings started", which is neither the event's meaning nor a
+    // number you could act on: it said 0 over a funnel showing 5 people at the
+    // payment screen. The event is still shown, one row down, as what it is.
+    [
+      'Bookings created',
+      rec && rec.bookings !== null && rec.bookings !== undefined ? num(rec.bookings) : null,
+      'rows written in the bookings table',
+    ],
   ];
 
   const list = (title, rows, fmtName) =>
@@ -4065,6 +4078,82 @@ function renderTrafficCard() {
       )}</div>`
     : '';
 
+  // ── Do the three sources agree? ───────────────────────────────────────────
+  // Sits above the funnel because it is the question the funnel makes people
+  // ask. Intent is measured in the browser, money in Stripe, and the booking
+  // in the database - and only the last one is the system of record. When
+  // these disagree the difference has a name, and each name is a different
+  // problem: an orphan is money taken with nothing written; a browser event
+  // missing under a real row is a measurement gap, not a lost sale.
+  const reachedPayment = byStep.payment ?? null;
+  const reconRow = (label, value, note, tone) =>
+    `<div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--an-grid)">
+       <div>
+         <div style="font-size:14px;font-weight:600;color:var(--an-ink)">${esc(label)}</div>
+         <div style="font-size:12px;color:var(--an-muted);margin-top:2px">${esc(note)}</div>
+       </div>
+       <div style="font-size:19px;font-weight:800;white-space:nowrap;color:${tone || 'var(--an-ink)'}">${
+         value === null || value === undefined ? '—' : esc(anCompact(value))
+       }</div>
+     </div>`;
+
+  let reconBody;
+  if (!rec) {
+    reconBody = anError('the reconciliation did not come back');
+  } else if (rec.error) {
+    reconBody = anError(rec.error);
+  } else {
+    const gaps = [];
+    if (rec.orphans > 0)
+      gaps.push(
+        `${rec.orphans} payment${rec.orphans === 1 ? '' : 's'} with no booking behind ${rec.orphans === 1 ? 'it' : 'them'}` +
+          (rec.orphans_value ? ` ($${rec.orphans_value.toFixed(2)} AUD)` : '') +
+          ' — see Orphan Payments'
+      );
+    // The browser event under a real row is the measurement gap that made this
+    // block necessary. Only worth saying when there ARE rows to be missing.
+    if (
+      rec.bookings > 0 &&
+      t.booking_completed !== null &&
+      t.booking_completed !== undefined &&
+      t.booking_completed < rec.bookings
+    )
+      gaps.push(
+        `${rec.bookings - t.booking_completed} booking${rec.bookings - t.booking_completed === 1 ? '' : 's'} exist that the browser never reported — the funnel below undercounts by that much`
+      );
+    if (rec.truncated) gaps.push('Stripe had more payments than one read returns — the payment numbers are a floor, not a total');
+    if (rec.bookings_error) gaps.push(`bookings count failed: ${rec.bookings_error}`);
+    if (rec.stripe_error) gaps.push(`Stripe not read: ${rec.stripe_error}`);
+
+    reconBody =
+      reconRow('Reached payment', reachedPayment, 'PostHog · measured in the browser', null) +
+      reconRow(
+        'Payments Stripe returned',
+        rec.payments_checked,
+        'every payment intent in the range, successful or not',
+        null
+      ) +
+      reconRow(
+        'Bookings written',
+        rec.bookings,
+        rec.bookings_paid === null || rec.bookings_paid === undefined
+          ? 'rows in the database — the only source of record'
+          : `rows in the database · ${rec.bookings_paid} carry a Stripe payment`,
+        'var(--an-good)'
+      ) +
+      reconRow(
+        'Payments with no booking',
+        rec.orphans,
+        'money taken with nothing written',
+        rec.orphans > 0 ? 'var(--an-crit)' : null
+      ) +
+      (gaps.length
+        ? `<div style="margin-top:12px;font-size:13px;line-height:1.6;color:var(--an-crit)">${gaps
+            .map((g) => `• ${esc(g)}`)
+            .join('<br>')}</div>`
+        : `<div style="margin-top:12px;font-size:13px;color:var(--an-good)">The three sources agree over this range.</div>`);
+  }
+
   el.innerHTML = `<div class="an-body">
       ${failedNote}
       <div class="an-kpis" style="margin-bottom:20px">${tiles
@@ -4091,6 +4180,11 @@ function renderTrafficCard() {
           };
         })}
         ${list('Most clicked buttons', t.ctas, (r) => ({ name: `${r.label || 'unlabelled'} (${r.location || 'unknown'})`, value: r.clicks }))}
+      </div>
+      <div style="margin-top:24px">
+        <div class="an-tile-label" style="margin-bottom:4px">Do the three sources agree?</div>
+        <div style="font-size:12px;color:var(--an-muted);margin-bottom:10px">Same date range, asked three times: the browser, Stripe, and the database.</div>
+        ${reconBody}
       </div>
       <div style="margin-top:24px">
         <div class="an-tile-label" style="margin-bottom:10px">Booking flow, step by step</div>
