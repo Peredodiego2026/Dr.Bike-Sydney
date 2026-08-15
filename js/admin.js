@@ -19,6 +19,32 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { storageKey: 'dr-bike-admin-session', persistSession: false },
 });
 
+// persistSession:false means supabase-js keeps the live session in memory only,
+// so localStorage is ours to maintain. It auto-refreshes roughly hourly and
+// Supabase ROTATES the refresh token on every refresh, retiring the previous
+// one. The pair written at login used to be the only pair ever stored, so the
+// stored refresh token was stale within the hour and the next boot had to fall
+// back to the login form. Every rotation is written back here instead.
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    storeAdminSession(session);
+    return;
+  }
+  // No session in the event. At boot that is just INITIAL_SESSION firing before
+  // restoreAdminSession() has run - not a sign-out, and treating it as one
+  // would throw the login form over a panel that is about to work fine.
+  //
+  // SIGNED_OUT with nothing in hand is different, and there is no logout button
+  // in this file: the only way to get here is a refresh that finally failed,
+  // typically because a second admin tab refreshed first and rotated this tab's
+  // token away. That is the state Diego photographed - the whole panel on
+  // screen, and "Admin session expired - sign in again" inside every feature,
+  // with no login form anywhere to fix it. Put the form back.
+  if (event !== 'SIGNED_OUT') return;
+  clearAdminSession();
+  if (!document.getElementById('admin-login-overlay')) checkAdminAuth();
+});
+
 // ── TASK-023: onclick -> addEventListener (see tasks.md) ────────────────────
 // Script runs at the end of body so the DOM already exists - no need to wait
 // for DOMContentLoaded. byId() no-ops safely if an element is not present
@@ -2255,8 +2281,7 @@ async function submitMFASetupCode() {
 }
 
 async function _completeAdminLogin(data) {
-  localStorage.setItem('drbike-admin-token', data.access_token);
-  localStorage.setItem('drbike-admin-refresh', data.refresh_token);
+  storeAdminSession(data);
   // await, not fire-and-forget: without it the dashboard starts loading and
   // subscribeToBookings() opens its realtime channel before the session exists,
   // so the first screen after signing in can hit RLS with no identity. Any
@@ -2280,8 +2305,7 @@ async function _completeAdminLogin(data) {
     error = e;
   }
   if (error) {
-    localStorage.removeItem('drbike-admin-token');
-    localStorage.removeItem('drbike-admin-refresh');
+    clearAdminSession();
     // whichever step of the login is on screen right now
     const errEl =
       document.getElementById('admin-enroll-err') ||
@@ -3331,6 +3355,21 @@ async function loadAnalytics() {
   renderAnalytics();
 }
 
+// The single writer of the stored pair. Both tokens move together on purpose:
+// an access token kept next to the refresh token that did NOT mint it is the
+// state that broke the panel, so a half-write is worse than no write.
+function storeAdminSession(session) {
+  if (!session?.access_token || !session?.refresh_token) return false;
+  localStorage.setItem('drbike-admin-token', session.access_token);
+  localStorage.setItem('drbike-admin-refresh', session.refresh_token);
+  return true;
+}
+
+function clearAdminSession() {
+  localStorage.removeItem('drbike-admin-token');
+  localStorage.removeItem('drbike-admin-refresh');
+}
+
 // The token in localStorage is written once at login and never again, but a
 // Supabase access token only lives about an hour. restoreAdminSession() hands
 // the refresh token to supabase-js on every page load, which mints a fresh
@@ -3349,9 +3388,7 @@ async function adminAccessToken() {
       data: { session },
     } = await sb.auth.getSession();
     if (session?.access_token) {
-      localStorage.setItem('drbike-admin-token', session.access_token);
-      if (session.refresh_token)
-        localStorage.setItem('drbike-admin-refresh', session.refresh_token);
+      storeAdminSession(session);
       return session.access_token;
     }
   } catch (e) {
@@ -7144,12 +7181,18 @@ async function restoreAdminSession() {
   } catch (e) {
     why = e.message;
   }
-  if (session) return true;
+  // setSession() refreshes when the stored access token has expired, and that
+  // mints a NEW refresh token - the one just read from localStorage is retired
+  // the moment it is used. Writing the fresh pair back is what stops the next
+  // boot from presenting a token Supabase has already thrown away.
+  if (session) {
+    storeAdminSession(session);
+    return true;
+  }
   // The stored pair is dead. Drop it, so checkAdminAuth() stops claiming we are
   // signed in and puts the password form back on screen.
   console.warn('[admin] stored session could not be restored:', why || 'no session returned');
-  localStorage.removeItem('drbike-admin-token');
-  localStorage.removeItem('drbike-admin-refresh');
+  clearAdminSession();
   return false;
 }
 
