@@ -3046,15 +3046,55 @@ let _routeMap = null,
   _routeOptimised = false;
 let _routeBookingsCache = null;
 
+// Guessing the suburb out of free text, longest name first.
+//
+// The old loop walked SUBURB_COORDS in key order and returned the first name
+// found anywhere in the address string. `sydney` is the first key, so every
+// address that ends in the city name - which in Australia is most of them -
+// resolved to the CBD:
+//
+//   "The Palladium 102 Miller Street, Pyrmont, Sydney"  ->  CBD
+//   "5 Hall St, Bondi Beach, Sydney"                    ->  CBD
+//
+// The heatmap piled those jobs onto George St and optimiseRoute() planned the
+// day around a van that was never going there. `north sydney` and
+// `bondi beach` lost the same way, swallowed by `sydney` and `bondi`.
+//
+// Longest first makes the most specific name win, and `sydney`/`cbd` sort last
+// whatever their length: they name the fallback, not a suburb, so they only
+// win when nothing more specific matched.
+const CITY_WIDE = new Set(['sydney', 'cbd']);
+const SUBURB_MATCHERS = Object.keys(SUBURB_COORDS)
+  .sort((a, b) => {
+    const aCity = CITY_WIDE.has(a);
+    const bCity = CITY_WIDE.has(b);
+    if (aCity !== bCity) return aCity ? 1 : -1;
+    return b.length - a.length;
+  })
+  .map((name) => ({
+    name,
+    // Word boundaries, because includes() also matched inside a word: `cbd`
+    // hit "cbdoil", and any street whose name happens to contain a suburb
+    // would have counted as being in it.
+    re: new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`),
+  }));
+
+function suburbFromText(text) {
+  const t = (text || '').toLowerCase();
+  if (!t) return null;
+  for (const { name, re } of SUBURB_MATCHERS) {
+    if (re.test(t)) return SUBURB_COORDS[name];
+  }
+  return null;
+}
+
 function suburbCoord(b) {
   const key = (b.suburb || '').trim().toLowerCase();
   if (SUBURB_COORDS[key]) return SUBURB_COORDS[key];
-  // try matching first word of address
-  const addr = (b.address || '').toLowerCase();
-  for (const name in SUBURB_COORDS) {
-    if (addr.includes(name)) return SUBURB_COORDS[name];
-  }
-  return null;
+  // The suburb field gets scanned too, not only the address: a value like
+  // "Sydney CBD" or "Bondi Beach NSW 2026" is not a key in the table and used
+  // to fall straight through as if the field had been left empty.
+  return suburbFromText(b.suburb) || suburbFromText(b.address);
 }
 
 function routeDistKm(a, b) {
@@ -4612,10 +4652,16 @@ function renderHeatmap(all) {
   all.forEach((b) => {
     const c = suburbCoord(b);
     if (!c) return;
-    const key = (b.suburb || '').trim().toLowerCase() || c.join(',');
-    if (!counts[key]) counts[key] = { coord: c, n: 0, name: b.suburb || 'Area', rev: 0 };
+    // Key on the resolved coordinate, never on the suburb field. Keying on the
+    // field split one suburb into two circles stacked on the same point - one
+    // for the bookings that filled it in, one for the bookings guessed from the
+    // address - with the count and the revenue divided between them. Fixing
+    // suburbCoord() made that worse, not better: far more bookings resolve now.
+    const key = c.join(',');
+    if (!counts[key]) counts[key] = { coord: c, n: 0, name: '', rev: 0 };
     counts[key].n++;
     counts[key].rev += anBookingRevenue(b);
+    if (!counts[key].name && b.suburb) counts[key].name = String(b.suburb).trim();
   });
   const points = Object.values(counts);
   if (!_heatMap) {
@@ -4639,7 +4685,7 @@ function renderHeatmap(all) {
     const color = intensity > 0.66 ? 'var(--red)' : intensity > 0.33 ? 'var(--amber)' : 'var(--blue)';
     L.circleMarker(p.coord, { radius, color, weight: 1, fillColor: color, fillOpacity: 0.45 })
       .bindPopup(
-        `<b>${esc(p.name)}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>${anMoney(p.rev)} revenue`
+        `<b>${esc(p.name || 'Area')}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>${anMoney(p.rev)} revenue`
       )
       .addTo(_heatLayer);
   });
