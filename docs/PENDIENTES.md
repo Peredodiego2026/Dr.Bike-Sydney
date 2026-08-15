@@ -4083,3 +4083,67 @@ la pestaña nueva y no una recarga mas.
 **Lo que este punto NO reviso**, y queda para quien siga: si hay otros
 elementos huerfanos de la misma unificacion del 04-jul. Se busco `getElementById`
 sin elemento **solo** para este caso, no en toda la pagina.
+
+## 18. Auditoria de Analytics (2026-08-11), lo que quedo sin arreglar
+
+Salio de arreglar `suburbCoord` (PR #237). Ese punto ya esta CERRADO: las
+direcciones que terminan en `", Sydney"` dejaban de resolverse al suburbio real
+y caian en el CBD, porque el fallback recorria `SUBURB_COORDS` en orden de
+claves y `sydney` era la primera. Afectaba al heatmap y al optimizador de rutas.
+Arreglado con 13 tests, mas el conteo del heatmap que partia un suburbio en dos
+circulos apilados.
+
+**Lo de abajo NO se arreglo.** Es el mismo tipo de defecto — un dato agrupado
+por el campo que casualmente este lleno — encontrado auditando el resto de la
+pantalla. Ninguno es urgente. Ninguno tiene test todavia.
+
+### 18.1 La lista "Suburbs" no usa `suburbCoord` (`js/admin.js`, `renderSuburbs`)
+
+```js
+const key = (b.suburb || '').trim() || 'Not recorded';
+```
+
+Agrupa por el texto crudo del campo. **Sin normalizar mayusculas y sin mirar
+nunca la direccion.** Dos consecuencias:
+
+- `Pyrmont`, `pyrmont` y `PYRMONT` son tres barras distintas en el mismo grafico.
+- Toda reserva con `suburb` vacio cae en **"Not recorded"** aunque la direccion
+  diga el suburbio. **La reserva de Thais es una de esas**: despues del #237 el
+  heatmap la ubica bien, y esta lista la sigue contando como "no registrado".
+
+El arreglo natural es usar el mismo matcher que ya existe (`suburbFromText`) y
+quedarse con el nombre canonico de `SUBURB_COORDS` en vez del texto crudo. Ojo:
+eso cambia las etiquetas que se ven, no solo los numeros.
+
+### 18.2 LTV cuenta al mismo cliente dos veces (`js/admin.js`, `renderLTV`)
+
+```js
+const key = b.client_id || b.client_email || b.profiles?.email || b.client_name || 'unknown';
+```
+
+La identidad depende de que campo este lleno. Alguien que reservo una vez como
+**invitado** (solo email) y otra **con cuenta** (`client_id`) cuenta como dos
+clientes. Eso infla "Active customers" y desinfla "Avg LTV" y "Repeat rate".
+Importa mas desde que existe el guest checkout (punto 14).
+
+Peor: toda reserva sin ninguno de esos campos se agrupa bajo la clave literal
+`'unknown'`, o sea **un cliente falso llamado "Client"** que acumula la
+facturacion de todos ellos y puede aparecer arriba de todo en la tabla de LTV.
+
+Arreglarlo bien pide decidir primero **que es un cliente**: probablemente email
+normalizado en minusculas como clave, con `client_id` solo como desempate.
+
+### 18.3 El margen es una estimacion pintada como medicion (`js/admin.js`, `renderMargins`)
+
+```js
+const cost = Math.round(d.jobs * _partsPerJob); // variable parts cost
+```
+
+Un costo de repuestos **plano por trabajo**, igual para todos los servicios. La
+columna dice "Est. cost", que es honesto, pero el **% de margen** que sale de
+ahi se pinta verde/ambar/rojo como si fuera un numero medido. El GST
+(`rev - rev/11`) si esta bien.
+
+Opciones: sacar el semaforo del margen estimado, o sacar el costo real de
+`parts_inventory` por trabajo. La segunda es la unica que hace el numero
+verdadero.
