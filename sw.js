@@ -1,5 +1,11 @@
-const CACHE_STATIC = 'drbike-static-v66';
-const CACHE_PAGES  = 'drbike-pages-v66';
+// v67: #223 replaced the "Ride Happy" step-4 icon with the real bike, and
+// production has served the new landing.html since (verified 11-Aug: the root
+// URL returns the mask markup and images/bike-icon.png is byte-identical to the
+// repo). Returning browsers kept drawing the old mangled SVG anyway, because
+// the previous landing.html was still sitting in CACHE_PAGES and a Ctrl+Shift+R
+// does not clear it - only a cache name change does, via the activate handler.
+const CACHE_STATIC = 'drbike-static-v67';
+const CACHE_PAGES  = 'drbike-pages-v67';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
 // too, without their query, and every one of those entries was dead weight:
