@@ -1427,6 +1427,43 @@ la paleta propia del modo oscuro (~200), los tokens que el tema redefine, los
 selectores `[style*=]`, las agujas de busqueda, el canvas y el
 `window.open()`. Cada grupo tiene su comentario en el archivo donde vive.
 
+##### Anexo 2026-08-11: el acoplamiento `[style*=]` pasa a estar ENFORZADO
+
+Los 18 patrones se habian contado **una vez**, a mano, en el PR C-2. Un
+recuento independiente contra `origin/main` llego a los mismos 272 y confirmo
+que **ningun hex mas se puede convertir hoy**, pero dejo a la vista que lo
+unico que protegia el acoplamiento era un comentario. Convertir
+`background:#FEF2F2` en `js/admin.js` sigue siendo un cambio que *parece*
+exactamente la limpieza que pide 12.14, que baja el presupuesto de color-check,
+y que rompe el modo oscuro sin que falle nada.
+
+`scripts/color-check.mjs` ahora lo verifica en cada `npm run check`. La lista
+esta fijada **por archivo**, no por hoja de estilo, porque "alguien todavia
+escribe ese string" es demasiado debil: `admin.html` y `js/admin.js` escriben
+los dos `background:#FEF2F2`, asi que convertir solo el del JS dejaba el
+selector matcheando el HTML y el check en verde mientras las tarjetas que
+dibuja el JS perdian su estilo oscuro. Probado en las dos direcciones:
+
+| Cambio de prueba | Antes | Ahora |
+|---|---|---|
+| `background:#FEF2F2` -> `var(--red-lt)` solo en `js/admin.js` | pasaba | **falla**, nombrando archivo y selector |
+| se agrega un `[style*=]` nuevo en `css/admin.css` | pasaba | **falla**, pide anotarlo en `COUPLED` |
+| se borra un `[style*=]` de `css/admin.css` | pasaba | **falla**, pide sacarlo de `COUPLED` |
+
+Un escritor nuevo del mismo string no falla: lo que se vigila es que un
+escritor **deje** de escribirlo.
+
+**Las dos unicas cosas que quedan abiertas de 12.14, y las dos son de Diego:**
+
+1. `--gray` y `--red-lt`/`--green-lt` en `js/admin.js` (31 hex): son
+   convertibles en cuanto al tema, y estan bloqueados **solo** por el
+   acoplamiento. Se destraban cambiando el selector y el hex en el mismo
+   commit, con medicion en el navegador de por medio.
+2. Los emails (`api/send-email.js` 223, `api/send-invoice.js` 107,
+   `send-cron.js` 49, `auth.js` 39): Gmail y Outlook no soportan `var()`, asi
+   que ahi nunca llegan a cero. Lo unico posible es que el hex coincida con el
+   token, y hoy coincide salvo 7 casos.
+
 #### Paso 3 / PR C-1 HECHO 2026-08-11: `css/admin.css`, y por que 173 se quedan
 
 **16 de 189.** Ese es el resultado honesto de mirar `css/admin.css` hex por hex.

@@ -221,6 +221,84 @@ for (const file of sweep('.')) {
   });
 }
 
+// ── the [style*='...'] couplings ───────────────────────────────────────────
+// The staff apps theme themselves by matching the TEXT of the inline styles
+// their JS writes: `[data-theme='dark'] [style*='color:#0d1f3c']` in
+// css/admin.css only applies while that exact string is still in js/admin.js.
+//
+// Converting that hex to var(--navy) looks like precisely the cleanup 12.14
+// asks for, and it silently moves the element out of the rule: dark mode
+// breaks, nothing fails, and the next person finds it in a screenshot. Until
+// now the only thing guarding it was a comment at the top of css/admin.css.
+//
+// So: every [style*='X'] selector must still match an X somebody writes. The
+// match is case-sensitive because CSS attribute matching is - which is why
+// `background:#FEF2F2` in the stylesheet and `background:#fef2f2` in the JS
+// would NOT be the same rule.
+// Pinned per FILE, not per stylesheet: "somebody still writes this string" is
+// too weak. admin.html and js/admin.js both write `background:#FEF2F2`, so
+// converting the JS one alone left the selector still matching the HTML and
+// the check stayed green while the JS-rendered cards lost their dark styling.
+// Recorded 2026-08-11 against origin/main. A new writer of an existing string
+// is fine and does not need adding; a writer that STOPS is the failure.
+const COUPLED = {
+  'css/admin.css': {
+    'color:var(--navy)': ['js/admin.js', 'admin.html'],
+    'color:var(--mgray)': ['js/admin.js', 'admin.html'],
+    'color:var(--gray)': ['js/admin.js'],
+    'background:var(--off)': ['js/admin.js', 'admin.html'],
+    'color:#0d1f3c': ['js/admin.js'],
+    'border-color:var(--border)': ['js/admin.js'],
+    'color:var(--border)': ['js/admin.js'],
+    'color:#fff': ['js/admin.js', 'admin.html'],
+    'background:var(--white)': ['js/admin.js', 'admin.html'],
+    'border:1px solid var(--border)': ['js/admin.js', 'admin.html'],
+    'font-weight:600;color:var(--mgray)': ['js/admin.js', 'admin.html'],
+    'background:var(--blue-lt)': ['js/admin.js', 'admin.html'],
+    'background:var(--green-lt)': ['js/admin.js', 'admin.html'],
+    'background:var(--red-lt)': ['js/admin.js', 'admin.html'],
+    'background:#FEF2F2': ['js/admin.js', 'admin.html'],
+    'background:#F0FDF4': ['admin.html'],
+    'padding:16px': ['js/admin.js', 'admin.html'],
+    'grid-template-columns:1fr 1fr': ['js/admin.js', 'admin.html'],
+  },
+  'css/mechanic.css': {},
+};
+for (const [sheet, pinned] of Object.entries(COUPLED)) {
+  const css = stripComments(readFileSync(sheet, 'utf8'));
+  const live = new Set([...css.matchAll(/\[style\*=['"]([^'"]+)['"]\]/g)].map(m => m[1]));
+  for (const selector of live) {
+    const writers = pinned[selector];
+    if (!writers) {
+      problems.push(
+        `${sheet}: [style*='${selector}'] is a new inline-style coupling. Add it to COUPLED ` +
+        `in scripts/color-check.mjs with the file(s) that write that string, so the next ` +
+        `person cannot convert the colour out from under it.`
+      );
+      continue;
+    }
+    for (const writer of writers) {
+      if (!readFileSync(writer, 'utf8').includes(selector)) {
+        problems.push(
+          `${writer} no longer writes the inline style \`${selector}\`, which ${sheet} ` +
+          `selects on. Most likely a hand-written hex just became var() - that is the ` +
+          `cleanup 12.14 asks for everywhere EXCEPT here, because it moves the element out ` +
+          `of the [data-theme='dark'] rule and breaks dark mode with nothing else failing. ` +
+          `Revert it, or change the selector in the same commit.`
+        );
+      }
+    }
+  }
+  for (const selector of Object.keys(pinned)) {
+    if (!live.has(selector)) {
+      problems.push(
+        `${sheet} no longer has the selector [style*='${selector}'] - remove it from COUPLED ` +
+        `in scripts/color-check.mjs so the list stays honest.`
+      );
+    }
+  }
+}
+
 if (wins.length) {
   console.log('color-check: the budget is stale, these files improved:');
   for (const w of wins) console.log('  - ' + w);
