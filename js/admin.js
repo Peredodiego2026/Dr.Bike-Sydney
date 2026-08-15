@@ -42,7 +42,8 @@ sb.auth.onAuthStateChange((event, session) => {
   // with no login form anywhere to fix it. Put the form back.
   if (event !== 'SIGNED_OUT') return;
   clearAdminSession();
-  if (!document.getElementById('admin-login-overlay')) checkAdminAuth();
+  // Safe to call unguarded: checkAdminAuth() refuses to build a second overlay.
+  checkAdminAuth();
 });
 
 // ── TASK-023: onclick -> addEventListener (see tasks.md) ────────────────────
@@ -2067,6 +2068,16 @@ async function sendReminders() {
 
 function checkAdminAuth() {
   if (localStorage.getItem('drbike-admin-token')) return true;
+  // One overlay, always. Two callers reach this in the same tick on a failed
+  // boot: the onAuthStateChange listener, because setSession() rejecting the
+  // stored pair emits SIGNED_OUT, and initAdmin() immediately after
+  // restoreAdminSession() returns false. A second overlay puts a duplicate
+  // #admin-email-inp / #admin-pass-inp in the DOM - and the duplicate is the
+  // one the admin sees, since it paints on top at the same z-index, while
+  // getElementById() keeps handing the submit handler the FIRST, empty pair.
+  // Signing in then fails with "Missing credentials" no matter what is typed,
+  // and _showLoginCard() renders the MFA step into the hidden card.
+  if (document.getElementById('admin-login-overlay')) return false;
   const overlay = document.createElement('div');
   overlay.id = 'admin-login-overlay';
   overlay.style.cssText =

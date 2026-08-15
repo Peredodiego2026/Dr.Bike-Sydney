@@ -190,10 +190,49 @@ describe('the onAuthStateChange listener', () => {
     expect(calls).toEqual(['checkAdminAuth']);
   });
 
-  it('does not stack a second login overlay on top of the one on screen', () => {
+  it('asks for the login form on every SIGNED_OUT - checkAdminAuth is the guard', () => {
     const { fn, calls } = makeListener({ stored: {}, overlayPresent: true });
     fn('SIGNED_OUT', null);
-    expect(calls).toEqual([]);
+    expect(calls).toEqual(['checkAdminAuth']);
+  });
+});
+
+// A failed boot calls checkAdminAuth() twice in the same tick: once from the
+// listener (setSession rejecting the stored pair emits SIGNED_OUT) and once
+// from initAdmin() after restoreAdminSession() returns false. The second
+// overlay is the one the admin sees - same z-index, later in the DOM - while
+// getElementById() keeps handing the submit handler the first, empty pair, so
+// signing in answers "Missing credentials" whatever is typed.
+describe('checkAdminAuth', () => {
+  const authSrc = grab(/function checkAdminAuth\(\) \{[\s\S]*?\n\}/, 'checkAdminAuth');
+
+  function makeAuth(stored) {
+    const localStorage = fakeStorage(stored);
+    const body = [];
+    const document = {
+      createElement: () => ({ style: {}, set id(v) { this._id = v; }, get id() { return this._id; } }),
+      getElementById: (id) => body.find((el) => el._id === id) || null,
+      body: { appendChild: (el) => body.push(el) },
+    };
+    const factory = new Function(
+      'deps',
+      `const { localStorage, document, setTimeout } = deps; ${authSrc} return checkAdminAuth;`
+    );
+    return { fn: factory({ localStorage, document, setTimeout: () => {} }), body };
+  }
+
+  it('builds exactly one overlay however many times it is called', () => {
+    const { fn, body } = makeAuth({});
+    expect(fn()).toBe(false);
+    expect(fn()).toBe(false);
+    expect(fn()).toBe(false);
+    expect(body.filter((el) => el._id === 'admin-login-overlay')).toHaveLength(1);
+  });
+
+  it('builds none at all while a token is stored', () => {
+    const { fn, body } = makeAuth({ [TOKEN]: 'live' });
+    expect(fn()).toBe(true);
+    expect(body).toHaveLength(0);
   });
 });
 
