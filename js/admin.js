@@ -1136,32 +1136,118 @@ async function deleteExpense(id, description) {
   }
 }
 
+// The selected period, as the two shapes the screen needs: 'YYYY-MM-DD'
+// strings for the expenses (dated by day) and Date instants for the bookings
+// (dated by timestamp). rangeEndExclusive is the first day AFTER the period,
+// so the comparison is [start, end) and the last day is never half-counted.
+function finRange(view, month, year) {
+  let startY = year;
+  let startM = month - 1; // JS months are 0-based
+  let months = 1;
+  if (view === 'quarter') {
+    startM = (Math.ceil(month / 3) - 1) * 3;
+    months = 3;
+  } else if (view !== 'month') {
+    startM = 0;
+    months = 12;
+  }
+  const rangeStart = new Date(startY, startM, 1);
+  const rangeEndExclusive = new Date(startY, startM + months, 1);
+  const iso = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const lastDay = new Date(startY, startM + months, 0);
+  return { dateFrom: iso(rangeStart), dateTo: iso(lastDay), rangeStart, rangeEndExclusive };
+}
+
+function periodLabel(view, month, year) {
+  return view === 'month'
+    ? new Date(year, month - 1, 1).toLocaleString('en-AU', { month: 'long', year: 'numeric' })
+    : view === 'quarter'
+      ? `Q${Math.ceil(month / 3)} ${year}`
+      : `FY ${year}`;
+}
+
+// The date a job's money belongs to: when it was finished. Falls back to
+// created_at for rows written before completed_at existed - the same rule
+// anCompletedInRange() uses on the Analytics screen.
+function finRevenueDate(j) {
+  const t = new Date(j.completed_at || j.created_at);
+  if (!Number.isFinite(t.getTime())) return j.scheduled_date || '';
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+}
+
+// Everything money-shaped on this screen goes blank, and the P&L says why.
+// Leaving the zeros on screen was the actual bug: a permissions error, a dead
+// session or a dropped connection all rendered as a month with no work.
+function showFinanceError(message, periodStr) {
+  const dash = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  };
+  ['fk-revenue', 'fk-jobs', 'fk-gst', 'fk-net', 'fk-avg', 'fk-profit', 'fk-margin'].forEach(dash);
+  ['bas-g1', 'bas-1a', 'bas-1b', 'bas-net'].forEach(dash);
+  const period = document.getElementById('fin-pl-period');
+  if (period) period.textContent = periodStr;
+  const rows = document.getElementById('fin-pl-rows');
+  if (rows)
+    rows.innerHTML = `<div class="pl-row" style="color:var(--red);font-size:13px;line-height:1.5;display:block">Could not read the bookings for this period, so there are no figures to show: ${esc(message)}<br>This is NOT a month with no work - nothing was read at all. Reload the page, and sign in again if it keeps happening.</div>`;
+  const chart = document.getElementById('fin-chart');
+  if (chart)
+    chart.innerHTML =
+      '<div style="color:var(--red);font-size:13px;margin:auto">No data read - see the message above</div>';
+  const txSub = document.getElementById('fin-tx-sub');
+  if (txSub) txSub.textContent = 'Could not be read · ' + periodStr;
+  const txBody = document.getElementById('fin-tx-body');
+  if (txBody)
+    txBody.innerHTML =
+      '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:32px;font-size:13px">Could not read the transactions for this period</td></tr>';
+  // Nothing to export, and the old figures must not survive as if they were
+  // this period's.
+  window._finData = null;
+}
+
 async function loadFinance() {
   loadCashHandover();
   const month = parseInt(document.getElementById('fin-month')?.value || new Date().getMonth() + 1);
   const year = parseInt(document.getElementById('fin-year')?.value || new Date().getFullYear());
   const view = document.getElementById('fin-view')?.value || 'month';
 
-  let dateFrom, dateTo;
-  if (view === 'month') {
-    dateFrom = `${year}-${String(month).padStart(2, '0')}-01`;
-    dateTo = new Date(year, month, 0).toISOString().split('T')[0];
-  } else if (view === 'quarter') {
-    const q = Math.ceil(month / 3);
-    dateFrom = `${year}-${String((q - 1) * 3 + 1).padStart(2, '0')}-01`;
-    dateTo = new Date(year, q * 3, 0).toISOString().split('T')[0];
-  } else {
-    dateFrom = `${year}-01-01`;
-    dateTo = `${year}-12-31`;
-  }
+  // Two shapes of the same range. The strings still drive the expenses, which
+  // are dated 'YYYY-MM-DD'; the Dates drive the bookings query, which now
+  // compares against a timestamp and therefore needs real instants.
+  const { dateFrom, dateTo, rangeStart, rangeEndExclusive } = finRange(view, month, year);
 
-  const { data: bookings } = await sb
+  // The money is dated by when the job was FINISHED, not by when it was
+  // booked in. Until 2026-08-16 this screen filtered on scheduled_date while
+  // Analytics filtered on completed_at, so a job scheduled 31-Jul and finished
+  // 2-Aug landed in July on one screen and August on the other - two revenue
+  // figures for the same month, and the BAS took the one nobody had agreed on.
+  // Diego chose completed_at for both (16-Aug-2026); it is also the rule the
+  // Analytics code already documented.
+  //
+  // The boundaries are built from the LOCAL midnight and sent as instants.
+  // Sending the plain 'YYYY-MM-DD' would compare a timestamptz against UTC
+  // midnight, and a job finished at 08:00 in Sydney is still the previous day
+  // in UTC - it would drop out of its own month.
+  // Rows written before completed_at existed have none. They fall back to
+  // created_at, exactly like anCompletedInRange() does, so the two screens
+  // agree on those too instead of one of them silently dropping them.
+  const completedWindow = `and(completed_at.gte.${rangeStart.toISOString()},completed_at.lt.${rangeEndExclusive.toISOString()}),and(completed_at.is.null,created_at.gte.${rangeStart.toISOString()},created_at.lt.${rangeEndExclusive.toISOString()})`;
+  const { data: bookings, error: bookingsError } = await sb
     .from('bookings')
     .select('*,profiles(full_name,email)')
     .eq('status', 'completed')
-    .gte('scheduled_date', dateFrom)
-    .lte('scheduled_date', dateTo)
-    .order('scheduled_date', { ascending: true });
+    .or(completedWindow)
+    .order('completed_at', { ascending: true });
+
+  // A failed query used to render exactly like a month with no work: $0
+  // revenue, 0 jobs, an empty P&L and a BAS of zero. Nothing on the screen
+  // said the number had not been read. This is the "No silent errors" rule in
+  // CLAUDE.md, and the Analytics screen next door already obeys it.
+  if (bookingsError) {
+    showFinanceError(bookingsError.message, periodLabel(view, month, year));
+    return;
+  }
 
   const jobs = bookings || [];
   const revenue = anRevenueOf(jobs);
@@ -1225,12 +1311,7 @@ async function loadFinance() {
     },
   ];
 
-  const periodStr =
-    view === 'month'
-      ? new Date(year, month - 1, 1).toLocaleString('en-AU', { month: 'long', year: 'numeric' })
-      : view === 'quarter'
-        ? `Q${Math.ceil(month / 3)} ${year}`
-        : `FY ${year}`;
+  const periodStr = periodLabel(view, month, year);
 
   document.getElementById('fin-pl-period').textContent = periodStr;
   // Never let an unreadable expense table look like a business with no costs.
@@ -1254,7 +1335,11 @@ async function loadFinance() {
   // Daily chart
   const dailyMap = {};
   jobs.forEach((j) => {
-    const d = j.scheduled_date;
+    // Bucketed by the day the money was recognised, same as the totals above.
+    // Bucketing by scheduled_date while the total counted completions put a
+    // bar on a day that contributed nothing to it.
+    const d = finRevenueDate(j);
+    if (!d) return;
     dailyMap[d] = (dailyMap[d] || 0) + anBookingRevenue(j);
   });
   const days = Object.keys(dailyMap).sort();
@@ -1291,7 +1376,7 @@ async function loadFinance() {
           const name =
             j.client_name || j.profiles?.full_name || j.profiles?.email?.split('@')[0] || 'Client';
           return `<tr>
-      <td data-label="Date">${j.scheduled_date}</td>
+      <td data-label="Date">${esc(finRevenueDate(j))}</td>
       <td data-label="Client">${esc(name)}</td>
       <td data-label="Service">${esc(j.service_name || 'Service')}</td>
       <td data-label="Amount" style="font-weight:600">$${price.toLocaleString('en-AU')}</td>
@@ -1330,7 +1415,7 @@ function exportFinanceCSV() {
       const price = anBookingRevenue(j);
       const gst = Math.round(price / 11);
       return [
-        j.scheduled_date,
+        finRevenueDate(j),
         j.profiles?.full_name || j.profiles?.email || '',
         j.service_name || '',
         price,
@@ -1520,7 +1605,7 @@ function exportFinancePDF() {
             g = Math.round(p / 11);
           return (
             '<tr><td>' +
-            (j.scheduled_date || '—') +
+            (finRevenueDate(j) || '—') +
             '</td><td class="bold">' +
             escapeHtml(j.profiles?.full_name || 'Client') +
             '</td><td>' +

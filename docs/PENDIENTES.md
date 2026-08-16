@@ -4290,7 +4290,7 @@ Arreglo minimo y honesto: que la tarjeta no muestre porcentaje cuando
 `_partsPerJob === 0` y diga "cargar gastos en Finanzas para ver el margen", en
 vez de un 100% verde.
 
-### 20.2 Si falla la consulta de Finanzas, la pantalla dice que no hubo trabajo
+### 20.2 Si falla la consulta de Finanzas, la pantalla dice que no hubo trabajo - CERRADO (PR #250)
 
 ```js
 const { data: bookings } = await sb.from('bookings')...
@@ -4319,7 +4319,7 @@ input-taxed, un pago a un proveedor sin ABN no da credito), asi que esto pide
 una decision del contador, no una formula. Mientras tanto el 1B deberia decir
 "pendiente de cargar", no "$0".
 
-### 20.4 Analytics y Finanzas fechan la plata en dias distintos
+### 20.4 Analytics y Finanzas fechan la plata en dias distintos - CERRADO (PR #250)
 
 - Analytics: `anCompletedInRange()` usa `completed_at || created_at`, y el
   comentario del archivo dice explicitamente que la facturacion se reconoce
@@ -4331,6 +4331,14 @@ una pantalla y en agosto en la otra. Con un solo trabajo al mes esto es
 invisible; a fin de trimestre es la diferencia entre dos BAS. Hay que elegir
 una definicion y que las dos pantallas la usen (probablemente `completed_at`,
 que es lo que ya esta documentado como la regla).
+
+**Los dos se arreglaron el 2026-08-16 (PR #250).** Diego eligio `completed_at`
+para las dos pantallas, que ademas es la regla que el codigo ya documentaba.
+Los limites del rango se mandan como instantes construidos desde la medianoche
+LOCAL: mandar `'YYYY-MM-DD'` contra una columna timestamptz sacaba del mes a
+todo trabajo terminado antes de las 10 de la manana en Sydney. Y una consulta
+fallida ahora vacia los KPI y el BAS y dice que no se leyo nada, en vez de
+mostrar ceros.
 
 ### 20.5 "New this month" en Clientes se pierde las altas de esa misma manana - CERRADO (PR #248)
 
