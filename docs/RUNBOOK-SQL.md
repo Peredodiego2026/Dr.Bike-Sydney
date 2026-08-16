@@ -170,6 +170,11 @@ with
     exists (select 1 from tbl where t='expenses')
   union all select 37, 'add-completion-notifications.sql', 'bookings.completion_notifications',
     exists (select 1 from col where t='bookings' and c='completion_notifications')
+  union all select 39, 'fix-availability-blocks.sql', 'availability: service_id nullable + indice unico (date,time_slot,van_number)',
+    (coalesce((select n = 'YES' from col where t='availability' and c='service_id'), false)
+     and exists (select 1 from idx where i = 'availability_date_time_slot_van_number_key'))
+  union all select 40, 'add-availability-reason.sql', 'availability.reason',
+    exists (select 1 from col where t='availability' and c='reason')
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
@@ -398,6 +403,8 @@ que paso a `OK`. Resumen de que se pierde en cada caso:
 | 34 | `add-bookings-rls.sql` + `harden-bookings-rls.sql` | Seguridad grave: sin RLS, un cliente puede leer las reservas de otro. Si sale FALTA, es lo primero de todo. |
 | 35 | `add-booking-unique-constraint.sql` | Dos clientes pueden reservar el mismo horario con la misma van. |
 | 36 | `migrate-inventory-push.sql` | Inventario de repuestos y notificaciones push. |
+| 39 | `fix-availability-blocks.sql` | El boton Block availability no guarda nada - 42703 en `blocked`, columna que nunca existio. Diego ya lo corrio el 16-ago; se agrega aca para que un entorno nuevo sepa que hace falta. |
+| 40 | `add-availability-reason.sql` | Bloquear un horario sigue fallando incluso con el 39 corrido: el campo "Reason" del modal no tiene columna donde caer, 42703 de nuevo pero en `reason`. Encontrado el 16-ago probando el boton en produccion (`docs/PENDIENTES.md` 21.5). |
 
 ---
 
