@@ -4248,3 +4248,133 @@ de bici, no un cuadrado opaco — decodificado y reescalado a 28x21 la bici se
 lee. Eso descarta la clase de fallas que estabamos buscando, pero **nadie miro
 las cinco marcas nuevas renderizadas**. Si alguna quedo desalineada respecto al
 texto del logo, se ve a simple vista y no lo agarra ningun test.
+## 20. Segunda pasada sobre Analytics y Finanzas (2026-08-16)
+
+Salio de cerrar el resto de `suburbCoord` (PR #244: el `", Sydney"` ya estaba
+arreglado en `main`, pero el desempate por largo de nombre mandaba
+`"123 Parramatta Rd, Ashfield"` a Parramatta, 25 km al oeste). Lo de abajo es
+lo que aparecio auditando las otras tarjetas de la pantalla. **Nada de esto se
+arreglo.** El punto 18 sigue abierto tal cual; esto se suma, no lo reemplaza.
+
+Ordenado por lo que mas cambia un numero que Diego mira.
+
+### 20.1 El margen de Analytics dice 100% hasta que se abre Finanzas (`js/admin.js`)
+
+`renderMargins()` calcula el costo asi:
+
+```js
+const cost = Math.round(d.jobs * _partsPerJob);
+const net = d.rev - Math.round(d.rev / 11); // ex-GST
+const margin = net > 0 ? Math.round(((net - cost) / net) * 100) : 0;
+```
+
+`_partsPerJob` arranca en `0` y **el unico lugar que lo escribe es
+`loadFinance()`**. Analytics y Finanzas son dos pantallas distintas del panel:
+
+- Entrar directo a Analytics (lo normal: se clickea Analytics en el menu) deja
+  `_partsPerJob = 0`, o sea `Est. cost = $0` y **`Margin = 100%` en verde para
+  todos los servicios**. No es una estimacion optimista: es la ausencia del
+  dato pintada como un resultado.
+- Si antes se abrio Finanzas, la tabla usa el `parts / jobs` **de ese mes
+  concreto** y lo aplica a la tabla de margenes, que es **de toda la vida**
+  ("lifetime, not filtered by the range above", lo dice la propia tarjeta).
+  Cambiar el mes en Finanzas cambia los margenes historicos de Analytics.
+
+El mismo `_partsPerJob` alimenta la seccion MARGINS del CSV
+(`exportAnalyticsCSV`), asi que el archivo exportado hereda el mismo numero.
+
+Esto es distinto del 18.3. El 18.3 dice que el costo plano por trabajo es una
+estimacion; esto dice que ademas **depende de por donde entraste al panel**.
+
+Arreglo minimo y honesto: que la tarjeta no muestre porcentaje cuando
+`_partsPerJob === 0` y diga "cargar gastos en Finanzas para ver el margen", en
+vez de un 100% verde.
+
+### 20.2 Si falla la consulta de Finanzas, la pantalla dice que no hubo trabajo
+
+```js
+const { data: bookings } = await sb.from('bookings')...
+const jobs = bookings || [];
+```
+
+`loadFinance()` **no lee `error` ni una sola vez**. Una caida de red, una
+sesion vencida o un cambio de RLS producen exactamente la misma pantalla que un
+mes sin trabajos: revenue $0, 0 jobs, P&L en cero, BAS en cero. Es la regla
+"No silent errors" del CLAUDE.md, y Analytics ya lo hace bien al lado
+(`failures[]` + el cartel `an-error`). Vale para `loadCashHandover()` tambien.
+
+### 20.3 El BAS reclama $0 de credito de GST aunque ya haya gastos cargados
+
+```js
+document.getElementById('bas-1b').textContent = '$0'; // no GST on purchases yet
+```
+
+El comentario quedo viejo: desde que existe la tabla `expenses` **si hay
+compras** (repuestos, fleet, software, seguros). El 1B en cero significa que el
+BAS de la pantalla **muestra mas GST a pagar del que corresponde**. No es un
+error de display: es el numero que se copia a la declaracion.
+
+Ojo antes de tocarlo: no todo gasto trae credito de GST (un seguro puede venir
+input-taxed, un pago a un proveedor sin ABN no da credito), asi que esto pide
+una decision del contador, no una formula. Mientras tanto el 1B deberia decir
+"pendiente de cargar", no "$0".
+
+### 20.4 Analytics y Finanzas fechan la plata en dias distintos
+
+- Analytics: `anCompletedInRange()` usa `completed_at || created_at`, y el
+  comentario del archivo dice explicitamente que la facturacion se reconoce
+  cuando el trabajo termina.
+- Finanzas y BAS: filtran por `scheduled_date` (`gte`/`lte`).
+
+Un trabajo agendado el 31 de julio y completado el 2 de agosto cae en julio en
+una pantalla y en agosto en la otra. Con un solo trabajo al mes esto es
+invisible; a fin de trimestre es la diferencia entre dos BAS. Hay que elegir
+una definicion y que las dos pantallas la usen (probablemente `completed_at`,
+que es lo que ya esta documentado como la regla).
+
+### 20.5 "New this month" en Clientes se pierde las altas de esa misma manana
+
+```js
+const thisMonth = new Date();
+thisMonth.setDate(1);
+if (kpis[2]) kpis[2].textContent = data.filter((c) => new Date(c.created_at) > thisMonth).length;
+```
+
+`setDate(1)` cambia el dia pero **no la hora**: el corte queda en "1 del mes a
+la hora actual". Mirando el panel un dia 1 a las 18:00, todo el que se registro
+esa manana no se cuenta. Falta `thisMonth.setHours(0, 0, 0, 0)`, que es
+exactamente lo que si hace `anRangeStart()` en Analytics.
+
+### 20.6 `loadClients()` no pone limite y el KPI "Total clients" puede ser un piso
+
+```js
+const { data, error } = await sb.from('profiles').select('*').order('created_at', ...)
+```
+
+Sin `.limit()`. PostgREST corta en su `max-rows` si el proyecto lo tiene
+configurado, y el panel no tendria forma de notarlo: la grilla y los tres KPI
+mostrarian el numero cortado como si fuera el total. Analytics ya se cuida de
+esto (pide 20.000 perfiles y avisa si llega al tope).
+
+**Verificar primero cuanto es el `max-rows` del proyecto** (Supabase >
+Settings > API). Si esta en 1000, esto ya esta mordiendo o va a morder pronto,
+y no solo aca: `loadAnalytics()` pide `.limit(20000)` pero un `max-rows` mas
+bajo gana igual, y su aviso ("solo se leyeron los primeros 20.000") nunca se
+dispara porque compara contra 20.000.
+
+### 20.7 Los CSV se pueden abrir como formula en Excel
+
+`exportAnalyticsCSV()` y `exportFinanceCSV()` escapan comillas, que es lo que
+hace falta para que el CSV sea valido, pero un valor que empieza con `=`, `+`,
+`-` o `@` lo ejecuta Excel al abrirlo. Los valores salen de campos que escribe
+gente (nombre de servicio, nombre de cliente). Riesgo bajo porque los abre
+Diego y nadie mas, pero se arregla con un apostrofe adelante y no vuelve a
+mirarse.
+
+### 20.8 Lo que esta pasada NO cubrio
+
+- No se verificaron los numeros contra la base: no hay acceso SQL desde esta
+  sesion. Todo lo de arriba sale de leer el codigo, no de comparar totales.
+- La tarjeta Traffic (PostHog) y la de Checkout dependen de `/api/analytics`,
+  que no se audito.
+- El Dashboard (`loadDashboard`) quedo afuera.
