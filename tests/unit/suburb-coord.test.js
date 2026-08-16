@@ -29,7 +29,7 @@ const grab = (re, what) => {
 const build = new Function(`
   ${grab(/const SUBURB_COORDS = \{[\s\S]*?\n\};/, 'SUBURB_COORDS')}
   ${grab(/const CITY_WIDE = new Set\(\[[^\]]*\]\);/, 'CITY_WIDE')}
-  ${grab(/const SUBURB_MATCHERS = Object\.keys\(SUBURB_COORDS\)[\s\S]*?\n  \}\)\);/, 'SUBURB_MATCHERS')}
+  ${grab(/const SUBURB_MATCHERS = Object\.keys\(SUBURB_COORDS\)[\s\S]*?\n\s*\}\)\);/, 'SUBURB_MATCHERS')}
   ${grab(/function suburbFromText\(text\) \{[\s\S]*?\n\}/, 'suburbFromText')}
   ${grab(/function suburbCoord\(b\) \{[\s\S]*?\n\}/, 'suburbCoord')}
   return { suburbCoord, SUBURB_COORDS };
@@ -84,6 +84,34 @@ describe('suburbCoord - the most specific name wins', () => {
 
   it('a plain city address still lands in the CBD', () => {
     expect(suburbCoord({ address: '1 Martin Place, Sydney NSW 2000' })).toEqual(at('sydney'));
+  });
+});
+
+describe('suburbCoord - a street named after a suburb is not the suburb', () => {
+  // An address reads street -> suburb -> city, so the name nearest the end is
+  // the destination. Ranking by name length instead put these jobs on the
+  // wrong side of Sydney: Parramatta Rd runs for 23 km through the inner west
+  // and none of it is in Parramatta.
+  it('"Parramatta Rd, Ashfield" is Ashfield', () => {
+    expect(suburbCoord({ address: '123 Parramatta Rd, Ashfield NSW 2131' })).toEqual(
+      at('ashfield')
+    );
+  });
+
+  it('"Parramatta Road, Leichhardt" is Leichhardt', () => {
+    expect(suburbCoord({ address: '45 Parramatta Road, Leichhardt' })).toEqual(at('leichhardt'));
+  });
+
+  it('"St Peters Lane, Newtown" is Newtown', () => {
+    expect(suburbCoord({ address: '5 St Peters Lane, Newtown' })).toEqual(at('newtown'));
+  });
+
+  it('"Sutherland St, Paddington" is Paddington, not the Shire', () => {
+    expect(suburbCoord({ address: '10 Sutherland St, Paddington' })).toEqual(at('paddington'));
+  });
+
+  it('"Glebe Point Rd, Glebe" still resolves when street and suburb agree', () => {
+    expect(suburbCoord({ address: '200 Glebe Point Rd, Glebe' })).toEqual(at('glebe'));
   });
 });
 
