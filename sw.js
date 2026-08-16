@@ -1,9 +1,28 @@
-// v67: #223 replaced the "Ride Happy" step-4 icon with the real bike, and
-// production has served the new landing.html since (verified 11-Aug: the root
-// URL returns the mask markup and images/bike-icon.png is byte-identical to the
-// repo). Returning browsers kept drawing the old mangled SVG anyway, because
-// the previous landing.html was still sitting in CACHE_PAGES and a Ctrl+Shift+R
-// does not clear it - only a cache name change does, via the activate handler.
+// v67 (#235): #223 replaced the "Ride Happy" step-4 icon with the real bike and
+// Diego kept seeing the old mangled SVG after a Ctrl+Shift+R. Bumping the cache
+// names is the right cure - activate() drops the old CACHE_PAGES, which is the
+// only place a pre-#223 landing.html can still live on a returning device.
+//
+// The original note here went further and said that stale copy was what
+// returning browsers were being drawn. It is not, and the correction matters
+// because the next person to debug "I deployed it and still see the old page"
+// will start from this comment: HTML is served NETWORK FIRST (see the fetch
+// handler below), and it has been since the service worker's first commit
+// (b93bac6) - no client ever ran a cache-first-HTML version. On a load that
+// reaches the network the cached page is never consulted. It is a fallback for
+// a failed fetch, so it can only surface offline, on a dropped connection, or
+// on a PWA cold start with no network.
+//
+// Re-verified on 16-Aug against production, and every server-side suspect came
+// back clean: the root URL, www, /landing.html and /index.html all return the
+// mask markup and zero copies of the old SVG path, for Firefox, Chrome, Edge,
+// Safari and iPhone user agents (the page is edge-cached with
+// `Vary: User-Agent`, so each one is a separate CDN entry and had to be checked
+// separately); images/bike-icon.png is RGBA with a real alpha channel (78.5%
+// transparent, a bike silhouette, not an opaque square, so the mask has
+// something to cut out); and i18n only rewrites text nodes, so it cannot swap
+// an icon back. What Diego's browser was holding was never captured, so the
+// cache bump is the cure, not the proven diagnosis.
 const CACHE_STATIC = 'drbike-static-v67';
 const CACHE_PAGES  = 'drbike-pages-v67';
 
