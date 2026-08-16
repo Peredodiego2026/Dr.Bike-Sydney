@@ -224,22 +224,39 @@ abierto hasta que se audite esa quinta.
 lo marca como candidato #1. Presupuesto del plan: <= 1.5 MB por pagina,
 LCP < 2.5s en movil, Lighthouse >= 90.
 
-### 3.3 Handlers inline que quedan (bloquean sacar `unsafe-inline` del CSP)
+### 3.3 Handlers inline que quedan - CERRADO 2026-08-16
 
-Los `onclick` ya se eliminaron todos (TASK-023). Faltan
+Los `onclick` ya se eliminaron todos (TASK-023). Faltaban
 `onfocus`/`onblur`/`oninput`/`onchange`/`onkeydown`, contados el 27-jul:
 
-| Archivo | Cantidad |
-|---|---|
-| `landing.html` | 33 |
-| `admin.html` | 12 |
-| `js/admin.js` | 6 |
-| `js/mechanic.js` | 6 |
-| `mechanic.html` | 2 |
-| **Total** | **59** |
+| Archivo | Contado 27-jul | Real al 16-ago (antes de este PR) |
+|---|---|---|
+| `landing.html` | 33 | 21 |
+| `admin.html` | 12 | 0 |
+| `js/admin.js` | 6 | 0 (comentarios documentando el refactor, no codigo) |
+| `js/mechanic.js` | 6 | 0 (idem) |
+| `mechanic.html` | 2 | 0 |
+| **Total** | **59** | **21** |
 
-Es trabajo de diseno y de seguridad a la vez: recien despues de esto se puede
-sacar `'unsafe-inline'` de `script-src` y cerrar el punto #9 del roadmap viejo.
+`admin.html`/`mechanic.html`/`js/admin.js`/`js/mechanic.js` ya se habian
+limpiado (Audit 12.17, event delegation con `data-*`). Quedaban los 21 de
+`landing.html`: 10 pares onfocus/onblur (resaltar el borde en foco, en el
+formulario de flota y el de membresia) + 1 oninput (`clearGiftPreset()`).
+Los 10 pares se movieron a `addEventListener` directo por campo (son
+estaticos, no hace falta delegacion) - **ojo, un intento con CSS `:focus`
+no funciona**: estos campos traen `border` en su propio `style=` inline, y
+un inline style le gana en especificidad a cualquier regla de hoja de
+estilos que no sea `!important`. El `oninput` se movio igual que los casos
+de Audit 12.17. Verificado en navegador: los 9 campos + el textarea cambian
+de borde en foco/blur igual que antes, y escribir en el monto personalizado
+sigue limpiando el preset seleccionado.
+
+**Esto NO alcanza para sacar `'unsafe-inline'` de `script-src`.** El CSP de
+`vercel.json` no usa nonce ni hash, asi que `'unsafe-inline'` sigue
+cubriendo tambien los bloques `<script>` inline que `landing.html` todavia
+tiene varios de (ver 10.1 y 3.2) - sacarlo hoy rompe esos scripts, no solo
+los atributos que se acaban de limpiar. Eso es trabajo de la 3.2, no de
+este punto.
 
 ### 3.4 Lighthouse formal nunca se corrio
 
