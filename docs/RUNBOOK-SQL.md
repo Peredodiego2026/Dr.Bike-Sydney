@@ -448,3 +448,54 @@ mitad codigo (hecho) y mitad SQL (a confirmar).
 
 Para probar la restauracion del backup, ver
 [RUNBOOK-BACKUP-RESTORE.md](RUNBOOK-BACKUP-RESTORE.md).
+
+---
+
+## 9. Las tres preguntas de la tabla `availability` (2026-08-16)
+
+El boton "Block availability" del admin **nunca guardo nada** (ver
+`docs/PENDIENTES.md` seccion 21: escribe una columna `blocked` que no existe,
+la columna se llama `available`). Antes de arreglarlo hay que saber tres cosas
+de la base, y ninguna se puede averiguar desde el codigo. Se copia esto entero
+en el SQL editor de Supabase y se pega el resultado en el chat.
+
+```sql
+-- 1. Columnas de `availability`, tipos y valores por defecto.
+--    Interesa la fila `available`: si su default es `true`, una fila nueva
+--    nace "disponible" y bloquear exige escribir `available = false` a mano.
+select column_name, data_type, is_nullable, column_default
+from information_schema.columns
+where table_schema = 'public' and table_name = 'availability'
+order by ordinal_position;
+
+-- 2. Indices de la tabla.
+--    js/admin.js hace upsert con onConflict 'date,time_slot,van_number'. Si
+--    NO aparece un indice UNIQUE sobre esas tres columnas, el upsert va a
+--    seguir fallando aunque se corrija el nombre de la columna.
+select indexname, indexdef
+from pg_indexes
+where schemaname = 'public' and tablename = 'availability';
+
+-- 3. Cuantos bloqueos hay guardados hoy.
+--    Se espera 0: el boton nunca escribio. Si sale mas que 0, alguien los
+--    cargo por otra via y hay que mirarlos antes de tocar nada.
+select count(*) as filas_guardadas from public.availability;
+```
+
+Con esas tres respuestas se puede cerrar la seccion 21 de PENDIENTES: corregir
+`saveBlocks()` para escribir `available: false`, decidir en que formato se
+guarda `time_slot` (hoy el admin escribe `'8:30'` en 24h y el lector compara
+contra `'8:00 AM'`, asi que no coinciden nunca) y decidir si el bloqueo debe
+respetar el `van_number` que la UI ya deja elegir.
+
+### 9.1 El `max-rows` del proyecto ya no bloquea nada
+
+Estaba anotado como pendiente ("Supabase > Settings > API > Max rows"). **Dejo
+de hacer falta**: el panel ya no cuenta filas recibidas para sacar totales.
+Clientes pide los tres contadores con `count: 'exact', head: true` (los cuenta
+la base, no llega ni una fila) y Analytics compara contra el conteo real en vez
+de contra el `.limit()` que pidio. Sea cual sea el tope, los numeros son
+ciertos y el aviso de "se leyeron solo N de M" aparece cuando corresponde.
+
+Sigue siendo util saberlo por rendimiento, pero ya no hay ningun numero en
+pantalla que dependa de ese valor.

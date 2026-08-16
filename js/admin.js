@@ -3377,11 +3377,12 @@ async function loadAnalytics() {
     sb
       .from('bookings')
       .select(
-        'id,client_id,client_name,client_email,service_name,service_price,callout_fee,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)'
+        'id,client_id,client_name,client_email,service_name,service_price,callout_fee,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)',
+        { count: 'exact' }
       )
       .order('created_at', { ascending: false })
       .limit(BOOKINGS_FETCH_CAP),
-    sb.from('profiles').select('id,created_at').limit(20000),
+    sb.from('profiles').select('id,created_at', { count: 'exact' }).limit(20000),
     sb.from('services').select('name'),
     fetchAnalyticsServer(),
   ]);
@@ -3393,12 +3394,28 @@ async function loadAnalytics() {
   // Hitting the row cap means every total on this screen is a floor, not a
   // count. Silently truncated numbers that still look precise are worse than
   // no numbers, so this says it out loud.
-  if ((bookingsRes.data || []).length >= BOOKINGS_FETCH_CAP)
+  //
+  // Compared against the row count the DATABASE reports, not against the
+  // .limit() asked for. Supabase caps a single response at the project's
+  // max-rows whatever the client requests, so if that cap is lower than these
+  // limits - and nobody on this project knows what it is set to - the old
+  // `length >= 20000` test could never be true and the warning could never
+  // appear, which is precisely the silence it exists to break.
+  const shortBy = (res, asked) => {
+    const got = (res.data || []).length;
+    if (res.count === null || res.count === undefined) return got >= asked ? got : 0;
+    return res.count > got ? res.count : 0;
+  };
+  const bookingsTotal = shortBy(bookingsRes, BOOKINGS_FETCH_CAP);
+  const profilesTotal = shortBy(profilesRes, 20000);
+  if (bookingsTotal)
     failures.push(
-      `only the ${BOOKINGS_FETCH_CAP.toLocaleString('en-AU')} most recent bookings were read - totals below are undercounted`
+      `only ${(bookingsRes.data || []).length.toLocaleString('en-AU')} of ${bookingsTotal.toLocaleString('en-AU')} bookings were read - totals below are undercounted`
     );
-  if ((profilesRes.data || []).length >= 20000)
-    failures.push('only the first 20,000 accounts were read - sign-up totals are undercounted');
+  if (profilesTotal)
+    failures.push(
+      `only ${(profilesRes.data || []).length.toLocaleString('en-AU')} of ${profilesTotal.toLocaleString('en-AU')} accounts were read - sign-up totals are undercounted`
+    );
   if (failures.length && errBox) {
     errBox.textContent = 'Heads up - ' + failures.join(' · ');
     errBox.style.display = 'block';
@@ -3411,7 +3428,7 @@ async function loadAnalytics() {
     profilesError: profilesRes.error ? profilesRes.error.message : null,
     catalog: catalogRes.data || [],
     catalogError: catalogRes.error ? catalogRes.error.message : null,
-    truncated: (bookingsRes.data || []).length >= BOOKINGS_FETCH_CAP,
+    truncated: Boolean(bookingsTotal),
   };
   _anServer = serverRes;
 
@@ -4918,11 +4935,36 @@ async function renderMechStats() {
 }
 
 // ── CLIENTS ───────────────────────────────────────────────────────────────────
+// Midnight on the 1st of the month `d` falls in. The Clients KPI used to do
+// `const t = new Date(); t.setDate(1);` and compare against that - which moves
+// the day but NOT the time, so the cut sat at "the 1st, at whatever o'clock it
+// is now". Looking at the panel on the 1st at 18:00 hid everyone who signed up
+// that morning. anRangeStart() on the Analytics screen already zeroes the time;
+// this is the same rule, named, so it can be tested.
+function startOfMonth(d) {
+  const out = new Date(d);
+  out.setDate(1);
+  out.setHours(0, 0, 0, 0);
+  return out;
+}
+
 async function loadClients() {
-  const { data, error } = await sb
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const monthStart = startOfMonth(new Date());
+  // The three KPIs are asked of the database, not counted off the rows that
+  // came back. A single select returns at most the project's max-rows, and
+  // this screen has no .limit() and no way to notice it was cut: "Total
+  // clients" would be a floor rendered as a total, and the other two would
+  // count only the page of rows that happened to arrive. `head: true` sends
+  // no rows at all, so this is three cheap queries, not three more downloads.
+  const [{ data, error }, totalRes, vipRes, newRes] = await Promise.all([
+    sb.from('profiles').select('*').order('created_at', { ascending: false }),
+    sb.from('profiles').select('id', { count: 'exact', head: true }),
+    sb.from('profiles').select('id', { count: 'exact', head: true }).eq('membership_plan', 'vip'),
+    sb
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', monthStart.toISOString()),
+  ]);
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
   const colors = ['var(--blue)', 'var(--green)', 'var(--amber)', 'var(--purple)', 'var(--cyan)', 'var(--red)'];
@@ -4981,12 +5023,31 @@ async function loadClients() {
       else if (btn.dataset.clAction === 'chat') openAdminChat(btn.dataset.id, btn.dataset.name);
     });
   }
+  // A count query that failed falls back to what was rendered, and says so
+  // rather than printing a smaller number as if it were the total.
   const kpis = document.querySelectorAll('#page-clients .kpi-value');
-  if (kpis[0]) kpis[0].textContent = data.length;
-  if (kpis[1]) kpis[1].textContent = data.filter((c) => c.membership_plan === 'vip').length;
-  const thisMonth = new Date();
-  thisMonth.setDate(1);
-  if (kpis[2]) kpis[2].textContent = data.filter((c) => new Date(c.created_at) > thisMonth).length;
+  const shown = (res, fallback) =>
+    res.error || res.count === null || res.count === undefined
+      ? String(fallback)
+      : String(res.count);
+  if (kpis[0]) kpis[0].textContent = shown(totalRes, data.length);
+  if (kpis[1])
+    kpis[1].textContent = shown(vipRes, data.filter((c) => c.membership_plan === 'vip').length);
+  if (kpis[2])
+    kpis[2].textContent = shown(
+      newRes,
+      data.filter((c) => new Date(c.created_at) >= monthStart).length
+    );
+
+  // The grid itself can still be short of the real total - that is the row cap
+  // doing its job, not an error - but it must not look like the whole list.
+  const total = totalRes.error ? null : totalRes.count;
+  if (total !== null && total > data.length) {
+    grid.insertAdjacentHTML(
+      'afterbegin',
+      `<div style="grid-column:1/-1;background:var(--off);border:1px solid var(--border);color:var(--mgray);padding:10px 14px;border-radius:10px;font-size:13px">Showing the ${data.length.toLocaleString('en-AU')} most recent of ${total.toLocaleString('en-AU')} clients. The counters above are the real totals.</div>`
+    );
+  }
 }
 
 // ── VAN ZONES ─────────────────────────────────────────────────────────────────
