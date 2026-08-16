@@ -4539,6 +4539,23 @@ pega al mismo endpoint, asi que un bloqueo real ya deberia excluir el horario
 en la SPA movil y en el wizard de desktop sin tocar nada mas - **falta que
 Diego repita la prueba con la cache correcta** para confirmarlo.
 
+### 21.6 `availability.reason` nunca existio - necesita SQL
+
+Con el `?v=` de 21.5 arreglado, Diego repitio la prueba y **cambio el error**:
+`Could not find the 'reason' column of 'availability' in the schema cache`.
+Distinto sintoma, mismo tipo de bug: `saveBlocks()` manda `reason` en el
+`upsert` desde siempre (ya estaba en el payload roto de 21.1), pero **ningun
+script de `scripts/*.sql` crea esa columna** - ni siquiera
+`fix-availability-blocks.sql`, que solo toco `service_id`, `van_number` y el
+indice unico. `tests/unit/availability-blocks.test.js` tampoco cubre
+`reason`, asi que nada lo iba a agarrar antes de produccion.
+
+**Arreglo: `scripts/add-availability-reason.sql`** (`alter table
+public.availability add column if not exists reason text;`, idempotente).
+Sumado a `docs/RUNBOOK-SQL.md` como los items **39** (`fix-availability-blocks.sql`,
+que faltaba en el runbook) y **40** (este). **Diego tiene que correr el 40 en
+el SQL Editor de Supabase antes de repetir la prueba por tercera vez.**
+
 ---
 
 ## 22. Estado al cerrar el 16-ago-2026
