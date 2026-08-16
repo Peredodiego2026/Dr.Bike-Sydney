@@ -482,13 +482,63 @@ where schemaname = 'public' and tablename = 'availability';
 select count(*) as filas_guardadas from public.availability;
 ```
 
-Con esas tres respuestas se puede cerrar la seccion 21 de PENDIENTES: corregir
-`saveBlocks()` para escribir `available: false`, decidir en que formato se
-guarda `time_slot` (hoy el admin escribe `'8:30'` en 24h y el lector compara
-contra `'8:00 AM'`, asi que no coinciden nunca) y decidir si el bloqueo debe
-respetar el `van_number` que la UI ya deja elegir.
+### 9.0 RESPONDIDO: Diego lo corrio el 2026-08-16
 
-### 9.1 El `max-rows` del proyecto ya no bloquea nada
+```
+columna  available    true                              | boolean | nullable=YES
+columna  date         (sin default)                     | date    | nullable=NO
+columna  id           nextval('availability_id_seq')    | bigint  | nullable=NO
+columna  service_id   (sin default)                     | text    | nullable=NO
+columna  time_slot    (sin default)                     | text    | nullable=NO
+columna  van_number   1                                 | integer | nullable=YES
+
+indice   availability_date_service_id_time_slot_van_number_key   CREATE UNIQUE INDEX
+indice   availability_pkey                                       CREATE UNIQUE INDEX
+indice   idx_availability_date_service                           CREATE INDEX
+
+filas guardadas  availability  0
+```
+
+**0 filas** confirma lo que decia la seccion 21: el boton nunca escribio nada.
+
+Lo que no esperabamos: hay **dos bloqueos mas** ademas del nombre de la columna.
+
+1. `service_id` es `text NOT NULL` **sin default**, y `saveBlocks()` no lo manda.
+   El insert falla igual aunque se corrija `blocked` -> `available`.
+2. El indice unico es sobre **cuatro** columnas -
+   `(date, service_id, time_slot, van_number)`, se lee en el nombre que Postgres
+   le genero. El `upsert` pide `onConflict: 'date,time_slot,van_number'`, que no
+   corresponde a ningun indice unico: PostgREST contesta 42P10.
+
+Y confirmado: `available` nace en `true`, asi que bloquear exige escribir
+`available: false` explicito.
+
+### 9.2 Por que esto no se cierra con un parche
+
+La tabla esta disenada **por servicio** (`service_id NOT NULL`, y dentro de la
+clave unica). El modal del admin no pregunta por servicio: Diego bloquea *un
+horario*, no *un horario de un servicio*. Son dos modelos distintos, y elegir
+entre ellos es una decision de producto:
+
+- **A.** Un bloqueo tapa el horario entero. Pide que `service_id` deje de ser
+  NOT NULL (o un valor centinela) y rehacer el indice unico. Es lo que la UI
+  ya promete hoy.
+- **B.** Un bloqueo es por servicio. Hay que agregar el selector al modal, y
+  bloquear "las 8:00" pasa a ser una fila por cada servicio del catalogo.
+
+Cualquiera de las dos toca el esquema, asi que va con su propio script en
+`scripts/` y su fila en la tabla de la seccion 3.
+
+Aparte del esquema siguen abiertos dos del lado del codigo: el lector
+(`api/auth.js`, `handleGetAvailability`) selecciona `time_slot, available`
+filtrando solo por `date` - **ignora `service_id` y `van_number`** -, y compara
+`time_slot` (`'8:30'`, 24h, media hora) contra las etiquetas de `ALL_SLOTS`
+(`'8:00 AM'`), que no coinciden nunca.
+
+Y `unblockDate()` (`js/admin.js`) filtra por `.eq('blocked', true)`, la misma
+columna inexistente: **el boton de desbloquear tampoco funciona.**
+
+### 9.3 El `max-rows` del proyecto ya no bloquea nada
 
 Estaba anotado como pendiente ("Supabase > Settings > API > Max rows"). **Dejo
 de hacer falta**: el panel ya no cuenta filas recibidas para sacar totales.
