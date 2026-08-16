@@ -3057,12 +3057,12 @@ let _routeMap = null,
   _routeOptimised = false;
 let _routeBookingsCache = null;
 
-// Guessing the suburb out of free text, longest name first.
+// Guessing the suburb out of free text.
 //
-// The old loop walked SUBURB_COORDS in key order and returned the first name
-// found anywhere in the address string. `sydney` is the first key, so every
-// address that ends in the city name - which in Australia is most of them -
-// resolved to the CBD:
+// The original loop walked SUBURB_COORDS in key order and returned the first
+// name found anywhere in the address string. `sydney` is the first key, so
+// every address that ends in the city name - which in Australia is most of
+// them - resolved to the CBD:
 //
 //   "The Palladium 102 Miller Street, Pyrmont, Sydney"  ->  CBD
 //   "5 Hall St, Bondi Beach, Sydney"                    ->  CBD
@@ -3071,32 +3071,44 @@ let _routeBookingsCache = null;
 // day around a van that was never going there. `north sydney` and
 // `bondi beach` lost the same way, swallowed by `sydney` and `bondi`.
 //
-// Longest first makes the most specific name win, and `sydney`/`cbd` sort last
-// whatever their length: they name the fallback, not a suburb, so they only
-// win when nothing more specific matched.
+// Three rules decide between the names that do match, in this order:
+//
+//   1. `sydney`/`cbd` lose to anything else. They name the fallback, not a
+//      suburb, so they only win when nothing more specific matched.
+//   2. The match closest to the END of the text wins. An Australian address
+//      reads street -> suburb -> city, so a suburb name appearing early is a
+//      STREET named after a suburb, not the destination. Ranking by name
+//      length instead (the first version of this fix) sent
+//      "123 Parramatta Rd, Ashfield" to Parramatta, 25 km from the job.
+//   3. Same starting position: the longer name wins, so `bondi beach` and
+//      `north sydney` beat the `bondi`/`sydney` sitting inside them.
 const CITY_WIDE = new Set(['sydney', 'cbd']);
-const SUBURB_MATCHERS = Object.keys(SUBURB_COORDS)
-  .sort((a, b) => {
-    const aCity = CITY_WIDE.has(a);
-    const bCity = CITY_WIDE.has(b);
-    if (aCity !== bCity) return aCity ? 1 : -1;
-    return b.length - a.length;
-  })
-  .map((name) => ({
-    name,
-    // Word boundaries, because includes() also matched inside a word: `cbd`
-    // hit "cbdoil", and any street whose name happens to contain a suburb
-    // would have counted as being in it.
-    re: new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`),
-  }));
+const SUBURB_MATCHERS = Object.keys(SUBURB_COORDS).map((name) => ({
+  name,
+  cityWide: CITY_WIDE.has(name),
+  // Word boundaries, because includes() also matched inside a word: `cbd`
+  // hit "cbdoil", and any street whose name happens to contain a suburb
+  // would have counted as being in it.
+  re: new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`),
+}));
 
 function suburbFromText(text) {
   const t = (text || '').toLowerCase();
   if (!t) return null;
-  for (const { name, re } of SUBURB_MATCHERS) {
-    if (re.test(t)) return SUBURB_COORDS[name];
+  let best = null;
+  for (const { name, cityWide, re } of SUBURB_MATCHERS) {
+    const hit = re.exec(t);
+    if (!hit) continue;
+    const cand = { name, cityWide, at: hit.index, len: name.length };
+    if (!best) {
+      best = cand;
+    } else if (best.cityWide !== cand.cityWide) {
+      if (best.cityWide) best = cand;
+    } else if (cand.at > best.at || (cand.at === best.at && cand.len > best.len)) {
+      best = cand;
+    }
   }
-  return null;
+  return best ? SUBURB_COORDS[best.name] : null;
 }
 
 function suburbCoord(b) {
