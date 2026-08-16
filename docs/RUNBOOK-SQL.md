@@ -175,6 +175,8 @@ with
      and exists (select 1 from idx where i = 'availability_date_time_slot_van_number_key'))
   union all select 40, 'add-availability-reason.sql', 'availability.reason',
     exists (select 1 from col where t='availability' and c='reason')
+  union all select 41, 'add-availability-rls.sql', 'las 4 policies de admin en availability',
+    (select count(*) = 4 from pol where t='availability' and p like 'availability_admin_%')
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
@@ -405,6 +407,7 @@ que paso a `OK`. Resumen de que se pierde en cada caso:
 | 36 | `migrate-inventory-push.sql` | Inventario de repuestos y notificaciones push. |
 | 39 | `fix-availability-blocks.sql` | El boton Block availability no guarda nada - 42703 en `blocked`, columna que nunca existio. Diego ya lo corrio el 16-ago; se agrega aca para que un entorno nuevo sepa que hace falta. |
 | 40 | `add-availability-reason.sql` | Bloquear un horario sigue fallando incluso con el 39 corrido: el campo "Reason" del modal no tiene columna donde caer, 42703 de nuevo pero en `reason`. Encontrado el 16-ago probando el boton en produccion (`docs/PENDIENTES.md` 21.5). |
+| 41 | `add-availability-rls.sql` | Con las columnas ya bien, el boton sigue fallando: 403 "new row violates row-level security policy". `availability` nacio semanas despues de `harden-security-2026-07-17.sql` y nunca recibio sus policies de admin, a diferencia de `van_zones`, que usa el mismo patron de escritura desde el navegador. Sin esto, ni Block ni Unblock pueden escribir nunca (`docs/PENDIENTES.md` 21.7). |
 
 ---
 
