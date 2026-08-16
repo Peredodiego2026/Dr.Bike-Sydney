@@ -2177,6 +2177,53 @@ function acctWhen(dateStr, timeStr) {
   return out;
 }
 
+// 10.2: cancel/reschedule used to be confirm()/prompt() with a hardcoded list
+// of 8 time slots that never checked real availability - a client could pick
+// a time someone else already had. Same non-native pattern js/app.js already
+// uses for the SPA's own booking detail screen, rebuilt here because that
+// screen is a different DOM the account panel does not render.
+function acctActionButtons(id, date, time) {
+  return '<div style="display:flex;gap:6px">'
+    + '<button class="acct-resched-btn" data-id="' + esc(id) + '" data-date="' + esc(date||'') + '" data-time="' + esc(time||'') + '" style="flex:1;padding:7px;border:1px solid var(--border);border-radius:6px;background:var(--white);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;color:var(--navy)">Reschedule</button>'
+    + '<button class="acct-cancel-btn" data-id="' + esc(id) + '" style="flex:1;padding:7px;border:1px solid var(--red-lt);border-radius:6px;background:var(--white);color:var(--red);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Cancel</button>'
+    + '</div>';
+}
+
+function acctReschedTimesHtml(slots, currentTime) {
+  var t = window.__drbikeTime;
+  if (!slots || !slots.length) return '<option value="">No times available</option>';
+  return slots.map(function(s) {
+    var value = t.toDbTime(s.time) || '';
+    var isCurrent = !!value && value === t.toDbTime(currentTime || '');
+    return '<option value="' + esc(value) + '"' + (!s.available ? ' disabled' : '') + (isCurrent && s.available ? ' selected' : '') + '>' + esc(t.toDisplayTime(s.time) || s.time) + (!s.available ? ' - unavailable' : '') + '</option>';
+  }).join('');
+}
+
+// Same endpoint and shape getAvailableSlots() in js/supabase.js uses - not
+// imported directly because it is bundled with the rest of that module's
+// Supabase client setup, which this plain script has no reason to load twice.
+function acctLoadReschedTimes(date, currentTime) {
+  var sel = document.getElementById('acct-resched-time');
+  var err = document.getElementById('acct-resched-err');
+  if (!sel || !err) return;
+  err.style.display = 'none';
+  sel.disabled = true;
+  sel.innerHTML = '<option>Loading available times...</option>';
+  fetch('/api/auth?role=get-availability&date=' + encodeURIComponent(date))
+    .then(function(r) { if (!r.ok) throw new Error('availability fetch failed'); return r.json(); })
+    .then(function(slots) {
+      sel.innerHTML = acctReschedTimesHtml(slots, currentTime);
+      var anyAvailable = slots.some(function(s) { return s.available; });
+      sel.disabled = !anyAvailable;
+      if (!anyAvailable) { err.textContent = 'No times available that day - try another date.'; err.style.display = 'block'; }
+    })
+    .catch(function() {
+      sel.innerHTML = '<option>Could not load times</option>';
+      err.textContent = 'Could not check availability. Try again.';
+      err.style.display = 'block';
+    });
+}
+
 function openAccountPanel(session) {
   document.getElementById('account-panel')?.remove();
   // The membership actions below reopen this panel with no argument. Reading
@@ -2307,10 +2354,7 @@ function openAccountPanel(session) {
           html += '</div>';
           html += '<div style="font-size:13px;color:var(--gray-lt)">' + esc(acctWhen(b.scheduled_date, b.scheduled_time)) + '</div>';
           if (canEdit) {
-            html += '<div style="display:flex;gap:6px;margin-top:8px">';
-            html += '<button class="acct-resched-btn" data-id="' + esc(b.id) + '" data-date="' + esc(b.scheduled_date||'') + '" data-time="' + esc(b.scheduled_time||'08:00') + '" style="flex:1;padding:7px;border:1px solid var(--border);border-radius:6px;background:var(--white);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;color:var(--navy)">Reschedule</button>';
-            html += '<button class="acct-cancel-btn" data-id="' + esc(b.id) + '" style="flex:1;padding:7px;border:1px solid var(--red-lt);border-radius:6px;background:var(--white);color:var(--red);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Cancel</button>';
-            html += '</div>';
+            html += '<div id="acct-actions-' + esc(b.id) + '" data-date="' + esc(b.scheduled_date||'') + '" data-time="' + esc(b.scheduled_time||'') + '" style="margin-top:8px">' + acctActionButtons(b.id, b.scheduled_date, b.scheduled_time) + '</div>';
           }
           if (['confirmed','enroute','in_progress'].includes(b.status)) {
             html += '<button class="acct-chat-btn" data-id="' + esc(b.id) + '" style="width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;background:var(--blue);color:var(--white);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">&#128172; <span>Message mechanic</span></button>';
@@ -2335,31 +2379,98 @@ function openAccountPanel(session) {
         var cancelBtn = e.target.closest('.acct-cancel-btn');
         var reschedBtn = e.target.closest('.acct-resched-btn');
         var chatBtn = e.target.closest('.acct-chat-btn');
+        var cancelYesBtn = e.target.closest('.acct-cancel-yes-btn');
+        var cancelNoBtn = e.target.closest('.acct-cancel-no-btn');
+        var reschedBackBtn = e.target.closest('.acct-resched-back-btn');
+        var reschedSaveBtn = e.target.closest('.acct-resched-save-btn');
         if (chatBtn) { openLandingChat(chatBtn.dataset.id); return; }
+
         if (cancelBtn) {
-          var bookingId = cancelBtn.dataset.id;
-          if (!confirm('Cancel this booking?')) return;
-          cancelBtn.textContent = '...'; cancelBtn.disabled = true;
-          _sb.auth.getSession().then(function(s) {
-            var ss = s.data && s.data.session ? s.data.session : null;
-            if (!ss) { cancelBtn.textContent = 'Cancel'; cancelBtn.disabled = false; return; }
-            fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ role:'client-cancel', access_token:ss.access_token, booking_id:bookingId, client_id:ss.user.id }) })
-              .then(function(r) { if (r.ok) { openAccountPanel(ss); } else { cancelBtn.textContent = 'Cancel'; cancelBtn.disabled = false; alert('Could not cancel. Please call us.'); } });
-          });
+          var box = document.getElementById('acct-actions-' + cancelBtn.dataset.id);
+          if (!box) return;
+          box.innerHTML =
+            '<div style="font-size:13px;color:var(--navy);margin-bottom:8px">Cancel this booking?</div>'
+            + '<div style="display:flex;gap:6px">'
+            + '<button class="acct-cancel-yes-btn" data-id="' + esc(cancelBtn.dataset.id) + '" style="flex:1;padding:7px;border:none;border-radius:6px;background:var(--red);color:var(--white);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Yes, cancel</button>'
+            + '<button class="acct-cancel-no-btn" style="flex:1;padding:7px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--navy);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Keep it</button>'
+            + '</div>';
+          return;
         }
-        if (reschedBtn) {
-          var bookingId = reschedBtn.dataset.id;
-          var newDate = prompt('New date (YYYY-MM-DD):', reschedBtn.dataset.date);
-          if (!newDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDate)) return;
-          var timeOpts = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00'];
-          var newTime = prompt('New time:\n' + timeOpts.join(' / '), reschedBtn.dataset.time);
-          if (!newTime || !timeOpts.includes(newTime)) return;
+        if (cancelNoBtn) {
+          var box = cancelNoBtn.closest('[id^="acct-actions-"]');
+          if (box) box.innerHTML = acctActionButtons(box.id.replace('acct-actions-',''), box.dataset.date, box.dataset.time);
+          return;
+        }
+        if (cancelYesBtn) {
+          var id = cancelYesBtn.dataset.id;
+          var box = document.getElementById('acct-actions-' + id);
+          cancelYesBtn.textContent = '...'; cancelYesBtn.disabled = true;
           _sb.auth.getSession().then(function(s) {
             var ss = s.data && s.data.session ? s.data.session : null;
             if (!ss) return;
-            fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ role:'client-reschedule', access_token:ss.access_token, booking_id:bookingId, client_id:ss.user.id, scheduled_date:newDate, scheduled_time:newTime }) })
-              .then(function(r) { if (r.ok) { openAccountPanel(ss); } else { alert('Could not reschedule. Please call us.'); } });
+            fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ role:'client-cancel', access_token:ss.access_token, booking_id:id, client_id:ss.user.id }) })
+              .then(function(r) {
+                if (r.ok) { openAccountPanel(ss); return; }
+                if (box) box.innerHTML = '<div style="font-size:12px;color:var(--red);margin-bottom:6px">Could not cancel. Please call us.</div>' + acctActionButtons(id, box.dataset.date, box.dataset.time);
+              });
           });
+          return;
+        }
+
+        if (reschedBtn) {
+          var id = reschedBtn.dataset.id, date = reschedBtn.dataset.date, time = reschedBtn.dataset.time;
+          var tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+          var box = document.getElementById('acct-actions-' + id);
+          if (!box) return;
+          box.innerHTML =
+            '<div style="margin-bottom:8px">'
+            + '<label for="acct-resched-date" style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px">New date</label>'
+            + '<input id="acct-resched-date" type="date" min="' + tomorrow + '" value="' + esc(date||tomorrow) + '" data-time="' + esc(time||'') + '" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box">'
+            + '</div>'
+            + '<div style="margin-bottom:8px">'
+            + '<label for="acct-resched-time" style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px">New time</label>'
+            + '<select id="acct-resched-time" disabled style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box"><option>Loading available times...</option></select>'
+            + '<div id="acct-resched-err" style="display:none;font-size:12px;color:var(--red);margin-top:4px"></div>'
+            + '</div>'
+            + '<div style="display:flex;gap:6px">'
+            + '<button class="acct-resched-save-btn" data-id="' + esc(id) + '" style="flex:1;padding:7px;border:none;border-radius:6px;background:var(--blue);color:var(--white);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Save</button>'
+            + '<button class="acct-resched-back-btn" style="flex:1;padding:7px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--navy);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Cancel</button>'
+            + '</div>';
+          acctLoadReschedTimes(date || tomorrow, time);
+          return;
+        }
+        if (reschedBackBtn) {
+          var box = reschedBackBtn.closest('[id^="acct-actions-"]');
+          if (box) box.innerHTML = acctActionButtons(box.id.replace('acct-actions-',''), box.dataset.date, box.dataset.time);
+          return;
+        }
+        if (reschedSaveBtn) {
+          var id = reschedSaveBtn.dataset.id;
+          var box = document.getElementById('acct-actions-' + id);
+          var dateInp = document.getElementById('acct-resched-date');
+          var timeSel = document.getElementById('acct-resched-time');
+          var errEl = document.getElementById('acct-resched-err');
+          var newDate = dateInp ? dateInp.value : '';
+          var newTime = timeSel ? timeSel.value : '';
+          if (!newDate) { errEl.textContent = 'Select a date.'; errEl.style.display = 'block'; return; }
+          if (!newTime) { errEl.textContent = 'Select a time.'; errEl.style.display = 'block'; return; }
+          reschedSaveBtn.textContent = 'Saving...'; reschedSaveBtn.disabled = true;
+          _sb.auth.getSession().then(function(s) {
+            var ss = s.data && s.data.session ? s.data.session : null;
+            if (!ss) return;
+            fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ role:'client-reschedule', access_token:ss.access_token, booking_id:id, client_id:ss.user.id, scheduled_date:newDate, scheduled_time:newTime }) })
+              .then(function(r) {
+                if (r.ok) { openAccountPanel(ss); return; }
+                reschedSaveBtn.textContent = 'Save'; reschedSaveBtn.disabled = false;
+                errEl.textContent = 'Could not reschedule. Please call us.'; errEl.style.display = 'block';
+              });
+          });
+          return;
+        }
+      });
+      el.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'acct-resched-date') {
+          acctLoadReschedTimes(e.target.value, e.target.dataset.time);
         }
       });
     }).catch(function() {
@@ -3265,6 +3376,14 @@ function openLandingChat(bookingId) {
   // name instead (the file is served must-revalidate, so only the service
   // worker can hold an old copy).
   import { getLang, setLang, translateScreen, dateLocale, sourceOf, LANGUAGES } from './js/i18n.js';
+  // Reused for the account panel's reschedule picker (10.2): this project has
+  // shipped 3 production bugs from hand-rolled time conversion (12h label vs
+  // 24h DB column vs HH:MM the endpoint validates - docs/PENDIENTES.md 22.1),
+  // so the account panel's plain <script> below borrows the tested functions
+  // through a global instead of re-deriving them. time-format.js has no
+  // module-private state, unlike i18n.js, so loading it twice is harmless.
+  import { toDbTime, toDisplayTime } from './js/time-format.js';
+  window.__drbikeTime = { toDbTime: toDbTime, toDisplayTime: toDisplayTime };
 
   // One control instead of three loose links: the header showed English,
   // Español and 中文 all at once, which reads as navigation rather than as a
