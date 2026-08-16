@@ -4560,3 +4560,72 @@ que en produccion devolvia -1 siempre.
   `scripts/fix-availability-blocks.sql` (ver `docs/RUNBOOK-SQL.md` 9).
 - Los numeros de Analytics ya no dependen del `max-rows` del proyecto: los
   contadores los cuenta la base con `count: 'exact'`.
+
+---
+
+## 23. TEST FINAL — la lista que solo puede correr Diego
+
+Escrita el 16-ago-2026. **No es una lista de bugs**: es lo que ninguna IA
+puede verificar por si sola, porque hace falta apretar botones contra la base
+real, cobrar una tarjeta de verdad y recibir un WhatsApp.
+
+Diego pidio dejarla para el final: **se corre entera cuando el resto de este
+documento este cerrado**, no antes. Hasta entonces, cada linea es un arreglo
+que esta vivo en produccion y con tests, pero que nadie vio funcionar de
+punta a punta.
+
+Marcar con [x] a medida que se prueben, y anotar la fecha.
+
+### 23.1 Lo que quedo esperando un click (16-ago-2026)
+
+- [ ] **Bloquear un horario.** Admin > Calendar > Block availability, elegir
+      un dia y una hora. Tiene que guardar SIN toast rojo. Despues abrir la
+      reserva como cliente ese dia: **ese horario no tiene que aparecer**.
+      (PR #253 + `scripts/fix-availability-blocks.sql`, ya corrido)
+- [ ] **Desbloquear.** El mismo dia, Unblock. El horario tiene que volver.
+- [ ] **Un cobro real.** Una reserva con tarjeta de punta a punta, despues
+      del salto de `stripe` a 22.5.0 (PR #260). Verificar que el cargo
+      aparece en Stripe y que la reserva se crea.
+- [ ] **El WhatsApp llega.** Con esa misma reserva, despues del salto de
+      `twilio` a 6.1.0 (PR #255): tiene que llegar el WhatsApp a Diego y el
+      SMS al mecanico.
+
+### 23.2 Lo que se arreglo este mes y nadie vio funcionar completo
+
+- [ ] **Reprogramar una reserva de verdad.** Desde el celular, en una reserva
+      propia. Antes fallaba SIEMPRE (PR #246). Comprobado el gate de formato
+      contra produccion, pero nadie completo un reschedule real.
+- [ ] **La hora se lee como hora.** En Mis Reservas, la tarjeta tiene que
+      decir `10:00 AM`, no `10:00:00`.
+- [ ] **Dos reservas a la misma hora.** Con UNA sola van libre, reservar las
+      10:00 y volver a entrar: las 10:00 **no** tienen que ofrecerse otra vez
+      (PR #247). Es el bug que permitia dos trabajos encima.
+
+### 23.3 Los numeros del panel, contra la realidad
+
+- [ ] **Finanzas de un mes cerrado.** Desde el PR #250 la plata se fecha por
+      `completed_at` y ya no por `scheduled_date`, asi que los totales de
+      meses pasados **cambiaron a proposito**. Comparar un mes contra lo que
+      Diego sabe que facturo.
+- [ ] **Analytics y Finanzas dicen lo mismo.** El mismo mes, las dos
+      pantallas, el mismo numero.
+- [ ] **Margenes.** Con gastos de repuestos cargados, la tabla ya no puede
+      decir 100% en verde para todo (PR #251). Sin gastos cargados tiene que
+      decir "Add expenses".
+- [ ] **Clientes.** Entrar un dia 1 del mes: "New this month" tiene que
+      contar a quien se registro esa misma manana (PR #248).
+- [ ] **LTV.** Un cliente que reservo como invitado y con cuenta tiene que
+      aparecer UNA vez, no dos (PR #252). Y no puede haber un cliente
+      llamado "Client" arriba de la tabla.
+- [ ] **Suburbios.** La lista y el mapa de calor tienen que coincidir: nada
+      ubicado en el mapa puede figurar como "Not recorded" en la lista.
+- [ ] **Los CSV en Excel.** Exportar Analytics y Finanzas y abrirlos: las
+      columnas alineadas (un cliente con coma en el nombre ya no las corre) y
+      ninguna celda ejecutandose como formula.
+
+### 23.4 Lo que ya estaba pendiente de antes
+
+En `docs/RUNBOOK-SQL.md` seccion 0 hay tres pruebas de mundo real anotadas el
+10-ago y nunca tachadas: una reserva sin iniciar sesion de punta a punta, la
+pagina de seguimiento mostrando ETA en una reserva nueva, y el simulacro de
+restauracion del backup. **Siguen abiertas.** Van en la misma tanda.
