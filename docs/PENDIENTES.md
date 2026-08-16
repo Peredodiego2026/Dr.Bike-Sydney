@@ -636,13 +636,17 @@ tienen **limite de 12 segundos**. En un celular con mala señal la request no
 falla: se queda colgada, y un spinner infinito es la misma mentira que el dato
 falso con otra ropa.
 
-### 10.4 Las maquetas de `docs/mockups/` son publicas — ABIERTO
+### 10.4 Las maquetas de `docs/mockups/` son publicas — CERRADO (ya estaba, desde el 2026-08-01)
 
-`docs/mockups/payments.html` y `notifications.html` son archivos estaticos en
-el repo, asi que Vercel los sirve en `drbikesydney.com.au/docs/mockups/...`.
-No hay nada sensible, pero es una maqueta con estados falsos ("Coming soon")
-accesible por cualquiera que adivine la URL. Opciones: moverlas fuera del
-directorio publicado, o agregarlas a las exclusiones de `vercel.json`.
+`docs/mockups/payments.html` y `notifications.html` siguen existiendo en el
+repo, pero **no llegan a Vercel**: el commit `d3c863c` (2026-08-01, "stop
+publishing docs, tests and migrations on the live domain") agrego
+`.vercelignore`, y su primera entrada es `docs/`, con un comentario que
+describe exactamente este problema ("those mockups were reachable on the live
+domain by anyone who guessed the URL"). No es la opcion B que este punto
+proponia (excluir en `vercel.json`) sino un archivo aparte con el mismo
+efecto. Quedo sin marcar cuando se cerro; no hace falta tocar codigo, solo
+este texto.
 
 ---
 
@@ -3943,9 +3947,13 @@ Checked 277 cards on 62 pages against 33 services.
 **Cero tarjetas despegadas.** Ninguna quedo con un precio que Admin no pueda
 cambiar. Lo unico que reporto:
 
-- `E-bike service` ($129) **se puede reservar y no esta en ninguna pagina de
-  marketing**. No es un precio viejo, es un servicio que nadie anuncia. Decision
-  de Diego si quiere una tarjeta para el.
+- ~~`E-bike service` ($129) se puede reservar y no esta en ninguna pagina de
+  marketing~~ — **CERRADO el mismo dia** (commit `89f21ac`, "anunciar E-bike
+  service, y devolverle al desktop el catalogo de precios"). Ver **17.3**, que
+  cuenta el arreglo completo: la tarjeta vive en `landing.html` dentro de
+  `#services-modal` (`.svc-card`, $129, icono, es/zh), y de paso encontro que
+  **ningun** servicio se veia en desktop, no solo este. Este punto se quedo sin
+  marcar despues de esa sesion.
 
 Esa herramienta ya existia y **no corre en CI a proposito**, porque necesita red
 y la tabla viva. Se corre a mano despues de tocar servicios:
