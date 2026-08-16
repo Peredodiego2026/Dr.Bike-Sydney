@@ -46,6 +46,7 @@ import {
   signIn,
   signUp,
   getMyBookings,
+  bookingsTruncated,
 } from './supabase.js';
 import {
   createHeader,
@@ -3570,7 +3571,11 @@ async function renderMyBookings() {
       return;
     }
 
-    list.innerHTML = filtered.map((b) => createBookingCard(b)).join('');
+    const truncatedNote =
+      tab === 'history' && bookingsTruncated
+        ? '<div style="text-align:center;padding:10px;font-size:12px;color:var(--gray)">Showing your most recent bookings</div>'
+        : '';
+    list.innerHTML = truncatedNote + filtered.map((b) => createBookingCard(b)).join('');
 
     list.querySelectorAll('.booking-card').forEach((card) => {
       card.style.cursor = 'pointer';

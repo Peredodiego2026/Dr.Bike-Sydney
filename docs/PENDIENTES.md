@@ -273,7 +273,7 @@ Tambien solo en ingles. Es un trabajo de contenido mucho mas grande: PR aparte.
 
 | # | Que | Detalle |
 |---|---|---|
-| 5.1 | Paginacion y filtros de fecha (TASK-030) | Admin bookings, mechanic jobs, client bookings. Hoy andan porque hay pocas filas; con 5.000 reservas se caen. Objetivo: < 500ms p95 |
+| 5.1 | Paginacion y filtros de fecha (TASK-030) | **Admin: CERRADO** - ya tiene `.range()` + filtros server-side y boton "Load more" (`js/admin.js:2636`, TASK-030 en `tasks.md` estaba desactualizado). **Mechanic y client: NO se pagino a proposito.** Estan acotados por naturaleza (un van desde hace 7 dias, un cliente de por vida - no una tabla que crece con todo el negocio) asi que en vez de paginacion completa, el server ahora manda `X-Truncated: true` si el tope (300 mechanic, 100 client) se llega a tocar, y la app avisa en vez de recortar en silencio (2026-08-16, esta misma sesion). Revisar si ese juicio de "no hace falta pagina completa" resulta equivocado. |
 | 5.2 | Prueba de carga (TASK-043) | ~500 concurrentes sobre booking + availability + GPS. **Ojo: no se puede correr contra produccion sin plan** - crearia reservas y cobros reales. Necesita entorno de staging o datos de prueba aislados |
 | 5.3 | Scroll-to-top del wizard | Se agrego en `js/router.js` el 22-jul y quedo anotado como "sin confirmar en navegador real" |
 | 5.4 | Secretos sin usar en Vercel | `MAPBOX_TOKEN`, `GOOGLE_PLACES_API_KEY`, `POSTHOG_KEY` - ninguno referenciado en el codigo. Borrarlos desde el dashboard |

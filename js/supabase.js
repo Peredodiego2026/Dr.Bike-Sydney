@@ -151,6 +151,11 @@ export async function signUp(email, password, name) {
 // Three outcomes the caller has to tell apart, because they read completely
 // differently on screen: null = nobody is signed in (ask them to), [] = signed
 // in with nothing booked yet, throw = we could not find out.
+// Set on every getMyBookings() call - true when the server had to cap the
+// result (5.1). A live binding: importers see the update from the same call
+// that returned the data, no extra round trip.
+export let bookingsTruncated = false;
+
 export async function getMyBookings() {
   const {
     data: { session },
@@ -169,5 +174,6 @@ export async function getMyBookings() {
     'bookings'
   );
   if (!res.ok) throw new Error('bookings fetch failed');
+  bookingsTruncated = res.headers.get('x-truncated') === 'true';
   return await res.json();
 }

@@ -1090,7 +1090,12 @@ async function handleMechanicJobs(req, res) {
   // field: "All zones" is for one person covering everything).
   const vanFilter =
     auth.mechanic.van_number !== null ? `van_number=eq.${auth.mechanic.van_number}&` : '';
-  const order = `${vanFilter}scheduled_date=gte.${cutoff}&order=scheduled_date.asc,scheduled_time.asc&limit=300`;
+  // A cap, not pagination - 300 recent+upcoming jobs for one van is not a
+  // page size a mechanic would ever click "next" on. If it is ever hit, the
+  // X-Truncated header below is the honest signal that some jobs are
+  // missing, instead of silently dropping them (5.1).
+  const MECHANIC_JOBS_LIMIT = 300;
+  const order = `${vanFilter}scheduled_date=gte.${cutoff}&order=scheduled_date.asc,scheduled_time.asc&limit=${MECHANIC_JOBS_LIMIT}`;
   // Try richer select including discount columns; fall back if migration not yet run.
   let jobsResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?select=${baseCols},discount_applied,discount_code&${order}`,
@@ -1103,6 +1108,9 @@ async function handleMechanicJobs(req, res) {
   }
   if (!jobsResp.ok) return res.status(500).json({ error: 'Failed to fetch jobs' });
   let jobs = await jobsResp.json();
+  // Capture before the preference filter below can only shrink this - the cap
+  // was hit against the raw fetch, not against whatever is left after filtering.
+  const jobsCapped = jobs.length >= MECHANIC_JOBS_LIMIT;
 
   // Preferred-mechanic priority window: an unclaimed job someone else was
   // preferred for stays hidden from this mechanic until it expires, then
@@ -1146,6 +1154,7 @@ async function handleMechanicJobs(req, res) {
     }
   }
 
+  if (jobsCapped) res.setHeader('X-Truncated', 'true');
   return res.status(200).json(jobs);
 }
 
@@ -1240,7 +1249,9 @@ async function handleClientBookings(req, res) {
   const base =
     'id,service_name,service_price,callout_fee,scheduled_date,scheduled_time,address,status,client_rating,client_review,tracking_token,mechanic_id,notes,photo_before_url,photo_after_url';
   const hdrs = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
-  const q = `client_id=eq.${client_id}&order=scheduled_date.desc&limit=100`;
+  // A cap, not pagination - see MECHANIC_JOBS_LIMIT above for why (5.1).
+  const CLIENT_BOOKINGS_LIMIT = 100;
+  const q = `client_id=eq.${client_id}&order=scheduled_date.desc&limit=${CLIENT_BOOKINGS_LIMIT}`;
   // Try with cancellation_reason; fall back if the column isn't there yet.
   let bookingsResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?select=${base},cancellation_reason&${q}`,
@@ -1252,6 +1263,7 @@ async function handleClientBookings(req, res) {
     });
   if (!bookingsResp.ok) return res.status(500).json({ error: 'Failed to fetch bookings' });
   const data = await bookingsResp.json();
+  if ((data || []).length >= CLIENT_BOOKINGS_LIMIT) res.setHeader('X-Truncated', 'true');
   return res.status(200).json(data || []);
 }
 

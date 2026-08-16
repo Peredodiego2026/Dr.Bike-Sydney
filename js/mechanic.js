@@ -306,6 +306,7 @@ const sb = supabase.createClient(
 let mechanic = null,
   vanNum = 1,
   jobs = [],
+  jobsTruncated = false,
   tab = 'today',
   online = true;
 const timerIntervals = {};
@@ -704,6 +705,7 @@ async function load() {
       }
       throw new Error(e.error || 'Failed to load jobs');
     }
+    jobsTruncated = resp.headers.get('x-truncated') === 'true';
     const data = await resp.json();
     const mapped = (data || []).map((b) => ({
       id: b.id,
@@ -855,7 +857,10 @@ function render() {
     c.innerHTML = `<div style="text-align:center;padding:60px 24px;color:var(--mgray)"><div style="font-size:48px;margin-bottom:16px">${m[0]}</div><div style="font-size:15px;font-weight:600;color:var(--navy);margin-bottom:8px">${m[1]}</div><div style="font-size:13px">${m[2]}</div></div>`;
     return;
   }
-  c.innerHTML = list.map((j) => card(j)).join('');
+  const truncatedNote = jobsTruncated
+    ? '<div style="text-align:center;padding:10px;font-size:12px;color:var(--mgray);background:var(--surface)">Showing your most recent jobs - contact Diego if one you expect is missing</div>'
+    : '';
+  c.innerHTML = truncatedNote + list.map((j) => card(j)).join('');
 
   // Event delegation for all card action buttons. render() runs on every
   // tab switch / data refresh, but #jobs-list is a single persistent
