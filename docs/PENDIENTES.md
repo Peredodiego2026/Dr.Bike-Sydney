@@ -4146,7 +4146,7 @@ del scorecard y el CSV. Una reserva sin email y sin cuenta **no es un cliente**:
 devuelve null y se cuenta aparte, con su plata, en el subtitulo de la tarjeta.
 El cliente falso llamado "Client" ya no existe.
 
-### 18.3 El margen es una estimacion pintada como medicion - CERRADO en parte (PR #251)
+### 18.3 El margen es una estimacion pintada como medicion - CERRADO (PR #251, completado 2026-08-16)
 
 ```js
 const cost = Math.round(d.jobs * _partsPerJob); // variable parts cost
@@ -4168,6 +4168,36 @@ gastos de repuestos cargados **no muestra ningun porcentaje**. El semaforo se
 mantiene solo cuando hay un dato real detras. Sigue abierto lo unico que hace
 el numero verdadero: sacar el costo por trabajo de `parts_inventory` en vez de
 un promedio plano.
+
+**CERRADO 2026-08-16 (misma fecha, sesion distinta).** El mecanico ya mandaba
+que repuestos uso por trabajo (id + cantidad) al completar, pero el server
+solo lo guardaba como texto libre ("2x Brake Pad") - la cantidad y el id se
+usaban un instante para descontar stock y se tiraban. Ahora:
+
+- **Migracion:** `scripts/add-parts-cost-actual.sql` agrega
+  `bookings.parts_cost_actual numeric` - Diego la tiene que correr en el SQL
+  editor de Supabase.
+- **Servidor:** `api/auth.js` (`handleMechanicComplete`) calcula
+  `qty * parts_inventory.cost_price` sumado por trabajo, en la misma pasada
+  donde ya se llamaba a `decrement_part_stock`. Si la migracion no corrio
+  todavia, el PATCH reintenta sin esa columna en vez de romper la
+  finalizacion del trabajo (mismo patron que el resto del archivo usa para
+  columnas nuevas).
+- **Admin:** la tabla de margenes y el CSV (`js/admin.js`,
+  `analyticsMarginsByService`) usan el costo real cuando el trabajo lo tiene,
+  y el promedio plano solo para los que no. Un servicio se marca "medido"
+  cuando el 100% de sus trabajos tiene costo real, "estimado" cuando ninguno
+  lo tiene (el numero de siempre), "mixto" cuando es una mezcla y hay
+  estimado disponible para completar el resto, y - el caso nuevo que evita
+  que un margen mixto se vea mas sano de lo que se sabe - "parcial" cuando
+  hay trabajos con costo real y el resto no tiene ni costo real ni estimado
+  al que recurrir: ese numero se muestra con `≥` porque es un piso, no el
+  total.
+- **Transicion esperada, no un bug:** el dia que Diego corra la migracion,
+  todo trabajo ya completado sigue en "estimado" (parts_cost_actual es NULL
+  ahi para siempre - no hay forma honesta de reconstruirlo con precision
+  retroactiva). Solo los trabajos que se completen DESPUES empiezan a sumar
+  costo real. El numero se vuelve mas preciso con el tiempo, nunca de golpe.
 
 ---
 
