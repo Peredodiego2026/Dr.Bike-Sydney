@@ -1580,11 +1580,37 @@ async function handleMechanicComplete(req, res) {
   // same part at the same time can't both compute a decrement from the same
   // stale stock count and silently lose one of the two deductions.
   let partsText = null;
+  // The real parts cost for THIS job, not the flat "total parts spend / total
+  // jobs" estimate the Analytics/Finance margin tables used before this
+  // (18.3). NULL means "we cannot say" (parts_used arrived as a plain string,
+  // or was empty) - never 0, which would claim a measured job that used no
+  // parts. Looked up in one batch query rather than inside the loop below so
+  // one slow request doesn't become N.
+  let partsCostActual = null;
   const lowStock = [];
   if (Array.isArray(parts_used) && parts_used.length) {
+    partsCostActual = 0;
+    const partIds = [...new Set(parts_used.map((p) => p?.id).filter(Boolean))];
+    let costById = new Map();
+    if (partIds.length) {
+      const idsFilter = partIds.map((id) => `"${id}"`).join(',');
+      const costResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/parts_inventory?select=id,cost_price&id=in.(${idsFilter})`,
+        { headers: sbHdr }
+      );
+      if (costResp.ok) {
+        const rows = await costResp.json();
+        costById = new Map(rows.map((r) => [r.id, Number(r.cost_price) || 0]));
+      }
+      // costResp failing leaves costById empty, so every part prices at 0
+      // below rather than throwing - a completion must never be blocked by
+      // this lookup. That undercounts the job's cost instead of overcounting
+      // it, which is the safer direction for a number that feeds a margin.
+    }
     for (const p of parts_used) {
       const qty = parseInt(p?.qty, 10);
       if (!p?.id || !Number.isFinite(qty) || qty <= 0) continue;
+      partsCostActual += qty * (costById.get(p.id) || 0);
       const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decrement_part_stock`, {
         method: 'POST',
         headers: sbHdr,
@@ -1610,6 +1636,7 @@ async function handleMechanicComplete(req, res) {
     mechanic_notes: mechanic_notes || null,
     parts_used: partsText,
     parts_charged: parts_charged || null,
+    parts_cost_actual: partsCostActual,
     final_charge_amount:
       final_charge_amount !== null && final_charge_amount !== undefined
         ? Number(final_charge_amount)
@@ -1678,19 +1705,26 @@ async function handleMechanicComplete(req, res) {
   // it from its own pre-completion copy of the row.
   const notifyRow = await readBookingForNotifications(booking_id, sbHdr);
 
-  const updateResp = await fetch(
+  const patchHdr = {
+    apikey: SERVICE_KEY,
+    Authorization: `Bearer ${SERVICE_KEY}`,
+    'Content-Type': 'application/json',
+    Prefer: 'return=minimal',
+  };
+  let updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
-    {
-      method: 'PATCH',
-      headers: {
-        apikey: SERVICE_KEY,
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(payload),
-    }
+    { method: 'PATCH', headers: patchHdr, body: JSON.stringify(payload) }
   );
+  if (!updateResp.ok) {
+    // scripts/add-parts-cost-actual.sql not run yet - retry without the new
+    // column rather than failing a real completion over it (18.3). Same
+    // fallback shape handleMechanicJobs uses for discount_applied/code.
+    const { parts_cost_actual, ...withoutPartsCost } = payload;
+    updateResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+      { method: 'PATCH', headers: patchHdr, body: JSON.stringify(withoutPartsCost) }
+    );
+  }
   if (!updateResp.ok) {
     const errText = await updateResp.text();
     console.error('complete patch error:', updateResp.status, errText);

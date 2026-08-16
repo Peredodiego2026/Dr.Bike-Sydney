@@ -3416,6 +3416,25 @@ function anError(detail) {
   );
 }
 
+// Same "try richer, fall back if migration not yet run" shape used elsewhere
+// (e.g. api/auth.js's discount_applied/discount_code fallback) - a missing
+// parts_cost_actual column must not fail the whole Analytics read, or every
+// card on the screen (not just the margins table) would go blank over one
+// column nobody has migrated yet (18.3).
+async function fetchAnalyticsBookings() {
+  const baseCols =
+    'id,client_id,client_name,client_email,service_name,service_price,callout_fee,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)';
+  const query = (cols) =>
+    sb
+      .from('bookings')
+      .select(cols, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .limit(BOOKINGS_FETCH_CAP);
+  let res = await query(`${baseCols},parts_cost_actual`);
+  if (res.error) res = await query(baseCols);
+  return res;
+}
+
 async function loadAnalytics() {
   const errBox = document.getElementById('an-error');
   if (errBox) errBox.style.display = 'none';
@@ -3425,14 +3444,7 @@ async function loadAnalytics() {
   // `auth.uid() = client_id`, so an admin session reads zero rows however many
   // exist - that one, and PostHog, come back from /api/analytics.
   const [bookingsRes, profilesRes, catalogRes, serverRes] = await Promise.all([
-    sb
-      .from('bookings')
-      .select(
-        'id,client_id,client_name,client_email,service_name,service_price,callout_fee,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)',
-        { count: 'exact' }
-      )
-      .order('created_at', { ascending: false })
-      .limit(BOOKINGS_FETCH_CAP),
+    fetchAnalyticsBookings(),
     sb.from('profiles').select('id,created_at', { count: 'exact' }).limit(20000),
     sb.from('services').select('name'),
     fetchAnalyticsServer(),
@@ -3897,28 +3909,30 @@ function exportAnalyticsCSV() {
   rows.push([]);
 
   rows.push(['MARGINS PER SERVICE']);
-  rows.push(['Service', 'Jobs', 'Revenue', 'Avg ticket', 'Est. cost', 'Margin %']);
+  rows.push(['Service', 'Jobs', 'Revenue', 'Avg ticket', 'Cost', 'Cost basis', 'Margin %']);
   const csvParts = analyticsPartsPerJob(completed);
   if (!csvParts.available)
-    rows.push(['(no parts expenses recorded - est. cost and margin cannot be worked out)']);
-  const byService = {};
-  completed.forEach((b) => {
-    const name = b.service_name || 'Other';
-    if (!byService[name]) byService[name] = { jobs: 0, rev: 0 };
-    byService[name].jobs++;
-    byService[name].rev += anBookingRevenue(b);
-  });
-  Object.entries(byService)
-    .sort((a, b) => b[1].rev - a[1].rev)
-    .forEach(([name, d]) => {
+    rows.push(['(no parts expenses recorded - a job with no real cost yet has nothing to fall back on)']);
+  // The same basis as the table on screen (18.3) - real cost from
+  // parts_cost_actual where a job has one, the flat lifetime estimate where
+  // it does not. This used to read the variable only the Finance screen
+  // filled in, so the export could leave with 100% on everything, or with
+  // one month's ratio applied to all of history.
+  analyticsMarginsByService(completed, csvParts)
+    .sort((a, b) => b.rev - a.rev)
+    .forEach((d) => {
       const avg = Math.round(d.rev / d.jobs);
       const net = d.rev - Math.round(d.rev / 11);
-      // The same basis as the table on screen. This used to read the variable
-      // only the Finance screen filled in, so the export could leave with 100%
-      // on everything, or with one month's ratio applied to all of history.
-      const cost = csvParts.available ? Math.round(d.jobs * csvParts.perJob) : null;
-      const margin = cost === null ? '' : net > 0 ? Math.round(((net - cost) / net) * 100) : 0;
-      rows.push([name, d.jobs, d.rev, avg, cost === null ? 'no data' : cost, margin]);
+      const margin = d.cost === null ? '' : net > 0 ? Math.round(((net - d.cost) / net) * 100) : 0;
+      rows.push([
+        d.name,
+        d.jobs,
+        d.rev,
+        avg,
+        d.cost === null ? 'no data' : d.cost,
+        d.cost === null ? '' : d.basis,
+        margin,
+      ]);
     });
   rows.push([]);
 
@@ -4861,44 +4875,88 @@ function analyticsPartsPerJob(completed) {
   return { available: true, perJob: parts / completed.length, parts, jobs: completed.length };
 }
 
+// Groups completed bookings by service, splitting each group's parts cost
+// into what is actually KNOWN (parts_cost_actual, summed straight off the
+// jobs that have it - 18.3) and what still has to lean on the flat lifetime
+// estimate for the jobs that do not. A service is only ever fully "measured"
+// once every completed job behind it happened after the parts_cost_actual
+// migration - which is why this blends rather than switching over in one
+// step: the day the column ships, every existing job is still estimated,
+// and only the completions from that day on start being real.
+function analyticsMarginsByService(completed, partsEstimate) {
+  const byService = {};
+  completed.forEach((b) => {
+    const name = b.service_name || 'Other';
+    if (!byService[name]) byService[name] = { jobs: 0, rev: 0, realCost: 0, realJobs: 0 };
+    const g = byService[name];
+    g.jobs++;
+    g.rev += anBookingRevenue(b);
+    if (b.parts_cost_actual !== null && b.parts_cost_actual !== undefined) {
+      g.realCost += Number(b.parts_cost_actual) || 0;
+      g.realJobs++;
+    }
+  });
+  return Object.entries(byService).map(([name, g]) => {
+    const estJobs = g.jobs - g.realJobs;
+    const haveEstimate = estJobs > 0 && partsEstimate.available;
+    // Every job accounted for, one way or another: measured (all real),
+    // estimated (all flat), or mixed (real + a flat estimate covering the
+    // rest). 'partial' is the one case none of those three names fit - some
+    // jobs are real, the rest have neither a real cost nor an estimate to
+    // fall back on (no parts expenses ever recorded). Calling that "mixed"
+    // would show a number that quietly excludes those jobs' cost while
+    // looking exactly like a row that has full coverage - the margin would
+    // read too generous with nothing on screen explaining why.
+    const basis =
+      estJobs === 0
+        ? 'measured'
+        : g.realJobs === 0
+          ? haveEstimate
+            ? 'estimated'
+            : null // no real cost anywhere and no estimate either - see cost below
+          : haveEstimate
+            ? 'mixed'
+            : 'partial';
+    const cost =
+      g.realJobs > 0 || haveEstimate
+        ? Math.round(g.realCost + (haveEstimate ? estJobs * partsEstimate.perJob : 0))
+        : null;
+    return { name, jobs: g.jobs, rev: g.rev, cost, basis, realJobs: g.realJobs, estJobs };
+  });
+}
+
 // #23 Margins per service
 function renderMargins(all) {
   const tbody = document.getElementById('an-margins');
   if (!tbody) return;
   const completed = all.filter((b) => b.status === 'completed');
-  const byService = {};
-  completed.forEach((b) => {
-    const name = b.service_name || 'Other';
-    if (!byService[name]) byService[name] = { jobs: 0, rev: 0 };
-    byService[name].jobs++;
-    byService[name].rev += anBookingRevenue(b);
-  });
-  const rows = Object.entries(byService).sort((a, b) => b[1].rev - a[1].rev);
-  if (!rows.length) {
+  if (!completed.length) {
     tbody.innerHTML =
       '<tr><td colspan="6" style="text-align:center;color:var(--mgray);padding:24px">No completed jobs yet</td></tr>';
     return;
   }
 
   const parts = analyticsPartsPerJob(completed);
-  // Where the number comes from, said on the card itself: the cost is a flat
-  // average of parts spend per job, not the real cost of each service. It is
-  // an estimate and has to read as one (PENDIENTES 18.3).
+  const rows = analyticsMarginsByService(completed, parts).sort((a, b) => b.rev - a.rev);
+  // Where the number comes from, said on the card itself: the cost mixes a
+  // flat average of parts spend per job with the real cost of jobs that have
+  // one, and it says so per row. This estimate half is still an estimate
+  // (PENDIENTES 18.3).
   const sub = document.getElementById('an-margins-sub');
   if (sub)
     sub.textContent = parts.available
-      ? `Lifetime, not filtered by the range above · est. cost = ${anMoney(parts.parts)} of parts / ${parts.jobs} jobs = ${anMoney(Math.round(parts.perJob))} a job`
-      : 'Lifetime, not filtered by the range above · no parts expenses recorded, so there is nothing to work a margin out of';
+      ? `Lifetime, not filtered by the range above · flat estimate where a job has no real cost yet = ${anMoney(parts.parts)} of parts / ${parts.jobs} jobs = ${anMoney(Math.round(parts.perJob))} a job`
+      : 'Lifetime, not filtered by the range above · no parts expenses recorded, so jobs with no real cost yet have nothing to fall back on';
 
   tbody.innerHTML = rows
-    .map(([name, d]) => {
+    .map((d) => {
       const avg = Math.round(d.rev / d.jobs);
       const net = d.rev - Math.round(d.rev / 11); // ex-GST
-      if (!parts.available) {
+      if (d.cost === null) {
         // A margin with no cost is not a 100% margin, it is a margin that
         // cannot be worked out. Say so - do not paint it green.
         return `<tr>
-      <td data-label="Service"><b>${esc(name)}</b></td>
+      <td data-label="Service"><b>${esc(d.name)}</b></td>
       <td data-label="Jobs">${d.jobs}</td>
       <td data-label="Revenue">${anMoney(d.rev)}</td>
       <td data-label="Avg ticket">${anMoney(avg)}</td>
@@ -4906,16 +4964,24 @@ function renderMargins(all) {
       <td data-label="Margin" style="color:var(--mgray)">Add expenses</td>
     </tr>`;
       }
-      const cost = Math.round(d.jobs * parts.perJob);
-      const profit = net - cost;
+      const profit = net - d.cost;
       const margin = net > 0 ? Math.round((profit / net) * 100) : 0;
       const mColor = margin >= 70 ? 'var(--green)' : margin >= 50 ? 'var(--amber)' : 'var(--red)';
+      const basisTitle =
+        d.basis === 'measured'
+          ? `Real cost from parts used on all ${d.jobs} job${d.jobs === 1 ? '' : 's'}`
+          : d.basis === 'mixed'
+            ? `${d.realJobs} of ${d.jobs} jobs have a real cost; the rest use the flat estimate`
+            : d.basis === 'partial'
+              ? `${d.realJobs} of ${d.jobs} jobs have a real cost; the other ${d.estJobs} have neither a real cost nor an estimate to fall back on - this total is a floor, not the full cost`
+              : 'Flat estimate - no job in this row has a real cost yet';
+      const basisMark = d.basis === 'measured' ? '✓ ' : d.basis === 'partial' ? '≥ ' : '';
       return `<tr>
-      <td data-label="Service"><b>${esc(name)}</b></td>
+      <td data-label="Service"><b>${esc(d.name)}</b></td>
       <td data-label="Jobs">${d.jobs}</td>
       <td data-label="Revenue">${anMoney(d.rev)}</td>
       <td data-label="Avg ticket">${anMoney(avg)}</td>
-      <td data-label="Est. cost">${anMoney(cost)}</td>
+      <td data-label="Est. cost" title="${esc(basisTitle)}">${basisMark}${anMoney(d.cost)}</td>
       <td data-label="Margin" style="color:${mColor};font-weight:700">${margin}%</td>
     </tr>`;
     })

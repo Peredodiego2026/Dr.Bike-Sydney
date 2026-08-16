@@ -35,8 +35,27 @@ const build = new Function(
 `
 );
 
+// analyticsMarginsByService (18.3) has no external state to inject - only
+// anBookingRevenue as a dependency, so it is spliced in alongside it.
+const marginsByService = new Function(
+  `
+  ${grab(/function anBookingRevenue\(b\) \{[\s\S]*?\n\}/, 'anBookingRevenue')}
+  ${grab(/function analyticsMarginsByService\(completed, partsEstimate\) \{[\s\S]*?\n\}/, 'analyticsMarginsByService')}
+  return analyticsMarginsByService;
+`
+)();
+
 const jobs = (n) => Array.from({ length: n }, () => ({ status: 'completed' }));
 const partsExpense = (amount, spent_on) => ({ amount, spent_on, category: 'parts' });
+const job = (service_price, parts_cost_actual) => ({
+  status: 'completed',
+  service_name: 'Tune-Up',
+  service_price,
+  callout_fee: 0,
+  parts_cost_actual: parts_cost_actual === undefined ? null : parts_cost_actual,
+});
+const notAvailable = { available: false };
+const estimate = (perJob) => ({ available: true, perJob });
 
 describe('analyticsPartsPerJob - sin datos no hay margen', () => {
   it('no inventa un coste cuando los gastos no se pudieron leer', () => {
@@ -108,16 +127,74 @@ describe('analyticsPartsPerJob - con datos', () => {
   });
 });
 
+describe('analyticsMarginsByService - costo real por trabajo (18.3)', () => {
+  it('measured: todos los trabajos tienen costo real, no toca el estimado', () => {
+    const [row] = marginsByService([job(50, 10), job(60, 15)], notAvailable);
+    expect(row.cost).toBe(25);
+    expect(row.basis).toBe('measured');
+    expect(row.realJobs).toBe(2);
+  });
+
+  it('estimated: ningun trabajo tiene costo real, usa el promedio plano', () => {
+    const [row] = marginsByService([job(50), job(60)], estimate(20));
+    expect(row.cost).toBe(40);
+    expect(row.basis).toBe('estimated');
+  });
+
+  it('sin costo real y sin estimado disponible: cost null, no un cero inventado', () => {
+    const [row] = marginsByService([job(50)], notAvailable);
+    expect(row.cost).toBeNull();
+  });
+
+  it('mixed: combina costo real con el estimado para el resto', () => {
+    const [row] = marginsByService([job(50, 10), job(60)], estimate(20));
+    expect(row.cost).toBe(30); // 10 real + 1 trabajo x 20 estimado
+    expect(row.basis).toBe('mixed');
+    expect(row.realJobs).toBe(1);
+  });
+
+  it('partial: costo real parcial SIN estimado para el resto no debe inflar el margen', () => {
+    // Antes de este caso, "mixed" se calculaba igual con o sin estimado
+    // disponible - un trabajo con costo real y otro sin ningun dato caia en
+    // "mixed" con un total que en silencio excluia el segundo trabajo, lo
+    // que hacia parecer el margen mas sano de lo que en verdad se sabe.
+    const [row] = marginsByService([job(50, 10), job(60)], notAvailable);
+    expect(row.cost).toBe(10); // solo el conocido - un piso, no el total
+    expect(row.basis).toBe('partial');
+    expect(row.realJobs).toBe(1);
+    expect(row.estJobs).toBe(1);
+  });
+
+  it('agrupa por servicio por separado', () => {
+    const rows = marginsByService(
+      [
+        { ...job(50, 10), service_name: 'Tune-Up' },
+        { ...job(80, 20), service_name: 'Brake Service' },
+      ],
+      notAvailable
+    );
+    expect(rows).toHaveLength(2);
+    const tuneUp = rows.find((r) => r.name === 'Tune-Up');
+    expect(tuneUp.jobs).toBe(1);
+    expect(tuneUp.rev).toBe(50);
+  });
+});
+
 describe('la tabla y el CSV usan la misma base', () => {
   it('renderMargins ya no lee _partsPerJob', () => {
     const fn = grab(/function renderMargins\(all\) \{[\s\S]*?\n\}/, 'renderMargins');
     expect(fn).not.toMatch(/_partsPerJob/);
     expect(fn).toMatch(/analyticsPartsPerJob\(completed\)/);
+    expect(fn).toMatch(/analyticsMarginsByService\(completed, parts\)/);
   });
 
   it('sin datos, la columna Margen dice que faltan gastos en vez de un 100%', () => {
+    // La disponibilidad ahora la decide analyticsMarginsByService (18.3) -
+    // renderMargins solo lee su resultado (d.cost === null) y lo pinta.
+    // Verificado arriba a nivel de comportamiento; aca solo se confirma que
+    // el render sigue leyendo esa señal y sigue sin pintar un 100% falso.
     const fn = grab(/function renderMargins\(all\) \{[\s\S]*?\n\}/, 'renderMargins');
-    expect(fn).toMatch(/if \(!parts\.available\)/);
+    expect(fn).toMatch(/if \(d\.cost === null\)/);
     expect(fn).toMatch(/Add expenses/);
   });
 
