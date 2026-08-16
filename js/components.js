@@ -3,6 +3,7 @@
 // Colors reference CSS variables from variables.css — no hardcoded values.
 
 import { translateValue } from './i18n.js';
+import { toDisplayTime } from './time-format.js';
 
 // ── Header ────────────────────────────────────────────────────────────────────
 export function createHeader(title, showBack = false, backUrl = '#home') {
@@ -206,7 +207,7 @@ export function createBookingCard(booking) {
   <div class="booking-card__date" style="font-size:18px;font-weight:800;color:var(--navy);text-align:center;line-height:1.1;flex-shrink:0;width:44px">${dateLabel}</div>
   <div class="booking-card__info">
     <div class="booking-card__service">${service_name || 'Service'}</div>
-    <div style="font-size:12px;color:var(--gray);margin-top:2px">${scheduled_time || ''}</div>
+    <div style="font-size:12px;color:var(--gray);margin-top:2px">${toDisplayTime(scheduled_time)}</div>
     ${rating ? `<div class="booking-card__rating" style="margin-top:4px">${createStarRating(rating, false)}</div>` : ''}
   </div>
   <div class="booking-card__right">
