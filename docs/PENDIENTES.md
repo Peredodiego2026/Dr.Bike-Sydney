@@ -4284,11 +4284,11 @@ conviene hacerlo igual: un PR por superficie, mirando la pagina antes y despues.
 
 ### 19.3 El ratchet de color tiene un agujero de 7 paginas
 
-`scripts/color-check.mjs` cubre las cinco superficies por nombre y las 60
-generadas por `generatedPages()`. **Siete paginas de la raiz no las mira nadie**,
-y suman 184 hex escritos a mano:
+`scripts/color-check.mjs` cubria las cinco superficies por nombre y las 60
+generadas por `generatedPages()`. **Siete paginas de la raiz no las miraba
+nadie.** Conteo a mano contra un grep simple (`#[0-9a-fA-F]{3,6}`):
 
-| Pagina | Hex a mano | Carga `variables.css` |
+| Pagina | Hex a mano (grep) | Carga `variables.css` |
 |---|---|---|
 | `business.html` | 41 | si |
 | `bike-check.html` | 40 | si |
@@ -4298,10 +4298,17 @@ y suman 184 hex escritos a mano:
 | `applepay.html` | 15 | **no** |
 | `claims.html` | 11 | **no** (19.2) |
 
-No es urgente: nada de esto esta roto hoy. Pero el ratchet existe para que el
-problema del 12.14 no vuelva a entrar de a una linea, y estas siete son
-exactamente por donde puede volver a entrar. Agregarlas al `BUDGET` con su
-conteo actual es barato y no obliga a convertir nada.
+**CERRADO 2026-08-16.** Las 7 se agregaron al `BUDGET` de
+`scripts/color-check.mjs`. El numero real que uso el script **no** es el grep
+de la tabla de arriba: `colours()` no cuenta la definicion de un custom
+property (`--nombre: #hex`) como un uso, y `terms.html`/`privacy.html`/
+`claims.html` declaran su propio `:root` local (19.2) - asi que su budget real
+quedo mas bajo que el grep. Numeros que efectivamente uso el script, sacados
+corriendo el chequeo con un budget alto y leyendo cuanto "mejoro":
+`business.html` 41, `bike-check.html` 40, `cycling-map.html` 32, `terms.html`
+**16** (no 24), `privacy.html` **13** (no 21), `applepay.html` 15,
+`claims.html` **3** (no 11). No se convirtio ni un hex: es un ratchet, el
+budget es lo que hay hoy, no una meta.
 
 ### 19.4 Lo que NO se verifico, en ninguno de los dos PRs
 

@@ -85,6 +85,20 @@ const BUDGET = {
   'api/send-invoice.js': 107,
   'api/send-cron.js': 49,
   'api/auth.js': 39,
+  // These 7 were outside the ratchet entirely until 2026-08-16 (docs/PENDIENTES.md
+  // 19.3) - not urgent, nothing here is broken, but it is exactly how #1848C8
+  // got into 74 files before 2026-08-09: one unwatched line at a time. terms.html,
+  // privacy.html and claims.html declare their own local :root (see 19.2 - it
+  // does not match css/variables.css), which is why their budget is lower than
+  // a raw grep of the file: this script does not count a custom property's own
+  // definition as a "use" of hand-written colour.
+  'business.html': 41,
+  'bike-check.html': 40,
+  'cycling-map.html': 32,
+  'terms.html': 16,
+  'privacy.html': 13,
+  'applepay.html': 15,
+  'claims.html': 3,
 };
 
 // ── the generated pages ────────────────────────────────────────────────────
