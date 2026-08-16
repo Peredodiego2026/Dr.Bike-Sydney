@@ -4408,7 +4408,7 @@ mirarse.
 
 ---
 
-## 21. El boton "Block availability" del admin nunca escribio nada (2026-08-16)
+## 21. El boton "Block availability" del admin nunca escribio nada - CERRADO (PR #253)
 
 Encontrado tirando del hilo del reschedule roto (PR #246) y del hecho de que
 ninguna reserva bloqueaba su horario (PR #247). Es la tercera cara del mismo
@@ -4475,5 +4475,17 @@ Tres decisiones, no una linea de codigo:
 3. Decidir que hace un bloqueo de media hora, y si el `van_number` del bloqueo
    debe respetarse (parece que si, la UI lo ofrece).
 
-Mientras tanto, **la unica forma real de bloquear un dia es no publicar
-disponibilidad de otra manera**: el boton no hace nada.
+**CERRADO el 2026-08-16 (PR #253).** Diego eligio el modelo A: un bloqueo tapa
+el horario entero, sin preguntar por servicio.
+
+- `scripts/fix-availability-blocks.sql` saca el NOT NULL de `service_id`, pasa
+  `van_number` a 0 = "todas las vans" (NULL nunca choca con NULL en un indice
+  unico, asi que el upsert insertaba duplicados en vez de actualizar) y crea la
+  clave unica `(date, time_slot, van_number)` contra la que el panel hace
+  `onConflict`. **Hay que correrlo antes de que el boton sirva.**
+- `saveBlocks()` escribe `available: false`; `unblockDate()` filtra por la
+  misma columna.
+- El lector convierte cada bloqueo en un intervalo ocupado, igual que una
+  reserva, asi que se comparan minutos y no strings: se acabo el desencuentro
+  `'8:30'` contra `'8:00 AM'`. Un bloqueo de media hora choca con el trabajo
+  que seguiria corriendo encima, y `van_number` se respeta.
