@@ -3,20 +3,20 @@
 > Lista maestra de lo que falta. Vive en el repo a proposito: sobrevive a que se
 > cierre un chat, se pierda el historial o se reinstale Claude.
 >
-> Ultima verificacion contra el sistema real: **2026-08-01** (seccion 12: SPA
-> movil, mechanic y admin en Chromium real; resto del documento, 2026-07-27).
+> Ultima verificacion contra el sistema real: **2026-08-16** (auditoria
+> completa de las 22 secciones, ver **22.4**). La tabla de abajo tambien se
+> corrio ese dia. Antes decia 2026-08-01/07-27 y ya no era cierto - quedaba
+> desactualizada desde julio.
 > Regla: si una linea de aqui contradice al codigo o a la base de datos, gana el
 > sistema. Corregir esta linea en el momento y anotar por que.
 
-## Salud del proyecto (verificado 2026-07-27)
+## Salud del proyecto (verificado 2026-08-16)
 
 | Chequeo | Resultado |
 |---|---|
-| `npm run check` | Verde - 35 archivos JS, i18n 940 claves es/zh, 661 strings en 5 superficies |
-| `npx vitest run` | 121 tests, 15 archivos, 0 fallos |
-| `TODO`/`FIXME`/`HACK` en el codigo | 0 |
+| `npm run check` | Verde - 38 archivos JS, i18n 1024 claves es/zh, 805 strings en 5 superficies |
+| `npx vitest run` | 352 tests, 34 archivos, 0 fallos |
 | PRs abiertas | 0 |
-| Ramas locales | Solo `main` (64 borradas el 27-jul, todas mergeadas) |
 
 El codigo esta sano. Lo que sigue no son bugs: son cosas sin hacer.
 
@@ -141,6 +141,15 @@ Dos filas = ya esta aplicado. Cero filas = falta correr el script.
 ---
 
 ## 2.5. Cobrar desde desktop (decidido 2026-07-27, sin empezar)
+
+> **CERRADO, y esta seccion quedo desactualizada mucho tiempo sin que nadie la
+> corrigiera.** Verificado en codigo el 2026-08-16: `bkProceed()` **no existe
+> en el repo** (`grep` solo encuentra el nombre en dos comentarios de
+> `js/i18n.js`). `openBooking(preselect)` en `landing.html:2581` navega a
+> `#book-service` - el wizard del SPA, el que cobra -, y `landing.html:3389`
+> carga `js/app.js`. Los 5 pasos que este punto dejaba por hacer ya estan
+> hechos. Se conserva el texto original abajo por trazabilidad: **no
+> describe el codigo actual.**
 
 **El problema, verificado en codigo el 27-jul:** en desktop NO existe codigo de
 pago. El aviso "Online payments coming soon" de `landing.html` no tapa un
@@ -4560,6 +4569,81 @@ que en produccion devolvia -1 siempre.
   `scripts/fix-availability-blocks.sql` (ver `docs/RUNBOOK-SQL.md` 9).
 - Los numeros de Analytics ya no dependen del `max-rows` del proyecto: los
   contadores los cuenta la base con `count: 'exact'`.
+
+### 22.4 Auditoria completa de las 22 secciones, y reparto en 3 frentes (16-ago-2026)
+
+**Se releyeron las 22 secciones de punta a punta, no solo esta.** Contando
+cada hallazgo numerado (### N.M) del documento: **unos 103 en total, ~70
+CERRADOS/HECHOS y ~33 abiertos.** El conteo es aproximado a proposito - varias
+subsecciones son explicativas ("CAUSA RAIZ de...", "Lo que NO cubrio esta
+auditoria") y no un item accionable en si mismo.
+
+**Dos correcciones que salieron de esta misma pasada, ya aplicadas arriba:**
+la tabla "Salud del proyecto" decia 2026-07-27/08-01 y ya no era cierta desde
+hace semanas (`npm run check`/`vitest` corridos de nuevo el 16-ago: **38 JS,
+1024 claves i18n, 352 tests**); y el punto **2.5** decia "sin empezar" cuando
+`bkProceed()` ya no existe en el repo desde hace tiempo - nadie habia vuelto a
+cerrar esa seccion.
+
+**Los 33 abiertos se repartieron en 3 prioridades para trabajarlos en 3 chats
+en paralelo**, cada uno en su propio worktree/rama desde `origin/main`, sin
+tocar los items de las otras dos listas. Esta es la version viva del reparto:
+cuando un item se cierra, se marca CERRADO en su propia seccion de origen (no
+aca), con la misma disciplina que ya usa el resto del documento.
+
+**Prioridad Alta — plata, seguridad, o "nadie lo probo de verdad":**
+
+| # | Que falta | Quien lo desbloquea |
+|---|---|---|
+| 16.5 / 14.9 | Una reserva de invitado real, de punta a punta, con tarjeta real, en produccion - nunca se hizo | Diego, prueba real |
+| 14.9 | Correr Admin > Orphan Payments (04-jul a 05-ago) y decidir cada devolucion | Diego, un click + decisiones |
+| 14.10 | Completar un trabajo del mecanico sin señal, con telefono real - nunca se probo | Diego, prueba real |
+| 21 | Bloquear un horario en Admin > Calendar y confirmar que desaparece de la reserva | Diego, un click |
+| 1.2 | Simulacro de restauracion del backup - nunca se probo que el backup restaura | Diego, seguir `RUNBOOK-BACKUP-RESTORE.md` |
+| 2.1 | El PIN de mecanico sigue en texto plano (localStorage + requests) desde el 29-jun | Diego decide, despues codigo |
+| 12.11 | La puerta del admin se abre con cualquier clave en localStorage; el arreglo real cambia el flujo de auth | Diego decide, despues codigo |
+| 20.3 | El BAS muestra $0 de credito GST con gastos ya cargados -> GST a pagar de mas | El contador |
+
+**Nota sobre el solapamiento con la seccion 23:** `21`, `16.5/14.9` y `1.2` son
+tambien pruebas de **23.1** y **23.4** (TEST FINAL). La regla de esa seccion es
+correrla entera recien cuando el resto del documento este cerrado. **Diego
+decidio el 16-ago adelantar estas 3 igual**, dentro del trabajo de Alta, en
+vez de esperar. Cuando se prueben, marcar el checkbox correspondiente en 23.1
+y 23.4 tambien - no hace falta repetir la prueba dos veces.
+
+**Prioridad Media — plata mal medida o hueco de proceso:**
+
+| # | Que falta | Quien lo desbloquea |
+|---|---|---|
+| 18.3 | El margen sigue siendo un promedio plano de repuestos, no el costo real por trabajo | Codigo (`parts_inventory`) |
+| 20.8 | `/api/analytics` (Traffic, Checkout) y `loadDashboard()` nunca se auditaron | Codigo, empieza por auditoria |
+| 12.6 | En Admin > Services & Prices: renombrar "Bike Build" a "Bike Assembly" ($80) y crear "E-Bike Service" ($129) | Diego, 2 minutos |
+| 12.16 | 11 tablas/listas del admin sin scroll propio (se van a romper con mas filas) | Codigo |
+| 5.1 | Sin paginacion en admin/mechanic/client - anda porque hay pocas filas todavia | Codigo |
+| 15.2 | Si falla el PDF de la factura, el mail sale igual sin adjunto y nadie se entera | Codigo |
+| 14.2 | El mensaje de error de "inicia sesion" no esta traducido (agujero del chequeo i18n) | Codigo, chico |
+| 14.3 | Nadie le aviso a Thais que se le devolvio el dinero (puede que ya se haya hecho) | Diego, WhatsApp |
+
+**Prioridad Baja — diseno, deuda tecnica, contenido:**
+
+| # | Que falta | Quien lo desbloquea |
+|---|---|---|
+| 19.1 | El azul del logotipo en `claims/privacy/terms`: usar el de la marca (`#0055de`) o el de la app (`#2563eb`) | Diego decide |
+| 19.2 | Esas 3 paginas legales no cargan `variables.css`, tienen su propia paleta que difiere | Codigo, depende de 19.1 |
+| 19.3 | 7 paginas fuera del ratchet de color, 184 hex sueltos | Codigo, barato |
+| 3.2 | `landing.html` pesa 255 KB / ~2600 lineas, candidato #1 de la dieta de diseño | Codigo |
+| 3.3 | Los 33 handlers inline de `landing.html` siguen sin sacarse (bloquea quitar `unsafe-inline` del CSP) | Codigo |
+| 3.4 | Lighthouse formal nunca se corrio sobre produccion | Diego o CI |
+| 10.1 | El chequeo de i18n no mira dentro de los `<script>` inline de `landing.html` | Codigo, no trivial |
+| 10.2 | Cancelar/reprogramar en el panel de cuenta sigue usando `confirm()`/`prompt()` nativos | Codigo, feature aparte |
+| 10.4 | `docs/mockups/` es publico en `drbikesydney.com.au/docs/mockups/...` | Codigo, movimiento simple |
+| 4.1 / 4.2 | `business.html`, `bike-check.html` y los 5 posts del blog siguen 100% en ingles | Codigo/contenido |
+| 5.2 | Prueba de carga nunca se corrio (necesita staging, no produccion) | Codigo + infraestructura |
+| 5.4 | Secretos sin usar en Vercel (`MAPBOX_TOKEN`, `GOOGLE_PLACES_API_KEY`, `POSTHOG_KEY`) | Diego, borrar del dashboard |
+| 9.5-bis | Un iPhone en "modo escritorio" / iPad recibe la landing, no la app - riesgo de loop si se arregla mal | Diego decide |
+| 13.9 | Contraste al limite en `track.html` (pasa AA por poco) | Diego decide, cambio de marca |
+| 17.1 | "E-Bike Service" ($129) se puede reservar pero no tiene tarjeta de marketing | Diego decide (opcional) |
+| 17.3 | Buscar si quedan mas elementos huerfanos de la unificacion del 04-jul | Codigo, exploratorio |
 
 ---
 
