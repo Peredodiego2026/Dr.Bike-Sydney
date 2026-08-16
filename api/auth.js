@@ -2994,14 +2994,45 @@ const ALL_SLOTS = [
   '5:00 PM',
 ];
 
+// Minutes since midnight, or -1 for anything this cannot read.
+//
+// Two formats arrive here and only one of them used to parse. ALL_SLOTS is
+// written in 12-hour labels ("8:00 AM"), but buildBusyIntervals() feeds this
+// `bookings.scheduled_time`, and that column is `time without time zone`, so
+// PostgREST returns "10:00:00". The AM/PM-only regex answered -1 for every
+// single one, which put each booking's busy interval at [-1, duration] - a
+// window that overlaps no slot in the working day.
+//
+// The effect was not subtle: NO booking blocked its own hour. With one van,
+// the same 10 AM slot stayed on offer to the next client, and the next.
+// The unit tests never caught it because they only ever fed the 12-hour
+// labels - a format that reaches this function from ALL_SLOTS but never from
+// the database.
 export function slotToMinutes(slot) {
-  const m = slot.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if (!m) return -1;
-  let h = parseInt(m[1], 10);
-  const min = parseInt(m[2], 10);
-  if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
-  if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
-  return h * 60 + min;
+  const s = String(slot ?? '').trim();
+
+  const twelve = s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (twelve) {
+    let h = parseInt(twelve[1], 10);
+    const min = parseInt(twelve[2], 10);
+    if (h < 1 || h > 12 || min > 59) return -1;
+    if (twelve[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+    if (twelve[3].toUpperCase() === 'AM' && h === 12) h = 0;
+    return h * 60 + min;
+  }
+
+  // "10:00:00" (the column as PostgREST serialises it) and "14:30" (the shape
+  // the reschedule endpoint validates and writes).
+  const twentyFour = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (twentyFour) {
+    const h = parseInt(twentyFour[1], 10);
+    const min = parseInt(twentyFour[2], 10);
+    const sec = twentyFour[3] === undefined ? 0 : parseInt(twentyFour[3], 10);
+    if (h > 23 || min > 59 || sec > 59) return -1;
+    return h * 60 + min;
+  }
+
+  return -1;
 }
 
 // A van is occupied for longer than the slot it was booked in - long services can
@@ -3015,6 +3046,12 @@ export const DEFAULT_SERVICE_DURATION_MIN = 60;
 
 // Turns each existing booking into a per-van busy window in minutes-since-midnight,
 // using that booking's own service duration (looked up by name) + the buffer.
+//
+// The trailing filter drops rows slotToMinutes cannot read. Now that it speaks
+// the database's own format, that means genuinely corrupt data - and dropping
+// it explicitly matters, because an interval starting at -1 covers no slot in
+// the working day, so keeping it looked exactly like a booking that blocks
+// nothing. Which is how this went unnoticed.
 export function buildBusyIntervals(bookings, durationByService) {
   return bookings
     .filter((b) => b.scheduled_time && b.van_number)
@@ -3022,7 +3059,8 @@ export function buildBusyIntervals(bookings, durationByService) {
       const start = slotToMinutes(b.scheduled_time);
       const dur = durationByService[b.service_name] ?? DEFAULT_SERVICE_DURATION_MIN;
       return { van: b.van_number, start, end: start + dur + SLOT_BUFFER_MIN };
-    });
+    })
+    .filter((iv) => iv.start >= 0);
 }
 
 // A slot is bookable if AT LEAST ONE van has no busy interval overlapping the
