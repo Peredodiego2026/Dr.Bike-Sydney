@@ -749,16 +749,52 @@ Lo que falta hacer, en orden:
 quedar detras del PIN debil que menciona el punto 2.1. Antes de poner numeros
 de facturacion ahi, ese acceso tiene que estar cerrado.
 
-### 10.2 `confirm()` y `prompt()` del navegador — ABIERTO
+### 10.2 `confirm()` y `prompt()` del navegador — CERRADO 2026-08-17
 
-Cancelar y reprogramar una reserva desde el panel usan los cuadros de dialogo
-del sistema operativo (`confirm()`, y `prompt()` pidiendo la fecha escrita a
-mano en formato `YYYY-MM-DD` y despues la hora). Es lo menos profesional que
-queda en el panel, y ademas se puede escribir cualquier cosa.
+Cancelar y reprogramar desde el panel de cuenta de `landing.html` usaban
+`confirm()` y `prompt()` (fecha a mano en `YYYY-MM-DD`, despues la hora
+elegida de una **lista fija de 8 horarios** que nunca consultaba
+disponibilidad real). Eso ultimo no era solo feo: un cliente podia elegir un
+horario que otro ya tenia. `js/app.js` ya resolvia esto bien para la pantalla
+`my-bookings` de la SPA, pero es una pantalla y un DOM completamente
+distintos (`[data-screen="my-bookings"]`, sus propios helpers privados) -
+`landing.html` no podia simplemente llamarla.
 
-Reemplazarlos pide un selector de fecha/hora de verdad, con los horarios libres
-que ya devuelve `/api/auth?role=get-availability` - o sea, lo mismo que el paso
-2 del wizard. Es una feature, no un ajuste de estilo: rama aparte.
+Se reconstruyo el mismo patron dentro del panel propio de `landing.html`
+(no se navego a la pantalla de la SPA, para no perder el contexto de
+Bookings/Bikes/Membership que el panel ya tenia abierto): click en Cancelar
+o Reprogramar reemplaza esa fila por una confirmacion o un formulario en
+linea (fecha + horarios reales de `/api/auth?role=get-availability`,
+mismo endpoint que usa el paso 2 del wizard), en vez de abrir un dialogo.
+Las 2 llamadas a `alert()` en los caminos de error tambien se sacaron -
+quedan como texto en linea, mismo patron que `fleet-msg`/`gift-error` en
+esta misma pagina.
+
+La conversion de horario (12h con AM/PM que devuelve el endpoint <-> 24h
+`HH:MM` que exige el POST de reprogramar) **no se reimplemento**: se
+importan `toDbTime`/`toDisplayTime` de `js/time-format.js` via un
+`<script type="module">`, publicadas en `window.__drbikeTime` para que el
+script no-modulo del panel las use. Motivo: este es exactamente el tipo de
+bug que ya paso 3 veces en este proyecto (22.1) - escribir la conversion de
+nuevo a mano era el riesgo real, no el `confirm()`.
+
+**Verificado en navegador, no solo leido.** Se stubearon `_sb.auth.getSession`
+y `fetch` (mismo patron que ya usa este proyecto para probar sin backend
+local - ver 8.1) para simular una reserva editable y respuestas reales de
+`/api/auth`, y se ejecutaron los flujos completos:
+- Cancelar: confirmacion en linea -> "Keep it" revierte -> confirmar de
+  verdad envia `client-cancel` y recarga el panel; si el servidor
+  responde error, texto en linea (`Could not cancel...`), nunca `alert()`.
+- Reprogramar: el `<select>` de horario llega con `9:00 AM` deshabilitado
+  (estaba marcado no disponible en la respuesta simulada) y el resto
+  convertido a `HH:MM` (`08:00`, `10:00`, `14:00`); cambiar la fecha vuelve
+  a pedir disponibilidad; guardar envia `scheduled_time:"10:00"` (nunca
+  `"10:00 AM"`, la forma que ya rompio el reschedule en el 22.1); el boton
+  "Cancel" del formulario revierte sin guardar nada.
+- Las 3 cadenas nuevas ("Save", "Yes, cancel", "No times available") se
+  agregaron a `js/i18n.js` es/zh. Dos cadenas de los `prompt()` viejos
+  (`"New date (YYYY-MM-DD):"`, `"New time:\n"`) quedaron sin uso y se
+  borraron del diccionario en vez de dejarlas de adorno.
 
 ---
 
