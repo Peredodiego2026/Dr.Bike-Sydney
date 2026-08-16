@@ -4509,6 +4509,36 @@ el horario entero, sin preguntar por servicio.
   `'8:30'` contra `'8:00 AM'`. Un bloqueo de media hora choca con el trabajo
   que seguiria corriendo encima, y `van_number` se respeta.
 
+### 21.5 El PR #253 arreglo el codigo y se olvido de bumpear el `?v=` — CERRADO
+
+Diego probo el boton en produccion el mismo 16-ago (la primera corrida real
+del punto 21 en la seccion 23.1) y **el mismo error de siempre**: toast rojo
+`Could not find the 'blocked' column of 'availability' in the schema cache`,
+un POST 400 contra Supabase con `"blocked"` en la lista de columnas.
+
+**No era el mismo bug.** `js/admin.js` en `origin/main` ya escribe
+`available: false` desde el PR #253 (verificado leyendo el archivo linea por
+linea). Lo que corria en el navegador de Diego era el `admin.js` de ANTES del
+PR: `admin.html:1430` carga `<script src="js/admin.js?v=20260801">`, y el
+PR #253 modifico `js/admin.js` sin tocar ese `?v=`. `sw.js` sirve el JS propio
+stale-while-revalidate por URL exacta (ver su propio comentario de cabecera);
+con la query sin cambiar, la entrada cacheada de antes del PR seguia
+ganandole a la primera carga.
+
+**Arreglado:** `?v=20260801` -> `?v=20260816`. Es la misma clase de bug que el
+`?v=` de `js/i18n.js` que `CLAUDE.md` ya prohibe tocar, pero mas general: pasa
+con **cualquier** `<script src="...?v=...">` que se edite sin bumpear su
+propia query, no solo con modulos ES. `mechanic.html` ya tiene el habito
+correcto (14.11 bumpeo sus dos `?v=` al mergear). `admin.html` no lo tenia.
+
+**Verificado en codigo, no en navegador todavia:** que `handleGetAvailability`
+(`api/auth.js`) y `buildBlockIntervals` leen `available`/`van_number` y
+convierten con `slotToMinutes()` es correcto por lectura del archivo. La
+reserva del cliente (`js/app.js` -> `getAvailableSlots()` en `js/supabase.js`)
+pega al mismo endpoint, asi que un bloqueo real ya deberia excluir el horario
+en la SPA movil y en el wizard de desktop sin tocar nada mas - **falta que
+Diego repita la prueba con la cache correcta** para confirmarlo.
+
 ---
 
 ## 22. Estado al cerrar el 16-ago-2026
