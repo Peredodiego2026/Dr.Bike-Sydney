@@ -959,6 +959,13 @@ body {
 .tbl tr:hover td {
   background: var(--surface);
 }
+/* Wrap a <table class="tbl"> in this when the row count can grow past a
+   screenful (12.16) - without it the table pushes the rest of the page down
+   instead of scrolling in place. */
+.tbl-scroll {
+  max-height: 480px;
+  overflow-y: auto;
+}
 .status {
   display: inline-flex;
   align-items: center;
@@ -1028,6 +1035,8 @@ body {
 .schedule-list {
   display: flex;
   flex-direction: column;
+  max-height: 480px;
+  overflow-y: auto;
 }
 .sch-item {
   display: flex;

@@ -271,12 +271,14 @@
             <div><div class="card-title">Today's bookings</div><div class="card-sub" id="dash-today-sub">Loading...</div></div>
             <span class="card-action" data-page="bookings">View all →</span>
           </div>
-          <table class="tbl">
-            <thead><tr><th>Client</th><th>Service</th><th>Time</th><th>Van</th><th>Status</th><th>Total</th></tr></thead>
-            <tbody id="dash-today-tbody">
-              <tr><td colspan="6" style="text-align:center;color:var(--mgray);padding:20px;font-size:13px">Loading today's jobs...</td></tr>
-            </tbody>
-          </table>
+          <div class="tbl-scroll">
+            <table class="tbl">
+              <thead><tr><th>Client</th><th>Service</th><th>Time</th><th>Van</th><th>Status</th><th>Total</th></tr></thead>
+              <tbody id="dash-today-tbody">
+                <tr><td colspan="6" style="text-align:center;color:var(--mgray);padding:20px;font-size:13px">Loading today's jobs...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <div class="card">
           <div class="card-hdr">
@@ -339,7 +341,7 @@
 
       <div class="card">
         <div class="card-hdr"><div><div class="card-title">All bookings</div><div class="card-sub" id="bk-sub">Loading from Supabase...</div></div></div>
-        <div class="card-body" style="overflow-x:auto">
+        <div class="card-body tbl-scroll" style="overflow-x:auto">
           <table class="tbl">
             <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Suburb</th><th>Van</th><th>Status</th><th>Total</th><th>Actions</th></tr></thead>
             <tbody id="bk-tbody"><tr><td colspan="8" style="text-align:center;color:var(--mgray);padding:24px">Loading...</td></tr></tbody>
@@ -407,7 +409,7 @@
           </div>
         </div>
         <div id="route-map" style="height:340px;border-radius:10px;overflow:hidden;background:var(--border-lt);margin-bottom:14px"></div>
-        <div id="route-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="route-list" style="display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto"></div>
       </div>
       <div class="vans">
         <div class="van-card">
@@ -441,7 +443,7 @@
       <div style="background:#EFF6FF;border:1px solid #DBEAFE;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--navy)">
         This is what clients see in the app once a mechanic accepts their job. Separate from <b>Notification Numbers</b> (which controls who gets SMS/WhatsApp alerts) — editing here never changes phone or alert settings.
       </div>
-      <div id="mech-profile-list" style="display:flex;flex-wrap:wrap;gap:18px"></div>
+      <div id="mech-profile-list" style="display:flex;flex-wrap:wrap;gap:18px;max-height:480px;overflow-y:auto"></div>
     </div>
 
     <!-- CLIENTS -->
@@ -640,7 +642,7 @@
       <!-- Tabla de transacciones -->
       <div class="card" style="margin-top:16px">
         <div class="card-hdr"><div><div class="card-title">Transactions</div><div class="card-sub" id="fin-tx-sub">All completed jobs</div></div></div>
-        <div class="card-body">
+        <div class="card-body tbl-scroll">
           <table class="tbl">
             <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Amount</th><th>GST</th><th>Net</th><th>Status</th></tr></thead>
             <tbody id="fin-tx-body"><tr><td colspan="7" style="text-align:center;color:var(--mgray);padding:24px">Loading...</td></tr></tbody>
@@ -661,7 +663,7 @@
           New contact
         </button>
       </div>
-      <div id="contacts-list"></div>
+      <div id="contacts-list" style="max-height:480px;overflow-y:auto"></div>
     </div>
 
     <!-- CONTACT MODAL -->
@@ -703,7 +705,7 @@
 
     <!-- CLAIMS -->
     <div id="page-claims" class="page">
-      <div id="claims-list" style="display:flex;flex-direction:column;gap:12px">
+      <div id="claims-list" style="display:flex;flex-direction:column;gap:12px;max-height:480px;overflow-y:auto">
         <div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading claims...</div>
       </div>
     </div>
@@ -1030,7 +1032,7 @@
           <button style="background:var(--off);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)" id="auto-wire-20">Export CSV</button>
         </div>
         <div class="card-sub" style="margin-bottom:16px">Clients subscribed via the website newsletter form.</div>
-        <div id="newsletter-list">
+        <div id="newsletter-list" style="max-height:480px;overflow-y:auto">
           <div style="text-align:center;padding:20px;color:var(--mgray);font-size:13px">Loading...</div>
         </div>
       </div>
@@ -1058,7 +1060,7 @@
             <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--amber-lt);color:var(--amber-ink)">⭐ All zones — Manager</span>
           </div>
 
-          <div id="notif-numbers-list" style="display:flex;flex-direction:column;gap:8px">
+          <div id="notif-numbers-list" style="display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto">
             <div style="text-align:center;color:var(--mgray);padding:24px;font-size:13px">Loading…</div>
           </div>
         </div>
@@ -1165,7 +1167,7 @@
       </div>
       <!-- Grouped table -->
       <div class="card">
-        <div style="overflow-x:auto">
+        <div class="tbl-scroll" style="overflow-x:auto">
           <table class="tbl" id="inv-table">
             <thead><tr><th>Part name</th><th>Stock</th><th>Min stock</th><th>Cost ($)</th><th>Client price ($)</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="inv-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr></tbody>
@@ -1199,7 +1201,7 @@
       <div id="svc-cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
       <!-- Grouped table -->
       <div class="card">
-        <div style="overflow-x:auto">
+        <div class="tbl-scroll" style="overflow-x:auto">
           <table class="tbl" id="svc-table">
             <thead><tr><th>Service name</th><th>Category</th><th>Price ($)</th><th>Duration</th><th>Actions</th></tr></thead>
             <tbody id="svc-tbody"><tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr></tbody>
@@ -1248,7 +1250,7 @@
           <option value="paused">Paused</option>
         </select>
       </div>
-      <div class="card" style="overflow-x:auto;padding:0">
+      <div class="card tbl-scroll" style="overflow-x:auto;padding:0">
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead>
             <tr style="border-bottom:2px solid var(--border)">
