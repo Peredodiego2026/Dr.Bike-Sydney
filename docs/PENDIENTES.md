@@ -4534,6 +4534,42 @@ quedo arreglado.
   que no se audito.
 - El Dashboard (`loadDashboard`) quedo afuera.
 
+**CERRADO 2026-08-16.** Se audito `handleAdminAnalytics` (`api/auth.js`,
+Traffic + Checkout + reconciliacion) y `loadDashboard()` (`js/admin.js`)
+completos, linea por linea. Misma limitacion que la pasada anterior: sin
+acceso SQL, todo sale de leer el codigo, no de comparar contra la base.
+
+**`/api/analytics` (Traffic, Checkout, reconciliacion): no aparecio nada
+nuevo para arreglar.** Ya maneja con cuidado los casos honestos - null
+cuando una query falla vs. array vacio cuando no hay datos, truncamiento de
+Stripe declarado en vez de escondido, tabla `checkout_attempts` faltante
+detectada por codigo de error en vez de leida como "cero abandonos",
+`scrubKeys()` en cualquier error que se le devuelve al navegador. Un
+resultado negativo de auditoria (revisado, nada que corregir) sigue siendo
+un resultado.
+
+**`loadDashboard()` (Dashboard del admin): 2 hallazgos, los dos CERRADOS
+en esta misma sesion:**
+
+1. **La tabla "Recent bookings" era codigo muerto.** `#page-dashboard` solo
+   tiene una tabla `.tbl` en el DOM (la de "Today's bookings",
+   `#dash-today-tbody`). El bloque que pintaba los 5 bookings mas recientes
+   escribia en `document.querySelector('#page-dashboard .tbl tbody')` -
+   el MISMO elemento - y el bloque de "Today's bookings" que corria justo
+   despues lo pisaba antes de que el navegador pintara un frame. La query
+   que lo alimentaba (`select('*').order('created_at',...).limit(5)`) era
+   un viaje de red completo para un resultado que nadie iba a ver nunca.
+   Se elimino el bloque entero y su query - el contenido que el admin ve
+   no cambia (siempre fue "Today's bookings" el que ganaba).
+2. **"Total clients" tenia el mismo bug que el 20.6 (PR #248) ya habia
+   cerrado en la pantalla de Clientes.** `sb.from('profiles').select('id')`
+   traia CADA fila de perfil solo para contar `.length` - sin el limite
+   explicito de Supabase (1000 filas por default), ese numero se
+   convertiria en un piso silencioso pasado ese punto, exactamente el bug
+   que el 20.6 encontro y arreglo en otra pantalla. Las dos KPIs de al lado
+   (newsletter, bikes) ya usaban `{ count: 'exact', head: true }` - el
+   Dashboard nunca se actualizo a ese patron. Ahora si.
+
 ---
 
 ## 21. El boton "Block availability" del admin nunca escribio nada - CERRADO (PR #253)

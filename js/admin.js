@@ -2489,8 +2489,12 @@ async function loadDashboard() {
     sb.from('bookings').select('*').eq('scheduled_date', today),
     sb.from('bookings').select('*').gte('scheduled_date', firstOfMonth).neq('status', 'cancelled'),
     sb.from('bookings').select('*').eq('status', 'pending'),
-    sb.from('bookings').select('*').order('created_at', { ascending: false }).limit(5),
-    sb.from('profiles').select('id'),
+    // count/head, not the rows themselves - same reason newsletter/bikes below
+    // do it this way. A plain .select('id') read every profile row just to
+    // throw it away for .length, which is also how 20.6 (PR #248) found
+    // "Total clients" on the Clients page silently flooring past Supabase's
+    // default row cap. This tile had the same bug, just uncaught until now.
+    sb.from('profiles').select('id', { count: 'exact', head: true }),
     sb
       .from('newsletter_subscribers')
       .select('*', { count: 'exact', head: true })
@@ -2508,8 +2512,7 @@ async function loadDashboard() {
     { data: todayJobs },
     { data: monthJobs },
     { data: pendingJobs },
-    { data: recentBookings },
-    { data: allClients },
+    { count: clientsCount },
     { count: newsletterCount },
     { count: bikesCount },
   ] = results;
@@ -2556,7 +2559,7 @@ async function loadDashboard() {
       'awaiting confirmation · ' + cancelRate + '% cancel rate';
   }
   if (kpis[3]) {
-    kpis[3].textContent = (allClients || []).length;
+    kpis[3].textContent = clientsCount || 0;
     kpis[3].nextElementSibling.textContent = 'total clients registered';
   }
   const newsletterEl = document.getElementById('kpi-newsletter');
@@ -2567,63 +2570,6 @@ async function loadDashboard() {
   const bikesSub = document.getElementById('kpi-bikes-sub');
   if (bikesEl) bikesEl.textContent = bikesCount || 0;
   if (bikesSub) bikesSub.textContent = 'client bikes on file';
-
-  // Recent bookings table
-  const tbody = document.querySelector('#page-dashboard .tbl tbody');
-  if (tbody && recentBookings) {
-    const stClass = {
-      confirmed: 'confirmed',
-      pending: 'pending',
-      enroute: 'enroute',
-      completed: 'completed',
-      cancelled: 'cancelled',
-    };
-    tbody.innerHTML =
-      recentBookings
-        .map((b) => {
-          const name = b.client_name || b.profiles?.full_name || 'Client';
-          const initials = name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .slice(0, 2)
-            .toUpperCase();
-          const st = b.status || 'pending';
-          const stColors = {
-            pending: 'var(--amber)',
-            confirmed: 'var(--blue)',
-            enroute: 'var(--green)',
-            completed: '#475569',
-            cancelled: 'var(--red)',
-          };
-          const stBg = {
-            pending: '#FEF3C7',
-            confirmed: 'var(--blue-tint)',
-            enroute: 'var(--green-tint)',
-            completed: 'var(--border-lt)',
-            cancelled: '#FEF2F2',
-          };
-          const stLabel = {
-            pending: 'Pending',
-            confirmed: 'Confirmed',
-            enroute: 'En route',
-            completed: 'Completed',
-            cancelled: 'Cancelled',
-          };
-          const vanColors = { 1: 'var(--blue)', 2: 'var(--amber)', 3: 'var(--purple)', 4: 'var(--red)' };
-          const vanNum = b.van_number || 1;
-          return `<tr>
-        <td data-label="Client" style="font-weight:700">${esc(name)}</td>
-        <td data-label="Service">${esc(b.service_name || '—')}</td>
-        <td data-label="Date">${b.scheduled_date || '—'}</td>
-        <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
-        <td data-label="Status"><span style="background:${stBg[st] || 'var(--border-lt)'};color:${stColors[st] || '#475569'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${stLabel[st] || st}</span></td>
-        <td data-label="Price" style="font-weight:700;color:var(--blue)">${anBookingRevenue(b)}</td>
-      </tr>`;
-        })
-        .join('') ||
-      '<tr><td colspan="6" style="text-align:center;color:var(--mgray);padding:24px">No bookings yet — ready to go!</td></tr>';
-  }
 
   // ── Today's bookings table ──
   const todayDate = new Date().toLocaleDateString('en-AU', {
