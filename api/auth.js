@@ -3067,22 +3067,55 @@ export function buildBusyIntervals(bookings, durationByService) {
 // full window the new booking would occupy (its own duration + buffer) - not
 // just a free slot at the start time, which is what the old van-count-only
 // check effectively assumed.
+// How long one row of `availability` takes a van off the road. The admin blocks
+// on the half hour, so that is the unit.
+export const BLOCK_SLOT_MIN = 30;
+
+// The blocks Diego set for a day, as busy intervals - the same shape a booking
+// produces, so one overlap check covers both.
+//
+// This used to be a Set of raw `time_slot` strings compared against ALL_SLOTS
+// ("8:00 AM"), while the admin writes 24-hour half hours ("8:30"). No string
+// ever matched, so no block ever blocked anything (PENDIENTES 21). Comparing in
+// minutes fixes that AND makes a half-hour block mean something: a block at
+// 8:30 collides with the 8:00 job that would still be running through it.
+//
+// van_number 0 is "all vans" - the same sentinel van_zones already uses.
+export function buildBlockIntervals(overrides, vans) {
+  const out = [];
+  for (const row of overrides || []) {
+    if (row.available !== false) continue;
+    const start = slotToMinutes(row.time_slot);
+    if (start < 0) continue;
+    const end = start + BLOCK_SLOT_MIN;
+    const van = Number(row.van_number);
+    // A row with no van, or van 0, takes every van out.
+    const targets = !van ? vans : [van];
+    for (const v of targets) out.push({ van: v, start, end });
+  }
+  return out;
+}
+
 export function computeAvailableSlots({
   allSlots,
   vans,
   busyIntervals,
   neededMin,
-  manualUnavailable,
+  blockIntervals,
   isToday,
   nowMin,
 }) {
+  const blocks = blockIntervals || [];
   return allSlots.map((time) => {
     const slotMin = slotToMinutes(time);
     const slotEnd = slotMin + neededMin;
+    const clashes = (intervals, van) =>
+      intervals.some((iv) => iv.van === van && slotMin < iv.end && iv.start < slotEnd);
+    // A slot is on offer if AT LEAST ONE van is free of both bookings and
+    // blocks for the whole window the job would occupy.
     let available = vans.some(
-      (van) => !busyIntervals.some((iv) => iv.van === van && slotMin < iv.end && iv.start < slotEnd)
+      (van) => !clashes(busyIntervals, van) && !clashes(blocks, van)
     );
-    if (manualUnavailable.has(time)) available = false;
     if (isToday && slotMin < nowMin) available = false;
     return { time, available };
   });
@@ -3108,7 +3141,9 @@ async function handleGetAvailability(req, res) {
         .select('scheduled_time,van_number,service_name')
         .eq('scheduled_date', date)
         .in('status', ['pending', 'confirmed', 'enroute', 'in_progress', 'arrived']),
-      sb.from('availability').select('time_slot, available').eq('date', date),
+      // van_number too: a block is per van (0 = all of them), and reading only
+    // the slot made one van's day off close the day for both.
+    sb.from('availability').select('time_slot, available, van_number').eq('date', date),
       sb.from('van_zones').select('van_number').neq('van_number', 0),
       sb.from('services').select('id,name,duration_max'),
     ]);
@@ -3124,9 +3159,7 @@ async function handleGetAvailability(req, res) {
     (requestedService?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
 
   const busyIntervals = buildBusyIntervals(bookings || [], durationByService);
-  const manualUnavailable = new Set(
-    (overrides || []).filter((r) => !r.available).map((r) => r.time_slot)
-  );
+  const blockIntervals = buildBlockIntervals(overrides, vans);
 
   const nowSydney = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
   const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney' }).format(
@@ -3140,7 +3173,7 @@ async function handleGetAvailability(req, res) {
     vans,
     busyIntervals,
     neededMin,
-    manualUnavailable,
+    blockIntervals,
     isToday,
     nowMin,
   });

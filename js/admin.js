@@ -1734,11 +1734,19 @@ async function saveBlocks() {
     return;
   }
 
+  // `available: false` - there is no `blocked` column and never was. Writing
+  // one meant every save failed with 42703 and nothing was ever stored: the
+  // table held 0 rows on 2026-08-16, years in (PENDIENTES 21).
+  //
+  // van_number 0 rather than null for "all vans": null never conflicts with
+  // null in a unique index, so the upsert would insert a duplicate row every
+  // time instead of updating the existing block. 0 is the sentinel van_zones
+  // already uses.
   const rows = slots.map((time) => ({
     date,
     time_slot: time,
-    van_number: van || null,
-    blocked: true,
+    van_number: van || 0,
+    available: false,
     reason: reason || null,
   }));
 
@@ -1765,7 +1773,9 @@ async function unblockDate() {
     return;
   }
 
-  let q = sb.from('availability').delete().eq('date', date).eq('blocked', true);
+  // Same column as saveBlocks writes. This filtered on `blocked` too, so
+  // Unblock could not have worked even if Block had.
+  let q = sb.from('availability').delete().eq('date', date).eq('available', false);
   if (van) q = q.eq('van_number', van);
 
   const { error } = await q;

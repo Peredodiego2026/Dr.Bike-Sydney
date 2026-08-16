@@ -73,7 +73,7 @@ describe('computeAvailableSlots', () => {
       vans: [1],
       busyIntervals,
       neededMin: 60 + SLOT_BUFFER_MIN, // booking a 1h service
-      manualUnavailable: new Set(),
+      blockIntervals: [],
       isToday: false,
       nowMin: 0,
     });
@@ -94,7 +94,7 @@ describe('computeAvailableSlots', () => {
       vans: [1, 2],
       busyIntervals,
       neededMin: 60 + SLOT_BUFFER_MIN,
-      manualUnavailable: new Set(),
+      blockIntervals: [],
       isToday: false,
       nowMin: 0,
     });
@@ -110,7 +110,7 @@ describe('computeAvailableSlots', () => {
       vans: [1],
       busyIntervals,
       neededMin: 20 + SLOT_BUFFER_MIN,
-      manualUnavailable: new Set(),
+      blockIntervals: [],
       isToday: false,
       nowMin: 0,
     });
@@ -118,19 +118,24 @@ describe('computeAvailableSlots', () => {
     expect(byTime['9:00 AM']).toBe(true);
   });
 
-  it('still applies manual overrides and the past-time-today cutoff', () => {
+  it('still applies the past-time-today cutoff', () => {
+    // This used to also assert a `manualUnavailable` Set of slot labels, and it
+    // passed for the wrong reason: the slot it claimed the override had closed
+    // was in the past anyway. That parameter is gone - admin blocks now arrive
+    // as intervals, see tests/unit/availability-blocks.test.js - and pinning a
+    // dead argument is how a test keeps passing over broken production code.
     const slots = computeAvailableSlots({
       allSlots: ALL_SLOTS,
       vans: [1],
       busyIntervals: [],
       neededMin: 60,
-      manualUnavailable: new Set(['9:00 AM']),
+      blockIntervals: [],
       isToday: true,
       nowMin: slotToMinutes('10:00 AM'),
     });
     const byTime = Object.fromEntries(slots.map((s) => [s.time, s.available]));
-    expect(byTime['9:00 AM']).toBe(false); // manual override
     expect(byTime['8:00 AM']).toBe(false); // in the past relative to nowMin
+    expect(byTime['9:00 AM']).toBe(false); // also in the past
     expect(byTime['10:00 AM']).toBe(true); // not before "now" (equal is not "before")
     expect(byTime['11:00 AM']).toBe(true);
   });
@@ -186,7 +191,7 @@ describe('a booking read back from the database blocks its own slot', () => {
       vans: [1],
       busyIntervals,
       neededMin: 60 + SLOT_BUFFER_MIN,
-      manualUnavailable: new Set(),
+      blockIntervals: [],
       isToday: false,
       nowMin: 0,
     });
@@ -203,7 +208,7 @@ describe('a booking read back from the database blocks its own slot', () => {
       vans: [1, 2],
       busyIntervals,
       neededMin: 60 + SLOT_BUFFER_MIN,
-      manualUnavailable: new Set(),
+      blockIntervals: [],
       isToday: false,
       nowMin: 0,
     });
@@ -219,7 +224,7 @@ describe('a booking read back from the database blocks its own slot', () => {
       vans: [1, 2],
       busyIntervals,
       neededMin: 60 + SLOT_BUFFER_MIN,
-      manualUnavailable: new Set(),
+      blockIntervals: [],
       isToday: false,
       nowMin: 0,
     });
