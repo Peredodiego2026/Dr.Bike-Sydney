@@ -4405,3 +4405,75 @@ mirarse.
 - La tarjeta Traffic (PostHog) y la de Checkout dependen de `/api/analytics`,
   que no se audito.
 - El Dashboard (`loadDashboard`) quedo afuera.
+
+---
+
+## 21. El boton "Block availability" del admin nunca escribio nada (2026-08-16)
+
+Encontrado tirando del hilo del reschedule roto (PR #246) y del hecho de que
+ninguna reserva bloqueaba su horario (PR #247). Es la tercera cara del mismo
+problema de fondo: **en este sistema conviven dos vocabularios de hora y nadie
+los traduce**. Este NO se arreglo, porque el arreglo necesita una decision
+sobre el esquema.
+
+### 21.1 Escribe una columna que no existe
+
+`saveBlocks()` en `js/admin.js` hace:
+
+```js
+const rows = slots.map((time) => ({
+  date, time_slot: time, van_number: van || null, blocked: true, reason: reason || null,
+}));
+await sb.from('availability').upsert(rows, { onConflict: 'date,time_slot,van_number' });
+```
+
+**Verificado contra la base de produccion** (con la anon key, misma que usa el
+panel):
+
+```
+GET /rest/v1/availability?select=time_slot,available  ->  200 []
+GET /rest/v1/availability?select=time_slot,blocked    ->  42703
+   "column availability.blocked does not exist"
+```
+
+O sea: la columna se llama `available`, no `blocked`. El upsert falla, entra
+por el `if (error)` y sale un toast rojo. **Nunca se escribio una fila.**
+Diego bloquea un dia y el dia sigue reservable.
+
+### 21.2 Y si escribiera, tampoco coincidiria
+
+El lector (`handleGetAvailability` en `api/auth.js`) compara asi:
+
+```js
+const manualUnavailable = new Set((overrides||[]).filter(r => !r.available).map(r => r.time_slot));
+...
+if (manualUnavailable.has(time)) available = false;   // `time` sale de ALL_SLOTS
+```
+
+`ALL_SLOTS` son etiquetas de 12 horas (`'8:00 AM'`). El modal del admin ofrece
+`'8:00'`, `'8:30'`, `'9:00'`... en 24 horas y cada media hora. **Ningun string
+coincide nunca.** Ademas, media hora no corresponde a ningun slot: si Diego
+bloquea las 8:30, hay que decidir si eso cierra el slot de las 8:00.
+
+### 21.3 Y el bloqueo por van se aplica a todas
+
+`handleGetAvailability` lee los overrides del dia **sin filtrar por
+`van_number`**, asi que un bloqueo de la van 1 tambien tapa la van 2. El modal
+deja elegir van, o sea que la UI promete algo que el backend no hace.
+
+### 21.4 Que hace falta para cerrarlo
+
+Tres decisiones, no una linea de codigo:
+
+1. Confirmar el default de `availability.available` y si existe el indice unico
+   `(date, time_slot, van_number)` que el `onConflict` da por hecho. Si no
+   existe, el upsert sigue fallando aunque se arregle el nombre de la columna.
+   Runbook: `docs/RUNBOOK-SQL.md`.
+2. Elegir UN formato de hora para `time_slot` y que las dos puntas lo usen.
+   Lo natural es guardar 24h (`'08:00'`) y comparar por minutos, no por string
+   - `slotToMinutes()` ya sabe leer los dos desde el PR #247.
+3. Decidir que hace un bloqueo de media hora, y si el `van_number` del bloqueo
+   debe respetarse (parece que si, la UI lo ofrece).
+
+Mientras tanto, **la unica forma real de bloquear un dia es no publicar
+disponibilidad de otra manera**: el boton no hace nada.
