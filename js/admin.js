@@ -669,19 +669,6 @@ const EXPENSE_LABELS = {
 };
 let _expenses = null; // {available, expenses[]} | {available:false, reason}
 
-// Real parts spend divided by jobs done, set by loadFinance() from the expenses
-// table. It replaces VAR_COST_PER_JOB, a hardcoded $10 a job that was deleted
-// with the rest of the invented costs - but these two readers were missed, and
-// referencing a const that no longer exists is a ReferenceError, not a wrong
-// number: it broke the margin table on Finance and the Analytics CSV export.
-// node --check cannot see it (it does not resolve identifiers) and no test
-// covers either function, which is exactly how it reached production.
-//
-// 0 until loadFinance() has run, and 0 when nothing is loaded under "parts".
-// That is honest - no parts expenses means no parts cost - and the P&L already
-// says out loud when nothing is loaded at all.
-let _partsPerJob = 0;
-
 // Every 'YYYY-MM' the range touches. A quarter view spans three, a year twelve,
 // and a recurring expense has to be counted once in each of them.
 function expMonthsInRange(dateFrom, dateTo) {
@@ -1176,7 +1163,6 @@ async function loadFinance() {
   );
   // Parts is a category like any other now, not jobCount x $10.
   const varCosts = exp.byCat.parts || 0;
-  _partsPerJob = jobCount > 0 ? varCosts / jobCount : 0;
   const fixedTotal = exp.total - varCosts;
   const grossProfit = netRevenue - varCosts;
   const netProfit = grossProfit - fixedTotal;
@@ -3387,6 +3373,10 @@ async function loadAnalytics() {
     fetchAnalyticsServer(),
   ]);
 
+  // The expenses, so the margins table has a cost basis of its own instead of
+  // depending on somebody having opened the Finance screen first.
+  if (!_expenses) _expenses = await fetchExpenses();
+
   const failures = [];
   if (bookingsRes.error) failures.push('bookings: ' + bookingsRes.error.message);
   if (profilesRes.error) failures.push('accounts: ' + profilesRes.error.message);
@@ -3839,6 +3829,9 @@ function exportAnalyticsCSV() {
 
   rows.push(['MARGINS PER SERVICE']);
   rows.push(['Service', 'Jobs', 'Revenue', 'Avg ticket', 'Est. cost', 'Margin %']);
+  const csvParts = analyticsPartsPerJob(completed);
+  if (!csvParts.available)
+    rows.push(['(no parts expenses recorded - est. cost and margin cannot be worked out)']);
   const byService = {};
   completed.forEach((b) => {
     const name = b.service_name || 'Other';
@@ -3850,10 +3843,13 @@ function exportAnalyticsCSV() {
     .sort((a, b) => b[1].rev - a[1].rev)
     .forEach(([name, d]) => {
       const avg = Math.round(d.rev / d.jobs);
-      const cost = Math.round(d.jobs * _partsPerJob);
       const net = d.rev - Math.round(d.rev / 11);
-      const margin = net > 0 ? Math.round(((net - cost) / net) * 100) : 0;
-      rows.push([name, d.jobs, d.rev, avg, cost, margin]);
+      // The same basis as the table on screen. This used to read the variable
+      // only the Finance screen filled in, so the export could leave with 100%
+      // on everything, or with one month's ratio applied to all of history.
+      const cost = csvParts.available ? Math.round(d.jobs * csvParts.perJob) : null;
+      const margin = cost === null ? '' : net > 0 ? Math.round(((net - cost) / net) * 100) : 0;
+      rows.push([name, d.jobs, d.rev, avg, cost === null ? 'no data' : cost, margin]);
     });
   rows.push([]);
 
@@ -4741,6 +4737,41 @@ function renderHeatmap(all) {
   return points.length;
 }
 
+// Parts spend per job over the WHOLE life of the business - which is the
+// period this table covers, and not whichever month was last looked at on the
+// Finance screen.
+//
+// The margins table used to read `_partsPerJob`, a variable only loadFinance()
+// ever wrote. Opening Analytics directly left it at 0: est. cost $0 and a
+// green 100% margin on every service - the absence of the number painted as a
+// result. And if Finance HAD been opened first, a lifetime table ended up
+// using one month's ratio, so changing the month over there moved the historic
+// margins over here.
+//
+// Returns available:false when there is nothing to work it out from. Callers
+// must render "no data", never a percentage.
+function analyticsPartsPerJob(completed) {
+  if (!_expenses || !_expenses.available)
+    return { available: false, reason: _expenses?.reason || 'expenses not loaded' };
+  const rows = _expenses.expenses || [];
+  if (!rows.length) return { available: false, reason: 'no expenses recorded' };
+  if (!completed.length) return { available: false, reason: 'no completed jobs' };
+
+  // From the month of the oldest expense to today: expTotalsInRange counts a
+  // recurring expense once per month of the range, so the range has to be the
+  // real one and not some arbitrary month.
+  const earliest = rows
+    .map((e) => String(e.spent_on || ''))
+    .filter(Boolean)
+    .sort()[0];
+  if (!earliest) return { available: false, reason: 'no expenses recorded' };
+  const today = new Date();
+  const dateTo = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const parts = expTotalsInRange(rows, earliest, dateTo).byCat.parts || 0;
+  if (!parts) return { available: false, reason: 'nothing recorded under parts' };
+  return { available: true, perJob: parts / completed.length, parts, jobs: completed.length };
+}
+
 // #23 Margins per service
 function renderMargins(all) {
   const tbody = document.getElementById('an-margins');
@@ -4759,11 +4790,34 @@ function renderMargins(all) {
       '<tr><td colspan="6" style="text-align:center;color:var(--mgray);padding:24px">No completed jobs yet</td></tr>';
     return;
   }
+
+  const parts = analyticsPartsPerJob(completed);
+  // Where the number comes from, said on the card itself: the cost is a flat
+  // average of parts spend per job, not the real cost of each service. It is
+  // an estimate and has to read as one (PENDIENTES 18.3).
+  const sub = document.getElementById('an-margins-sub');
+  if (sub)
+    sub.textContent = parts.available
+      ? `Lifetime, not filtered by the range above · est. cost = ${anMoney(parts.parts)} of parts / ${parts.jobs} jobs = ${anMoney(Math.round(parts.perJob))} a job`
+      : 'Lifetime, not filtered by the range above · no parts expenses recorded, so there is nothing to work a margin out of';
+
   tbody.innerHTML = rows
     .map(([name, d]) => {
       const avg = Math.round(d.rev / d.jobs);
-      const cost = Math.round(d.jobs * _partsPerJob); // variable parts cost
       const net = d.rev - Math.round(d.rev / 11); // ex-GST
+      if (!parts.available) {
+        // A margin with no cost is not a 100% margin, it is a margin that
+        // cannot be worked out. Say so - do not paint it green.
+        return `<tr>
+      <td data-label="Service"><b>${esc(name)}</b></td>
+      <td data-label="Jobs">${d.jobs}</td>
+      <td data-label="Revenue">${anMoney(d.rev)}</td>
+      <td data-label="Avg ticket">${anMoney(avg)}</td>
+      <td data-label="Est. cost" style="color:var(--mgray)">&mdash;</td>
+      <td data-label="Margin" style="color:var(--mgray)">Add expenses</td>
+    </tr>`;
+      }
+      const cost = Math.round(d.jobs * parts.perJob);
       const profit = net - cost;
       const margin = net > 0 ? Math.round((profit / net) * 100) : 0;
       const mColor = margin >= 70 ? 'var(--green)' : margin >= 50 ? 'var(--amber)' : 'var(--red)';
