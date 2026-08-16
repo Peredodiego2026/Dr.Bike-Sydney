@@ -1,5 +1,50 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
+## Current state (2026-08-16) — read this first
+
+- **`main` is at the merge of #253.** Shipped today, in order: #244 (suburb
+  matching), #245 + #249 (the Analytics/Finance audit written down), #246
+  (client reschedule), #247 (bookings blocking their own slot), #248 (client
+  counters), #250 (Finance errors + revenue date), #251 (margins), #252 (LTV
+  identity, suburb list, CSV), #253 (availability blocks). Every one was
+  verified on `drbikesydney.com.au` after merging, not just merged.
+
+- **One root cause produced four separate live failures: the app carried two
+  time vocabularies and nothing converted between them.**
+  `/api/auth?role=get-availability` answers in 12-hour labels (`"8:00 AM"`),
+  `bookings.scheduled_time` is a `time` column PostgREST returns as
+  `"10:00:00"`, and the admin's block modal wrote a third shape (`'8:30'`).
+  What it broke: **every client reschedule 400'd** (it posted the label to an
+  endpoint validating `HH:MM`); **no booking blocked its own slot**, so the
+  same hour stayed on offer to the next client; and **the Block availability
+  button never stored a single row**. `js/time-format.js` (client) and
+  `slotToMinutes` (server) now read all three shapes.
+
+- **`availability` was migrated by hand on 2026-08-16.**
+  `scripts/fix-availability-blocks.sql` ran in the SQL Editor: `service_id`
+  is nullable, `van_number` is NOT NULL default 0 (0 = all vans), and the
+  unique key is `(date, time_slot, van_number)`. Verified by Diego's own
+  query output. The table held **0 rows** before this - the button had never
+  once saved anything.
+
+- **PENDING DIEGO, the only thing not verified:** block a slot in Admin >
+  Calendar and confirm it disappears from the client booking flow. The logic
+  has 15 tests and the right code is live, but nobody has pressed the button
+  against the real database yet.
+
+- **Still open, needs an accountant not a developer:** `docs/PENDIENTES.md`
+  20.3 - the BAS screen reports **$0 of GST credits (1B)** while expenses are
+  loaded, so it overstates the GST owed. Deciding which expenses carry a
+  credit is not a code decision.
+
+- **Still open, known and documented:** 18.3 (the margin is a flat lifetime
+  average of parts spend, honest about itself now but only `parts_inventory`
+  makes it true) and everything under `docs/PENDIENTES.md` 20.8 that this
+  audit never covered: `/api/analytics` (the Traffic and Checkout cards) and
+  `loadDashboard()`.
+
+- **Test count: 352.** `npm run check` and `npm run lint` are clean on `main`.
+
 ## Current state (2026-08-10) — read this first
 
 - **`main` is at the merge of #217.** Shipped today, in order: #214 (the SQL
@@ -329,7 +374,8 @@
 - **Blocker:** Still need Diego to confirm backups + ops model (vans/mechanics/bookings-day). Slot index waits on a duplicate pre-check.
 
 ## Confirmed schema facts (2026-06-29)
-- `bookings.scheduled_time` is `time without time zone` (not text) — verify client sends "HH:MM" not "8:00 AM".
+- `bookings.scheduled_time` is `time without time zone` (not text) — verify client sends "HH:MM" not "8:00 AM". **2026-08-16: this line was right and nobody acted on it for months. Three live bugs came out of exactly this** (see Current state). Client-side conversion now lives in `js/time-format.js`; the server accepts all three shapes in `slotToMinutes`.
+- `availability` (verified 2026-08-16, after `scripts/fix-availability-blocks.sql`): `available boolean default true`, `service_id text NULL`, `van_number int NOT NULL default 0` (0 = all vans), `time_slot text`, unique on `(date, time_slot, van_number)`. There is **no** `blocked` column and there never was.
 - Schema drift: redundant columns exist (rating vs client_rating **— corrected 2026-07-27: this pair was never real, `bookings.rating` does not exist**, review_text vs client_review, photo_before/before_photo_url/photo_before_url, client_signature vs client_signature_url, original_price vs service_price). Cleanup candidate — confirm which are authoritative before dropping.
 - Desktop `bkProceed` does NOT set van_number → those bookings are NULL-van and won't be covered by a per-van slot unique index.
 

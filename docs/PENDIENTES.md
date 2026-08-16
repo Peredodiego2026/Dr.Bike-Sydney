@@ -4508,3 +4508,55 @@ el horario entero, sin preguntar por servicio.
   reserva, asi que se comparan minutos y no strings: se acabo el desencuentro
   `'8:30'` contra `'8:00 AM'`. Un bloqueo de media hora choca con el trabajo
   que seguiria corriendo encima, y `van_number` se respeta.
+
+---
+
+## 22. Estado al cerrar el 16-ago-2026
+
+Un dia entero sobre Analytics, Finanzas y la reserva. **10 PRs mergeadas y
+verificadas en produccion**, no solo mergeadas.
+
+### 22.1 La causa de fondo, que valia por cuatro bugs
+
+La app llevaba **dos vocabularios de hora y nadie los traducia**:
+
+| donde | formato |
+|---|---|
+| `/api/auth?role=get-availability` | etiquetas de 12h: `"8:00 AM"` |
+| `bookings.scheduled_time` | columna `time`, PostgREST devuelve `"10:00:00"` |
+| el modal de bloqueos del admin | 24h y media hora: `'8:30'` |
+
+De ahi salieron, todos en produccion al mismo tiempo:
+
+- **El reschedule del cliente fallaba SIEMPRE** (#246). Mandaba la etiqueta a
+  un endpoint que valida `HH:MM`. Comprobado contra produccion: `"12:00 PM"`
+  daba 400 y `"12:00"` pasaba.
+- **Ninguna reserva bloqueaba su propio horario** (#247). `slotToMinutes`
+  devolvia -1 para el formato de la base, asi que el mismo horario se le
+  seguia ofreciendo al cliente siguiente. Los tests no lo agarraban porque
+  solo le daban el formato que la base nunca manda.
+- **El boton de bloquear disponibilidad nunca guardo una fila** (#253).
+- Y de yapa, la tarjeta mostraba `10:00:00` al cliente.
+
+**La leccion, escrita para la proxima:** cuando escribas un test de algo que
+toca la base, alimentalo con **la forma que devuelve la base**, no con la
+que usa el codigo de al lado. La suite estuvo verde meses sobre una funcion
+que en produccion devolvia -1 siempre.
+
+### 22.2 Lo que queda abierto
+
+| # | que es | quien lo desbloquea |
+|---|---|---|
+| **21** | bloquear un horario y comprobar que desaparece de la reserva | **Diego, un click.** El SQL ya corrio y el codigo esta vivo; falta apretar el boton contra la base real |
+| **20.3** | el BAS reclama $0 de credito de GST con gastos cargados: muestra mas GST a pagar del que corresponde | **el contador.** Que gasto da credito no es una decision de codigo |
+| **18.3** | el margen es un promedio plano de repuestos por trabajo | codigo, cuando se saque el costo real de `parts_inventory` |
+| **20.8** | `/api/analytics` (Traffic y Checkout) y `loadDashboard()` | nadie los auditó todavia |
+
+### 22.3 Como esta el repo
+
+- `main` en el merge de #253. **352 tests**, `npm run check` y `npm run lint`
+  limpios.
+- `availability` migrada a mano el 16-ago con
+  `scripts/fix-availability-blocks.sql` (ver `docs/RUNBOOK-SQL.md` 9).
+- Los numeros de Analytics ya no dependen del `max-rows` del proyecto: los
+  contadores los cuenta la base con `count: 'exact'`.
