@@ -608,21 +608,40 @@ entero. Faltaban 4 estados en el diccionario (`Pending`, `In Progress`,
 `Completed`, `Cancelled`) y "Upcoming (N)" no podia traducirse con el numero
 adentro.
 
-### 10.1 El guardrail de i18n tiene un agujero — ABIERTO
+### 10.1 El guardrail de i18n tiene un agujero — MITIGADO 2026-08-02, no cerrado del todo
 
 `scripts/i18n-check.mjs` **borra los bloques `<script>`** antes de buscar texto
-en las paginas HTML. `landing.html` construye media interfaz dentro de scripts
-inline (el panel de cuenta, el modal de reserva viejo, el chat, el bot de FAQ),
-asi que **nada de eso esta cubierto por el chequeo**. Por eso "UPCOMING (1)" y
-"Pending" llegaron a produccion en ingles sobre una pagina en español, con el
-check en verde.
+en las paginas HTML (`stringsFromHtml()`). Eso sigue siendo cierto, pero
+**ya no es toda la historia**: el commit `da57e68` (2026-08-02, "close the
+hole that let payment errors ship in English") agrego
+`stringsFromInlineScripts()`, que vuelve a leer esos mismos bloques con
+otra extraccion - textContent/innerText, propiedades tipo `label:`/`price:`/
+`msg:`, `showToast(...)`, y el patron generico `>texto<` (la misma forma que
+usa `stringsFromJs()` para `js/app.js`, porque el HTML que arma
+`landing.html` a fuerza de `html += '<span>...</span>'` es exactamente esa
+forma). Es justo lo que atrapo "Upcoming"/"Pending" la primera vez.
 
-No es facil de arreglar bien: un parser ingenuo de strings dentro de JS levanta
-un monton de falsos positivos (selectores, claves, nombres de campos). Una
-opcion realista es extraer las cadenas que estan dentro de comillas y que
-tengan letras y espacios, con una lista de exclusiones. La otra, mas limpia, es
-sacar esa UI de los scripts inline. Mientras tanto: **cualquier texto que se
-escriba dentro de un `<script>` en landing.html hay que traducirlo a mano.**
+**Probado a proposito, no solo leido.** Se inyecto un string falso sin
+traducir en el mismo lugar exacto donde vivio el bug original
+(`landing.html`, el `html +=` de la fila "Upcoming" del panel de cuenta) y
+se corrio `npm run i18n:check`:
+
+- `html += '<span>Zzz Probe</span>'` (mismo defecto que el bug real) →
+  **detectado**, el check fallo señalando el string exacto.
+- `var lbl = 'Zzz Probe'; html += '<span>' + lbl + '</span>'` (el mismo texto,
+  pero armado en dos pasos: variable intermedia, despues concatenada) →
+  **no detectado**, el check paso en verde.
+
+O sea: el agujero de 2026-07-28 esta tapado para la forma exacta en que
+ocurrio y para la mayoria de los casos directos. Sigue habiendo un agujero
+mas angosto: un string armado en una variable separada y concatenado
+despues escapa a las tres extracciones, porque ninguna seria de regex sabe
+seguir una asignacion. Cerrarlo del todo pide lo mismo que ya decia este
+punto antes de la mitigacion - un parser real de JS (AST), no otra regex -
+y eso sigue sin valer la pena solo por esto: la opcion mas limpia continua
+siendo sacar esa UI de los scripts inline (ver 3.2). Mientras tanto, un
+string nuevo escrito con variable intermedia dentro de un `<script>` de
+`landing.html` todavia hay que traducirlo a mano y con cuidado.
 
 ### 10.3 Limpieza de datos falsos y codigo muerto (28-jul) — HECHO
 
