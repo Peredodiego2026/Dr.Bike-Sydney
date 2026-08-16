@@ -70,7 +70,7 @@ const BUDGET = {
   'css/admin.css': 143,
   'css/mechanic.css': 29,
   'js/app.js': 97,
-  'js/admin.js': 72,
+  'js/admin.js': 68,
   'js/mechanic.js': 13,
   'js/components.js': 28,
   'js/stripe.js': 5,
