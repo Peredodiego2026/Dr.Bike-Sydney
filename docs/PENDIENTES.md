@@ -3836,6 +3836,11 @@ cerrado):
   `client_email` - que las reservas de invitado ahora si tienen (seccion 14).
   Si el PDF falla, el mail **igual sale** sin adjunto y solo queda un
   `console.warn`: nadie se entera. Eso ultimo si es un hallazgo, sin arreglar.
+
+  **CERRADO 2026-08-16 (15.2).** `api/send-invoice.js` ahora avisa a Diego
+  por WhatsApp cuando `buildPDF()` falla (mismo mecanismo que
+  `client_cancelled`/`noshow_alert`), ademas del `console.warn` que ya
+  tenia. El email sigue saliendo igual, con o sin el adjunto.
 - **"Un mail bonito, sin demoras".** Sin especificar todavia. El camino de envio
   esta bien elegido: **no** usa el mailer de Supabase (que nunca se configuro y
   reporta exito aunque no entregue), sino Resend, igual que el resto.

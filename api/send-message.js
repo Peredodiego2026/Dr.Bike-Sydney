@@ -203,6 +203,8 @@ function buildWAMessage(template, data, lang) {
         : `⚠️ Debía reembolsarse $20 (más de 24h de anticipación) pero no se pudo procesar automáticamente. Revisa manualmente en Stripe.`;
       return `⚠️ Cancelación de cliente\n\n${status}\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n📅 ${d.date || ''} a las ${d.time || ''}\n⏱️ Canceló con ${d.hours ?? '—'} horas de anticipación (más de 24h)`;
     }
+    case 'invoice_pdf_failed':
+      return `⚠️ Factura sin PDF adjunto\n\nDiego, el PDF de la factura no se pudo generar. El cliente igual recibió el email con el resumen del servicio, pero sin el adjunto.\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n🧾 ${d.invoiceNumber || '—'}\n\nRevisar: https://drbikesydney.com.au/admin.html`;
     default:
       return null;
   }
@@ -225,6 +227,7 @@ async function handleWhatsApp(req, res) {
       'new_booking',
       'client_cancelled',
       'noshow_alert',
+      'invoice_pdf_failed',
     ].includes(template)
   ) {
     return res.status(400).json({ error: 'Invalid template' });
