@@ -1184,6 +1184,8 @@ const dict = {
     'Please create an account or sign in to finish your booking':
       'Creá una cuenta o iniciá sesión para terminar tu reserva',
     'Please sign in to complete your booking.': 'Iniciá sesión para completar tu reserva.',
+    'Please sign in to send a message.': 'Iniciá sesión para enviar un mensaje.',
+    'Please sign in again.': 'Iniciá sesión de nuevo.',
     'We need an email to send your receipt.': 'Necesitamos un email para enviarte el recibo.',
     "Sorry, we don't currently service that address. Try a different address or contact us.":
       'Lo sentimos, no cubrimos esa dirección por ahora. Probá con otra dirección o contactanos.',
@@ -2435,6 +2437,8 @@ const dict = {
     'you@email.com': 'you@email.com',
     'Please create an account or sign in to finish your booking': '请创建账户或登录以完成预订',
     'Please sign in to complete your booking.': '请登录以完成您的预订。',
+    'Please sign in to send a message.': '请登录以发送消息。',
+    'Please sign in again.': '请重新登录。',
     'We need an email to send your receipt.': '我们需要一个邮箱来发送收据。',
     "Sorry, we don't currently service that address. Try a different address or contact us.":
       '抱歉，我们目前不提供该地址的服务。请尝试其他地址或联系我们。',
