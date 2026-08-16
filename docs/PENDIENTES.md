@@ -4332,7 +4332,7 @@ invisible; a fin de trimestre es la diferencia entre dos BAS. Hay que elegir
 una definicion y que las dos pantallas la usen (probablemente `completed_at`,
 que es lo que ya esta documentado como la regla).
 
-### 20.5 "New this month" en Clientes se pierde las altas de esa misma manana
+### 20.5 "New this month" en Clientes se pierde las altas de esa misma manana - CERRADO (PR #248)
 
 ```js
 const thisMonth = new Date();
@@ -4345,7 +4345,7 @@ la hora actual". Mirando el panel un dia 1 a las 18:00, todo el que se registro
 esa manana no se cuenta. Falta `thisMonth.setHours(0, 0, 0, 0)`, que es
 exactamente lo que si hace `anRangeStart()` en Analytics.
 
-### 20.6 `loadClients()` no pone limite y el KPI "Total clients" puede ser un piso
+### 20.6 `loadClients()` no pone limite y el KPI "Total clients" puede ser un piso - CERRADO (PR #248)
 
 ```js
 const { data, error } = await sb.from('profiles').select('*').order('created_at', ...)
@@ -4361,6 +4361,17 @@ Settings > API). Si esta en 1000, esto ya esta mordiendo o va a morder pronto,
 y no solo aca: `loadAnalytics()` pide `.limit(20000)` pero un `max-rows` mas
 bajo gana igual, y su aviso ("solo se leyeron los primeros 20.000") nunca se
 dispara porque compara contra 20.000.
+
+**Los dos se arreglaron el 2026-08-16 (PR #248).** Los tres contadores de
+Clientes ahora los cuenta la base con `count: 'exact', head: true`, hay una
+`startOfMonth()` con tests que si pone la hora en cero, y el aviso de truncado
+de Analytics compara contra el conteo real en vez de contra el `.limit()` que
+pidio - antes esa condicion era falsa siempre si el `max-rows` del proyecto era
+menor, o sea que el aviso no podia aparecer nunca.
+
+Y **la pregunta que 20.6 dejaba abierta - cuanto vale el `max-rows` - ya no hace
+falta contestarla**: no queda ningun numero en pantalla que dependa de ese
+valor.
 
 ### 20.7 Los CSV se pueden abrir como formula en Excel
 
