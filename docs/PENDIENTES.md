@@ -2722,6 +2722,14 @@ fuera de token (12.14).
 > un servidor estatico local. Y `profile` / `my-bikes` de la SPA redirigen a
 > login sin sesion, asi que sus pantallas propias tampoco se midieron.
 >
+> **CERRADO 2026-08-16.** Recorriendo `admin.html` completo aparecieron 13,
+> no 11 - las 5 nombradas arriba mas Finance transactions, Contacts, Claims,
+> Newsletter, Notification numbers, Inventory, Services y Membership. Las 13
+> tienen `overflow-y:auto` + `max-height:480px` ahora (`.tbl-scroll` para las
+> 6 que son `<table>`, directo en las 7 que son listas). Misma limitacion que
+> antes: no se pudo medir con datos reales por la autenticacion de
+> `/api/auth` - se verifico que `getComputedStyle()` aplica los valores
+> correctos en un preview local, no el scroll en si con filas de verdad.
 > El detalle de abajo es la medicion original del 01-ago.
 
 **SPA a 390px - VERIFICADO EN NAVEGADOR, medido con `getBoundingClientRect()`:**
