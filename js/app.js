@@ -63,6 +63,7 @@ import {
   confirmDialog,
 } from './components.js';
 import { getRiderTier } from './rider-tier.js';
+import { toDbTime, toDisplayTime, sameTime } from './time-format.js';
 import {
   getLang,
   setLang,
@@ -2207,7 +2208,7 @@ async function renderTrackingPicker(screen) {
             style="background:var(--white);border:1px solid var(--border);border-left:4px solid ${color};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:64px;transition:background 150ms ease">
             <div style="flex:1;min-width:0">
               <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.service_name || 'Service'}</div>
-              <div style="font-size:13px;color:var(--gray)">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''}</div>
+              <div style="font-size:13px;color:var(--gray)">${b.scheduled_date || ''}${toDisplayTime(b.scheduled_time) ? ' · ' + toDisplayTime(b.scheduled_time) : ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
               <span style="font-size:11px;font-weight:600;color:${color};background:${color}1A;padding:3px 10px;border-radius:20px;white-space:nowrap">${ST_LABELS[b.status] || b.status}</span>
@@ -3611,7 +3612,7 @@ async function renderMyBookings() {
             <div style="display:inline-block;font-size:11px;font-weight:600;color:${sc};background:${sc}1A;padding:3px 10px;border-radius:20px;margin-bottom:20px">${sl}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Date</span><span style="font-weight:600;color:var(--navy)">${booking.scheduled_date || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Time</span><span style="font-weight:600;color:var(--navy)">${booking.scheduled_time || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Time</span><span style="font-weight:600;color:var(--navy)">${toDisplayTime(booking.scheduled_time) || '--'}</span></div>
               <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${booking.address || '--'}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Call-out fee</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
             </div>
@@ -3791,7 +3792,6 @@ async function renderMyBookings() {
           overlay.querySelector('#reschedule-btn').addEventListener('click', () => {
             const panel = document.getElementById('detail-panel');
             const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-            const fmtTime = (t) => t.replace(':00', '') + (parseInt(t) < 12 ? 'am' : 'pm');
             panel.innerHTML = `
               <div style="font-size:18px;font-weight:700;margin-bottom:20px">📅 <span>Reschedule</span></div>
               <div style="margin-bottom:16px">
@@ -3825,11 +3825,17 @@ async function renderMyBookings() {
               try {
                 const slots = await getAvailableSlots(date);
                 const anyAvailable = slots.some((s) => s.available);
+                // The option VALUE is the 24h time the endpoint validates
+                // (`client-reschedule` rejects anything but HH:MM); the label
+                // stays the 12-hour slot name the client already sees in the
+                // booking wizard. Posting the label is what made every
+                // reschedule fail with "Invalid time format (HH:MM)".
                 timeSel.innerHTML = slots
-                  .map(
-                    (s) =>
-                      `<option value="${s.time}" ${!s.available ? 'disabled' : ''} ${s.time === booking.scheduled_time && s.available ? 'selected' : ''}>${fmtTime(s.time)}${!s.available ? translateValue(' - unavailable') : ''}</option>`
-                  )
+                  .map((s) => {
+                    const value = toDbTime(s.time);
+                    const isCurrent = sameTime(s.time, booking.scheduled_time);
+                    return `<option value="${escapeHtml(value || '')}" ${!s.available ? 'disabled' : ''} ${isCurrent && s.available ? 'selected' : ''}>${escapeHtml(toDisplayTime(s.time) || s.time)}${!s.available ? translateValue(' - unavailable') : ''}</option>`;
+                  })
                   .join('');
                 timeSel.disabled = !anyAvailable;
                 if (!anyAvailable) {
@@ -3849,7 +3855,10 @@ async function renderMyBookings() {
 
             panel.querySelector('#confirm-resched-btn').addEventListener('click', async () => {
               const newDate = panel.querySelector('#resched-date').value;
-              const newTime = panel.querySelector('#resched-time').value;
+              // Already 24h - the <option> values are built with toDbTime().
+              // Converted again rather than trusted, so a slot the endpoint
+              // would reject is caught here instead of after the round trip.
+              const newTime = toDbTime(panel.querySelector('#resched-time').value);
               if (!newDate) {
                 showToast('Select a date.', 'error');
                 return;
