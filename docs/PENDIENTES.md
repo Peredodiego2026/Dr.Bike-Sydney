@@ -4556,9 +4556,31 @@ Sumado a `docs/RUNBOOK-SQL.md` como los items **39** (`fix-availability-blocks.s
 que faltaba en el runbook) y **40** (este). **Diego tiene que correr el 40 en
 el SQL Editor de Supabase antes de repetir la prueba por tercera vez.**
 
----
+### 21.7 `availability` nunca tuvo policies de admin - tercer y ultimo SQL
 
-## 22. Estado al cerrar el 16-ago-2026
+Con el 21.6 corrido, Diego probo por tercera vez: **cambio el error otra
+vez**, ahora `403 new row violates row-level security policy for table
+"availability"`. `saveBlocks()` y `unblockDate()` escriben con la sesion
+autenticada del admin (no la service key), igual que `van_zones` - pero
+`availability` **nacio con el PR #253, semanas despues** de
+`harden-security-2026-07-17.sql`, el script que le puso policies de admin a
+`bookings`, `discount_codes` y `van_zones`. Nunca la incluyo porque no
+existia todavia. RLS quedo encendido sin ninguna policy de escritura: acceso
+denegado por defecto para todo el mundo, admin incluido.
+
+**Arreglo: `scripts/add-availability-rls.sql`**, mismo patron exacto que
+`van_zones_admin_write/update/delete` de `harden-security-2026-07-17.sql`:
+4 policies (`select`/`insert`/`update`/`delete`) que solo dejan pasar a un
+usuario autenticado cuyo `profiles.role` sea `'admin'`. El lector server-side
+(`api/auth.js`, service key) no lo necesita y no lo toca este script. Sumado
+al runbook como item **41**.
+
+**Tres SQL en cadena para un boton que "ya estaba cerrado" (PR #253, 16-ago):**
+columna que no existia (21.1/21.5-cache), columna que faltaba (21.6), y ahora
+RLS sin policies (21.7). Los tres eran invisibles desde el codigo o los tests
+- ninguno corre contra la base real. **La leccion que ya escribio la seccion
+22.1 sobre los dos vocabularios de hora vale otra vez aca: sin probar contra
+produccion, "cerrado" es una hipotesis, no un hecho.**
 
 Un dia entero sobre Analytics, Finanzas y la reserva. **10 PRs mergeadas y
 verificadas en produccion**, no solo mergeadas.
