@@ -1141,7 +1141,7 @@ async function deleteExpense(id, description) {
 // (dated by timestamp). rangeEndExclusive is the first day AFTER the period,
 // so the comparison is [start, end) and the last day is never half-counted.
 function finRange(view, month, year) {
-  let startY = year;
+  const startY = year;
   let startM = month - 1; // JS months are 0-based
   let months = 1;
   if (view === 'quarter') {
