@@ -1392,6 +1392,22 @@ async function loadFinance() {
   };
 }
 
+// One cell of a CSV, quoted and disarmed.
+//
+// Two problems, one place. Quoting: exportFinanceCSV() joined the raw values
+// with commas, so a client called "Smith, John" silently pushed every column
+// after it one to the right. Disarming: Excel and Sheets EXECUTE a cell that
+// starts with = + - or @, and these cells carry names typed by clients and
+// service names typed by Diego, so a spreadsheet opened from this app could
+// run something nobody wrote (PENDIENTES 20.7). A leading apostrophe is the
+// standard fix and is invisible once the file is open.
+function csvCell(value) {
+  const text = value === null || value === undefined ? '' : String(value);
+  const disarmed = /^[=+\-@\t\r]/.test(text) ? "'" + text : text;
+  return '"' + disarmed.replace(/"/g, '""') + '"';
+}
+const csvRow = (cells) => cells.map(csvCell).join(',');
+
 function exportFinanceCSV() {
   const d = window._finData;
   if (!d) return;
@@ -1419,7 +1435,7 @@ function exportFinanceCSV() {
     ['Net Profit', d.netProfit, '', '', '', '', ''],
     ['Margin', d.margin + '%', '', '', '', '', ''],
   ];
-  const csv = rows.map((r) => r.join(',')).join('\n');
+  const csv = rows.map(csvRow).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -3163,7 +3179,10 @@ const SUBURB_MATCHERS = Object.keys(SUBURB_COORDS).map((name) => ({
   re: new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`),
 }));
 
-function suburbFromText(text) {
+// The matched suburb NAME, canonical and lowercase, or null. Split out of
+// suburbFromText so the suburb list can group by the same name the heatmap
+// plots, instead of by whatever string the booking form happened to store.
+function suburbNameFromText(text) {
   const t = (text || '').toLowerCase();
   if (!t) return null;
   let best = null;
@@ -3179,7 +3198,12 @@ function suburbFromText(text) {
       best = cand;
     }
   }
-  return best ? SUBURB_COORDS[best.name] : null;
+  return best ? best.name : null;
+}
+
+function suburbFromText(text) {
+  const name = suburbNameFromText(text);
+  return name ? SUBURB_COORDS[name] : null;
 }
 
 function suburbCoord(b) {
@@ -3790,16 +3814,18 @@ function renderTargetMetrics(all) {
   sixMoAgo.setMonth(sixMoAgo.getMonth() - 6);
   const twelveMoAgo = new Date(now);
   twelveMoAgo.setMonth(twelveMoAgo.getMonth() - 12);
-  const clientKey = (b) => b.client_id || b.client_email || b.profiles?.email;
+  // The same identity as the LTV table, so the two cards cannot disagree
+  // about how many customers there are.
   const cohort = new Set();
   completed.forEach((b) => {
     const d = new Date(b.scheduled_date + 'T00:00:00');
-    if (d >= twelveMoAgo && d < sixMoAgo) cohort.add(clientKey(b));
+    const key = ltvClientKey(b);
+    if (key && d >= twelveMoAgo && d < sixMoAgo) cohort.add(key);
   });
   const returned = new Set();
   completed.forEach((b) => {
-    const key = clientKey(b);
-    if (!cohort.has(key)) return;
+    const key = ltvClientKey(b);
+    if (!key || !cohort.has(key)) return;
     const d = new Date(b.scheduled_date + 'T00:00:00');
     if (d >= sixMoAgo) returned.add(key);
   });
@@ -3902,7 +3928,9 @@ function exportAnalyticsCSV() {
   rows.push(['Suburb', 'Bookings', 'Revenue']);
   const bySuburb = {};
   completed.forEach((b) => {
-    const key = (b.suburb || 'Unknown').trim();
+    // Same grouping as the on-screen list (suburbLabel), so the export and the
+    // chart cannot disagree about which suburb a job was in.
+    const key = suburbLabel(b) || 'Unknown';
     if (!bySuburb[key]) bySuburb[key] = { n: 0, rev: 0 };
     bySuburb[key].n++;
     bySuburb[key].rev += anBookingRevenue(b);
@@ -3942,7 +3970,11 @@ function exportAnalyticsCSV() {
   rows.push(['Client', 'Jobs', 'LTV', 'Last service']);
   const byClient = {};
   completed.forEach((b) => {
-    const key = b.client_id || b.client_email || b.profiles?.email || b.client_name || 'unknown';
+    // Same identity as the on-screen table (ltvClientKey): a guest booking and
+    // a signed-in booking by the same person are one customer, and a booking
+    // with no email and no account is nobody rather than a fake one.
+    const key = ltvClientKey(b);
+    if (!key) return;
     if (!byClient[key])
       byClient[key] = {
         name: b.client_name || b.profiles?.full_name || b.profiles?.email || 'Client',
@@ -3959,9 +3991,7 @@ function exportAnalyticsCSV() {
     .sort((a, b) => b.ltv - a.ltv)
     .forEach((c) => rows.push([c.name, c.jobs, c.ltv, c.last]));
 
-  const csv = rows
-    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
-    .join('\n');
+  const csv = rows.map(csvRow).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -4373,6 +4403,22 @@ function renderServicePopularity(completed, catalog, d) {
 }
 
 // ── Bookings by suburb ───────────────────────────────────────────────────────
+// The list used to group by `(b.suburb || '').trim()` - the raw field, never
+// normalised and never falling back to the address. Two consequences, both
+// reported on 11-Aug-2026 (PENDIENTES 18.1): `Pyrmont`, `pyrmont` and
+// `PYRMONT` were three separate bars in the same chart, and every booking
+// with an empty suburb landed in "Not recorded" even when the address said
+// exactly where it was - while the heatmap right below it, which does read
+// the address, placed the same booking correctly. One screen, two answers.
+//
+// Now both use suburbNameFromText, so the bar and the circle agree.
+// Title-cased for display: the table's keys are lowercase.
+function suburbLabel(b) {
+  const name = suburbNameFromText(b.suburb) || suburbNameFromText(b.address);
+  if (!name) return null;
+  return name.replace(/(^|\s)([a-z])/g, (m, sp, ch) => sp + ch.toUpperCase());
+}
+
 function renderSuburbs(inRange, d) {
   const el = document.getElementById('an-suburbs');
   if (!el) return;
@@ -4386,7 +4432,9 @@ function renderSuburbs(inRange, d) {
   }
   const counts = {};
   inRange.forEach((b) => {
-    const key = (b.suburb || '').trim() || 'Not recorded';
+    // Only when neither the field nor the address names a suburb we know. That
+    // is a real "we do not know where this was", not a blank field.
+    const key = suburbLabel(b) || 'Not recorded';
     if (!counts[key]) counts[key] = { n: 0, rev: 0 };
     counts[key].n++;
     if (b.status === 'completed') counts[key].rev += anBookingRevenue(b);
@@ -4918,6 +4966,29 @@ function renderMargins(all) {
     .join('');
 }
 
+// Who a booking belongs to, as ONE rule the whole screen shares.
+//
+// It used to be `client_id || client_email || profiles?.email || client_name
+// || 'unknown'`, so identity depended on which field happened to be filled:
+// somebody who booked once as a guest (email only) and once signed in
+// (client_id) counted as TWO customers, which inflated "Active customers"
+// and deflated both "Avg LTV" and "Repeat rate". Worse, every booking with
+// none of those fields collapsed into the literal key 'unknown' - one fake
+// customer named "Client" carrying everybody's money, high enough up the
+// table to look real.
+//
+// Diego chose the email, lowercased, as the identity (16-Aug-2026), with
+// client_id only as the tie-break when there is no email. A booking with
+// neither is NOT a customer: it returns null and the caller counts it aside.
+function ltvClientKey(b) {
+  const email = String(b.client_email || b.profiles?.email || '')
+    .trim()
+    .toLowerCase();
+  if (email) return 'email:' + email;
+  if (b.client_id) return 'id:' + b.client_id;
+  return null;
+}
+
 // #22 Customer LTV & churn
 function renderLTV(all) {
   const rowsEl = document.getElementById('an-ltv-rows');
@@ -4926,8 +4997,14 @@ function renderLTV(all) {
   if (!rowsEl) return;
   const completed = all.filter((b) => b.status === 'completed');
   const byClient = {};
+  const unidentified = { jobs: 0, revenue: 0 };
   completed.forEach((b) => {
-    const key = b.client_id || b.client_email || b.profiles?.email || b.client_name || 'unknown';
+    const key = ltvClientKey(b);
+    if (!key) {
+      unidentified.jobs++;
+      unidentified.revenue += anBookingRevenue(b);
+      return;
+    }
     if (!byClient[key])
       byClient[key] = {
         name: b.client_name || b.profiles?.full_name || b.profiles?.email || 'Client',
@@ -4969,7 +5046,14 @@ function renderLTV(all) {
   const repeatRate = Math.round((clients.filter((c) => c.jobs > 1).length / clients.length) * 100);
 
   if (subEl)
-    subEl.textContent = `${clients.length} customers · churn after ${CHURN_DAYS} days inactive`;
+    subEl.textContent =
+      `${clients.length} customers · churn after ${CHURN_DAYS} days inactive` +
+      // Named, never folded in. These jobs are real money that simply cannot be
+      // attributed to anyone, and hiding them is how the old 'unknown' bucket
+      // turned them into a customer that does not exist.
+      (unidentified.jobs
+        ? ` · ${unidentified.jobs} completed job${unidentified.jobs === 1 ? '' : 's'} (${anMoney(unidentified.revenue)}) have no email or account and are not counted here`
+        : '');
   if (kpisEl)
     kpisEl.innerHTML = [
       ['Avg LTV', anMoney(avgLtv), 'var(--green)'],
@@ -7410,9 +7494,7 @@ function exportNewsletterCSV() {
   const csv = [
     headers.join(','),
     ...Array.from(rows).map((r) =>
-      Array.from(r.querySelectorAll('td'))
-        .map((td) => '"' + td.textContent.trim().replace(/"/g, '""') + '"')
-        .join(',')
+      csvRow(Array.from(r.querySelectorAll('td')).map((td) => td.textContent.trim()))
     ),
   ].join('\n');
   const a = document.createElement('a');

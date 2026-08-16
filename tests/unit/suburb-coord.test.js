@@ -30,6 +30,7 @@ const build = new Function(`
   ${grab(/const SUBURB_COORDS = \{[\s\S]*?\n\};/, 'SUBURB_COORDS')}
   ${grab(/const CITY_WIDE = new Set\(\[[^\]]*\]\);/, 'CITY_WIDE')}
   ${grab(/const SUBURB_MATCHERS = Object\.keys\(SUBURB_COORDS\)[\s\S]*?\n\s*\}\)\);/, 'SUBURB_MATCHERS')}
+  ${grab(/function suburbNameFromText\(text\) \{[\s\S]*?\n\}/, 'suburbNameFromText')}
   ${grab(/function suburbFromText\(text\) \{[\s\S]*?\n\}/, 'suburbFromText')}
   ${grab(/function suburbCoord\(b\) \{[\s\S]*?\n\}/, 'suburbCoord')}
   return { suburbCoord, SUBURB_COORDS };

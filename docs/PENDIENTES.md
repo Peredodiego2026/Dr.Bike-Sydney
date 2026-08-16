@@ -4097,7 +4097,7 @@ circulos apilados.
 por el campo que casualmente este lleno — encontrado auditando el resto de la
 pantalla. Ninguno es urgente. Ninguno tiene test todavia.
 
-### 18.1 La lista "Suburbs" no usa `suburbCoord` (`js/admin.js`, `renderSuburbs`)
+### 18.1 La lista "Suburbs" no usa `suburbCoord` - CERRADO (PR #252)
 
 ```js
 const key = (b.suburb || '').trim() || 'Not recorded';
@@ -4115,7 +4115,14 @@ El arreglo natural es usar el mismo matcher que ya existe (`suburbFromText`) y
 quedarse con el nombre canonico de `SUBURB_COORDS` en vez del texto crudo. Ojo:
 eso cambia las etiquetas que se ven, no solo los numeros.
 
-### 18.2 LTV cuenta al mismo cliente dos veces (`js/admin.js`, `renderLTV`)
+**2026-08-16 (PR #252):** hecho asi. `suburbNameFromText()` salio de
+`suburbFromText()` para poder devolver el NOMBRE y no las coordenadas, y la
+lista agrupa por ese nombre en Title Case. Las etiquetas cambiaron, como
+avisaba el parrafo de arriba: ahora se leen `Pyrmont` y `Bondi Beach`, una sola
+barra por suburbio, y "Not recorded" quedo para cuando de verdad no se sabe
+donde fue - ni el campo ni la direccion nombran un suburbio conocido.
+
+### 18.2 LTV cuenta al mismo cliente dos veces - CERRADO (PR #252)
 
 ```js
 const key = b.client_id || b.client_email || b.profiles?.email || b.client_name || 'unknown';
@@ -4132,6 +4139,12 @@ facturacion de todos ellos y puede aparecer arriba de todo en la tabla de LTV.
 
 Arreglarlo bien pide decidir primero **que es un cliente**: probablemente email
 normalizado en minusculas como clave, con `client_id` solo como desempate.
+
+**2026-08-16 (PR #252):** Diego eligio exactamente eso. `ltvClientKey()` es
+ahora la unica definicion, y la usan la tabla de LTV, la retencion de 6 meses
+del scorecard y el CSV. Una reserva sin email y sin cuenta **no es un cliente**:
+devuelve null y se cuenta aparte, con su plata, en el subtitulo de la tarjeta.
+El cliente falso llamado "Client" ya no existe.
 
 ### 18.3 El margen es una estimacion pintada como medicion - CERRADO en parte (PR #251)
 
@@ -4389,7 +4402,7 @@ Y **la pregunta que 20.6 dejaba abierta - cuanto vale el `max-rows` - ya no hace
 falta contestarla**: no queda ningun numero en pantalla que dependa de ese
 valor.
 
-### 20.7 Los CSV se pueden abrir como formula en Excel
+### 20.7 Los CSV se pueden abrir como formula en Excel - CERRADO (PR #252)
 
 `exportAnalyticsCSV()` y `exportFinanceCSV()` escapan comillas, que es lo que
 hace falta para que el CSV sea valido, pero un valor que empieza con `=`, `+`,
@@ -4397,6 +4410,12 @@ hace falta para que el CSV sea valido, pero un valor que empieza con `=`, `+`,
 gente (nombre de servicio, nombre de cliente). Riesgo bajo porque los abre
 Diego y nadie mas, pero se arregla con un apostrofe adelante y no vuelve a
 mirarse.
+
+**2026-08-16 (PR #252):** hecho, con un `csvCell()` que usan los tres
+exportadores. De paso aparecio algo peor que la inyeccion: `exportFinanceCSV()`
+no entrecomillaba **nada** - unia los valores con comas - asi que un cliente
+llamado "Smith, John" corria una columna todo lo que venia despues. Eso tambien
+quedo arreglado.
 
 ### 20.8 Lo que esta pasada NO cubrio
 
