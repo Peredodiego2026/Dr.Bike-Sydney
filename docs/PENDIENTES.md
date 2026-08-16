@@ -4147,3 +4147,104 @@ ahi se pinta verde/ambar/rojo como si fuera un numero medido. El GST
 Opciones: sacar el semaforo del margen estimado, o sacar el costo real de
 `parts_inventory` por trabajo. La segunda es la unica que hace el numero
 verdadero.
+
+---
+
+## 19. La bici fea ya no existe, y lo que se vio al sacarla (2026-08-16)
+
+Salio de que Diego seguia viendo la bici fea del paso 4 despues de un
+Ctrl+Shift+R, con el #223 ya mergeado. **No era ni cache ni la mascara.**
+Produccion servia el HTML correcto todo el tiempo: se verifico con curl que
+`/`, `www`, `/landing.html` e `/index.html` devuelven el markup de la mascara y
+cero copias del path viejo, para user agents de Firefox, Chrome, Edge, Safari e
+iPhone — uno por uno, porque la pagina se cachea en el edge con
+`Vary: User-Agent` y cada UA es una entrada distinta del CDN.
+
+Lo que si habia era la bici fea en otros cinco lugares (#242, CERRADO) y tres
+cosas que quedan abiertas.
+
+### 19.1 El azul del logotipo: decision de marca sin tomar
+
+El #242 dejo los logotipos de `claims/privacy/terms` con `var(--blue)`, que es
+`#2563eb`. Eso es exactamente el `stroke="#2563eb"` que tenian antes, o sea que
+el PR no cambio ningun color a proposito: cambio el dibujo.
+
+Pero **la marca tiene otro azul**. El logo y los iconos de app usan `#0055de`
+(decidido el 2026-08-03, ver la seccion "App icons" de `CLAUDE.md`: son dos
+azules a proposito, el de la app y el del logo). Los logotipos de esas tres
+paginas son logotipo, no icono de contenido, y hoy estan pintados con el azul
+de la app.
+
+Nadie decidio que esten asi: quedaron heredados. **Es una decision de Diego**,
+no un bug:
+
+- dejarlos con `var(--blue)` y aceptar que el logotipo del nav de las legales
+  use el azul de la app, o
+- pasarlos a `#0055de` y que el logotipo sea el azul de la marca en todos lados.
+
+Si se elige lo segundo, el hex va con comentario: `#0055de` no es un token y no
+debe serlo (misma razon que los iconos).
+
+### 19.2 Tres paginas declaran una paleta paralela que NO coincide con los tokens
+
+`claims.html`, `privacy.html` y `terms.html` **no cargan `css/variables.css`**.
+Cada una abre su propio `:root` con nombres y valores propios, y no son los
+tokens:
+
+| Concepto | `css/variables.css` | Las tres legales | ¿Igual? |
+|---|---|---|---|
+| azul | `--blue: #2563eb` | `--blue: #2563eb` | si |
+| azul oscuro | `--blue-dark: #1e40af` | `--blue-dark: #1d4ed8` | **NO** |
+| azul claro | `--blue-lt: #eff6ff` | `--blue-light: #eff6ff` | valor si, nombre no |
+| texto oscuro | `--navy: #0d1f3c` | `--dark: #111827` | **NO**, nombre y valor |
+| texto gris | `--gray: #475569` | `--gray: #6b7280` | **NO** |
+| gris claro | `--gray-lt: #94a3b8` | `--gray-light: #f9fafb` | **NO**, son cosas distintas |
+| borde | `--border: #e2e8f0` | `--border: #e5e7eb` | **NO** |
+| blanco | `--white: #ffffff` | `--white: #ffffff` | si |
+
+`#111827` y `#e5e7eb` son justo los dos valores que `CLAUDE.md` documenta como
+el error historico del 12.14 (la tabla del skill de diseño los dio por tokens
+durante meses). Siguen vivos aca.
+
+**Esto contradice lo que dice `CLAUDE.md` hoy**: *"Every surface now resolves
+every token to the same value, so any page is a valid reference"*. Es cierto
+para las cinco superficies de la app; no lo es para estas tres. Quien lea esa
+frase y tome `terms.html` de referencia se lleva `--gray: #6b7280`.
+
+El arreglo natural es cargar `css/variables.css` en las tres y borrar el
+`:root` propio, pero **cambia pixeles**: el gris del cuerpo pasaria de `#6b7280`
+a `#475569` y el borde de `#e5e7eb` a `#e2e8f0`. Es el mismo trabajo que ya se
+hizo con `track.html` (`fix/track-loads-the-tokens`) y con `css/landing.css`, y
+conviene hacerlo igual: un PR por superficie, mirando la pagina antes y despues.
+
+### 19.3 El ratchet de color tiene un agujero de 7 paginas
+
+`scripts/color-check.mjs` cubre las cinco superficies por nombre y las 60
+generadas por `generatedPages()`. **Siete paginas de la raiz no las mira nadie**,
+y suman 184 hex escritos a mano:
+
+| Pagina | Hex a mano | Carga `variables.css` |
+|---|---|---|
+| `business.html` | 41 | si |
+| `bike-check.html` | 40 | si |
+| `cycling-map.html` | 32 | si |
+| `terms.html` | 24 | **no** (19.2) |
+| `privacy.html` | 21 | **no** (19.2) |
+| `applepay.html` | 15 | **no** |
+| `claims.html` | 11 | **no** (19.2) |
+
+No es urgente: nada de esto esta roto hoy. Pero el ratchet existe para que el
+problema del 12.14 no vuelva a entrar de a una linea, y estas siete son
+exactamente por donde puede volver a entrar. Agregarlas al `BUDGET` con su
+conteo actual es barato y no obliga a convertir nada.
+
+### 19.4 Lo que NO se verifico, en ninguno de los dos PRs
+
+Ni el #223 ni el #242 miraron pixeles. Lo verificado es el HTML y el CSS que
+sirve el servidor (por HTTP, contra produccion y contra el preview del PR), que
+el PNG responde 200 y es byte a byte identico al del repo, y que
+`images/bike-icon.png` es RGBA con canal alfa real: 78.5% transparente, silueta
+de bici, no un cuadrado opaco — decodificado y reescalado a 28x21 la bici se
+lee. Eso descarta la clase de fallas que estabamos buscando, pero **nadie miro
+las cinco marcas nuevas renderizadas**. Si alguna quedo desalineada respecto al
+texto del logo, se ve a simple vista y no lo agarra ningun test.
