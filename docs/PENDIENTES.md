@@ -3204,6 +3204,15 @@ Verificado en navegador contra la rama:
   a proposito, asi que una clienta con el telefono en español lo veia en ingles.
   Ya esta en el diccionario, pero el hueco del chequeo sigue ahi.
 
+  **CERRADO EN PARTE 2026-08-16.** `js/app.js` tiene 5 variantes de
+  `throw new Error('Please sign in...')`, todas llegan a pantalla via
+  `translateValue()`. 2 de las 5 ("Please sign in to send a message.",
+  "Please sign in again.") no estaban en el diccionario - las mismas se
+  agregaron a es/zh. **El hueco del chequeo sigue abierto a proposito:**
+  `scripts/i18n-check.mjs` explica por que no lee `throw new Error(...)`
+  (mezcla mensajes de usuario e internos, sin forma de distinguirlos por
+  analisis estatico) - no se toco esa decision.
+
 ### 14.3 Ella no recibio NINGUN email, y no fue por el mismo motivo
 
 Diego pregunto por que la clienta no recibio ni un correo. La respuesta es que
