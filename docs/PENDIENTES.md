@@ -4133,7 +4133,7 @@ facturacion de todos ellos y puede aparecer arriba de todo en la tabla de LTV.
 Arreglarlo bien pide decidir primero **que es un cliente**: probablemente email
 normalizado en minusculas como clave, con `client_id` solo como desempate.
 
-### 18.3 El margen es una estimacion pintada como medicion (`js/admin.js`, `renderMargins`)
+### 18.3 El margen es una estimacion pintada como medicion - CERRADO en parte (PR #251)
 
 ```js
 const cost = Math.round(d.jobs * _partsPerJob); // variable parts cost
@@ -4147,6 +4147,14 @@ ahi se pinta verde/ambar/rojo como si fuera un numero medido. El GST
 Opciones: sacar el semaforo del margen estimado, o sacar el costo real de
 `parts_inventory` por trabajo. La segunda es la unica que hace el numero
 verdadero.
+
+**2026-08-16 (PR #251):** se hizo lo intermedio. La tarjeta ahora **dice de
+donde sale el numero** ("est. cost = $X of parts / N jobs = $Y a job"), asi que
+el promedio plano deja de parecer un costo medido por servicio, y cuando no hay
+gastos de repuestos cargados **no muestra ningun porcentaje**. El semaforo se
+mantiene solo cuando hay un dato real detras. Sigue abierto lo unico que hace
+el numero verdadero: sacar el costo por trabajo de `parts_inventory` en vez de
+un promedio plano.
 
 ---
 
@@ -4258,7 +4266,7 @@ arreglo.** El punto 18 sigue abierto tal cual; esto se suma, no lo reemplaza.
 
 Ordenado por lo que mas cambia un numero que Diego mira.
 
-### 20.1 El margen de Analytics dice 100% hasta que se abre Finanzas (`js/admin.js`)
+### 20.1 El margen de Analytics dice 100% hasta que se abre Finanzas - CERRADO (PR #251)
 
 `renderMargins()` calcula el costo asi:
 
