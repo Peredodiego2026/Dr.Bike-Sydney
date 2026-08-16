@@ -41,6 +41,20 @@
     .navbar .container { display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 16px; }
     .nav-logo { display: flex; gap: 10px; align-items: center; }
     .nav-logo span { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+    /* The bike: images/bike-icon.png worn as a CSS mask and tinted, the same
+       mark the SPA and the landing use. It replaces an inline SVG whose frame
+       path (`M12 6l1 5.5-6.5 2 2-7.5`) drew an open quadrilateral across the
+       middle of the icon, which at 28px read as a lump instead of a bicycle.
+       `flex: none` because both places that use it are flex containers.
+       A class, not an inline style, because `.nav-logo span` above would
+       otherwise reach the mark itself. */
+    .bike-mark {
+      display: inline-block; width: 28px; height: 28px; flex: none;
+      background-color: var(--blue);
+      -webkit-mask: url('images/bike-icon.png') center/contain no-repeat;
+      mask: url('images/bike-icon.png') center/contain no-repeat;
+    }
+    .bike-mark.on-dark { background-color: white; }
     .nav-right { display: flex; align-items: center; gap: 16px; }
     .nav-back {
       font-size: 14px; color: var(--gray); font-weight: 500;
@@ -113,14 +127,7 @@
 <nav class="navbar">
   <div class="container">
     <a href="/" class="nav-logo">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="5.5" cy="17.5" r="3.5"/>
-        <circle cx="18.5" cy="17.5" r="3.5"/>
-        <path d="M15 6a1 1 0 0 0-1-1h-4"/>
-        <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
-        <path d="M18.5 17.5L15 6"/>
-        <path d="M5.5 17.5L9 11l4.5-1"/>
-      </svg>
+      <span class="bike-mark"></span>
       <span>DR BIKE SYDNEY</span>
     </a>
     <div class="nav-right">
@@ -283,14 +290,7 @@
 
       <div>
         <div style="display:flex;gap:10px;align-items:center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="5.5" cy="17.5" r="3.5"/>
-            <circle cx="18.5" cy="17.5" r="3.5"/>
-            <path d="M15 6a1 1 0 0 0-1-1h-4"/>
-            <path d="M12 6l1 5.5-6.5 2 2-7.5"/>
-            <path d="M18.5 17.5L15 6"/>
-            <path d="M5.5 17.5L9 11l4.5-1"/>
-          </svg>
+          <span class="bike-mark on-dark"></span>
           <span style="font-weight:700;font-size:15px;color:white;letter-spacing:0.5px">DR BIKE SYDNEY</span>
         </div>
         <p data-i18n="footer-tag" style="color:var(--gray);font-size:14px;margin-top:12px;line-height:1.6">Professional bike service at your doorstep.</p>
