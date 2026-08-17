@@ -280,9 +280,49 @@ Sumar las URLs nuevas a la lista de rewrites de `vercel.json`.
 
 ~284 traducciones entre las dos paginas.
 
-### 4.2 Los 5 posts del blog
+### 4.2 Los 5 posts del blog - CERRADO 2026-08-17
 
-Tambien solo en ingles. Es un trabajo de contenido mucho mas grande: PR aparte.
+Estaban 100% en ingles. `scripts/translate-blog-posts.mjs` (nuevo, `npm run
+blog:translate`) - mismo mecanismo que 4.1 (diccionario por pagina,
+fragmento completo, el ingles sigue siendo la fuente), separado de
+`translate-static-pages.mjs` porque estos 5 viven en `blog/` y se cruzan
+entre si (cada post linkea a los otros 4 desde su seccion "More from Dr.
+Bike Sydney").
+
+**Encontrado de pasada, arreglado aparte:** `best-bikes-for-sydney-commuting-2026.html`
+tenia el `<style>` entero con llaves dobles (`*{{box-sizing...}}`, resto de
+un template que nunca se compilo) - el CSS nunca se aplicaba, la pagina
+estaba en produccion, indexada, sin ningun estilo. Bug real de produccion,
+no de traduccion: se separo en su propio PR urgente en vez de esperar a
+que esta traduccion estuviera lista.
+
+**Cross-links, mismo criterio que 4.1:** los 5 posts se linkean entre si y
+con `/bike-check` en su seccion de relacionados, y con las 20 paginas de
+suburbio en su seccion "We come to you across Sydney" - todos esos
+destinos ya tienen es/zh, asi que las 3 versiones de cada post enlazan en
+su propio idioma. Un link embebido a mitad de parrafo (el post de bicis de
+commuting menciona la guia de leyes de e-bikes) se resolvio a mano en el
+diccionario en vez de con el reemplazo generico de href, porque el href
+esta en el medio de una oracion traducida, no en su propia etiqueta.
+
+**`scripts/generate-suburb-pages.mjs` tambien se toco, dos cosas:**
+1. El sitemap ahora declara los 15 URLs de blog (5 posts x 3 idiomas) con
+   sus alternates - antes eran 5 entradas en ingles sin alternates.
+2. `BLOG_POSTS` (la lista de "Bike care guides" que aparece al final de
+   cada pagina de suburbio) dejo de ser ingles-solamente y ahora es
+   `{en, es, zh}`. El comentario que justificaba eso ("no tienen
+   traduccion todavia, mandar a un lector a un articulo en ingles es peor
+   que no linkearlo") ya no es cierto. **El codigo esta escrito pero no
+   esta activo todavia**: correr el generador para que las 60 paginas de
+   suburbio muestren los links nuevos pisa la conversion a `var(--token)`
+   que esas paginas ya tienen (ver el aviso aparte sobre esa plantilla
+   desactualizada) - se descartaron esas 60 reescrituras antes de
+   commitear, mismo que en 4.1. Corre limpio en cuanto se actualice esa
+   plantilla.
+
+**No era idempotente en el primer intento**, igual que 4.1 y por la misma
+razon (el ingles es fuente y destino): probado corriendolo 2 veces
+seguidas antes de darlo por bueno.
 
 ---
 

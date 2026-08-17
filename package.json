@@ -44,7 +44,8 @@
     "icons:check": "node scripts/icons-check.mjs",
     "color:check": "node scripts/color-check.mjs",
     "services:check": "node scripts/services-sync-check.mjs",
-    "suburbs:generate": "node scripts/generate-suburb-pages.mjs"
+    "suburbs:generate": "node scripts/generate-suburb-pages.mjs",
+    "blog:translate": "node scripts/translate-blog-posts.mjs"
   },
   "lint-staged": {
     "api/**/*.js": [

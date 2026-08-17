@@ -2,69 +2,189 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://drbikesydney.com.au/</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/landing.html</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/bike-check</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/business</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/terms</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/privacy</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/blog/best-bikes-for-sydney-commuting-2026</loc>
-    <lastmod>2026-08-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/best-bikes-for-sydney-commuting-2026"/>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/es/blog/best-bikes-for-sydney-commuting-2026</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/best-bikes-for-sydney-commuting-2026"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/zh/blog/best-bikes-for-sydney-commuting-2026</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/best-bikes-for-sydney-commuting-2026"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/best-bikes-for-sydney-commuting-2026"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/blog/cycling-safety-tips-sydney-roads</loc>
-    <lastmod>2026-08-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/cycling-safety-tips-sydney-roads"/>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/es/blog/cycling-safety-tips-sydney-roads</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/cycling-safety-tips-sydney-roads"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/zh/blog/cycling-safety-tips-sydney-roads</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/cycling-safety-tips-sydney-roads"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/cycling-safety-tips-sydney-roads"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/blog/electric-bike-laws-nsw-2026</loc>
-    <lastmod>2026-08-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/electric-bike-laws-nsw-2026"/>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/es/blog/electric-bike-laws-nsw-2026</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/electric-bike-laws-nsw-2026"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/zh/blog/electric-bike-laws-nsw-2026</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/electric-bike-laws-nsw-2026"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/electric-bike-laws-nsw-2026"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/blog/how-to-choose-a-bike-mechanic-sydney</loc>
-    <lastmod>2026-08-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://drbikesydney.com.au/es/blog/how-to-choose-a-bike-mechanic-sydney</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/zh/blog/how-to-choose-a-bike-mechanic-sydney</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/how-to-choose-a-bike-mechanic-sydney"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://drbikesydney.com.au/blog/how-to-clean-your-bike-chain-sydney</loc>
-    <lastmod>2026-08-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/how-to-clean-your-bike-chain-sydney"/>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/es/blog/how-to-clean-your-bike-chain-sydney</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/how-to-clean-your-bike-chain-sydney"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://drbikesydney.com.au/zh/blog/how-to-clean-your-bike-chain-sydney</loc>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/blog/how-to-clean-your-bike-chain-sydney"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/blog/how-to-clean-your-bike-chain-sydney"/>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://drbikesydney.com.au/bondi</loc>
@@ -72,7 +192,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/bondi"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/bondi"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/bondi"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -82,7 +202,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/bondi"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/bondi"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/bondi"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -92,7 +212,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/bondi"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/bondi"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/bondi"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -102,7 +222,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/cbd"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/cbd"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/cbd"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -112,7 +232,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/cbd"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/cbd"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/cbd"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -122,7 +242,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/cbd"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/cbd"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/cbd"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -132,7 +252,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/chatswood"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/chatswood"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/chatswood"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -142,7 +262,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/chatswood"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/chatswood"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/chatswood"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -152,7 +272,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/chatswood"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/chatswood"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/chatswood"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -162,7 +282,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/eastern-suburbs"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/eastern-suburbs"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/eastern-suburbs"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -172,7 +292,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/eastern-suburbs"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/eastern-suburbs"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/eastern-suburbs"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -182,7 +302,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/eastern-suburbs"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/eastern-suburbs"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/eastern-suburbs"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -192,7 +312,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/hills-district"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/hills-district"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/hills-district"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -202,7 +322,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/hills-district"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/hills-district"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/hills-district"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -212,7 +332,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/hills-district"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/hills-district"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/hills-district"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -222,7 +342,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/hornsby"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/hornsby"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/hornsby"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -232,7 +352,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/hornsby"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/hornsby"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/hornsby"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -242,7 +362,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/hornsby"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/hornsby"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/hornsby"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -252,7 +372,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/inner-west"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/inner-west"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/inner-west"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -262,7 +382,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/inner-west"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/inner-west"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/inner-west"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -272,7 +392,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/inner-west"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/inner-west"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/inner-west"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -282,7 +402,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/manly"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/manly"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/manly"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -292,7 +412,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/manly"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/manly"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/manly"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -302,7 +422,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/manly"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/manly"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/manly"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -312,7 +432,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/marrickville"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/marrickville"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/marrickville"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -322,7 +442,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/marrickville"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/marrickville"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/marrickville"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -332,7 +452,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/marrickville"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/marrickville"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/marrickville"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -342,7 +462,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/mosman"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/mosman"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/mosman"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -352,7 +472,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/mosman"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/mosman"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/mosman"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -362,7 +482,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/mosman"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/mosman"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/mosman"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -372,7 +492,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/newtown"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/newtown"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/newtown"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -382,7 +502,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/newtown"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/newtown"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/newtown"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -392,7 +512,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/newtown"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/newtown"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/newtown"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -402,7 +522,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/north-shore"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/north-shore"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/north-shore"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -412,7 +532,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/north-shore"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/north-shore"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/north-shore"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -422,7 +542,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/north-shore"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/north-shore"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/north-shore"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -432,7 +552,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/northern-beaches"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/northern-beaches"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/northern-beaches"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -442,7 +562,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/northern-beaches"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/northern-beaches"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/northern-beaches"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -452,7 +572,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/northern-beaches"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/northern-beaches"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/northern-beaches"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -462,7 +582,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/parramatta"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/parramatta"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/parramatta"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -472,7 +592,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/parramatta"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/parramatta"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/parramatta"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -482,7 +602,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/parramatta"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/parramatta"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/parramatta"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -492,7 +612,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/penrith"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/penrith"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/penrith"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -502,7 +622,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/penrith"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/penrith"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/penrith"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -512,7 +632,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/penrith"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/penrith"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/penrith"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -522,7 +642,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/ryde"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/ryde"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/ryde"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -532,7 +652,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/ryde"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/ryde"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/ryde"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -542,7 +662,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/ryde"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/ryde"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/ryde"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -552,7 +672,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/st-george"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/st-george"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/st-george"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -562,7 +682,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/st-george"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/st-george"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/st-george"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -572,7 +692,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/st-george"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/st-george"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/st-george"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -582,7 +702,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/strathfield"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/strathfield"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/strathfield"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -592,7 +712,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/strathfield"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/strathfield"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/strathfield"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -602,7 +722,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/strathfield"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/strathfield"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/strathfield"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -612,7 +732,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/surry-hills"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/surry-hills"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/surry-hills"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -622,7 +742,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/surry-hills"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/surry-hills"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/surry-hills"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -632,7 +752,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/surry-hills"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/surry-hills"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/surry-hills"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -642,7 +762,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/sutherland-shire"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/sutherland-shire"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/sutherland-shire"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -652,7 +772,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/sutherland-shire"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/sutherland-shire"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/sutherland-shire"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -662,7 +782,7 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/sutherland-shire"/>
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/sutherland-shire"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/sutherland-shire"/>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
