@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <link rel="stylesheet" href="css/variables.css?v=20260628">
-<link rel="stylesheet" href="css/admin.css?v=20260801">
+<link rel="stylesheet" href="css/admin.css?v=2cca27bf2b">
 <style>
 @media(max-width:768px){
   .content{padding:12px 10px !important}
@@ -457,6 +457,56 @@
           <button data-action="acb-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Create booking</button>
           <button data-action="acb-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Admin reschedule modal (docs/PENDIENTES.md 25.4) - before this, only
+         the client could move their own booking. -->
+    <div id="admin-reschedule-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+      <div style="background:var(--white);border-radius:16px;padding:24px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Reschedule booking</div>
+        <input type="hidden" id="admin-resched-booking-id">
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">New date</div>
+          <input type="date" id="admin-resched-date" class="inp" aria-label="New date">
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">New time</div>
+          <select id="admin-resched-time" class="inp" aria-label="New time">
+            <option value="08:00">8:00 AM</option>
+            <option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="17:00">5:00 PM</option>
+          </select>
+        </div>
+        <div id="admin-resched-error" style="display:none;font-size:12px;color:var(--red);margin-bottom:12px"></div>
+        <div style="display:flex;gap:10px">
+          <button data-action="admin-resched-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Reschedule</button>
+          <button data-action="admin-resched-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking detail modal - opened from the Calendar (Month/Week/Day chips) and
+         from a Bookings-table row. Before this, both just dumped you on the flat
+         list with no way back to the one booking you clicked. -->
+    <div id="booking-detail-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+      <div style="background:var(--white);border-radius:16px;width:440px;max-width:calc(100vw - 32px);max-height:calc(100vh - 64px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div>
+            <div id="bkd-name" style="font-size:17px;font-weight:700;color:var(--navy)">—</div>
+            <div id="bkd-status" style="margin-top:4px"></div>
+          </div>
+          <button data-action="close-booking-detail" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray);line-height:1;padding:2px" aria-label="Close">✕</button>
+        </div>
+        <div id="bkd-body" style="padding:18px 24px;overflow-y:auto;flex:1"></div>
+        <div id="bkd-actions" style="padding:14px 24px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px"></div>
       </div>
     </div>
 
@@ -1498,5 +1548,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=0520a325ad"></script>
+<script src="js/admin.js?v=07155459f7"></script>
 </body></html>
