@@ -1621,28 +1621,62 @@ async function handleMechanicComplete(req, res) {
   let partsCostActual = null;
   const lowStock = [];
   if (Array.isArray(parts_used) && parts_used.length) {
-    partsCostActual = 0;
-    const partIds = [...new Set(parts_used.map((p) => p?.id).filter(Boolean))];
+    // Only real parts_inventory ids (uuid, proper 8-4-4-4-12 shape - not just
+    // "36 characters of hex or hyphen", which a first pass at this filter
+    // used and which let strings like 36 hyphens or 36 hex digits with none
+    // through) go into the PostgREST `in.()` filter below. A garbage id from
+    // a corrupted client wouldn't just fail to price itself, it would break
+    // the filter syntax for every OTHER id in the same batch (review
+    // finding) - this is defence in depth, not a path the mechanic app's own
+    // UI can reach today (parts always come from a server-sourced picker,
+    // never free text), but the filter costs nothing to keep correct.
+    const partIds = [
+      ...new Set(
+        parts_used
+          .map((p) => p?.id)
+          .filter(
+            (id) =>
+              typeof id === 'string' &&
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+          )
+      ),
+    ];
     let costById = new Map();
+    // Whether the lookup below can be trusted. Starts false when there was
+    // nothing valid to look up in the first place (every id missing or
+    // malformed) rather than defaulting to true and letting the loop below
+    // silently settle on $0 for a job that was never actually priced (review
+    // finding: an earlier version of this fix missed exactly this case) -
+    // then only gets set true once a real query has actually come back ok.
+    let costLookupOk = false;
     if (partIds.length) {
       const idsFilter = partIds.map((id) => `"${id}"`).join(',');
-      const costResp = await fetch(
-        `${SUPABASE_URL}/rest/v1/parts_inventory?select=id,cost_price&id=in.(${idsFilter})`,
-        { headers: sbHdr }
-      );
-      if (costResp.ok) {
-        const rows = await costResp.json();
-        costById = new Map(rows.map((r) => [r.id, Number(r.cost_price) || 0]));
+      try {
+        const costResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/parts_inventory?select=id,cost_price&id=in.(${idsFilter})`,
+          { headers: sbHdr }
+        );
+        if (costResp.ok) {
+          const rows = await costResp.json();
+          costById = new Map(rows.map((r) => [r.id, Number(r.cost_price) || 0]));
+          costLookupOk = true;
+        }
+      } catch (e) {
+        // A completion must never be blocked by this lookup (it is not on
+        // the critical path of actually completing the job), but a network
+        // failure here used to propagate out of the whole function and 500
+        // the completion - the opposite of that intent (review finding).
+        console.warn('[mechanic-complete] parts_inventory cost lookup failed:', e.message);
       }
-      // costResp failing leaves costById empty, so every part prices at 0
-      // below rather than throwing - a completion must never be blocked by
-      // this lookup. That undercounts the job's cost instead of overcounting
-      // it, which is the safer direction for a number that feeds a margin.
     }
+    // NULL means "we cannot say" (parts_used arrived as a plain string, was
+    // empty, or the lookup above failed) - never 0, which would claim a
+    // measured job that used no parts (18.3).
+    if (costLookupOk) partsCostActual = 0;
     for (const p of parts_used) {
       const qty = parseInt(p?.qty, 10);
       if (!p?.id || !Number.isFinite(qty) || qty <= 0) continue;
-      partsCostActual += qty * (costById.get(p.id) || 0);
+      if (costLookupOk) partsCostActual += qty * (costById.get(p.id) || 0);
       const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decrement_part_stock`, {
         method: 'POST',
         headers: sbHdr,
@@ -1751,6 +1785,16 @@ async function handleMechanicComplete(req, res) {
     // scripts/add-parts-cost-actual.sql not run yet - retry without the new
     // column rather than failing a real completion over it (18.3). Same
     // fallback shape handleMechanicJobs uses for discount_applied/code.
+    //
+    // Logged even though the retry usually succeeds: silently swallowing the
+    // first failure here was a review finding - without this line there is
+    // no way to tell "migration not run yet" (expected, harmless) apart from
+    // "this write is actually broken for an unrelated reason" (needs
+    // attention) if the two ever produce different symptoms.
+    console.warn(
+      '[mechanic-complete] booking PATCH failed, retrying without parts_cost_actual:',
+      updateResp.status
+    );
     const { parts_cost_actual, ...withoutPartsCost } = payload;
     updateResp = await fetch(
       `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,

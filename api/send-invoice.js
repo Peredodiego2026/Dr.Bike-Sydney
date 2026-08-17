@@ -722,10 +722,24 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.warn('[send-invoice] PDF generation failed:', e.message);
-    // Fire-and-forget: the email below still goes out with the same info in
-    // the HTML body, just without the attachment. This alert is the only way
-    // Diego finds out - previously it was just this console.warn, which
-    // nobody reads (2026-08-16, PENDIENTES.md 15.2).
+    // Fire-and-forget, deliberately NOT awaited - reverted back to this after
+    // a self-review round briefly changed it to `await`. The reasoning for
+    // awaiting looked right in isolation (a Vercel function can freeze the
+    // moment the handler returns) but didn't survive a second look: this
+    // whole function is itself awaited by handleMechanicComplete right
+    // before it responds to the mechanic's phone for a job already marked
+    // completed in the DB, and api/send-message.js retries Twilio 3x
+    // internally with no timeout - so awaiting here traded "the alert might
+    // occasionally get dropped" for "a slow Twilio can stall the mechanic's
+    // completion response, or even pre-empt the invoice email below from
+    // being attempted at all if the function times out first." The email
+    // below still goes out with the same info in the HTML body, just without
+    // the attachment. This alert is the only way Diego finds out about a
+    // failed PDF - previously it was just the console.warn above, which
+    // nobody reads (2026-08-16, PENDIENTES.md 15.2) - but losing it
+    // occasionally to a Vercel freeze is a smaller risk than the one
+    // awaiting it introduced. Matches the same fire-and-forget shape
+    // notifyAdminCancellation (api/auth.js) already uses in production.
     fetch(`${SELF_BASE_URL}/api/send-message?channel=whatsapp`, {
       method: 'POST',
       headers: {

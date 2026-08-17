@@ -4301,6 +4301,18 @@ usaban un instante para descontar stock y se tiraban. Ahora:
   retroactiva). Solo los trabajos que se completen DESPUES empiezan a sumar
   costo real. El numero se vuelve mas preciso con el tiempo, nunca de golpe.
 
+**Revision post-merge (16-ago-2026, 8 agentes en paralelo sobre las 6 PRs de
+Media):** encontro 3 bugs reales en `handleMechanicComplete` (`api/auth.js`)
+que esta seccion arriba no menciona porque se escribieron sobre el codigo ya
+mergeado, no sobre la PR: el fetch a `parts_inventory` no tenia try/catch (una
+falla de red hubiera tumbado la finalizacion entera, justo lo que el
+comentario de al lado decia que no podia pasar); si ese fetch fallaba sin
+tirar excepcion, `partsCostActual` quedaba en `0` en vez de `NULL` -
+reclamando un trabajo "medido" con costo cero que en realidad no se pudo
+medir; y un id de repuesto con formato invalido rompia el filtro `in.()` para
+todo el lote, no solo para si mismo. Los 3 arreglados en la misma pasada -
+ver seccion 24.
+
 ---
 
 ## 19. La bici fea ya no existe, y lo que se vio al sacarla (2026-08-16)
@@ -4908,3 +4920,157 @@ En `docs/RUNBOOK-SQL.md` seccion 0 hay tres pruebas de mundo real anotadas el
 10-ago y nunca tachadas: una reserva sin iniciar sesion de punta a punta, la
 pagina de seguimiento mostrando ETA en una reserva nueva, y el simulacro de
 restauracion del backup. **Siguen abiertas.** Van en la misma tanda.
+
+---
+
+## 24. Revision de las 6 PRs de Prioridad Media, ya mergeadas (16-ago-2026) - CERRADO, corregido en 24.1
+
+Diego pidio revisar todo lo hecho en 14.2, 15.2, 12.16, 5.1, 20.8 y 18.3
+despues de mergear las 6 - no el diff de cada PR por separado, el resultado
+combinado ya en `main`. 8 pasadas independientes en paralelo (line-by-line,
+comportamiento eliminado, cross-file, reuse, simplificacion, eficiencia,
+altura arquitectonica, reglas de CLAUDE.md) sobre el mismo diff agregado;
+una (cross-file) fallo por limite de gasto mensual y se repitio a mano.
+
+**3 bugs reales, los 3 en `handleMechanicComplete` (18.3) - CERRADOS:**
+
+1. El fetch a `parts_inventory` para el costo de repuestos no tenia
+   try/catch. Una falla de red ahi tumbaba la finalizacion completa del
+   trabajo - exactamente lo que el comentario de al lado decia que no podia
+   pasar. Envuelto en try/catch, mismo patron que el `guardResp` de la
+   verificacion de duplicados dos parrafos arriba.
+2. Si esa consulta fallaba (respuesta no-ok, no una excepcion), el codigo
+   seguia de largo y `partsCostActual` quedaba en `0` en vez de `NULL` -
+   marcando un trabajo como "medido" con costo real cero cuando en realidad
+   no se pudo medir. Nuevo flag `costLookupOk` que separa "no hay repuestos
+   que costear" de "la consulta fallo".
+3. Los ids de repuesto iban al filtro `in.()` de PostgREST sin validar. Un id
+   con formato invalido rompia la sintaxis del filtro para **todo el lote**,
+   no solo para si mismo. **Correccion de 24.1: esto se presento como bug de
+   campo al mismo nivel que el 1 y el 2, y no lo es** - `js/mechanic.js` solo
+   deja elegir repuestos de una lista que ya trajo del servidor con su uuid
+   real, no hay entrada de texto libre, asi que un mecanico normal nunca
+   puede mandar un id corrupto. Es un endurecimiento defensivo (contra un
+   cliente corrupto o un POST directo con un token robado), barato de
+   mantener, no un bug que le fuera a pasar a un mecanico en el dia a dia.
+
+**2 hallazgos de eficiencia, tambien arreglados** (no son bugs, pero el costo
+era real y el arreglo barato):
+
+4. ~~La misma finalizacion arriesgaba perder el aviso de WhatsApp...~~ **Este
+   arreglo se revirtio en 24.1 - resulto ser un error propio, no una
+   correccion.** Ver 24.1 para el detalle completo.
+5. `fetchAnalyticsBookings()` (`js/admin.js`) reintentaba la consulta con
+   `parts_cost_actual` en **cada** carga de Analytics, aunque ya hubiera
+   fallado antes - un viaje de red completo desperdiciado en cada apertura de
+   la pestaña hasta que Diego corra la migracion. Ahora se acuerda con un
+   flag de modulo despues del primer fallo.
+
+**Cobertura nueva:** `tests/unit/completion-guard.test.js` gano 4 tests sobre
+los 3 bugs de `handleMechanicComplete`, y `tests/unit/analytics-bookings-fallback.test.js`
+(nuevo) prueba el cacheo de `fetchAnalyticsBookings()` con un `sb` falso -
+antes de esta pasada, ese archivo solo tenia una prueba de patron de texto
+sobre `js/admin.js`, no una prueba de comportamiento real.
+
+**Encontrado pero NO tocado, a proposito** (limpieza de codigo, no bugs -
+Diego pidio bugs y errores, no un refactor):
+- 3 copias casi identicas del patron "consultar por lote de ids -> Map" en
+  `api/auth.js` (perfiles, costo de repuestos, contactos de escalamiento).
+- El patron "columna nueva puede no existir todavia, reintentar sin ella" -
+  ahora son 3 copias en `api/auth.js` mas 1 en `js/admin.js`, todas escritas
+  a mano por separado.
+- `.tbl-scroll` (12.16) se creo para las 6 tablas pero las 7 listas que no
+  son tablas repiten el mismo `max-height:480px;overflow-y:auto` a mano en
+  vez de reusar la clase.
+- La logica de "basis"/"cost" en `analyticsMarginsByService` calcula los dos
+  con arboles de condiciones separados que hoy coinciden pero podrian
+  desincronizarse en una edicion futura - no es un bug actual, verificado
+  contra el codigo real.
+
+Si Diego quiere esa limpieza en algun momento, es una PR aparte - esta se
+mantuvo enfocada en lo que realmente estaba mal.
+
+### 24.1 Antes de mergear la 24, Diego pidio revisar la revision - y encontro que una "correccion" era un error
+
+Diego pidio explicitamente auditar la PR de la seccion 24 antes de mergearla,
+buscando "problemas, bugs, o falsos positivos" - no confiar en el resultado
+de la primera pasada solo porque sonaba bien. 3 pasadas independientes mas
+sobre el diff de esa PR (una combinando line-by-line + trampas propias de
+JS, otra combinando comportamiento eliminado + cross-file, y una tercera
+dedicada especificamente a re-verificar cada una de las 5 afirmaciones
+originales contra el codigo de ANTES del fix, sin dar nada por sentado).
+
+**El hallazgo mas importante: el arreglo #4 de la 24 (esperar el aviso de
+WhatsApp con `await`) era un error, y se revirtio.**
+
+El diagnostico original decia que el fetch fire-and-forget en
+`api/send-invoice.js` podia perderse si Vercel congelaba la funcion antes de
+que terminara, y que `notifyAdminCancellation` (`api/auth.js`) probaba que
+el patron fire-and-forget funciona bien en produccion. Las dos partes
+resultaron flojas:
+
+- El "precedente seguro" citado tiene **menos** proteccion que el codigo que
+  se estaba "arreglando": `notifyAdminCancellation` no espera nada mas
+  despues de lanzar su fetch, mientras que `send-invoice.js` YA tenia un
+  `await resend.emails.send(...)` sustancial despues del fetch sin esperar -
+  eso le daba al fetch una ventana real para terminar via el event loop
+  antes de que la funcion pudiera devolver una respuesta. La comparacion
+  estaba al reves.
+- Y el `await` que se agrego introducia un riesgo nuevo y mas serio: esta
+  misma funcion la espera `handleMechanicComplete` justo antes de responderle
+  al telefono del mecanico que el trabajo quedo completado (para un trabajo
+  que YA esta marcado completado en la base). `api/send-message.js`
+  reintenta Twilio hasta 3 veces con backoff, sin timeout en ningun punto de
+  toda la cadena. Si Twilio esta lento, el `await` nuevo podia demorar - o en
+  el peor caso, si la funcion se corta por tiempo antes de llegar ahi, hasta
+  impedir por completo - el envio de la factura real al cliente. Cambiar "el
+  aviso a veces se pierde" por "el email de la factura a veces ni se
+  intenta" es peor, no mejor.
+
+**Revertido a fire-and-forget**, con el comentario explicando por que
+(incluyendo por que la vuelta atras es la decision correcta, no solo
+deshacer). Si en algun momento se quiere hacer bien - avisar sin arriesgar
+la factura - el camino es mover el aviso a DESPUES del email y ponerle un
+timeout corto, no simplemente esperarlo donde estaba.
+
+**2 bugs reales mas, encontrados en el arreglo mismo, corregidos:**
+
+- El regex nuevo para validar ids de repuesto (`/^[0-9a-f-]{36}$/i`, arreglo
+  #3 de la 24) solo revisaba largo y alfabeto, no la forma real de un uuid
+  (grupos 8-4-4-4-12). Un string de 36 guiones, o 36 caracteres hex sin
+  ningun guion, pasaba el regex igual, y ninguno es un uuid valido para
+  Postgres - hubiera roto el filtro completo de la misma manera que el bug
+  original. Regex corregido a la forma real.
+- Caso borde que el arreglo #2 de la 24 no cubria: si TODOS los ids de un
+  `parts_used` eran invalidos (no solo alguno), `partIds` quedaba vacio, el
+  bloque de consulta nunca corria, y `costLookupOk` se quedaba en su valor
+  por defecto (`true` en esa version) - `partsCostActual` terminaba en `0`
+  en vez de `NULL`, la misma mentira que el arreglo #2 existia para cerrar.
+  `costLookupOk` ahora arranca en `false` y solo pasa a `true` adentro de la
+  rama de exito real.
+
+**1 test propio que era un falso positivo real, corregido:**
+`tests/unit/completion-guard.test.js` tenia un test llamado "guards the
+partsCostActual accumulation on whether the lookup actually succeeded" que
+**nunca revisaba el camino de falla** - solo confirmaba que el codigo feliz
+existia. Si alguien borraba la asignacion `costLookupOk = false` en el
+futuro (reintroduciendo el bug #2 original), ese test hubiera seguido en
+verde. Reescrito para contar cuantas veces aparece `costLookupOk = true` en
+la funcion (tiene que ser exactamente una, y adentro del bloque de exito) y
+para extraer el regex de validacion del codigo fuente y correrlo de verdad
+contra casos validos e invalidos, en vez de solo comparar el texto.
+
+**1 hallazgo de severidad baja, corregido:** `_partsCostColumnMissing`
+(`js/admin.js`, el cacheo del arreglo #5) quedaba pegado en `true` para el
+resto de la sesion aunque la falla que lo puso ahi haya sido una falla de
+red pasajera, no la migracion faltante - y el boton "Refresh" de Analytics
+no lo sabia. Ahora el click en Refresh lo resetea explicitamente.
+
+**Precision sobre el arreglo #3 (arriba, en la lista principal de la 24):**
+se presento como bug de campo al mismo nivel que el 1 y el 2. No lo es - es
+endurecimiento defensivo, inalcanzable desde el cliente real del mecanico.
+Corregido en el texto de arriba.
+
+**Verificado, no una promesa:** `npm run check`, `npm run lint` (0 errores)
+y `npx vitest run` (367 tests) corridos contra los arreglos de esta seccion,
+no solo contra los de la 24 original.

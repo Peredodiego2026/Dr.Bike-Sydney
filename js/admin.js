@@ -3421,6 +3421,14 @@ function anError(detail) {
 // parts_cost_actual column must not fail the whole Analytics read, or every
 // card on the screen (not just the margins table) would go blank over one
 // column nobody has migrated yet (18.3).
+//
+// Remembered for the rest of the session once the richer query has failed
+// once, so every later loadAnalytics() call (opening the tab again, hitting
+// refresh, switching ranges) goes straight to the fallback instead of
+// re-paying for a query that will keep failing until Diego runs the
+// migration - a real, repeated wasted request that review caught.
+let _partsCostColumnMissing = false;
+
 async function fetchAnalyticsBookings() {
   const baseCols =
     'id,client_id,client_name,client_email,service_name,service_price,callout_fee,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)';
@@ -3430,8 +3438,12 @@ async function fetchAnalyticsBookings() {
       .select(cols, { count: 'exact' })
       .order('created_at', { ascending: false })
       .limit(BOOKINGS_FETCH_CAP);
+  if (_partsCostColumnMissing) return query(baseCols);
   let res = await query(`${baseCols},parts_cost_actual`);
-  if (res.error) res = await query(baseCols);
+  if (res.error) {
+    _partsCostColumnMissing = true;
+    res = await query(baseCols);
+  }
   return res;
 }
 
@@ -4756,7 +4768,14 @@ function wireAnalytics() {
       if (fresh) fresh.textContent = _anTables[id].showing ? 'Chart' : 'Table';
       return;
     }
-    if (ev.target.closest('#an-refresh')) loadAnalytics();
+    if (ev.target.closest('#an-refresh')) {
+      // An explicit "Refresh" is the one signal that the admin actually
+      // wants a fresh check, not the cached fallback - a transient failure
+      // (network blip, not necessarily the migration) shouldn't need a hard
+      // page reload to ever recover in the same session (review finding).
+      _partsCostColumnMissing = false;
+      loadAnalytics();
+    }
   });
 
   // Hover layer. One tooltip node for the whole page.

@@ -113,3 +113,96 @@ describe('handleMechanicComplete wiring', () => {
     expect(fn).toMatch(/idempotencyKey:\s*`complete-charge-\$\{booking_id\}`/);
   });
 });
+
+// A review of the 6 merged Prioridad Media PRs (2026-08-16) found 3 real bugs
+// in the parts-cost-actual addition to this function, all in the shape "an
+// external call can fail, and the code did the wrong thing when it did":
+describe('handleMechanicComplete - parts cost lookup failure handling (review fix)', () => {
+  const auth = readFileSync(join(root, 'api/auth.js'), 'utf8');
+  const match = auth.match(/async function handleMechanicComplete\([^)]*\)\s*{[\s\S]*?\r?\n}\r?\n/);
+  const fn = (match || [''])[0];
+
+  it('wraps the parts_inventory cost lookup in try/catch, not a bare await', () => {
+    // Before the fix, a network exception on this fetch propagated out of the
+    // whole function - the opposite of the adjacent comment's promise that a
+    // completion is never blocked by this lookup.
+    expect(fn).toMatch(
+      /try\s*{[\s\S]{0,300}rest\/v1\/parts_inventory\?select=id,cost_price[\s\S]{0,400}catch \(e\) {/
+    );
+  });
+
+  it('defaults costLookupOk to false and sets it true in exactly one place: the success branch', () => {
+    // A first pass at this fix defaulted costLookupOk to true and only ever
+    // set it to false - which is a false-positive-shaped test risk in
+    // itself: pattern-matching for "the false-setting exists somewhere"
+    // cannot tell a real guard from a decoy. Asserting there is EXACTLY ONE
+    // `= true` assignment, and that it sits textually inside `if
+    // (costResp.ok)`, is what actually pins "this can only become trusted
+    // by a real successful response" - not just "the words costLookupOk and
+    // false both appear somewhere in the function" (review finding: the
+    // previous version of this test only checked the happy-path tokens and
+    // would have stayed green even if the false-branch assignments were
+    // deleted entirely).
+    expect(fn).toMatch(/let costLookupOk = false;/);
+    const trueAssignments = fn.match(/costLookupOk = true;/g) || [];
+    expect(trueAssignments).toHaveLength(1);
+    expect(fn).toMatch(/if \(costResp\.ok\) {[\s\S]{0,200}costLookupOk = true;[\s\S]{0,50}\n\s*}/);
+    // And the catch block must NOT flip it true - a network exception is
+    // exactly the case that has to stay "cannot say".
+    const catchBlock = fn.match(/} catch \(e\) {[\s\S]*?\n\s*}\s*\n\s*}\s*\n/)?.[0] || '';
+    expect(catchBlock).not.toMatch(/costLookupOk = true/);
+  });
+
+  it('guards the partsCostActual accumulation on whether the lookup actually succeeded', () => {
+    // Before the fix, a failed lookup (network throw, or a non-ok response)
+    // left partsCostActual at 0 - a job that genuinely used $80 of parts
+    // could get recorded as a "measured" $0, understating its real cost with
+    // no signal anywhere that the number wasn't real.
+    expect(fn).toMatch(/if \(costLookupOk\) partsCostActual = 0/);
+    expect(fn).toMatch(/if \(costLookupOk\) partsCostActual \+=/);
+  });
+
+  it('treats "no valid id at all" the same as a failed lookup, not a measured $0', () => {
+    // Edge case a first pass at this fix missed: if every id in parts_used
+    // was missing or malformed, partIds ends up empty, the lookup block
+    // never runs, and costLookupOk staying at its default has to be false -
+    // otherwise a job with zero valid ids still settles on partsCostActual
+    // = 0 (measured, not "cannot say") purely because the loop below never
+    // finds anything to add.
+    expect(fn).toMatch(/let costLookupOk = false;[\s\S]{0,20}if \(partIds\.length\) {/);
+  });
+
+  it('only puts uuid-shaped ids (proper 8-4-4-4-12 groups) into the parts_inventory in.() filter', () => {
+    // A single malformed id used to be able to break the filter syntax for
+    // the WHOLE batch, pricing every other part in the same job at 0 too.
+    // The regex itself is pinned precisely, not just "some uuid check
+    // exists": an earlier version only checked "36 characters of hex or
+    // hyphen", which a string of 36 hyphens or 36 hex digits with none also
+    // matches - neither is a real uuid, and Postgres would reject the whole
+    // filter on either just as it would on the original threat (quotes/
+    // commas/parens), reintroducing the same whole-batch failure this test
+    // exists to guard against (review finding).
+    const uuidRe = /\/\^\[0-9a-f\]\{8\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{12\}\$\/i/;
+    expect(fn).toMatch(uuidRe);
+    // Extract the exact regex literal from the source and run it for real,
+    // rather than trusting the text alone matches what it looks like.
+    const literal = fn.match(/\/\^\[0-9a-f\][\s\S]{0,80}\$\/i/)[0];
+    // eslint-disable-next-line no-eval -- test-only, reads the regex literal straight from source
+    const partIdRegex = eval(literal);
+    expect(partIdRegex.test('a1b2c3d4-e5f6-4a5b-8c9d-0123456789ab')).toBe(true);
+    expect(partIdRegex.test('-'.repeat(36))).toBe(false);
+    expect(partIdRegex.test('a'.repeat(36))).toBe(false);
+    expect(partIdRegex.test('not-a-uuid-at-all')).toBe(false);
+  });
+
+  it('logs before retrying the completion PATCH without parts_cost_actual', () => {
+    // Before the fix, a failed first PATCH attempt was retried silently -
+    // if the retry succeeded, there was no trace anywhere that the write
+    // needed a fallback, so "migration not run yet" (expected) and "this
+    // write is broken for an unrelated reason" (needs attention) were
+    // indistinguishable in the logs.
+    expect(fn).toMatch(
+      /console\.warn\(\s*'\[mechanic-complete\] booking PATCH failed[\s\S]{0,200}const \{ parts_cost_actual, \.\.\.withoutPartsCost \} = payload;/
+    );
+  });
+});
