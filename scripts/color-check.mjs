@@ -110,13 +110,23 @@ const BUDGET = {
 //
 // So they share ONE budget. It exists because they were outside the check
 // entirely until 2026-08-09, and #1848C8 had reached all 60 of them.
-const GENERATED_BUDGET = 2969;
+//
+// business.html and bike-check.html got es/zh translations too (4.1,
+// scripts/translate-static-pages.mjs), which live in the same es/ and zh/
+// directories as the suburb pages and would otherwise be swept in here by
+// name alone. Their root English file is NOT one of the "three copies":
+// it is the hand-authored source those two translations are generated FROM,
+// already tracked in its own BUDGET entry above - counting it here too would
+// budget the same file in two places at once.
+const GENERATED_BUDGET = 3131;
+const INDIVIDUALLY_BUDGETED_ROOT = new Set(['business.html', 'bike-check.html']);
 
 function generatedPages() {
   const suburbs = readdirSync('es').filter(f => f.endsWith('.html'));
   const pages = [];
   for (const s of suburbs) {
-    for (const p of [s, `es/${s}`, `zh/${s}`]) if (existsSync(p)) pages.push(p);
+    const variants = INDIVIDUALLY_BUDGETED_ROOT.has(s) ? [`es/${s}`, `zh/${s}`] : [s, `es/${s}`, `zh/${s}`];
+    for (const p of variants) if (existsSync(p)) pages.push(p);
   }
   for (const b of readdirSync('blog').filter(f => f.endsWith('.html'))) pages.push(`blog/${b}`);
   return pages;

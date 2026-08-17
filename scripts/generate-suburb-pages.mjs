@@ -656,8 +656,6 @@ ${nearbySection}
 const STATIC_PAGES = [
   { path: '/', priority: '1.0', changefreq: 'weekly' },
   { path: '/landing.html', priority: '0.9', changefreq: 'weekly' },
-  { path: '/bike-check', priority: '0.9', changefreq: 'monthly' },
-  { path: '/business', priority: '0.9', changefreq: 'monthly' },
   { path: '/terms', priority: '0.3', changefreq: 'yearly' },
   { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
   { path: '/blog/best-bikes-for-sydney-commuting-2026', priority: '0.7', changefreq: 'monthly' },
@@ -666,6 +664,24 @@ const STATIC_PAGES = [
   { path: '/blog/how-to-choose-a-bike-mechanic-sydney', priority: '0.7', changefreq: 'monthly' },
   { path: '/blog/how-to-clean-your-bike-chain-sydney', priority: '0.7', changefreq: 'monthly' },
 ];
+
+// business.html and bike-check.html got es/zh siblings from
+// scripts/translate-static-pages.mjs (docs/PENDIENTES.md 4.1). They used to be
+// single English-only STATIC_PAGES entries with no alternates - now they need
+// the same 3-URL-with-alternates treatment as a suburb, just not a suburb.
+const TRANSLATED_STATIC_PAGES = [
+  { slug: 'business', priority: '0.9' },
+  { slug: 'bike-check', priority: '0.9' },
+];
+
+function alternatesXml(slug) {
+  return Object.entries(LANGS)
+    .map(
+      ([, a]) => `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${SITE}${a.prefix}/${slug}"/>`
+    )
+    .concat([`    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}/${slug}"/>`])
+    .join('\n');
+}
 
 function sitemap() {
   const entries = [];
@@ -679,20 +695,23 @@ function sitemap() {
   </url>`);
   }
 
+  for (const p of TRANSLATED_STATIC_PAGES) {
+    for (const [code, l] of Object.entries(LANGS)) {
+      entries.push(`  <url>
+    <loc>${SITE}${l.prefix}/${p.slug}</loc>
+${alternatesXml(p.slug)}
+    <lastmod>${TODAY}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>${code === 'en' ? p.priority : '0.7'}</priority>
+  </url>`);
+    }
+  }
+
   for (const sub of SUBURBS) {
     for (const [code, l] of Object.entries(LANGS)) {
-      const alts = Object.entries(LANGS)
-        .map(
-          ([, a]) =>
-            `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${SITE}${a.prefix}/${sub.slug}"/>`
-        )
-        .concat([
-          `    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}/${sub.slug}"/>`,
-        ])
-        .join('\n');
       entries.push(`  <url>
     <loc>${SITE}${l.prefix}/${sub.slug}</loc>
-${alts}
+${alternatesXml(sub.slug)}
     <lastmod>${TODAY}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>${code === 'en' ? '0.8' : '0.6'}</priority>
@@ -723,6 +742,7 @@ for (const [code, meta] of Object.entries(LANGS)) {
 
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemap());
 console.log(
-  `sitemap.xml: ${STATIC_PAGES.length + SUBURBS.length * 3} urls (${SUBURBS.length} suburbs x 3 languages)`
+  `sitemap.xml: ${STATIC_PAGES.length + (TRANSLATED_STATIC_PAGES.length + SUBURBS.length) * 3} urls ` +
+    `(${SUBURBS.length} suburbs + ${TRANSLATED_STATIC_PAGES.length} translated pages, x 3 languages)`
 );
 console.log(`done: ${written} pages written`);

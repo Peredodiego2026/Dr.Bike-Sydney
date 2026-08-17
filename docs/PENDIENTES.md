@@ -268,17 +268,58 @@ montarlo en CI.
 
 ## 4. Traducciones (el mecanismo ya esta decidido)
 
-### 4.1 `business.html` (79 strings) y `bike-check.html` (63)
+### 4.1 `business.html` y `bike-check.html` - CERRADO 2026-08-17
 
-Siguen 100% en ingles. **Mecanismo decidido, no rediscutir:** NO convertirlas en
-templates como el generador de suburbios. Se deja el archivo ingles como fuente y
-se escribe un script que emita `/es/<page>.html` y `/zh/<page>.html` reemplazando
-frases enteras desde un diccionario por pagina (mismo enfoque que
-`api/_email-i18n.js`: son bloques de prosa entre tags, el swap por fragmento es
-seguro), y que inyecte `hreflang`, `<html lang>` y las entradas del sitemap.
-Sumar las URLs nuevas a la lista de rewrites de `vercel.json`.
+Estaban 100% en ingles. `scripts/translate-static-pages.mjs` (nuevo,
+`npm run static-pages:translate`) hace exactamente lo que este punto pedia:
+NO son templates como el generador de suburbios, el ingles sigue siendo la
+fuente, y un diccionario por pagina reemplaza fragmentos de prosa completos
+(mismo enfoque que `api/_email-i18n.js`) sobre el HTML ya renderizado -
+markup, JS inline, precios y URLs no se tocan. 142 strings reales entre las
+dos paginas (no 79+63: ese numero doble-contaba placeholders repetidos como
+"1-4 bikes", que en el HTML real es una sola cadena usada dos veces).
 
-~284 traducciones entre las dos paginas.
+**Cada clave se verifica contra el HTML antes de escribir nada** - si una ya
+no matchea (typo, o el ingles cambio debajo), el script corta en vez de
+publicar esa frase en ingles en silencio. Mismo principio que el 22.1, pero
+para copy en vez de formato de hora.
+
+`hreflang` + `<html lang>` se inyectan en **las 3** versiones, incluida la
+inglesa (`business.html`/`bike-check.html` no tenian ninguno antes de esto):
+sin eso Google nunca hubiera encontrado las traducciones desde la pagina en
+ingles. `vercel.json` ya tenia las rutas `/es|zh/<suburbio>` - se sumaron
+`business` y `bike-check` a esa misma lista. El sitemap se resolvio en
+`scripts/generate-suburb-pages.mjs` (que ya lo regenera) en vez de un
+segundo escritor separado: `business`/`bike-check` tenian una entrada unica
+en ingles sin alternates, ahora emiten las 3 como una tabla de suburbio mas
+(`TRANSLATED_STATIC_PAGES`), sin dos scripts peleando por el mismo archivo.
+
+**Encontrado al escribirlo, no al usarlo:** el script propio de este punto no
+es idempotente si se corre dos veces seguidas sin querer - la segunda corrida
+lee su propia salida anterior (el archivo ingles es fuente Y destino) y
+duplicaba el bloque de `hreflang`. Se probo corriendolo 3 veces seguidas
+antes de darlo por bueno; ahora normaliza el bloque antes de reinyectarlo,
+tolerando tambien CRLF (`git core.autocrlf=true` en este repo entrega los
+archivos con CRLF en Windows aunque esten en LF en el commit).
+
+**Un hallazgo real de la traduccion, no del mecanismo:** la primera pasada
+uso "service" sin traducir en 3 frases de `bike-check.html` ("un service
+profesional"), inconsistente con el resto del proyecto que siempre usa
+"servicio". Se probo el quiz completo (los 4 resultados: rojo, amarillo x2,
+amarillo x1, verde) en un navegador real con `answer()` llamado a mano, no
+solo leyendo el diccionario - ahi aparecio tambien un CTA
+("Call 0433 963 250", armado en JS para el resultado rojo) que se habia
+quedado sin traducir en las dos primeras pasadas por revisar el HTML estatico
+y no las cadenas que arma `showResult()` en tiempo de ejecucion.
+
+**Efecto de lado, no planeado:** correr `npm run suburbs:generate` para
+regenerar el sitemap tambien reescribio las 60 paginas de suburbio -
+revirtiendo `var(--gray)`/`var(--border)`/`var(--green)` a hex literal,
+porque la plantilla del generador nunca se actualizo cuando esas 60 paginas
+se convirtieron a tokens. Se descartaron esas 60 reescrituras
+(`git checkout`) antes de commitear; el generador en si sigue con hex viejo
+en su propia plantilla, sin tocar en este PR - queda anotado aparte, no es
+parte de este punto.
 
 ### 4.2 Los 5 posts del blog
 
