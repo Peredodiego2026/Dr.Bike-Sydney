@@ -722,34 +722,38 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.warn('[send-invoice] PDF generation failed:', e.message);
-    // Awaited, not fire-and-forget: this is already the slow/degraded path
-    // (PDF generation just failed), so the extra latency is cheap - and a
-    // Vercel function can freeze the moment the handler returns, which can
-    // drop an un-awaited request before it reaches Resend/Twilio. The whole
-    // point of this alert is that Diego finds out when the PDF fails
-    // (2026-08-16, PENDIENTES.md 15.2); leaving it unawaited risked losing it
-    // the same silent way for a fraction of failures (review finding).
-    try {
-      const alertResp = await fetch(`${SELF_BASE_URL}/api/send-message?channel=whatsapp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
-        },
-        body: JSON.stringify({
-          to: '0433963250',
-          template: 'invoice_pdf_failed',
-          data: { clientName, service, invoiceNumber },
-        }),
-      });
-      if (!alertResp.ok)
-        console.error(
-          '[send-invoice] could not alert Diego about missing PDF:',
-          alertResp.status
-        );
-    } catch (alertErr) {
-      console.error('[send-invoice] could not alert Diego about missing PDF:', alertErr.message);
-    }
+    // Fire-and-forget, deliberately NOT awaited - reverted back to this after
+    // a self-review round briefly changed it to `await`. The reasoning for
+    // awaiting looked right in isolation (a Vercel function can freeze the
+    // moment the handler returns) but didn't survive a second look: this
+    // whole function is itself awaited by handleMechanicComplete right
+    // before it responds to the mechanic's phone for a job already marked
+    // completed in the DB, and api/send-message.js retries Twilio 3x
+    // internally with no timeout - so awaiting here traded "the alert might
+    // occasionally get dropped" for "a slow Twilio can stall the mechanic's
+    // completion response, or even pre-empt the invoice email below from
+    // being attempted at all if the function times out first." The email
+    // below still goes out with the same info in the HTML body, just without
+    // the attachment. This alert is the only way Diego finds out about a
+    // failed PDF - previously it was just the console.warn above, which
+    // nobody reads (2026-08-16, PENDIENTES.md 15.2) - but losing it
+    // occasionally to a Vercel freeze is a smaller risk than the one
+    // awaiting it introduced. Matches the same fire-and-forget shape
+    // notifyAdminCancellation (api/auth.js) already uses in production.
+    fetch(`${SELF_BASE_URL}/api/send-message?channel=whatsapp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
+      body: JSON.stringify({
+        to: '0433963250',
+        template: 'invoice_pdf_failed',
+        data: { clientName, service, invoiceNumber },
+      }),
+    }).catch((alertErr) =>
+      console.error('[send-invoice] could not alert Diego about missing PDF:', alertErr.message)
+    );
   }
 
   try {

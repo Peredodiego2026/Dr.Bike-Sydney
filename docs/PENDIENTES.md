@@ -4888,7 +4888,7 @@ restauracion del backup. **Siguen abiertas.** Van en la misma tanda.
 
 ---
 
-## 24. Revision de las 6 PRs de Prioridad Media, ya mergeadas (16-ago-2026) - CERRADO
+## 24. Revision de las 6 PRs de Prioridad Media, ya mergeadas (16-ago-2026) - CERRADO, corregido en 24.1
 
 Diego pidio revisar todo lo hecho en 14.2, 15.2, 12.16, 5.1, 20.8 y 18.3
 despues de mergear las 6 - no el diff de cada PR por separado, el resultado
@@ -4911,18 +4911,20 @@ una (cross-file) fallo por limite de gasto mensual y se repitio a mano.
    que costear" de "la consulta fallo".
 3. Los ids de repuesto iban al filtro `in.()` de PostgREST sin validar. Un id
    con formato invalido rompia la sintaxis del filtro para **todo el lote**,
-   no solo para si mismo - un mecanico completando un trabajo con 3 repuestos
-   reales y un id corrupto perdia el costo de los 3. Ahora solo entran al
-   filtro los que tienen forma de uuid.
+   no solo para si mismo. **Correccion de 24.1: esto se presento como bug de
+   campo al mismo nivel que el 1 y el 2, y no lo es** - `js/mechanic.js` solo
+   deja elegir repuestos de una lista que ya trajo del servidor con su uuid
+   real, no hay entrada de texto libre, asi que un mecanico normal nunca
+   puede mandar un id corrupto. Es un endurecimiento defensivo (contra un
+   cliente corrupto o un POST directo con un token robado), barato de
+   mantener, no un bug que le fuera a pasar a un mecanico en el dia a dia.
 
 **2 hallazgos de eficiencia, tambien arreglados** (no son bugs, pero el costo
 era real y el arreglo barato):
 
-4. La misma finalizacion arriesgaba perder el aviso de WhatsApp: el fetch a
-   `/api/send-message` en `api/send-invoice.js` no se esperaba
-   (`fire-and-forget`), y una funcion de Vercel puede congelarse apenas el
-   handler devuelve la respuesta. Ahora se espera - es el camino de error ya
-   degradado (fallo el PDF), la latencia extra no importa ahi.
+4. ~~La misma finalizacion arriesgaba perder el aviso de WhatsApp...~~ **Este
+   arreglo se revirtio en 24.1 - resulto ser un error propio, no una
+   correccion.** Ver 24.1 para el detalle completo.
 5. `fetchAnalyticsBookings()` (`js/admin.js`) reintentaba la consulta con
    `parts_cost_actual` en **cada** carga de Analytics, aunque ya hubiera
    fallado antes - un viaje de red completo desperdiciado en cada apertura de
@@ -4952,3 +4954,88 @@ Diego pidio bugs y errores, no un refactor):
 
 Si Diego quiere esa limpieza en algun momento, es una PR aparte - esta se
 mantuvo enfocada en lo que realmente estaba mal.
+
+### 24.1 Antes de mergear la 24, Diego pidio revisar la revision - y encontro que una "correccion" era un error
+
+Diego pidio explicitamente auditar la PR de la seccion 24 antes de mergearla,
+buscando "problemas, bugs, o falsos positivos" - no confiar en el resultado
+de la primera pasada solo porque sonaba bien. 3 pasadas independientes mas
+sobre el diff de esa PR (una combinando line-by-line + trampas propias de
+JS, otra combinando comportamiento eliminado + cross-file, y una tercera
+dedicada especificamente a re-verificar cada una de las 5 afirmaciones
+originales contra el codigo de ANTES del fix, sin dar nada por sentado).
+
+**El hallazgo mas importante: el arreglo #4 de la 24 (esperar el aviso de
+WhatsApp con `await`) era un error, y se revirtio.**
+
+El diagnostico original decia que el fetch fire-and-forget en
+`api/send-invoice.js` podia perderse si Vercel congelaba la funcion antes de
+que terminara, y que `notifyAdminCancellation` (`api/auth.js`) probaba que
+el patron fire-and-forget funciona bien en produccion. Las dos partes
+resultaron flojas:
+
+- El "precedente seguro" citado tiene **menos** proteccion que el codigo que
+  se estaba "arreglando": `notifyAdminCancellation` no espera nada mas
+  despues de lanzar su fetch, mientras que `send-invoice.js` YA tenia un
+  `await resend.emails.send(...)` sustancial despues del fetch sin esperar -
+  eso le daba al fetch una ventana real para terminar via el event loop
+  antes de que la funcion pudiera devolver una respuesta. La comparacion
+  estaba al reves.
+- Y el `await` que se agrego introducia un riesgo nuevo y mas serio: esta
+  misma funcion la espera `handleMechanicComplete` justo antes de responderle
+  al telefono del mecanico que el trabajo quedo completado (para un trabajo
+  que YA esta marcado completado en la base). `api/send-message.js`
+  reintenta Twilio hasta 3 veces con backoff, sin timeout en ningun punto de
+  toda la cadena. Si Twilio esta lento, el `await` nuevo podia demorar - o en
+  el peor caso, si la funcion se corta por tiempo antes de llegar ahi, hasta
+  impedir por completo - el envio de la factura real al cliente. Cambiar "el
+  aviso a veces se pierde" por "el email de la factura a veces ni se
+  intenta" es peor, no mejor.
+
+**Revertido a fire-and-forget**, con el comentario explicando por que
+(incluyendo por que la vuelta atras es la decision correcta, no solo
+deshacer). Si en algun momento se quiere hacer bien - avisar sin arriesgar
+la factura - el camino es mover el aviso a DESPUES del email y ponerle un
+timeout corto, no simplemente esperarlo donde estaba.
+
+**2 bugs reales mas, encontrados en el arreglo mismo, corregidos:**
+
+- El regex nuevo para validar ids de repuesto (`/^[0-9a-f-]{36}$/i`, arreglo
+  #3 de la 24) solo revisaba largo y alfabeto, no la forma real de un uuid
+  (grupos 8-4-4-4-12). Un string de 36 guiones, o 36 caracteres hex sin
+  ningun guion, pasaba el regex igual, y ninguno es un uuid valido para
+  Postgres - hubiera roto el filtro completo de la misma manera que el bug
+  original. Regex corregido a la forma real.
+- Caso borde que el arreglo #2 de la 24 no cubria: si TODOS los ids de un
+  `parts_used` eran invalidos (no solo alguno), `partIds` quedaba vacio, el
+  bloque de consulta nunca corria, y `costLookupOk` se quedaba en su valor
+  por defecto (`true` en esa version) - `partsCostActual` terminaba en `0`
+  en vez de `NULL`, la misma mentira que el arreglo #2 existia para cerrar.
+  `costLookupOk` ahora arranca en `false` y solo pasa a `true` adentro de la
+  rama de exito real.
+
+**1 test propio que era un falso positivo real, corregido:**
+`tests/unit/completion-guard.test.js` tenia un test llamado "guards the
+partsCostActual accumulation on whether the lookup actually succeeded" que
+**nunca revisaba el camino de falla** - solo confirmaba que el codigo feliz
+existia. Si alguien borraba la asignacion `costLookupOk = false` en el
+futuro (reintroduciendo el bug #2 original), ese test hubiera seguido en
+verde. Reescrito para contar cuantas veces aparece `costLookupOk = true` en
+la funcion (tiene que ser exactamente una, y adentro del bloque de exito) y
+para extraer el regex de validacion del codigo fuente y correrlo de verdad
+contra casos validos e invalidos, en vez de solo comparar el texto.
+
+**1 hallazgo de severidad baja, corregido:** `_partsCostColumnMissing`
+(`js/admin.js`, el cacheo del arreglo #5) quedaba pegado en `true` para el
+resto de la sesion aunque la falla que lo puso ahi haya sido una falla de
+red pasajera, no la migracion faltante - y el boton "Refresh" de Analytics
+no lo sabia. Ahora el click en Refresh lo resetea explicitamente.
+
+**Precision sobre el arreglo #3 (arriba, en la lista principal de la 24):**
+se presento como bug de campo al mismo nivel que el 1 y el 2. No lo es - es
+endurecimiento defensivo, inalcanzable desde el cliente real del mecanico.
+Corregido en el texto de arriba.
+
+**Verificado, no una promesa:** `npm run check`, `npm run lint` (0 errores)
+y `npx vitest run` (367 tests) corridos contra los arreglos de esta seccion,
+no solo contra los de la 24 original.

@@ -4768,7 +4768,14 @@ function wireAnalytics() {
       if (fresh) fresh.textContent = _anTables[id].showing ? 'Chart' : 'Table';
       return;
     }
-    if (ev.target.closest('#an-refresh')) loadAnalytics();
+    if (ev.target.closest('#an-refresh')) {
+      // An explicit "Refresh" is the one signal that the admin actually
+      // wants a fresh check, not the cached fallback - a transient failure
+      // (network blip, not necessarily the migration) shouldn't need a hard
+      // page reload to ever recover in the same session (review finding).
+      _partsCostColumnMissing = false;
+      loadAnalytics();
+    }
   });
 
   // Hover layer. One tooltip node for the whole page.

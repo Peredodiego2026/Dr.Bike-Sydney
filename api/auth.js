@@ -1589,23 +1589,34 @@ async function handleMechanicComplete(req, res) {
   let partsCostActual = null;
   const lowStock = [];
   if (Array.isArray(parts_used) && parts_used.length) {
-    // Only real parts_inventory ids (uuid) go into the PostgREST `in.()`
-    // filter below - a garbage id from a corrupted client wouldn't just fail
-    // to price itself, it would break the filter syntax for every OTHER id
-    // in the same batch (review finding).
+    // Only real parts_inventory ids (uuid, proper 8-4-4-4-12 shape - not just
+    // "36 characters of hex or hyphen", which a first pass at this filter
+    // used and which let strings like 36 hyphens or 36 hex digits with none
+    // through) go into the PostgREST `in.()` filter below. A garbage id from
+    // a corrupted client wouldn't just fail to price itself, it would break
+    // the filter syntax for every OTHER id in the same batch (review
+    // finding) - this is defence in depth, not a path the mechanic app's own
+    // UI can reach today (parts always come from a server-sourced picker,
+    // never free text), but the filter costs nothing to keep correct.
     const partIds = [
       ...new Set(
         parts_used
           .map((p) => p?.id)
-          .filter((id) => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id))
+          .filter(
+            (id) =>
+              typeof id === 'string' &&
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+          )
       ),
     ];
     let costById = new Map();
-    // Whether the lookup below actually ran and can be trusted - kept
-    // separate from costById.size because "zero parts matched" (all ids
-    // deleted from inventory since) and "the lookup itself failed" must not
-    // collapse into the same $0 (review finding: they used to).
-    let costLookupOk = true;
+    // Whether the lookup below can be trusted. Starts false when there was
+    // nothing valid to look up in the first place (every id missing or
+    // malformed) rather than defaulting to true and letting the loop below
+    // silently settle on $0 for a job that was never actually priced (review
+    // finding: an earlier version of this fix missed exactly this case) -
+    // then only gets set true once a real query has actually come back ok.
+    let costLookupOk = false;
     if (partIds.length) {
       const idsFilter = partIds.map((id) => `"${id}"`).join(',');
       try {
@@ -1616,8 +1627,7 @@ async function handleMechanicComplete(req, res) {
         if (costResp.ok) {
           const rows = await costResp.json();
           costById = new Map(rows.map((r) => [r.id, Number(r.cost_price) || 0]));
-        } else {
-          costLookupOk = false;
+          costLookupOk = true;
         }
       } catch (e) {
         // A completion must never be blocked by this lookup (it is not on
@@ -1625,7 +1635,6 @@ async function handleMechanicComplete(req, res) {
         // failure here used to propagate out of the whole function and 500
         // the completion - the opposite of that intent (review finding).
         console.warn('[mechanic-complete] parts_inventory cost lookup failed:', e.message);
-        costLookupOk = false;
       }
     }
     // NULL means "we cannot say" (parts_used arrived as a plain string, was
