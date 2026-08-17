@@ -3,20 +3,22 @@
 > Lista maestra de lo que falta. Vive en el repo a proposito: sobrevive a que se
 > cierre un chat, se pierda el historial o se reinstale Claude.
 >
-> Ultima verificacion contra el sistema real: **2026-08-16** (auditoria
-> completa de las 22 secciones, ver **22.4**). La tabla de abajo tambien se
-> corrio ese dia. Antes decia 2026-08-01/07-27 y ya no era cierto - quedaba
-> desactualizada desde julio.
+> Ultima verificacion contra el sistema real: **2026-08-17** (numeros de la
+> tabla de abajo). La auditoria completa de las 22 secciones (**22.4**) sigue
+> siendo del 2026-08-16 - eso no se repitio, solo se actualizaron los
+> numeros que cambian solos con cada PR mergeada. Antes esta linea decia
+> 2026-08-01/07-27 y ya no era cierto - quedaba desactualizada desde julio.
+> La misma trampa se repitio con 22.4 apenas un dia despues: ver 22.4.1.
 > Regla: si una linea de aqui contradice al codigo o a la base de datos, gana el
 > sistema. Corregir esta linea en el momento y anotar por que.
 
-## Salud del proyecto (verificado 2026-08-16)
+## Salud del proyecto (verificado 2026-08-17)
 
 | Chequeo | Resultado |
 |---|---|
-| `npm run check` | Verde - 38 archivos JS, i18n 1024 claves es/zh, 805 strings en 5 superficies |
-| `npx vitest run` | 352 tests, 34 archivos, 0 fallos |
-| PRs abiertas | 0 |
+| `npm run check` | Verde - 38 archivos JS, i18n 1028 claves es/zh, 822 strings en 5 superficies |
+| `npx vitest run` | 373 tests, 35 archivos, 0 fallos |
+| PRs abiertas | 4 (#277, #280, #281, #282 - todo Prioridad Baja, i18n de blog/business.html y un CSS roto) |
 
 El codigo esta sano. Lo que sigue no son bugs: son cosas sin hacer.
 
@@ -4845,6 +4847,11 @@ que en produccion devolvia -1 siempre.
 
 ### 22.2 Lo que queda abierto
 
+*Tabla del 16-ago, dejada tal cual por ser un registro de "el estado al
+cerrar ese dia". Al 17-ago: **18.3 y 20.8 ya estan CERRADOS** (ver 22.4 y sus
+propias secciones); **21 sigue abierto pero con mucho mas encima** (ver
+21.5-21.8, no es "un click" nada mas); **20.3 sigue igual**, sin tocar.*
+
 | # | que es | quien lo desbloquea |
 |---|---|---|
 | **21** | bloquear un horario y comprobar que desaparece de la reserva | **Diego, un click.** El SQL ya corrio y el codigo esta vivo; falta apretar el boton contra la base real |
@@ -4882,6 +4889,17 @@ tocar los items de las otras dos listas. Esta es la version viva del reparto:
 cuando un item se cierra, se marca CERRADO en su propia seccion de origen (no
 aca), con la misma disciplina que ya usa el resto del documento.
 
+> **22.4.1 - esta seccion quedo desactualizada en menos de 24 horas, y se
+> corrigio parcialmente el 17-ago.** Ver el detalle completo despues de las 3
+> tablas. Resumen: los 6 items de Media de abajo ya estan CERRADOS (una
+> sesion los cerro el 16/17-ago, ver cada seccion propia); en Baja, 3.3, 10.2
+> y 10.4 tambien. En Alta, el 21 sigue abierto pero con mucho mas trabajo
+> encima del que esta tabla sugiere - ver 21.5 a 21.8. **Las filas de abajo
+> se dejan tal como se escribieron el 16-ago, a proposito, para que quede el
+> registro de que decia el reparto original** - el estado real esta marcado
+> en negrita cuando se conoce, y la regla de siempre aplica: la seccion
+> propia de cada item, no esta tabla, es la que manda.
+
 **Prioridad Alta — plata, seguridad, o "nadie lo probo de verdad":**
 
 | # | Que falta | Quien lo desbloquea |
@@ -4889,7 +4907,7 @@ aca), con la misma disciplina que ya usa el resto del documento.
 | 16.5 / 14.9 | Una reserva de invitado real, de punta a punta, con tarjeta real, en produccion - nunca se hizo | Diego, prueba real |
 | 14.9 | Correr Admin > Orphan Payments (04-jul a 05-ago) y decidir cada devolucion | Diego, un click + decisiones |
 | 14.10 | Completar un trabajo del mecanico sin señal, con telefono real - nunca se probo | Diego, prueba real |
-| 21 | Bloquear un horario en Admin > Calendar y confirmar que desaparece de la reserva | Diego, un click |
+| 21 | Bloquear un horario en Admin > Calendar y confirmar que desaparece de la reserva | **Sigue abierto - pero no es "un click".** Desde el 16-ago aparecieron 4 capas mas (21.5 a 21.8: cache sin invalidar, columna `reason` faltante, RLS sin policies, y el bloqueo no impedia la reserva del lado del servidor) - las 4 ya tienen su codigo/SQL, falta la prueba real de Diego contra produccion |
 | 1.2 | Simulacro de restauracion del backup - nunca se probo que el backup restaura | Diego, seguir `RUNBOOK-BACKUP-RESTORE.md` |
 | 2.1 | El PIN de mecanico sigue en texto plano (localStorage + requests) desde el 29-jun | Diego decide, despues codigo |
 | 12.11 | La puerta del admin se abre con cualquier clave en localStorage; el arreglo real cambia el flujo de auth | Diego decide, despues codigo |
@@ -4902,18 +4920,19 @@ decidio el 16-ago adelantar estas 3 igual**, dentro del trabajo de Alta, en
 vez de esperar. Cuando se prueben, marcar el checkbox correspondiente en 23.1
 y 23.4 tambien - no hace falta repetir la prueba dos veces.
 
-**Prioridad Media — plata mal medida o hueco de proceso:**
+**Prioridad Media — plata mal medida o hueco de proceso — CERRADA COMPLETA
+2026-08-17, las 6 items de codigo:**
 
 | # | Que falta | Quien lo desbloquea |
 |---|---|---|
-| 18.3 | El margen sigue siendo un promedio plano de repuestos, no el costo real por trabajo | Codigo (`parts_inventory`) |
-| 20.8 | `/api/analytics` (Traffic, Checkout) y `loadDashboard()` nunca se auditaron | Codigo, empieza por auditoria |
-| 12.6 | En Admin > Services & Prices: renombrar "Bike Build" a "Bike Assembly" ($80) y crear "E-Bike Service" ($129) | Diego, 2 minutos |
-| 12.16 | 11 tablas/listas del admin sin scroll propio (se van a romper con mas filas) | Codigo |
-| 5.1 | Sin paginacion en admin/mechanic/client - anda porque hay pocas filas todavia | Codigo |
-| 15.2 | Si falla el PDF de la factura, el mail sale igual sin adjunto y nadie se entera | Codigo |
-| 14.2 | El mensaje de error de "inicia sesion" no esta traducido (agujero del chequeo i18n) | Codigo, chico |
-| 14.3 | Nadie le aviso a Thais que se le devolvio el dinero (puede que ya se haya hecho) | Diego, WhatsApp |
+| 18.3 | ~~El margen sigue siendo un promedio plano...~~ **CERRADO.** Costo real de `parts_inventory` por trabajo, con fallback honesto al promedio para los jobs sin dato (PR #276, corregido en PR #279 tras una auto-revision) | Codigo (`parts_inventory`) |
+| 20.8 | ~~`/api/analytics`... nunca se auditaron~~ **CERRADO.** Auditados: `/api/analytics` sin hallazgos, `loadDashboard()` con 2 bugs reales (tabla muerta + KPI sin limite) (PR #274) | Codigo, empieza por auditoria |
+| 12.6 | En Admin > Services & Prices: renombrar "Bike Build" a "Bike Assembly" ($80) y crear "E-Bike Service" ($129) | **Sigue pendiente - es de Diego, no de codigo.** 2 minutos |
+| 12.16 | ~~11 tablas/listas del admin sin scroll propio...~~ **CERRADO.** Eran 13, no 11 (PR #269) | Codigo |
+| 5.1 | ~~Sin paginacion en admin/mechanic/client...~~ **CERRADO.** Admin ya la tenia (doc desactualizado); mechanic/client avisan si tocan su tope en vez de paginar (PR #272) | Codigo |
+| 15.2 | ~~Si falla el PDF de la factura...~~ **CERRADO.** Avisa a Diego por WhatsApp (PR #265) | Codigo |
+| 14.2 | ~~El mensaje de error de "inicia sesion" no esta traducido...~~ **CERRADO** (PR #263) | Codigo, chico |
+| 14.3 | Nadie le aviso a Thais que se le devolvio el dinero (puede que ya se haya hecho) | **Sigue pendiente - es de Diego, no de codigo.** WhatsApp |
 
 **Prioridad Baja — diseno, deuda tecnica, contenido:**
 
@@ -4923,18 +4942,26 @@ y 23.4 tambien - no hace falta repetir la prueba dos veces.
 | 19.2 | Esas 3 paginas legales no cargan `variables.css`, tienen su propia paleta que difiere | Codigo, depende de 19.1 |
 | 19.3 | 7 paginas fuera del ratchet de color, 184 hex sueltos | Codigo, barato |
 | 3.2 | `landing.html` pesa 255 KB / ~2600 lineas, candidato #1 de la dieta de diseño | Codigo |
-| 3.3 | Los 33 handlers inline de `landing.html` siguen sin sacarse (bloquea quitar `unsafe-inline` del CSP) | Codigo |
+| 3.3 | ~~Los 33 handlers inline de `landing.html` siguen sin sacarse...~~ **CERRADO 2026-08-16**, ver seccion 3.3 propia | Codigo |
 | 3.4 | Lighthouse formal nunca se corrio sobre produccion | Diego o CI |
 | 10.1 | El chequeo de i18n no mira dentro de los `<script>` inline de `landing.html` | Codigo, no trivial |
-| 10.2 | Cancelar/reprogramar en el panel de cuenta sigue usando `confirm()`/`prompt()` nativos | Codigo, feature aparte |
-| 10.4 | `docs/mockups/` es publico en `drbikesydney.com.au/docs/mockups/...` | Codigo, movimiento simple |
-| 4.1 / 4.2 | `business.html`, `bike-check.html` y los 5 posts del blog siguen 100% en ingles | Codigo/contenido |
+| 10.2 | ~~Cancelar/reprogramar... `confirm()`/`prompt()` nativos~~ **CERRADO 2026-08-17**, ver seccion 10.2 propia | Codigo, feature aparte |
+| 10.4 | ~~`docs/mockups/` es publico...~~ **Nunca fue un bug real - CERRADO desde el 2026-08-01**, `.vercelignore` ya lo tapaba. Error del audit original, no de codigo | Codigo, movimiento simple |
+| 4.1 / 4.2 | `business.html`, `bike-check.html` y los 5 posts del blog siguen 100% en ingles | **En progreso** - 3 PRs abiertas al 17-ago (#280, #281, #282), Prioridad Baja |
 | 5.2 | Prueba de carga nunca se corrio (necesita staging, no produccion) | Codigo + infraestructura |
 | 5.4 | Secretos sin usar en Vercel (`MAPBOX_TOKEN`, `GOOGLE_PLACES_API_KEY`, `POSTHOG_KEY`) | Diego, borrar del dashboard |
 | 9.5-bis | Un iPhone en "modo escritorio" / iPad recibe la landing, no la app - riesgo de loop si se arregla mal | Diego decide |
 | 13.9 | Contraste al limite en `track.html` (pasa AA por poco) | Diego decide, cambio de marca |
-| 17.1 | "E-Bike Service" ($129) se puede reservar pero no tiene tarjeta de marketing | Diego decide (opcional) |
+| 17.1 | "E-Bike Service" ($129) se puede reservar pero no tiene tarjeta de marketing | Diego decide (opcional) - **ojo:** hay otra seccion tambien numerada 17.1 (sobre el catalogo de precios, ya cerrada) - no confundir, son temas distintos con el mismo numero |
 | 17.3 | Buscar si quedan mas elementos huerfanos de la unificacion del 04-jul | Codigo, exploratorio |
+
+**Lo que no se reviso a fondo, y por que:** las filas de Alta y Baja sin
+marca en negrita arriba se dejaron como el 16-ago las describio - no porque
+esten confirmadas al dia de hoy, sino porque revisarlas seccion por seccion
+no era parte de lo que se pidio (la auditoria de esta pasada fue sobre
+Media, la lista asignada). Antes de asumir que una de esas filas sigue
+abierta, leer su seccion propia - el 21, el 3.3 y el 10.4 de arriba son tres
+ejemplos de que esta tabla ya se equivoco una vez en menos de 24 horas.
 
 ---
 
