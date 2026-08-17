@@ -411,9 +411,20 @@ regenerar el sitemap tambien reescribio las 60 paginas de suburbio -
 revirtiendo `var(--gray)`/`var(--border)`/`var(--green)` a hex literal,
 porque la plantilla del generador nunca se actualizo cuando esas 60 paginas
 se convirtieron a tokens. Se descartaron esas 60 reescrituras
-(`git checkout`) antes de commitear; el generador en si sigue con hex viejo
-en su propia plantilla, sin tocar en este PR - queda anotado aparte, no es
-parte de este punto.
+(`git checkout`) antes de commitear; el generador en si seguia con hex viejo
+en su propia plantilla, sin tocar en este PR - quedo anotado aparte.
+
+**Ya arreglado, 2026-08-18.** El PR #285 (sesion aparte) corrigio la
+plantilla del generador antes de que este punto llegara a mergearse -
+correr `npm run suburbs:generate` ahora reproduce las 60 paginas byte a
+byte (0 lineas de diff, solo fin de linea LF/CRLF). Este punto se rehizo
+sobre esa base: `TRANSLATED_STATIC_PAGES` y `BLOG_SLUGS` conviven en el
+mismo `sitemap()` sin pisarse, `GENERATED_BUDGET` recalculado a 3549 con
+la metodologia de placeholder (nunca a mano). La rama original de este
+punto (`feat/business-bikecheck-translations`, PR #280) se abrio antes de
+la 3.2 (PR #291) y antes del #285 - conflicto real al intentar mergearla
+hoy, asi que se rehizo entera sobre `main` actual en vez de resolverla a
+mano. **Cerrar #280 sin mergear.**
 
 ### 4.2 Los 5 posts del blog - CERRADO 2026-08-17
 
@@ -5256,7 +5267,7 @@ y 23.4 tambien - no hace falta repetir la prueba dos veces.
 | 10.1 | ~~El chequeo de i18n no mira dentro de los `<script>` inline de `landing.html`~~ **MOOT 2026-08-18** - esos scripts ya no son inline (3.2); el agujero angosto de fondo (regex, no AST) sigue sin cerrar, ver seccion 10.1 propia | Codigo, no trivial |
 | 10.2 | ~~Cancelar/reprogramar... `confirm()`/`prompt()` nativos~~ **CERRADO 2026-08-17**, ver seccion 10.2 propia | Codigo, feature aparte |
 | 10.4 | ~~`docs/mockups/` es publico...~~ **Nunca fue un bug real - CERRADO desde el 2026-08-01**, `.vercelignore` ya lo tapaba. Error del audit original, no de codigo | Codigo, movimiento simple |
-| 4.1 / 4.2 | `business.html`, `bike-check.html` y los 5 posts del blog siguen 100% en ingles | **En progreso** - 3 PRs abiertas al 17-ago (#280, #281, #282), Prioridad Baja |
+| 4.1 / 4.2 | ~~`business.html`, `bike-check.html` y los 5 posts del blog siguen 100% en ingles~~ **4.2 CERRADO** (#282, mergeado). **4.1 rehecho** (#280 quedo obsoleto por conflicto con la 3.2 - reemplazado por otro PR sobre `main` actual, ver seccion 4.1 propia) | Diego, merge |
 | 5.2 | Prueba de carga nunca se corrio (necesita staging, no produccion) | Codigo + infraestructura |
 | 5.4 | Secretos sin usar en Vercel (`MAPBOX_TOKEN`, `GOOGLE_PLACES_API_KEY`, `POSTHOG_KEY`) | Diego, borrar del dashboard |
 | 9.5-bis | Un iPhone en "modo escritorio" / iPad recibe la landing, no la app - riesgo de loop si se arregla mal | Diego decide |

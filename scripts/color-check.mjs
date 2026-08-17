@@ -129,7 +129,7 @@ const BUDGET = {
 // it is the hand-authored source those two translations are generated FROM,
 // already tracked in its own BUDGET entry above - counting it here too would
 // budget the same file in two places at once.
-const GENERATED_BUDGET = 99999;
+const GENERATED_BUDGET = 3549;
 const INDIVIDUALLY_BUDGETED_ROOT = new Set(['business.html', 'bike-check.html']);
 
 function generatedPages() {
