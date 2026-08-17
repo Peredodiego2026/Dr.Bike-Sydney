@@ -231,7 +231,7 @@ abierto hasta que se audite esa quinta.
 
 ### 3.2 Dieta de `landing.html` - CERRADO 2026-08-18
 
-Los ~15 bloques `<script>` inline (13 clasicos + 2 `type="module"`, ~2155
+Los 17 bloques `<script>` inline (15 clasicos + 2 `type="module"`, ~2155
 lineas) se sacaron a `js/landing-inline.js` (clasicos, concatenados en su
 orden original - ese orden importa, comparten el scope de nivel superior del
 archivo igual que antes compartian el scope global de la pagina) y
@@ -246,7 +246,7 @@ difieren al final sin importar su posicion, asi que consolidarlos no cambia
 nada de su timing relativo.
 
 `landing.html`: 3529 lineas / 229 KB -> 1424 lineas / 111 KB (-51% peso,
--60% lineas). Los 2 archivos nuevos suman 121 KB (113 KB + 8 KB) que ahora el
+-60% lineas). Los 2 archivos nuevos suman 122 KB (114 KB + 8 KB) que ahora el
 navegador cachea aparte en vez de descargar de nuevo con cada visita a la
 pagina.
 
