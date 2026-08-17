@@ -293,6 +293,13 @@ document.addEventListener('click', function (e) {
 document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
+  // The bookings-table row carries data-action="view-booking" so the whole
+  // row opens the detail modal, but its Confirm/Chat/Track/Cancel buttons
+  // (data-bk-action, handled by a separate listener) live inside that same
+  // row. Without this, clicking Confirm bubbled up to closest('[data-action]'),
+  // found the row, and opened the detail modal on top of the action that had
+  // just run.
+  if (e.target.closest('[data-bk-action]')) return;
   const d = el.dataset;
   switch (d.action) {
     case 'close-block-modal':
@@ -404,6 +411,30 @@ document.addEventListener('click', function (e) {
       break;
     case 'admin-resched-close':
       closeAdminReschedule();
+      break;
+    case 'view-booking':
+      openBookingDetail(d.id);
+      break;
+    case 'close-booking-detail':
+      closeBookingDetail();
+      break;
+    case 'bkd-confirm':
+      confirmBookingAdmin(d.id);
+      closeBookingDetail();
+      break;
+    case 'bkd-chat':
+      openAdminChat(d.id, d.name);
+      break;
+    case 'bkd-track':
+      copyTrackLink(d.token);
+      break;
+    case 'bkd-cancel':
+      closeBookingDetail();
+      openCancel(d.id);
+      break;
+    case 'bkd-reassign':
+      closeBookingDetail();
+      openReassign(d.id);
       break;
   }
 });
@@ -2789,7 +2820,7 @@ function renderBookingsTable(data) {
       const st = b.status || 'pending';
       const isPending = st === 'pending';
       const isCancelled = st === 'cancelled' || st === 'completed';
-      return `<tr>
+      return `<tr data-action="view-booking" data-id="${b.id}" style="cursor:pointer">
       <td data-label="Date">${date}</td>
       <td data-label="Client"><b>${esc(name)}</b></td>
       <td data-label="Service">${esc(b.service_name || '—')}</td>
@@ -2958,6 +2989,118 @@ async function submitAdminReschedule() {
   }
 }
 
+// ── BOOKING DETAIL ───────────────────────────────────────────────────────────
+// Palette by van_number, separate from the status colours already used for
+// the calendar chips - a van has nothing to do with pending/confirmed/done.
+// Cycles past the 2 vans that exist today so a 3rd van doesn't fall back to
+// an unstyled default.
+const VAN_COLORS = ['var(--blue)', 'var(--purple)', 'var(--cyan)', 'var(--slate)'];
+function vanColor(vanNumber) {
+  const n = Number(vanNumber) || 1;
+  return VAN_COLORS[(n - 1) % VAN_COLORS.length];
+}
+
+const BKD_ST_CLASS = {
+  pending: 'pending',
+  confirmed: 'confirmed',
+  enroute: 'enroute',
+  in_progress: 'enroute',
+  completed: 'completed',
+  cancelled: 'cancelled',
+};
+
+// Calendar chips only ever loaded a date-range slice of bookings (this
+// month's, this week's), so a booking clicked from the calendar is not
+// reliably in `allBookings` (the Bookings-page cache). Look there first -
+// it's already in memory and has the joined profile - fall back to a fetch
+// by id for the calendar case.
+async function openBookingDetail(id) {
+  let b = allBookings.find((x) => x.id === id);
+  if (!b) {
+    const { data, error } = await sb
+      .from('bookings')
+      .select('*, profiles(full_name)')
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) {
+      showToast('Could not load that booking: ' + (error?.message || 'not found'));
+      return;
+    }
+    b = data;
+  }
+  renderBookingDetail(b);
+  document.getElementById('booking-detail-modal').style.display = 'flex';
+}
+
+function closeBookingDetail() {
+  document.getElementById('booking-detail-modal').style.display = 'none';
+}
+
+function renderBookingDetail(b) {
+  const name = b.client_name || b.profiles?.full_name || b.client_email?.split('@')[0] || 'Client';
+  const st = b.status || 'pending';
+  const isPending = st === 'pending';
+  const isCancelled = st === 'cancelled' || st === 'completed';
+  const date = b.scheduled_date
+    ? new Date(b.scheduled_date + 'T00:00:00').toLocaleDateString('en-AU', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : '—';
+  const total = anBookingRevenue(b);
+
+  document.getElementById('bkd-name').textContent = name;
+  document.getElementById('bkd-status').innerHTML =
+    `<span class="status ${BKD_ST_CLASS[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span>`;
+
+  const row = (label, value) =>
+    value === null || value === undefined || value === ''
+      ? ''
+      : `<div style="display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--border-lt)">
+          <div style="font-size:12px;color:var(--mgray)">${label}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--navy);text-align:right">${value}</div>
+        </div>`;
+
+  document.getElementById('bkd-body').innerHTML = `
+    ${row('Service', esc(b.service_name || '—'))}
+    ${row('Date', date)}
+    ${row('Time', esc(b.scheduled_time || '—'))}
+    ${row('Address', esc(b.address || '—'))}
+    ${row('Van', `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${vanColor(b.van_number)};display:inline-block"></span>Van ${b.van_number || 1}</span>`)}
+    ${row('Phone', b.client_phone ? `<a href="tel:${esc(b.client_phone)}" style="color:var(--blue);text-decoration:none">${esc(b.client_phone)}</a>` : '')}
+    ${row('Email', b.client_email ? `<a href="mailto:${esc(b.client_email)}" style="color:var(--blue);text-decoration:none">${esc(b.client_email)}</a>` : '')}
+    ${row('Callout fee', b.callout_fee !== null && b.callout_fee !== undefined ? '$' + Number(b.callout_fee).toFixed(2) : '')}
+    ${row('Discount', b.discount_applied ? '−$' + Number(b.discount_applied).toFixed(2) + (b.discount_code ? ' (' + esc(b.discount_code) + ')' : '') : '')}
+    ${row('Total', '<b style="font-size:14px">$' + total.toFixed(2) + '</b>')}
+    ${row('Cancelled - reason', b.cancellation_reason ? esc(b.cancellation_reason) : '')}
+  `;
+
+  const actions = [];
+  if (isPending)
+    actions.push(
+      `<button data-action="bkd-confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Confirm</button>`
+    );
+  if (!isCancelled)
+    actions.push(
+      `<button data-action="bkd-chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Chat</button>`
+    );
+  if (b.tracking_token)
+    actions.push(
+      `<button data-action="bkd-track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Track link</button>`
+    );
+  if (!isCancelled)
+    actions.push(
+      `<button data-action="bkd-reassign" data-id="${b.id}" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Reassign van</button>`
+    );
+  if (!isCancelled)
+    actions.push(
+      `<button data-action="bkd-cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>`
+    );
+  document.getElementById('bkd-actions').innerHTML = actions.join('');
+}
+
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
 let unreadCount = 0;
 let notifPanelOpen = false;
@@ -3032,7 +3175,7 @@ async function loadRecentNotifications() {
         hour12: true,
       });
       const st = b.status || 'pending';
-      return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" data-page="bookings">
+      return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" data-action="view-booking" data-id="${b.id}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
         <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(name)}</div>
         <span style="font-size:11px;color:#fff;background:${stColors[st] || '#475569'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
@@ -6397,6 +6540,16 @@ function calNext() {
   loadCalendar();
 }
 
+// `date.toISOString().split('T')[0]` converts through UTC first, and Sydney
+// is UTC+10/11: local midnight lands on the PREVIOUS UTC day, so a cell
+// built with `new Date(y, m, day)` (always exactly local midnight) matched
+// bookings and blocks one calendar day early - "20" showed what belonged to
+// the 19th. Read the calendar fields straight off the Date object instead;
+// they are already local, nothing to convert.
+function calDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 async function loadCalendar() {
   const grid = document.getElementById('cal-grid');
   if (!grid) return;
@@ -6406,8 +6559,8 @@ async function loadCalendar() {
     const month = calMonthDate.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const dateFrom = firstDay.toISOString().split('T')[0];
-    const dateTo = lastDay.toISOString().split('T')[0];
+    const dateFrom = calDateStr(firstDay);
+    const dateTo = calDateStr(lastDay);
     const title = document.getElementById('cal-title');
     if (title)
       title.textContent = firstDay.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
@@ -6446,7 +6599,7 @@ async function loadCalendar() {
       enroute: 'var(--green-tint)',
       completed: 'var(--border-lt)',
     };
-    const today = new Date().toISOString().split('T')[0];
+    const today = calDateStr(new Date());
     const startDate = new Date(firstDay);
     const dow = startDate.getDay();
     startDate.setDate(startDate.getDate() - (dow === 0 ? 6 : dow - 1));
@@ -6458,21 +6611,36 @@ async function loadCalendar() {
     const cur = new Date(startDate);
     let cells = 0;
     while (cur <= lastDay || cells % 7 !== 0) {
-      const dateStr = cur.toISOString().split('T')[0];
+      const dateStr = calDateStr(cur);
       const isToday = dateStr === today;
       const isCurMonth = cur.getMonth() === month;
       const dayJobs = jobs.filter((j) => j.scheduled_date === dateStr);
       const dayBlocks = blockRows.filter((b) => b.date === dateStr);
       html += `<div style="min-height:80px;padding:6px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)${isToday ? ';background:rgba(24,72,200,0.06)' : ''}">
         <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:4px;font-size:13px;font-weight:${isToday ? '700' : '400'};background:${isToday ? 'var(--blue)' : 'transparent'};color:${isToday ? '#fff' : isCurMonth ? 'var(--navy)' : 'var(--mgray)'}">${cur.getDate()}</div>
-        ${dayBlocks.length ? `<div style="font-size:11px;font-weight:600;background:var(--red-lt);color:var(--red);border-radius:20px;padding:1px 7px;display:inline-block;margin-bottom:3px;white-space:nowrap">🚫 ${dayBlocks.length} blocked</div>` : ''}
+        ${
+          dayBlocks.length
+            ? `<div class="cal-block-badge" tabindex="0" style="font-size:11px;font-weight:600;background:var(--red-lt);color:var(--red);border-radius:20px;padding:1px 7px;display:inline-block;margin-bottom:3px;white-space:nowrap">🚫 ${dayBlocks.length} blocked
+                <div class="cal-block-tooltip">
+                  ${dayBlocks
+                    .map(
+                      (b) => `<div class="cal-block-tooltip-row">
+                        <div class="cal-block-tooltip-time">${esc(b.time_slot)} · ${b.van_number ? 'Van ' + b.van_number : 'All vans'}</div>
+                        ${b.reason ? `<div class="cal-block-tooltip-reason">${esc(b.reason)}</div>` : ''}
+                      </div>`
+                    )
+                    .join('')}
+                </div>
+              </div>`
+            : ''
+        }
         ${dayJobs
           .slice(0, 3)
           .map((j) => {
             const st = j.status || 'pending';
             const nm = j.profiles?.full_name?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
-            return `<div style="font-size:11px;background:${stBg[st] || 'var(--border-lt)'};border-left:2px solid ${stColors[st] || '#475569'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-page="bookings">${tm} ${esc(nm)}</div>`;
+            return `<div style="font-size:11px;background:${stBg[st] || 'var(--border-lt)'};border-left:2px solid ${stColors[st] || '#475569'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-action="view-booking" data-id="${j.id}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${vanColor(j.van_number)};margin-right:3px"></span>${tm} ${esc(nm)}</div>`;
           })
           .join('')}
         ${dayJobs.length > 3 ? `<div style="font-size:11px;color:var(--mgray)">+${dayJobs.length - 3} more</div>` : ''}
@@ -6493,10 +6661,10 @@ async function loadCalendar() {
   if (calView === 'week') calWeekStart = startOfWeek(new Date(calWeekStart));
 
   const days = calView === 'week' ? 7 : 1;
-  const dateFrom = calWeekStart.toISOString().split('T')[0];
-  const dateTo = new Date(new Date(calWeekStart).setDate(calWeekStart.getDate() + days - 1))
-    .toISOString()
-    .split('T')[0];
+  const dateFrom = calDateStr(calWeekStart);
+  const dateTo = calDateStr(
+    new Date(new Date(calWeekStart).setDate(calWeekStart.getDate() + days - 1))
+  );
 
   const title = document.getElementById('cal-title');
   if (title) {
@@ -6561,14 +6729,14 @@ async function loadCalendar() {
     enroute: 'var(--green-tint)',
     completed: 'var(--border-lt)',
   };
-  const today = new Date().toISOString().split('T')[0];
+  const today = calDateStr(new Date());
 
   const colWidth = calView === 'week' ? Math.floor(100 / days) : 100;
 
   let html = `<div style="display:flex;min-width:${calView === 'week' ? '700px' : '300px'};gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden">`;
 
   dayDates.forEach((d, i) => {
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = calDateStr(d);
     const isToday = dateStr === today;
     const dayJobs = jobs.filter((j) => j.scheduled_date === dateStr);
     const dayBlocks = blockRows.filter((b) => b.date === dateStr);
@@ -6601,11 +6769,11 @@ async function loadCalendar() {
                   const name = j.profiles?.full_name?.split(' ')[0] || 'Client';
                   const time = j.scheduled_time || '';
                   const van = j.van_number || 1;
-                  return `<div style="background:${stBg[st] || 'var(--border-lt)'};border-left:3px solid ${stColors[st] || '#475569'};border-radius:6px;padding:6px 8px;cursor:pointer" data-page="bookings">
+                  return `<div style="background:${stBg[st] || 'var(--border-lt)'};border-left:3px solid ${stColors[st] || '#475569'};border-radius:6px;padding:6px 8px;cursor:pointer" data-action="view-booking" data-id="${j.id}">
               <div style="font-size:11px;font-weight:700;color:${stColors[st] || '#475569'}">${time}</div>
               <div style="font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
               <div style="font-size:11px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.service_name || '')}</div>
-              <div style="font-size:11px;font-weight:600;color:${stColors[st]};margin-top:2px">Van ${van}</div>
+              <div style="font-size:11px;font-weight:600;color:${vanColor(van)};margin-top:2px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${vanColor(van)};margin-right:3px"></span>Van ${van}</div>
             </div>`;
                 })
                 .join('')
