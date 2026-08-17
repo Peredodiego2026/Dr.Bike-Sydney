@@ -4757,6 +4757,41 @@ RLS sin policies (21.7). Los tres eran invisibles desde el codigo o los tests
 22.1 sobre los dos vocabularios de hora vale otra vez aca: sin probar contra
 produccion, "cerrado" es una hipotesis, no un hecho.**
 
+### 21.8 El bloqueo nunca impedia una reserva - solo tapaba la lista
+
+Diego probo end-to-end el 17-ago (ya con 21.5-21.7 corridos): el toast decia
+"3 slots blocked", pero el horario seguia figurando disponible para el
+cliente. **No era un cuarto bug de guardado - la base tiene 2 vans, no una.**
+
+`handleGetAvailability` contesta "¿hay AL MENOS UNA van libre?" (esta
+verificado con sus propios tests, es el comportamiento correcto para esa
+lista). Bloquear la Van 1 no saca el horario de la oferta si la Van 2 sigue
+libre. Eso ya era medio esperable - lo que no lo era: **leyendo el codigo,
+`handleCreateBooking` nunca consulta `availability` en absoluto.**
+`matchVanZone()` ya sabe a que van especifica pertenece la direccion del
+cliente, pero nada comprobaba si ESA van estaba bloqueada antes de crear la
+reserva (y cobrar). Un cliente de la zona de la Van 1 podia reservar el
+horario que Diego se habia bloqueado, sin que nada lo frenara del lado del
+servidor - el bloqueo era una sugerencia visual, no una regla.
+
+**Arreglado en `api/auth.js`:** nueva funcion `isSlotBlocked(blockRows,
+vanNumber, timeSlot, neededMin)`, que reusa `buildBlockIntervals`/
+`slotToMinutes` pero para UNA sola van (la que `matchVanZone` ya resolvio),
+no "cualquiera". `handleCreateBooking` la llama antes de armar la reserva y,
+si la van esta bloqueada a esa hora, rechaza con 409 y reembolsa el pago si
+ya se habia cobrado - mismo patron que ya usa esa funcion para "el horario se
+lo llevaron entre el pago y el insert" (el choque de `bookings_unique_slot`).
+
+7 tests nuevos en `tests/unit/availability-blocks.test.js` (incluye "otra van,
+sin bloqueo propio, si puede - aunque la 1 este cerrada", que documenta a
+proposito que esto es distinto de `computeAvailableSlots`, no una correccion
+de ese). Suite completa 364/364.
+
+**No verificado en produccion todavia:** que un intento de reserva real
+contra un horario bloqueado efectivamente rebote con el mensaje correcto.
+
+## 22. Estado al cerrar el 16-ago-2026
+
 Un dia entero sobre Analytics, Finanzas y la reserva. **10 PRs mergeadas y
 verificadas en produccion**, no solo mergeadas.
 

@@ -616,13 +616,17 @@ async function handleCreateBooking(req, res) {
   // 2. Authoritative service price from the services table
   let svc = null;
   if (service_id) {
-    const r = await sb.from('services').select('id,name,price').eq('id', service_id).maybeSingle();
+    const r = await sb
+      .from('services')
+      .select('id,name,price,duration_max')
+      .eq('id', service_id)
+      .maybeSingle();
     svc = r.data;
   }
   if (!svc && service_name) {
     const r = await sb
       .from('services')
-      .select('id,name,price')
+      .select('id,name,price,duration_max')
       .eq('name', service_name)
       .maybeSingle();
     svc = r.data;
@@ -700,6 +704,34 @@ async function handleCreateBooking(req, res) {
         "Sorry, we don't currently service that address." +
         (payment_intent_id ? ' Your payment has been refunded.' : ''),
     });
+  }
+
+  // 3c. Reject a slot the admin blocked for THIS van (docs/PENDIENTES.md
+  // 21.8). handleGetAvailability's "at least one van is free" display can
+  // still show this slot on a multi-van fleet even though vanNumber's own
+  // schedule is blocked - this is the actual enforcement, not just the list.
+  {
+    const { data: blockRows } = await sb
+      .from('availability')
+      .select('time_slot, available, van_number')
+      .eq('date', scheduled_date);
+    const neededMin = (svc.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+    if (isSlotBlocked(blockRows, vanNumber, scheduled_time, neededMin)) {
+      if (payment_intent_id) {
+        try {
+          await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+            payment_intent: payment_intent_id,
+          });
+        } catch (e) {
+          console.error('[create-booking] blocked-slot refund failed:', e.message);
+        }
+      }
+      return res.status(409).json({
+        error:
+          'That time is no longer available.' +
+          (payment_intent_id ? ' Your payment has been refunded.' : ' Please pick another time.'),
+      });
+    }
   }
 
   // 4. Verify payment (skipped for the admin test account, and for a
@@ -3140,6 +3172,24 @@ export function buildBlockIntervals(overrides, vans) {
     for (const v of targets) out.push({ van: v, start, end });
   }
   return out;
+}
+
+// handleGetAvailability computes this same clash to decide what the client
+// sees, but that check is per date - it says a slot is on offer if AT LEAST
+// ONE van is free, so blocking van 1 alone never removes the slot from a
+// two-van fleet's display. handleCreateBooking already knows which SPECIFIC
+// van the address belongs to (matchVanZone), so this checks that one van,
+// not "any van" - the actual guarantee a block is supposed to give the
+// person who blocked their own schedule. Before this, saveBlocks()/
+// unblockDate() only ever fed the display list; nothing stopped a booking
+// against a blocked slot server-side (docs/PENDIENTES.md 21.8).
+export function isSlotBlocked(blockRows, vanNumber, timeSlot, neededMin) {
+  const start = slotToMinutes(timeSlot);
+  if (start < 0) return false;
+  const end = start + neededMin;
+  return buildBlockIntervals(blockRows, [vanNumber]).some(
+    (iv) => iv.van === vanNumber && start < iv.end && iv.start < end
+  );
 }
 
 export function computeAvailableSlots({
