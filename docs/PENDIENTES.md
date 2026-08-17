@@ -4893,6 +4893,33 @@ patron que 21.1-21.8). Suite completa 380/380.
 que no corre en un servidor estatico local - falta que Diego lo vea
 renderizado en produccion.
 
+### 21.10 El PR de 21.9 se olvido del `?v=` - el mismo bug de 21.5, otra vez
+
+Diego probo el PR de 21.9 en produccion y no vio nada: ni los badges de
+bloqueo, ni Day navegando, y ademas la semana se le abria en septiembre en
+vez de la semana actual. Las tres cosas tenian **una sola causa**: el PR
+edito `js/admin.js` (74 lineas) y no bumpeo el `?v=` de `admin.html` -
+exactamente el bug de 21.5, en el mismo archivo, el mismo dia. `sw.js` siguio
+sirviendo el `admin.js` de antes del PR; el navegador de Diego nunca vio el
+codigo nuevo. (La semana en septiembre fue una segunda causa encima:
+`calWeekStart` es una variable de modulo que no se resetea sola, asi que una
+pestaña abierta hace rato con clicks viejos en Next arrastraba ese valor -
+se resuelve solo con una recarga real una vez que el `?v=` fuerza a
+descargar el archivo correcto).
+
+**Arreglado, y esta vez con guardarropa para que no sea la tercera:**
+`admin.html` ahora carga `js/admin.js?v=825cc0e187` - **un hash del propio
+contenido del archivo**, no una fecha escrita a mano. `scripts/admin-js-version-check.mjs`,
+sumado a `npm run check`, recalcula ese hash y falla si no coincide con lo
+que dice `admin.html`, imprimiendo el valor exacto para pegar. Ya no depende
+de acordarse: **o el hash coincide, o `npm run check` no pasa.** Verificado
+rompiendolo a proposito (?v= viejo a mano) antes de mergear: falla con el
+mensaje correcto. Regla anotada en `CLAUDE.md`.
+
+`js/mechanic.js` y `js/app.js` siguen con el bump manual (14.11 ya documento
+el patron para `mechanic.html`) - no les toco nada, porque esta clase de bug
+todavia no les paso a ellos. Si le pasa, mismo arreglo.
+
 ## 22. Estado al cerrar el 16-ago-2026
 
 Un dia entero sobre Analytics, Finanzas y la reserva. **10 PRs mergeadas y

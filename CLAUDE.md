@@ -244,6 +244,24 @@ was live on the main pricing pages for a while before admin.js's MRR
 math, terms.html's 3 languages, api/chat.js's chatbot knowledge, and an
 e2e test were found still on the old numbers).
 
+### `js/admin.js`'s `?v=` is enforced, not remembered
+
+`admin.html` loads `js/admin.js?v=<hash>`, and `sw.js` serves that URL
+stale-while-revalidate: a browser that already opened `admin.html` keeps
+running the exact JS it first fetched until the query string changes. Edit
+`js/admin.js` without bumping it and the fix is live in the repo, in `main`,
+in the PR that says it's done - and invisible to Diego's browser. This
+shipped **twice in one day** (docs/PENDIENTES.md 21.5, then again on 21.9)
+before it got a real guard.
+
+**Enforced 2026-08-17:** `npm run check` runs `scripts/admin-js-version-check.mjs`,
+which hashes `js/admin.js` and fails if `admin.html`'s `?v=` doesn't match -
+prints the exact value to paste in. You cannot forget to update it and have
+`npm run check` stay green. If you ever touch `js/mechanic.js` or `js/app.js`
+instead, the same failure mode applies to `mechanic.html`/`landing.html`/
+`index.html` - those still rely on remembering to bump the date-string `?v=`
+by hand (14.11 covers `mechanic.html`), because they haven't bitten twice yet.
+
 ---
 
 # Style rules (ALWAYS apply)
