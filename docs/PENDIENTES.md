@@ -5292,3 +5292,33 @@ Corregido en el texto de arriba.
 **Verificado, no una promesa:** `npm run check`, `npm run lint` (0 errores)
 y `npx vitest run` (367 tests) corridos contra los arreglos de esta seccion,
 no solo contra los de la 24 original.
+
+## 28. Mapa en vivo de las vans para el admin (18-ago-2026)
+
+Ultimo item de la lista pedida por Diego (seccion 25). El cliente ya tenia
+su mapa de seguimiento por reserva (`track.html`), pero el admin no tenia
+ninguna vista de "donde estan mis vans ahora" - solo el mapa de la ruta de
+HOY en Vans & Mechanics, que ubica los TRABAJOS, no a los mecanicos.
+
+**Se sumo a ese mismo mapa, no se creo uno nuevo.** `renderVanLocations()`
+lee `mechanic_locations` (la fila mas reciente por `van_number` - la tabla
+es un historial, no una posicion actual), la dibuja con un pin distinto al
+de los trabajos (🚐, color por van, semi-transparente si hace mas de 15 min
+que no manda señal - no la esconde, la marca como no-en-vivo). Suscripcion
+de realtime (`subscribeVanLocations()`, un solo canal para toda la pagina)
+para que se mueva sola sin recargar.
+
+**Igual que 21.7, la tabla nunca tuvo policy de admin.**
+`harden-security-2026-07-17.sql` le puso RLS a `mechanic_locations` pero
+solo para "el cliente con una reserva activa" - el admin, ni con su propia
+sesion, podia leerla directo desde el navegador. `scripts/add-mechanic-locations-admin-select.sql`
+nuevo, mismo patron que `availability_admin_select`, sumado al runbook
+(item 42). **Sin correrlo, el mapa no muestra ninguna van y no tira ningun
+error** - mismo modo de falla silenciosa que ya paso antes.
+
+10 tests nuevos en `tests/unit/admin-live-van-map.test.js`.
+
+**No verificado en produccion**, y dos cosas que no se hicieron a
+proposito: no hay boton para "centrar en mi van" ni notificacion si una van
+deja de mandar señal por mucho tiempo - se puede sumar despues si hace
+falta.
