@@ -6350,14 +6350,27 @@ async function loadCalendar() {
       title.textContent = firstDay.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
     grid.innerHTML =
       '<div style="text-align:center;padding:30px;color:var(--mgray)">Loading...</div>';
-    const { data: bookings } = await sb
-      .from('bookings')
-      .select('*, profiles(full_name)')
-      .gte('scheduled_date', dateFrom)
-      .lte('scheduled_date', dateTo)
-      .neq('status', 'cancelled')
-      .order('scheduled_time');
+    const [{ data: bookings }, { data: blocks }] = await Promise.all([
+      sb
+        .from('bookings')
+        .select('*, profiles(full_name)')
+        .gte('scheduled_date', dateFrom)
+        .lte('scheduled_date', dateTo)
+        .neq('status', 'cancelled')
+        .order('scheduled_time'),
+      // The calendar never queried this table at all (docs/PENDIENTES.md
+      // 21.8): Block availability could save perfectly and every view still
+      // showed the day as plain and empty, with no way to tell it apart
+      // from a day nobody touched.
+      sb
+        .from('availability')
+        .select('date, time_slot, van_number, reason')
+        .eq('available', false)
+        .gte('date', dateFrom)
+        .lte('date', dateTo),
+    ]);
     const jobs = bookings || [];
+    const blockRows = blocks || [];
     const stColors = {
       pending: 'var(--amber-bright)',
       confirmed: 'var(--blue)',
@@ -6386,8 +6399,10 @@ async function loadCalendar() {
       const isToday = dateStr === today;
       const isCurMonth = cur.getMonth() === month;
       const dayJobs = jobs.filter((j) => j.scheduled_date === dateStr);
+      const dayBlocks = blockRows.filter((b) => b.date === dateStr);
       html += `<div style="min-height:80px;padding:6px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)${isToday ? ';background:rgba(24,72,200,0.06)' : ''}">
         <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:4px;font-size:13px;font-weight:${isToday ? '700' : '400'};background:${isToday ? 'var(--blue)' : 'transparent'};color:${isToday ? '#fff' : isCurMonth ? 'var(--navy)' : 'var(--mgray)'}">${cur.getDate()}</div>
+        ${dayBlocks.length ? `<div style="font-size:11px;font-weight:600;background:var(--red-lt);color:var(--red);border-radius:20px;padding:1px 7px;display:inline-block;margin-bottom:3px;white-space:nowrap">🚫 ${dayBlocks.length} blocked</div>` : ''}
         ${dayJobs
           .slice(0, 3)
           .map((j) => {
@@ -6407,8 +6422,12 @@ async function loadCalendar() {
     return;
   }
 
-  // Set week start to Monday
-  calWeekStart = startOfWeek(new Date(calWeekStart));
+  // Set week start to Monday - week view only. Day view used to run this
+  // unconditionally: calNext()/calPrev() move calWeekStart by +-1 day, then
+  // this snapped it straight back to that day's Monday, undoing the move -
+  // Prev/Next looked dead because Day view could never land anywhere but
+  // the Monday of whatever week it started on.
+  if (calView === 'week') calWeekStart = startOfWeek(new Date(calWeekStart));
 
   const days = calView === 'week' ? 7 : 1;
   const dateFrom = calWeekStart.toISOString().split('T')[0];
@@ -6439,15 +6458,25 @@ async function loadCalendar() {
   grid.innerHTML =
     '<div style="text-align:center;padding:30px;color:var(--mgray)">Loading...</div>';
 
-  const { data: bookings } = await sb
-    .from('bookings')
-    .select('*, profiles(full_name)')
-    .gte('scheduled_date', dateFrom)
-    .lte('scheduled_date', dateTo)
-    .neq('status', 'cancelled')
-    .order('scheduled_time');
+  const [{ data: bookings }, { data: blocks }] = await Promise.all([
+    sb
+      .from('bookings')
+      .select('*, profiles(full_name)')
+      .gte('scheduled_date', dateFrom)
+      .lte('scheduled_date', dateTo)
+      .neq('status', 'cancelled')
+      .order('scheduled_time'),
+    sb
+      .from('availability')
+      .select('date, time_slot, van_number, reason')
+      .eq('available', false)
+      .gte('date', dateFrom)
+      .lte('date', dateTo)
+      .order('time_slot'),
+  ]);
 
   const jobs = bookings || [];
+  const blockRows = blocks || [];
 
   // Build day columns
   const dayDates = [];
@@ -6479,6 +6508,7 @@ async function loadCalendar() {
     const dateStr = d.toISOString().split('T')[0];
     const isToday = dateStr === today;
     const dayJobs = jobs.filter((j) => j.scheduled_date === dateStr);
+    const dayBlocks = blockRows.filter((b) => b.date === dateStr);
     const dayName = d.toLocaleDateString('en-AU', { weekday: 'short' });
     const dayNum = d.getDate();
 
@@ -6489,10 +6519,18 @@ async function loadCalendar() {
         <div style="font-size:18px;font-weight:700;color:${isToday ? '#fff' : 'var(--navy)'}">${dayNum}</div>
         ${dayJobs.length > 0 ? `<div style="font-size:11px;color:${isToday ? 'rgba(255,255,255,0.7)' : 'var(--mgray)'};">${dayJobs.length} job${dayJobs.length > 1 ? 's' : ''}</div>` : ''}
       </div>
-      <!-- Jobs -->
+      <!-- Blocked slots, then jobs. "Free" only when the day has neither. -->
       <div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:120px">
+        ${dayBlocks
+          .map(
+            (b) => `<div style="background:var(--red-lt);border-left:3px solid var(--red);border-radius:6px;padding:6px 8px">
+              <div style="font-size:11px;font-weight:700;color:var(--red)">🚫 ${esc(b.time_slot)} · ${b.van_number ? 'Van ' + b.van_number : 'All vans'}</div>
+              ${b.reason ? `<div style="font-size:11px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.reason)}</div>` : ''}
+            </div>`
+          )
+          .join('')}
         ${
-          dayJobs.length === 0
+          dayJobs.length === 0 && dayBlocks.length === 0
             ? `<div style="font-size:11px;color:var(--mgray);text-align:center;padding:16px 4px;opacity:.5">Free</div>`
             : dayJobs
                 .map((j) => {

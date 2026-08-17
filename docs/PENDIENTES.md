@@ -4853,6 +4853,46 @@ de ese). Suite completa 364/364.
 **No verificado en produccion todavia:** que un intento de reserva real
 contra un horario bloqueado efectivamente rebote con el mensaje correcto.
 
+### 21.9 El calendario del admin nunca mostraba un bloqueo, en ninguna vista
+
+Diego probo Block slots en produccion el 17-ago (ya con 21.5-21.8 en `main`)
+y reporto dos cosas juntas:
+
+1. Despues de bloquear, Day/Week/Month seguian diciendo "Free" - **ninguna
+   vista consultaba `availability`**, solo `bookings`. El guardado andaba
+   perfecto (confirmado por SQL), pero no habia forma de verlo sin abrir el
+   SQL Editor.
+2. En Day view, **Prev/Next no navegaban nunca**.
+
+**Causa del 1.** Las tres vistas comparten `loadCalendar()`, y ese Promise.all
+solo pedia `bookings`. `availability` nunca entraba a la consulta.
+
+**Causa del 2, y no tiene nada que ver con la 1.** `loadCalendar()` corria
+`calWeekStart = startOfWeek(new Date(calWeekStart))` **sin condicion**, para
+las tres vistas. `calPrev()`/`calNext()` mueven `calWeekStart` +-1 dia y
+llaman a `loadCalendar()` - que en Day view snapeaba ese valor de vuelta al
+lunes de esa semana antes de pintar nada, deshaciendo el movimiento. Week
+view no lo notaba porque navega de a 7 dias, que siempre cae en otro lunes -
+el mismo snap ahi es un no-op.
+
+**Arreglado:**
+- El snap a lunes ahora es `if (calView === 'week') ...` - Day deja de
+  perder su propia fecha.
+- `loadCalendar()` pide `availability` junto con `bookings` en las tres
+  vistas (`available = false`, mismo rango de fechas visible).
+- **Month:** un badge `🚫 N blocked` por dia, antes de los jobs.
+- **Week/Day:** cada horario bloqueado se lista con su van y el motivo,
+  arriba de los jobs del dia. "Free" solo aparece cuando el dia no tiene
+  ni jobs ni bloqueos.
+
+7 tests nuevos de fuente en `tests/unit/calendar-shows-blocks.test.js`
+(`js/admin.js` es un script clasico, se verifica leyendo el archivo, mismo
+patron que 21.1-21.8). Suite completa 380/380.
+
+**No verificado en navegador:** `admin.html` autentica contra `/api/auth`,
+que no corre en un servidor estatico local - falta que Diego lo vea
+renderizado en produccion.
+
 ## 22. Estado al cerrar el 16-ago-2026
 
 Un dia entero sobre Analytics, Finanzas y la reserva. **10 PRs mergeadas y
