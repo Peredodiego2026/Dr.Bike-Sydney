@@ -722,24 +722,34 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.warn('[send-invoice] PDF generation failed:', e.message);
-    // Fire-and-forget: the email below still goes out with the same info in
-    // the HTML body, just without the attachment. This alert is the only way
-    // Diego finds out - previously it was just this console.warn, which
-    // nobody reads (2026-08-16, PENDIENTES.md 15.2).
-    fetch(`${SELF_BASE_URL}/api/send-message?channel=whatsapp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
-      },
-      body: JSON.stringify({
-        to: '0433963250',
-        template: 'invoice_pdf_failed',
-        data: { clientName, service, invoiceNumber },
-      }),
-    }).catch((alertErr) =>
-      console.error('[send-invoice] could not alert Diego about missing PDF:', alertErr.message)
-    );
+    // Awaited, not fire-and-forget: this is already the slow/degraded path
+    // (PDF generation just failed), so the extra latency is cheap - and a
+    // Vercel function can freeze the moment the handler returns, which can
+    // drop an un-awaited request before it reaches Resend/Twilio. The whole
+    // point of this alert is that Diego finds out when the PDF fails
+    // (2026-08-16, PENDIENTES.md 15.2); leaving it unawaited risked losing it
+    // the same silent way for a fraction of failures (review finding).
+    try {
+      const alertResp = await fetch(`${SELF_BASE_URL}/api/send-message?channel=whatsapp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+        },
+        body: JSON.stringify({
+          to: '0433963250',
+          template: 'invoice_pdf_failed',
+          data: { clientName, service, invoiceNumber },
+        }),
+      });
+      if (!alertResp.ok)
+        console.error(
+          '[send-invoice] could not alert Diego about missing PDF:',
+          alertResp.status
+        );
+    } catch (alertErr) {
+      console.error('[send-invoice] could not alert Diego about missing PDF:', alertErr.message);
+    }
   }
 
   try {

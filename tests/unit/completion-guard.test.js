@@ -113,3 +113,48 @@ describe('handleMechanicComplete wiring', () => {
     expect(fn).toMatch(/idempotencyKey:\s*`complete-charge-\$\{booking_id\}`/);
   });
 });
+
+// A review of the 6 merged Prioridad Media PRs (2026-08-16) found 3 real bugs
+// in the parts-cost-actual addition to this function, all in the shape "an
+// external call can fail, and the code did the wrong thing when it did":
+describe('handleMechanicComplete - parts cost lookup failure handling (review fix)', () => {
+  const auth = readFileSync(join(root, 'api/auth.js'), 'utf8');
+  const match = auth.match(/async function handleMechanicComplete\([^)]*\)\s*{[\s\S]*?\r?\n}\r?\n/);
+  const fn = (match || [''])[0];
+
+  it('wraps the parts_inventory cost lookup in try/catch, not a bare await', () => {
+    // Before the fix, a network exception on this fetch propagated out of the
+    // whole function - the opposite of the adjacent comment's promise that a
+    // completion is never blocked by this lookup.
+    expect(fn).toMatch(
+      /try\s*{[\s\S]{0,300}rest\/v1\/parts_inventory\?select=id,cost_price[\s\S]{0,400}catch \(e\) {/
+    );
+  });
+
+  it('guards the partsCostActual accumulation on whether the lookup actually succeeded', () => {
+    // Before the fix, a failed lookup (network throw, or a non-ok response)
+    // left partsCostActual at 0 - a job that genuinely used $80 of parts
+    // could get recorded as a "measured" $0, understating its real cost with
+    // no signal anywhere that the number wasn't real.
+    expect(fn).toMatch(/let costLookupOk = true/);
+    expect(fn).toMatch(/if \(costLookupOk\) partsCostActual = 0/);
+    expect(fn).toMatch(/if \(costLookupOk\) partsCostActual \+=/);
+  });
+
+  it('only puts uuid-shaped ids into the parts_inventory in.() filter', () => {
+    // A single malformed id used to be able to break the filter syntax for
+    // the WHOLE batch, pricing every other part in the same job at 0 too.
+    expect(fn).toMatch(/\/\^\[0-9a-f-\]\{36\}\$\/i\.test\(id\)/);
+  });
+
+  it('logs before retrying the completion PATCH without parts_cost_actual', () => {
+    // Before the fix, a failed first PATCH attempt was retried silently -
+    // if the retry succeeded, there was no trace anywhere that the write
+    // needed a fallback, so "migration not run yet" (expected) and "this
+    // write is broken for an unrelated reason" (needs attention) were
+    // indistinguishable in the logs.
+    expect(fn).toMatch(
+      /console\.warn\(\s*'\[mechanic-complete\] booking PATCH failed[\s\S]{0,200}const \{ parts_cost_actual, \.\.\.withoutPartsCost \} = payload;/
+    );
+  });
+});

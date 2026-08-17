@@ -4301,6 +4301,18 @@ usaban un instante para descontar stock y se tiraban. Ahora:
   retroactiva). Solo los trabajos que se completen DESPUES empiezan a sumar
   costo real. El numero se vuelve mas preciso con el tiempo, nunca de golpe.
 
+**Revision post-merge (16-ago-2026, 8 agentes en paralelo sobre las 6 PRs de
+Media):** encontro 3 bugs reales en `handleMechanicComplete` (`api/auth.js`)
+que esta seccion arriba no menciona porque se escribieron sobre el codigo ya
+mergeado, no sobre la PR: el fetch a `parts_inventory` no tenia try/catch (una
+falla de red hubiera tumbado la finalizacion entera, justo lo que el
+comentario de al lado decia que no podia pasar); si ese fetch fallaba sin
+tirar excepcion, `partsCostActual` quedaba en `0` en vez de `NULL` -
+reclamando un trabajo "medido" con costo cero que en realidad no se pudo
+medir; y un id de repuesto con formato invalido rompia el filtro `in.()` para
+todo el lote, no solo para si mismo. Los 3 arreglados en la misma pasada -
+ver seccion 24.
+
 ---
 
 ## 19. La bici fea ya no existe, y lo que se vio al sacarla (2026-08-16)
@@ -4873,3 +4885,70 @@ En `docs/RUNBOOK-SQL.md` seccion 0 hay tres pruebas de mundo real anotadas el
 10-ago y nunca tachadas: una reserva sin iniciar sesion de punta a punta, la
 pagina de seguimiento mostrando ETA en una reserva nueva, y el simulacro de
 restauracion del backup. **Siguen abiertas.** Van en la misma tanda.
+
+---
+
+## 24. Revision de las 6 PRs de Prioridad Media, ya mergeadas (16-ago-2026) - CERRADO
+
+Diego pidio revisar todo lo hecho en 14.2, 15.2, 12.16, 5.1, 20.8 y 18.3
+despues de mergear las 6 - no el diff de cada PR por separado, el resultado
+combinado ya en `main`. 8 pasadas independientes en paralelo (line-by-line,
+comportamiento eliminado, cross-file, reuse, simplificacion, eficiencia,
+altura arquitectonica, reglas de CLAUDE.md) sobre el mismo diff agregado;
+una (cross-file) fallo por limite de gasto mensual y se repitio a mano.
+
+**3 bugs reales, los 3 en `handleMechanicComplete` (18.3) - CERRADOS:**
+
+1. El fetch a `parts_inventory` para el costo de repuestos no tenia
+   try/catch. Una falla de red ahi tumbaba la finalizacion completa del
+   trabajo - exactamente lo que el comentario de al lado decia que no podia
+   pasar. Envuelto en try/catch, mismo patron que el `guardResp` de la
+   verificacion de duplicados dos parrafos arriba.
+2. Si esa consulta fallaba (respuesta no-ok, no una excepcion), el codigo
+   seguia de largo y `partsCostActual` quedaba en `0` en vez de `NULL` -
+   marcando un trabajo como "medido" con costo real cero cuando en realidad
+   no se pudo medir. Nuevo flag `costLookupOk` que separa "no hay repuestos
+   que costear" de "la consulta fallo".
+3. Los ids de repuesto iban al filtro `in.()` de PostgREST sin validar. Un id
+   con formato invalido rompia la sintaxis del filtro para **todo el lote**,
+   no solo para si mismo - un mecanico completando un trabajo con 3 repuestos
+   reales y un id corrupto perdia el costo de los 3. Ahora solo entran al
+   filtro los que tienen forma de uuid.
+
+**2 hallazgos de eficiencia, tambien arreglados** (no son bugs, pero el costo
+era real y el arreglo barato):
+
+4. La misma finalizacion arriesgaba perder el aviso de WhatsApp: el fetch a
+   `/api/send-message` en `api/send-invoice.js` no se esperaba
+   (`fire-and-forget`), y una funcion de Vercel puede congelarse apenas el
+   handler devuelve la respuesta. Ahora se espera - es el camino de error ya
+   degradado (fallo el PDF), la latencia extra no importa ahi.
+5. `fetchAnalyticsBookings()` (`js/admin.js`) reintentaba la consulta con
+   `parts_cost_actual` en **cada** carga de Analytics, aunque ya hubiera
+   fallado antes - un viaje de red completo desperdiciado en cada apertura de
+   la pestaña hasta que Diego corra la migracion. Ahora se acuerda con un
+   flag de modulo despues del primer fallo.
+
+**Cobertura nueva:** `tests/unit/completion-guard.test.js` gano 4 tests sobre
+los 3 bugs de `handleMechanicComplete`, y `tests/unit/analytics-bookings-fallback.test.js`
+(nuevo) prueba el cacheo de `fetchAnalyticsBookings()` con un `sb` falso -
+antes de esta pasada, ese archivo solo tenia una prueba de patron de texto
+sobre `js/admin.js`, no una prueba de comportamiento real.
+
+**Encontrado pero NO tocado, a proposito** (limpieza de codigo, no bugs -
+Diego pidio bugs y errores, no un refactor):
+- 3 copias casi identicas del patron "consultar por lote de ids -> Map" en
+  `api/auth.js` (perfiles, costo de repuestos, contactos de escalamiento).
+- El patron "columna nueva puede no existir todavia, reintentar sin ella" -
+  ahora son 3 copias en `api/auth.js` mas 1 en `js/admin.js`, todas escritas
+  a mano por separado.
+- `.tbl-scroll` (12.16) se creo para las 6 tablas pero las 7 listas que no
+  son tablas repiten el mismo `max-height:480px;overflow-y:auto` a mano en
+  vez de reusar la clase.
+- La logica de "basis"/"cost" en `analyticsMarginsByService` calcula los dos
+  con arboles de condiciones separados que hoy coinciden pero podrian
+  desincronizarse en una edicion futura - no es un bug actual, verificado
+  contra el codigo real.
+
+Si Diego quiere esa limpieza en algun momento, es una PR aparte - esta se
+mantuvo enfocada en lo que realmente estaba mal.
