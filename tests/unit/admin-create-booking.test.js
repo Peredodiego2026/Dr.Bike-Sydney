@@ -40,6 +40,11 @@ describe('handleAdminCreateBooking - server', () => {
     expect(fn).toMatch(/applySurcharge\(Number\(svc\.price\)/);
   });
 
+  it('el callout fee sale de callout_zones por direccion, no un $20 fijo (bug encontrado en auto-revision)', () => {
+    expect(fn).toMatch(/\.from\('callout_zones'\)\.select\('callout_fee,suburbs'\)/);
+    expect(fn).not.toMatch(/const calloutFee = applySurcharge\(20,/);
+  });
+
   it('resuelve la van con matchVanZone, o respeta un override explicito', () => {
     expect(fn).toMatch(/matchVanZone\(auth\.sb, address\)/);
     expect(fn).toMatch(/van_number \? Number\(van_number\)/);

@@ -3757,7 +3757,22 @@ async function handleAdminCreateBooking(req, res) {
     return res.status(409).json({ error: 'That time is not available for this van.' });
 
   const servicePrice = applySurcharge(Number(svc.price), scheduled_date);
-  const calloutFee = applySurcharge(20, scheduled_date);
+
+  // Authoritative call-out fee (callout_zones by address, default $20) -
+  // same lookup handleCreateBooking and rescheduleBookingCore use. Found in
+  // self-review: this used to be a hardcoded $20, which would undercharge
+  // or overcharge relative to the real zone rate for any suburb whose fee
+  // differs from the default.
+  let calloutFee = 20;
+  try {
+    const { data: zones } = await auth.sb.from('callout_zones').select('callout_fee,suburbs');
+    const addr = address.toLowerCase();
+    const zone = (zones || []).find((z) =>
+      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
+    );
+    if (zone) calloutFee = Number(zone.callout_fee);
+  } catch {}
+  calloutFee = applySurcharge(calloutFee, scheduled_date);
 
   const { data: booking, error: insErr } = await auth.sb
     .from('bookings')
