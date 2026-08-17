@@ -17,6 +17,7 @@ import { describe, it, expect } from 'vitest';
 import {
   buildBlockIntervals,
   computeAvailableSlots,
+  isSlotBlocked,
   BLOCK_SLOT_MIN,
   SLOT_BUFFER_MIN,
 } from '../../api/auth.js';
@@ -139,6 +140,46 @@ describe('un bloqueo saca el horario de la oferta', () => {
   it('sin bloqueos, el dia sigue abierto', () => {
     const slots = offer({});
     expect(Object.values(slots).every(Boolean)).toBe(true);
+  });
+});
+
+describe('isSlotBlocked - lo que usa handleCreateBooking, no solo la lista', () => {
+  // computeAvailableSlots contesta "¿hay AL MENOS UNA van libre?" - correcto
+  // para la lista que ve el cliente, pero handleCreateBooking ya sabe a QUE
+  // van pertenece la direccion (matchVanZone), asi que necesita la respuesta
+  // para esa unica van. Antes de esto nada llamaba a esta pregunta: el bloqueo
+  // solo tapaba la lista, nunca impedia la reserva en si (PENDIENTES 21.8).
+  const rows = [{ time_slot: '9:00', available: false, van_number: 1 }];
+  const neededMin = 60 + SLOT_BUFFER_MIN;
+
+  it('la van bloqueada no puede reservarse', () => {
+    expect(isSlotBlocked(rows, 1, '9:00 AM', neededMin)).toBe(true);
+  });
+
+  it('otra van, sin bloqueo propio, si puede - aunque la 1 este cerrada', () => {
+    expect(isSlotBlocked(rows, 2, '9:00 AM', neededMin)).toBe(false);
+  });
+
+  it('van_number 0 (todas) bloquea cualquier van que se pregunte', () => {
+    const allVans = [{ time_slot: '9:00', available: false, van_number: 0 }];
+    expect(isSlotBlocked(allVans, 1, '9:00 AM', neededMin)).toBe(true);
+    expect(isSlotBlocked(allVans, 2, '9:00 AM', neededMin)).toBe(true);
+  });
+
+  it('un bloqueo de media hora choca con el trabajo que seguiria corriendo', () => {
+    const halfHour = [{ time_slot: '8:30', available: false, van_number: 1 }];
+    expect(isSlotBlocked(halfHour, 1, '8:00 AM', neededMin)).toBe(true);
+    expect(isSlotBlocked(halfHour, 1, '9:00 AM', neededMin)).toBe(false);
+  });
+
+  it('sin filas bloqueadas, no bloquea nada', () => {
+    expect(isSlotBlocked([], 1, '9:00 AM', neededMin)).toBe(false);
+    expect(isSlotBlocked(null, 1, '9:00 AM', neededMin)).toBe(false);
+  });
+
+  it('ignora las filas con available:true', () => {
+    const open = [{ time_slot: '9:00', available: true, van_number: 1 }];
+    expect(isSlotBlocked(open, 1, '9:00 AM', neededMin)).toBe(false);
   });
 });
 
