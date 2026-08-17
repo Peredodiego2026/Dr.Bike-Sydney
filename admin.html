@@ -391,6 +391,23 @@
       </div>
     </div>
 
+    <!-- Booking detail modal - opened from the Calendar (Month/Week/Day chips) and
+         from a Bookings-table row. Before this, both just dumped you on the flat
+         list with no way back to the one booking you clicked. -->
+    <div id="booking-detail-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+      <div style="background:var(--white);border-radius:16px;width:440px;max-width:calc(100vw - 32px);max-height:calc(100vh - 64px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div>
+            <div id="bkd-name" style="font-size:17px;font-weight:700;color:var(--navy)">—</div>
+            <div id="bkd-status" style="margin-top:4px"></div>
+          </div>
+          <button data-action="close-booking-detail" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray);line-height:1;padding:2px" aria-label="Close">✕</button>
+        </div>
+        <div id="bkd-body" style="padding:18px 24px;overflow-y:auto;flex:1"></div>
+        <div id="bkd-actions" style="padding:14px 24px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+    </div>
+
     <!-- VANS -->
     <div id="page-vans" class="page">
       <div class="card" style="margin-bottom:18px">
@@ -1429,5 +1446,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=f9b6109bb0"></script>
+<script src="js/admin.js?v=31bbdc20fa"></script>
 </body></html>
