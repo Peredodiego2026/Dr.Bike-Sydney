@@ -4920,6 +4920,59 @@ mensaje correcto. Regla anotada en `CLAUDE.md`.
 el patron para `mechanic.html`) - no les toco nada, porque esta clase de bug
 todavia no les paso a ellos. Si le pasa, mismo arreglo.
 
+### 21.11 Los bloqueos aparecian en el dia equivocado del Month view
+
+Con el `?v=` ya arreglado (21.10), Diego confirmo Week y Day funcionando
+bien - los 3 horarios bloqueados del miercoles 19 se ven con su van y motivo,
+y Day navega. Pero en Month view el badge "3 blocked" salia en el **jueves
+20**, no en el miercoles 19: entrando a Day view del 20 no habia nada.
+
+**Causa, y no era la cache esta vez.** `dateStr = cur.toISOString().split('T')[0]`
+convierte a UTC antes de cortar la fecha. Sydney es UTC+10/11: la medianoche
+local cae en el dia UTC **anterior**. `cur` en Month view se arma con
+`new Date(year, month, day)`, que es siempre medianoche local exacta, asi
+que el dato queda sistematicamente un dia atrasado - la celda que **muestra**
+"20" (`cur.getDate()`, ya local) filtraba `availability`/`bookings` con la
+fecha "19" (`cur.toISOString()`, corrida a UTC). Bloqueos del 19 aparecian
+bajo el "20".
+
+**Por que Week/Day no lo mostraban (aun con el mismo patron de codigo):**
+`calWeekStart` arranca en `new Date()` - la hora exacta en que se cargo la
+pagina, no medianoche - y esa hora del dia se arrastra en cada
+`setDate()`. Si esa hora cae despues de medianoche+offset (en Sydney,
+aprox. desde las 10 AM en adelante), la conversion a UTC no cruza al dia
+anterior y el bug queda invisible. Es el mismo defecto, disimulado por la
+hora en que Diego abrio la pestaña - habria aparecido igual si la abria
+temprano a la mañana.
+
+**Arreglo:** `calDateStr(d)` nueva, lee `getFullYear()/getMonth()/getDate()`
+directo del objeto Date - **sin pasar por UTC en ningun momento** porque esos
+campos ya son locales. Reemplaza los 8 usos de `.toISOString().split('T')[0]`
+dentro de `loadCalendar()` (Month, Week y Day: `dateFrom`, `dateTo`, `today`,
+`dateStr`, en las tres vistas). No se toco ningun otro `toISOString()` del
+archivo - los que quedan son timestamps reales (`cash_settled_at`,
+`completed_at`), no fechas de calendario, y no es el mismo bug.
+
+**De paso, lo que pidio Diego:** un tooltip al pasar el cursor sobre el badge
+"N blocked" del Month view, sin click - lista cada horario bloqueado con su
+van y el motivo. CSS puro (`:hover` + `:focus-within` para teclado), sin
+`onclick` ni `onmouseover` inline (regla del proyecto). Nueva seccion en
+`css/admin.css`.
+
+**Al tocar `css/admin.css`, el mismo bug de cache que 21.10 ya era posible
+para ESTE archivo tambien** - `admin.html` lo carga con su propio `?v=`,
+nunca antes verificado. Se renombra `scripts/admin-js-version-check.mjs` a
+**`admin-assets-version-check.mjs`** y ahora cubre `js/admin.js` **y**
+`css/admin.css` con el mismo hash-en-vez-de-fecha.
+
+11 tests nuevos/actualizados (`calDateStr` se extrae y se ejecuta de
+verdad, no solo se busca en el texto). Suite completa 384/384.
+
+**No verificado visualmente:** el sandbox de este entorno no puede simular
+`:hover` sobre `admin.html` (necesita `/api/auth`, y los archivos fuera del
+proyecto no son interactivos aca) - falta que Diego pase el cursor sobre un
+badge real.
+
 ## 22. Estado al cerrar el 16-ago-2026
 
 Un dia entero sobre Analytics, Finanzas y la reserva. **10 PRs mergeadas y
@@ -5293,6 +5346,124 @@ Corregido en el texto de arriba.
 y `npx vitest run` (367 tests) corridos contra los arreglos de esta seccion,
 no solo contra los de la 24 original.
 
+## 25. Gestion de reservas desde el calendario (18-ago-2026)
+
+Diego pidio comparar el calendario del admin contra software de servicio de
+campo real (Jobber, Housecall Pro, ServiceM8) y cerrar los huecos que
+importan para ordenar reservas, **sin** arrastrar-y-soltar (queda afuera a
+proposito, se evalua mas adelante). Se hace en varios PRs chicos en vez de
+uno grande, cada uno mergeable solo.
+
+### 25.1 Click en una reserva ahora abre su ficha, no la lista completa
+
+Antes: clickear un chip del calendario (Month/Week/Day) o una fila del feed
+del Dashboard mandaba a la pagina de Bookings entera, sin filtrar ni
+resaltar cual reserva era - habia que buscarla de nuevo a mano.
+
+**Arreglado.** Modal nuevo `#booking-detail-modal`: servicio, fecha, hora,
+direccion, van (con punto de color), telefono/email (click-to-call /
+mailto), desglose de precio, motivo de cancelacion si aplica. Reutiliza las
+funciones que ya existian (`confirmBookingAdmin`, `openAdminChat`,
+`copyTrackLink`, `openCancel`) - no duplica logica.
+
+`openBookingDetail(id)` busca primero en `allBookings` (el cache de la
+pagina de Bookings); si no esta ahi - el caso normal viniendo del
+calendario, que solo carga el rango de fechas visible - lo trae con un
+`select` por id.
+
+### 25.2 Reasignar van: la funcion ya existia, no la llamaba nadie
+
+`openReassign()` y su modal estaban completos en el codigo desde antes, pero
+**ningun boton en toda la app los llamaba** - codigo muerto. Ahora hay un
+boton "Reassign van" en la ficha nueva de 25.1 que lo abre.
+
+### 25.3 Color por van en el calendario
+
+Las 3 vistas coloreaban por status (pending/confirmed/etc), nunca por van -
+con 2 vans y creciendo, un vistazo no decia cual estaba mas cargada. Punto
+de color nuevo (`vanColor()`, paleta de 4 tokens que rota si algun dia hay
+mas de 4 vans) junto al horario en Month, y en el label "Van N" de Week/Day.
+No reemplaza el color de status, que sigue significando lo mismo que
+siempre.
+
+**Verificado:** `npm run check` (incluye `color-check`: los botones nuevos
+usan `var(--purple-lt)`/`var(--blue-lt)`/`var(--red-lt)`, no hex a mano -
+los que ya existian en la tabla de Bookings no se tocaron, quedan como
+deuda de otro dia) y `npx vitest run`, 390/390 (10 tests nuevos en
+`tests/unit/booking-detail.test.js`, incluye `vanColor()` extraida del
+archivo y ejecutada de verdad, no solo buscada en el texto).
+
+**No verificado en navegador** (mismo limite de siempre: `admin.html`
+necesita `/api/auth`, no corre en servidor estatico local) - falta que
+Diego lo vea en produccion.
+
+## 26. El admin puede reprogramar una reserva (18-ago-2026)
+
+Parte de la lista pedida por Diego comparando contra software de servicio de
+campo (ver seccion 25, mergeada por separado - misma iniciativa, PR aparte a
+proposito). Solo el cliente podia mover su propia reserva; no habia ningun
+camino de admin para "mover este trabajo a otro horario".
+
+**De paso, un agujero que ni el reschedule del cliente tenia cerrado:**
+ninguno de los dos - ni el viejo del cliente ni el nuevo del admin -
+consultaba `availability` antes de mover una reserva. `handleCreateBooking`
+ya rechaza una reserva NUEVA contra un horario bloqueado (21.8), pero mover
+una YA EXISTENTE a ese mismo horario bloqueado no pasaba por el mismo
+chequeo. Mismo agujero, puerta distinta.
+
+**Arreglado con un refactor, no una segunda copia.** `rescheduleBookingCore()`
+nueva en `api/auth.js`: precio/callout fee recalculado para la fecha nueva
+(igual que antes), mas el chequeo de `isSlotBlocked()` que faltaba, mas el
+choque de `bookings_unique_slot` (23505) que ya existia. La usan los dos:
+`handleClientReschedule` (dueño de la reserva) y `handleAdminReschedule`
+(nueva, autenticada con `verifyAdminSession` - mismo patron que el resto de
+`admin-*`, sin filtro de `client_id` porque un admin puede mover cualquiera).
+
+Boton "Reschedule" nuevo en la tabla de Bookings, modal con fecha + hora.
+
+8 tests nuevos en `tests/unit/admin-reschedule.test.js` (por texto - la
+funcion compartida hace `fetch()` real, se prueba lo mismo que ya se prueba
+en el resto del archivo: que la logica sin red este ahi, no se mockea la
+red entera). `isSlotBlocked` en si ya tiene sus propios tests de ejecucion
+real en `availability-blocks.test.js`, no se repiten aca.
+
+**No verificado en produccion:** ni el reschedule del cliente ni el del
+admin se probaron contra la base real todavia - queda para el TEST FINAL
+(seccion 23) o antes si Diego quiere probarlo suelto.
+
+## 27. El admin puede crear una reserva a mano (18-ago-2026)
+
+Item 5 de la lista pedida por Diego (seccion 25). Un cliente que llama por
+telefono no tenia como entrar al sistema - la unica forma de que existiera
+una reserva era pagar online con la wizard.
+
+**No cobra.** El mecanico cobra al terminar, mismo patron que
+`cash_settled_at` que ya esta en produccion - no hacia falta meter Stripe en
+el medio para esto. El precio **siempre sale del catalogo** (`services`),
+nunca se acepta un precio escrito en el body - la leccion de siempre en este
+proyecto (`CLAUDE.md`, el precio del 2026-07-22 que quedo mal en 4 lugares).
+
+`handleAdminCreateBooking` nueva en `api/auth.js`, autenticada con
+`verifyAdminSession` (mismo patron que el resto de `admin-*`): resuelve la
+van con `matchVanZone()` (la misma funcion que usa `handleCreateBooking`
+real, o un override manual si el admin elige una van a mano), choca contra
+`isSlotBlocked` y contra `bookings_unique_slot` igual que una reserva
+normal, y crea la fila en `confirmed` (no `pending` - un admin la esta
+reservando a proposito). Email de confirmacion al cliente si dejo email,
+best-effort (no bloquea la respuesta si falla, mismo criterio de "no
+silencioso" del resto del archivo).
+
+Boton "+ New booking" en la pagina de Bookings, modal con nombre/telefono/
+email/direccion/servicio/fecha/hora/van.
+
+10 tests nuevos en `tests/unit/admin-create-booking.test.js`.
+
+**No verificado en produccion.** Y una cosa que se decidio sin preguntarle a
+Diego, para que quede visible: no manda WhatsApp/SMS a nadie mas que el
+email al cliente - ni aviso a Diego (el mismo la esta creando) ni SMS al
+mecanico. Si el mecanico necesita enterarse por SMS ademas de verla en su
+cola de la app, es un agregado chico para despues.
+
 ## 28. Mapa en vivo de las vans para el admin (18-ago-2026)
 
 Ultimo item de la lista pedida por Diego (seccion 25). El cliente ya tenia
@@ -5322,3 +5493,14 @@ error** - mismo modo de falla silenciosa que ya paso antes.
 proposito: no hay boton para "centrar en mi van" ni notificacion si una van
 deja de mandar señal por mucho tiempo - se puede sumar despues si hace
 falta.
+
+**Bug real encontrado al encadenar los merges (no antes):** esta seccion y
+la 25.3 declaraban cada una su propio `const VAN_COLORS` a nivel de modulo -
+mientras vivian en branches separadas nunca chocaban, pero al mergear las 5
+PRs en una sola rama para que fueran mergeables en orden, `js/admin.js`
+terminaba con `VAN_COLORS` declarado dos veces (`SyntaxError: Identifier
+'VAN_COLORS' has already been declared` - `node --check` no pasaba). El de
+esta seccion (el objeto `{1: ..., 2: ...}` que usan `renderRouteMap()` y
+`renderVanLocations()`) se renombro a `VAN_MAP_COLORS`; el array de 25.3
+(`vanColor()`) se dejo como estaba. Test actualizado para buscar el nombre
+nuevo.

@@ -50,8 +50,8 @@ describe('renderVanLocations - una posicion por van, la mas reciente', () => {
     expect(fn).toMatch(/opacity:\$\{stale \? 0\.45 : 1\}/);
   });
 
-  it('usa el mismo VAN_COLORS que los pines de trabajo del mismo mapa', () => {
-    expect(fn).toMatch(/VAN_COLORS\[v\.van_number\]/);
+  it('usa el mismo VAN_MAP_COLORS que los pines de trabajo del mismo mapa', () => {
+    expect(fn).toMatch(/VAN_MAP_COLORS\[v\.van_number\]/);
   });
 });
 

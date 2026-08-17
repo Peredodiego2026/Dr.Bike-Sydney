@@ -2279,6 +2279,95 @@ async function handleApplyReferral(req, res) {
   return res.status(200).json({ ok: true, credit: CREDIT });
 }
 
+// Shared by handleClientReschedule and handleAdminReschedule so the two can
+// never disagree about what a reschedule is allowed to do. `bk` needs id,
+// status, google_event_id, service_name, address, van_number.
+//
+// Neither caller checked isSlotBlocked before this (docs/PENDIENTES.md 21.8
+// closed that hole for NEW bookings via handleCreateBooking, but moving an
+// EXISTING one was never wired to it) - a reschedule could land a booking
+// on a slot the admin had specifically blocked, same gap, different door.
+async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_time) {
+  if (!['pending', 'confirmed'].includes(bk.status))
+    return { ok: false, status: 400, error: 'Booking cannot be rescheduled' };
+
+  // Re-derive price + callout fee for the NEW date, same lookups
+  // handleCreateBooking uses - previously this only updated date/time, so
+  // moving a booking onto or off a Sunday/NSW-holiday silently left the
+  // stale price in place (undercharging or overcharging by the 20%
+  // surcharge). Recomputing fresh from the base service/zone price is
+  // correct regardless of whether the OLD date was a surcharge day too -
+  // adjusting the already-surcharged stored value in place would double
+  // (or wrongly drop) the surcharge instead.
+  const svcResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/services?select=price,duration_max&name=eq.${encodeURIComponent(bk.service_name)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const svcData = svcResp.ok ? await svcResp.json() : [];
+  const newServicePrice = svcData?.[0]
+    ? applySurcharge(Number(svcData[0].price), scheduled_date)
+    : null;
+
+  const neededMin =
+    (svcData?.[0]?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+  const blockResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/availability?select=time_slot,available,van_number&date=eq.${encodeURIComponent(scheduled_date)}`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const blockRows = blockResp.ok ? await blockResp.json() : [];
+  if (isSlotBlocked(blockRows, Number(bk.van_number) || 1, scheduled_time, neededMin))
+    return { ok: false, status: 409, error: 'That time is not available. Please pick another.' };
+
+  let newCalloutFee = 20;
+  try {
+    const zonesResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/callout_zones?select=callout_fee,suburbs`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    const zones = zonesResp.ok ? await zonesResp.json() : [];
+    const addr = (bk.address || '').toLowerCase();
+    const zone = (zones || []).find((z) =>
+      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
+    );
+    if (zone) newCalloutFee = Number(zone.callout_fee);
+  } catch {}
+  newCalloutFee = applySurcharge(newCalloutFee, scheduled_date);
+
+  const updatePayload = { scheduled_date, scheduled_time, callout_fee: newCalloutFee };
+  if (newServicePrice !== null) updatePayload.service_price = newServicePrice;
+
+  const updateResp = await fetch(`${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(bk.id)}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SERVICE_KEY,
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify(updatePayload),
+  });
+  if (!updateResp.ok) {
+    // 23505 = unique_violation on bookings_unique_slot (van_number, scheduled_date,
+    // scheduled_time) - someone else took that slot between the caller loading
+    // availability and confirming. Tell them that specifically instead of a
+    // generic failure so they know to just pick another time.
+    const errBody = await updateResp.json().catch(() => ({}));
+    if (errBody.code === '23505')
+      return { ok: false, status: 409, error: 'That time was just taken by another booking - please pick another.' };
+    return { ok: false, status: 500, error: 'Failed to reschedule booking' };
+  }
+
+  if (bk.google_event_id) {
+    updateCalendarEvent(bk.google_event_id, {
+      scheduledDate: scheduled_date,
+      scheduledTime: scheduled_time,
+      durationMin: neededMin,
+    }).catch(() => {});
+  }
+
+  return { ok: true };
+}
+
 async function handleClientReschedule(req, res) {
   const { access_token, booking_id, client_id, scheduled_date, scheduled_time } = req.body;
   if (!access_token || !booking_id || !client_id || !scheduled_date || !scheduled_time)
@@ -2301,7 +2390,7 @@ async function handleClientReschedule(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,google_event_id,service_name,address&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,google_event_id,service_name,address,van_number&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -2309,86 +2398,38 @@ async function handleClientReschedule(req, res) {
   if (!bkData?.length) return res.status(404).json({ error: 'Booking not found' });
   const bk = bkData[0];
   if (bk.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
-  if (!['pending', 'confirmed'].includes(bk.status))
-    return res.status(400).json({ error: 'Booking cannot be rescheduled' });
 
-  // Re-derive price + callout fee for the NEW date, same lookups
-  // handleCreateBooking uses - previously this only updated date/time, so
-  // moving a booking onto or off a Sunday/NSW-holiday silently left the
-  // stale price in place (undercharging or overcharging by the 20%
-  // surcharge). Recomputing fresh from the base service/zone price is
-  // correct regardless of whether the OLD date was a surcharge day too -
-  // adjusting the already-surcharged stored value in place would double
-  // (or wrongly drop) the surcharge instead.
-  const svcResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/services?select=price&name=eq.${encodeURIComponent(bk.service_name)}&limit=1`,
-    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
-  );
-  const svcData = svcResp.ok ? await svcResp.json() : [];
-  const newServicePrice = svcData?.[0]
-    ? applySurcharge(Number(svcData[0].price), scheduled_date)
-    : null;
+  const result = await rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_time);
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
+  return res.status(200).json({ ok: true });
+}
 
-  let newCalloutFee = 20;
-  try {
-    const zonesResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/callout_zones?select=callout_fee,suburbs`,
-      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
-    );
-    const zones = zonesResp.ok ? await zonesResp.json() : [];
-    const addr = (bk.address || '').toLowerCase();
-    const zone = (zones || []).find((z) =>
-      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
-    );
-    if (zone) newCalloutFee = Number(zone.callout_fee);
-  } catch {}
-  newCalloutFee = applySurcharge(newCalloutFee, scheduled_date);
+// Admin-side equivalent - the calendar's own reschedule (docs/PENDIENTES.md
+// 25.4). Before this, only the client could move their own booking; there
+// was no admin path at all for "move this job to a different time".
+async function handleAdminReschedule(req, res) {
+  const { access_token, booking_id, scheduled_date, scheduled_time } = req.body;
+  if (!booking_id || !scheduled_date || !scheduled_time)
+    return res.status(400).json({ error: 'booking_id, scheduled_date, scheduled_time required' });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduled_date))
+    return res.status(400).json({ error: 'Invalid date format (YYYY-MM-DD)' });
+  if (!/^\d{2}:\d{2}$/.test(scheduled_time))
+    return res.status(400).json({ error: 'Invalid time format (HH:MM)' });
 
-  const updatePayload = { scheduled_date, scheduled_time, callout_fee: newCalloutFee };
-  if (newServicePrice !== null) updatePayload.service_price = newServicePrice;
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
-  const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
-    {
-      method: 'PATCH',
-      headers: {
-        apikey: SERVICE_KEY,
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(updatePayload),
-    }
-  );
-  if (!updateResp.ok) {
-    // 23505 = unique_violation on bookings_unique_slot (van_number, scheduled_date,
-    // scheduled_time) - someone else took that slot between the client loading
-    // availability and confirming. Tell them that specifically instead of a
-    // generic failure so they know to just pick another time.
-    const errBody = await updateResp.json().catch(() => ({}));
-    if (errBody.code === '23505')
-      return res
-        .status(409)
-        .json({ error: 'That time was just taken by another booking - please pick another.' });
-    return res.status(500).json({ error: 'Failed to reschedule booking' });
-  }
+  const { data: bk, error: bkErr } = await auth.sb
+    .from('bookings')
+    .select('id,status,google_event_id,service_name,address,van_number')
+    .eq('id', booking_id)
+    .maybeSingle();
+  if (bkErr) return res.status(500).json({ error: 'Database error' });
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
 
-  if (bk.google_event_id) {
-    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-    sb.from('services')
-      .select('duration_max')
-      .eq('name', bk.service_name)
-      .maybeSingle()
-      .then(({ data: svc }) =>
-        updateCalendarEvent(bk.google_event_id, {
-          scheduledDate: scheduled_date,
-          scheduledTime: scheduled_time,
-          durationMin: (svc?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN,
-        })
-      )
-      .catch(() => {});
-  }
-
+  const result = await rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_time);
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
   return res.status(200).json({ ok: true });
 }
 
@@ -3701,6 +3742,130 @@ async function handleAdminServicesSave(req, res) {
   return res.status(200).json({ service: data });
 }
 
+// ── Admin: manual booking (docs/PENDIENTES.md 25.5, item 5 de la lista) ──────
+// Para un cliente que llama por telefono - hoy la unica forma de entrar una
+// reserva era pagar online con la wizard del cliente. No cobra: el mecanico
+// cobra al terminar (mismo patron que cash_settled_at, ya en produccion), asi
+// que no hace falta Stripe aca. Precio SIEMPRE sale del catalogo, nunca
+// escrito a mano - la leccion de siempre en este proyecto (CLAUDE.md, precio
+// del 2026-07-22).
+async function handleAdminCreateBooking(req, res) {
+  const {
+    access_token,
+    client_name,
+    client_phone,
+    client_email,
+    service_id,
+    scheduled_date,
+    scheduled_time,
+    address,
+    van_number, // optional override - if omitted, resolved from the address
+  } = req.body;
+
+  if (!client_name || !client_phone || !service_id || !scheduled_date || !scheduled_time || !address)
+    return res.status(400).json({
+      error:
+        'client_name, client_phone, service_id, scheduled_date, scheduled_time, address required',
+    });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduled_date))
+    return res.status(400).json({ error: 'Invalid date format (YYYY-MM-DD)' });
+  if (!/^\d{2}:\d{2}$/.test(scheduled_time))
+    return res.status(400).json({ error: 'Invalid time format (HH:MM)' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const { data: svc } = await auth.sb
+    .from('services')
+    .select('id,name,price,duration_max')
+    .eq('id', service_id)
+    .maybeSingle();
+  if (!svc) return res.status(400).json({ error: 'Unknown service' });
+
+  const vanNumber = van_number ? Number(van_number) : await matchVanZone(auth.sb, address);
+  if (!vanNumber)
+    return res.status(400).json({
+      error: "That address isn't in a covered zone. Pick a van manually if you want to book it anyway.",
+    });
+
+  const neededMin = (svc.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+  const { data: blockRows } = await auth.sb
+    .from('availability')
+    .select('time_slot,available,van_number')
+    .eq('date', scheduled_date);
+  if (isSlotBlocked(blockRows, vanNumber, scheduled_time, neededMin))
+    return res.status(409).json({ error: 'That time is not available for this van.' });
+
+  const servicePrice = applySurcharge(Number(svc.price), scheduled_date);
+
+  // Authoritative call-out fee (callout_zones by address, default $20) -
+  // same lookup handleCreateBooking and rescheduleBookingCore use. Found in
+  // self-review: this used to be a hardcoded $20, which would undercharge
+  // or overcharge relative to the real zone rate for any suburb whose fee
+  // differs from the default.
+  let calloutFee = 20;
+  try {
+    const { data: zones } = await auth.sb.from('callout_zones').select('callout_fee,suburbs');
+    const addr = address.toLowerCase();
+    const zone = (zones || []).find((z) =>
+      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
+    );
+    if (zone) calloutFee = Number(zone.callout_fee);
+  } catch {}
+  calloutFee = applySurcharge(calloutFee, scheduled_date);
+
+  const { data: booking, error: insErr } = await auth.sb
+    .from('bookings')
+    .insert([
+      {
+        client_name: String(client_name).trim(),
+        client_phone: String(client_phone).trim(),
+        client_email: client_email ? String(client_email).trim() : null,
+        service_name: svc.name,
+        service_price: servicePrice,
+        callout_fee: calloutFee,
+        scheduled_date,
+        scheduled_time,
+        address: String(address).trim(),
+        status: 'confirmed', // an admin deliberately booking it, not a self-service pending one
+        van_number: vanNumber,
+      },
+    ])
+    .select()
+    .single();
+
+  if (insErr) {
+    if (insErr.code === '23505')
+      return res.status(409).json({ error: 'That time was just taken by another booking.' });
+    return res.status(500).json({ error: 'Could not create booking', detail: insErr.message });
+  }
+
+  // Best-effort, same "loud, not silent" rule as the rest of this file - a
+  // booking that exists but whose confirmation email failed is recoverable
+  // (2026-08-05 incident), a booking request that just vanishes is not.
+  if (booking.client_email) {
+    fetch(`${SELF_BASE_URL}/api/send-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: booking.client_email,
+        name: booking.client_name,
+        service: booking.service_name,
+        date: booking.scheduled_date,
+        time: booking.scheduled_time,
+        address: booking.address,
+        price: servicePrice + calloutFee,
+        bookingId: booking.id,
+        type: 'confirmation',
+        lang: 'en',
+      }),
+    }).catch((e) => console.error('[admin-create-booking] confirmation email failed:', e.message));
+  }
+
+  return res.status(200).json({ booking });
+}
+
 // ── Admin: Expenses ─────────────────────────────────────────────────────────
 // The table is RLS-on with no policy, so nothing but the service role can read
 // it - which is why these three exist rather than the panel querying Supabase
@@ -4209,6 +4374,7 @@ async function handler(req, res) {
   if (role === 'mechanic-preference-status') return handleMechanicPreferenceStatus(req, res);
   if (role === 'apply-referral') return handleApplyReferral(req, res);
   if (role === 'client-reschedule') return handleClientReschedule(req, res);
+  if (role === 'admin-reschedule') return handleAdminReschedule(req, res);
   if (role === 'client-history') return handleClientHistory(req, res);
   if (role === 'google-calendar-ticket') return handleGoogleCalendarTicket(req, res);
   if (role === 'client-bookings') return handleClientBookings(req, res);
@@ -4219,6 +4385,7 @@ async function handler(req, res) {
   if (role === 'save-card-confirm') return handleSaveCardConfirm(req, res);
   if (role === 'remove-card') return handleRemoveCard(req, res);
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
+  if (role === 'admin-create-booking') return handleAdminCreateBooking(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   if (role === 'submit-claim') return handleSubmitClaim(req, res);
