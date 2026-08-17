@@ -16,7 +16,13 @@ import { createHash } from 'node:crypto';
 const JS_PATH = 'js/admin.js';
 const HTML_PATH = 'admin.html';
 
-const jsContent = readFileSync(JS_PATH, 'utf8');
+// Normalize CRLF -> LF before hashing. This repo has no .gitattributes and
+// core.autocrlf varies by machine: a Windows checkout reads this file with
+// \r\n, the ubuntu-latest CI runner reads the same commit with \n. Hashing
+// the raw bytes made the check disagree with itself between the two - the
+// first CI run after this script existed failed on exactly that, not on a
+// real missing bump.
+const jsContent = readFileSync(JS_PATH, 'utf8').replace(/\r\n/g, '\n');
 const expected = createHash('sha256').update(jsContent).digest('hex').slice(0, 10);
 
 const html = readFileSync(HTML_PATH, 'utf8');
