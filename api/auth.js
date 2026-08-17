@@ -3701,6 +3701,115 @@ async function handleAdminServicesSave(req, res) {
   return res.status(200).json({ service: data });
 }
 
+// ── Admin: manual booking (docs/PENDIENTES.md 25.5, item 5 de la lista) ──────
+// Para un cliente que llama por telefono - hoy la unica forma de entrar una
+// reserva era pagar online con la wizard del cliente. No cobra: el mecanico
+// cobra al terminar (mismo patron que cash_settled_at, ya en produccion), asi
+// que no hace falta Stripe aca. Precio SIEMPRE sale del catalogo, nunca
+// escrito a mano - la leccion de siempre en este proyecto (CLAUDE.md, precio
+// del 2026-07-22).
+async function handleAdminCreateBooking(req, res) {
+  const {
+    access_token,
+    client_name,
+    client_phone,
+    client_email,
+    service_id,
+    scheduled_date,
+    scheduled_time,
+    address,
+    van_number, // optional override - if omitted, resolved from the address
+  } = req.body;
+
+  if (!client_name || !client_phone || !service_id || !scheduled_date || !scheduled_time || !address)
+    return res.status(400).json({
+      error:
+        'client_name, client_phone, service_id, scheduled_date, scheduled_time, address required',
+    });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduled_date))
+    return res.status(400).json({ error: 'Invalid date format (YYYY-MM-DD)' });
+  if (!/^\d{2}:\d{2}$/.test(scheduled_time))
+    return res.status(400).json({ error: 'Invalid time format (HH:MM)' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const { data: svc } = await auth.sb
+    .from('services')
+    .select('id,name,price,duration_max')
+    .eq('id', service_id)
+    .maybeSingle();
+  if (!svc) return res.status(400).json({ error: 'Unknown service' });
+
+  const vanNumber = van_number ? Number(van_number) : await matchVanZone(auth.sb, address);
+  if (!vanNumber)
+    return res.status(400).json({
+      error: "That address isn't in a covered zone. Pick a van manually if you want to book it anyway.",
+    });
+
+  const neededMin = (svc.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+  const { data: blockRows } = await auth.sb
+    .from('availability')
+    .select('time_slot,available,van_number')
+    .eq('date', scheduled_date);
+  if (isSlotBlocked(blockRows, vanNumber, scheduled_time, neededMin))
+    return res.status(409).json({ error: 'That time is not available for this van.' });
+
+  const servicePrice = applySurcharge(Number(svc.price), scheduled_date);
+  const calloutFee = applySurcharge(20, scheduled_date);
+
+  const { data: booking, error: insErr } = await auth.sb
+    .from('bookings')
+    .insert([
+      {
+        client_name: String(client_name).trim(),
+        client_phone: String(client_phone).trim(),
+        client_email: client_email ? String(client_email).trim() : null,
+        service_name: svc.name,
+        service_price: servicePrice,
+        callout_fee: calloutFee,
+        scheduled_date,
+        scheduled_time,
+        address: String(address).trim(),
+        status: 'confirmed', // an admin deliberately booking it, not a self-service pending one
+        van_number: vanNumber,
+      },
+    ])
+    .select()
+    .single();
+
+  if (insErr) {
+    if (insErr.code === '23505')
+      return res.status(409).json({ error: 'That time was just taken by another booking.' });
+    return res.status(500).json({ error: 'Could not create booking', detail: insErr.message });
+  }
+
+  // Best-effort, same "loud, not silent" rule as the rest of this file - a
+  // booking that exists but whose confirmation email failed is recoverable
+  // (2026-08-05 incident), a booking request that just vanishes is not.
+  if (booking.client_email) {
+    fetch(`${SELF_BASE_URL}/api/send-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: booking.client_email,
+        name: booking.client_name,
+        service: booking.service_name,
+        date: booking.scheduled_date,
+        time: booking.scheduled_time,
+        address: booking.address,
+        price: servicePrice + calloutFee,
+        bookingId: booking.id,
+        type: 'confirmation',
+        lang: 'en',
+      }),
+    }).catch((e) => console.error('[admin-create-booking] confirmation email failed:', e.message));
+  }
+
+  return res.status(200).json({ booking });
+}
+
 // ── Admin: Expenses ─────────────────────────────────────────────────────────
 // The table is RLS-on with no policy, so nothing but the service role can read
 // it - which is why these three exist rather than the panel querying Supabase
@@ -4219,6 +4328,7 @@ async function handler(req, res) {
   if (role === 'save-card-confirm') return handleSaveCardConfirm(req, res);
   if (role === 'remove-card') return handleRemoveCard(req, res);
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
+  if (role === 'admin-create-booking') return handleAdminCreateBooking(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   if (role === 'submit-claim') return handleSubmitClaim(req, res);

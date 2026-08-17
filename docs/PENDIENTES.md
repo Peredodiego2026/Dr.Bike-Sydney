@@ -5292,3 +5292,36 @@ Corregido en el texto de arriba.
 **Verificado, no una promesa:** `npm run check`, `npm run lint` (0 errores)
 y `npx vitest run` (367 tests) corridos contra los arreglos de esta seccion,
 no solo contra los de la 24 original.
+
+## 27. El admin puede crear una reserva a mano (18-ago-2026)
+
+Item 5 de la lista pedida por Diego (seccion 25). Un cliente que llama por
+telefono no tenia como entrar al sistema - la unica forma de que existiera
+una reserva era pagar online con la wizard.
+
+**No cobra.** El mecanico cobra al terminar, mismo patron que
+`cash_settled_at` que ya esta en produccion - no hacia falta meter Stripe en
+el medio para esto. El precio **siempre sale del catalogo** (`services`),
+nunca se acepta un precio escrito en el body - la leccion de siempre en este
+proyecto (`CLAUDE.md`, el precio del 2026-07-22 que quedo mal en 4 lugares).
+
+`handleAdminCreateBooking` nueva en `api/auth.js`, autenticada con
+`verifyAdminSession` (mismo patron que el resto de `admin-*`): resuelve la
+van con `matchVanZone()` (la misma funcion que usa `handleCreateBooking`
+real, o un override manual si el admin elige una van a mano), choca contra
+`isSlotBlocked` y contra `bookings_unique_slot` igual que una reserva
+normal, y crea la fila en `confirmed` (no `pending` - un admin la esta
+reservando a proposito). Email de confirmacion al cliente si dejo email,
+best-effort (no bloquea la respuesta si falla, mismo criterio de "no
+silencioso" del resto del archivo).
+
+Boton "+ New booking" en la pagina de Bookings, modal con nombre/telefono/
+email/direccion/servicio/fecha/hora/van.
+
+10 tests nuevos en `tests/unit/admin-create-booking.test.js`.
+
+**No verificado en produccion.** Y una cosa que se decidio sin preguntarle a
+Diego, para que quede visible: no manda WhatsApp/SMS a nadie mas que el
+email al cliente - ni aviso a Diego (el mismo la esta creando) ni SMS al
+mecanico. Si el mecanico necesita enterarse por SMS ademas de verla en su
+cola de la app, es un agregado chico para despues.

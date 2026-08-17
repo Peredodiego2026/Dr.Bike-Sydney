@@ -399,6 +399,15 @@ document.addEventListener('click', function (e) {
     case 'delete-contact':
       deleteContact(d.id);
       break;
+    case 'open-admin-create-booking':
+      openAdminCreateBooking();
+      break;
+    case 'acb-confirm':
+      submitAdminCreateBooking();
+      break;
+    case 'acb-close':
+      closeAdminCreateBooking();
+      break;
   }
 });
 
@@ -2893,6 +2902,92 @@ async function doReassign(vanNum) {
   document.getElementById('reassign-modal').style.display = 'none';
   applyBookingFilters();
   showToast(`Reassigned to Van ${vanNum} ✓`);
+}
+
+// ── ADMIN MANUAL BOOKING (docs/PENDIENTES.md 25.5) ──────────────────────────
+async function openAdminCreateBooking() {
+  ['acb-name', 'acb-phone', 'acb-email', 'acb-address', 'acb-date'].forEach((id) => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('acb-time').selectedIndex = 0;
+  document.getElementById('acb-van').value = '';
+  const err = document.getElementById('acb-error');
+  err.style.display = 'none';
+  err.textContent = '';
+
+  const svcSelect = document.getElementById('acb-service');
+  svcSelect.innerHTML = '<option value="">Loading...</option>';
+  document.getElementById('admin-create-booking-modal').style.display = 'flex';
+
+  const { data: services, error } = await sb
+    .from('services')
+    .select('id,name,price')
+    .order('name');
+  if (error) {
+    svcSelect.innerHTML = '<option value="">Could not load services</option>';
+    return;
+  }
+  svcSelect.innerHTML = (services || [])
+    .map((s) => `<option value="${s.id}">${esc(s.name)} - $${Number(s.price).toFixed(0)}</option>`)
+    .join('');
+}
+
+function closeAdminCreateBooking() {
+  document.getElementById('admin-create-booking-modal').style.display = 'none';
+}
+
+async function submitAdminCreateBooking() {
+  const errEl = document.getElementById('acb-error');
+  errEl.style.display = 'none';
+
+  const payload = {
+    client_name: document.getElementById('acb-name').value.trim(),
+    client_phone: document.getElementById('acb-phone').value.trim(),
+    client_email: document.getElementById('acb-email').value.trim() || undefined,
+    address: document.getElementById('acb-address').value.trim(),
+    service_id: document.getElementById('acb-service').value,
+    scheduled_date: document.getElementById('acb-date').value,
+    scheduled_time: document.getElementById('acb-time').value,
+    van_number: document.getElementById('acb-van').value || undefined,
+  };
+
+  if (
+    !payload.client_name ||
+    !payload.client_phone ||
+    !payload.address ||
+    !payload.service_id ||
+    !payload.scheduled_date
+  ) {
+    errEl.textContent = 'Fill in name, phone, address, service and date.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.querySelector('[data-action="acb-confirm"]');
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-create-booking',
+        access_token: await adminAccessToken(),
+        ...payload,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Could not create booking');
+    closeAdminCreateBooking();
+    applyBookingFilters();
+    showToast('✅ Booking created');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create booking';
+  }
 }
 
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
