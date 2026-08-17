@@ -17,8 +17,8 @@
 | Chequeo | Resultado |
 |---|---|
 | `npm run check` | Verde - 38 archivos JS, i18n 1028 claves es/zh, 822 strings en 5 superficies |
-| `npx vitest run` | 373 tests, 35 archivos, 0 fallos |
-| PRs abiertas | 4 (#277, #280, #281, #282 - todo Prioridad Baja, i18n de blog/business.html y un CSS roto) |
+| `npx vitest run` | 380 tests, 36 archivos, 0 fallos |
+| PRs abiertas | 6 (#277, #280, #281, #285, #287, #288 - #282 ya mergeo. #285 es el fix del generador de suburbios, #287/#288 son calendario y ficha de reserva del admin, el resto sigue siendo Prioridad Baja) |
 
 El codigo esta sano. Lo que sigue no son bugs: son cosas sin hacer.
 
@@ -343,7 +343,7 @@ seguidas antes de darlo por bueno.
 |---|---|---|
 | 5.1 | Paginacion y filtros de fecha (TASK-030) | **Admin: CERRADO** - ya tiene `.range()` + filtros server-side y boton "Load more" (`js/admin.js:2636`, TASK-030 en `tasks.md` estaba desactualizado). **Mechanic y client: NO se pagino a proposito.** Estan acotados por naturaleza (un van desde hace 7 dias, un cliente de por vida - no una tabla que crece con todo el negocio) asi que en vez de paginacion completa, el server ahora manda `X-Truncated: true` si el tope (300 mechanic, 100 client) se llega a tocar, y la app avisa en vez de recortar en silencio (2026-08-16, esta misma sesion). Revisar si ese juicio de "no hace falta pagina completa" resulta equivocado. |
 | 5.2 | Prueba de carga (TASK-043) | ~500 concurrentes sobre booking + availability + GPS. **Ojo: no se puede correr contra produccion sin plan** - crearia reservas y cobros reales. Necesita entorno de staging o datos de prueba aislados |
-| 5.3 | Scroll-to-top del wizard | Se agrego en `js/router.js` el 22-jul y quedo anotado como "sin confirmar en navegador real" |
+| 5.3 | Scroll-to-top del wizard - **CERRADO por codigo (2026-08-17), no por pixeles** | Rastreado en codigo: `router.js` resetea el scroll en cualquier cambio de ruta (`prevRoute !== route`), pero los 3 pasos del wizard (`book-service`) re-renderizan sin tocar el hash - por eso `js/app.js` tiene su propio `scrollStepToTop()`, llamado en `renderStep1` (:619), `renderStep2` (:865) y `renderStep3` (:1003), mismo patron que el router. Las transiciones que si cambian de ruta (`service-summary`, etc.) quedan cubiertas por el reset generico. **Con esto la cobertura es logicamente completa - no hay un paso sin su llamada.** Lo que NO se logro: ver el reset ocurrir en vivo. En el preview local se confirmo que `window.scrollY` es un contexto de scroll real (no un div interno sin efecto) y que seleccionar un servicio corre `scrollStepToTop()` (el scroll bajaba de 1500 a ~10 apenas al elegir la tarjeta), pero el click de "Continuar" para cruzar a paso 2 no llego a completarse limpio en ese entorno - no se debe a un bug encontrado, se debe a que simular la seleccion via JS no disparo el mismo flujo que un click real. Si alguien quiere el ultimo tramo (ver paso 1 a paso 2 con scroll real), es un vistazo de un minuto en Chromium, no una investigacion. |
 | 5.4 | Secretos sin usar en Vercel | `MAPBOX_TOKEN`, `GOOGLE_PLACES_API_KEY`, `POSTHOG_KEY` - ninguno referenciado en el codigo. Borrarlos desde el dashboard |
 | 5.5 | El generador de paginas de suburbio revertia `var(--token)` a hex - **CERRADO (2026-08-17)** | `scripts/generate-suburb-pages.mjs` seguia emitiendo hex a mano (`#475569`, `#E2E8F0`, borde del badge verde) donde las 60 paginas comprometidas (raiz + `es/` + `zh/`) ya tenian `var(--gray)` / `var(--border)` / `var(--green)` escritos a mano encima. Correr el generador por CUALQUIER motivo no relacionado (precio, copy, sitemap) revertia las 60 en silencio - asi se encontro, corriendo `npm run suburbs:generate` para levantar un cambio de sitemap durante 4.1. Bug aparte, mas serio: el badge ambar ("Background Checked") tenia un valor de color distinto, no solo sin token - el generador emitia `#D97706`, las 60 paginas vivas tienen `#B45309` (`--amber`). Arreglados los 6 puntos en el generador (2 reglas CSS, la descripcion de servicio x4, el div de badges, el borde del badge verde, y el valor del badge ambar). Verificado: regenerar las 60 con el fix da diff vacio contra lo comprometido (byte a byte, salvo fin de linea), `sitemap.xml` solo mueve el `lastmod` a hoy, y `npm run check` + `npm test` (364 tests) quedan limpios. `GENERATED_BUDGET` de `color-check.mjs` no bajo: el conteo ya reflejaba las paginas convertidas, lo que estaba mal era solo lo que el generador iba a escribir la proxima vez que alguien lo corriera. Sin SQL. |
 
@@ -4237,6 +4237,19 @@ la pestaña nueva y no una recarga mas.
 **Lo que este punto NO reviso**, y queda para quien siga: si hay otros
 elementos huerfanos de la misma unificacion del 04-jul. Se busco `getElementById`
 sin elemento **solo** para este caso, no en toda la pagina.
+
+**Hecho, 2026-08-17 - CERRADO, sin hallazgos nuevos.** Se corrio el barrido
+completo: los 107 `getElementById(...)` distintos de `landing.html` contra
+cada `id="..."` (estatico o asignado por JS con `.id =`) del mismo archivo.
+4 huerfanos, los 4 ya conocidos y ya en una rama en curso: `diag-photo`,
+`diag-result`, `diag-text` (las funciones "AI Diagnosis", `runAIDiagnosis` /
+`runAIDiagnosisText` / `showDiagResult`, todas con guardas `if (!el) return`
+- no rompen, solo no hacen nada) y `bk-services-list`, usado por
+`autoSelectService()` - que ademas no tiene NINGUN caller en todo el
+archivo, ya muerta por partida doble. Las 4 caen dentro del mismo cluster
+que el PR #277 ("borra el AI Diagnosis muerto de landing.html") ya esta
+sacando - no se toco `landing.html` aca a proposito, para no pisar esa
+rama. No aparecio ningun huerfano fuera de ese cluster.
 
 ## 18. Auditoria de Analytics (2026-08-11), lo que quedo sin arreglar
 
