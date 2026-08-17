@@ -369,11 +369,16 @@ const COPY = {
 const fill = (text, sub) =>
   String(text).replaceAll('{name}', sub.name).replaceAll('{areas}', sub.areas);
 
+// [textColor, bg, stroke, borderColor] - stroke feeds the <svg stroke="">, a raw
+// SVG attribute that cannot resolve a CSS var(), so it always stays hex. The
+// span's border can use a token; only the first badge does, matching the
+// hand-edit already live on the committed suburb pages. #B45309 (not the old
+// #D97706) is the live amber - matches --amber in css/variables.css.
 const BADGE_STYLES = [
-  ['#065F46', '#ECFDF5', '#15803D', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>'],
-  ['#1e40af', '#EEF3FC', '#0A58CA', '<circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><polyline points="16 3 18 5 22 1"/>'],
-  ['#92400e', '#FFFBEB', '#D97706', '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'],
-  ['#5b21b6', '#F5F3FF', '#7C3AED', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'],
+  ['#065F46', '#ECFDF5', '#15803D', 'var(--green)', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>'],
+  ['#1e40af', '#EEF3FC', '#0A58CA', '#0A58CA', '<circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><polyline points="16 3 18 5 22 1"/>'],
+  ['#92400e', '#FFFBEB', '#B45309', '#B45309', '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'],
+  ['#5b21b6', '#F5F3FF', '#7C3AED', '#7C3AED', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'],
 ];
 
 function page(sub, lang) {
@@ -400,8 +405,8 @@ function page(sub, lang) {
 
   const badges = c.badges
     .map((text, i) => {
-      const [color, bg, stroke, svg] = BADGE_STYLES[i];
-      return `    <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:${color};background:${bg};border:1px solid ${stroke};border-radius:8px;padding:5px 10px">
+      const [color, bg, stroke, borderColor, svg] = BADGE_STYLES[i];
+      return `    <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:${color};background:${bg};border:1px solid ${borderColor};border-radius:8px;padding:5px 10px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2.5">${svg}</svg>
       ${text}
     </span>`;
@@ -411,7 +416,7 @@ function page(sub, lang) {
   const services = c.serviceNames
     .map(
       (name, i) =>
-        `      <div class="service-card" data-service="${SERVICE_KEYS[i]}"><h3>${name}</h3><div class="price">${PRICES[i]}</div><p style="font-size:12px;color:#475569;margin-top:4px">${c.serviceDescs[i]}</p></div>`
+        `      <div class="service-card" data-service="${SERVICE_KEYS[i]}"><h3>${name}</h3><div class="price">${PRICES[i]}</div><p style="font-size:12px;color:var(--gray);margin-top:4px">${c.serviceDescs[i]}</p></div>`
     )
     .join('\n');
 
@@ -566,10 +571,10 @@ ${alternates}
     .pillar{text-align:center;padding:24px 16px}
     .pillar .icon{font-size:36px;margin-bottom:12px}
     .pillar h3{font-size:15px;font-weight:700;color:#0D1F3C}
-    .pillar p{font-size:13px;color:#475569;margin-top:4px}
+    .pillar p{font-size:13px;color:var(--gray);margin-top:4px}
     .areas{background:#EEF3FC;border-radius:12px;padding:20px;margin-top:16px;font-size:14px;color:#2563EB;line-height:1.8}
     .faq{margin-top:16px}
-    .faq-item{border-bottom:1px solid #E2E8F0;padding:16px 0}
+    .faq-item{border-bottom:1px solid var(--border);padding:16px 0}
     .faq-item h3{font-size:15px;font-weight:700;color:#0D1F3C;margin-bottom:8px}
     .faq-item p{font-size:14px;color:#4B5563;line-height:1.6}
     footer{background:#0D1F3C;color:rgba(255,255,255,.6);text-align:center;padding:32px 24px;font-size:13px}
@@ -588,7 +593,7 @@ ${alternates}
     <a href="/" class="cta-header">${c.bookNow}</a>
   </div>
 </header>
-<div style="background:#F7F8FA;border-bottom:1px solid #E2E8F0;padding:12px 24px">
+<div style="background:#F7F8FA;border-bottom:1px solid var(--border);padding:12px 24px">
   <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:16px">
 ${badges}
   </div>
