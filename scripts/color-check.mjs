@@ -59,7 +59,10 @@ const DARK_THEMED = /^(admin\.html|mechanic\.html|css\/admin\.css|css\/mechanic\
 // script tells you the new number when you do.
 const BUDGET = {
   'index.html': 8,
-  'landing.html': 91,
+  // 3.2: the 15 inline <script> blocks this file used to carry moved to
+  // js/landing-inline.js, and took most of the hand-written hex with them -
+  // budget for that file is set the same placeholder-run way, see below.
+  'landing.html': 11,
   'track.html': 2,
   'admin.html': 7,
   'mechanic.html': 8,
@@ -74,6 +77,8 @@ const BUDGET = {
   'js/mechanic.js': 13,
   'js/components.js': 28,
   'js/stripe.js': 5,
+  'js/landing-inline.js': 80,
+  'js/landing-modules.js': 0,
   // The four files that build customer email. Gmail and Outlook drop custom
   // properties, so these will NEVER reach zero: the only thing possible here is
   // that the hex matches the token, which it now does except for 7 occurrences
