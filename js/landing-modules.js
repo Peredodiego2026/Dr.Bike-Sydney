@@ -56,15 +56,15 @@
   // presented. Options are buttons in a role="listbox", so Enter/Space work for
   // free; the extra keyboard wiring below is Escape, the arrows and closing on
   // an outside click.
-  var LANG_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
-  var LANG_CARET = '<svg class="nav-lang-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
-  var LANG_CHECK = '<svg class="nav-lang-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  const LANG_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+  const LANG_CARET = '<svg class="nav-lang-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+  const LANG_CHECK = '<svg class="nav-lang-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
 
   function renderLangSwitcher() {
-    var wrap = document.getElementById('nav-lang-switcher');
+    const wrap = document.getElementById('nav-lang-switcher');
     if (!wrap) return;
-    var code = getLang();
-    var current = LANGUAGES.filter(function(l) { return l.code === code; })[0] || LANGUAGES[0];
+    const code = getLang();
+    const current = LANGUAGES.filter(function(l) { return l.code === code; })[0] || LANGUAGES[0];
 
     wrap.innerHTML =
       '<button type="button" class="nav-lang-toggle" id="nav-lang-toggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="nav-lang-menu" aria-label="Language">'
@@ -77,9 +77,9 @@
         }).join('')
       + '</div>';
 
-    var toggle = wrap.querySelector('#nav-lang-toggle');
-    var menu = wrap.querySelector('#nav-lang-menu');
-    var options = Array.prototype.slice.call(menu.querySelectorAll('.nav-lang-option'));
+    const toggle = wrap.querySelector('#nav-lang-toggle');
+    const menu = wrap.querySelector('#nav-lang-menu');
+    const options = Array.prototype.slice.call(menu.querySelectorAll('.nav-lang-option'));
 
     // Bound on open and unbound on close: renderLangSwitcher() runs again on
     // every language change, so a listener left on document would pile up.
@@ -91,7 +91,7 @@
       menu.hidden = false;
       toggle.setAttribute('aria-expanded', 'true');
       document.addEventListener('mousedown', onOutside);
-      var start = typeof index === 'number' ? index : Math.max(0, options.indexOf(wrap.querySelector('[aria-selected="true"]')));
+      const start = typeof index === 'number' ? index : Math.max(0, options.indexOf(wrap.querySelector('[aria-selected="true"]')));
       options[start].focus();
     }
 
@@ -118,7 +118,7 @@
         // Re-renders this switcher (langchange), so focus would be lost on a
         // detached node - put it back on the control the user was using.
         setLang(opt.dataset.lang);
-        var next = document.getElementById('nav-lang-toggle');
+        const next = document.getElementById('nav-lang-toggle');
         if (next) next.focus();
       });
       opt.addEventListener('keydown', function(e) {
@@ -149,8 +149,8 @@
   // Uses setTimeout rather than requestAnimationFrame for the debounce -
   // rAF is throttled/never fires on backgrounded or unfocused tabs (verified
   // in testing), which would silently stop translations from applying.
-  var _i18nDebounce = null;
-  var _bodyObserver = new MutationObserver(function() {
+  let _i18nDebounce = null;
+  const _bodyObserver = new MutationObserver(function() {
     if (_i18nDebounce) return;
     _i18nDebounce = setTimeout(function() {
       _i18nDebounce = null;
