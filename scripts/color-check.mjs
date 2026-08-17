@@ -77,7 +77,7 @@ const BUDGET = {
   'js/mechanic.js': 13,
   'js/components.js': 28,
   'js/stripe.js': 5,
-  'js/landing-inline.js': 80,
+  'js/landing-inline.js': 74,
   'js/landing-modules.js': 0,
   // The four files that build customer email. Gmail and Outlook drop custom
   // properties, so these will NEVER reach zero: the only thing possible here is

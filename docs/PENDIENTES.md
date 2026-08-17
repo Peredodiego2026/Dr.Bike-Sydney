@@ -4335,15 +4335,23 @@ sin elemento **solo** para este caso, no en toda la pagina.
 **Hecho, 2026-08-17 - CERRADO, sin hallazgos nuevos.** Se corrio el barrido
 completo: los 107 `getElementById(...)` distintos de `landing.html` contra
 cada `id="..."` (estatico o asignado por JS con `.id =`) del mismo archivo.
-4 huerfanos, los 4 ya conocidos y ya en una rama en curso: `diag-photo`,
-`diag-result`, `diag-text` (las funciones "AI Diagnosis", `runAIDiagnosis` /
-`runAIDiagnosisText` / `showDiagResult`, todas con guardas `if (!el) return`
-- no rompen, solo no hacen nada) y `bk-services-list`, usado por
-`autoSelectService()` - que ademas no tiene NINGUN caller en todo el
-archivo, ya muerta por partida doble. Las 4 caen dentro del mismo cluster
-que el PR #277 ("borra el AI Diagnosis muerto de landing.html") ya esta
-sacando - no se toco `landing.html` aca a proposito, para no pisar esa
-rama. No aparecio ningun huerfano fuera de ese cluster.
+4 huerfanos, los 4 ya conocidos: `diag-photo`, `diag-result`, `diag-text`
+(las funciones "AI Diagnosis", `runAIDiagnosis` / `runAIDiagnosisText` /
+`showDiagResult`, todas con guardas `if (!el) return` - no rompian, solo no
+hacian nada) y `bk-services-list`, usado por `autoSelectService()` - que
+ademas no tenia NINGUN caller en todo el archivo, ya muerta por partida
+doble.
+
+**Borrado, 2026-08-18.** El cluster completo (79 lineas) ya salio. La rama
+original de este borrado (`fix/landing-orphaned-diag-elements`, PR #277) se
+abrio *antes* de la 3.2 (la dieta de `landing.html`, PR #291), asi que su
+diff apuntaba a lineas de `landing.html` que ya no existen ahi - ese codigo
+se movio a `js/landing-inline.js` con el resto de los scripts inline.
+Rehecho contra `main` post-3.2: mismo borrado, misma verificacion (cero
+callers, cero referencias a los 4 ids), aplicado sobre `js/landing-inline.js`
+en vez de `landing.html`. Presupuesto de `color-check.mjs` para ese archivo
+bajo de 80 a 74 (los 6 hex que se fueron con `showDiagResult`). El PR #277
+original queda obsoleto - hay que cerrarlo sin mergear.
 
 ## 18. Auditoria de Analytics (2026-08-11), lo que quedo sin arreglar
 
