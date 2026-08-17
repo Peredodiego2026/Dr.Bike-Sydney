@@ -6334,6 +6334,16 @@ function calNext() {
   loadCalendar();
 }
 
+// `date.toISOString().split('T')[0]` converts through UTC first, and Sydney
+// is UTC+10/11: local midnight lands on the PREVIOUS UTC day, so a cell
+// built with `new Date(y, m, day)` (always exactly local midnight) matched
+// bookings and blocks one calendar day early - "20" showed what belonged to
+// the 19th. Read the calendar fields straight off the Date object instead;
+// they are already local, nothing to convert.
+function calDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 async function loadCalendar() {
   const grid = document.getElementById('cal-grid');
   if (!grid) return;
@@ -6343,8 +6353,8 @@ async function loadCalendar() {
     const month = calMonthDate.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const dateFrom = firstDay.toISOString().split('T')[0];
-    const dateTo = lastDay.toISOString().split('T')[0];
+    const dateFrom = calDateStr(firstDay);
+    const dateTo = calDateStr(lastDay);
     const title = document.getElementById('cal-title');
     if (title)
       title.textContent = firstDay.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
@@ -6383,7 +6393,7 @@ async function loadCalendar() {
       enroute: 'var(--green-tint)',
       completed: 'var(--border-lt)',
     };
-    const today = new Date().toISOString().split('T')[0];
+    const today = calDateStr(new Date());
     const startDate = new Date(firstDay);
     const dow = startDate.getDay();
     startDate.setDate(startDate.getDate() - (dow === 0 ? 6 : dow - 1));
@@ -6395,14 +6405,29 @@ async function loadCalendar() {
     const cur = new Date(startDate);
     let cells = 0;
     while (cur <= lastDay || cells % 7 !== 0) {
-      const dateStr = cur.toISOString().split('T')[0];
+      const dateStr = calDateStr(cur);
       const isToday = dateStr === today;
       const isCurMonth = cur.getMonth() === month;
       const dayJobs = jobs.filter((j) => j.scheduled_date === dateStr);
       const dayBlocks = blockRows.filter((b) => b.date === dateStr);
       html += `<div style="min-height:80px;padding:6px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)${isToday ? ';background:rgba(24,72,200,0.06)' : ''}">
         <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:4px;font-size:13px;font-weight:${isToday ? '700' : '400'};background:${isToday ? 'var(--blue)' : 'transparent'};color:${isToday ? '#fff' : isCurMonth ? 'var(--navy)' : 'var(--mgray)'}">${cur.getDate()}</div>
-        ${dayBlocks.length ? `<div style="font-size:11px;font-weight:600;background:var(--red-lt);color:var(--red);border-radius:20px;padding:1px 7px;display:inline-block;margin-bottom:3px;white-space:nowrap">🚫 ${dayBlocks.length} blocked</div>` : ''}
+        ${
+          dayBlocks.length
+            ? `<div class="cal-block-badge" tabindex="0" style="font-size:11px;font-weight:600;background:var(--red-lt);color:var(--red);border-radius:20px;padding:1px 7px;display:inline-block;margin-bottom:3px;white-space:nowrap">🚫 ${dayBlocks.length} blocked
+                <div class="cal-block-tooltip">
+                  ${dayBlocks
+                    .map(
+                      (b) => `<div class="cal-block-tooltip-row">
+                        <div class="cal-block-tooltip-time">${esc(b.time_slot)} · ${b.van_number ? 'Van ' + b.van_number : 'All vans'}</div>
+                        ${b.reason ? `<div class="cal-block-tooltip-reason">${esc(b.reason)}</div>` : ''}
+                      </div>`
+                    )
+                    .join('')}
+                </div>
+              </div>`
+            : ''
+        }
         ${dayJobs
           .slice(0, 3)
           .map((j) => {
@@ -6430,10 +6455,10 @@ async function loadCalendar() {
   if (calView === 'week') calWeekStart = startOfWeek(new Date(calWeekStart));
 
   const days = calView === 'week' ? 7 : 1;
-  const dateFrom = calWeekStart.toISOString().split('T')[0];
-  const dateTo = new Date(new Date(calWeekStart).setDate(calWeekStart.getDate() + days - 1))
-    .toISOString()
-    .split('T')[0];
+  const dateFrom = calDateStr(calWeekStart);
+  const dateTo = calDateStr(
+    new Date(new Date(calWeekStart).setDate(calWeekStart.getDate() + days - 1))
+  );
 
   const title = document.getElementById('cal-title');
   if (title) {
@@ -6498,14 +6523,14 @@ async function loadCalendar() {
     enroute: 'var(--green-tint)',
     completed: 'var(--border-lt)',
   };
-  const today = new Date().toISOString().split('T')[0];
+  const today = calDateStr(new Date());
 
   const colWidth = calView === 'week' ? Math.floor(100 / days) : 100;
 
   let html = `<div style="display:flex;min-width:${calView === 'week' ? '700px' : '300px'};gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden">`;
 
   dayDates.forEach((d, i) => {
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = calDateStr(d);
     const isToday = dateStr === today;
     const dayJobs = jobs.filter((j) => j.scheduled_date === dateStr);
     const dayBlocks = blockRows.filter((b) => b.date === dateStr);
