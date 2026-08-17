@@ -110,7 +110,13 @@ const BUDGET = {
 //
 // So they share ONE budget. It exists because they were outside the check
 // entirely until 2026-08-09, and #1848C8 had reached all 60 of them.
-const GENERATED_BUDGET = 2969;
+//
+// The 5 blog posts got es/zh translations too (4.2, scripts/translate-blog-posts.mjs)
+// - three copies each now, same as the suburb pages, so they read the same way:
+// root name, es/blog/<name>, zh/blog/<name>. Before this the loop only ever
+// looked at the root blog/ folder, because es/blog and zh/blog did not exist
+// yet - it would have silently kept ignoring the new translations otherwise.
+const GENERATED_BUDGET = 3387;
 
 function generatedPages() {
   const suburbs = readdirSync('es').filter(f => f.endsWith('.html'));
@@ -118,7 +124,9 @@ function generatedPages() {
   for (const s of suburbs) {
     for (const p of [s, `es/${s}`, `zh/${s}`]) if (existsSync(p)) pages.push(p);
   }
-  for (const b of readdirSync('blog').filter(f => f.endsWith('.html'))) pages.push(`blog/${b}`);
+  for (const b of readdirSync('blog').filter(f => f.endsWith('.html'))) {
+    for (const p of [`blog/${b}`, `es/blog/${b}`, `zh/blog/${b}`]) if (existsSync(p)) pages.push(p);
+  }
   return pages;
 }
 

@@ -109,6 +109,10 @@
       "destination": "/blog/$1.html"
     },
     {
+      "source": "/(es|zh)/blog/(best-bikes-for-sydney-commuting-2026|cycling-safety-tips-sydney-roads|electric-bike-laws-nsw-2026|how-to-choose-a-bike-mechanic-sydney|how-to-clean-your-bike-chain-sydney)",
+      "destination": "/$1/blog/$2.html"
+    },
+    {
       "source": "/((?!api/|\\.well-known/|.*\\.html|.*\\.png|.*\\.svg|.*\\.json|.*\\.js|.*\\.txt|.*\\.xml|.*\\.webmanifest|.*\\.ico|.*\\.css|.*\\.woff|.*\\.woff2).*)",
       "destination": "/landing.html"
     }

@@ -81,16 +81,34 @@ const NEIGHBOURS = {
   'sutherland-shire': ['st-george', 'marrickville', 'cbd'],
 };
 
-// Existing blog posts, linked from the English pages only - they have no
-// translation yet, and sending a Spanish reader to an English article is worse
-// than not linking it.
-const BLOG_POSTS = [
-  ['/blog/how-to-choose-a-bike-mechanic-sydney', 'How to choose a bike mechanic in Sydney'],
-  ['/blog/how-to-clean-your-bike-chain-sydney', 'How to clean your bike chain'],
-  ['/blog/cycling-safety-tips-sydney-roads', 'Cycling safety on Sydney roads'],
-  ['/blog/best-bikes-for-sydney-commuting-2026', 'Best bikes for Sydney commuting'],
-  ['/blog/electric-bike-laws-nsw-2026', 'Electric bike laws in NSW'],
-];
+// Existing blog posts. Used to be English-only (linked from English suburb
+// pages only, on the theory that sending a Spanish reader to an English
+// article is worse than not linking it) - the posts themselves got es/zh
+// translations in 4.2 (scripts/translate-blog-posts.mjs), so now every
+// language links its own version.
+const BLOG_POSTS = {
+  en: [
+    ['/blog/how-to-choose-a-bike-mechanic-sydney', 'How to choose a bike mechanic in Sydney'],
+    ['/blog/how-to-clean-your-bike-chain-sydney', 'How to clean your bike chain'],
+    ['/blog/cycling-safety-tips-sydney-roads', 'Cycling safety on Sydney roads'],
+    ['/blog/best-bikes-for-sydney-commuting-2026', 'Best bikes for Sydney commuting'],
+    ['/blog/electric-bike-laws-nsw-2026', 'Electric bike laws in NSW'],
+  ],
+  es: [
+    ['/es/blog/how-to-choose-a-bike-mechanic-sydney', 'Cómo elegir un mecánico de bicicletas en Sídney'],
+    ['/es/blog/how-to-clean-your-bike-chain-sydney', 'Cómo limpiar la cadena de tu bici'],
+    ['/es/blog/cycling-safety-tips-sydney-roads', 'Seguridad en bici en las calles de Sídney'],
+    ['/es/blog/best-bikes-for-sydney-commuting-2026', 'Las mejores bicis para moverte por Sídney'],
+    ['/es/blog/electric-bike-laws-nsw-2026', 'Leyes de e-bikes en NSW'],
+  ],
+  zh: [
+    ['/zh/blog/how-to-choose-a-bike-mechanic-sydney', '如何在悉尼选择自行车技师'],
+    ['/zh/blog/how-to-clean-your-bike-chain-sydney', '如何清洁自行车链条'],
+    ['/zh/blog/cycling-safety-tips-sydney-roads', '悉尼道路骑行安全'],
+    ['/zh/blog/best-bikes-for-sydney-commuting-2026', '悉尼通勤自行车推荐'],
+    ['/zh/blog/electric-bike-laws-nsw-2026', '新州电动自行车法规'],
+  ],
+};
 
 // Prices are display defaults only - js/live-prices.js overwrites them from the
 // Supabase `services` table on load, matching on data-service.
@@ -490,12 +508,8 @@ function page(sub, lang) {
   <p class="links-row">${neighbours
     .map((n) => `<a href="${meta.prefix}/${n.slug}">${n.name}</a>`)
     .join('')}</p>
-  ${
-    lang === 'en'
-      ? `<h3 class="links-h3">${c.readMore}</h3>
-  <p class="links-row">${BLOG_POSTS.map(([href, label]) => `<a href="${href}">${label}</a>`).join('')}</p>`
-      : ''
-  }
+  <h3 class="links-h3">${c.readMore}</h3>
+  <p class="links-row">${BLOG_POSTS[lang].map(([href, label]) => `<a href="${href}">${label}</a>`).join('')}</p>
 </section>
 `
     : '';
@@ -660,11 +674,17 @@ const STATIC_PAGES = [
   { path: '/business', priority: '0.9', changefreq: 'monthly' },
   { path: '/terms', priority: '0.3', changefreq: 'yearly' },
   { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
-  { path: '/blog/best-bikes-for-sydney-commuting-2026', priority: '0.7', changefreq: 'monthly' },
-  { path: '/blog/cycling-safety-tips-sydney-roads', priority: '0.7', changefreq: 'monthly' },
-  { path: '/blog/electric-bike-laws-nsw-2026', priority: '0.7', changefreq: 'monthly' },
-  { path: '/blog/how-to-choose-a-bike-mechanic-sydney', priority: '0.7', changefreq: 'monthly' },
-  { path: '/blog/how-to-clean-your-bike-chain-sydney', priority: '0.7', changefreq: 'monthly' },
+];
+
+// The 5 blog post slugs, now that they have es/zh siblings too (4.2) - same
+// alternates treatment as a suburb, kept as their own list rather than
+// folded into STATIC_PAGES because the path needs a blog/ prefix.
+const BLOG_SLUGS = [
+  'best-bikes-for-sydney-commuting-2026',
+  'cycling-safety-tips-sydney-roads',
+  'electric-bike-laws-nsw-2026',
+  'how-to-choose-a-bike-mechanic-sydney',
+  'how-to-clean-your-bike-chain-sydney',
 ];
 
 function sitemap() {
@@ -677,6 +697,27 @@ function sitemap() {
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`);
+  }
+
+  for (const slug of BLOG_SLUGS) {
+    for (const [code, l] of Object.entries(LANGS)) {
+      const alts = Object.entries(LANGS)
+        .map(
+          ([, a]) =>
+            `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${SITE}${a.prefix}/blog/${slug}"/>`
+        )
+        .concat([
+          `    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}/blog/${slug}"/>`,
+        ])
+        .join('\n');
+      entries.push(`  <url>
+    <loc>${SITE}${l.prefix}/blog/${slug}</loc>
+${alts}
+    <lastmod>${TODAY}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>${code === 'en' ? '0.7' : '0.5'}</priority>
+  </url>`);
+    }
   }
 
   for (const sub of SUBURBS) {
@@ -723,6 +764,7 @@ for (const [code, meta] of Object.entries(LANGS)) {
 
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemap());
 console.log(
-  `sitemap.xml: ${STATIC_PAGES.length + SUBURBS.length * 3} urls (${SUBURBS.length} suburbs x 3 languages)`
+  `sitemap.xml: ${STATIC_PAGES.length + (SUBURBS.length + BLOG_SLUGS.length) * 3} urls ` +
+    `(${SUBURBS.length} suburbs + ${BLOG_SLUGS.length} blog posts, x 3 languages)`
 );
 console.log(`done: ${written} pages written`);
