@@ -2993,7 +2993,7 @@ function renderBookingDetail(b) {
     `<span class="status ${BKD_ST_CLASS[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span>`;
 
   const row = (label, value) =>
-    value == null || value === ''
+    value === null || value === undefined || value === ''
       ? ''
       : `<div style="display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--border-lt)">
           <div style="font-size:12px;color:var(--mgray)">${label}</div>
@@ -3008,7 +3008,7 @@ function renderBookingDetail(b) {
     ${row('Van', `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${vanColor(b.van_number)};display:inline-block"></span>Van ${b.van_number || 1}</span>`)}
     ${row('Phone', b.client_phone ? `<a href="tel:${esc(b.client_phone)}" style="color:var(--blue);text-decoration:none">${esc(b.client_phone)}</a>` : '')}
     ${row('Email', b.client_email ? `<a href="mailto:${esc(b.client_email)}" style="color:var(--blue);text-decoration:none">${esc(b.client_email)}</a>` : '')}
-    ${row('Callout fee', b.callout_fee != null ? '$' + Number(b.callout_fee).toFixed(2) : '')}
+    ${row('Callout fee', b.callout_fee !== null && b.callout_fee !== undefined ? '$' + Number(b.callout_fee).toFixed(2) : '')}
     ${row('Discount', b.discount_applied ? '−$' + Number(b.discount_applied).toFixed(2) + (b.discount_code ? ' (' + esc(b.discount_code) + ')' : '') : '')}
     ${row('Total', '<b style="font-size:14px">$' + total.toFixed(2) + '</b>')}
     ${row('Cancelled - reason', b.cancellation_reason ? esc(b.cancellation_reason) : '')}
