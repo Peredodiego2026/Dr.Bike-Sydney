@@ -2684,3 +2684,47 @@ body {
 .an-stack-seg:last-child {
   border-radius: 0 6px 6px 0;
 }
+
+/* ── CALENDAR: blocked-slot tooltip ─────────────────────────────────────── */
+/* Hover only, no click, no JS - Month view's day cell is too small to list
+   every blocked slot, and clicking through to Day view just to read a
+   reason ("not in the city") is a lot of friction for a one-line fact. */
+.cal-block-badge {
+  position: relative;
+  cursor: default;
+}
+.cal-block-tooltip {
+  display: none;
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  max-width: 240px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  padding: 8px 10px;
+  text-align: left;
+  white-space: normal;
+}
+.cal-block-badge:hover .cal-block-tooltip,
+.cal-block-badge:focus-within .cal-block-tooltip {
+  display: block;
+}
+.cal-block-tooltip-row + .cal-block-tooltip-row {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-lt);
+}
+.cal-block-tooltip-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--red);
+}
+.cal-block-tooltip-reason {
+  font-size: 11px;
+  color: var(--gray);
+  margin-top: 1px;
+}

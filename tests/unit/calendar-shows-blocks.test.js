@@ -42,7 +42,14 @@ describe('el calendario del admin ahora lee availability', () => {
   });
 
   it('Month view pinta un badge cuando el dia tiene bloqueos', () => {
-    expect(admin).toMatch(/dayBlocks\.length \? `<div[\s\S]*?blocked/);
+    expect(admin).toMatch(/dayBlocks\.length\s*\n\s*\? `<div class="cal-block-badge"/);
+  });
+
+  it('el badge lleva el tooltip con cada horario, van y motivo - sin onclick', () => {
+    expect(admin).toMatch(/class="cal-block-tooltip"/);
+    expect(admin).toMatch(/class="cal-block-tooltip-time"/);
+    expect(admin).not.toMatch(/cal-block-badge[^`]*onclick/);
+    expect(admin).not.toMatch(/cal-block-badge[^`]*onmouseover/);
   });
 
   it('Week/Day view lista los horarios bloqueados con su van y motivo', () => {
@@ -52,6 +59,41 @@ describe('el calendario del admin ahora lee availability', () => {
 
   it('"Free" solo aparece cuando el dia no tiene NI jobs NI bloqueos', () => {
     expect(admin).toMatch(/dayJobs\.length === 0 && dayBlocks\.length === 0/);
+  });
+});
+
+describe('calDateStr - fechas locales, sin pasar por UTC', () => {
+  // .toISOString() convierte a UTC primero. Sydney es UTC+10/11: la
+  // medianoche local cae en el dia UTC ANTERIOR, asi que una celda
+  // construida con `new Date(y, m, day)` (siempre medianoche local exacta)
+  // hacia matchear reservas y bloqueos un dia antes de lo que mostraba en
+  // pantalla - "20" mostraba lo que era del 19 (docs/PENDIENTES.md 21.11).
+  // Comprobado ejecutando la funcion de verdad, no solo el texto: se extrae
+  // del archivo tal cual esta, no se reescribe a mano.
+  const fn = grab(/function calDateStr\(d\) \{[\s\S]*?\n\}/, 'calDateStr');
+  // eslint-disable-next-line no-new-func
+  const calDateStr = new Function('d', fn.replace(/^function calDateStr\(d\) \{/, '').slice(0, -1));
+
+  it('lee los campos locales, no los convierte a UTC', () => {
+    // Medianoche local: en cualquier timezone con offset positivo (como
+    // Sydney), .toISOString() la habria mandado al dia anterior.
+    expect(calDateStr(new Date(2026, 7, 20, 0, 0, 0))).toBe('2026-08-20');
+  });
+
+  it('pad de mes y dia de un digito', () => {
+    expect(calDateStr(new Date(2026, 0, 5, 0, 0, 0))).toBe('2026-01-05');
+  });
+
+  it('loadCalendar ya no usa toISOString para fechas de calendario', () => {
+    // Acotado al cuerpo real de la funcion, no "hasta el final del archivo" -
+    // el resto de admin.js SI usa toISOString para timestamps (created_at,
+    // cash_settled_at), eso no es el bug y no hay que tocarlo.
+    const fnLoad = grab(
+      /async function loadCalendar\(\) \{[\s\S]*?\n\/\/ ── ADMIN CHAT/,
+      'loadCalendar'
+    );
+    expect(fnLoad).not.toMatch(/toISOString/);
+    expect((fnLoad.match(/calDateStr\(/g) || []).length).toBeGreaterThanOrEqual(6);
   });
 });
 
