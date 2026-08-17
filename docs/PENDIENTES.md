@@ -229,11 +229,94 @@ abierto hasta que se audite esa quinta.
 
 **Estado 2026-08-03: `track.html` auditada, seccion 13. Punto cerrado.**
 
-### 3.2 Dieta de `landing.html`
+### 3.2 Dieta de `landing.html` - CERRADO 2026-08-18
 
-255 KB de HTML, ~2600 lineas, con estilos y scripts inline. `docs/PLAN-DISENO.md`
-lo marca como candidato #1. Presupuesto del plan: <= 1.5 MB por pagina,
-LCP < 2.5s en movil, Lighthouse >= 90.
+Los 17 bloques `<script>` inline (15 clasicos + 2 `type="module"`, ~2155
+lineas) se sacaron a `js/landing-inline.js` (clasicos, concatenados en su
+orden original - ese orden importa, comparten el scope de nivel superior del
+archivo igual que antes compartian el scope global de la pagina) y
+`js/landing-modules.js` (los 2 `type="module"`: el bootstrap de GrowthBook y
+el puente de idioma/hora `window.__drbikeI18n`/`window.__drbikeTime`).
+`landing.html` los carga con `<script src="js/landing-inline.js">` y
+`<script type="module" src="js/landing-modules.js">`, en la posicion donde
+estaba el ultimo bloque de cada tipo - un script clasico corre en cuanto el
+parser lo encuentra, asi que moverlo a una posicion mas tardia es seguro (hay
+estrictamente mas DOM ya armado, nunca menos); los `type="module"` ya se
+difieren al final sin importar su posicion, asi que consolidarlos no cambia
+nada de su timing relativo.
+
+`landing.html`: 3529 lineas / 229 KB -> 1424 lineas / 111 KB (-51% peso,
+-60% lineas). Los 2 archivos nuevos suman 122 KB (114 KB + 8 KB) que ahora el
+navegador cachea aparte en vez de descargar de nuevo con cada visita a la
+pagina.
+
+**Bug real encontrado por la extraccion (no preexistente, lo causo mover el
+codigo):** los imports de `js/landing-modules.js` decian
+`from './js/i18n.js'` y `from './js/time-format.js'` - rutas correctas
+cuando el modulo vivia inline en `landing.html` (raiz del sitio), rotas una
+vez que el archivo mismo vive en `/js/`, porque `./js/...` se resuelve
+relativo a la ubicacion del propio archivo. Sin el fix, el navegador pedia
+`/js/js/i18n.js` (404) y el puente de idioma no cargaba. Se encontro
+revisando la consola/red en un navegador real antes de dar el trabajo por
+terminado - `npm run check` y los tests no lo detectan porque ninguno de los
+dos ejecuta el modulo en un navegador. Corregido a `./i18n.js` /
+`./time-format.js`.
+
+**3 strings sin traducir, encontrados por la misma extraccion:** al mover el
+codigo de HTML a un `.js` real, `scripts/i18n-check.mjs` (que ya escaneaba
+`js/app.js`/`js/components.js` con este patron, ver 10.1) empezo a revisar
+tambien `js/landing-inline.js` y encontro 3 strings que el escaneo de HTML
+(mas limitado) nunca habia visto:
+- `"Type your question"` - el `aria-label` del input del chat bot (el
+  `placeholder` con puntos suspensivos ya estaba traducido, este sin puntos
+  no). Se traduce solo con el diccionario, via el mismo mecanismo generico
+  que ya traduce cualquier `[aria-label]` del DOM - no hizo falta tocar
+  codigo.
+- `"Get Started -"` - el prefijo de `gsBtn.textContent = 'Get Started - ' +
+  c.price`. Se investigo si esto era un bug real (el boton se queda en
+  ingles para un visitante es/zh) y **no lo es**: los 3 precios de plan son
+  fijos (`$67/month`, `$97/month`, `$197/month`), y el diccionario ya tenia
+  una entrada para cada string completo resultante (`'Get Started -
+  $97/month': 'Comenzar - $97/mes'`, etc.) desde antes de este PR - el
+  mecanismo generico de traduccion (el `MutationObserver` que re-escanea el
+  DOM) ya lo cubria. Verificado en navegador: el modal de plan muestra
+  "Comenzar - $97/mes" correctamente. Se agrego igual una entrada para el
+  prefijo solo (`'Get Started -': 'Comenzar -'`) porque el checker estatico
+  no sabe de los 3 precios fijos y la pide - no cambia nada en runtime, deja
+  el check verde de forma honesta en vez de silenciarlo.
+- `"Please wait a moment for the security check to finish, then try again."`
+  - mensaje de un `alert()` nativo cuando el widget de Cloudflare Turnstile
+  todavia no cargo el token. Solo diccionario, igual que el precedente ya
+  existente `'Please enter a valid email address.'` (linea de arriba en el
+  mismo archivo) - ningun `alert()` de este proyecto llama a
+  `translateValue()`, asi que ese mensaje se sigue mostrando en ingles en
+  runtime sin importar el idioma. Es una limitacion preexistente y mas
+  amplia que esta tarea (aplica a todo `alert()`/`confirm()` del sitio, no
+  solo a este), no algo que 3.2 tenga que resolver.
+
+**Verificado:** `npm run check` limpio (i18n, color-check con
+`js/landing-inline.js`=80 y `js/landing-modules.js`=0 en el `BUDGET`, resto
+sin cambios), `npx vitest run` 380/380. En navegador (servidor estatico
+local, sin backend real): modal de info de plan (abre con el plan correcto,
+boton traducido), tarjeta de regalo, selector de idioma (ida y vuelta en/es
+confirmada por `document.documentElement.lang` y el H1), bot de FAQ (abre,
+`aria-label` y `placeholder` correctos), boton "Book Now" (dispara
+`openBooking()`, cambia el hash a `#book-service` - el wizard en si es
+territorio de `js/app.js`/`js/router.js`, no tocado aca). Sin errores nuevos
+en consola; los que aparecen (Turnstile invalido en localhost, SW que no
+registra en `serve`, `/api/*` 404) son del entorno de prueba sin backend, no
+de este cambio.
+
+**Nota para quien toque el CSP despues:** `landing.html` era la unica de las
+5 paginas con bloques `<script>` inline con codigo - `index.html`,
+`admin.html`, `mechanic.html` y `track.html` ya no tenian ninguno. Ahora que
+esta extraccion la dejo en cero tambien, ya no queda ningun `<script>` con
+codigo inline en ninguna superficie. Aun asi `'unsafe-inline'` en
+`script-src` (`vercel.json`) **no se puede sacar todavia**: `landing.html`
+sigue teniendo 2 bloques `<script type="application/ld+json">` (datos
+estructurados, no codigo) que el CSP igual exige permitir sin nonce/hash. No
+es trabajo de esta tarea - queda anotado para cuando alguien decida meterle
+nonce al CSP.
 
 ### 3.3 Handlers inline que quedan - CERRADO 2026-08-16
 
@@ -690,10 +773,21 @@ mas angosto: un string armado en una variable separada y concatenado
 despues escapa a las tres extracciones, porque ninguna seria de regex sabe
 seguir una asignacion. Cerrarlo del todo pide lo mismo que ya decia este
 punto antes de la mitigacion - un parser real de JS (AST), no otra regex -
-y eso sigue sin valer la pena solo por esto: la opcion mas limpia continua
-siendo sacar esa UI de los scripts inline (ver 3.2). Mientras tanto, un
-string nuevo escrito con variable intermedia dentro de un `<script>` de
-`landing.html` todavia hay que traducirlo a mano y con cuidado.
+y eso sigue sin valer la pena solo por esto.
+
+**Actualizacion 2026-08-18 (3.2 ya saco esa UI de los scripts inline, como
+decia el parrafo anterior):** el codigo que antes vivia en los `<script>`
+inline de `landing.html` ahora es `js/landing-inline.js`, un `.js` real que
+`stringsFromJs()` escanea (no `stringsFromInlineScripts()`). Esto **no
+cierra** el agujero angosto - `stringsFromJs()` es la misma clase de regex
+por patron, con la misma limitacion de no seguir una asignacion en dos
+pasos - pero **si demostro que la cobertura mejoro**: al mover el codigo,
+`stringsFromJs()` encontro 3 strings sin traducir
+(`"Type your question"`, `"Get Started -"`, el mensaje de alerta de
+Turnstile) que `stringsFromInlineScripts()` nunca habia señalado mientras
+el codigo vivio en HTML (ver 3.2 para el detalle de cada uno). Sigue
+pendiente lo mismo que antes: un string nuevo con variable intermedia en
+`js/landing-inline.js` todavia hay que traducirlo a mano y con cuidado.
 
 ### 10.3 Limpieza de datos falsos y codigo muerto (28-jul) — HECHO
 
@@ -5062,10 +5156,10 @@ y 23.4 tambien - no hace falta repetir la prueba dos veces.
 | 19.1 | El azul del logotipo en `claims/privacy/terms`: usar el de la marca (`#0055de`) o el de la app (`#2563eb`) | Diego decide |
 | 19.2 | Esas 3 paginas legales no cargan `variables.css`, tienen su propia paleta que difiere | Codigo, depende de 19.1 |
 | 19.3 | 7 paginas fuera del ratchet de color, 184 hex sueltos | Codigo, barato |
-| 3.2 | `landing.html` pesa 255 KB / ~2600 lineas, candidato #1 de la dieta de diseño | Codigo |
+| 3.2 | ~~`landing.html` pesa 255 KB...~~ **CERRADO 2026-08-18.** 3529 -> 1424 lineas, 229 KB -> 111 KB; scripts inline a `js/landing-inline.js`/`js/landing-modules.js`. Ver seccion 3.2 propia | Codigo |
 | 3.3 | ~~Los 33 handlers inline de `landing.html` siguen sin sacarse...~~ **CERRADO 2026-08-16**, ver seccion 3.3 propia | Codigo |
 | 3.4 | Lighthouse formal nunca se corrio sobre produccion | Diego o CI |
-| 10.1 | El chequeo de i18n no mira dentro de los `<script>` inline de `landing.html` | Codigo, no trivial |
+| 10.1 | ~~El chequeo de i18n no mira dentro de los `<script>` inline de `landing.html`~~ **MOOT 2026-08-18** - esos scripts ya no son inline (3.2); el agujero angosto de fondo (regex, no AST) sigue sin cerrar, ver seccion 10.1 propia | Codigo, no trivial |
 | 10.2 | ~~Cancelar/reprogramar... `confirm()`/`prompt()` nativos~~ **CERRADO 2026-08-17**, ver seccion 10.2 propia | Codigo, feature aparte |
 | 10.4 | ~~`docs/mockups/` es publico...~~ **Nunca fue un bug real - CERRADO desde el 2026-08-01**, `.vercelignore` ya lo tapaba. Error del audit original, no de codigo | Codigo, movimiento simple |
 | 4.1 / 4.2 | `business.html`, `bike-check.html` y los 5 posts del blog siguen 100% en ingles | **En progreso** - 3 PRs abiertas al 17-ago (#280, #281, #282), Prioridad Baja |

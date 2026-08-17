@@ -929,6 +929,7 @@ const dict = {
     'Get Started - $97/month': 'Comenzar - $97/mes',
     'Get Started - $67/month': 'Comenzar - $67/mes',
     'Get Started - $197/month': 'Comenzar - $197/mes',
+    'Get Started -': 'Comenzar -',
 
     // ── Membership redesign 2026-07-22 (3 free-quota categories) ─────────
     '1 free minor repair (under $60) + 1 free bike wash per month':
@@ -1013,6 +1014,7 @@ const dict = {
     'Dr. Bike Assistant': 'Asistente de Dr. Bike',
     'Ask me anything': 'Preguntame lo que quieras',
     'Type your question...': 'Escribí tu pregunta...',
+    'Type your question': 'Escribí tu pregunta',
     'What does a Tune-Up include?': '¿Qué incluye un Ajuste?',
     'Which areas do you cover?': '¿Qué zonas cubren?',
     'How do memberships work?': '¿Cómo funcionan las membresías?',
@@ -1114,6 +1116,8 @@ const dict = {
     'Cycling Tips & Offers': 'Tips de Ciclismo y Ofertas',
     Subscribe: 'Suscribirse',
     'Please enter a valid email address.': 'Por favor, ingresá un correo válido.',
+    'Please wait a moment for the security check to finish, then try again.':
+      'Esperá un momento a que termine la verificación de seguridad e intentá de nuevo.',
     '✅ Subscribed! Check your inbox for a 10% off code.':
       '✅ ¡Suscripto! Revisá tu correo por un código de 10% de descuento.',
     'Could not subscribe. Please try again.': 'No se pudo suscribir. Por favor, intentá de nuevo.',
@@ -2204,6 +2208,7 @@ const dict = {
     'Get Started - $97/month': '立即开始 - $97/月',
     'Get Started - $67/month': '立即开始 - $67/月',
     'Get Started - $197/month': '立即开始 - $197/月',
+    'Get Started -': '立即开始 -',
 
     // ── Membership redesign 2026-07-22 (3 free-quota categories) ─────────
     '1 free minor repair (under $60) + 1 free bike wash per month':
@@ -2287,6 +2292,7 @@ const dict = {
     'Dr. Bike Assistant': 'Dr. Bike助手',
     'Ask me anything': '有问必答',
     'Type your question...': '输入您的问题...',
+    'Type your question': '输入您的问题',
     'What does a Tune-Up include?': '基础调校包含什么？',
     'Which areas do you cover?': '你们覆盖哪些区域？',
     'How do memberships work?': '会员计划如何运作？',
@@ -2383,6 +2389,8 @@ const dict = {
     'Cycling Tips & Offers': '骑行贴士与优惠',
     Subscribe: '订阅',
     'Please enter a valid email address.': '请输入有效的邮箱地址。',
+    'Please wait a moment for the security check to finish, then try again.':
+      '请稍等安全验证完成后再试一次。',
     '✅ Subscribed! Check your inbox for a 10% off code.': '✅ 订阅成功！请查收邮箱中的9折优惠码。',
     'Could not subscribe. Please try again.': '订阅失败，请重试。',
     'No spam. Unsubscribe anytime.': '不会发送垃圾邮件，随时可取消订阅。',
