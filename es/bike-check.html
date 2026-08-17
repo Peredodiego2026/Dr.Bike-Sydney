@@ -257,10 +257,11 @@ function answer(q, val) {
     document.getElementById('q'+(q+1)).classList.add('active');
     const pct = (q/5)*100;
     document.getElementById('progressFill').style.width = pct+'%';
-    document.getElementById('progressLabel').textContent = 'Question '+(q+1)+' of 5';
+    const progressLabels = ['Pregunta 1 de 5', 'Pregunta 2 de 5', 'Pregunta 3 de 5', 'Pregunta 4 de 5', 'Pregunta 5 de 5'];
+    document.getElementById('progressLabel').textContent = progressLabels[q];
   } else {
     document.getElementById('progressFill').style.width = '100%';
-    document.getElementById('progressLabel').textContent = 'Complete!';
+    document.getElementById('progressLabel').textContent = '¡Completo!';
     showResult();
   }
 }

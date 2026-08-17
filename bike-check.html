@@ -257,7 +257,8 @@ function answer(q, val) {
     document.getElementById('q'+(q+1)).classList.add('active');
     const pct = (q/5)*100;
     document.getElementById('progressFill').style.width = pct+'%';
-    document.getElementById('progressLabel').textContent = 'Question '+(q+1)+' of 5';
+    const progressLabels = ['Question 1 of 5', 'Question 2 of 5', 'Question 3 of 5', 'Question 4 of 5', 'Question 5 of 5'];
+    document.getElementById('progressLabel').textContent = progressLabels[q];
   } else {
     document.getElementById('progressFill').style.width = '100%';
     document.getElementById('progressLabel').textContent = 'Complete!';

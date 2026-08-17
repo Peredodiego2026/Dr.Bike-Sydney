@@ -406,6 +406,26 @@ solo leyendo el diccionario - ahi aparecio tambien un CTA
 quedado sin traducir en las dos primeras pasadas por revisar el HTML estatico
 y no las cadenas que arma `showResult()` en tiempo de ejecucion.
 
+**Segundo hallazgo del mismo tipo, en el rebase del 2026-08-18:** la barra de
+progreso del quiz (`answer()`) armaba `'Question '+(q+1)+' of 5'` por
+concatenacion - el diccionario SI tenia las 5 variantes completas
+("Question 1 of 5".."Question 5 of 5") traducidas en es y zh, pero como
+`translate-static-pages.mjs` reemplaza fragmentos que aparecen literales en
+el HTML ya renderizado, y ese texto nunca aparece completo en el archivo
+fuente (esta partido en 3 pedazos por el `+`), esas 5 entradas nunca
+matcheaban - un visitante es/zh veia "Question 2 of 5" en ingles en medio
+de una pagina traducida. Mismo defecto que el boton "Get Started -" de la
+3.2, causa distinta: alli el mecanismo de runtime (`translateValue` +
+`MutationObserver`) SI lo hubiera resuelto porque ya tenia las 3 variantes
+de precio reales matriculadas; aca no hay mecanismo de runtime - la pagina
+se traduce una sola vez, en build. `'Complete!'` tampoco tenia entrada en el
+diccionario, mismo sintoma. Arreglado en el fuente ingles: un array
+`progressLabels` con las 5 frases completas (para que existan literales en
+el HTML y el diccionario las pueda matchear) en vez de la concatenacion, mas
+la entrada de diccionario que faltaba para `'Complete!'`. Verificado
+llamando a `answer()` a mano en un navegador real, es y zh: "Pregunta 2 de
+5" / "第 2 题，共 5 题" y "¡Completo!" / "完成！".
+
 **Efecto de lado, no planeado:** correr `npm run suburbs:generate` para
 regenerar el sitemap tambien reescribio las 60 paginas de suburbio -
 revirtiendo `var(--gray)`/`var(--border)`/`var(--green)` a hex literal,

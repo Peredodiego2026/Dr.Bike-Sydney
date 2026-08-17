@@ -257,10 +257,11 @@ function answer(q, val) {
     document.getElementById('q'+(q+1)).classList.add('active');
     const pct = (q/5)*100;
     document.getElementById('progressFill').style.width = pct+'%';
-    document.getElementById('progressLabel').textContent = 'Question '+(q+1)+' of 5';
+    const progressLabels = ['第 1 题，共 5 题', '第 2 题，共 5 题', '第 3 题，共 5 题', '第 4 题，共 5 题', '第 5 题，共 5 题'];
+    document.getElementById('progressLabel').textContent = progressLabels[q];
   } else {
     document.getElementById('progressFill').style.width = '100%';
-    document.getElementById('progressLabel').textContent = 'Complete!';
+    document.getElementById('progressLabel').textContent = '完成！';
     showResult();
   }
 }

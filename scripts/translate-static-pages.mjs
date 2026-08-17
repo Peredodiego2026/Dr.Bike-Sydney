@@ -287,6 +287,7 @@ const DICT = {
       'Question 3 of 5': 'Pregunta 3 de 5',
       'Question 4 of 5': 'Pregunta 4 de 5',
       'Question 5 of 5': 'Pregunta 5 de 5',
+      'Complete!': '¡Completo!',
       'How are your brakes?': '¿Cómo están tus frenos?',
       'Squeeze both brake levers firmly. Does the bike stop quickly and cleanly? Do the levers feel firm, not spongy?':
         'Apretá firmemente ambas palancas de freno. ¿La bici frena rápido y limpio? ¿Las palancas se sienten firmes, no esponjosas?',
@@ -412,6 +413,7 @@ const DICT = {
       'Question 3 of 5': '第 3 题，共 5 题',
       'Question 4 of 5': '第 4 题，共 5 题',
       'Question 5 of 5': '第 5 题，共 5 题',
+      'Complete!': '完成！',
       'How are your brakes?': '您的刹车状况如何？',
       'Squeeze both brake levers firmly. Does the bike stop quickly and cleanly? Do the levers feel firm, not spongy?':
         '用力捏紧两个刹车把。自行车能否快速、干净利落地停下？刹车把感觉是否紧实，而不是软绵绵的？',
