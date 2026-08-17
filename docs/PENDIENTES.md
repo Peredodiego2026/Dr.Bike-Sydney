@@ -17,8 +17,8 @@
 | Chequeo | Resultado |
 |---|---|
 | `npm run check` | Verde - 38 archivos JS, i18n 1028 claves es/zh, 822 strings en 5 superficies |
-| `npx vitest run` | 373 tests, 35 archivos, 0 fallos |
-| PRs abiertas | 4 (#277, #280, #281, #282 - todo Prioridad Baja, i18n de blog/business.html y un CSS roto) |
+| `npx vitest run` | 380 tests, 36 archivos, 0 fallos |
+| PRs abiertas | 6 (#277, #280, #281, #285, #287, #288 - #282 ya mergeo. #285 es el fix del generador de suburbios, #287/#288 son calendario y ficha de reserva del admin, el resto sigue siendo Prioridad Baja) |
 
 El codigo esta sano. Lo que sigue no son bugs: son cosas sin hacer.
 
@@ -343,7 +343,7 @@ seguidas antes de darlo por bueno.
 |---|---|---|
 | 5.1 | Paginacion y filtros de fecha (TASK-030) | **Admin: CERRADO** - ya tiene `.range()` + filtros server-side y boton "Load more" (`js/admin.js:2636`, TASK-030 en `tasks.md` estaba desactualizado). **Mechanic y client: NO se pagino a proposito.** Estan acotados por naturaleza (un van desde hace 7 dias, un cliente de por vida - no una tabla que crece con todo el negocio) asi que en vez de paginacion completa, el server ahora manda `X-Truncated: true` si el tope (300 mechanic, 100 client) se llega a tocar, y la app avisa en vez de recortar en silencio (2026-08-16, esta misma sesion). Revisar si ese juicio de "no hace falta pagina completa" resulta equivocado. |
 | 5.2 | Prueba de carga (TASK-043) | ~500 concurrentes sobre booking + availability + GPS. **Ojo: no se puede correr contra produccion sin plan** - crearia reservas y cobros reales. Necesita entorno de staging o datos de prueba aislados |
-| 5.3 | Scroll-to-top del wizard | Se agrego en `js/router.js` el 22-jul y quedo anotado como "sin confirmar en navegador real" |
+| 5.3 | Scroll-to-top del wizard - **CERRADO (2026-08-17)** | Rastreado en codigo, no solo mirado: `router.js` resetea el scroll en cualquier cambio de ruta (`prevRoute !== route`), pero los 3 pasos del wizard (`book-service`) re-renderizan sin tocar el hash - por eso `js/app.js` tiene su propio `scrollStepToTop()`, llamado en `renderStep1` (:619), `renderStep2` (:865) y `renderStep3` (:1003), mismo patron que el router. Las transiciones que si cambian de ruta (`service-summary`, etc.) quedan cubiertas por el reset generico. Confirmado en el preview que `window.scrollY` es el contexto de scroll real (no un div interno sin efecto). Cobertura completa, sin agujeros. |
 | 5.4 | Secretos sin usar en Vercel | `MAPBOX_TOKEN`, `GOOGLE_PLACES_API_KEY`, `POSTHOG_KEY` - ninguno referenciado en el codigo. Borrarlos desde el dashboard |
 
 ## 6. Tradeoffs aceptados (NO son pendientes)
@@ -4236,6 +4236,19 @@ la pestaña nueva y no una recarga mas.
 **Lo que este punto NO reviso**, y queda para quien siga: si hay otros
 elementos huerfanos de la misma unificacion del 04-jul. Se busco `getElementById`
 sin elemento **solo** para este caso, no en toda la pagina.
+
+**Hecho, 2026-08-17 - CERRADO, sin hallazgos nuevos.** Se corrio el barrido
+completo: los 107 `getElementById(...)` distintos de `landing.html` contra
+cada `id="..."` (estatico o asignado por JS con `.id =`) del mismo archivo.
+4 huerfanos, los 4 ya conocidos y ya en una rama en curso: `diag-photo`,
+`diag-result`, `diag-text` (las funciones "AI Diagnosis", `runAIDiagnosis` /
+`runAIDiagnosisText` / `showDiagResult`, todas con guardas `if (!el) return`
+- no rompen, solo no hacen nada) y `bk-services-list`, usado por
+`autoSelectService()` - que ademas no tiene NINGUN caller en todo el
+archivo, ya muerta por partida doble. Las 4 caen dentro del mismo cluster
+que el PR #277 ("borra el AI Diagnosis muerto de landing.html") ya esta
+sacando - no se toco `landing.html` aca a proposito, para no pisar esa
+rama. No aparecio ningun huerfano fuera de ese cluster.
 
 ## 18. Auditoria de Analytics (2026-08-11), lo que quedo sin arreglar
 
