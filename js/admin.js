@@ -3396,10 +3396,19 @@ const SUBURB_COORDS = {
   sutherland: [-34.031, 151.057],
 };
 
+// Module scope, not just renderRouteMap()'s: renderVanLocations() (25.6)
+// needs the same van->colour mapping for the live markers to match the job
+// pins on the same map. Named distinctly from the VAN_COLORS array used by
+// vanColor() (25.3/booking detail) - same concept, different shape, and both
+// live in this file since 292's merge.
+const VAN_MAP_COLORS = { 1: 'var(--blue)', 2: 'var(--amber)' };
+
 let _routeMap = null,
   _routeLayer = null,
   _routeOptimised = false;
 let _routeBookingsCache = null;
+let _vanLocLayer = null,
+  _vanLocChannel = null;
 
 // Guessing the suburb out of free text.
 //
@@ -3568,10 +3577,9 @@ async function renderRouteMap(useCache) {
   }
   _routeLayer = L.layerGroup().addTo(_routeMap);
 
-  const VAN_COLORS = { 1: 'var(--blue)', 2: 'var(--amber)' };
   const latlngs = [];
   stops.forEach((s, i) => {
-    const color = VAN_COLORS[s.van_number] || 'var(--blue)';
+    const color = VAN_MAP_COLORS[s.van_number] || 'var(--blue)';
     const icon = L.divIcon({
       className: '',
       html: `<div style="width:26px;height:26px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3)">${i + 1}</div>`,
@@ -3592,6 +3600,12 @@ async function renderRouteMap(useCache) {
   if (latlngs.length) _routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2));
   setTimeout(() => _routeMap && _routeMap.invalidateSize(), 100);
 
+  // Live van positions (docs/PENDIENTES.md 25.6) - independent of whether
+  // there are job stops today, so this has to run before the early return
+  // below when the list is empty.
+  renderVanLocations();
+  subscribeVanLocations();
+
   // Ordered itinerary list
   const list = document.getElementById('route-list');
   if (list) {
@@ -3607,7 +3621,7 @@ async function renderRouteMap(useCache) {
           const leg = routeDistKm(prev, s.coord);
           totalKm += leg;
           prev = s.coord;
-          const color = VAN_COLORS[s.van_number] || 'var(--blue)';
+          const color = VAN_MAP_COLORS[s.van_number] || 'var(--blue)';
           return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--off);border-radius:8px;border-left:3px solid ${color}">
         <div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</div>
         <div style="flex:1;min-width:0">
@@ -3620,6 +3634,67 @@ async function renderRouteMap(useCache) {
         .join('') +
       `<div style="text-align:right;font-size:13px;color:var(--mgray);padding:4px 12px 0;font-weight:600">Total: ${totalKm.toFixed(1)} km</div>`;
   }
+}
+
+// ── LIVE VAN POSITIONS (docs/PENDIENTES.md 25.6) ────────────────────────────
+// mechanic_locations has no "current position" row, only a history - most
+// recent updated_at per van_number IS the current position. Needs
+// scripts/add-mechanic-locations-admin-select.sql run first (RLS had no
+// admin policy on this table at all before that - the map silently shows
+// nothing without it, no error, same failure shape as 21.7).
+async function renderVanLocations() {
+  if (!_routeMap || typeof L === 'undefined') return;
+  const { data, error } = await sb
+    .from('mechanic_locations')
+    .select('van_number,lat,lng,updated_at,mechanic_id')
+    .order('updated_at', { ascending: false })
+    .limit(50);
+  if (error) {
+    console.error('[admin] mechanic_locations read failed:', error.message);
+    return;
+  }
+
+  // First row seen per van, in an already-desc-sorted list, is the latest.
+  const latestByVan = {};
+  (data || []).forEach((row) => {
+    if (!(row.van_number in latestByVan)) latestByVan[row.van_number] = row;
+  });
+
+  if (_vanLocLayer) _routeMap.removeLayer(_vanLocLayer);
+  _vanLocLayer = L.layerGroup().addTo(_routeMap);
+
+  const staleAfterMin = 15; // a van that hasn't pinged in 15min is probably not driving
+  Object.values(latestByVan).forEach((v) => {
+    if (v.lat === null || v.lat === undefined || v.lng === null || v.lng === undefined) return;
+    const ageMin = (Date.now() - new Date(v.updated_at).getTime()) / 60000;
+    const stale = ageMin > staleAfterMin;
+    const color = VAN_MAP_COLORS[v.van_number] || 'var(--blue)';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:30px;height:30px;border-radius:50%;background:${color};opacity:${stale ? 0.45 : 1};display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.35);font-size:15px">🚐</div>`,
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+    });
+    L.marker([v.lat, v.lng], { icon, zIndexOffset: 1000 })
+      .bindPopup(
+        `<b>Van ${v.van_number}</b><br>${stale ? `Last seen ${Math.round(ageMin)} min ago` : 'Live'}`
+      )
+      .addTo(_vanLocLayer);
+  });
+}
+
+// One subscription for the life of the page - re-subscribing on every
+// renderRouteMap() call would open a new realtime channel per render.
+function subscribeVanLocations() {
+  if (_vanLocChannel) return;
+  _vanLocChannel = sb
+    .channel('admin-van-locations')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'mechanic_locations' },
+      () => renderVanLocations()
+    )
+    .subscribe();
 }
 
 // ── Analytics: funnel, heatmap, margins, LTV/churn (#20-23) ──────────────────

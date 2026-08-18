@@ -5571,3 +5571,44 @@ Diego, para que quede visible: no manda WhatsApp/SMS a nadie mas que el
 email al cliente - ni aviso a Diego (el mismo la esta creando) ni SMS al
 mecanico. Si el mecanico necesita enterarse por SMS ademas de verla en su
 cola de la app, es un agregado chico para despues.
+
+## 28. Mapa en vivo de las vans para el admin (18-ago-2026)
+
+Ultimo item de la lista pedida por Diego (seccion 25). El cliente ya tenia
+su mapa de seguimiento por reserva (`track.html`), pero el admin no tenia
+ninguna vista de "donde estan mis vans ahora" - solo el mapa de la ruta de
+HOY en Vans & Mechanics, que ubica los TRABAJOS, no a los mecanicos.
+
+**Se sumo a ese mismo mapa, no se creo uno nuevo.** `renderVanLocations()`
+lee `mechanic_locations` (la fila mas reciente por `van_number` - la tabla
+es un historial, no una posicion actual), la dibuja con un pin distinto al
+de los trabajos (🚐, color por van, semi-transparente si hace mas de 15 min
+que no manda señal - no la esconde, la marca como no-en-vivo). Suscripcion
+de realtime (`subscribeVanLocations()`, un solo canal para toda la pagina)
+para que se mueva sola sin recargar.
+
+**Igual que 21.7, la tabla nunca tuvo policy de admin.**
+`harden-security-2026-07-17.sql` le puso RLS a `mechanic_locations` pero
+solo para "el cliente con una reserva activa" - el admin, ni con su propia
+sesion, podia leerla directo desde el navegador. `scripts/add-mechanic-locations-admin-select.sql`
+nuevo, mismo patron que `availability_admin_select`, sumado al runbook
+(item 42). **Sin correrlo, el mapa no muestra ninguna van y no tira ningun
+error** - mismo modo de falla silenciosa que ya paso antes.
+
+10 tests nuevos en `tests/unit/admin-live-van-map.test.js`.
+
+**No verificado en produccion**, y dos cosas que no se hicieron a
+proposito: no hay boton para "centrar en mi van" ni notificacion si una van
+deja de mandar señal por mucho tiempo - se puede sumar despues si hace
+falta.
+
+**Bug real encontrado al encadenar los merges (no antes):** esta seccion y
+la 25.3 declaraban cada una su propio `const VAN_COLORS` a nivel de modulo -
+mientras vivian en branches separadas nunca chocaban, pero al mergear las 5
+PRs en una sola rama para que fueran mergeables en orden, `js/admin.js`
+terminaba con `VAN_COLORS` declarado dos veces (`SyntaxError: Identifier
+'VAN_COLORS' has already been declared` - `node --check` no pasaba). El de
+esta seccion (el objeto `{1: ..., 2: ...}` que usan `renderRouteMap()` y
+`renderVanLocations()`) se renombro a `VAN_MAP_COLORS`; el array de 25.3
+(`vanColor()`) se dejo como estaba. Test actualizado para buscar el nombre
+nuevo.
