@@ -340,7 +340,10 @@
       </div>
 
       <div class="card">
-        <div class="card-hdr"><div><div class="card-title">All bookings</div><div class="card-sub" id="bk-sub">Loading from Supabase...</div></div></div>
+        <div class="card-hdr">
+          <div><div class="card-title">All bookings</div><div class="card-sub" id="bk-sub">Loading from Supabase...</div></div>
+          <button data-action="open-admin-create-booking" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">+ New booking</button>
+        </div>
         <div class="card-body tbl-scroll" style="overflow-x:auto">
           <table class="tbl">
             <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Suburb</th><th>Van</th><th>Status</th><th>Total</th><th>Actions</th></tr></thead>
@@ -388,6 +391,72 @@
           <button style="padding:16px;border:2px solid var(--amber);border-radius:10px;background:var(--amber-lt);color:var(--amber);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-7">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
         </div>
         <button style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-8">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Admin manual booking modal (docs/PENDIENTES.md 25.5) - for a phone-in
+         customer. Doesn't charge: the mechanic collects payment on completion,
+         same as the existing cash-settled path. -->
+    <div id="admin-create-booking-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:16px;padding:24px;width:420px;max-width:100%;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">New booking (phone-in)</div>
+
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Client name</div>
+          <input type="text" id="acb-name" class="inp" aria-label="Client name">
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Phone</div>
+            <input type="tel" id="acb-phone" class="inp" aria-label="Phone">
+          </div>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Email (optional)</div>
+            <input type="email" id="acb-email" class="inp" aria-label="Email">
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Address</div>
+          <input type="text" id="acb-address" class="inp" aria-label="Address">
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Service</div>
+          <select id="acb-service" class="inp" aria-label="Service"><option value="">Loading...</option></select>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Date</div>
+            <input type="date" id="acb-date" class="inp" aria-label="Date">
+          </div>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Time</div>
+            <select id="acb-time" class="inp" aria-label="Time">
+              <option value="08:00">8:00 AM</option>
+              <option value="09:00">9:00 AM</option>
+              <option value="10:00">10:00 AM</option>
+              <option value="11:00">11:00 AM</option>
+              <option value="12:00">12:00 PM</option>
+              <option value="13:00">1:00 PM</option>
+              <option value="14:00">2:00 PM</option>
+              <option value="15:00">3:00 PM</option>
+              <option value="16:00">4:00 PM</option>
+              <option value="17:00">5:00 PM</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Van</div>
+          <select id="acb-van" class="inp" aria-label="Van">
+            <option value="">Auto-detect from address</option>
+            <option value="1">Van 1 - Inner West</option>
+            <option value="2">Van 2 - North Shore</option>
+          </select>
+        </div>
+        <div id="acb-error" style="display:none;font-size:12px;color:var(--red);margin-bottom:12px"></div>
+        <div style="display:flex;gap:10px">
+          <button data-action="acb-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Create booking</button>
+          <button data-action="acb-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -1479,5 +1548,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=21f681b0cf"></script>
+<script src="js/admin.js?v=07155459f7"></script>
 </body></html>
