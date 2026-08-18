@@ -391,6 +391,39 @@
       </div>
     </div>
 
+    <!-- Admin reschedule modal (docs/PENDIENTES.md 25.4) - before this, only
+         the client could move their own booking. -->
+    <div id="admin-reschedule-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+      <div style="background:var(--white);border-radius:16px;padding:24px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Reschedule booking</div>
+        <input type="hidden" id="admin-resched-booking-id">
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">New date</div>
+          <input type="date" id="admin-resched-date" class="inp" aria-label="New date">
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">New time</div>
+          <select id="admin-resched-time" class="inp" aria-label="New time">
+            <option value="08:00">8:00 AM</option>
+            <option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="17:00">5:00 PM</option>
+          </select>
+        </div>
+        <div id="admin-resched-error" style="display:none;font-size:12px;color:var(--red);margin-bottom:12px"></div>
+        <div style="display:flex;gap:10px">
+          <button data-action="admin-resched-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Reschedule</button>
+          <button data-action="admin-resched-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Booking detail modal - opened from the Calendar (Month/Week/Day chips) and
          from a Bookings-table row. Before this, both just dumped you on the flat
          list with no way back to the one booking you clicked. -->
@@ -1446,5 +1479,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=110ef73335"></script>
+<script src="js/admin.js?v=21f681b0cf"></script>
 </body></html>

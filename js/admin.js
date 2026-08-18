@@ -406,6 +406,12 @@ document.addEventListener('click', function (e) {
     case 'delete-contact':
       deleteContact(d.id);
       break;
+    case 'admin-resched-confirm':
+      submitAdminReschedule();
+      break;
+    case 'admin-resched-close':
+      closeAdminReschedule();
+      break;
     case 'view-booking':
       openBookingDetail(d.id);
       break;
@@ -2826,6 +2832,7 @@ function renderBookingsTable(data) {
         ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:var(--purple);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
         ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
+        ${!isCancelled ? `<button data-bk-action="reschedule" data-id="${b.id}" data-date="${b.scheduled_date || ''}" style="background:var(--amber-lt);color:var(--amber);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Reschedule</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:var(--red);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
       </td>
     </tr>`;
@@ -2845,6 +2852,7 @@ function renderBookingsTable(data) {
       if (action === 'confirm') confirmBookingAdmin(btn.dataset.id);
       else if (action === 'chat') openAdminChat(btn.dataset.id, btn.dataset.name);
       else if (action === 'track') copyTrackLink(btn.dataset.token);
+      else if (action === 'reschedule') openAdminReschedule(btn.dataset.id, btn.dataset.date);
       else if (action === 'cancel') openCancel(btn.dataset.id);
     });
   }
@@ -2924,6 +2932,61 @@ async function doReassign(vanNum) {
   document.getElementById('reassign-modal').style.display = 'none';
   applyBookingFilters();
   showToast(`Reassigned to Van ${vanNum} ✓`);
+}
+
+// ── ADMIN RESCHEDULE (docs/PENDIENTES.md 25.4) ─────────────────────────────
+function openAdminReschedule(id, currentDate) {
+  document.getElementById('admin-resched-booking-id').value = id;
+  document.getElementById('admin-resched-date').value = currentDate || '';
+  document.getElementById('admin-resched-time').selectedIndex = 0;
+  const err = document.getElementById('admin-resched-error');
+  err.style.display = 'none';
+  err.textContent = '';
+  document.getElementById('admin-reschedule-modal').style.display = 'flex';
+}
+
+function closeAdminReschedule() {
+  document.getElementById('admin-reschedule-modal').style.display = 'none';
+}
+
+async function submitAdminReschedule() {
+  const id = document.getElementById('admin-resched-booking-id').value;
+  const scheduled_date = document.getElementById('admin-resched-date').value;
+  const scheduled_time = document.getElementById('admin-resched-time').value;
+  const errEl = document.getElementById('admin-resched-error');
+  errEl.style.display = 'none';
+  if (!scheduled_date) {
+    errEl.textContent = 'Pick a date.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const btn = document.querySelector('[data-action="admin-resched-confirm"]');
+  btn.disabled = true;
+  btn.textContent = 'Rescheduling...';
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-reschedule',
+        access_token: await adminAccessToken(),
+        booking_id: id,
+        scheduled_date,
+        scheduled_time,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Could not reschedule');
+    closeAdminReschedule();
+    applyBookingFilters();
+    showToast('✅ Booking rescheduled');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Reschedule';
+  }
 }
 
 // ── BOOKING DETAIL ───────────────────────────────────────────────────────────

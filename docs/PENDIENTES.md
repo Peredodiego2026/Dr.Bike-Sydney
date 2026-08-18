@@ -5504,3 +5504,37 @@ archivo y ejecutada de verdad, no solo buscada en el texto).
 **No verificado en navegador** (mismo limite de siempre: `admin.html`
 necesita `/api/auth`, no corre en servidor estatico local) - falta que
 Diego lo vea en produccion.
+
+## 26. El admin puede reprogramar una reserva (18-ago-2026)
+
+Parte de la lista pedida por Diego comparando contra software de servicio de
+campo (ver seccion 25, mergeada por separado - misma iniciativa, PR aparte a
+proposito). Solo el cliente podia mover su propia reserva; no habia ningun
+camino de admin para "mover este trabajo a otro horario".
+
+**De paso, un agujero que ni el reschedule del cliente tenia cerrado:**
+ninguno de los dos - ni el viejo del cliente ni el nuevo del admin -
+consultaba `availability` antes de mover una reserva. `handleCreateBooking`
+ya rechaza una reserva NUEVA contra un horario bloqueado (21.8), pero mover
+una YA EXISTENTE a ese mismo horario bloqueado no pasaba por el mismo
+chequeo. Mismo agujero, puerta distinta.
+
+**Arreglado con un refactor, no una segunda copia.** `rescheduleBookingCore()`
+nueva en `api/auth.js`: precio/callout fee recalculado para la fecha nueva
+(igual que antes), mas el chequeo de `isSlotBlocked()` que faltaba, mas el
+choque de `bookings_unique_slot` (23505) que ya existia. La usan los dos:
+`handleClientReschedule` (dueño de la reserva) y `handleAdminReschedule`
+(nueva, autenticada con `verifyAdminSession` - mismo patron que el resto de
+`admin-*`, sin filtro de `client_id` porque un admin puede mover cualquiera).
+
+Boton "Reschedule" nuevo en la tabla de Bookings, modal con fecha + hora.
+
+8 tests nuevos en `tests/unit/admin-reschedule.test.js` (por texto - la
+funcion compartida hace `fetch()` real, se prueba lo mismo que ya se prueba
+en el resto del archivo: que la logica sin red este ahi, no se mockea la
+red entera). `isSlotBlocked` en si ya tiene sus propios tests de ejecucion
+real en `availability-blocks.test.js`, no se repiten aca.
+
+**No verificado en produccion:** ni el reschedule del cliente ni el del
+admin se probaron contra la base real todavia - queda para el TEST FINAL
+(seccion 23) o antes si Diego quiere probarlo suelto.
