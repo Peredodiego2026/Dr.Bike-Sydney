@@ -5453,3 +5453,54 @@ Corregido en el texto de arriba.
 **Verificado, no una promesa:** `npm run check`, `npm run lint` (0 errores)
 y `npx vitest run` (367 tests) corridos contra los arreglos de esta seccion,
 no solo contra los de la 24 original.
+
+## 25. Gestion de reservas desde el calendario (18-ago-2026)
+
+Diego pidio comparar el calendario del admin contra software de servicio de
+campo real (Jobber, Housecall Pro, ServiceM8) y cerrar los huecos que
+importan para ordenar reservas, **sin** arrastrar-y-soltar (queda afuera a
+proposito, se evalua mas adelante). Se hace en varios PRs chicos en vez de
+uno grande, cada uno mergeable solo.
+
+### 25.1 Click en una reserva ahora abre su ficha, no la lista completa
+
+Antes: clickear un chip del calendario (Month/Week/Day) o una fila del feed
+del Dashboard mandaba a la pagina de Bookings entera, sin filtrar ni
+resaltar cual reserva era - habia que buscarla de nuevo a mano.
+
+**Arreglado.** Modal nuevo `#booking-detail-modal`: servicio, fecha, hora,
+direccion, van (con punto de color), telefono/email (click-to-call /
+mailto), desglose de precio, motivo de cancelacion si aplica. Reutiliza las
+funciones que ya existian (`confirmBookingAdmin`, `openAdminChat`,
+`copyTrackLink`, `openCancel`) - no duplica logica.
+
+`openBookingDetail(id)` busca primero en `allBookings` (el cache de la
+pagina de Bookings); si no esta ahi - el caso normal viniendo del
+calendario, que solo carga el rango de fechas visible - lo trae con un
+`select` por id.
+
+### 25.2 Reasignar van: la funcion ya existia, no la llamaba nadie
+
+`openReassign()` y su modal estaban completos en el codigo desde antes, pero
+**ningun boton en toda la app los llamaba** - codigo muerto. Ahora hay un
+boton "Reassign van" en la ficha nueva de 25.1 que lo abre.
+
+### 25.3 Color por van en el calendario
+
+Las 3 vistas coloreaban por status (pending/confirmed/etc), nunca por van -
+con 2 vans y creciendo, un vistazo no decia cual estaba mas cargada. Punto
+de color nuevo (`vanColor()`, paleta de 4 tokens que rota si algun dia hay
+mas de 4 vans) junto al horario en Month, y en el label "Van N" de Week/Day.
+No reemplaza el color de status, que sigue significando lo mismo que
+siempre.
+
+**Verificado:** `npm run check` (incluye `color-check`: los botones nuevos
+usan `var(--purple-lt)`/`var(--blue-lt)`/`var(--red-lt)`, no hex a mano -
+los que ya existian en la tabla de Bookings no se tocaron, quedan como
+deuda de otro dia) y `npx vitest run`, 390/390 (10 tests nuevos en
+`tests/unit/booking-detail.test.js`, incluye `vanColor()` extraida del
+archivo y ejecutada de verdad, no solo buscada en el texto).
+
+**No verificado en navegador** (mismo limite de siempre: `admin.html`
+necesita `/api/auth`, no corre en servidor estatico local) - falta que
+Diego lo vea en produccion.
