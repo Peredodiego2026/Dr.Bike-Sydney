@@ -314,6 +314,9 @@ document.addEventListener('click', function (e) {
     case 'run-orphan-audit':
       runOrphanAudit();
       break;
+    case 'unblock-selected':
+      unblockSelected();
+      break;
     case 'unblock-date':
       unblockDate();
       break;
@@ -1749,8 +1752,9 @@ function openBlockModal() {
         </div>
         <div style="display:flex;gap:10px;margin-top:4px">
           <button data-action="save-blocks" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
-          <button data-action="unblock-date" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid var(--red-edge);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock all</button>
+          <button data-action="unblock-selected" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid var(--red-edge);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock selected</button>
         </div>
+        <button data-action="unblock-date" style="background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans);text-decoration:underline;padding:2px;text-align:center">Unblock every slot for this date instead</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -1807,6 +1811,45 @@ async function saveBlocks() {
   document.getElementById('block-modal').remove();
   showToast(
     `✅ ${slots.length} slot${slots.length > 1 ? 's' : ''} blocked for ${new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`
+  );
+  loadCalendar();
+}
+
+// Diego found this in production (18-ago-2026): the only unblock button
+// deleted every blocked slot for the date/van, even if he only meant to
+// free up 1 or 2. Wanted almost every time - `unblockDate()` below is now
+// the rare/explicit path, kept for "actually clear the whole date".
+async function unblockSelected() {
+  const van = parseInt(document.getElementById('block-van').value);
+  const date = document.getElementById('block-date').value;
+  const slots = [...document.querySelectorAll('#block-slots input:checked')].map((cb) => cb.value);
+  if (!date) {
+    showToast('Pick a date');
+    return;
+  }
+  if (!slots.length) {
+    showToast('Select at least one slot to unblock');
+    return;
+  }
+
+  // Same column/van semantics as saveBlocks and unblockDate.
+  let q = sb
+    .from('availability')
+    .delete()
+    .eq('date', date)
+    .eq('available', false)
+    .in('time_slot', slots);
+  if (van) q = q.eq('van_number', van);
+
+  const { error } = await q;
+  if (error) {
+    showToast('Error: ' + error.message);
+    return;
+  }
+
+  document.getElementById('block-modal').remove();
+  showToast(
+    `✅ ${slots.length} slot${slots.length > 1 ? 's' : ''} unblocked for ${new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`
   );
   loadCalendar();
 }
