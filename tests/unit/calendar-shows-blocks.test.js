@@ -116,3 +116,43 @@ describe('Prev/Next en Day view - el snap a lunes solo aplica a Week', () => {
     expect(nextFn).toMatch(/loadCalendar\(\);/);
   });
 });
+
+describe('fitMonthGrid - Diego (21-ago-2026): 6 semanas quedaban un poco mas altas que la pantalla, la pagina entera scrolleaba un poco para llegar a la ultima', () => {
+  const adminHtml = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'admin.html'),
+    'utf8'
+  );
+
+  it('el grid del mes tiene id propio y filas flexibles (1fr), no solo min-height fijo', () => {
+    expect(admin).toMatch(/id="cal-month-grid"/);
+    expect(admin).toMatch(/grid-auto-rows:1fr/);
+  });
+
+  it('fitMonthGrid mide lo que sobra debajo de la barra y le da esa altura al grid', () => {
+    const fn = grab(/function fitMonthGrid\(\) \{[\s\S]*?\n\}/, 'fitMonthGrid');
+    expect(fn).toMatch(/window\.innerHeight - grid\.getBoundingClientRect\(\)\.top/);
+  });
+
+  it('tiene un piso minimo - una ventana muy chica no debe aplastar las celdas a nada', () => {
+    const fn = grab(/function fitMonthGrid\(\) \{[\s\S]*?\n\}/, 'fitMonthGrid');
+    expect(fn).toMatch(/Math\.max\(available, 320\)/);
+  });
+
+  it('no hace nada si la vista activa no es Month (no tiene sentido medir un grid que no existe)', () => {
+    const fn = grab(/function fitMonthGrid\(\) \{[\s\S]*?\n\}/, 'fitMonthGrid');
+    expect(fn).toMatch(/calView !== 'month'/);
+  });
+
+  it('se llama despues de pintar el grid del mes', () => {
+    const fnLoad = grab(/async function loadCalendar\(\) \{[\s\S]*?\n\/\/ ── ADMIN CHAT/, 'loadCalendar');
+    expect(fnLoad).toMatch(/grid\.innerHTML = html;\s*\n\s*fitMonthGrid\(\);/);
+  });
+
+  it('se re-mide si la ventana cambia de tamaño, no solo al cargar', () => {
+    expect(admin).toMatch(/window\.addEventListener\('resize', function \(\) \{[\s\S]*?fitMonthGrid/);
+  });
+
+  it('#cal-grid tiene overflow-y:auto como red de seguridad para una ventana muy chica - scroll contenido, no la pagina entera', () => {
+    expect(adminHtml).toMatch(/id="cal-grid" style="overflow-x:auto;overflow-y:auto"/);
+  });
+});
