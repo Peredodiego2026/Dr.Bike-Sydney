@@ -3,3 +3,8 @@ node_modules/
 dist/
 *.min.js
 package-lock.json
+# Extracted byte-for-byte from landing.html's inline <script> tags (3.2), never
+# run through prettier - includes a vendor snippet (PostHog) whose own comment
+# says not to rewrite it. A pre-commit prettier --write on it reformats the
+# whole 2000-line file for a one-line change; same trap js/admin.js already hit.
+js/landing-inline.js

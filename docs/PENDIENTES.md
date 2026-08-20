@@ -388,17 +388,89 @@ montarlo en CI.
 
 ## 4. Traducciones (el mecanismo ya esta decidido)
 
-### 4.1 `business.html` (79 strings) y `bike-check.html` (63)
+### 4.1 `business.html` y `bike-check.html` - CERRADO 2026-08-17
 
-Siguen 100% en ingles. **Mecanismo decidido, no rediscutir:** NO convertirlas en
-templates como el generador de suburbios. Se deja el archivo ingles como fuente y
-se escribe un script que emita `/es/<page>.html` y `/zh/<page>.html` reemplazando
-frases enteras desde un diccionario por pagina (mismo enfoque que
-`api/_email-i18n.js`: son bloques de prosa entre tags, el swap por fragmento es
-seguro), y que inyecte `hreflang`, `<html lang>` y las entradas del sitemap.
-Sumar las URLs nuevas a la lista de rewrites de `vercel.json`.
+Estaban 100% en ingles. `scripts/translate-static-pages.mjs` (nuevo,
+`npm run static-pages:translate`) hace exactamente lo que este punto pedia:
+NO son templates como el generador de suburbios, el ingles sigue siendo la
+fuente, y un diccionario por pagina reemplaza fragmentos de prosa completos
+(mismo enfoque que `api/_email-i18n.js`) sobre el HTML ya renderizado -
+markup, JS inline, precios y URLs no se tocan. 142 strings reales entre las
+dos paginas (no 79+63: ese numero doble-contaba placeholders repetidos como
+"1-4 bikes", que en el HTML real es una sola cadena usada dos veces).
 
-~284 traducciones entre las dos paginas.
+**Cada clave se verifica contra el HTML antes de escribir nada** - si una ya
+no matchea (typo, o el ingles cambio debajo), el script corta en vez de
+publicar esa frase en ingles en silencio. Mismo principio que el 22.1, pero
+para copy en vez de formato de hora.
+
+`hreflang` + `<html lang>` se inyectan en **las 3** versiones, incluida la
+inglesa (`business.html`/`bike-check.html` no tenian ninguno antes de esto):
+sin eso Google nunca hubiera encontrado las traducciones desde la pagina en
+ingles. `vercel.json` ya tenia las rutas `/es|zh/<suburbio>` - se sumaron
+`business` y `bike-check` a esa misma lista. El sitemap se resolvio en
+`scripts/generate-suburb-pages.mjs` (que ya lo regenera) en vez de un
+segundo escritor separado: `business`/`bike-check` tenian una entrada unica
+en ingles sin alternates, ahora emiten las 3 como una tabla de suburbio mas
+(`TRANSLATED_STATIC_PAGES`), sin dos scripts peleando por el mismo archivo.
+
+**Encontrado al escribirlo, no al usarlo:** el script propio de este punto no
+es idempotente si se corre dos veces seguidas sin querer - la segunda corrida
+lee su propia salida anterior (el archivo ingles es fuente Y destino) y
+duplicaba el bloque de `hreflang`. Se probo corriendolo 3 veces seguidas
+antes de darlo por bueno; ahora normaliza el bloque antes de reinyectarlo,
+tolerando tambien CRLF (`git core.autocrlf=true` en este repo entrega los
+archivos con CRLF en Windows aunque esten en LF en el commit).
+
+**Un hallazgo real de la traduccion, no del mecanismo:** la primera pasada
+uso "service" sin traducir en 3 frases de `bike-check.html` ("un service
+profesional"), inconsistente con el resto del proyecto que siempre usa
+"servicio". Se probo el quiz completo (los 4 resultados: rojo, amarillo x2,
+amarillo x1, verde) en un navegador real con `answer()` llamado a mano, no
+solo leyendo el diccionario - ahi aparecio tambien un CTA
+("Call 0433 963 250", armado en JS para el resultado rojo) que se habia
+quedado sin traducir en las dos primeras pasadas por revisar el HTML estatico
+y no las cadenas que arma `showResult()` en tiempo de ejecucion.
+
+**Segundo hallazgo del mismo tipo, en el rebase del 2026-08-18:** la barra de
+progreso del quiz (`answer()`) armaba `'Question '+(q+1)+' of 5'` por
+concatenacion - el diccionario SI tenia las 5 variantes completas
+("Question 1 of 5".."Question 5 of 5") traducidas en es y zh, pero como
+`translate-static-pages.mjs` reemplaza fragmentos que aparecen literales en
+el HTML ya renderizado, y ese texto nunca aparece completo en el archivo
+fuente (esta partido en 3 pedazos por el `+`), esas 5 entradas nunca
+matcheaban - un visitante es/zh veia "Question 2 of 5" en ingles en medio
+de una pagina traducida. Mismo defecto que el boton "Get Started -" de la
+3.2, causa distinta: alli el mecanismo de runtime (`translateValue` +
+`MutationObserver`) SI lo hubiera resuelto porque ya tenia las 3 variantes
+de precio reales matriculadas; aca no hay mecanismo de runtime - la pagina
+se traduce una sola vez, en build. `'Complete!'` tampoco tenia entrada en el
+diccionario, mismo sintoma. Arreglado en el fuente ingles: un array
+`progressLabels` con las 5 frases completas (para que existan literales en
+el HTML y el diccionario las pueda matchear) en vez de la concatenacion, mas
+la entrada de diccionario que faltaba para `'Complete!'`. Verificado
+llamando a `answer()` a mano en un navegador real, es y zh: "Pregunta 2 de
+5" / "第 2 题，共 5 题" y "¡Completo!" / "完成！".
+
+**Efecto de lado, no planeado:** correr `npm run suburbs:generate` para
+regenerar el sitemap tambien reescribio las 60 paginas de suburbio -
+revirtiendo `var(--gray)`/`var(--border)`/`var(--green)` a hex literal,
+porque la plantilla del generador nunca se actualizo cuando esas 60 paginas
+se convirtieron a tokens. Se descartaron esas 60 reescrituras
+(`git checkout`) antes de commitear; el generador en si seguia con hex viejo
+en su propia plantilla, sin tocar en este PR - quedo anotado aparte.
+
+**Ya arreglado, 2026-08-18.** El PR #285 (sesion aparte) corrigio la
+plantilla del generador antes de que este punto llegara a mergearse -
+correr `npm run suburbs:generate` ahora reproduce las 60 paginas byte a
+byte (0 lineas de diff, solo fin de linea LF/CRLF). Este punto se rehizo
+sobre esa base: `TRANSLATED_STATIC_PAGES` y `BLOG_SLUGS` conviven en el
+mismo `sitemap()` sin pisarse, `GENERATED_BUDGET` recalculado a 3549 con
+la metodologia de placeholder (nunca a mano). La rama original de este
+punto (`feat/business-bikecheck-translations`, PR #280) se abrio antes de
+la 3.2 (PR #291) y antes del #285 - conflicto real al intentar mergearla
+hoy, asi que se rehizo entera sobre `main` actual en vez de resolverla a
+mano. **Cerrar #280 sin mergear.**
 
 ### 4.2 Los 5 posts del blog - CERRADO 2026-08-17
 
@@ -4358,18 +4430,25 @@ la pestaña nueva y no una recarga mas.
 elementos huerfanos de la misma unificacion del 04-jul. Se busco `getElementById`
 sin elemento **solo** para este caso, no en toda la pagina.
 
-**Hecho, 2026-08-17 - CERRADO, sin hallazgos nuevos.** Se corrio el barrido
-completo: los 107 `getElementById(...)` distintos de `landing.html` contra
-cada `id="..."` (estatico o asignado por JS con `.id =`) del mismo archivo.
-4 huerfanos, los 4 ya conocidos y ya en una rama en curso: `diag-photo`,
-`diag-result`, `diag-text` (las funciones "AI Diagnosis", `runAIDiagnosis` /
-`runAIDiagnosisText` / `showDiagResult`, todas con guardas `if (!el) return`
-- no rompen, solo no hacen nada) y `bk-services-list`, usado por
-`autoSelectService()` - que ademas no tiene NINGUN caller en todo el
-archivo, ya muerta por partida doble. Las 4 caen dentro del mismo cluster
-que el PR #277 ("borra el AI Diagnosis muerto de landing.html") ya esta
-sacando - no se toco `landing.html` aca a proposito, para no pisar esa
-rama. No aparecio ningun huerfano fuera de ese cluster.
+**Revisado el 2026-08-17, CERRADO - dos sesiones en paralelo llegaron al
+mismo hallazgo por separado** (ver mas abajo, PR #277). Se comparo cada
+`getElementById(...)` / `querySelector('#...')` de `landing.html` contra cada
+`id="..."` que la pagina realmente declara (literal, `.id =` dinamico y
+`setAttribute('id', ...)`). Un solo cluster real, **no relacionado con el
+04-jul** - es mas viejo, de la version standalone que `landing.html` tenia de
+"AI Diagnosis" antes de que ese feature se reconstruyera dentro de
+`js/app.js` (`runAIDiagnosis`/`runAIDiagnosisText`/`showDiagResult`/
+`autoSelectService`, todavia vivas ahi con la misma firma pero recibiendo
+`screen` como primer argumento). La version de `landing.html` buscaba
+`#diag-photo`, `#diag-text`, `#diag-result` y `#bk-services-list`, ninguno de
+los cuatro existe en su HTML, y ninguna de las 4 funciones tenia un solo
+llamador. Muerto en el mismo sentido que el flujo `bk-` de la 10.3: codigo
+que quedo cuando el HTML que lo activaba se saco por otro lado. Borrado (79
+lineas). No se toco `js/i18n.js`: las cadenas de copy que usaba esa version
+tambien las usa la de `js/app.js`, que sigue viva. **Nota del rebase
+(17-ago):** para cuando este PR se actualizo contra `main`, el punto 3.2 ya
+habia movido este mismo bloque de `landing.html` a `js/landing-inline.js` -
+el borrado se aplico ahi, no en `landing.html`.
 
 ## 18. Auditoria de Analytics (2026-08-11), lo que quedo sin arreglar
 
@@ -5241,7 +5320,7 @@ y 23.4 tambien - no hace falta repetir la prueba dos veces.
 | 10.1 | ~~El chequeo de i18n no mira dentro de los `<script>` inline de `landing.html`~~ **MOOT 2026-08-18** - esos scripts ya no son inline (3.2); el agujero angosto de fondo (regex, no AST) sigue sin cerrar, ver seccion 10.1 propia | Codigo, no trivial |
 | 10.2 | ~~Cancelar/reprogramar... `confirm()`/`prompt()` nativos~~ **CERRADO 2026-08-17**, ver seccion 10.2 propia | Codigo, feature aparte |
 | 10.4 | ~~`docs/mockups/` es publico...~~ **Nunca fue un bug real - CERRADO desde el 2026-08-01**, `.vercelignore` ya lo tapaba. Error del audit original, no de codigo | Codigo, movimiento simple |
-| 4.1 / 4.2 | `business.html`, `bike-check.html` y los 5 posts del blog siguen 100% en ingles | **En progreso** - 3 PRs abiertas al 17-ago (#280, #281, #282), Prioridad Baja |
+| 4.1 / 4.2 | ~~`business.html`, `bike-check.html` y los 5 posts del blog siguen 100% en ingles~~ **4.2 CERRADO** (#282, mergeado). **4.1 rehecho** (#280 quedo obsoleto por conflicto con la 3.2 - reemplazado por otro PR sobre `main` actual, ver seccion 4.1 propia) | Diego, merge |
 | 5.2 | Prueba de carga nunca se corrio (necesita staging, no produccion) | Codigo + infraestructura |
 | 5.4 | Secretos sin usar en Vercel (`MAPBOX_TOKEN`, `GOOGLE_PLACES_API_KEY`, `POSTHOG_KEY`) | Diego, borrar del dashboard |
 | 9.5-bis | Un iPhone en "modo escritorio" / iPad recibe la landing, no la app - riesgo de loop si se arregla mal | Diego decide |
@@ -5325,6 +5404,34 @@ En `docs/RUNBOOK-SQL.md` seccion 0 hay tres pruebas de mundo real anotadas el
 10-ago y nunca tachadas: una reserva sin iniciar sesion de punta a punta, la
 pagina de seguimiento mostrando ETA en una reserva nueva, y el simulacro de
 restauracion del backup. **Siguen abiertas.** Van en la misma tanda.
+
+### 23.5 Gestion de reservas del calendario (PRs #287-#297, 18/21-ago-2026) - Diego decidio dejarlas para cuando haga una reserva de pago real de prueba
+
+Todo lo de las secciones 21.11 y 25-28 esta mergeado y en produccion, pero
+**nada de esto se probo contra la base real todavia.** Diego pidio dejarlo
+anotado aca en vez de probarlo suelto, para hacerlo junto con el proximo
+booking de pago real (los ultimos items de 23.1 lo necesitan de cualquier
+forma, asi que conviene una sola pasada):
+
+- [ ] **Tooltip del calendario (21.11).** Month view, pasar el cursor sobre
+      el badge "N blocked": tiene que caer en el dia correcto y mostrar
+      horario + van + motivo.
+- [ ] **Calendario sin scroll (PR #297).** Abrir Admin > Calendar en Month:
+      las 6 semanas tienen que verse enteras sin que la pagina scrollee.
+- [ ] **Ficha de reserva (25.1-25.3).** Click en una reserva (calendario o
+      tabla de Bookings) abre la ficha; "Reassign van" cambia la van de
+      verdad; el punto de color coincide con la van.
+- [ ] **Reprogramar desde el admin (26).** Boton "Reschedule" en la tabla,
+      mover una reserva real a otra fecha/hora.
+- [ ] **Crear reserva a mano (27).** Botón "+ New booking", cargar una
+      reserva de telefono de prueba. Confirmar que NO cobra (el mecanico
+      cobra al terminar) y que si se carga un email llega la confirmacion.
+- [ ] **Mapa en vivo de vans (28).** Vans & Mechanics, confirmar que se ven
+      los pines 🚐 de las 2 vans (si `mechanic_locations` no tiene una fila
+      reciente el mapa queda vacio de forma legitima, no es bug).
+- [ ] **Unblock selected (PR #296).** Block availability, tildar 1-2
+      horarios ya bloqueados y confirmar que "Unblock selected" libera solo
+      esos, no el dia entero.
 
 ---
 
