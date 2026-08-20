@@ -272,6 +272,11 @@ function byId(id) {
   byId('mech-profile-modal-photo-file').addEventListener('change', function (event) {
     previewMechProfilePhoto(this);
   });
+  let resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(fitMonthGrid, 150);
+  });
 })();
 
 // Sidebar / quick-action / mobile-nav page navigation - all converted from
@@ -6763,6 +6768,23 @@ function calDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// Diego (21-ago-2026): the month grid's day cells sized to their own content
+// (min-height:80px each), so 6 weeks usually added up a bit taller than the
+// viewport - the whole document scrolled a few pixels to reach the last row,
+// sidebar included. #cal-grid now takes exactly the room left below the
+// toolbar and #cal-month-grid fills it (grid-auto-rows:1fr), so 6 rows land
+// inside one screen on a normal window. #cal-grid keeps overflow-y:auto
+// (admin.html) as the fallback for a window too short even at the row floor,
+// so a small window gets a contained scrollbar instead of the whole page
+// moving again.
+function fitMonthGrid() {
+  const grid = document.getElementById('cal-grid');
+  const monthGrid = document.getElementById('cal-month-grid');
+  if (!grid || !monthGrid || calView !== 'month') return;
+  const available = window.innerHeight - grid.getBoundingClientRect().top - 24;
+  grid.style.height = Math.max(available, 320) + 'px';
+}
+
 async function loadCalendar() {
   const grid = document.getElementById('cal-grid');
   if (!grid) return;
@@ -6817,7 +6839,7 @@ async function loadCalendar() {
     const dow = startDate.getDay();
     startDate.setDate(startDate.getDate() - (dow === 0 ? 6 : dow - 1));
     let html =
-      '<div style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-width:560px">';
+      '<div id="cal-month-grid" style="display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto;grid-auto-rows:1fr;height:100%;border:1px solid var(--border);border-radius:12px;overflow:hidden;min-width:560px">';
     ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((d) => {
       html += `<div style="padding:8px 4px;text-align:center;background:var(--off);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--mgray);text-transform:uppercase">${d}</div>`;
     });
@@ -6863,6 +6885,7 @@ async function loadCalendar() {
     }
     html += '</div>';
     grid.innerHTML = html;
+    fitMonthGrid();
     return;
   }
 
