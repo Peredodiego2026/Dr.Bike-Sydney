@@ -318,6 +318,32 @@ estructurados, no codigo) que el CSP igual exige permitir sin nonce/hash. No
 es trabajo de esta tarea - queda anotado para cuando alguien decida meterle
 nonce al CSP.
 
+**Bug real encontrado en una revision posterior al merge, 2026-08-18 -
+CERRADO.** Esta tarea sacaba codigo inline de `landing.html` (servido
+NETWORK FIRST por `sw.js`, nunca queda viejo) y lo movia a
+`js/landing-inline.js`/`js/landing-modules.js` (dos archivos `.js` reales,
+que `sw.js` sirve CACHE FIRST). Los `<script src=...>` que los cargan se
+escribieron sin `?v=` - exactamente el caso que el propio comentario de
+`sw.js` ya advertia ("give new scripts a `?v=` in the page - do not rely on
+this list"). Efecto real: cualquier browser que haya visitado `landing.html`
+despues de este PR y antes de este arreglo tiene esos dos archivos
+congelados para siempre, sin importar cuantos commits nuevos los toquen (el
+propio PR #294, que borra el cluster de AI Diagnosis de
+`js/landing-inline.js`, hubiera sido invisible para esos visitantes). No se
+detecto antes de mergear porque `npm run check` no tenia ningun chequeo
+sobre estos dos archivos todavia.
+
+Arreglado: `scripts/admin-assets-version-check.mjs` (que ya hacia este
+mismo trabajo para `admin.html`/`js/admin.js`/`css/admin.css`) se
+generalizo a `scripts/versioned-assets-check.mjs` y ahora cubre tambien
+`landing.html` + los 2 archivos nuevos. `?v=` es un hash del contenido de
+cada archivo, no una fecha a mano - `npm run check` falla solo si alguno de
+los dos cambia sin que el `?v=` se mueva. `sw.js` bump a v68 (documentado en
+su propio comentario de cabecera) para limpiar de una vez los archivos sin
+version que ya estan cacheados desde el deploy original de esta tarea -
+sin ese bump, el fix del `?v=` de aca en adelante no alcanza a los
+navegadores que ya visitaron la pagina antes de hoy.
+
 ### 3.3 Handlers inline que quedan - CERRADO 2026-08-16
 
 Los `onclick` ya se eliminaron todos (TASK-023). Faltaban
