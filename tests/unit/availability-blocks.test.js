@@ -211,6 +211,35 @@ describe('el panel escribe lo que el lector lee', () => {
   });
 });
 
+describe('unblockSelected - Diego encontro en produccion que "Unblock all" borraba todo, no solo lo tildado (18-ago-2026)', () => {
+  const src = readAdmin();
+
+  it('existe y filtra por los horarios tildados, no por la fecha entera', () => {
+    const fn = grabAdmin(/async function unblockSelected\(\) \{[\s\S]*?\n\}/, 'unblockSelected');
+    expect(fn).toMatch(/\.in\('time_slot', slots\)/);
+    expect(fn).toMatch(/\.eq\('available', false\)/);
+  });
+
+  it('pide al menos un horario tildado antes de borrar nada', () => {
+    const fn = grabAdmin(/async function unblockSelected\(\) \{[\s\S]*?\n\}/, 'unblockSelected');
+    expect(fn).toMatch(/if \(!slots\.length\)/);
+  });
+
+  it('respeta el mismo van_number que el resto del modulo (0 = todas las vans)', () => {
+    const fn = grabAdmin(/async function unblockSelected\(\) \{[\s\S]*?\n\}/, 'unblockSelected');
+    expect(fn).toMatch(/if \(van\) q = q\.eq\('van_number', van\);/);
+  });
+
+  it('el boton nuevo esta en el modal, y "Unblock all" sigue existiendo pero ya no es la opcion principal', () => {
+    expect(src.admin).toMatch(/data-action="unblock-selected"/);
+    expect(src.admin).toMatch(/data-action="unblock-date"/);
+  });
+
+  it('esta en el dispatcher de clicks', () => {
+    expect(src.admin).toMatch(/case 'unblock-selected':\s*\n\s*unblockSelected\(\);/);
+  });
+});
+
 // ── helpers ─────────────────────────────────────────────────────────────────
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
