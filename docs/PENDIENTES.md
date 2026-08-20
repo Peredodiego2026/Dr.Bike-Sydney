@@ -18,7 +18,7 @@
 |---|---|
 | `npm run check` | Verde - 38 archivos JS, i18n 1028 claves es/zh, 822 strings en 5 superficies |
 | `npx vitest run` | 380 tests, 36 archivos, 0 fallos |
-| PRs abiertas | 6 (#277, #280, #281, #285, #287, #288 - #282 ya mergeo. #285 es el fix del generador de suburbios, #287/#288 son calendario y ficha de reserva del admin, el resto sigue siendo Prioridad Baja) |
+| PRs abiertas | 0 al 2026-08-20. Las 6 de la fila anterior (#277, #280, #281, #285, #287, #288) ya se resolvieron: #277/#281/#285/#287/#288 mergeadas, #280 cerrada sin mergear (quedo obsoleta, ver 4.1). Sumar #298 (cache-busting de la 3.2, en revision) |
 
 El codigo esta sano. Lo que sigue no son bugs: son cosas sin hacer.
 
@@ -327,11 +327,11 @@ escribieron sin `?v=` - exactamente el caso que el propio comentario de
 `sw.js` ya advertia ("give new scripts a `?v=` in the page - do not rely on
 this list"). Efecto real: cualquier browser que haya visitado `landing.html`
 despues de este PR y antes de este arreglo tiene esos dos archivos
-congelados para siempre, sin importar cuantos commits nuevos los toquen (el
-propio PR #294, que borra el cluster de AI Diagnosis de
-`js/landing-inline.js`, hubiera sido invisible para esos visitantes). No se
-detecto antes de mergear porque `npm run check` no tenia ningun chequeo
-sobre estos dos archivos todavia.
+congelados para siempre, sin importar cuantos commits nuevos los toquen -
+el borrado del cluster de AI Diagnosis en `js/landing-inline.js` (ver 17.3
+mas abajo, commit `944f613`) hubiera sido invisible para esos visitantes
+tambien. No se detecto antes de mergear porque `npm run check` no tenia
+ningun chequeo sobre estos dos archivos todavia.
 
 Arreglado: `scripts/admin-assets-version-check.mjs` (que ya hacia este
 mismo trabajo para `admin.html`/`js/admin.js`/`css/admin.css`) se
