@@ -4332,18 +4332,25 @@ la pestaña nueva y no una recarga mas.
 elementos huerfanos de la misma unificacion del 04-jul. Se busco `getElementById`
 sin elemento **solo** para este caso, no en toda la pagina.
 
-**Hecho, 2026-08-17 - CERRADO, sin hallazgos nuevos.** Se corrio el barrido
-completo: los 107 `getElementById(...)` distintos de `landing.html` contra
-cada `id="..."` (estatico o asignado por JS con `.id =`) del mismo archivo.
-4 huerfanos, los 4 ya conocidos y ya en una rama en curso: `diag-photo`,
-`diag-result`, `diag-text` (las funciones "AI Diagnosis", `runAIDiagnosis` /
-`runAIDiagnosisText` / `showDiagResult`, todas con guardas `if (!el) return`
-- no rompen, solo no hacen nada) y `bk-services-list`, usado por
-`autoSelectService()` - que ademas no tiene NINGUN caller en todo el
-archivo, ya muerta por partida doble. Las 4 caen dentro del mismo cluster
-que el PR #277 ("borra el AI Diagnosis muerto de landing.html") ya esta
-sacando - no se toco `landing.html` aca a proposito, para no pisar esa
-rama. No aparecio ningun huerfano fuera de ese cluster.
+**Revisado el 2026-08-17, CERRADO - dos sesiones en paralelo llegaron al
+mismo hallazgo por separado** (ver mas abajo, PR #277). Se comparo cada
+`getElementById(...)` / `querySelector('#...')` de `landing.html` contra cada
+`id="..."` que la pagina realmente declara (literal, `.id =` dinamico y
+`setAttribute('id', ...)`). Un solo cluster real, **no relacionado con el
+04-jul** - es mas viejo, de la version standalone que `landing.html` tenia de
+"AI Diagnosis" antes de que ese feature se reconstruyera dentro de
+`js/app.js` (`runAIDiagnosis`/`runAIDiagnosisText`/`showDiagResult`/
+`autoSelectService`, todavia vivas ahi con la misma firma pero recibiendo
+`screen` como primer argumento). La version de `landing.html` buscaba
+`#diag-photo`, `#diag-text`, `#diag-result` y `#bk-services-list`, ninguno de
+los cuatro existe en su HTML, y ninguna de las 4 funciones tenia un solo
+llamador. Muerto en el mismo sentido que el flujo `bk-` de la 10.3: codigo
+que quedo cuando el HTML que lo activaba se saco por otro lado. Borrado (79
+lineas). No se toco `js/i18n.js`: las cadenas de copy que usaba esa version
+tambien las usa la de `js/app.js`, que sigue viva. **Nota del rebase
+(17-ago):** para cuando este PR se actualizo contra `main`, el punto 3.2 ya
+habia movido este mismo bloque de `landing.html` a `js/landing-inline.js` -
+el borrado se aplico ahi, no en `landing.html`.
 
 ## 18. Auditoria de Analytics (2026-08-11), lo que quedo sin arreglar
 
