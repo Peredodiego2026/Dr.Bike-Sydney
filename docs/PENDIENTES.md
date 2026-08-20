@@ -5379,6 +5379,34 @@ En `docs/RUNBOOK-SQL.md` seccion 0 hay tres pruebas de mundo real anotadas el
 pagina de seguimiento mostrando ETA en una reserva nueva, y el simulacro de
 restauracion del backup. **Siguen abiertas.** Van en la misma tanda.
 
+### 23.5 Gestion de reservas del calendario (PRs #287-#297, 18/21-ago-2026) - Diego decidio dejarlas para cuando haga una reserva de pago real de prueba
+
+Todo lo de las secciones 21.11 y 25-28 esta mergeado y en produccion, pero
+**nada de esto se probo contra la base real todavia.** Diego pidio dejarlo
+anotado aca en vez de probarlo suelto, para hacerlo junto con el proximo
+booking de pago real (los ultimos items de 23.1 lo necesitan de cualquier
+forma, asi que conviene una sola pasada):
+
+- [ ] **Tooltip del calendario (21.11).** Month view, pasar el cursor sobre
+      el badge "N blocked": tiene que caer en el dia correcto y mostrar
+      horario + van + motivo.
+- [ ] **Calendario sin scroll (PR #297).** Abrir Admin > Calendar en Month:
+      las 6 semanas tienen que verse enteras sin que la pagina scrollee.
+- [ ] **Ficha de reserva (25.1-25.3).** Click en una reserva (calendario o
+      tabla de Bookings) abre la ficha; "Reassign van" cambia la van de
+      verdad; el punto de color coincide con la van.
+- [ ] **Reprogramar desde el admin (26).** Boton "Reschedule" en la tabla,
+      mover una reserva real a otra fecha/hora.
+- [ ] **Crear reserva a mano (27).** Botón "+ New booking", cargar una
+      reserva de telefono de prueba. Confirmar que NO cobra (el mecanico
+      cobra al terminar) y que si se carga un email llega la confirmacion.
+- [ ] **Mapa en vivo de vans (28).** Vans & Mechanics, confirmar que se ven
+      los pines 🚐 de las 2 vans (si `mechanic_locations` no tiene una fila
+      reciente el mapa queda vacio de forma legitima, no es bug).
+- [ ] **Unblock selected (PR #296).** Block availability, tildar 1-2
+      horarios ya bloqueados y confirmar que "Unblock selected" libera solo
+      esos, no el dia entero.
+
 ---
 
 ## 24. Revision de las 6 PRs de Prioridad Media, ya mergeadas (16-ago-2026) - CERRADO, corregido en 24.1
