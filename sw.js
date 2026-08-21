@@ -1,3 +1,17 @@
+// v68 (2026-08-18, docs/PENDIENTES.md 3.2-cache): the 3.2 landing.html diet
+// (PR #291) moved ~2155 lines of inline <script> content out into two real
+// files, js/landing-inline.js and js/landing-modules.js, loaded with NO ?v=
+// at all. Before that PR the code was inline in landing.html itself, which
+// this file serves NETWORK FIRST (see below), so it was never stale; once it
+// became separate .js files this file's own STATIC_ASSETS comment applies to
+// them too ("give new scripts a ?v= in the page - do not rely on this
+// list") - cache-first with no version query meant they froze on any browser
+// that had already visited, from the PR's first deploy. landing.html now
+// loads both with a content-hash ?v= (scripts/versioned-assets-check.mjs
+// enforces it stays correct), but browsers that cached the un-versioned
+// files under the OLD cache name would never have picked that up on their
+// own - this bump is what actually clears them.
+//
 // v67 (#235): #223 replaced the "Ride Happy" step-4 icon with the real bike and
 // Diego kept seeing the old mangled SVG after a Ctrl+Shift+R. Bumping the cache
 // names is the right cure - activate() drops the old CACHE_PAGES, which is the
@@ -23,8 +37,8 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v67';
-const CACHE_PAGES  = 'drbike-pages-v67';
+const CACHE_STATIC = 'drbike-static-v68';
+const CACHE_PAGES  = 'drbike-pages-v68';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
 // too, without their query, and every one of those entries was dead weight:
