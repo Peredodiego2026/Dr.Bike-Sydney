@@ -499,6 +499,168 @@ async function loadLeaflet() {
   }
 }
 
+// ── "What's My Fee?" zone price checker ───────────────────────────────────────
+// Public, no login needed - same role:'zone-price' endpoint the desktop hero
+// button calls (js/landing-inline.js), so the two surfaces can never disagree
+// on a price. matchCalloutZone (api/auth.js) is the single source of truth
+// both go through.
+function feeCheckKeyframes() {
+  if (document.getElementById('fee-check-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'fee-check-styles';
+  s.textContent = '@keyframes feeCheckSpin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(s);
+}
+
+function feeCheckInputHtml() {
+  return `
+<h2 class="confirm-box__title">What's your suburb?</h2>
+<p class="confirm-box__msg">We'll check your call-out fee - takes 2 seconds.</p>
+<input type="text" class="fee-check-input" placeholder="e.g. Bondi, Parramatta, Cronulla..." style="width:100%;min-height:44px;margin-top:14px;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font-family);outline:none;box-sizing:border-box">
+<div class="fee-check-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px"></div>
+<div class="confirm-box__actions">
+  <button type="button" class="confirm-box__btn confirm-box__btn--cancel" data-act="close">Cancel</button>
+  <button type="button" class="confirm-box__btn confirm-box__btn--go fee-check-submit">Check My Fee</button>
+</div>`;
+}
+
+function feeCheckScanningHtml() {
+  feeCheckKeyframes();
+  return `
+<div style="text-align:center;padding:8px 0">
+  <div style="width:100px;height:100px;margin:0 auto 18px;position:relative;border-radius:50%">
+    <div style="position:absolute;inset:0;border-radius:50%;border:2px solid var(--blue-lt)"></div>
+    <div style="position:absolute;inset:16px;border-radius:50%;border:2px solid var(--blue-lt)"></div>
+    <div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg, var(--blue) 0deg, transparent 65deg);animation:feeCheckSpin 1.1s linear infinite"></div>
+    <div style="position:absolute;inset:7px;border-radius:50%;background:var(--white)"></div>
+    <div style="position:absolute;top:50%;left:50%;width:9px;height:9px;margin:-4.5px;border-radius:50%;background:var(--blue)"></div>
+  </div>
+  <div style="font-size:15px;font-weight:700;color:var(--navy)">Checking your area...</div>
+  <div style="font-size:13px;color:var(--gray);margin-top:4px">Comparing against our Sydney zones</div>
+</div>`;
+}
+
+function feeCheckResultHtml(zoneName, fee) {
+  return `
+<div style="text-align:center">
+  <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">${escapeHtml(zoneName)}</div>
+  <div class="fee-check-amount" style="font-size:44px;font-weight:900;color:var(--blue);line-height:1;font-variant-numeric:tabular-nums" data-target="${Number(fee)}">$0</div>
+  <p class="confirm-box__msg" style="margin-top:10px">Calculated from the distance to our base on the Northern Beaches - the same fee you'll see when you book.</p>
+</div>
+<div class="confirm-box__actions" style="flex-direction:column">
+  <button type="button" class="confirm-box__btn confirm-box__btn--go fee-check-continue" style="width:100%">Continue to Booking →</button>
+  <button type="button" class="confirm-box__btn confirm-box__btn--cancel fee-check-again" style="width:100%;margin-top:8px">Check another suburb</button>
+</div>`;
+}
+
+function feeCheckNotCoveredHtml(suburbText) {
+  return (
+    createEmptyState(
+      '🔍',
+      "We don't recognise that suburb yet",
+      `Give us a call and we'll confirm if we can reach you: <a href="tel:+61433963250" style="color:var(--blue);font-weight:600">0433 963 250</a>`
+    ) +
+    `
+<div class="confirm-box__actions">
+  <button type="button" class="confirm-box__btn confirm-box__btn--go fee-check-again" style="width:100%">Try a different suburb</button>
+</div>`
+  );
+}
+
+function feeCheckAnimateAmount(el) {
+  const target = Number(el.dataset.target) || 0;
+  const start = performance.now();
+  const duration = 700;
+  function tick(now) {
+    const p = Math.min(1, (now - start) / duration);
+    el.textContent = '$' + Math.round(target * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function openFeeCheckModal() {
+  document.getElementById('fee-check-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'fee-check-overlay';
+  overlay.className = 'confirm-overlay';
+  overlay.tabIndex = -1;
+  overlay.innerHTML = `<div class="confirm-box fee-check-box">${feeCheckInputHtml()}</div>`;
+  document.body.appendChild(overlay);
+  translateScreen(overlay); // outside [data-screen], not covered by the router's auto-translate observer
+
+  const box = overlay.querySelector('.fee-check-box');
+  function setStep(html) {
+    box.innerHTML = html;
+    translateScreen(overlay);
+    const amount = box.querySelector('.fee-check-amount');
+    if (amount) feeCheckAnimateAmount(amount);
+    // Result/not-covered screens have no input to receive focus, which leaves
+    // it outside the overlay's DOM subtree - Escape stops bubbling to our
+    // keydown listener below. Focus the overlay itself as a fallback so Esc
+    // always closes the modal regardless of which screen is showing.
+    const input = box.querySelector('.fee-check-input');
+    if (input) input.focus();
+    else overlay.focus();
+  }
+
+  async function submit(suburb) {
+    setStep(feeCheckScanningHtml());
+    let data = null;
+    try {
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'zone-price', address: suburb }),
+      });
+      if (r.ok) data = await r.json();
+    } catch (e) {}
+    // Minimum time on the scanning screen so it always reads as "checking",
+    // never a flash - even though the real lookup is near-instant.
+    await new Promise((res) => setTimeout(res, 1400));
+    if (data && data.covered) setStep(feeCheckResultHtml(data.zoneName, data.calloutFee));
+    else setStep(feeCheckNotCoveredHtml(suburb));
+  }
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay || e.target.closest('[data-act="close"]')) {
+      overlay.remove();
+      return;
+    }
+    if (e.target.closest('.fee-check-submit')) {
+      const input = box.querySelector('.fee-check-input');
+      const err = box.querySelector('.fee-check-err');
+      const val = (input.value || '').trim();
+      if (val.length < 3) {
+        err.textContent = translateValue('Enter your suburb first.');
+        err.style.display = 'block';
+        return;
+      }
+      submit(val);
+      return;
+    }
+    if (e.target.closest('.fee-check-again')) {
+      setStep(feeCheckInputHtml());
+      return;
+    }
+    if (e.target.closest('.fee-check-continue')) {
+      overlay.remove();
+      router.navigate('book-service');
+      return;
+    }
+  });
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      return;
+    }
+    if (e.key === 'Enter' && e.target.closest('.fee-check-input')) {
+      box.querySelector('.fee-check-submit')?.click();
+    }
+  });
+  box.querySelector('.fee-check-input').focus();
+}
+
 // ── Book a Service (3-step wizard) ───────────────────────────────────────────
 // Emergency Service (services table row, category "Scheduled services") is
 // intercepted before it ever reaches the normal booking wizard - see the
@@ -5164,6 +5326,7 @@ router.init();
 document.dispatchEvent(new Event('routerinit'));
 renderSpaLangSwitcher();
 updateHomeNav();
+document.getElementById('hero-fee-btn')?.addEventListener('click', openFeeCheckModal);
 if (window._pendingReview) {
   setTimeout(() => router.navigate('review'), 200);
 }

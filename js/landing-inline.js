@@ -1424,18 +1424,25 @@ function openFeeCheckModal() {
   document.getElementById('fee-check-modal')?.remove();
   const modal = document.createElement('div');
   modal.id = 'fee-check-modal';
+  modal.tabIndex = -1;
   modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(13,31,60,0.6);display:flex;align-items:center;justify-content:center;padding:16px';
   modal.innerHTML = feeCheckInputHtml();
   document.body.appendChild(modal);
   if (window.__drbikeI18n) window.__drbikeI18n.translateScreen(modal);
+  modal.querySelector('.fee-check-input')?.focus();
 
   function setStep(html) {
     modal.innerHTML = html;
     if (window.__drbikeI18n) window.__drbikeI18n.translateScreen(modal);
     const amount = modal.querySelector('.fee-check-amount');
     if (amount) feeCheckAnimateAmount(amount);
+    // Result/not-covered screens have no input to receive focus, which leaves
+    // it outside the modal's DOM subtree - Escape stops bubbling to our
+    // keydown listener below. Focus the modal itself as a fallback so Esc
+    // always closes it regardless of which screen is showing.
     const input = modal.querySelector('.fee-check-input');
     if (input) input.focus();
+    else modal.focus();
   }
 
   async function submit(suburb) {
