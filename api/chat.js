@@ -223,7 +223,7 @@ async function handler(req, res) {
 SERVICES & PRICES (the mobile call-out fee below is ADDED ON TOP of these - it is NOT included):
 ${servicesBlock || 'Prices are temporarily unavailable — tell the user to check drbikesydney.com.au or type "mechanic" to talk to the team directly.'}
 
-MOBILE CALL-OUT FEE: varies by suburb, from $25 (Northern Beaches) to $65 (Penrith, Sutherland Shire far side, St George). It is charged on top of the service price above. Never state a single fixed number for it - if the customer names their suburb, give your best estimate from this range and tell them the exact fee is confirmed when they enter their address at booking. If they don't name a suburb, just say it depends on their area ($25-$65) instead of guessing.
+MOBILE CALL-OUT FEE: from $25 (Northern Beaches, the cheapest), up to $65 (Penrith, Sutherland Shire far side, St George - the most expensive). It is charged on top of the service price above. If the customer names their suburb, give your best estimate from this range, not just "$25". If they don't name a suburb, say "call-out fees start from $25 depending on your area" - never quote a single number as if it applied everywhere, and never say just "$25" to someone whose suburb you know is pricier. The exact fee is always confirmed when they enter their address at booking.
 
 MEMBERSHIPS:
 - Basic $67/mo: 1 free minor repair (any repair under $60) + 1 free bike wash per month, 5% off extra services. The call-out fee for their zone still applies even on the free visit.
