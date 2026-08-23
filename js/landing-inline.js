@@ -784,6 +784,22 @@ function acctLoadReschedTimes(date, currentTime) {
     });
 }
 
+// Same pattern acctActionButtons already uses for the booking Cancel button
+// (10.2) - the membership Cancel used a native confirm() + alert(), which
+// looks like an OS error dialog interrupting the page, not part of it.
+function acctMembershipButtonsHtml(isPaused) {
+  return '<div style="display:flex;gap:8px">' +
+    '<button class="acct-membership-toggle-btn" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ' + (isPaused?'#15803D':'#B45309') + ';color:' + (isPaused?'#15803D':'#B45309') + ';background:#fff">' + (isPaused?'Resume':'Pause') + '</button>' +
+    '<button class="acct-membership-cancel-btn" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:var(--gray);background:var(--white)">Cancel</button>' +
+    '</div>';
+}
+
+// Same non-native confirm pattern as acctActionButtons/10.2 - the native
+// confirm('Sign out?') read as an OS error dialog, not part of the page.
+function signoutButtonsHtml() {
+  return '<button class="account-signout-btn" style="width:100%;min-height:40px;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--gray);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>';
+}
+
 function openAccountPanel(session) {
   document.getElementById('account-panel')?.remove();
   // The membership actions below reopen this panel with no argument. Reading
@@ -853,9 +869,7 @@ function openAccountPanel(session) {
         '</div>',
       '</div>',
       /* Footer */
-      '<div style="padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0">',
-        '<button id="account-signout-btn" style="width:100%;min-height:40px;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--gray);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>',
-      '</div>',
+      '<div style="padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0" id="account-signout-wrap">' + signoutButtonsHtml() + '</div>',
     '</div>'
   ].join('');
   document.body.appendChild(panel);
@@ -874,8 +888,19 @@ function openAccountPanel(session) {
 
   document.getElementById('account-panel-close').addEventListener('click', function() { panel.remove(); });
   panel.addEventListener('click', function(e) { if (e.target === panel) panel.remove(); });
-  document.getElementById('account-signout-btn').addEventListener('click', function() {
-    if (confirm('Sign out?')) { _sb.auth.signOut(); panel.remove(); }
+  document.getElementById('account-signout-wrap').addEventListener('click', function(e) {
+    const wrap = document.getElementById('account-signout-wrap');
+    if (e.target.closest('.account-signout-btn')) {
+      wrap.innerHTML =
+        '<div style="font-size:13px;color:var(--navy);margin-bottom:8px;text-align:center">Sign out of your account?</div>'
+        + '<div style="display:flex;gap:6px">'
+        + '<button class="account-signout-yes-btn" style="flex:1;min-height:40px;padding:10px;border:none;border-radius:8px;background:var(--red);color:var(--white);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Yes, sign out</button>'
+        + '<button class="account-signout-no-btn" style="flex:1;min-height:40px;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>'
+        + '</div>';
+      return;
+    }
+    if (e.target.closest('.account-signout-yes-btn')) { _sb.auth.signOut(); panel.remove(); return; }
+    if (e.target.closest('.account-signout-no-btn')) { wrap.innerHTML = signoutButtonsHtml(); return; }
   });
 
   /* Load all data */
@@ -1087,38 +1112,70 @@ function openAccountPanel(session) {
           (startDate ? '<div style="font-size:13px;opacity:0.7;margin-top:4px">Member since ' + startDate + '</div>' : '') +
           '<div style="margin-top:12px">' + statusBadge + '</div>' +
           '</div>' +
-          '<div style="display:flex;gap:8px">' +
-          '<button id="acct-membership-toggle" data-paused="' + (isPaused?'1':'0') + '" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ' + (isPaused?'#15803D':'#B45309') + ';color:' + (isPaused?'#15803D':'#B45309') + ';background:#fff">' + (isPaused?'Resume':'Pause') + '</button>' +
-          '<button id="acct-membership-cancel" style="flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);color:var(--gray);background:var(--white)">Cancel</button>' +
-          '</div>';
-        // Wire up buttons after HTML is set
+          '<div id="acct-membership-actions">' + acctMembershipButtonsHtml(isPaused) + '</div>' +
+          '<div id="acct-membership-msg" style="display:none;font-size:12px;margin-top:8px;text-align:center"></div>';
+        // Wire up buttons after HTML is set. Delegated on the actions box so
+        // the confirm-swap below (10.2's non-native pattern) doesn't need to
+        // re-bind listeners each time it rewrites its own innerHTML.
         setTimeout(function() {
-          const toggleBtn = document.getElementById('acct-membership-toggle');
-          const cancelMBtn = document.getElementById('acct-membership-cancel');
-          if (toggleBtn) toggleBtn.addEventListener('click', async function() {
-            toggleBtn.disabled = true;
-            toggleBtn.textContent = isPaused ? 'Resuming...' : 'Pausing...';
-            try {
-              const session = (await _sb.auth.getSession()).data.session;
-              const endpoint = isPaused ? '/api/resume-subscription' : '/api/pause-subscription';
-              const r = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ access_token: session?.access_token }) });
-              const d = await r.json();
-              if (!r.ok) throw new Error(d.error || 'Failed');
-              alert(isPaused ? 'Membership resumed!' : 'Membership paused. No charges until you resume.');
-              openAccountPanel();
-            } catch(e) { alert(e.message || 'Something went wrong'); toggleBtn.disabled = false; toggleBtn.textContent = isPaused ? 'Resume' : 'Pause'; }
-          });
-          if (cancelMBtn) cancelMBtn.addEventListener('click', async function() {
-            if (!confirm('Cancel your membership? It will stay active until the end of the billing period.')) return;
-            cancelMBtn.disabled = true; cancelMBtn.textContent = 'Cancelling...';
-            try {
-              const session = (await _sb.auth.getSession()).data.session;
-              const r = await fetch('/api/cancel-subscription', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ access_token: session?.access_token }) });
-              const d = await r.json();
-              if (!r.ok) throw new Error(d.error || 'Failed');
-              alert('Membership will cancel at end of current period.');
-              openAccountPanel();
-            } catch(e) { alert(e.message || 'Something went wrong'); cancelMBtn.disabled = false; cancelMBtn.textContent = 'Cancel'; }
+          const actionsBox = document.getElementById('acct-membership-actions');
+          const msgBox = document.getElementById('acct-membership-msg');
+          if (!actionsBox) return;
+          function showMsg(text, isError) {
+            if (!msgBox) return;
+            msgBox.textContent = text;
+            msgBox.style.color = isError ? 'var(--red)' : 'var(--green)';
+            msgBox.style.display = 'block';
+          }
+          actionsBox.addEventListener('click', function(e) {
+            const toggleBtn = e.target.closest('.acct-membership-toggle-btn');
+            const cancelBtn = e.target.closest('.acct-membership-cancel-btn');
+            const cancelYesBtn = e.target.closest('.acct-membership-cancel-yes-btn');
+            const cancelNoBtn = e.target.closest('.acct-membership-cancel-no-btn');
+
+            if (toggleBtn) {
+              toggleBtn.disabled = true;
+              toggleBtn.textContent = isPaused ? 'Resuming...' : 'Pausing...';
+              (async function() {
+                try {
+                  const session = (await _sb.auth.getSession()).data.session;
+                  const endpoint = isPaused ? '/api/resume-subscription' : '/api/pause-subscription';
+                  const r = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ access_token: session?.access_token }) });
+                  const d = await r.json();
+                  if (!r.ok) throw new Error(d.error || 'Failed');
+                  showMsg(isPaused ? 'Membership resumed!' : 'Membership paused. No charges until you resume.', false);
+                  setTimeout(function() { openAccountPanel(); }, 1200);
+                } catch(e) { showMsg(e.message || 'Something went wrong', true); toggleBtn.disabled = false; toggleBtn.textContent = isPaused ? 'Resume' : 'Pause'; }
+              })();
+              return;
+            }
+            if (cancelBtn) {
+              actionsBox.innerHTML =
+                '<div style="font-size:13px;color:var(--navy);margin-bottom:8px;text-align:center">Cancel your membership? It stays active until the end of the billing period.</div>'
+                + '<div style="display:flex;gap:6px">'
+                + '<button class="acct-membership-cancel-yes-btn" style="flex:1;padding:9px;border:none;border-radius:8px;background:var(--red);color:var(--white);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Yes, cancel</button>'
+                + '<button class="acct-membership-cancel-no-btn" style="flex:1;padding:9px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Keep it</button>'
+                + '</div>';
+              return;
+            }
+            if (cancelNoBtn) { actionsBox.innerHTML = acctMembershipButtonsHtml(isPaused); return; }
+            if (cancelYesBtn) {
+              cancelYesBtn.textContent = 'Cancelling...'; cancelYesBtn.disabled = true;
+              (async function() {
+                try {
+                  const session = (await _sb.auth.getSession()).data.session;
+                  const r = await fetch('/api/cancel-subscription', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ access_token: session?.access_token }) });
+                  const d = await r.json();
+                  if (!r.ok) throw new Error(d.error || 'Failed');
+                  actionsBox.innerHTML = acctMembershipButtonsHtml(isPaused);
+                  showMsg('Membership will cancel at end of current period.', false);
+                } catch(e) {
+                  actionsBox.innerHTML = acctMembershipButtonsHtml(isPaused);
+                  showMsg(e.message || 'Something went wrong', true);
+                }
+              })();
+              return;
+            }
           });
         }, 50);
       });
