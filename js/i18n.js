@@ -757,6 +757,10 @@ const dict = {
     'Message mechanic': 'Mensaje al mecánico',
     'Cancel this booking?': '¿Cancelar esta reserva?',
     'Yes, cancel': 'Sí, cancelar',
+    'Sign out of your account?': '¿Cerrar sesión de tu cuenta?',
+    'Yes, sign out': 'Sí, cerrar sesión',
+    'Cancel your membership? It stays active until the end of the billing period.':
+      '¿Cancelar tu membresía? Seguirá activa hasta el final del período de facturación.',
     'Could not cancel. Please call us.': 'No se pudo cancelar. Por favor, llamanos.',
     Save: 'Guardar',
     'Could not reschedule. Please call us.': 'No se pudo reprogramar. Por favor, llamanos.',
@@ -2055,6 +2059,10 @@ const dict = {
     'Message mechanic': '给技工发消息',
     'Cancel this booking?': '取消此预订吗？',
     'Yes, cancel': '是的，取消',
+    'Sign out of your account?': '确定要退出登录吗？',
+    'Yes, sign out': '是的，退出登录',
+    'Cancel your membership? It stays active until the end of the billing period.':
+      '取消您的会员资格？会员资格将保持有效，直到本计费周期结束。',
     'Could not cancel. Please call us.': '无法取消，请致电我们。',
     Save: '保存',
     'Could not reschedule. Please call us.': '无法改期，请致电我们。',
