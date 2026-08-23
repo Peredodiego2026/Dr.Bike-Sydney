@@ -759,6 +759,23 @@ const dict = {
     'Yes, cancel': 'Sí, cancelar',
     'Sign out of your account?': '¿Cerrar sesión de tu cuenta?',
     'Yes, sign out': 'Sí, cerrar sesión',
+    "What's My Fee?": '¿Cuánto Me Cuesta?',
+    "What's your suburb?": '¿Cuál es tu suburbio?',
+    "We'll check your call-out fee - takes 2 seconds.":
+      'Vamos a chequear tu tarifa de visita - toma 2 segundos.',
+    'Check My Fee': 'Chequear Mi Tarifa',
+    'Checking your area...': 'Chequeando tu zona...',
+    'Comparing against our Sydney zones': 'Comparando con nuestras zonas de Sídney',
+    "Calculated from the distance to our base on the Northern Beaches - the same fee you'll see when you book.":
+      'Calculado según la distancia a nuestra base en Northern Beaches - la misma tarifa que vas a ver al reservar.',
+    'Continue to Booking →': 'Continuar a la Reserva →',
+    'Check another suburb': 'Chequear otro suburbio',
+    "We don't recognise that suburb yet": 'Todavía no reconocemos ese suburbio',
+    "Give us a call and we'll confirm if we can reach you:":
+      'Llamanos y confirmamos si podemos llegar hasta vos:',
+    'Try a different suburb': 'Probar otro suburbio',
+    'e.g. Bondi, Parramatta, Cronulla...': 'ej. Bondi, Parramatta, Cronulla...',
+    'Enter your suburb first.': 'Primero escribí tu suburbio.',
     'Cancel your membership? It stays active until the end of the billing period.':
       '¿Cancelar tu membresía? Seguirá activa hasta el final del período de facturación.',
     'Could not cancel. Please call us.': 'No se pudo cancelar. Por favor, llamanos.',
@@ -2061,6 +2078,22 @@ const dict = {
     'Yes, cancel': '是的，取消',
     'Sign out of your account?': '确定要退出登录吗？',
     'Yes, sign out': '是的，退出登录',
+    "What's My Fee?": '我的费用是多少？',
+    "What's your suburb?": '您在哪个区？',
+    "We'll check your call-out fee - takes 2 seconds.": '我们来查一下您的上门服务费——只需2秒。',
+    'Check My Fee': '查询我的费用',
+    'Checking your area...': '正在查询您的区域...',
+    'Comparing against our Sydney zones': '正在与我们的悉尼分区进行比对',
+    "Calculated from the distance to our base on the Northern Beaches - the same fee you'll see when you book.":
+      '根据到我们北部海滩基地的距离计算——与您预订时看到的费用一致。',
+    'Continue to Booking →': '继续预订 →',
+    'Check another suburb': '查询其他区域',
+    "We don't recognise that suburb yet": '我们暂时无法识别该区域',
+    "Give us a call and we'll confirm if we can reach you:":
+      '请致电我们确认是否可以为您提供上门服务：',
+    'Try a different suburb': '尝试其他区域',
+    'e.g. Bondi, Parramatta, Cronulla...': '例如：Bondi、Parramatta、Cronulla...',
+    'Enter your suburb first.': '请先输入您的区域。',
     'Cancel your membership? It stays active until the end of the billing period.':
       '取消您的会员资格？会员资格将保持有效，直到本计费周期结束。',
     'Could not cancel. Please call us.': '无法取消，请致电我们。',

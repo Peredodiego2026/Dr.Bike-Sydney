@@ -1336,6 +1336,147 @@ function bkServiceNameFrom(card) {
 }
 
 
+// ── "What's My Fee?" zone price checker ───────────────────────────────────────
+// Public, no login needed - calls role:'zone-price' (api/auth.js), which uses
+// the exact same callout_zones lookup that actually charges the customer
+// (matchCalloutZone), so this can never quote a different number than what
+// booking later charges. Same non-native-dialog, swap-the-card pattern as the
+// account panel (10.2) - one card, its content replaced per step, not three
+// separate modals stacked and hidden.
+function feeCheckKeyframes() {
+  if (document.getElementById('fee-check-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'fee-check-styles';
+  s.textContent = '@keyframes feeCheckSpin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(s);
+}
+
+function feeCheckCardHtml(inner) {
+  return '<div class="fee-check-card" style="background:var(--white);border-radius:16px;max-width:420px;width:100%;padding:32px 28px;box-shadow:0 20px 60px rgba(13,31,60,0.35);position:relative">'
+    + '<button class="fee-check-close" type="button" aria-label="Close" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;line-height:1;color:var(--gray-lt);cursor:pointer;padding:4px">&#215;</button>'
+    + inner
+    + '</div>';
+}
+
+function feeCheckInputHtml() {
+  return feeCheckCardHtml(
+    '<div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px">What\'s your suburb?</div>'
+    + '<div style="font-size:13px;color:var(--gray);margin-bottom:18px">We\'ll check your call-out fee - takes 2 seconds.</div>'
+    + '<input type="text" class="fee-check-input" placeholder="e.g. Bondi, Parramatta, Cronulla..." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;color:var(--navy)">'
+    + '<div class="fee-check-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px"></div>'
+    + '<button class="fee-check-submit" type="button" style="width:100%;margin-top:16px;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Check My Fee</button>'
+  );
+}
+
+function feeCheckScanningHtml() {
+  feeCheckKeyframes();
+  return feeCheckCardHtml(
+    '<div style="text-align:center;padding:8px 0">'
+    + '<div style="width:110px;height:110px;margin:0 auto 20px;position:relative;border-radius:50%">'
+    + '<div style="position:absolute;inset:0;border-radius:50%;border:2px solid var(--blue-lt)"></div>'
+    + '<div style="position:absolute;inset:18px;border-radius:50%;border:2px solid var(--blue-lt)"></div>'
+    + '<div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg, var(--blue) 0deg, transparent 65deg);animation:feeCheckSpin 1.1s linear infinite"></div>'
+    + '<div style="position:absolute;inset:8px;border-radius:50%;background:var(--white)"></div>'
+    + '<div style="position:absolute;top:50%;left:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:var(--blue)"></div>'
+    + '</div>'
+    + '<div style="font-size:15px;font-weight:700;color:var(--navy)">Checking your area...</div>'
+    + '<div style="font-size:13px;color:var(--gray);margin-top:4px">Comparing against our Sydney zones</div>'
+    + '</div>'
+  );
+}
+
+function feeCheckResultHtml(zoneName, fee) {
+  return feeCheckCardHtml(
+    '<div style="text-align:center">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">' + esc(zoneName) + '</div>'
+    + '<div class="fee-check-amount" style="font-size:48px;font-weight:900;color:var(--blue);line-height:1;font-variant-numeric:tabular-nums" data-target="' + Number(fee) + '">$0</div>'
+    + '<div style="font-size:13px;color:var(--gray);margin-top:12px;max-width:280px;margin-left:auto;margin-right:auto">Calculated from the distance to our base on the Northern Beaches - the same fee you\'ll see when you book.</div>'
+    + '<button class="fee-check-continue" type="button" style="width:100%;margin-top:22px;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Continue to Booking &rarr;</button>'
+    + '<button class="fee-check-again" type="button" style="width:100%;margin-top:6px;padding:10px;background:transparent;color:var(--gray);border:none;font-size:13px;cursor:pointer;font-family:inherit">Check another suburb</button>'
+    + '</div>'
+  );
+}
+
+function feeCheckNotCoveredHtml(suburbText) {
+  return feeCheckCardHtml(
+    '<div style="text-align:center">'
+    + '<div style="font-size:32px;margin-bottom:8px">&#128269;</div>'
+    + '<div style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:6px">We don\'t recognise that suburb yet</div>'
+    + '<div style="font-size:13px;color:var(--gray);margin-bottom:18px">Give us a call and we\'ll confirm if we can reach you: <a href="tel:+61433963250" style="color:var(--blue);font-weight:600">0433 963 250</a></div>'
+    + '<button class="fee-check-again" type="button" style="width:100%;padding:12px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Try a different suburb</button>'
+    + '</div>'
+  );
+}
+
+function feeCheckAnimateAmount(el) {
+  const target = Number(el.dataset.target) || 0;
+  const start = performance.now();
+  const duration = 700;
+  function tick(now) {
+    const p = Math.min(1, (now - start) / duration);
+    el.textContent = '$' + Math.round(target * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function openFeeCheckModal() {
+  document.getElementById('fee-check-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'fee-check-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(13,31,60,0.6);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = feeCheckInputHtml();
+  document.body.appendChild(modal);
+  if (window.__drbikeI18n) window.__drbikeI18n.translateScreen(modal);
+
+  function setStep(html) {
+    modal.innerHTML = html;
+    if (window.__drbikeI18n) window.__drbikeI18n.translateScreen(modal);
+    const amount = modal.querySelector('.fee-check-amount');
+    if (amount) feeCheckAnimateAmount(amount);
+    const input = modal.querySelector('.fee-check-input');
+    if (input) input.focus();
+  }
+
+  async function submit(suburb) {
+    setStep(feeCheckScanningHtml());
+    let data = null;
+    try {
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'zone-price', address: suburb }),
+      });
+      if (r.ok) data = await r.json();
+    } catch (e) {}
+    // Minimum time on the scanning screen so it always reads as "checking",
+    // never a flash - even though the real lookup is near-instant.
+    await new Promise((res) => setTimeout(res, 1400));
+    if (data && data.covered) setStep(feeCheckResultHtml(data.zoneName, data.calloutFee));
+    else setStep(feeCheckNotCoveredHtml(suburb));
+  }
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal || e.target.closest('.fee-check-close')) { modal.remove(); return; }
+    if (e.target.closest('.fee-check-submit')) {
+      const input = modal.querySelector('.fee-check-input');
+      const err = modal.querySelector('.fee-check-err');
+      const val = (input.value || '').trim();
+      if (val.length < 3) { err.textContent = 'Enter your suburb first.'; err.style.display = 'block'; return; }
+      submit(val);
+      return;
+    }
+    if (e.target.closest('.fee-check-again')) { setStep(feeCheckInputHtml()); return; }
+    if (e.target.closest('.fee-check-continue')) { modal.remove(); openBooking(); return; }
+  });
+  modal.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { modal.remove(); return; }
+    if (e.key === 'Enter' && e.target.closest('.fee-check-input')) {
+      modal.querySelector('.fee-check-submit')?.click();
+    }
+  });
+}
+
 // ── Wire all booking triggers on DOM ready ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   const homeViewAllBtn = document.getElementById('home-view-all-btn');
@@ -1343,6 +1484,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const heroBk = document.getElementById('hero-book-btn');
   if (heroBk) heroBk.addEventListener('click', function() { openBooking(); });
+
+  const heroFeeBtn = document.getElementById('hero-fee-btn');
+  if (heroFeeBtn) heroFeeBtn.addEventListener('click', openFeeCheckModal);
 
   // "Book A Service" static section - previously had no handler at all,
   // looked like a working form but did nothing on submit (see
