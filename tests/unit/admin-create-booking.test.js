@@ -41,7 +41,7 @@ describe('handleAdminCreateBooking - server', () => {
   });
 
   it('el callout fee sale de callout_zones por direccion, no un $20 fijo (bug encontrado en auto-revision)', () => {
-    expect(fn).toMatch(/\.from\('callout_zones'\)\.select\('callout_fee,suburbs'\)/);
+    expect(fn).toMatch(/matchCalloutZone\(auth\.sb, address\)/);
     expect(fn).not.toMatch(/const calloutFee = applySurcharge\(20,/);
   });
 

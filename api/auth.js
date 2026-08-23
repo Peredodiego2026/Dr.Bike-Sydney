@@ -351,6 +351,37 @@ async function handleCheckCoverage(req, res) {
   return res.status(200).json({ covered: vanNumber !== null });
 }
 
+// Matches an address's suburb against callout_zones. Returns { calloutFee,
+// zoneName } or null if the address isn't in any configured zone - shared by
+// the public price-check (handleZonePrice) and every place that charges a
+// callout fee (handleGetPrice, handleCreateBooking, rescheduleBookingCore,
+// handleAdminCreateBooking), so none of them can ever quote a different
+// number than what actually gets charged. Same idea as matchVanZone above.
+export async function matchCalloutZone(sb, address) {
+  const { data: zones } = await sb.from('callout_zones').select('name,callout_fee,suburbs');
+  const addr = (address || '').toLowerCase();
+  const zone = (zones || []).find((z) =>
+    (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
+  );
+  return zone ? { calloutFee: Number(zone.callout_fee), zoneName: zone.name } : null;
+}
+
+// The "What's My Fee?" button on the marketing page - public/no-auth on
+// purpose, same reasoning as handleCheckCoverage: a visitor should be able to
+// see their price before creating an account or starting a booking, not just
+// after. Returns the fee so the UI can show it (handleCheckCoverage only
+// returns a boolean).
+async function handleZonePrice(req, res) {
+  const { address } = req.body || {};
+  if (!address) return res.status(400).json({ error: 'address required' });
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const match = await matchCalloutZone(sb, address);
+  if (!match) return res.status(200).json({ covered: false });
+  return res
+    .status(200)
+    .json({ covered: true, calloutFee: match.calloutFee, zoneName: match.zoneName });
+}
+
 // The client needs to know the REAL price (including any membership waiver/
 // discount) before it ever asks Stripe to charge anything - otherwise a
 // member either gets overcharged, or the amount Stripe actually collects
@@ -386,12 +417,8 @@ async function handleGetPrice(req, res) {
 
   let baseCalloutFee = 20;
   try {
-    const { data: zones } = await sb.from('callout_zones').select('callout_fee,suburbs');
-    const addr = (address || '').toLowerCase();
-    const zone = (zones || []).find((z) =>
-      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
-    );
-    if (zone) baseCalloutFee = Number(zone.callout_fee);
+    const match = await matchCalloutZone(sb, address);
+    if (match) baseCalloutFee = match.calloutFee;
   } catch {}
   baseCalloutFee = applySurcharge(baseCalloutFee, scheduled_date);
 
@@ -640,12 +667,8 @@ async function handleCreateBooking(req, res) {
   // 3. Authoritative call-out fee (callout_zones by address, default $20)
   let calloutFee = 20;
   try {
-    const { data: zones } = await sb.from('callout_zones').select('callout_fee,suburbs');
-    const addr = (address || '').toLowerCase();
-    const zone = (zones || []).find((z) =>
-      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
-    );
-    if (zone) calloutFee = Number(zone.callout_fee);
+    const match = await matchCalloutZone(sb, address);
+    if (match) calloutFee = match.calloutFee;
   } catch {}
   calloutFee = applySurcharge(calloutFee, scheduled_date);
 
@@ -2308,8 +2331,7 @@ async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_
     ? applySurcharge(Number(svcData[0].price), scheduled_date)
     : null;
 
-  const neededMin =
-    (svcData?.[0]?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+  const neededMin = (svcData?.[0]?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
   const blockResp = await fetch(
     `${SUPABASE_URL}/rest/v1/availability?select=time_slot,available,van_number&date=eq.${encodeURIComponent(scheduled_date)}`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
@@ -2320,32 +2342,27 @@ async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_
 
   let newCalloutFee = 20;
   try {
-    const zonesResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/callout_zones?select=callout_fee,suburbs`,
-      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
-    );
-    const zones = zonesResp.ok ? await zonesResp.json() : [];
-    const addr = (bk.address || '').toLowerCase();
-    const zone = (zones || []).find((z) =>
-      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
-    );
-    if (zone) newCalloutFee = Number(zone.callout_fee);
+    const match = await matchCalloutZone(createClient(SUPABASE_URL, SERVICE_KEY), bk.address);
+    if (match) newCalloutFee = match.calloutFee;
   } catch {}
   newCalloutFee = applySurcharge(newCalloutFee, scheduled_date);
 
   const updatePayload = { scheduled_date, scheduled_time, callout_fee: newCalloutFee };
   if (newServicePrice !== null) updatePayload.service_price = newServicePrice;
 
-  const updateResp = await fetch(`${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(bk.id)}`, {
-    method: 'PATCH',
-    headers: {
-      apikey: SERVICE_KEY,
-      Authorization: `Bearer ${SERVICE_KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify(updatePayload),
-  });
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(bk.id)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(updatePayload),
+    }
+  );
   if (!updateResp.ok) {
     // 23505 = unique_violation on bookings_unique_slot (van_number, scheduled_date,
     // scheduled_time) - someone else took that slot between the caller loading
@@ -2353,7 +2370,11 @@ async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_
     // generic failure so they know to just pick another time.
     const errBody = await updateResp.json().catch(() => ({}));
     if (errBody.code === '23505')
-      return { ok: false, status: 409, error: 'That time was just taken by another booking - please pick another.' };
+      return {
+        ok: false,
+        status: 409,
+        error: 'That time was just taken by another booking - please pick another.',
+      };
     return { ok: false, status: 500, error: 'Failed to reschedule booking' };
   }
 
@@ -3294,9 +3315,7 @@ export function computeAvailableSlots({
       intervals.some((iv) => iv.van === van && slotMin < iv.end && iv.start < slotEnd);
     // A slot is on offer if AT LEAST ONE van is free of both bookings and
     // blocks for the whole window the job would occupy.
-    let available = vans.some(
-      (van) => !clashes(busyIntervals, van) && !clashes(blocks, van)
-    );
+    let available = vans.some((van) => !clashes(busyIntervals, van) && !clashes(blocks, van));
     if (isToday && slotMin < nowMin) available = false;
     return { time, available };
   });
@@ -3323,8 +3342,8 @@ async function handleGetAvailability(req, res) {
         .eq('scheduled_date', date)
         .in('status', ['pending', 'confirmed', 'enroute', 'in_progress', 'arrived']),
       // van_number too: a block is per van (0 = all of them), and reading only
-    // the slot made one van's day off close the day for both.
-    sb.from('availability').select('time_slot, available, van_number').eq('date', date),
+      // the slot made one van's day off close the day for both.
+      sb.from('availability').select('time_slot, available, van_number').eq('date', date),
       sb.from('van_zones').select('van_number').neq('van_number', 0),
       sb.from('services').select('id,name,duration_max'),
     ]);
@@ -3762,7 +3781,14 @@ async function handleAdminCreateBooking(req, res) {
     van_number, // optional override - if omitted, resolved from the address
   } = req.body;
 
-  if (!client_name || !client_phone || !service_id || !scheduled_date || !scheduled_time || !address)
+  if (
+    !client_name ||
+    !client_phone ||
+    !service_id ||
+    !scheduled_date ||
+    !scheduled_time ||
+    !address
+  )
     return res.status(400).json({
       error:
         'client_name, client_phone, service_id, scheduled_date, scheduled_time, address required',
@@ -3786,7 +3812,8 @@ async function handleAdminCreateBooking(req, res) {
   const vanNumber = van_number ? Number(van_number) : await matchVanZone(auth.sb, address);
   if (!vanNumber)
     return res.status(400).json({
-      error: "That address isn't in a covered zone. Pick a van manually if you want to book it anyway.",
+      error:
+        "That address isn't in a covered zone. Pick a van manually if you want to book it anyway.",
     });
 
   const neededMin = (svc.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
@@ -3806,12 +3833,8 @@ async function handleAdminCreateBooking(req, res) {
   // differs from the default.
   let calloutFee = 20;
   try {
-    const { data: zones } = await auth.sb.from('callout_zones').select('callout_fee,suburbs');
-    const addr = address.toLowerCase();
-    const zone = (zones || []).find((z) =>
-      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
-    );
-    if (zone) calloutFee = Number(zone.callout_fee);
+    const match = await matchCalloutZone(auth.sb, address);
+    if (match) calloutFee = match.calloutFee;
   } catch {}
   calloutFee = applySurcharge(calloutFee, scheduled_date);
 
@@ -4380,6 +4403,7 @@ async function handler(req, res) {
   if (role === 'client-bookings') return handleClientBookings(req, res);
   if (role === 'create-booking') return handleCreateBooking(req, res);
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
+  if (role === 'zone-price') return handleZonePrice(req, res);
   if (role === 'get-price') return handleGetPrice(req, res);
   if (role === 'save-card-setup') return handleSaveCardSetupIntent(req, res);
   if (role === 'save-card-confirm') return handleSaveCardConfirm(req, res);

@@ -195,6 +195,29 @@
   border-color: rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.08);
 }
+/* Third hero CTA ("What's My Fee?") - deliberately its own look, not another
+   .btn-outline: it opens a price checker, not a commitment like Book/View,
+   so it reads as its own thing at a glance before anyone reads the label. */
+[data-screen='home'] .btn-white {
+  background: var(--white);
+  border: none;
+  color: var(--navy);
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: background 150ms ease;
+  cursor: pointer;
+  font-family: inherit;
+}
+[data-screen='home'] .btn-white:hover {
+  background: var(--border-lt);
+}
 [data-screen='home'] .hero-stats {
   display: flex;
   gap: 20px;
