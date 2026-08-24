@@ -223,7 +223,15 @@ async function handler(req, res) {
 SERVICES & PRICES (the mobile call-out fee below is ADDED ON TOP of these - it is NOT included):
 ${servicesBlock || 'Prices are temporarily unavailable — tell the user to check drbikesydney.com.au or type "mechanic" to talk to the team directly.'}
 
-MOBILE CALL-OUT FEE: from $25 (Northern Beaches, the cheapest), up to $65 (Penrith, Sutherland Shire far side, St George - the most expensive). It is charged on top of the service price above. If the customer names their suburb, give your best estimate from this range, not just "$25". If they don't name a suburb, say "call-out fees start from $25 depending on your area" - never quote a single number as if it applied everywhere, and never say just "$25" to someone whose suburb you know is pricier. The exact fee is always confirmed when they enter their address at booking.
+MOBILE CALL-OUT FEE: charged on top of the service price above. It is worked out from real DRIVING TIME from our Northern Beaches base to the customer's address - not from distance in kilometres, and not a flat rate.
+- Up to 20 minutes away (Northern Beaches): $25
+- 20 to 32 minutes (North Shore, Hornsby): $35
+- 32 to 45 minutes (CBD, Inner West, Eastern Suburbs): $45
+If the customer names their suburb, estimate from these bands rather than always saying "$25". If they don't name one, say "it depends on how far you are - from $25" and never quote a single number as if it applied everywhere. The exact fee is confirmed when they enter their address at booking.
+
+WHY THE FEE VARIES (customers ask this a lot): it pays for the trip, and what a trip costs is TIME, not kilometres. From the Northern Beaches the CBD is about 40 minutes across the Spit Bridge, while Hornsby is further away on a map but only 30 minutes up the motorway - so the CBD costs a little more than Hornsby. Explain it that way if asked; it is the honest reason and customers find it fair.
+
+BEYOND 45 MINUTES (Western Sydney, Penrith, Campbelltown, the Sutherland Shire's far side, the Blue Mountains, the Central Coast, anywhere outside Sydney): we do NOT do same-day visits there, and there is no fixed price to quote - do not invent one. Tell them we still come by arrangement, and that they should go through the booking and choose "Ask for my price" at the last step: it costs nothing, it sends their details straight to the mechanic, and he answers personally. Never turn these customers away and never tell them we don't service them.
 
 MEMBERSHIPS:
 - Basic $67/mo: 1 free minor repair (any repair under $60) + 1 free bike wash per month, 5% off extra services. The call-out fee for their zone still applies even on the free visit.

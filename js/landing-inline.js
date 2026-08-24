@@ -1405,12 +1405,21 @@ function feeCheckResultHtml(zoneName, fee) {
   );
 }
 
+// Was a dead end: an emoji, "we don't recognise that suburb", a phone number
+// and a "try another suburb" button. Somebody who came this far is interested
+// and was being sent away with homework.
+//
+// It is a door now. The booking runs to the end for these addresses too and
+// finishes on "Ask for my price" instead of a card - free, and it reaches
+// Diego with the service, date and address already filled in. So the honest
+// next step is "keep going", not "call us".
 function feeCheckNotCoveredHtml(suburbText) {
   return feeCheckCardHtml(
     '<div style="text-align:center">'
-    + '<div style="font-size:32px;margin-bottom:8px">&#128269;</div>'
-    + '<div style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:6px">We don\'t recognise that suburb yet</div>'
-    + '<div style="font-size:13px;color:var(--gray);margin-bottom:18px">Give us a call and we\'ll confirm if we can reach you: <a href="tel:+61433963250" style="color:var(--blue);font-weight:600">0433 963 250</a></div>'
+    + '<div style="font-size:32px;margin-bottom:8px">&#128172;</div>'
+    + '<div style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:6px">We quote that area case by case</div>'
+    + '<div style="font-size:13px;color:var(--gray);line-height:1.55;margin-bottom:18px">It\'s outside our same-day zone, so there\'s no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.</div>'
+    + '<button class="fee-check-continue" type="button" style="width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">Continue - book at no cost</button>'
     + '<button class="fee-check-again" type="button" style="width:100%;padding:12px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Try a different suburb</button>'
     + '</div>'
   );
