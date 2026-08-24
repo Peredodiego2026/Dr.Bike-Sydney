@@ -140,3 +140,45 @@ describe('the base', () => {
     expect(BASE.lng).toBeGreaterThan(151);
   });
 });
+
+// ── Regression: the free-booking hole ────────────────────────────────────────
+// Found reviewing this branch before merge (2026-08-24), self-inflicted.
+//
+// Once 'unknown' stopped quoting a fee, handleCreateBooking computed
+// `calloutFee = coverage.calloutFee ?? 0` -> 0, and the payment block was
+// gated on `calloutFee > 0`. So an address that could not be resolved skipped
+// payment verification ENTIRELY and produced a booking with callout_fee 0 and
+// no Stripe check. Free bookings, on the money path.
+//
+// Read as text because handleCreateBooking does real network and DB work -
+// same approach as payment-amount-trust.test.js.
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const authSrc = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'api', 'auth.js'),
+  'utf8'
+);
+
+describe('create-booking: an unresolved address can never be a free booking', () => {
+  it('verifies any request that carries a payment, whatever the computed fee', () => {
+    expect(authSrc).toMatch(/if \(!isAdmin && \(calloutFee > 0 \|\| hasPaymentRef\)\)/);
+    // the old gate is what let a $0 fee skip verification
+    expect(authSrc).not.toMatch(/if \(!isAdmin && calloutFee > 0\) \{/);
+  });
+
+  it('refuses an unresolved address that has no payment behind it', () => {
+    expect(authSrc).toMatch(/if \(!hasPaymentRef && !isAdmin\)/);
+  });
+
+  it('only accepts a paid amount that is one of the real bands', () => {
+    expect(authSrc).toMatch(/acceptablePaidCents/);
+    expect(authSrc).toMatch(/VALID_FEES\.map/);
+  });
+
+  it('both public endpoints send unknown to the quote flow, not to a card', () => {
+    const hits = authSrc.match(/covered: !needsQuote\(r\)/g) || [];
+    expect(hits).toHaveLength(2); // check-coverage + zone-price
+  });
+});

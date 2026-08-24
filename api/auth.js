@@ -368,16 +368,17 @@ async function resolveAddressCoverage(address) {
 // Lets the client check coverage before paying, so someone outside the service
 // area finds out at the address step instead of after being charged.
 //
-// `covered` used to be a boolean and is now 'in' | 'out' | 'unknown'. The
-// boolean is kept alongside it for any caller not yet updated, and it maps
-// 'unknown' to TRUE on purpose: an address we could not resolve must not be
-// turned away (api/_coverage.js).
+// `coverage` is the real answer - 'in' | 'out' | 'unknown'. The old boolean
+// `covered` is kept for callers not yet updated, and it is FALSE for BOTH
+// 'out' and 'unknown': in neither case do we know what the trip costs, so in
+// neither case do we take a card. That is not a rejection - a caller reading
+// only the boolean shows the WhatsApp panel, which is where both belong.
 async function handleCheckCoverage(req, res) {
   const { address } = req.body || {};
   if (!address) return res.status(400).json({ error: 'address required' });
   const r = await resolveAddressCoverage(address);
   return res.status(200).json({
-    covered: r.covered !== 'out',
+    covered: !needsQuote(r),
     coverage: r.covered,
     calloutFee: r.calloutFee,
     minutes: r.minutes,
@@ -428,7 +429,7 @@ async function handleZonePrice(req, res) {
   if (!address) return res.status(400).json({ error: 'address required' });
   const r = await resolveAddressCoverage(address);
   return res.status(200).json({
-    covered: r.covered !== 'out',
+    covered: !needsQuote(r),
     coverage: r.covered,
     calloutFee: r.calloutFee,
     zoneName: r.zoneName,
@@ -731,15 +732,26 @@ async function handleCreateBooking(req, res) {
   const coverage = await resolveAddressCoverage(address);
   let calloutFee = applySurcharge(coverage.calloutFee ?? 0, scheduled_date);
 
+  const hasPaymentRef = Boolean(payment_intent_id || checkout_session_id);
+
   // A booking whose address cannot be resolved is sent to the quote flow and
   // never charged, so one should not arrive here at all. One still can: the
   // client resolved the address confidently a minute ago, paid, and by the
   // time this runs the geocoder is rate-limited or down. Refunding then would
   // punish a paying customer for someone else's outage - so step 4 below
   // accepts the amount they actually paid, provided it is a real band fee.
+  //
+  // With NO payment behind it, though, an unresolved address must not become
+  // a booking: that is the free-booking hole. It goes to the quote flow.
   if (coverage.covered === 'unknown') {
+    if (!hasPaymentRef && !isAdmin) {
+      return res.status(400).json({
+        error:
+          "We couldn't work out the trip to that address - message us on WhatsApp and we'll sort it out.",
+      });
+    }
     console.warn(
-      '[create-booking] coverage unresolved, will accept a paid band fee - confirm by hand:',
+      '[create-booking] coverage unresolved but payment present, accepting a band fee - confirm by hand:',
       address
     );
   }
@@ -856,8 +868,14 @@ async function handleCreateBooking(req, res) {
   // 4. Verify payment (skipped for the admin test account, and for a
   // membership visit that waived the callout fee down to $0 - there's no
   // Stripe charge to verify since nothing was ever going to be charged).
+  //
+  // The `calloutFee > 0` test alone was a hole once 'unknown' started
+  // quoting no fee: calloutFee came out 0, this block was skipped entirely,
+  // and an unresolvable address produced a booking with no payment checked at
+  // all. Any request carrying a payment reference is verified now, whatever
+  // the computed fee - a payment that exists must always be checked.
   let verifiedPI = null;
-  if (!isAdmin && calloutFee > 0) {
+  if (!isAdmin && (calloutFee > 0 || hasPaymentRef)) {
     if (!process.env.STRIPE_SECRET_KEY) return res.status(402).json({ error: 'Payment required' });
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     try {
