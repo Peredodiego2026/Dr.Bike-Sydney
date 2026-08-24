@@ -1638,13 +1638,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  document.querySelectorAll('.services-grid .service-card').forEach(function(card) {
-    card.style.cursor = 'pointer';
-    card.addEventListener('click', function() {
-      const svcName = card.querySelector('.svc-name');
-      openBooking(svcName ? svcName.textContent.trim() : null);
-    });
-  });
+  // Removed a dead whole-card click handler here (audit 2026-08-23): it
+  // queried '.services-grid .service-card', neither of which class has ever
+  // existed on this page (the cards are .svc-card), so the forEach was always
+  // empty - a no-op since it was written. The "Book Now" button inside each
+  // card (.svc-btn, wired above) is the real, working entry point.
 
   /* login-cta buttons removed — auth via nav My Account button */
 });

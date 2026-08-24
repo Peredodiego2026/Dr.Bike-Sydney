@@ -66,13 +66,23 @@ const DEFAULT_CALLOUT_FEE = 20;
 export async function getCalloutFee(address) {
   try {
     const { data, error } = await sb.from('callout_zones').select('callout_fee, suburbs');
-    if (error || !data?.length) return DEFAULT_CALLOUT_FEE;
+    // A query error is NOT the same as "no zones configured": if it fails, the
+    // client shows (and tries to pay) the flat $20 while the server recomputes
+    // the real suburb fee and rejects the mismatch - the client just can't
+    // book, with no clue why. Silent until now (audit 2026-08-23) - at least
+    // leave a trace so a broken callout_zones read is diagnosable.
+    if (error) {
+      console.error('[getCalloutFee] callout_zones read failed, showing $20:', error.message);
+      return DEFAULT_CALLOUT_FEE;
+    }
+    if (!data?.length) return DEFAULT_CALLOUT_FEE;
     const addr = (address || '').toLowerCase();
     const zone = data.find((z) =>
       (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
     );
     return zone ? Number(zone.callout_fee) : DEFAULT_CALLOUT_FEE;
-  } catch {
+  } catch (e) {
+    console.error('[getCalloutFee] threw, showing $20:', e.message);
     return DEFAULT_CALLOUT_FEE;
   }
 }
@@ -86,7 +96,8 @@ export async function getMechanicInfo(mechanicId) {
       .single();
     if (error) return { name: 'Your Mechanic', phone: '0433 963 250' };
     return data;
-  } catch {
+  } catch (e) {
+    console.error('[getMechanicInfo] failed, showing generic contact:', e.message);
     return { name: 'Your Mechanic', phone: '0433 963 250' };
   }
 }

@@ -291,6 +291,18 @@ img {
   div[style*='cursor:pointer']:hover {
     filter: brightness(0.95);
   }
+  /* Replaces the inline onmouseover/onmouseout colour swaps that six buttons
+     still carried (audit 2026-08-23) - the project forbids inline handlers.
+     .lp-hover-fill: an outline button that fills on hover; .lp-hover-dark: a
+     solid blue button that deepens. Both override the generic brightness
+     above by setting the colour outright. */
+  .lp-hover-fill:hover {
+    background: var(--blue) !important;
+    color: var(--white) !important;
+  }
+  .lp-hover-dark:hover {
+    background: var(--blue-dark) !important;
+  }
 }
 
 /* ── Trust Bar ────────────────────────────────────────────────────────────── */
