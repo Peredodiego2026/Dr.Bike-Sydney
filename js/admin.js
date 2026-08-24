@@ -1949,7 +1949,9 @@ async function sendBroadcastPush() {
             }),
           });
           sent++;
-        } catch (e) {}
+        } catch (e) {
+          console.error('[broadcast-push] failed for client', p.id, e.message);
+        }
       })
     );
 
@@ -8229,7 +8231,9 @@ if (document.readyState === 'loading') {
 setTimeout(() => {
   try {
     loadBookings();
-  } catch (e) {}
+  } catch (e) {
+    console.error('[admin] background bookings preload failed:', e.message);
+  }
 }, 2000);
 
 // Inject notification panel into body
