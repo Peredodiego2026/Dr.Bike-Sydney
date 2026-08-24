@@ -553,6 +553,7 @@ function go(page, btn) {
     loadFinance();
   }
   if (page === 'vans') {
+    renderVanCards();
     renderMechStats();
     renderRouteMap();
   }
@@ -1693,7 +1694,11 @@ function exportFinancePDF() {
 // ── AVAILABILITY BLOCKING ─────────────────────────────────────────────────────
 function openBlockModal() {
   document.getElementById('block-modal')?.remove();
-  const today = new Date().toISOString().split('T')[0];
+  // calDateStr, not .toISOString() - same UTC-vs-Sydney-local bug as 21.11's
+  // calendar fix (never propagated here): from local midnight to ~10-11am,
+  // .toISOString() rolls back to the PREVIOUS day, so the modal defaulted
+  // to (and let you pick) yesterday's date during that window.
+  const today = calDateStr(new Date());
   const modal = document.createElement('div');
   modal.id = 'block-modal';
   modal.style.cssText =
@@ -1837,16 +1842,19 @@ async function unblockSelected() {
     return;
   }
 
-  // Same column/van semantics as saveBlocks and unblockDate.
-  let q = sb
+  // Same column/van semantics as saveBlocks. `van` is always 0/1/2 here (the
+  // select has no empty option) and 0 IS "All vans" - a real filter value,
+  // not "no filter". `if (van)` used to treat 0 as falsy and skip the
+  // van_number filter entirely, so choosing "All vans" deleted every van's
+  // blocks (0, 1 AND 2) for that date/slot instead of just the "all vans"
+  // ones. Found by Diego in production, 2026-08-23.
+  const { error } = await sb
     .from('availability')
     .delete()
     .eq('date', date)
     .eq('available', false)
+    .eq('van_number', van)
     .in('time_slot', slots);
-  if (van) q = q.eq('van_number', van);
-
-  const { error } = await q;
   if (error) {
     showToast('Error: ' + error.message);
     return;
@@ -1868,11 +1876,14 @@ async function unblockDate() {
   }
 
   // Same column as saveBlocks writes. This filtered on `blocked` too, so
-  // Unblock could not have worked even if Block had.
-  let q = sb.from('availability').delete().eq('date', date).eq('available', false);
-  if (van) q = q.eq('van_number', van);
-
-  const { error } = await q;
+  // Unblock could not have worked even if Block had. `van` is always 0/1/2
+  // (see unblockSelected() above for why `if (van)` was wrong to skip 0).
+  const { error } = await sb
+    .from('availability')
+    .delete()
+    .eq('date', date)
+    .eq('available', false)
+    .eq('van_number', van);
   if (error) {
     showToast('Error: ' + error.message);
     return;
@@ -2714,7 +2725,7 @@ async function loadDashboard() {
           <td data-label="Time">${timeStr}</td>
           <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
           <td data-label="Status"><span style="background:${stBg2[st]};color:${stColors2[st]};padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600">${stLabel2[st] || st}</span></td>
-          <td data-label="Total" style="font-weight:700;color:var(--blue)">${anBookingRevenue(b)}</td>
+          <td data-label="Total" style="font-weight:700;color:var(--blue)">${anMoney(anBookingRevenue(b))}</td>
         </tr>`;
         })
         .join('');
@@ -2753,7 +2764,7 @@ async function loadDashboard() {
             <div class="sch-name">${esc(b.profiles?.full_name || b.client_name || 'Client')}</div>
             <div class="sch-svc">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
           </div>
-          <div class="sch-price">${anBookingRevenue(b)}</div>
+          <div class="sch-price">${anMoney(anBookingRevenue(b))}</div>
         </div>`
         )
         .join('');
@@ -2884,7 +2895,7 @@ function renderBookingsTable(data) {
       <td data-label="Suburb">${esc(b.suburb || '—')}</td>
       <td data-label="Van"><span class="mech-tag v${b.van_number || 1}">Van ${b.van_number || 1}</span></td>
       <td data-label="Status"><span class="status ${stClass[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
-      <td data-label="Price"><b>${anBookingRevenue(b)}</b></td>
+      <td data-label="Price"><b>${anMoney(anBookingRevenue(b))}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
         ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:var(--purple);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
@@ -2981,14 +2992,42 @@ function openReassign(id) {
   document.getElementById('reassign-modal').style.display = 'flex';
 }
 
+// Used to write straight to `bookings` from the browser with no error check
+// (an RLS denial or a slot conflict left the row unmoved while the UI still
+// said "Reassigned ✓") and no check that the target van was actually free at
+// that time - unlike every other booking-mutating action in this file. Now
+// routed through handleAdminReassignVan, same server-side verify + conflict
+// check as reschedule/create-booking. Found in audit, 2026-08-23.
 async function doReassign(vanNum) {
   const id = document.getElementById('reassign-booking-id').value;
-  await sb.from('bookings').update({ van_number: vanNum }).eq('id', id);
-  const b = allBookings.find((x) => x.id === id);
-  if (b) b.van_number = vanNum;
-  document.getElementById('reassign-modal').style.display = 'none';
-  applyBookingFilters();
-  showToast(`Reassigned to Van ${vanNum} ✓`);
+  const btn6 = document.getElementById('auto-wire-6');
+  const btn7 = document.getElementById('auto-wire-7');
+  if (btn6) btn6.disabled = true;
+  if (btn7) btn7.disabled = true;
+  try {
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-reassign-van',
+        access_token: await adminAccessToken(),
+        booking_id: id,
+        van_number: vanNum,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Could not reassign van');
+    const b = allBookings.find((x) => x.id === id);
+    if (b) b.van_number = vanNum;
+    document.getElementById('reassign-modal').style.display = 'none';
+    applyBookingFilters();
+    showToast(`Reassigned to Van ${vanNum} ✓`);
+  } catch (e) {
+    showToast('Error: ' + e.message);
+  } finally {
+    if (btn6) btn6.disabled = false;
+    if (btn7) btn7.disabled = false;
+  }
 }
 
 // ── ADMIN MANUAL BOOKING (docs/PENDIENTES.md 25.5) ──────────────────────────
@@ -3324,7 +3363,7 @@ async function loadRecentNotifications() {
         <span style="font-size:11px;color:#fff;background:${stColors[st] || '#475569'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
       </div>
       <div style="font-size:13px;color:var(--mgray)">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
-      <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anBookingRevenue(b)}</div>
+      <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anMoney(anBookingRevenue(b))}</div>
     </div>`;
     })
     .join('');
@@ -3343,7 +3382,7 @@ function prependNotification(b) {
     'padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--blue-tint);border-left:3px solid var(--blue);animation:fadeSlideIn .3s';
   div.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--navy)">🔔 New booking</div>
     <div style="font-size:13px;color:var(--mgray)">${b.service_name || 'Service'} · ${esc(b.suburb || '—')}</div>
-    <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anBookingRevenue(b)}</div>`;
+    <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anMoney(anBookingRevenue(b))}</div>`;
   list.prepend(div);
 }
 
@@ -3577,7 +3616,10 @@ function toggleRouteMode() {
 async function renderRouteMap(useCache) {
   const mapEl = document.getElementById('route-map');
   if (!mapEl || typeof L === 'undefined') return;
-  const today = new Date().toISOString().split('T')[0];
+  // calDateStr, not .toISOString() - same bug as openBlockModal above: from
+  // Sydney local midnight to ~10-11am, .toISOString() rolls back to
+  // yesterday, so "Today's optimised route" silently showed yesterday's jobs.
+  const today = calDateStr(new Date());
 
   let bookings = _routeBookingsCache;
   if (!useCache || !bookings) {
@@ -5556,6 +5598,51 @@ function renderLTV(all) {
     .join('');
 }
 
+// Van 1/Van 2 cards used to show hardcoded zone text and a hardcoded
+// "● Online" badge, written straight into admin.html - grepped, nothing in
+// this file ever touched them. Reassigning a suburb in Zone Manager left
+// this page showing stale zones forever, and "Online" was fake regardless
+// of any real mechanic state. Found in audit, 2026-08-23. Zone text now
+// reads van_zones (same table Zone Manager writes); online/offline reuses
+// renderVanLocations()'s own "no ping in 15min" rule against
+// mechanic_locations, so the two views of "is this van live" can't disagree.
+async function renderVanCards() {
+  const [{ data: zoneRows }, { data: locRows }] = await Promise.all([
+    sb.from('van_zones').select('van_number,suburb').eq('active', true).order('van_number'),
+    sb
+      .from('mechanic_locations')
+      .select('van_number,updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(50),
+  ]);
+
+  const suburbsByVan = {};
+  (zoneRows || []).forEach((r) => {
+    if (r.suburb === '__driver__' || r.suburb === '__whatsapp__') return;
+    (suburbsByVan[r.van_number] ||= []).push(r.suburb);
+  });
+
+  const staleAfterMin = 15;
+  const latestByVan = {};
+  (locRows || []).forEach((r) => {
+    if (!(r.van_number in latestByVan)) latestByVan[r.van_number] = r;
+  });
+
+  [1, 2].forEach((v) => {
+    const zoneEl = document.getElementById(`van-zone-${v}`);
+    if (zoneEl) zoneEl.textContent = suburbsByVan[v]?.length ? suburbsByVan[v].join(' · ') : 'No zone assigned';
+
+    const onlineEl = document.getElementById(`van-online-${v}`);
+    if (onlineEl) {
+      const last = latestByVan[v];
+      const ageMin = last ? (Date.now() - new Date(last.updated_at).getTime()) / 60000 : Infinity;
+      const online = ageMin <= staleAfterMin;
+      onlineEl.className = 'van-online ' + (online ? 'on' : 'off');
+      onlineEl.textContent = online ? '● Online' : '● Offline';
+    }
+  });
+}
+
 async function renderMechStats() {
   const vansDiv = document.querySelector('#page-vans');
   if (!vansDiv) return;
@@ -6888,6 +6975,12 @@ async function loadCalendar() {
     fitMonthGrid();
     return;
   }
+
+  // fitMonthGrid() only ever SET #cal-grid's inline height, never cleared
+  // it - switching Month -> Week/Day left last month's computed height
+  // applied, squeezing Week/Day's own (usually shorter) content into that
+  // box with a spurious inner scrollbar until the next full page load.
+  grid.style.height = '';
 
   // Set week start to Monday - week view only. Day view used to run this
   // unconditionally: calNext()/calPrev() move calWeekStart by +-1 day, then
