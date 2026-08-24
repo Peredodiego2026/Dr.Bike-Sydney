@@ -1,8 +1,9 @@
 // v71 (2026-08-23): audit fixes touched js/supabase.js (getCalloutFee /
-// getMechanicInfo now log instead of swallowing) and js/app.js (reschedule
-// date-picker timezone). supabase.js is imported as an ES module with no ?v=,
-// so only a cache bump reaches it - the ?v= tags on app.js/landing-inline.js/
-// landing.css are bumped in their pages too, this covers the module.
+// getMechanicInfo now log instead of swallowing), js/app.js (reschedule
+// date-picker timezone) and js/i18n.js (3 dead "$20 call-out fee" keys
+// removed). supabase.js and i18n.js are imported as ES modules with no ?v=,
+// so only a cache bump reaches them - the ?v= tags on app.js/landing-inline.js/
+// landing.css are bumped in their pages too, this covers the modules.
 // v70 (2026-08-24): the My Bikes bottom-nav icon went 28px -> 22px in v69 to
 // match its siblings exactly, but Diego then said it read as too small - the
 // bike PNG traces its silhouette with more internal padding than the stroke
