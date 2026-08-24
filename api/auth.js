@@ -3,7 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import { geocodeAddress, drivingRoute } from './_eta.js';
+import { geocodeAddress, drivingRoute, suggestAddresses } from './_eta.js';
 import { resolveCoverage, needsQuote, BASE, VALID_FEES } from './_coverage.js';
 import {
   guard,
@@ -424,6 +424,21 @@ export async function matchCalloutZone(sb, address) {
 // win trust was telling people in Newport and Castle Hill to go elsewhere.
 // Now it runs the same resolution as the booking path, so the fee quoted here
 // and the fee charged later cannot disagree.
+// Address autocomplete, moved off the customer's browser. It used to call
+// Nominatim directly from every device on a 250 ms debounce - five to ten
+// requests per address typed, per person - and the `User-Agent` the old code
+// passed was silently dropped, because browsers do not let fetch() set it. So
+// the app was anonymous to a service whose policy requires applications to
+// identify themselves, and there was no way to cache anything.
+//
+// Public and unauthenticated on purpose, same as the coverage and fee checks:
+// this runs while somebody is still deciding whether to book.
+async function handleAddressSuggest(req, res) {
+  const { query } = req.body || {};
+  const results = await suggestAddresses(query);
+  return res.status(200).json({ results });
+}
+
 async function handleZonePrice(req, res) {
   const { address } = req.body || {};
   if (!address) return res.status(400).json({ error: 'address required' });
@@ -4597,6 +4612,7 @@ async function handler(req, res) {
   if (role === 'create-booking') return handleCreateBooking(req, res);
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'zone-price') return handleZonePrice(req, res);
+  if (role === 'address-suggest') return handleAddressSuggest(req, res);
   if (role === 'get-price') return handleGetPrice(req, res);
   if (role === 'save-card-setup') return handleSaveCardSetupIntent(req, res);
   if (role === 'save-card-confirm') return handleSaveCardConfirm(req, res);

@@ -1,3 +1,7 @@
+// v73 (2026-08-24): el autocompletado de direcciones dejo de llamar a
+// Nominatim desde el navegador de cada cliente (5-10 consultas por direccion
+// tipeada, sin User-Agent porque el navegador lo descarta) y pasa por el
+// servidor con cache. Toca js/app.js.
 // v72 (2026-08-24): the "we don't service that address" message was a toast
 // with `white-space: nowrap` - an 85-character string (longer in es/zh) blew
 // past both screen edges and was unreadable, then vanished after 3s leaving a
@@ -64,7 +68,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v72';
+const CACHE_STATIC = 'drbike-static-v73';
 const CACHE_PAGES  = 'drbike-pages-v70';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

@@ -182,3 +182,54 @@ describe('create-booking: an unresolved address can never be a free booking', ()
     expect(hits).toHaveLength(2); // check-coverage + zone-price
   });
 });
+
+// ── Regression: the external services must not be hammered ───────────────────
+// Nominatim allows one request per second and asks that results be cached;
+// OSRM's demo server promises nothing. The failure is silent - a rate-limited
+// lookup returns null, coverage falls back to the zone table, and a customer
+// who should have been quoted lands in the manual queue with nobody the wiser.
+const etaSrc = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'api', '_eta.js'),
+  'utf8'
+);
+const appSrc = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'js', 'app.js'),
+  'utf8'
+);
+
+describe('address lookups are cached and made from one place', () => {
+  it('the browser never calls Nominatim itself any more', () => {
+    const realCalls = appSrc
+      .split('\n')
+      .filter((l) => /nominatim/i.test(l) && !l.trim().startsWith('//'));
+    expect(realCalls).toEqual([]);
+  });
+
+  it('autocomplete goes through our own endpoint, which is registered', () => {
+    expect(appSrc).toMatch(/role: 'address-suggest'/);
+    expect(authSrc).toMatch(/role === 'address-suggest'/);
+  });
+
+  it('geocode, route and suggest all read the cache before the network', () => {
+    for (const kind of ['geocode', 'route', 'suggest']) {
+      expect(etaSrc.includes(`cacheGet('${kind}'`)).toBe(true);
+    }
+  });
+
+  it('a remembered miss expires sooner than a hit, so a fixed address recovers', () => {
+    expect(etaSrc).toMatch(/MISS_TTL_DAYS = 7/);
+    expect(etaSrc).toMatch(/CACHE_TTL_DAYS = 90/);
+  });
+
+  it('a service outage is not cached as if it were an answer', () => {
+    expect(etaSrc).toMatch(/if \(!r\.ok\) return null; \/\/ transient - do NOT cache/);
+  });
+
+  it('the route key includes the origin, so a second van cannot inherit times', () => {
+    expect(etaSrc).toMatch(/const routeKey = `\$\{lat\.toFixed\(4\)\},\$\{lng\.toFixed\(4\)\}/);
+  });
+
+  it('a cache failure never breaks a booking', () => {
+    expect(etaSrc).toMatch(/a cache that cannot be written is still a working app/);
+  });
+});

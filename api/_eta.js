@@ -6,11 +6,70 @@
 // device. Everything is best-effort - any failure returns null and the caller
 // sends its message without an ETA rather than inventing one.
 
+import { createClient } from '@supabase/supabase-js';
+
 const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
 const OSRM = 'https://router.project-osrm.org/route/v1/driving';
 const UA = 'DrBikeSydney/1.0 (contact@drbikesydney.com.au)';
 
-async function geocode(address, signal) {
+// ── Cache ────────────────────────────────────────────────────────────────────
+// Nominatim allows one request per second and asks that results be cached.
+// OSRM's demo server promises nothing at all. Before this, one booking could
+// geocode the same address three or four times over, and the browser's
+// autocomplete added five to ten more per person while they typed.
+//
+// The failure mode is what makes this worth fixing rather than watching: a
+// rate-limited lookup returns null, coverage silently falls back to the zone
+// table, and a customer who should have been quoted a price lands in the
+// manual WhatsApp queue instead. It degrades quietly, which is the kind of
+// bug this project keeps finding months late.
+const CACHE_TTL_DAYS = 90;
+const MISS_TTL_DAYS = 7; // a "found nothing" is remembered briefly, not for 90 days
+
+const cacheKey = (kind, value) =>
+  `${kind}:${String(value).toLowerCase().replace(/\s+/g, ' ').trim()}`;
+
+function cacheClient() {
+  const url = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  if (!key) return null;
+  return createClient(url, key);
+}
+
+// Never throws and never blocks the caller: a cache that is down must not be
+// able to stop a booking, it just means the lookup runs as it did before.
+async function cacheGet(kind, value) {
+  const sb = cacheClient();
+  if (!sb) return undefined;
+  try {
+    const { data } = await sb
+      .from('geo_cache')
+      .select('payload, created_at')
+      .eq('cache_key', cacheKey(kind, value))
+      .maybeSingle();
+    if (!data) return undefined;
+    const ageDays = (Date.now() - new Date(data.created_at).getTime()) / 86400000;
+    const ttl = data.payload === null ? MISS_TTL_DAYS : CACHE_TTL_DAYS;
+    if (ageDays > ttl) return undefined;
+    return data.payload; // null is a real answer here: "looked up, found nothing"
+  } catch {
+    return undefined;
+  }
+}
+
+async function cacheSet(kind, value, payload) {
+  const sb = cacheClient();
+  if (!sb) return;
+  try {
+    await sb
+      .from('geo_cache')
+      .upsert({ cache_key: cacheKey(kind, value), kind, payload, created_at: new Date() });
+  } catch {
+    /* a cache that cannot be written is still a working app */
+  }
+}
+
+async function geocodeLive(address, signal) {
   const q = encodeURIComponent(address);
   const r = await fetch(`${NOMINATIM}?format=json&limit=1&countrycodes=au&q=${q}`, {
     headers: { 'User-Agent': UA },
@@ -23,6 +82,54 @@ async function geocode(address, signal) {
   const lat = parseFloat(hit.lat);
   const lng = parseFloat(hit.lon);
   return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+}
+
+async function geocode(address, signal) {
+  const cached = await cacheGet('geocode', address);
+  if (cached !== undefined) return cached;
+  const hit = await geocodeLive(address, signal);
+  await cacheSet('geocode', address, hit);
+  return hit;
+}
+
+// The address autocomplete. Was called straight from every customer's browser
+// on a 250 ms debounce - five to ten requests per address typed, per person,
+// with no way to identify the app: browsers silently drop a `User-Agent`
+// header set by fetch(), so the "DrBikeSydney/1.0" the old code passed never
+// left the machine. Nominatim's policy requires an application to identify
+// itself, and this now does, from one server instead of every device - which
+// is what this file's opening comment always said the design was.
+export async function suggestAddresses(query, { limit = 5, timeoutMs = 4000 } = {}) {
+  const q = String(query || '').trim();
+  if (q.length < 3) return [];
+  const cached = await cacheGet('suggest', q);
+  if (cached !== undefined) return cached || [];
+
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const enc = encodeURIComponent(`${q}, Sydney, NSW, Australia`);
+    const r = await fetch(
+      `${NOMINATIM}?format=json&limit=${limit}&addressdetails=1&countrycodes=au&q=${enc}`,
+      { headers: { 'User-Agent': UA, 'Accept-Language': 'en' }, signal: ctl.signal }
+    );
+    if (!r.ok) return [];
+    const raw = await r.json();
+    // Nominatim returns separate OSM records that render to the same text
+    // (different way segments of one street), so the dropdown used to show
+    // the identical line two or three times.
+    const seen = new Set();
+    const out = (Array.isArray(raw) ? raw : [])
+      .filter((i) => i?.display_name && !seen.has(i.display_name) && seen.add(i.display_name))
+      .map((i) => ({ display_name: i.display_name, lat: i.lat, lon: i.lon }));
+    await cacheSet('suggest', q, out);
+    return out;
+  } catch (e) {
+    console.warn('[geo] suggest failed:', e.message);
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // Same lookup, on its own, for the one caller that wants coordinates rather
@@ -59,23 +166,35 @@ export async function drivingRoute({ fromLat, fromLng, address, timeoutMs = 5000
   if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
   if (!address || String(address).trim().length < 4) return null;
 
+  // Keyed on the origin too: the same address routed from a different van
+  // base is a different trip, so a second van cannot inherit the first one's
+  // cached times.
+  const routeKey = `${lat.toFixed(4)},${lng.toFixed(4)}|${String(address).trim()}`;
+  const cached = await cacheGet('route', routeKey);
+  if (cached !== undefined) return cached;
+
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const dest = await geocode(String(address).trim(), ctl.signal);
-    if (!dest) return null;
+    if (!dest) {
+      await cacheSet('route', routeKey, null);
+      return null;
+    }
     const r = await fetch(`${OSRM}/${lng},${lat};${dest.lng},${dest.lat}?overview=false`, {
       signal: ctl.signal,
     });
-    if (!r.ok) return null;
+    if (!r.ok) return null; // transient - do NOT cache a service outage
     const data = await r.json();
     const seconds = data?.routes?.[0]?.duration;
     const metres = data?.routes?.[0]?.distance;
     if (!Number.isFinite(seconds)) return null;
-    return {
+    const out = {
       minutes: Math.max(1, Math.round(seconds / 60)),
       km: Number.isFinite(metres) ? Math.round(metres / 1000) : null,
     };
+    await cacheSet('route', routeKey, out);
+    return out;
   } catch (e) {
     console.warn('[eta] could not compute:', e.message);
     return null;

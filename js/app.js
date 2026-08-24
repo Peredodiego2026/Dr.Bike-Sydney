@@ -1235,28 +1235,22 @@ async function renderBookService() {
         return;
       }
       try {
-        const q = encodeURIComponent(query + ', Sydney, NSW, Australia');
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=5&addressdetails=1`,
-          {
-            headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' },
-          }
-        );
-        const raw = await res.json();
-        if (!raw.length) {
+        // Goes through our own server now. This used to call Nominatim
+        // straight from the browser, once per 250 ms of typing, per person -
+        // and the User-Agent it set was silently dropped (browsers forbid it),
+        // so the app was anonymous to a service that rate-limits and asks
+        // applications to identify themselves. Server-side there is one
+        // caller, a real User-Agent, and a cache. Deduping moved there too.
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'address-suggest', query }),
+        });
+        const { results: data } = res.ok ? await res.json() : { results: [] };
+        if (!data?.length) {
           suggestionsBox.style.display = 'none';
           return;
         }
-        // Nominatim can return multiple distinct records that render to the
-        // exact same display_name (separate OSM way segments for the same
-        // street, etc.) - dedupe on the visible text so the dropdown never
-        // shows the identical suggestion two or three times in a row.
-        const seen = new Set();
-        const data = raw.filter((item) => {
-          if (seen.has(item.display_name)) return false;
-          seen.add(item.display_name);
-          return true;
-        });
         suggestionsBox.innerHTML = data
           .map(
             (item) => `
@@ -2292,19 +2286,11 @@ function haversineKm([lat1, lng1], [lat2, lng2]) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ── Geocode address via Nominatim (free, no key needed) ───────────────────────
-async function geocodeAddress(address) {
-  if (!address) return null;
-  try {
-    const q = encodeURIComponent(address + ', Sydney, NSW, Australia');
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
-      headers: { 'Accept-Language': 'en', 'User-Agent': 'DrBikeSydney/1.0' },
-    });
-    const data = await r.json();
-    if (data?.[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-  } catch {}
-  return null;
-}
+// A browser-side geocodeAddress() lived here with no callers - dead since
+// handleCreateBooking started storing coordinates on the booking itself
+// (docs/PENDIENTES.md 13.1), so the tracking page never has to look one up.
+// Removed rather than left: it was a Nominatim caller waiting for somebody to
+// wire it back in, from the browser, without a User-Agent or a cache.
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
