@@ -1343,6 +1343,14 @@ function bkServiceNameFrom(card) {
 // booking later charges. Same non-native-dialog, swap-the-card pattern as the
 // account panel (10.2) - one card, its content replaced per step, not three
 // separate modals stacked and hidden.
+//
+// This script tag runs before js/app.js's module (also loaded by
+// landing.html, for the shared booking wizard) reaches its own #hero-fee-btn
+// wiring, so setting this here - synchronously, not inside DOMContentLoaded -
+// is what makes js/app.js back off instead of double-binding the same
+// button. See the matching check in js/app.js.
+window.__landingOwnsFeeCheck = true;
+
 function feeCheckKeyframes() {
   if (document.getElementById('fee-check-styles')) return;
   const s = document.createElement('style');
@@ -1352,7 +1360,7 @@ function feeCheckKeyframes() {
 }
 
 function feeCheckCardHtml(inner) {
-  return '<div class="fee-check-card" style="background:var(--white);border-radius:16px;max-width:420px;width:100%;padding:32px 28px;box-shadow:0 20px 60px rgba(13,31,60,0.35);position:relative">'
+  return '<div class="fee-check-card" style="background:var(--white);border-radius:16px;max-width:320px;width:100%;padding:28px 24px;box-shadow:0 20px 60px rgba(13,31,60,0.35);position:relative">'
     + '<button class="fee-check-close" type="button" aria-label="Close" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;line-height:1;color:var(--gray-lt);cursor:pointer;padding:4px">&#215;</button>'
     + inner
     + '</div>';
