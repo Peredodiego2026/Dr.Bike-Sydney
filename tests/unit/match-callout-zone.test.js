@@ -43,4 +43,20 @@ describe('matchCalloutZone', () => {
     const match = await matchCalloutZone(fakeSb([]), '12 Beach Rd, Curl Curl');
     expect(match).toBeNull();
   });
+
+  // Found in production 2026-08-24 (Diego): "What's My Fee?" takes a bare
+  // suburb name, but a DB entry can be the more specific "Bondi Beach" /
+  // "Bondi Junction" - the plain suburb never contains the longer DB entry,
+  // so every short input silently reported "not covered".
+  it('matches a bare suburb name against a longer, more specific DB entry', async () => {
+    const zones = [{ name: 'City & Inner Sydney', callout_fee: 45, suburbs: ['bondi beach', 'bondi junction'] }];
+    const match = await matchCalloutZone(fakeSb(zones), 'Bondi');
+    expect(match).toEqual({ calloutFee: 45, zoneName: 'City & Inner Sydney' });
+  });
+
+  it('does not let a near-empty address match every zone (space-only suburb names)', async () => {
+    const zones = [{ name: 'City & Inner Sydney', callout_fee: 45, suburbs: ['bondi beach'] }];
+    const match = await matchCalloutZone(fakeSb(zones), 'a');
+    expect(match).toBeNull();
+  });
 });

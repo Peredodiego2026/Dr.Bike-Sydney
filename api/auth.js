@@ -359,9 +359,21 @@ async function handleCheckCoverage(req, res) {
 // number than what actually gets charged. Same idea as matchVanZone above.
 export async function matchCalloutZone(sb, address) {
   const { data: zones } = await sb.from('callout_zones').select('name,callout_fee,suburbs');
-  const addr = (address || '').toLowerCase();
+  const addr = (address || '').trim().toLowerCase();
+  // Bidirectional on purpose: a full booking address ("123 Beach Rd, Bondi
+  // Beach NSW") CONTAINS the shorter DB suburb, but "What's My Fee?" takes a
+  // bare suburb name and the DB entry is sometimes the more specific "Bondi
+  // Beach"/"Bondi Junction" - "bondi" alone never contains either, so every
+  // plain suburb name silently reported "not covered" (found in production,
+  // 2026-08-24, reported by Diego - "Bondi" is literally this file's own
+  // placeholder example). The addr.length >= 3 guard matches the frontend's
+  // own minimum and stops a near-empty address from matching every zone
+  // whose suburb list contains a space.
   const zone = (zones || []).find((z) =>
-    (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
+    (z.suburbs || []).some((s) => {
+      const suburb = String(s).toLowerCase();
+      return addr.includes(suburb) || (addr.length >= 3 && suburb.includes(addr));
+    })
   );
   return zone ? { calloutFee: Number(zone.callout_fee), zoneName: zone.name } : null;
 }
