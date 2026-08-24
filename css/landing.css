@@ -81,12 +81,24 @@ img {
   display: flex;
   gap: 32px;
 }
-.nav-links a {
+/* The Services entry is a <button>, not an <a>: it opens the price catalogue
+   in place rather than scrolling to a section that no longer exists. Styled
+   alongside the links so the nav still reads as one row of equal items. */
+.nav-links a,
+.nav-links button {
   font-size: 14px;
   color: var(--gray);
   transition: color 150ms;
 }
-.nav-links a:hover {
+.nav-links button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+.nav-links a:hover,
+.nav-links button:hover {
   color: var(--blue);
 }
 .nav-lang-btn {
@@ -305,39 +317,6 @@ img {
   }
 }
 
-/* ── Trust Bar ────────────────────────────────────────────────────────────── */
-.trust-bar {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 20px 0;
-}
-.trust-bar .container {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-}
-.trust-label {
-  font-size: 11px;
-  letter-spacing: 1.5px;
-  color: var(--gray-lt);
-  font-weight: 600;
-  white-space: nowrap;
-}
-.trust-brands {
-  display: flex;
-  gap: 32px;
-  align-items: center;
-  margin-left: auto;
-}
-.trust-brand {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--gray);
-}
-.trust-sep {
-  color: var(--border);
-  font-size: 16px;
-}
 
 .section-center {
   text-align: center;
