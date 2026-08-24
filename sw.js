@@ -1,3 +1,12 @@
+// v69 (2026-08-24): the My Bikes bottom-nav icon was 28px next to its four
+// 22px siblings (Home/Bookings/Track/Profile), reported by Diego as
+// mismatched size AND height - a taller flex item shifts where its label
+// sits relative to the others even though the label's own font-size never
+// changed. Fixed in both places it's defined, index.html's static markup
+// and js/components.js's createBottomNav() - the second is imported with no
+// `?v=` (same reasoning as js/i18n.js, see CLAUDE.md), so only this cache
+// bump actually delivers it to a returning browser.
+//
 // v68 (2026-08-18, docs/PENDIENTES.md 3.2-cache): the 3.2 landing.html diet
 // (PR #291) moved ~2155 lines of inline <script> content out into two real
 // files, js/landing-inline.js and js/landing-modules.js, loaded with NO ?v=
@@ -37,8 +46,8 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v68';
-const CACHE_PAGES  = 'drbike-pages-v68';
+const CACHE_STATIC = 'drbike-static-v69';
+const CACHE_PAGES  = 'drbike-pages-v69';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
 // too, without their query, and every one of those entries was dead weight:

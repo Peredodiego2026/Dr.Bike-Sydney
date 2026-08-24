@@ -154,6 +154,23 @@
   margin-top: 24px;
   flex-wrap: wrap;
 }
+/* Diego reported "What's My Fee?" (.btn-white) rendering as a full pill next
+   to Book a Service / View Services, on both Chrome (with extensions) and
+   Firefox private browsing (no extensions) - ruling out an extension.
+   Checked the deployed CSS, computed styles, and the actual painted pixels
+   (sharp, corner-by-corner) from this session's own Playwright renders: all
+   three buttons trace an identical 12px radius, no measurable difference.
+   Could not reproduce or explain the discrepancy despite that. This grouped
+   rule removes any possibility of the three selectors resolving `var(--radius)`
+   differently, whatever the real cause turns out to be - it can only help.
+   `appearance: none` on .btn-white below is the same kind of defensive
+   hardening, in case native button chrome is bleeding through on the one
+   button of the three with no visible border to mask it. */
+[data-screen='home'] .btn-primary,
+[data-screen='home'] .btn-outline,
+[data-screen='home'] .btn-white {
+  border-radius: var(--radius);
+}
 [data-screen='home'] .btn-primary {
   background: var(--blue);
   color: var(--white);
@@ -199,6 +216,7 @@
    .btn-outline: it opens a price checker, not a commitment like Book/View,
    so it reads as its own thing at a glance before anyone reads the label. */
 [data-screen='home'] .btn-white {
+  appearance: none;
   background: var(--white);
   border: none;
   color: var(--navy);
@@ -547,7 +565,8 @@
     flex-direction: column;
   }
   [data-screen='home'] .btn-primary,
-  [data-screen='home'] .btn-outline {
+  [data-screen='home'] .btn-outline,
+  [data-screen='home'] .btn-white {
     text-align: center;
     justify-content: center;
   }
