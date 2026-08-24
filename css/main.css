@@ -1333,7 +1333,14 @@ body {
     opacity 0.25s,
     transform 0.25s;
   z-index: 9999;
-  white-space: nowrap;
+  /* `white-space: nowrap` lived here and forced every toast onto one line.
+     Fine for "Booking cancelled ✓", but an 85-character message (the coverage
+     one, longer still in es/zh) stretched the box to ~600px on a 375px phone
+     and, being centre-anchored, spilled off BOTH edges - unreadable. Found in
+     production 2026-08-24. Wrapping plus a cap that respects the viewport
+     keeps short toasts on one line and lets long ones grow downwards. */
+  max-width: min(calc(100vw - 2 * var(--space-4)), 32rem);
+  text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 .toast--visible {
