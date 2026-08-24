@@ -51,6 +51,20 @@ export function feeForMinutes(minutes) {
   return band ? band.fee : null;
 }
 
+// "1h 5min" rather than "65 min" - Diego reads these on a phone while deciding
+// whether a job is worth the drive, and hours are what he thinks in.
+export function formatMinutes(minutes) {
+  // Number(null) is 0, not NaN, so a missing value has to be rejected BEFORE
+  // the conversion - otherwise "no route" renders as "0min" in a message to
+  // Diego, which reads like the job is next door.
+  if (typeof minutes !== 'number' || !Number.isFinite(minutes) || minutes < 0) return '';
+  const m = Math.round(minutes);
+  if (m < 60) return `${m}min`;
+  const h = Math.floor(m / 60);
+  const rest = m % 60;
+  return rest ? `${h}h ${rest}min` : `${h}h`;
+}
+
 // Decides coverage from whatever the lookups managed to return. Pure, so the
 // rules can be tested without a network or a database.
 //

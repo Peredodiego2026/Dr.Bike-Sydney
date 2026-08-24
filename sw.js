@@ -1,3 +1,5 @@
+// v74 (2026-08-25): flujo de consulta de precio para fuera de zona - toca
+// js/app.js, js/router.js y js/i18n.js.
 // v73 (2026-08-24): el autocompletado de direcciones dejo de llamar a
 // Nominatim desde el navegador de cada cliente (5-10 consultas por direccion
 // tipeada, sin User-Agent porque el navegador lo descarta) y pasa por el
@@ -68,7 +70,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v73';
+const CACHE_STATIC = 'drbike-static-v74';
 const CACHE_PAGES  = 'drbike-pages-v70';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
