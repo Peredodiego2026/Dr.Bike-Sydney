@@ -1426,7 +1426,31 @@ async function renderServiceSummary() {
 
   const surcharged = isSurchargeDay(date);
   const serviceTotal = applySurcharge(Number(service.price || 0), date);
-  const calloutFee = applySurcharge(await getCalloutFee(location), date);
+
+  // Ask the server, not the browser's own copy of the price table. The server
+  // resolves the trip by real driving time from the base and is the only
+  // authority on both the fee and whether we go at all - a client-side
+  // callout_zones lookup could disagree with what create-booking charges, and
+  // knows nothing about the perimeter.
+  let coverage = { covered: true, needsQuote: false, calloutFee: null, minutes: null, km: null };
+  try {
+    const cvRes = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'check-coverage', address: location }),
+    });
+    if (cvRes.ok) coverage = await cvRes.json();
+  } catch {
+    // Offline or the endpoint is down: fall through to the local estimate.
+    // create-booking re-resolves authoritatively either way.
+  }
+  window.appState.needsQuote = Boolean(coverage.needsQuote);
+  window.appState.tripMinutes = coverage.minutes ?? null;
+  window.appState.tripKm = coverage.km ?? null;
+
+  const calloutFee = coverage.needsQuote
+    ? 0
+    : applySurcharge(coverage.calloutFee ?? (await getCalloutFee(location)), date);
   const grandTotal = serviceTotal + calloutFee;
   const inclusions = getServiceInclusions(service.name);
   const dur = formatServiceDuration(service);
@@ -1522,7 +1546,12 @@ async function renderServiceSummary() {
     </div>
     <div id="booking-error" class="booking-error" hidden></div>
     <div class="sticky-bottom">
-      <button class="btn btn--primary btn--full" id="proceed-btn">${payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee)}</button>
+      ${
+        coverage.needsQuote
+          ? `<div style="font-size:13px;color:var(--color-text-secondary);text-align:center;margin-bottom:10px;line-height:1.5">${translateValue('No charge - we check your address and reply personally.')}</div>
+             <button class="btn btn--primary btn--full" id="proceed-btn">${translateValue('Ask for my price')}</button>`
+          : `<button class="btn btn--primary btn--full" id="proceed-btn">${payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee)}</button>`
+      }
     </div>
     ${createBottomNav('home')}
   `;
@@ -1709,21 +1738,130 @@ async function renderServiceSummary() {
       // nothing (docs/PENDIENTES.md 14).
       if (!user && !window.appState.guestEmail) {
         btn.disabled = false;
-        btn.textContent = payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
+        btn.textContent = coverage.needsQuote
+          ? translateValue('Ask for my price')
+          : payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
         askGuestContact();
         return;
       }
 
       window.appState.bookingId = null;
       window.appState.isGuest = false;
+
+      // Outside the same-day area, or an address we could not place: no card,
+      // no charge. The whole booking is sent to Diego as a question instead,
+      // and he answers from his phone. The contact details were collected the
+      // same way as any other booking, which is the point - a rejection at the
+      // address step would have lost all of this.
+      if (coverage.needsQuote) {
+        await submitQuoteRequest({ serviceTotal, coverage, btn, errEl });
+        return;
+      }
+
       router.navigate('payment');
     } catch (e) {
       errEl.textContent = translateValue(e.message || 'Please try again.');
       errEl.hidden = false;
       btn.disabled = false;
-      btn.textContent = payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
+      btn.textContent = coverage.needsQuote
+        ? translateValue('Ask for my price')
+        : payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
     }
   });
+}
+
+// Records the enquiry and hands the person off to WhatsApp with the message
+// already written.
+//
+// Diego asked for it to arrive "as if the client had sent it from their
+// phone". A message cannot be made to come FROM someone else's number - that
+// is impersonation, and the WhatsApp API only sends from the business's own
+// number. So the customer sends it, which gets the same result honestly: it
+// lands in Diego's WhatsApp as a real chat with them, he replies in the
+// thread, and their number is now a contact he owns.
+//
+// The row is written FIRST. If they never tap send - they changed their mind,
+// WhatsApp is not installed, the tab closed - the enquiry is still in the
+// admin panel with their name, phone, service and address. The lead does not
+// depend on the last tap.
+async function submitQuoteRequest({ serviceTotal, coverage, btn, errEl }) {
+  const { service, date, time, location } = window.appState;
+  btn.textContent = translateValue('Sending...');
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      role: 'request-quote',
+      access_token: session?.access_token || null,
+      service_id: service.id,
+      service_name: service.name,
+      service_price: serviceTotal,
+      scheduled_date: date,
+      scheduled_time: time,
+      address: location,
+      client_name: window.appState.guestName || session?.user?.user_metadata?.full_name || '',
+      client_email: window.appState.guestEmail || session?.user?.email || '',
+      client_phone:
+        window.appState.guestPhone || session?.user?.user_metadata?.phone || '',
+      client_lang: getLang(),
+      trip_minutes: coverage.minutes ?? null,
+      trip_km: coverage.km ?? null,
+    }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error || 'Could not send your enquiry');
+
+  window.appState.quoteWhatsAppUrl = data.whatsappUrl || null;
+  window.appState.quoteReference = data.reference || null;
+  router.navigate('quote-sent');
+}
+
+// The end of the quote flow. Deliberately not a "sorry" screen: the enquiry
+// is already saved and Diego has already been told, so this is a confirmation
+// with one obvious next step, not an apology for a rejection.
+function renderQuoteSent() {
+  const screen = document.querySelector('[data-screen="quote-sent"]');
+  if (!screen) return;
+  const waUrl = window.appState.quoteWhatsAppUrl;
+  const phone = window.appState.guestPhone || '';
+
+  screen.innerHTML = `
+    ${createHeader('Enquiry sent', true, '#home')}
+    <div style="padding:8px 0 16px;text-align:center">
+      <div style="font-size:44px;line-height:1;margin:18px 0 14px">📨</div>
+      <div style="font-size:20px;font-weight:800;color:var(--color-text);margin-bottom:10px">${translateValue('We sent your enquiry to the mechanic')}</div>
+      <div style="font-size:15px;color:var(--color-text-secondary);line-height:1.55;padding:0 8px;margin-bottom:8px">${translateValue("We're checking your address and will get back to you shortly.")}</div>
+      ${
+        phone
+          ? `<div style="font-size:14px;color:var(--color-text);font-weight:600;margin-bottom:22px">${escapeHtml(phone)}</div>`
+          : '<div style="margin-bottom:22px"></div>'
+      }
+
+      ${
+        waUrl
+          ? `<div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;padding:18px 16px;margin:0 4px 14px;text-align:left">
+               <div style="font-size:14px;font-weight:700;color:var(--color-text);margin-bottom:6px">${translateValue('Want an answer faster?')}</div>
+               <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:14px">${translateValue('Send us the details on WhatsApp - the message is already written.')}</div>
+               <a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" id="quote-wa-btn"
+                  style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:14px;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box">💬 ${translateValue('Send on WhatsApp')}</a>
+             </div>`
+          : ''
+      }
+
+      <button class="btn btn--secondary btn--full" id="quote-home-btn" style="margin:0 4px;width:calc(100% - 8px)">${translateValue('Back to home')}</button>
+    </div>
+    ${createBottomNav('home')}
+  `;
+
+  screen.querySelector('#quote-home-btn')?.addEventListener('click', () => {
+    router.navigate('home');
+  });
+  if (window.gtag) gtag('event', 'quote_requested');
+  if (window.posthog) posthog.capture('quote_requested');
 }
 
 // ── Optional preferred-mechanic picker (admin-toggleable, see Admin > Settings) ──
@@ -5119,6 +5257,7 @@ document.addEventListener('screenchange', ({ detail }) => {
   }
   if (detail.route === 'book-service') renderBookService();
   if (detail.route === 'service-summary') renderServiceSummary();
+  if (detail.route === 'quote-sent') renderQuoteSent();
   if (detail.route === 'payment') renderPayment();
   if (detail.route === 'tracking') renderTracking();
   if (detail.route === 'review') renderReview();

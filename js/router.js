@@ -3,6 +3,7 @@ const ROUTES = [
   'book-service',
   'service-summary',
   'payment',
+  'quote-sent',
   'tracking',
   'review',
   'login',

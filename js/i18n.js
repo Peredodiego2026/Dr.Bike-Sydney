@@ -340,6 +340,17 @@ const dict = {
     'Where should we come?': '¿A dónde vamos?',
     'Your mechanic will come to this address': 'Tu mecánico va a llegar a esta dirección',
     "We don't reach that address yet": 'Todavía no llegamos a esa dirección',
+    'No charge - we check your address and reply personally.':
+      'Sin costo - revisamos tu dirección y te respondemos personalmente.',
+    'Ask for my price': 'Consultar mi precio',
+    'We sent your enquiry to the mechanic': 'Le enviamos tu consulta al mecánico',
+    "We're checking your address and will get back to you shortly.":
+      'Estamos revisando tu dirección y te contactamos a la brevedad.',
+    'Want an answer faster?': '¿Querés una respuesta más rápida?',
+    'Send us the details on WhatsApp - the message is already written.':
+      'Mandanos los datos por WhatsApp - el mensaje ya está escrito.',
+    'Send on WhatsApp': 'Enviar por WhatsApp',
+    'Back to home': 'Volver al inicio',
     "Send us the address on WhatsApp and we'll tell you if we can make it work.":
       'Mandanos la dirección por WhatsApp y te decimos si podemos llegar.',
     '💬 Ask on WhatsApp': '💬 Consultar por WhatsApp',
@@ -1686,6 +1697,17 @@ const dict = {
     'Where should we come?': '我们应该前往哪里？',
     'Your mechanic will come to this address': '您的技工将前往此地址',
     "We don't reach that address yet": '我们暂时无法到达该地址',
+    'No charge - we check your address and reply personally.':
+      '不收费 - 我们会核实您的地址并亲自回复。',
+    'Ask for my price': '咨询我的价格',
+    'We sent your enquiry to the mechanic': '您的咨询已发送给技工',
+    "We're checking your address and will get back to you shortly.":
+      '我们正在核实您的地址，会尽快与您联系。',
+    'Want an answer faster?': '想更快得到答复？',
+    'Send us the details on WhatsApp - the message is already written.':
+      '通过 WhatsApp 把详情发给我们 - 消息已经写好了。',
+    'Send on WhatsApp': '通过 WhatsApp 发送',
+    'Back to home': '返回首页',
     "Send us the address on WhatsApp and we'll tell you if we can make it work.":
       '请通过 WhatsApp 把地址发给我们，我们会告诉您能否安排。',
     '💬 Ask on WhatsApp': '💬 通过 WhatsApp 咨询',

@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import crypto from 'crypto';
 import { geocodeAddress, drivingRoute, suggestAddresses } from './_eta.js';
-import { resolveCoverage, needsQuote, BASE, VALID_FEES } from './_coverage.js';
+import { resolveCoverage, needsQuote, BASE, VALID_FEES, formatMinutes } from './_coverage.js';
 import {
   guard,
   rateLimit,
@@ -437,6 +437,128 @@ async function handleAddressSuggest(req, res) {
   const { query } = req.body || {};
   const results = await suggestAddresses(query);
   return res.status(200).json({ results });
+}
+
+// An enquiry from someone we cannot serve same-day, or whose address we could
+// not place. Not a booking: nothing is charged, and it does NOT hold the slot
+// (Diego's call - a Katoomba enquiry he has not answered yet must not block a
+// Saturday somebody in Dee Why would pay for). If he takes the job he enters
+// it himself with "+ New booking", and that is when the slot is taken.
+//
+// Stored as a booking row with status 'quote_requested' so it inherits the
+// admin detail view, the chat and the client history for free. Every revenue
+// figure keys off 'completed', so an unanswered enquiry cannot inflate them.
+async function handleRequestQuote(req, res) {
+  const {
+    access_token,
+    service_id,
+    service_name,
+    service_price,
+    scheduled_date,
+    scheduled_time,
+    address,
+    client_name,
+    client_email,
+    client_phone,
+    client_lang,
+    trip_minutes,
+    trip_km,
+  } = req.body || {};
+
+  if (!address || !service_name)
+    return res.status(400).json({ error: 'address and service_name required' });
+  // The phone is the whole point: it is how Diego answers.
+  if (!client_phone || String(client_phone).replace(/\D/g, '').length < 8)
+    return res.status(400).json({ error: 'A mobile number is required so we can reply' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  let userId = null;
+  if (access_token) {
+    const { data } = await sb.auth.getUser(access_token);
+    userId = data?.user?.id || null;
+  }
+
+  const { data: row, error } = await sb
+    .from('bookings')
+    .insert([
+      {
+        user_id: userId,
+        client_id: userId,
+        client_name: String(client_name || '').slice(0, 120),
+        client_email: String(client_email || '').slice(0, 160) || null,
+        client_phone: String(client_phone).slice(0, 40),
+        service_name: String(service_name).slice(0, 120),
+        service_price: Number(service_price) || 0,
+        // No trip, no fee. Nothing is charged for an enquiry.
+        callout_fee: 0,
+        scheduled_date: scheduled_date || null,
+        scheduled_time: scheduled_time || null,
+        address: String(address).slice(0, 300),
+        status: 'quote_requested',
+        van_number: 1,
+        client_lang: ['en', 'es', 'zh'].includes(client_lang) ? client_lang : 'en',
+      },
+    ])
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('[request-quote] insert failed:', error.message);
+    return res.status(500).json({ error: 'Could not save your enquiry' });
+  }
+
+  const trip =
+    Number.isFinite(Number(trip_km)) && Number.isFinite(Number(trip_minutes))
+      ? `${Math.round(trip_km)} km · ${formatMinutes(trip_minutes)}`
+      : 'distancia no calculada';
+
+  // The message the CUSTOMER sends, pre-written. Their own number, their own
+  // WhatsApp - so it reaches Diego as a genuine chat he can reply to.
+  const waText = [
+    'Hola Dr. Bike! Quiero consultar el precio para:',
+    '',
+    `Servicio: ${service_name}`,
+    scheduled_date ? `Fecha que necesito: ${scheduled_date} ${scheduled_time || ''}`.trim() : '',
+    `Direccion: ${address}`,
+    client_name ? `Nombre: ${client_name}` : '',
+    '',
+    `Su sistema me marco: ${trip} desde su zona`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  // Backstop: if they never tap send, Diego still finds out. Best-effort -
+  // a notification that fails must not lose the enquiry, which is already
+  // saved above.
+  fetch(`${SELF_BASE_URL}/api/send-message?channel=whatsapp`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+    },
+    body: JSON.stringify({
+      to: '0433963250',
+      template: 'quote_requested',
+      data: {
+        clientName: client_name || 'Cliente',
+        clientPhone: client_phone,
+        service: service_name,
+        date: scheduled_date,
+        time: scheduled_time,
+        address,
+        trip,
+        replyUrl: `https://wa.me/${String(client_phone).replace(/\D/g, '').replace(/^0/, '61')}`,
+      },
+    }),
+  }).catch((e) => console.error('[request-quote] admin notify failed:', e.message));
+
+  return res.status(200).json({
+    ok: true,
+    reference: row.id,
+    whatsappUrl: `https://wa.me/61433963250?text=${encodeURIComponent(waText)}`,
+  });
 }
 
 async function handleZonePrice(req, res) {
@@ -4613,6 +4735,7 @@ async function handler(req, res) {
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'zone-price') return handleZonePrice(req, res);
   if (role === 'address-suggest') return handleAddressSuggest(req, res);
+  if (role === 'request-quote') return handleRequestQuote(req, res);
   if (role === 'get-price') return handleGetPrice(req, res);
   if (role === 'save-card-setup') return handleSaveCardSetupIntent(req, res);
   if (role === 'save-card-confirm') return handleSaveCardConfirm(req, res);
