@@ -439,7 +439,9 @@ export default async function handler(req, res) {
     if (bkg) {
       try {
         checklist = JSON.parse(bkg.pre_service_checklist || 'null');
-      } catch {}
+      } catch (e) {
+        console.warn('[send-invoice] pre_service_checklist not valid JSON:', bookingId, e.message);
+      }
       checklistNotes = sanitize(bkg.pre_service_notes || '');
       durationSecs = bkg.service_duration_seconds;
       photoBeforeUrl = bkg.photo_before_url || '';
@@ -450,7 +452,9 @@ export default async function handler(req, res) {
           .join(' ');
       }
     }
-  } catch {}
+  } catch (e) {
+    console.error('[send-invoice] checklist/photos lookup failed:', bookingId, e.message);
+  }
 
   // ── Build checklist HTML ──────────────────────────────────────────────────
   let checklistHtml = '';

@@ -263,7 +263,7 @@ async function countMonthlyBookingsByCategory(sb, clientId, scheduledDate) {
 // Shared by the client-facing quote endpoint (so what Stripe charges is
 // already correct) and handleCreateBooking's own verification (so a booking
 // can never be created for less than what membership rules actually allow).
-async function applyMembershipPricing(
+export async function applyMembershipPricing(
   sb,
   clientId,
   scheduledDate,
@@ -894,17 +894,28 @@ async function handleCreateBooking(req, res) {
   if (insErr) {
     if (insErr.code === '23505') {
       // Slot was taken between payment and insert — refund a real payment, then reject
+      let refunded = false;
       if (verifiedPI) {
         try {
           await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
             payment_intent: verifiedPI,
           });
-        } catch {}
+          refunded = true;
+        } catch (e) {
+          // A charged customer with no booking and no refund is the exact
+          // failure this whole retry path exists to prevent - if the refund
+          // itself throws, that must not vanish silently (it did, until now).
+          console.error('[create-booking] slot-conflict refund failed:', verifiedPI, e.message);
+        }
       }
       return res.status(409).json({
         error:
           'That time slot was just booked.' +
-          (verifiedPI ? ' Your payment has been refunded.' : ' Please pick another time.'),
+          (refunded
+            ? ' Your payment has been refunded.'
+            : verifiedPI
+              ? ' We could not process your refund automatically - contact us and we will sort it out.'
+              : ' Please pick another time.'),
       });
     }
     return res.status(500).json({ error: 'Could not create booking', detail: insErr.message });
@@ -1801,7 +1812,9 @@ async function handleMechanicComplete(req, res) {
               : Math.min(dc.discount_value, price);
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error('[mechanic-complete] discount-code consume failed:', booking_id, e.message);
+    }
   }
 
   // Read the booking BEFORE the PATCH: the discount block above may be about to

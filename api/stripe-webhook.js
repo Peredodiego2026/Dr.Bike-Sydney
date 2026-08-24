@@ -16,6 +16,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
+import { matchCalloutZone, applySurcharge, applyMembershipPricing } from './auth.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const sb = createClient(
@@ -294,6 +295,51 @@ async function handlePaymentIntentSucceeded(pi) {
   const email = md.email || pi.receipt_email || null;
   const accountId = await accountForEmail(email);
 
+  // The amount Stripe actually captured is not trusted as the price - it
+  // started life as `priceCents` in a request body from whoever's browser
+  // was holding the page (create-payment-session.js), which can be edited.
+  // Recompute the same way handleCreateBooking does (zone fee + surcharge +
+  // membership discount, matched by email since there is no session token
+  // here) and refuse to book - refunding instead - on any mismatch. Without
+  // this, this fallback path was the one place in the app that turned a
+  // tampered Stripe charge straight into a real booking with a mechanic
+  // dispatched, no verification at all.
+  let calloutFee = 20;
+  try {
+    const match = await matchCalloutZone(sb, md.bk_address);
+    if (match) calloutFee = match.calloutFee;
+  } catch (e) {
+    console.error('[webhook] matchCalloutZone failed, falling back to $20:', e.message);
+  }
+  calloutFee = applySurcharge(calloutFee, md.bk_date);
+
+  if (accountId && md.bk_guest !== '1') {
+    const servicePrice = applySurcharge(Number(svc?.price) || 0, md.bk_date);
+    const priced = await applyMembershipPricing(
+      sb,
+      accountId,
+      md.bk_date,
+      servicePrice,
+      calloutFee,
+      svc?.name || md.bk_service_name,
+      svc?.price
+    );
+    calloutFee = priced.calloutFee;
+  }
+
+  const amountReceived = pi.amount_received / 100;
+  if (Math.round(amountReceived * 100) !== Math.round(calloutFee * 100)) {
+    console.error(
+      `[webhook] amount mismatch for ${pi.id}: charged $${amountReceived}, authoritative price $${calloutFee} - refunding instead of creating a booking`
+    );
+    try {
+      await stripe.refunds.create({ payment_intent: pi.id });
+    } catch (e) {
+      console.error(`[webhook] refund failed for ${pi.id}:`, e.message);
+    }
+    return { rejected: 'amount mismatch', charged: amountReceived, expected: calloutFee };
+  }
+
   const row = {
     user_id: accountId,
     client_id: accountId,
@@ -302,7 +348,7 @@ async function handlePaymentIntentSucceeded(pi) {
     client_phone: md.bk_phone || null,
     service_name: svc?.name || md.bk_service_name || 'Service',
     service_price: Number(svc?.price) || 0,
-    callout_fee: pi.amount_received / 100,
+    callout_fee: calloutFee,
     scheduled_date: md.bk_date || null,
     scheduled_time: md.bk_time || null,
     address: md.bk_address || 'Home',
