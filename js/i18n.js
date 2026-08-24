@@ -339,6 +339,18 @@ const dict = {
     'Your Address': 'Tu Dirección',
     'Where should we come?': '¿A dónde vamos?',
     'Your mechanic will come to this address': 'Tu mecánico va a llegar a esta dirección',
+    "Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs. Further out, like Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are.":
+      'Las visitas del día cubren todo lo que esté a unos 45 minutos de nuestra base en Northern Beaches: Northern Beaches, North Shore, Hornsby, el CBD, Inner West y Eastern Suburbs. Más lejos, como Western Sydney, Sutherland Shire o las Blue Mountains, igual vamos, pero con coordinación previa en vez de el mismo día. Poné tu dirección al reservar y te decimos en cuál estás.',
+    "Why is the call-out fee different for my suburb?":
+      '¿Por qué la tarifa de visita cambia según mi suburbio?',
+    "Because it pays for the trip, and what a trip really costs is time, not kilometres. From our Northern Beaches base the CBD is about 40 minutes across the Spit Bridge, while Hornsby is further away on the map but only 30 minutes up the motorway — so the CBD costs a little more. We work the fee out from real driving time to your address, which is why it's exact rather than a flat rate.":
+      'Porque paga el viaje, y lo que un viaje cuesta de verdad es tiempo, no kilómetros. Desde nuestra base en Northern Beaches, el CBD está a unos 40 minutos cruzando el Spit Bridge, mientras que Hornsby queda más lejos en el mapa pero a solo 30 minutos por autopista, así que el CBD cuesta un poco más. Calculamos la tarifa con el tiempo real de manejo hasta tu dirección, por eso es exacta y no una tarifa plana.',
+    "We quote that area case by case":
+      'Esa zona la cotizamos caso por caso',
+    "Continue - book at no cost":
+      'Continuar - reservar sin costo',
+    "It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.":
+      'Está fuera de nuestra zona de visitas del día, así que no hay un precio fijo para mostrarte, pero igual vamos. Reservá normalmente y el último paso te pide el precio en vez de la tarjeta: sin cargo, y el mecánico te responde personalmente.',
     "We don't reach that address yet": 'Todavía no llegamos a esa dirección',
     'No charge - we check your address and reply personally.':
       'Sin costo - revisamos tu dirección y te respondemos personalmente.',
@@ -1696,6 +1708,18 @@ const dict = {
     'Your Address': '您的地址',
     'Where should we come?': '我们应该前往哪里？',
     'Your mechanic will come to this address': '您的技工将前往此地址',
+    "Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs. Further out, like Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are.":
+      '当日上门服务覆盖距离我们 Northern Beaches 基地约 45 分钟车程内的所有地区：Northern Beaches、North Shore、Hornsby、CBD、Inner West 和 Eastern Suburbs。更远的地区，如 Western Sydney、Sutherland Shire 或 Blue Mountains，我们仍会前往，但需另行安排，非当日服务。预订时输入您的地址，我们会告知您属于哪一种。',
+    "Why is the call-out fee different for my suburb?":
+      '为什么不同区域的上门费不一样？',
+    "Because it pays for the trip, and what a trip really costs is time, not kilometres. From our Northern Beaches base the CBD is about 40 minutes across the Spit Bridge, while Hornsby is further away on the map but only 30 minutes up the motorway — so the CBD costs a little more. We work the fee out from real driving time to your address, which is why it's exact rather than a flat rate.":
+      '因为它支付的是行程，而行程的真正成本是时间，不是公里数。从我们 Northern Beaches 的基地出发，CBD 需要约 40 分钟穿过 Spit Bridge，而 Hornsby 在地图上更远，走高速却只需 30 分钟——所以 CBD 稍贵一些。我们根据到您地址的实际驾驶时间计算费用，因此是精确的，而非统一定价。',
+    "We quote that area case by case":
+      '该地区我们逐例报价',
+    "Continue - book at no cost":
+      '继续 — 免费预订',
+    "It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.":
+      '该地址不在我们的当日服务范围内，因此没有固定价格可以展示，但我们仍会前往。照常预订即可，最后一步会请您咨询价格而不是付款：不收费用，技工会亲自回复您。',
     "We don't reach that address yet": '我们暂时无法到达该地址',
     'No charge - we check your address and reply personally.':
       '不收费 - 我们会核实您的地址并亲自回复。',
