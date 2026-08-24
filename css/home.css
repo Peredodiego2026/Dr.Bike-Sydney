@@ -211,12 +211,16 @@
      deployed CSS, computed styles, pixel-traced corners) came back
      identical to .btn-primary/.btn-outline. Whatever is different about his
      render, it can't be a custom-property resolution quirk if there's no
-     custom property left to resolve. height is explicit too, not
-     min-height: this is the only one of the three hero buttons with an
-     <svg> icon child, and intrinsic sizing around inline content can differ
-     from a plain text button in ways min-height doesn't fully pin down. */
+     custom property left to resolve. */
   border-radius: 12px !important;
-  height: 44px;
+  /* 48px, not 44px: .btn-primary/.btn-outline only declare min-height:44px,
+     but their padding+line-height render them at ~48px - confirmed via
+     Playwright before any of these hero-button edits. An earlier version of
+     this rule set height:44px explicitly (thinking the icon child needed
+     pinning down), which forced .btn-white 4px shorter than its siblings and
+     made it sit visibly higher in the row - Diego caught it immediately.
+     Match the real number instead of a rounder-looking guess. */
+  height: 48px;
   font-weight: 700;
   font-size: 14px;
   min-height: 44px;
