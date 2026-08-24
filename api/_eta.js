@@ -47,8 +47,12 @@ export async function geocodeAddress(address, { timeoutMs = 4000 } = {}) {
   }
 }
 
-// Returns whole minutes of driving time, or null if it could not be worked out.
-export async function drivingEtaMinutes({ fromLat, fromLng, address, timeoutMs = 5000 }) {
+// Minutes AND road kilometres for one trip, or null if it could not be worked
+// out. OSRM returns both in the same response - only the duration was ever
+// read, so the distance came free once someone asked for it (the out-of-zone
+// message to Diego quotes "78 km · 1h 5min" so he can judge a job at a
+// glance).
+export async function drivingRoute({ fromLat, fromLng, address, timeoutMs = 5000 }) {
   const lat = Number(fromLat);
   const lng = Number(fromLng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
@@ -66,12 +70,22 @@ export async function drivingEtaMinutes({ fromLat, fromLng, address, timeoutMs =
     if (!r.ok) return null;
     const data = await r.json();
     const seconds = data?.routes?.[0]?.duration;
+    const metres = data?.routes?.[0]?.distance;
     if (!Number.isFinite(seconds)) return null;
-    return Math.max(1, Math.round(seconds / 60));
+    return {
+      minutes: Math.max(1, Math.round(seconds / 60)),
+      km: Number.isFinite(metres) ? Math.round(metres / 1000) : null,
+    };
   } catch (e) {
     console.warn('[eta] could not compute:', e.message);
     return null;
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Kept as the ETA callers' shape: they only ever wanted the minutes.
+export async function drivingEtaMinutes(opts) {
+  const route = await drivingRoute(opts);
+  return route ? route.minutes : null;
 }
