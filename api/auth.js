@@ -3,7 +3,8 @@
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import { geocodeAddress } from './_eta.js';
+import { geocodeAddress, drivingRoute, suggestAddresses } from './_eta.js';
+import { resolveCoverage, needsQuote, BASE, VALID_FEES } from './_coverage.js';
 import {
   guard,
   rateLimit,
@@ -341,14 +342,49 @@ async function matchVanZone(sb, address) {
   return match && Number(match.van_number) ? Number(match.van_number) : null;
 }
 
-// Lets the client check coverage before paying, so a client outside the service
+// The single place that answers "do we go there, and what does the trip cost".
+// Runs the two lookups in parallel and hands both to resolveCoverage(), which
+// holds the rules (see api/_coverage.js for why driving time and not distance,
+// and why a failed lookup must never read as "no").
+//
+// Neither lookup is allowed to throw out of here: OSRM and Nominatim are
+// public demo servers with no availability promise, and this sits on the
+// booking path. A failure just means one less layer of evidence.
+async function resolveAddressCoverage(address) {
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const [route, zone] = await Promise.all([
+    drivingRoute({ fromLat: BASE.lat, fromLng: BASE.lng, address }).catch((e) => {
+      console.warn('[coverage] routing failed:', e.message);
+      return null;
+    }),
+    matchCalloutZone(sb, address).catch((e) => {
+      console.warn('[coverage] callout_zones lookup failed:', e.message);
+      return null;
+    }),
+  ]);
+  return resolveCoverage({ minutes: route?.minutes ?? null, km: route?.km ?? null, zone });
+}
+
+// Lets the client check coverage before paying, so someone outside the service
 // area finds out at the address step instead of after being charged.
+//
+// `coverage` is the real answer - 'in' | 'out' | 'unknown'. The old boolean
+// `covered` is kept for callers not yet updated, and it is FALSE for BOTH
+// 'out' and 'unknown': in neither case do we know what the trip costs, so in
+// neither case do we take a card. That is not a rejection - a caller reading
+// only the boolean shows the WhatsApp panel, which is where both belong.
 async function handleCheckCoverage(req, res) {
   const { address } = req.body || {};
   if (!address) return res.status(400).json({ error: 'address required' });
-  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-  const vanNumber = await matchVanZone(sb, address);
-  return res.status(200).json({ covered: vanNumber !== null });
+  const r = await resolveAddressCoverage(address);
+  return res.status(200).json({
+    covered: !needsQuote(r),
+    coverage: r.covered,
+    calloutFee: r.calloutFee,
+    minutes: r.minutes,
+    km: r.km,
+    needsQuote: needsQuote(r),
+  });
 }
 
 // Matches an address's suburb against callout_zones. Returns { calloutFee,
@@ -383,15 +419,39 @@ export async function matchCalloutZone(sb, address) {
 // see their price before creating an account or starting a booking, not just
 // after. Returns the fee so the UI can show it (handleCheckCoverage only
 // returns a boolean).
+// Used to answer straight from `callout_zones`, so any suburb missing from
+// that hand-typed list came back "not covered" - which is how a tool built to
+// win trust was telling people in Newport and Castle Hill to go elsewhere.
+// Now it runs the same resolution as the booking path, so the fee quoted here
+// and the fee charged later cannot disagree.
+// Address autocomplete, moved off the customer's browser. It used to call
+// Nominatim directly from every device on a 250 ms debounce - five to ten
+// requests per address typed, per person - and the `User-Agent` the old code
+// passed was silently dropped, because browsers do not let fetch() set it. So
+// the app was anonymous to a service whose policy requires applications to
+// identify themselves, and there was no way to cache anything.
+//
+// Public and unauthenticated on purpose, same as the coverage and fee checks:
+// this runs while somebody is still deciding whether to book.
+async function handleAddressSuggest(req, res) {
+  const { query } = req.body || {};
+  const results = await suggestAddresses(query);
+  return res.status(200).json({ results });
+}
+
 async function handleZonePrice(req, res) {
   const { address } = req.body || {};
   if (!address) return res.status(400).json({ error: 'address required' });
-  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-  const match = await matchCalloutZone(sb, address);
-  if (!match) return res.status(200).json({ covered: false });
-  return res
-    .status(200)
-    .json({ covered: true, calloutFee: match.calloutFee, zoneName: match.zoneName });
+  const r = await resolveAddressCoverage(address);
+  return res.status(200).json({
+    covered: !needsQuote(r),
+    coverage: r.covered,
+    calloutFee: r.calloutFee,
+    zoneName: r.zoneName,
+    minutes: r.minutes,
+    km: r.km,
+    needsQuote: needsQuote(r),
+  });
 }
 
 // The client needs to know the REAL price (including any membership waiver/
@@ -678,15 +738,38 @@ async function handleCreateBooking(req, res) {
   // than a mystery lump surcharge.
   let servicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
-  // 3. Authoritative call-out fee (callout_zones by address, default $20)
-  let calloutFee = 20;
-  try {
-    const match = await matchCalloutZone(sb, address);
-    if (match) calloutFee = match.calloutFee;
-  } catch (e) {
-    console.error('matchCalloutZone failed, falling back to $20:', e.message);
+  // 3. Authoritative call-out fee, from the same resolution the client was
+  // quoted (driving time from the base, falling back to the priced zone -
+  // api/_coverage.js). Was a direct `callout_zones` lookup defaulting to $20,
+  // which is how Balmain, Potts Point, North Sydney and Maroubra - all $45
+  // suburbs - were being served at $20: they had a van but no row in the
+  // price table.
+  const coverage = await resolveAddressCoverage(address);
+  let calloutFee = applySurcharge(coverage.calloutFee ?? 0, scheduled_date);
+
+  const hasPaymentRef = Boolean(payment_intent_id || checkout_session_id);
+
+  // A booking whose address cannot be resolved is sent to the quote flow and
+  // never charged, so one should not arrive here at all. One still can: the
+  // client resolved the address confidently a minute ago, paid, and by the
+  // time this runs the geocoder is rate-limited or down. Refunding then would
+  // punish a paying customer for someone else's outage - so step 4 below
+  // accepts the amount they actually paid, provided it is a real band fee.
+  //
+  // With NO payment behind it, though, an unresolved address must not become
+  // a booking: that is the free-booking hole. It goes to the quote flow.
+  if (coverage.covered === 'unknown') {
+    if (!hasPaymentRef && !isAdmin) {
+      return res.status(400).json({
+        error:
+          "We couldn't work out the trip to that address - message us on WhatsApp and we'll sort it out.",
+      });
+    }
+    console.warn(
+      '[create-booking] coverage unresolved but payment present, accepting a band fee - confirm by hand:',
+      address
+    );
   }
-  calloutFee = applySurcharge(calloutFee, scheduled_date);
 
   // 3a. Membership pricing: waives/discounts servicePrice and calloutFee per
   // the client's active plan and how much of their monthly quota is left
@@ -715,32 +798,41 @@ async function handleCreateBooking(req, res) {
     isIncludedVisit = priced.included;
   }
 
-  // 3b. Zone dispatch: reject bookings outside any configured coverage zone
-  // instead of silently defaulting to van 1 - previously this accepted (and
-  // charged) bookings no mechanic could actually reach. The admin test
-  // account keeps the van-1 fallback so test addresses don't have to match
-  // a real suburb.
   // Start the geocode now, not after the insert: it runs while Stripe is being
   // verified below, so by the time step 5b needs it there is nothing to wait
   // for. Deliberately not awaited here - a map service must never be able to
   // delay taking a booking.
   const geoPromise = geocodeAddress(address);
 
-  let vanNumber = await matchVanZone(sb, address);
-  if (!vanNumber && isAdmin) vanNumber = 1;
-  if (!vanNumber) {
+  // 3b. Dispatch. With one van there is no choice to make, and `van_zones`
+  // was never really a dispatch table - it was acting as a coverage
+  // whitelist, rejecting 59 of the 92 suburbs that had a price. Coverage is
+  // now decided in step 3 by driving time; this only records which van goes.
+  //
+  // Kept as a lookup rather than a constant so the day a second van has its
+  // own zones, this line already reads them. `|| 1` is what makes today's
+  // single-van reality work without every suburb having to be typed in.
+  const vanNumber = (await matchVanZone(sb, address)) || 1;
+
+  // Beyond the perimeter this is a quote request, not a booking - the client
+  // is sent to WhatsApp instead of a card form, so it should never arrive
+  // here. If one does (a stale tab, a direct API call), refuse it rather than
+  // commit the van to a trip that loses money, and refund anything taken.
+  // Note 'unknown' is NOT refused: an address we could not resolve is booked
+  // at the base fee and confirmed by hand (api/_coverage.js).
+  if (coverage.covered === 'out' && !isAdmin) {
     if (payment_intent_id) {
       try {
         await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
           payment_intent: payment_intent_id,
         });
       } catch (e) {
-        console.error('[create-booking] out-of-zone refund failed:', e.message);
+        console.error('[create-booking] out-of-perimeter refund failed:', e.message);
       }
     }
     return res.status(400).json({
       error:
-        "Sorry, we don't currently service that address." +
+        "That address is outside our same-day area - message us on WhatsApp and we'll work it out." +
         (payment_intent_id ? ' Your payment has been refunded.' : ''),
     });
   }
@@ -773,11 +865,32 @@ async function handleCreateBooking(req, res) {
     }
   }
 
+  // When the address could not be resolved there is no authoritative fee to
+  // check a payment against. `acceptablePaidCents` is the set the amount is
+  // allowed to be instead: the real band fees, surcharged for the date. That
+  // covers the transient geocoder-outage case (client resolved it fine, paid,
+  // then the lookup broke) without reopening the tampered-amount hole closed
+  // in PR #318 - an invented $0.50 is not a band.
+  const acceptablePaidCents =
+    coverage.covered === 'unknown'
+      ? VALID_FEES.map((f) => Math.round(applySurcharge(f, scheduled_date) * 100))
+      : null;
+  const amountIsAcceptable = (cents) =>
+    acceptablePaidCents
+      ? acceptablePaidCents.includes(Math.round(cents))
+      : Math.round(cents) === Math.round(calloutFee * 100);
+
   // 4. Verify payment (skipped for the admin test account, and for a
   // membership visit that waived the callout fee down to $0 - there's no
   // Stripe charge to verify since nothing was ever going to be charged).
+  //
+  // The `calloutFee > 0` test alone was a hole once 'unknown' started
+  // quoting no fee: calloutFee came out 0, this block was skipped entirely,
+  // and an unresolvable address produced a booking with no payment checked at
+  // all. Any request carrying a payment reference is verified now, whatever
+  // the computed fee - a payment that exists must always be checked.
   let verifiedPI = null;
-  if (!isAdmin && calloutFee > 0) {
+  if (!isAdmin && (calloutFee > 0 || hasPaymentRef)) {
     if (!process.env.STRIPE_SECRET_KEY) return res.status(402).json({ error: 'Payment required' });
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     try {
@@ -787,7 +900,7 @@ async function handleCreateBooking(req, res) {
           return res.status(402).json({ error: 'Payment not completed' });
         const sessPI =
           typeof sess.payment_intent === 'string' ? sess.payment_intent : sess.payment_intent?.id;
-        if (Math.round(sess.amount_total) !== Math.round(calloutFee * 100)) {
+        if (!amountIsAcceptable(sess.amount_total)) {
           if (sessPI) {
             try {
               await stripe.refunds.create({ payment_intent: sessPI });
@@ -799,12 +912,13 @@ async function handleCreateBooking(req, res) {
             error: 'Payment amount mismatch' + (sessPI ? '. Your payment has been refunded.' : ''),
           });
         }
+        if (coverage.covered === 'unknown') calloutFee = sess.amount_total / 100;
         verifiedPI = sessPI;
       } else if (payment_intent_id) {
         const p = await stripe.paymentIntents.retrieve(payment_intent_id);
         if (p.status !== 'succeeded')
           return res.status(402).json({ error: 'Payment not completed' });
-        if (Math.round(p.amount) !== Math.round(calloutFee * 100)) {
+        if (!amountIsAcceptable(p.amount)) {
           try {
             await stripe.refunds.create({ payment_intent: p.id });
           } catch (e) {
@@ -814,6 +928,9 @@ async function handleCreateBooking(req, res) {
             .status(402)
             .json({ error: 'Payment amount mismatch. Your payment has been refunded.' });
         }
+        // With an unresolved address the accepted band IS the fee - otherwise
+        // the row would record a $0 call-out against a real payment.
+        if (coverage.covered === 'unknown') calloutFee = p.amount / 100;
         verifiedPI = p.id;
       } else {
         return res.status(402).json({ error: 'Payment required' });
@@ -3897,12 +4014,12 @@ async function handleAdminCreateBooking(req, res) {
     .maybeSingle();
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
 
-  const vanNumber = van_number ? Number(van_number) : await matchVanZone(auth.sb, address);
-  if (!vanNumber)
-    return res.status(400).json({
-      error:
-        "That address isn't in a covered zone. Pick a van manually if you want to book it anyway.",
-    });
+  // Never refuse an admin's own booking over zones. This is the path Diego
+  // uses to enter a job he already agreed to by phone or WhatsApp - including
+  // the out-of-perimeter ones the quote flow sends him, which by definition
+  // match no zone. It used to reject those and tell him to pick a van
+  // manually, adding friction to the exact flow that exists to rescue them.
+  const vanNumber = van_number ? Number(van_number) : (await matchVanZone(auth.sb, address)) || 1;
 
   const neededMin = (svc.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
   const { data: blockRows } = await auth.sb
@@ -4495,6 +4612,7 @@ async function handler(req, res) {
   if (role === 'create-booking') return handleCreateBooking(req, res);
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'zone-price') return handleZonePrice(req, res);
+  if (role === 'address-suggest') return handleAddressSuggest(req, res);
   if (role === 'get-price') return handleGetPrice(req, res);
   if (role === 'save-card-setup') return handleSaveCardSetupIntent(req, res);
   if (role === 'save-card-confirm') return handleSaveCardConfirm(req, res);

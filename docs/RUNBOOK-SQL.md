@@ -181,13 +181,15 @@ with
     exists (select 1 from pol where t='mechanic_locations' and p = 'mechanic_locations_admin_select')
   union all select 43, 'add-parts-cost-actual.sql', 'bookings.parts_cost_actual (costo real de repuestos por trabajo)',
     exists (select 1 from col where t='bookings' and c='parts_cost_actual')
+  union all select 44, 'add-geo-cache.sql', 'tabla geo_cache (cache de direcciones y rutas)',
+    exists (select 1 from tbl where t = 'geo_cache')
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 37 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 38 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
@@ -471,12 +473,13 @@ que paso a `OK`. Resumen de que se pierde en cada caso:
 | 40 | `add-availability-reason.sql` | Bloquear un horario sigue fallando incluso con el 39 corrido: el campo "Reason" del modal no tiene columna donde caer, 42703 de nuevo pero en `reason`. Encontrado el 16-ago probando el boton en produccion (`docs/PENDIENTES.md` 21.5). |
 | 41 | `add-availability-rls.sql` | Con las columnas ya bien, el boton sigue fallando: 403 "new row violates row-level security policy". `availability` nacio semanas despues de `harden-security-2026-07-17.sql` y nunca recibio sus policies de admin, a diferencia de `van_zones`, que usa el mismo patron de escritura desde el navegador. Sin esto, ni Block ni Unblock pueden escribir nunca (`docs/PENDIENTES.md` 21.7). |
 | 42 | `add-mechanic-locations-admin-select.sql` | El mapa en vivo de vans del admin (`docs/PENDIENTES.md` 25.6) no muestra ninguna van: `mechanic_locations` solo tiene policy para el cliente con una reserva activa, nunca para el admin. Sin esto el mapa queda vacio para siempre, sin ningun error visible. |
+| 44 | `add-geo-cache.sql` | Cache de direcciones y rutas. Sin esto la app **sigue funcionando**, pero cada consulta de cobertura, cada calculo de precio y cada tecla del autocompletado pega contra Nominatim y OSRM, que son servidores publicos gratuitos con limite de 1 consulta por segundo. Con poco volumen no se nota; con volumen empiezan a fallar los calculos de ruta y -esto es lo grave- **falla en silencio**: la cobertura cae a la tabla de zonas y clientes que deberian recibir un precio terminan en la cola manual de WhatsApp sin que nadie sepa por que. |
 
 ---
 
 ## 6. Chequeo final, despues de correr todo
 
-Volver a pegar la consulta de la seccion 3. **Las 37 filas tienen que decir
+Volver a pegar la consulta de la seccion 3. **Las 38 filas tienen que decir
 `OK`.** Eso es la prueba de que la base quedo como el codigo espera.
 
 Despues, tres pruebas de las de verdad, que la base sola no puede demostrar:
