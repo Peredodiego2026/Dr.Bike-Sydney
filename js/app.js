@@ -5326,7 +5326,17 @@ router.init();
 document.dispatchEvent(new Event('routerinit'));
 renderSpaLangSwitcher();
 updateHomeNav();
-document.getElementById('hero-fee-btn')?.addEventListener('click', openFeeCheckModal);
+// landing.html loads this module too (for the shared booking wizard) AND its
+// own js/landing-inline.js, which wires this exact same button id to its own
+// desktop-styled fee-check modal. Without this guard both handlers fire on
+// one click, opening two overlapping modals at once (found in production,
+// 2026-08-24 - looked like "2 tabs opening" and a mismatched oversized box).
+// landing-inline.js sets window.__landingOwnsFeeCheck synchronously (its
+// script tag runs before this module does), so it always wins there;
+// index.html never loads landing-inline.js, so this always wins here.
+if (!window.__landingOwnsFeeCheck) {
+  document.getElementById('hero-fee-btn')?.addEventListener('click', openFeeCheckModal);
+}
 if (window._pendingReview) {
   setTimeout(() => router.navigate('review'), 200);
 }
