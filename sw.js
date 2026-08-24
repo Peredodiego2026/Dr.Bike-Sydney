@@ -1,3 +1,5 @@
+// v76 (2026-08-25): la barra "Trusted by" con marcas de fabricantes tambien
+// estaba en la SPA, no solo en la landing. Toca index.html y css/home.css.
 // v75 (2026-08-25): el boton "Leave us a review" apuntaba a un link de
 // Google muerto desde 2022 (nombre corto retirado) - caia en google.com a
 // secas. Toca js/app.js y js/landing-inline.js.
@@ -73,7 +75,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v75';
+const CACHE_STATIC = 'drbike-static-v76';
 const CACHE_PAGES  = 'drbike-pages-v70';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
