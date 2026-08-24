@@ -339,8 +339,8 @@ const dict = {
     'Your Address': 'Tu Dirección',
     'Where should we come?': '¿A dónde vamos?',
     'Your mechanic will come to this address': 'Tu mecánico va a llegar a esta dirección',
-    "The $20 call-out fee covers the mechanic's trip. Most areas in Sydney are covered.":
-      'La tarifa de visita de $20 cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
+    "The mobile call-out fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
+      'La tarifa de visita (desde $25, según tu suburbio) cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
     'Continue to Summary': 'Continuar al Resumen',
     // Service Summary / Quote
     'Sunday & public holiday rate': 'Tarifa de domingo y feriado',
@@ -527,8 +527,8 @@ const dict = {
     "A Tune-Up typically takes 45-60 minutes. A Standard Service takes 60-90 minutes. A Standard+ Service can take 2-3 hours. We'll give you an estimated time when you book.":
       'Un Ajuste generalmente toma 45-60 minutos. Un Servicio Estándar toma 60-90 minutos. Un Servicio Estándar+ puede tomar 2-3 horas. Te damos un tiempo estimado al reservar.',
     'What payment methods do you accept?': '¿Qué métodos de pago aceptan?',
-    'We accept all major credit and debit cards, Apple Pay, and Google Pay. A $20 call-out deposit is charged at booking; the remainder is charged on completion.':
-      'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. Se cobra un depósito de $20 al reservar; el resto se cobra al completar el servicio.',
+    'We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $25, depending on your suburb) is charged at booking; the remainder is charged on completion.':
+      'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. Se cobra un depósito por la visita (desde $25, según tu suburbio) al reservar; el resto se cobra al completar el servicio.',
     "Still have questions? We're here to help!": '¿Tenés más preguntas? ¡Estamos para ayudarte!',
     'Contact Us': 'Contactanos',
     'Ready to Experience': 'Listo para Experimentar',
@@ -634,8 +634,8 @@ const dict = {
     // Services intro + "All Services" modal
     'Book a Service →': 'Reservar un Servicio →',
     'All Services': 'Todos los Servicios',
-    'All prices include $20 mobile call-out fee. We come to you.':
-      'Todos los precios incluyen la tarifa de visita de $20. Vamos hasta vos.',
+    'All prices include a mobile call-out fee (from $25, depending on your suburb). We come to you.':
+      'Todos los precios incluyen la tarifa de visita (desde $25, según tu suburbio). Vamos hasta vos.',
     Essentials: 'Esenciales',
     'Tyres & Wheels': 'Neumáticos y Ruedas',
     'Cables & Accessories': 'Cables y Accesorios',
@@ -680,8 +680,8 @@ const dict = {
     'Clean, adjust, regrease': 'Limpieza, ajuste, re-engrase',
     'Custom Quote': 'Cotización Personalizada',
     'E-bikes, carbon, vintage, insurance claims': 'E-bikes, carbono, vintage, reclamos de seguro',
-    'All prices include $20 mobile call-out. Parts charged separately unless stated.':
-      'Todos los precios incluyen la visita de $20. Los repuestos se cobran aparte salvo que se indique lo contrario.',
+    'All prices include a mobile call-out fee (from $25, depending on your suburb). Parts charged separately unless stated.':
+      'Todos los precios incluyen la tarifa de visita (desde $25, según tu suburbio). Los repuestos se cobran aparte salvo que se indique lo contrario.',
     'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
       'Reservas de domingo y feriados de NSW +20%. El sábado tiene precio normal.',
 
@@ -957,7 +957,8 @@ const dict = {
       '1 reparación menor gratis (menos de $60) + 1 lavado gratis por mes',
     '5% off extra services': '5% de descuento en servicios extra',
     '10% off extra services': '10% de descuento en servicios extra',
-    '$20 call-out fee applies': 'Se cobra la tarifa de visita de $20',
+    'Call-out fee applies (from $25, depending on your suburb)':
+      'Se cobra la tarifa de visita (desde $25, según tu suburbio)',
     'Priority scheduling (72hs)': 'Turnos prioritarios (72hs)',
     '2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month':
       '2 reparaciones menores gratis (menos de $60) + 1 lavado gratis + 1 Ajuste gratis por mes',
@@ -972,16 +973,16 @@ const dict = {
     '1 free minor repair per month (any repair under $60)':
       '1 reparación menor gratis por mes (cualquier arreglo de menos de $60)',
     '1 free bike wash per month': '1 lavado de bici gratis por mes',
-    'Digital service history log is a Standard/VIP perk. Call-out fee is not included - the standard $20 call-out fee still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-      'El historial digital de servicios es un beneficio Standard/VIP. La tarifa de visita no está incluida - se cobra igual la tarifa de $20 en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+    'Digital service history log is a Standard/VIP perk. Call-out fee is not included - the mobile call-out fee (from $25, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      'El historial digital de servicios es un beneficio Standard/VIP. La tarifa de visita no está incluida - se cobra igual la tarifa de visita (desde $25, según tu suburbio) en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
       'Un lavado más una reparación menor promedio vale unos $75. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
     '2 free minor repairs per month (any repair under $60)':
       '2 reparaciones menores gratis por mes (cualquier arreglo de menos de $60)',
     '1 free Tune-Up per month': '1 Ajuste gratis por mes',
     'Call-out fee included on covered visits': 'Tarifa de visita incluida en las visitas cubiertas',
-    '1 emergency callout per month (standard $20 call-out fee applies)':
-      '1 visita de emergencia por mes (se cobra la tarifa de visita estándar de $20)',
+    '1 emergency callout per month (call-out fee applies, from $25 depending on your suburb)':
+      '1 visita de emergencia por mes (se cobra la tarifa de visita, desde $25 según tu suburbio)',
     'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       'Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     'A Tune-Up ($109) + a wash ($35) + 2 minor repairs (~$80) = about $224 in free work every month, for $97.':
@@ -1685,8 +1686,8 @@ const dict = {
     'Your Address': '您的地址',
     'Where should we come?': '我们应该前往哪里？',
     'Your mechanic will come to this address': '您的技工将前往此地址',
-    "The $20 call-out fee covers the mechanic's trip. Most areas in Sydney are covered.":
-      '20美元的上门费包含技工的车费。悉尼大部分地区均可提供服务。',
+    "The mobile call-out fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
+      '上门费（从$25起，视郊区而定）包含技工的车费。悉尼大部分地区均可提供服务。',
     'Continue to Summary': '继续查看摘要',
     // Service Summary / Quote
     'Sunday & public holiday rate': '周日及公共假期费率',
@@ -1858,8 +1859,8 @@ const dict = {
     "A Tune-Up typically takes 45-60 minutes. A Standard Service takes 60-90 minutes. A Standard+ Service can take 2-3 hours. We'll give you an estimated time when you book.":
       '基础调校通常需要45-60分钟。标准服务需要60-90分钟。标准+服务可能需要2-3小时。预订时我们会告知预计时长。',
     'What payment methods do you accept?': '你们接受哪些支付方式？',
-    'We accept all major credit and debit cards, Apple Pay, and Google Pay. A $20 call-out deposit is charged at booking; the remainder is charged on completion.':
-      '我们接受所有主流信用卡和借记卡、Apple Pay和Google Pay。预订时收取$20上门押金，其余金额在服务完成后收取。',
+    'We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $25, depending on your suburb) is charged at booking; the remainder is charged on completion.':
+      '我们接受所有主流信用卡和借记卡、Apple Pay和Google Pay。预订时收取上门费押金（从$25起，视郊区而定），其余金额在服务完成后收取。',
     "Still have questions? We're here to help!": '还有疑问？我们随时为您解答！',
     'Contact Us': '联系我们',
     'Ready to Experience': '准备好体验',
@@ -1957,8 +1958,8 @@ const dict = {
     // Services intro + "All Services" modal
     'Book a Service →': '预约服务 →',
     'All Services': '所有服务',
-    'All prices include $20 mobile call-out fee. We come to you.':
-      '所有价格均含$20上门费，我们会上门为您服务。',
+    'All prices include a mobile call-out fee (from $25, depending on your suburb). We come to you.':
+      '所有价格均含上门费（从$25起，视郊区而定），我们会上门为您服务。',
     Essentials: '基础服务',
     'Tyres & Wheels': '轮胎与车轮',
     'Cables & Accessories': '线缆与配件',
@@ -2000,8 +2001,8 @@ const dict = {
     'Clean, adjust, regrease': '清洁、调整、重新润滑',
     'Custom Quote': '定制报价',
     'E-bikes, carbon, vintage, insurance claims': '电动自行车、碳纤维车架、老式车、保险理赔',
-    'All prices include $20 mobile call-out. Parts charged separately unless stated.':
-      '所有价格均含$20上门费。除另有说明外，零件费用另计。',
+    'All prices include a mobile call-out fee (from $25, depending on your suburb). Parts charged separately unless stated.':
+      '所有价格均含上门费（从$25起，视郊区而定）。除另有说明外，零件费用另计。',
     'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
       '周日及新南威尔士州公共假日预订加收20%。周六按正常价格计算。',
 
@@ -2256,7 +2257,8 @@ const dict = {
       '每月1次免费小额维修（低于$60）+ 1次免费洗车',
     '5% off extra services': '额外服务享95折',
     '10% off extra services': '额外服务享9折',
-    '$20 call-out fee applies': '仍需支付$20上门费',
+    'Call-out fee applies (from $25, depending on your suburb)':
+      '需支付上门费（从$25起，视郊区而定）',
     'Priority scheduling (72hs)': '优先预约（72小时）',
     '2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month':
       '每月2次免费小额维修（低于$60）+ 1次免费洗车 + 1次免费基础调校',
@@ -2270,16 +2272,16 @@ const dict = {
     '1 free minor repair per month (any repair under $60)':
       '每月1次免费小额维修（任何低于$60的维修）',
     '1 free bike wash per month': '每月1次免费洗车',
-    'Digital service history log is a Standard/VIP perk. Call-out fee is not included - the standard $20 call-out fee still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-      '数字化服务记录是Standard/VIP会员专享。不含上门费 - 您的覆盖服务仍需支付标准的$20上门费。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+    'Digital service history log is a Standard/VIP perk. Call-out fee is not included - the mobile call-out fee (from $25, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+      '数字化服务记录是Standard/VIP会员专享。不含上门费 - 您的覆盖服务仍需支付上门费（从$25起，视郊区而定）。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
       '一次洗车加一次平均小额维修价值约$75。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
     '2 free minor repairs per month (any repair under $60)':
       '每月2次免费小额维修（任何低于$60的维修）',
     '1 free Tune-Up per month': '每月1次免费基础调校',
     'Call-out fee included on covered visits': '覆盖服务含上门费',
-    '1 emergency callout per month (standard $20 call-out fee applies)':
-      '每月1次紧急上门（需付标准$20上门费）',
+    '1 emergency callout per month (call-out fee applies, from $25 depending on your suburb)':
+      '每月1次紧急上门（需付上门费，从$25起视郊区而定）',
     'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       '备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     'A Tune-Up ($109) + a wash ($35) + 2 minor repairs (~$80) = about $224 in free work every month, for $97.':

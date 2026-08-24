@@ -1185,7 +1185,7 @@ async function renderBookService() {
             </div>
           </div>
         </div>
-        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The $20 call-out fee covers the mechanic's trip. Most areas in Sydney are covered.</div>
+        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The mobile call-out fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
       </div>
       <div class="sticky-bottom">
         <button class="btn btn--primary btn--full" id="s3-continue">Continue to Summary</button>
