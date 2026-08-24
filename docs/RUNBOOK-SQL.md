@@ -179,13 +179,15 @@ with
     (select count(*) = 4 from pol where t='availability' and p like 'availability_admin_%')
   union all select 42, 'add-mechanic-locations-admin-select.sql', 'policy de admin en mechanic_locations',
     exists (select 1 from pol where t='mechanic_locations' and p = 'mechanic_locations_admin_select')
+  union all select 43, 'add-parts-cost-actual.sql', 'bookings.parts_cost_actual (costo real de repuestos por trabajo)',
+    exists (select 1 from col where t='bookings' and c='parts_cost_actual')
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 31 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 37 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
@@ -203,6 +205,38 @@ from public.profiles where referral_code is null;
 
 Si la consulta entera da error en vez de tabla, copiar el mensaje de error y
 pasarlo: significa que algo mas basico no esta como se supone.
+
+### 3.1 Cuatro tablas sin historial de migracion conocido (auditoria 2026-08-23)
+
+`callout_zones`, `waitlist`, `claims` y `notification_log` se usan desde el
+codigo (`.from('...')`) pero **no tienen ningun script en `scripts/` que las
+cree ni aparecen en la consulta de arriba** - nadie sabe si tienen RLS y
+policies como corresponde. No es que esten rotas: es que nunca se verificaron.
+Importa porque `availability` era exactamente asi ("siempre se asumio bien") y
+en agosto resulto que le faltaban TODAS las policies de admin (items 41-42).
+
+Esta consulta no cambia nada, solo reporta el estado de RLS de las cuatro:
+
+```sql
+select
+  c.relname as tabla,
+  case when c.relrowsecurity then 'RLS ON' else '>>> RLS OFF <<<' end as rls,
+  coalesce((select count(*) from pg_policies p
+            where p.schemaname = 'public' and p.tablename = c.relname), 0) as policies
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname = 'public'
+  and c.relkind = 'r'
+  and c.relname in ('callout_zones','waitlist','claims','notification_log')
+order by c.relname;
+```
+
+**Como se lee:** una fila por tabla que exista. `RLS OFF` con `0 policies` en
+una tabla con datos de clientes (`waitlist`, `claims`, `notification_log`)
+significa que cualquiera con la anon key la puede leer entera - pasarlo para
+decidir que policies necesita cada una. `callout_zones` es catalogo publico de
+precios, `RLS OFF` ahi es menos grave pero igual conviene saberlo. Si una tabla
+no aparece en el resultado, es que no existe con ese nombre - avisar cual.
 
 ---
 
@@ -416,7 +450,7 @@ que paso a `OK`. Resumen de que se pierde en cada caso:
 
 ## 6. Chequeo final, despues de correr todo
 
-Volver a pegar la consulta de la seccion 3. **Las 31 filas tienen que decir
+Volver a pegar la consulta de la seccion 3. **Las 37 filas tienen que decir
 `OK`.** Eso es la prueba de que la base quedo como el codigo espera.
 
 Despues, tres pruebas de las de verdad, que la base sola no puede demostrar:

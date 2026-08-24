@@ -76,7 +76,13 @@ convert, never raise it.
 
 ## Payments
 - Stripe LIVE keys active in production
-- Mobile (index.html): $20 call-out fee charged via Stripe at booking step 3 (PaymentIntent)
+- Mobile (index.html): zone-based call-out fee charged via Stripe at booking step 3
+  (PaymentIntent). The fee is looked up per suburb from the `callout_zones` table
+  (`matchCalloutZone()` in `api/auth.js`, from $25; $20 only as a fallback when a
+  suburb matches no zone) - NOT a flat $20. This block said "$20 call-out fee" until
+  2026-08-23; the flat $20 was replaced by zone pricing and the copy across the app
+  was fixed in commit 67b27c6. The server is authoritative and refunds any Stripe
+  charge whose amount doesn't match the recomputed zone fee.
 - Desktop (landing.html): **the same flow.** `landing.html:3389` loads `js/app.js`
   and `openBooking()` opens the SPA wizard in-page (hash `#book-service`), so
   desktop charges the same PaymentIntent, fires the same analytics events and
@@ -147,7 +153,8 @@ mobile->index.html, desktop->landing.html. Full one-page routing was not retried
 - Prices live in Supabase's `services` table (name, price, category) - do not hardcode
   a price list here, it drifts constantly. To check current prices, query it live or
   see Admin > Services & Prices. js/live-prices.js and api/chat.js read it the same way.
-- All prices include $20 mobile call-out fee
+- The mobile call-out fee is zone-based (from $25, per suburb in `callout_zones`),
+  NOT a flat $20 - see the Payments section above
 - Phone: 0433 963 250 / +61433963250
 - WhatsApp: wa.me/61433963250
 - Mechanic PIN: 3250
