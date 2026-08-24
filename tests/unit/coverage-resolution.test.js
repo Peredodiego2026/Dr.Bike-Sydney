@@ -18,7 +18,7 @@ import {
   needsQuote,
   feeForMinutes,
   PERIMETER_MAX_MINUTES,
-  UNRESOLVED_FEE,
+  VALID_FEES,
   BASE,
 } from '../../api/_coverage.js';
 
@@ -100,15 +100,22 @@ describe('routing unavailable: fall back to the priced zone', () => {
 });
 
 describe('nothing resolved - the layer this whole module exists for', () => {
-  it('an unrecognisable address is booked anyway, never rejected', () => {
+  it('is never a rejection: the person keeps their booking', () => {
     const r = resolveCoverage({ minutes: null, zone: null });
     expect(r.covered).toBe('unknown');
-    expect(needsQuote(r)).toBe(false); // NOT sent to the quote flow
+    expect(r.covered).not.toBe('out');
   });
 
-  it('charges the cheapest band rather than guessing high', () => {
-    expect(resolveCoverage({}).calloutFee).toBe(UNRESOLVED_FEE);
-    expect(UNRESOLVED_FEE).toBe(25);
+  // Diego's rule (2026-08-24): if we cannot work out what the trip costs, we
+  // do not take the customer's money on a guess. An earlier draft charged the
+  // cheapest band, which risked billing $25 for a trip to Katoomba and then
+  // having to refund it.
+  it('quotes NO fee - nothing is charged when we do not know the trip', () => {
+    expect(resolveCoverage({}).calloutFee).toBe(null);
+  });
+
+  it('goes to the same free quote request as an out-of-perimeter address', () => {
+    expect(needsQuote(resolveCoverage({}))).toBe(true);
   });
 
   it('says so, so a human can confirm the fee afterwards', () => {
@@ -121,6 +128,7 @@ describe('nothing resolved - the layer this whole module exists for', () => {
     expect(resolveCoverage({ minutes: 'soon' }).covered).toBe('unknown');
     expect(resolveCoverage({ zone: { calloutFee: 'free' } }).covered).toBe('unknown');
     expect(needsQuote(null)).toBe(false);
+    expect(VALID_FEES).toEqual([25, 35, 45]);
     expect(needsQuote(undefined)).toBe(false);
   });
 });

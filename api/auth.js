@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import crypto from 'crypto';
 import { geocodeAddress, drivingRoute } from './_eta.js';
-import { resolveCoverage, needsQuote, BASE, UNRESOLVED_FEE } from './_coverage.js';
+import { resolveCoverage, needsQuote, BASE, VALID_FEES } from './_coverage.js';
 import {
   guard,
   rateLimit,
@@ -723,16 +723,23 @@ async function handleCreateBooking(req, res) {
   let servicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
   // 3. Authoritative call-out fee, from the same resolution the client was
-  // quoted (driving time from the base, falling back to the priced zone, then
-  // to the base fee - api/_coverage.js). Was a direct `callout_zones` lookup
-  // defaulting to $20, which is how Balmain, Potts Point, North Sydney and
-  // Maroubra - all $45 suburbs - were being served at $20: they had a van but
-  // no row in the price table.
+  // quoted (driving time from the base, falling back to the priced zone -
+  // api/_coverage.js). Was a direct `callout_zones` lookup defaulting to $20,
+  // which is how Balmain, Potts Point, North Sydney and Maroubra - all $45
+  // suburbs - were being served at $20: they had a van but no row in the
+  // price table.
   const coverage = await resolveAddressCoverage(address);
-  let calloutFee = applySurcharge(coverage.calloutFee ?? UNRESOLVED_FEE, scheduled_date);
+  let calloutFee = applySurcharge(coverage.calloutFee ?? 0, scheduled_date);
+
+  // A booking whose address cannot be resolved is sent to the quote flow and
+  // never charged, so one should not arrive here at all. One still can: the
+  // client resolved the address confidently a minute ago, paid, and by the
+  // time this runs the geocoder is rate-limited or down. Refunding then would
+  // punish a paying customer for someone else's outage - so step 4 below
+  // accepts the amount they actually paid, provided it is a real band fee.
   if (coverage.covered === 'unknown') {
     console.warn(
-      '[create-booking] could not resolve coverage, charging base fee - confirm manually:',
+      '[create-booking] coverage unresolved, will accept a paid band fee - confirm by hand:',
       address
     );
   }
@@ -831,6 +838,21 @@ async function handleCreateBooking(req, res) {
     }
   }
 
+  // When the address could not be resolved there is no authoritative fee to
+  // check a payment against. `acceptablePaidCents` is the set the amount is
+  // allowed to be instead: the real band fees, surcharged for the date. That
+  // covers the transient geocoder-outage case (client resolved it fine, paid,
+  // then the lookup broke) without reopening the tampered-amount hole closed
+  // in PR #318 - an invented $0.50 is not a band.
+  const acceptablePaidCents =
+    coverage.covered === 'unknown'
+      ? VALID_FEES.map((f) => Math.round(applySurcharge(f, scheduled_date) * 100))
+      : null;
+  const amountIsAcceptable = (cents) =>
+    acceptablePaidCents
+      ? acceptablePaidCents.includes(Math.round(cents))
+      : Math.round(cents) === Math.round(calloutFee * 100);
+
   // 4. Verify payment (skipped for the admin test account, and for a
   // membership visit that waived the callout fee down to $0 - there's no
   // Stripe charge to verify since nothing was ever going to be charged).
@@ -845,7 +867,7 @@ async function handleCreateBooking(req, res) {
           return res.status(402).json({ error: 'Payment not completed' });
         const sessPI =
           typeof sess.payment_intent === 'string' ? sess.payment_intent : sess.payment_intent?.id;
-        if (Math.round(sess.amount_total) !== Math.round(calloutFee * 100)) {
+        if (!amountIsAcceptable(sess.amount_total)) {
           if (sessPI) {
             try {
               await stripe.refunds.create({ payment_intent: sessPI });
@@ -857,12 +879,13 @@ async function handleCreateBooking(req, res) {
             error: 'Payment amount mismatch' + (sessPI ? '. Your payment has been refunded.' : ''),
           });
         }
+        if (coverage.covered === 'unknown') calloutFee = sess.amount_total / 100;
         verifiedPI = sessPI;
       } else if (payment_intent_id) {
         const p = await stripe.paymentIntents.retrieve(payment_intent_id);
         if (p.status !== 'succeeded')
           return res.status(402).json({ error: 'Payment not completed' });
-        if (Math.round(p.amount) !== Math.round(calloutFee * 100)) {
+        if (!amountIsAcceptable(p.amount)) {
           try {
             await stripe.refunds.create({ payment_intent: p.id });
           } catch (e) {
@@ -872,6 +895,9 @@ async function handleCreateBooking(req, res) {
             .status(402)
             .json({ error: 'Payment amount mismatch. Your payment has been refunded.' });
         }
+        // With an unresolved address the accepted band IS the fee - otherwise
+        // the row would record a $0 call-out against a real payment.
+        if (coverage.covered === 'unknown') calloutFee = p.amount / 100;
         verifiedPI = p.id;
       } else {
         return res.status(402).json({ error: 'Payment required' });

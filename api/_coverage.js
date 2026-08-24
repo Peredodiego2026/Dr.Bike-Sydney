@@ -41,10 +41,10 @@ export const FEE_BANDS = [
   { maxMinutes: PERIMETER_MAX_MINUTES, fee: 45 },
 ];
 
-// What a booking costs when we could not work out where it is at all. The
-// cheapest band on purpose: undercharging a rare unresolvable address by $20
-// is cheaper than turning away a customer who was 10 minutes down the road.
-export const UNRESOLVED_FEE = 25;
+// The fees a booking is ever allowed to be charged. Used to sanity-check a
+// payment that arrives while the address cannot be re-resolved (see
+// handleCreateBooking): anything not on this list is refused.
+export const VALID_FEES = FEE_BANDS.map((b) => b.fee);
 
 export function feeForMinutes(minutes) {
   const band = FEE_BANDS.find((b) => minutes <= b.maxMinutes);
@@ -60,7 +60,8 @@ export function feeForMinutes(minutes) {
 //
 // Returns { covered, calloutFee, minutes, km, zoneName, basis }.
 // `covered` is deliberately three-valued: 'in' | 'out' | 'unknown'.
-// 'unknown' means BOOK THEM ANYWAY - see UNRESOLVED_FEE above.
+// 'unknown' does NOT mean rejected: the person keeps their booking and ends
+// on a free quote request, exactly like an out-of-perimeter address.
 export function resolveCoverage({ minutes = null, zone = null, km = null } = {}) {
   const mins = Number.isFinite(minutes) ? Math.round(minutes) : null;
   const distanceKm = Number.isFinite(km) ? Math.round(km) : null;
@@ -116,12 +117,20 @@ export function resolveCoverage({ minutes = null, zone = null, km = null } = {})
   }
 
   // Layer 3: nothing resolved. A typo, a new estate, a geocoder that was down,
-  // an address written in a way nobody anticipated. This is the layer that
-  // exists so none of those becomes a lost customer: let the booking through
-  // at the base fee and let a human confirm it.
+  // an address written in a way nobody anticipated.
+  //
+  // No fee is quoted and NOTHING is charged. Diego's rule, and the right one:
+  // if we cannot work out what the trip costs, we do not take the customer's
+  // money on a guess - we ask. An earlier draft charged the cheapest band and
+  // confirmed by hand, which risked billing $25 for a trip to Katoomba and
+  // then having to refund it.
+  //
+  // This is still NOT a rejection. The person keeps their whole booking and
+  // ends on the same quote request as an out-of-perimeter address: their
+  // details reach Diego, he answers personally. Nobody is turned away.
   return {
     covered: 'unknown',
-    calloutFee: UNRESOLVED_FEE,
+    calloutFee: null,
     minutes: null,
     km: null,
     zoneName: null,
@@ -130,6 +139,9 @@ export function resolveCoverage({ minutes = null, zone = null, km = null } = {})
 }
 
 // True when the booking should ask for a quote instead of taking a card.
+// Covers BOTH "we know it is too far" and "we could not work out where it is":
+// in either case we do not know what the trip costs, so we do not charge for
+// it. The customer's experience is the same - no card, a message to Diego.
 export function needsQuote(resolution) {
-  return resolution?.covered === 'out';
+  return resolution?.covered === 'out' || resolution?.covered === 'unknown';
 }
