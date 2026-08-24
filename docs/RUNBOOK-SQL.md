@@ -238,6 +238,32 @@ decidir que policies necesita cada una. `callout_zones` es catalogo publico de
 precios, `RLS OFF` ahi es menos grave pero igual conviene saberlo. Si una tabla
 no aparece en el resultado, es que no existe con ese nombre - avisar cual.
 
+**RESULTADO (Diego lo corrio el 2026-08-23): las cuatro estan bien, no hace
+falta ningun script.**
+
+| tabla | rls | policies | veredicto |
+|---|---|---|---|
+| `callout_zones` | RLS ON | 2 | OK - catalogo publico de precios |
+| `waitlist` | RLS ON | 2 | OK |
+| `claims` | RLS ON | **0** | **OK, y a proposito** - ver abajo |
+| `notification_log` | RLS ON | **0** | **OK, y a proposito** - ver abajo |
+
+`claims` y `notification_log` con RLS ON y **cero policies** parece alarmante
+pero es lo correcto: en Postgres, RLS activo sin ninguna policy **niega a
+todos**, y el `service_role` key saltea RLS por diseño. Se verifico en el
+codigo que a esas dos tablas **solo las toca el servidor**, nunca el navegador:
+
+- `claims`: `api/auth.js` - el insert publico del formulario de reclamo y los
+  dos handlers de admin (`handleAdminClaimsList` / `handleAdminClaimsUpdate`,
+  ambos detras de `verifyAdminSession`), todos con el service key.
+- `notification_log`: `api/send-message.js:39`, un solo insert con service key.
+
+O sea que el 0-policies es lo que mantiene esas tablas cerradas al navegador.
+**No agregarles policies**: hacerlo abriria acceso que hoy esta correctamente
+denegado. Esto se verifico porque `availability` tenia el mismo perfil
+"nadie lo miro nunca" y ahi si faltaban policies de verdad (items 41-42) - aca
+el patron resulto sano.
+
 ---
 
 ## 4. Lo que ya se puede afirmar sin correr nada
