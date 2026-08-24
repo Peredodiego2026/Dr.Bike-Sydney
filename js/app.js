@@ -1190,6 +1190,11 @@ async function renderBookService() {
             </div>
           </div>
         </div>
+        <div id="s3-coverage-msg" style="display:none;background:var(--amber-tint);border:1px solid var(--amber-edge);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:6px">We don't reach that address yet</div>
+          <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-bottom:12px">Send us the address on WhatsApp and we'll tell you if we can make it work.</div>
+          <a id="s3-coverage-wa" href="https://wa.me/61433963250" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box">💬 Ask on WhatsApp</a>
+        </div>
         <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The mobile call-out fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
       </div>
       <div class="sticky-bottom">
@@ -1201,6 +1206,28 @@ async function renderBookService() {
     const input = screen.querySelector('#location-input');
     const suggestionsBox = screen.querySelector('#address-suggestions');
     let debounceTimer = null;
+
+    // The "we don't reach you" panel. Pre-fills the WhatsApp message with the
+    // address they typed so they don't have to write it twice, and scrolls
+    // itself into view - on a short phone the panel can render below the fold.
+    function showCoverageBlock(addr) {
+      const box = screen.querySelector('#s3-coverage-msg');
+      const wa = screen.querySelector('#s3-coverage-wa');
+      if (!box || !wa) return;
+      const text = translateValue('Hi! Do you cover this address?') + ' ' + addr;
+      wa.href = 'https://wa.me/61433963250?text=' + encodeURIComponent(text);
+      box.style.display = 'block';
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideCoverageBlock() {
+      const box = screen.querySelector('#s3-coverage-msg');
+      if (box) box.style.display = 'none';
+    }
+
+    // Typing a new address clears the rejection: the message referred to the
+    // OLD address, so leaving it up would make a valid new one look rejected.
+    input.addEventListener('input', hideCoverageBlock);
 
     async function fetchSuggestions(query) {
       if (query.length < 3) {
@@ -1289,14 +1316,16 @@ async function renderBookService() {
         });
         const data = res.ok ? await res.json() : { covered: true };
         if (data.covered === false) {
-          showToast(
-            "Sorry, we don't currently service that address. Try a different address or contact us.",
-            'error'
-          );
+          // Was a toast: it vanished after 3 seconds, so anyone who looked away
+          // was left with a button that did nothing and no explanation. A
+          // dead end needs a way out, not a notification - this panel stays
+          // put until the address changes, and hands them WhatsApp.
+          showCoverageBlock(addr);
           btn.textContent = 'Continue to Summary';
           btn.disabled = false;
           return;
         }
+        hideCoverageBlock();
       } catch {
         // Coverage check failed (network) - don't block booking on it, the
         // server re-checks authoritatively in create-booking anyway.
