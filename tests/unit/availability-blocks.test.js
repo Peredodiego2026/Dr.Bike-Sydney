@@ -200,10 +200,12 @@ describe('el panel escribe lo que el lector lee', () => {
     expect(fn).toMatch(/van_number: van \|\| 0/);
   });
 
-  it('unblockDate filtra por la misma columna', () => {
+  it('unblockDate filtra por la misma columna, y por van_number siempre (mismo bug de 0 = All vans)', () => {
     const fn = grabAdmin(/async function unblockDate\(\) \{[\s\S]*?\n\}/, 'unblockDate');
     expect(fn).toMatch(/\.eq\('available', false\)/);
     expect(fn).not.toMatch(/'blocked'/);
+    expect(fn).toMatch(/\.eq\('van_number', van\)/);
+    expect(fn).not.toMatch(/if \(van\) q = q\.eq\('van_number', van\)/);
   });
 
   it('el servidor pide van_number, sin el no puede respetar el bloqueo por van', () => {
@@ -225,9 +227,12 @@ describe('unblockSelected - Diego encontro en produccion que "Unblock all" borra
     expect(fn).toMatch(/if \(!slots\.length\)/);
   });
 
-  it('respeta el mismo van_number que el resto del modulo (0 = todas las vans)', () => {
+  it('filtra por van_number SIEMPRE, incluido 0 = "All vans" (bug 2026-08-23: if(van) saltaba el filtro cuando van=0 y borraba TODAS las vans)', () => {
     const fn = grabAdmin(/async function unblockSelected\(\) \{[\s\S]*?\n\}/, 'unblockSelected');
-    expect(fn).toMatch(/if \(van\) q = q\.eq\('van_number', van\);/);
+    expect(fn).toMatch(/\.eq\('van_number', van\)/);
+    // el bug era exactamente este patron: 0 es falsy, asi que "All vans" no
+    // filtraba nada y borraba los bloqueos de van 0, 1 Y 2
+    expect(fn).not.toMatch(/if \(van\) q = q\.eq\('van_number', van\)/);
   });
 
   it('el boton nuevo esta en el modal, y "Unblock all" sigue existiendo pero ya no es la opcion principal', () => {

@@ -2485,6 +2485,63 @@ async function handleAdminReschedule(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+// Admin's "Reassign van" button (docs/PENDIENTES.md 25.2) used to write
+// straight to `bookings` from the browser with `sb.from('bookings').update(...)`
+// and no error check at all - on an RLS denial or a bookings_unique_slot
+// conflict, the row never moved but the UI still said "Reassigned to Van X
+// ✓". It also never checked whether the NEW van was actually free at that
+// slot (isSlotBlocked), unlike every other booking-mutating action in this
+// file. Found in audit, 2026-08-23. Same server-side pattern as
+// handleAdminReschedule: verify, re-check the slot for the target van,
+// write, tell the truth about the result.
+async function handleAdminReassignVan(req, res) {
+  const { access_token, booking_id, van_number } = req.body;
+  const vanNum = Number(van_number);
+  if (!booking_id || !vanNum)
+    return res.status(400).json({ error: 'booking_id, van_number required' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const { data: bk, error: bkErr } = await auth.sb
+    .from('bookings')
+    .select('id,status,scheduled_date,scheduled_time,service_name')
+    .eq('id', booking_id)
+    .maybeSingle();
+  if (bkErr) return res.status(500).json({ error: 'Database error' });
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+  if (!['pending', 'confirmed'].includes(bk.status))
+    return res.status(400).json({ error: 'Booking cannot be reassigned' });
+
+  const svcResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/services?select=duration_max&name=eq.${encodeURIComponent(bk.service_name)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  const svcData = svcResp.ok ? await svcResp.json() : [];
+  const neededMin = (svcData?.[0]?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+
+  const { data: blockRows } = await auth.sb
+    .from('availability')
+    .select('time_slot, available, van_number')
+    .eq('date', bk.scheduled_date);
+  if (isSlotBlocked(blockRows, vanNum, bk.scheduled_time, neededMin))
+    return res.status(409).json({ error: 'That van is blocked at this time.' });
+
+  const { error: updErr } = await auth.sb
+    .from('bookings')
+    .update({ van_number: vanNum })
+    .eq('id', booking_id);
+  if (updErr) {
+    // 23505 = bookings_unique_slot (van_number, scheduled_date, scheduled_time)
+    if (updErr.code === '23505')
+      return res.status(409).json({ error: 'That van already has a booking at this time.' });
+    return res.status(500).json({ error: 'Failed to reassign van' });
+  }
+
+  return res.status(200).json({ ok: true });
+}
+
 async function handleClientHistory(req, res) {
   const { client_id, client_email, booking_id } = req.body;
   if (!client_id && !client_email && !booking_id)
@@ -4431,6 +4488,7 @@ async function handler(req, res) {
   if (role === 'apply-referral') return handleApplyReferral(req, res);
   if (role === 'client-reschedule') return handleClientReschedule(req, res);
   if (role === 'admin-reschedule') return handleAdminReschedule(req, res);
+  if (role === 'admin-reassign-van') return handleAdminReassignVan(req, res);
   if (role === 'client-history') return handleClientHistory(req, res);
   if (role === 'google-calendar-ticket') return handleGoogleCalendarTicket(req, res);
   if (role === 'client-bookings') return handleClientBookings(req, res);
