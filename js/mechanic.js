@@ -309,6 +309,24 @@ let mechanic = null,
   jobsTruncated = false,
   tab = 'today',
   online = true;
+
+// The server (handleMechanic in api/auth.js) returns ONE combined `name`
+// field - never first_name/last_name. Six spots read mechanic.first_name/
+// .last_name, which are always undefined, so clients saw "Your mechanic" /
+// "Mechanic" in every accept/arrived/enroute/complete notification and the
+// Profile tab. These read the field that actually exists. (2026-08-23 audit)
+function mechFullName(fallback) {
+  return (mechanic?.name || '').trim() || fallback;
+}
+function mechFirstName(fallback) {
+  const n = (mechanic?.name || '').trim();
+  return n ? n.split(/\s+/)[0] : fallback;
+}
+function mechInitials() {
+  const parts = (mechanic?.name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'M';
+  return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
+}
 const timerIntervals = {};
 let isOffline = !navigator.onLine;
 
@@ -974,7 +992,11 @@ function checklistChanged() {
     '#service-checklist .chk-item[data-required="true"]'
   );
   const allRequiredDone = requiredItems.length === 0 || [...requiredItems].every((c) => c.checked);
-  const btn = document.querySelector('#complete-modal button[onclick^="submitComplete"]');
+  // The Complete button is data-action="submit-complete" (migrated off onclick
+  // by TASK-023). This selector still looked for onclick=, so it always
+  // matched null and the "3 required safety checks" gate never disabled
+  // anything - a mechanic could submit without checking brakes/tyres/chain.
+  const btn = document.querySelector('#complete-modal button[data-action="submit-complete"]');
   if (btn) {
     btn.disabled = !allRequiredDone;
     btn.style.opacity = allRequiredDone ? '1' : '0.5';
@@ -1135,7 +1157,7 @@ async function setStatus(id, status) {
     if (j?.client_id)
       sendClientPush(j.client_id, {
         title: '🔧 Mechanic assigned — Dr. Bike Sydney',
-        body: `${mechanic?.first_name || 'Your mechanic'} has accepted your ${j.service || 'booking'}. We'll notify you when they're on the way.`,
+        body: `${mechFirstName('Your mechanic')} has accepted your ${j.service || 'booking'}. We'll notify you when they're on the way.`,
         url: '/',
         tag: 'booking-accepted-' + id,
       });
@@ -1321,7 +1343,7 @@ async function sendClientPush(clientId, { title, body, url, tag }) {
 function notifyClientAccepted(j) {
   if (!j) return;
   const mechName =
-    ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+    mechFullName('Your mechanic');
   const when = [j.date, j.time].filter(Boolean).join(' at ');
 
   if (j.client_id)
@@ -1353,7 +1375,7 @@ function notifyClientAccepted(j) {
 function notifyClientArrived(j) {
   if (!j) return;
   const mechName =
-    ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+    mechFullName('Your mechanic');
 
   if (j.client_id)
     sendClientPush(j.client_id, {
@@ -1384,7 +1406,7 @@ function notifyClientArrived(j) {
 async function notifyClientEnroute(j) {
   if (!j) return;
   const mechName =
-    ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+    mechFullName('Your mechanic');
   const trackUrl = `https://drbikesydney.com.au/?tracking=${j.id}`;
 
   // Where the mechanic actually is right now. The server turns this plus the
@@ -1476,7 +1498,7 @@ async function fetchEta(fix, address) {
 function notifyClientComplete(j) {
   if (!j?.client_id) return;
   const mechName =
-    ((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Your mechanic';
+    mechFullName('Your mechanic');
   sendClientPush(j.client_id, {
     title: `✅ ${esc(j.service)} complete!`,
     body: `${mechName} has finished your service. Please leave a review — it helps us a lot! ⭐`,
@@ -1792,7 +1814,11 @@ async function openPartsPicker() {
       body: JSON.stringify({ role: 'mechanic-parts', token: stored.token || '' }),
     });
     parts = r.ok ? await r.json() : [];
-  } catch (e) {}
+  } catch (e) {
+    // A network failure here rendered an empty picker indistinguishable from
+    // "no parts in the catalog" - at least leave a trace.
+    console.error('[mechanic] parts catalog load failed:', e.message);
+  }
   renderPartsPicker(parts);
 }
 
@@ -2100,7 +2126,10 @@ async function submitComplete(id) {
     return;
   }
 
-  const btn = document.querySelector('#complete-modal button[onclick*="submitComplete"]');
+  // Same dead onclick= selector as checklistChanged() had - always null, so
+  // the "Saving..." disabled state during upload+POST never applied and a
+  // double-tap could fire two completions in flight.
+  const btn = document.querySelector('#complete-modal button[data-action="submit-complete"]');
   if (btn) {
     btn.textContent = 'Saving...';
     btn.disabled = true;
@@ -2794,8 +2823,8 @@ function profile() {
 
   document.getElementById('jobs-list').innerHTML = `<div class="profile-wrap">
     <div style="text-align:center;margin-bottom:24px;padding:0 16px">
-      <div class="profile-av">${mechanic?.first_name?.[0] || 'M'}${mechanic?.last_name?.[0] || ''}</div>
-      <div style="font-size:18px;font-weight:700;color:var(--navy)">${((mechanic?.first_name || '') + ' ' + (mechanic?.last_name || '')).trim() || 'Mechanic'}</div>
+      <div class="profile-av">${mechInitials()}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--navy)">${mechFullName('Mechanic')}</div>
       <div style="font-size:13px;color:var(--mgray);margin-top:4px">Van ${vanNum} · ${mechanic?.role || 'Mechanic'}</div>
       ${rated.length ? `<div style="font-size:20px;margin-top:8px">${stars} <span style="font-size:15px;font-weight:700;color:var(--navy)">${avgRating}</span> <span style="font-size:13px;color:var(--mgray)">(${rated.length} reviews)</span></div>` : ''}
     </div>
