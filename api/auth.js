@@ -419,7 +419,9 @@ async function handleGetPrice(req, res) {
   try {
     const match = await matchCalloutZone(sb, address);
     if (match) baseCalloutFee = match.calloutFee;
-  } catch {}
+  } catch (e) {
+    console.error('matchCalloutZone failed, falling back to $20:', e.message);
+  }
   baseCalloutFee = applySurcharge(baseCalloutFee, scheduled_date);
 
   const priced = await applyMembershipPricing(
@@ -669,7 +671,9 @@ async function handleCreateBooking(req, res) {
   try {
     const match = await matchCalloutZone(sb, address);
     if (match) calloutFee = match.calloutFee;
-  } catch {}
+  } catch (e) {
+    console.error('matchCalloutZone failed, falling back to $20:', e.message);
+  }
   calloutFee = applySurcharge(calloutFee, scheduled_date);
 
   // 3a. Membership pricing: waives/discounts servicePrice and calloutFee per
@@ -2344,7 +2348,9 @@ async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_
   try {
     const match = await matchCalloutZone(createClient(SUPABASE_URL, SERVICE_KEY), bk.address);
     if (match) newCalloutFee = match.calloutFee;
-  } catch {}
+  } catch (e) {
+    console.error('matchCalloutZone failed, falling back to $20:', e.message);
+  }
   newCalloutFee = applySurcharge(newCalloutFee, scheduled_date);
 
   const updatePayload = { scheduled_date, scheduled_time, callout_fee: newCalloutFee };
@@ -3835,7 +3841,9 @@ async function handleAdminCreateBooking(req, res) {
   try {
     const match = await matchCalloutZone(auth.sb, address);
     if (match) calloutFee = match.calloutFee;
-  } catch {}
+  } catch (e) {
+    console.error('matchCalloutZone failed, falling back to $20:', e.message);
+  }
   calloutFee = applySurcharge(calloutFee, scheduled_date);
 
   const { data: booking, error: insErr } = await auth.sb
