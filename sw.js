@@ -1,3 +1,10 @@
+// v70 (2026-08-24): the My Bikes bottom-nav icon went 28px -> 22px in v69 to
+// match its siblings exactly, but Diego then said it read as too small - the
+// bike PNG traces its silhouette with more internal padding than the stroke
+// SVGs use, so identical bounding boxes don't read as identical visual
+// weight. Settled on 25px. Same reasoning as v69: js/components.js's
+// createBottomNav() has no `?v=`, so this bump is what actually delivers it.
+//
 // v69 (2026-08-24): the My Bikes bottom-nav icon was 28px next to its four
 // 22px siblings (Home/Bookings/Track/Profile), reported by Diego as
 // mismatched size AND height - a taller flex item shifts where its label
@@ -46,8 +53,8 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v69';
-const CACHE_PAGES  = 'drbike-pages-v69';
+const CACHE_STATIC = 'drbike-static-v70';
+const CACHE_PAGES  = 'drbike-pages-v70';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
 // too, without their query, and every one of those entries was dead weight:

@@ -49,7 +49,7 @@ export function createBottomNav(activeTab = 'home') {
       id: 'my-bikes',
       label: 'My Bikes',
       href: '#my-bikes',
-      icon: `<span style="display:inline-block;width:22px;height:22px;background-color:currentColor;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>`,
+      icon: `<span style="display:inline-block;width:25px;height:25px;background-color:currentColor;-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span>`,
     },
     {
       id: 'profile',

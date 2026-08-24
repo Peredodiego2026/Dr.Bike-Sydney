@@ -154,23 +154,6 @@
   margin-top: 24px;
   flex-wrap: wrap;
 }
-/* Diego reported "What's My Fee?" (.btn-white) rendering as a full pill next
-   to Book a Service / View Services, on both Chrome (with extensions) and
-   Firefox private browsing (no extensions) - ruling out an extension.
-   Checked the deployed CSS, computed styles, and the actual painted pixels
-   (sharp, corner-by-corner) from this session's own Playwright renders: all
-   three buttons trace an identical 12px radius, no measurable difference.
-   Could not reproduce or explain the discrepancy despite that. This grouped
-   rule removes any possibility of the three selectors resolving `var(--radius)`
-   differently, whatever the real cause turns out to be - it can only help.
-   `appearance: none` on .btn-white below is the same kind of defensive
-   hardening, in case native button chrome is bleeding through on the one
-   button of the three with no visible border to mask it. */
-[data-screen='home'] .btn-primary,
-[data-screen='home'] .btn-outline,
-[data-screen='home'] .btn-white {
-  border-radius: var(--radius);
-}
 [data-screen='home'] .btn-primary {
   background: var(--blue);
   color: var(--white);
@@ -221,7 +204,19 @@
   border: none;
   color: var(--navy);
   padding: 12px 24px;
-  border-radius: var(--radius);
+  /* Hard-coded, not var(--radius): Diego kept seeing this button as a full
+     pill next to its rectangular siblings on his own machine, in two
+     different browsers (Chrome and Firefox private mode - ruling out an
+     extension), even after every check this session could run (source CSS,
+     deployed CSS, computed styles, pixel-traced corners) came back
+     identical to .btn-primary/.btn-outline. Whatever is different about his
+     render, it can't be a custom-property resolution quirk if there's no
+     custom property left to resolve. height is explicit too, not
+     min-height: this is the only one of the three hero buttons with an
+     <svg> icon child, and intrinsic sizing around inline content can differ
+     from a plain text button in ways min-height doesn't fully pin down. */
+  border-radius: 12px !important;
+  height: 44px;
   font-weight: 700;
   font-size: 14px;
   min-height: 44px;
