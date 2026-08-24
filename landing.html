@@ -52,7 +52,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel up to 2 hours before your appointment at no charge."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes, we carry common parts in the van, but they are not included in the service price — they are charged separately at cost price with no markup."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $25, depending on your suburb) is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=20260823a">
+  <link rel="stylesheet" href="css/landing.css?v=20260825a">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
   <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
@@ -88,7 +88,7 @@
     </a>
 
     <div class="nav-links">
-      <a href="#services">Services</a>
+      <button id="nav-services-btn" type="button">Services</button>
       <a href="#mechanics">Mechanics</a>
       <a href="#memberships">Memberships</a>
       <a href="#fleet" style="color:var(--blue);font-weight:700">Fleet &#x2192;</a>
@@ -150,7 +150,7 @@
 
       <div class="hero-btns">
         <button id="hero-book-btn" class="btn-primary" type="button">Book a Service</button>
-        <a href="#services" class="btn-outline">View Services</a>
+        <button id="hero-services-btn" class="btn-outline" type="button">View Services</button>
         <button id="hero-fee-btn" class="btn-white" type="button">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           What's My Fee?
@@ -398,53 +398,6 @@
   </div>
 </section>
 
-<!-- ── TRUST BAR ────────────────────────────────────────────────────────────── -->
-<div class="trust-bar">
-  <div class="container">
-    <span class="trust-label">TRUSTED BY CYCLISTS ACROSS SYDNEY</span>
-    <div class="trust-brands">
-      <span class="trust-brand">Specialized</span>
-      <span class="trust-sep">|</span>
-      <span class="trust-brand">Trek</span>
-      <span class="trust-sep">|</span>
-      <span class="trust-brand">Giant</span>
-      <span class="trust-sep">|</span>
-      <span class="trust-brand">Cannondale</span>
-      <span class="trust-sep">|</span>
-      <span class="trust-brand">BMC</span>
-    </div>
-  </div>
-</div>
-
-<!-- ── SERVICES ─────────────────────────────────────────────────────────────── -->
-<section id="services" style="padding:96px 0;background:white">
-  <div class="container">
-    <div class="section-center">
-      <span class="section-badge">OUR SERVICES</span>
-      <h2 class="section-h2">Complete Bike Care at Your Location</h2>
-      <p class="section-sub">We bring a fully equipped mobile workshop to your door — no bike shop queues, no expensive tow-ins.</p>
-    </div>
-
-    <!-- Two CTAs, not one: booking stays the emphasised path, and the price
-         catalogue gets its way back in. The "View All Services" button existed
-         until 0c639c1 (4 Jul 2026) swapped it for the booking link, which left
-         #services-modal, its 33 price cards and the openServicesModal() wiring
-         with no way to reach them - a desktop visitor could not see a single
-         price anywhere on the page. -->
-    <!-- align-items:center, not the default stretch: a flex item left to
-         stretch takes the row's height, which made this button twice as tall
-         as the link beside it.
-         btn-outline is the HERO's style - white text on a translucent white
-         border, for a dark background. On this white section it renders
-         invisible, so the pair below uses the light-background classes:
-         solid for the booking action, outlined for the catalogue. -->
-    <div style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0">
-      <a href="#book-service" class="btn-primary">Book a Service &rarr;</a>
-      <button id="home-view-all-btn" type="button" class="btn-outline-blue">View All Services &rarr;</button>
-    </div>
-
-  </div>
-</section>
 
 <!-- ── ALL SERVICES MODAL ────────────────────────────────────────────────────── -->
 <div id="services-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);overflow-y:auto;justify-content:center;align-items:flex-start;padding:40px 16px;">
@@ -1410,7 +1363,7 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=2aee4f2c92"></script>
+<script src="js/landing-inline.js?v=144a4fb5e0"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=d753faa212"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing

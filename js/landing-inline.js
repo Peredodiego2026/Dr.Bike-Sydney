@@ -1494,8 +1494,23 @@ function openFeeCheckModal() {
 
 // ── Wire all booking triggers on DOM ready ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  const homeViewAllBtn = document.getElementById('home-view-all-btn');
-  if (homeViewAllBtn) homeViewAllBtn.addEventListener('click', openServicesModal);
+  // The "OUR SERVICES" section that held the old button is gone: it was 96px
+  // of padding around a heading, a subtitle and two buttons, with no service
+  // cards in it at all - a large empty band earning nothing. The 33 price
+  // cards were always in #services-modal, never in that section.
+  //
+  // The catalogue moved to the two places people already look for it: the
+  // nav's "Services" entry and the hero's "View Services". Both used to be
+  // anchors that scrolled DOWN to that section, where a second click finally
+  // opened the modal - so this is one click now instead of two.
+  //
+  // Keeping a route to the modal is the trap here: an earlier attempt
+  // (0c639c1, 4 Jul 2026) removed the only one and left a desktop visitor
+  // unable to see a single price anywhere on the page.
+  ['home-view-all-btn', 'nav-services-btn', 'hero-services-btn'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', openServicesModal);
+  });
 
   const heroBk = document.getElementById('hero-book-btn');
   if (heroBk) heroBk.addEventListener('click', function() { openBooking(); });
