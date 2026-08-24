@@ -24,6 +24,13 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
+// js/app.js joined 2026-08-23: it's the SPA's core, loaded on BOTH index.html
+// and landing.html, and the audit found the two pages carried different ?v=
+// values (20260806b vs 20260728f) - both stale, both a manual date-string
+// nobody kept in sync. Converting it to the same content-hash scheme as
+// admin.js means index and landing can never again disagree about which
+// app.js is fresh, and a single content edit fails here for both until both
+// move to the new hash.
 const PAGES = [
   {
     html: 'admin.html',
@@ -33,8 +40,13 @@ const PAGES = [
     ],
   },
   {
+    html: 'index.html',
+    assets: [{ path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ }],
+  },
+  {
     html: 'landing.html',
     assets: [
+      { path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-inline.js', re: /src="js\/landing-inline\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-modules.js', re: /src="js\/landing-modules\.js\?v=([a-zA-Z0-9]+)"/ },
     ],

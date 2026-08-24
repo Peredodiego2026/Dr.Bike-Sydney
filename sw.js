@@ -1,3 +1,9 @@
+// v71 (2026-08-23): audit fixes touched js/supabase.js (getCalloutFee /
+// getMechanicInfo now log instead of swallowing), js/app.js (reschedule
+// date-picker timezone) and js/i18n.js (3 dead "$20 call-out fee" keys
+// removed). supabase.js and i18n.js are imported as ES modules with no ?v=,
+// so only a cache bump reaches them - the ?v= tags on app.js/landing-inline.js/
+// landing.css are bumped in their pages too, this covers the modules.
 // v70 (2026-08-24): the My Bikes bottom-nav icon went 28px -> 22px in v69 to
 // match its siblings exactly, but Diego then said it read as too small - the
 // bike PNG traces its silhouette with more internal padding than the stroke
@@ -53,7 +59,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v70';
+const CACHE_STATIC = 'drbike-static-v71';
 const CACHE_PAGES  = 'drbike-pages-v70';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

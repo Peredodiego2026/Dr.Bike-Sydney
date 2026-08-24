@@ -292,14 +292,19 @@ let _loginMode = 'signin';
 let _bookingsTab = 'upcoming';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+// YYYY-MM-DD from a Date's LOCAL fields. `.toISOString().split('T')[0]`
+// converts through UTC first, and Sydney is UTC+10/11: from local midnight to
+// ~10-11am, the UTC date is still yesterday, so a date computed that way is a
+// day behind. Same bug the admin calendar had (docs/PENDIENTES.md 21.11).
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function generateDates(count = 7) {
   return Array.from({ length: count }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return localDateStr(d);
   });
 }
 
@@ -3958,7 +3963,9 @@ async function renderMyBookings() {
 
           overlay.querySelector('#reschedule-btn').addEventListener('click', () => {
             const panel = document.getElementById('detail-panel');
-            const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+            const tmrw = new Date();
+            tmrw.setDate(tmrw.getDate() + 1);
+            const tomorrow = localDateStr(tmrw);
             panel.innerHTML = `
               <div style="font-size:18px;font-weight:700;margin-bottom:20px">📅 <span>Reschedule</span></div>
               <div style="margin-bottom:16px">

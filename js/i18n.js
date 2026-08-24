@@ -486,8 +486,6 @@ const dict = {
     '/month': '/mes',
     '1 Tune-Up per month': '1 Ajuste por mes',
     '10% off parts': '10% de descuento en repuestos',
-    '1 free Tune-Up per month ($20 call-out fee applies)':
-      '1 Ajuste gratis por mes (se cobra la tarifa de visita de $20)',
     '10% off extra visits beyond your monthly service':
       '10% de descuento en visitas extra más allá de tu servicio mensual',
     'Priority scheduling (48hs)': 'Turnos prioritarios (48hs)',
@@ -609,8 +607,6 @@ const dict = {
     Popular: 'Popular',
     '1 Basic Service': '1 Servicio Básico',
     '10% off repairs': '10% de descuento en reparaciones',
-    '1 free Basic Service/month ($20 call-out fee applies)':
-      '1 Servicio Basic gratis/mes (se cobra la tarifa de visita de $20)',
     'Priority booking': 'Reserva prioritaria',
     'Email support': 'Soporte por correo',
     '2 Standard Services': '2 Servicios Standard',
@@ -928,8 +924,6 @@ const dict = {
     'Digital bike history log': 'Historial digital de la bici',
     'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       'Servicios de emergencia, descuento en servicios extra, visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
-    'Call-out fee is not included - the standard $20 call-out fee still applies to your monthly visit. Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-      'La tarifa de visita no está incluida - se cobra igual la tarifa de $20 en tu visita mensual. Visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
     'A regular Tune-Up costs $109. With Basic you save $52/month.':
       'Un Ajuste normal cuesta $109. Con Basic ahorrás $52/mes.',
     '2 free services per month (any type), call-out fee included':
@@ -1823,7 +1817,6 @@ const dict = {
     '/month': '/月',
     '1 Tune-Up per month': '每月1次基础调校',
     '10% off parts': '零件享9折',
-    '1 free Tune-Up per month ($20 call-out fee applies)': '每月1次免费基础调校（仍收$20上门费）',
     '10% off extra visits beyond your monthly service': '超出每月服务后，额外上门享9折',
     'Priority scheduling (48hs)': '优先预约（48小时）',
     'Digital bike history': '数字化车辆记录',
@@ -1936,8 +1929,6 @@ const dict = {
     Popular: '最受欢迎',
     '1 Basic Service': '1次Basic服务',
     '10% off repairs': '维修享9折',
-    '1 free Basic Service/month ($20 call-out fee applies)':
-      '每月1次免费Basic服务（仍收$20上门费）',
     'Priority booking': '优先预约',
     'Email support': '邮件支持',
     '2 Standard Services': '2次Standard服务',
@@ -2228,8 +2219,6 @@ const dict = {
     'Digital bike history log': '数字化车辆记录',
     'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
       '紧急服务、额外服务折扣、无限次上门不含在内。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
-    'Call-out fee is not included - the standard $20 call-out fee still applies to your monthly visit. Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-      '不含上门费 - 每月服务仍需支付$20上门费。无限次上门。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
     'A regular Tune-Up costs $109. With Basic you save $52/month.':
       '普通基础调校售价$109。使用Basic每月可节省$52。',
     '2 free services per month (any type), call-out fee included':
