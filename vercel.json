@@ -1,7 +1,13 @@
 {
   "crons": [
-    { "path": "/api/send-reminders?type=2h", "schedule": "0 22 * * *" },
-    { "path": "/api/send-cron?type=all", "schedule": "0 9 * * *" }
+    {
+      "path": "/api/send-reminders?type=2h",
+      "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/send-cron?type=all",
+      "schedule": "0 9 * * *"
+    }
   ],
   "rewrites": [
     {
@@ -199,6 +205,188 @@
           "value": "public, max-age=0, must-revalidate"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:slug(eastern-suburbs)",
+      "destination": "/bondi",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(eastern-suburbs).html",
+      "destination": "/bondi",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(eastern-suburbs)",
+      "destination": "/es/bondi",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(eastern-suburbs).html",
+      "destination": "/es/bondi",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(eastern-suburbs)",
+      "destination": "/zh/bondi",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(eastern-suburbs).html",
+      "destination": "/zh/bondi",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(surry-hills)",
+      "destination": "/cbd",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(surry-hills).html",
+      "destination": "/cbd",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(surry-hills)",
+      "destination": "/es/cbd",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(surry-hills).html",
+      "destination": "/es/cbd",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(surry-hills)",
+      "destination": "/zh/cbd",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(surry-hills).html",
+      "destination": "/zh/cbd",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(marrickville|newtown|strathfield)",
+      "destination": "/inner-west",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(marrickville|newtown|strathfield).html",
+      "destination": "/inner-west",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(marrickville|newtown|strathfield)",
+      "destination": "/es/inner-west",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(marrickville|newtown|strathfield).html",
+      "destination": "/es/inner-west",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(marrickville|newtown|strathfield)",
+      "destination": "/zh/inner-west",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(marrickville|newtown|strathfield).html",
+      "destination": "/zh/inner-west",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(chatswood|hills-district|hornsby|mosman|ryde)",
+      "destination": "/north-shore",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(chatswood|hills-district|hornsby|mosman|ryde).html",
+      "destination": "/north-shore",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(chatswood|hills-district|hornsby|mosman|ryde)",
+      "destination": "/es/north-shore",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(chatswood|hills-district|hornsby|mosman|ryde).html",
+      "destination": "/es/north-shore",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(chatswood|hills-district|hornsby|mosman|ryde)",
+      "destination": "/zh/north-shore",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(chatswood|hills-district|hornsby|mosman|ryde).html",
+      "destination": "/zh/north-shore",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(manly)",
+      "destination": "/northern-beaches",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(manly).html",
+      "destination": "/northern-beaches",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(manly)",
+      "destination": "/es/northern-beaches",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(manly).html",
+      "destination": "/es/northern-beaches",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(manly)",
+      "destination": "/zh/northern-beaches",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(manly).html",
+      "destination": "/zh/northern-beaches",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(parramatta|penrith|st-george|sutherland-shire)",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(parramatta|penrith|st-george|sutherland-shire).html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(parramatta|penrith|st-george|sutherland-shire)",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/es/:slug(parramatta|penrith|st-george|sutherland-shire).html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(parramatta|penrith|st-george|sutherland-shire)",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/zh/:slug(parramatta|penrith|st-george|sutherland-shire).html",
+      "destination": "/",
+      "permanent": true
     }
   ]
 }
