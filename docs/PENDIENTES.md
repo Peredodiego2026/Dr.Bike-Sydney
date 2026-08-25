@@ -5788,4 +5788,82 @@ Lo delicado no fue borrar sino no dejar 404s:
 copia entre si. Dejan de ser un problema de escala, pero necesitan
 contenido local de verdad - y eso depende de que Diego este en Sydney
 (primera semana de noviembre 2026), no de codigo.
+## 30. Parramatta: el paso de la direccion seguia siendo un callejon (25-ago-2026)
+
+Diego probo Parramatta desde el celular y desde la landing. Salia el panel
+"no llegamos a esa direccion" con un boton de WhatsApp, y nada mas.
+
+**El bug:** en `renderStep3`, `covered === false` hacia `return` y volvia a
+habilitar el boton. El segundo toque corria el mismo chequeo, recibia la
+misma respuesta y mostraba el mismo panel. **Nunca se podia avanzar.** Una
+persona que ya habia elegido servicio, fecha y hora quedaba encerrada.
+
+Lo peor es que el resto del flujo ya estaba bien: el resumen lee
+`needsQuote` y cambia el boton de pago por "Consultar mi precio", sin cobrar
+nada. Solo el paso 3 no dejaba llegar hasta ahi.
+
+Ahora el primer toque explica y el segundo continua ("Continuar igual"). El
+panel usa la MISMA copia que la landing ("Esa zona la cotizamos caso por
+caso"), que ya estaba traducida - cero llaves nuevas para ese texto.
+
+### El mensaje de WhatsApp no decia que queria el cliente
+
+Era `"Hi! Do you cover this address? <direccion>"` y nada mas. Diego recibia
+una direccion sin saber que servicio pedian. Ahora lleva servicio, fecha,
+direccion y km/minutos - los mismos campos que el mensaje que arma el
+servidor al final del flujo de cotizacion.
+
+De paso, los dos mensajes tenian el mismo bug de formato: los `''` puestos
+como renglon en blanco los borraba `.filter(Boolean)`, asi que el saludo se
+pegaba a los campos. El separador va en el `join`, no en el array.
+
+### Los "errores de zoom" no eran de layout
+
+Safari en iPhone **hace zoom a la pagina entera** cuando enfocas un input con
+`font-size` menor a 16px, y no vuelve. La pagina queda corrida de lado: por
+eso una captura mostraba "HERE SHOULD WE COME?" sin la W y el parrafo cortado
+a la derecha. Se lee como un desborde y no lo es.
+
+Habia **~50 controles entre 13 y 15px**, puestos inline en las cinco
+superficies. Una regla en `css/fonts.css` (el unico CSS que cargan las cinco)
+los sube a 16px solo en punteros gruesos. Verificado en el navegador: inline
+`15px` -> computado `16px`, 0 inputs por debajo, `scrollWidth` igual al
+viewport.
+
+### El link de wa.me NO estaba roto
+
+Firefox le mostro a Diego un error de HSTS en `wa.me`. El href es
+`https://wa.me/...` en el codigo y se verifico en ejecucion. Era el VPN de su
+navegador interceptando TLS - en el celular, sin VPN, el mismo boton abrio
+WhatsApp con el mensaje escrito.
+
+## 31. La peninsula se divide en dos (25-ago-2026)
+
+Diego vive en las Northern Beaches y la van sale de Curl Curl, y sin embargo
+**la punta de su propia peninsula era el unico lugar que la app rechazaba.**
+
+Medido (Google, 25-ago-2026): Curl Curl -> Palm Beach son **46 minutos /
+30.7 km**. El perimetro corta en 45. Por un minuto, Palm Beach resolvia
+`out`. Y Whale Beach, a 33 minutos, caia en la banda de $45 - la que existe
+para cruzar el Spit hasta el CBD.
+
+No es el mismo tipo de viaje. Barrenjoey Road es el unico camino, sin puente,
+sin peajes, sin transito de ciudad, por los suburbios donde la van ya
+trabaja. Se divide asi:
+
+- **hasta 20 min -> $25** (ya lo hacian las bandas de tiempo, sin cambios)
+- **de ahi a la punta -> $35** (nuevo, tope fijo)
+
+**Codificado en el codigo y no en una tabla, a pedido de Diego: "nunca debe
+tirar error".** El routing caido, un geocoder que no conoce Careel Bay, la
+base de datos con timeout - ninguno puede convertir una direccion de Palm
+Beach en un rechazo, porque no se consulta a ninguno. Alcanza con el codigo
+postal (2104-2108) o el nombre del suburbio.
+
+El nombre del suburbio se busca solo como **parte completa separada por
+comas**, nunca como substring: "12 Newport Rd, Dee Why" es un viaje de $25 a
+Dee Why, no de $35 a Newport. Hay test para eso, y para que "291 Church St"
+no matchee "Church Point".
+
+17 tests nuevos.
 

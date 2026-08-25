@@ -18,6 +18,8 @@ import {
   needsQuote,
   feeForMinutes,
   PERIMETER_MAX_MINUTES,
+  matchFarPeninsula,
+  PENINSULA_FAR_FEE,
   VALID_FEES,
   BASE,
 } from '../../api/_coverage.js';
@@ -231,5 +233,82 @@ describe('address lookups are cached and made from one place', () => {
 
   it('a cache failure never breaks a booking', () => {
     expect(etaSrc).toMatch(/a cache that cannot be written is still a working app/);
+  });
+});
+
+// ── The far peninsula ──────────────────────────────────────────────────────
+//
+// Diego lives on the Northern Beaches and the van starts its day in Curl Curl,
+// yet the tip of his own peninsula was the one place the app refused. Palm
+// Beach is 46 minutes up Barrenjoey Road - one minute past the 45-minute
+// perimeter - so it resolved to 'out' and got a quote request instead of a
+// price. Whale Beach, 33 minutes, was charged $45: the band meant for a trip
+// across the Spit Bridge into the CBD.
+//
+// The rule Diego asked for on 25-aug-2026: the north splits in two. Up to 20
+// minutes is $25, and everything beyond that to the far tip is $35 - one road,
+// no bridge, no tolls, the suburbs the van already works in.
+describe('the far peninsula is $35 to the tip, not a rejection', () => {
+  const far = [
+    ['Palm Beach', '1 Barrenjoey Rd, Palm Beach NSW 2108', 46],
+    ['Whale Beach', 'Whale Beach NSW 2108', 33],
+    ['Avalon Beach', '20 Old Barrenjoey Rd, Avalon Beach NSW 2107', 27],
+    ['Newport', 'Newport NSW 2106', 22],
+    ['Bayview', '3 Cabbage Tree Rd, Bayview NSW 2104', 21],
+    ['Church Point', 'Church Point NSW 2105', 25],
+  ];
+
+  it.each(far)('%s is covered at $35', (_name, address, minutes) => {
+    const r = resolveCoverage({ address, minutes, km: 25 });
+    expect(r.covered).toBe('in');
+    expect(r.calloutFee).toBe(35);
+    expect(needsQuote(r)).toBe(false);
+  });
+
+  // The whole reason this lives in code and not in a table. Diego's words:
+  // it must never error. Every lookup can fail at once and Palm Beach still
+  // has a price.
+  it.each(far)('%s still resolves with no routing and no zone row', (_name, address) => {
+    const r = resolveCoverage({ address, minutes: null, km: null, zone: null });
+    expect(r.covered).toBe('in');
+    expect(r.calloutFee).toBe(35);
+  });
+
+  it('Palm Beach past the perimeter is covered anyway - it was the bug', () => {
+    const r = resolveCoverage({ address: 'Palm Beach NSW 2108', minutes: 46, km: 31 });
+    expect(46).toBeGreaterThan(PERIMETER_MAX_MINUTES);
+    expect(r.covered).toBe('in');
+  });
+
+  it('the near half of the north is still $25 - Mona Vale is inside 20 min', () => {
+    const r = resolveCoverage({ address: '5 Bungan St, Mona Vale NSW 2103', minutes: 17, km: 11 });
+    expect(r.calloutFee).toBe(25);
+  });
+
+  // A street named after a suburb must not reprice the address. "12 Newport
+  // Rd, Dee Why" is a $25 trip to Dee Why; matching 'newport' anywhere in the
+  // string would have billed it $35.
+  it('a street named after a peninsula suburb does not move the fee', () => {
+    const r = resolveCoverage({ address: '12 Newport Rd, Dee Why NSW 2099', minutes: 8, km: 4 });
+    expect(r.calloutFee).toBe(25);
+    expect(r.basis).toBe('driving-time');
+  });
+
+  it('Church Point does not match "291 Church St, Parramatta"', () => {
+    expect(matchFarPeninsula('291 Church St, Parramatta NSW 2150')).toBeNull();
+    const r = resolveCoverage({ address: '291 Church St, Parramatta NSW 2150', minutes: 52, km: 41 });
+    expect(r.covered).toBe('out');
+  });
+
+  it('leaves everywhere else alone', () => {
+    expect(matchFarPeninsula('Sydney NSW 2000')).toBeNull();
+    expect(matchFarPeninsula('Dee Why NSW 2099')).toBeNull();
+    expect(matchFarPeninsula('')).toBeNull();
+    expect(matchFarPeninsula(null)).toBeNull();
+    expect(resolveCoverage({ address: 'Sydney NSW 2000', minutes: 40, km: 22 }).calloutFee).toBe(45);
+  });
+
+  it('$35 is a fee a booking is allowed to be charged', () => {
+    expect(VALID_FEES).toContain(PENINSULA_FAR_FEE);
   });
 });

@@ -367,6 +367,11 @@ const dict = {
       'Mandanos la dirección por WhatsApp y te decimos si podemos llegar.',
     '💬 Ask on WhatsApp': '💬 Consultar por WhatsApp',
     'Hi! Do you cover this address?': '¡Hola! ¿Llegan a esta dirección?',
+    'Service:': 'Servicio:',
+    'Date:': 'Fecha:',
+    'Address:': 'Dirección:',
+    'Distance from your base:': 'Distancia desde su base:',
+    'Continue anyway': 'Continuar igual',
     "The mobile call-out fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
       'La tarifa de visita (desde $25, según tu suburbio) cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
     'Continue to Summary': 'Continuar al Resumen',
@@ -1736,6 +1741,11 @@ const dict = {
       '请通过 WhatsApp 把地址发给我们，我们会告诉您能否安排。',
     '💬 Ask on WhatsApp': '💬 通过 WhatsApp 咨询',
     'Hi! Do you cover this address?': '您好！请问这个地址你们能上门吗？',
+    'Service:': '服务：',
+    'Date:': '日期：',
+    'Address:': '地址：',
+    'Distance from your base:': '距离你们基地：',
+    'Continue anyway': '仍然继续',
     "The mobile call-out fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
       '上门费（从$25起，视郊区而定）包含技工的车费。悉尼大部分地区均可提供服务。',
     'Continue to Summary': '继续查看摘要',

@@ -362,7 +362,7 @@ async function resolveAddressCoverage(address) {
       return null;
     }),
   ]);
-  return resolveCoverage({ minutes: route?.minutes ?? null, km: route?.km ?? null, zone });
+  return resolveCoverage({ minutes: route?.minutes ?? null, km: route?.km ?? null, zone, address });
 }
 
 // Lets the client check coverage before paying, so someone outside the service
@@ -516,18 +516,22 @@ async function handleRequestQuote(req, res) {
 
   // The message the CUSTOMER sends, pre-written. Their own number, their own
   // WhatsApp - so it reaches Diego as a genuine chat he can reply to.
-  const waText = [
-    'Hola Dr. Bike! Quiero consultar el precio para:',
-    '',
+  // Same shape as the address-step message in js/app.js, so both land in
+  // Diego's WhatsApp looking alike. The blank lines are in the join, not in
+  // the array: filter(Boolean) drops an empty string, so the '' separators
+  // that used to sit in here were removed and never printed.
+  const waFields = [
     `Servicio: ${service_name}`,
     scheduled_date ? `Fecha que necesito: ${scheduled_date} ${scheduled_time || ''}`.trim() : '',
     `Direccion: ${address}`,
     client_name ? `Nombre: ${client_name}` : '',
-    '',
-    `Su sistema me marco: ${trip} desde su zona`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+  ].filter(Boolean);
+  const waText =
+    'Hola Dr. Bike! Quiero consultar el precio para:' +
+    '\n\n' +
+    waFields.join('\n') +
+    '\n\n' +
+    `Su sistema me marco: ${trip} desde su zona`;
 
   // Backstop: if they never tap send, Diego still finds out. Best-effort -
   // a notification that fails must not lose the enquiry, which is already
