@@ -43,7 +43,7 @@
   <!-- Booking wizard styles (from index.html CSS) -->
   <link rel="stylesheet" href="css/variables.css?v=20260622">
   <link rel="stylesheet" href="css/main.css?v=20260824a">
-  <link rel="stylesheet" href="css/home.css?v=20260824d">
+  <link rel="stylesheet" href="css/home.css?v=20260825b">
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"LocalBusiness","name":"Dr. Bike Sydney","telephone":"+61433963250","email":"contact@drbikesydney.com.au","address":{"@type":"PostalAddress","addressLocality":"Sydney","addressRegion":"NSW","addressCountry":"AU"},"priceRange":"$$","openingHours":"Mo-Su 07:00-19:00","url":"https://drbikesydney.com.au","description":"Professional mobile bicycle repair service in Sydney. We come to you, fully equipped.","serviceArea":{"@type":"City","name":"Sydney"},"hasOfferCatalog":{"@type":"OfferCatalog","name":"Bike Services","itemListElement":[{"@type":"Offer","itemOffered":{"@type":"Service","name":"Tune-Up","description":"Adjust brakes & gears, lube chain, safety check"},"price":"109","priceCurrency":"AUD","availability":"https://schema.org/InStock"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Standard Service","description":"Full tune-up + wheel true + drivetrain clean"},"price":"149","priceCurrency":"AUD","availability":"https://schema.org/InStock"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Standard+ Service","description":"Complete overhaul: bearings, cables, full clean"},"price":"199","priceCurrency":"AUD","availability":"https://schema.org/InStock"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Flat Tyre Repair","description":"Tube replace or patch, remount & inflate"},"price":"27","priceCurrency":"AUD","availability":"https://schema.org/InStock"}]}}
@@ -52,7 +52,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel up to 2 hours before your appointment at no charge."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes, we carry common parts in the van, but they are not included in the service price — they are charged separately at cost price with no markup."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $25, depending on your suburb) is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=20260825a">
+  <link rel="stylesheet" href="css/landing.css?v=20260825b">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
   <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
@@ -310,27 +310,27 @@
 
 
 <!-- ── MEMBERSHIPS ────────────────────────────────────────────────────────────── -->
-<section id="memberships" style="padding:80px 0;background:var(--gray-light)">
+<section id="memberships" style="padding:44px 0;background:var(--gray-light)">
   <div class="container" style="text-align:center">
     <span class="section-badge">MEMBERSHIPS</span>
     <h2 class="section-h2" style="font-size:2rem">Choose Your Plan</h2>
-    <p style="color:var(--gray);font-size:18px;margin-top:12px">Save more with our membership plans. Designed for regular cyclists.</p>
+    <p style="color:var(--gray);font-size:16px;margin-top:8px">Save more with our membership plans. Designed for regular cyclists.</p>
 
-    <div style="display:inline-flex;align-items:center;gap:0;background:var(--border);border-radius:9999px;padding:4px;margin:16px 0 48px">
+    <div style="display:inline-flex;align-items:center;gap:0;background:var(--border);border-radius:9999px;padding:4px;margin:14px 0 26px">
       <button id="toggle-monthly" style="padding:8px 24px;border-radius:9999px;border:none;font-size:15px;font-weight:600;cursor:pointer;background:var(--blue);color:white;font-family:inherit;transition:all 200ms">Monthly</button>
       <button id="toggle-annual" style="padding:8px 24px;border-radius:9999px;border:none;font-size:15px;font-weight:600;cursor:pointer;background:transparent;color:var(--gray);font-family:inherit;transition:all 200ms">Annual <span style="background:var(--green-lt);color:var(--green);font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:4px">Save 20%</span></button>
     </div>
 
     <div class="memberships-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto">
       <!-- Basic -->
-      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
+      <div class="plan-card">
         <h3 style="font-weight:700;font-size:18px">Basic</h3>
-        <div style="margin:16px 0">
-          <span id="price-basic" style="font-size:2.5rem;font-weight:800">$67</span>
+        <div class="plan-price">
+          <span id="price-basic" class="amount">$67</span>
           <span id="period-basic" style="color:var(--gray);font-size:15px">/month</span>
           <div id="annual-note-basic" style="display:none;font-size:13px;color:var(--green);font-weight:600;margin-top:4px">$643<span>/yr - save</span> $161</div>
         </div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:15px;color:var(--gray)">
+        <ul>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>1 free minor repair (under $60) + 1 free bike wash per month</li>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>5% off extra services</li>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Call-out fee applies (from $25, depending on your suburb)</li>
@@ -341,15 +341,15 @@
         <button class="lp-learn-more" data-plan="basic" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
       </div>
       <!-- Standard -->
-      <div style="background:white;border:2px solid var(--blue);border-radius:var(--radius-lg);padding:32px;text-align:left;position:relative">
+      <div class="plan-card plan-card--featured">
         <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:4px 16px;border-radius:var(--radius-full);font-size:13px;font-weight:600;white-space:nowrap">Popular</div>
         <h3 style="font-weight:700;font-size:18px">Standard</h3>
-        <div style="margin:16px 0">
-          <span id="price-standard" style="font-size:2.5rem;font-weight:800">$97</span>
+        <div class="plan-price">
+          <span id="price-standard" class="amount">$97</span>
           <span id="period-standard" style="color:var(--gray);font-size:15px">/month</span>
           <div id="annual-note-standard" style="display:none;font-size:13px;color:var(--green);font-weight:600;margin-top:4px">$931<span>/yr - save</span> $233</div>
         </div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:15px;color:var(--gray)">
+        <ul>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month</li>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Call-out fee included</li>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>10% off extra services</li>
@@ -362,14 +362,14 @@
         <button class="lp-learn-more" data-plan="standard" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
       </div>
       <!-- VIP -->
-      <div style="background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:left">
+      <div class="plan-card">
         <h3 style="font-weight:700;font-size:18px">VIP</h3>
-        <div style="margin:16px 0">
-          <span id="price-vip" style="font-size:2.5rem;font-weight:800">$197</span>
+        <div class="plan-price">
+          <span id="price-vip" class="amount">$197</span>
           <span id="period-vip" style="color:var(--gray);font-size:15px">/month</span>
           <div id="annual-note-vip" style="display:none;font-size:13px;color:var(--green);font-weight:600;margin-top:4px">$1,891<span>/yr - save</span> $473</div>
         </div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:15px;color:var(--gray)">
+        <ul>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month</li>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Call-out fee included</li>
           <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>15% off extra services, plus 5% more</li>
@@ -385,6 +385,14 @@
     </div>
     <p style="color:var(--gray);font-size:13px;margin-top:24px">All plans include mobile service within Sydney metro area</p>
 
+  </div>
+</section>
+
+<!-- Gift cards: era parte de la seccion de planes, y no es un plan. Sacarlo
+     de ahi es lo que deja los tres planes en una sola pantalla (160px de
+     los 1023 que medía la seccion). Sigue existiendo, como su propio bloque. -->
+<section style="padding:28px 0;background:var(--gray-light)">
+  <div class="container">
     <div style="max-width:900px;margin:40px auto 0;background:linear-gradient(135deg,var(--purple),var(--blue));border-radius:var(--radius-lg);padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;text-align:left">
       <div style="display:flex;align-items:center;gap:18px">
         <div style="font-size:40px">🎁</div>

@@ -1,3 +1,6 @@
+// v78 (2026-08-25): las tarjetas de membresia entran en una pantalla (1356px
+// -> 851px) y ganan profundidad 3D discreta. Toca css/home.css, que comparten
+// la landing y la SPA.
 // v77 (2026-08-25): FAQ, chatbot y terminos explican que el precio va por
 // tiempo de manejo; el "What's My Fee" fuera de zona ahora invita a seguir
 // con la consulta gratis en vez de mandar a llamar. Toca js/i18n.js.
@@ -78,7 +81,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v77';
+const CACHE_STATIC = 'drbike-static-v78';
 const CACHE_PAGES  = 'drbike-pages-v70';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
