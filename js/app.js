@@ -41,7 +41,6 @@ import {
   sb,
   getServices,
   getAvailableSlots,
-  getCalloutFee,
   submitReview,
   signIn,
   signUp,
@@ -1471,8 +1470,8 @@ async function renderServiceSummary() {
   if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
   if (window.posthog) posthog.capture('booking_step_viewed', { step: 'quote_summary' });
 
-  // getCalloutFee() below hits Supabase, so this screen has the same blank-box
-  // problem as Profile - and this one sits in the middle of the paid flow.
+  // The coverage call below is a network round trip, so this screen has the
+  // same blank-box problem as Profile - and this one sits in the paid flow.
   screen.innerHTML = `
     ${createHeader('Your Quote', true, '#book-service')}
     ${createBrandLoader()}
@@ -1487,7 +1486,16 @@ async function renderServiceSummary() {
   // authority on both the fee and whether we go at all - a client-side
   // callout_zones lookup could disagree with what create-booking charges, and
   // knows nothing about the perimeter.
-  let coverage = { covered: true, needsQuote: false, calloutFee: null, minutes: null, km: null };
+  // The default is needsQuote, NOT "covered at some price". It used to be
+  // covered:true / calloutFee:null, and the line below fell through to
+  // getCalloutFee() - a `callout_zones` read from the browser, which is a
+  // different calculator from the one create-booking charges with. So a
+  // dropped request quietly produced a number nobody would honour: the
+  // summary said $20, the payment screen said $45, and the charge bounced.
+  //
+  // If we cannot reach the server we do not know the fee, and "we don't know"
+  // is what the quote flow is for. No card, nothing charged, details to Diego.
+  let coverage = { covered: false, needsQuote: true, calloutFee: null, minutes: null, km: null };
   try {
     const cvRes = await fetch('/api/auth', {
       method: 'POST',
@@ -1496,16 +1504,13 @@ async function renderServiceSummary() {
     });
     if (cvRes.ok) coverage = await cvRes.json();
   } catch {
-    // Offline or the endpoint is down: fall through to the local estimate.
-    // create-booking re-resolves authoritatively either way.
+    // Left as needsQuote above - deliberately, see the comment there.
   }
   window.appState.needsQuote = Boolean(coverage.needsQuote);
   window.appState.tripMinutes = coverage.minutes ?? null;
   window.appState.tripKm = coverage.km ?? null;
 
-  const calloutFee = coverage.needsQuote
-    ? 0
-    : applySurcharge(coverage.calloutFee ?? (await getCalloutFee(location)), date);
+  const calloutFee = coverage.needsQuote ? 0 : applySurcharge(Number(coverage.calloutFee) || 0, date);
   const grandTotal = serviceTotal + calloutFee;
   const inclusions = getServiceInclusions(service.name);
   const dur = formatServiceDuration(service);
@@ -2015,6 +2020,51 @@ function wireMechanicPreferencePicker(screen, mechanics) {
 let _paidIntent = null;
 let _paidBookingKey = null;
 
+// Nothing could work out what the trip to this address costs. This used to
+// guess: it read `callout_zones` straight from the browser and charged
+// whatever it found, or $20. A guess that does not match what the server
+// recomputes gets the payment REFUSED and refunded, so the guess bought
+// nothing and cost the customer a booking that just failed.
+//
+// The free quote loses no one: their details reach Diego, he answers
+// personally, and nobody is charged on a number we are not sure of.
+function renderPaymentUnavailable(screen) {
+  screen.innerHTML = `
+    ${createHeader('Confirm Booking', true, '#service-summary')}
+    <div style="text-align:center;padding:28px 20px">
+      <div style="font-size:40px;line-height:1;margin-bottom:14px" aria-hidden="true">📨</div>
+      <div style="font-size:18px;font-weight:800;color:var(--color-text);margin-bottom:10px">${translateValue('We need to price this one by hand')}</div>
+      <div style="font-size:14px;color:var(--color-text-secondary);line-height:1.55;margin-bottom:22px">${translateValue("We couldn't work out the trip to your address just now, and we won't take a card for an amount we're not sure of. Send us the booking and we'll confirm the price - no charge.")}</div>
+      <button class="btn btn--primary btn--full" id="pay-unavailable-quote">${translateValue('Ask for my price')}</button>
+    </div>
+    ${createBottomNav('home')}
+  `;
+  screen
+    .querySelector('#pay-unavailable-quote')
+    ?.addEventListener('click', () => router.navigate('service-summary'));
+}
+
+// The payment screen must show the SAME number handleCreateBooking will
+// verify, or the charge is refused as an "amount mismatch" and refunded - and
+// from the customer's side the booking simply failed. So the fallback here is
+// not a cheaper lookup, it is the same calculator reached without a token.
+//
+// It used to be getCalloutFee(), which reads `callout_zones` from the browser.
+// That is a different answer: North Sydney is $45 by driving time and has no
+// row in that table at all, so the fallback quoted $20 for a booking the
+// server would price at $45 and then refund.
+async function resolvedCalloutFee(address, date) {
+  const res = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'check-coverage', address }),
+  });
+  if (!res.ok) throw new Error('coverage lookup failed');
+  const c = await res.json();
+  if (c.needsQuote) return 0;
+  return applySurcharge(Number(c.calloutFee) || 0, date);
+}
+
 async function renderPayment() {
   const screen = document.querySelector('[data-screen="payment"]');
   if (!screen) return;
@@ -2083,6 +2133,7 @@ async function renderPayment() {
   // form asking to pay for it.
   let calloutFee = 0;
   let isIncludedVisit = false;
+  let priceUnavailable = false;
   if (currentUser && !isTestAdmin) {
     try {
       const priceResp = await fetch('/api/auth', {
@@ -2102,13 +2153,27 @@ async function renderPayment() {
         calloutFee = priced.calloutFee;
         isIncludedVisit = priced.isIncludedVisit;
       } else {
-        calloutFee = applySurcharge(await getCalloutFee(location), date);
+        calloutFee = await resolvedCalloutFee(location, date);
       }
     } catch {
-      calloutFee = applySurcharge(await getCalloutFee(location), date);
+      try {
+        calloutFee = await resolvedCalloutFee(location, date);
+      } catch {
+        priceUnavailable = true;
+      }
     }
   } else {
-    calloutFee = applySurcharge(await getCalloutFee(location), date);
+    try {
+      calloutFee = await resolvedCalloutFee(location, date);
+    } catch {
+      priceUnavailable = true;
+    }
+  }
+
+  // No number we trust, so no card form - see renderPaymentUnavailable.
+  if (priceUnavailable) {
+    renderPaymentUnavailable(screen);
+    return;
   }
   const mechanicPicker = await loadMechanicPreferencePicker();
 

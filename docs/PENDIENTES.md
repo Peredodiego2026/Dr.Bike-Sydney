@@ -5928,3 +5928,54 @@ Con el ruteo funcionando, la **capa 1 (tiempo) siempre gana**. Los precios de
 la tabla `callout_zones` solo se usan si el ruteo se cae. Editar un precio
 ahi ya no cambia lo que paga un cliente en condiciones normales.
 
+## 33. Habia cuatro calculadoras de tarifa, y se contradecian (25-ago-2026)
+
+`js/app.js` lo dice en voz alta en la pantalla de pago: el precio que se
+muestra **"must match exactly what handleCreateBooking will verify, or a paid
+charge gets rejected as amount mismatch"**.
+
+No coincidia. Cuatro lugares calculaban la tarifa por su cuenta:
+
+| donde | como |
+|---|---|
+| `handleCreateBooking` (el cobro) | `resolveAddressCoverage` - tiempo de manejo |
+| `handleGetPrice` (la pantalla de pago) | `callout_zones`, default **$20** |
+| `rescheduleBookingCore` | `callout_zones`, default **$20** |
+| reserva desde el admin | `callout_zones`, default **$20** |
+| `getCalloutFee` en `js/supabase.js` | `callout_zones` **desde el navegador**, default $20 |
+
+**North Sydney es el caso que muerde:** $45 por tiempo de manejo, y **sin
+fila en `callout_zones`**. Un cliente logueado ahi veia $20 en la pantalla de
+pago, pagaba $20, el servidor recalculaba $45, rechazaba el monto y **le
+reembolsaba**. Desde su lado la reserva simplemente fallaba, sin explicacion.
+
+Lo mas incomodo: el comentario de `getCalloutFee` ya habia diagnosticado esto
+en la auditoria del 23-ago - *"the client shows (and tries to pay) the flat
+$20 while the server recomputes the real suburb fee and rejects the mismatch -
+the client just can't book, with no clue why"*. Le pusieron un `console.error`
+y lo dejaron ahi.
+
+### Lo que quedo
+
+Un solo `calloutFeeForAddress(address, date)` en `api/auth.js`, usado por los
+tres caminos del servidor. `callout_zones` se sigue leyendo, pero **desde un
+solo lugar**: la capa de respaldo dentro de `resolveAddressCoverage`, para
+cuando el ruteo no responde.
+
+En el navegador, `getCalloutFee` se borro. El respaldo de la pantalla de pago
+ahora llama a `check-coverage`, que es la misma resolucion que el servidor
+verifica.
+
+Y si no se puede resolver nada, **no se cobra**: el resumen ahora arranca en
+`needsQuote: true` (antes arrancaba en `covered: true` con fee `null`, que
+caia al lookup del navegador), y la pantalla de pago muestra la ruta de
+consulta gratis en vez de un formulario de tarjeta con un numero inventado.
+
+En el admin, una direccion que no resuelve registra $0 **y lo avisa en el
+log**, en vez de facturar un default.
+
+### Verificado corriendo
+
+North Sydney en la pantalla de pago: **$45.00**, en `index.html` y en
+`landing.html`. Con el lookup caido: sin boton de pago, ruta de consulta.
+

@@ -365,6 +365,30 @@ async function resolveAddressCoverage(address) {
   return resolveCoverage({ minutes: route?.minutes ?? null, km: route?.km ?? null, zone, address });
 }
 
+// ONE calculator. Every place that quotes or charges a call-out fee reads the
+// number from here.
+//
+// It did not use to. handleCreateBooking resolved the fee from driving time
+// (api/_coverage.js) while handleGetPrice, rescheduleBookingCore and the
+// admin booking form each did their own `callout_zones` lookup defaulting to
+// $20. js/app.js says it out loud on the payment screen - the quote "must
+// match exactly what handleCreateBooking will verify, or a paid charge gets
+// rejected as amount mismatch" - and it did not match.
+//
+// North Sydney is the clearest case: $45 by driving time, and no row at all
+// in `callout_zones`. A logged-in customer there saw $20 on the payment
+// screen, paid $20, and handleCreateBooking recomputed $45, refused the
+// amount and REFUNDED them. From their side the booking simply failed.
+async function calloutFeeForAddress(address, scheduledDate) {
+  const coverage = await resolveAddressCoverage(address);
+  return {
+    coverage,
+    // null (out of the perimeter, or unresolvable) is not a fee. Callers
+    // decide what to do about it - nobody invents a number here.
+    fee: coverage.calloutFee === null ? null : applySurcharge(coverage.calloutFee, scheduledDate),
+  };
+}
+
 // Lets the client check coverage before paying, so someone outside the service
 // area finds out at the address step instead of after being charged.
 //
@@ -613,14 +637,23 @@ async function handleGetPrice(req, res) {
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
   const baseServicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
-  let baseCalloutFee = 20;
-  try {
-    const match = await matchCalloutZone(sb, address);
-    if (match) baseCalloutFee = match.calloutFee;
-  } catch (e) {
-    console.error('matchCalloutZone failed, falling back to $20:', e.message);
+  // Same resolution handleCreateBooking will verify against. An address with
+  // no fee belongs in the quote flow, not on a card form, so it is reported
+  // as such instead of being priced at a default.
+  const { coverage: priceCoverage, fee: resolvedFee } = await calloutFeeForAddress(
+    address,
+    scheduled_date
+  );
+  if (resolvedFee === null) {
+    return res.status(200).json({
+      calloutFee: 0,
+      needsQuote: true,
+      servicePrice: baseServicePrice,
+      isIncludedVisit: false,
+      plan: null,
+    });
   }
-  baseCalloutFee = applySurcharge(baseCalloutFee, scheduled_date);
+  const baseCalloutFee = resolvedFee;
 
   const priced = await applyMembershipPricing(
     sb,
@@ -2612,14 +2645,13 @@ async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_
   if (isSlotBlocked(blockRows, Number(bk.van_number) || 1, scheduled_time, neededMin))
     return { ok: false, status: 409, error: 'That time is not available. Please pick another.' };
 
-  let newCalloutFee = 20;
-  try {
-    const match = await matchCalloutZone(createClient(SUPABASE_URL, SERVICE_KEY), bk.address);
-    if (match) newCalloutFee = match.calloutFee;
-  } catch (e) {
-    console.error('matchCalloutZone failed, falling back to $20:', e.message);
-  }
-  newCalloutFee = applySurcharge(newCalloutFee, scheduled_date);
+  // Same calculator as the original booking. If the address cannot be priced
+  // now - the router is down, the geocoder does not know it - the booking
+  // KEEPS the fee it was taken on. Zeroing it, or defaulting it to $20, would
+  // silently rewrite what an existing customer agreed to pay.
+  const { fee: reFee } = await calloutFeeForAddress(bk.address, scheduled_date);
+  const newCalloutFee =
+    reFee === null ? Number(bk.callout_fee) || 0 : reFee;
 
   const updatePayload = { scheduled_date, scheduled_time, callout_fee: newCalloutFee };
   if (newServicePrice !== null) updatePayload.service_price = newServicePrice;
@@ -4157,19 +4189,19 @@ async function handleAdminCreateBooking(req, res) {
 
   const servicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
-  // Authoritative call-out fee (callout_zones by address, default $20) -
-  // same lookup handleCreateBooking and rescheduleBookingCore use. Found in
-  // self-review: this used to be a hardcoded $20, which would undercharge
-  // or overcharge relative to the real zone rate for any suburb whose fee
-  // differs from the default.
-  let calloutFee = 20;
-  try {
-    const match = await matchCalloutZone(auth.sb, address);
-    if (match) calloutFee = match.calloutFee;
-  } catch (e) {
-    console.error('matchCalloutZone failed, falling back to $20:', e.message);
+  // Authoritative call-out fee, from the same calculator every other path
+  // uses. This comment used to claim it was "the same lookup
+  // handleCreateBooking uses" - it had not been for a while.
+  //
+  // An address Diego types by hand is exactly the kind that fails to resolve
+  // (a shorthand, a building name, a new street). It records $0 rather than
+  // inventing a number, and says so in the log so it can be corrected in the
+  // dashboard instead of quietly billing the wrong amount.
+  const { fee: adminFee } = await calloutFeeForAddress(address, scheduled_date);
+  if (adminFee === null) {
+    console.warn('[admin-create-booking] no fee could be resolved, recording $0:', address);
   }
-  calloutFee = applySurcharge(calloutFee, scheduled_date);
+  const calloutFee = adminFee ?? 0;
 
   const { data: booking, error: insErr } = await auth.sb
     .from('bookings')

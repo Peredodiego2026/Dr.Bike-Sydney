@@ -40,9 +40,23 @@ describe('handleAdminCreateBooking - server', () => {
     expect(fn).toMatch(/applySurcharge\(Number\(svc\.price\)/);
   });
 
-  it('el callout fee sale de callout_zones por direccion, no un $20 fijo (bug encontrado en auto-revision)', () => {
-    expect(fn).toMatch(/matchCalloutZone\(auth\.sb, address\)/);
-    expect(fn).not.toMatch(/const calloutFee = applySurcharge\(20,/);
+  // Este test pedia matchCalloutZone, que era el arreglo correcto en su
+  // momento (antes: un $20 hardcodeado). Dejo de serlo: handleCreateBooking
+  // pasó a resolver la tarifa por tiempo de manejo y este camino se quedó
+  // atras, asi que una reserva creada desde el admin y la misma reserva
+  // hecha por el cliente podian costar distinto.
+  it('el callout fee sale de la MISMA calculadora que el resto, no de callout_zones', () => {
+    expect(fn).toMatch(/calloutFeeForAddress\(address, scheduled_date\)/);
+    expect(fn).not.toMatch(/matchCalloutZone/);
+    expect(fn).not.toMatch(/let calloutFee = 20;/);
+  });
+
+  // Una direccion que Diego escribe a mano es justo la que no resuelve.
+  // Inventar un numero ahi es lo que producia cobros equivocados.
+  it('si no se puede resolver, registra $0 y lo avisa - no inventa una tarifa', () => {
+    expect(fn).toMatch(/adminFee === null/);
+    expect(fn).toMatch(/console\.warn\('\[admin-create-booking\] no fee could be resolved/);
+    expect(fn).toMatch(/adminFee \?\? 0/);
   });
 
   it('resuelve la van con matchVanZone, o respeta un override explicito', () => {
