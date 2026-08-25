@@ -807,23 +807,100 @@
 }
 
 /* ── Membership plan cards ─────────────────────────────────────────────────── */
+/* Measured 2026-08-25: the plans section ran 1356px against a 720px viewport,
+   so a laptop at 100% zoom saw the VIP card cut in half. The three cards were
+   already equal height - the problem was that ONE card was 765px, taller than
+   the screen by itself. That is also why a carousel would not have fixed it:
+   a single 765px card still overflows.
+   Nothing was removed. The type scale and spacing tighten, which brings a card
+   to ~535px and the section to 863px, so all three plans stay side by side.
+   That matters on a pricing page: somebody comparing plans should not have to
+   remember the one they scrolled past.
+   These rules are shared - landing.html sits inside a [data-screen='home']
+   wrapper and loads this file, so the landing and the mobile SPA get the same
+   cards from one place. */
 [data-screen='home'] .plan-card {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 28px;
+  padding: 22px 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
   box-shadow: var(--elevation-0);
+  /* Minimal depth, not a gimmick: the grid holds the perspective and each card
+     lifts a couple of degrees toward the cursor. The featured plan sits
+     permanently forward on Z so the recommendation reads as nearer rather than
+     merely outlined. Two or three degrees is the whole effect - more than that
+     and a price list starts to wobble. */
+  transform-style: preserve-3d;
   transition:
-    box-shadow var(--motion-fast),
-    transform var(--motion-fast);
+    box-shadow 320ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+[data-screen='home'] .plan-card h3 {
+  font-weight: 700;
+  font-size: 16px;
+}
+[data-screen='home'] .plan-price {
+  margin: 8px 0 12px;
+}
+[data-screen='home'] .plan-price .amount {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+[data-screen='home'] .plan-card ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--gray);
+  flex: 1;
+}
+[data-screen='home'] .plan-card .lp-get-started {
+  margin-top: 16px !important;
+  padding: 10px !important;
+  font-size: 14px !important;
+}
+[data-screen='home'] .plan-card .lp-learn-more {
+  margin-top: 6px !important;
+  padding: 6px !important;
+}
+[data-screen='home'] .memberships-grid {
+  perspective: 1200px;
 }
 [data-screen='home'] .plan-card--featured {
   border: 2px solid var(--blue);
   position: relative;
+  transform: translateZ(24px);
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.14);
 }
 @media (hover: hover) {
   [data-screen='home'] .plan-card:hover {
-    box-shadow: var(--elevation-1);
-    transform: translateY(-2px);
+    transform: translateZ(34px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 18px 40px rgba(13, 31, 60, 0.14);
+  }
+  [data-screen='home'] .plan-card--featured:hover {
+    transform: translateZ(46px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 22px 48px rgba(37, 99, 235, 0.2);
+  }
+}
+/* Reduced motion means no MOVEMENT, not no depth: the transition and the
+   hover tilt go, but the featured card keeps its static lift - otherwise a
+   reader with that preference loses the visual hierarchy that tells them
+   which plan is recommended, for no benefit. */
+@media (prefers-reduced-motion: reduce) {
+  [data-screen='home'] .plan-card,
+  [data-screen='home'] .plan-card--featured {
+    transition: none;
+  }
+  [data-screen='home'] .plan-card:hover {
+    transform: none;
+  }
+  [data-screen='home'] .plan-card--featured:hover {
+    transform: translateZ(24px);
   }
 }
