@@ -99,22 +99,6 @@ describe('declining notifications does not wipe the screen', () => {
   });
 });
 
-// The cron runs 09:00 UTC - 19:00 in Sydney - so somebody who fills in their
-// birthday later than that, on the day itself, gets the banner and no email.
-describe('the banner does not promise an email that was never sent', () => {
-  it('it asks whether the cron stamped this year', () => {
-    expect(appjs).toMatch(/birthday_promo_sent_year/);
-    expect(appjs).toMatch(
-      /const emailWentOut = Number\(profile\.birthday_promo_sent_year\) === new Date\(\)\.getFullYear\(\);/
-    );
-  });
-
-  it('and says something else when it did not', () => {
-    expect(appjs).toMatch(/emailWentOut\s*\r?\n?\s*\? 'Check your email/);
-    expect(appjs).toMatch(/: 'The whole Dr\. Bike team wishes you a great one\.'/);
-  });
-
-  it('hugs its content instead of stretching to 900px', () => {
-    expect(appjs).toMatch(/box\.style\.width = 'fit-content';/);
-  });
-});
+// Superseded by tests/unit/birthday-modal.test.js: the inline banner became a
+// modal, and the "was an email really sent?" question moved to the server,
+// which now sends it at the moment the modal opens.

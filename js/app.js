@@ -5474,34 +5474,61 @@ async function renderMyBikes() {
 //
 // Shown once per year per device. Somebody who opens the app four times on
 // their birthday should be greeted, not nagged.
+// The birthday greeting.
+//
+// Six seconds after somebody lands, the page dims and a panel folds down from
+// the top. It replaced an amber strip wedged under the header, which read as
+// one more notification bar on the one day it is not.
+//
+// The email goes out WHEN THE PANEL OPENS, not on the cron's schedule. That
+// cron fires at 09:00 UTC - 19:00 in Sydney - so the greeting arrived in the
+// evening, and anyone who filled in their birthday after that got nothing.
+// Now whoever visits is greeted on arrival and the cron only covers whoever
+// does not. `birthday_promo_sent_year` is stamped by both, so it goes out once
+// a year whichever gets there first (see handleBirthdayGreeting in api/auth.js).
 const BIRTHDAY_SEEN_KEY = 'drbike-birthday-greeted-year';
+const BIRTHDAY_DELAY_MS = 6000;
+let _bdayChecked = false;
 
 async function showBirthdayGreeting() {
-  const screen = document.querySelector('[data-screen="home"]');
-  if (!screen || screen.querySelector('#birthday-greeting')) return;
+  // Once per page load. The home route fires on every return to it, and a
+  // second timer would open the panel again over the first.
+  if (_bdayChecked) return;
 
   const year = new Date().getFullYear();
   try {
-    if (localStorage.getItem(BIRTHDAY_SEEN_KEY) === String(year)) return;
+    if (localStorage.getItem(BIRTHDAY_SEEN_KEY) === String(year)) {
+      _bdayChecked = true;
+      return;
+    }
   } catch {
     /* private mode: greet every time rather than not at all */
   }
 
-  let user = null;
+  let session = null;
   try {
-    const { data } = await sb.auth.getUser();
-    user = data?.user || null;
+    const { data } = await sb.auth.getSession();
+    session = data?.session || null;
   } catch {
     return;
   }
-  if (!user) return;
+  // Deliberately WITHOUT setting the flag: somebody who lands signed out and
+  // signs in a minute later returns to this route with a session, and burning
+  // the one-shot on the anonymous pass would swallow their birthday.
+  if (!session?.user) return;
 
+  // From here the answer is settled for this page load either way.
+  _bdayChecked = true;
+
+  // Local pre-check so the server is asked once a year, not on every visit.
+  // It is only a filter - handleBirthdayGreeting checks the date again, in
+  // Sydney time, before it sends anything.
   let profile = null;
   try {
     const { data } = await sb
       .from('profiles')
-      .select('full_name, birthday, birthday_promo_sent_year')
-      .eq('id', user.id)
+      .select('full_name, birthday')
+      .eq('id', session.user.id)
       .single();
     profile = data;
   } catch {
@@ -5509,63 +5536,90 @@ async function showBirthdayGreeting() {
   }
   if (!isBirthdayToday(profile?.birthday)) return;
 
-  const first = String(profile.full_name || user.email || '')
+  const first = String(profile.full_name || session.user.email || '')
     .trim()
     .split(/[\s@]/)[0];
 
-  // "Check your email" is a promise, and it was being made unconditionally.
-  // The cron runs once a day at 09:00 UTC - 19:00 in Sydney - so anyone who
-  // fills in their birthday later than that on the day itself gets the banner
-  // and no email. That is exactly what happened to Diego on 25-aug-2026. The
-  // cron stamps the year it sent in, so the banner can just ask.
-  const emailWentOut = Number(profile.birthday_promo_sent_year) === new Date().getFullYear();
+  setTimeout(() => openBirthdayModal(first, session.access_token, year), BIRTHDAY_DELAY_MS);
+}
 
-  const box = document.createElement('div');
-  box.id = 'birthday-greeting';
-  // Amber, not the app blue. Blue is the colour of every other panel here, so
-  // the greeting read as one more piece of chrome; a birthday should not.
-  // These are the existing tokens - --amber-ink is defined as the text colour
-  // for --amber-lt, so the pairing is the one the palette already intends.
-  box.style.cssText =
-    'display:flex;align-items:center;gap:12px;background:var(--amber-lt);border:1px solid var(--amber-edge);border-radius:14px;padding:14px 16px;margin:12px 16px 0';
-  box.innerHTML = `
-    <span style="font-size:26px;line-height:1" aria-hidden="true">🎂</span>
-    <div style="flex:1;min-width:0">
-      <div style="font-size:15px;font-weight:800;color:var(--amber-ink)">${escapeHtml(
+async function openBirthdayModal(first, accessToken, year) {
+  // Sending and greeting are the same moment, so the copy can tell the truth
+  // about the email instead of promising one.
+  let emailSent = false;
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'birthday-greeting', access_token: accessToken }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.greet) return;
+    emailSent = Boolean(data.emailSent);
+  } catch {
+    // Offline on your birthday is not a reason to say nothing.
+    emailSent = false;
+  }
+
+  document.getElementById('bday-scrim')?.remove();
+  const scrim = document.createElement('div');
+  scrim.id = 'bday-scrim';
+  scrim.className = 'bday-scrim';
+  scrim.setAttribute('role', 'dialog');
+  scrim.setAttribute('aria-modal', 'true');
+  scrim.setAttribute('aria-labelledby', 'bday-title');
+  scrim.innerHTML = `
+    <div class="bday-card">
+      <button class="bday-close" id="bday-close" aria-label="${translateValue('Close')}">&times;</button>
+      <span class="bday-card__emoji" aria-hidden="true">🎂</span>
+      <h2 class="bday-card__title" id="bday-title">${escapeHtml(
         translateValue('Happy birthday, NAME!').replace('NAME', first)
-      )}</div>
-      <div style="font-size:13px;color:var(--amber);margin-top:2px">${translateValue(
-        emailWentOut
+      )}</h2>
+      <p class="bday-card__msg">${translateValue(
+        emailSent
           ? 'Check your email - there is something from us in there.'
           : 'The whole Dr. Bike team wishes you a great one.'
-      )}</div>
-    </div>
-    <button id="birthday-greeting-close" aria-label="${translateValue('Close')}" style="flex-shrink:0;min-width:44px;min-height:44px;border:none;background:none;font-size:20px;line-height:1;color:var(--amber);cursor:pointer;font-family:inherit">&times;</button>
-  `;
-  // On the landing, `screen` is the whole marketing page, so prepending put
-  // the banner ABOVE the nav and pushed the header down the screen. It goes
-  // under the trust bar instead - inside the page, not on top of it. The
-  // mobile SPA has no such bar, and there the top of the screen is right.
-  const trustBar = document.getElementById('trust-badges');
-  if (trustBar && trustBar.parentNode) {
-    box.style.margin = '16px auto 0';
-    // Hugging the text, not stretching. At a fixed 900px the greeting is a
-    // short line on the left and the close button 900px away on the right,
-    // with a lake of empty amber between them.
-    box.style.width = 'fit-content';
-    box.style.maxWidth = 'min(900px, calc(100% - 32px))';
-    trustBar.insertAdjacentElement('afterend', box);
-  } else {
-    screen.prepend(box);
-  }
-  box.querySelector('#birthday-greeting-close').addEventListener('click', () => {
+      )}</p>
+    </div>`;
+  document.body.appendChild(scrim);
+
+  const previouslyFocused = document.activeElement;
+  const close = () => {
     try {
       localStorage.setItem(BIRTHDAY_SEEN_KEY, String(year));
     } catch {
       /* nothing to do - it just shows again next time */
     }
-    box.remove();
+    scrim.classList.remove('is-open');
+    document.removeEventListener('keydown', onKey);
+    // Let the fade finish before removing, but never leave it behind if the
+    // transition never fires (a hidden tab does not run them).
+    const drop = () => scrim.remove();
+    scrim.addEventListener('transitionend', drop, { once: true });
+    setTimeout(drop, 600);
+    if (previouslyFocused?.focus) previouslyFocused.focus();
+  };
+  function onKey(e) {
+    if (e.key === 'Escape') close();
+  }
+
+  scrim.querySelector('#bday-close').addEventListener('click', close);
+  // Only the backdrop itself - a click inside the card must not dismiss it.
+  scrim.addEventListener('click', (e) => {
+    if (e.target === scrim) close();
   });
+  document.addEventListener('keydown', onKey);
+
+  // Two frames: the element has to be in the DOM and have had its start styles
+  // applied before the class flips, or the browser skips straight to the end
+  // state and there is no fold at all.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      scrim.classList.add('is-open');
+      scrim.querySelector('#bday-close')?.focus();
+    })
+  );
 }
 
 async function updateHomeNav() {
