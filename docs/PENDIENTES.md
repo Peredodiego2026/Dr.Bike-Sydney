@@ -5745,3 +5745,47 @@ esta seccion (el objeto `{1: ..., 2: ...}` que usan `renderRouteMap()` y
 `renderVanLocations()`) se renombro a `VAN_MAP_COLORS`; el array de 25.3
 (`vanColor()`) se dejo como estaba. Test actualizado para buscar el nombre
 nuevo.
+
+## 29. Las 60 paginas de suburbio, reducidas a 15 (25-ago-2026)
+
+Medido, no estimado: comparando `bondi.html` contra `manly.html` y
+neutralizando el nombre del suburbio, **de 198 lineas solo diferian 12**.
+94% identicas. Lo unico distinto era la lista de suburbios vecinos (una
+frase, repetida dos veces), las coordenadas del dato estructurado, y tres
+enlaces al pie. Titular, cuerpo, servicios, FAQ y CTA: iguales en las 20.
+
+Eso es la definicion que Google usa para *doorway pages*. Y eran 20 x 3
+idiomas = **60 paginas**, no 20.
+
+Dos señales mas que salieron al mirarlas:
+- **No estaban enlazadas** desde la landing ni desde la app. Solo se
+  enlazaban entre ellas y desde el blog: un grupo aislado que solo se
+  apunta a si mismo, que es otro patron clasico de doorway.
+- Varias prometian servicio donde la van no llega (Penrith, Katoomba y
+  compañia), asi que alguien podia buscar "bike mechanic Penrith", caer
+  ahi, e intentar reservar para que el servidor le rechazara la
+  direccion.
+
+**Quedan 5 por idioma**, una por region, elegidas para que cada borrada
+tenga un destino natural de redireccion: `bondi` (este), `cbd` (centro),
+`inner-west`, `north-shore` (norte) y `northern-beaches` (la zona de la
+base). Se van 15 x 3 = 45.
+
+Lo delicado no fue borrar sino no dejar 404s:
+- **36 reglas de redireccion permanente** en `vercel.json`, cubriendo las
+  90 rutas (15 suburbios x 3 idiomas x con y sin `.html`). Verificado
+  programaticamente que las 90 estan cubiertas y que **los 16 destinos
+  existen como archivo** - `/es/` y `/zh/` no existen, asi que esas
+  redirecciones apuntan a la raiz.
+- **Sitemap**: de 85 URLs a 40.
+- **30 archivos con enlaces internos reescritos** (los 5 posts del blog en
+  3 idiomas, y las 5 paginas que quedan en 3 idiomas). Verificado con un
+  barrido de todos los `href` del repo: **0 enlaces rotos**.
+- `GENERATED_BUDGET` de `color-check` bajado de 3549 a 1479, que es el
+  trinquete funcionando: al borrar paginas el presupuesto de hex sobraba.
+
+**Lo que NO se resuelve con esto:** las 15 que quedan siguen compartiendo
+copia entre si. Dejan de ser un problema de escala, pero necesitan
+contenido local de verdad - y eso depende de que Diego este en Sydney
+(primera semana de noviembre 2026), no de codigo.
+
