@@ -451,68 +451,11 @@ function closeMembershipModal() {
 }
 
 // ── Gift Cards ──────────────────────────────────────────────────────────────
-let _giftAmount = 100;
-function openGiftCardModal() {
-  document.getElementById('giftcard-modal').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  selectGiftAmount(100);
-}
-function closeGiftCardModal() {
-  document.getElementById('giftcard-modal').style.display = 'none';
-  document.body.style.overflow = '';
-}
-function selectGiftAmount(amt) {
-  _giftAmount = amt;
-  document.getElementById('gift-amount-custom').value = '';
-  document.querySelectorAll('.gift-amt-btn').forEach(function(b) {
-    const on = Number(b.dataset.amt) === amt;
-    b.style.borderColor = on ? '#7C3AED' : '#E2E8F0';
-    b.style.background = on ? '#F5F3FF' : '#fff';
-    b.style.color = on ? '#7C3AED' : '#0D1F3C';
-  });
-}
-function clearGiftPreset() {
-  _giftAmount = null;
-  document.querySelectorAll('.gift-amt-btn').forEach(function(b) {
-    b.style.borderColor = 'var(--border)'; b.style.background = 'var(--white)'; b.style.color = 'var(--navy)';
-  });
-}
-async function submitGiftCard() {
-  const btn = document.getElementById('gift-submit');
-  const errEl = document.getElementById('gift-error');
-  errEl.style.display = 'none';
-  const custom = document.getElementById('gift-amount-custom').value.trim();
-  const amount = custom ? Number(custom) : _giftAmount;
-  const recipientEmail = document.getElementById('gift-recipient-email').value.trim();
-  const recipientName = document.getElementById('gift-recipient-name').value.trim();
-  const senderName = document.getElementById('gift-sender-name').value.trim();
-  const message = document.getElementById('gift-message').value.trim();
-
-  if (!amount || amount < 20 || amount > 1000) { errEl.textContent = 'Choose an amount between $20 and $1000.'; errEl.style.display = 'block'; return; }
-  if (!recipientEmail || recipientEmail.indexOf('@') < 0) { errEl.textContent = "Enter the recipient's email."; errEl.style.display = 'block'; return; }
-
-  btn.disabled = true;
-  btn.textContent = 'Redirecting to payment...';
-  try {
-    const r = await fetch('/api/buy-gift-card', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: amount, recipientEmail: recipientEmail, recipientName: recipientName, senderName: senderName, message: message })
-    });
-    const d = await r.json();
-    if (!r.ok || !d.url) throw new Error(d.error || 'Could not start checkout');
-    window.location.href = d.url;
-  } catch(e) {
-    errEl.textContent = e.message || 'Something went wrong';
-    errEl.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Continue to payment →';
-  }
-}
-document.addEventListener('click', function(e) {
-  const b = e.target.closest && e.target.closest('.gift-amt-btn');
-  if (b) selectGiftAmount(Number(b.dataset.amt));
-});
-document.getElementById('gift-amount-custom').addEventListener('input', clearGiftPreset);
+// The gift card modal moved to js/gift-card.js, which both surfaces share.
+// What lived here was a second implementation of it, bound to markup that only
+// existed in landing.html - so the mobile SPA had no gift card at all.
+// js/app.js publishes the opener on window; this file is a classic script and
+// cannot import a module.
 
 async function submitMembership() {
   const btn = document.getElementById('membership-submit');
@@ -1587,7 +1530,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // opened on top of it (z-index 10000 over 9999) and swallowed the next click.
   wire('toggle-monthly', function() { setBilling('monthly'); });
   wire('toggle-annual', function() { setBilling('annual'); });
-  wire('giftcard-open-btn', function() { openGiftCardModal(); });
+  wire('giftcard-open-btn', function() {
+    if (typeof window.drbikeOpenGiftCard === 'function') window.drbikeOpenGiftCard();
+  });
   wire('services-modal-close-btn', function() {
     byId('services-modal').style.display = 'none';
   });

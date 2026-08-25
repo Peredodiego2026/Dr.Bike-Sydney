@@ -62,6 +62,7 @@ import {
   createTierBadge,
   confirmDialog,
 } from './components.js';
+import { openGiftCardModal } from './gift-card.js';
 import { getRiderTier } from './rider-tier.js';
 import { toDbTime, toDisplayTime, sameTime } from './time-format.js';
 import {
@@ -4667,6 +4668,17 @@ async function renderProfile() {
       </div>
 
       <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Gift a service</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+          <div style="min-width:0">
+            <div style="font-size:15px;font-weight:600;color:var(--navy)">🎁 <span>Send a gift card</span></div>
+            <div style="font-size:13px;color:var(--gray);margin-top:2px">Any cyclist you know, delivered by email</div>
+          </div>
+          <button id="gift-open-btn" style="flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Buy</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
         <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Birthday</div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
           <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Tell us the day and we'll send you something on it. We don't ask for the year.</div>
@@ -4766,6 +4778,10 @@ async function renderProfile() {
       renderProfile();
     });
   });
+
+  // The gift card lived only on landing.html until now - same modal, same
+  // module, so the two surfaces cannot drift apart again.
+  screen.querySelector('#gift-open-btn')?.addEventListener('click', openGiftCardModal);
 
   screen.querySelector('#bday-save')?.addEventListener('click', async () => {
     const btn = screen.querySelector('#bday-save');
@@ -5912,6 +5928,16 @@ function renderSpaLangSwitcher() {
 }
 
 router.init();
+
+// landing-inline.js is a classic script, not a module, so it cannot import
+// this. One explicit handle beats a second copy of the modal - which is what
+// the landing had, and why the SPA had no gift card at all.
+//
+// After router.init() on purpose: nothing added here should ever be able to
+// run before the router is wired. A throw above that line leaves every
+// navigation link changing the hash and nothing happening, with no error
+// anyone would connect to the cause.
+window.drbikeOpenGiftCard = openGiftCardModal;
 document.dispatchEvent(new Event('routerinit'));
 renderSpaLangSwitcher();
 updateHomeNav();
