@@ -6069,3 +6069,36 @@ Verificado corriendo en `landing.html`: el panel se cierra, el hash va a
 Idioma, Metodo de pago, Notificaciones), la flecha vuelve a `#home` y el
 overlay se cierra.
 
+## 36. El saludo de cumpleanos: naranja, y dentro de la pagina (25-ago-2026)
+
+Dos correcciones de Diego sobre el banner de 34, con la version anterior ya en
+produccion y funcionando.
+
+**Color.** Estaba en `--blue-lt` / `--blue-dark`, que es el azul de todos los
+demas paneles de la app - o sea que el saludo se leia como un aviso mas del
+sistema. Un cumpleanos no deberia. Pasa a los tokens ambar que ya existian:
+
+| | |
+|---|---|
+| fondo | `--amber-lt` (#fffbeb) |
+| borde | `--amber-edge` (#fcd34d) |
+| titulo | `--amber-ink` (#92400e) |
+| subtitulo y cerrar | `--amber` (#b45309) |
+
+Titulo y subtitulo usan **dos tonos distintos de la misma rampa**, no el mismo:
+`--amber-ink` esta definido en `variables.css` como "text ON --amber-lt", asi
+que el par es el que la paleta ya tenia pensado.
+
+**Posicion.** `screen.prepend(box)` ponia el banner arriba de todo. En la SPA
+esta bien, pero en la landing `screen` es la pagina de marketing entera - asi
+que el saludo quedaba **encima de la barra de navegacion**, empujando el
+header hacia abajo. Ahora se inserta despues de la barra de garantias, con
+`max-width:900px` para alinear con el contenedor de esa barra.
+
+La barra recibio `id="trust-badges"` como ancla. La SPA no tiene esa barra, y
+ahi el `prepend` sigue siendo correcto - la rama else lo cubre.
+
+Verificado en `landing.html`: el orden dentro de `<main>` queda
+`trust-badges -> birthday-greeting -> section.hero`, y los cuatro colores
+resuelven a los hex de arriba.
+

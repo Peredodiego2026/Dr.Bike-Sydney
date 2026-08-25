@@ -5487,21 +5487,36 @@ async function showBirthdayGreeting() {
 
   const box = document.createElement('div');
   box.id = 'birthday-greeting';
+  // Amber, not the app blue. Blue is the colour of every other panel here, so
+  // the greeting read as one more piece of chrome; a birthday should not.
+  // These are the existing tokens - --amber-ink is defined as the text colour
+  // for --amber-lt, so the pairing is the one the palette already intends.
   box.style.cssText =
-    'display:flex;align-items:center;gap:12px;background:var(--blue-lt);border:1px solid var(--blue-edge);border-radius:14px;padding:14px 16px;margin:12px 16px 0';
+    'display:flex;align-items:center;gap:12px;background:var(--amber-lt);border:1px solid var(--amber-edge);border-radius:14px;padding:14px 16px;margin:12px 16px 0';
   box.innerHTML = `
     <span style="font-size:26px;line-height:1" aria-hidden="true">🎂</span>
     <div style="flex:1;min-width:0">
-      <div style="font-size:15px;font-weight:800;color:var(--blue-dark)">${escapeHtml(
+      <div style="font-size:15px;font-weight:800;color:var(--amber-ink)">${escapeHtml(
         translateValue('Happy birthday, NAME!').replace('NAME', first)
       )}</div>
-      <div style="font-size:13px;color:var(--gray);margin-top:2px">${translateValue(
+      <div style="font-size:13px;color:var(--amber);margin-top:2px">${translateValue(
         'Check your email - there is something from us in there.'
       )}</div>
     </div>
-    <button id="birthday-greeting-close" aria-label="${translateValue('Close')}" style="flex-shrink:0;min-width:44px;min-height:44px;border:none;background:none;font-size:20px;line-height:1;color:var(--gray);cursor:pointer;font-family:inherit">&times;</button>
+    <button id="birthday-greeting-close" aria-label="${translateValue('Close')}" style="flex-shrink:0;min-width:44px;min-height:44px;border:none;background:none;font-size:20px;line-height:1;color:var(--amber);cursor:pointer;font-family:inherit">&times;</button>
   `;
-  screen.prepend(box);
+  // On the landing, `screen` is the whole marketing page, so prepending put
+  // the banner ABOVE the nav and pushed the header down the screen. It goes
+  // under the trust bar instead - inside the page, not on top of it. The
+  // mobile SPA has no such bar, and there the top of the screen is right.
+  const trustBar = document.getElementById('trust-badges');
+  if (trustBar && trustBar.parentNode) {
+    box.style.margin = '16px auto 0';
+    box.style.maxWidth = '900px';
+    trustBar.insertAdjacentElement('afterend', box);
+  } else {
+    screen.prepend(box);
+  }
   box.querySelector('#birthday-greeting-close').addEventListener('click', () => {
     try {
       localStorage.setItem(BIRTHDAY_SEEN_KEY, String(year));
