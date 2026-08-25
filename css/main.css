@@ -1786,12 +1786,44 @@ body {
   padding: 16px 18px 14px;
   border-radius: 14px;
   text-align: left;
-  background: linear-gradient(140deg, var(--blue-dark), var(--blue));
-  border: 1px solid color-mix(in srgb, var(--amber-bright) 45%, transparent);
+  background: linear-gradient(140deg, var(--blue-dark), var(--blue) 55%, var(--blue-deep));
+  border: 1px solid color-mix(in srgb, var(--white) 22%, transparent);
   box-shadow: 0 18px 34px color-mix(in srgb, var(--navy) 60%, transparent);
   transform: rotateX(12deg) rotateZ(-2deg);
   transform-style: preserve-3d;
   overflow: hidden;
+}
+/* The monogram IS the background. It is the real images/logo-db.png, not a
+   redrawn approximation - `brightness(0) invert(1)` flattens any artwork to
+   pure white, so one file gives the exact silhouette at any tint. A navy blob
+   underneath keeps the lower-left corner dark enough for the names to read. */
+.gift-card3d__mark {
+  position: absolute;
+  top: -18px;
+  right: -26px;
+  width: 190px;
+  height: auto;
+  opacity: 0.17;
+  filter: brightness(0) invert(1);
+  pointer-events: none;
+  z-index: 0;
+}
+.gift-card3d__wash {
+  position: absolute;
+  left: -50px;
+  bottom: -60px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: var(--navy);
+  opacity: 0.55;
+  filter: blur(30px);
+  pointer-events: none;
+  z-index: 0;
+}
+.gift-card3d > *:not(.gift-card3d__mark):not(.gift-card3d__wash) {
+  position: relative;
+  z-index: 2;
 }
 .gift-card3d__shine {
   position: absolute;
@@ -1811,12 +1843,14 @@ body {
   margin-bottom: 6px;
 }
 .gift-card3d__amount {
-  font-size: 30px;
+  font-size: 42px;
   font-weight: 900;
-  line-height: 1.05;
+  line-height: 1;
   color: var(--white);
   font-variant-numeric: tabular-nums;
-  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+  margin: 2px 0 12px;
+  text-shadow: 0 3px 12px color-mix(in srgb, var(--navy) 45%, transparent);
 }
 .gift-card3d__row {
   display: flex;

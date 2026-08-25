@@ -180,3 +180,54 @@ describe('the new module is covered by the i18n check', () => {
     expect(i18nCheck).toMatch(/JS_SURFACES = \[[^\]]*'js\/gift-card\.js'/s);
   });
 });
+
+// Diego picked variant 2 of five: the monogram is the background, diffused,
+// with no photographic watermark - "solo pon los colores que este difuminado
+// el fondo y el logo en algun lugar".
+describe('the card face carries the brand', () => {
+  it('uses the real logo file, not a redrawn approximation', () => {
+    expect(gift).toMatch(/class="gift-card3d__mark" src="images\/logo-db\.png"/);
+    // Relative, because both index.html and landing.html sit at the root.
+    expect(gift).not.toMatch(/src="\/images\/logo-db/);
+  });
+
+  // brightness(0) invert(1) flattens any artwork to pure white, so one file
+  // gives the exact silhouette at any tint - no second asset to keep in sync.
+  it('the monogram is tinted white and sits behind everything', () => {
+    expect(mainCss).toMatch(/\.gift-card3d__mark\s*\{[^}]*filter: brightness\(0\) invert\(1\)/s);
+    expect(mainCss).toMatch(/\.gift-card3d__mark\s*\{[^}]*z-index: 0/s);
+    expect(mainCss).toMatch(/\.gift-card3d__mark\s*\{[^}]*opacity: 0\.17/s);
+  });
+
+  it('it is decorative, so it is hidden from screen readers', () => {
+    expect(gift).toMatch(/gift-card3d__mark[^>]*alt="" aria-hidden="true"/);
+  });
+
+  it('a blurred navy wash keeps the names readable over it', () => {
+    expect(mainCss).toMatch(/\.gift-card3d__wash\s*\{[^}]*filter: blur\(30px\)/s);
+    expect(gift).toMatch(/class="gift-card3d__wash"/);
+  });
+
+  it('the content sits above both', () => {
+    expect(mainCss).toMatch(
+      /\.gift-card3d > \*:not\(\.gift-card3d__mark\):not\(\.gift-card3d__wash\)\s*\{[^}]*z-index: 2/s
+    );
+  });
+
+  it('the amount is the loudest thing on the card', () => {
+    expect(mainCss).toMatch(/\.gift-card3d__amount\s*\{[^}]*font-size: 42px/s);
+  });
+
+  // The size and tilt were the parts Diego already liked - they must not move.
+  it('keeps the size and tilt that were already approved', () => {
+    expect(mainCss).toMatch(/\.gift-card3d\s*\{[^}]*width: min\(300px, 82%\)/s);
+    expect(mainCss).toMatch(/\.gift-card3d\s*\{[^}]*transform: rotateX\(12deg\) rotateZ\(-2deg\)/s);
+  });
+
+  it('no photographic watermark - colour and blur only', () => {
+    const i = mainCss.indexOf('.gift-card3d {');
+    const block = mainCss.slice(i, i + 1400);
+    expect(block).not.toMatch(/url\(/);
+  });
+});
+

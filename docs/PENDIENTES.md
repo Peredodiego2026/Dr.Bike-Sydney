@@ -6335,3 +6335,33 @@ usan `Recipient` / `Sender`, que no chocan con nada.
 
 30 tests nuevos. Suite completa **10 veces seguidas**: 650/650.
 
+## 42. La cara de la gift card, elegida entre cinco (25-ago-2026)
+
+Diego: *"me gusta la tarjeta pero vamos a ocupar esta... sin la marca de agua...
+solo pon los colores que este difuminado el fondo y el logo en algun lugar"*.
+Se le mostraron **cinco variantes** antes de tocar nada y eligio la 2.
+
+**El monograma ES el fondo.** Gigante, arriba a la derecha, al 17% de opacidad.
+Sin foto de marca de agua: solo color y desenfoque, como pidio.
+
+Dos decisiones que valen anotar:
+
+- **Es `images/logo-db.png`, el archivo real, no un dibujo aproximado.**
+  `filter: brightness(0) invert(1)` aplasta cualquier arte a blanco puro, asi
+  que un solo archivo da la silueta exacta a cualquier tinte. No hay un segundo
+  asset que mantener sincronizado, y no hay riesgo de que el trazo se aleje del
+  logo de verdad. (Las maquetas que se le mostraron SI usaban un dibujo, y se
+  le aviso.)
+- **Una mancha navy desenfocada abajo a la izquierda.** Sin eso, "Para" y "De"
+  caen sobre la parte clara del degrade y pierden contraste.
+
+El monto pasa de 30px a **42px** - es lo que se esta comprando, deberia ser lo
+mas fuerte de la tarjeta. Tamaño e inclinacion no se tocaron: eran la parte que
+ya estaba aprobada.
+
+Los colores salen todos de tokens (`--blue-dark`, `--blue`, `--blue-deep`,
+`--navy`), asi que no entra ningun hex nuevo al presupuesto de `color-check`.
+
+8 tests nuevos, incluido uno que verifica que **no vuelva a entrar una imagen de
+fondo** (`url(` en el bloque de la tarjeta).
+

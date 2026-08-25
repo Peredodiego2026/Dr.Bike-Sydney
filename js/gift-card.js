@@ -42,6 +42,8 @@ export function openGiftCardModal() {
              and it answers "what will they actually get?" without a word. -->
         <div class="gift-stage">
           <div class="gift-card3d" id="gift-preview">
+            <img class="gift-card3d__mark" src="images/logo-db.png" alt="" aria-hidden="true">
+            <div class="gift-card3d__wash" aria-hidden="true"></div>
             <div class="gift-card3d__shine" aria-hidden="true"></div>
             <div class="gift-card3d__brand">DR. BIKE SYDNEY</div>
             <div class="gift-card3d__amount" id="gift-preview-amount">$100</div>
