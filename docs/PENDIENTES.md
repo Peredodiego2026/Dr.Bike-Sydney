@@ -5979,3 +5979,52 @@ log**, en vez de facturar un default.
 North Sydney en la pantalla de pago: **$45.00**, en `index.html` y en
 `landing.html`. Con el lookup caido: sin boton de pago, ruta de consulta.
 
+## 34. La campana de cumpleanos nunca mando un solo email (25-ago-2026)
+
+Era el cumpleanos de Diego y pregunto por que su propia app no lo habia
+saludado. No era un bug del cron.
+
+Todo estaba construido:
+
+- `api/send-cron.js` tiene la rutina, y `vercel.json` la corre **todos los
+  dias a las 9** (`0 9 * * * -> /api/send-cron?type=all`).
+- El email `birthday_promo` esta escrito, **traducido a los 3 idiomas**,
+  saluda por nombre y trae un codigo de descuento con vigencia.
+- `scripts/add-birthday-to-profiles.sql` agrega la columna, y esta anotada
+  como item 32 del runbook.
+
+**Faltaba una sola cosa: en toda la app no habia donde escribir la fecha.**
+`profiles.birthday` era `NULL` para todo el mundo, el filtro
+`.not('birthday','is',null)` no matcheaba a nadie, y la campana nunca mando
+un email ni podia hacerlo. Todos los dias a las 9, en silencio.
+
+Y no llega de otro lado: **Stripe no da fecha de nacimiento** en las
+suscripciones, y ni el registro ni la reserva la piden. Hay que preguntarla.
+
+### Lo que quedo
+
+- **Campo en el perfil**: dia + mes. No se pide el ano - el cron solo compara
+  mm/dd, asi que el ano seria dato personal sin uso.
+- **Ano centinela 1904**, y no es arbitrario: la columna es `DATE`, y 1904 es
+  bisiesto, asi que alguien nacido el **29 de febrero** puede guardarse.
+  Verificado: escribe `1904-02-29`.
+- **Validacion real**: el 31 de abril en JavaScript se convierte solo en 1 de
+  mayo. La comprobacion construye la fecha y mira si volvio la que se pidio.
+- **Saludo dentro de la app** en la pantalla de inicio, por nombre, una vez al
+  ano por dispositivo, con el nombre escapado.
+- 23 llaves nuevas x 3 idiomas.
+
+### Un bug propio, que vale anotar
+
+`isBirthdayToday` llamaba `localDateStr()` sin argumento. Esa funcion pide un
+`Date`, asi que tiraba `TypeError` - y como quien la llama **no la espera**,
+el error se volvia una promesa rechazada sin manejar: **el saludo simplemente
+no aparecia y no se registraba nada**. Se encontro probandolo en el navegador,
+no en los tests. Hay test para que no vuelva.
+
+### Lo que Diego tiene que hacer
+
+1. Correr `scripts/add-birthday-to-profiles.sql` si todavia no se corrio
+   (item 32 del runbook tiene la consulta que lo verifica).
+2. Cargar su propio cumpleanos en Perfil. El ano que viene la app lo saluda.
+
