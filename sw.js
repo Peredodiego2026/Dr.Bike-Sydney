@@ -1,3 +1,6 @@
+// v87 (2026-08-25): el saludo de cumpleanos gana profundidad real (capas en
+// translateZ, entrada escalonada, salida propia) y el email deja de perderse
+// si el envio falla. Toca css/main.css y js/app.js.
 // v79 (2026-08-25): el "What's My Fee" fuera de zona seguia mostrando el
 // callejon viejo: la copia que se usa esta en js/app.js, y landing.html
 // tambien carga ese archivo, asi que fallaba en las dos superficies.
@@ -84,7 +87,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v86';
+const CACHE_STATIC = 'drbike-static-v87';
 const CACHE_PAGES  = 'drbike-pages-v70';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

@@ -1514,8 +1514,17 @@ body {
 
 /* ── Birthday modal ─────────────────────────────────────────────────────────
    A panel that folds down from the top over a dimmed page, six seconds after
-   arrival. It replaces an inline amber strip under the header, which read as
+   arrival. It replaced an inline amber strip under the header, which read as
    one more notification bar and was easy to scroll past on the day it matters.
+
+   The first version was a flat rotateX. This one has real depth: the card
+   keeps a 3D context (preserve-3d) and its emoji, heading and message sit at
+   different translateZ values, so the fold pushes them through space at
+   different rates instead of moving as one flat plane. They also arrive
+   staggered, which is what makes it read as unfolding rather than appearing.
+
+   Closing is its own animation, not the entrance played backwards: it lifts
+   away and shrinks on a faster curve, which reads as dismissal.
 
    Colours come from the amber ramp and the scrim is mixed from --navy, so
    there is no new hex here for scripts/color-check.mjs to count. */
@@ -1527,16 +1536,27 @@ body {
   align-items: flex-start;
   justify-content: center;
   padding: 12vh 16px 16px;
-  background: color-mix(in srgb, var(--navy) 55%, transparent);
+  background: color-mix(in srgb, var(--navy) 0%, transparent);
+  backdrop-filter: blur(0);
   /* The fold needs a vanishing point on the ANCESTOR - perspective on the card
      itself would apply to its children instead of to the card. */
-  perspective: 1200px;
-  opacity: 0;
-  transition: opacity 0.28s ease;
+  perspective: 1100px;
+  transition:
+    background 0.45s ease,
+    backdrop-filter 0.45s ease;
 }
 .bday-scrim.is-open {
-  opacity: 1;
+  background: color-mix(in srgb, var(--navy) 55%, transparent);
+  backdrop-filter: blur(3px);
 }
+.bday-scrim.is-closing {
+  background: color-mix(in srgb, var(--navy) 0%, transparent);
+  backdrop-filter: blur(0);
+  transition:
+    background 0.28s ease,
+    backdrop-filter 0.28s ease;
+}
+
 .bday-card {
   position: relative;
   width: 100%;
@@ -1546,23 +1566,39 @@ body {
   border-radius: 16px;
   padding: 30px 24px 26px;
   text-align: center;
-  box-shadow: 0 24px 60px color-mix(in srgb, var(--navy) 38%, transparent);
+  box-shadow: 0 26px 64px color-mix(in srgb, var(--navy) 42%, transparent);
   transform-origin: top center;
-  transform: rotateX(-82deg);
+  /* Children keep their own Z, so the fold moves them through depth. Without
+     this they flatten onto the card's plane and the whole thing reads 2D. */
+  transform-style: preserve-3d;
+  transform: rotateX(-88deg) translateY(-18px) scale(0.96);
   opacity: 0;
   transition:
-    transform 0.5s cubic-bezier(0.22, 1.15, 0.36, 1),
-    opacity 0.3s ease;
+    transform 0.62s cubic-bezier(0.2, 1.24, 0.32, 1),
+    opacity 0.34s ease;
 }
 .bday-scrim.is-open .bday-card {
-  transform: rotateX(0deg);
+  transform: rotateX(0deg) translateY(0) scale(1);
   opacity: 1;
 }
+.bday-scrim.is-closing .bday-card {
+  /* Away and smaller, not back up the way it came - a different gesture. */
+  transform: translateY(-22px) scale(0.94);
+  opacity: 0;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.9, 0.5),
+    opacity 0.26s ease;
+}
+
+/* The three layers. Each sits further forward than the last, so the fold and
+   the shadow separate them. */
 .bday-card__emoji {
-  font-size: 44px;
+  font-size: 46px;
   line-height: 1;
   display: block;
   margin-bottom: 12px;
+  transform: translateZ(42px);
+  filter: drop-shadow(0 8px 10px color-mix(in srgb, var(--navy) 26%, transparent));
 }
 .bday-card__title {
   font-size: 20px;
@@ -1570,13 +1606,39 @@ body {
   color: var(--amber-ink);
   margin: 0 0 8px;
   line-height: 1.25;
+  transform: translateZ(24px);
 }
 .bday-card__msg {
   font-size: 14px;
   color: var(--amber);
   margin: 0;
   line-height: 1.55;
+  transform: translateZ(12px);
 }
+
+/* Staggered arrival. Held back until the card has started unfolding, so the
+   content does not float in mid-air ahead of the surface it sits on. */
+.bday-card__emoji,
+.bday-card__title,
+.bday-card__msg {
+  opacity: 0;
+  transition:
+    opacity 0.34s ease,
+    transform 0.34s ease;
+}
+.bday-scrim.is-open .bday-card__emoji {
+  opacity: 1;
+  transition-delay: 0.22s;
+}
+.bday-scrim.is-open .bday-card__title {
+  opacity: 1;
+  transition-delay: 0.3s;
+}
+.bday-scrim.is-open .bday-card__msg {
+  opacity: 1;
+  transition-delay: 0.37s;
+}
+
 .bday-close {
   position: absolute;
   top: 4px;
@@ -1591,17 +1653,32 @@ body {
   cursor: pointer;
   font-family: inherit;
   border-radius: 10px;
+  transform: translateZ(30px);
 }
 .bday-close:focus-visible {
   outline: 2px solid var(--amber-ink);
   outline-offset: -2px;
 }
+
 /* Reduced motion means no MOVEMENT, not no modal: it still fades in, it just
-   does not swing down. */
+   does not swing down, and nothing is held back on a delay. */
 @media (prefers-reduced-motion: reduce) {
   .bday-card,
-  .bday-scrim.is-open .bday-card {
+  .bday-scrim.is-open .bday-card,
+  .bday-scrim.is-closing .bday-card {
     transform: none;
     transition: opacity 0.2s ease;
+  }
+  .bday-card__emoji,
+  .bday-card__title,
+  .bday-card__msg,
+  .bday-close {
+    transform: none;
+    transition-delay: 0s;
+  }
+  .bday-scrim,
+  .bday-scrim.is-open,
+  .bday-scrim.is-closing {
+    backdrop-filter: none;
   }
 }

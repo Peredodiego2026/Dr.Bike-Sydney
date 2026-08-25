@@ -6219,3 +6219,62 @@ como respaldo para quien no entra ese dia. Los dos estampan
 25 tests nuevos. La suite completa se corrio **10 veces seguidas**: 621/621 sin
 un solo test inestable.
 
+## 40. El email de cumpleanos no llegaba, y el motivo lo puse yo (25-ago-2026)
+
+El panel aparecia y el email no llegaba nunca. Tres defectos en el mismo
+bloque, todos mios, de 38.
+
+### 1. Un envio fallido quemaba el ano entero
+
+El codigo estampaba `birthday_promo_sent_year` **antes** de mandar y **nunca lo
+deshacia**. Lo documente como un canje deliberado: "el precio es perder el
+email si el envio falla despues - mejor que mandar dos".
+
+Estaba mal. Perder el saludo por un fallo transitorio es peor que el riesgo que
+evitaba, y ademas es **permanente**: la siguiente visita lee el sello, concluye
+"ya se mando" y se calla para siempre.
+
+Ahora el reclamo se **devuelve** si el envio falla, asi que la proxima visita
+reintenta.
+
+### 2. El reclamo no matcheaba a nadie la primera vez
+
+`.neq('birthday_promo_sent_year', year)` - en SQL, `columna <> 2026` es **NULL**
+cuando la columna es NULL, y NULL **no matchea**. NULL es exactamente lo que
+tiene toda fila que nunca recibio el email.
+
+O sea que el `UPDATE` afectaba **cero filas**, sin error, y el codigo seguia
+igual: mandaba en cada visita y nunca sellaba. Ahora es
+`.or('birthday_promo_sent_year.is.null,birthday_promo_sent_year.neq.<year>')`.
+
+### 3. No se sabia si el reclamo se habia ganado
+
+Sin `.select()`, un `UPDATE` que no matcheo nada es indistinguible de uno que
+gano. Dos pestañas abriendo a la vez mandaban dos emails - justo lo que el
+diseño decia evitar. Ahora devuelve las filas y se comprueba.
+
+La respuesta lleva un campo `reason` (`sent`, `send-failed`, `claimed-elsewhere`,
+`claim-failed`) y el log incluye el cuerpo de la respuesta de `send-email`, no
+solo el numero de estado.
+
+## 41. El panel de cumpleanos, con profundidad de verdad (25-ago-2026)
+
+Diego: "es muy basico... puede ser un poco mas complejo? con mas 3d o algun
+efecto smooth de aparicion y de desaparicion".
+
+Lo que habia era un `rotateX` plano: la tarjeta giraba como una chapa.
+
+- **`transform-style: preserve-3d`** en la tarjeta, y emoji, titulo y mensaje en
+  `translateZ` distintos (42 / 24 / 12px). Al desplegarse **atraviesan
+  profundidad a distintas velocidades** en vez de moverse como un plano unico.
+  El emoji lleva su propia `drop-shadow`, que es lo que lo despega.
+- **Entrada escalonada** (0.22s / 0.30s / 0.37s): el contenido llega despues de
+  que la superficie empezo a abrirse, no flotando en el aire antes que ella.
+- **El fondo se oscurece Y se desenfoca** progresivamente, en vez de aparecer.
+- **La salida es su propio gesto** - se aleja y se achica en una curva mas
+  rapida - y no la entrada al reves. Necesito una clase `is-closing` propia.
+- Con `prefers-reduced-motion` se caen los movimientos, **los retardos y el
+  desenfoque**: sigue apareciendo, sin nada que se mueva.
+
+10 tests nuevos. Suite completa **10 veces seguidas**: 628/628.
+
