@@ -61,31 +61,16 @@ export async function getAvailableSlots(date, serviceId) {
   return await res.json();
 }
 
-const DEFAULT_CALLOUT_FEE = 20;
-
-export async function getCalloutFee(address) {
-  try {
-    const { data, error } = await sb.from('callout_zones').select('callout_fee, suburbs');
-    // A query error is NOT the same as "no zones configured": if it fails, the
-    // client shows (and tries to pay) the flat $20 while the server recomputes
-    // the real suburb fee and rejects the mismatch - the client just can't
-    // book, with no clue why. Silent until now (audit 2026-08-23) - at least
-    // leave a trace so a broken callout_zones read is diagnosable.
-    if (error) {
-      console.error('[getCalloutFee] callout_zones read failed, showing $20:', error.message);
-      return DEFAULT_CALLOUT_FEE;
-    }
-    if (!data?.length) return DEFAULT_CALLOUT_FEE;
-    const addr = (address || '').toLowerCase();
-    const zone = data.find((z) =>
-      (z.suburbs || []).some((s) => addr.includes(String(s).toLowerCase()))
-    );
-    return zone ? Number(zone.callout_fee) : DEFAULT_CALLOUT_FEE;
-  } catch (e) {
-    console.error('[getCalloutFee] threw, showing $20:', e.message);
-    return DEFAULT_CALLOUT_FEE;
-  }
-}
+// getCalloutFee() lived here and is gone (25-aug-2026). It read
+// `callout_zones` straight from the browser and fell back to a flat $20 - a
+// second, quieter answer to a question api/_coverage.js already answers from
+// driving time. Its own comment had diagnosed the damage back in the 23-aug
+// audit: "the client shows (and tries to pay) the flat $20 while the server
+// recomputes the real suburb fee and rejects the mismatch - the client just
+// can't book, with no clue why." That got a console.error, not a fix.
+//
+// The fee now comes from one place, `role: 'check-coverage'`, which is the
+// same resolution handleCreateBooking verifies against.
 
 export async function getMechanicInfo(mechanicId) {
   try {
