@@ -6028,3 +6028,44 @@ no en los tests. Hay test para que no vuelva.
    (item 32 del runbook tiene la consulta que lo verifica).
 2. Cargar su propio cumpleanos en Perfil. El ano que viene la app lo saluda.
 
+## 35. La pantalla de Perfil era inalcanzable desde la computadora (25-ago-2026)
+
+Diego mergeo el campo de cumpleanos, abrio la landing y no encontro donde
+cargarlo. No era un bug del feature.
+
+**`#profile` aparecia CERO veces** en `landing.html`, `js/landing-inline.js`
+y `js/landing-modules.js`. El panel de cuenta tenia tres pestanas -
+Bookings, My Bikes, Membership - y nada mas. La pantalla estaba en el DOM de
+la landing y el router ya la renderizaba como overlay, pero **nada la abria**.
+
+Asi que todo lo que vive solo ahi era mobile-only sin que nadie lo notara:
+
+- El selector de idioma
+- Las notificaciones push
+- La tarjeta guardada
+- El codigo de referidos
+- Y el campo de cumpleanos, que es como se encontro
+
+### La segunda mitad del bug
+
+Poner el link no alcanzaba. `createHeader('Profile', false)` no dibuja flecha
+de volver - en el celular no hace falta, porque Perfil es una pestana raiz y
+la barra inferior es la salida. Pero **`css/main.css` esconde `.bottom-nav`
+arriba de 768px**, asi que en la landing la pantalla se abria sin ninguna
+salida visible. El boton del navegador funciona, porque es un cambio de hash,
+pero nadie tiene por que descubrir eso.
+
+Ahora el header muestra la flecha cuando `document.body.dataset.surface` es
+`'landing'`, en los dos renders (el loader y el final, o parpadea).
+
+### Es la cuarta vez
+
+Misma clase de bug que la barra "Trusted by", que el callejon del chequeo de
+tarifa y que las cuatro calculadoras de fee: **una feature construida en una
+superficie y no cableada en la otra.** Por eso ahora hay test.
+
+Verificado corriendo en `landing.html`: el panel se cierra, el hash va a
+`#profile`, la pantalla se activa con las cuatro secciones (Cumpleanos,
+Idioma, Metodo de pago, Notificaciones), la flecha vuelve a `#home` y el
+overlay se cierra.
+

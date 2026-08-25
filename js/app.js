@@ -4483,12 +4483,20 @@ async function renderProfile() {
   const screen = document.querySelector('[data-screen="profile"]');
   if (!screen) return;
 
+  // On the mobile SPA, Profile is a root tab and the bottom nav is the way
+  // out, so the header carries no back arrow. On landing.html the same screen
+  // is a full-screen overlay AND css/main.css hides the bottom nav above
+  // 768px - so with no arrow there is no visible way back at all. The browser
+  // button works, because it is a hash change, but nobody should have to
+  // discover that.
+  const needsBack = document.body.dataset.surface === 'landing';
+
   // Painted before the first await, with the same header and nav the finished
   // screen uses: sb.auth.getUser() is a network round trip, and until it came
   // back this screen was an empty box. On a slow connection that is
   // indistinguishable from the app being broken.
   screen.innerHTML = `
-    ${createHeader('Profile', false)}
+    ${createHeader('Profile', needsBack)}
     ${createBrandLoader()}
     ${createBottomNav('profile')}
   `;
@@ -4559,7 +4567,7 @@ async function renderProfile() {
   const riderTier = getRiderTier(completedJobs);
 
   screen.innerHTML = `
-    ${createHeader('Profile', false)}
+    ${createHeader('Profile', needsBack)}
     <div class="profile-wrap">
       <div class="mechanic-avatar" style="width:72px;height:72px;margin:var(--space-6) auto var(--space-3)">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

@@ -794,6 +794,28 @@ function acctMembershipButtonsHtml(isPaused) {
     '</div>';
 }
 
+// The account panel had three TABS (bookings, bikes, membership) and nothing
+// else, so on desktop the Profile screen could not be reached at all - and
+// `#profile` appeared nowhere in landing.html, landing-inline.js or
+// landing-modules.js. Everything that lives only there was mobile-only
+// without anyone noticing: language, push notifications, the card on file,
+// the referral code, and - the way this was found - the birthday field.
+//
+// The screen itself was already in landing.html's DOM and the router already
+// renders non-home routes as a full-screen overlay on this surface. Nothing
+// was missing except a way in.
+//
+// It is a link and not a fourth tab on purpose: the tabs swap a pane inside
+// the panel, this navigates away from it.
+function profileLinkHtml() {
+  return (
+    '<button class="account-profile-btn" style="width:100%;min-height:40px;padding:10px;margin-bottom:8px;border:1.5px solid var(--blue-edge);border-radius:8px;background:var(--white);color:var(--blue-dark);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">' +
+    '<span aria-hidden="true">&#9881;</span>' +
+    '<span>Profile &amp; settings</span>' +
+    '</button>'
+  );
+}
+
 // Same non-native confirm pattern as acctActionButtons/10.2 - the native
 // confirm('Sign out?') read as an OS error dialog, not part of the page.
 function signoutButtonsHtml() {
@@ -869,7 +891,7 @@ function openAccountPanel(session) {
         '</div>',
       '</div>',
       /* Footer */
-      '<div style="padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0" id="account-signout-wrap">' + signoutButtonsHtml() + '</div>',
+      '<div style="padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0" id="account-panel-footer">' + profileLinkHtml() + '<div id="account-signout-wrap">' + signoutButtonsHtml() + '</div></div>',
     '</div>'
   ].join('');
   document.body.appendChild(panel);
@@ -888,6 +910,13 @@ function openAccountPanel(session) {
 
   document.getElementById('account-panel-close').addEventListener('click', function() { panel.remove(); });
   panel.addEventListener('click', function(e) { if (e.target === panel) panel.remove(); });
+  panel.querySelector('.account-profile-btn')?.addEventListener('click', function() {
+    // The panel is a fixed overlay; leaving it up would sit on top of the
+    // screen it just opened.
+    document.getElementById('account-panel')?.remove();
+    window.location.hash = '#profile';
+  });
+
   document.getElementById('account-signout-wrap').addEventListener('click', function(e) {
     const wrap = document.getElementById('account-signout-wrap');
     if (e.target.closest('.account-signout-btn')) {

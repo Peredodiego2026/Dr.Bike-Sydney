@@ -355,6 +355,7 @@ const dict = {
     'No charge - we check your address and reply personally.':
       'Sin costo - revisamos tu dirección y te respondemos personalmente.',
     'Ask for my price': 'Consultar mi precio',
+    'Profile & settings': 'Perfil y ajustes',
     'Birthday': 'Cumpleaños',
     'Tell us the day and we\'ll send you something on it. We don\'t ask for the year.': 'Decinos el día y te mandamos algo. No te pedimos el año.',
     'Day': 'Día',
@@ -1740,6 +1741,7 @@ const dict = {
     'No charge - we check your address and reply personally.':
       '不收费 - 我们会核实您的地址并亲自回复。',
     'Ask for my price': '咨询我的价格',
+    'Profile & settings': '个人资料与设置',
     'Birthday': '生日',
     'Tell us the day and we\'ll send you something on it. We don\'t ask for the year.': '告诉我们日期，那天我们会送你一份礼物。我们不需要年份。',
     'Day': '日',
