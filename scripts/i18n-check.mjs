@@ -37,10 +37,14 @@ const HTML_SURFACES = ['index.html', 'landing.html', 'track.html'];
 // other extracted file) builds its UI from imported data, not hardcoded
 // strings, so it has nothing for stringsFromJs to find - left out on purpose,
 // not an oversight.
-const JS_SURFACES = ['js/app.js', 'js/components.js', 'js/landing-inline.js'];
+const JS_SURFACES = ['js/app.js', 'js/components.js', 'js/landing-inline.js', 'js/gift-card.js'];
 
 // Strings that stay in English on purpose.
 const ALLOWED = new Set([
+  // The gift card's own face: a brand lockup and an example address, both of
+  // which read the same in every language.
+  'DR. BIKE SYDNEY',
+  'ana@example.com',
   // Brand and people
   'Dr. Bike Sydney',
   'Dr. Bike',

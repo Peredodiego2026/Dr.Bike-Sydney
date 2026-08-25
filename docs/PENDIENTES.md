@@ -6219,3 +6219,61 @@ como respaldo para quien no entra ese dia. Los dos estampan
 25 tests nuevos. La suite completa se corrio **10 veces seguidas**: 621/621 sin
 un solo test inestable.
 
+## 39. La gift card: una sola implementacion, y el boton de pagar visible (25-ago-2026)
+
+Diego abrio el modal de gift card y encontro cuatro cosas.
+
+### 1. No existia en la SPA
+
+`grep -c gift index.html js/app.js` devolvia **0**. El modal eran ~25 lineas de
+markup dentro de `landing.html` mas sus handlers en `js/landing-inline.js`.
+
+**Es la quinta vez este mes con esta misma forma:** la barra "Trusted by", el
+callejon del chequeo de tarifa, cuatro calculadoras de fee, la pantalla de
+Perfil inalcanzable, y ahora esto. Una feature cableada en una superficie y no
+en la otra.
+
+Ahora vive en `js/gift-card.js` y **las dos superficies abren el mismo modulo**.
+`landing-inline.js` es un script clasico y no puede importar un modulo, asi que
+`js/app.js` publica un unico handle (`window.drbikeOpenGiftCard`) - eso, o una
+segunda copia. En la SPA la entrada esta en Perfil.
+
+### 2. No se veia el boton de pagar
+
+La hoja crecia mas que la pantalla y el boton quedaba al final, asi que en el
+telefono el modal terminaba en "Personal message" y no habia forma de pagar sin
+saber que habia que scrollear **el fondo**. Ahora la hoja es una columna flex
+con **cuerpo scrolleable y pie fijo**: el boton esta siempre a la vista.
+
+### 3. Los cuadros no se entendian
+
+Todos los campos tenian solo `placeholder`, que desaparece al escribir - una vez
+lleno, la caja ya no dice que es. El monto libre se leia como un "28" pelado.
+
+Cada campo tiene `<label>` real, el grupo de montos es un `<fieldset>` con
+`<legend>`, y el monto libre lleva un **$** adentro de la caja.
+
+### 4. No se veia bien
+
+El encabezado era un degrade violeta-a-azul, que es literalmente el cliche que
+las notas de diseño de este proyecto nombran. Ahora es el navy de la marca con
+acento dorado, y el 3D esta donde sirve: **una vista previa de la tarjeta que se
+esta comprando, inclinada, que se actualiza mientras escribis** (monto,
+destinatario, remitente). Contesta "que le llega exactamente" sin una palabra.
+
+### Un hueco del checker de i18n, encontrado de paso
+
+`scripts/i18n-check.mjs` **no leia `js/gift-card.js`** - era un archivo nuevo,
+lleno de copia visible, fuera de `JS_SURFACES`. Se agrego.
+
+Y algo que el checker sigue sin ver: solo marca literales **fuera** de
+`translateValue`. Una llave que no existe en el diccionario hace que
+`translateValue` devuelva el original, o sea ingles, en silencio. De las 15
+cadenas del modal, **11 no tenian traduccion** y ninguna habria sido marcada.
+
+De esas, `From` ya existia traducido como **"Desde"** (de un lugar), no "De"
+(de una persona) - mal para una tarjeta de regalo. Las etiquetas de la tarjeta
+usan `Recipient` / `Sender`, que no chocan con nada.
+
+30 tests nuevos. Suite completa **10 veces seguidas**: 650/650.
+
