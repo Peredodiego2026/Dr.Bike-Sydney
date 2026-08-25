@@ -5607,9 +5607,12 @@ async function openBirthdayModal(first, accessToken, year) {
     } catch {
       /* nothing to do - it just shows again next time */
     }
+    // is-closing rather than just dropping is-open: the exit is its own
+    // animation (lifts away and shrinks), not the entrance played backwards.
     scrim.classList.remove('is-open');
+    scrim.classList.add('is-closing');
     document.removeEventListener('keydown', onKey);
-    // Let the fade finish before removing, but never leave it behind if the
+    // Let the exit finish before removing, but never leave it behind if the
     // transition never fires (a hidden tab does not run them).
     const drop = () => scrim.remove();
     scrim.addEventListener('transitionend', drop, { once: true });

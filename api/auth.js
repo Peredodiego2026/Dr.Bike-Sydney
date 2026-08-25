@@ -444,18 +444,34 @@ async function handleBirthdayGreeting(req, res) {
   const to = profile.email || user.email;
   if (!to) return res.status(200).json({ greet: true, emailSent: false });
 
-  // Stamp BEFORE sending. Two tabs opening at once would otherwise both pass
-  // the check above and send twice; a stamp that runs first means the loser
-  // sees `emailSent: true` and sends nothing. The cost of the trade is a
-  // birthday email lost if the send then fails - better than sending two.
-  const { error: stampErr } = await sb
+  // CLAIM, send, and put the claim back if the send fails.
+  //
+  // The first version stamped the year and never undid it, so ONE failed send
+  // burned the whole year - the next visit read the stamp, said "already sent"
+  // and stayed quiet forever. That is what happened on 25-aug-2026: Diego got
+  // the panel and no email, twice, because the year was already stamped by the
+  // first attempt.
+  //
+  // `.neq()` is not enough on its own either: in SQL, `column <> 2026` is NULL
+  // for a NULL column, so it does NOT match - and NULL is exactly what every
+  // first-time row holds. The claim silently matched zero rows and the code
+  // sent anyway, every single visit.
+  const previous = profile.birthday_promo_sent_year ?? null;
+  const { data: claimed, error: stampErr } = await sb
     .from('profiles')
     .update({ birthday_promo_sent_year: year })
     .eq('id', user.id)
-    .neq('birthday_promo_sent_year', year);
+    .or(`birthday_promo_sent_year.is.null,birthday_promo_sent_year.neq.${year}`)
+    .select('id');
+
   if (stampErr) {
-    console.error('[birthday-greeting] could not stamp the year:', stampErr.message);
-    return res.status(200).json({ greet: true, emailSent: false });
+    console.error('[birthday-greeting] could not claim the year:', stampErr.message);
+    return res.status(200).json({ greet: true, emailSent: false, reason: 'claim-failed' });
+  }
+  // Zero rows means another tab claimed it between the read and here. It is
+  // sending; this one must not.
+  if (!claimed?.length) {
+    return res.status(200).json({ greet: true, emailSent: true, reason: 'claimed-elsewhere' });
   }
 
   try {
@@ -472,11 +488,20 @@ async function handleBirthdayGreeting(req, res) {
         lang: ['en', 'es', 'zh'].includes(profile.preferred_lang) ? profile.preferred_lang : 'en',
       }),
     });
-    if (!r.ok) throw new Error('send-email returned ' + r.status);
-    return res.status(200).json({ greet: true, emailSent: true });
+    if (!r.ok) throw new Error('send-email returned ' + r.status + ' ' + (await r.text()).slice(0, 200));
+    return res.status(200).json({ greet: true, emailSent: true, reason: 'sent' });
   } catch (e) {
-    console.error('[birthday-greeting] send failed:', e.message);
-    return res.status(200).json({ greet: true, emailSent: false });
+    console.error('[birthday-greeting] send failed, releasing the claim:', e.message);
+    // Give the year back, or this birthday is lost until next year over a
+    // transient failure.
+    await sb
+      .from('profiles')
+      .update({ birthday_promo_sent_year: previous })
+      .eq('id', user.id)
+      .then(({ error }) => {
+        if (error) console.error('[birthday-greeting] could not release the claim:', error.message);
+      });
+    return res.status(200).json({ greet: true, emailSent: false, reason: 'send-failed' });
   }
 }
 

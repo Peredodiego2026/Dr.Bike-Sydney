@@ -67,10 +67,15 @@ describe('the panel', () => {
   // perspective has to sit on the ancestor - on the card itself it would apply
   // to the card's children instead.
   it('folds down in 3D from its top edge', () => {
-    expect(mainCss).toMatch(/\.bday-scrim\s*\{[^}]*perspective: 1200px/s);
+    expect(mainCss).toMatch(/\.bday-scrim\s*\{[^}]*perspective: 1100px/s);
     expect(mainCss).toMatch(/transform-origin: top center/);
-    expect(mainCss).toMatch(/transform: rotateX\(-82deg\)/);
+    expect(mainCss).toMatch(/transform: rotateX\(-88deg\) translateY\(-18px\) scale\(0\.96\)/);
     expect(mainCss).toMatch(/\.bday-scrim\.is-open \.bday-card\s*\{\s*transform: rotateX\(0deg\)/);
+    // preserve-3d is what makes it depth rather than a flat plate turning:
+    // without it the children collapse onto the card's own plane.
+    expect(mainCss).toMatch(/transform-style: preserve-3d/);
+    expect(mainCss).toMatch(/\.bday-card__emoji\s*\{[^}]*translateZ\(42px\)/s);
+    expect(mainCss).toMatch(/\.bday-card__title\s*\{[^}]*translateZ\(24px\)/s);
   });
 
   it('still appears when motion is reduced, just without the swing', () => {
@@ -163,12 +168,36 @@ describe('the server side cannot send twice', () => {
 
   // Two tabs opening at once would both pass a read-then-write check. The
   // stamp is conditional and runs FIRST, so the loser sends nothing.
-  it('stamps the year before sending, conditionally', () => {
+  it('claims the year before sending', () => {
     const stampAt = serverFn.indexOf('birthday_promo_sent_year: year');
     const sendAt = serverFn.indexOf('/api/send-email');
     expect(stampAt).toBeGreaterThan(-1);
     expect(stampAt).toBeLessThan(sendAt);
-    expect(serverFn).toMatch(/\.neq\('birthday_promo_sent_year', year\)/);
+  });
+
+  // In SQL, `column <> 2026` is NULL for a NULL column, so .neq() alone does
+  // NOT match - and NULL is what every first-time row holds. The claim matched
+  // zero rows and the code sent on every single visit.
+  it('the claim matches a NULL year, which is what a first-timer has', () => {
+    expect(serverFn).toMatch(/birthday_promo_sent_year\.is\.null,birthday_promo_sent_year\.neq\./);
+  });
+
+  // Without .select() a claim that matched nothing is indistinguishable from
+  // one that won, so a second tab would send a second email.
+  it('knows whether it actually won the claim', () => {
+    expect(serverFn).toMatch(/\.select\('id'\)/);
+    expect(serverFn).toMatch(/if \(!claimed\?\.length\)/);
+    expect(serverFn).toMatch(/reason: 'claimed-elsewhere'/);
+  });
+
+  // One failed send used to burn the whole year: the stamp stayed, the next
+  // visit read it and said "already sent", forever.
+  it('gives the year back if the send fails', () => {
+    expect(serverFn).toMatch(/const previous = profile\.birthday_promo_sent_year \?\? null;/);
+    expect(serverFn).toMatch(/\.update\(\{ birthday_promo_sent_year: previous \}\)/);
+    const releaseAt = serverFn.indexOf('birthday_promo_sent_year: previous');
+    const catchAt = serverFn.indexOf('} catch (e) {');
+    expect(releaseAt).toBeGreaterThan(catchAt);
   });
 
   it('greets without a second email when the cron already sent one', () => {
@@ -177,8 +206,35 @@ describe('the server side cannot send twice', () => {
     );
   });
 
-  it('reports failure instead of pretending', () => {
-    expect(serverFn).toMatch(/console\.error\('\[birthday-greeting\] send failed:'/);
-    expect(serverFn).toMatch(/greet: true, emailSent: false/);
+  it('reports failure instead of pretending, and says why', () => {
+    expect(serverFn).toMatch(/console\.error\('\[birthday-greeting\] send failed, releasing the claim:'/);
+    expect(serverFn).toMatch(/reason: 'send-failed'/);
+    expect(serverFn).toMatch(/reason: 'sent'/);
+  });
+
+  // A bare status number is not diagnosable three days later.
+  it('puts the upstream body in the log, not just a number', () => {
+    expect(serverFn).toMatch(/await r\.text\(\)/);
+  });
+});
+
+// Closing is its own gesture - lifting away and shrinking - not the entrance
+// run backwards.
+describe('the exit is animated too', () => {
+  it('uses a closing state rather than just dropping the open one', () => {
+    expect(clientFn).toMatch(/scrim\.classList\.add\('is-closing'\)/);
+    expect(mainCss).toMatch(/\.bday-scrim\.is-closing \.bday-card\s*\{[^}]*translateY\(-22px\) scale\(0\.94\)/s);
+  });
+
+  it('the content arrives staggered, after the card starts unfolding', () => {
+    expect(mainCss).toMatch(/\.bday-scrim\.is-open \.bday-card__emoji\s*\{[^}]*transition-delay: 0\.22s/s);
+    expect(mainCss).toMatch(/\.bday-scrim\.is-open \.bday-card__msg\s*\{[^}]*transition-delay: 0\.37s/s);
+  });
+
+  it('reduced motion drops the delays as well as the movement', () => {
+    const i = mainCss.indexOf('@media (prefers-reduced-motion: reduce)', mainCss.indexOf('.bday-scrim'));
+    const block = mainCss.slice(i, i + 700);
+    expect(block).toMatch(/transition-delay: 0s/);
+    expect(block).toMatch(/backdrop-filter: none/);
   });
 });
