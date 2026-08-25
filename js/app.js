@@ -558,16 +558,31 @@ function feeCheckResultHtml(zoneName, fee) {
 </div>`;
 }
 
+// Was a dead end: a magnifier, "we don't recognise that suburb", a phone
+// number and "try a different suburb". Somebody who typed their suburb into a
+// fee checker is interested, and we were sending them away with homework.
+//
+// It is a door now. Since PR #326 the booking runs to the end for these
+// addresses too and finishes on "Ask for my price" instead of a card - free,
+// and it reaches Diego with the service, date and address already filled in.
+// So the honest next step is "keep going", not "call us".
+//
+// NOTE: there is a second copy of this screen in js/landing-inline.js for the
+// desktop landing. Both were rewritten (this one on 2026-08-25, after Diego
+// found the old text still live on his phone AND on the desktop landing -
+// landing.html loads app.js too, so this file's version was the one showing on
+// both). If you change the wording here, change it there.
 function feeCheckNotCoveredHtml(suburbText) {
   return (
     createEmptyState(
-      '🔍',
-      "We don't recognise that suburb yet",
-      `Give us a call and we'll confirm if we can reach you: <a href="tel:+61433963250" style="color:var(--blue);font-weight:600">0433 963 250</a>`
+      '💬',
+      'We quote that area case by case',
+      "It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally."
     ) +
     `
-<div class="confirm-box__actions">
-  <button type="button" class="confirm-box__btn confirm-box__btn--go fee-check-again" style="width:100%">Try a different suburb</button>
+<div class="confirm-box__actions" style="flex-direction:column">
+  <button type="button" class="confirm-box__btn confirm-box__btn--go fee-check-continue" style="width:100%">${translateValue('Continue - book at no cost')}</button>
+  <button type="button" class="confirm-box__btn confirm-box__btn--cancel fee-check-again" style="width:100%;margin-top:8px">${translateValue('Try a different suburb')}</button>
 </div>`
   );
 }
