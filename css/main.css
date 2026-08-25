@@ -765,16 +765,38 @@ body {
   height: 1px;
   background: var(--color-border);
 }
+/* The card form is three boxes now - number on its own line, expiry and CVC
+   side by side (js/stripe.js builds the markup). This used to be ONE bordered
+   box holding Stripe's combined element, which showed only the card number
+   until a valid one was typed and then revealed the rest; on a phone that
+   reads as a form with missing fields. So the border moved from the wrapper
+   to each field. */
 .card-element {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.card-element__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.card-field {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  margin-bottom: var(--space-4);
   transition: border-color var(--transition-fast);
-  min-height: 44px;
+  /* Stripe's iframe is 16px type plus its own padding; this keeps an empty
+     field the same height as a filled one and clears the 44px touch target. */
+  min-height: 52px;
+  display: flex;
+  align-items: center;
 }
-.card-element:focus-within {
+.card-field > * {
+  width: 100%;
+}
+.card-field:focus-within {
   border-color: var(--color-primary);
 }
 .StripeElement {

@@ -4393,6 +4393,9 @@ function urlBase64ToUint8Array(base64String) {
 // Requests notification permission, subscribes via the service worker's push
 // manager, and saves the subscription on the client's profile so
 // notifyClientOfMechanicMessage (api/auth.js) can reach them.
+// Returns true only when a subscription was actually stored. Every path used
+// to return undefined, so the caller could not tell "enabled" from "the user
+// said no" - and it repainted the whole profile either way.
 async function enablePushNotifications() {
   if (
     !('Notification' in window) ||
@@ -4400,19 +4403,19 @@ async function enablePushNotifications() {
     !('PushManager' in window)
   ) {
     showToast('Push notifications are not supported on this browser', 'error');
-    return;
+    return false;
   }
   try {
     const perm = await Notification.requestPermission();
     if (perm !== 'granted') {
       showToast('Notification permission was not granted', 'error');
-      return;
+      return false;
     }
     const keyResp = await fetch('/api/auth?role=vapid-public-key');
     const { key } = await keyResp.json();
     if (!key) {
       showToast('Notifications are not set up yet - try again later', 'error');
-      return;
+      return false;
     }
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.subscribe({
@@ -4422,14 +4425,16 @@ async function enablePushNotifications() {
     const {
       data: { user },
     } = await sb.auth.getUser();
-    if (!user) return;
+    if (!user) return false;
     await sb
       .from('profiles')
       .update({ push_subscription: JSON.stringify(sub) })
       .eq('id', user.id);
     showToast('Notifications enabled!', 'success');
+    return true;
   } catch (e) {
     showToast('Could not enable notifications: ' + e.message, 'error');
+    return false;
   }
 }
 
@@ -4684,6 +4689,7 @@ async function renderProfile() {
             </select>
             <button id="bday-save" style="flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">${translateValue('Save')}</button>
           </div>
+          <div id="bday-status" style="display:${bdayDay && bdayMonth ? 'flex' : 'none'};align-items:center;gap:6px;margin-top:10px;font-size:13px;font-weight:600;color:var(--green)"><span aria-hidden="true">&#10003;</span><span>${translateValue('Saved')}</span></div>
         </div>
       </div>
 
@@ -4789,6 +4795,19 @@ async function renderProfile() {
       return;
     }
     showToast(translateValue('Saved - see you on the day'), 'success');
+    // The toast was the only feedback and it disappears after 3 seconds, so
+    // anyone who looked away could not tell whether the date had been stored
+    // - the field looks identical either way. This mark stays.
+    const status = screen.querySelector('#bday-status');
+    if (status) status.style.display = 'flex';
+  });
+
+  // Changing either select means the shown date is no longer the saved one.
+  ['#bday-day', '#bday-month'].forEach((sel) => {
+    screen.querySelector(sel)?.addEventListener('change', () => {
+      const status = screen.querySelector('#bday-status');
+      if (status) status.style.display = 'none';
+    });
   });
 
   screen.querySelector('#copy-code-btn').addEventListener('click', () => {
@@ -4893,9 +4912,18 @@ async function renderProfile() {
   screen.querySelector('#push-enable-btn')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     btn.disabled = true;
-    btn.textContent = 'Enabling...';
-    await enablePushNotifications();
-    renderProfile();
+    btn.textContent = translateValue('Enabling...');
+    const granted = await enablePushNotifications();
+    // renderProfile() ran unconditionally, and it repaints the screen as a
+    // loading spinner first. So SAYING NO wiped the profile to a blank page
+    // with an error toast floating over it - it read as a crash. Only the
+    // success case has anything new to show.
+    if (granted) {
+      renderProfile();
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = translateValue('Enable');
   });
 
   // Membership pause/resume/cancel
@@ -5472,7 +5500,7 @@ async function showBirthdayGreeting() {
   try {
     const { data } = await sb
       .from('profiles')
-      .select('full_name, birthday')
+      .select('full_name, birthday, birthday_promo_sent_year')
       .eq('id', user.id)
       .single();
     profile = data;
@@ -5484,6 +5512,13 @@ async function showBirthdayGreeting() {
   const first = String(profile.full_name || user.email || '')
     .trim()
     .split(/[\s@]/)[0];
+
+  // "Check your email" is a promise, and it was being made unconditionally.
+  // The cron runs once a day at 09:00 UTC - 19:00 in Sydney - so anyone who
+  // fills in their birthday later than that on the day itself gets the banner
+  // and no email. That is exactly what happened to Diego on 25-aug-2026. The
+  // cron stamps the year it sent in, so the banner can just ask.
+  const emailWentOut = Number(profile.birthday_promo_sent_year) === new Date().getFullYear();
 
   const box = document.createElement('div');
   box.id = 'birthday-greeting';
@@ -5500,7 +5535,9 @@ async function showBirthdayGreeting() {
         translateValue('Happy birthday, NAME!').replace('NAME', first)
       )}</div>
       <div style="font-size:13px;color:var(--amber);margin-top:2px">${translateValue(
-        'Check your email - there is something from us in there.'
+        emailWentOut
+          ? 'Check your email - there is something from us in there.'
+          : 'The whole Dr. Bike team wishes you a great one.'
       )}</div>
     </div>
     <button id="birthday-greeting-close" aria-label="${translateValue('Close')}" style="flex-shrink:0;min-width:44px;min-height:44px;border:none;background:none;font-size:20px;line-height:1;color:var(--amber);cursor:pointer;font-family:inherit">&times;</button>
@@ -5512,7 +5549,11 @@ async function showBirthdayGreeting() {
   const trustBar = document.getElementById('trust-badges');
   if (trustBar && trustBar.parentNode) {
     box.style.margin = '16px auto 0';
-    box.style.maxWidth = '900px';
+    // Hugging the text, not stretching. At a fixed 900px the greeting is a
+    // short line on the left and the close button 900px away on the right,
+    // with a lake of empty amber between them.
+    box.style.width = 'fit-content';
+    box.style.maxWidth = 'min(900px, calc(100% - 32px))';
     trustBar.insertAdjacentElement('afterend', box);
   } else {
     screen.prepend(box);

@@ -6102,3 +6102,66 @@ Verificado en `landing.html`: el orden dentro de `<main>` queda
 `trust-badges -> birthday-greeting -> section.hero`, y los cuatro colores
 resuelven a los hex de arriba.
 
+## 37. Cinco cosas que Diego encontro en su propio telefono (25-ago-2026)
+
+Probando el campo de cumpleanos recien salido, en la SPA y en la landing.
+
+### 1. El formulario de tarjeta mostraba solo el numero
+
+Era el elemento `card` combinado de Stripe, que revela los campos **de a uno**:
+se ve el numero, y vencimiento y CVC aparecen recien cuando escribis un numero
+valido. Stripe lo diseno asi, pero en un telefono se lee como un formulario al
+que le faltan dos campos.
+
+Pasa a los elementos separados - `cardNumber`, `cardExpiry`, `cardCvc` - en
+**tres cajas visibles**. Es la misma integracion: `confirmCardPayment` y
+`confirmCardSetup` reciben el elemento del numero y encuentran a los hermanos,
+siempre que los tres salgan de **la misma instancia** de `elements()`.
+
+El markup lo arma `js/stripe.js`, no cada llamador, para que los dos puntos de
+montaje (pantalla de pago y perfil) no puedan divergir. El borde se movio del
+contenedor a cada campo (`.card-field`).
+
+### 2. El zoom que quedaba, adentro del iframe de Stripe
+
+`css/fonts.css` fuerza 16px en todo input con puntero grueso, porque abajo de
+eso Safari en iPhone hace zoom a la pagina al enfocar y no vuelve. **Pero los
+campos de Stripe viven en un iframe de otro origen**, donde ninguna hoja de
+estilo nuestra llega. La unica entrada es el objeto `style` que se le pasa, y
+estaba en `15px`.
+
+### 3. Guardar el cumpleanos no dejaba rastro
+
+El unico feedback era un toast de 3 segundos. Quien miraba para otro lado no
+podia saber si se habia guardado: el campo se ve igual en los dos casos. Ahora
+hay una marca `✓ Guardado` que **queda**, arranca visible si ya habia una fecha
+guardada, y se borra al cambiar cualquiera de los dos selectores.
+
+### 4. Decir que NO a las notificaciones borraba la pantalla
+
+`renderProfile()` se llamaba pase lo que pase despues de pedir el permiso, y
+esa funcion **repinta la pantalla como spinner antes de consultar**. Asi que
+rechazar el permiso dejaba el perfil en blanco con un toast de error flotando
+en el medio - se lee como que la app se rompio.
+
+`enablePushNotifications()` devolvia `undefined` por todos los caminos, asi que
+quien la llamaba no podia distinguir "listo" de "el usuario dijo que no". Ahora
+devuelve booleano y solo se repinta cuando hay algo nuevo que mostrar.
+
+### 5. El banner prometia un email que nunca se mando
+
+Decia "revisa tu email" siempre. Pero el cron corre **09:00 UTC, que son las
+19:00 en Sydney**: quien carga su cumpleanos mas tarde ese mismo dia recibe el
+banner y ningun email. Es exactamente lo que le paso a Diego, que lo cargo
+20:05.
+
+El cron deja estampado el ano en que mando (`birthday_promo_sent_year`), asi
+que el banner ahora **pregunta**: si no coincide con el ano actual, saluda sin
+prometer nada.
+
+De paso, el ancho: a 900px fijos el saludo quedaba corto a la izquierda y la ×
+a 900px de distancia, con un lago de ambar vacio en el medio. Ahora es
+`fit-content`.
+
+14 tests nuevos.
+
