@@ -355,6 +355,16 @@ const dict = {
     'No charge - we check your address and reply personally.':
       'Sin costo - revisamos tu dirección y te respondemos personalmente.',
     'Ask for my price': 'Consultar mi precio',
+    'Birthday': 'Cumpleaños',
+    'Tell us the day and we\'ll send you something on it. We don\'t ask for the year.': 'Decinos el día y te mandamos algo. No te pedimos el año.',
+    'Day': 'Día',
+    'Month': 'Mes',
+    'Pick a day and a month': 'Elegí un día y un mes',
+    'That day does not exist in that month': 'Ese día no existe en ese mes',
+    'Could not save your birthday': 'No pudimos guardar tu cumpleaños',
+    'Saved - see you on the day': 'Guardado - nos vemos ese día',
+    'Happy birthday, NAME!': '¡Feliz cumpleaños, NAME!',
+    'Check your email - there is something from us in there.': 'Revisá tu email, que te dejamos algo.',
     'We need to price this one by hand': 'Este lo tenemos que cotizar a mano',
     'We sent your enquiry to the mechanic': 'Le enviamos tu consulta al mecánico',
     "We're checking your address and will get back to you shortly.":
@@ -1730,6 +1740,16 @@ const dict = {
     'No charge - we check your address and reply personally.':
       '不收费 - 我们会核实您的地址并亲自回复。',
     'Ask for my price': '咨询我的价格',
+    'Birthday': '生日',
+    'Tell us the day and we\'ll send you something on it. We don\'t ask for the year.': '告诉我们日期，那天我们会送你一份礼物。我们不需要年份。',
+    'Day': '日',
+    'Month': '月',
+    'Pick a day and a month': '请选择日期和月份',
+    'That day does not exist in that month': '该月没有这一天',
+    'Could not save your birthday': '无法保存你的生日',
+    'Saved - see you on the day': '已保存，那天见',
+    'Happy birthday, NAME!': '生日快乐，NAME！',
+    'Check your email - there is something from us in there.': '查收邮件，我们给你留了东西。',
     'We need to price this one by hand': '这个需要我们人工报价',
     'We sent your enquiry to the mechanic': '您的咨询已发送给技工',
     "We're checking your address and will get back to you shortly.":

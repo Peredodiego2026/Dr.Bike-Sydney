@@ -4434,6 +4434,51 @@ async function enablePushNotifications() {
 }
 
 // ── Profile + Referral ────────────────────────────────────────────────
+// The birthday campaign in api/send-cron.js has existed, been scheduled and
+// been translated since before there was any way to fill this in. `profiles.
+// birthday` was NULL for everyone, the cron's `.not('birthday','is',null)`
+// matched zero rows, and it had therefore never sent a single email - found
+// on 25-aug-2026, which was Diego's own birthday.
+//
+// Only the day and month are ever read (the cron splits the date and compares
+// mm/dd), so the year is not asked for. It still has to go into a DATE column,
+// so a sentinel year is stored. 1904 is deliberate: it is a leap year, so
+// somebody born on 29 February can be saved.
+const BIRTHDAY_SENTINEL_YEAR = 1904;
+
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+// True when today is this profile's birthday.
+//
+// The date comes from the DEVICE's local calendar via localDateStr, not from
+// UTC - `.toISOString()` would put anyone in Sydney a day behind between
+// midnight and 10am. The greeting therefore lands on the reader's own date,
+// which for a birthday is the right one even if they are travelling. The
+// EMAIL is a separate decision: that cron runs on the server's clock.
+function isBirthdayToday(birthday) {
+  if (!birthday) return false;
+  const [, mm, dd] = String(birthday).split('-');
+  if (!mm || !dd) return false;
+  // localDateStr takes a Date - calling it bare throws, and that throw is
+  // invisible: the caller is not awaited, so it becomes an unhandled
+  // rejection and the greeting simply never appears.
+  const [, tMm, tDd] = localDateStr(new Date()).split('-');
+  return mm === tMm && dd === tDd;
+}
+
 async function renderProfile() {
   const screen = document.querySelector('[data-screen="profile"]');
   if (!screen) return;
@@ -4465,12 +4510,13 @@ async function renderProfile() {
     referralCount = 0,
     membershipStatus = null,
     membershipPlan = null,
-    savedCardId = null;
+    savedCardId = null,
+    birthday = null;
   try {
     const { data: profile } = await sb
       .from('profiles')
       .select(
-        'referral_code, referral_credits, referral_count, membership_status, membership_plan, membership_started_at, stripe_default_payment_method_id'
+        'referral_code, referral_credits, referral_count, membership_status, membership_plan, membership_started_at, stripe_default_payment_method_id, birthday'
       )
       .eq('id', user.id)
       .single();
@@ -4480,6 +4526,7 @@ async function renderProfile() {
       membershipStatus = profile.membership_status || null;
       membershipPlan = profile.membership_plan || null;
       savedCardId = profile.stripe_default_payment_method_id || null;
+      birthday = profile.birthday || null;
       if (!profile.referral_code) {
         const { error: refCodeErr } = await sb
           .from('profiles')
@@ -4490,6 +4537,13 @@ async function renderProfile() {
       }
     }
   } catch {}
+
+  // Stored as a DATE, but only the day and month are ever used - see
+  // BIRTHDAY_SENTINEL_YEAR. Asking for the year would be more personal data
+  // for no purpose.
+  const [, bdayMmStr, bdayDdStr] = (birthday || '').split('-');
+  const bdayMonth = Number(bdayMmStr) || 0;
+  const bdayDay = Number(bdayDdStr) || 0;
 
   const shareMsg = encodeURIComponent(
     'Get $15 off your first Dr. Bike Sydney service! Use my code ' +
@@ -4600,6 +4654,32 @@ async function renderProfile() {
       </div>
 
       <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Birthday</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+          <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Tell us the day and we'll send you something on it. We don't ask for the year.</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="bday-day" aria-label="Day" style="flex:1;min-height:44px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:15px;font-family:inherit">
+              <option value="">${translateValue('Day')}</option>
+              ${Array.from({ length: 31 }, (_, i) => i + 1)
+                .map(
+                  (d) =>
+                    `<option value="${d}"${bdayDay === d ? ' selected' : ''}>${d}</option>`
+                )
+                .join('')}
+            </select>
+            <select id="bday-month" aria-label="Month" style="flex:2;min-height:44px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:15px;font-family:inherit">
+              <option value="">${translateValue('Month')}</option>
+              ${MONTH_NAMES.map(
+                (m, i) =>
+                  `<option value="${i + 1}"${bdayMonth === i + 1 ? ' selected' : ''}>${translateValue(m)}</option>`
+              ).join('')}
+            </select>
+            <button id="bday-save" style="flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">${translateValue('Save')}</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
         <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Payment Method</div>
         <div id="card-on-file-section" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
           ${
@@ -4671,6 +4751,36 @@ async function renderProfile() {
         });
       renderProfile();
     });
+  });
+
+  screen.querySelector('#bday-save')?.addEventListener('click', async () => {
+    const btn = screen.querySelector('#bday-save');
+    const d = Number(screen.querySelector('#bday-day').value);
+    const m = Number(screen.querySelector('#bday-month').value);
+    if (!d || !m) {
+      showToast(translateValue('Pick a day and a month'), 'error');
+      return;
+    }
+    // 31 April does not exist. Date rolls it over to 1 May silently, so the
+    // check is explicit: build the date and see if it came back as the one
+    // that was asked for.
+    const probe = new Date(BIRTHDAY_SENTINEL_YEAR, m - 1, d);
+    if (probe.getMonth() !== m - 1 || probe.getDate() !== d) {
+      showToast(translateValue('That day does not exist in that month'), 'error');
+      return;
+    }
+    btn.disabled = true;
+    const value = `${BIRTHDAY_SENTINEL_YEAR}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const { error } = await sb.from('profiles').update({ birthday: value }).eq('id', user.id);
+    btn.disabled = false;
+    if (error) {
+      // Not swallowed: the column is added by scripts/add-birthday-to-profiles.sql,
+      // which is run by hand, so "column does not exist" is a real possibility
+      // and the message is the only way anyone would find out.
+      showToast(translateValue('Could not save your birthday') + ': ' + error.message, 'error');
+      return;
+    }
+    showToast(translateValue('Saved - see you on the day'), 'success');
   });
 
   screen.querySelector('#copy-code-btn').addEventListener('click', () => {
@@ -5320,6 +5430,80 @@ async function renderMyBikes() {
   });
 }
 
+// The birthday greeting on the home screen.
+//
+// Diego's ask on his own birthday, the same day we found out the email
+// campaign had never fired: "que lo salude la app por su cumpleaños por su
+// nombre". The email does the discount; this is the app noticing.
+//
+// Shown once per year per device. Somebody who opens the app four times on
+// their birthday should be greeted, not nagged.
+const BIRTHDAY_SEEN_KEY = 'drbike-birthday-greeted-year';
+
+async function showBirthdayGreeting() {
+  const screen = document.querySelector('[data-screen="home"]');
+  if (!screen || screen.querySelector('#birthday-greeting')) return;
+
+  const year = new Date().getFullYear();
+  try {
+    if (localStorage.getItem(BIRTHDAY_SEEN_KEY) === String(year)) return;
+  } catch {
+    /* private mode: greet every time rather than not at all */
+  }
+
+  let user = null;
+  try {
+    const { data } = await sb.auth.getUser();
+    user = data?.user || null;
+  } catch {
+    return;
+  }
+  if (!user) return;
+
+  let profile = null;
+  try {
+    const { data } = await sb
+      .from('profiles')
+      .select('full_name, birthday')
+      .eq('id', user.id)
+      .single();
+    profile = data;
+  } catch {
+    return;
+  }
+  if (!isBirthdayToday(profile?.birthday)) return;
+
+  const first = String(profile.full_name || user.email || '')
+    .trim()
+    .split(/[\s@]/)[0];
+
+  const box = document.createElement('div');
+  box.id = 'birthday-greeting';
+  box.style.cssText =
+    'display:flex;align-items:center;gap:12px;background:var(--blue-lt);border:1px solid var(--blue-edge);border-radius:14px;padding:14px 16px;margin:12px 16px 0';
+  box.innerHTML = `
+    <span style="font-size:26px;line-height:1" aria-hidden="true">🎂</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:15px;font-weight:800;color:var(--blue-dark)">${escapeHtml(
+        translateValue('Happy birthday, NAME!').replace('NAME', first)
+      )}</div>
+      <div style="font-size:13px;color:var(--gray);margin-top:2px">${translateValue(
+        'Check your email - there is something from us in there.'
+      )}</div>
+    </div>
+    <button id="birthday-greeting-close" aria-label="${translateValue('Close')}" style="flex-shrink:0;min-width:44px;min-height:44px;border:none;background:none;font-size:20px;line-height:1;color:var(--gray);cursor:pointer;font-family:inherit">&times;</button>
+  `;
+  screen.prepend(box);
+  box.querySelector('#birthday-greeting-close').addEventListener('click', () => {
+    try {
+      localStorage.setItem(BIRTHDAY_SEEN_KEY, String(year));
+    } catch {
+      /* nothing to do - it just shows again next time */
+    }
+    box.remove();
+  });
+}
+
 async function updateHomeNav() {
   const targets = [
     { label: 'home-nav-auth-label', btn: 'home-nav-auth-btn' },
@@ -5385,7 +5569,10 @@ document.addEventListener('screenchange', ({ detail }) => {
   if (detail.route === 'my-bookings') renderMyBookings();
   if (detail.route === 'profile') renderProfile();
   if (detail.route === 'my-bikes') renderMyBikes();
-  if (detail.route === 'home') updateHomeNav();
+  if (detail.route === 'home') {
+    updateHomeNav();
+    showBirthdayGreeting();
+  }
 });
 
 // ── AI Bike Diagnosis ────────────────────────────────────────────────────────
