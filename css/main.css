@@ -1511,3 +1511,97 @@ body {
   border: 1.5px solid var(--red);
   color: var(--white);
 }
+
+/* ── Birthday modal ─────────────────────────────────────────────────────────
+   A panel that folds down from the top over a dimmed page, six seconds after
+   arrival. It replaces an inline amber strip under the header, which read as
+   one more notification bar and was easy to scroll past on the day it matters.
+
+   Colours come from the amber ramp and the scrim is mixed from --navy, so
+   there is no new hex here for scripts/color-check.mjs to count. */
+.bday-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  background: color-mix(in srgb, var(--navy) 55%, transparent);
+  /* The fold needs a vanishing point on the ANCESTOR - perspective on the card
+     itself would apply to its children instead of to the card. */
+  perspective: 1200px;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+.bday-scrim.is-open {
+  opacity: 1;
+}
+.bday-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--amber-lt);
+  border: 1px solid var(--amber-edge);
+  border-radius: 16px;
+  padding: 30px 24px 26px;
+  text-align: center;
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--navy) 38%, transparent);
+  transform-origin: top center;
+  transform: rotateX(-82deg);
+  opacity: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1.15, 0.36, 1),
+    opacity 0.3s ease;
+}
+.bday-scrim.is-open .bday-card {
+  transform: rotateX(0deg);
+  opacity: 1;
+}
+.bday-card__emoji {
+  font-size: 44px;
+  line-height: 1;
+  display: block;
+  margin-bottom: 12px;
+}
+.bday-card__title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--amber-ink);
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+.bday-card__msg {
+  font-size: 14px;
+  color: var(--amber);
+  margin: 0;
+  line-height: 1.55;
+}
+.bday-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  color: var(--amber);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 10px;
+}
+.bday-close:focus-visible {
+  outline: 2px solid var(--amber-ink);
+  outline-offset: -2px;
+}
+/* Reduced motion means no MOVEMENT, not no modal: it still fades in, it just
+   does not swing down. */
+@media (prefers-reduced-motion: reduce) {
+  .bday-card,
+  .bday-scrim.is-open .bday-card {
+    transform: none;
+    transition: opacity 0.2s ease;
+  }
+}

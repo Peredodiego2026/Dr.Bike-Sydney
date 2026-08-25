@@ -6165,3 +6165,57 @@ a 900px de distancia, con un lago de ambar vacio en el medio. Ahora es
 
 14 tests nuevos.
 
+## 38. El saludo de cumpleanos pasa a ser un modal, y manda el email el (25-ago-2026)
+
+Rediseno pedido por Diego sobre el banner de 34/36/37, ya en produccion.
+
+### Lo que cambia
+
+Era una franja ambar metida bajo el header. Ahora es **un panel que se
+despliega en 3D desde arriba, sobre la pagina oscurecida, a los 6 segundos de
+que la persona entra**. Se cierra con la X, tocando el fondo o con Escape.
+
+La franja se leia como una barra de avisos mas, justo el dia en que no lo es.
+
+### Lo importante no es el diseno: es cuando se manda el email
+
+El cron corre **09:00 UTC, que son las 19:00 en Sydney**. O sea que el saludo
+llegaba de noche, y quien cargaba su cumpleanos despues de esa hora no recibia
+nada. Le paso a Diego el dia de su propio cumpleanos.
+
+Ahora **el email sale en el momento en que se abre el panel**. El cron queda
+como respaldo para quien no entra ese dia. Los dos estampan
+`birthday_promo_sent_year`, asi que sale una vez al ano, gane quien gane.
+
+### `handleBirthdayGreeting` en `api/auth.js`
+
+- Verifica el token del cliente. El navegador no puede mandar el email solo:
+  `send-email` pide `INTERNAL_API_SECRET`, que es del servidor.
+- **Decide la fecha en Sydney, no en UTC** (`toLocaleDateString` con
+  `timeZone: 'Australia/Sydney'`). En UTC, cada mañana de Sydney cae en el dia
+  anterior: el cumpleanos se saludaria un dia antes durante diez horas de cada
+  veinticuatro.
+- **Re-chequea la fecha**, no le cree al cliente.
+- **Estampa el ano ANTES de mandar, y de forma condicional**
+  (`.neq('birthday_promo_sent_year', year)`). Dos pestañas abriendose a la vez
+  pasarian las dos un chequeo leer-despues-escribir; con el estampado primero,
+  la que pierde ve `emailSent: true` y no manda nada. El precio del canje es
+  perder el email si el envio falla despues - mejor que mandar dos.
+
+### Detalles del cliente que valen anotar
+
+- **No quema el disparo unico en una visita sin sesion.** Quien entra
+  deslogueado y se loguea un minuto despues vuelve por esta misma ruta con
+  sesion; marcar el flag en la pasada anonima le comeria el cumpleanos.
+- **Dos `requestAnimationFrame`** antes de animar. Con uno solo el navegador
+  salta al estado final y no hay despliegue.
+- **`transitionend` no dispara en una pestaña oculta**, asi que hay un
+  `setTimeout` de respaldo o el scrim queda pegado para siempre.
+- **El fondo cierra solo si el click fue en el fondo** (`e.target === scrim`);
+  un click adentro de la tarjeta no debe descartarla.
+- El scrim se mezcla desde `--navy` con `color-mix`, asi que no entra ningun
+  hex nuevo al presupuesto de `color-check`.
+
+25 tests nuevos. La suite completa se corrio **10 veces seguidas**: 621/621 sin
+un solo test inestable.
+

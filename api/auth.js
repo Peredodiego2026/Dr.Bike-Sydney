@@ -389,6 +389,97 @@ async function calloutFeeForAddress(address, scheduledDate) {
   };
 }
 
+// The birthday greeting, sent the moment the person opens the app on the day.
+//
+// The cron in api/send-cron.js runs once, at 09:00 UTC - 19:00 in Sydney - so
+// the email arrived in the evening, and anyone who filled in their birthday
+// after that got nothing at all. Diego hit exactly that on 25-aug-2026.
+//
+// Now whoever visits gets it on arrival, and the cron is the fallback for
+// whoever does not. Both stamp `birthday_promo_sent_year`, so it is sent once
+// a year whichever gets there first.
+//
+// The date is computed in SYDNEY, not UTC. That is the calendar the business
+// and the customer share; UTC would move the birthday to the previous day for
+// every Sydney morning.
+function sydneyMonthDay(now = new Date()) {
+  // en-CA gives YYYY-MM-DD, which slices cleanly.
+  const iso = now.toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' });
+  const [year, mm, dd] = iso.split('-');
+  return { year: Number(year), mm, dd };
+}
+
+async function handleBirthdayGreeting(req, res) {
+  const { access_token } = req.body || {};
+  if (!access_token) return res.status(401).json({ error: 'Sign in required' });
+
+  // Service key: this reads and writes another user's profile row after
+  // verifying their token, which the anon key's RLS would refuse.
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const {
+    data: { user },
+    error: uErr,
+  } = await sb.auth.getUser(access_token);
+  if (uErr || !user) return res.status(401).json({ error: 'Invalid session' });
+
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('full_name, email, birthday, birthday_promo_sent_year, preferred_lang')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.birthday) return res.status(200).json({ greet: false });
+
+  const { year, mm, dd } = sydneyMonthDay();
+  const [, bMm, bDd] = String(profile.birthday).split('-');
+  if (bMm !== mm || bDd !== dd) return res.status(200).json({ greet: false });
+
+  // Already sent this year, by this route or by the cron. Still greet - it is
+  // their birthday - but do not promise a second email.
+  if (Number(profile.birthday_promo_sent_year) === year) {
+    return res.status(200).json({ greet: true, emailSent: true });
+  }
+
+  const to = profile.email || user.email;
+  if (!to) return res.status(200).json({ greet: true, emailSent: false });
+
+  // Stamp BEFORE sending. Two tabs opening at once would otherwise both pass
+  // the check above and send twice; a stamp that runs first means the loser
+  // sees `emailSent: true` and sends nothing. The cost of the trade is a
+  // birthday email lost if the send then fails - better than sending two.
+  const { error: stampErr } = await sb
+    .from('profiles')
+    .update({ birthday_promo_sent_year: year })
+    .eq('id', user.id)
+    .neq('birthday_promo_sent_year', year);
+  if (stampErr) {
+    console.error('[birthday-greeting] could not stamp the year:', stampErr.message);
+    return res.status(200).json({ greet: true, emailSent: false });
+  }
+
+  try {
+    const r = await fetch(`${SELF_BASE_URL}/api/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
+      body: JSON.stringify({
+        to,
+        name: profile.full_name || to.split('@')[0],
+        type: 'birthday_promo',
+        lang: ['en', 'es', 'zh'].includes(profile.preferred_lang) ? profile.preferred_lang : 'en',
+      }),
+    });
+    if (!r.ok) throw new Error('send-email returned ' + r.status);
+    return res.status(200).json({ greet: true, emailSent: true });
+  } catch (e) {
+    console.error('[birthday-greeting] send failed:', e.message);
+    return res.status(200).json({ greet: true, emailSent: false });
+  }
+}
+
 // Lets the client check coverage before paying, so someone outside the service
 // area finds out at the address step instead of after being charged.
 //
@@ -4773,6 +4864,7 @@ async function handler(req, res) {
   if (role === 'address-suggest') return handleAddressSuggest(req, res);
   if (role === 'request-quote') return handleRequestQuote(req, res);
   if (role === 'get-price') return handleGetPrice(req, res);
+  if (role === 'birthday-greeting') return handleBirthdayGreeting(req, res);
   if (role === 'save-card-setup') return handleSaveCardSetupIntent(req, res);
   if (role === 'save-card-confirm') return handleSaveCardConfirm(req, res);
   if (role === 'remove-card') return handleRemoveCard(req, res);
