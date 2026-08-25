@@ -231,3 +231,13 @@ describe('the card face carries the brand', () => {
   });
 });
 
+
+// Two things Diego flagged on the live version.
+describe('the monogram is centred, not cornered', () => {
+  it('sits in the middle of the card', () => {
+    expect(mainCss).toMatch(/\.gift-card3d__mark\s*\{[^}]*top: 50%/s);
+    expect(mainCss).toMatch(/\.gift-card3d__mark\s*\{[^}]*transform: translate\(-50%, -50%\)/s);
+    // Jammed against two edges at once it was cropped twice and read as a bug.
+    expect(mainCss).not.toMatch(/\.gift-card3d__mark\s*\{[^}]*right: -26px/s);
+  });
+});

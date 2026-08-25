@@ -6365,3 +6365,60 @@ Los colores salen todos de tokens (`--blue-dark`, `--blue`, `--blue-deep`,
 8 tests nuevos, incluido uno que verifica que **no vuelva a entrar una imagen de
 fondo** (`url(` en el bloque de la tarjeta).
 
+## 43. El email de cumpleanos: blanco sobre naranja no se leia (25-ago-2026)
+
+Diego: *"el mail se ve muy aburrido y no se leen las letras blancas en el fondo
+naranjo"*. Lo segundo no era estetica.
+
+### El contraste, medido
+
+`header()` pinta el texto en **blanco** sobre el color que le pasen. El de
+cumpleanos pasaba `#F59E0B`:
+
+| fondo | blanco encima | |
+|---|---|---|
+| `#0D1F3C` | 16.43:1 | ok |
+| `#0A58CA` | 6.44:1 | ok |
+| `#7C3AED` | 5.70:1 | ok |
+| `#CF2020` | 5.41:1 | ok |
+| `#2563EB` | 5.17:1 | ok |
+| `#B45309` | 5.02:1 | ok |
+| `#15803D` | 5.02:1 | ok |
+| **`#F59E0B`** | **2.15:1** | **FALLA** |
+
+Se midieron **los ocho** colores de cabecera, no solo el que Diego vio. `#F59E0B`
+era el unico que fallaba, y aparecia **4 veces**: dos cabeceras y **los dos
+botones de accion** - que es el elemento que mas importa, y que Diego no llego a
+mencionar. Pasa a `#B45309`, el mismo naranja mas profundo.
+
+La linea de la marca en la cabecera estaba en `rgba(255,255,255,0.6)`: 1.4:1
+sobre el ambar y ~3.1:1 incluso sobre el azul. Son 11px en mayusculas, que para
+WCAG es **texto normal** - el minimo es 4.5:1, no 3:1.
+
+### Lo aburrido
+
+El cupon era una caja tintada plana con el monto, el codigo y cuatro lineas de
+condiciones **casi al mismo peso**: nada guiaba la vista. Ahora es un ticket
+navy con el valor a 52px, una perforacion punteada y el codigo en su mitad.
+
+Se armo en **una sola celda** y no en tres: `color-check` bloqueo la primera
+version por 2 hex de mas, y los emails no pueden usar tokens (ningun cliente de
+correo soporta variables CSS). Reducir el markup fue la salida correcta;
+**subir el presupuesto no.**
+
+Llave nueva: `Code`, traducida a es y zh. Se verifico que las **8 cadenas** del
+email siguen existiendo en el cuerpo Y en el diccionario - se reescribio el
+bloque entero y las traducciones se aplican por reemplazo exacto de texto.
+
+**Hueco que queda:** `scripts/i18n-check.mjs` no lee `api/`, asi que ninguna
+cadena de email esta cubierta por el checker.
+
+## 44. El monograma de la gift card, al centro (25-ago-2026)
+
+Metido contra la esquina superior derecha, el logo quedaba **recortado por dos
+bordes a la vez** y se leia como un error, no como la cara de la tarjeta. Ahora
+va centrado, corrido apenas a la derecha para acompañar al monto en vez de
+taparlo.
+
+6 tests nuevos. Suite completa **10 veces seguidas**: 671/671.
+

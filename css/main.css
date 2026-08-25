@@ -1799,9 +1799,14 @@ body {
    underneath keeps the lower-left corner dark enough for the names to read. */
 .gift-card3d__mark {
   position: absolute;
-  top: -18px;
-  right: -26px;
-  width: 190px;
+  /* Centred, not tucked into the corner - jammed against the top-right the
+     monogram was cropped by two edges at once and read as a mistake rather
+     than as the card's face. Nudged right of centre so it sits beside the
+     amount instead of directly behind it. */
+  top: 50%;
+  left: 56%;
+  transform: translate(-50%, -50%);
+  width: 168px;
   height: auto;
   opacity: 0.17;
   filter: brightness(0) invert(1);

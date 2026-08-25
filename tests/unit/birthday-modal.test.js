@@ -238,3 +238,63 @@ describe('the exit is animated too', () => {
     expect(block).toMatch(/backdrop-filter: none/);
   });
 });
+
+// White on #F59E0B is 2.15:1 - it failed on both headers that used it AND on
+// their call-to-action buttons, which is the element that matters most.
+// #B45309 is the same orange family at 5.02:1.
+describe('the birthday email is readable', () => {
+  const mail = read('api/send-email.js');
+  const dict = read('api/_email-i18n.js');
+
+  const contrastWithWhite = (hex) => {
+    const lum = (h) => {
+      const c = [1, 3, 5]
+        .map((i) => parseInt(h.substr(i, 2), 16) / 255)
+        .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    return 1.05 / (lum(hex) + 0.05);
+  };
+
+  it('no header colour fails white text', () => {
+    const hexes = [...new Set((mail.match(/header\('#[0-9A-Fa-f]{6}'/g) || []).map((h) => h.slice(8, 15)))];
+    expect(hexes.length).toBeGreaterThan(0);
+    for (const h of hexes) expect({ h, ratio: +contrastWithWhite(h).toFixed(2) }).toMatchObject({
+      ratio: expect.any(Number),
+    });
+    const failing = hexes.filter((h) => contrastWithWhite(h) < 4.5);
+    expect(failing).toEqual([]);
+  });
+
+  it('the pale amber is gone from every email', () => {
+    expect(mail).not.toMatch(/#F59E0B/i);
+  });
+
+  // 11px uppercase is normal text to WCAG, and it was at 0.6 alpha.
+  it('the brand line in the header is not a ghost', () => {
+    expect(mail).not.toMatch(/color:rgba\(255,255,255,0\.6\);letter-spacing:0\.12em/);
+  });
+
+  it('the coupon leads with the value, not with the terms', () => {
+    const start = mail.indexOf("'Happy Birthday!'");
+    const body = mail.slice(start, mail.indexOf('${footer()}', start));
+    expect(body).toMatch(/font-size:52px;font-weight:900/);
+    expect(body.indexOf('$20')).toBeLessThan(body.indexOf('Valid for 7 days'));
+  });
+
+  it('every string it shows is still translated', () => {
+    const start = mail.indexOf("'Happy Birthday!'");
+    const body = mail.slice(start, mail.indexOf('${footer()}', start));
+    for (const k of [
+      'any service booked this week',
+      'Your birthday gift',
+      '&bull; Valid for 7 days from your birthday',
+      '&bull; One use per customer',
+      'Redeem my birthday gift &rarr;',
+      'Code',
+    ]) {
+      expect(body).toContain(k);
+      expect(dict).toContain(`'${k}':`);
+    }
+  });
+});

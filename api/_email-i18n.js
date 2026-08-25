@@ -159,6 +159,7 @@ const dict = {
     ', wishing you an amazing birthday from the whole Dr. Bike team! 🚲':
       ', ¡todo el equipo de Dr. Bike te desea un feliz cumpleaños! 🚲',
     'Your birthday gift': 'Tu regalo de cumpleaños',
+    'Code': 'Código',
     '&bull; Valid for 7 days from your birthday': '&bull; Válido por 7 días desde tu cumpleaños',
     '&bull; Applies to any service $109+': '&bull; Aplica a cualquier servicio de $109 o más',
     '&bull; Enter code at checkout': '&bull; Ingresa el código al pagar',
@@ -286,6 +287,7 @@ const dict = {
     ', wishing you an amazing birthday from the whole Dr. Bike team! 🚲':
       '，Dr. Bike 全体团队祝您生日快乐！🚲',
     'Your birthday gift': '您的生日礼物',
+    'Code': '代码',
     '&bull; Valid for 7 days from your birthday': '&bull; 自生日起 7 天内有效',
     '&bull; Applies to any service $109+': '&bull; 适用于 $109 及以上的任意服务',
     '&bull; Enter code at checkout': '&bull; 结算时输入优惠码',

@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     <div style="font-family:Inter,Arial,sans-serif;max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
     <div style="background:${color};padding:32px 28px;text-align:center">
       <div style="font-size:38px;margin-bottom:8px">${emoji}</div>
-      <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Dr. Bike Sydney</div>
+      <div style="font-size:11px;font-weight:600;color:#fff;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:6px;opacity:0.92">Dr. Bike Sydney</div>
       <div style="font-size:22px;font-weight:800;color:#fff">${title}</div>
     </div>`;
 
@@ -196,14 +196,14 @@ export default async function handler(req, res) {
     },
     review_request: {
       subject: `⭐ How was your ${service} with Dr. Bike?`,
-      html: `${header('#F59E0B', '⭐', 'How was your service?')}
+      html: `${header('#B45309', '⭐', 'How was your service?')}
         <div style="padding:32px 28px">
           <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your <strong>${service}</strong> is complete! We'd love to hear how it went.</p>
           <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
             <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 12px">Rate your experience</p>
             <div style="font-size:32px;letter-spacing:4px">⭐⭐⭐⭐⭐</div>
           </div>
-          <a href="https://drbikesydney.com.au/?review=${bookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Leave a review →</a>
+          <a href="https://drbikesydney.com.au/?review=${bookingId}" style="display:block;background:#B45309;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Leave a review →</a>
           <p style="font-size:12px;color:#94A3B8;text-align:center;margin:0">It takes less than 30 seconds and helps other Sydney cyclists find us 🙏</p>
         </div>${footer()}`,
     },
@@ -361,29 +361,44 @@ export default async function handler(req, res) {
     },
     birthday_promo: {
       subject: `🎂 Happy Birthday, ${name}! A gift from Dr. Bike Sydney`,
-      html: `${header('#F59E0B', '🎂', 'Happy Birthday!')}
+      html: `${header('#B45309', '🎂', 'Happy Birthday!')}
         <div style="padding:32px 28px">
-          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, wishing you an amazing birthday from the whole Dr. Bike team! 🚲</p>
-          <div style="background:#FFFBEB;border-radius:16px;padding:28px;margin-bottom:24px;text-align:center;border:2px dashed #FCD34D">
-            <div style="font-size:42px;margin-bottom:8px">🎁</div>
-            <div style="font-size:13px;color:#B45309;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">Your birthday gift</div>
-            <div style="font-size:32px;font-weight:900;color:#B45309;margin-bottom:4px">$20 OFF</div>
-            <div style="font-size:13px;color:#B45309;margin-bottom:16px;opacity:0.8">any service booked this week</div>
-            <div style="background:#fff;border-radius:10px;padding:10px 20px;display:inline-block;border:2px solid #FCD34D">
-              <span style="font-size:20px;font-weight:900;color:#0D1F3C;letter-spacing:0.16em">BDAY20</span>
-            </div>
-          </div>
-          <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:24px">
-            <p style="font-size:12px;color:#475569;margin:0;line-height:1.8">
-              &bull; Valid for 7 days from your birthday<br>
-              &bull; Applies to any service $109+<br>
-              &bull; One use per customer<br>
-              &bull; Enter code at checkout
-            </p>
-          </div>
-          <a href="https://drbikesydney.com.au/?coupon=BDAY20" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Redeem my birthday gift &rarr;</a>
-          <p style="font-size:12px;color:#94A3B8;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; Mon&ndash;Sat</p>
-        </div>${footer()}`,
+          <p style="color:#475569;font-size:15px;margin:0 0 22px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, wishing you an amazing birthday from the whole Dr. Bike team! 🚲</p>
+
+          <!-- The coupon reads as a torn ticket: a dark stub carrying the value,
+               a perforation, and the code on the tear-off half. The flat tinted
+               box it replaced put the amount, the code and four lines of terms
+               at almost the same weight, so nothing led. -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;margin-bottom:22px">
+            <tr>
+              <td style="background:#0D1F3C;border-radius:16px;padding:26px 24px 24px;text-align:center">
+                <div style="font-size:11px;font-weight:700;color:#FCD34D;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:10px">Your birthday gift</div>
+                <div style="font-size:52px;font-weight:900;color:#fff;line-height:1;letter-spacing:-0.02em">$20 <span style="font-size:28px;letter-spacing:0.02em">OFF</span></div>
+                <div style="font-size:13px;color:#94A3B8;margin-top:8px">any service booked this week</div>
+                <div style="border-top:2px dashed #94A3B8;opacity:0.4;margin:20px 0 18px;font-size:0;line-height:0">&nbsp;</div>
+                <div style="font-size:11px;color:#94A3B8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">Code</div>
+                <div style="display:inline-block;background:#FFFBEB;border-radius:10px;padding:12px 26px">
+                  <span style="font-size:22px;font-weight:900;color:#0D1F3C;letter-spacing:0.2em">BDAY20</span>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <a href="https://drbikesydney.com.au/?coupon=BDAY20" style="display:block;background:#B45309;color:#fff;text-decoration:none;text-align:center;padding:17px;border-radius:12px;font-weight:700;font-size:16px;margin-bottom:18px">Redeem my birthday gift &rarr;</a>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:6px">
+            <tr>
+              <td style="font-size:12px;color:#475569;line-height:1.9;padding:0">
+                &bull; Valid for 7 days from your birthday<br>
+                &bull; Applies to any service $109+<br>
+                &bull; One use per customer<br>
+                &bull; Enter code at checkout
+              </td>
+            </tr>
+          </table>
+          <p style="font-size:12px;color:#94A3B8;text-align:center;margin:18px 0 0">We come to you &mdash; home, work or park &middot; Mon&ndash;Sat</p>
+        </div>
+${footer()}`,
     },
     payment_action_required: {
       subject: `🔐 Action required — verify your Dr. Bike payment`,
