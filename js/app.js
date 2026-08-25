@@ -1206,8 +1206,8 @@ async function renderBookService() {
           </div>
         </div>
         <div id="s3-coverage-msg" style="display:none;background:var(--amber-tint);border:1px solid var(--amber-edge);border-radius:12px;padding:16px;margin-bottom:16px">
-          <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:6px">We don't reach that address yet</div>
-          <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-bottom:12px">Send us the address on WhatsApp and we'll tell you if we can make it work.</div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:6px">We quote that area case by case</div>
+          <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-bottom:12px">It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.</div>
           <a id="s3-coverage-wa" href="https://wa.me/61433963250" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box">💬 Ask on WhatsApp</a>
         </div>
         <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The mobile call-out fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
@@ -1222,17 +1222,43 @@ async function renderBookService() {
     const suggestionsBox = screen.querySelector('#address-suggestions');
     let debounceTimer = null;
 
-    // The "we don't reach you" panel. Pre-fills the WhatsApp message with the
-    // address they typed so they don't have to write it twice, and scrolls
-    // itself into view - on a short phone the panel can render below the fold.
-    function showCoverageBlock(addr) {
+    // The out-of-zone panel. WhatsApp here is the SHORTCUT, not the exit - the
+    // booking itself carries on and ends on "Ask for my price" (see the
+    // needsQuote branch in the summary step). It used to be the only way out,
+    // which made an interested customer do homework instead of book.
+    //
+    // The message used to be "Hi! Do you cover this address? <address>" and
+    // nothing else, so Diego got an address with no idea what the person
+    // wanted. It now carries the same fields as the one the server writes at
+    // the end of the quote flow, so both land in his WhatsApp looking alike.
+    function showCoverageBlock(addr, info) {
       const box = screen.querySelector('#s3-coverage-msg');
       const wa = screen.querySelector('#s3-coverage-wa');
       if (!box || !wa) return;
-      const text = translateValue('Hi! Do you cover this address?') + ' ' + addr;
+      const svc = window.appState.service?.name || '';
+      const when = [window.appState.date, window.appState.time].filter(Boolean).join(' ');
+      const km = Number(info?.km);
+      const mins = Number(info?.minutes);
+      const trip =
+        Number.isFinite(km) && Number.isFinite(mins) && km > 0
+          ? `${Math.round(km)} km / ${Math.round(mins)} min`
+          : '';
+      // The blank line goes in the join and NOT in the array: filter(Boolean)
+      // drops an empty string, so a '' used as a separator silently vanished
+      // and the greeting ran straight into the fields.
+      const fields = [
+        svc ? `${translateValue('Service:')} ${svc}` : '',
+        when ? `${translateValue('Date:')} ${when}` : '',
+        `${translateValue('Address:')} ${addr}`,
+        trip ? `${translateValue('Distance from your base:')} ${trip}` : '',
+      ].filter(Boolean);
+      const text =
+        translateValue('Hi! Do you cover this address?') + '\n\n' + fields.join('\n');
       wa.href = 'https://wa.me/61433963250?text=' + encodeURIComponent(text);
       box.style.display = 'block';
-      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // block:'nearest', not 'center': centring a panel near the bottom of a
+      // short page makes iOS scroll the sideways axis as well.
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function hideCoverageBlock() {
@@ -1240,9 +1266,18 @@ async function renderBookService() {
       if (box) box.style.display = 'none';
     }
 
+    // The address we have already shown the out-of-zone panel for. Without
+    // this the second tap re-ran the same check, got the same answer and
+    // showed the same panel: the button was enabled but could never advance,
+    // so an out-of-zone customer was stuck on step 3 forever.
+    let warnedAddress = null;
+
     // Typing a new address clears the rejection: the message referred to the
     // OLD address, so leaving it up would make a valid new one look rejected.
-    input.addEventListener('input', hideCoverageBlock);
+    input.addEventListener('input', () => {
+      hideCoverageBlock();
+      warnedAddress = null;
+    });
 
     async function fetchSuggestions(query) {
       if (query.length < 3) {
@@ -1325,16 +1360,21 @@ async function renderBookService() {
         });
         const data = res.ok ? await res.json() : { covered: true };
         if (data.covered === false) {
-          // Was a toast: it vanished after 3 seconds, so anyone who looked away
-          // was left with a button that did nothing and no explanation. A
-          // dead end needs a way out, not a notification - this panel stays
-          // put until the address changes, and hands them WhatsApp.
-          showCoverageBlock(addr);
-          btn.textContent = 'Continue to Summary';
-          btn.disabled = false;
-          return;
+          // Out of the same-day zone. This is NOT a rejection: the first tap
+          // explains what that means, the second one carries on to the
+          // summary, where the pay button becomes "Ask for my price" and
+          // nothing is charged. Blocking here was the bug - it threw away a
+          // customer who had already picked a service, a date and a time.
+          if (warnedAddress !== addr) {
+            warnedAddress = addr;
+            showCoverageBlock(addr, data);
+            btn.textContent = translateValue('Continue anyway');
+            btn.disabled = false;
+            return;
+          }
+        } else {
+          hideCoverageBlock();
         }
-        hideCoverageBlock();
       } catch {
         // Coverage check failed (network) - don't block booking on it, the
         // server re-checks authoritatively in create-booking anyway.
