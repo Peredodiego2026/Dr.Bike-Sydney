@@ -24,27 +24,52 @@
 // nearest base wins; the arithmetic does not change.
 export const BASE = { suburb: 'Curl Curl', lat: -33.7688, lng: 151.2926 };
 
-// Past this, an on-demand visit costs more than it earns. Worked out from the
-// van's real running cost: a 130 km round trip is $96 out of pocket (diesel at
-// $2.47/L over 11 km/L, plus tyres, servicing, depreciation, insurance) or
-// $114 on the ATO's per-km rate, plus ~$20 of motorway tolls - against a $65
-// call-out. And that ignores the 2.5 unpaid hours of driving, which is the
-// larger loss: the same hours do three jobs in the Northern Beaches.
+// ── The clock ─────────────────────────────────────────────────────────────
+//
+// OSRM's public server routes on free-flow speeds: it assumes empty roads. It
+// is not wrong, it is answering a different question than the one Diego asks
+// himself when he decides whether a job is worth driving to.
+//
+// Calibrated against Google on the one route we have both numbers for
+// (25-aug-2026, Curl Curl to Palm Beach): Google 46 min, OSRM 36 min. So the
+// router runs about 28% fast. Every threshold below is written in REAL
+// minutes - the ones Diego means when he says "45 minutes maximum" - and the
+// router's answer is converted once, here, on the way in.
+//
+// This is ONE measured point. If a second Google/OSRM pair ever gets
+// recorded, average them and update this number - do not add a second factor
+// somewhere else.
+export const TRAFFIC_FACTOR = 1.28;
+
+export function toRealMinutes(routerMinutes) {
+  if (!Number.isFinite(routerMinutes)) return null;
+  return routerMinutes * TRAFFIC_FACTOR;
+}
+
+// Diego's hard limit, in real minutes with traffic. Past this an on-demand
+// visit costs more than it earns: a 130 km round trip is $96 out of pocket
+// (diesel at $2.47/L over 11 km/L, plus tyres, servicing, depreciation,
+// insurance) or $114 on the ATO's per-km rate, plus motorway tolls - against
+// a $45 call-out. And that ignores the unpaid driving hours, which is the
+// larger loss: the same hours do three jobs on the Northern Beaches.
+//
+// He set it knowing it stretches: "con trafico las zonas a 45 min seran de 1
+// hora". 45 is the planning number, not the worst case.
 export const PERIMETER_MAX_MINUTES = 45;
 
-// Time bands inside the perimeter. These reproduce the prices already in
-// `callout_zones` - the conversion is meant to leave what customers pay
-// unchanged, not to reprice anything.
+// Two bands, in real minutes. This replaces a three-band ladder whose middle
+// step ($35 up to 32 ROUTER minutes) silently repriced the whole middle ring:
+// the CBD measures 25 router minutes, so it was being charged $35 when
+// `callout_zones` - and this file's own comment - said $45. Same for North
+// Sydney, Chatswood, Bondi Junction and Lane Cove.
 export const FEE_BANDS = [
-  { maxMinutes: 20, fee: 25 },
-  { maxMinutes: 32, fee: 35 },
+  { maxMinutes: 25, fee: 25 },
   { maxMinutes: PERIMETER_MAX_MINUTES, fee: 45 },
 ];
 
 // The fees a booking is ever allowed to be charged. Used to sanity-check a
 // payment that arrives while the address cannot be re-resolved (see
 // handleCreateBooking): anything not on this list is refused.
-export const VALID_FEES = FEE_BANDS.map((b) => b.fee);
 
 // ── The far peninsula ─────────────────────────────────────────────────────
 //
@@ -101,14 +126,12 @@ export const PENINSULA_FAR_SUBURBS = new Set([
 // which is how Nominatim returns it and how people write it. The postcode is
 // checked first: it is the one part of an Australian address that cannot be
 // ambiguous.
-export function matchFarPeninsula(address) {
+function matchZoneList(address, postcodes, suburbs) {
   if (!address || typeof address !== 'string') return null;
   const lower = address.toLowerCase();
 
   for (const pc of lower.match(/\b\d{4}\b/g) || []) {
-    if (PENINSULA_FAR_POSTCODES.has(pc)) {
-      return { fee: PENINSULA_FAR_FEE, basis: 'peninsula-postcode' };
-    }
+    if (postcodes.has(pc)) return 'postcode';
   }
 
   const parts = lower
@@ -121,11 +144,49 @@ export function matchFarPeninsula(address) {
     )
     .filter(Boolean);
   for (const part of parts) {
-    if (PENINSULA_FAR_SUBURBS.has(part)) {
-      return { fee: PENINSULA_FAR_FEE, basis: 'peninsula-suburb' };
-    }
+    if (suburbs.has(part)) return 'suburb';
   }
   return null;
+}
+
+export function matchFarPeninsula(address) {
+  const how = matchZoneList(address, PENINSULA_FAR_POSTCODES, PENINSULA_FAR_SUBURBS);
+  return how ? { fee: PENINSULA_FAR_FEE, basis: `peninsula-${how}` } : null;
+}
+
+// PENINSULA_FAR_FEE has to be in here explicitly. It used to arrive by
+// accident, because $35 happened to be the middle band's price; collapsing to
+// two bands would have dropped it, and a Palm Beach customer who paid $35 and
+// then hit a geocoder outage would have had a perfectly good payment refused.
+export const VALID_FEES = [...new Set([...FEE_BANDS.map((b) => b.fee), PENINSULA_FAR_FEE])].sort(
+  (a, b) => a - b
+);
+
+// ── The near half of the north corridor ───────────────────────────────────
+//
+// Terrey Hills measures 26 real minutes - one minute past the $25 band - and
+// without this it would cost the same as the Sydney CBD. It is the same road
+// the van already drives to Frenchs Forest, in the same council area, with no
+// bridge and no toll. The clock alone gets it wrong for exactly the reason the
+// peninsula gets it wrong: what a trip costs is not only how long it takes.
+//
+// Postcode 2084 is Terrey Hills, Duffys Forest and Cottage Point. Cottage
+// Point is further out than the others and $25 is generous there - it is four
+// streets at the end of a dead end and it will almost never come up. Being
+// generous in his own council is the right side to err on.
+export const NORTH_NEAR_FEE = 25;
+export const NORTH_NEAR_POSTCODES = new Set(['2084']);
+export const NORTH_NEAR_SUBURBS = new Set([
+  'terrey hills',
+  'duffys forest',
+  'cottage point',
+  'ingleside',
+]);
+
+export function matchNearNorth(address) {
+  return matchZoneList(address, NORTH_NEAR_POSTCODES, NORTH_NEAR_SUBURBS)
+    ? { fee: NORTH_NEAR_FEE, basis: 'north-corridor' }
+    : null;
 }
 
 export function feeForMinutes(minutes) {
@@ -160,14 +221,32 @@ export function formatMinutes(minutes) {
 // 'unknown' does NOT mean rejected: the person keeps their booking and ends
 // on a free quote request, exactly like an out-of-perimeter address.
 export function resolveCoverage({ minutes = null, zone = null, km = null, address = null } = {}) {
-  const mins = Number.isFinite(minutes) ? Math.round(minutes) : null;
+  // `minutes` arrives from the router, which assumes empty roads. Everything
+  // below - the bands, the perimeter, the number Diego reads in his WhatsApp
+  // message - is in REAL minutes. Converted once, here.
+  const real = toRealMinutes(minutes);
+  const mins = real === null ? null : Math.round(real);
   const distanceKm = Number.isFinite(km) ? Math.round(km) : null;
 
-  // Layer 0: the far peninsula, decided by postcode or suburb name alone.
-  // It runs FIRST and it is the only layer that can overrule the perimeter,
-  // because Palm Beach is 46 minutes out and would otherwise be refused for
-  // being one minute too far up a road the van drives anyway. Nothing here
-  // depends on a network call, which is the whole point - see matchFarPeninsula.
+  // Layer 0: the two hand-drawn zones, decided by postcode or suburb name
+  // alone. They run FIRST and they are the only layers that can overrule the
+  // clock, because the clock cannot see that a road has no bridge and no toll.
+  // Palm Beach is 46 real minutes and would otherwise be refused for being one
+  // minute too far up a road the van drives anyway; Terrey Hills is 26 and
+  // would cost the same as the CBD. Nothing here depends on a network call,
+  // which is the whole point - see matchZoneList.
+  const north = matchNearNorth(address);
+  if (north) {
+    return {
+      covered: 'in',
+      calloutFee: north.fee,
+      minutes: mins,
+      km: distanceKm,
+      zoneName: zone?.zoneName ?? 'Northern Beaches',
+      basis: north.basis,
+    };
+  }
+
   const peninsula = matchFarPeninsula(address);
   if (peninsula) {
     return {

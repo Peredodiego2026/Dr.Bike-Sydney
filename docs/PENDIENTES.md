@@ -5867,3 +5867,64 @@ no matchee "Church Point".
 
 17 tests nuevos.
 
+## 32. El reloj estaba mal, y escondia una fuga de precio (25-ago-2026)
+
+Se midieron 55 suburbios de Sydney uno por uno, con los mismos dos servicios
+que usa la app en produccion (Nominatim para geocodificar, OSRM para rutear).
+De ahi salieron dos cosas.
+
+### OSRM rutea con calles vacias
+
+No modela trafico. Calibrado contra Google en la unica ruta de la que
+tenemos los dos numeros (Curl Curl a Palm Beach, captura de Diego del
+25-ago-2026): **Google 46 minutos, OSRM 36**. El router corre 28% rapido.
+
+Todo lo que la app llamaba "45 minutos" eran en realidad **58 manejando**.
+
+### La fuga: el CBD cobraba $35 donde decia $45
+
+Las bandas viejas cobraban $35 hasta 32 minutos **de router**. El CBD mide
+25. Asi que el CBD caia en la banda de $35 - cuando `callout_zones`, y el
+comentario de este mismo archivo, decian **$45**.
+
+La conversion de zonas a bandas de tiempo (que segun su propio comentario
+"no debia repreciar nada") habia bajado un escalon a todo el anillo medio:
+CBD, North Sydney, Chatswood, Lane Cove, St Ives, Bondi Junction. Nadie lo
+noto porque nada fallaba.
+
+### Lo que quedo
+
+Los umbrales ahora se escriben en **minutos reales** - los que Diego quiere
+decir cuando dice "45 minutos maximo" - y la respuesta del router se
+convierte una sola vez, al entrar (`toRealMinutes`, `TRAFFIC_FACTOR`).
+
+| zona | precio |
+|---|---|
+| hasta 25 min reales | $25 |
+| peninsula norte entera, hasta la punta | $35 |
+| corredor norte cercano (2084) | $25 |
+| de 26 a 45 min reales | $45 |
+| mas de 45 min reales | consulta, sin cobro |
+
+Dos bandas de tiempo en vez de tres. El $35 dejo de ser una banda: ahora es
+**solo** el precio de la peninsula.
+
+### Lo que casi se rompe
+
+`VALID_FEES` se armaba de `FEE_BANDS`, asi que el $35 estaba ahi **por
+accidente** - era el precio de la banda del medio. Al colapsar a dos bandas
+desaparecia, y un cliente de Palm Beach que pagara $35 y despues cayera en
+una falla del geocoder habria tenido un pago perfectamente valido rechazado
+(ver `amountIsAcceptable` en `api/auth.js`). Ahora `PENINSULA_FAR_FEE` entra
+explicito y hay test.
+
+Tambien: `VALID_FEES` quedo declarado antes que `PENINSULA_FAR_FEE` y el
+modulo entero tiraba `ReferenceError` al importarse. `node --check` pasa igual
+porque solo mira sintaxis - se encontro importando el modulo de verdad.
+
+### Ojo con `callout_zones`
+
+Con el ruteo funcionando, la **capa 1 (tiempo) siempre gana**. Los precios de
+la tabla `callout_zones` solo se usan si el ruteo se cae. Editar un precio
+ahi ya no cambia lo que paga un cliente en condiciones normales.
+

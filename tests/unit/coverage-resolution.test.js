@@ -18,6 +18,10 @@ import {
   needsQuote,
   feeForMinutes,
   PERIMETER_MAX_MINUTES,
+  TRAFFIC_FACTOR,
+  toRealMinutes,
+  FEE_BANDS,
+  matchNearNorth,
   matchFarPeninsula,
   PENINSULA_FAR_FEE,
   VALID_FEES,
@@ -31,16 +35,19 @@ describe('feeForMinutes - the ladder that reproduces the existing prices', () =>
     expect(feeForMinutes(20)).toBe(25); // edge of the band
   });
 
-  it('North Shore and Hornsby stay $35', () => {
-    expect(feeForMinutes(21)).toBe(35);
-    expect(feeForMinutes(30)).toBe(35); // Hornsby
-    expect(feeForMinutes(32)).toBe(35);
+  // feeForMinutes takes REAL minutes now. The middle band is gone: it was
+  // $35 up to 32 ROUTER minutes, and the CBD measures 25 router minutes, so
+  // the whole middle ring - CBD, North Sydney, Chatswood, Bondi Junction -
+  // was quietly being charged $35 where callout_zones said $45.
+  it('everything past 25 real minutes is $45, including the city', () => {
+    expect(feeForMinutes(26)).toBe(45);
+    expect(feeForMinutes(32)).toBe(45); // Sydney CBD
+    expect(feeForMinutes(45)).toBe(45); // Coogee, right on the line
   });
 
-  it('the city stays $45', () => {
-    expect(feeForMinutes(33)).toBe(45);
-    expect(feeForMinutes(40)).toBe(45); // CBD across the Spit
-    expect(feeForMinutes(45)).toBe(45);
+  it('$35 is not a time band any more - only the peninsula charges it', () => {
+    expect(FEE_BANDS.map((b) => b.fee)).toEqual([25, 45]);
+    expect(feeForMinutes(30)).not.toBe(35);
   });
 
   it('past the perimeter there is no fee to quote', () => {
@@ -54,28 +61,34 @@ describe('driving time decides, because distance would misprice it', () => {
   // straight line, but one is motorway and the other is the Spit Bridge.
   // Pricing on kilometres would charge them the same.
   it('same km, different time, different fee', () => {
-    const hornsby = resolveCoverage({ minutes: 30, km: 15 });
-    const cbd = resolveCoverage({ minutes: 40, km: 14 });
-    expect(hornsby.calloutFee).toBe(35);
+    // 14 router minutes is ~18 real: inside the $25 band. 30 router minutes
+    // is ~38 real: the city band. Nearly identical distances, different trips.
+    const near = resolveCoverage({ minutes: 14, km: 15 });
+    const cbd = resolveCoverage({ minutes: 30, km: 14 });
+    expect(near.calloutFee).toBe(25);
     expect(cbd.calloutFee).toBe(45);
   });
 
   it('inside the perimeter is covered', () => {
-    const r = resolveCoverage({ minutes: 44, km: 30 });
+    // 34 router minutes is 44 real - just inside Diego's 45-minute limit.
+    const r = resolveCoverage({ minutes: 34, km: 30 });
     expect(r.covered).toBe('in');
     expect(needsQuote(r)).toBe(false);
   });
 
   it('one minute past the perimeter becomes a quote, with no fee invented', () => {
-    const r = resolveCoverage({ minutes: PERIMETER_MAX_MINUTES + 1, km: 50 });
+    const r = resolveCoverage({ minutes: (PERIMETER_MAX_MINUTES + 1) / TRAFFIC_FACTOR, km: 50 });
     expect(r.covered).toBe('out');
     expect(r.calloutFee).toBe(null);
     expect(needsQuote(r)).toBe(true);
   });
 
-  it('keeps km and minutes so the message to Diego can quote them', () => {
+  // The minutes Diego reads are the REAL ones, not the router's. He is
+  // deciding whether the drive is worth it; free-flow minutes would undersell
+  // it by nearly a third.
+  it('reports real minutes and km so the message to Diego can quote them', () => {
     const r = resolveCoverage({ minutes: 65, km: 78 });
-    expect(r.minutes).toBe(65);
+    expect(r.minutes).toBe(Math.round(65 * TRAFFIC_FACTOR));
     expect(r.km).toBe(78);
   });
 });
@@ -305,10 +318,125 @@ describe('the far peninsula is $35 to the tip, not a rejection', () => {
     expect(matchFarPeninsula('Dee Why NSW 2099')).toBeNull();
     expect(matchFarPeninsula('')).toBeNull();
     expect(matchFarPeninsula(null)).toBeNull();
-    expect(resolveCoverage({ address: 'Sydney NSW 2000', minutes: 40, km: 22 }).calloutFee).toBe(45);
+    expect(matchNearNorth('Sydney NSW 2000')).toBeNull();
+    expect(resolveCoverage({ address: 'Sydney NSW 2000', minutes: 25, km: 18 }).calloutFee).toBe(45);
   });
 
   it('$35 is a fee a booking is allowed to be charged', () => {
     expect(VALID_FEES).toContain(PENINSULA_FAR_FEE);
+  });
+});
+
+// ── The clock, and the leak it was hiding ─────────────────────────────────
+//
+// OSRM routes on empty roads. Measured against Google on 25-aug-2026 for the
+// one route we have both numbers for - Curl Curl to Palm Beach - the router
+// says 36 minutes and Google says 46. Everything the app decided was being
+// decided on a clock running 28% fast.
+//
+// The damage was not at the far edge, it was in the middle ring. The old
+// bands charged $35 up to 32 ROUTER minutes; the Sydney CBD measures 25. So
+// the CBD, North Sydney, Chatswood, Lane Cove and Bondi Junction were all
+// being charged $35 where `callout_zones` - and this file's own comment -
+// said $45. Nobody noticed because nothing errored.
+describe('real minutes, not free-flow minutes', () => {
+  const router = (real) => real / TRAFFIC_FACTOR;
+
+  it('the CBD is $45 again - it was quietly dropped to $35', () => {
+    // 25 router minutes, which is what OSRM actually returns for the CBD
+    const r = resolveCoverage({ address: 'Sydney NSW 2000', minutes: 25, km: 18 });
+    expect(r.calloutFee).toBe(45);
+    expect(r.minutes).toBe(32);
+  });
+
+  it.each([
+    ['North Sydney', 21],
+    ['Chatswood', 22],
+    ['Lane Cove', 25],
+    ['St Ives', 25],
+    ['Bondi Junction', 32],
+  ])('%s goes back to $45', (_name, routerMins) => {
+    expect(resolveCoverage({ minutes: routerMins, km: 20 }).calloutFee).toBe(45);
+  });
+
+  it.each([
+    ['Dee Why', 6],
+    ['Manly', 8],
+    ['Frenchs Forest', 11],
+    ['Mosman', 16],
+    ['Mona Vale', 18],
+    ['Neutral Bay', 19],
+  ])('%s stays $25', (_name, routerMins) => {
+    expect(resolveCoverage({ minutes: routerMins, km: 10 }).calloutFee).toBe(25);
+  });
+
+  it('the perimeter is 45 REAL minutes, so it bites earlier than it used to', () => {
+    // Randwick: 36 router minutes. Under the old clock that was inside the
+    // 45-minute perimeter and cost $45. It is 46 real minutes.
+    const randwick = resolveCoverage({ address: 'Randwick NSW 2031', minutes: 36, km: 29 });
+    expect(randwick.covered).toBe('out');
+    expect(needsQuote(randwick)).toBe(true);
+    // Coogee is one router minute further out but lands exactly on the line.
+    expect(resolveCoverage({ minutes: 35, km: 26 }).calloutFee).toBe(45);
+  });
+
+  it('rejects a non-number instead of turning it into zero', () => {
+    expect(toRealMinutes(null)).toBeNull();
+    expect(toRealMinutes(undefined)).toBeNull();
+    expect(toRealMinutes(NaN)).toBeNull();
+    expect(toRealMinutes(0)).toBe(0);
+  });
+
+  it('a trip Diego reads about is quoted in real minutes', () => {
+    expect(Math.round(router(45) * TRAFFIC_FACTOR)).toBe(45);
+  });
+});
+
+// The other hand-drawn zone. Terrey Hills is 26 real minutes - one minute
+// past the $25 band - and without this it would cost the same as the CBD,
+// despite being the same council, the same road, no bridge and no toll.
+describe('the near half of the north corridor is $25', () => {
+  it.each([
+    ['12 Myoora Rd, Terrey Hills NSW 2084', 20],
+    ['Terrey Hills', null],
+    ['Duffys Forest NSW 2084', 24],
+    ['Ingleside, NSW', null],
+  ])('%s is $25', (address, minutes) => {
+    const r = resolveCoverage({ address, minutes, km: 17 });
+    expect(r.covered).toBe('in');
+    expect(r.calloutFee).toBe(25);
+  });
+
+  it('does not reach past the corridor', () => {
+    expect(matchNearNorth('Sydney NSW 2000')).toBeNull();
+    expect(matchNearNorth('Hornsby NSW 2077')).toBeNull();
+    expect(matchNearNorth('Palm Beach NSW 2108')).toBeNull();
+    expect(matchNearNorth(null)).toBeNull();
+  });
+
+  // "5 Terrey St, Bondi" must not become a $25 trip to Terrey Hills.
+  it('a street name does not move the fee', () => {
+    expect(matchNearNorth('5 Terrey Hills Rd, Bondi NSW 2026')).toBeNull();
+  });
+});
+
+// The set of amounts a payment is allowed to be when the address cannot be
+// re-resolved. $35 used to be in here by accident - it was the middle band's
+// price. Collapsing to two bands would have dropped it, and a Palm Beach
+// customer who paid $35 and then hit a geocoder outage would have had a
+// perfectly good payment refused.
+describe('every fee the app can quote is a fee it can accept', () => {
+  it('holds all three, including the peninsula', () => {
+    expect(VALID_FEES).toEqual([25, 35, 45]);
+  });
+
+  it.each([
+    ['Palm Beach NSW 2108', 36],
+    ['Terrey Hills NSW 2084', 20],
+    ['Sydney NSW 2000', 25],
+    ['Dee Why NSW 2099', 6],
+  ])('%s quotes a fee that is on the list', (address, minutes) => {
+    const fee = resolveCoverage({ address, minutes, km: 20 }).calloutFee;
+    expect(VALID_FEES).toContain(fee);
   });
 });
