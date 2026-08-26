@@ -6483,3 +6483,71 @@ lo genera Stripe - y no se puede controlar desde aca. Ver 46.
 
 10 tests nuevos. Suite completa 10 veces: 675/675.
 
+## 48. El modo oscuro no tenia tokens. Tenia 160 parches. (26-ago-2026)
+
+Diego, cuatro veces distintas recorriendo una reserva pagada de punta a punta:
+*"en dark queda que desear la aplicacion, no se notan los cuadros ni las
+divisiones"*.
+
+No era ninguna regla en particular. **El modo oscuro no tenia capa de tokens.**
+`css/variables.css` definia 98 colores y **ninguno** tenia valor oscuro. Cada
+pantalla parchaba los suyos a mano: 149 selectores `[data-theme='dark']` en
+`css/admin.css` y un bloque privado de 11 tokens en `css/mechanic.css`.
+
+Lo que nadie se acordo de parchar **se quedaba con su valor claro**, en
+silencio. No es una metafora: `js/admin.js` escribe `color:var(--navy)` inline
+**68 veces**, y `--navy` es `#0d1f3c`. En oscuro eso era tinta casi negra sobre
+una tarjeta casi negra. Los bordes eran peores: `#e2e8f0`, un gris claro,
+dibujado sobre navy.
+
+Y las dos superficies **no estaban de acuerdo sobre que era oscuro**: admin
+pintaba `#1c1c1e` neutro, mecanico `#152035` navy, en el mismo producto.
+
+### Lo que se hizo
+
+- **Una sola paleta oscura**, en `css/variables.css`: 42 tokens. Los bloques
+  privados de `admin.css` y `mechanic.css` se borraron - cargan **despues** de
+  `variables.css`, asi que dejarlos habria significado que la paleta vieja e
+  incompleta le siguiera ganando a la nueva.
+- **`--navy` hacia dos trabajos**: la tinta de casi toda etiqueta y **el fondo
+  del sidebar del admin**. Un token que significa dos cosas no se puede tematizar
+  (aclararlo para la tinta pone el sidebar blanco). Se separo `--navy-surface`,
+  identico en modo claro, deliberadamente **no** redefinido en oscuro.
+- **16 hacks `[style*='color:var(--x)']` eliminados.** Matcheaban un estilo
+  inline por substring y forzaban un color con `!important`. Solo funcionaban
+  dentro de `.main`, asi que **todo modal que `js/admin.js` cuelga de `<body>`
+  nunca estuvo cubierto** - esa era la tinta invisible que Diego encontraba.
+- `--on-amber`: la tinta que va **encima** de un relleno ambar. Blanco en claro
+  (donde `--amber` es `#b45309`), casi negro en oscuro (donde es `#fbbf24`).
+
+### Los acentos: dos restricciones que se pelean
+
+`--blue`, `--green` y `--red` son a la vez **relleno de boton con texto blanco
+duro** y **texto de color sobre la tarjeta**. Las dos restricciones se mueven en
+sentidos opuestos y **no existe** un valor que llegue a AA (4.5) en ambas: para
+leerse como texto sobre navy hay que aclararlo, y aclararlo mata el texto blanco
+encima. Estan calibrados para pasar AA-large (3.0) en los dos papeles, que es la
+banda donde vive el texto UI en negrita.
+
+`--amber` es la excepcion documentada: se lee como texto muchas mas veces de las
+que se rellena, asi que se queda brillante y su unico boton (`En route`) usa
+`--on-amber`. `--wa` es el verde de WhatsApp: blanco sobre el da 1.98:1 en
+**los dos** temas, es el boton de WhatsApp y no es algo que este tema haya
+introducido ni le toque arreglar.
+
+### El guard
+
+`scripts/dark-theme-check.mjs`, en `npm run check`. Falla si un token de color
+que admin o mecanico usan **no tiene valor oscuro**, si un valor oscuro es
+identico al claro sin estar declarado como excepcion, si un token existe solo en
+un tema, y - lo importante - si el **contraste** de cualquier tinta contra los
+tres fondos oscuros baja de 3:1, o si el blanco sobre cualquier relleno baja de
+3:1. Un check que solo mirara presencia aprobaria una paleta de navy sobre navy.
+
+Estado actual: **peor tinta 3.10:1, peor blanco sobre relleno 3.30:1**, cero
+fallas. Antes habia tinta a 1.03:1.
+
+11 tests nuevos en `tests/unit/dark-theme.test.js`, que protegen la **forma**
+(una sola paleta, sin bloques privados, sin hacks de substring) - porque una
+segunda paleta privada pasaria el guard y dejaria la app donde estaba.
+
