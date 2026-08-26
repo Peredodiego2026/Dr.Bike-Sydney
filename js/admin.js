@@ -1321,7 +1321,7 @@ async function loadFinance() {
     jobCount +
     ' job' +
     (jobCount !== 1 ? 's' : '') +
-    (calloutGaps ? ` · ${calloutGaps} with no call-out fee recorded` : '');
+    (calloutGaps ? ` · ${calloutGaps} with no visit & diagnosis fee recorded` : '');
   document.getElementById('fk-gst').textContent = '$' + gst.toLocaleString('en-AU');
   document.getElementById('fk-net').textContent = '$' + netRevenue.toLocaleString('en-AU');
   document.getElementById('fk-avg').textContent = 'avg ' + anMoney(avgJob) + ' / job';
@@ -1521,10 +1521,10 @@ Average job value: ${anMoney(d.avgJob)}
 Basis: service_price + callout_fee, as recorded on each completed booking.
 ${
   d.calloutGaps
-    ? `WARNING: ${d.calloutGaps} of those ${d.jobCount} bookings have no call-out fee
+    ? `WARNING: ${d.calloutGaps} of those ${d.jobCount} bookings have no visit & diagnosis fee
 recorded. They are counted with a $0 call-out, so G1 above is UNDERSTATED.
 Check those rows before lodging.`
-    : 'All completed bookings in this period have a call-out fee recorded.'
+    : 'All completed bookings in this period have a visit & diagnosis fee recorded.'
 }
 
 NOTE: This is an estimate. Please verify with your registered tax agent before lodging.`;
@@ -4659,7 +4659,7 @@ function renderRevenueChart(d, from) {
     const gaps = anCalloutGaps(completed);
     const basis = `Adds <code>service_price</code> and <code>callout_fee</code> as recorded on each completed booking &mdash; what was actually charged, not today's price list.`;
     note.innerHTML = gaps
-      ? `${basis} <strong>${gaps} of ${completed.length} completed ${completed.length === 1 ? 'booking' : 'bookings'} in this range ${gaps === 1 ? 'has' : 'have'} no call-out fee recorded</strong>, so ${gaps === 1 ? 'it counts' : 'they count'} only the service price and the real total is higher.`
+      ? `${basis} <strong>${gaps} of ${completed.length} completed ${completed.length === 1 ? 'booking' : 'bookings'} in this range ${gaps === 1 ? 'has' : 'have'} no visit & diagnosis fee recorded</strong>, so ${gaps === 1 ? 'it counts' : 'they count'} only the service price and the real total is higher.`
       : basis;
   }
 }

@@ -1272,7 +1272,7 @@ const _bkState = { service: null, date: null, time: null, services: [], bookingI
 
 // Every booking CTA on this page funnels through here. It used to open the
 // bk- modal below, which wrote the booking to Supabase but never charged the
-// call-out fee and never notified anyone, so Diego had to chase each desktop
+// visit & diagnosis fee and never notified anyone, so Diego had to chase each desktop
 // booking by hand. It now hands over to the same wizard the mobile app runs
 // (the [data-screen] blocks near the end of this file, driven by js/app.js),
 // so desktop takes payment and fires the WhatsApp/SMS/email notifications
@@ -1308,7 +1308,7 @@ function bkServiceNameFrom(card) {
 }
 
 
-// ── "What's My Fee?" zone price checker ───────────────────────────────────────
+// ── "What does a visit cost?" zone price checker ───────────────────────────────────────
 // Public, no login needed - calls role:'zone-price' (api/auth.js), which uses
 // the exact same callout_zones lookup that actually charges the customer
 // (matchCalloutZone), so this can never quote a different number than what
@@ -1341,7 +1341,7 @@ function feeCheckCardHtml(inner) {
 function feeCheckInputHtml() {
   return feeCheckCardHtml(
     '<div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px">What\'s your suburb?</div>'
-    + '<div style="font-size:13px;color:var(--gray);margin-bottom:18px">We\'ll check your call-out fee - takes 2 seconds.</div>'
+    + '<div style="font-size:13px;color:var(--gray);margin-bottom:18px">We\'ll check your visit & diagnosis fee - takes 2 seconds.</div>'
     + '<input type="text" class="fee-check-input" placeholder="e.g. Bondi, Parramatta, Cronulla..." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;color:var(--navy)">'
     + '<div class="fee-check-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px"></div>'
     + '<button class="fee-check-submit" type="button" style="width:100%;margin-top:16px;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Check My Fee</button>'
@@ -1656,7 +1656,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '5% off extra services',
         'Priority scheduling (72hs)'
       ],
-      excludes: 'Digital service history log is a Standard/VIP perk. Call-out fee is not included - the mobile call-out fee (from $25, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $25, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
       savings: 'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.'
     },
     standard: {
@@ -1665,11 +1665,11 @@ document.addEventListener('DOMContentLoaded', function() {
         '2 free minor repairs per month (any repair under $60)',
         '1 free bike wash per month',
         '1 free Tune-Up per month',
-        'Call-out fee included on covered visits',
+        'Visit & diagnosis included on covered visits',
         '10% off extra services',
         'Priority scheduling (48hs)',
         'Digital bike history log',
-        '1 emergency callout per month (call-out fee applies, from $25 depending on your suburb)'
+        '1 emergency callout per month (visit & diagnosis fee applies, from $25 depending on your suburb)'
       ],
       excludes: 'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
       savings: 'A Tune-Up ($109) + a wash ($35) + 2 minor repairs (~$80) = about $224 in free work every month, for $97.'
@@ -1680,11 +1680,11 @@ document.addEventListener('DOMContentLoaded', function() {
         '3 free minor repairs per month (any repair under $60)',
         '2 free bike washes per month',
         '1 free Tune-Up per month',
-        'Call-out fee included on covered visits',
+        'Visit & diagnosis included on covered visits',
         '15% off extra services, plus 5% more',
         'Priority scheduling (24hs)',
         'Digital bike history log',
-        '1 emergency callout per month (call-out fee waived in your zone)',
+        '1 emergency callout per month (visit & diagnosis fee waived in your zone)',
         'Dedicated mechanic'
       ],
       excludes: 'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',

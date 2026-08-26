@@ -504,7 +504,7 @@ async function loadLeaflet() {
   }
 }
 
-// ── "What's My Fee?" zone price checker ───────────────────────────────────────
+// ── "What does a visit cost?" zone price checker ───────────────────────────────────────
 // Public, no login needed - same role:'zone-price' endpoint the desktop hero
 // button calls (js/landing-inline.js), so the two surfaces can never disagree
 // on a price. matchCalloutZone (api/auth.js) is the single source of truth
@@ -520,7 +520,7 @@ function feeCheckKeyframes() {
 function feeCheckInputHtml() {
   return `
 <h2 class="confirm-box__title">What's your suburb?</h2>
-<p class="confirm-box__msg">We'll check your call-out fee - takes 2 seconds.</p>
+<p class="confirm-box__msg">We'll check your visit & diagnosis fee - takes 2 seconds.</p>
 <input type="text" class="fee-check-input" placeholder="e.g. Bondi, Parramatta, Cronulla..." style="width:100%;min-height:44px;margin-top:14px;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font-family);outline:none;box-sizing:border-box">
 <div class="fee-check-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px"></div>
 <div class="confirm-box__actions">
@@ -1210,7 +1210,7 @@ async function renderBookService() {
           <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-bottom:12px">It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.</div>
           <a id="s3-coverage-wa" href="https://wa.me/61433963250" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box">💬 Ask on WhatsApp</a>
         </div>
-        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The mobile call-out fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
+        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The visit & diagnosis fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
       </div>
       <div class="sticky-bottom">
         <button class="btn btn--primary btn--full" id="s3-continue">Continue to Summary</button>
@@ -1565,7 +1565,7 @@ async function renderServiceSummary() {
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--color-border)">
             <div>
-              <span style="font-size:13px;color:var(--color-text-secondary)">Mobile call-out fee</span>
+              <span style="font-size:13px;color:var(--color-text-secondary)">Visit & diagnosis</span>
               <div style="font-size:11px;color:var(--color-text-secondary);opacity:0.7;margin-top:1px">Paid online now via Stripe</div>
             </div>
             <span style="font-size:13px;font-weight:600">$${calloutFee.toFixed(2)}</span>
@@ -1597,10 +1597,23 @@ async function renderServiceSummary() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <div style="font-size:13px;color:var(--blue);line-height:1.55">
           <strong>How payment works:</strong> ${translateValue(
-            'The $CALLOUT call-out fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.'
+            'The $CALLOUT visit & diagnosis fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.'
           )
             .replace('CALLOUT', calloutFee.toFixed(2))
             .replace('SERVICE', `<span id="q-svc-note">${serviceTotal.toFixed(2)}</span>`)}
+        </div>
+      </div>
+
+      <!-- What the fee buys. This sits BEFORE the card, deliberately: the fee
+           is not refunded when a repair turns out not to be viable, and a
+           policy like that is only defensible if it was stated up front. It
+           also sets the expectation that pays for itself - the visit buys a
+           diagnosis, not a guaranteed repair. -->
+      <div style="display:flex;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <div style="font-size:13px;color:var(--gray);line-height:1.55">
+          <strong style="color:var(--navy)">${translateValue('What the visit & diagnosis covers')}</strong><br>
+          ${translateValue('A mechanic comes to you, inspects the whole bike and tells you exactly what it needs. If the repair is not possible - a part we do not carry, or a job that needs a machinist or welding - you are told on the spot and the service fee is not charged. The visit & diagnosis covers that inspection and is not refunded.')}
         </div>
       </div>
 
@@ -1611,7 +1624,7 @@ async function renderServiceSummary() {
         coverage.needsQuote
           ? `<div style="font-size:13px;color:var(--color-text-secondary);text-align:center;margin-bottom:10px;line-height:1.5">${translateValue('No charge - we check your address and reply personally.')}</div>
              <button class="btn btn--primary btn--full" id="proceed-btn">${translateValue('Ask for my price')}</button>`
-          : `<button class="btn btn--primary btn--full" id="proceed-btn">${payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee)}</button>`
+          : `<button class="btn btn--primary btn--full" id="proceed-btn">${payButtonLabel('Confirm & Pay $CALLOUT Visit & Diagnosis', calloutFee)}</button>`
       }
     </div>
     ${createBottomNav('home')}
@@ -1801,7 +1814,7 @@ async function renderServiceSummary() {
         btn.disabled = false;
         btn.textContent = coverage.needsQuote
           ? translateValue('Ask for my price')
-          : payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
+          : payButtonLabel('Confirm & Pay $CALLOUT Visit & Diagnosis', calloutFee);
         askGuestContact();
         return;
       }
@@ -1826,7 +1839,7 @@ async function renderServiceSummary() {
       btn.disabled = false;
       btn.textContent = coverage.needsQuote
         ? translateValue('Ask for my price')
-        : payButtonLabel('Confirm & Pay $CALLOUT Call-out Fee', calloutFee);
+        : payButtonLabel('Confirm & Pay $CALLOUT Visit & Diagnosis', calloutFee);
     }
   });
 }
@@ -2190,7 +2203,7 @@ async function renderPayment() {
         <div style="font-size:13px;color:var(--gray);margin-top:4px">${date} &bull; ${time}</div>
         <div style="font-size:13px;color:var(--gray)">${location}</div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:13px;color:var(--gray)">Call-out fee</span>
+          <span style="font-size:13px;color:var(--gray)">Visit & diagnosis</span>
           ${
             isIncludedVisit
               ? `<span style="font-size:11px;font-weight:700;color:var(--green);background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
@@ -2220,7 +2233,7 @@ async function renderPayment() {
         </svg>
         <span>Secure payment powered by Stripe. Encrypted and safe.</span>
       </div>
-      <button class="btn btn--primary btn--full" id="pay-btn">${payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee)}</button>`
+      <button class="btn btn--primary btn--full" id="pay-btn">${payButtonLabel('Pay $CALLOUT Visit & Diagnosis', calloutFee)}</button>`
       }
 
       <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--gray-lt)">
@@ -2382,6 +2395,10 @@ async function renderPayment() {
           time,
           address: location || 'Home',
           price: _total,
+          // So the email can say what is still owed. Without it the total read
+          // as a fresh bill: "$160.80" with no hint that $30 of it was already
+          // charged, which is how a confirmation turns into a support message.
+          calloutPaid: fee,
           bookingId: _bId,
           type: 'confirmation',
           lang: getLang(),
@@ -2462,7 +2479,7 @@ async function renderPayment() {
 
     const prSupported = await createPaymentRequestButton('payment-request-btn', {
       amountCents: Math.round(calloutFee * 100),
-      label: 'Dr. Bike Sydney - Call-out fee',
+      label: 'Dr. Bike Sydney - Visit & diagnosis',
       onPayment: async (paymentMethodId) => {
         const pi = await chargeOnce(paymentMethodId);
         await finalizeBooking(pi, { isTest: false });
@@ -2494,7 +2511,7 @@ async function renderPayment() {
             translateValue('Payment failed. Please check your card details and try again.');
         errEl.hidden = false;
         btn.disabled = false;
-        btn.textContent = payButtonLabel('Pay $CALLOUT Call-out Fee', calloutFee);
+        btn.textContent = payButtonLabel('Pay $CALLOUT Visit & Diagnosis', calloutFee);
       }
     });
   } else {
@@ -4074,7 +4091,7 @@ async function renderMyBookings() {
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Date</span><span style="font-weight:600;color:var(--navy)">${booking.scheduled_date || '--'}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Time</span><span style="font-weight:600;color:var(--navy)">${toDisplayTime(booking.scheduled_time) || '--'}</span></div>
               <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${booking.address || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Call-out fee</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Visit & diagnosis</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
             </div>
             ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid var(--red-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
             ${

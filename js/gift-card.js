@@ -4,7 +4,7 @@
 // handlers in js/landing-inline.js, which meant the mobile SPA had no gift
 // card at all - `grep -c gift index.html js/app.js` returned 0. That is the
 // same shape as four other bugs this month (the "Trusted by" bar, the fee-check
-// dead end, four separate call-out fee calculators, an unreachable Profile
+// dead end, four separate visit & diagnosis fee calculators, an unreachable Profile
 // screen): a feature wired on one surface and not the other. Building it here
 // and opening it from both is the only version of this that cannot drift.
 import { translateValue } from './i18n.js';

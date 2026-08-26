@@ -365,7 +365,7 @@ async function resolveAddressCoverage(address) {
   return resolveCoverage({ minutes: route?.minutes ?? null, km: route?.km ?? null, zone, address });
 }
 
-// ONE calculator. Every place that quotes or charges a call-out fee reads the
+// ONE calculator. Every place that quotes or charges a visit & diagnosis fee reads the
 // number from here.
 //
 // It did not use to. handleCreateBooking resolved the fee from driving time
@@ -537,7 +537,7 @@ export async function matchCalloutZone(sb, address) {
   const { data: zones } = await sb.from('callout_zones').select('name,callout_fee,suburbs');
   const addr = (address || '').trim().toLowerCase();
   // Bidirectional on purpose: a full booking address ("123 Beach Rd, Bondi
-  // Beach NSW") CONTAINS the shorter DB suburb, but "What's My Fee?" takes a
+  // Beach NSW") CONTAINS the shorter DB suburb, but "What does a visit cost?" takes a
   // bare suburb name and the DB entry is sometimes the more specific "Bondi
   // Beach"/"Bondi Junction" - "bondi" alone never contains either, so every
   // plain suburb name silently reported "not covered" (found in production,
@@ -554,7 +554,7 @@ export async function matchCalloutZone(sb, address) {
   return zone ? { calloutFee: Number(zone.callout_fee), zoneName: zone.name } : null;
 }
 
-// The "What's My Fee?" button on the marketing page - public/no-auth on
+// The "What does a visit cost?" button on the marketing page - public/no-auth on
 // purpose, same reasoning as handleCheckCoverage: a visitor should be able to
 // see their price before creating an account or starting a booking, not just
 // after. Returns the fee so the UI can show it (handleCheckCoverage only
@@ -1013,7 +1013,7 @@ async function handleCreateBooking(req, res) {
   // than a mystery lump surcharge.
   let servicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
-  // 3. Authoritative call-out fee, from the same resolution the client was
+  // 3. Authoritative visit & diagnosis fee, from the same resolution the client was
   // quoted (driving time from the base, falling back to the priced zone -
   // api/_coverage.js). Was a direct `callout_zones` lookup defaulting to $20,
   // which is how Balmain, Potts Point, North Sydney and Maroubra - all $45
@@ -4305,7 +4305,7 @@ async function handleAdminCreateBooking(req, res) {
 
   const servicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
-  // Authoritative call-out fee, from the same calculator every other path
+  // Authoritative visit & diagnosis fee, from the same calculator every other path
   // uses. This comment used to claim it was "the same lookup
   // handleCreateBooking uses" - it had not been for a while.
   //

@@ -35,7 +35,7 @@ export function isOrphanCandidate(
   const charge = pi.latest_charge && typeof pi.latest_charge === 'object' ? pi.latest_charge : null;
   if (charge && (charge.refunded || charge.amount_refunded > 0)) return false;
   if (pi.charges?.data?.some((c) => c.refunded || c.amount_refunded > 0)) return false;
-  if (pi.invoice) return false; // subscription invoices, not call-out fees
+  if (pi.invoice) return false; // subscription invoices, not visit & diagnosis fees
   if (pi.metadata?.giftCard === 'true') return false;
   // The daily cron skips anything Diego was already told about, so it does not
   // wake him twice. An audit must do the opposite: a payment alerted about in

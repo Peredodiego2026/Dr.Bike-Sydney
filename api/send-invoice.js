@@ -167,9 +167,9 @@ function buildPDF({
       y += 16;
     });
 
-    // Totals box — itemized: call-out fee (info only) + service + parts + discounts + GST + grand total
+    // Totals box — itemized: visit & diagnosis fee (info only) + service + parts + discounts + GST + grand total
     const totalRows = [
-      { label: 'Call-out fee (paid at booking)', value: calloutFeeVal, muted: true },
+      { label: 'Visit & diagnosis (paid at booking)', value: calloutFeeVal, muted: true },
       { label: 'Service', value: finalPrice },
       ...(partsRows || []).map((p) => ({ ...p, sub: true })),
       ...(discountAmt > 0
@@ -400,7 +400,7 @@ export default async function handler(req, res) {
   const finalPrice = Number(price) || 0;
   const discountAmt = Number(discount) || 0;
 
-  // Itemized parts + call-out fee + completion-time discount (EFTPOS flow)
+  // Itemized parts + visit & diagnosis fee + completion-time discount (EFTPOS flow)
   const calloutFeeVal = Number(calloutFee) || 20;
   const partsRows = (Array.isArray(partsCharged) ? partsCharged : [])
     .filter((p) => Number(p?.qty) > 0)
@@ -657,7 +657,7 @@ export default async function handler(req, res) {
     </div>
 
     <div class="total-box">
-      <div class="total-row"><span style="color:#94A3B8;text-decoration:line-through">Call-out fee (paid at booking)</span><span style="color:#94A3B8;text-decoration:line-through">$${calloutFeeVal.toFixed(2)}</span></div>
+      <div class="total-row"><span style="color:#94A3B8;text-decoration:line-through">Visit & diagnosis (paid at booking)</span><span style="color:#94A3B8;text-decoration:line-through">$${calloutFeeVal.toFixed(2)}</span></div>
       <div class="total-row"><span>Service</span><span>$${finalPrice.toFixed(2)}</span></div>
       ${partsRows.map((p) => `<div class="total-row"><span style="padding-left:12px">${p.label}</span><span>$${p.value.toFixed(2)}</span></div>`).join('')}
       ${discountAmt > 0 ? `<div class="total-row"><span style="color:#15803D">Discount (at booking)</span><span style="color:#15803D">−$${discountAmt.toFixed(2)}</span></div>` : ''}

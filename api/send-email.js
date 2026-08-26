@@ -58,6 +58,10 @@ export default async function handler(req, res) {
 
   const gst = Math.round((price || 0) / 11);
   const net = (price || 0) - gst;
+  // Present only on the booking confirmation. A total with no mention of what
+  // was already charged reads as a second bill.
+  const paidNow = Number(req.body.calloutPaid) || 0;
+  const stillOwed = Math.max(0, (Number(price) || 0) - paidNow);
   const year = new Date().getFullYear();
 
   const header = (color, emoji, title) => `
@@ -83,6 +87,12 @@ export default async function handler(req, res) {
         <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Net amount</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">$${net} AUD</td></tr>
         <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">GST (10%)</td><td style="padding:8px 0;font-weight:600;color:#475569;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">$${gst} AUD</td></tr>
         <tr><td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px;border-top:2px solid #E2E8F0">Total</td><td style="padding:10px 0 0;font-weight:800;color:#2563EB;font-size:18px;text-align:right;border-top:2px solid #E2E8F0">$${price} AUD</td></tr>
+        ${
+          paidNow > 0
+            ? `<tr><td colspan="2" style="padding:14px 0 0;font-size:13px">Visit &amp; diagnosis &mdash; already paid: &minus;$${paidNow.toFixed(2)} AUD</td></tr>
+        <tr><td colspan="2" style="padding:6px 0 0;font-size:17px;font-weight:800">To pay the mechanic on completion: $${stillOwed.toFixed(2)} AUD</td></tr>`
+            : ''
+        }
       </table>
     </div>`;
 
@@ -91,7 +101,7 @@ export default async function handler(req, res) {
       subject: `✅ Booking confirmed — ${service} · ${date}`,
       html: `${header('#0D1F3C', '🚲', 'Booking confirmed!')}
         <div style="padding:32px 28px">
-          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your booking is confirmed ✅ Your mechanic will contact you 30 min before arrival.</p>
+          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your booking is confirmed ✅ Your mechanic will contact you 30 min before arrival. The rest is paid on completion, by card or EFTPOS - and if the repair turns out not to be possible, they tell you on the spot and it is not charged.</p>
 
           <!-- Booking details -->
           ${bookingTable()}
@@ -110,7 +120,7 @@ export default async function handler(req, res) {
                twice over. It repeated, line for line, the six figures the
                booking table above already shows - Diego's words: "no tiene
                sentido". And it called them a tax invoice at a moment when
-               nothing had been invoiced: at booking we charge the call-out fee
+               nothing had been invoiced: at booking we charge the visit & diagnosis fee
                only, and the email itself says "Payment collected on
                completion" three lines further up.
 
