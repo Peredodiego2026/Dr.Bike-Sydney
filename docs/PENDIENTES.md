@@ -6483,3 +6483,48 @@ lo genera Stripe - y no se puede controlar desde aca. Ver 46.
 
 10 tests nuevos. Suite completa 10 veces: 675/675.
 
+## 47. El cliente que pago no existia, y la plata cobrada no estaba en ningun lado (26-ago-2026)
+
+Diego, mirando el admin despues de su reserva pagada: *"no se activo nada en
+admin... no estan los 30 aus ni el cliente en ni un lado"*.
+
+**El booking si estaba y si mostraba los $30** - en su modal, con la van y la
+direccion. Lo que faltaba eran dos cosas distintas.
+
+### 1. El invitado que pago no era un cliente
+
+`loadClients` lee **solo `profiles`**. Una reserva sin cuenta guarda nombre,
+email y telefono **en la fila del booking** y no crea perfil.
+
+O sea que el dia que alguien pago $30 como invitado, la pantalla de Clientes
+decia **1** - el admin - y la persona que acababa de pagar no aparecia en
+ningun lado. No se la podia ver, contar ni contactar.
+
+Ahora la pantalla une las dos fuentes: perfiles **mas** invitados sacados de
+`bookings` donde `client_id` es nulo. Una tarjeta por persona y no por reserva,
+y quien reservo como invitado y despues se registro con el mismo email **no se
+duplica**. El total del KPI tambien los suma, o la tarjeta contradecia a la
+lista de abajo.
+
+La tarjeta de invitado muestra su telefono en vez de los botones **Bikes** y
+**Chat**: los dos necesitan un id de perfil que un invitado no tiene, y botones
+muertos son peores que un dato util.
+
+### 2. La plata cobrada no estaba en ninguna pantalla
+
+`Revenue` cuenta **solo trabajos `completed`**, y eso **esta bien**: es
+reconocimiento de ingreso, y el codigo lo arreglo a proposito - el comentario
+cuenta que antes tres pantallas tenian tres definiciones distintas de
+"revenue" y el dashboard era el unico que halagaba el numero.
+
+Pero los $30 **existen**. Estan en Stripe. Y ninguna pantalla del panel lo
+admitia: Finance $0, Dashboard $0, P&L $0.
+
+Se agrego **"Collected, not yet earned"**: la suma de `callout_fee` de las
+reservas con `stripe_payment_intent_id` y estado distinto de completada o
+cancelada. **Deliberadamente fuera de Revenue**, con el texto explicando por
+que. Hay un test que verifica que siga afuera, para que un cambio posterior no
+la sume en silencio.
+
+11 tests nuevos. Suite completa **10 veces**: 699/699.
+

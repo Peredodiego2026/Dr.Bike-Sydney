@@ -709,6 +709,20 @@
         </div>
       </div>
 
+      <!-- Money already charged for jobs that have not happened yet. It is
+           deliberately NOT part of Revenue above - revenue is recognised when
+           the job is finished, which is correct. But the cash is real and sat
+           in Stripe with no screen in the panel admitting it existed. -->
+      <div id="fk-held-card" class="card" style="display:none;border-left:4px solid var(--blue);margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px">
+          <div style="min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--navy)">Collected, not yet earned</div>
+            <div id="fk-held-sub" style="font-size:13px;color:var(--mgray);margin-top:3px;line-height:1.5">&mdash;</div>
+          </div>
+          <div id="fk-held" style="flex-shrink:0;font-size:26px;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums">$0</div>
+        </div>
+      </div>
+
       <div class="fin-row">
         <!-- Chart de revenue diario -->
         <div class="card">
@@ -1548,5 +1562,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=27c805b3fe"></script>
+<script src="js/admin.js?v=2a27717fd3"></script>
 </body></html>
