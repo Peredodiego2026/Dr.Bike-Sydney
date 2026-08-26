@@ -3972,6 +3972,77 @@ function promptNewPassword() {
 }
 
 // ── My Bookings ───────────────────────────────────────────────────────────────
+// ── Keeping the bookings list honest ─────────────────────────────────────────
+// Diego, moving between the mechanic app and the client app during a real job:
+// "apreto boton en ruta pero en la seccion booking de la spa sigue el servicio
+// en confirmed... actualice la pagina y ahora aparece en ruta".
+//
+// He was right, and the cause was plain: this file subscribed to
+// mechanic_locations and to the job chat, and to NOTHING on `bookings`. The
+// list had no way of learning the status had moved. Only a reload could.
+//
+// Three ways in, because each covers a case the others miss:
+//   - realtime, for the screen sitting open while the mechanic taps En route;
+//   - coming back to the tab, which is exactly what Diego was doing;
+//   - a slow poll, because realtime needs `bookings` to be in the
+//     supabase_realtime publication, and that is a database setting no deploy
+//     can guarantee (see scripts/enable-realtime-bookings.sql).
+let _bookingsLiveChannel = null;
+let _bookingsLiveTimer = null;
+
+function stopBookingsLive() {
+  if (_bookingsLiveChannel) {
+    sb.removeChannel(_bookingsLiveChannel);
+    _bookingsLiveChannel = null;
+  }
+  if (_bookingsLiveTimer) {
+    clearInterval(_bookingsLiveTimer);
+    _bookingsLiveTimer = null;
+  }
+}
+
+// Never redraw the list out from under an open sheet: the client would be
+// reading their booking and have it yanked away mid-sentence.
+function bookingsCanRefresh() {
+  return (
+    router.current === 'my-bookings' &&
+    !document.hidden &&
+    !document.getElementById('detail-panel')
+  );
+}
+
+function refreshBookingsIfIdle() {
+  if (bookingsCanRefresh()) renderMyBookings();
+}
+
+async function startBookingsLive() {
+  stopBookingsLive();
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    if (!session) return; // a guest has no rows to watch
+    _bookingsLiveChannel = sb
+      .channel(`client-bookings-${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings',
+          filter: `client_id=eq.${session.user.id}`,
+        },
+        refreshBookingsIfIdle
+      )
+      .subscribe();
+  } catch (e) {
+    console.warn('[bookings] realtime unavailable, falling back to polling:', e.message);
+  }
+  _bookingsLiveTimer = setInterval(refreshBookingsIfIdle, 30000);
+}
+
+document.addEventListener('visibilitychange', refreshBookingsIfIdle);
+
 async function renderMyBookings() {
   const screen = document.querySelector('[data-screen="my-bookings"]');
   if (!screen) return;
@@ -5716,6 +5787,8 @@ document.addEventListener('screenchange', ({ detail }) => {
   if (window.gtag)
     gtag('event', 'page_view', { page_title: detail.route, page_location: '/#' + detail.route });
   if (detail.prev === 'tracking' && detail.route !== 'tracking') cleanupTracking();
+  if (detail.route === 'my-bookings') startBookingsLive();
+  else if (detail.prev === 'my-bookings') stopBookingsLive();
   if (detail.prev === 'payment' && detail.route !== 'payment') {
     destroyPaymentForm();
     if (window.appState.bookingId && detail.route !== 'tracking') {

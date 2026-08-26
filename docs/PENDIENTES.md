@@ -6528,3 +6528,53 @@ la sume en silencio.
 
 11 tests nuevos. Suite completa **10 veces**: 699/699.
 
+## 50. Un sintoma, tres causas sin relacion (26-ago-2026)
+
+Diego, recorriendo un trabajo real entre tres pantallas: *"la actualizacion al
+dia 31 en mi pagina de admin y mechanic solo aparecieron cuando hice reset a las
+paginas"* y *"apreto boton en ruta pero en la seccion booking de la spa sigue el
+servicio en confirmed... actualice la pagina y ahora aparece en ruta"*.
+
+Parecia un bug. Eran tres, y ninguno tenia que ver con los otros.
+
+### Admin: escuchaba, recordaba, y no dibujaba
+
+La suscripcion ya existia y ya funcionaba. Actualizaba `allBookings` en memoria
+y **ahi se terminaba**: nada repintaba la tabla, asi que la pantalla seguia
+mostrando la fila como estaba al cargar la pagina. Faltaba una linea.
+
+Ahora repinta, **agrupado**: una sola finalizacion escribe la reserva varias
+veces seguidas (estado, repuestos, resultado de las notificaciones) y cada
+escritura es un evento propio. Sin agrupar, la tabla se recargaba tres veces en
+un segundo. Y **nunca con un modal abierto** - repintar debajo le hace perder al
+admin el lugar donde estaba leyendo.
+
+### SPA del cliente: no escuchaba nada
+
+`js/app.js` estaba suscripto a `mechanic_locations` y al chat del trabajo, y a
+**nada** de `bookings`. La lista no tenia forma de enterarse de que el estado se
+habia movido. Solo un reload.
+
+Tres caminos, porque cada uno cubre lo que los otros no: realtime para la
+pantalla abierta mientras el mecanico toca *En route*; **volver a la pestana**,
+que es exactamente lo que Diego estaba haciendo; y una consulta lenta detras.
+
+### Mecanico: el codigo estaba bien desde siempre
+
+`js/mechanic.js` **siempre** llamo a `load()` con cada evento. Que igual hiciera
+falta recargar a mano solo puede significar una cosa: **los eventos no estaban
+llegando**.
+
+Supabase solo transmite cambios de las tablas que son miembros de la publicacion
+`supabase_realtime`. Es un ajuste **de la base de datos**: ningun deploy lo
+lleva, ningun test lo agarra, y nada en la app lo reporta. Una tabla que no es
+miembro produce silencio, que es indistinguible de "no paso nada".
+
+`scripts/enable-realtime-bookings.sql` lo arregla. Pero **las tres pantallas ya
+no dependen de eso**: recargan al volver a la app y solas cada tanto. Un
+mecanico a mitad de ronda no puede tener que deslizar para enterarse de que un
+trabajo se movio. Eso si, **nunca con el modal de completar abierto**: borraria
+una firma que el cliente ya dio.
+
+15 tests nuevos. 714/714.
+

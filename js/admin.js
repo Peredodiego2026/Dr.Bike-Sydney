@@ -3431,6 +3431,33 @@ function markAllRead() {
   updateNotifBadge();
 }
 
+// Coalesced, because a single completion writes the booking several times in
+// a row (status, then parts, then the notification outcome) and each write is
+// its own event. Without this the table would refetch three times in a second.
+let _repaintTimer = null;
+function repaintBookingsSoon() {
+  clearTimeout(_repaintTimer);
+  _repaintTimer = setTimeout(() => {
+    // Only when the screen is actually showing, and never while a booking
+    // modal is open - repainting under an open modal loses the admin's place.
+    const page = document.getElementById('page-bookings');
+    if (!page || page.style.display === 'none') return;
+    // Every admin overlay that could be covering the table. Repainting under
+    // one of them loses whatever the admin was in the middle of reading.
+    for (const id of [
+      'booking-detail-modal',
+      'cancel-modal',
+      'reassign-modal',
+      'admin-reschedule-modal',
+      'admin-create-booking-modal',
+    ]) {
+      const el = document.getElementById(id);
+      if (el && el.style.display !== 'none' && el.style.display !== '') return;
+    }
+    applyBookingFilters();
+  }, 500);
+}
+
 function subscribeToBookings() {
   sb.channel('admin-bookings-notifs')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings' }, (payload) => {
@@ -3438,12 +3465,28 @@ function subscribeToBookings() {
       unreadCount++;
       updateNotifBadge();
       prependNotification(payload.new);
+      repaintBookingsSoon();
     })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bookings' }, (payload) => {
       const idx = allBookings.findIndex((b) => b.id === payload.new.id);
       if (idx >= 0) allBookings[idx] = { ...allBookings[idx], ...payload.new };
+      // THE line this whole fix is about. The row above kept `allBookings`
+      // correct and the screen wrong, which is indistinguishable from broken.
+      repaintBookingsSoon();
     })
     .subscribe();
+
+  // Behind realtime, a slow poll. Realtime only delivers if `bookings` is in
+  // the supabase_realtime publication - a database setting, not something a
+  // deploy can carry (see scripts/enable-realtime-bookings.sql). The evidence
+  // that it may not be on: js/mechanic.js has ALWAYS called load() on every
+  // event, and the mechanic screen still needed a manual reload.
+  setInterval(() => {
+    if (!document.hidden) repaintBookingsSoon();
+  }, 60000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) repaintBookingsSoon();
+  });
 }
 
 // ── MECHANIC STATS ────────────────────────────────────────────────────────────

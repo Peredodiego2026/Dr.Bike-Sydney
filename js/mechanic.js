@@ -808,7 +808,29 @@ function sub() {
       }
     })
     .subscribe();
-  window.addEventListener('beforeunload', () => sb.removeChannel(mechChannel));
+
+  // This screen has always called load() on every event, and a rescheduled job
+  // still only appeared after a manual reload - so the events were not
+  // arriving. Realtime needs `bookings` in the supabase_realtime publication,
+  // which is a database setting (scripts/enable-realtime-bookings.sql).
+  //
+  // A mechanic mid-round cannot be asked to pull-to-refresh to find out a job
+  // moved, so the screen no longer depends on that setting being right: it
+  // reloads when the phone comes back to the app, and slowly on its own.
+  // Never while the completion modal is open - that would wipe a signature.
+  const canReload = () => !document.hidden && !document.getElementById('complete-modal');
+  const reloadInterval = setInterval(() => {
+    if (canReload()) load();
+  }, 60000);
+  const onVisible = () => {
+    if (canReload()) load();
+  };
+  document.addEventListener('visibilitychange', onVisible);
+  window.addEventListener('beforeunload', () => {
+    clearInterval(reloadInterval);
+    document.removeEventListener('visibilitychange', onVisible);
+    sb.removeChannel(mechChannel);
+  });
   requestPushPermission();
 }
 
