@@ -4,14 +4,14 @@
 // v87 (2026-08-25): la gift card pasa a js/gift-card.js, un modulo nuevo que
 // comparten la landing y la SPA. Se importa sin ?v=, asi que solo este bump lo
 // renueva. Tambien cambia css/main.css (el modal) y js/landing-inline.js.
-// v79 (2026-08-25): el "What's My Fee" fuera de zona seguia mostrando el
+// v79 (2026-08-25): el "What does a visit cost" fuera de zona seguia mostrando el
 // callejon viejo: la copia que se usa esta en js/app.js, y landing.html
 // tambien carga ese archivo, asi que fallaba en las dos superficies.
 // v78 (2026-08-25): las tarjetas de membresia entran en una pantalla (1356px
 // -> 851px) y ganan profundidad 3D discreta. Toca css/home.css, que comparten
 // la landing y la SPA.
 // v77 (2026-08-25): FAQ, chatbot y terminos explican que el precio va por
-// tiempo de manejo; el "What's My Fee" fuera de zona ahora invita a seguir
+// tiempo de manejo; el "What does a visit cost" fuera de zona ahora invita a seguir
 // con la consulta gratis en vez de mandar a llamar. Toca js/i18n.js.
 // v76 (2026-08-25): la barra "Trusted by" con marcas de fabricantes tambien
 // estaba en la SPA, no solo en la landing. Toca index.html y css/home.css.
@@ -31,7 +31,7 @@
 // WhatsApp. Touches css/main.css and js/i18n.js, so the cache has to move.
 // v71 (2026-08-23): audit fixes touched js/supabase.js (getCalloutFee /
 // getMechanicInfo now log instead of swallowing), js/app.js (reschedule
-// date-picker timezone) and js/i18n.js (3 dead "$20 call-out fee" keys
+// date-picker timezone) and js/i18n.js (3 dead "$20 visit & diagnosis fee" keys
 // removed). supabase.js and i18n.js are imported as ES modules with no ?v=,
 // so only a cache bump reaches them - the ?v= tags on app.js/landing-inline.js/
 // landing.css are bumped in their pages too, this covers the modules.
@@ -90,7 +90,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v88';
+const CACHE_STATIC = 'drbike-static-v89';
 const CACHE_PAGES  = 'drbike-pages-v70';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

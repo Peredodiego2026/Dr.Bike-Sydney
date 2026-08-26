@@ -6365,3 +6365,73 @@ Los colores salen todos de tokens (`--blue-dark`, `--blue`, `--blue-deep`,
 8 tests nuevos, incluido uno que verifica que **no vuelva a entrar una imagen de
 fondo** (`url(` en el bloque de la tarjeta).
 
+## 46. "Visita y diagnostico": el fee dice lo que compra (26-ago-2026)
+
+Diego, despues de ver el email de su propia reserva pagada:
+
+> *"hay que explicar mejor en el booking confirmed... porque sale un solo
+> invoice y pareciera que tiene que pagar todo de nuevo"*
+
+y sobre el nombre:
+
+> *"realmente ese fee es ir a checkear la bicicleta... lo que no significa que
+> por pagar nosotros tengamos la responsabilidad 100% de que vamos a
+> solucionar su problema"*
+
+Tiene razon en las dos, y la segunda importa mas de lo que parece.
+
+### El nombre
+
+"Call-out fee" nombra un traslado. Lo que el cliente compra es el traslado
+**mas** una revision completa de la bici por un mecanico y un diagnostico de que
+necesita - **por eso no se reembolsa** cuando la reparacion resulta inviable.
+
+Un cargo por diagnostico no reembolsable es normal y defendible: mecanicos,
+plomeros, veterinarios. Lo que la ley australiana del consumidor mira no es "lo
+arreglaste?", sino si el servicio se presto con competencia, si sirvio para el
+**fin declarado**, y si eso **se dijo antes de cobrar**.
+
+Ese tercer punto era el unico que faltaba. La app cobraba sin decir en ningun
+lado que compraba. La politica ya estaba bien; la divulgacion no existia.
+
+**184 reemplazos en 21 archivos**, mas 3 archivos en una segunda pasada por
+variantes de mayusculas que el primer script no cubrio - las encontro el propio
+test de barrido, no una revision a ojo.
+
+Espanol ya decia "Tarifa de visita" y chino "上门服务费", asi que
+esos solo se ajustaron para incluir el diagnostico.
+
+### La divulgacion, antes de la tarjeta
+
+Un bloque nuevo en el resumen, **arriba del boton de pagar**, que dice: un
+mecanico va, revisa la bici entera y te dice que necesita; si la reparacion no
+es posible - un repuesto que no llevamos, un trabajo que necesita tornero o
+soldadura - te lo dicen ahi mismo y **no se cobra el servicio**; la visita y el
+diagnostico cubren esa revision y **no se reembolsan**.
+
+Define el alcance sin intentar anular una garantia legal, que es la linea que
+separa un termino valido de uno que no se sostiene.
+
+### La aritmetica del email
+
+El email decia **Total $160.80** sin mencionar los $30 ya cobrados. Se lee como
+una segunda factura. Ahora:
+
+    Total                                    $160.80
+    Visita y diagnostico - ya pagado          -$30.00
+    A pagar al mecanico al terminar          $130.80
+
+`color-check` bloqueo **dos** versiones de ese bloque por hex de mas. Los emails
+no pueden usar tokens - ningun cliente de correo soporta variables CSS - asi que
+la version final **no agrega ni un color**: hereda del contenedor. El trinquete
+gano las dos veces, y tenia razon.
+
+### El test que vale
+
+`tests/unit/visit-and-diagnosis.test.js` **recorre el arbol entero** buscando
+"call-out fee" en cualquier `.html` o `.js` fuera de tests/docs/scripts. No es
+una lista de archivos que alguien tiene que acordarse de actualizar: es un
+barrido. Encontro las 3 variantes de mayusculas a los dos minutos de escrito.
+
+13 tests nuevos. Suite completa **10 veces**: 678/678.
+

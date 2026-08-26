@@ -1977,7 +1977,7 @@ function renderChargeBreakdown() {
   const b = calcChargeBreakdown();
   if (!b) return;
   let rows = '';
-  rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gray-lt);text-decoration:line-through;margin-bottom:6px"><span>Call-out fee (paid at booking)</span><span>$${b.calloutFee.toFixed(2)}</span></div>`;
+  rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gray-lt);text-decoration:line-through;margin-bottom:6px"><span>Visit & diagnosis (paid at booking)</span><span>$${b.calloutFee.toFixed(2)}</span></div>`;
   rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--navy);margin-bottom:6px"><span>Service</span><span>$${b.service.toFixed(2)}</span></div>`;
   if (b.partsItems.length) {
     b.partsItems.forEach((p) => {
