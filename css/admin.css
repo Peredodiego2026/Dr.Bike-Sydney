@@ -16,9 +16,10 @@
       [data-theme='dark'] paints. Mapping them to a light token inverts the
       theme - that is defect 12.15, and it is how "No jobs today" ended up at
       1.03:1.
-   2. Tokens the dark block redefines: --white, --off, --mgray, --border,
-      --shadow, --shadow-lg, --blue-lt. Converting a hex to one of these is
-      forbidden: it would follow the theme when the author meant it not to.
+   2. Tokens the dark theme redefines - now ALL of them, in css/variables.css
+      rather than in a private block here. Converting a hand-written hex to one
+      of those tokens is forbidden: it would follow the theme when the author
+      meant it not to.
    3. Selector strings, not colours. `[style*='background:#FEF2F2']` (line ~478)
       and `[style*='background:#F0FDF4']` (~481) MATCH the inline style that
       js/admin.js writes. If that hex ever becomes var() in the JS, these rules
@@ -27,15 +28,6 @@
       definition that references itself is invalid and wipes the colour off
       every descendant (12.14, HALLAZGO 1).
    ────────────────────────────────────────────────────────────────────────── */
-[data-theme='dark'] {
-  --white: #1c1c1e;
-  --off: #242426;
-  --mgray: #98989f;
-  --border: #38383a;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --blue-lt: rgba(24, 72, 200, 0.18);
-}
 * {
   box-sizing: border-box;
   margin: 0;
@@ -51,11 +43,11 @@ body {
 }
 /* Dark mode fixes admin */
 [data-theme='dark'] body {
-  background: #0d1b2e;
+  background: #0f1a2e;
   color: #f2f2f7;
 }
 [data-theme='dark'] .main {
-  background: #0d1b2e;
+  background: #0f1a2e;
   color: #f2f2f7;
 }
 [data-theme='dark'] .main .card-title {
@@ -109,15 +101,6 @@ body {
 [data-theme='dark'] .main .cl-name {
   color: #f2f2f7;
 }
-[data-theme='dark'] .main [style*='color:var(--navy)'] {
-  color: #f2f2f7 !important;
-}
-[data-theme='dark'] .main [style*='color:var(--mgray)'] {
-  color: #8e8e93 !important;
-}
-[data-theme='dark'] .main [style*='color:var(--gray)'] {
-  color: #8e8e93 !important;
-}
 [data-theme='dark'] .card-title {
   color: #f2f2f7;
 }
@@ -139,12 +122,6 @@ body {
 [data-theme='dark'] #coupon-inline-form {
   background: #152035;
   border-color: rgba(255, 255, 255, 0.08);
-}
-[data-theme='dark'] #coupon-inline-form [style*='color:var(--navy)'] {
-  color: #f2f2f7 !important;
-}
-[data-theme='dark'] #page-coupons > div > div[style*='color:var(--navy)'] {
-  color: #f2f2f7 !important;
 }
 [data-theme='dark'] .tbl th {
   background: #1a2740;
@@ -275,7 +252,7 @@ body {
   color: #f2f2f7;
 }
 [data-theme='dark'] .add-van-btn {
-  background: #0d1b2e;
+  background: #0f1a2e;
   border-color: rgba(255, 255, 255, 0.1);
   color: #98989f;
 }
@@ -294,7 +271,7 @@ body {
   color: #f2f2f7;
 }
 [data-theme='dark'] .mobile-bottom-nav {
-  background: var(--navy);
+  background: var(--navy-surface);
   border-color: rgba(255, 255, 255, 0.08);
 }
 [data-theme='dark'] .mobile-bottom-nav a {
@@ -368,14 +345,14 @@ body {
 
 /* P4: Sections with persistent white background in dark mode */
 [data-theme='dark'] .content {
-  background: #0d1b2e;
+  background: #0f1a2e;
 }
 [data-theme='dark'] #page-coupons {
-  background: #0d1b2e;
+  background: #0f1a2e;
   color: #f2f2f7;
 }
 [data-theme='dark'] #page-inventory {
-  background: #0d1b2e;
+  background: #0f1a2e;
   color: #f2f2f7;
 }
 
@@ -418,20 +395,8 @@ body {
   border-color: rgba(255, 255, 255, 0.08);
 }
 /* Force all navy inline text to white in dark mode */
-[data-theme='dark'] [style*='color:var(--navy)'] {
-  color: #f2f2f7 !important;
-}
-[data-theme='dark'] [style*='color:var(--navy)'] {
-  color: #f2f2f7 !important;
-}
 [data-theme='dark'] [style*='color:#0d1f3c'] {
   color: #f2f2f7 !important;
-}
-[data-theme='dark'] [style*='color:var(--mgray)'] {
-  color: #8e8e93 !important;
-}
-[data-theme='dark'] [style*='color:var(--mgray)'] {
-  color: #8e8e93 !important;
 }
 [data-theme='dark'] [style*='background:var(--off)'] {
   background: #1a2740 !important;
@@ -537,7 +502,7 @@ body {
 /* SIDEBAR */
 .sidebar {
   width: 240px;
-  background: var(--navy);
+  background: var(--navy-surface);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1612,7 +1577,7 @@ body {
 .ham-line {
   width: 14px;
   height: 1.5px;
-  background: var(--navy);
+  background: var(--navy-surface);
   border-radius: 2px;
   display: block;
 }
@@ -1647,7 +1612,7 @@ body {
   z-index: 9999;
   width: 42px;
   height: 42px;
-  background: var(--navy);
+  background: var(--navy-surface);
   border-radius: 10px;
   border: none;
   cursor: pointer;

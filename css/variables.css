@@ -13,6 +13,10 @@
   --red: #cf2020;
   --red-lt: #fef2f2;
   --navy: #0d1f3c;
+  --navy-surface: #0d1f3c; /* the SAME navy, but as a dark ground: sidebar,
+     panels, the report header. Identical in light mode on purpose - the
+     split exists so dark mode can lighten the ink without repainting a
+     surface that is supposed to stay dark in BOTH themes. */
   --gray: #475569;
   --gray-lt: #94a3b8;
   --border: #e2e8f0;
@@ -47,6 +51,7 @@
   --green-tint: #ecfdf5; /* soft green panel background    */
   --blue-pale: #93c5fd; /* label on navy, focus border    */
   --amber-edge: #fcd34d; /* the edge of an attention box   */
+  --on-amber: #ffffff; /* ink ON an amber fill - see the dark block */
   --slate: #64748b; /* between --gray and --gray-lt   */
   --cyan: #0891b2; /* avatars                        */
 
@@ -141,4 +146,94 @@
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition: 150ms ease;
+}
+
+/* ── Dark theme ───────────────────────────────────────────────────────────
+   The single source of truth. Before this block existed there was none: 98
+   tokens in :root and zero dark values, so every surface patched its own -
+   css/admin.css carried 149 [data-theme='dark'] rules, css/mechanic.css its
+   own 11-token block, and the two disagreed about what dark even looked like
+   (#1c1c1e neutral vs #152035 navy, in the same product).
+
+   Anything nobody remembered to patch simply kept its LIGHT value. That is
+   not a metaphor: js/admin.js writes `color:var(--navy)` inline 68 times and
+   js/mechanic.js writes `color:var(--gray)` 30 times, and in dark mode those
+   resolved to near-black ink on a near-black card. The boxes and dividers
+   Diego reported as "no se notan" were #e2e8f0 borders - a light grey
+   hairline - drawn on navy.
+
+   Activated ONLY by the data-theme attribute, which js/admin.js and
+   js/mechanic.js set. There is no prefers-color-scheme anywhere in this
+   project, so the client SPA and the landing are untouched by this block.
+
+   scripts/dark-theme-check.mjs fails the build if a colour token used by
+   admin or mechanic is missing here. */
+[data-theme='dark'] {
+  /* Grounds. --white is the card, --off/--surface the sunken panel inside it. */
+  --white: #152035;
+  --off: #1b2942;
+  --surface: #1b2942;
+
+  /* Ink. --navy is the primary label everywhere; --navy-surface is deliberately
+     NOT inverted - it is a dark ground in both themes (see :root above). */
+  --navy: #eef2f7;
+  --gray: #9fb0c6;
+  --mgray: #9fb0c6;
+  --gray-lt: #8092ab;
+  --slate: #93a3b8;
+  --navy2: #cbd5e1;
+
+  /* Divisions. The old value was white at 10%, which on navy is a hairline you
+     have to hunt for. These are what make a card read as a card. */
+  --border: rgba(255, 255, 255, 0.16);
+  --border-lt: rgba(255, 255, 255, 0.08);
+
+  /* Accents. Each one has to survive TWO jobs in this codebase - filled button
+     background under white text, and coloured text on the dark card - so they
+     sit mid-range rather than at either extreme. --blue-dark was the worst
+     offender in light values: #1e40af on navy is 2:1, invisible. */
+  --blue: #3b82f6;
+  --blue-dark: #2f6fe0;
+  --blue-deep: #5b9bff;
+  --blue-soft: #93c5fd;
+  --blue-pale: #bfdbfe;
+  --blue2: #1d4ed8;
+  --green: #16a34a;
+  --green-bright: #4ade80;
+  --green-ink: #6ee7b7;
+  --amber: #fbbf24;
+  --amber-bright: #fbbf24;
+  --amber-ink: #fcd34d;
+  --on-amber: #1c1608;
+  --gold: #fbbf24;
+  --orange: #fbbf24;
+  --red: #ef4444;
+  --red-bright: #f87171;
+  --purple: #9064f7;
+  --cyan: #0d8ea5;
+  --wa: #25d366;
+
+  /* Tints: pale panel fills. In light these are near-white washes; the same
+     wash on a dark ground has to be the accent at low alpha, not a white box. */
+  --blue-lt: rgba(59, 130, 246, 0.16);
+  --blue-tint: rgba(59, 130, 246, 0.1);
+  --green-lt: rgba(52, 211, 153, 0.14);
+  --green-tint: rgba(52, 211, 153, 0.09);
+  --amber-lt: rgba(251, 191, 36, 0.14);
+  --amber-tint: rgba(251, 191, 36, 0.09);
+  --red-lt: rgba(248, 113, 113, 0.14);
+  --purple-lt: rgba(167, 139, 250, 0.14);
+  --wa-lt: rgba(37, 211, 102, 0.12);
+
+  /* Edges: the border of a tinted panel. */
+  --blue-edge: rgba(96, 165, 250, 0.35);
+  --amber-edge: rgba(251, 191, 36, 0.4);
+  --red-edge: rgba(248, 113, 113, 0.38);
+
+  /* A shadow the light version could not cast: on a dark ground the 8%-black
+     drop shadow is literally invisible. */
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --elevation-1: 0 12px 32px rgba(0, 0, 0, 0.38);
+  --elevation-2: 0 24px 64px rgba(0, 0, 0, 0.5);
 }
