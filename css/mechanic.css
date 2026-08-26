@@ -698,3 +698,39 @@ body {
   border: 1.5px solid var(--red);
   color: #fff;
 }
+
+/* ── Next-service chips ──────────────────────────────────────────────────────
+   Replaced <input type="date">, which drew a different picker on every platform
+   and none of them belonged to this app. It was also the wrong control: a
+   mechanic finishing a job recommends an INTERVAL, not the 14th of March, and
+   picking a day out of a calendar with gloves on is slower and less accurate
+   than tapping "6 months". */
+.next-chip {
+  padding: 9px 14px;
+  min-height: 40px;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--off);
+  color: var(--navy);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.next-chip:hover {
+  border-color: var(--blue);
+}
+.next-chip.is-on {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.next-chip:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+

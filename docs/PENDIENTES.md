@@ -6649,3 +6649,55 @@ un test que lo verifica, porque el check no puede.
 
 23 tests nuevos. 737/737.
 
+## 52. La app del mecanico: tres cosas (26-ago-2026)
+
+### El aviso de GPS cada 5 segundos
+
+Diego, en una PC sin GPS: *"aparece ese mensaje en pc del gps cada ciertos
+segundos"*.
+
+`sendLocation()` corre en un `setInterval` de 5 segundos y **cada fallo lanzaba
+su propio toast**. Solo el codigo 1 (permiso denegado) cortaba el ciclo; un
+*timeout* - que es lo que devuelve para siempre una maquina sin GPS - seguia
+disparando un mensaje cada cinco segundos mientras el trabajo estuviera en ruta.
+Y `watchPosition` tiraba los suyos aparte.
+
+Ahora hay **un aviso por tipo de problema**, no uno por intento, y los tres
+caminos pasan por el mismo embudo. Se resetea cuando **entra una posicion de
+verdad**, asi que un mecanico que sale de un tunel y vuelve a entrar se entera
+otra vez si se rompe una segunda vez - si no, el limite se convierte en silencio.
+Permiso denegado **sigue** cortando el compartir: reintentar no lo puede
+arreglar.
+
+### El scroll horizontal del modal de completar
+
+El panel es un scroller vertical **sin opinion sobre el otro eje**, asi que
+cualquier hijo un pixel mas ancho le agregaba tambien barra horizontal. Un
+formulario no tiene nada a lo que scrollear de costado: el eje se apago.
+
+De paso, el canvas de la firma tenia `width="100%"`, que **no es un valor legal**
+para ese atributo (lleva un entero de pixeles), y **ninguna altura en CSS**: en
+una pantalla 2x el cuadro se dibujaba de 240px de alto porque eso era lo que
+valia `canvas.height`. Las dos cosas ahora son explicitas y legales.
+
+### La fecha del proximo servicio
+
+Diego: *"la navegacion para colocar la nueva fecha del siguiente servicio se ve
+horrible en pc... y en celu igual se ve horrible"*.
+
+Era `<input type="date">`, asi que **cada plataforma dibujaba su propio selector**
+y ninguno pertenecia a esta app - el spinner de mes/ano de Firefox de su captura
+no es algo que el CSS pueda tocar.
+
+Pero ademas **era el control equivocado**. Un mecanico que termina un service
+recomienda un **intervalo**, no el 14 de marzo; elegir un dia de un calendario
+con guantes puestos es mas lento y menos preciso que tocar "6 meses".
+
+Ahora son chips: 3, 6, 12 meses y *Not now*. Escriben una fecha real en **el
+mismo campo oculto** que ya leian `submitComplete()` y la factura, asi que
+**cambio el control, no el dato**. *Not now* escribe vacio, y
+`nextServiceMessage()` ya trataba eso como "sin fecha", asi que la factura cae en
+su linea generica en vez de imprimir *Invalid Date*.
+
+15 tests nuevos. 752/752.
+
