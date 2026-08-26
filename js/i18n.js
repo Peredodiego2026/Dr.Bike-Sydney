@@ -355,6 +355,8 @@ const dict = {
     'No charge - we check your address and reply personally.':
       'Sin costo - revisamos tu dirección y te respondemos personalmente.',
     'Ask for my price': 'Consultar mi precio',
+    'Waiting for a mechanic': 'Esperando un mecánico',
+    'Assigned to your booking': 'Asignado a tu reserva',
     'Send a gift card': 'Regalar una tarjeta',
     'Any cyclist you know, delivered by email': 'Para cualquier ciclista, se entrega por email',
     'Buy': 'Comprar',
@@ -1754,6 +1756,8 @@ const dict = {
     'No charge - we check your address and reply personally.':
       '不收费 - 我们会核实您的地址并亲自回复。',
     'Ask for my price': '咨询我的价格',
+    'Waiting for a mechanic': '等待技师',
+    'Assigned to your booking': '已分配给你的预约',
     'Send a gift card': '送一张礼品卡',
     'Any cyclist you know, delivered by email': '送给任何骑行者，通过邮件送达',
     'Buy': '购买',
