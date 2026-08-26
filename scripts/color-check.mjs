@@ -70,11 +70,11 @@ const BUDGET = {
   'css/main.css': 0,
   'css/home.css': 2,
   'css/landing.css': 1,
-  'css/admin.css': 134,
+  'css/admin.css': 114,
   'css/mechanic.css': 29,
   'js/app.js': 96,
-  'js/admin.js': 68,
-  'js/mechanic.js': 13,
+  'js/admin.js': 11,
+  'js/mechanic.js': 0,
   'js/components.js': 28,
   'js/stripe.js': 5,
   'js/landing-inline.js': 68,
@@ -279,23 +279,12 @@ for (const file of sweep('.')) {
 // Recorded 2026-08-11 against origin/main. A new writer of an existing string
 // is fine and does not need adding; a writer that STOPS is the failure.
 const COUPLED = {
-  'css/admin.css': {
-    'background:var(--off)': ['js/admin.js', 'admin.html'],
-    'color:#0d1f3c': ['js/admin.js'],
-    'border-color:var(--border)': ['js/admin.js'],
-    'color:var(--border)': ['js/admin.js'],
-    'color:#fff': ['js/admin.js', 'admin.html'],
-    'background:var(--white)': ['js/admin.js', 'admin.html'],
-    'border:1px solid var(--border)': ['js/admin.js', 'admin.html'],
-    'font-weight:600;color:var(--mgray)': ['js/admin.js', 'admin.html'],
-    'background:var(--blue-lt)': ['js/admin.js', 'admin.html'],
-    'background:var(--green-lt)': ['js/admin.js', 'admin.html'],
-    'background:var(--red-lt)': ['js/admin.js', 'admin.html'],
-    'background:#FEF2F2': ['js/admin.js', 'admin.html'],
-    'background:#F0FDF4': ['admin.html'],
-    'padding:16px': ['js/admin.js', 'admin.html'],
-    'grid-template-columns:1fr 1fr': ['js/admin.js', 'admin.html'],
-  },
+  // Emptied 2026-08-27. Every one of these pinned a [style*='...'] rule in
+  // css/admin.css to the JS that wrote the matching string. Those rules existed
+  // only because the dark theme had no tokens and a colour had to be forced by
+  // matching the TEXT of a style attribute. css/variables.css now themes every
+  // token, the rules are gone, and so are the pins.
+  'css/admin.css': {},
   'css/mechanic.css': {},
 };
 for (const [sheet, pinned] of Object.entries(COUPLED)) {

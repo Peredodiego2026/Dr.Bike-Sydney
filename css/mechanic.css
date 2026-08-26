@@ -115,7 +115,9 @@ html,
 body {
   height: 100%;
   font-family: var(--sans);
-  background: var(--off);
+  /* --app, not --off: --off is the sunken panel INSIDE a card, and using it for
+     the page made the background lighter than the cards sitting on top of it. */
+  background: var(--app);
   color: var(--navy);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;

@@ -23,6 +23,7 @@
   --border-lt: #f1f5f9;
   --surface: #f8fafc;
   --white: #ffffff;
+  --app: #f8fafc; /* the page behind the cards - see the dark block */
 
   /* ── Colours the palette did not have a name for ─────────────────────────
      These are NOT new colours. Every one of them was already shipping, written
@@ -46,6 +47,7 @@
   --amber-tint: #fef9c3; /* soft amber panel background    */
   --red-bright: #ef4444; /* inline error text              */
   --red-edge: #fecaca; /* border of an error panel       */
+  --green-edge: #a7f3d0; /* border of a success panel      */
   --green-bright: #22c55e; /* en-route: moving, not finished */
   --green-ink: #065f46; /* text ON --green-lt             */
   --green-tint: #ecfdf5; /* soft green panel background    */
@@ -174,10 +176,19 @@
    scripts/dark-theme-check.mjs fails the build if a colour token used by
    admin or mechanic is missing here. */
 [data-theme='dark'] {
-  /* Grounds. --white is the card, --off/--surface the sunken panel inside it. */
-  --white: #152035;
-  --off: #1b2942;
-  --surface: #1b2942;
+  /* Grounds, and the distance between them is the whole point. The first
+     version of this block had the page at #0f1a2e and the card at #152035 -
+     1.07:1, which is not a difference, it is the same colour twice. Cards
+     dissolved into the page and the app read as one flat navy field.
+
+     Now: page 1.28:1 from the card, card 1.20:1 from the sunken panel, plus a
+     real border. --app is new; before this the page background was a literal
+     hex sitting in css/admin.css, which is how it drifted apart from the card
+     in the first place. */
+  --app: #0b1220;
+  --white: #1a2942;
+  --off: #243654;
+  --surface: #243654;
 
   /* Ink. --navy is the primary label everywhere; --navy-surface is deliberately
      NOT inverted - it is a dark ground in both themes (see :root above). */
@@ -186,19 +197,19 @@
   --mgray: #9fb0c6;
   --gray-lt: #8092ab;
   --slate: #93a3b8;
-  --navy2: #cbd5e1;
+  --navy2: #24354f;
 
   /* Divisions. The old value was white at 10%, which on navy is a hairline you
      have to hunt for. These are what make a card read as a card. */
-  --border: rgba(255, 255, 255, 0.16);
-  --border-lt: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.22);
+  --border-lt: rgba(255, 255, 255, 0.12);
 
   /* Accents. Each one has to survive TWO jobs in this codebase - filled button
      background under white text, and coloured text on the dark card - so they
      sit mid-range rather than at either extreme. --blue-dark was the worst
      offender in light values: #1e40af on navy is 2:1, invisible. */
   --blue: #3b82f6;
-  --blue-dark: #2f6fe0;
+  --blue-dark: #4285f0;
   --blue-deep: #5b9bff;
   --blue-soft: #93c5fd;
   --blue-pale: #bfdbfe;
@@ -234,6 +245,7 @@
   --blue-edge: rgba(96, 165, 250, 0.35);
   --amber-edge: rgba(251, 191, 36, 0.4);
   --red-edge: rgba(248, 113, 113, 0.38);
+  --green-edge: rgba(52, 211, 153, 0.38);
 
   /* A shadow the light version could not cast: on a dark ground the 8%-black
      drop shadow is literally invisible. */

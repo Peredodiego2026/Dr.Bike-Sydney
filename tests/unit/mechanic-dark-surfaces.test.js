@@ -24,7 +24,12 @@ describe('nothing paints itself white behind the theme s back', () => {
     // is explaining, and a comment is not a painted surface.
     const painted = mech
       .split('\n')
-      .filter((line) => line.includes('background:#fff') && !line.trimStart().startsWith('<!--'));
+      .filter(
+        (line) =>
+          line.includes('background:#fff') &&
+          !line.trimStart().startsWith('<!--') &&
+          !line.trimStart().startsWith('//')
+      );
     expect(painted).toHaveLength(1);
     expect(painted[0]).toMatch(/sig-canvas/);
   });

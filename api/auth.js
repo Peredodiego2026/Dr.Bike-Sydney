@@ -3663,21 +3663,27 @@ async function handlePublicMechanics(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const hdrs = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
 
+  // The active mechanics first. This used to run the other way round - start
+  // from completed bookings, keep the mechanics who appeared in them - which
+  // meant the team section was empty until the first job was finished. On a
+  // brand-new business that is every visitor, forever, right up to the moment
+  // the page stops needing to convince anybody.
+  const contactsResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/escalation_contacts?select=id,first_name,last_name,photo_url,bio&active=eq.true`,
+    { headers: hdrs }
+  );
+  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
+  const contacts = await contactsResp.json();
+  if (!contacts.length) return res.status(200).json([]);
+
+  // Then whatever record they have, which may be none. A mechanic with no
+  // completed jobs yet is still a real, background-checked person to introduce.
   const bookingsResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?select=mechanic_id,client_rating,client_review,client_name&status=eq.completed&mechanic_id=not.is.null`,
     { headers: hdrs }
   );
   if (!bookingsResp.ok) return res.status(500).json({ error: 'Database error' });
   const bookings = await bookingsResp.json();
-  const mechIds = [...new Set(bookings.map((b) => b.mechanic_id))];
-  if (!mechIds.length) return res.status(200).json([]);
-
-  const contactsResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/escalation_contacts?select=id,first_name,last_name,photo_url,bio&active=eq.true&id=in.(${mechIds.map(encodeURIComponent).join(',')})`,
-    { headers: hdrs }
-  );
-  if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
-  const contacts = await contactsResp.json();
 
   const mechanics = contacts
     .map((c) => {

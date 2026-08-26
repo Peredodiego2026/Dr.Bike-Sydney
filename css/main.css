@@ -1820,7 +1820,12 @@ body {
    underneath keeps the lower-left corner dark enough for the names to read. */
 .gift-card3d__mark {
   position: absolute;
-  top: -18px;
+  /* Inside the top edge, not above it. At -18px the mark was clipped by the
+     card's own rounded corner and the D came out sliced - Diego: "la db del
+     logo habia que moverla de la esquina un poco hacia abajo porque se
+     cortaba". It still bleeds off the RIGHT on purpose: that edge is straight
+     for most of its height and the crop reads as intentional there. */
+  top: 12px;
   right: -26px;
   width: 190px;
   height: auto;

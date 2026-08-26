@@ -136,7 +136,7 @@ function lpDateLocale() {
             <div style="font-size:17px;font-weight:700;color:var(--navy)">${escapeMechHtml(m.name)}</div>
             <div style="font-size:13px;color:var(--gray);margin-top:3px">Dr. Bike Mobile Mechanic</div>
             ${m.rating ? `<div style="color:var(--amber-bright);font-size:17px;margin-top:10px">${stars} <span style="color:var(--gray);font-size:13px">${m.rating}</span></div>` : ''}
-            <div style="font-size:13px;color:var(--gray);margin-top:5px">${m.jobs_completed} <span>${m.jobs_completed === 1 ? 'service completed' : 'services completed'}</span></div>
+            ${m.jobs_completed > 0 ? `<div style="font-size:13px;color:var(--gray);margin-top:5px">${m.jobs_completed} <span>${m.jobs_completed === 1 ? 'service completed' : 'services completed'}</span></div>` : '<div style="font-size:13px;color:var(--gray);margin-top:5px">Qualified &amp; background-checked</div>'}
           </div>
         </div>
       </div>`;

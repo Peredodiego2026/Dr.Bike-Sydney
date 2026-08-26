@@ -36,6 +36,10 @@ const SAME_IN_BOTH = new Set([
   // is the half of the old --navy that must NOT follow the theme; splitting it
   // out is what let --navy become themable ink at all.
   '--navy-surface',
+  // The toast pill, which carries hard-coded white text. The first pass
+  // inverted it to a light slate and made every toast white-on-white - a
+  // message the mechanic could not read at all.
+  '--navy2',
   // WhatsApp's own green. It identifies WhatsApp, not us - shifting it for the
   // theme would make the button read as some other product's.
   '--wa',
@@ -201,6 +205,105 @@ for (const token of FILL) {
         `only ${r.toFixed(2)}:1 in dark mode. Darken it, or the button label disappears.`
     );
   }
+}
+
+// ── Do the surfaces separate? ───────────────────────────────────────────────
+// The first version of this check measured INK against grounds and passed
+// comfortably - 14:1 on the card. What it never measured was the grounds
+// against EACH OTHER, and that is what actually broke: the page was #0f1a2e and
+// the card #152035, a ratio of 1.07. The same colour twice. Every card and row
+// dissolved into one flat field, which is what Diego saw when he said "modo
+// oscuro sigue igual de pedorro no se entiende nada todo es azul".
+//
+// Ink contrast cannot detect this. A card with no edge still has perfectly
+// readable text on it; it just is not a card. So the distance between the
+// grounds is its own requirement.
+const GROUND_STEPS = [
+  ['the page (--app)', 'the card (--white)', 1.15],
+  ['the card (--white)', 'the sunken panel (--off)', 1.12],
+];
+const TOKEN_OF = {
+  'the page (--app)': '--app',
+  'the card (--white)': '--white',
+  'the sunken panel (--off)': '--off',
+};
+for (const [aName, bName, min] of GROUND_STEPS) {
+  const a = valueOf(darkBlock, TOKEN_OF[aName]);
+  const b = valueOf(darkBlock, TOKEN_OF[bName]);
+  if (!isHex(a) || !isHex(b)) continue;
+  const r = ratio(a, b);
+  if (r < min) {
+    problems.push(
+      `${aName} (${a}) and ${bName} (${b}) are ${r.toFixed(2)}:1 apart in dark mode. ` +
+        `Below ${min}:1 they read as the same colour and a card stops looking like a card. ` +
+        `Move them further apart.`
+    );
+  }
+}
+
+// ── Colours the theme cannot reach ──────────────────────────────────────────
+// A token only themes a colour that was WRITTEN as a token. js/mechanic.js and
+// js/admin.js build most of their UI as inline styles, and every literal in one
+// of those is a colour frozen to whatever it was in light mode.
+//
+// The batch that produced "todo es azul": `color:#0D1F3C` on the Agenda's day
+// headings (near-black ink on a navy page) and `background:rgba(0,0,0,0.03)` on
+// its empty rows (a black wash, invisible on a dark ground).
+//
+// Only the two dark-capable files, and only the two properties that decide
+// whether something can be seen. A scrim like rgba(0,0,0,0.6) is deliberately
+// black in both themes and is allowed by the alpha threshold.
+const DARK_SURFACES = ['js/mechanic.js', 'js/admin.js'];
+const LITERAL_ALLOWED = [
+  // Modal scrims and shadows: black at real strength is correct in both themes.
+  /rgba\(0,\s*0,\s*0,\s*0?\.[3-9]\d*\)/,
+  // White text ON a coloured fill, which the FILL check above already covers.
+  /#fff\b|#ffffff\b/i,
+];
+for (const file of DARK_SURFACES) {
+  let src;
+  try {
+    src = readFileSync(file, 'utf8');
+  } catch {
+    continue;
+  }
+  // Some blocks genuinely cannot use tokens. The printed report in
+  // js/admin.js is built with window.open(''), a BRAND NEW document that
+  // never loads css/variables.css - every var(--x) in it resolves to nothing
+  // and the declaration is dropped. Those regions opt out by name, so the
+  // exception is visible in review instead of hidden inside a pattern.
+  let muted = false;
+  const lines = src.split('\n');
+  lines.forEach((line, i) => {
+    if (line.includes('dark-theme-check: off')) muted = true;
+    else if (line.includes('dark-theme-check: on')) muted = false;
+    if (muted) return;
+    if (line.trimStart().startsWith('//') || line.trimStart().startsWith('*')) return;
+    // Two shapes, because a colour can be chosen either way:
+    //   background:#FEF2F2                     - written straight into a style
+    //   color:${isMech ? '#fff' : '#0D1F3C'}   - chosen inside a template
+    // The first regex missed the second entirely, which is how the chat bubble
+    // kept navy text on a white pill while the app around it went dark.
+    const painted = [
+      ...line.matchAll(/(?:color|background|border-bottom|border-top|border)\s*:\s*(?:[^;"'`]*\s)?(#[0-9a-fA-F]{6}|rgba\(0,\s*0,\s*0,\s*0?\.[0-2]\d*\))/g),
+      // Any quoted hex, anywhere in these two files. Requiring a `color:` on
+      // the same line still missed the colour MAPS - `cancelled: '#FEF2F2'`,
+      // `const statusBg = isOut ? '#FEF2F2' : ...` - which are assigned to a
+      // variable first and painted somewhere else entirely. In js/mechanic.js
+      // and js/admin.js a quoted hex is a colour, so it is treated as one.
+      ...line.matchAll(/['"](#[0-9a-fA-F]{6})['"]/g),
+    ];
+    for (const m of painted) {
+      const literal = m[1];
+      if (LITERAL_ALLOWED.some((re) => re.test(literal))) continue;
+      problems.push(
+        `${file}:${i + 1} paints with the literal ${literal}, which no theme can reach - ` +
+          `it stays exactly that colour in dark mode. Use a var(--token), or if it must not ` +
+          `follow the theme, say so in a comment on the line above and add it to ` +
+          `LITERAL_ALLOWED in this script.`
+      );
+    }
+  });
 }
 
 if (problems.length) {

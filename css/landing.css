@@ -923,6 +923,33 @@ html.drbike-wizard-open #faqbot-win {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    /* When the content is TALLER than the box, plain `center` splits the
+       overflow evenly and the top half scrolls out of reach under the sticky
+       navbar - which is how centring the plans clipped their own heading.
+       `safe` centres while it fits and falls back to the start when it does
+       not. The plain value above is the fallback for browsers without it. */
+    justify-content: safe center;
+  }
+
+  /* And the plans have to actually fit before centring can help. Every number
+     here is the value the cards already used as its maximum, so a tall screen
+     is unchanged and a laptop tightens instead of overflowing. */
+  body[data-surface='landing'] #memberships .plan-card {
+    padding: clamp(14px, 2vh, 22px) clamp(14px, 1.4vw, 20px);
+  }
+  body[data-surface='landing'] #memberships .plan-price {
+    margin: clamp(4px, 0.8vh, 8px) 0 clamp(6px, 1.2vh, 12px);
+  }
+  body[data-surface='landing'] #memberships .plan-price .amount {
+    font-size: clamp(1.45rem, 2.6vh, 1.9rem);
+  }
+  body[data-surface='landing'] #memberships .plan-card ul {
+    gap: clamp(3px, 0.6vh, 6px);
+    font-size: clamp(12px, 1.5vh, 13px);
+  }
+  body[data-surface='landing'] #memberships .plan-card .lp-get-started {
+    margin-top: clamp(8px, 1.6vh, 16px) !important;
+    padding: clamp(7px, 1.1vh, 10px) !important;
   }
 }
 
