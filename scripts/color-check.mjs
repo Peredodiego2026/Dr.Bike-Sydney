@@ -70,7 +70,7 @@ const BUDGET = {
   'css/main.css': 0,
   'css/home.css': 2,
   'css/landing.css': 1,
-  'css/admin.css': 143,
+  'css/admin.css': 134,
   'css/mechanic.css': 29,
   'js/app.js': 97,
   'js/admin.js': 68,
@@ -280,9 +280,6 @@ for (const file of sweep('.')) {
 // is fine and does not need adding; a writer that STOPS is the failure.
 const COUPLED = {
   'css/admin.css': {
-    'color:var(--navy)': ['js/admin.js', 'admin.html'],
-    'color:var(--mgray)': ['js/admin.js', 'admin.html'],
-    'color:var(--gray)': ['js/admin.js'],
     'background:var(--off)': ['js/admin.js', 'admin.html'],
     'color:#0d1f3c': ['js/admin.js'],
     'border-color:var(--border)': ['js/admin.js'],
