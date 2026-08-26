@@ -15,19 +15,6 @@
    (#8e9bb5, #1a2740), the iOS green #34c759 and two reds (#f87171, #fca5a5)
    that no token names.
    ────────────────────────────────────────────────────────────────────────── */
-[data-theme='dark'] {
-  --white: #152035;
-  --off: #1a2740;
-  --mgray: #8e9bb5;
-  --border: rgba(255, 255, 255, 0.1);
-  --navy: #f2f2f7;
-  --blue-lt: rgba(37, 99, 235, 0.18);
-  --green-lt: rgba(5, 150, 105, 0.15);
-  --amber-lt: rgba(217, 119, 6, 0.15);
-  --red-lt: rgba(220, 38, 38, 0.15);
-  --wa-lt: rgba(37, 211, 102, 0.12);
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
-}
 [data-theme='dark'] .job-card {
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
@@ -62,11 +49,17 @@
   color: #fff !important;
 }
 [data-theme='dark'] .abtn.primary.go {
-  background: var(--amber) !important;
+  /* --on-amber, not the white the other primary buttons use. In dark --amber
+     is #fbbf24 and white on it is 1.67:1 - the label vanishes. --on-amber is
+     10.8:1 there, and plain white in light mode where --amber is #b45309.
+     scripts/dark-theme-check.mjs records why --amber is the one accent
+     exempted from the white-text rule. */
+  color: var(--on-amber) !important;
 }
-/* No dark override for .abtn.primary.done/.accept: --green is not redefined by
-   [data-theme='dark'], so the button is already the same green in both themes.
-   The rule that used to sit here said `background: undefined !important`. */
+/* .abtn.primary.done/.accept need no rule of their own: --green now has a dark
+   value in css/variables.css, tuned so white still reads on the filled button
+   (3.30:1) while the same green reads as text on a card (4.94:1). The rule that
+   used to sit here said `background: undefined !important`. */
 [data-theme='dark'] .abtn.danger {
   background: transparent !important;
   color: #f87171 !important;

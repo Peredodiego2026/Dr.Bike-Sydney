@@ -497,6 +497,12 @@ body {
   .bottom-nav {
     display: none !important;
   }
+  /* The token means "how much room the bottom bar takes", so when the bar is
+     hidden it takes none. Without this, every panel that reserves space for it
+     would leave 56px of dead air at the bottom of a desktop screen. */
+  :root {
+    --bottom-nav-h: 0px;
+  }
   .screen.active:not([data-screen='home']) {
     max-width: 680px;
     margin: 0 auto;

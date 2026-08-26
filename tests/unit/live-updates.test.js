@@ -36,6 +36,14 @@ describe('admin repaints, not just remembers', () => {
     expect(admin).toMatch(/_repaintTimer = setTimeout\(/);
   });
 
+  // Found while re-reading this: admin switches pages with an `active` CLASS,
+  // so the first version's `page.style.display === 'none'` read '' forever and
+  // refetched the table every minute while the admin was on another screen.
+  it('and only while the bookings page is the one on screen', () => {
+    expect(admin).toMatch(/if \(!page\?\.classList\.contains\('active'\)\) return;/);
+    expect(admin).not.toMatch(/page\.style\.display === 'none'/);
+  });
+
   // Repainting under an open modal loses the admin's place mid-read.
   it('and never under an open modal', () => {
     for (const id of ['booking-detail-modal', 'cancel-modal', 'reassign-modal']) {

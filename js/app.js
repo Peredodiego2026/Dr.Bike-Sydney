@@ -1576,6 +1576,10 @@ async function renderServiceSummary() {
             <span style="font-size:13px;color:var(--color-success)">Promo discount</span>
             <span style="font-size:13px;font-weight:600;color:var(--color-success)" id="q-discount-amt"></span>
           </div>
+          <div id="q-credit-row" style="display:none;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--color-border)">
+            <span style="font-size:13px;color:var(--color-success)">Referral credit</span>
+            <span style="font-size:13px;font-weight:600;color:var(--color-success)" id="q-credit-amt"></span>
+          </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px;background:var(--color-bg)">
           <span style="font-size:15px;font-weight:700">Total</span>
@@ -1634,6 +1638,46 @@ async function renderServiceSummary() {
 
   let _appliedDiscount = 0;
   let _currentServiceTotal = serviceTotal;
+  // The client's referral balance. Display only: api/auth.js recomputes the
+  // spend server-side and is the authority, exactly like the promo code. Shown
+  // here because a discount the customer only discovers when the mechanic is
+  // standing in their driveway is not a discount, it is a surprise.
+  let _referralCredit = 0;
+  const creditUsed = () => Math.min(_referralCredit, _currentServiceTotal);
+  const paintTotals = () => {
+    const used = creditUsed();
+    const row = screen.querySelector('#q-credit-row');
+    const amt = screen.querySelector('#q-credit-amt');
+    if (row && amt) {
+      row.style.display = used > 0 ? 'flex' : 'none';
+      amt.textContent = '-$' + used.toFixed(2);
+    }
+    const totalEl = screen.querySelector('#summary-total-amount');
+    if (totalEl) totalEl.textContent = '$' + (_currentServiceTotal - used + calloutFee).toFixed(2);
+  };
+
+  // Read the balance and show it. A guest has no profile and no credits, so
+  // this quietly does nothing for them - which is also what the server does.
+  (async () => {
+    try {
+      const {
+        data: { session },
+      } = await sb.auth.getSession();
+      if (!session) return;
+      const { data: prof, error } = await sb
+        .from('profiles')
+        .select('referral_credits')
+        .eq('id', session.user.id)
+        .single();
+      if (error) throw new Error(error.message);
+      _referralCredit = Number(prof?.referral_credits) || 0;
+      paintTotals();
+    } catch (e) {
+      // Never block the booking over a balance lookup. The credit still gets
+      // spent server-side; the client just does not see it here first.
+      console.warn('[summary] could not read referral credit:', e.message);
+    }
+  })();
 
   screen.querySelector('#referral-apply-btn').addEventListener('click', async () => {
     const input = screen.querySelector('#referral-input');
@@ -1648,9 +1692,6 @@ async function renderServiceSummary() {
       _currentServiceTotal = Math.max(0, serviceTotal - disc);
       window.appState.discountCode = code;
       window.appState.discountAmount = disc;
-      const newGrand = _currentServiceTotal + calloutFee;
-      const totalEl = screen.querySelector('#summary-total-amount');
-      if (totalEl) totalEl.textContent = '$' + newGrand.toFixed(2);
       const svcEl = screen.querySelector('#q-service-price');
       if (svcEl) svcEl.textContent = '$' + _currentServiceTotal.toFixed(2);
       const svcNoteEl = screen.querySelector('#q-svc-note');
@@ -1661,6 +1702,9 @@ async function renderServiceSummary() {
         discRow.style.display = 'flex';
         discAmt.textContent = '-$' + disc.toFixed(2);
       }
+      // After the code, not before: the credit can only cover what is left, and
+      // that is the same order api/auth.js applies them in.
+      paintTotals();
       msg.style.color = 'var(--color-success)';
       msg.textContent = label;
       input.disabled = true;

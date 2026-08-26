@@ -129,6 +129,10 @@ with
       'idx_bookings_client_date','idx_bookings_mechanic','idx_mechloc_van'))
   union all select 22, 'add-discount-to-bookings.sql', 'bookings.discount_applied + discount_code',
     (select count(*) = 2 from col where t='bookings' and c in ('discount_applied','discount_code'))
+  union all select 24, 'referral-credits-spendable.sql', 'columna + las 2 funciones de credito',
+    (exists (select 1 from col where t='bookings' and c='referral_credit_applied')
+     and exists (select 1 from fn where f='spend_referral_credits')
+     and exists (select 1 from fn where f='refund_referral_credits'))
   union all select 23, 'add-cancellation-reason.sql', 'bookings.cancellation_reason',
     exists (select 1 from col where t='bookings' and c='cancellation_reason')
   union all select 24, 'create-van-inventory-table.sql', 'tabla van_inventory',
@@ -625,3 +629,22 @@ ciertos y el aviso de "se leyeron solo N de M" aparece cuando corresponde.
 
 Sigue siendo util saberlo por rendimiento, pero ya no hay ningun numero en
 pantalla que dependa de ese valor.
+
+## 10. `referral-credits-spendable.sql` (26-ago-2026)
+
+**Sin correr esto, el credito por recomendacion se sigue sin poder gastar.**
+
+`handleApplyReferral()` acredita a las dos partes de una recomendacion, y hasta
+esta migracion **nada restaba ese numero nunca**. Las unicas dos escrituras a
+`referral_credits` en todo el repo eran incrementos. El cliente compartia su
+codigo, veia "Credits earned $30" en su perfil, y en la caja el dinero no
+existia.
+
+Agrega `bookings.referral_credit_applied` y dos funciones,
+`spend_referral_credits()` y `refund_referral_credits()`.
+
+**El codigo no se rompe si todavia no la corriste.** Ninguna consulta nombra la
+columna nueva salvo la de cancelacion, que la pide aparte y sobrevive a que
+falte; el gasto en la reserva loguea y sigue. Simplemente el credito no se
+descuenta hasta que corras el archivo.
+

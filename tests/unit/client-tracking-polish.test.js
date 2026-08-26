@@ -85,6 +85,17 @@ describe('the buttons are no longer behind the bottom bar', () => {
   it('and the tracking panel reserves exactly that much', () => {
     expect(app).toMatch(/padding:0 16px calc\(12px \+ var\(--bottom-nav-h\)\)/);
   });
+
+  // Caught re-reading this: the bar is display:none on desktop, so a fixed
+  // reservation would have left 56px of dead air at the bottom of every
+  // desktop tracking screen. The token means "how much room the bar takes",
+  // and a hidden bar takes none.
+  it('and reserves nothing on desktop, where the bar is hidden', () => {
+    const i = mainCss.indexOf('@media (min-width: 768px)', mainCss.indexOf('.bottom-nav {'));
+    const block = mainCss.slice(i, i + 600);
+    expect(block).toMatch(/display: none !important;/);
+    expect(block).toMatch(/--bottom-nav-h: 0px;/);
+  });
 });
 
 describe('the celebration sheet is shared, not copied', () => {

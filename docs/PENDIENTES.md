@@ -6861,4 +6861,171 @@ estimacion **nunca pisa** a la medicion: si la ruta ya llego, un repintado lento
 de haversine no la puede reemplazar.
 
 18 tests nuevos. 790/790.
+## 48. El modo oscuro no tenia tokens. Tenia 160 parches. (26-ago-2026)
+
+Diego, cuatro veces distintas recorriendo una reserva pagada de punta a punta:
+*"en dark queda que desear la aplicacion, no se notan los cuadros ni las
+divisiones"*.
+
+No era ninguna regla en particular. **El modo oscuro no tenia capa de tokens.**
+`css/variables.css` definia 98 colores y **ninguno** tenia valor oscuro. Cada
+pantalla parchaba los suyos a mano: 149 selectores `[data-theme='dark']` en
+`css/admin.css` y un bloque privado de 11 tokens en `css/mechanic.css`.
+
+Lo que nadie se acordo de parchar **se quedaba con su valor claro**, en
+silencio. No es una metafora: `js/admin.js` escribe `color:var(--navy)` inline
+**68 veces**, y `--navy` es `#0d1f3c`. En oscuro eso era tinta casi negra sobre
+una tarjeta casi negra. Los bordes eran peores: `#e2e8f0`, un gris claro,
+dibujado sobre navy.
+
+Y las dos superficies **no estaban de acuerdo sobre que era oscuro**: admin
+pintaba `#1c1c1e` neutro, mecanico `#152035` navy, en el mismo producto.
+
+### Lo que se hizo
+
+- **Una sola paleta oscura**, en `css/variables.css`: 42 tokens. Los bloques
+  privados de `admin.css` y `mechanic.css` se borraron - cargan **despues** de
+  `variables.css`, asi que dejarlos habria significado que la paleta vieja e
+  incompleta le siguiera ganando a la nueva.
+- **`--navy` hacia dos trabajos**: la tinta de casi toda etiqueta y **el fondo
+  del sidebar del admin**. Un token que significa dos cosas no se puede tematizar
+  (aclararlo para la tinta pone el sidebar blanco). Se separo `--navy-surface`,
+  identico en modo claro, deliberadamente **no** redefinido en oscuro.
+- **16 hacks `[style*='color:var(--x)']` eliminados.** Matcheaban un estilo
+  inline por substring y forzaban un color con `!important`. Solo funcionaban
+  dentro de `.main`, asi que **todo modal que `js/admin.js` cuelga de `<body>`
+  nunca estuvo cubierto** - esa era la tinta invisible que Diego encontraba.
+- `--on-amber`: la tinta que va **encima** de un relleno ambar. Blanco en claro
+  (donde `--amber` es `#b45309`), casi negro en oscuro (donde es `#fbbf24`).
+
+### Los acentos: dos restricciones que se pelean
+
+`--blue`, `--green` y `--red` son a la vez **relleno de boton con texto blanco
+duro** y **texto de color sobre la tarjeta**. Las dos restricciones se mueven en
+sentidos opuestos y **no existe** un valor que llegue a AA (4.5) en ambas: para
+leerse como texto sobre navy hay que aclararlo, y aclararlo mata el texto blanco
+encima. Estan calibrados para pasar AA-large (3.0) en los dos papeles, que es la
+banda donde vive el texto UI en negrita.
+
+`--amber` es la excepcion documentada: se lee como texto muchas mas veces de las
+que se rellena, asi que se queda brillante y su unico boton (`En route`) usa
+`--on-amber`. `--wa` es el verde de WhatsApp: blanco sobre el da 1.98:1 en
+**los dos** temas, es el boton de WhatsApp y no es algo que este tema haya
+introducido ni le toque arreglar.
+
+### El guard
+
+`scripts/dark-theme-check.mjs`, en `npm run check`. Falla si un token de color
+que admin o mecanico usan **no tiene valor oscuro**, si un valor oscuro es
+identico al claro sin estar declarado como excepcion, si un token existe solo en
+un tema, y - lo importante - si el **contraste** de cualquier tinta contra los
+tres fondos oscuros baja de 3:1, o si el blanco sobre cualquier relleno baja de
+3:1. Un check que solo mirara presencia aprobaria una paleta de navy sobre navy.
+
+Estado actual: **peor tinta 3.10:1, peor blanco sobre relleno 3.30:1**, cero
+fallas. Antes habia tinta a 1.03:1.
+
+11 tests nuevos en `tests/unit/dark-theme.test.js`, que protegen la **forma**
+(una sola paleta, sin bloques privados, sin hacks de substring) - porque una
+segunda paleta privada pasaria el guard y dejaria la app donde estaba.
+## 49. El credito por recomendacion no se podia gastar. Nunca. (26-ago-2026)
+
+Diego: *"no probamos el codigo de descuento del cliente que tiene en su perfil"*.
+
+No se podia probar, porque no podia funcionar. `handleApplyReferral()` acredita
+a las dos partes, y **nada en todo el repo restaba ese numero**. Las unicas dos
+escrituras a `referral_credits` eran incrementos. Un cliente podia compartir su
+codigo, ver *Credits earned $30* en su perfil, y descubrir en la caja que el
+dinero no existia. Peor que no tener el programa.
+
+Encima, la app prometia **$15** en tres lugares y tres idiomas
+(`js/app.js:4635/4657/4658`) mientras el servidor acreditaba **$10**
+(`const CREDIT = 10`). Nadie podia notar la diferencia porque el credito era
+ingastable de las dos maneras. Ahora el servidor paga los $15 que el cliente
+ve: **de los dos numeros, el que cuenta es el que se le mostro**.
+
+### Donde se gasta
+
+Contra el precio del servicio, como descuento a nivel reserva. Esa canaleta ya
+existia (`bookings.discount_applied`), asi que el desglose del mecanico, el mail
+de factura y las cifras del admin lo levantan **sin plomeria nueva**. Se suma
+**encima** de un codigo promocional en vez de reemplazarlo, y nunca deja el
+total abajo de cero.
+
+Un invitado no tiene perfil ni creditos: `user` es null y el bloque entero se
+saltea.
+
+### Tres cosas que podian perder plata del cliente
+
+1. **Dos reservas en el mismo segundo.** `spend_referral_credits()` hace
+   `SELECT ... FOR UPDATE` adentro, asi que no pueden leer las dos el mismo
+   saldo y gastarlo cada una. Es la misma carrera que `consume_discount_code()`
+   evita para los codigos promocionales.
+2. **Credito descontado, reserva sin actualizar.** Si el UPDATE falla despues
+   del gasto, se llama a `refund_referral_credits()` y vuelve al perfil.
+3. **Reserva cancelada.** El credito vuelve. Sin esto, el cliente gasta $15 que
+   se gano, cancela esa tarde, y la plata desaparece sin que ninguna pantalla lo
+   admita. Poner la columna en cero en el mismo paso lo hace idempotente: una
+   segunda cancelacion no acuna credito de la nada.
+
+### Y se ve antes de pagar
+
+Fila propia en el resumen de la reserva, debajo del descuento promocional. Un
+descuento que el cliente descubre cuando el mecanico ya esta en su vereda no es
+un descuento, es una sorpresa. La fila es **solo informativa**: el servidor
+recalcula y manda, igual que con el codigo.
+
+### El SQL no es una dependencia dura
+
+`scripts/*.sql` se corren a mano, asi que el codigo llega a main antes que la
+migracion. **Ninguna consulta nombra la columna nueva** salvo la de cancelacion,
+que la pide aparte y sobrevive a que falte - PostgREST rechaza el request
+entero, no saltea la columna, y eso habria volteado la pantalla del mecanico
+hasta que Diego corriera el archivo. El gasto en la reserva loguea y sigue.
+
+19 tests nuevos. 707/707.
+
+## 56. Tres bugs que aparecieron revisando mi propio trabajo (26-ago-2026)
+
+Diego pidio explicitamente buscar **bugs y falsos positivos** en lo recien
+construido antes de dar nada por terminado. Aparecieron tres, y ninguno lo
+habria agarrado un test que no se buscara a proposito.
+
+### 1. La guarda del admin leia la propiedad equivocada
+
+El repintado de la tabla de reservas se protegia con
+`page.style.display === 'none'`. Pero el admin cambia de pagina con una **clase
+`active`** (`go()`), no con un display inline: `style.display` era `''` siempre,
+asi que la guarda **nunca bloqueaba nada** y la tabla se recargaba de la base
+cada minuto aunque el admin estuviera mirando Finanzas.
+
+### 2. El padding reservaba lugar para una barra que no existe
+
+`--bottom-nav-h` resuelve el problema de los botones tapados en el celular, pero
+en desktop `.bottom-nav` es `display:none`. El panel habria dejado **56px de
+aire muerto** abajo de cada pantalla de seguimiento en PC. El token ahora vale
+`0px` de 768px para arriba: significa *cuanto lugar ocupa la barra*, y una barra
+oculta no ocupa nada.
+
+### 3. Un test mio era un falso positivo esperando a pasar
+
+`dark-theme.test.js` fijaba `CACHE_STATIC = 'drbike-static-v91'` **literal**. Se
+puso en rojo apenas otra rama subio la misma linea a v96 - una falla que
+reportaba un merge, no un bug. Ahora verifica un **minimo**, que es lo que de
+verdad tiene que seguir siendo cierto.
+
+### Y lo que encontro el merge
+
+Al unir las ramas, `mechanic.html` volvio a `?v=20260826-dark` y **se perdieron
+en silencio dos bumps posteriores**. CLAUDE.md ya avisaba que los `?v=` de
+`mechanic.html` eran cadenas de fecha escritas a mano y el unico hueco que
+quedaba sin enforcar. Mordio exactamente como estaba previsto: un merge entre
+dos ramas que habian tocado esa linea se resolvio hacia el valor viejo, sin nada
+en rojo en ningun lado.
+
+`js/mechanic.js` y `css/mechanic.css` ahora son **hashes de contenido** dentro de
+`scripts/versioned-assets-check.mjs`. Un hash no se puede resolver hacia el lado
+equivocado de un merge y quedar verde.
+
+**823/823, corrido 10 veces seguidas. 6 checks verdes, lint 0 errores.**
 

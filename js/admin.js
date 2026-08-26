@@ -3440,8 +3440,11 @@ function repaintBookingsSoon() {
   _repaintTimer = setTimeout(() => {
     // Only when the screen is actually showing, and never while a booking
     // modal is open - repainting under an open modal loses the admin's place.
+    // Pages are switched with an `active` CLASS (go() at ~line 538), not with
+    // an inline display. Testing style.display here would have read '' forever
+    // and refetched the table every minute while the admin was on Finance.
     const page = document.getElementById('page-bookings');
-    if (!page || page.style.display === 'none') return;
+    if (!page?.classList.contains('active')) return;
     // Every admin overlay that could be covering the table. Repainting under
     // one of them loses whatever the admin was in the middle of reading.
     for (const id of [
