@@ -6701,3 +6701,73 @@ su linea generica en vez de imprimir *Invalid Date*.
 
 15 tests nuevos. 752/752.
 
+## 53. Las dos barras de scroll de la landing, y dos secciones enormes (26-ago-2026)
+
+### Las dos barras: cuatro lineas de CSS
+
+Diego lo reporto **dos veces**, y la segunda dio el dato que lo resolvia:
+*"las lineas del scroll solo aparecen en el pc en el celular no"*.
+
+`css/main.css` abria con:
+
+```css
+html,
+body {
+  overflow-x: hidden;
+}
+```
+
+El CSS dice que **si un eje es `hidden` y el otro es `visible`, el valor usado
+del eje visible pasa a `auto`**. O sea que ese `overflow-x` le daba en silencio
+`overflow-y: auto` **a los dos**, `html` y `body`.
+
+Y despues la regla de propagacion: el viewport toma su overflow de `<html>`, y
+**solo** cae a `<body>` cuando el de html es `visible`. Con html ya no visible,
+body dejo de propagar y **se volvio un contenedor de scroll propio**. Dos cajas
+que scrollean, dos barras.
+
+En el celular no se veia porque ahi las barras son superpuestas y no ocupan
+ancho - exactamente lo que Diego observo.
+
+**La regla va en `body` y en ninguno mas.** Con html visible, el viewport toma
+el overflow de body, **body vuelve a computar `visible`** y no dibuja barra
+propia. Una sola barra, y el scroll lateral sigue suprimido.
+
+### Las dos secciones que no entraban
+
+*"el cuadro del mecanico en el pc azul detras abarca mucha pantalla hay que
+achicarlo para que entre en una sola pantalla al 100%"* y lo mismo para los
+planes, *"desde el titulo hasta que terminan las letras de abajo"*.
+
+La de mecanicos sumaba 80 + titulo + 48 + 420 + 24 + 96: mas de 800px **antes**
+del cromo del navegador.
+
+Todos esos numeros ahora estan atados al viewport con `clamp()`, y las dos
+secciones llevan `min-height:100svh` centrado, **solo en desktop** - en un
+celular una seccion de pantalla completa empuja la siguiente fuera de vista y
+hace sentir la pagina el doble de larga.
+
+`min-height`, nunca `height`: una seccion que de verdad necesita mas lugar
+crece. **Una tarjeta de plan cortada al medio es peor que una seccion que se
+pasa 40px.** Y sin navegador para medir, atar todo al viewport es la unica forma
+honesta de que entre: entra por construccion, no por adivinar un tamano de
+pantalla.
+
+### La tarjeta del mecanico no era 3D porque no se movia
+
+240px dentro de una seccion oscura de 420px de alto es una estampilla flotando
+en un vacio. Y con **un solo** mecanico la matematica del carrusel da offset 0:
+sin rotacion, sin profundidad, escala 1. **Nada se leia como 3D porque nada lo
+era.**
+
+Ahora la tarjeta es `clamp(250px, 23vw, 320px)` y tiene un flotado propio. Vive
+en un elemento **interno**: el carrusel escribe `transform` sobre la tarjeta
+desde JS, y animar la misma propiedad en dos lugares hace que uno de los dos
+pierda en silencio. Solo respira la de adelante; las de atras son fondo.
+
+Y el paso entre tarjetas dejo de ser 190px fijos - calculados para una tarjeta
+de 240 - y pasa a ser proporcional al ancho medido, o una pantalla ancha las
+superpondria y una angosta dejaria un hueco.
+
+14 tests nuevos. 766/766.
+

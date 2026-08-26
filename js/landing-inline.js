@@ -129,13 +129,15 @@ function lpDateLocale() {
         const stars = m.rating ? '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating) : '';
         return `
       <div class="mech-card" data-index="${i}">
-        <div class="mech-card__banner"><img src="images/mechanic-working.webp" alt=""></div>
-        <div style="display:flex;justify-content:center;margin-top:-36px">${avatarHTML}</div>
-        <div style="text-align:center;padding:8px 16px 20px">
-          <div style="font-size:15px;font-weight:700;color:var(--navy)">${escapeMechHtml(m.name)}</div>
-          <div style="font-size:13px;color:var(--gray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
-          ${m.rating ? `<div style="color:var(--amber-bright);font-size:15px;margin-top:8px">${stars} <span style="color:var(--gray);font-size:13px">${m.rating}</span></div>` : ''}
-          <div style="font-size:13px;color:var(--gray);margin-top:4px">${m.jobs_completed} <span>${m.jobs_completed === 1 ? 'service completed' : 'services completed'}</span></div>
+        <div class="mech-card__float">
+          <div class="mech-card__banner"><img src="images/mechanic-working.webp" alt=""></div>
+          <div style="display:flex;justify-content:center;margin-top:-40px">${avatarHTML}</div>
+          <div style="text-align:center;padding:10px 18px 22px">
+            <div style="font-size:17px;font-weight:700;color:var(--navy)">${escapeMechHtml(m.name)}</div>
+            <div style="font-size:13px;color:var(--gray);margin-top:3px">Dr. Bike Mobile Mechanic</div>
+            ${m.rating ? `<div style="color:var(--amber-bright);font-size:17px;margin-top:10px">${stars} <span style="color:var(--gray);font-size:13px">${m.rating}</span></div>` : ''}
+            <div style="font-size:13px;color:var(--gray);margin-top:5px">${m.jobs_completed} <span>${m.jobs_completed === 1 ? 'service completed' : 'services completed'}</span></div>
+          </div>
         </div>
       </div>`;
       })
@@ -176,7 +178,11 @@ function lpDateLocale() {
       if (offset > n / 2) offset -= n;
       if (offset < -n / 2) offset += n;
       const abs = Math.abs(offset);
-      const tx = offset * 190;
+      // Proportional to the card, which is now clamp(250px, 23vw, 320px) rather
+      // than a fixed 240. 0.79 of the width is the same overlap the old 190/240
+      // gave, so the arrangement is unchanged - it just follows the card.
+      const cardW = card.offsetWidth || 240;
+      const tx = offset * cardW * 0.79;
       const tz = -abs * 140;
       const ry = -offset * 38;
       const scale = abs === 0 ? 1 : 0.82;
@@ -185,6 +191,7 @@ function lpDateLocale() {
       card.style.opacity = String(opacity);
       card.style.zIndex = String(100 - abs);
       card.style.pointerEvents = abs > 2 ? 'none' : 'auto';
+      card.classList.toggle('is-active', abs === 0);
     });
     document.querySelectorAll('#mech-carousel-dots .mech-dot').forEach((dot, i) => {
       dot.classList.toggle('active', i === activeIndex);

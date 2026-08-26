@@ -28,7 +28,15 @@ a {
 }
 
 /* ── Base ────────────────────────────────────────────────────────────────────── */
-html,
+/* On BODY only, never on both. `overflow-x: hidden` forces the other axis from
+   `visible` to `auto`, so declaring it on <html> as well made both elements
+   scroll containers - and because the viewport only inherits body's overflow
+   while html's is `visible`, body stopped propagating and grew a second
+   scrollbar beside html's. That is the "dos barras" on desktop; phones hide it
+   because their scrollbars are zero-width overlays.
+
+   Left here, the viewport takes body's overflow, body computes back to visible,
+   and sideways scrolling is still suppressed. */
 body {
   overflow-x: hidden;
 }
