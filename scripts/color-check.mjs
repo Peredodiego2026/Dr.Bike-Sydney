@@ -72,7 +72,7 @@ const BUDGET = {
   'css/landing.css': 1,
   'css/admin.css': 143,
   'css/mechanic.css': 29,
-  'js/app.js': 97,
+  'js/app.js': 96,
   'js/admin.js': 68,
   'js/mechanic.js': 13,
   'js/components.js': 28,

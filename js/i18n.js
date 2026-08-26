@@ -1231,6 +1231,8 @@ const dict = {
     'Select a date.': 'Elegí una fecha.',
     'Signed out successfully': 'Sesión cerrada con éxito',
     'Thanks for your feedback!': '¡Gracias por tu opinión!',
+    'Your review is now on our page. Thank you for taking the time.': 'Tu reseña ya está en nuestra página. Gracias por tomarte el tiempo.',
+    'Would you share it on Google too? It helps other Sydney cyclists find us.': '¿La compartirías también en Google? Ayuda a que otros ciclistas de Sídney nos encuentren.',
     'That service is no longer available. Please pick a new one.':
       'Ese servicio ya no está disponible. Por favor, elegí uno nuevo.',
     'Tracking link copied!': '¡Enlace de rastreo copiado!',
@@ -2577,6 +2579,8 @@ const dict = {
     'Select a date.': '请选择日期。',
     'Signed out successfully': '已成功退出登录',
     'Thanks for your feedback!': '感谢您的反馈！',
+    'Your review is now on our page. Thank you for taking the time.': '您的评价已发布在我们的页面上。感谢您抽出时间。',
+    'Would you share it on Google too? It helps other Sydney cyclists find us.': '也愿意在 Google 上分享吗？这能帮助更多悉尼骑行者找到我们。',
     'That service is no longer available. Please pick a new one.':
       '该服务已不可用，请选择新的服务。',
     'Tracking link copied!': '追踪链接已复制！',

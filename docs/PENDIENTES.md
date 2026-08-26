@@ -6578,3 +6578,74 @@ una firma que el cliente ya dio.
 
 15 tests nuevos. 714/714.
 
+## 51. La pantalla del cliente: tres cosas chicas (26-ago-2026)
+
+### La barra de progreso no decia que estaba pasando
+
+Diego: *"necesitamos que el proceso que se esta realizando en este momento...
+el boton parpadee... y que dejen de parpadear cuando el otro proceso empiece...
+done deberia salir en color verde"*.
+
+El codigo tenia **dos estados**: pasado y no pasado, los dos planos. Cada paso
+alcanzado se pintaba del mismo `#1E40AF` solido, Done incluido, asi que el
+cliente no podia saber donde estaba el trabajo.
+
+Ahora son tres: **hecho** (azul apagado), **en curso** (azul vivo con latido) y
+**pendiente**. Solo un paso es `live` a la vez, que es lo que hace que el latido
+se corte solo cuando el trabajo avanza - justo lo que Diego pidio. **Done no
+late**: esta terminado, y un trabajo listo que sigue parpadeando se lee como
+algo que todavia se debe. Y es verde, pero solo el ultimo: verde en el paso 0
+diria que todo termino en el momento en que se confirmo.
+
+### Los botones tapados por la barra de abajo
+
+Diego: *"no puedo escrolear para abajo entonces no puedo ver los botones de
+mesage ni de share link"*.
+
+**El panel scrolleaba perfecto.** La barra de navegacion es `position:fixed`
+con `z-index:100` y el panel no reservaba lugar para ella, asi que la ultima
+fila quedaba fisicamente **debajo**. Llegar al final del scroll los estacionaba
+atras de la barra en vez de arriba.
+
+El alto de la barra ahora es un token, `--bottom-nav-h`, y **la barra misma lo
+usa**: los dos numeros no pueden separarse nunca mas.
+
+### El agradecimiento de la resena era un toast
+
+Diego: *"debe estar mas arriba. que aparezca con fondo medio oscuro con opacidad
+en 3d mas de lujo mas bonito... y que el cliente pueda hacer click en cualquier
+parte fuera del cuadro para se cierre"*.
+
+Dejar una resena es lo unico que la app le pide al cliente **despues** de que la
+plata cambio de manos. Merecia la misma hoja que el saludo de cumpleanos.
+
+La hoja 3D se **extrajo** a `showCelebration()` en `js/components.js` en vez de
+copiarse: una segunda copia con otro nombre es como un producto termina con
+cuatro estilos de modal. Se renombro `.bday-*` a `.celebrate-*` - el nombre dice
+**que es**, no para que se uso primero. Cuidado con eso: los ids del perfil
+(`bday-day`, `bday-status`) son otra cosa y **no** se tocaron.
+
+Ademas el escapado de texto del usuario ahora vive **adentro** del helper, asi
+que lo tiene todo el que lo llame y no solo el autor que se acordo.
+
+### Y la resena no aparecia sola
+
+*"desde el celular tuve que cerrar la pagina y volver a abrirla para ver el
+comentario"*.
+
+La grilla de resenas de la home la llenaba un IIFE que corria **una vez, al
+cargar la pagina**. Nadie le pedia los datos de nuevo. Ahora la funcion tiene
+nombre y se publica en `window.drbikeReloadReviews`, y el flujo de resena la
+llama al cerrar la hoja. Como ahora puede correr dos veces, **el estado vacio
+tambien tiene que poder irse**: la primera resena aterriza en una pagina que en
+ese momento dice que no hay ninguna.
+
+### El agujero del i18n, otra vez
+
+`scripts/i18n-check.mjs` solo marca literales **fuera** de `translateValue()`.
+Una cadena pasada **adentro** sin entrada en el diccionario devuelve ingles y el
+check queda verde. Las dos cadenas nuevas se agregaron a mano a es y zh, y hay
+un test que lo verifica, porque el check no puede.
+
+23 tests nuevos. 737/737.
+

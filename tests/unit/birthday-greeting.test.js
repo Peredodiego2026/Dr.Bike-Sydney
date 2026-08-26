@@ -94,8 +94,15 @@ describe('the app greets on the day', () => {
     expect(appjs).toMatch(/BIRTHDAY_SEEN_KEY/);
   });
 
+  // Escaping moved INTO showCelebration() when the sheet became reusable, so
+  // the guarantee now covers every caller rather than the one whose author
+  // remembered to wrap the string.
   it('the name is escaped - it is user-controlled text', () => {
-    expect(appjs).toMatch(/escapeHtml\(\s*translateValue\('Happy birthday, NAME!'\)/);
+    const components = fs.readFileSync(new URL('../../js/components.js', import.meta.url), 'utf8');
+    const celebrate = components.slice(components.indexOf('export function showCelebration'));
+    expect(celebrate).toMatch(/const esc = \(v\) =>/);
+    expect(celebrate).toMatch(/\$\{esc\(title \|\| ''\)\}/);
+    expect(appjs).toMatch(/title: translateValue\('Happy birthday, NAME!'\)/);
   });
 
   it('is translated into both other languages', () => {
