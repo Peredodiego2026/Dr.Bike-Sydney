@@ -2742,10 +2742,14 @@ async function renderTracking() {
     </div>
 
     <!-- Map: flex:1 fills all remaining space between status bar and bottom panel -->
-    <div id="tracking-map" style="flex:1;min-height:0;display:block"></div>
+    <div id="tracking-map" style="flex:1;min-height:34dvh;display:block"></div>
 
-    <!-- Bottom panel -->
-    <div style="flex-shrink:0;background:var(--white);border-top:1px solid var(--border)">
+    <!-- Bottom panel. overflow-y:auto because the screen itself is
+         height:100dvh; overflow:hidden - Leaflet needs a container of a known
+         size, so the SCREEN cannot scroll. Without this the panel is simply
+         clipped and everything past the fold, buttons included, is
+         unreachable. -->
+    <div style="flex-shrink:0;max-height:52dvh;overflow-y:auto;background:var(--white);border-top:1px solid var(--border)">
       <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border-lt)">
         <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -2755,7 +2759,7 @@ async function renderTracking() {
           <div id="mechanic-meta" style="font-size:13px;color:var(--gray);margin-top:1px"></div>
         </div>
         <div id="eta-badge" style="margin-left:auto;flex-shrink:0;text-align:right">
-          <div id="eta-text" style="font-size:13px;color:var(--gray)">On the way to you</div>
+          <div id="eta-text" style="font-size:13px;color:var(--gray)">Waiting for a mechanic</div>
         </div>
         <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-lt)" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
@@ -2898,26 +2902,32 @@ async function renderTracking() {
     }
   }
 
-  // Real GPS position - always use device location, not geocoded address
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = [pos.coords.latitude, pos.coords.longitude];
-        clientCoords = coords;
-        clientMarker.setLatLng(coords);
-        map.setView(coords, 14);
-        map.invalidateSize({ animate: false });
-      },
-      null,
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-    );
-  }
+  // The pin is the address the job was BOOKED for, never the phone's GPS.
+  //
+  // This used to call getCurrentPosition and recentre the map on whatever it
+  // returned - the comment even said "always use device location, not geocoded
+  // address". That is backwards: the mechanic is going to the booking address,
+  // not to wherever the client happens to be standing. Diego booked Curl Curl
+  // from Hamilton Island and the map flew to Hamilton Island.
+  //
+  // It also cost a location-permission prompt for no benefit at all. The
+  // coordinates come from the booking row (address_lat/address_lng), which
+  // public-track already returns.
 
   const booking = await pollBooking();
   if (_renderSeq !== _trackingRenderSeq) return;
 
   if (booking) {
     applyStatus(booking.status || 'confirmed');
+
+    const lat = Number(booking.address_lat);
+    const lng = Number(booking.address_lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      clientCoords = [lat, lng];
+      clientMarker.setLatLng(clientCoords);
+      map.setView(clientCoords, 14);
+      map.invalidateSize({ animate: false });
+    }
 
     // Show assigned mechanic as soon as one has accepted the job (mechanic_id set)
     if (booking.mechanic_id && booking.mechanic_profile?.name) {
@@ -2926,6 +2936,10 @@ async function renderTracking() {
       const metaEl = screen.querySelector('#mechanic-meta');
       const avatarEl = screen.querySelector('#mechanic-avatar');
       if (nameEl) nameEl.textContent = p.name.split(' ')[0];
+      // Assigned, but not necessarily moving yet. updateETA overwrites this
+      // the moment a real position arrives.
+      const etaEl = screen.querySelector('#eta-text');
+      if (etaEl && !_mechanicMarker) etaEl.textContent = translateValue('Assigned to your booking');
       if (metaEl) {
         const parts = [];
         if (p.jobs_completed > 0) parts.push(`${p.jobs_completed} services`);

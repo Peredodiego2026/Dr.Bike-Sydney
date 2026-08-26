@@ -6434,4 +6434,52 @@ una lista de archivos que alguien tiene que acordarse de actualizar: es un
 barrido. Encontro las 3 variantes de mayusculas a los dos minutos de escrito.
 
 13 tests nuevos. Suite completa **10 veces**: 678/678.
+## 45. La primera reserva pagada de verdad, y los 4 bugs que encontro (26-ago-2026)
+
+Diego hizo la reserva real con pago que `PENDIENTES.md` pedia desde el 21 de
+agosto. **Funciono de punta a punta**, con Apple Pay, y confirmo lo que 675
+tests que leen archivos no podian confirmar:
+
+- Tune-Up, domingo 30 de agosto, "10 lalchere st, curl curl"
+- **Tarifa de visita $30.00** = $25 de la banda x 1.20 del recargo de domingo
+- Servicio $130.80 = $109 x 1.20
+- Cobro real en Stripe, recibo, SMS y email
+
+Las bandas de zona y el recargo, calculados contra Stripe de verdad. Eso ya
+justifico el test. Y despues aparecieron cuatro cosas que ningun test veia.
+
+### 1. El mapa mostraba donde esta el TELEFONO, no la reserva
+
+`renderTracking` llamaba `getCurrentPosition` y **recentraba el mapa ahi**. El
+comentario decia, textual: *"always use device location, not geocoded address"*.
+Es exactamente al reves - el mecanico va a la direccion reservada, no a donde
+el cliente este parado. Diego reservo en Curl Curl desde Hamilton Island y el
+mapa volo a Hamilton Island.
+
+Ademas costaba un permiso de ubicacion **a cambio de nada**. Las coordenadas
+salen de `address_lat`/`address_lng`, que `public-track` ya devolvia.
+
+### 2. El panel de abajo quedaba cortado
+
+`[data-screen='tracking'].active` es `height:100dvh; overflow:hidden` - correcto,
+porque Leaflet necesita un contenedor de tamaño conocido. Pero entonces **nada
+debajo del mapa se puede alcanzar**: el panel quedaba recortado con sus botones
+adentro. Ahora scrollea el panel, y el mapa conserva un `min-height` para que
+un panel alto no lo aplaste a cero.
+
+### 3. Decia "On the way to you" sin mecanico asignado
+
+`#eta-text` estaba escrito a mano con ese texto y solo lo pisa `updateETA`, que
+no habla hasta tener una posicion real. O sea que entre reservar y que alguien
+acepte, la pantalla afirmaba algo falso. Ahora arranca en "Waiting for a
+mechanic" y pasa por "Assigned to your booking".
+
+### 4. Gmail invento un "Train trip"
+
+En el recibo de Stripe, Gmail dibujo una tarjeta de reserva de viaje: *"Train
+trip, Sydney departs 12:10, arrives 12:10"*. Es el parser de reservas de Gmail
+equivocandose con "Dr. Bike **Sydney**" y una hora. **No es un email nuestro** -
+lo genera Stripe - y no se puede controlar desde aca. Ver 46.
+
+10 tests nuevos. Suite completa 10 veces: 675/675.
 
