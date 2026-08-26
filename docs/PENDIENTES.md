@@ -6483,3 +6483,60 @@ lo genera Stripe - y no se puede controlar desde aca. Ver 46.
 
 10 tests nuevos. Suite completa 10 veces: 675/675.
 
+## 49. El credito por recomendacion no se podia gastar. Nunca. (26-ago-2026)
+
+Diego: *"no probamos el codigo de descuento del cliente que tiene en su perfil"*.
+
+No se podia probar, porque no podia funcionar. `handleApplyReferral()` acredita
+a las dos partes, y **nada en todo el repo restaba ese numero**. Las unicas dos
+escrituras a `referral_credits` eran incrementos. Un cliente podia compartir su
+codigo, ver *Credits earned $30* en su perfil, y descubrir en la caja que el
+dinero no existia. Peor que no tener el programa.
+
+Encima, la app prometia **$15** en tres lugares y tres idiomas
+(`js/app.js:4635/4657/4658`) mientras el servidor acreditaba **$10**
+(`const CREDIT = 10`). Nadie podia notar la diferencia porque el credito era
+ingastable de las dos maneras. Ahora el servidor paga los $15 que el cliente
+ve: **de los dos numeros, el que cuenta es el que se le mostro**.
+
+### Donde se gasta
+
+Contra el precio del servicio, como descuento a nivel reserva. Esa canaleta ya
+existia (`bookings.discount_applied`), asi que el desglose del mecanico, el mail
+de factura y las cifras del admin lo levantan **sin plomeria nueva**. Se suma
+**encima** de un codigo promocional en vez de reemplazarlo, y nunca deja el
+total abajo de cero.
+
+Un invitado no tiene perfil ni creditos: `user` es null y el bloque entero se
+saltea.
+
+### Tres cosas que podian perder plata del cliente
+
+1. **Dos reservas en el mismo segundo.** `spend_referral_credits()` hace
+   `SELECT ... FOR UPDATE` adentro, asi que no pueden leer las dos el mismo
+   saldo y gastarlo cada una. Es la misma carrera que `consume_discount_code()`
+   evita para los codigos promocionales.
+2. **Credito descontado, reserva sin actualizar.** Si el UPDATE falla despues
+   del gasto, se llama a `refund_referral_credits()` y vuelve al perfil.
+3. **Reserva cancelada.** El credito vuelve. Sin esto, el cliente gasta $15 que
+   se gano, cancela esa tarde, y la plata desaparece sin que ninguna pantalla lo
+   admita. Poner la columna en cero en el mismo paso lo hace idempotente: una
+   segunda cancelacion no acuna credito de la nada.
+
+### Y se ve antes de pagar
+
+Fila propia en el resumen de la reserva, debajo del descuento promocional. Un
+descuento que el cliente descubre cuando el mecanico ya esta en su vereda no es
+un descuento, es una sorpresa. La fila es **solo informativa**: el servidor
+recalcula y manda, igual que con el codigo.
+
+### El SQL no es una dependencia dura
+
+`scripts/*.sql` se corren a mano, asi que el codigo llega a main antes que la
+migracion. **Ninguna consulta nombra la columna nueva** salvo la de cancelacion,
+que la pide aparte y sobrevive a que falte - PostgREST rechaza el request
+entero, no saltea la columna, y eso habria volteado la pantalla del mecanico
+hasta que Diego corriera el archivo. El gasto en la reserva loguea y sigue.
+
+19 tests nuevos. 707/707.
+
