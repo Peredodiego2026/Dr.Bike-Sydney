@@ -1579,7 +1579,7 @@ function openCompleteModal(id) {
       <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);font-size:15px">✅ Complete job — ${esc(j.service)}</div>
       ${
         j.discount_applied > 0
-          ? `<div style="margin:16px 16px 0;background:var(--green-lt);border:1.5px solid #A7F3D0;border-radius:10px;padding:12px 14px">
+          ? `<div style="margin:16px 16px 0;background:var(--green-lt);border:1.5px solid var(--green-edge);border-radius:10px;padding:12px 14px">
         <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
         <div style="font-size:15px;color:var(--green-ink)">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ' (referral credit)'} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
       </div>`
@@ -1599,11 +1599,11 @@ function openCompleteModal(id) {
           <button type="button" data-action="open-parts-picker" id="parts-used-btn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--off);cursor:pointer;font-family:var(--sans)">
             <span id="parts-used-label" style="font-size:13px;font-weight:600;color:var(--navy)">Add parts used</span>
             <span style="display:flex;align-items:center;gap:8px">
-              <span id="parts-used-count" style="display:none;font-size:11px;font-weight:700;color:var(--blue-dark);background:#1E40AF15;padding:2px 9px;border-radius:20px">0</span>
+              <span id="parts-used-count" style="display:none;font-size:11px;font-weight:700;color:var(--blue-dark);background:var(--blue-dark)15;padding:2px 9px;border-radius:20px">0</span>
               <span style="color:var(--gray-lt);font-size:18px;line-height:1">›</span>
             </span>
           </button>
-          <div id="parts-banner" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
+          <div id="parts-banner" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">💳 Payment breakdown</label>
@@ -1667,11 +1667,11 @@ function openCompleteModal(id) {
           <canvas id="sig-canvas" width="600" height="120" style="width:100%;max-width:100%;height:120px;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
-        <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
+        <div id="sig-banner" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
         <div id="pay-method-section">
           ${
             j.has_card_on_file
-              ? `<div style="background:#EFF6FF;border:1.5px solid var(--blue-edge);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+              ? `<div style="background:var(--blue-lt);border:1.5px solid var(--blue-edge);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
                 <span style="font-size:18px" aria-hidden="true">💳</span>
                 <div style="font-size:13px;color:var(--blue-dark);font-weight:600">Will auto-charge the client's card on file - no EFTPOS needed.</div>
               </div>`
@@ -1749,7 +1749,7 @@ function openCompleteModal(id) {
       chkDiv.innerHTML = allItems
         .map(
           (item, i) => `
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid var(--border-lt)">
           <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? 'var(--red)' : 'var(--green)'};flex-shrink:0" data-change="checklist-changed">
           <span>${item.label}${item.required ? '<span style="color:var(--red);font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
@@ -1774,7 +1774,12 @@ function openCompleteModal(id) {
     // resolve custom properties. var(--navy) here silently keeps the previous
     // stroke colour and the signature draws in the wrong colour, or not at all.
     // The only ctx.*Style in the repo - leave it hex (docs/PENDIENTES.md 12.14).
+    // dark-theme-check: off - the signature canvas is white paper in BOTH
+    // themes (see its background:#fff), so this ink must stay dark. Following
+    // the theme here would draw a light stroke on white and the client's
+    // signature would vanish from the invoice.
     ctx.strokeStyle = '#0D1F3C';
+    /* dark-theme-check: on */
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     let drawing = false;
@@ -2273,7 +2278,7 @@ async function submitComplete(id) {
       const section = document.getElementById('pay-method-section');
       if (section) {
         section.innerHTML = `
-          <div style="background:#FEF2F2;border:1.5px solid var(--red-edge);border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
+          <div style="background:var(--red-lt);border:1.5px solid var(--red-edge);border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
           <div style="display:flex;gap:8px">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
@@ -2889,7 +2894,7 @@ function profile() {
     <div style="padding:0 16px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6">Earnings</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div style="background:linear-gradient(135deg,var(--blue),#0D1F3C);border-radius:14px;padding:16px;color:#fff">
+        <div style="background:linear-gradient(135deg,var(--blue),var(--navy));border-radius:14px;padding:16px;color:#fff">
           <div style="font-size:11px;opacity:0.7;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Today</div>
           <div style="font-size:24px;font-weight:800;margin-top:4px">$${todayRev}</div>
           <div style="font-size:13px;opacity:0.7;margin-top:2px">${td.length} job${td.length !== 1 ? 's' : ''}</div>
@@ -2952,6 +2957,8 @@ function toast(msg) {
   t.textContent = msg;
   t.style.cssText =
     'background:var(--navy2);color:#ffffff;border-radius:12px;padding:12px 20px;font-weight:600;font-size:13px;';
+  // --navy2 stays dark in BOTH themes on purpose: this pill carries hard-coded
+  // white text, so a light background here means an unreadable toast.
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
@@ -2980,12 +2987,12 @@ function renderAgenda() {
 
     html += `<div style="margin-top:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:700;color:${isToday ? 'var(--blue)' : '#0D1F3C'}">${label}</div>
+        <div style="font-size:13px;font-weight:700;color:${isToday ? 'var(--blue)' : 'var(--navy)'}">${label}</div>
         ${dayJobs.length ? `<div style="font-size:13px;color:var(--gray)">${dayJobs.length} job${dayJobs.length !== 1 ? 's' : ''} · $${revenue}</div>` : ''}
       </div>`;
 
     if (!dayJobs.length) {
-      html += `<div style="padding:12px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;font-size:13px;color:var(--gray-lt)">No jobs scheduled</div>`;
+      html += `<div style="padding:12px;background:var(--off);border:1px solid var(--border-lt);border-radius:8px;text-align:center;font-size:13px;color:var(--gray-lt)">No jobs scheduled</div>`;
     } else {
       // Timeline view
       const times = [
@@ -3027,11 +3034,11 @@ function renderAgenda() {
           html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
           <div style="width:52px;font-size:11px;color:var(--gray-lt);padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">
-            <div style="font-size:13px;font-weight:600;color:#0D1F3C">${esc(j.service)}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(j.service)}</div>
             <div style="font-size:13px;color:var(--gray);margin-top:2px">${esc(j.client)} · ${j.suburb || j.address || '—'}</div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
               <span style="font-size:11px;font-weight:600;color:${color}">${j.status.toUpperCase()}</span>
-              <span style="font-size:13px;font-weight:700;color:#0D1F3C">$${j.price}</span>
+              <span style="font-size:13px;font-weight:700;color:var(--navy)">$${j.price}</span>
             </div>
           </div>
         </div>`;
@@ -3138,7 +3145,7 @@ function appendMechMessage(msg, scroll = true) {
   const div = document.createElement('div');
   div.style.cssText = `display:flex;flex-direction:column;align-items:${isMech ? 'flex-end' : 'flex-start'};gap:2px;margin-bottom:6px`;
   const bubble = document.createElement('div');
-  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? 'var(--blue)' : '#fff'};color:${isMech ? '#fff' : '#0D1F3C'};border:${isMech ? 'none' : '1px solid #E2E8F0'}`;
+  bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? 'var(--blue)' : 'var(--white)'};color:${isMech ? '#fff' : 'var(--navy)'};border:${isMech ? 'none' : '1px solid var(--border)'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
   if (photoMatch) {
     const img = document.createElement('img');

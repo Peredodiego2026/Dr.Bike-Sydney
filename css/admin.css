@@ -20,19 +20,6 @@
       rather than in a private block here. Converting a hand-written hex to one
       of those tokens is forbidden: it would follow the theme when the author
       meant it not to.
-   3. Selector strings, not colours. `[style*='background:#FEF2F2']` (line ~478)
-      and `[style*='background:#F0FDF4']` (~481) MATCH the inline style that
-      js/admin.js writes. If that hex ever becomes var() in the JS, these rules
-      stop matching and dark mode silently breaks. They are coupled on purpose.
-   4. Custom property VALUES - the whole --an-* chart ramp at the bottom. A
-      definition that references itself is invalid and wipes the colour off
-      every descendant (12.14, HALLAZGO 1).
-   ────────────────────────────────────────────────────────────────────────── */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
 body {
   font-family: var(--sans);
   background: var(--border-lt);
@@ -43,12 +30,12 @@ body {
 }
 /* Dark mode fixes admin */
 [data-theme='dark'] body {
-  background: #0f1a2e;
-  color: #f2f2f7;
+  background: var(--app);
+  color: var(--navy);
 }
 [data-theme='dark'] .main {
-  background: #0f1a2e;
-  color: #f2f2f7;
+  background: var(--app);
+  color: var(--navy);
 }
 [data-theme='dark'] .main .card-title {
   color: #f2f2f7;
@@ -110,10 +97,6 @@ body {
 [data-theme='dark'] #page-reminders .card {
   background: #152035;
   border-color: rgba(255, 255, 255, 0.08);
-}
-[data-theme='dark'] #page-reminders [style*='background:var(--off)'] {
-  background: #1a2740 !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 [data-theme='dark'] #page-coupons .card {
   background: #152035;
@@ -252,7 +235,7 @@ body {
   color: #f2f2f7;
 }
 [data-theme='dark'] .add-van-btn {
-  background: #0f1a2e;
+  background: var(--app);
   border-color: rgba(255, 255, 255, 0.1);
   color: #98989f;
 }
@@ -345,14 +328,14 @@ body {
 
 /* P4: Sections with persistent white background in dark mode */
 [data-theme='dark'] .content {
-  background: #0f1a2e;
+  background: var(--app);
 }
 [data-theme='dark'] #page-coupons {
-  background: #0f1a2e;
+  background: var(--app);
   color: #f2f2f7;
 }
 [data-theme='dark'] #page-inventory {
-  background: #0f1a2e;
+  background: var(--app);
   color: #f2f2f7;
 }
 
@@ -395,22 +378,6 @@ body {
   border-color: rgba(255, 255, 255, 0.08);
 }
 /* Force all navy inline text to white in dark mode */
-[data-theme='dark'] [style*='color:#0d1f3c'] {
-  color: #f2f2f7 !important;
-}
-[data-theme='dark'] [style*='background:var(--off)'] {
-  background: #1a2740 !important;
-}
-/* No rule for [style*='background:var(--white)'] here: the inline style already
-   says var(--white), and this file re-declares --white as #1c1c1e for dark, so
-   the element follows the theme on its own. The rule that used to sit here said
-   `background: undefined !important` and did nothing. */
-[data-theme='dark'] [style*='border-color:var(--border)'] {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-[data-theme='dark'] [style*='color:var(--border)'] {
-  color: #38383a !important;
-}
 /* Toggle/switch labels */
 [data-theme='dark'] .toggle-label {
   color: #f2f2f7;
@@ -436,47 +403,12 @@ body {
   color: #f2f2f7;
 }
 /* Vans page */
-[data-theme='dark'] #page-vans [style*='color:#fff'] {
-  color: #fff !important;
-}
-[data-theme='dark'] #page-vans [style*='background:var(--white)'] {
-  /* background is deliberately absent - see the note further up: var(--white)
-     already follows the theme. Only the text colour needs forcing. */
-  color: #f2f2f7 !important;
-}
-[data-theme='dark'] #page-vans [style*='border:1px solid var(--border)'] {
-  border-color: #38383a !important;
-}
 /* Settings page inline navy text */
-[data-theme='dark'] #page-settings [style*='font-weight:600;color:var(--mgray)'] {
-  color: #8e8e93 !important;
-}
 [data-theme='dark'] #page-settings label {
   color: #8e8e93;
 }
 
 /* FIX 3: Coupon card hardcoded light backgrounds - dark mode */
-[data-theme='dark'] #coupons-grid [style*='background:var(--blue-lt)'] {
-  background: rgba(24, 72, 200, 0.2) !important;
-}
-[data-theme='dark'] #coupons-grid [style*='background:var(--green-lt)'] {
-  background: rgba(5, 150, 105, 0.2) !important;
-}
-[data-theme='dark'] #coupons-grid [style*='background:var(--green-lt)'] {
-  background: rgba(21, 128, 61, 0.2) !important;
-  color: #4ade80 !important;
-}
-[data-theme='dark'] #coupons-grid [style*='background:var(--red-lt)'] {
-  background: rgba(220, 38, 38, 0.15) !important;
-  color: #f87171 !important;
-}
-[data-theme='dark'] #coupons-grid [style*='background:#FEF2F2'] {
-  background: rgba(220, 38, 38, 0.12) !important;
-}
-[data-theme='dark'] #coupons-grid [style*='background:#F0FDF4'] {
-  background: rgba(5, 150, 105, 0.12) !important;
-}
-
 /* FIX 4: Van performance table dark mode */
 [data-theme='dark'] .perf-tbl th {
   background: #1a2740;
@@ -1830,21 +1762,13 @@ body {
     grid-template-columns: 1fr !important;
   }
   /* Zone manager */
-  #zones-container > div > div[style*='padding:16px'] {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 10px !important;
-  }
-  /* Booking filters */
+/* Booking filters */
   #booking-filters {
     flex-wrap: wrap;
     gap: 8px;
   }
   /* Coupon form */
-  #coupon-inline-form [style*='grid-template-columns:1fr 1fr'] {
-    grid-template-columns: 1fr !important;
-  }
-  /* Page */
+/* Page */
   .page {
     padding: 10px;
     gap: 10px;

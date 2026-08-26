@@ -7029,3 +7029,87 @@ equivocado de un merge y quedar verde.
 
 **823/823, corrido 10 veces seguidas. 6 checks verdes, lint 0 errores.**
 
+## 57. El modo oscuro, de verdad esta vez (27-ago-2026)
+
+Diego, mirando la app del mecanico despues del primer intento: *"modo oscuro
+sigue igual de pedorro no se entiende nada todo es azul"*.
+
+**Estaba leyendo un numero real.** La pagina era `#0f1a2e` y la tarjeta
+`#152035`: contraste **1.07**. El mismo color dos veces. Cada tarjeta, fila y
+panel se disolvia en un unico campo navy plano.
+
+### Por que el check no lo agarro
+
+Medía la **tinta contra los fondos** y pasaba comodo - 14:1 sobre la tarjeta.
+Nunca midio los fondos **entre si**. Texto perfectamente legible sobre una
+tarjeta invisible sigue siendo una tarjeta invisible.
+
+Ahora `GROUND_STEPS` exige distancia entre pagina, tarjeta y panel hundido. Con
+la paleta nueva: **1.28** y **1.20**, mas bordes al 22% en vez de 16%.
+
+### El tercer mecanismo de modo oscuro
+
+`applyDarkModeInline()` en `js/admin.js`: recorria el DOM **en un timer**,
+buscaba elementos cuyo estilo inline contuviera ciertos strings de color, y le
+forzaba un valor oscuro a cada uno con `!important`.
+
+Peleaba con los otros dos. Forzaba una paleta **neutra** (`#242426`, `#8E8E93`)
+mientras los tokens pintan navy, asi que la misma pantalla terminaba con dos
+oscuros distintos. Y no podia funcionar ni en principio: recorria los elementos
+que existian **en el momento en que corria**, asi que toda tarjeta o modal
+dibujado despues nunca quedaba cubierto - por eso necesitaba **ocho** llamadas
+en timers y aun asi se le escapaban cosas.
+
+Eliminado, junto con las **18 reglas `[style*='...']`** de `css/admin.css` que
+cazaban un color por el **texto** de un atributo de estilo. Existian solo porque
+los tokens no tenian valor oscuro.
+
+### 58 literales que ningun tema podia alcanzar
+
+Un token solo tematiza un color **escrito como token**. El lote que Diego estaba
+mirando:
+
+- `color:#0D1F3C` en los titulos de dia de la Agenda: tinta casi negra sobre
+  pagina navy. Todos los dias menos hoy, ilegibles.
+- `background:rgba(0,0,0,0.03)` en sus filas vacias: un lavado **negro**, que
+  sobre fondo oscuro no existe.
+
+El guard ahora los rechaza, y hubo que ampliarlo **tres veces** porque el color
+se elige de tres formas distintas:
+
+1. `background:#FEF2F2` - directo en el estilo.
+2. `color:${isMech ? '#fff' : '#0D1F3C'}` - **adentro de un ternario**. Ahi se
+   escondia la burbuja del chat.
+3. `cancelled: '#FEF2F2'` - un **mapa de colores** asignado a una variable y
+   pintado en otro lado.
+
+Lo que de verdad no puede usar tokens se excluye **por nombre**, con
+`dark-theme-check: off`: el reporte impreso (`window.open('')` es un documento
+nuevo que nunca carga `variables.css`) y la tinta de la firma (se firma sobre
+papel blanco en los dos temas).
+
+`color-check` bajo de 134 a 118 en `admin.css`, de 68 a 38 en `js/admin.js` y de
+13 a 3 en `js/mechanic.js`.
+
+### Y tres cosas mas del mismo reporte
+
+**La seccion de mecanicos estaba vacia.** `handlePublicMechanics` arrancaba de
+`bookings where completed` y devolvia `[]` si no habia ninguna - asi que un
+negocio nuevo mostraba *"coming soon"* a **todos** los visitantes hasta terminar
+el primer trabajo. El unico momento para el que existe esa seccion - convencer a
+alguien que nunca te escucho nombrar - era exactamente cuando no tenia nada que
+mostrar. Diego lo encontro al cancelar su reserva de prueba. Invertido: arranca
+de los mecanicos activos y les cuelga las estadisticas que haya.
+
+**"Choose Your Plan" seguia sin entrar.** Centrar empeoro el problema: cuando el
+contenido es **mas alto** que la caja, `justify-content: center` reparte el
+sobrante arriba y abajo, y la mitad de arriba se va fuera de alcance debajo del
+navbar fijo - por eso el titulo salia cortado. `safe center` centra mientras
+entra y cae al inicio cuando no. Ademas las tarjetas ahora se aprietan con el
+alto de pantalla en vez de desbordar.
+
+**El logo de la gift card** estaba en `top:-18px`, por encima del borde: la
+esquina redondeada le cortaba la D. Ahora entra 12px.
+
+**848/848, corrido 10 veces. 7 checks verdes, lint 0 errores.**
+

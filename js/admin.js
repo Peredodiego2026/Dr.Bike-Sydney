@@ -577,7 +577,6 @@ function go(page, btn) {
     loadNewsletter();
   }
   if (page === 'memberships') loadMemberships();
-  setTimeout(applyDarkModeInline, 100);
 
   // Update mobile bottom nav active state
   ['dashboard', 'bookings', 'clients', 'finance'].forEach((p) => {
@@ -591,73 +590,22 @@ function go(page, btn) {
   window.scrollTo(0, 0);
 }
 
-function applyDarkModeInline() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  // Fix all inline style elements that use navy/mgray colors
-  document.querySelectorAll('[style]').forEach((el) => {
-    const s = el.style;
-    if (isDark) {
-      if (
-        s.color === 'var(--navy)' ||
-        el.getAttribute('style')?.includes('color:var(--navy)') ||
-        el.getAttribute('style')?.includes('color: var(--navy)')
-      ) {
-        el.style.setProperty('color', '#F2F2F7', 'important');
-      }
-      if (
-        s.color === 'var(--mgray)' ||
-        el.getAttribute('style')?.includes('color:var(--mgray)') ||
-        el.getAttribute('style')?.includes('color: var(--mgray)')
-      ) {
-        el.style.setProperty('color', '#8E8E93', 'important');
-      }
-      if (
-        el.getAttribute('style')?.includes('background:#fff') ||
-        el.getAttribute('style')?.includes('background: #fff') ||
-        el.getAttribute('style')?.includes('background:var(--off)') ||
-        el.getAttribute('style')?.includes('background:var(--off)')
-      ) {
-        if (!el.getAttribute('style')?.includes('rgba')) {
-          el.style.setProperty('background', '#242426', 'important');
-        }
-      }
-      if (
-        el.getAttribute('style')?.includes('border-color:var(--border)') ||
-        el.getAttribute('style')?.includes('border:1px solid var(--border)') ||
-        el.getAttribute('style')?.includes('border: 1px solid #E2E8F0')
-      ) {
-        el.style.setProperty('border-color', '#38383A', 'important');
-      }
-      // The four hex in this block are NEEDLES, not colours: they are compared
-      // against the text of a style attribute. Turning one into var(--gray) or
-      // var(--navy) does not change a colour, it makes the test stop matching
-      // and dark mode stops repainting these elements (docs/PENDIENTES.md
-      // 12.14). Same coupling as the [style*='...'] rules in css/admin.css.
-      if (
-        el.getAttribute('style')?.includes('color:var(--mgray)') ||
-        el.getAttribute('style')?.includes('color: #475569')
-      ) {
-        el.style.setProperty('color', '#8E8E93', 'important');
-      }
-      if (
-        el.getAttribute('style')?.includes('color:var(--navy)') ||
-        el.getAttribute('style')?.includes('color:#0d1f3c')
-      ) {
-        el.style.setProperty('color', '#F2F2F7', 'important');
-      }
-    } else {
-      // Restore light mode - undo exactly what the dark-mode branch above
-      // forced. Previously this loop computed `orig` and did nothing with
-      // it, so switching back to light mode without navigating away left
-      // dark colors stuck on-screen.
-      ['color', 'background', 'border-color'].forEach((prop) => {
-        if (el.style.getPropertyPriority(prop) === 'important') {
-          el.style.removeProperty(prop);
-        }
-      });
-    }
-  });
-}
+// applyDarkModeInline() lived here: a DOM walker that ran on a timer, found
+// elements whose inline style contained certain colour strings, and forced a
+// dark value onto each with !important.
+//
+// It was the THIRD dark-mode mechanism in this app, and it fought the other
+// two. It forced a neutral palette (#242426, #38383A, #8E8E93) while the
+// tokens paint navy, so the same screen ended up with two different darks -
+// part of what Diego meant by "no se entiende nada todo es azul".
+//
+// It also could not work in principle: it walked the elements that existed at
+// the moment it ran, so anything rendered afterwards - every job card, every
+// modal - was never covered, which is why it had to be re-run from eight call
+// sites on timers and still missed things.
+//
+// css/variables.css does the whole job now, for every element, at every
+// moment, with no timer.
 
 const _adminMoonSVG =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
@@ -670,7 +618,6 @@ function toggleAdminTheme() {
   localStorage.setItem('drbike-theme', next);
   const btn = document.getElementById('theme-btn-admin');
   if (btn) btn.innerHTML = next === 'dark' ? _adminSunSVG : _adminMoonSVG;
-  setTimeout(applyDarkModeInline, 50);
 }
 // Init theme button icon
 (function () {
@@ -688,7 +635,6 @@ function toggleAdminTheme() {
       month: 'short',
       year: 'numeric',
     });
-  setTimeout(applyDarkModeInline, 100);
 })();
 
 // ── SIDEBAR TOGGLE ─────────────────────────────────────────────────────────────
@@ -1582,6 +1528,10 @@ function exportFinancePDF() {
     .slice(0, 8);
   const maxSvc = topSvcs[0]?.[1] || 1;
 
+  // dark-theme-check: off - everything until the marker below is written into
+  // a window.open('') document that never loads css/variables.css, so a
+  // var(--token) there resolves to nothing. These literals are the report's
+  // own self-contained palette and must stay literals.
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Dr. Bike Sydney — Finance Report</title>
   <style>
@@ -1727,6 +1677,7 @@ function exportFinancePDF() {
     </div>
   </div></body></html>`);
   win.document.close();
+  /* dark-theme-check: on */
 }
 
 // ── AVAILABILITY BLOCKING ─────────────────────────────────────────────────────
@@ -2062,7 +2013,7 @@ function showToast(msg) {
     t = document.createElement('div');
     t.id = 'admin-toast';
     t.style.cssText =
-      'position:fixed;bottom:24px;right:24px;background:#0D1F3C;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;font-family:Inter,sans-serif';
+      'position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;font-family:Inter,sans-serif';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -2113,12 +2064,12 @@ async function loadCoupons() {
         return `
       <div style="background:var(--white);border:1.5px solid ${isActive && !expired ? 'var(--border)' : 'var(--red-edge)'};border-radius:16px;padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:box-shadow .2s">
         <!-- Color accent top bar -->
-        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${isActive && !expired ? 'linear-gradient(90deg,var(--blue),#6366F1)' : '#FCA5A5'}"></div>
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${isActive && !expired ? 'linear-gradient(90deg,var(--blue),#6366F1)' : 'var(--red-edge)'}"></div>
 
         <!-- Code + status -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;margin-top:4px">
           <div style="font-size:18px;font-weight:800;color:var(--navy);letter-spacing:0.08em;font-variant-numeric:tabular-nums">${esc(c.code)}</div>
-          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive && !expired ? '#DCFCE7' : '#FEE2E2'};color:${isActive && !expired ? 'var(--green)' : 'var(--red)'}">${expired ? 'Expired' : isActive ? 'Active' : 'Inactive'}</span>
+          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;background:${isActive && !expired ? 'var(--green-lt)' : 'var(--red-lt)'};color:${isActive && !expired ? 'var(--green)' : 'var(--red)'}">${expired ? 'Expired' : isActive ? 'Active' : 'Inactive'}</span>
         </div>
 
         <!-- Big value display -->
@@ -2141,10 +2092,10 @@ async function loadCoupons() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? '#FCA5A5' : '#86EFAC'};border-radius:8px;background:${isActive ? '#FEF2F2' : '#F0FDF4'};color:${isActive ? 'var(--red)' : 'var(--green)'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? 'var(--red-edge)' : 'var(--green-edge)'};border-radius:8px;background:${isActive ? 'var(--red-lt)' : 'var(--green-lt)'};color:${isActive ? 'var(--red)' : 'var(--green)'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             ${isActive ? 'Deactivate' : 'Activate'}
           </button>
-          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid #FCA5A5;border-radius:8px;background:#FEF2F2;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid var(--red-edge);border-radius:8px;background:var(--red-lt);color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -2180,7 +2131,7 @@ function toast(msg) {
     t = document.createElement('div');
     t.id = 'admin-toast';
     t.style.cssText =
-      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0D1F3C;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;font-family:Inter,sans-serif';
+      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;font-family:Inter,sans-serif';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -2323,17 +2274,17 @@ function checkAdminAuth() {
   const overlay = document.createElement('div');
   overlay.id = 'admin-login-overlay';
   overlay.style.cssText =
-    'position:fixed;inset:0;background:#0D1F3C;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
+    'position:fixed;inset:0;background:var(--navy);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
       <div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
-      <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>
+      <div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:var(--gray);margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
-        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
         data-enter="focus-admin-pass">
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
-        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         data-enter="submit-admin-login">
       <div id="admin-pass-err" style="color:var(--red);font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
       <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
@@ -2583,11 +2534,11 @@ function _showLoginCard(innerHtml) {
 }
 
 function _loginCardHeader() {
-  return '<div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">Dr. Bike Admin</div>';
+  return '<div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px">Dr. Bike Admin</div>';
 }
 
 const _inp =
-  'width:100%;padding:13px 16px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:15px;color:#0D1F3C;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
+  'width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
 const _btn =
   'width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
 
@@ -2732,15 +2683,15 @@ async function loadDashboard() {
       pending: 'var(--amber)',
       confirmed: 'var(--blue)',
       enroute: 'var(--green)',
-      completed: '#475569',
+      completed: 'var(--gray)',
       cancelled: 'var(--red)',
     };
     const stBg2 = {
-      pending: '#FEF3C7',
+      pending: 'var(--amber-tint)',
       confirmed: 'var(--blue-tint)',
       enroute: 'var(--green-tint)',
       completed: 'var(--border-lt)',
-      cancelled: '#FEF2F2',
+      cancelled: 'var(--red-lt)',
     };
     const stLabel2 = {
       pending: 'Pending',
@@ -2790,7 +2741,7 @@ async function loadDashboard() {
       pending: 'var(--amber-bright)',
       confirmed: 'var(--blue)',
       enroute: 'var(--green)',
-      completed: '#475569',
+      completed: 'var(--gray)',
       cancelled: 'var(--red)',
     };
     if (upcoming.length > 0) {
@@ -2938,10 +2889,10 @@ function renderBookingsTable(data) {
       <td data-label="Price"><b>${anMoney(anBookingRevenue(b))}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
         ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:#F5F0FF;color:var(--purple);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
-        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:#EFF6FF;color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
+        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
+        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="reschedule" data-id="${b.id}" data-date="${b.scheduled_date || ''}" style="background:var(--amber-lt);color:var(--amber);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Reschedule</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:#FEF2F2;color:var(--red);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
+        ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
       </td>
     </tr>`;
     })
@@ -3384,7 +3335,7 @@ async function loadRecentNotifications() {
     pending: 'var(--amber)',
     confirmed: 'var(--green)',
     enroute: 'var(--blue)',
-    completed: '#475569',
+    completed: 'var(--gray)',
     cancelled: 'var(--red)',
   };
   list.innerHTML = data
@@ -3400,7 +3351,7 @@ async function loadRecentNotifications() {
       return `<div style="padding:10px 12px;border-radius:8px;margin-bottom:4px;background:var(--off);cursor:pointer" data-action="view-booking" data-id="${b.id}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
         <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(name)}</div>
-        <span style="font-size:11px;color:#fff;background:${stColors[st] || '#475569'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
+        <span style="font-size:11px;color:#fff;background:${stColors[st] || 'var(--gray)'};padding:2px 7px;border-radius:10px;font-weight:600">${st}</span>
       </div>
       <div style="font-size:13px;color:var(--mgray)">${esc(b.service_name || 'Service')} · ${esc(b.suburb || '—')}</div>
       <div style="font-size:11px;color:var(--mgray);margin-top:2px">${time} · ${anMoney(anBookingRevenue(b))}</div>
@@ -5784,7 +5735,7 @@ async function renderMechStats() {
               const day = new Date(d + 'T00:00:00')
                 .toLocaleDateString('en-AU', { weekday: 'short' })
                 .slice(0, 2);
-              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:100%;height:${h}%;background:${v2 > 0 ? colors[v] : '#E2E8F0'};border-radius:3px 3px 0 0;transition:height .4s" title="${v2} job${v2 !== 1 ? 's' : ''}"></div><div style="font-size:11px;color:var(--mgray)">${day}</div></div>`;
+              return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:100%;height:${h}%;background:${v2 > 0 ? colors[v] : 'var(--border)'};border-radius:3px 3px 0 0;transition:height .4s" title="${v2} job${v2 !== 1 ? 's' : ''}"></div><div style="font-size:11px;color:var(--mgray)">${day}</div></div>`;
             })
             .join('')}
         </div>
@@ -5873,7 +5824,7 @@ async function loadClients() {
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
-    grid.innerHTML = `<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
     return;
   }
   if (!data || data.length === 0) {
@@ -6121,7 +6072,7 @@ function addVan() {
   vanZones.push({
     id: newId,
     name: 'Van ' + newId,
-    color: colors[newId] || '#475569',
+    color: colors[newId] || 'var(--gray)',
     suburbs: [],
   });
   renderVanZones();
@@ -6144,7 +6095,7 @@ const CLAIM_STATUS = {
   new: { label: 'New', color: 'var(--amber)', bg: 'var(--amber-tint)' },
   reviewing: { label: 'Reviewing', color: 'var(--blue)', bg: 'var(--blue-tint)' },
   resolved: { label: 'Resolved', color: 'var(--green)', bg: 'var(--green-tint)' },
-  rejected: { label: 'Rejected', color: 'var(--red)', bg: '#FEF2F2' },
+  rejected: { label: 'Rejected', color: 'var(--red)', bg: 'var(--red-lt)' },
 };
 
 // Payments Stripe took that no booking ever claimed. Read-only on purpose:
@@ -6398,7 +6349,7 @@ async function loadContacts() {
       (c) => `
     <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || 'var(--border-lt)'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role] || '#475569'};flex-shrink:0">
+        <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || 'var(--border-lt)'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role] || 'var(--gray)'};flex-shrink:0">
           ${c.first_name[0]}${c.last_name[0]}
         </div>
         <div style="flex:1;min-width:0">
@@ -6406,11 +6357,11 @@ async function loadContacts() {
           <div style="font-size:13px;color:var(--mgray)">${c.phone}</div>
           ${c.email ? `<div style="font-size:13px;color:var(--mgray)">${c.email}</div>` : ''}
         </div>
-        <span style="background:${roleBg[c.role] || 'var(--border-lt)'};color:${roleColors[c.role] || '#475569'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
+        <span style="background:${roleBg[c.role] || 'var(--border-lt)'};color:${roleColors[c.role] || 'var(--gray)'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
       <div style="display:flex;gap:8px">
         <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
-        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:#FEF2F2;border:1.5px solid var(--red-edge);color:var(--red);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
+        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`
     )
@@ -6559,7 +6510,7 @@ function renderInventory() {
     const isLow = p.stock <= p.min_stock;
     const isOut = p.stock === 0;
     const statusTxt = isOut ? '🔴 Out of stock' : isLow ? '🟡 Low stock' : '🟢 OK';
-    const statusBg = isOut ? '#FEF2F2' : isLow ? 'var(--amber-tint)' : '#F0FDF4';
+    const statusBg = isOut ? 'var(--red-lt)' : isLow ? 'var(--amber-tint)' : 'var(--green-lt)';
     const statusCl = isOut ? 'var(--red)' : isLow ? 'var(--amber-ink)' : 'var(--green)';
     return `<tr>
       <td data-label="Part" style="font-weight:600">${escapeHtml(p.name)}</td>
@@ -6573,7 +6524,7 @@ function renderInventory() {
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">−</button>
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">+</button>
           <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-part" data-id="${p.id}" style="background:#FEF2F2;border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="delete-part" data-id="${p.id}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -6753,7 +6704,6 @@ function renderServices() {
       <div style="font-size:15px;font-weight:600;color:var(--mgray)">No services yet</div>
       <div style="font-size:13px;color:var(--mgray);opacity:.7">Add your first service to start the catalog</div>
     </div></td></tr>`;
-    applyDarkModeInline();
     return;
   }
 
@@ -6769,7 +6719,6 @@ function renderServices() {
 
   if (!filtered.length) {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mgray)">No services match "${escapeHtml(q)}"</td></tr>`;
-    applyDarkModeInline();
     return;
   }
 
@@ -6794,7 +6743,7 @@ function renderServices() {
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
           <button data-action="open-service-modal" data-id="${s.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-service" data-id="${s.id}" style="background:#FEF2F2;border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="delete-service" data-id="${s.id}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -6807,8 +6756,6 @@ function renderServices() {
         byCat[cat].map(svcRow).join('')
     )
     .join('');
-
-  applyDarkModeInline();
 }
 
 function openServiceModal(id) {
@@ -6843,7 +6790,6 @@ function openServiceModal(id) {
     </div>
   </div>`;
   document.body.appendChild(modal);
-  applyDarkModeInline();
 }
 
 async function saveService(id) {
@@ -7044,7 +6990,7 @@ async function loadCalendar() {
       pending: 'var(--amber-bright)',
       confirmed: 'var(--blue)',
       enroute: 'var(--green)',
-      completed: '#475569',
+      completed: 'var(--gray)',
     };
     const stBg = {
       pending: 'var(--amber-tint)',
@@ -7093,7 +7039,7 @@ async function loadCalendar() {
             const st = j.status || 'pending';
             const nm = j.profiles?.full_name?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
-            return `<div style="font-size:11px;background:${stBg[st] || 'var(--border-lt)'};border-left:2px solid ${stColors[st] || '#475569'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-action="view-booking" data-id="${j.id}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${vanColor(j.van_number)};margin-right:3px"></span>${tm} ${esc(nm)}</div>`;
+            return `<div style="font-size:11px;background:${stBg[st] || 'var(--border-lt)'};border-left:2px solid ${stColors[st] || 'var(--gray)'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-action="view-booking" data-id="${j.id}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${vanColor(j.van_number)};margin-right:3px"></span>${tm} ${esc(nm)}</div>`;
           })
           .join('')}
         ${dayJobs.length > 3 ? `<div style="font-size:11px;color:var(--mgray)">+${dayJobs.length - 3} more</div>` : ''}
@@ -7181,7 +7127,7 @@ async function loadCalendar() {
     pending: 'var(--amber-bright)',
     confirmed: 'var(--blue)',
     enroute: 'var(--green)',
-    completed: '#475569',
+    completed: 'var(--gray)',
   };
   const stBg = {
     pending: 'var(--amber-tint)',
@@ -7229,8 +7175,8 @@ async function loadCalendar() {
                   const name = j.profiles?.full_name?.split(' ')[0] || 'Client';
                   const time = j.scheduled_time || '';
                   const van = j.van_number || 1;
-                  return `<div style="background:${stBg[st] || 'var(--border-lt)'};border-left:3px solid ${stColors[st] || '#475569'};border-radius:6px;padding:6px 8px;cursor:pointer" data-action="view-booking" data-id="${j.id}">
-              <div style="font-size:11px;font-weight:700;color:${stColors[st] || '#475569'}">${time}</div>
+                  return `<div style="background:${stBg[st] || 'var(--border-lt)'};border-left:3px solid ${stColors[st] || 'var(--gray)'};border-radius:6px;padding:6px 8px;cursor:pointer" data-action="view-booking" data-id="${j.id}">
+              <div style="font-size:11px;font-weight:700;color:${stColors[st] || 'var(--gray)'}">${time}</div>
               <div style="font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
               <div style="font-size:11px;color:var(--mgray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.service_name || '')}</div>
               <div style="font-size:11px;font-weight:600;color:${vanColor(van)};margin-top:2px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${vanColor(van)};margin-right:3px"></span>Van ${van}</div>
@@ -7701,7 +7647,7 @@ async function loadNotifNumbers() {
   }
 
   const zoneLabel = { 1: 'Van 1', 2: 'Van 2', all: 'All zones', '': 'All zones' };
-  const zoneBg = { 1: 'var(--blue-tint)', 2: '#F0FDF4', all: 'var(--amber-tint)', '': 'var(--amber-tint)' };
+  const zoneBg = { 1: 'var(--blue-tint)', 2: 'var(--green-lt)', all: 'var(--amber-tint)', '': 'var(--amber-tint)' };
   const zoneColor = {
     1: 'var(--blue)',
     2: 'var(--green)',
@@ -7730,7 +7676,7 @@ async function loadNotifNumbers() {
         <button data-action="edit-notif-number" data-id="${c.id}"
           style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
         <button data-action="delete-notif-number" data-id="${c.id}"
-          style="background:#FEF2F2;border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
+          style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
       </div>
     </div>`;
     })
@@ -7929,7 +7875,7 @@ async function loadMechanicProfiles() {
       const initials = ((c.first_name || '?')[0] + (c.last_name || '')[0]).toUpperCase();
       const avatarHTML = c.photo_url
         ? `<img src="${esc(c.photo_url)}" alt="${esc(name)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
-        : `<div style="width:80px;height:80px;border-radius:50%;background:#EFF6FF;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
+        : `<div style="width:80px;height:80px;border-radius:50%;background:var(--blue-lt);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
       const roleTag =
         c.role === 'manager'
           ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--amber-lt);color:var(--amber-ink)">⭐ Manager</span>'
@@ -7938,7 +7884,7 @@ async function loadMechanicProfiles() {
       return `
     <div class="card" style="padding:0;overflow:hidden;width:300px;position:relative">
       ${roleTag}
-      <div style="height:90px;width:100%;overflow:hidden;background:#EFF6FF">
+      <div style="height:90px;width:100%;overflow:hidden;background:var(--blue-lt)">
         <img src="images/mechanic-working.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
       </div>
       <div style="display:flex;justify-content:center;margin-top:-40px">${avatarHTML}</div>
@@ -8247,7 +8193,7 @@ async function loadNewsletter() {
         <td style="font-size:13px">${esc(s.name || '—')}</td>
         <td style="font-size:13px">${esc(s.source || 'website')}</td>
         <td style="font-size:13px">${new Date(s.subscribed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-        <td><span style="background:${s.active ? 'var(--green-tint)' : '#FEF2F2'};color:${s.active ? 'var(--green)' : 'var(--red)'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
+        <td><span style="background:${s.active ? 'var(--green-tint)' : 'var(--red-lt)'};color:${s.active ? 'var(--green)' : 'var(--red)'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${s.active ? 'Active' : 'Unsub'}</span></td>
       </tr>`
         )
         .join('')}</tbody>
