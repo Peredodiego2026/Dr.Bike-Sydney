@@ -568,10 +568,10 @@ window.addEventListener('offline', updateOnlineStatus);
 function ratingHTML(jobs) {
   const rated = jobs.filter((j) => j.rating);
   if (rated.length === 0)
-    return '<div style="text-align:center;padding:16px;background:#fff;border-radius:12px;border:1px solid var(--border);color:var(--mgray);font-size:13px">No ratings yet — complete jobs to get reviews!</div>';
+    return '<div style="text-align:center;padding:16px;background:var(--white);border-radius:12px;border:1px solid var(--border);color:var(--mgray);font-size:13px">No ratings yet — complete jobs to get reviews!</div>';
   const avg = (rated.reduce((s, j) => s + (j.rating || 0), 0) / rated.length).toFixed(1);
   const stars = '⭐'.repeat(Math.round(avg));
-  return `<div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px;text-align:center;margin-bottom:16px">
+  return `<div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:16px;text-align:center;margin-bottom:16px">
     <div style="font-size:32px;font-weight:800;color:var(--navy)">${avg}</div>
     <div style="font-size:20px;margin:4px 0">${stars}</div>
     <div style="font-size:13px;color:var(--mgray)">${rated.length} review${rated.length !== 1 ? 's' : ''}</div>
@@ -1661,6 +1661,9 @@ function openCompleteModal(id) {
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:var(--red)">*</span></label>
+          <!-- background:#fff is deliberate and must stay a literal: you sign on white
+               paper in either theme, the stroke is drawn in a dark ink that only reads
+               on white, and this image goes into the client's invoice. -->
           <canvas id="sig-canvas" width="600" height="120" style="width:100%;max-width:100%;height:120px;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
@@ -2356,11 +2359,10 @@ async function openClientHistory(bookingId, clientName, clientId) {
 
   const overlay = document.createElement('div');
   overlay.id = 'history-modal';
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+  overlay.className = 'sheet-overlay';
 
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:24px">
+    <div class="sheet-panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div>
           <div style="font-size:18px;font-weight:700;color:var(--navy)">${esc(clientName)}</div>
@@ -2724,7 +2726,7 @@ function openChecklist(bookingId) {
           ${['ok', 'warn', 'critical']
             .map(
               (s) => `<button data-action="set-check" data-id="${item.id}" data-status="${s}"
-            style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:var(--gray)"
+            style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;background:var(--white);color:var(--gray)"
             id="cb-${item.id}-${s}">${s === 'ok' ? '✅ OK' : s === 'warn' ? '⚠️ Warn' : '🔴 Critical'}</button>`
             )
             .join('')}

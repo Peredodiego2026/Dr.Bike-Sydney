@@ -6771,3 +6771,31 @@ superpondria y una angosta dejaria un hueco.
 
 14 tests nuevos. 766/766.
 
+## 54. Cuatro superficies que el tema oscuro no podia alcanzar (26-ago-2026)
+
+El modo oscuro ya tiene tabla de tokens completa (48), pero **un token solo
+puede alcanzar un color que este escrito como token**. Cuatro lugares de
+`js/mechanic.js` pintaban `background:#fff` como literal: en oscuro eran hojas
+de papel blanco sobre el fondo navy, y ningun trabajo sobre la paleta las podia
+tocar.
+
+Diego encontro la mas grande solo: *"aprete en history en el pc y se ve un
+history abajo como en la foto nose si me gusta ese banner abajo"*.
+
+Las otras tres eran la tarjeta de *No ratings yet*, el resumen de calificaciones
+y un boton chico.
+
+**La cuarta se queda blanca a proposito**: el canvas de la firma. Se firma sobre
+papel blanco en los dos temas, el trazo se dibuja con una tinta oscura que solo
+se lee sobre blanco, y esa imagen termina en la factura del cliente. Lleva un
+comentario que lo dice, y un test que verifica que sea **la unica** que queda.
+
+### Y el panel de historial
+
+Una hoja que sube desde el borde de abajo esta bien en un celular - es donde
+esta el pulgar - y **se lee como una barra de notificacion en una PC**. Todos
+los demas overlays de esta app estan centrados. Ahora sube en mobile y esta
+centrado de 768px para arriba.
+
+7 tests nuevos. 772/772.
+
