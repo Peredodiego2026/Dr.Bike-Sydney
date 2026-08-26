@@ -1344,19 +1344,71 @@ async function handleCreateBooking(req, res) {
   // separate SELECT-then-UPDATE (racy), queried a discount_amount column
   // that doesn't exist (silently never matched, discount was never applied),
   // and compared discount_type to 'percentage' instead of the real 'percent'.
+  let codeDiscount = 0;
   if (discount_code) {
     const code = String(discount_code).trim().toUpperCase();
     const { data: rows } = await sb.rpc('consume_discount_code', { p_code: code });
     const dc = rows && rows[0];
     if (dc) {
-      const disc =
+      codeDiscount =
         dc.discount_type === 'percent'
           ? Math.round(servicePrice * dc.discount_value) / 100
           : Math.min(dc.discount_value, servicePrice);
       await sb
         .from('bookings')
-        .update({ discount_applied: disc, discount_code: code })
+        .update({ discount_applied: codeDiscount, discount_code: code })
         .eq('id', booking.id);
+    }
+  }
+
+  // 6b. Referral credit. Until now this was a number that only ever went UP:
+  // handleApplyReferral credited both sides and nothing anywhere subtracted it
+  // again - grep `referral_credits` across api/ and js/ before this commit and
+  // the only writes are two increments. The client's profile showed "Credits
+  // earned $30" and there was no screen, endpoint or checkout that could spend
+  // a cent of it. A promise the code could not keep.
+  //
+  // Spent here, against the service price, as a booking-level discount: that is
+  // the pipe that already exists (bookings.discount_applied), so the mechanic's
+  // completion breakdown, the invoice email and the admin figures all pick it
+  // up with no new plumbing. It stacks ON TOP of a promo code rather than
+  // replacing it, and never takes the total below zero.
+  //
+  // A guest has no profile and therefore no credits - `user` is null and this
+  // whole block is skipped.
+  if (user) {
+    const remaining = Math.max(0, servicePrice - codeDiscount);
+    if (remaining > 0) {
+      // Atomic: SELECT ... FOR UPDATE inside the function. Two bookings started
+      // at the same second cannot both read the same balance and each spend it,
+      // which is the exact race consume_discount_code() exists to stop for
+      // promo codes.
+      const { data: spentRows, error: spendErr } = await sb.rpc('spend_referral_credits', {
+        p_user: user.id,
+        p_max: remaining,
+      });
+      if (spendErr) {
+        // Never fail the booking over this. The client keeps the credit and can
+        // spend it next time; a lost booking is far worse than a late discount.
+        console.error('[create-booking] referral credit spend failed:', spendErr.message);
+      } else {
+        const spent = Number(spentRows) || 0;
+        if (spent > 0) {
+          const { error: applyErr } = await sb
+            .from('bookings')
+            .update({
+              discount_applied: codeDiscount + spent,
+              referral_credit_applied: spent,
+            })
+            .eq('id', booking.id);
+          if (applyErr) {
+            // The credit left the profile but never reached the booking. Put it
+            // back rather than swallowing the client's money.
+            console.error('[create-booking] credit spent but not applied:', applyErr.message);
+            await sb.rpc('refund_referral_credits', { p_user: user.id, p_amount: spent });
+          }
+        }
+      }
     }
   }
 
@@ -2387,6 +2439,43 @@ async function notifyAdminCancellation(bk) {
   const hours = hoursUntilAppointment(bk.scheduled_date, bk.scheduled_time);
   const eligibleForRefund = hours >= 24;
 
+  // A cancelled booking gives the referral credit back. Without this the credit
+  // is burned by a booking that never happened - the client spends $15 they
+  // earned, cancels the same afternoon, and the money is simply gone with no
+  // screen anywhere admitting it. Zeroing the column in the same statement
+  // makes it idempotent: a second cancel of the same booking restores nothing.
+  if (bk.client_id) {
+    try {
+      const sbAdmin = createClient(SUPABASE_URL, SERVICE_KEY);
+      // Asked for separately, and allowed to fail: scripts/*.sql in this repo
+      // are run by hand, so this column exists in the code before it exists in
+      // the database. A cancellation must not break in that window.
+      const { data: creditRow, error: readErr } = await sbAdmin
+        .from('bookings')
+        .select('referral_credit_applied')
+        .eq('id', booking_id)
+        .single();
+      if (readErr) throw new Error(readErr.message);
+      const creditToRestore = Number(creditRow?.referral_credit_applied) || 0;
+      if (creditToRestore <= 0) throw null;
+      const { error: restoreErr } = await sbAdmin.rpc('refund_referral_credits', {
+        p_user: bk.client_id,
+        p_amount: creditToRestore,
+      });
+      if (restoreErr) throw new Error(restoreErr.message);
+      await sbAdmin
+        .from('bookings')
+        .update({ referral_credit_applied: 0 })
+        .eq('id', booking_id)
+        .gt('referral_credit_applied', 0);
+    } catch (e) {
+      // `throw null` above is the "nothing to restore" path, not a failure.
+      if (e) {
+        console.error('[client-cancel] referral credit restore failed:', booking_id, e.message);
+      }
+    }
+  }
+
   let refunded = false;
   let refundAttempted = false;
   if (eligibleForRefund && bk.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
@@ -2702,7 +2791,11 @@ async function handleApplyReferral(req, res) {
   if (referrer.id === user.id)
     return res.status(400).json({ error: 'You cannot use your own referral code' });
 
-  const CREDIT = 10;
+  // $15, matching what js/app.js tells the customer in all three languages
+  // ("You and your friend each get $15 off"). This was 10 - the app promised
+  // one number and the server paid another, and nobody could tell because the
+  // credit was unspendable either way.
+  const CREDIT = 15;
   await Promise.all([
     sb
       .from('profiles')

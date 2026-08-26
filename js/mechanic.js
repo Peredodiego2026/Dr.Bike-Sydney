@@ -1540,7 +1540,7 @@ function openCompleteModal(id) {
         j.discount_applied > 0
           ? `<div style="margin:16px 16px 0;background:var(--green-lt);border:1.5px solid #A7F3D0;border-radius:10px;padding:12px 14px">
         <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
-        <div style="font-size:15px;color:var(--green-ink)">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ''} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
+        <div style="font-size:15px;color:var(--green-ink)">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ' (referral credit)'} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
       </div>`
           : ''
       }
