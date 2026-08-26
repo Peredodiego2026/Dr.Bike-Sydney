@@ -66,6 +66,25 @@ document.addEventListener('click', (e) => {
     case 'clear-sig':
       clearSig();
       break;
+    case 'set-next-service': {
+      const months = Number(el.dataset.months) || 0;
+      const field = document.getElementById('comp-next');
+      if (field) {
+        if (months > 0) {
+          const d = new Date();
+          d.setMonth(d.getMonth() + months);
+          // en-CA gives YYYY-MM-DD, which is what the field carried before and
+          // what the invoice expects.
+          field.value = d.toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' });
+        } else {
+          field.value = '';
+        }
+      }
+      document
+        .querySelectorAll('#next-service-chips .next-chip')
+        .forEach((b) => b.classList.toggle('is-on', b === el));
+      break;
+    }
     case 'close-complete-modal':
       document.getElementById('complete-modal')?.remove();
       break;
@@ -549,10 +568,10 @@ window.addEventListener('offline', updateOnlineStatus);
 function ratingHTML(jobs) {
   const rated = jobs.filter((j) => j.rating);
   if (rated.length === 0)
-    return '<div style="text-align:center;padding:16px;background:#fff;border-radius:12px;border:1px solid var(--border);color:var(--mgray);font-size:13px">No ratings yet — complete jobs to get reviews!</div>';
+    return '<div style="text-align:center;padding:16px;background:var(--white);border-radius:12px;border:1px solid var(--border);color:var(--mgray);font-size:13px">No ratings yet — complete jobs to get reviews!</div>';
   const avg = (rated.reduce((s, j) => s + (j.rating || 0), 0) / rated.length).toFixed(1);
   const stars = '⭐'.repeat(Math.round(avg));
-  return `<div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px;text-align:center;margin-bottom:16px">
+  return `<div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:16px;text-align:center;margin-bottom:16px">
     <div style="font-size:32px;font-weight:800;color:var(--navy)">${avg}</div>
     <div style="font-size:20px;margin:4px 0">${stars}</div>
     <div style="font-size:13px;color:var(--mgray)">${rated.length} review${rated.length !== 1 ? 's' : ''}</div>
@@ -808,7 +827,29 @@ function sub() {
       }
     })
     .subscribe();
-  window.addEventListener('beforeunload', () => sb.removeChannel(mechChannel));
+
+  // This screen has always called load() on every event, and a rescheduled job
+  // still only appeared after a manual reload - so the events were not
+  // arriving. Realtime needs `bookings` in the supabase_realtime publication,
+  // which is a database setting (scripts/enable-realtime-bookings.sql).
+  //
+  // A mechanic mid-round cannot be asked to pull-to-refresh to find out a job
+  // moved, so the screen no longer depends on that setting being right: it
+  // reloads when the phone comes back to the app, and slowly on its own.
+  // Never while the completion modal is open - that would wipe a signature.
+  const canReload = () => !document.hidden && !document.getElementById('complete-modal');
+  const reloadInterval = setInterval(() => {
+    if (canReload()) load();
+  }, 60000);
+  const onVisible = () => {
+    if (canReload()) load();
+  };
+  document.addEventListener('visibilitychange', onVisible);
+  window.addEventListener('beforeunload', () => {
+    clearInterval(reloadInterval);
+    document.removeEventListener('visibilitychange', onVisible);
+    sb.removeChannel(mechChannel);
+  });
   requestPushPermission();
 }
 
@@ -1534,7 +1575,7 @@ function openCompleteModal(id) {
   modal.style.cssText =
     'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
   modal.innerHTML = `
-    <div style="background:var(--white);border-radius:16px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
+    <div style="background:var(--white);border-radius:16px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;overflow-x:hidden">
       <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);font-size:15px">✅ Complete job — ${esc(j.service)}</div>
       ${
         j.discount_applied > 0
@@ -1602,12 +1643,28 @@ function openCompleteModal(id) {
           </div>
         </div>
         <div>
-          <label for="comp-next" style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Next service recommended</label>
-          <input id="comp-next" type="date" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;background:var(--white);color:var(--navy)">
+          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Next service recommended <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
+          <div id="next-service-chips" style="display:flex;gap:6px;flex-wrap:wrap">
+            ${[
+              { months: 3, label: '3 months' },
+              { months: 6, label: '6 months' },
+              { months: 12, label: '12 months' },
+            ]
+              .map(
+                (o) =>
+                  `<button type="button" class="next-chip" data-action="set-next-service" data-months="${o.months}">${o.label}</button>`
+              )
+              .join('')}
+            <button type="button" class="next-chip is-on" data-action="set-next-service" data-months="0">Not now</button>
+          </div>
+          <input id="comp-next" type="hidden" value="">
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:var(--red)">*</span></label>
-          <canvas id="sig-canvas" width="100%" height="120" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
+          <!-- background:#fff is deliberate and must stay a literal: you sign on white
+               paper in either theme, the stroke is drawn in a dark ink that only reads
+               on white, and this image goes into the client's invoice. -->
+          <canvas id="sig-canvas" width="600" height="120" style="width:100%;max-width:100%;height:120px;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
         <div id="sig-banner" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
@@ -2302,11 +2359,10 @@ async function openClientHistory(bookingId, clientName, clientId) {
 
   const overlay = document.createElement('div');
   overlay.id = 'history-modal';
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+  overlay.className = 'sheet-overlay';
 
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:24px">
+    <div class="sheet-panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div>
           <div style="font-size:18px;font-weight:700;color:var(--navy)">${esc(clientName)}</div>
@@ -2670,7 +2726,7 @@ function openChecklist(bookingId) {
           ${['ok', 'warn', 'critical']
             .map(
               (s) => `<button data-action="set-check" data-id="${item.id}" data-status="${s}"
-            style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:var(--gray)"
+            style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;background:var(--white);color:var(--gray)"
             id="cb-${item.id}-${s}">${s === 'ok' ? '✅ OK' : s === 'warn' ? '⚠️ Warn' : '🔴 Critical'}</button>`
             )
             .join('')}
@@ -3187,9 +3243,22 @@ async function requestGPSPermission() {
     return true;
   } catch (err) {
     if (err.code === 1) gpsPermissionState = 'denied';
-    toast(gpsErrorMessage(err));
+    gpsToastOnce(err);
     return false;
   }
+}
+
+// One toast per kind of problem, not one per attempt. sendLocation() runs on a
+// 5-second interval and every failure used to raise its own, so a machine with
+// no GPS - Diego's PC - got one message every five seconds for as long as the
+// job was en route. Reset whenever a fix actually lands, so a mechanic who
+// rides out of a tunnel and back in is told again if it breaks a second time.
+let _gpsToastShown = new Set();
+function gpsToastOnce(err) {
+  const kind = String(err?.code ?? 'unknown');
+  if (_gpsToastShown.has(kind)) return;
+  _gpsToastShown.add(kind);
+  toast(gpsErrorMessage(err));
 }
 
 // Browser geolocation errors surface as strings like "Timeout expired", which
@@ -3251,6 +3320,7 @@ function currentPosition(timeoutMs = 6000) {
 
 function startGPS(bookingId) {
   activeJobId = bookingId;
+  _gpsToastShown = new Set();
   if (!navigator.geolocation) {
     toast('GPS not available');
     return;
@@ -3265,7 +3335,7 @@ function startGPS(bookingId) {
     watchId = navigator.geolocation.watchPosition(
       (pos) => upsertLocation(pos.coords.latitude, pos.coords.longitude),
       (err) => {
-        toast(gpsErrorMessage(err));
+        gpsToastOnce(err);
         if (err.code === 1) stopGPS();
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
@@ -3277,7 +3347,7 @@ function sendLocation(bookingId) {
   navigator.geolocation.getCurrentPosition(
     (pos) => upsertLocation(pos.coords.latitude, pos.coords.longitude),
     (err) => {
-      toast(gpsErrorMessage(err));
+      gpsToastOnce(err);
       if (err.code === 1) stopGPS();
     },
     { enableHighAccuracy: true, timeout: 8000 }
@@ -3286,6 +3356,9 @@ function sendLocation(bookingId) {
 
 async function upsertLocation(lat, lng) {
   lastGpsFix = { lat, lng, at: Date.now() };
+  // Location is working again, so the next failure is news rather than the same
+  // news repeated.
+  if (_gpsToastShown.size) _gpsToastShown = new Set();
   if (!mechanic?.token) return;
   try {
     const resp = await fetch('/api/auth', {

@@ -1293,6 +1293,19 @@ async function loadFinance() {
 
   const jobs = bookings || [];
   const revenue = anRevenueOf(jobs);
+
+  // Visit & diagnosis fees already charged on jobs that have not happened yet.
+  // Deliberately NOT added to revenue: it is not earned until the mechanic
+  // rides out. But it is money in the account, and until now the only place it
+  // existed was Stripe.
+  const { data: heldRows, error: heldError } = await sb
+    .from('bookings')
+    .select('callout_fee,status,stripe_payment_intent_id')
+    .not('stripe_payment_intent_id', 'is', null)
+    .not('status', 'in', '(completed,cancelled)');
+  if (heldError) console.warn('[finance] could not read collected-not-earned:', heldError.message);
+  const heldJobs = heldRows || [];
+  const held = heldJobs.reduce((a, b) => a + (Number(b.callout_fee) || 0), 0);
   const jobCount = jobs.length;
   const gst = Math.round(revenue / 11); // GST inclusive: 1/11
   const netRevenue = revenue - gst;
@@ -1312,6 +1325,18 @@ async function loadFinance() {
 
   // KPIs
   document.getElementById('fk-revenue').textContent = '$' + revenue.toLocaleString('en-AU');
+
+  // Shown only when there is something to show - an empty $0 card next to four
+  // other $0 tiles is noise.
+  const heldCard = document.getElementById('fk-held-card');
+  if (heldCard) {
+    heldCard.style.display = held > 0 ? 'block' : 'none';
+    if (held > 0) {
+      document.getElementById('fk-held').textContent = '$' + held.toLocaleString('en-AU');
+      document.getElementById('fk-held-sub').textContent =
+        `${heldJobs.length} booking${heldJobs.length === 1 ? '' : 's'} paid for and not yet done. In the Stripe account, kept out of revenue above until the mechanic rides out.`;
+    }
+  }
   // A booking with no callout_fee recorded contributes zero call-out, never an
   // assumed $20 - inventing a fee here would land in a BAS lodgement. Say how
   // many rows are in that state instead of quietly absorbing them, same as the
@@ -1441,6 +1466,10 @@ async function loadFinance() {
     jobCount,
     avgJob,
     calloutGaps,
+    // Cash taken for jobs that have not happened. Kept next to revenue but
+    // never summed into it - see where it is computed.
+    held,
+    heldCount: heldJobs.length,
     periodStr,
     dateFrom,
     dateTo,
@@ -1622,6 +1651,15 @@ function exportFinancePDF() {
       <div class="kpi orange"><div class="kpi-label">GST Collected</div><div class="kpi-val">$${d.gst.toLocaleString('en-AU')}</div><div class="kpi-sub">payable to ATO</div></div>
       <div class="kpi"><div class="kpi-label">Est. Net Profit</div><div class="kpi-val">$${d.netProfit.toLocaleString('en-AU')}</div><div class="kpi-sub">after expenses</div></div>
     </div>
+
+    ${
+      d.held > 0
+        ? `<div class="card" style="border-left:4px solid var(--blue)">
+        <div class="card-h"><div><div class="card-t">Collected, not yet earned</div><div class="card-s">Visit &amp; diagnosis fees already charged on jobs that have not happened yet</div></div><div style="font-size:22px;font-weight:800;color:var(--blue)">$${d.held.toLocaleString('en-AU')}</div></div>
+        <div style="padding:0 16px 14px;font-size:13px;color:var(--mgray);line-height:1.6">${d.heldCount} booking${d.heldCount === 1 ? '' : 's'} paid for. This is money in the Stripe account, deliberately left out of revenue above - it is not earned until the mechanic rides out.</div>
+      </div>`
+        : ''
+    }
 
     <div class="two-col">
       <div>
@@ -3393,6 +3431,36 @@ function markAllRead() {
   updateNotifBadge();
 }
 
+// Coalesced, because a single completion writes the booking several times in
+// a row (status, then parts, then the notification outcome) and each write is
+// its own event. Without this the table would refetch three times in a second.
+let _repaintTimer = null;
+function repaintBookingsSoon() {
+  clearTimeout(_repaintTimer);
+  _repaintTimer = setTimeout(() => {
+    // Only when the screen is actually showing, and never while a booking
+    // modal is open - repainting under an open modal loses the admin's place.
+    // Pages are switched with an `active` CLASS (go() at ~line 538), not with
+    // an inline display. Testing style.display here would have read '' forever
+    // and refetched the table every minute while the admin was on Finance.
+    const page = document.getElementById('page-bookings');
+    if (!page?.classList.contains('active')) return;
+    // Every admin overlay that could be covering the table. Repainting under
+    // one of them loses whatever the admin was in the middle of reading.
+    for (const id of [
+      'booking-detail-modal',
+      'cancel-modal',
+      'reassign-modal',
+      'admin-reschedule-modal',
+      'admin-create-booking-modal',
+    ]) {
+      const el = document.getElementById(id);
+      if (el && el.style.display !== 'none' && el.style.display !== '') return;
+    }
+    applyBookingFilters();
+  }, 500);
+}
+
 function subscribeToBookings() {
   sb.channel('admin-bookings-notifs')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings' }, (payload) => {
@@ -3400,12 +3468,28 @@ function subscribeToBookings() {
       unreadCount++;
       updateNotifBadge();
       prependNotification(payload.new);
+      repaintBookingsSoon();
     })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bookings' }, (payload) => {
       const idx = allBookings.findIndex((b) => b.id === payload.new.id);
       if (idx >= 0) allBookings[idx] = { ...allBookings[idx], ...payload.new };
+      // THE line this whole fix is about. The row above kept `allBookings`
+      // correct and the screen wrong, which is indistinguishable from broken.
+      repaintBookingsSoon();
     })
     .subscribe();
+
+  // Behind realtime, a slow poll. Realtime only delivers if `bookings` is in
+  // the supabase_realtime publication - a database setting, not something a
+  // deploy can carry (see scripts/enable-realtime-bookings.sql). The evidence
+  // that it may not be on: js/mechanic.js has ALWAYS called load() on every
+  // event, and the mechanic screen still needed a manual reload.
+  setInterval(() => {
+    if (!document.hidden) repaintBookingsSoon();
+  }, 60000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) repaintBookingsSoon();
+  });
 }
 
 // ── MECHANIC STATS ────────────────────────────────────────────────────────────
@@ -5733,7 +5817,7 @@ async function loadClients() {
   // clients" would be a floor rendered as a total, and the other two would
   // count only the page of rows that happened to arrive. `head: true` sends
   // no rows at all, so this is three cheap queries, not three more downloads.
-  const [{ data, error }, totalRes, vipRes, newRes] = await Promise.all([
+  const [{ data: profiles, error }, totalRes, vipRes, newRes, guestRes] = await Promise.all([
     sb.from('profiles').select('*').order('created_at', { ascending: false }),
     sb.from('profiles').select('id', { count: 'exact', head: true }),
     sb.from('profiles').select('id', { count: 'exact', head: true }).eq('membership_plan', 'vip'),
@@ -5741,7 +5825,48 @@ async function loadClients() {
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .gte('created_at', monthStart.toISOString()),
+    // Guests. A booking made without an account writes its name, email and
+    // phone onto the booking row and creates no profile - so this screen, which
+    // only ever read `profiles`, showed 1 client on the day somebody had just
+    // paid $30 as a guest. A paying customer nobody could see, email or count.
+    sb
+      .from('bookings')
+      .select('client_name,client_email,client_phone,created_at')
+      .is('client_id', null)
+      .not('client_email', 'is', null)
+      .order('created_at', { ascending: false }),
   ]);
+
+  // One card per guest, not per booking: three bookings is still one customer.
+  const byEmail = new Map();
+  for (const b of guestRes?.data || []) {
+    const key = String(b.client_email || '').trim().toLowerCase();
+    if (!key) continue;
+    const seen = byEmail.get(key);
+    if (seen) {
+      seen.bookings += 1;
+      if (b.created_at < seen.created_at) seen.created_at = b.created_at;
+      continue;
+    }
+    byEmail.set(key, {
+      id: null,
+      isGuest: true,
+      bookings: 1,
+      full_name: b.client_name || '',
+      email: b.client_email,
+      phone: b.client_phone || '',
+      created_at: b.created_at,
+      membership_plan: null,
+      role: 'guest',
+    });
+  }
+  // Somebody who booked as a guest and later signed up is one person.
+  const known = new Set((profiles || []).map((x) => String(x.email || '').trim().toLowerCase()));
+  const guests = [...byEmail.values()].filter(
+    (g) => !known.has(String(g.email).trim().toLowerCase())
+  );
+  const data = [...(profiles || []), ...guests];
+  const guestCount = guests.length;
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
   const colors = ['var(--blue)', 'var(--green)', 'var(--amber)', 'var(--purple)', 'var(--cyan)', 'var(--red)'];
@@ -5774,16 +5899,20 @@ async function loadClients() {
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <div class="cl-av" style="background:${colors[i % colors.length]}">${esc(initials)}</div>
         <div style="flex:1"><div class="cl-name">${esc(name)}</div><div class="cl-suburb">${esc(c.email || '')}</div></div>
-        <span class="cl-seg ${segClass}">${segLabel}</span>
+        <span class="cl-seg ${c.isGuest ? 'seg-new' : segClass}">${c.isGuest ? 'Guest' : segLabel}</span>
       </div>
       <div class="cl-stats">
         <div class="cl-stat"><div class="cl-stat-n">${mem !== 'none' ? '✓' : '—'}</div><div class="cl-stat-l">Member</div></div>
-        <div class="cl-stat"><div class="cl-stat-n">${c.role || 'client'}</div><div class="cl-stat-l">Role</div></div>
-        <div class="cl-stat"><div class="cl-stat-n">${new Date(c.created_at).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })}</div><div class="cl-stat-l">Joined</div></div>
+        <div class="cl-stat"><div class="cl-stat-n">${c.isGuest ? c.bookings : c.role || 'client'}</div><div class="cl-stat-l">${c.isGuest ? 'Bookings' : 'Role'}</div></div>
+        <div class="cl-stat"><div class="cl-stat-n">${new Date(c.created_at).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })}</div><div class="cl-stat-l">${c.isGuest ? 'First booked' : 'Joined'}</div></div>
       </div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px">
-        <button data-cl-action="bikes" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Bikes</button>
-        <button data-cl-action="chat" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Chat</button>
+        ${
+          c.isGuest
+            ? `<div style="flex:1;font-size:13px;color:var(--mgray);line-height:1.5">${esc(c.phone || c.email || '')}</div>`
+            : `<button data-cl-action="bikes" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Bikes</button>
+        <button data-cl-action="chat" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Chat</button>`
+        }
       </div>
     </div>`;
     })
@@ -5818,7 +5947,7 @@ async function loadClients() {
 
   // The grid itself can still be short of the real total - that is the row cap
   // doing its job, not an error - but it must not look like the whole list.
-  const total = totalRes.error ? null : totalRes.count;
+  const total = totalRes.error ? null : totalRes.count + guestCount;
   if (total !== null && total > data.length) {
     grid.insertAdjacentHTML(
       'afterbegin',

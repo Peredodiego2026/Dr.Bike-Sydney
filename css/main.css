@@ -28,7 +28,15 @@ a {
 }
 
 /* ── Base ────────────────────────────────────────────────────────────────────── */
-html,
+/* On BODY only, never on both. `overflow-x: hidden` forces the other axis from
+   `visible` to `auto`, so declaring it on <html> as well made both elements
+   scroll containers - and because the viewport only inherits body's overflow
+   while html's is `visible`, body stopped propagating and grew a second
+   scrollbar beside html's. That is the "dos barras" on desktop; phones hide it
+   because their scrollbars are zero-width overlays.
+
+   Left here, the viewport takes body's overflow, body computes back to visible,
+   and sideways scrolling is still suppressed. */
 body {
   overflow-x: hidden;
 }
@@ -150,6 +158,7 @@ body {
 
 /* ── Bottom Navigation ───────────────────────────────────────────────────────── */
 .bottom-nav {
+  height: var(--bottom-nav-h);
   position: fixed;
   bottom: 0;
   left: 0;
@@ -487,6 +496,12 @@ body {
 @media (min-width: 768px) {
   .bottom-nav {
     display: none !important;
+  }
+  /* The token means "how much room the bottom bar takes", so when the bar is
+     hidden it takes none. Without this, every panel that reserves space for it
+     would leave 56px of dead air at the bottom of a desktop screen. */
+  :root {
+    --bottom-nav-h: 0px;
   }
   .screen.active:not([data-screen='home']) {
     max-width: 680px;
@@ -1528,7 +1543,13 @@ body {
 
    Colours come from the amber ramp and the scrim is mixed from --navy, so
    there is no new hex here for scripts/color-check.mjs to count. */
-.bday-scrim {
+/* ── The celebration sheet ──────────────────────────────────────────────────
+   A card that folds down from the top over a darkened, blurred page. Built for
+   the birthday greeting; now also the review thank-you, which is why it is
+   named for the shape and not for the occasion. Anything that deserves a
+   moment rather than a toast belongs here - see showCelebration() in
+   js/components.js. */
+.celebrate-scrim {
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -1545,11 +1566,11 @@ body {
     background 0.45s ease,
     backdrop-filter 0.45s ease;
 }
-.bday-scrim.is-open {
+.celebrate-scrim.is-open {
   background: color-mix(in srgb, var(--navy) 55%, transparent);
   backdrop-filter: blur(3px);
 }
-.bday-scrim.is-closing {
+.celebrate-scrim.is-closing {
   background: color-mix(in srgb, var(--navy) 0%, transparent);
   backdrop-filter: blur(0);
   transition:
@@ -1557,7 +1578,7 @@ body {
     backdrop-filter 0.28s ease;
 }
 
-.bday-card {
+.celebrate-card {
   position: relative;
   width: 100%;
   max-width: 420px;
@@ -1577,11 +1598,11 @@ body {
     transform 0.62s cubic-bezier(0.2, 1.24, 0.32, 1),
     opacity 0.34s ease;
 }
-.bday-scrim.is-open .bday-card {
+.celebrate-scrim.is-open .celebrate-card {
   transform: rotateX(0deg) translateY(0) scale(1);
   opacity: 1;
 }
-.bday-scrim.is-closing .bday-card {
+.celebrate-scrim.is-closing .celebrate-card {
   /* Away and smaller, not back up the way it came - a different gesture. */
   transform: translateY(-22px) scale(0.94);
   opacity: 0;
@@ -1592,7 +1613,7 @@ body {
 
 /* The three layers. Each sits further forward than the last, so the fold and
    the shadow separate them. */
-.bday-card__emoji {
+.celebrate-card__emoji {
   font-size: 46px;
   line-height: 1;
   display: block;
@@ -1600,7 +1621,7 @@ body {
   transform: translateZ(42px);
   filter: drop-shadow(0 8px 10px color-mix(in srgb, var(--navy) 26%, transparent));
 }
-.bday-card__title {
+.celebrate-card__title {
   font-size: 20px;
   font-weight: 800;
   color: var(--amber-ink);
@@ -1608,7 +1629,7 @@ body {
   line-height: 1.25;
   transform: translateZ(24px);
 }
-.bday-card__msg {
+.celebrate-card__msg {
   font-size: 14px;
   color: var(--amber);
   margin: 0;
@@ -1618,28 +1639,28 @@ body {
 
 /* Staggered arrival. Held back until the card has started unfolding, so the
    content does not float in mid-air ahead of the surface it sits on. */
-.bday-card__emoji,
-.bday-card__title,
-.bday-card__msg {
+.celebrate-card__emoji,
+.celebrate-card__title,
+.celebrate-card__msg {
   opacity: 0;
   transition:
     opacity 0.34s ease,
     transform 0.34s ease;
 }
-.bday-scrim.is-open .bday-card__emoji {
+.celebrate-scrim.is-open .celebrate-card__emoji {
   opacity: 1;
   transition-delay: 0.22s;
 }
-.bday-scrim.is-open .bday-card__title {
+.celebrate-scrim.is-open .celebrate-card__title {
   opacity: 1;
   transition-delay: 0.3s;
 }
-.bday-scrim.is-open .bday-card__msg {
+.celebrate-scrim.is-open .celebrate-card__msg {
   opacity: 1;
   transition-delay: 0.37s;
 }
 
-.bday-close {
+.celebrate-close {
   position: absolute;
   top: 4px;
   right: 4px;
@@ -1655,7 +1676,7 @@ body {
   border-radius: 10px;
   transform: translateZ(30px);
 }
-.bday-close:focus-visible {
+.celebrate-close:focus-visible {
   outline: 2px solid var(--amber-ink);
   outline-offset: -2px;
 }
@@ -1663,22 +1684,22 @@ body {
 /* Reduced motion means no MOVEMENT, not no modal: it still fades in, it just
    does not swing down, and nothing is held back on a delay. */
 @media (prefers-reduced-motion: reduce) {
-  .bday-card,
-  .bday-scrim.is-open .bday-card,
-  .bday-scrim.is-closing .bday-card {
+  .celebrate-card,
+  .celebrate-scrim.is-open .celebrate-card,
+  .celebrate-scrim.is-closing .celebrate-card {
     transform: none;
     transition: opacity 0.2s ease;
   }
-  .bday-card__emoji,
-  .bday-card__title,
-  .bday-card__msg,
-  .bday-close {
+  .celebrate-card__emoji,
+  .celebrate-card__title,
+  .celebrate-card__msg,
+  .celebrate-close {
     transform: none;
     transition-delay: 0s;
   }
-  .bday-scrim,
-  .bday-scrim.is-open,
-  .bday-scrim.is-closing {
+  .celebrate-scrim,
+  .celebrate-scrim.is-open,
+  .celebrate-scrim.is-closing {
     backdrop-filter: none;
   }
 }
@@ -2016,3 +2037,38 @@ body {
     transform: none;
   }
 }
+
+/* ── Live step in the tracking bar ──────────────────────────────────────────
+   Marks the step happening RIGHT NOW, so the client can tell "the mechanic is
+   on the way" from "the mechanic has been dispatched at some point". Applied by
+   applyStatus() in js/app.js to exactly one step at a time, which is what makes
+   it stop on its own when the job moves on. */
+.track-step--live {
+  animation: track-step-pulse 1.8s ease-in-out infinite;
+}
+@keyframes track-step-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Someone who has asked the system to stop moving things still needs to know
+     which step is live, so the halo stays - it just stops breathing. */
+  .track-step--live {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+  }
+}
+
+/* ── The route line on the tracking map ──────────────────────────────────────
+   Leaflet draws polylines as SVG, so the colour can come from a token instead
+   of being pinned as another hex inside js/app.js. */
+.track-route-line {
+  stroke: var(--blue);
+  stroke-opacity: 0.85;
+}
+

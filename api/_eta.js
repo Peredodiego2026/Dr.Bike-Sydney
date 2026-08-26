@@ -7,6 +7,7 @@
 // sends its message without an ETA rather than inventing one.
 
 import { createClient } from '@supabase/supabase-js';
+import { TRAFFIC_FACTOR } from './_coverage.js';
 
 const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
 const OSRM = 'https://router.project-osrm.org/route/v1/driving';
@@ -197,6 +198,77 @@ export async function drivingRoute({ fromLat, fromLng, address, timeoutMs = 5000
     return out;
   } catch (e) {
     console.warn('[eta] could not compute:', e.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ── The line on the client's map ────────────────────────────────────────────
+// Diego, watching his own booking: "cuando estaba en ruta tampoco vio ni una
+// ruta ni un tiempo ni nada... no se vio eso en ni un momento... se debe ver el
+// camino hacia el mechanico y la ubicacion del mechanico".
+//
+// He was right that nothing was there. Grep `polyline` in js/app.js before this
+// commit and the only hits are SVG icons - a route line was never drawn. The
+// ETA beside it was a straight line divided by a fixed speed, which in Sydney
+// reads "3.2 km away" for an eight-kilometre drive.
+//
+// Different from drivingRoute() above in two ways that matter:
+//   - it asks OSRM for the geometry (`overview=full`), which is the actual line;
+//   - it takes coordinates rather than an address, because the mechanic's
+//     position is already a fix and geocoding it would be a lookup that can only
+//     lose precision.
+//
+// Same reason as everything else in this file for living on the server: the
+// browser's CSP does not whitelist the OSRM host, and the demo server's usage
+// is per-caller.
+export async function drivingRouteGeometry({ fromLat, fromLng, toLat, toLng, timeoutMs = 6000 }) {
+  const a = [Number(fromLat), Number(fromLng)];
+  const b = [Number(toLat), Number(toLng)];
+  if (![...a, ...b].every(Number.isFinite)) return null;
+  if (Math.abs(a[0]) > 90 || Math.abs(b[0]) > 90) return null;
+  if (Math.abs(a[1]) > 180 || Math.abs(b[1]) > 180) return null;
+
+  // Rounded to ~100m on the origin. A van that has crept forward twenty metres
+  // is on the same road with the same route, and keying on its exact position
+  // would mean a cache entry per GPS tick and a call to a free service every
+  // five seconds.
+  const routeKey = `${a[0].toFixed(3)},${a[1].toFixed(3)}|${b[0].toFixed(5)},${b[1].toFixed(5)}`;
+  const cached = await cacheGet('routegeom', routeKey);
+  if (cached !== undefined) return cached;
+
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const r = await fetch(
+      `${OSRM}/${a[1]},${a[0]};${b[1]},${b[0]}?overview=full&geometries=geojson`,
+      { signal: ctl.signal, headers: { 'User-Agent': UA } }
+    );
+    if (!r.ok) return null; // transient - do NOT cache a service outage
+    const data = await r.json();
+    const route = data?.routes?.[0];
+    const seconds = route?.duration;
+    const metres = route?.distance;
+    // GeoJSON is [lng, lat]; Leaflet wants [lat, lng]. Getting this backwards
+    // draws a line through the Indian Ocean, so it is flipped once, here.
+    const coordinates = (route?.geometry?.coordinates || [])
+      .filter((c) => Array.isArray(c) && c.length >= 2)
+      .map(([lng, lat]) => [lat, lng]);
+    if (!Number.isFinite(seconds) || coordinates.length < 2) return null;
+
+    const out = {
+      // OSRM returns free-flow times. TRAFFIC_FACTOR is the same calibration the
+      // coverage map uses so a client is never quoted a rosier number than the
+      // one the pricing was built on.
+      minutes: Math.max(1, Math.round((seconds / 60) * TRAFFIC_FACTOR)),
+      km: Number.isFinite(metres) ? Math.round((metres / 1000) * 10) / 10 : null,
+      coordinates,
+    };
+    await cacheSet('routegeom', routeKey, out);
+    return out;
+  } catch (e) {
+    console.warn('[eta] could not draw a route:', e.message);
     return null;
   } finally {
     clearTimeout(timer);

@@ -48,19 +48,20 @@ import {
   bookingsTruncated,
 } from './supabase.js';
 import {
-  createHeader,
-  createBottomNav,
-  createServiceCard,
-  formatServiceDuration,
-  createTimeSlot,
-  createDateItem,
-  createSummaryRow,
-  createBookingCard,
-  createEmptyState,
-  createBrandLoader,
-  showToast,
-  createTierBadge,
   confirmDialog,
+  createBookingCard,
+  createBottomNav,
+  createBrandLoader,
+  createDateItem,
+  createEmptyState,
+  createHeader,
+  createServiceCard,
+  createSummaryRow,
+  createTierBadge,
+  createTimeSlot,
+  formatServiceDuration,
+  showCelebration,
+  showToast,
 } from './components.js';
 import { openGiftCardModal } from './gift-card.js';
 import { getRiderTier } from './rider-tier.js';
@@ -1252,8 +1253,7 @@ async function renderBookService() {
         `${translateValue('Address:')} ${addr}`,
         trip ? `${translateValue('Distance from your base:')} ${trip}` : '',
       ].filter(Boolean);
-      const text =
-        translateValue('Hi! Do you cover this address?') + '\n\n' + fields.join('\n');
+      const text = translateValue('Hi! Do you cover this address?') + '\n\n' + fields.join('\n');
       wa.href = 'https://wa.me/61433963250?text=' + encodeURIComponent(text);
       box.style.display = 'block';
       // block:'nearest', not 'center': centring a panel near the bottom of a
@@ -1511,7 +1511,9 @@ async function renderServiceSummary() {
   window.appState.tripMinutes = coverage.minutes ?? null;
   window.appState.tripKm = coverage.km ?? null;
 
-  const calloutFee = coverage.needsQuote ? 0 : applySurcharge(Number(coverage.calloutFee) || 0, date);
+  const calloutFee = coverage.needsQuote
+    ? 0
+    : applySurcharge(Number(coverage.calloutFee) || 0, date);
   const grandTotal = serviceTotal + calloutFee;
   const inclusions = getServiceInclusions(service.name);
   const dur = formatServiceDuration(service);
@@ -1923,8 +1925,7 @@ async function submitQuoteRequest({ serviceTotal, coverage, btn, errEl }) {
       address: location,
       client_name: window.appState.guestName || session?.user?.user_metadata?.full_name || '',
       client_email: window.appState.guestEmail || session?.user?.email || '',
-      client_phone:
-        window.appState.guestPhone || session?.user?.user_metadata?.phone || '',
+      client_phone: window.appState.guestPhone || session?.user?.user_metadata?.phone || '',
       client_lang: getLang(),
       trip_minutes: coverage.minutes ?? null,
       trip_km: coverage.km ?? null,
@@ -2819,7 +2820,7 @@ async function renderTracking() {
           )
           .join('')}
       </div>
-      <div style="display:flex;gap:8px;padding:0 16px 12px">
+      <div style="display:flex;gap:8px;padding:0 16px calc(12px + var(--bottom-nav-h))">
         <button id="message-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Message
@@ -2889,17 +2890,38 @@ async function renderTracking() {
   _mechanicMarker = null;
 
   // ── ETA updater ───────────────────────────────────────────────────────────
-  function updateETA(mechCoords) {
-    const distKm = haversineKm(mechCoords, clientCoords);
-    const mins = Math.max(1, Math.round((distKm / CITY_SPEED_KMH) * 60));
-    const eta = new Date(Date.now() + mins * 60000);
-    const etaStr = eta.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+  // Set once a real driving route has been drawn, so a slower straight-line
+  // repaint cannot overwrite a true number with a guess.
+  let _routeShown = false;
+  let _routeFitted = false;
+
+  function paintETA({ minutes, km, byRoad }) {
     const el = screen.querySelector('#eta-text');
-    if (el)
-      el.textContent =
-        distKm < 0.1
-          ? 'Mechanic is right outside!'
-          : `ETA: ${etaStr} (~${mins} min · ${distKm.toFixed(1)} km away)`;
+    if (!el) return;
+    const eta = new Date(Date.now() + minutes * 60000);
+    const etaStr = eta.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+    const distance = km === null || km === undefined ? '' : ` \u00b7 ${km.toFixed(1)} km`;
+    // "by road" against "straight line" is not decoration. One of these numbers
+    // is a real driving time and the other is a guess, and the client is
+    // entitled to know which one they are looking at.
+    el.textContent = byRoad
+      ? `${translateValue('ETA')} ${etaStr} \u00b7 ${minutes} min${distance} ${translateValue('by road')}`
+      : `${translateValue('ETA')} ~${etaStr}${distance} ${translateValue('straight line')}`;
+  }
+
+  function updateETA(mechCoords) {
+    if (_routeShown) return;
+    const distKm = haversineKm(mechCoords, clientCoords);
+    if (distKm < 0.1) {
+      const el = screen.querySelector('#eta-text');
+      if (el) el.textContent = translateValue('Mechanic is right outside!');
+      return;
+    }
+    paintETA({
+      minutes: Math.max(1, Math.round((distKm / CITY_SPEED_KMH) * 60)),
+      km: distKm,
+      byRoad: false,
+    });
   }
 
   // ── Status updater ────────────────────────────────────────────────────────
@@ -2924,8 +2946,19 @@ async function renderTracking() {
     for (let i = 0; i <= 3; i++) {
       const el = screen.querySelector(`#step-${i}`);
       if (!el) continue;
-      el.style.background = i <= activeStep ? '#1E40AF' : 'var(--surface)';
-      el.style.color = i <= activeStep ? '#fff' : 'var(--gray)';
+      const done = i < activeStep;
+      const live = i === activeStep;
+      // Green only at the end: green on step 0 would say the whole job was
+      // finished the moment it was confirmed.
+      const liveColour = i === 3 ? 'var(--green)' : 'var(--blue)';
+      el.style.background = live ? liveColour : done ? 'var(--blue-dark)' : 'var(--surface)';
+      el.style.color = done || live ? '#fff' : 'var(--gray)';
+      el.style.opacity = done ? '0.72' : '1';
+      // The pulse marks the step in progress, and stops by itself when the next
+      // one starts - only one step is ever `live`. Not on Done: that one is
+      // over, not in progress, and a finished job that keeps blinking reads as
+      // something still owed.
+      el.classList.toggle('track-step--live', live && i !== 3);
     }
   }
 
@@ -3061,6 +3094,60 @@ async function renderTracking() {
       ?.addEventListener('click', () => openClientChat(bookingId, screen));
   }
 
+  // ── The road between the two pins ─────────────────────────────────────────
+  // Diego: "cuando estaba en ruta tampoco vio ni una ruta ni un tiempo ni
+  // nada... se debe ver el camino hacia el mechanico y la ubicacion del
+  // mechanico". He was right - nothing ever drew one. Routing has to happen on
+  // the server (the CSP does not whitelist the router's host), so this asks
+  // /api/auth for the geometry and draws what comes back.
+  let _routeLine = null;
+
+  async function refreshRoute() {
+    if (!trackingToken || !_trackingMap) return;
+    try {
+      const resp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'track-route', tracking_token: trackingToken }),
+      });
+      if (!resp.ok) return;
+      const { route } = await resp.json();
+      // No route is a normal answer - not en route yet, address never geocoded,
+      // router down. The map keeps its markers and the straight-line estimate
+      // rather than showing the client a failure.
+      if (!route?.coordinates?.length) return;
+
+      if (_routeLine) _routeLine.setLatLngs(route.coordinates);
+      else
+        _routeLine = window.L.polyline(route.coordinates, {
+          // Coloured from CSS rather than an option, so the line follows the
+          // design tokens instead of pinning another hex into this file.
+          className: 'track-route-line',
+          weight: 5,
+          lineJoin: 'round',
+          lineCap: 'round',
+        }).addTo(_trackingMap);
+
+      _routeShown = true;
+      paintETA({ minutes: route.minutes, km: route.km, byRoad: true });
+
+      // Frame the whole trip once. Re-fitting on every refresh would fight the
+      // client every time they panned or zoomed the map themselves.
+      if (!_routeFitted) {
+        _routeFitted = true;
+        _trackingMap.fitBounds(_routeLine.getBounds(), { padding: [40, 40], maxZoom: 15 });
+      }
+    } catch (e) {
+      console.warn('[tracking] could not draw the route:', e.message);
+    }
+  }
+
+  // Straight away, then about once a minute. The line barely changes between
+  // ticks and the router is a free service - asking at the 5s cadence of the
+  // status poll would be abusive for no gain.
+  refreshRoute();
+  const routeInterval = setInterval(refreshRoute, 45000);
+
   // ── Real-time: Supabase Realtime subscription (Uber-style push, no polling) ──
   // Subscribe to mechanic_locations changes for instant map updates
   let realtimeChannel = null;
@@ -3132,6 +3219,7 @@ async function renderTracking() {
   _unsubTracking = () => {
     if (prev) prev();
     clearInterval(pollInterval);
+    clearInterval(routeInterval);
     if (realtimeChannel) sb.removeChannel(realtimeChannel);
   };
 }
@@ -3646,7 +3734,28 @@ async function renderReview() {
       btn.textContent = 'Submit Review';
       return;
     }
-    showToast('Thanks for your feedback!', 'success');
+    // And the second half of what he reported: "desde el celular tuve que
+    // cerrar la pagina y volver a abrirla para ver el comentario. si aparece
+    // pero no es automatico". The home screen was already drawn when the review
+    // was sent, so nobody had asked for the data again. Re-rendering on the way
+    // out is what makes it appear by itself.
+    const thankYou = (message) =>
+      showCelebration({
+        emoji: '\u2B50',
+        title: translateValue('Thanks for your feedback!'),
+        message: translateValue(message),
+        onClose: () => {
+          // Refill the home page's reviews grid. It is an inline module in
+          // index.html that ran once at page load, which is why the review only
+          // showed up after closing and reopening the app.
+          try {
+            window.drbikeReloadReviews?.();
+          } catch (e) {
+            console.warn('[review] could not refresh the reviews list:', e.message);
+          }
+        },
+      });
+
     // 2.3: If 5-star review, show social share nudge before navigating home
     if (currentRating === 5) {
       screen.innerHTML = `
@@ -3682,9 +3791,11 @@ async function renderReview() {
       screen
         .querySelector('#review-skip-home-btn')
         .addEventListener('click', () => router.navigate('home'));
+      thankYou('Would you share it on Google too? It helps other Sydney cyclists find us.');
       return; // don't navigate home yet
     }
     router.navigate('home');
+    thankYou('Your review is now on our page. Thank you for taking the time.');
   });
 
   screen.querySelector('#skip-btn').addEventListener('click', () => router.navigate('home'));
@@ -4016,6 +4127,75 @@ function promptNewPassword() {
 }
 
 // ── My Bookings ───────────────────────────────────────────────────────────────
+// ── Keeping the bookings list honest ─────────────────────────────────────────
+// Diego, moving between the mechanic app and the client app during a real job:
+// "apreto boton en ruta pero en la seccion booking de la spa sigue el servicio
+// en confirmed... actualice la pagina y ahora aparece en ruta".
+//
+// He was right, and the cause was plain: this file subscribed to
+// mechanic_locations and to the job chat, and to NOTHING on `bookings`. The
+// list had no way of learning the status had moved. Only a reload could.
+//
+// Three ways in, because each covers a case the others miss:
+//   - realtime, for the screen sitting open while the mechanic taps En route;
+//   - coming back to the tab, which is exactly what Diego was doing;
+//   - a slow poll, because realtime needs `bookings` to be in the
+//     supabase_realtime publication, and that is a database setting no deploy
+//     can guarantee (see scripts/enable-realtime-bookings.sql).
+let _bookingsLiveChannel = null;
+let _bookingsLiveTimer = null;
+
+function stopBookingsLive() {
+  if (_bookingsLiveChannel) {
+    sb.removeChannel(_bookingsLiveChannel);
+    _bookingsLiveChannel = null;
+  }
+  if (_bookingsLiveTimer) {
+    clearInterval(_bookingsLiveTimer);
+    _bookingsLiveTimer = null;
+  }
+}
+
+// Never redraw the list out from under an open sheet: the client would be
+// reading their booking and have it yanked away mid-sentence.
+function bookingsCanRefresh() {
+  return (
+    router.current === 'my-bookings' && !document.hidden && !document.getElementById('detail-panel')
+  );
+}
+
+function refreshBookingsIfIdle() {
+  if (bookingsCanRefresh()) renderMyBookings();
+}
+
+async function startBookingsLive() {
+  stopBookingsLive();
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    if (!session) return; // a guest has no rows to watch
+    _bookingsLiveChannel = sb
+      .channel(`client-bookings-${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings',
+          filter: `client_id=eq.${session.user.id}`,
+        },
+        refreshBookingsIfIdle
+      )
+      .subscribe();
+  } catch (e) {
+    console.warn('[bookings] realtime unavailable, falling back to polling:', e.message);
+  }
+  _bookingsLiveTimer = setInterval(refreshBookingsIfIdle, 30000);
+}
+
+document.addEventListener('visibilitychange', refreshBookingsIfIdle);
+
 async function renderMyBookings() {
   const screen = document.querySelector('[data-screen="my-bookings"]');
   if (!screen) return;
@@ -4761,10 +4941,7 @@ async function renderProfile() {
             <select id="bday-day" aria-label="Day" style="flex:1;min-height:44px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:15px;font-family:inherit">
               <option value="">${translateValue('Day')}</option>
               ${Array.from({ length: 31 }, (_, i) => i + 1)
-                .map(
-                  (d) =>
-                    `<option value="${d}"${bdayDay === d ? ' selected' : ''}>${d}</option>`
-                )
+                .map((d) => `<option value="${d}"${bdayDay === d ? ' selected' : ''}>${d}</option>`)
                 .join('')}
             </select>
             <select id="bday-month" aria-label="Month" style="flex:2;min-height:44px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:15px;font-family:inherit">
@@ -5653,67 +5830,24 @@ async function openBirthdayModal(first, accessToken, year) {
     emailSent = false;
   }
 
-  document.getElementById('bday-scrim')?.remove();
-  const scrim = document.createElement('div');
-  scrim.id = 'bday-scrim';
-  scrim.className = 'bday-scrim';
-  scrim.setAttribute('role', 'dialog');
-  scrim.setAttribute('aria-modal', 'true');
-  scrim.setAttribute('aria-labelledby', 'bday-title');
-  scrim.innerHTML = `
-    <div class="bday-card">
-      <button class="bday-close" id="bday-close" aria-label="${translateValue('Close')}">&times;</button>
-      <span class="bday-card__emoji" aria-hidden="true">🎂</span>
-      <h2 class="bday-card__title" id="bday-title">${escapeHtml(
-        translateValue('Happy birthday, NAME!').replace('NAME', first)
-      )}</h2>
-      <p class="bday-card__msg">${translateValue(
-        emailSent
-          ? 'Check your email - there is something from us in there.'
-          : 'The whole Dr. Bike team wishes you a great one.'
-      )}</p>
-    </div>`;
-  document.body.appendChild(scrim);
-
-  const previouslyFocused = document.activeElement;
-  const close = () => {
-    try {
-      localStorage.setItem(BIRTHDAY_SEEN_KEY, String(year));
-    } catch {
-      /* nothing to do - it just shows again next time */
-    }
-    // is-closing rather than just dropping is-open: the exit is its own
-    // animation (lifts away and shrinks), not the entrance played backwards.
-    scrim.classList.remove('is-open');
-    scrim.classList.add('is-closing');
-    document.removeEventListener('keydown', onKey);
-    // Let the exit finish before removing, but never leave it behind if the
-    // transition never fires (a hidden tab does not run them).
-    const drop = () => scrim.remove();
-    scrim.addEventListener('transitionend', drop, { once: true });
-    setTimeout(drop, 600);
-    if (previouslyFocused?.focus) previouslyFocused.focus();
-  };
-  function onKey(e) {
-    if (e.key === 'Escape') close();
-  }
-
-  scrim.querySelector('#bday-close').addEventListener('click', close);
-  // Only the backdrop itself - a click inside the card must not dismiss it.
-  scrim.addEventListener('click', (e) => {
-    if (e.target === scrim) close();
+  showCelebration({
+    emoji: '\u{1F382}',
+    title: translateValue('Happy birthday, NAME!').replace('NAME', first),
+    message: translateValue(
+      emailSent
+        ? 'Check your email - there is something from us in there.'
+        : 'The whole Dr. Bike team wishes you a great one.'
+    ),
+    // Written on the way OUT, not on the way in: a greeting the client never
+    // actually saw should come back next time they open the app.
+    onClose: () => {
+      try {
+        localStorage.setItem(BIRTHDAY_SEEN_KEY, String(year));
+      } catch {
+        /* nothing to do - it just shows again next time */
+      }
+    },
   });
-  document.addEventListener('keydown', onKey);
-
-  // Two frames: the element has to be in the DOM and have had its start styles
-  // applied before the class flips, or the browser skips straight to the end
-  // state and there is no fold at all.
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => {
-      scrim.classList.add('is-open');
-      scrim.querySelector('#bday-close')?.focus();
-    })
-  );
 }
 
 async function updateHomeNav() {
@@ -5760,6 +5894,8 @@ document.addEventListener('screenchange', ({ detail }) => {
   if (window.gtag)
     gtag('event', 'page_view', { page_title: detail.route, page_location: '/#' + detail.route });
   if (detail.prev === 'tracking' && detail.route !== 'tracking') cleanupTracking();
+  if (detail.route === 'my-bookings') startBookingsLive();
+  else if (detail.prev === 'my-bookings') stopBookingsLive();
   if (detail.prev === 'payment' && detail.route !== 'payment') {
     destroyPaymentForm();
     if (window.appState.bookingId && detail.route !== 'tracking') {

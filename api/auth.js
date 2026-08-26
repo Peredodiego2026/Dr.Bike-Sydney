@@ -3,7 +3,12 @@
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import { geocodeAddress, drivingRoute, suggestAddresses } from './_eta.js';
+import {
+  geocodeAddress,
+  drivingRoute,
+  drivingRouteGeometry,
+  suggestAddresses,
+} from './_eta.js';
 import { resolveCoverage, needsQuote, BASE, VALID_FEES, formatMinutes } from './_coverage.js';
 import {
   guard,
@@ -3326,6 +3331,76 @@ async function notifyClientOfMechanicMessage(bookingId, message, SERVICE_KEY) {
   });
 }
 
+// The road between the mechanic and the client, for the tracking map.
+//
+// Diego, watching his own booking go out: "cuando estaba en ruta tampoco vio ni
+// una ruta ni un tiempo ni nada... se debe ver el camino hacia el mechanico y
+// la ubicacion del mechanico". Nothing was drawn because nothing had ever been
+// built - grep `polyline` in js/app.js and the only hits are icons.
+//
+// A separate role from public-track on purpose. That one polls every 5 seconds
+// to keep the status honest, and a routing call on that cadence would hammer a
+// free service for a line that barely changes. The client asks for this one
+// when it opens the screen and then about once a minute.
+//
+// Authenticated exactly like public-track: the tracking token IS the
+// credential, and it never leaves the server with anything the client could not
+// already see there.
+async function handleTrackRoute(req, res) {
+  const { tracking_token } = req.body;
+  if (!tracking_token) return res.status(400).json({ error: 'tracking_token required' });
+
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const headers = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const filter = `tracking_token=eq.${encodeURIComponent(tracking_token)}`;
+
+  // address_lat/address_lng come from scripts/add-address-coordinates.sql,
+  // which is run by hand. Asked for tolerantly, because PostgREST rejects the
+  // WHOLE query on an unknown column - the same guard handlePublicTrack uses.
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=status,van_number,mechanic_id,address_lat,address_lng&${filter}&limit=1`,
+    { headers }
+  );
+  if (!resp.ok) return res.status(200).json({ route: null, reason: 'no-coordinates-column' });
+  const rows = await resp.json();
+  const booking = rows?.[0];
+  if (!booking) return res.status(404).json({ error: 'Booking not found' });
+
+  // Only while somebody is actually driving to you. A route drawn for a job
+  // that is finished, or one that has not been dispatched, is a line to
+  // nowhere.
+  if (!['enroute', 'en_route'].includes(booking.status)) {
+    return res.status(200).json({ route: null, reason: 'not-en-route' });
+  }
+  if (!booking.address_lat || !booking.address_lng) {
+    return res.status(200).json({ route: null, reason: 'address-not-geocoded' });
+  }
+
+  const locResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/mechanic_locations?select=lat,lng&${
+      booking.van_number
+        ? `van_number=eq.${booking.van_number}`
+        : `mechanic_id=eq.${encodeURIComponent(booking.mechanic_id || '')}`
+    }&order=updated_at.desc&limit=1`,
+    { headers }
+  );
+  const loc = locResp.ok ? (await locResp.json())?.[0] : null;
+  if (!loc?.lat || !loc?.lng) {
+    return res.status(200).json({ route: null, reason: 'no-mechanic-fix' });
+  }
+
+  const route = await drivingRouteGeometry({
+    fromLat: loc.lat,
+    fromLng: loc.lng,
+    toLat: booking.address_lat,
+    toLng: booking.address_lng,
+  });
+
+  // A missing route is a normal answer, not an error: the map keeps its markers
+  // and the straight-line estimate rather than showing the client a failure.
+  return res.status(200).json({ route: route || null, reason: route ? null : 'routing-failed' });
+}
+
 async function handlePublicTrack(req, res) {
   // tracking_token ONLY - it's the one credential this endpoint is meant to
   // accept (a long random UUID, unguessable). Raw booking_id used to work
@@ -4923,6 +4998,7 @@ async function handler(req, res) {
     : role === 'mechanic'
       ? 20
       : role === 'public-track' ||
+          role === 'track-route' ||
           role === 'public-booking-list' ||
           role === 'public-mechanics' ||
           role === 'consume-code' ||
@@ -4945,6 +5021,7 @@ async function handler(req, res) {
   if (await guard(req, res, { method: 'POST', rateMax, rateWindow: 60000, rateKey: role })) return;
 
   if (role === 'public-track') return handlePublicTrack(req, res);
+  if (role === 'track-route') return handleTrackRoute(req, res);
   if (role === 'public-booking-list') return handlePublicBookingList(req, res);
   if (role === 'public-mechanics') return handlePublicMechanics(req, res);
   if (role === 'consume-code') return handleConsumeCode(req, res);

@@ -906,3 +906,23 @@ html.drbike-wizard-open #faqbot-win {
   opacity: 1;
 }
 
+/* ── Sections that should land as one screenful ──────────────────────────────
+   Diego, on the desktop landing: "el cuadro del mecanico en el pc azul detras
+   abarca mucha pantalla hay que achicarlo para que entre en una sola pantalla
+   al 100%", and the same for the plans - "desde el titulo hasta que terminan
+   las letras de abajo".
+
+   Desktop only. On a phone a full-height section pushes the next one entirely
+   out of view and makes the page feel twice as long.
+
+   min-height, never height: a section that genuinely needs more room grows.
+   A plan card cut in half is worse than a section that runs a little over. */
+@media (min-width: 768px) {
+  body[data-surface='landing'] .fits-one-screen {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+

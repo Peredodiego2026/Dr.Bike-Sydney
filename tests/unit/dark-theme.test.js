@@ -107,16 +107,36 @@ describe('the caches were bumped', () => {
   // css/variables.css and css/mechanic.css are served by sw.js. Without a new
   // ?v= and a new cache name, a returning browser keeps the old stylesheet and
   // the fix is invisible to exactly the people who already use the app.
-  it('every dark-capable page asks for the new stylesheets', () => {
+  it('every dark-capable page asks for a versioned stylesheet', () => {
     for (const page of ['admin.html', 'mechanic.html']) {
-      expect(read(page), `${page} did not bump variables.css`).toMatch(
-        /css\/variables\.css\?v=20260826-dark/
+      expect(read(page), `${page} loads variables.css with no ?v=`).toMatch(
+        /css\/variables\.css\?v=[A-Za-z0-9-]+/
       );
     }
-    expect(read('mechanic.html')).toMatch(/css\/mechanic\.css\?v=20260826-dark/);
   });
 
-  it('and the service worker cache name changed', () => {
-    expect(read('sw.js')).toMatch(/CACHE_STATIC = 'drbike-static-v91'/);
+  // css/mechanic.css and js/mechanic.js used to carry hand-typed date strings,
+  // which CLAUDE.md flagged as the remaining cache gap. It bit exactly as
+  // predicted: a merge between two branches that had both bumped that line
+  // resolved to the OLDER value and silently undid the bust, with nothing red.
+  // They are content hashes now, so scripts/versioned-assets-check.mjs cannot
+  // be satisfied by the wrong side of a merge.
+  it('and the mechanic assets are hashes the build can verify, not dates', () => {
+    const check = read('scripts/versioned-assets-check.mjs');
+    expect(check).toMatch(/html: 'mechanic\.html'/);
+    expect(check).toMatch(/path: 'css\/mechanic\.css'/);
+    expect(check).toMatch(/path: 'js\/mechanic\.js'/);
+    expect(read('mechanic.html')).toMatch(/css\/mechanic\.css\?v=[0-9a-f]{10}/);
+    expect(read('mechanic.html')).toMatch(/js\/mechanic\.js\?v=[0-9a-f]{10}/);
+  });
+
+  // Pinned as a MINIMUM, not as a literal. The first version of this test
+  // asserted exactly v91 and went red the moment another branch bumped the same
+  // line to v96 - a failure that reported a merge, not a bug. What has to stay
+  // true is that the name moved past the value this fix shipped against.
+  it('and the service worker cache name moved past the old one', () => {
+    const name = read('sw.js').match(/CACHE_STATIC = 'drbike-static-v(\d+)'/);
+    expect(name, 'CACHE_STATIC is missing or no longer numbered').not.toBeNull();
+    expect(Number(name[1])).toBeGreaterThanOrEqual(91);
   });
 });

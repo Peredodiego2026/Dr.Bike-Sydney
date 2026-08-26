@@ -13,10 +13,18 @@ const appjs = read('js/app.js');
 const authjs = read('api/auth.js');
 const mainCss = read('css/main.css');
 
+const components = read('js/components.js');
+
 const clientFn = appjs.slice(
   appjs.indexOf('async function showBirthdayGreeting'),
   appjs.indexOf('async function updateHomeNav')
 );
+// The sheet itself is showCelebration() in js/components.js: the birthday
+// greeting and the review thank-you are the same object, and Diego asked for
+// the second one to look like the first ("mas de lujo"). Everything about the
+// PANEL is asserted against the helper; everything about WHEN and WHY the
+// birthday opens one stays on clientFn.
+const celebrateFn = components.slice(components.indexOf('export function showCelebration'));
 const serverFn = authjs.slice(
   authjs.indexOf('async function handleBirthdayGreeting'),
   authjs.indexOf('// Lets the client check coverage before paying')
@@ -60,28 +68,28 @@ describe('it opens six seconds in, once', () => {
 
 describe('the panel', () => {
   it('dims the page behind it', () => {
-    expect(mainCss).toMatch(/\.bday-scrim\s*\{[^}]*position: fixed/s);
+    expect(mainCss).toMatch(/\.celebrate-scrim\s*\{[^}]*position: fixed/s);
     expect(mainCss).toMatch(/background: color-mix\(in srgb, var\(--navy\) 55%, transparent\)/);
   });
 
   // perspective has to sit on the ancestor - on the card itself it would apply
   // to the card's children instead.
   it('folds down in 3D from its top edge', () => {
-    expect(mainCss).toMatch(/\.bday-scrim\s*\{[^}]*perspective: 1100px/s);
+    expect(mainCss).toMatch(/\.celebrate-scrim\s*\{[^}]*perspective: 1100px/s);
     expect(mainCss).toMatch(/transform-origin: top center/);
     expect(mainCss).toMatch(/transform: rotateX\(-88deg\) translateY\(-18px\) scale\(0\.96\)/);
-    expect(mainCss).toMatch(/\.bday-scrim\.is-open \.bday-card\s*\{\s*transform: rotateX\(0deg\)/);
+    expect(mainCss).toMatch(/\.celebrate-scrim\.is-open \.celebrate-card\s*\{\s*transform: rotateX\(0deg\)/);
     // preserve-3d is what makes it depth rather than a flat plate turning:
     // without it the children collapse onto the card's own plane.
     expect(mainCss).toMatch(/transform-style: preserve-3d/);
-    expect(mainCss).toMatch(/\.bday-card__emoji\s*\{[^}]*translateZ\(42px\)/s);
-    expect(mainCss).toMatch(/\.bday-card__title\s*\{[^}]*translateZ\(24px\)/s);
+    expect(mainCss).toMatch(/\.celebrate-card__emoji\s*\{[^}]*translateZ\(42px\)/s);
+    expect(mainCss).toMatch(/\.celebrate-card__title\s*\{[^}]*translateZ\(24px\)/s);
   });
 
   it('still appears when motion is reduced, just without the swing', () => {
     const i = mainCss.indexOf(
       '@media (prefers-reduced-motion: reduce)',
-      mainCss.indexOf('.bday-scrim')
+      mainCss.indexOf('.celebrate-scrim')
     );
     const block = mainCss.slice(i, i + 300);
     expect(block).toMatch(/transform: none/);
@@ -89,38 +97,42 @@ describe('the panel', () => {
   });
 
   it('closes on the X, on the backdrop, and on Escape', () => {
-    expect(clientFn).toMatch(/#bday-close'\)\.addEventListener\('click', close\)/);
-    expect(clientFn).toMatch(/if \(e\.target === scrim\) close\(\);/);
-    expect(clientFn).toMatch(/if \(e\.key === 'Escape'\) close\(\);/);
+    expect(celebrateFn).toMatch(/#celebrate-close'\)\.addEventListener\('click', close\)/);
+    expect(celebrateFn).toMatch(/if \(e\.target === scrim\) close\(\);/);
+    expect(celebrateFn).toMatch(/if \(e\.key === 'Escape'\) close\(\);/);
   });
 
   // A click inside the card must not dismiss it - hence `e.target === scrim`
   // rather than a bare listener.
   it('does not close when the card itself is clicked', () => {
-    expect(clientFn).not.toMatch(/scrim\.addEventListener\('click', close\)/);
+    expect(celebrateFn).not.toMatch(/scrim\.addEventListener\('click', close\)/);
   });
 
   it('cleans up its key listener and never leaves the scrim behind', () => {
-    expect(clientFn).toMatch(/document\.removeEventListener\('keydown', onKey\)/);
+    expect(celebrateFn).toMatch(/document\.removeEventListener\('keydown', onKey\)/);
     // transitionend does not fire in a hidden tab, so there is a timeout too.
-    expect(clientFn).toMatch(/setTimeout\(drop, 600\)/);
+    expect(celebrateFn).toMatch(/setTimeout\(drop, 600\)/);
   });
 
   it('is announced as a dialog and takes focus', () => {
-    expect(clientFn).toMatch(/setAttribute\('role', 'dialog'\)/);
-    expect(clientFn).toMatch(/setAttribute\('aria-modal', 'true'\)/);
-    expect(clientFn).toMatch(/aria-labelledby/);
-    expect(clientFn).toMatch(/if \(previouslyFocused\?\.focus\) previouslyFocused\.focus\(\);/);
+    expect(celebrateFn).toMatch(/setAttribute\('role', 'dialog'\)/);
+    expect(celebrateFn).toMatch(/setAttribute\('aria-modal', 'true'\)/);
+    expect(celebrateFn).toMatch(/aria-labelledby/);
+    expect(celebrateFn).toMatch(/if \(previouslyFocused\?\.focus\) previouslyFocused\.focus\(\);/);
   });
 
   // One frame is not enough: the start styles must be applied before the class
   // flips, or the browser jumps to the end state and there is no fold.
   it('waits two frames before animating', () => {
-    expect(clientFn).toMatch(/requestAnimationFrame\(\(\) =>\s*\r?\n?\s*requestAnimationFrame/s);
+    expect(celebrateFn).toMatch(/requestAnimationFrame\(\(\) =>\s*\r?\n?\s*requestAnimationFrame/s);
   });
 
   it('escapes the name - it is user-controlled', () => {
-    expect(clientFn).toMatch(/escapeHtml\(\s*\r?\n?\s*translateValue\('Happy birthday, NAME!'\)/s);
+    expect(clientFn).toMatch(/title: translateValue\('Happy birthday, NAME!'\)\.replace\('NAME', first\)/);
+    // Escaped once, inside the helper, so every caller gets it - not only the
+    // one whose author remembered.
+    expect(celebrateFn).toMatch(/const esc = \(v\) =>/);
+    expect(celebrateFn).toMatch(/\$\{esc\(title \|\| ''\)\}/);
   });
 });
 
@@ -222,17 +234,17 @@ describe('the server side cannot send twice', () => {
 // run backwards.
 describe('the exit is animated too', () => {
   it('uses a closing state rather than just dropping the open one', () => {
-    expect(clientFn).toMatch(/scrim\.classList\.add\('is-closing'\)/);
-    expect(mainCss).toMatch(/\.bday-scrim\.is-closing \.bday-card\s*\{[^}]*translateY\(-22px\) scale\(0\.94\)/s);
+    expect(celebrateFn).toMatch(/scrim\.classList\.add\('is-closing'\)/);
+    expect(mainCss).toMatch(/\.celebrate-scrim\.is-closing \.celebrate-card\s*\{[^}]*translateY\(-22px\) scale\(0\.94\)/s);
   });
 
   it('the content arrives staggered, after the card starts unfolding', () => {
-    expect(mainCss).toMatch(/\.bday-scrim\.is-open \.bday-card__emoji\s*\{[^}]*transition-delay: 0\.22s/s);
-    expect(mainCss).toMatch(/\.bday-scrim\.is-open \.bday-card__msg\s*\{[^}]*transition-delay: 0\.37s/s);
+    expect(mainCss).toMatch(/\.celebrate-scrim\.is-open \.celebrate-card__emoji\s*\{[^}]*transition-delay: 0\.22s/s);
+    expect(mainCss).toMatch(/\.celebrate-scrim\.is-open \.celebrate-card__msg\s*\{[^}]*transition-delay: 0\.37s/s);
   });
 
   it('reduced motion drops the delays as well as the movement', () => {
-    const i = mainCss.indexOf('@media (prefers-reduced-motion: reduce)', mainCss.indexOf('.bday-scrim'));
+    const i = mainCss.indexOf('@media (prefers-reduced-motion: reduce)', mainCss.indexOf('.celebrate-scrim'));
     const block = mainCss.slice(i, i + 700);
     expect(block).toMatch(/transition-delay: 0s/);
     expect(block).toMatch(/backdrop-filter: none/);

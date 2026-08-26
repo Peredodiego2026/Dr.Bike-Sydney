@@ -366,3 +366,86 @@ export function createTierBadge(riderTier, size = 'sm') {
   <span class="tier-badge__label" style="font-size:14px;font-weight:700;color:var(--navy)">${label}</span>
 </span>`;
 }
+
+// ── Celebration sheet ─────────────────────────────────────────────────────────
+// A card that folds down from the top of a darkened, blurred page. For the
+// handful of moments that deserve one - a birthday, a review just left - rather
+// than the strip at the bottom of the screen a toast gives them.
+//
+// Diego on the review thank-you, which was a toast: "no me gusta tanto. debe
+// estar mas arriba. que aparezca con fondo medio oscuro con opacidad en 3d mas
+// de lujo mas bonito... y que el cliente pueda hacer click en cualquier parte
+// fuera del cuadro para se cierre".
+//
+// Extracted from the birthday greeting rather than copied: a second modal under
+// a second name is how a product ends up with four of them. Dismissed by the
+// close button, by the backdrop, or by Escape - never by a click inside the
+// card, which would fire the moment someone tried to select the text.
+export function showCelebration({ emoji, title, message, onClose } = {}) {
+  document.getElementById('celebrate-scrim')?.remove();
+
+  const scrim = document.createElement('div');
+  scrim.id = 'celebrate-scrim';
+  scrim.className = 'celebrate-scrim';
+  scrim.setAttribute('role', 'dialog');
+  scrim.setAttribute('aria-modal', 'true');
+  scrim.setAttribute('aria-labelledby', 'celebrate-title');
+  const esc = (v) =>
+    String(v ?? '').replace(
+      /[&<>"']/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+    );
+  scrim.innerHTML = `
+    <div class="celebrate-card">
+      <button class="celebrate-close" id="celebrate-close" aria-label="${esc(translateValue('Close'))}">&times;</button>
+      <span class="celebrate-card__emoji" aria-hidden="true">${esc(emoji || '')}</span>
+      <h2 class="celebrate-card__title" id="celebrate-title">${esc(title || '')}</h2>
+      <p class="celebrate-card__msg">${esc(message || '')}</p>
+    </div>`;
+  document.body.appendChild(scrim);
+
+  const previouslyFocused = document.activeElement;
+  let closed = false;
+  const close = () => {
+    if (closed) return; // backdrop click and Escape can both land
+    closed = true;
+    // is-closing rather than just dropping is-open: the exit is its own
+    // animation (lifts away and shrinks), not the entrance played backwards.
+    scrim.classList.remove('is-open');
+    scrim.classList.add('is-closing');
+    document.removeEventListener('keydown', onKey);
+    // Let the exit finish, but never leave it behind if the transition never
+    // fires - a hidden tab does not run them.
+    const drop = () => scrim.remove();
+    scrim.addEventListener('transitionend', drop, { once: true });
+    setTimeout(drop, 600);
+    if (previouslyFocused?.focus) previouslyFocused.focus();
+    try {
+      onClose?.();
+    } catch (e) {
+      console.warn('[celebrate] onClose failed:', e.message);
+    }
+  };
+  function onKey(e) {
+    if (e.key === 'Escape') close();
+  }
+
+  scrim.querySelector('#celebrate-close').addEventListener('click', close);
+  // Only the backdrop itself - a click inside the card must not dismiss it.
+  scrim.addEventListener('click', (e) => {
+    if (e.target === scrim) close();
+  });
+  document.addEventListener('keydown', onKey);
+
+  // Two frames: the element has to be in the DOM and have had its start styles
+  // applied before the class flips, or the browser skips straight to the end
+  // state and there is no fold at all.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      scrim.classList.add('is-open');
+      scrim.querySelector('#celebrate-close')?.focus();
+    })
+  );
+
+  return close;
+}

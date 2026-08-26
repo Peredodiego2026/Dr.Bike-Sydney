@@ -6483,6 +6483,384 @@ lo genera Stripe - y no se puede controlar desde aca. Ver 46.
 
 10 tests nuevos. Suite completa 10 veces: 675/675.
 
+## 47. El cliente que pago no existia, y la plata cobrada no estaba en ningun lado (26-ago-2026)
+
+Diego, mirando el admin despues de su reserva pagada: *"no se activo nada en
+admin... no estan los 30 aus ni el cliente en ni un lado"*.
+
+**El booking si estaba y si mostraba los $30** - en su modal, con la van y la
+direccion. Lo que faltaba eran dos cosas distintas.
+
+### 1. El invitado que pago no era un cliente
+
+`loadClients` lee **solo `profiles`**. Una reserva sin cuenta guarda nombre,
+email y telefono **en la fila del booking** y no crea perfil.
+
+O sea que el dia que alguien pago $30 como invitado, la pantalla de Clientes
+decia **1** - el admin - y la persona que acababa de pagar no aparecia en
+ningun lado. No se la podia ver, contar ni contactar.
+
+Ahora la pantalla une las dos fuentes: perfiles **mas** invitados sacados de
+`bookings` donde `client_id` es nulo. Una tarjeta por persona y no por reserva,
+y quien reservo como invitado y despues se registro con el mismo email **no se
+duplica**. El total del KPI tambien los suma, o la tarjeta contradecia a la
+lista de abajo.
+
+La tarjeta de invitado muestra su telefono en vez de los botones **Bikes** y
+**Chat**: los dos necesitan un id de perfil que un invitado no tiene, y botones
+muertos son peores que un dato util.
+
+### 2. La plata cobrada no estaba en ninguna pantalla
+
+`Revenue` cuenta **solo trabajos `completed`**, y eso **esta bien**: es
+reconocimiento de ingreso, y el codigo lo arreglo a proposito - el comentario
+cuenta que antes tres pantallas tenian tres definiciones distintas de
+"revenue" y el dashboard era el unico que halagaba el numero.
+
+Pero los $30 **existen**. Estan en Stripe. Y ninguna pantalla del panel lo
+admitia: Finance $0, Dashboard $0, P&L $0.
+
+Se agrego **"Collected, not yet earned"**: la suma de `callout_fee` de las
+reservas con `stripe_payment_intent_id` y estado distinto de completada o
+cancelada. **Deliberadamente fuera de Revenue**, con el texto explicando por
+que. Hay un test que verifica que siga afuera, para que un cambio posterior no
+la sume en silencio.
+
+11 tests nuevos. Suite completa **10 veces**: 699/699.
+
+## 50. Un sintoma, tres causas sin relacion (26-ago-2026)
+
+Diego, recorriendo un trabajo real entre tres pantallas: *"la actualizacion al
+dia 31 en mi pagina de admin y mechanic solo aparecieron cuando hice reset a las
+paginas"* y *"apreto boton en ruta pero en la seccion booking de la spa sigue el
+servicio en confirmed... actualice la pagina y ahora aparece en ruta"*.
+
+Parecia un bug. Eran tres, y ninguno tenia que ver con los otros.
+
+### Admin: escuchaba, recordaba, y no dibujaba
+
+La suscripcion ya existia y ya funcionaba. Actualizaba `allBookings` en memoria
+y **ahi se terminaba**: nada repintaba la tabla, asi que la pantalla seguia
+mostrando la fila como estaba al cargar la pagina. Faltaba una linea.
+
+Ahora repinta, **agrupado**: una sola finalizacion escribe la reserva varias
+veces seguidas (estado, repuestos, resultado de las notificaciones) y cada
+escritura es un evento propio. Sin agrupar, la tabla se recargaba tres veces en
+un segundo. Y **nunca con un modal abierto** - repintar debajo le hace perder al
+admin el lugar donde estaba leyendo.
+
+### SPA del cliente: no escuchaba nada
+
+`js/app.js` estaba suscripto a `mechanic_locations` y al chat del trabajo, y a
+**nada** de `bookings`. La lista no tenia forma de enterarse de que el estado se
+habia movido. Solo un reload.
+
+Tres caminos, porque cada uno cubre lo que los otros no: realtime para la
+pantalla abierta mientras el mecanico toca *En route*; **volver a la pestana**,
+que es exactamente lo que Diego estaba haciendo; y una consulta lenta detras.
+
+### Mecanico: el codigo estaba bien desde siempre
+
+`js/mechanic.js` **siempre** llamo a `load()` con cada evento. Que igual hiciera
+falta recargar a mano solo puede significar una cosa: **los eventos no estaban
+llegando**.
+
+Supabase solo transmite cambios de las tablas que son miembros de la publicacion
+`supabase_realtime`. Es un ajuste **de la base de datos**: ningun deploy lo
+lleva, ningun test lo agarra, y nada en la app lo reporta. Una tabla que no es
+miembro produce silencio, que es indistinguible de "no paso nada".
+
+`scripts/enable-realtime-bookings.sql` lo arregla. Pero **las tres pantallas ya
+no dependen de eso**: recargan al volver a la app y solas cada tanto. Un
+mecanico a mitad de ronda no puede tener que deslizar para enterarse de que un
+trabajo se movio. Eso si, **nunca con el modal de completar abierto**: borraria
+una firma que el cliente ya dio.
+
+15 tests nuevos. 714/714.
+
+## 51. La pantalla del cliente: tres cosas chicas (26-ago-2026)
+
+### La barra de progreso no decia que estaba pasando
+
+Diego: *"necesitamos que el proceso que se esta realizando en este momento...
+el boton parpadee... y que dejen de parpadear cuando el otro proceso empiece...
+done deberia salir en color verde"*.
+
+El codigo tenia **dos estados**: pasado y no pasado, los dos planos. Cada paso
+alcanzado se pintaba del mismo `#1E40AF` solido, Done incluido, asi que el
+cliente no podia saber donde estaba el trabajo.
+
+Ahora son tres: **hecho** (azul apagado), **en curso** (azul vivo con latido) y
+**pendiente**. Solo un paso es `live` a la vez, que es lo que hace que el latido
+se corte solo cuando el trabajo avanza - justo lo que Diego pidio. **Done no
+late**: esta terminado, y un trabajo listo que sigue parpadeando se lee como
+algo que todavia se debe. Y es verde, pero solo el ultimo: verde en el paso 0
+diria que todo termino en el momento en que se confirmo.
+
+### Los botones tapados por la barra de abajo
+
+Diego: *"no puedo escrolear para abajo entonces no puedo ver los botones de
+mesage ni de share link"*.
+
+**El panel scrolleaba perfecto.** La barra de navegacion es `position:fixed`
+con `z-index:100` y el panel no reservaba lugar para ella, asi que la ultima
+fila quedaba fisicamente **debajo**. Llegar al final del scroll los estacionaba
+atras de la barra en vez de arriba.
+
+El alto de la barra ahora es un token, `--bottom-nav-h`, y **la barra misma lo
+usa**: los dos numeros no pueden separarse nunca mas.
+
+### El agradecimiento de la resena era un toast
+
+Diego: *"debe estar mas arriba. que aparezca con fondo medio oscuro con opacidad
+en 3d mas de lujo mas bonito... y que el cliente pueda hacer click en cualquier
+parte fuera del cuadro para se cierre"*.
+
+Dejar una resena es lo unico que la app le pide al cliente **despues** de que la
+plata cambio de manos. Merecia la misma hoja que el saludo de cumpleanos.
+
+La hoja 3D se **extrajo** a `showCelebration()` en `js/components.js` en vez de
+copiarse: una segunda copia con otro nombre es como un producto termina con
+cuatro estilos de modal. Se renombro `.bday-*` a `.celebrate-*` - el nombre dice
+**que es**, no para que se uso primero. Cuidado con eso: los ids del perfil
+(`bday-day`, `bday-status`) son otra cosa y **no** se tocaron.
+
+Ademas el escapado de texto del usuario ahora vive **adentro** del helper, asi
+que lo tiene todo el que lo llame y no solo el autor que se acordo.
+
+### Y la resena no aparecia sola
+
+*"desde el celular tuve que cerrar la pagina y volver a abrirla para ver el
+comentario"*.
+
+La grilla de resenas de la home la llenaba un IIFE que corria **una vez, al
+cargar la pagina**. Nadie le pedia los datos de nuevo. Ahora la funcion tiene
+nombre y se publica en `window.drbikeReloadReviews`, y el flujo de resena la
+llama al cerrar la hoja. Como ahora puede correr dos veces, **el estado vacio
+tambien tiene que poder irse**: la primera resena aterriza en una pagina que en
+ese momento dice que no hay ninguna.
+
+### El agujero del i18n, otra vez
+
+`scripts/i18n-check.mjs` solo marca literales **fuera** de `translateValue()`.
+Una cadena pasada **adentro** sin entrada en el diccionario devuelve ingles y el
+check queda verde. Las dos cadenas nuevas se agregaron a mano a es y zh, y hay
+un test que lo verifica, porque el check no puede.
+
+23 tests nuevos. 737/737.
+
+## 52. La app del mecanico: tres cosas (26-ago-2026)
+
+### El aviso de GPS cada 5 segundos
+
+Diego, en una PC sin GPS: *"aparece ese mensaje en pc del gps cada ciertos
+segundos"*.
+
+`sendLocation()` corre en un `setInterval` de 5 segundos y **cada fallo lanzaba
+su propio toast**. Solo el codigo 1 (permiso denegado) cortaba el ciclo; un
+*timeout* - que es lo que devuelve para siempre una maquina sin GPS - seguia
+disparando un mensaje cada cinco segundos mientras el trabajo estuviera en ruta.
+Y `watchPosition` tiraba los suyos aparte.
+
+Ahora hay **un aviso por tipo de problema**, no uno por intento, y los tres
+caminos pasan por el mismo embudo. Se resetea cuando **entra una posicion de
+verdad**, asi que un mecanico que sale de un tunel y vuelve a entrar se entera
+otra vez si se rompe una segunda vez - si no, el limite se convierte en silencio.
+Permiso denegado **sigue** cortando el compartir: reintentar no lo puede
+arreglar.
+
+### El scroll horizontal del modal de completar
+
+El panel es un scroller vertical **sin opinion sobre el otro eje**, asi que
+cualquier hijo un pixel mas ancho le agregaba tambien barra horizontal. Un
+formulario no tiene nada a lo que scrollear de costado: el eje se apago.
+
+De paso, el canvas de la firma tenia `width="100%"`, que **no es un valor legal**
+para ese atributo (lleva un entero de pixeles), y **ninguna altura en CSS**: en
+una pantalla 2x el cuadro se dibujaba de 240px de alto porque eso era lo que
+valia `canvas.height`. Las dos cosas ahora son explicitas y legales.
+
+### La fecha del proximo servicio
+
+Diego: *"la navegacion para colocar la nueva fecha del siguiente servicio se ve
+horrible en pc... y en celu igual se ve horrible"*.
+
+Era `<input type="date">`, asi que **cada plataforma dibujaba su propio selector**
+y ninguno pertenecia a esta app - el spinner de mes/ano de Firefox de su captura
+no es algo que el CSS pueda tocar.
+
+Pero ademas **era el control equivocado**. Un mecanico que termina un service
+recomienda un **intervalo**, no el 14 de marzo; elegir un dia de un calendario
+con guantes puestos es mas lento y menos preciso que tocar "6 meses".
+
+Ahora son chips: 3, 6, 12 meses y *Not now*. Escriben una fecha real en **el
+mismo campo oculto** que ya leian `submitComplete()` y la factura, asi que
+**cambio el control, no el dato**. *Not now* escribe vacio, y
+`nextServiceMessage()` ya trataba eso como "sin fecha", asi que la factura cae en
+su linea generica en vez de imprimir *Invalid Date*.
+
+15 tests nuevos. 752/752.
+
+## 53. Las dos barras de scroll de la landing, y dos secciones enormes (26-ago-2026)
+
+### Las dos barras: cuatro lineas de CSS
+
+Diego lo reporto **dos veces**, y la segunda dio el dato que lo resolvia:
+*"las lineas del scroll solo aparecen en el pc en el celular no"*.
+
+`css/main.css` abria con:
+
+```css
+html,
+body {
+  overflow-x: hidden;
+}
+```
+
+El CSS dice que **si un eje es `hidden` y el otro es `visible`, el valor usado
+del eje visible pasa a `auto`**. O sea que ese `overflow-x` le daba en silencio
+`overflow-y: auto` **a los dos**, `html` y `body`.
+
+Y despues la regla de propagacion: el viewport toma su overflow de `<html>`, y
+**solo** cae a `<body>` cuando el de html es `visible`. Con html ya no visible,
+body dejo de propagar y **se volvio un contenedor de scroll propio**. Dos cajas
+que scrollean, dos barras.
+
+En el celular no se veia porque ahi las barras son superpuestas y no ocupan
+ancho - exactamente lo que Diego observo.
+
+**La regla va en `body` y en ninguno mas.** Con html visible, el viewport toma
+el overflow de body, **body vuelve a computar `visible`** y no dibuja barra
+propia. Una sola barra, y el scroll lateral sigue suprimido.
+
+### Las dos secciones que no entraban
+
+*"el cuadro del mecanico en el pc azul detras abarca mucha pantalla hay que
+achicarlo para que entre en una sola pantalla al 100%"* y lo mismo para los
+planes, *"desde el titulo hasta que terminan las letras de abajo"*.
+
+La de mecanicos sumaba 80 + titulo + 48 + 420 + 24 + 96: mas de 800px **antes**
+del cromo del navegador.
+
+Todos esos numeros ahora estan atados al viewport con `clamp()`, y las dos
+secciones llevan `min-height:100svh` centrado, **solo en desktop** - en un
+celular una seccion de pantalla completa empuja la siguiente fuera de vista y
+hace sentir la pagina el doble de larga.
+
+`min-height`, nunca `height`: una seccion que de verdad necesita mas lugar
+crece. **Una tarjeta de plan cortada al medio es peor que una seccion que se
+pasa 40px.** Y sin navegador para medir, atar todo al viewport es la unica forma
+honesta de que entre: entra por construccion, no por adivinar un tamano de
+pantalla.
+
+### La tarjeta del mecanico no era 3D porque no se movia
+
+240px dentro de una seccion oscura de 420px de alto es una estampilla flotando
+en un vacio. Y con **un solo** mecanico la matematica del carrusel da offset 0:
+sin rotacion, sin profundidad, escala 1. **Nada se leia como 3D porque nada lo
+era.**
+
+Ahora la tarjeta es `clamp(250px, 23vw, 320px)` y tiene un flotado propio. Vive
+en un elemento **interno**: el carrusel escribe `transform` sobre la tarjeta
+desde JS, y animar la misma propiedad en dos lugares hace que uno de los dos
+pierda en silencio. Solo respira la de adelante; las de atras son fondo.
+
+Y el paso entre tarjetas dejo de ser 190px fijos - calculados para una tarjeta
+de 240 - y pasa a ser proporcional al ancho medido, o una pantalla ancha las
+superpondria y una angosta dejaria un hueco.
+
+14 tests nuevos. 766/766.
+
+## 54. Cuatro superficies que el tema oscuro no podia alcanzar (26-ago-2026)
+
+El modo oscuro ya tiene tabla de tokens completa (48), pero **un token solo
+puede alcanzar un color que este escrito como token**. Cuatro lugares de
+`js/mechanic.js` pintaban `background:#fff` como literal: en oscuro eran hojas
+de papel blanco sobre el fondo navy, y ningun trabajo sobre la paleta las podia
+tocar.
+
+Diego encontro la mas grande solo: *"aprete en history en el pc y se ve un
+history abajo como en la foto nose si me gusta ese banner abajo"*.
+
+Las otras tres eran la tarjeta de *No ratings yet*, el resumen de calificaciones
+y un boton chico.
+
+**La cuarta se queda blanca a proposito**: el canvas de la firma. Se firma sobre
+papel blanco en los dos temas, el trazo se dibuja con una tinta oscura que solo
+se lee sobre blanco, y esa imagen termina en la factura del cliente. Lleva un
+comentario que lo dice, y un test que verifica que sea **la unica** que queda.
+
+### Y el panel de historial
+
+Una hoja que sube desde el borde de abajo esta bien en un celular - es donde
+esta el pulgar - y **se lee como una barra de notificacion en una PC**. Todos
+los demas overlays de esta app estan centrados. Ahora sube en mobile y esta
+centrado de 768px para arriba.
+
+7 tests nuevos. 772/772.
+
+## 55. El mapa del cliente no tenia ruta ni tiempo real (26-ago-2026)
+
+Diego, mirando su propia reserva salir: *"cuando estaba en ruta tampoco vio ni
+una ruta ni un tiempo ni nada... no se vio eso en ni un momento... hay que
+arreglarlo. se debe ver el camino hacia el mechanico y la ubicacion del
+mechanico"*.
+
+Tenia razon en las dos cosas, y son agujeros distintos.
+
+### La ruta nunca existio
+
+Buscar `polyline` en `js/app.js` antes de este commit: **todos los resultados
+son iconos SVG**. Nunca se dibujo un camino. No es que estuviera roto - no
+estaba construido.
+
+### Y el tiempo era una linea recta
+
+`updateETA()` calculaba distancia haversine dividida por una velocidad fija. En
+Sydney eso dice *"3.2 km away"* para un viaje de ocho kilometros por calle, y
+los minutos al lado son igual de inventados.
+
+### Lo que se hizo
+
+`drivingRouteGeometry()` en `api/_eta.js`: le pide a OSRM la **geometria**
+(`overview=full`), no solo la duracion. Dos diferencias con `drivingRoute()`,
+que ya existia:
+
+- devuelve la linea de verdad;
+- toma **coordenadas** en vez de una direccion, porque la posicion del mecanico
+  ya es una fija y geocodificarla solo podria perder precision.
+
+Aplica el **mismo `TRAFFIC_FACTOR`** con el que se calculan los precios de
+cobertura - importado, no repetido -, asi que el mapa no le puede prometer al
+cliente un numero mas optimista que el que uso la cotizacion.
+
+El GeoJSON viene `[lng, lat]` y Leaflet quiere `[lat, lng]`: se da vuelta **una
+sola vez**, en el servidor. Al reves dibuja una linea por el oceano Indico.
+
+### Por que un rol aparte
+
+`public-track` se consulta **cada 5 segundos** para mantener el estado al dia.
+Pedir una ruta con esa frecuencia seria golpear un servicio gratuito por una
+linea que casi no cambia. `track-route` se pide al abrir la pantalla y despues
+**cada 45 segundos**, y la cache del router se indexa por el origen redondeado a
+~100m: una camioneta que avanzo veinte metros esta en la misma calle.
+
+### Ninguna falta de ruta es un error
+
+*No esta en ruta*, *la direccion nunca se geocodifico*, *no hay fija del
+mecanico*, *el router no contesto*: los cuatro devuelven **200 con un motivo**.
+El mapa se queda con sus marcadores y con la estimacion en linea recta en vez de
+mostrarle una falla al cliente.
+
+### Y el texto dice que clase de numero es
+
+*"ETA 14:32 - 12 min - 5.4 km **by road**"* contra *"ETA ~14:28 - 3.2 km **en
+linea recta**"*. Uno de los dos numeros esta medido y el otro es una
+aproximacion, y el cliente tiene derecho a saber cual esta mirando. Ademas la
+estimacion **nunca pisa** a la medicion: si la ruta ya llego, un repintado lento
+de haversine no la puede reemplazar.
+
+18 tests nuevos. 790/790.
 ## 48. El modo oscuro no tenia tokens. Tenia 160 parches. (26-ago-2026)
 
 Diego, cuatro veces distintas recorriendo una reserva pagada de punta a punta:
@@ -6606,4 +6984,48 @@ entero, no saltea la columna, y eso habria volteado la pantalla del mecanico
 hasta que Diego corriera el archivo. El gasto en la reserva loguea y sigue.
 
 19 tests nuevos. 707/707.
+
+## 56. Tres bugs que aparecieron revisando mi propio trabajo (26-ago-2026)
+
+Diego pidio explicitamente buscar **bugs y falsos positivos** en lo recien
+construido antes de dar nada por terminado. Aparecieron tres, y ninguno lo
+habria agarrado un test que no se buscara a proposito.
+
+### 1. La guarda del admin leia la propiedad equivocada
+
+El repintado de la tabla de reservas se protegia con
+`page.style.display === 'none'`. Pero el admin cambia de pagina con una **clase
+`active`** (`go()`), no con un display inline: `style.display` era `''` siempre,
+asi que la guarda **nunca bloqueaba nada** y la tabla se recargaba de la base
+cada minuto aunque el admin estuviera mirando Finanzas.
+
+### 2. El padding reservaba lugar para una barra que no existe
+
+`--bottom-nav-h` resuelve el problema de los botones tapados en el celular, pero
+en desktop `.bottom-nav` es `display:none`. El panel habria dejado **56px de
+aire muerto** abajo de cada pantalla de seguimiento en PC. El token ahora vale
+`0px` de 768px para arriba: significa *cuanto lugar ocupa la barra*, y una barra
+oculta no ocupa nada.
+
+### 3. Un test mio era un falso positivo esperando a pasar
+
+`dark-theme.test.js` fijaba `CACHE_STATIC = 'drbike-static-v91'` **literal**. Se
+puso en rojo apenas otra rama subio la misma linea a v96 - una falla que
+reportaba un merge, no un bug. Ahora verifica un **minimo**, que es lo que de
+verdad tiene que seguir siendo cierto.
+
+### Y lo que encontro el merge
+
+Al unir las ramas, `mechanic.html` volvio a `?v=20260826-dark` y **se perdieron
+en silencio dos bumps posteriores**. CLAUDE.md ya avisaba que los `?v=` de
+`mechanic.html` eran cadenas de fecha escritas a mano y el unico hueco que
+quedaba sin enforcar. Mordio exactamente como estaba previsto: un merge entre
+dos ramas que habian tocado esa linea se resolvio hacia el valor viejo, sin nada
+en rojo en ningun lado.
+
+`js/mechanic.js` y `css/mechanic.css` ahora son **hashes de contenido** dentro de
+`scripts/versioned-assets-check.mjs`. Un hash no se puede resolver hacia el lado
+equivocado de un merge y quedar verde.
+
+**823/823, corrido 10 veces seguidas. 6 checks verdes, lint 0 errores.**
 

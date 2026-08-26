@@ -39,6 +39,19 @@ const PAGES = [
       { path: 'css/admin.css', re: /href="css\/admin\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
+  // mechanic.html joined 2026-08-26. Its two assets carried hand-typed date
+  // strings ("20260810b"), which CLAUDE.md already flagged as the remaining
+  // gap - and it bit exactly as predicted: a merge between two branches that
+  // had both bumped that line resolved to the older value and silently undid
+  // the cache bust, with nothing red anywhere. A content hash cannot be
+  // resolved to the wrong side and stay green.
+  {
+    html: 'mechanic.html',
+    assets: [
+      { path: 'js/mechanic.js', re: /src="js\/mechanic\.js\?v=([a-zA-Z0-9]+)"/ },
+      { path: 'css/mechanic.css', re: /href="css\/mechanic\.css\?v=([a-zA-Z0-9]+)"/ },
+    ],
+  },
   {
     html: 'index.html',
     assets: [{ path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ }],
