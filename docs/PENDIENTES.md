@@ -6799,3 +6799,66 @@ centrado de 768px para arriba.
 
 7 tests nuevos. 772/772.
 
+## 55. El mapa del cliente no tenia ruta ni tiempo real (26-ago-2026)
+
+Diego, mirando su propia reserva salir: *"cuando estaba en ruta tampoco vio ni
+una ruta ni un tiempo ni nada... no se vio eso en ni un momento... hay que
+arreglarlo. se debe ver el camino hacia el mechanico y la ubicacion del
+mechanico"*.
+
+Tenia razon en las dos cosas, y son agujeros distintos.
+
+### La ruta nunca existio
+
+Buscar `polyline` en `js/app.js` antes de este commit: **todos los resultados
+son iconos SVG**. Nunca se dibujo un camino. No es que estuviera roto - no
+estaba construido.
+
+### Y el tiempo era una linea recta
+
+`updateETA()` calculaba distancia haversine dividida por una velocidad fija. En
+Sydney eso dice *"3.2 km away"* para un viaje de ocho kilometros por calle, y
+los minutos al lado son igual de inventados.
+
+### Lo que se hizo
+
+`drivingRouteGeometry()` en `api/_eta.js`: le pide a OSRM la **geometria**
+(`overview=full`), no solo la duracion. Dos diferencias con `drivingRoute()`,
+que ya existia:
+
+- devuelve la linea de verdad;
+- toma **coordenadas** en vez de una direccion, porque la posicion del mecanico
+  ya es una fija y geocodificarla solo podria perder precision.
+
+Aplica el **mismo `TRAFFIC_FACTOR`** con el que se calculan los precios de
+cobertura - importado, no repetido -, asi que el mapa no le puede prometer al
+cliente un numero mas optimista que el que uso la cotizacion.
+
+El GeoJSON viene `[lng, lat]` y Leaflet quiere `[lat, lng]`: se da vuelta **una
+sola vez**, en el servidor. Al reves dibuja una linea por el oceano Indico.
+
+### Por que un rol aparte
+
+`public-track` se consulta **cada 5 segundos** para mantener el estado al dia.
+Pedir una ruta con esa frecuencia seria golpear un servicio gratuito por una
+linea que casi no cambia. `track-route` se pide al abrir la pantalla y despues
+**cada 45 segundos**, y la cache del router se indexa por el origen redondeado a
+~100m: una camioneta que avanzo veinte metros esta en la misma calle.
+
+### Ninguna falta de ruta es un error
+
+*No esta en ruta*, *la direccion nunca se geocodifico*, *no hay fija del
+mecanico*, *el router no contesto*: los cuatro devuelven **200 con un motivo**.
+El mapa se queda con sus marcadores y con la estimacion en linea recta en vez de
+mostrarle una falla al cliente.
+
+### Y el texto dice que clase de numero es
+
+*"ETA 14:32 - 12 min - 5.4 km **by road**"* contra *"ETA ~14:28 - 3.2 km **en
+linea recta**"*. Uno de los dos numeros esta medido y el otro es una
+aproximacion, y el cliente tiene derecho a saber cual esta mirando. Ademas la
+estimacion **nunca pisa** a la medicion: si la ruta ya llego, un repintado lento
+de haversine no la puede reemplazar.
+
+18 tests nuevos. 790/790.
+

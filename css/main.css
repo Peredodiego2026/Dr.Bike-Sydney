@@ -2057,3 +2057,12 @@ body {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
   }
 }
+
+/* ── The route line on the tracking map ──────────────────────────────────────
+   Leaflet draws polylines as SVG, so the colour can come from a token instead
+   of being pinned as another hex inside js/app.js. */
+.track-route-line {
+  stroke: var(--blue);
+  stroke-opacity: 0.85;
+}
+

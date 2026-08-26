@@ -2846,17 +2846,38 @@ async function renderTracking() {
   _mechanicMarker = null;
 
   // ── ETA updater ───────────────────────────────────────────────────────────
-  function updateETA(mechCoords) {
-    const distKm = haversineKm(mechCoords, clientCoords);
-    const mins = Math.max(1, Math.round((distKm / CITY_SPEED_KMH) * 60));
-    const eta = new Date(Date.now() + mins * 60000);
-    const etaStr = eta.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+  // Set once a real driving route has been drawn, so a slower straight-line
+  // repaint cannot overwrite a true number with a guess.
+  let _routeShown = false;
+  let _routeFitted = false;
+
+  function paintETA({ minutes, km, byRoad }) {
     const el = screen.querySelector('#eta-text');
-    if (el)
-      el.textContent =
-        distKm < 0.1
-          ? 'Mechanic is right outside!'
-          : `ETA: ${etaStr} (~${mins} min · ${distKm.toFixed(1)} km away)`;
+    if (!el) return;
+    const eta = new Date(Date.now() + minutes * 60000);
+    const etaStr = eta.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+    const distance = km === null || km === undefined ? '' : ` \u00b7 ${km.toFixed(1)} km`;
+    // "by road" against "straight line" is not decoration. One of these numbers
+    // is a real driving time and the other is a guess, and the client is
+    // entitled to know which one they are looking at.
+    el.textContent = byRoad
+      ? `${translateValue('ETA')} ${etaStr} \u00b7 ${minutes} min${distance} ${translateValue('by road')}`
+      : `${translateValue('ETA')} ~${etaStr}${distance} ${translateValue('straight line')}`;
+  }
+
+  function updateETA(mechCoords) {
+    if (_routeShown) return;
+    const distKm = haversineKm(mechCoords, clientCoords);
+    if (distKm < 0.1) {
+      const el = screen.querySelector('#eta-text');
+      if (el) el.textContent = translateValue('Mechanic is right outside!');
+      return;
+    }
+    paintETA({
+      minutes: Math.max(1, Math.round((distKm / CITY_SPEED_KMH) * 60)),
+      km: distKm,
+      byRoad: false,
+    });
   }
 
   // ── Status updater ────────────────────────────────────────────────────────
@@ -3029,6 +3050,60 @@ async function renderTracking() {
       ?.addEventListener('click', () => openClientChat(bookingId, screen));
   }
 
+  // ── The road between the two pins ─────────────────────────────────────────
+  // Diego: "cuando estaba en ruta tampoco vio ni una ruta ni un tiempo ni
+  // nada... se debe ver el camino hacia el mechanico y la ubicacion del
+  // mechanico". He was right - nothing ever drew one. Routing has to happen on
+  // the server (the CSP does not whitelist the router's host), so this asks
+  // /api/auth for the geometry and draws what comes back.
+  let _routeLine = null;
+
+  async function refreshRoute() {
+    if (!trackingToken || !_trackingMap) return;
+    try {
+      const resp = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'track-route', tracking_token: trackingToken }),
+      });
+      if (!resp.ok) return;
+      const { route } = await resp.json();
+      // No route is a normal answer - not en route yet, address never geocoded,
+      // router down. The map keeps its markers and the straight-line estimate
+      // rather than showing the client a failure.
+      if (!route?.coordinates?.length) return;
+
+      if (_routeLine) _routeLine.setLatLngs(route.coordinates);
+      else
+        _routeLine = window.L.polyline(route.coordinates, {
+          // Coloured from CSS rather than an option, so the line follows the
+          // design tokens instead of pinning another hex into this file.
+          className: 'track-route-line',
+          weight: 5,
+          lineJoin: 'round',
+          lineCap: 'round',
+        }).addTo(_trackingMap);
+
+      _routeShown = true;
+      paintETA({ minutes: route.minutes, km: route.km, byRoad: true });
+
+      // Frame the whole trip once. Re-fitting on every refresh would fight the
+      // client every time they panned or zoomed the map themselves.
+      if (!_routeFitted) {
+        _routeFitted = true;
+        _trackingMap.fitBounds(_routeLine.getBounds(), { padding: [40, 40], maxZoom: 15 });
+      }
+    } catch (e) {
+      console.warn('[tracking] could not draw the route:', e.message);
+    }
+  }
+
+  // Straight away, then about once a minute. The line barely changes between
+  // ticks and the router is a free service - asking at the 5s cadence of the
+  // status poll would be abusive for no gain.
+  refreshRoute();
+  const routeInterval = setInterval(refreshRoute, 45000);
+
   // ── Real-time: Supabase Realtime subscription (Uber-style push, no polling) ──
   // Subscribe to mechanic_locations changes for instant map updates
   let realtimeChannel = null;
@@ -3100,6 +3175,7 @@ async function renderTracking() {
   _unsubTracking = () => {
     if (prev) prev();
     clearInterval(pollInterval);
+    clearInterval(routeInterval);
     if (realtimeChannel) sb.removeChannel(realtimeChannel);
   };
 }
