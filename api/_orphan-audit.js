@@ -39,6 +39,13 @@ const DEFAULT_GRACE_MINUTES = 15; // a booking mid-flight is not an orphan
 // turn it into a real booking by hand; short enough that nobody waits out a
 // weekend for their own money. A business decision, so it is asserted in
 // tests/unit/orphan-refund.test.js rather than left to drift.
+//
+// This is a floor, not a promise. The sweep is part of ?type=all, which
+// vercel.json runs once a day at 09:00 UTC (Hobby accounts cannot schedule
+// anything more frequent - see the note at the top of api/send-cron.js). A
+// payment that crosses the deadline one minute after a run waits for the next
+// one, so the real worst case is close to 48h. Shortening the constant does
+// not change that; only running the sweep more often would.
 export const ORPHAN_REFUND_AFTER_HOURS = 24;
 
 // What to do with a payment already established to have no booking behind it.
