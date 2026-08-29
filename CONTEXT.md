@@ -1,6 +1,91 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-08-16) — read this first
+## Current state (2026-08-27) — read this first
+
+- **`main` is at the merge of #355.** The block below covers #346 through #355,
+  shipped across 26-27 August. Everything is merged; **no PR is open.**
+
+- **The one that mattered most: dark mode had no token layer at all.**
+  `css/variables.css` declared 98 colours and not one had a dark value. Each
+  surface patched its own classes by hand - 149 `[data-theme='dark']` selectors
+  in `css/admin.css` alone - and whatever nobody remembered to patch kept its
+  LIGHT value in silence. It took **two** passes to fix, and the second one is
+  the lesson: the first pass gave every token a dark value, measured ink against
+  the grounds (14:1, comfortable) and shipped. Diego looked at it and said "todo
+  es azul". The page was `#0f1a2e` and the card `#152035` - **1.07:1**. The check
+  had never measured the grounds against EACH OTHER, so nothing noticed the cards
+  had no edge. `scripts/dark-theme-check.mjs` now measures ground separation,
+  contrast in both roles, and rejects colour literals in `js/admin.js` and
+  `js/mechanic.js` - which had to be widened three times, because a colour gets
+  chosen three ways (inline, inside a ternary, and in a map assigned to a
+  variable). `js/mechanic.js` is now at **zero** hand-written colours.
+
+- **`applyDarkModeInline()` is gone.** It was a THIRD dark-mode mechanism: a DOM
+  walker on a timer that forced a neutral palette while the tokens paint navy, so
+  one screen carried two darks. It only ever covered elements that existed the
+  moment it ran, which is why it needed eight call sites and still missed things.
+
+- **Three "it doesn't update" reports were three unrelated bugs.** Admin listened
+  and never repainted; the client SPA had no `bookings` subscription at all; the
+  mechanic's code was correct all along and its events were not arriving, because
+  `bookings` was not in the `supabase_realtime` publication. All three screens now
+  also refresh on tab focus and on a slow timer, so none of them depends on that
+  database setting being right.
+
+- **Referral credits could never be spent.** `handleApplyReferral()` credited both
+  sides and nothing anywhere subtracted the number again. The app promised $15 and
+  the server paid $10. Both fixed; the credit is spent as a booking-level discount
+  and comes back if the booking is cancelled.
+
+- **The team section was empty by design, and nobody had noticed.**
+  `handlePublicMechanics` started from completed bookings, so a brand-new business
+  showed "coming soon" to every visitor until the first job finished - the one
+  moment that section exists for. Inverted to start from active mechanics.
+
+- **Two SQL migrations were run by Diego on 27-Aug and are LIVE:**
+  `referral-credits-spendable.sql` (verified: `column_ok = 1`, `functions_ok = 2`)
+  and `enable-realtime-bookings.sql` (verified: bookings, job_messages and
+  mechanic_locations all broadcasting).
+
+- **Numbers to check, not to trust:** 848 tests, 58 entries in
+  `docs/PENDIENTES.md`, 7 checks in `npm run check`. Run them; this line ages.
+
+### What is NOT done
+
+- **A 20-point pre-launch audit exists and none of it is fixed yet.** Security,
+  Australian legal compliance, performance, accessibility, marketing and ops,
+  probed against production. The three gaps with immediate consequence: the
+  mechanic's shared 4-digit PIN, analytics running before any cookie consent, and
+  `js/app.js` at 295 KB in one file. The single most important unanswered question
+  is whether **RLS actually blocks a client from reading another client's rows** -
+  nobody has tested it with the anon key.
+
+- **Diego reports still seeing two scrollbars on the desktop landing.** The cause
+  found and fixed on 26-Aug was `overflow-x: hidden` on BOTH `html` and `body`,
+  which makes both elements scroll containers. Production serves the fixed CSS
+  (verified with `curl`). Either his browser is still on the cached stylesheet, or
+  there is a second cause nobody has found. **Unresolved.**
+
+- **Google reviews: decided, do not re-investigate.** Google's API can read and
+  reply to reviews but cannot create one. The app keeps its own rating and offers
+  a link to Google.
+
+- **Suburb pages stay blocked until November 2026**, when Diego is in Sydney and
+  can supply real local facts. Do not invent them.
+
+### Rules this session learned the hard way
+
+- **`npm run check` must be judged by its exit code.** Filtering its output with
+  `grep "^x"` hid the budget lines and passed a check that was failing. CI caught
+  it; the local run had said green.
+- **`mechanic.html`'s `?v=` are content hashes now**, inside
+  `scripts/versioned-assets-check.mjs`. They used to be hand-typed dates, and a
+  merge between two branches that had both bumped that line resolved to the OLDER
+  value and silently undid a cache bust, with nothing red anywhere.
+
+---
+
+## Current state (2026-08-16) — superseded, kept for the history below it
 
 - **`main` is at the merge of #253.** Shipped today, in order: #244 (suburb
   matching), #245 + #249 (the Analytics/Finance audit written down), #246
