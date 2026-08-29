@@ -1100,12 +1100,14 @@ function card(j) {
     <div style="position:relative;z-index:1;background:var(--white);border-radius:14px">
     <div class="job-header">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:40px;height:40px;border-radius:50%;background:${sc[st]}1A;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:${sc[st]};flex-shrink:0;letter-spacing:-0.03em">${j.client
-          .split(' ')
-          .map((n) => n[0] || '')
-          .join('')
-          .slice(0, 2)
-          .toUpperCase()}</div>
+        <div style="width:40px;height:40px;border-radius:50%;background:${sc[st]}1A;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:${sc[st]};flex-shrink:0;letter-spacing:-0.03em">${esc(
+          j.client
+            .split(' ')
+            .map((n) => n[0] || '')
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()
+        )}</div>
         <div><div class="job-client">${esc(j.client)}</div><div class="job-meta">${j.date === today ? 'Today' : ''}${t ? ' · ' + t : ''} ${j.date !== today ? '· ' + d : ''}</div></div>
       </div>
       <span class="status-badge" style="background:${sc[st]}1A;color:${sc[st]}">${sl[st] || st}</span>
@@ -1122,7 +1124,7 @@ function card(j) {
     }
     ${isEnroute ? `<div id="timer-${j.id}" style="font-size:13px;color:var(--amber);font-weight:600;margin-bottom:6px;padding:0 18px">En route: 00:00</div>` : ''}
     <div class="job-service">${esc(j.service)}</div>
-    <div class="job-addr">${j.address || j.suburb || '—'}</div>
+    <div class="job-addr">${esc(j.address || j.suburb || '—')}</div>
     ${j.phone ? `<div class="job-addr">${esc(j.phone)}</div>` : ''}
     ${j.notes ? `<div class="job-notes">Note: ${esc(j.notes)}</div>` : ''}
     <div class="job-price">$${j.price}</div>
@@ -1383,8 +1385,7 @@ async function sendClientPush(clientId, { title, body, url, tag }) {
 // driving over - on a booking made 5 days out, that was 5 days of silence.
 function notifyClientAccepted(j) {
   if (!j) return;
-  const mechName =
-    mechFullName('Your mechanic');
+  const mechName = mechFullName('Your mechanic');
   const when = [j.date, j.time].filter(Boolean).join(' at ');
 
   if (j.client_id)
@@ -1415,8 +1416,7 @@ function notifyClientAccepted(j) {
 
 function notifyClientArrived(j) {
   if (!j) return;
-  const mechName =
-    mechFullName('Your mechanic');
+  const mechName = mechFullName('Your mechanic');
 
   if (j.client_id)
     sendClientPush(j.client_id, {
@@ -1446,8 +1446,7 @@ function notifyClientArrived(j) {
 
 async function notifyClientEnroute(j) {
   if (!j) return;
-  const mechName =
-    mechFullName('Your mechanic');
+  const mechName = mechFullName('Your mechanic');
   const trackUrl = `https://drbikesydney.com.au/?tracking=${j.id}`;
 
   // Where the mechanic actually is right now. The server turns this plus the
@@ -1538,8 +1537,7 @@ async function fetchEta(fix, address) {
 // Push cuando el job es completado
 function notifyClientComplete(j) {
   if (!j?.client_id) return;
-  const mechName =
-    mechFullName('Your mechanic');
+  const mechName = mechFullName('Your mechanic');
   sendClientPush(j.client_id, {
     title: `✅ ${esc(j.service)} complete!`,
     body: `${mechName} has finished your service. Please leave a review — it helps us a lot! ⭐`,
@@ -2751,7 +2749,13 @@ function setCheck(itemId, status) {
     const b = document.getElementById(`cb-${itemId}-${s}`);
     if (!b) return;
     b.style.background =
-      s === status ? (s === 'ok' ? 'var(--green)' : s === 'warn' ? 'var(--amber)' : 'var(--red)') : '#fff';
+      s === status
+        ? s === 'ok'
+          ? 'var(--green)'
+          : s === 'warn'
+            ? 'var(--amber)'
+            : 'var(--red)'
+        : '#fff';
     b.style.color = s === status ? '#fff' : 'var(--gray)';
   });
 }
