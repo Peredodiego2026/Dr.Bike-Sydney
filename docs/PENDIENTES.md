@@ -7113,3 +7113,100 @@ esquina redondeada le cortaba la D. Ahora entra 12px.
 
 **848/848, corrido 10 veces. 7 checks verdes, lint 0 errores.**
 
+
+## 58. La direccion de los clientes estaba abierta a internet (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 2: *"la clave anonima esta en el JS, como
+corresponde; toda la proteccion real es Row Level Security. Probalo."*
+
+Se probo. **RLS estaba bien. Las vistas la esquivaban.**
+
+### Lo que se pudo hacer sin ninguna credencial
+
+Con la anon key que `js/supabase.js` sirve a cualquiera que abra la pagina,
+contra produccion, el 30-ago-2026:
+
+```
+GET  /rest/v1/public_booking_tracking?select=*
+  -> 200. Las 3 reservas, cada una con su tracking_token.
+
+POST /api/auth?role=public-track   {"tracking_token": <uno de esos>}
+  -> 200. Direccion completa, arrival_pin de 4 digitos, GPS del mecanico.
+```
+
+Dos pedidos. Sin login, sin token previo, sin adivinar nada.
+
+### La causa raiz, en una frase
+
+**Una vista de Postgres corre con los privilegios de su DUENO, no de quien
+consulta** - y Supabase le da a `anon` **todos** los privilegios sobre los
+objetos nuevos del esquema `public`.
+
+Las dos vistas del proyecto se crearon owner-privileged **a proposito**: es la
+unica forma de mostrarle a un anonimo una porcion filtrada de `bookings`, que
+esta detras de RLS. Lo que nadie conto es la otra mitad del trato. Owner
+privileges no solo hacen que ande el SELECT: hacen que anden las escrituras. Y
+el GRANT por defecto agrego la puerta de escritura sola.
+
+### Segundo agujero, misma causa
+
+```
+PATCH /rest/v1/public_reviews?id=eq.<uuid>   -> 204
+```
+
+`anon` tenia UPDATE sobre la vista de resenas. Una escritura por ahi aterriza
+en `bookings` **sin que RLS se consulte nunca**. Hoy no hay resenas, asi que no
+hay ids que direccionar; el dia que las haya, sus ids se leen en la misma vista
+y cualquiera puede editarlas. Un DELETE por ese camino se lleva **la reserva
+entera**, no la resena.
+
+### Lo que este bug ensena sobre donde mirar
+
+`api/auth.js:3404` **no estaba mal**. Su comentario dice, correctamente, que el
+token es un UUID imposible de adivinar y que aceptar un `booking_id` crudo
+arruinaba el punto de tenerlo - eso ya se habia arreglado (entrada del
+2026-07-21). El codigo era correcto y la base lo contradecia.
+
+Nadie lo iba a encontrar leyendo JavaScript. Por eso el guard son dos piezas y
+no una:
+
+- `tests/unit/public-views-locked.test.js` (13 tests, corre en CI): falla si
+  algun REVOKE se cae de las migraciones. Una migracion re-corrida ya no puede
+  reabrir el agujero, que es exactamente como se habria vuelto a colar.
+- `scripts/rls-check.mjs` (`npm run rls:check`): pega contra la base de verdad
+  como pegaria un atacante. **Fuera de `npm run check` a proposito** - usa red,
+  y un Supabase lento seria CI en rojo en una rama que no toco nada.
+
+El probe reprodujo los 3 hallazgos y **un cuarto que era ruido**: leia el
+"no automatically updatable" de la vista de tracking por status 400, y
+PostGREST lo contesta con 500. Ahora matchea el mensaje. Un detector que grita
+de mas se termina ignorando, que es peor que no tenerlo.
+
+### Lo que hay que correr
+
+`scripts/lock-public-views.sql`. Revoca todo sobre `public_booking_tracking`
+(**nada la usa** - se grepeo el repo entero; `handlePublicTrack` lee `bookings`
+directo con la service key), le saca la escritura a `public_reviews` dejandole
+el SELECT que la landing necesita, y cambia los default privileges del esquema
+para que la proxima vista no nazca con el mismo agujero.
+
+`public_reviews` **no** lleva `security_invoker = on`, y eso es deliberado:
+prenderlo aplicaria la RLS de `bookings`, un visitante anonimo matchearia cero
+filas y la seccion de testimonios quedaria vacia para siempre. Leer como el
+dueno es el motivo por el que la vista existe. Sacarle la escritura es la unica
+proteccion que puede tener - hay un test que falla si alguien "mejora" esto.
+
+### Lo que NO se probo
+
+- **DELETE.** No se mando ninguno, por la regla de no borrar filas. El GRANT
+  por defecto de Supabase casi con certeza lo incluia junto al UPDATE que si
+  se confirmo con el 204.
+- **Cliente A leyendo la reserva del cliente B.** Requiere dos cuentas reales;
+  las policies del repo dicen `auth.uid() = client_id` en SELECT, INSERT y
+  UPDATE de `bookings`, pero los scripts del repo **ya se demostraron
+  desactualizados** respecto de la base (`migrate-inventory-push.sql` declara
+  `parts_inventory FOR ALL USING (true)` y la base la tiene cerrada). Queda
+  pendiente contra la base, no contra el repo.
+
+Las 16 tablas base, en cambio, si estan bien: lectura anonima devuelve 0 filas
+en todas las sensibles, e INSERT anonimo devuelve `42501` en todas.
