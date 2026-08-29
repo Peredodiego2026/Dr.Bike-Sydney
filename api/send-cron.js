@@ -6,7 +6,7 @@ import {
   dispatchCompletionCalls,
   recordCompletionOutcome,
 } from './_completion-notify.js';
-import { isOrphanCandidate } from './_orphan-audit.js';
+import { isOrphanCandidate, orphanAction, ORPHAN_REFUND_AFTER_HOURS } from './_orphan-audit.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -615,7 +615,15 @@ async function handleOrphanPayments(req, res) {
     return res.status(502).json({ error: e.message });
   }
 
-  const candidates = (intents.data || []).filter((pi) => isOrphanCandidate(pi, { nowSeconds }));
+  // ignoreAlerted, deliberately. The default hides anything already carrying
+  // `orphan_alerted` so Diego is not woken twice - which also meant a payment
+  // he was told about once and never acted on left this cron's sight forever,
+  // money kept and nobody looking. They come back in now; orphanAction is what
+  // decides that an alerted payment is not re-alerted, and the refund deadline
+  // is measured against every orphan, alerted or not.
+  const candidates = (intents.data || []).filter((pi) =>
+    isOrphanCandidate(pi, { nowSeconds, ignoreAlerted: true })
+  );
 
   if (!candidates.length)
     return res.status(200).json({ checked: intents.data?.length || 0, orphans: 0 });
@@ -642,14 +650,60 @@ async function handleOrphanPayments(req, res) {
   const adminPhone = waRow?.postcode;
 
   let alerted = 0;
+  let refunded = 0;
+  let refundedTotal = 0;
   for (const pi of orphans) {
+    const action = orphanAction(pi, { nowSeconds });
+    // 'done'  - a previous run already gave the money back.
+    // 'wait'  - alerted, still inside the deadline; Diego may yet book it.
+    if (action === 'done' || action === 'wait') continue;
+
     const amount = (pi.amount_received / 100).toFixed(2);
     const email = pi.metadata?.email || pi.receipt_email || 'unknown';
     const when = new Date(pi.created * 1000).toISOString().replace('T', ' ').slice(0, 16);
-    const msg =
-      `ORPHAN PAYMENT: $${amount} AUD charged with no booking behind it.\n` +
-      `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
-      `Either create the booking manually or refund it in Stripe.`;
+    let msg;
+
+    if (action === 'refund') {
+      // The refund happens FIRST and does not depend on the WhatsApp going
+      // out. This used to be the other way round: no admin number configured,
+      // or Twilio having a bad morning, meant `continue` - no alert, no mark,
+      // no refund, and a console.error nobody reads. Whether a client gets
+      // their own money back cannot hang on whether a message to Diego sent.
+      try {
+        await stripe.refunds.create({ payment_intent: pi.id });
+      } catch (e) {
+        // Left unmarked on purpose so tomorrow's run tries again. Giving up
+        // quietly here is the failure this whole handler exists to end.
+        console.error('[orphan-payments] refund FAILED for', pi.id, e.message);
+        continue;
+      }
+      refunded++;
+      refundedTotal += pi.amount_received / 100;
+
+      // Belt and braces. If this mark fails the refund still stands, and
+      // isOrphanCandidate filters the payment out tomorrow anyway once Stripe
+      // reports latest_charge.refunded - two independent reasons not to
+      // double-refund.
+      try {
+        await stripe.paymentIntents.update(pi.id, {
+          metadata: { ...pi.metadata, orphan_refunded: String(Math.floor(Date.now() / 1000)) },
+        });
+      } catch (e) {
+        console.error('[orphan-payments] refunded but could not mark', pi.id, e.message);
+      }
+
+      msg =
+        `ORPHAN PAYMENT REFUNDED: $${amount} AUD went back to the client.\n` +
+        `It was charged with no booking behind it and none appeared within ` +
+        `${ORPHAN_REFUND_AFTER_HOURS}h.\n` +
+        `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
+        `Nothing to do. If this was a real job, contact the client and book it again.`;
+    } else {
+      msg =
+        `ORPHAN PAYMENT: $${amount} AUD charged with no booking behind it.\n` +
+        `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
+        `Create the booking within ${ORPHAN_REFUND_AFTER_HOURS}h or it refunds itself.`;
+    }
 
     if (adminPhone) {
       const r = await fetch(`${BASE}/api/send-whatsapp`, {
@@ -667,21 +721,26 @@ async function handleOrphanPayments(req, res) {
       continue;
     }
 
-    // Marked only after Diego has actually been told.
-    try {
-      await stripe.paymentIntents.update(pi.id, {
-        metadata: { ...pi.metadata, orphan_alerted: String(Math.floor(Date.now() / 1000)) },
-      });
-    } catch (e) {
-      console.error('[orphan-payments] could not mark', pi.id, e.message);
+    // Marked only after Diego has actually been told. Only meaningful for an
+    // alert - a refund marked itself above, whatever the messaging did.
+    if (action === 'alert') {
+      try {
+        await stripe.paymentIntents.update(pi.id, {
+          metadata: { ...pi.metadata, orphan_alerted: String(Math.floor(Date.now() / 1000)) },
+        });
+      } catch (e) {
+        console.error('[orphan-payments] could not mark', pi.id, e.message);
+      }
+      alerted++;
     }
-    alerted++;
   }
 
   return res.status(200).json({
     checked: intents.data?.length || 0,
     orphans: orphans.length,
     alerted,
+    refunded,
+    refundedTotal: Math.round(refundedTotal * 100) / 100,
     ids: orphans.map((pi) => pi.id),
   });
 }

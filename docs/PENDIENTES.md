@@ -7210,3 +7210,99 @@ proteccion que puede tener - hay un test que falla si alguien "mejora" esto.
 
 Las 16 tablas base, en cambio, si estan bien: lectura anonima devuelve 0 filas
 en todas las sensibles, e INSERT anonimo devuelve `42501` en todas.
+
+## 59. El cobro sin reserva avisaba una vez y despues se olvidaba (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 12. La regla de Diego no era una pregunta
+abierta: *"Nunca puede existir un cobro sin reserva. Si la reserva no se puede
+crear, no se cobra; y si el cobro ya salio, **se reembolsa solo, sin que nadie
+tenga que mirar**."*
+
+Habia **tres** redes y ninguna terminaba el trabajo.
+
+### Lo que ya estaba bien, y hay que decirlo
+
+1. `api/stripe-webhook.js` reconstruye la reserva desde la metadata del
+   PaymentIntent. El navegador puede morirse justo despues del cobro y la
+   reserva igual aparece. Eso se construyo despues del incidente del
+   2026-08-05 (entrada 14) y **funciona**.
+2. El webhook reembolsa solo si el monto no coincide con el precio que el
+   servidor recalcula. Tambien funciona - y es la unica cosa que reembolsaba
+   sola en toda la app.
+3. Un cron diario (`?type=orphan-payments`) cruzaba Stripe contra `bookings` y
+   encontraba los pagos huerfanos.
+
+### Donde se cortaba
+
+La red 3 es la que **se parece** a la regla y no lo es. Le mandaba a Diego un
+WhatsApp que decia, literalmente: *"Either create the booking manually or
+refund it in Stripe."* Eso es pedirle a un humano que mire. La regla dice lo
+contrario.
+
+Y era peor que eso: **avisaba una sola vez**. `isOrphanCandidate` descarta
+cualquier pago que ya tenga `orphan_alerted` en su metadata - lo cual tiene
+sentido para no despertar a Diego dos veces por lo mismo. El efecto real es que
+un pago del que Diego se entero un martes y no llego a resolver **salia del
+radar del cron para siempre**. La plata del cliente quedaba adentro, en
+silencio, sin que nada volviera a mirarla nunca.
+
+Tres agujeros mas, todos en el mismo bucle:
+
+- **Sin numero de WhatsApp configurado** -> `continue`. Sin aviso, sin marca,
+  sin reembolso, y un `console.error` que no lee nadie.
+- **Twilio caido** -> `continue`. Igual.
+- **Stripe se cansa de reintentar.** El webhook tira una excepcion cuando el
+  insert falla, justamente para que Stripe reintente. Stripe reintenta unos 3
+  dias y despues abandona. Si el error era permanente - por ejemplo **una
+  columna que no existe porque la migracion no se corrio**, que es un modo de
+  falla conocido de este proyecto - el final es un cobro sin reserva y nadie se
+  entera.
+
+### Lo que se hizo
+
+`orphanAction()` en `api/_orphan-audit.js`: una funcion pura que decide que
+hacer con un pago ya confirmado como huerfano.
+
+- `alert` - nuevo: avisarle a Diego, que todavia puede convertirlo en reserva.
+- `wait` - avisado y dentro del plazo.
+- `refund` - **pasado el plazo: la plata vuelve sola.**
+- `done` - una corrida anterior ya lo reembolso.
+
+El cron ahora lista con `ignoreAlerted: true`, asi los ya avisados **vuelven a
+entrar** en vez de desaparecer, y `orphanAction` es lo que evita re-avisar.
+
+**El reembolso va primero y no depende del WhatsApp.** Que un cliente recupere
+su plata no puede colgar de que Twilio ande o de que haya un numero cargado.
+Eso invierte el orden que tenia el bucle, que era exactamente al reves.
+
+**El plazo es 24 h** (`ORPHAN_REFUND_AFTER_HOURS`). Decision de negocio con
+default aplicado, no consultada: suficiente para que Diego cree la reserva a
+mano despues del aviso, corto para que nadie espere un fin de semana por su
+propia plata. Hay un test que lo afirma para que no se mueva sin querer, y otro
+que verifica que el plazo entre en la ventana de 48 h que mira el cron - si no,
+el pago envejeceria fuera de la lista antes de poder reembolsarse.
+
+### El modo de falla catastrofico, y su test
+
+Un reembolso automatico tiene una forma de salir horriblemente mal: si la
+consulta a `bookings` falla y se interpreta como "no hay ninguna reserva",
+**todos** los pagos del dia parecen huerfanos y la caja se reembolsa sola.
+
+El codigo ya abortaba bien (`return res.status(500)`), pero eso no estaba
+cubierto por ningun test y ahora si lo esta. Es la clase de linea que una
+"simplificacion" futura borra sin entender que sostiene.
+
+### Lo que NO se toco, a proposito
+
+`shouldCreateBookingFor` en el webhook sigue devolviendo `{skipped}` sin
+reembolsar cuando falta la metadata. La tentacion era hacerlo reembolsar ahi
+tambien, y es una trampa: por ese mismo camino pasan PaymentIntents que
+**legitimamente** no son reservas y que los filtros de arriba no atrapan (el
+Checkout Session de `create-payment-session.js:251` lleva solo
+`{bookingId, email}`). Reembolsarlos seria devolver plata de cobros validos.
+
+El cron es el unico lugar del sistema que cruza contra `bookings`, o sea contra
+la verdad, y por eso es el unico que puede decidir un reembolso. Una red que
+sabe, en vez de cuatro parches que adivinan.
+
+15 tests nuevos. 876/876, corrido 4 veces.
