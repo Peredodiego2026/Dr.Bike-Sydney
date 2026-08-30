@@ -7,6 +7,13 @@ import {
   recordCompletionOutcome,
 } from './_completion-notify.js';
 import { isOrphanCandidate, orphanAction, ORPHAN_REFUND_AFTER_HOURS } from './_orphan-audit.js';
+import {
+  buildBackup,
+  backupSubject,
+  backupBody,
+  backupFilename,
+  MAX_JSON_BYTES,
+} from './_backup.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -484,6 +491,11 @@ async function handleNoShowWatch(req, res) {
 // writable - without it this would re-alert about the same payment every day.
 const ORPHAN_LOOKBACK_HOURS = 48;
 
+// The nightly backup is every client's name, phone and address in one file.
+// It goes to the owner's own inbox and nowhere else - hardcoded rather than
+// configurable, so no env var or admin field can ever redirect it.
+const BACKUP_RECIPIENT = 'peredo.dm@gmail.com';
+
 // The filter moved to api/_orphan-audit.js, unchanged, so the admin panel's
 // one-off audit over an arbitrary date range and this daily sweep can never
 // disagree about what counts as an orphan. Re-exported because
@@ -590,6 +602,103 @@ async function handleCompletionRetry(req, res) {
   return res
     .status(200)
     .json({ checked: rows.length, bookings: stale.length, recovered, stillFailing });
+}
+
+// ── Nightly off-site backup (?type=backup) ──────────────────────────────────
+// The Supabase Free plan includes NO backups - confirmed from the dashboard on
+// 2026-08-30: "Free Plan does not include project backups". Not "backups
+// nobody has restored": none at all. So the whole database is dumped to JSON
+// every night and emailed to Diego, which puts a copy OUTSIDE Supabase and
+// therefore outside whatever kills the project.
+//
+// A stopgap, not point-in-time recovery, and the email body says so. It goes
+// to the admin address only: the file is every client's name, phone and
+// address, so it must never be sent anywhere else.
+async function handleBackup(req, res) {
+  if (!process.env.RESEND_API_KEY) return res.status(200).json({ skipped: 'no RESEND_API_KEY' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  if (!SERVICE_KEY) return res.status(200).json({ skipped: 'no SUPABASE_SERVICE_KEY' });
+
+  // The service key bypasses RLS, which is the point: a backup that only saw
+  // what an anonymous visitor sees would save nothing at all.
+  const fetchPage = async (table, offset, limit) => {
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/${table}?select=*&offset=${offset}&limit=${limit}`, {
+        headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+      });
+      if (!r.ok)
+        return { rows: null, error: `HTTP ${r.status}: ${(await r.text()).slice(0, 200)}` };
+      return { rows: await r.json() };
+    } catch (e) {
+      return { rows: null, error: e.message };
+    }
+  };
+
+  const out = await buildBackup({ fetchPage });
+
+  if (out.bytes > MAX_JSON_BYTES) {
+    // Sending it anyway means Resend rejects the message and the backup fails
+    // silently at 9am. Say so loudly instead - at this size the answer is a
+    // plan with real backups, not a bigger email.
+    const mb = (out.bytes / 1024 / 1024).toFixed(1);
+    await sendBackupEmail({
+      subject: `[!] Dr. Bike backup NO ENVIADO - ${mb} MB, demasiado grande`,
+      body:
+        `La base ya pesa ${mb} MB y no entra en un email.\n\n` +
+        `El backup por correo dejo de alcanzar. Hay que pasar a un plan con\n` +
+        `backups de verdad (Supabase Pro) o exportar a otro lado.\n\n` +
+        `MIENTRAS TANTO NO HAY NINGUNA COPIA DE HOY.\n`,
+      attachment: null,
+    });
+    return res.status(200).json({ skipped: 'too large', bytes: out.bytes });
+  }
+
+  const sent = await sendBackupEmail({
+    subject: backupSubject({ ...out, date: new Date() }),
+    body: backupBody(out),
+    attachment: {
+      filename: backupFilename(),
+      content: Buffer.from(out.json, 'utf8').toString('base64'),
+    },
+  });
+
+  if (!sent.ok) {
+    // A backup that failed to send but reported success is the exact problem
+    // this endpoint exists to avoid.
+    console.error('[backup] email failed:', sent.error);
+    return res.status(500).json({ error: sent.error, bytes: out.bytes });
+  }
+
+  return res.status(200).json({
+    ok: true,
+    complete: out.complete,
+    rows: out.totalRows,
+    bytes: out.bytes,
+    errors: out.errors,
+  });
+}
+
+async function sendBackupEmail({ subject, body, attachment }) {
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
+        to: [BACKUP_RECIPIENT],
+        subject,
+        text: body,
+        ...(attachment ? { attachments: [attachment] } : {}),
+      }),
+    });
+    if (!r.ok) return { ok: false, error: `HTTP ${r.status}: ${(await r.text()).slice(0, 300)}` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 }
 
 async function handleOrphanPayments(req, res) {
@@ -1099,6 +1208,7 @@ export default async function handler(req, res) {
   if (type === 'advance') return handleAdvanceReminders(req, res);
   if (type === 'noshow') return handleNoShowWatch(req, res);
   if (type === 'orphan-payments') return handleOrphanPayments(req, res);
+  if (type === 'backup') return handleBackup(req, res);
   if (type === 'completion-retry') return handleCompletionRetry(req, res);
 
   // Consolidated daily cron: runs all background jobs in sequence
@@ -1128,6 +1238,7 @@ export default async function handler(req, res) {
       noshow,
       orphanPayments,
       completionRetry,
+      backup,
     ] = await Promise.allSettled([
       wrap((r) => handleBirthday(req, r)),
       wrap((r) => handleReengagement(req, r)),
@@ -1138,6 +1249,9 @@ export default async function handler(req, res) {
       wrap((r) => handleNoShowWatch(req, r)),
       wrap((r) => handleOrphanPayments(req, r)),
       wrap((r) => handleCompletionRetry(req, r)),
+      // Last on purpose: it reads every table, so it sees the state after
+      // the other jobs have finished writing rather than halfway through.
+      wrap((r) => handleBackup(req, r)),
     ]);
     return res.status(200).json({
       birthday: birthday.value || birthday.reason?.message,
@@ -1149,6 +1263,7 @@ export default async function handler(req, res) {
       noshow: noshow.value || noshow.reason?.message,
       orphanPayments: orphanPayments.value || orphanPayments.reason?.message,
       completionRetry: completionRetry.value || completionRetry.reason?.message,
+      backup: backup.value || backup.reason?.message,
     });
   }
 
