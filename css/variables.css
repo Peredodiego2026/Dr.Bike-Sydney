@@ -6,6 +6,9 @@
   --blue: #2563eb;
   --blue-dark: #1e40af;
   --blue-lt: #eff6ff;
+  /* Focus ring. Must clear 3:1 against whatever sits next to it
+     (WCAG 1.4.11). #2563eb on white is 5.17:1. */
+  --focus-ring: #2563eb;
   --green: #15803d;
   --green-lt: #f0fdf4;
   --amber: #b45309;
@@ -232,6 +235,9 @@
   /* Tints: pale panel fills. In light these are near-white washes; the same
      wash on a dark ground has to be the accent at low alpha, not a white box. */
   --blue-lt: rgba(59, 130, 246, 0.16);
+  /* Lighter in dark mode: #93c5fd is 6.73:1 on the dark card, where the
+     light-mode #2563eb would be 3.30:1 and fail. */
+  --focus-ring: #93c5fd;
   --blue-tint: rgba(59, 130, 246, 0.1);
   --green-lt: rgba(52, 211, 153, 0.14);
   --green-tint: rgba(52, 211, 153, 0.09);
@@ -253,4 +259,81 @@
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.45);
   --elevation-1: 0 12px 32px rgba(0, 0, 0, 0.38);
   --elevation-2: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Focus ring ────────────────────────────────────────────────────────────
+   Audit point 13: nothing on this site told a keyboard user where they were.
+   There was no global focus style at all - only two components
+   (.celebrate-close, .gift-close) styled :focus-visible - and four inputs
+   killed the browser's own ring outright with `outline: none` in their BASE
+   rule, which applies on focus too. One of them is the mechanic's PIN field.
+
+   This lives in variables.css, a file that otherwise holds only tokens,
+   because it is the ONLY stylesheet all five surfaces load - track.html loads
+   nothing else. Anywhere more "correct" would leave a surface uncovered.
+
+   :focus-visible, not :focus: a mouse click on a button should not leave a
+   ring behind. The browser decides, and it gets it right.
+
+   outline (not box-shadow) because an outline is not clipped by overflow:hidden
+   and survives a parent's border-radius. The 2px offset lifts it clear of the
+   element's own border so it stays visible on a filled button, where a ring in
+   the same colour as the fill would vanish. */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Legacy inputs that zero the outline in their base rule are re-armed here.
+   variables.css loads BEFORE main/admin/mechanic.css, so at equal specificity
+   theirs would win - hence the explicit, higher-specificity re-statement
+   rather than relying on the rule above. scripts/a11y-check.mjs fails the
+   build if a new `outline: none` appears without a focus style beside it. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Skip link: visually gone until it takes focus, then the first thing a
+   keyboard user meets. Not `display:none` - that would take it out of the tab
+   order, which is the one thing it must stay in. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10000;
+  padding: 12px 18px;
+  background: var(--blue);
+  color: var(--white);
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 0 0 8px 0;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* Visually hidden, still read aloud. Audit point 15: the app had exactly two
+   aria-live regions, both loading spinners, so a screen reader never announced
+   an error, a step change, or the mechanic's position.
+
+   Not `display:none` and not `visibility:hidden` - both remove the element from
+   the accessibility tree, which is the one thing this must never do. The
+   clip-path/1px recipe is the one that survives every screen reader. */
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

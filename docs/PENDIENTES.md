@@ -7762,3 +7762,185 @@ hay que acotar la ventana a codigo antes de afirmar.
 el resultado en celular y compu despues del deploy. Lo que si esta verificado
 por calculo es el contraste; lo que no se puede calcular es si el lugar y el
 tamaño le gustan.
+
+## 65. Nada le decia a un usuario de teclado donde estaba parado (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 13. Dos fallas, **ninguna visible para alguien
+que usa mouse**, que es exactamente por que sobrevivieron tanto.
+
+### 1. No habia "saltar al contenido" en ninguna parte
+
+Un usuario de teclado tabulaba por **todo el encabezado** antes de llegar a la
+pagina. En la SPA, donde el router redibuja la pantalla sin recargar, eso pasa
+en **cada cambio de pantalla**.
+
+Ahora `index.html` y `landing.html` abren con un `.skip-link` que es lo primero
+del orden de tabulacion. Esta escondido con `left:-9999px` y **no** con
+`display:none`, porque `display:none` lo sacaria del orden de tabulacion, que es
+lo unico que no puede pasar.
+
+### 2. No habia estilo de foco, y seis reglas tiraban el del navegador
+
+Solo dos componentes (`.celebrate-close`, `.gift-close`) tenian
+`:focus-visible`. Todo lo demas dependia del anillo propio del navegador - y
+**seis reglas lo apagaban con `outline: none`**. Cuatro de ellas en la regla
+**base**, no en `:focus`, asi que aplicaban siempre:
+
+```
+css/main.css      .review-textarea:focus
+css/main.css      .form-input:focus
+css/main.css      .gift-body input, .gift-body textarea
+css/admin.css     .inp
+css/mechanic.css  .pin-inp        <- el campo del PIN del mecanico
+css/mechanic.css  .notes-inp
+```
+
+`.pin-inp` es el peor: se tabula al campo del PIN y **nada en pantalla dice
+donde estas**.
+
+Las seis se limpiaron. El anillo global vive en `css/variables.css` - un archivo
+que por lo demas solo tiene tokens - porque **es la unica hoja de estilos que
+cargan las cinco superficies**: `track.html` no carga ninguna otra. Cualquier
+lugar mas "correcto" habria dejado una superficie sin cubrir.
+
+`:focus-visible` y no `:focus`: un click con mouse no debe dejar un anillo
+puesto. El navegador ya sabe distinguir; el punto es dejarlo decidir. Y
+`outline` en vez de `box-shadow` porque un outline no lo recorta
+`overflow:hidden` ni lo deforma el `border-radius` del padre.
+
+`--focus-ring` tiene valor en los dos temas: `#2563eb` en claro (5.17:1 sobre
+blanco) y `#93c5fd` en oscuro (6.73:1 sobre la tarjeta). WCAG 1.4.11 pide 3:1
+contra lo que este al lado; hay un test que lo **calcula**.
+
+### El agujero que aparecio de rebote: `css/main.css` no estaba vigilado
+
+`css/main.css` llevaba un `?v=` escrito a mano (`20260827a`) y **no estaba en
+`scripts/versioned-assets-check.mjs`**. O sea: edite `main.css` para arreglar el
+foco, `npm run check` quedo **verde**, y el arreglo habria sido invisible para
+todo navegador que ya entro.
+
+Es el **mismo hueco que mordio a `mechanic.html` cuatro dias antes** (entrada
+14.11 / el comentario del propio script). Se agrego `css/main.css` a la lista,
+en las dos paginas que lo cargan, y el check inmediatamente marco lo que
+faltaba. Deja de ser algo que hay que acordarse.
+
+### Dos errores propios que valen mas que el codigo
+
+1. **El guard reportaba rota toda pagina correcta.** Comparaba el indice de
+   `class="skip-link"` - un atributo, siempre unos caracteres *adentro* de su
+   propio `<a>` - contra el indice del primer `<a>`. Encontrado corriendolo.
+2. **Correr prettier sobre `js/i18n.js` rompio dos tests que ya existian**
+   (`live-route`, `profile-card-and-birthday`): buscan cadenas por indice y el
+   reformateo las movio. Se revirtio el archivo y las traducciones se
+   re-insertaron **preservando el fin de linea CRLF**, sin reformatear. Leccion:
+   `npm run format` cubre `js/`, pero i18n.js es un diccionario que otros tests
+   leen posicionalmente - no se formatea de paso.
+
+### Lo que NO se hizo
+
+- **No se recorrio la reserva entera sin mouse.** Eso necesita un navegador y
+  esta prohibido en esta sesion. Lo que si esta: el anillo existe, es visible en
+  los dos temas por calculo, y ninguna regla lo apaga. **Falta que Diego tabule
+  el flujo** y avise si algun modal atrapa el foco.
+- **No se auditaron trampas de foco en modales.** `Escape` cierra en los seis
+  modales que se revisaron (`js/app.js` x3, `landing-inline.js` x2,
+  `mechanic.js` x1), pero que el foco vuelva al disparador al cerrar no se
+  verifico.
+
+16 tests nuevos. 966/966.
+
+## 66. Un lector de pantalla no se enteraba de nada (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 15: *"que anuncie el cambio de paso, que lea
+los errores al ocurrir, y que el mapa tenga alternativa en texto"*.
+
+La app tenia **exactamente dos regiones `aria-live`, y las dos eran spinners de
+carga**. Un pago fallido, un cambio de paso en el asistente de reserva, y el
+mecanico moviendose por el mapa: los tres se le anunciaban a **nadie**.
+
+### El helper, y por que tiene la forma que tiene
+
+`announce(mensaje, { assertive })` en `js/components.js`, con **dos regiones
+persistentes** creadas una vez y en las que se escribe.
+
+No se inserta un elemento nuevo que traiga `role="alert"` puesto. Un lector
+anuncia una region viva cuando su **contenido cambia**; un elemento que llega ya
+con su texto se anuncia de forma inconsistente, y en algunas combinaciones no se
+anuncia nunca. Esta es la forma que funciona en todos.
+
+Dos canales, y la distincion importa:
+- **polite** espera una pausa. Estados, cambios de paso, el mecanico moviendose.
+- **assertive** interrumpe. **Solo errores**: un pago que fallo no puede esperar
+  a que el lector termine la oracion en la que esta.
+
+Y limpia el texto antes de escribirlo: **dos pagos fallidos seguidos es un caso
+real**, y una region cuyo texto no cambio no dice nada.
+
+`.sr-only` usa la receta `clip-path` de 1px, no `display:none` ni
+`visibility:hidden` - las dos sacan el elemento del arbol de accesibilidad, que
+es lo unico que no puede pasar.
+
+### Los errores
+
+`showToast()` creaba un `div` pelado, sin `role` ni `aria-live`. Ahora anuncia
+por la region viva, y el toast lleva `aria-hidden="true"`: sin eso el lector
+lee el mismo mensaje **dos veces**.
+
+### El cambio de paso
+
+Los tres pasos del asistente se redibujan **dentro de la misma pantalla sin
+tocar el hash**, asi que no habia ninguna senal - el lector simplemente
+encontraba contenido distinto bajo el cursor.
+
+Se engancho en `scrollStepToTop()`, que ya era el unico lugar que corre en cada
+cambio de paso, en las dos superficies. Un solo punto en vez de tres.
+
+### El mapa
+
+`#tracking-map` es un lienzo de tiles: ilegible, y un lector que aterriza ahi
+encuentra un hueco sin etiqueta. Ahora lleva `aria-hidden="true"` y al lado hay
+un `#map-alt` que dice lo mismo en texto, alimentado desde `paintETA()` para que
+no pueda quedar viejo.
+
+Con guarda de repeticion: eso repinta **cada pocos segundos** mientras el
+mecanico se mueve, y un lector repitiendo la misma oracion en loop es peor que
+el silencio.
+
+### El bug del guard, que es la parte que mas vale
+
+El chequeo de traducciones cortaba el diccionario asi:
+
+```js
+dict.slice(dict.indexOf(`  ${lang}: {`))   // hasta el FINAL del archivo
+```
+
+Para `es`, eso incluye el bloque `zh` entero. **Una cadena traducida solo al
+chino satisfacia tambien el chequeo del espanol.** El guard pasaba sobre una
+traduccion faltante de verdad.
+
+Se encontro **borrando una a proposito** para ver si el guard la agarraba. No
+la agarro. Ahora `langBlockOf()` corta hasta el siguiente idioma, y el mismo
+arreglo se aplico a `tests/unit/keyboard-access.test.js`, que tenia el error
+identico. Verificado volviendo a borrarla: ahora si falla.
+
+**Un test que nunca se vio fallar no prueba nada** - cuarta vez en esta sesion
+(ver 58, 62, 64).
+
+### Las cadenas habladas y el agujero del i18n-check
+
+Las seis cadenas nuevas pasan **adentro** de `translateValue()` via `announce()`,
+y `scripts/i18n-check.mjs` solo ve las que estan **afuera**. Es el hueco que
+CLAUDE.md documenta: una traduccion faltante ahi es silenciosa, la cadena sale
+en ingles y el check queda verde.
+
+Por eso `scripts/a11y-check.mjs` las verifica por nombre, una por una.
+
+### Lo que NO se verifico
+
+**No se probo con un lector de pantalla real** (NVDA, VoiceOver, TalkBack). Eso
+necesita un navegador, prohibido en esta sesion. Lo que si esta verificado: las
+regiones existen, tienen la forma que los lectores anuncian de forma confiable,
+los tres disparadores estan conectados, y las seis cadenas estan en los tres
+idiomas. **Lo que falta es que alguien lo escuche.**
+
+19 tests nuevos. 985/985.
