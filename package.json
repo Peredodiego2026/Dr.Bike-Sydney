@@ -5,11 +5,11 @@
   "type": "module",
   "dependencies": {
     "@growthbook/growthbook": "^1.7.0",
-    "@sentry/node": "^10.70.0",
-    "@supabase/supabase-js": "^2.112.3",
+    "@sentry/node": "^10.71.0",
+    "@supabase/supabase-js": "^2.112.4",
     "pdfkit": "^0.19.1",
-    "resend": "^6.22.0",
-    "sharp": "^0.35.3",
+    "resend": "^6.24.0",
+    "sharp": "^0.35.4",
     "stripe": "^22.5.0",
     "twilio": "^6.1.0",
     "web-push": "^3.6.7",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "eslint": "^10.9.0",
+    "eslint": "^10.9.1",
     "eslint-plugin-n": "^18.3.0",
     "eslint-plugin-security": "^4.0.1",
     "husky": "^9.1.7",
@@ -44,6 +44,7 @@
     "icons:check": "node scripts/icons-check.mjs",
     "color:check": "node scripts/color-check.mjs",
     "services:check": "node scripts/services-sync-check.mjs",
+    "rls:check": "node scripts/rls-check.mjs",
     "suburbs:generate": "node scripts/generate-suburb-pages.mjs",
     "blog:translate": "node scripts/translate-blog-posts.mjs",
     "static-pages:translate": "node scripts/translate-static-pages.mjs"

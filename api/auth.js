@@ -3,12 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import {
-  geocodeAddress,
-  drivingRoute,
-  drivingRouteGeometry,
-  suggestAddresses,
-} from './_eta.js';
+import { geocodeAddress, drivingRoute, drivingRouteGeometry, suggestAddresses } from './_eta.js';
 import { resolveCoverage, needsQuote, BASE, VALID_FEES, formatMinutes } from './_coverage.js';
 import {
   guard,
@@ -73,12 +68,35 @@ const verifyToken = verifyMechanicToken;
 
 // Shared mechanic auth: accepts a session token OR a PIN (dual-accept during
 // migration). Returns { mechanic } on success, or { error, status } on failure.
-async function authMechanic(req) {
+//
+// The lockout lives HERE, not in the login handler, and that is the whole point
+// of this function existing. Until 2026-08-30 only role=mechanic (the login
+// screen) checked isLoginLocked; the other thirteen mechanic-* routes - jobs,
+// update-status, parts, messages, location, ... - all funnel through
+// authMechanic and every one accepted an unlimited stream of PIN guesses,
+// capped only by the 30/min per-IP rate limit. The PIN is four digits: 10,000
+// possibilities, ~5 hours to walk at 30/min from one IP and minutes across a
+// handful. Whoever lands it sees every client's name, phone and exact address
+// for the day. Confirmed against production: role=mechanic returned 429 on the
+// 6th bad PIN, role=mechanic-jobs returned 401 forever. Checking it in the
+// shared path covers all fourteen at once.
+export async function authMechanic(req) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const token = req.body?.token;
   const pin = req.body?.pin;
   if (!token && (!pin || String(pin).trim().length < 4))
     return { error: 'PIN required', status: 401 };
+
+  // The lockout applies to the PIN path only. A session token is a 256-bit
+  // HMAC - not something you guess four digits at a time - and an expired one
+  // is a normal event, not an attack, so a token-only request must never trip
+  // the lock or feed its counter.
+  const pinAttempt = !!pin;
+  if (pinAttempt && (await isLoginLocked(req)))
+    return {
+      error: `Too many attempts. Try again in ${LOGIN_LOCK_MINUTES} minutes.`,
+      status: 429,
+    };
 
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/escalation_contacts?select=*`, {
     headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
@@ -117,8 +135,15 @@ async function authMechanic(req) {
     }
   }
 
-  if (!mechanic) return { error: 'Invalid PIN', status: 401 };
+  if (!mechanic) {
+    // Only a PIN guess feeds the lockout counter; a bad/expired token does not.
+    if (pinAttempt) await recordLoginFailure(req);
+    return { error: 'Invalid PIN', status: 401 };
+  }
   if (mechanic.active === false) return { error: 'Account disabled', status: 403 };
+  // A correct PIN wipes the slate so a mechanic who mistyped a few times is not
+  // still counted against once they get it right.
+  if (pinAttempt) await clearLoginFailures(req);
   return { mechanic };
 }
 
@@ -493,7 +518,8 @@ async function handleBirthdayGreeting(req, res) {
         lang: ['en', 'es', 'zh'].includes(profile.preferred_lang) ? profile.preferred_lang : 'en',
       }),
     });
-    if (!r.ok) throw new Error('send-email returned ' + r.status + ' ' + (await r.text()).slice(0, 200));
+    if (!r.ok)
+      throw new Error('send-email returned ' + r.status + ' ' + (await r.text()).slice(0, 200));
     return res.status(200).json({ greet: true, emailSent: true, reason: 'sent' });
   } catch (e) {
     console.error('[birthday-greeting] send failed, releasing the claim:', e.message);
@@ -1568,18 +1594,15 @@ async function handleAdmin(req, res) {
 }
 
 async function handleMechanic(req, res) {
-  if (await isLoginLocked(req)) {
-    res.setHeader('Retry-After', LOGIN_LOCK_MINUTES * 60);
-    return res
-      .status(429)
-      .json({ error: `Too many attempts. Try again in ${LOGIN_LOCK_MINUTES} minutes.` });
-  }
+  // The lockout, the failure counter and the success reset all live in
+  // authMechanic now, so every mechanic-* route is guarded, not just this one
+  // (see the note there). This handler only adds the Retry-After header, which
+  // is specific to the login screen's own retry UI.
   const auth = await authMechanic(req);
   if (auth.error) {
-    if (auth.status === 401) await recordLoginFailure(req);
+    if (auth.status === 429) res.setHeader('Retry-After', LOGIN_LOCK_MINUTES * 60);
     return res.status(auth.status).json({ error: auth.error });
   }
-  await clearLoginFailures(req);
   const mechanic = auth.mechanic;
   return res.status(200).json({
     id: mechanic.id,
@@ -2864,8 +2887,7 @@ async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_
   // KEEPS the fee it was taken on. Zeroing it, or defaulting it to $20, would
   // silently rewrite what an existing customer agreed to pay.
   const { fee: reFee } = await calloutFeeForAddress(bk.address, scheduled_date);
-  const newCalloutFee =
-    reFee === null ? Number(bk.callout_fee) || 0 : reFee;
+  const newCalloutFee = reFee === null ? Number(bk.callout_fee) || 0 : reFee;
 
   const updatePayload = { scheduled_date, scheduled_time, callout_fee: newCalloutFee };
   if (newServicePrice !== null) updatePayload.service_price = newServicePrice;

@@ -6,7 +6,14 @@ import {
   dispatchCompletionCalls,
   recordCompletionOutcome,
 } from './_completion-notify.js';
-import { isOrphanCandidate } from './_orphan-audit.js';
+import { isOrphanCandidate, orphanAction, ORPHAN_REFUND_AFTER_HOURS } from './_orphan-audit.js';
+import {
+  buildBackup,
+  backupSubject,
+  backupBody,
+  backupFilename,
+  MAX_JSON_BYTES,
+} from './_backup.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -484,6 +491,11 @@ async function handleNoShowWatch(req, res) {
 // writable - without it this would re-alert about the same payment every day.
 const ORPHAN_LOOKBACK_HOURS = 48;
 
+// The nightly backup is every client's name, phone and address in one file.
+// It goes to the owner's own inbox and nowhere else - hardcoded rather than
+// configurable, so no env var or admin field can ever redirect it.
+const BACKUP_RECIPIENT = 'peredo.dm@gmail.com';
+
 // The filter moved to api/_orphan-audit.js, unchanged, so the admin panel's
 // one-off audit over an arbitrary date range and this daily sweep can never
 // disagree about what counts as an orphan. Re-exported because
@@ -592,6 +604,103 @@ async function handleCompletionRetry(req, res) {
     .json({ checked: rows.length, bookings: stale.length, recovered, stillFailing });
 }
 
+// ── Nightly off-site backup (?type=backup) ──────────────────────────────────
+// The Supabase Free plan includes NO backups - confirmed from the dashboard on
+// 2026-08-30: "Free Plan does not include project backups". Not "backups
+// nobody has restored": none at all. So the whole database is dumped to JSON
+// every night and emailed to Diego, which puts a copy OUTSIDE Supabase and
+// therefore outside whatever kills the project.
+//
+// A stopgap, not point-in-time recovery, and the email body says so. It goes
+// to the admin address only: the file is every client's name, phone and
+// address, so it must never be sent anywhere else.
+async function handleBackup(req, res) {
+  if (!process.env.RESEND_API_KEY) return res.status(200).json({ skipped: 'no RESEND_API_KEY' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  if (!SERVICE_KEY) return res.status(200).json({ skipped: 'no SUPABASE_SERVICE_KEY' });
+
+  // The service key bypasses RLS, which is the point: a backup that only saw
+  // what an anonymous visitor sees would save nothing at all.
+  const fetchPage = async (table, offset, limit) => {
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/${table}?select=*&offset=${offset}&limit=${limit}`, {
+        headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+      });
+      if (!r.ok)
+        return { rows: null, error: `HTTP ${r.status}: ${(await r.text()).slice(0, 200)}` };
+      return { rows: await r.json() };
+    } catch (e) {
+      return { rows: null, error: e.message };
+    }
+  };
+
+  const out = await buildBackup({ fetchPage });
+
+  if (out.bytes > MAX_JSON_BYTES) {
+    // Sending it anyway means Resend rejects the message and the backup fails
+    // silently at 9am. Say so loudly instead - at this size the answer is a
+    // plan with real backups, not a bigger email.
+    const mb = (out.bytes / 1024 / 1024).toFixed(1);
+    await sendBackupEmail({
+      subject: `[!] Dr. Bike backup NO ENVIADO - ${mb} MB, demasiado grande`,
+      body:
+        `La base ya pesa ${mb} MB y no entra en un email.\n\n` +
+        `El backup por correo dejo de alcanzar. Hay que pasar a un plan con\n` +
+        `backups de verdad (Supabase Pro) o exportar a otro lado.\n\n` +
+        `MIENTRAS TANTO NO HAY NINGUNA COPIA DE HOY.\n`,
+      attachment: null,
+    });
+    return res.status(200).json({ skipped: 'too large', bytes: out.bytes });
+  }
+
+  const sent = await sendBackupEmail({
+    subject: backupSubject({ ...out, date: new Date() }),
+    body: backupBody(out),
+    attachment: {
+      filename: backupFilename(),
+      content: Buffer.from(out.json, 'utf8').toString('base64'),
+    },
+  });
+
+  if (!sent.ok) {
+    // A backup that failed to send but reported success is the exact problem
+    // this endpoint exists to avoid.
+    console.error('[backup] email failed:', sent.error);
+    return res.status(500).json({ error: sent.error, bytes: out.bytes });
+  }
+
+  return res.status(200).json({
+    ok: true,
+    complete: out.complete,
+    rows: out.totalRows,
+    bytes: out.bytes,
+    errors: out.errors,
+  });
+}
+
+async function sendBackupEmail({ subject, body, attachment }) {
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
+        to: [BACKUP_RECIPIENT],
+        subject,
+        text: body,
+        ...(attachment ? { attachments: [attachment] } : {}),
+      }),
+    });
+    if (!r.ok) return { ok: false, error: `HTTP ${r.status}: ${(await r.text()).slice(0, 300)}` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 async function handleOrphanPayments(req, res) {
   if (!process.env.STRIPE_SECRET_KEY)
     return res.status(200).json({ skipped: 'no STRIPE_SECRET_KEY' });
@@ -615,7 +724,15 @@ async function handleOrphanPayments(req, res) {
     return res.status(502).json({ error: e.message });
   }
 
-  const candidates = (intents.data || []).filter((pi) => isOrphanCandidate(pi, { nowSeconds }));
+  // ignoreAlerted, deliberately. The default hides anything already carrying
+  // `orphan_alerted` so Diego is not woken twice - which also meant a payment
+  // he was told about once and never acted on left this cron's sight forever,
+  // money kept and nobody looking. They come back in now; orphanAction is what
+  // decides that an alerted payment is not re-alerted, and the refund deadline
+  // is measured against every orphan, alerted or not.
+  const candidates = (intents.data || []).filter((pi) =>
+    isOrphanCandidate(pi, { nowSeconds, ignoreAlerted: true })
+  );
 
   if (!candidates.length)
     return res.status(200).json({ checked: intents.data?.length || 0, orphans: 0 });
@@ -642,14 +759,60 @@ async function handleOrphanPayments(req, res) {
   const adminPhone = waRow?.postcode;
 
   let alerted = 0;
+  let refunded = 0;
+  let refundedTotal = 0;
   for (const pi of orphans) {
+    const action = orphanAction(pi, { nowSeconds });
+    // 'done'  - a previous run already gave the money back.
+    // 'wait'  - alerted, still inside the deadline; Diego may yet book it.
+    if (action === 'done' || action === 'wait') continue;
+
     const amount = (pi.amount_received / 100).toFixed(2);
     const email = pi.metadata?.email || pi.receipt_email || 'unknown';
     const when = new Date(pi.created * 1000).toISOString().replace('T', ' ').slice(0, 16);
-    const msg =
-      `ORPHAN PAYMENT: $${amount} AUD charged with no booking behind it.\n` +
-      `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
-      `Either create the booking manually or refund it in Stripe.`;
+    let msg;
+
+    if (action === 'refund') {
+      // The refund happens FIRST and does not depend on the WhatsApp going
+      // out. This used to be the other way round: no admin number configured,
+      // or Twilio having a bad morning, meant `continue` - no alert, no mark,
+      // no refund, and a console.error nobody reads. Whether a client gets
+      // their own money back cannot hang on whether a message to Diego sent.
+      try {
+        await stripe.refunds.create({ payment_intent: pi.id });
+      } catch (e) {
+        // Left unmarked on purpose so tomorrow's run tries again. Giving up
+        // quietly here is the failure this whole handler exists to end.
+        console.error('[orphan-payments] refund FAILED for', pi.id, e.message);
+        continue;
+      }
+      refunded++;
+      refundedTotal += pi.amount_received / 100;
+
+      // Belt and braces. If this mark fails the refund still stands, and
+      // isOrphanCandidate filters the payment out tomorrow anyway once Stripe
+      // reports latest_charge.refunded - two independent reasons not to
+      // double-refund.
+      try {
+        await stripe.paymentIntents.update(pi.id, {
+          metadata: { ...pi.metadata, orphan_refunded: String(Math.floor(Date.now() / 1000)) },
+        });
+      } catch (e) {
+        console.error('[orphan-payments] refunded but could not mark', pi.id, e.message);
+      }
+
+      msg =
+        `ORPHAN PAYMENT REFUNDED: $${amount} AUD went back to the client.\n` +
+        `It was charged with no booking behind it and none appeared within ` +
+        `${ORPHAN_REFUND_AFTER_HOURS}h.\n` +
+        `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
+        `Nothing to do. If this was a real job, contact the client and book it again.`;
+    } else {
+      msg =
+        `ORPHAN PAYMENT: $${amount} AUD charged with no booking behind it.\n` +
+        `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
+        `Create the booking within ${ORPHAN_REFUND_AFTER_HOURS}h or it refunds itself.`;
+    }
 
     if (adminPhone) {
       const r = await fetch(`${BASE}/api/send-whatsapp`, {
@@ -667,21 +830,26 @@ async function handleOrphanPayments(req, res) {
       continue;
     }
 
-    // Marked only after Diego has actually been told.
-    try {
-      await stripe.paymentIntents.update(pi.id, {
-        metadata: { ...pi.metadata, orphan_alerted: String(Math.floor(Date.now() / 1000)) },
-      });
-    } catch (e) {
-      console.error('[orphan-payments] could not mark', pi.id, e.message);
+    // Marked only after Diego has actually been told. Only meaningful for an
+    // alert - a refund marked itself above, whatever the messaging did.
+    if (action === 'alert') {
+      try {
+        await stripe.paymentIntents.update(pi.id, {
+          metadata: { ...pi.metadata, orphan_alerted: String(Math.floor(Date.now() / 1000)) },
+        });
+      } catch (e) {
+        console.error('[orphan-payments] could not mark', pi.id, e.message);
+      }
+      alerted++;
     }
-    alerted++;
   }
 
   return res.status(200).json({
     checked: intents.data?.length || 0,
     orphans: orphans.length,
     alerted,
+    refunded,
+    refundedTotal: Math.round(refundedTotal * 100) / 100,
     ids: orphans.map((pi) => pi.id),
   });
 }
@@ -1040,6 +1208,7 @@ export default async function handler(req, res) {
   if (type === 'advance') return handleAdvanceReminders(req, res);
   if (type === 'noshow') return handleNoShowWatch(req, res);
   if (type === 'orphan-payments') return handleOrphanPayments(req, res);
+  if (type === 'backup') return handleBackup(req, res);
   if (type === 'completion-retry') return handleCompletionRetry(req, res);
 
   // Consolidated daily cron: runs all background jobs in sequence
@@ -1069,6 +1238,7 @@ export default async function handler(req, res) {
       noshow,
       orphanPayments,
       completionRetry,
+      backup,
     ] = await Promise.allSettled([
       wrap((r) => handleBirthday(req, r)),
       wrap((r) => handleReengagement(req, r)),
@@ -1079,6 +1249,9 @@ export default async function handler(req, res) {
       wrap((r) => handleNoShowWatch(req, r)),
       wrap((r) => handleOrphanPayments(req, r)),
       wrap((r) => handleCompletionRetry(req, r)),
+      // Last on purpose: it reads every table, so it sees the state after
+      // the other jobs have finished writing rather than halfway through.
+      wrap((r) => handleBackup(req, r)),
     ]);
     return res.status(200).json({
       birthday: birthday.value || birthday.reason?.message,
@@ -1090,6 +1263,7 @@ export default async function handler(req, res) {
       noshow: noshow.value || noshow.reason?.message,
       orphanPayments: orphanPayments.value || orphanPayments.reason?.message,
       completionRetry: completionRetry.value || completionRetry.reason?.message,
+      backup: backup.value || backup.reason?.message,
     });
   }
 

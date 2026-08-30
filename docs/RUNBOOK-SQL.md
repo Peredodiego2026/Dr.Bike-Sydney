@@ -648,3 +648,42 @@ columna nueva salvo la de cancelacion, que la pide aparte y sobrevive a que
 falte; el gasto en la reserva loguea y sigue. Simplemente el credito no se
 descuenta hasta que corras el archivo.
 
+
+## 11. `lock-public-views.sql` (30-ago-2026) — URGENTE
+
+**Es la unica migracion de esta lista que tapa un agujero abierto ahora mismo.**
+Las demas agregan una funcionalidad que falta; esta cierra la direccion de los
+clientes, que hasta que se corra la puede leer cualquiera.
+
+Verificado contra produccion el 30-ago-2026, sin ninguna credencial mas que la
+anon key que la propia pagina publica:
+
+```
+GET  /rest/v1/public_booking_tracking?select=*   -> 200, cada reserva con su tracking_token
+POST /api/auth?role=public-track {tracking_token} -> 200, direccion + arrival_pin + GPS
+PATCH /rest/v1/public_reviews?id=eq.<uuid>        -> 204, escritura anonima sobre bookings
+```
+
+Causa raiz: una vista de Postgres corre con los privilegios de su **dueno**, y
+Supabase le da a `anon` **todos** los privilegios sobre los objetos nuevos de
+`public`. Las dos vistas se crearon owner-privileged a proposito para poder
+mostrar una porcion filtrada de `bookings`; el efecto no buscado fue que las
+escrituras tambien esquivan RLS, y que la vista de tracking publicaba la
+credencial que `api/auth.js` trata como prueba de propiedad.
+
+`api/auth.js` no tiene nada que arreglar. El codigo era correcto y la base lo
+contradecia — motivo por el cual el guard vive en dos lugares:
+`tests/unit/public-views-locked.test.js` (en CI, lee los .sql) y
+`scripts/rls-check.mjs` (`npm run rls:check`, pega contra la base real).
+
+**El codigo no se rompe si todavia no la corriste** — al reves: hoy la app
+anda, y correrla no cambia nada de lo que el usuario ve. Nada en el repo
+consulta `public_booking_tracking` (grepeado entero), y `public_reviews`
+conserva el `GRANT SELECT` del que dependen `index.html:2232` y
+`js/landing-inline.js:614` para los testimonios.
+
+**Como saber que quedo bien:** el archivo termina con un `SELECT` que lista las
+vistas y sus permisos. Tiene que decir `public_booking_tracking ->
+(no public access)` y `public_reviews -> SELECT`. Cualquier otra cosa, o
+cualquier otra vista con un permiso de escritura, sigue abierta. Despues corre
+`npm run rls:check` desde el repo: tiene que salir en verde y con exit 0.
