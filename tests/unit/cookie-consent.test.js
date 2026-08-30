@@ -229,3 +229,98 @@ describe('the gate script is repeatable and guards itself', () => {
     expect(pkg.scripts['consent:check']).toBe('node scripts/consent-gate.mjs --check');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Diego, seeing the first version live on drbikesydney.com.au: "esta muy
+// ancho... hacerlo de otro color como azul claro difuminado y mas chico".
+//
+// He was right: it was an edge-to-edge white slab across a 1900px page for one
+// sentence. These pin the compact version so it does not drift back, and check
+// the thing that cannot be judged by looking - whether the text on the new
+// tinted ground still clears AA.
+// ---------------------------------------------------------------------------
+describe('the banner is a card, not a slab', () => {
+  it('is bounded, not full width', () => {
+    expect(consent).toMatch(/max-width:440px/);
+    expect(consent).not.toMatch(/'left:0'/);
+    expect(consent).not.toMatch(/'right:0'/);
+  });
+
+  it('floats with a gap on every side, clear of the home indicator', () => {
+    expect(consent).toMatch(/left:16px/);
+    expect(consent).toMatch(/bottom:calc\(16px \+ env\(safe-area-inset-bottom/);
+    expect(consent).toMatch(/border-radius:14px/);
+  });
+
+  // "Smaller" must not come out of the touch target - that would trade one
+  // accessibility problem for another.
+  it('keeps the 44px touch target the project requires', () => {
+    expect(consent).toMatch(/min-height:44px/);
+  });
+
+  // One expression has to serve both themes, because --white is white in light
+  // mode and the dark card colour in dark mode. A [data-theme] branch here
+  // would be a second place to keep in sync.
+  it('tints with color-mix over the themed card, not a fixed colour', () => {
+    expect(consent).toMatch(/color-mix\(in srgb, var\(--blue/);
+    expect(consent).toMatch(/backdrop-filter:blur/);
+    // Only the style string, not the whole file. The prose right above it in
+    // js/consent.js explains WHY there is no [data-theme] branch, and the
+    // first version of this test matched its own explanation and failed - the
+    // same trap as the SQL guard in PENDIENTES 58. Assert on code, not on
+    // comments.
+    const css = consent.slice(consent.indexOf('bar.style.cssText'), consent.indexOf('const msg'));
+    expect(css).not.toContain('[data-theme');
+    expect(css).toContain('color-mix');
+  });
+
+  // A browser without nested color-mix must still get a readable card, so the
+  // plain themed background is declared first and overridden.
+  it('declares a plain background before the frosted one', () => {
+    const bg = [...consent.matchAll(/'background:([^']+)'/g)].map((m) => m[1]);
+    expect(bg.length).toBeGreaterThanOrEqual(2);
+    expect(bg[0]).toBe('var(--white,#fff)');
+    expect(bg[1]).toContain('color-mix');
+  });
+});
+
+describe('the text on the new ground still clears AA', () => {
+  // Measured, not eyeballed. The card and the page were once the same colour
+  // at 1.07:1 and the check that only measured ink passed it (PENDIENTES 57).
+  const toRgb = (h) => {
+    const v = h.replace('#', '');
+    const f = v.length === 3 ? [...v].map((c) => c + c).join('') : v;
+    return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16));
+  };
+  const lum = (rgb) =>
+    rgb
+      .map((x) => {
+        const c = x / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      })
+      .reduce((a, c, i) => a + [0.2126, 0.7152, 0.0722][i] * c, 0);
+  const ratio = (a, b) => {
+    const [l1, l2] = [lum(toRgb(a)), lum(toRgb(b))];
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  };
+  // 7% --blue over white, the light-mode result of the color-mix above.
+  const mix = (a, b, p) => toRgb(a).map((x, i) => Math.round(x * p + toRgb(b)[i] * (1 - p)));
+  const hex = (r) => '#' + r.map((x) => x.toString(16).padStart(2, '0')).join('');
+  const GROUND = hex(mix('#2563eb', '#ffffff', 0.07));
+
+  it('the message text clears 4.5:1', () => {
+    expect(ratio('#475569', GROUND)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('the Privacy link clears 4.5:1', () => {
+    expect(ratio('#2563eb', GROUND)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('the Decline label clears 4.5:1', () => {
+    expect(ratio('#0d1f3c', GROUND)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('white on the Accept button clears 4.5:1', () => {
+    expect(ratio('#ffffff', '#2563eb')).toBeGreaterThanOrEqual(4.5);
+  });
+});

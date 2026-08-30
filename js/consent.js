@@ -194,40 +194,61 @@
     bar.id = 'drbike-consent';
     bar.setAttribute('role', 'dialog');
     bar.setAttribute('aria-label', t.text);
+    // A floating card, not an edge-to-edge bar. The first version spanned the
+    // full width on a solid white ground, which on a wide screen is a slab
+    // across the whole page for one sentence. Diego, seeing it live: "esta muy
+    // ancho... hacerlo de otro color como azul claro difuminado y mas chico".
+    //
+    // The blue is built with color-mix instead of a fixed tint because the two
+    // themes need opposite things and the tokens already carry that: in light
+    // mode --white is white and this resolves to a soft blue card; in dark mode
+    // --white IS the dark card colour, so the same expression yields a
+    // blue-tinted dark card. One rule, both themes, no [data-theme] branch to
+    // keep in sync.
+    //
+    // `background` is set twice on purpose: a browser without nested color-mix
+    // ignores the second and keeps the plain themed card. Same for the two
+    // `bottom` lines and env() - readable everywhere, frosted where supported.
+    //
     // Sits above the SPA's 56px bottom nav so it never covers it, and above
     // Sentry/Stripe overlays without fighting the booking modal (z 9998).
     bar.style.cssText = [
       'position:fixed',
-      'left:0',
-      'right:0',
-      'bottom:0',
+      'left:16px',
+      'right:16px',
+      'bottom:16px',
+      'bottom:calc(16px + env(safe-area-inset-bottom,0px))',
+      'max-width:440px',
+      'margin-left:auto', // bottom-right on desktop, out of the reading path
       'z-index:9998',
       'background:var(--white,#fff)',
-      'border-top:1px solid var(--border,#e2e8f0)',
-      'box-shadow:0 -4px 24px rgba(0,0,0,0.12)',
-      'padding:14px 16px',
-      'padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))',
+      'background:color-mix(in srgb, var(--blue,#2563eb) 7%, color-mix(in srgb, var(--white,#fff) 86%, transparent))',
+      '-webkit-backdrop-filter:blur(16px) saturate(1.6)',
+      'backdrop-filter:blur(16px) saturate(1.6)',
+      'border:1px solid var(--blue-edge,#bfdbfe)',
+      'border-radius:14px',
+      'box-shadow:0 6px 28px rgba(0,0,0,0.14)',
+      'padding:12px 14px',
       'font-family:Inter,system-ui,sans-serif',
       'display:flex',
       'flex-wrap:wrap',
       'align-items:center',
-      'gap:10px',
-      'justify-content:center',
+      'gap:8px',
     ].join(';');
 
     const msg = document.createElement('p');
     msg.textContent = t.text;
     msg.style.cssText =
-      'margin:0;flex:1 1 260px;font-size:13px;line-height:1.45;color:var(--gray,#475569)';
+      'margin:0;flex:1 1 100%;font-size:12.5px;line-height:1.4;color:var(--gray,#475569)';
 
     const link = document.createElement('a');
     link.href = '/privacy.html';
     link.textContent = t.more;
     link.style.cssText =
-      'font-size:13px;font-weight:600;color:var(--blue,#2563eb);text-decoration:underline;white-space:nowrap';
+      'font-size:12.5px;font-weight:600;color:var(--blue,#2563eb);text-decoration:underline;white-space:nowrap';
 
     const actions = document.createElement('div');
-    actions.style.cssText = 'display:flex;gap:8px;flex:0 0 auto';
+    actions.style.cssText = 'display:flex;gap:8px;flex:1 0 auto;justify-content:flex-end';
 
     // 44px min height: these are touch targets on the mobile SPA.
     function button(label, primary) {
@@ -235,10 +256,13 @@
       b.type = 'button';
       b.textContent = label;
       b.style.cssText = [
+        // Still 44px tall: the project's mobile touch-target rule is not
+        // negotiable for "smaller". The bulk came from the padding, not the
+        // height, so that is what shrank.
         'min-height:44px',
-        'padding:12px 20px',
-        'border-radius:8px',
-        'font-size:14px',
+        'padding:8px 16px',
+        'border-radius:9px',
+        'font-size:13px',
         'font-weight:700',
         'font-family:inherit',
         'cursor:pointer',

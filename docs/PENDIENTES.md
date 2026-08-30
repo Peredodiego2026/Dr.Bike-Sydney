@@ -7592,3 +7592,81 @@ que nunca se vio fallar no prueba nada** - la misma leccion de la entrada 58.
   trampa que documenta CLAUDE.md, y el guard automatico funciono.
 
 26 tests nuevos. 928/928.
+
+## 64. El banner de cookies era una losa de lado a lado (30-ago-2026)
+
+Diego, mirandolo en produccion apenas se deployo la entrada 62: *"el baner se ve
+asi... creo que hay que hacerlo de otro color como azul claro difuminado y mas
+chico esta muy ancho"*.
+
+Tenia razon. La primera version era `left:0; right:0; bottom:0` con fondo blanco
+solido: en una pantalla de 1900px, **una losa cruzando la pagina entera para una
+sola frase**. Funcionalmente correcta, visualmente pesada.
+
+### Lo que cambio
+
+Tarjeta flotante de **440px maximo**, abajo a la derecha (fuera del camino de
+lectura), con 16px de aire en los cuatro lados, esquinas de 14px y fondo azul
+translucido con `backdrop-filter: blur(16px)`.
+
+El azul se arma con `color-mix` en vez de un tinte fijo, y eso **no es
+decoracion**: los dos temas necesitan cosas opuestas y los tokens ya lo
+resuelven. `--white` es blanco en claro y **es el color de la tarjeta oscura**
+en oscuro, asi que la misma expresion da una tarjeta azul suave en claro y una
+tarjeta oscura teñida de azul en oscuro. **Una regla, dos temas, ningun bloque
+`[data-theme]` que mantener sincronizado** - que es exactamente la deuda que
+produjo los 160 parches de la entrada 48.
+
+`background` se declara **dos veces** a proposito: un navegador sin `color-mix`
+anidado ignora la segunda y se queda con la tarjeta tematizada plana. Legible
+en todos lados, esmerilada donde se puede.
+
+### "Mas chico" no salio del area tactil
+
+Los botones **siguen midiendo 44px de alto**, que es la regla mobile del
+proyecto. El volumen venia del padding (`12px 20px`), no de la altura, asi que
+eso es lo que bajo (`8px 16px`), mas texto de 13px a 12.5px. Se ve
+sensiblemente mas chico y sigue siendo pulsable con el pulgar.
+
+### El contraste se calculo, no se miro
+
+El fondo cambio de blanco puro a `#f0f4fe`, asi que todo el texto encima
+cambio de relacion. Medido con la formula WCAG:
+
+```
+--gray  #475569 sobre #f0f4fe -> 6.88:1   OK AA
+--blue  #2563eb sobre #f0f4fe -> 4.70:1   OK AA
+--navy  #0d1f3c sobre #f0f4fe -> 14.92:1  OK AA
+blanco  sobre el boton --blue -> 5.17:1   OK AA
+```
+
+Los cuatro pasan el minimo AA de **4.5:1** para texto normal. Hay 4 tests que
+recalculan esto, para que un ajuste futuro del tinte no baje ninguno en
+silencio - la leccion de la entrada 57, donde la tarjeta y la pagina estaban a
+1.07:1 y el check pasaba porque solo medía la tinta.
+
+### El bump del service worker no era opcional
+
+`js/consent.js` se carga **sin `?v=`**, igual que `js/i18n.js` y
+`js/landing-inline.js`. `npm run check` no lo marca porque no esta en la lista
+de assets versionados. Eso significa que **solo un bump de `CACHE_STATIC`
+entrega el banner nuevo**: sin el, todo navegador que ya entro seguiria viendo
+la losa ancha para siempre. v98 -> v99.
+
+### Un test que fallo por matchear su propio comentario, otra vez
+
+El test "no hay bloque `[data-theme]`" leia el archivo entero, y el comentario
+que **explica** por que no hay un `[data-theme]` contiene esa cadena. Fallaba
+sobre codigo correcto. Ahora mira solo el string de estilo
+(`bar.style.cssText`), no la prosa. **Tercera vez en esta sesion** que un guard
+matchea su propia explicacion (ver 58 y 62): cuando un test lee texto fuente,
+hay que acotar la ventana a codigo antes de afirmar.
+
+9 tests nuevos. 937/937.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador** (prohibido en esta sesion). Diego tiene que mirar
+el resultado en celular y compu despues del deploy. Lo que si esta verificado
+por calculo es el contraste; lo que no se puede calcular es si el lugar y el
+tamaño le gustan.
