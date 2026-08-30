@@ -7519,3 +7519,76 @@ telefono y direccion de cada cliente en un solo lugar. Ninguna variable de
 entorno ni campo de admin puede redirigirlo.
 
 17 tests nuevos. 899/899.
+
+## 62. Los analytics arrancaban antes de que nadie aceptara nada (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 7. **44 paginas** cargaban Google Analytics,
+PostHog y el *session replay* de Sentry en el `<head>`, antes de que el
+visitante tuviera oportunidad de decir nada. No habia banner.
+
+El session replay no es un detalle tecnico: **graba lo que la persona hace en
+pantalla**. Arrancar eso sin preguntar es distinto de dejar una cookie.
+
+### Por que no alcanzaba el Consent Mode de Google
+
+La solucion "oficial" de Google es declarar `gtag('consent','default', denied)`
+antes de cargar el tag. Eso evita que GA escriba cookies, **pero el script se
+carga igual y habla con Google igual** - y no hace absolutamente nada por
+PostHog ni por Sentry.
+
+Asi que el bloqueo es de verdad: cada tag de analytics viaja como
+`<script type="text/plain" data-consent="analytics">`, que **ningun navegador
+ejecuta**. `js/consent.js` los reescribe a `<script>` reales solo cuando hay
+consentimiento. No hay nada que "des-enviar", porque no se envio nada.
+
+El Consent Mode se declara **ademas**, en denied. Asi, si alguien agrega un tag
+nuevo y se olvida del envoltorio, degrada a sin-cookies en vez de a rastreado.
+
+### Las dos formas de analytics, y por que hicieron falta dos mecanismos
+
+1. **Tags** (GA en las 44 paginas, PostHog y Sentry en index.html): se
+   neutralizan con `type="text/plain"`.
+2. **Codigo** (PostHog en la landing se inicia desde `js/landing-inline.js`, no
+   hay tag que neutralizar): se registra con `window.drbikeOnConsent(fn)`, que
+   corre la funcion ya mismo si hay consentimiento o al aceptar, y nunca si no.
+
+El segundo caso tenia una trampa. El snippet de instalacion de PostHog deja
+`window.posthog` con un **stub truthy**, y `js/app.js` y `js/cta-tracking.js`
+guardan cada `capture()` con `if (window.posthog)`. Sin limpiarlo, todas esas
+llamadas creerian que el rastreo esta activo y encolarian eventos para un
+consentimiento que quiza nunca llegue. Se guarda el stub en una variable, se
+limpia el global, y se restaura solo al aceptar.
+
+Y **falla cerrado**: si `js/consent.js` no cargara, el resultado seguro es no
+rastrear, nunca rastrear sin haber preguntado.
+
+### Por que un script y no 44 ediciones a mano
+
+`scripts/consent-gate.mjs` hace la transformacion. Editar 44 archivos a mano es
+como se escapa uno, y **una pagina que se escapa sigue rastreando en silencio y
+no se nota**. El script es idempotente, asi que se puede volver a correr despues
+de que `generate-suburb-pages.mjs` genere paginas nuevas, y trae un `--check`
+que sale con exit 1 nombrando las paginas sin proteger (`npm run consent:check`).
+
+**No toca `<script type="application/ld+json">`**, que es lo que Google lee para
+mostrar precios y zonas en los resultados de busqueda. Bloquear eso hubiera
+costado en silencio todo el trabajo de SEO de las paginas de suburbio. Hay un
+test que lo verifica.
+
+### Verificado haciendo fallar los guardas a proposito
+
+Se desprotegio `bondi.html` a mano: el test fallo nombrando la pagina y
+`npm run consent:check` salio con exit 1. Restaurada, 26/26 y exit 0. **Un test
+que nunca se vio fallar no prueba nada** - la misma leccion de la entrada 58.
+
+### Lo que NO se verifico
+
+- **No se abrio el navegador** (prohibido en esta sesion). Que el banner se vea
+  bien lo tiene que mirar Diego despues del deploy.
+- **`sw.js` subio a v98/v71** porque el banner es contenido nuevo. Sin eso, un
+  visitante que ya entro seguiria con la version vieja cacheada.
+- **El `?v=` de `js/landing-inline.js`** lo agarro `npm run check`, no yo:
+  cambie el archivo y no actualice el hash en `landing.html`. Exactamente la
+  trampa que documenta CLAUDE.md, y el guard automatico funciono.
+
+26 tests nuevos. 928/928.
