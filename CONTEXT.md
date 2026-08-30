@@ -1,5 +1,87 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
+## Current state (2026-08-30) — read this first
+
+- **Auditoria pre-lanzamiento de 20 puntos, sesion completa.** Lo que sigue es
+  lo que cambio hoy y, mas importante, **que resulto ser falso** de lo que la
+  auditoria daba por cierto.
+
+- **RLS estaba bien. Las VISTAS la esquivaban, y eso era una fuga en vivo.**
+  Con la anon key que `js/supabase.js` publica, `GET public_booking_tracking`
+  devolvia cada reserva **con su `tracking_token`**, y ese token se cambiaba por
+  direccion completa + `arrival_pin` en `/api/auth?role=public-track`. Dos
+  pedidos, sin login. Y `public_reviews` aceptaba **PATCH anonimo** (204), que
+  escribe sobre `bookings` sin consultar RLS.
+  Causa raiz en una frase: **una vista de Postgres corre con privilegios de su
+  DUENO**, y Supabase le da a `anon` todos los privilegios sobre objetos nuevos.
+  `api/auth.js` no tenia un solo bug - el codigo era correcto y la base lo
+  contradecia. **Cerrado y verificado en produccion** (401 en ambas, 200 en las
+  resenas que la landing necesita).
+
+- **Las 16 tablas base SI estaban bien**, y el cruce cliente-A-lee-a-cliente-B
+  tambien: simulando un usuario logueado que no es admin ni dueno,
+  `bookings/profiles/bikes/job_messages` devuelven **0,0,0,0**.
+  **Ojo con el falso positivo:** el primer test uso "el cliente con mas
+  reservas", que resulto ser la cuenta admin de Diego, y
+  `bookings_select_own_or_admin` **permite a un admin ver todo a proposito**.
+  Un resultado hay que interpretarlo contra la politica, no leerlo solo.
+
+- **NO HAY BACKUPS.** El plan Free de Supabase no los incluye - no es "nadie
+  restauro uno", es que **no existe ninguno**. Se armo un volcado nocturno de
+  toda la base a JSON por email (`?type=backup`, dentro de `?type=all`), que
+  queda fuera de Supabase. **Nadie restauro desde el todavia**: sigue siendo una
+  promesa hasta que se pruebe contra un proyecto vacio.
+
+- **Diego NO esta registrado en GST** (verificado en el registro publico de la
+  ATO: ABN 87 654 025 287, PEREDO DIEGO MAURICIO, activo desde 16-may-2026,
+  *"Not currently registered for GST"*, direccion **QLD 4803**, no Sydney).
+  Y la app **cobra y factura GST igual**: "Tax Invoice", ABN, "GST included", y
+  una pantalla BAS entera que calcula "NET GST PAYABLE TO ATO".
+  **No mando ninguna factura todavia**, asi que no hay nada que corregir hacia
+  atras. **Diego decidio registrarse** para recuperar el GST de herramientas y
+  van. **PENDIENTE: la fecha de registro** - con eso se activa el flag
+  `GST_REGISTERED` y factura, panel, BAS y chatbot pasan a modo registrado.
+  Calendario puesto para el 9-nov-2026: actualizar la direccion del ABN.
+
+- **El bloqueo del PIN del mecanico cubria 1 de 14 rutas.** Existia desde junio
+  pero solo en `role=mechanic`. Verificado en produccion: el login cortaba al
+  sexto intento, `mechanic-jobs` no cortaba nunca. Movido a `authMechanic`, el
+  camino que comparten las catorce.
+
+- **Un cobro sin reserva avisaba UNA vez y despues se olvidaba.** El cron
+  mandaba un WhatsApp diciendo "create the booking manually or refund it in
+  Stripe" - pedirle a un humano que mire - y `isOrphanCandidate` descartaba lo
+  que ya tenia `orphan_alerted`, asi que un pago no resuelto salia del radar
+  para siempre. Ahora: aviso -> espera -> **reembolso automatico a las 24h**
+  (piso; el barrido es diario, asi que el peor caso real son ~48h).
+
+- **Los analytics arrancaban antes de que nadie aceptara**, en 44 paginas,
+  incluido el session replay de Sentry. Ahora todo tag va inerte
+  (`type="text/plain"`) hasta el consentimiento. **PENDIENTE DIEGO: mirar el
+  banner** en celular y compu despues del deploy - no se abrio el navegador.
+
+- **`privacy.html` prometia acceso y borrado sin forma de cumplirlo.** Ahora
+  `npm run privacy:export|forget` imprime el SQL (no lo ejecuta) y
+  `docs/RUNBOOK-PRIVACY.md` tiene el procedimiento. **Anonimiza, no borra**:
+  las reservas tienen retencion fiscal de 7 anos.
+
+- **Dos lecciones que se repitieron y conviene no re-aprender:**
+  1. **Un test que nunca se vio fallar no prueba nada.** Los guards de esta
+     sesion se verificaron re-introduciendo el bug a proposito. Dos veces un
+     test *pasaba* sobre un archivo roto (matcheaba el comentario que explicaba
+     el bug; despues, CRLF hacia que `--.*$` no borrara nada).
+  2. **Los PRs apilados se mergean en la rama padre, no en main.** Paso otra
+     vez: #359 y #361 se mergearon hacia arriba en la cadena y `main` no recibio
+     nada; ademas el backup quedo fuera de la rama que seguia. Se consolido todo
+     en #368. **Verificar con `merge-base`, no asumir.**
+
+- **Test count: 950.** `npm run check`, `npm run lint`, `npm test` y
+  `npm run rls:check` en exit 0.
+
+- **Abierto al cierre de la sesion:** #369 (banner de cookies) y #370
+  (privacidad), los dos con CI verde. #358 hay que **cerrarlo sin mergear**
+  (superseded por #368). #367 es de otra sesion.
+
 ## Current state (2026-08-27) — read this first
 
 - **`main` is at the merge of #355.** The block below covers #346 through #355,
