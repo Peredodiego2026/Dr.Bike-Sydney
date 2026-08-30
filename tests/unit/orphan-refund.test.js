@@ -26,7 +26,11 @@
 // orphanAction is the decision that closes it: alert first, then give the
 // money back on its own if the booking still does not exist.
 import { describe, it, expect } from 'vitest';
-import { orphanAction, ORPHAN_REFUND_AFTER_HOURS } from '../../api/_orphan-audit.js';
+import {
+  orphanAction,
+  ORPHAN_REFUND_AFTER_HOURS,
+  ORPHAN_HARD_REFUND_AFTER_HOURS,
+} from '../../api/_orphan-audit.js';
 
 const NOW = 1_800_000_000;
 const hoursAgo = (h) => NOW - h * 3600;
@@ -53,25 +57,57 @@ describe('orphanAction', () => {
     expect(act({ metadata: { orphan_alerted: '123' } })).toBe('wait');
   });
 
-  it('refunds on its own after the deadline, alerted or not', () => {
+  // Diego, after the first version shipped: "cuando pase esto me tiene que
+  // llegar un mensaje que se genero un pago sin reserva". Nothing is refunded
+  // before he has been told - he has to get the chance to turn a real job into
+  // a real booking.
+  it('never refunds something Diego was not told about first', () => {
     const old = hoursAgo(ORPHAN_REFUND_AFTER_HOURS + 1);
-    expect(orphanAction(pi({ created: old }), { nowSeconds: NOW })).toBe('refund');
+    expect(orphanAction(pi({ created: old }), { nowSeconds: NOW })).toBe('alert');
+  });
+
+  // The case the first version got wrong, and it is the ORDINARY one: the
+  // sweep runs once a day, so a payment made shortly after a run is already
+  // past the 24h deadline the first time it is seen. The old code went
+  // straight to 'refund' and Diego never got the alert at all.
+  it('a payment already past the deadline on first sighting still alerts', () => {
+    expect(orphanAction(pi({ created: hoursAgo(30) }), { nowSeconds: NOW })).toBe('alert');
+    expect(orphanAction(pi({ created: hoursAgo(47) }), { nowSeconds: NOW })).toBe('alert');
+  });
+
+  it('refunds once alerted and past the deadline', () => {
+    const old = hoursAgo(ORPHAN_REFUND_AFTER_HOURS + 1);
     expect(
       orphanAction(pi({ created: old, metadata: { orphan_alerted: '123' } }), { nowSeconds: NOW })
     ).toBe('refund');
   });
 
-  // The refund must not depend on the alert having been delivered. Twilio being
-  // down, or no admin number configured, cannot be what decides whether a
-  // client gets their money back.
-  it('refunds even if the alert never went out', () => {
-    expect(orphanAction(pi({ created: hoursAgo(48) }), { nowSeconds: NOW })).toBe('refund');
+  // The backstop. If no admin WhatsApp is configured, or Twilio is down for
+  // days, `orphan_alerted` never gets set - and "never refund before telling
+  // him" would then keep a client's money forever, which is the failure this
+  // whole thing exists to end.
+  it('gives the money back after 3 days even if the alert never went out', () => {
+    expect(
+      orphanAction(pi({ created: hoursAgo(ORPHAN_HARD_REFUND_AFTER_HOURS + 1) }), {
+        nowSeconds: NOW,
+      })
+    ).toBe('refund');
+  });
+
+  it('the hard deadline is longer than the normal one, or it would never apply', () => {
+    expect(ORPHAN_HARD_REFUND_AFTER_HOURS).toBeGreaterThan(ORPHAN_REFUND_AFTER_HOURS);
+    expect(ORPHAN_HARD_REFUND_AFTER_HOURS).toBe(72);
   });
 
   it('is exactly at the boundary, not near it', () => {
     const h = ORPHAN_REFUND_AFTER_HOURS;
-    expect(orphanAction(pi({ created: hoursAgo(h - 0.01) }), { nowSeconds: NOW })).toBe('alert');
-    expect(orphanAction(pi({ created: hoursAgo(h) }), { nowSeconds: NOW })).toBe('refund');
+    const alerted = { orphan_alerted: '123' };
+    expect(
+      orphanAction(pi({ created: hoursAgo(h - 0.01), metadata: alerted }), { nowSeconds: NOW })
+    ).toBe('wait');
+    expect(orphanAction(pi({ created: hoursAgo(h), metadata: alerted }), { nowSeconds: NOW })).toBe(
+      'refund'
+    );
   });
 
   // Idempotency. The cron runs daily and Stripe's list is a rolling 48h window,
