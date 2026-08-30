@@ -53,8 +53,9 @@
        the loader from Meta Business Manager here with the real id. The
        fbq('track', ...) calls in js/app.js are all guarded with `window.fbq &&`,
        so they start working again on their own and need no edit. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
-    <script>
+    <script src="/js/consent.js"></script>
+    <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+    <script type="text/plain" data-consent="analytics">
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
@@ -63,11 +64,11 @@
       gtag('config', 'G-GXYD68JXZW');
     </script>
     <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
-    <script
+    <script type="text/plain" data-consent="analytics"
       src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js"
       crossorigin="anonymous"
     ></script>
-    <script>
+    <script type="text/plain" data-consent="analytics">
       Sentry.onLoad(function () {
         Sentry.init({
           dsn: 'https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488',
@@ -86,7 +87,7 @@
       });
     </script>
     <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
-    <script>
+    <script type="text/plain" data-consent="analytics">
       !(function (t, e) {
         var o, n, p, r;
         e.__SV ||

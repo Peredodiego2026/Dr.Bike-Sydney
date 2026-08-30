@@ -5,7 +5,8 @@
        initialising with the literal PIXEL_ID_HERE: no data collected, an error
        in the console on every page view, and Facebook's script loaded anyway. -->
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+  <script src="/js/consent.js"></script>
+  <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
   
 
   <meta charset="UTF-8">
@@ -55,7 +56,7 @@
   <link rel="stylesheet" href="css/landing.css?v=20260827a">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
-  <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
+  <script type="text/plain" data-consent="analytics" src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
   
   <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
   
@@ -1360,7 +1361,7 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=2775a8b319"></script>
+<script src="js/landing-inline.js?v=ee4ad3f878"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=d753faa212"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing

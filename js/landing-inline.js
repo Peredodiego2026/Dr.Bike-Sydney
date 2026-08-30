@@ -52,19 +52,40 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
   // Vercel previews as real traffic: production numbers showed pages like
   // "/C:/Users/.../landing.html" and referrers "localhost:3000" sitting beside
   // real visitors. Same guard as admin.html and mechanic.html.
-  if (!_noTrack && (location.hostname === 'drbikesydney.com.au' || location.hostname === 'www.drbikesydney.com.au')) {
+  // The snippet above only installs a stub; nothing reaches PostHog until
+  // init() runs, which is what inserts their script tag. So consent gates
+  // init(), not the snippet.
+  //
+  // The stub has to be stashed and the global cleared first: js/app.js and
+  // js/cta-tracking.js guard every capture() on `window.posthog` being
+  // truthy alone, so leaving the stub in place would make them all think
+  // tracking is live and silently queue events for a consent that may never
+  // come. Cleared now, restored only if the visitor accepts.
+  const _phStub = window.posthog;
+  window.posthog = undefined;
+
+  const _initPosthog = () => {
+    // Production only. Without this guard PostHog counted localhost, file://
+    // and Vercel previews as real traffic: production numbers showed pages
+    // like "/C:/Users/.../landing.html" and referrers "localhost:3000"
+    // sitting beside real visitors. Same guard as admin.html and mechanic.html.
+    if (_noTrack) return;
+    if (location.hostname !== 'drbikesydney.com.au' && location.hostname !== 'www.drbikesydney.com.au')
+      return;
+    window.posthog = _phStub;
     posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
       api_host: 'https://eu.i.posthog.com',
       person_profiles: 'identified_only',
       capture_pageview: true,
       capture_pageleave: true,
     });
-  } else {
-    // MUST clear the stub - see the same comment in index.html. The snippet
-    // leaves window.posthog truthy but without capture() unless init() ran, and
-    // js/app.js guards on truthiness alone.
-    window.posthog = undefined;
-  }
+  };
+
+  // js/consent.js is loaded first and synchronously by scripts/consent-gate.mjs,
+  // so this hook exists. The fallback is deliberately "do nothing": if the
+  // consent script ever fails to load, the safe outcome is no tracking, not
+  // tracking without being asked.
+  if (typeof window.drbikeOnConsent === 'function') window.drbikeOnConsent(_initPosthog);
 
 
 // Dates rendered by the classic inline scripts below must follow the chosen
