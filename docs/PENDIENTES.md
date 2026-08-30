@@ -7376,3 +7376,85 @@ sea por-mecanico. No hay nada que hacer aca.
   429 en `mechanic-jobs` hay que confirmarlo en produccion despues del merge.
 
 6 tests nuevos. 882/882.
+
+## 61. No habia backups. Ninguno. (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 19. La pregunta era *"Supabase los hace, pero
+nadie restauro uno nunca"*. **La respuesta result peor que la pregunta.**
+
+Diego abrio Database > Backups y mando la captura:
+
+> **Free Plan does not include project backups.**
+> Upgrade to the Pro Plan for up to 7 days of scheduled backups.
+
+No es "backups que nadie probo". Es que **no existe ninguno**. Si la base se
+pierde - un `DELETE` mal escrito en el SQL Editor, que es como se corren todas
+las migraciones de este proyecto - no hay a donde volver.
+
+Hoy son 3 reservas y se sobrevive. El dia que sean 200 clientes con sus bicis,
+su historial de servicio y sus pagos, es el fin de los registros del negocio.
+
+### Lo que se hizo
+
+Diego eligio la opcion gratis: **volcado nocturno de toda la base a JSON,
+enviado por email**. Queda **fuera de Supabase por construccion** - sale del
+proyecto y aterriza en su casilla, asi que sobrevive a que el proyecto muera.
+
+No reemplaza el point-in-time recovery de Pro y el cuerpo del mail lo dice.
+Es la diferencia entre perder un dia y perder todo.
+
+Corre dentro de `?type=all`, el cron diario que ya existe: Vercel en plan Hobby
+no permite crons mas frecuentes que diarios, y agregar una entrada nueva ya
+hizo fallar un deploy antes (ver el comentario arriba de `api/send-cron.js`).
+Va **ultimo** en el `Promise.allSettled`, para leer el estado despues de que
+los otros jobs terminaron de escribir y no a mitad de camino.
+
+### Las dos formas en que un backup miente
+
+Un backup en el que no se puede confiar es peor que ninguno, porque se deja de
+pensar en el. Las dos formas estan cubiertas y testeadas:
+
+1. **Truncado silencioso.** PostgREST devuelve **1000 filas como maximo** por
+   pedido. Un volcado ingenuo de una tabla que crece se detendria en 1000 y el
+   archivo se veria completo igual. Cada tabla se pagina hasta agotarla.
+2. **Omision silenciosa.** Si una tabla falla, descartarla y mandar el resto
+   produce un archivo que parece entero y no lo es. Una tabla que falla queda
+   registrada **adentro** del backup (`__backup_error__`) y el asunto del mail
+   dice **INCOMPLETO**.
+
+Hay un tercer caso: si el archivo supera los 20 MB no se manda un mail que
+Resend va a rechazar en silencio - se manda un aviso diciendo que **hoy no hay
+copia** y que a ese tamano la respuesta es un plan con backups de verdad.
+
+### El hueco que encontro el chequeo contra la base real
+
+La lista de tablas se verifico contra el esquema vivo, y el chequeo encontro el
+modo de falla que la lista tiene: **una tabla que existe en la base y no esta
+nombrada no la respalda nadie, y nada lo dice.**
+
+Faltaban dos:
+- `waitlist_signups` - personas reales que pidieron que las contacten.
+- `stripe_events` - los ids de eventos de Stripe que evitan procesar un webhook
+  dos veces. Perderlos es plata, no datos.
+
+Ahora hay una lista `DELIBERATELY_SKIPPED` con el motivo de cada exclusion
+(`geo_cache` se regenera, `login_attempts` no significa nada una hora despues,
+`bookings_backup_20260726` ya es una copia y duplicaria el archivo), y un test
+que compara las dos listas contra el esquema pinneado al 30-ago-2026. Cuando
+una migracion agregue una tabla, el test falla y obliga a elegir: respaldarla o
+saltearla con una razon. Las dos estan bien; el silencio no.
+
+### Lo que NO se verifico
+
+**No se disparo el endpoint contra produccion.** Mandaria un mail real con
+todos los datos de los clientes, y hacerlo antes del merge significa correr el
+codigo de una rama. Se verifico que las 24 tablas existen (las 24 responden 200
+en la API) y hay 17 tests sobre el armado del archivo. **El primer mail de
+verdad llega el dia despues del merge, a las 9:00 UTC.** Si no llega, el
+problema esta en el envio, no en el armado.
+
+**El destinatario esta hardcodeado**, no configurable: el archivo es el nombre,
+telefono y direccion de cada cliente en un solo lugar. Ninguna variable de
+entorno ni campo de admin puede redirigirlo.
+
+17 tests nuevos. 899/899.
