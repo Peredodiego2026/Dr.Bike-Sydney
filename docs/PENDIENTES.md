@@ -7592,3 +7592,95 @@ que nunca se vio fallar no prueba nada** - la misma leccion de la entrada 58.
   trampa que documenta CLAUDE.md, y el guard automatico funciono.
 
 26 tests nuevos. 928/928.
+
+## 63. La politica de privacidad prometia algo que no se podia hacer (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 9: *"Si un cliente pide 'borren todo lo mio' o
+pide una copia de sus datos, hoy no hay forma."*
+
+`privacy.html` ya prometia las dos cosas, bajo la Privacy Act 1988, y
+**responder dentro de los 30 dias**:
+
+> Access the personal information we hold about you
+> Request deletion of your personal information (subject to our legal
+> retention obligations)
+
+Contestar por email es un proceso **valido**: la ley australiana no exige un
+boton de autoservicio. **El hueco no era el boton.** Era que cuando alguien
+pidiera de verdad, no habia forma de hacerlo: significaba escribir SQL a mano
+sobre una docena de tablas y acordarse, de memoria, de cuales guardan datos
+personales. Una promesa que no se puede ejecutar es peor que ninguna, porque
+esta publicada en el sitio.
+
+### Lo que hace que esto no sea un DELETE
+
+`privacy.html` **tambien** promete guardar los registros de reservas **7 anos**,
+por obligacion fiscal australiana. Leidas rapido las dos promesas se
+contradicen. No: la respuesta a "borren todo lo mio" es **anonimizar**. El
+registro financiero queda con sus fechas e importes - que es lo que exige la
+ATO - y se le saca toda la identidad.
+
+Asi que **ningun paso borra una fila de `bookings`**, nunca, y hay un test que
+falla si una edicion futura lo cambia. Tambien hay un test que verifica que las
+columnas financieras (`service_price`, `callout_fee`,
+`stripe_payment_intent_id`, ...) **no** esten entre las que se tocan: anonimizar
+de mas destruye el registro fiscal, que es el otro error posible.
+
+### Por que imprime SQL en vez de ejecutarlo
+
+Un endpoint HTTP que anonimiza un cliente **es un arma**: una llamada mal hecha,
+o un bug en un chequeo de autenticacion, y los registros de alguien real quedan
+sin datos sin deshacer. Un script que **imprime SQL revisado es una herramienta**:
+Diego lo lee, ve que tablas toca y por que, y lo corre el mismo - igual que
+todas las migraciones de este proyecto.
+
+El bloque sale con `BEGIN;` al principio y `-- COMMIT;` **comentado** al final,
+a proposito: se corre, se miran los conteos de filas afectadas, y recien ahi se
+descomenta. Un cliente con 2 reservas no deberia tocar 40 filas.
+
+### El bug que aparecio corriendolo
+
+La primera version parseaba los argumentos con
+`args[args.indexOf('--id') + 1]`. `indexOf` devuelve **-1** cuando la bandera no
+esta, y `-1 + 1` es **0** - asi que leia `args[0]`, que era la cadena literal
+`--forget`, y generaba:
+
+```sql
+WHERE client_id = 'forget'::uuid
+```
+
+SQL con un WHERE basura, apuntado a registros reales. **No lo encontre
+leyendolo: lo encontre corriendolo.** Ahora hay una funcion `flag()` que
+devuelve `null` cuando falta, y validacion de formato de uuid y de email antes
+de construir nada. Con un test que lo fija.
+
+### La deriva de esquema, que es el riesgo real a largo plazo
+
+`api/_privacy.js` es la fuente de verdad de donde vive el dato personal. Una
+migracion que agregue una columna con un nombre, un telefono o una direccion y
+no la agregue ahi crea un dato que **ningun pedido de borrado va a alcanzar, y
+nada lo dice**.
+
+No se puede chequear automaticamente desde el repo: leer `information_schema`
+necesita la service key, que no esta ni debe estar aca. Asi que
+`docs/RUNBOOK-PRIVACY.md` seccion 3 trae la consulta que lista toda columna con
+pinta de dato personal, para correr **despues de cada migracion** y comparar
+contra `PII_MAP` y `NOT_PERSONAL`. Toda tabla esta en una de las dos listas, y
+las no-personales llevan el motivo escrito - hay tests que lo exigen.
+
+### Lo que el runbook admite que NO cubre
+
+Escrito en la seccion 4, para informarselo al cliente en la respuesta:
+
+- **Supabase Auth**: `auth.users` vive fuera de `public`. Se borra a mano desde
+  el panel, y es a proposito que sea manual porque cascadea.
+- **Stripe**: los pagos quedan alla con su propia retencion.
+- **Los backups nocturnos**: contienen copias previas a la anonimizacion. Es
+  correcto - son registros historicos - pero si el pedido es explicito hay que
+  borrar esos correos.
+- **Emails ya enviados**: no se pueden retirar de la casilla del cliente.
+
+Prometer mas de lo que se puede cumplir es exactamente el problema que este
+runbook vino a arreglar; el runbook no lo repite.
+
+22 tests nuevos. 950/950.
