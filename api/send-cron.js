@@ -808,10 +808,14 @@ async function handleOrphanPayments(req, res) {
         `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
         `Nothing to do. If this was a real job, contact the client and book it again.`;
     } else {
+      // "within 24h" was a promise this could not keep: the sweep runs once a
+      // day, so the next chance to act is the next run, not a rolling 24h from
+      // now. Says what actually happens instead.
       msg =
         `ORPHAN PAYMENT: $${amount} AUD charged with no booking behind it.\n` +
         `Client: ${email}\nCharged: ${when} UTC\nStripe: ${pi.id}\n\n` +
-        `Create the booking within ${ORPHAN_REFUND_AFTER_HOURS}h or it refunds itself.`;
+        `Create the booking by hand today, or it refunds itself on the next ` +
+        `daily run (never sooner than ${ORPHAN_REFUND_AFTER_HOURS}h after the charge).`;
     }
 
     if (adminPhone) {
