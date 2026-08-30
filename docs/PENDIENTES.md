@@ -7684,3 +7684,89 @@ Prometer mas de lo que se puede cumplir es exactamente el problema que este
 runbook vino a arreglar; el runbook no lo repite.
 
 22 tests nuevos. 950/950.
+
+## 65. Nada le decia a un usuario de teclado donde estaba parado (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 13. Dos fallas, **ninguna visible para alguien
+que usa mouse**, que es exactamente por que sobrevivieron tanto.
+
+### 1. No habia "saltar al contenido" en ninguna parte
+
+Un usuario de teclado tabulaba por **todo el encabezado** antes de llegar a la
+pagina. En la SPA, donde el router redibuja la pantalla sin recargar, eso pasa
+en **cada cambio de pantalla**.
+
+Ahora `index.html` y `landing.html` abren con un `.skip-link` que es lo primero
+del orden de tabulacion. Esta escondido con `left:-9999px` y **no** con
+`display:none`, porque `display:none` lo sacaria del orden de tabulacion, que es
+lo unico que no puede pasar.
+
+### 2. No habia estilo de foco, y seis reglas tiraban el del navegador
+
+Solo dos componentes (`.celebrate-close`, `.gift-close`) tenian
+`:focus-visible`. Todo lo demas dependia del anillo propio del navegador - y
+**seis reglas lo apagaban con `outline: none`**. Cuatro de ellas en la regla
+**base**, no en `:focus`, asi que aplicaban siempre:
+
+```
+css/main.css      .review-textarea:focus
+css/main.css      .form-input:focus
+css/main.css      .gift-body input, .gift-body textarea
+css/admin.css     .inp
+css/mechanic.css  .pin-inp        <- el campo del PIN del mecanico
+css/mechanic.css  .notes-inp
+```
+
+`.pin-inp` es el peor: se tabula al campo del PIN y **nada en pantalla dice
+donde estas**.
+
+Las seis se limpiaron. El anillo global vive en `css/variables.css` - un archivo
+que por lo demas solo tiene tokens - porque **es la unica hoja de estilos que
+cargan las cinco superficies**: `track.html` no carga ninguna otra. Cualquier
+lugar mas "correcto" habria dejado una superficie sin cubrir.
+
+`:focus-visible` y no `:focus`: un click con mouse no debe dejar un anillo
+puesto. El navegador ya sabe distinguir; el punto es dejarlo decidir. Y
+`outline` en vez de `box-shadow` porque un outline no lo recorta
+`overflow:hidden` ni lo deforma el `border-radius` del padre.
+
+`--focus-ring` tiene valor en los dos temas: `#2563eb` en claro (5.17:1 sobre
+blanco) y `#93c5fd` en oscuro (6.73:1 sobre la tarjeta). WCAG 1.4.11 pide 3:1
+contra lo que este al lado; hay un test que lo **calcula**.
+
+### El agujero que aparecio de rebote: `css/main.css` no estaba vigilado
+
+`css/main.css` llevaba un `?v=` escrito a mano (`20260827a`) y **no estaba en
+`scripts/versioned-assets-check.mjs`**. O sea: edite `main.css` para arreglar el
+foco, `npm run check` quedo **verde**, y el arreglo habria sido invisible para
+todo navegador que ya entro.
+
+Es el **mismo hueco que mordio a `mechanic.html` cuatro dias antes** (entrada
+14.11 / el comentario del propio script). Se agrego `css/main.css` a la lista,
+en las dos paginas que lo cargan, y el check inmediatamente marco lo que
+faltaba. Deja de ser algo que hay que acordarse.
+
+### Dos errores propios que valen mas que el codigo
+
+1. **El guard reportaba rota toda pagina correcta.** Comparaba el indice de
+   `class="skip-link"` - un atributo, siempre unos caracteres *adentro* de su
+   propio `<a>` - contra el indice del primer `<a>`. Encontrado corriendolo.
+2. **Correr prettier sobre `js/i18n.js` rompio dos tests que ya existian**
+   (`live-route`, `profile-card-and-birthday`): buscan cadenas por indice y el
+   reformateo las movio. Se revirtio el archivo y las traducciones se
+   re-insertaron **preservando el fin de linea CRLF**, sin reformatear. Leccion:
+   `npm run format` cubre `js/`, pero i18n.js es un diccionario que otros tests
+   leen posicionalmente - no se formatea de paso.
+
+### Lo que NO se hizo
+
+- **No se recorrio la reserva entera sin mouse.** Eso necesita un navegador y
+  esta prohibido en esta sesion. Lo que si esta: el anillo existe, es visible en
+  los dos temas por calculo, y ninguna regla lo apaga. **Falta que Diego tabule
+  el flujo** y avise si algun modal atrapa el foco.
+- **No se auditaron trampas de foco en modales.** `Escape` cierra en los seis
+  modales que se revisaron (`js/app.js` x3, `landing-inline.js` x2,
+  `mechanic.js` x1), pero que el foco vuelva al disparador al cerrar no se
+  verifico.
+
+16 tests nuevos. 966/966.

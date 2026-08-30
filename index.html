@@ -43,7 +43,7 @@
     <meta name="apple-mobile-web-app-title" content="Dr. Bike" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="css/variables.css?v=20260713" />
-    <link rel="stylesheet" href="css/main.css?v=20260827a" />
+    <link rel="stylesheet" href="css/main.css?v=dbd0385557" />
     <link rel="stylesheet" href="css/home.css?v=20260825b" />
     <!-- Google Analytics -->
     <!-- Meta Pixel removed 2026-07-28. It was initialising with the literal
@@ -261,6 +261,9 @@
     </style>
   </head>
   <body>
+    <!-- First thing in the tab order. Audit point 13: without it a keyboard
+         user tabs through the whole header on every screen change. -->
+    <a class="skip-link" href="#app">Skip to content</a>
     <div id="boot-loader" role="status" aria-live="polite">
       <div class="boot-mark">
         <img src="images/logo-db.png" alt="" width="88" height="62" fetchpriority="high" />

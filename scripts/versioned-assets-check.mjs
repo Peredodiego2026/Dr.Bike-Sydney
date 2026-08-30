@@ -52,14 +52,24 @@ const PAGES = [
       { path: 'css/mechanic.css', re: /href="css\/mechanic\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
+  // css/main.css joined 2026-08-30. It carried a hand-typed date string
+  // ("20260827a") and was NOT in this list, which is the same gap that bit
+  // mechanic.html four days earlier. It bit again immediately: the audit's
+  // keyboard-access work (point 13) edited main.css and `npm run check` stayed
+  // green, so the focus ring would have shipped invisible to every returning
+  // browser. Both pages load it, so both are checked.
   {
     html: 'index.html',
-    assets: [{ path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ }],
+    assets: [
+      { path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ },
+      { path: 'css/main.css', re: /href="css\/main\.css\?v=([a-zA-Z0-9]+)"/ },
+    ],
   },
   {
     html: 'landing.html',
     assets: [
       { path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ },
+      { path: 'css/main.css', re: /href="css\/main\.css\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-inline.js', re: /src="js\/landing-inline\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-modules.js', re: /src="js\/landing-modules\.js\?v=([a-zA-Z0-9]+)"/ },
     ],
@@ -86,7 +96,9 @@ for (const { html: htmlPath, assets } of PAGES) {
     const expected = hashOf(path);
     const m = html.match(re);
     if (!m) {
-      console.error(`x ${htmlPath} does not load ${path} with a ?v= query - cache-busting is gone.`);
+      console.error(
+        `x ${htmlPath} does not load ${path} with a ?v= query - cache-busting is gone.`
+      );
       failed = true;
       continue;
     }

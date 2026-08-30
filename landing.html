@@ -43,7 +43,7 @@
 
   <!-- Booking wizard styles (from index.html CSS) -->
   <link rel="stylesheet" href="css/variables.css?v=20260622">
-  <link rel="stylesheet" href="css/main.css?v=20260827a">
+  <link rel="stylesheet" href="css/main.css?v=dbd0385557">
   <link rel="stylesheet" href="css/home.css?v=20260825b">
 
   <script type="application/ld+json">
@@ -72,6 +72,8 @@
      without a width media query - a desktop opening index.html directly must
      still get the SPA layout untouched. -->
 <body data-surface="landing">
+<!-- First thing in the tab order. Audit point 13. -->
+<a class="skip-link" href="#main-content">Skip to content</a>
 
 
 
@@ -108,7 +110,7 @@
     </button>
   </div>
 </nav>
-<main>
+<main id="main-content" tabindex="-1">
   <!-- 6.1 + 6.2 Trust Badges -->
   <div id="trust-badges" style="background:var(--surface);border-bottom:1px solid var(--border);padding:8px 24px">
     <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:20px">

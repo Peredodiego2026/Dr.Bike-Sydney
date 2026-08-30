@@ -14,6 +14,9 @@ export const LANGUAGES = [
 
 const dict = {
   es: {
+    // Skip link (audit point 13). All three languages in the same commit
+    // that creates the string, per the project rule.
+    'Skip to content': 'Saltar al contenido',
     // Catalogue services added to the All Services modal (landing.html) and
     // the mobile home (index.html) on 2026-08-02. Every one of these exists in
     // the Supabase `services` table and was bookable already - they were just
@@ -1456,6 +1459,7 @@ const dict = {
     'your@email.com': 'tu@correo.com',
   },
   zh: {
+    'Skip to content': '跳至主要内容',
     // Catalogue services added 2026-08-02 - see the note in the es block.
     'E-bike Diagnostic': '电动车诊断',
     'Full system scan, firmware check and error code review.':

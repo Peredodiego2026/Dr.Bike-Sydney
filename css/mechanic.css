@@ -213,7 +213,6 @@ body {
   font-family: var(--sans);
   text-align: center;
   letter-spacing: 10px;
-  outline: none;
   margin-bottom: 12px;
 }
 .pin-inp::placeholder {
@@ -509,7 +508,6 @@ body {
   padding: 8px 12px;
   font-size: 12px;
   font-family: var(--sans);
-  outline: none;
   color: #0d1f3c;
   margin-top: 12px;
   background: #fff;
@@ -769,4 +767,3 @@ body {
     box-shadow: var(--shadow-lg);
   }
 }
-
