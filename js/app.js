@@ -3524,7 +3524,7 @@ function appendClientMsg(msg, container, scroll) {
   const bubble = document.createElement('div');
   bubble.style.cssText = `max-width:75%;padding:9px 13px;border-radius:${isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};font-size:15px;line-height:1.4;word-break:break-word;background:${isClient ? '#2563EB' : '#fff'};color:${isClient ? '#fff' : '#0D1F3C'};border:${isClient ? 'none' : '1px solid #E2E8F0'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
-  if (photoMatch) {
+  if (photoMatch && /^https?:\/\//i.test(photoMatch[1])) {
     const img = document.createElement('img');
     img.src = photoMatch[1];
     img.alt = 'Photo';
@@ -4314,7 +4314,7 @@ async function renderMyBookings() {
             <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Date</span><span style="font-weight:600;color:var(--navy)">${booking.scheduled_date || '--'}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Time</span><span style="font-weight:600;color:var(--navy)">${toDisplayTime(booking.scheduled_time) || '--'}</span></div>
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${booking.address || '--'}</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${escapeHtml(booking.address || '--')}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Visit & diagnosis</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
             </div>
             ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid var(--red-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
@@ -4836,7 +4836,7 @@ async function renderProfile() {
         </svg>
       </div>
       <div class="fw-600 text-center">${name}</div>
-      <div class="text-secondary text-sm text-center">${user.email}</div>
+      <div class="text-secondary text-sm text-center">${escapeHtml(user.email)}</div>
 
       <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;box-shadow:var(--elevation-0)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">

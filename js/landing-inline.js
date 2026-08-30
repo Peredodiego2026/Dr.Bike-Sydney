@@ -89,8 +89,11 @@ function lpDateLocale() {
 
   function escapeMechHtml(str) {
     const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
+    d.textContent = str ?? '';
+    // The textContent round-trip leaves quote characters as-is, so also
+    // replace them; the result then stays safe inside a quoted attribute
+    // value (src, alt), not only inside a text node.
+    return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   async function loadMechanics() {
@@ -123,7 +126,7 @@ function lpDateLocale() {
     track.innerHTML = mechanics
       .map((m, i) => {
         const avatarHTML = m.photo_url
-          ? `<img src="${m.photo_url}" alt="${escapeMechHtml(m.name)}" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
+          ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
           : `<div style="width:76px;height:76px;border-radius:50%;background:var(--blue-lt);border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${mechInitials(m.name)}</div>`;
         const roundedRating = m.rating ? Math.round(m.rating) : 0;
         const stars = m.rating ? '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating) : '';
@@ -210,7 +213,7 @@ function lpDateLocale() {
   function openMechDetail(m) {
     const body = document.getElementById('mech-detail-body');
     const avatarHTML = m.photo_url
-      ? `<img src="${m.photo_url}" alt="${escapeMechHtml(m.name)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
+      ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
       : `<div style="width:96px;height:96px;border-radius:50%;background:var(--blue-lt);border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--blue)">${mechInitials(m.name)}</div>`;
     body.innerHTML = `
       <div style="height:110px;background:var(--blue-lt);overflow:hidden"><img src="images/mechanic-working.webp" style="width:100%;height:100%;object-fit:cover" alt=""></div>
@@ -1974,7 +1977,7 @@ function openLandingChat(bookingId) {
     const bubble = document.createElement('div');
     bubble.style.cssText = 'max-width:75%;padding:9px 13px;border-radius:' + (isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:15px;line-height:1.4;word-break:break-word;background:' + (isClient ? '#2563eb' : '#fff') + ';color:' + (isClient ? '#fff' : '#0D1F3C') + ';border:' + (isClient ? 'none' : '1px solid #E2E8F0');
     const pm = (m.message || '').match(/^\[PHOTO:(.*)\]$/);
-    if (pm) { const img = document.createElement('img'); img.src = pm[1]; img.style.cssText = 'max-width:200px;border-radius:10px;display:block;cursor:pointer'; img.addEventListener('click', function() { window.open(pm[1], '_blank'); }); bubble.style.padding = '4px'; bubble.appendChild(img); }
+    if (pm && /^https?:\/\//i.test(pm[1])) { const img = document.createElement('img'); img.src = pm[1]; img.style.cssText = 'max-width:200px;border-radius:10px;display:block;cursor:pointer'; img.addEventListener('click', function() { window.open(pm[1], '_blank'); }); bubble.style.padding = '4px'; bubble.appendChild(img); }
     else bubble.textContent = m.message;
     wrap.appendChild(bubble); msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
   }

@@ -930,7 +930,8 @@ async function loadCashHandover() {
 async function fetchExpenses() {
   try {
     const token = await adminAccessToken();
-    if (!token) return { available: false, reason: 'Your admin session expired - reload and sign in' };
+    if (!token)
+      return { available: false, reason: 'Your admin session expired - reload and sign in' };
     const r = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -983,7 +984,8 @@ function renderExpenseTotals(rows) {
         ${tile(
           'Spent so far',
           money(oneOff),
-          rows.filter((e) => !e.recurring_monthly).length + ' one-off expense' +
+          rows.filter((e) => !e.recurring_monthly).length +
+            ' one-off expense' +
             (rows.filter((e) => !e.recurring_monthly).length === 1 ? '' : 's')
         )}
         ${
@@ -1004,7 +1006,10 @@ function renderExpenseTotals(rows) {
                <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">By category</div>
                ${cats
                  .map(
-                   ([c, v]) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:4px 0;font-size:13px">
+                   ([
+                     c,
+                     v,
+                   ]) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:4px 0;font-size:13px">
                      <span>${esc(EXPENSE_LABELS[c])}</span>
                      <span style="font-weight:700;white-space:nowrap">${esc(money(v))}</span>
                    </div>`
@@ -1103,7 +1108,8 @@ async function saveExpense() {
 async function deleteExpense(id, description) {
   if (!id) return;
   // Deleting changes what the P&L says the business spent, so it asks first.
-  if (!confirm(`Delete "${description || 'this expense'}"?\n\nThe P&L will stop counting it.`)) return;
+  if (!confirm(`Delete "${description || 'this expense'}"?\n\nThe P&L will stop counting it.`))
+    return;
   try {
     const r = await fetch('/api/auth', {
       method: 'POST',
@@ -1256,11 +1262,7 @@ async function loadFinance() {
   const gst = Math.round(revenue / 11); // GST inclusive: 1/11
   const netRevenue = revenue - gst;
   if (!_expenses) _expenses = await fetchExpenses();
-  const exp = expTotalsInRange(
-    _expenses.available ? _expenses.expenses : [],
-    dateFrom,
-    dateTo
-  );
+  const exp = expTotalsInRange(_expenses.available ? _expenses.expenses : [], dateFrom, dateTo);
   // Parts is a category like any other now, not jobCount x $10.
   const varCosts = exp.byCat.parts || 0;
   const fixedTotal = exp.total - varCosts;
@@ -1332,17 +1334,19 @@ async function loadFinance() {
     : exp.total === 0
       ? '<div class="pl-row" style="color:var(--mgray);font-size:13px;line-height:1.5;display:block">No expenses loaded for this period. Add them on the Expenses screen - until then this is revenue, not profit.</div>'
       : '';
-  document.getElementById('fin-pl-rows').innerHTML = expNote + plRows
-    .map(
-      (r) => `
+  document.getElementById('fin-pl-rows').innerHTML =
+    expNote +
+    plRows
+      .map(
+        (r) => `
     <div class="pl-row${r.sub ? ' subtotal' : ''}${r.total ? ' total' : ''}">
       <span class="pl-label${r.bold ? ' dark' : ''}">${esc(r.label)}</span>
       <span style="font-weight:${r.bold ? '700' : '500'};color:${r.color || (r.neg ? 'var(--red)' : 'var(--navy)')}">
         ${r.val >= 0 ? '$' : '–$'}${Math.abs(r.val).toLocaleString('en-AU')}
       </span>
     </div>`
-    )
-    .join('');
+      )
+      .join('');
 
   // Daily chart
   const dailyMap = {};
@@ -3036,10 +3040,7 @@ async function openAdminCreateBooking() {
   svcSelect.innerHTML = '<option value="">Loading...</option>';
   document.getElementById('admin-create-booking-modal').style.display = 'flex';
 
-  const { data: services, error } = await sb
-    .from('services')
-    .select('id,name,price')
-    .order('name');
+  const { data: services, error } = await sb.from('services').select('id,name,price').order('name');
   if (error) {
     svcSelect.innerHTML = '<option value="">Could not load services</option>';
     return;
@@ -3816,10 +3817,8 @@ function subscribeVanLocations() {
   if (_vanLocChannel) return;
   _vanLocChannel = sb
     .channel('admin-van-locations')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'mechanic_locations' },
-      () => renderVanLocations()
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'mechanic_locations' }, () =>
+      renderVanLocations()
     )
     .subscribe();
 }
@@ -4427,7 +4426,9 @@ function exportAnalyticsCSV() {
   rows.push(['Service', 'Jobs', 'Revenue', 'Avg ticket', 'Cost', 'Cost basis', 'Margin %']);
   const csvParts = analyticsPartsPerJob(completed);
   if (!csvParts.available)
-    rows.push(['(no parts expenses recorded - a job with no real cost yet has nothing to fall back on)']);
+    rows.push([
+      '(no parts expenses recorded - a job with no real cost yet has nothing to fall back on)',
+    ]);
   // The same basis as the table on screen (18.3) - real cost from
   // parts_cost_actual where a job has one, the flat lifetime estimate where
   // it does not. This used to read the variable only the Finance screen
@@ -5152,7 +5153,10 @@ function renderTrafficCard() {
       gaps.push(
         `${rec.bookings - t.booking_completed} booking${rec.bookings - t.booking_completed === 1 ? '' : 's'} exist that the browser never reported — the funnel below undercounts by that much`
       );
-    if (rec.truncated) gaps.push('Stripe had more payments than one read returns — the payment numbers are a floor, not a total');
+    if (rec.truncated)
+      gaps.push(
+        'Stripe had more payments than one read returns — the payment numbers are a floor, not a total'
+      );
     if (rec.bookings_error) gaps.push(`bookings count failed: ${rec.bookings_error}`);
     if (rec.stripe_error) gaps.push(`Stripe not read: ${rec.stripe_error}`);
 
@@ -5343,7 +5347,8 @@ function renderHeatmap(all) {
   points.forEach((p) => {
     const intensity = p.n / maxN;
     const radius = 12 + intensity * 28;
-    const color = intensity > 0.66 ? 'var(--red)' : intensity > 0.33 ? 'var(--amber)' : 'var(--blue)';
+    const color =
+      intensity > 0.66 ? 'var(--red)' : intensity > 0.33 ? 'var(--amber)' : 'var(--blue)';
     L.circleMarker(p.coord, { radius, color, weight: 1, fillColor: color, fillOpacity: 0.45 })
       .bindPopup(
         `<b>${esc(p.name || 'Area')}</b><br>${p.n} booking${p.n !== 1 ? 's' : ''}<br>${anMoney(p.rev)} revenue`
@@ -5667,7 +5672,10 @@ async function renderVanCards() {
 
   [1, 2].forEach((v) => {
     const zoneEl = document.getElementById(`van-zone-${v}`);
-    if (zoneEl) zoneEl.textContent = suburbsByVan[v]?.length ? suburbsByVan[v].join(' · ') : 'No zone assigned';
+    if (zoneEl)
+      zoneEl.textContent = suburbsByVan[v]?.length
+        ? suburbsByVan[v].join(' · ')
+        : 'No zone assigned';
 
     const onlineEl = document.getElementById(`van-online-${v}`);
     if (onlineEl) {
@@ -5791,7 +5799,9 @@ async function loadClients() {
   // One card per guest, not per booking: three bookings is still one customer.
   const byEmail = new Map();
   for (const b of guestRes?.data || []) {
-    const key = String(b.client_email || '').trim().toLowerCase();
+    const key = String(b.client_email || '')
+      .trim()
+      .toLowerCase();
     if (!key) continue;
     const seen = byEmail.get(key);
     if (seen) {
@@ -5812,7 +5822,13 @@ async function loadClients() {
     });
   }
   // Somebody who booked as a guest and later signed up is one person.
-  const known = new Set((profiles || []).map((x) => String(x.email || '').trim().toLowerCase()));
+  const known = new Set(
+    (profiles || []).map((x) =>
+      String(x.email || '')
+        .trim()
+        .toLowerCase()
+    )
+  );
   const guests = [...byEmail.values()].filter(
     (g) => !known.has(String(g.email).trim().toLowerCase())
   );
@@ -5820,7 +5836,14 @@ async function loadClients() {
   const guestCount = guests.length;
   const grid = document.querySelector('#page-clients .clients-grid');
   if (!grid) return;
-  const colors = ['var(--blue)', 'var(--green)', 'var(--amber)', 'var(--purple)', 'var(--cyan)', 'var(--red)'];
+  const colors = [
+    'var(--blue)',
+    'var(--green)',
+    'var(--amber)',
+    'var(--purple)',
+    'var(--cyan)',
+    'var(--red)',
+  ];
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
@@ -6004,7 +6027,7 @@ function renderVanZones() {
     <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:20px;overflow:hidden">
       <div style="padding:14px 16px;background:${van.color}">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:15px;font-weight:600;color:#fff">${van.name}</div>
+          <div style="font-size:15px;font-weight:600;color:#fff">${esc(van.name)}</div>
           ${vanZones.length > 1 ? `<button data-action="remove-van" data-id="${van.id}" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:4px 8px;border-radius:6px;font-size:13px;cursor:pointer">✕</button>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -6350,12 +6373,12 @@ async function loadContacts() {
     <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <div style="width:40px;height:40px;border-radius:50%;background:${roleBg[c.role] || 'var(--border-lt)'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${roleColors[c.role] || 'var(--gray)'};flex-shrink:0">
-          ${c.first_name[0]}${c.last_name[0]}
+          ${esc(c.first_name[0])}${esc(c.last_name[0])}
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:600;color:var(--navy)">${c.first_name} ${c.last_name}</div>
-          <div style="font-size:13px;color:var(--mgray)">${c.phone}</div>
-          ${c.email ? `<div style="font-size:13px;color:var(--mgray)">${c.email}</div>` : ''}
+          <div style="font-size:15px;font-weight:600;color:var(--navy)">${esc(c.first_name)} ${esc(c.last_name)}</div>
+          <div style="font-size:13px;color:var(--mgray)">${esc(c.phone)}</div>
+          ${c.email ? `<div style="font-size:13px;color:var(--mgray)">${esc(c.email)}</div>` : ''}
         </div>
         <span style="background:${roleBg[c.role] || 'var(--border-lt)'};color:${roleColors[c.role] || 'var(--gray)'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
@@ -7160,7 +7183,9 @@ async function loadCalendar() {
       <div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:120px">
         ${dayBlocks
           .map(
-            (b) => `<div style="background:var(--red-lt);border-left:3px solid var(--red);border-radius:6px;padding:6px 8px">
+            (
+              b
+            ) => `<div style="background:var(--red-lt);border-left:3px solid var(--red);border-radius:6px;padding:6px 8px">
               <div style="font-size:11px;font-weight:700;color:var(--red)">🚫 ${esc(b.time_slot)} · ${b.van_number ? 'Van ' + b.van_number : 'All vans'}</div>
               ${b.reason ? `<div style="font-size:11px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.reason)}</div>` : ''}
             </div>`
@@ -7647,7 +7672,12 @@ async function loadNotifNumbers() {
   }
 
   const zoneLabel = { 1: 'Van 1', 2: 'Van 2', all: 'All zones', '': 'All zones' };
-  const zoneBg = { 1: 'var(--blue-tint)', 2: 'var(--green-lt)', all: 'var(--amber-tint)', '': 'var(--amber-tint)' };
+  const zoneBg = {
+    1: 'var(--blue-tint)',
+    2: 'var(--green-lt)',
+    all: 'var(--amber-tint)',
+    '': 'var(--amber-tint)',
+  };
   const zoneColor = {
     1: 'var(--blue)',
     2: 'var(--green)',
@@ -7672,7 +7702,7 @@ async function loadNotifNumbers() {
       </div>
       <!-- Fila 2: teléfono + canal + botones -->
       <div style="display:flex;align-items:center;gap:8px;padding-left:46px">
-        <span style="font-size:13px;color:var(--mgray);flex:1">${c.phone} · ${channelIcon[channel]} ${channel.toUpperCase()}</span>
+        <span style="font-size:13px;color:var(--mgray);flex:1">${esc(c.phone)} · ${channelIcon[channel]} ${channel.toUpperCase()}</span>
         <button data-action="edit-notif-number" data-id="${c.id}"
           style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
         <button data-action="delete-notif-number" data-id="${c.id}"
@@ -8147,7 +8177,7 @@ async function viewClientBikes(clientId, clientName) {
         <div style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px">
           <div style="font-weight:700;font-size:15px">${esc(b.nickname)}</div>
           <div style="font-size:13px;color:var(--mgray);margin-top:3px">
-            ${[b.year, b.brand, b.model, b.color, TYPE_LABELS[b.bike_type]].filter(Boolean).join(' · ') || 'No details'}
+            ${[b.year, b.brand, b.model, b.color, TYPE_LABELS[b.bike_type]].filter(Boolean).map(esc).join(' · ') || 'No details'}
           </div>
         </div>`
           )
