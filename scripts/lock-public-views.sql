@@ -72,9 +72,17 @@ GRANT SELECT ON public.public_reviews TO anon, authenticated;
 -- The default privileges are what made this a class of bug rather than one
 -- mistake. Any view created from now on inherits SELECT only; a view that
 -- needs more has to say so out loud.
+--
+-- `ON TABLES` is mandatory and this statement shipped without it, which cost
+-- Diego two failed runs on 2026-08-30. ALTER DEFAULT PRIVILEGES needs to be
+-- told which KIND of object it is talking about (TABLES / SEQUENCES /
+-- FUNCTIONS / TYPES / SCHEMAS); without it Postgres fails to parse at `FROM`.
+-- And a parse error aborts the WHOLE batch - so the three statements above,
+-- which were correct, never executed either, and the leak stayed open while
+-- the script looked like it had been run. Views count as TABLES here.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
-  FROM anon, authenticated;
+  ON TABLES FROM anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 4. Verify. Run this after the statements above and read the output.

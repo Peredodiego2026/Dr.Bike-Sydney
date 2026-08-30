@@ -96,6 +96,52 @@ describe('the next view cannot be born with the same hole', () => {
   });
 });
 
+// The remediation script is pasted into Supabase's SQL editor by hand, and
+// nothing in CI can execute Postgres to find out whether it parses. It did
+// not: `ALTER DEFAULT PRIVILEGES ... REVOKE ... FROM` is a syntax error
+// without `ON TABLES`, because the statement has to say which KIND of object
+// it means. Diego ran it twice on 2026-08-30 and got `42601 syntax error at
+// or near "FROM"` both times.
+//
+// The expensive part is not the typo. A parse error aborts the WHOLE batch, so
+// the three statements above it - which were correct - never ran either, and
+// the leak stayed open while the script looked like it had been applied. A
+// script that half-runs would be better than one that silently does nothing.
+//
+// These assert the shapes Postgres actually requires, so the same class of
+// error cannot ship again unnoticed.
+describe('the remediation script is valid SQL, not just correct intent', () => {
+  // Comments have to go before any of this: the first version of these tests
+  // matched the prose explaining the bug instead of the statement, and so
+  // passed on a file that was still broken.
+  //
+  // Stripping them is `[^\n\r]*` and not `.*$` on purpose. Git checks these
+  // files out with CRLF on Windows, `.` never matches `\r`, and `$` without
+  // the m flag only matches end-of-string - so `--.*$` silently stripped
+  // nothing here and the second version of this test failed too.
+  const sql = lock.replace(/--[^\n\r]*/g, '');
+  const flatSql = sql.toLowerCase().replace(/\s+/g, ' ');
+
+  it('ALTER DEFAULT PRIVILEGES names the object kind', () => {
+    const stmt = /alter default privileges[\s\S]*?;/.exec(flatSql)?.[0] ?? '';
+    expect(stmt).not.toBe('');
+    // The clause Postgres requires, in the order it wants it.
+    expect(stmt).toMatch(/on tables from/);
+  });
+
+  it('every REVOKE and GRANT names the object it acts on', () => {
+    const found = [...sql.matchAll(/\b(REVOKE|GRANT)\b[\s\S]*?;/gi)];
+    expect(found.length).toBeGreaterThanOrEqual(4);
+    for (const m of found) expect(m[0].toLowerCase()).toMatch(/\bon\b/);
+  });
+
+  it('every statement is terminated', () => {
+    // An unterminated statement swallows whatever follows it.
+    expect(sql.trim().endsWith(';')).toBe(true);
+    expect(sql.split(';').filter((s) => s.trim()).length).toBeGreaterThanOrEqual(5);
+  });
+});
+
 describe('the live probe covers the exact chain that was exploitable', () => {
   it('checks that the tracking view stops publishing the credential', () => {
     expect(probe).toContain('public_booking_tracking?select=tracking_token');
