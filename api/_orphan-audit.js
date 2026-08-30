@@ -12,10 +12,64 @@
 // payment was an orphan (PENDIENTES section 14). Nobody knows how many. This
 // module is what answers that, over any date range, without sending anything.
 //
-// It reads. It never refunds and never writes to Stripe: giving money back is
-// Diego's call, made in Stripe's own dashboard, one payment at a time.
+// auditOrphanPayments reads. It never refunds and never writes to Stripe: the
+// admin panel's audit is a report, and a report that moves money is a trap.
+//
+// 2026-08-30: that used to read "It reads. It never refunds and never writes
+// to Stripe: giving money back is Diego's call, made in Stripe's own
+// dashboard, one payment at a time." - full stop, for the whole module. It is
+// no longer the whole story, and the missing half was keeping real clients'
+// money. Diego's rule is that a charge with no booking behind it must not
+// survive on its own: "si el cobro ya salio, se reembolsa solo, sin que nadie
+// tenga que mirar." Asking a human to look is exactly what the daily WhatsApp
+// did - and it asked once. isOrphanCandidate skips anything already carrying
+// `orphan_alerted`, so a payment Diego never got around to acting on dropped
+// out of the cron permanently and was never seen again.
+//
+// The split is now explicit: the AUDIT below is still read-only, and the daily
+// CRON (api/send-cron.js?type=orphan-payments) is what refunds. orphanAction
+// is the decision it uses, kept here beside isOrphanCandidate because the two
+// have to agree on what an orphan is, and pure so it can be tested without a
+// Stripe account.
 
 const DEFAULT_GRACE_MINUTES = 15; // a booking mid-flight is not an orphan
+
+// How long a charge with no booking behind it may exist before the money goes
+// back on its own. Long enough that Diego, alerted within the hour, can still
+// turn it into a real booking by hand; short enough that nobody waits out a
+// weekend for their own money. A business decision, so it is asserted in
+// tests/unit/orphan-refund.test.js rather than left to drift.
+//
+// This is a floor, not a promise. The sweep is part of ?type=all, which
+// vercel.json runs once a day at 09:00 UTC (Hobby accounts cannot schedule
+// anything more frequent - see the note at the top of api/send-cron.js). A
+// payment that crosses the deadline one minute after a run waits for the next
+// one, so the real worst case is close to 48h. Shortening the constant does
+// not change that; only running the sweep more often would.
+export const ORPHAN_REFUND_AFTER_HOURS = 24;
+
+// What to do with a payment already established to have no booking behind it.
+// Call this only on confirmed orphans - it does not re-check that.
+//
+//   'done'   a previous run already refunded it; leave it alone
+//   'refund' past the deadline; give the money back
+//   'alert'  new; tell Diego, who can still turn it into a booking
+//   'wait'   alerted and still inside the deadline; the next run decides
+export function orphanAction(
+  pi,
+  { nowSeconds, refundAfterHours = ORPHAN_REFUND_AFTER_HOURS } = {}
+) {
+  const md = pi?.metadata || {};
+  if (md.orphan_refunded) return 'done';
+
+  // No `created` means no provable age, and this runs unattended. Refunding on
+  // a guess would give away money that may well have a booking behind it, so
+  // an unaged payment can only ever be alerted about.
+  const created = Number(pi?.created);
+  if (Number.isFinite(created) && nowSeconds - created >= refundAfterHours * 3600) return 'refund';
+
+  return md.orphan_alerted ? 'wait' : 'alert';
+}
 
 // Exported so the filtering can be tested without a Stripe account. Every
 // false here is a payment we must NOT report; every true is a payment that

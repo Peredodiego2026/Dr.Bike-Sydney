@@ -20,6 +20,22 @@
 -- despite bookings' restrictive RLS, and the GRANT below is what actually
 -- lets anon query the view itself.
 --
+-- 2026-08-30: that paragraph describes half of the trade and the missing half
+-- was a live hole. Owner privileges do not only make the SELECT work - they
+-- make writes work too, and Supabase's default grants hand anon every
+-- privilege on new objects in `public`. A PATCH to this view from the open
+-- internet returned 204: anon held UPDATE, and an update through the view
+-- lands on `bookings` with RLS never consulted. Once real reviews exist their
+-- ids are readable here, so the rows are addressable; a DELETE through the
+-- view would take the whole booking with it.
+--
+-- The REVOKE below is the fix, and it has to stay attached to the GRANT.
+-- security_invoker is deliberately NOT set on this view: turning it on would
+-- apply bookings' RLS, an anonymous visitor would match zero rows, and the
+-- testimonials section would go permanently empty. Reading as the owner is
+-- the entire point here - so removing write access is the only protection
+-- this view can have.
+--
 -- HOW TO APPLY: Supabase Dashboard -> SQL Editor -> paste -> Run.
 
 create or replace view public.public_reviews as
@@ -42,6 +58,8 @@ where b.client_rating is not null
   and b.status = 'completed'
 order by b.completed_at desc;
 
+revoke insert, update, delete, truncate, references, trigger
+  on public.public_reviews from anon, authenticated;
 grant select on public.public_reviews to anon, authenticated;
 
 -- Verify: should return 0 rows today (no real review submitted yet) and

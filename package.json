@@ -44,6 +44,7 @@
     "icons:check": "node scripts/icons-check.mjs",
     "color:check": "node scripts/color-check.mjs",
     "services:check": "node scripts/services-sync-check.mjs",
+    "rls:check": "node scripts/rls-check.mjs",
     "suburbs:generate": "node scripts/generate-suburb-pages.mjs",
     "blog:translate": "node scripts/translate-blog-posts.mjs",
     "static-pages:translate": "node scripts/translate-static-pages.mjs"

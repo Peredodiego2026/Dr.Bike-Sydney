@@ -7113,3 +7113,409 @@ esquina redondeada le cortaba la D. Ahora entra 12px.
 
 **848/848, corrido 10 veces. 7 checks verdes, lint 0 errores.**
 
+
+## 58. La direccion de los clientes estaba abierta a internet (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 2: *"la clave anonima esta en el JS, como
+corresponde; toda la proteccion real es Row Level Security. Probalo."*
+
+Se probo. **RLS estaba bien. Las vistas la esquivaban.**
+
+### Lo que se pudo hacer sin ninguna credencial
+
+Con la anon key que `js/supabase.js` sirve a cualquiera que abra la pagina,
+contra produccion, el 30-ago-2026:
+
+```
+GET  /rest/v1/public_booking_tracking?select=*
+  -> 200. Las 3 reservas, cada una con su tracking_token.
+
+POST /api/auth?role=public-track   {"tracking_token": <uno de esos>}
+  -> 200. Direccion completa, arrival_pin de 4 digitos, GPS del mecanico.
+```
+
+Dos pedidos. Sin login, sin token previo, sin adivinar nada.
+
+### La causa raiz, en una frase
+
+**Una vista de Postgres corre con los privilegios de su DUENO, no de quien
+consulta** - y Supabase le da a `anon` **todos** los privilegios sobre los
+objetos nuevos del esquema `public`.
+
+Las dos vistas del proyecto se crearon owner-privileged **a proposito**: es la
+unica forma de mostrarle a un anonimo una porcion filtrada de `bookings`, que
+esta detras de RLS. Lo que nadie conto es la otra mitad del trato. Owner
+privileges no solo hacen que ande el SELECT: hacen que anden las escrituras. Y
+el GRANT por defecto agrego la puerta de escritura sola.
+
+### Segundo agujero, misma causa
+
+```
+PATCH /rest/v1/public_reviews?id=eq.<uuid>   -> 204
+```
+
+`anon` tenia UPDATE sobre la vista de resenas. Una escritura por ahi aterriza
+en `bookings` **sin que RLS se consulte nunca**. Hoy no hay resenas, asi que no
+hay ids que direccionar; el dia que las haya, sus ids se leen en la misma vista
+y cualquiera puede editarlas. Un DELETE por ese camino se lleva **la reserva
+entera**, no la resena.
+
+### Lo que este bug ensena sobre donde mirar
+
+`api/auth.js:3404` **no estaba mal**. Su comentario dice, correctamente, que el
+token es un UUID imposible de adivinar y que aceptar un `booking_id` crudo
+arruinaba el punto de tenerlo - eso ya se habia arreglado (entrada del
+2026-07-21). El codigo era correcto y la base lo contradecia.
+
+Nadie lo iba a encontrar leyendo JavaScript. Por eso el guard son dos piezas y
+no una:
+
+- `tests/unit/public-views-locked.test.js` (13 tests, corre en CI): falla si
+  algun REVOKE se cae de las migraciones. Una migracion re-corrida ya no puede
+  reabrir el agujero, que es exactamente como se habria vuelto a colar.
+- `scripts/rls-check.mjs` (`npm run rls:check`): pega contra la base de verdad
+  como pegaria un atacante. **Fuera de `npm run check` a proposito** - usa red,
+  y un Supabase lento seria CI en rojo en una rama que no toco nada.
+
+El probe reprodujo los 3 hallazgos y **un cuarto que era ruido**: leia el
+"no automatically updatable" de la vista de tracking por status 400, y
+PostGREST lo contesta con 500. Ahora matchea el mensaje. Un detector que grita
+de mas se termina ignorando, que es peor que no tenerlo.
+
+### Lo que hay que correr
+
+`scripts/lock-public-views.sql`. Revoca todo sobre `public_booking_tracking`
+(**nada la usa** - se grepeo el repo entero; `handlePublicTrack` lee `bookings`
+directo con la service key), le saca la escritura a `public_reviews` dejandole
+el SELECT que la landing necesita, y cambia los default privileges del esquema
+para que la proxima vista no nazca con el mismo agujero.
+
+`public_reviews` **no** lleva `security_invoker = on`, y eso es deliberado:
+prenderlo aplicaria la RLS de `bookings`, un visitante anonimo matchearia cero
+filas y la seccion de testimonios quedaria vacia para siempre. Leer como el
+dueno es el motivo por el que la vista existe. Sacarle la escritura es la unica
+proteccion que puede tener - hay un test que falla si alguien "mejora" esto.
+
+### Lo que NO se probo
+
+- **DELETE.** No se mando ninguno, por la regla de no borrar filas. El GRANT
+  por defecto de Supabase casi con certeza lo incluia junto al UPDATE que si
+  se confirmo con el 204.
+- **Cliente A leyendo la reserva del cliente B.** Requiere dos cuentas reales;
+  las policies del repo dicen `auth.uid() = client_id` en SELECT, INSERT y
+  UPDATE de `bookings`, pero los scripts del repo **ya se demostraron
+  desactualizados** respecto de la base (`migrate-inventory-push.sql` declara
+  `parts_inventory FOR ALL USING (true)` y la base la tiene cerrada). Queda
+  pendiente contra la base, no contra el repo.
+
+Las 16 tablas base, en cambio, si estan bien: lectura anonima devuelve 0 filas
+en todas las sensibles, e INSERT anonimo devuelve `42501` en todas.
+
+### Post-mortem del propio arreglo: el SQL no parseaba (30-ago-2026)
+
+`lock-public-views.sql` se entrego con un error de sintaxis. La ultima
+sentencia decia:
+
+```sql
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  FROM anon, authenticated;      -- <- falta ON TABLES
+```
+
+`ALTER DEFAULT PRIVILEGES` tiene que decir **de que tipo de objeto** habla
+(TABLES / SEQUENCES / FUNCTIONS / TYPES / SCHEMAS). Sin `ON TABLES`, Postgres
+falla al parsear en el `FROM`: `42601 syntax error at or near "FROM"`.
+
+**Lo caro no fue el typo.** Un error de parseo **aborta el lote entero**, asi
+que las tres sentencias anteriores - que estaban bien - tampoco corrieron. El
+resultado es el peor posible: el script parece aplicado, Diego lo corre dos
+veces, y la fuga sigue abierta. Un script que corre a medias hubiera sido mejor
+que uno que no hace nada en silencio.
+
+**Por que no lo agarro nada:** el SQL se pega a mano en el editor de Supabase.
+Ningun test de este repo puede ejecutar Postgres, asi que la validez del SQL no
+estaba cubierta por nada. Los tests que habia verificaban la *intencion* (que
+el REVOKE existiera), no que el archivo fuera ejecutable.
+
+Ahora hay tres tests que afirman la forma que Postgres exige: que
+`ALTER DEFAULT PRIVILEGES` lleve `ON TABLES FROM`, que todo REVOKE/GRANT nombre
+su objeto, y que ninguna sentencia quede sin terminar. **Se verificaron
+re-introduciendo el bug a proposito**: con el bug, 2 tests fallan; sin el, 16
+pasan. Un test que nunca se vio fallar no prueba nada.
+
+Y una segunda vuelta de lo mismo: la primera version de esos tests **pasaba con
+el archivo roto**, porque matcheaba el comentario que explica el bug en vez de
+la sentencia. La segunda tambien fallaba, por CRLF: git deja `
+` al final de
+linea, `.` no matchea `
+` y `$` sin flag `m` solo matchea fin de string, asi
+que `--.*$` no borraba nada. Quedo como `--[^
+
+]*`.
+
+**CERRADO Y VERIFICADO EN PRODUCCION (30-ago-2026).** Con el SQL corregido:
+
+```
+GET  /rest/v1/public_booking_tracking  -> 401 permission denied for view
+PATCH /rest/v1/public_reviews          -> 401 permission denied for view
+GET  /rest/v1/public_reviews           -> 200  (la landing las sigue leyendo)
+npm run rls:check                      -> exit 0, 17 cerradas, 4 publicas
+```
+
+Ademas, la mitad del punto 2 que a la manana no se podia probar quedo probada:
+simulando un usuario logueado que no es admin ni dueno de nada
+(`sub` = un UUID inventado, dentro de BEGIN/ROLLBACK), `bookings`, `profiles`,
+`bikes` y `job_messages` devuelven **0, 0, 0, 0**. Un cliente no ve nada de
+otro. Las politicas reales de la base lo confirman:
+`bookings_select_own_or_admin` es `auth.uid() = client_id OR es admin` - y esa
+excepcion de admin es la que hizo que el primer test diera un falso positivo,
+porque el UUID elegido era la cuenta de admin de Diego.
+
+
+## 59. El cobro sin reserva avisaba una vez y despues se olvidaba (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 12. La regla de Diego no era una pregunta
+abierta: *"Nunca puede existir un cobro sin reserva. Si la reserva no se puede
+crear, no se cobra; y si el cobro ya salio, **se reembolsa solo, sin que nadie
+tenga que mirar**."*
+
+Habia **tres** redes y ninguna terminaba el trabajo.
+
+### Lo que ya estaba bien, y hay que decirlo
+
+1. `api/stripe-webhook.js` reconstruye la reserva desde la metadata del
+   PaymentIntent. El navegador puede morirse justo despues del cobro y la
+   reserva igual aparece. Eso se construyo despues del incidente del
+   2026-08-05 (entrada 14) y **funciona**.
+2. El webhook reembolsa solo si el monto no coincide con el precio que el
+   servidor recalcula. Tambien funciona - y es la unica cosa que reembolsaba
+   sola en toda la app.
+3. Un cron diario (`?type=orphan-payments`) cruzaba Stripe contra `bookings` y
+   encontraba los pagos huerfanos.
+
+### Donde se cortaba
+
+La red 3 es la que **se parece** a la regla y no lo es. Le mandaba a Diego un
+WhatsApp que decia, literalmente: *"Either create the booking manually or
+refund it in Stripe."* Eso es pedirle a un humano que mire. La regla dice lo
+contrario.
+
+Y era peor que eso: **avisaba una sola vez**. `isOrphanCandidate` descarta
+cualquier pago que ya tenga `orphan_alerted` en su metadata - lo cual tiene
+sentido para no despertar a Diego dos veces por lo mismo. El efecto real es que
+un pago del que Diego se entero un martes y no llego a resolver **salia del
+radar del cron para siempre**. La plata del cliente quedaba adentro, en
+silencio, sin que nada volviera a mirarla nunca.
+
+Tres agujeros mas, todos en el mismo bucle:
+
+- **Sin numero de WhatsApp configurado** -> `continue`. Sin aviso, sin marca,
+  sin reembolso, y un `console.error` que no lee nadie.
+- **Twilio caido** -> `continue`. Igual.
+- **Stripe se cansa de reintentar.** El webhook tira una excepcion cuando el
+  insert falla, justamente para que Stripe reintente. Stripe reintenta unos 3
+  dias y despues abandona. Si el error era permanente - por ejemplo **una
+  columna que no existe porque la migracion no se corrio**, que es un modo de
+  falla conocido de este proyecto - el final es un cobro sin reserva y nadie se
+  entera.
+
+### Lo que se hizo
+
+`orphanAction()` en `api/_orphan-audit.js`: una funcion pura que decide que
+hacer con un pago ya confirmado como huerfano.
+
+- `alert` - nuevo: avisarle a Diego, que todavia puede convertirlo en reserva.
+- `wait` - avisado y dentro del plazo.
+- `refund` - **pasado el plazo: la plata vuelve sola.**
+- `done` - una corrida anterior ya lo reembolso.
+
+El cron ahora lista con `ignoreAlerted: true`, asi los ya avisados **vuelven a
+entrar** en vez de desaparecer, y `orphanAction` es lo que evita re-avisar.
+
+**El reembolso va primero y no depende del WhatsApp.** Que un cliente recupere
+su plata no puede colgar de que Twilio ande o de que haya un numero cargado.
+Eso invierte el orden que tenia el bucle, que era exactamente al reves.
+
+**El plazo es 24 h** (`ORPHAN_REFUND_AFTER_HOURS`). Decision de negocio con
+default aplicado, no consultada: suficiente para que Diego cree la reserva a
+mano despues del aviso, corto para que nadie espere un fin de semana por su
+propia plata. Hay un test que lo afirma para que no se mueva sin querer, y otro
+que verifica que el plazo entre en la ventana de 48 h que mira el cron - si no,
+el pago envejeceria fuera de la lista antes de poder reembolsarse.
+
+### El modo de falla catastrofico, y su test
+
+Un reembolso automatico tiene una forma de salir horriblemente mal: si la
+consulta a `bookings` falla y se interpreta como "no hay ninguna reserva",
+**todos** los pagos del dia parecen huerfanos y la caja se reembolsa sola.
+
+El codigo ya abortaba bien (`return res.status(500)`), pero eso no estaba
+cubierto por ningun test y ahora si lo esta. Es la clase de linea que una
+"simplificacion" futura borra sin entender que sostiene.
+
+### Lo que NO se toco, a proposito
+
+`shouldCreateBookingFor` en el webhook sigue devolviendo `{skipped}` sin
+reembolsar cuando falta la metadata. La tentacion era hacerlo reembolsar ahi
+tambien, y es una trampa: por ese mismo camino pasan PaymentIntents que
+**legitimamente** no son reservas y que los filtros de arriba no atrapan (el
+Checkout Session de `create-payment-session.js:251` lleva solo
+`{bookingId, email}`). Reembolsarlos seria devolver plata de cobros validos.
+
+El cron es el unico lugar del sistema que cruza contra `bookings`, o sea contra
+la verdad, y por eso es el unico que puede decidir un reembolso. Una red que
+sabe, en vez de cuatro parches que adivinan.
+
+15 tests nuevos. 876/876, corrido 4 veces.
+
+## 60. El PIN del mecanico solo estaba blindado en la puerta de entrada (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 3. El PIN es de 4 digitos. Lo unico entre
+alguien que lo adivina y el nombre, telefono y direccion exacta de cada cliente
+del dia es el bloqueo por intentos fallidos - y ese bloqueo cubria **una sola**
+de las catorce rutas que aceptan el PIN.
+
+### El estado real, no el que decia la auditoria
+
+La auditoria (y viejas notas) hablaban de "sin bloqueo". Falso: el bloqueo
+existe desde el 2026-06-29 (5 fallos / 15 min, respaldado en la tabla
+`login_attempts`, cross-instance). Lo que estaba mal era **donde** estaba puesto.
+
+`handleMechanic` (role=mechanic, la pantalla de login) llamaba `isLoginLocked`
+antes de autenticar. Pero las otras trece rutas - `mechanic-jobs`,
+`mechanic-update-status`, `mechanic-parts`, `mechanic-messages`,
+`mechanic-location`, ... - autentican pasando el mismo PIN a `authMechanic`, y
+**ninguna** consultaba el bloqueo. La unica barrera ahi era el rate limit
+generico de 30/min por IP.
+
+### Verificado contra produccion
+
+```
+POST /api/auth?role=mechanic       PIN malo x6 -> 401 401 401 401 401 429
+POST /api/auth?role=mechanic-jobs  PIN malo x8 -> 401 401 401 401 401 401 401 401
+```
+
+El login corta al sexto. `mechanic-jobs` no corta nunca. 10.000 PINs a 30/min
+son ~5 horas desde una sola IP, y minutos repartido en varias. El que lo saca
+entra a `mechanic-jobs` y ve la agenda entera con direcciones.
+
+### El arreglo
+
+El bloqueo se movio **adentro de `authMechanic`**, que es el unico camino que
+comparten las catorce rutas. Ahora:
+
+- consulta `isLoginLocked` antes de procesar un PIN, y corta con 429 sin
+  siquiera leer la base;
+- cuenta el fallo (`recordLoginFailure`) en cualquier ruta, no solo en login;
+- limpia el contador con un PIN correcto.
+
+Aplica **solo al camino del PIN**. Un token de sesion es un HMAC de 256 bits,
+no algo que se adivine de a 4 digitos, y uno vencido es un evento normal, no un
+ataque - un pedido con token nunca toca el contador ni el bloqueo. Si lo
+tocara, un mecanico con la sesion vencida se autobloquearia al reabrir la app.
+
+`handleMechanic` se simplifico para no contar doble: el bloqueo, el contador y
+el reset viven ahora en `authMechanic`; el handler solo agrega el header
+`Retry-After`, que es propio de la UI de reintento del login.
+
+### La otra mitad del punto 3 ya estaba
+
+"PIN por mecanico o rotable sin tocar codigo": ya existe. `handleAdminSetMechanicPin`
+(role=admin-set-mechanic-pin) deja a Diego fijar o rotar el PIN de cada
+mecanico desde Admin, guardado como `pin_hash` (HMAC), nunca en texto plano, y
+devuelto una sola vez para entregarselo al mecanico. El PIN es por-contacto, o
+sea por-mecanico. No hay nada que hacer aca.
+
+### Lo que NO se hizo
+
+- **No se cambio el largo del PIN** (sigue 4 digitos). Con el bloqueo cubriendo
+  las catorce rutas, el espacio de 10.000 ya no es fuerza-bruteable online. Un
+  PIN mas largo es mejora incremental, no cierre de agujero.
+- **No se probo el 429 en las trece rutas contra produccion despues del fix**
+  porque el fix todavia no esta deployado. Se probo la funcion `authMechanic`
+  directa con 6 tests (bloqueo, conteo, reset, y que el token no toca nada). El
+  429 en `mechanic-jobs` hay que confirmarlo en produccion despues del merge.
+
+6 tests nuevos. 882/882.
+
+## 61. No habia backups. Ninguno. (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 19. La pregunta era *"Supabase los hace, pero
+nadie restauro uno nunca"*. **La respuesta result peor que la pregunta.**
+
+Diego abrio Database > Backups y mando la captura:
+
+> **Free Plan does not include project backups.**
+> Upgrade to the Pro Plan for up to 7 days of scheduled backups.
+
+No es "backups que nadie probo". Es que **no existe ninguno**. Si la base se
+pierde - un `DELETE` mal escrito en el SQL Editor, que es como se corren todas
+las migraciones de este proyecto - no hay a donde volver.
+
+Hoy son 3 reservas y se sobrevive. El dia que sean 200 clientes con sus bicis,
+su historial de servicio y sus pagos, es el fin de los registros del negocio.
+
+### Lo que se hizo
+
+Diego eligio la opcion gratis: **volcado nocturno de toda la base a JSON,
+enviado por email**. Queda **fuera de Supabase por construccion** - sale del
+proyecto y aterriza en su casilla, asi que sobrevive a que el proyecto muera.
+
+No reemplaza el point-in-time recovery de Pro y el cuerpo del mail lo dice.
+Es la diferencia entre perder un dia y perder todo.
+
+Corre dentro de `?type=all`, el cron diario que ya existe: Vercel en plan Hobby
+no permite crons mas frecuentes que diarios, y agregar una entrada nueva ya
+hizo fallar un deploy antes (ver el comentario arriba de `api/send-cron.js`).
+Va **ultimo** en el `Promise.allSettled`, para leer el estado despues de que
+los otros jobs terminaron de escribir y no a mitad de camino.
+
+### Las dos formas en que un backup miente
+
+Un backup en el que no se puede confiar es peor que ninguno, porque se deja de
+pensar en el. Las dos formas estan cubiertas y testeadas:
+
+1. **Truncado silencioso.** PostgREST devuelve **1000 filas como maximo** por
+   pedido. Un volcado ingenuo de una tabla que crece se detendria en 1000 y el
+   archivo se veria completo igual. Cada tabla se pagina hasta agotarla.
+2. **Omision silenciosa.** Si una tabla falla, descartarla y mandar el resto
+   produce un archivo que parece entero y no lo es. Una tabla que falla queda
+   registrada **adentro** del backup (`__backup_error__`) y el asunto del mail
+   dice **INCOMPLETO**.
+
+Hay un tercer caso: si el archivo supera los 20 MB no se manda un mail que
+Resend va a rechazar en silencio - se manda un aviso diciendo que **hoy no hay
+copia** y que a ese tamano la respuesta es un plan con backups de verdad.
+
+### El hueco que encontro el chequeo contra la base real
+
+La lista de tablas se verifico contra el esquema vivo, y el chequeo encontro el
+modo de falla que la lista tiene: **una tabla que existe en la base y no esta
+nombrada no la respalda nadie, y nada lo dice.**
+
+Faltaban dos:
+- `waitlist_signups` - personas reales que pidieron que las contacten.
+- `stripe_events` - los ids de eventos de Stripe que evitan procesar un webhook
+  dos veces. Perderlos es plata, no datos.
+
+Ahora hay una lista `DELIBERATELY_SKIPPED` con el motivo de cada exclusion
+(`geo_cache` se regenera, `login_attempts` no significa nada una hora despues,
+`bookings_backup_20260726` ya es una copia y duplicaria el archivo), y un test
+que compara las dos listas contra el esquema pinneado al 30-ago-2026. Cuando
+una migracion agregue una tabla, el test falla y obliga a elegir: respaldarla o
+saltearla con una razon. Las dos estan bien; el silencio no.
+
+### Lo que NO se verifico
+
+**No se disparo el endpoint contra produccion.** Mandaria un mail real con
+todos los datos de los clientes, y hacerlo antes del merge significa correr el
+codigo de una rama. Se verifico que las 24 tablas existen (las 24 responden 200
+en la API) y hay 17 tests sobre el armado del archivo. **El primer mail de
+verdad llega el dia despues del merge, a las 9:00 UTC.** Si no llega, el
+problema esta en el envio, no en el armado.
+
+**El destinatario esta hardcodeado**, no configurable: el archivo es el nombre,
+telefono y direccion de cada cliente en un solo lugar. Ninguna variable de
+entorno ni campo de admin puede redirigirlo.
+
+17 tests nuevos. 899/899.
