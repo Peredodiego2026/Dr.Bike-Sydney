@@ -164,7 +164,15 @@ describe('the new string ships in all three languages', () => {
   it('has es and zh, in the same commit that created it', () => {
     const i18n = read('js/i18n.js');
     for (const lang of ['es', 'zh']) {
-      const block = i18n.slice(i18n.indexOf(`  ${lang}: {`));
+      // One block only. Slicing to the end of the file would let a
+      // Chinese-only translation satisfy the Spanish assertion - the same
+      // bug this caught in scripts/a11y-check.mjs.
+      const start = i18n.indexOf(`  ${lang}: {`);
+      const others = ['en', 'es', 'zh']
+        .filter((l) => l !== lang)
+        .map((l) => i18n.indexOf(`  ${l}: {`, start + 1))
+        .filter((i) => i > start);
+      const block = i18n.slice(start, others.length ? Math.min(...others) : undefined);
       expect(block, `${lang} is missing "Skip to content"`).toContain("'Skip to content'");
     }
   });

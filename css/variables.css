@@ -318,3 +318,22 @@ a:focus-visible,
 .skip-link:focus {
   left: 0;
 }
+
+/* Visually hidden, still read aloud. Audit point 15: the app had exactly two
+   aria-live regions, both loading spinners, so a screen reader never announced
+   an error, a step change, or the mechanic's position.
+
+   Not `display:none` and not `visibility:hidden` - both remove the element from
+   the accessibility tree, which is the one thing this must never do. The
+   clip-path/1px recipe is the one that survives every screen reader. */
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

@@ -7770,3 +7770,99 @@ faltaba. Deja de ser algo que hay que acordarse.
   verifico.
 
 16 tests nuevos. 966/966.
+
+## 66. Un lector de pantalla no se enteraba de nada (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 15: *"que anuncie el cambio de paso, que lea
+los errores al ocurrir, y que el mapa tenga alternativa en texto"*.
+
+La app tenia **exactamente dos regiones `aria-live`, y las dos eran spinners de
+carga**. Un pago fallido, un cambio de paso en el asistente de reserva, y el
+mecanico moviendose por el mapa: los tres se le anunciaban a **nadie**.
+
+### El helper, y por que tiene la forma que tiene
+
+`announce(mensaje, { assertive })` en `js/components.js`, con **dos regiones
+persistentes** creadas una vez y en las que se escribe.
+
+No se inserta un elemento nuevo que traiga `role="alert"` puesto. Un lector
+anuncia una region viva cuando su **contenido cambia**; un elemento que llega ya
+con su texto se anuncia de forma inconsistente, y en algunas combinaciones no se
+anuncia nunca. Esta es la forma que funciona en todos.
+
+Dos canales, y la distincion importa:
+- **polite** espera una pausa. Estados, cambios de paso, el mecanico moviendose.
+- **assertive** interrumpe. **Solo errores**: un pago que fallo no puede esperar
+  a que el lector termine la oracion en la que esta.
+
+Y limpia el texto antes de escribirlo: **dos pagos fallidos seguidos es un caso
+real**, y una region cuyo texto no cambio no dice nada.
+
+`.sr-only` usa la receta `clip-path` de 1px, no `display:none` ni
+`visibility:hidden` - las dos sacan el elemento del arbol de accesibilidad, que
+es lo unico que no puede pasar.
+
+### Los errores
+
+`showToast()` creaba un `div` pelado, sin `role` ni `aria-live`. Ahora anuncia
+por la region viva, y el toast lleva `aria-hidden="true"`: sin eso el lector
+lee el mismo mensaje **dos veces**.
+
+### El cambio de paso
+
+Los tres pasos del asistente se redibujan **dentro de la misma pantalla sin
+tocar el hash**, asi que no habia ninguna senal - el lector simplemente
+encontraba contenido distinto bajo el cursor.
+
+Se engancho en `scrollStepToTop()`, que ya era el unico lugar que corre en cada
+cambio de paso, en las dos superficies. Un solo punto en vez de tres.
+
+### El mapa
+
+`#tracking-map` es un lienzo de tiles: ilegible, y un lector que aterriza ahi
+encuentra un hueco sin etiqueta. Ahora lleva `aria-hidden="true"` y al lado hay
+un `#map-alt` que dice lo mismo en texto, alimentado desde `paintETA()` para que
+no pueda quedar viejo.
+
+Con guarda de repeticion: eso repinta **cada pocos segundos** mientras el
+mecanico se mueve, y un lector repitiendo la misma oracion en loop es peor que
+el silencio.
+
+### El bug del guard, que es la parte que mas vale
+
+El chequeo de traducciones cortaba el diccionario asi:
+
+```js
+dict.slice(dict.indexOf(`  ${lang}: {`))   // hasta el FINAL del archivo
+```
+
+Para `es`, eso incluye el bloque `zh` entero. **Una cadena traducida solo al
+chino satisfacia tambien el chequeo del espanol.** El guard pasaba sobre una
+traduccion faltante de verdad.
+
+Se encontro **borrando una a proposito** para ver si el guard la agarraba. No
+la agarro. Ahora `langBlockOf()` corta hasta el siguiente idioma, y el mismo
+arreglo se aplico a `tests/unit/keyboard-access.test.js`, que tenia el error
+identico. Verificado volviendo a borrarla: ahora si falla.
+
+**Un test que nunca se vio fallar no prueba nada** - cuarta vez en esta sesion
+(ver 58, 62, 64).
+
+### Las cadenas habladas y el agujero del i18n-check
+
+Las seis cadenas nuevas pasan **adentro** de `translateValue()` via `announce()`,
+y `scripts/i18n-check.mjs` solo ve las que estan **afuera**. Es el hueco que
+CLAUDE.md documenta: una traduccion faltante ahi es silenciosa, la cadena sale
+en ingles y el check queda verde.
+
+Por eso `scripts/a11y-check.mjs` las verifica por nombre, una por una.
+
+### Lo que NO se verifico
+
+**No se probo con un lector de pantalla real** (NVDA, VoiceOver, TalkBack). Eso
+necesita un navegador, prohibido en esta sesion. Lo que si esta verificado: las
+regiones existen, tienen la forma que los lectores anuncian de forma confiable,
+los tres disparadores estan conectados, y las seis cadenas estan en los tres
+idiomas. **Lo que falta es que alguien lo escuche.**
+
+19 tests nuevos. 985/985.
