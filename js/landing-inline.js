@@ -89,7 +89,7 @@ function lpDateLocale() {
 
   function escapeMechHtml(str) {
     const d = document.createElement('div');
-    d.textContent = str == null ? '' : String(str);
+    d.textContent = str ?? '';
     // The textContent round-trip leaves quote characters as-is, so also
     // replace them; the result then stays safe inside a quoted attribute
     // value (src, alt), not only inside a text node.
