@@ -7211,6 +7211,67 @@ proteccion que puede tener - hay un test que falla si alguien "mejora" esto.
 Las 16 tablas base, en cambio, si estan bien: lectura anonima devuelve 0 filas
 en todas las sensibles, e INSERT anonimo devuelve `42501` en todas.
 
+### Post-mortem del propio arreglo: el SQL no parseaba (30-ago-2026)
+
+`lock-public-views.sql` se entrego con un error de sintaxis. La ultima
+sentencia decia:
+
+```sql
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  FROM anon, authenticated;      -- <- falta ON TABLES
+```
+
+`ALTER DEFAULT PRIVILEGES` tiene que decir **de que tipo de objeto** habla
+(TABLES / SEQUENCES / FUNCTIONS / TYPES / SCHEMAS). Sin `ON TABLES`, Postgres
+falla al parsear en el `FROM`: `42601 syntax error at or near "FROM"`.
+
+**Lo caro no fue el typo.** Un error de parseo **aborta el lote entero**, asi
+que las tres sentencias anteriores - que estaban bien - tampoco corrieron. El
+resultado es el peor posible: el script parece aplicado, Diego lo corre dos
+veces, y la fuga sigue abierta. Un script que corre a medias hubiera sido mejor
+que uno que no hace nada en silencio.
+
+**Por que no lo agarro nada:** el SQL se pega a mano en el editor de Supabase.
+Ningun test de este repo puede ejecutar Postgres, asi que la validez del SQL no
+estaba cubierta por nada. Los tests que habia verificaban la *intencion* (que
+el REVOKE existiera), no que el archivo fuera ejecutable.
+
+Ahora hay tres tests que afirman la forma que Postgres exige: que
+`ALTER DEFAULT PRIVILEGES` lleve `ON TABLES FROM`, que todo REVOKE/GRANT nombre
+su objeto, y que ninguna sentencia quede sin terminar. **Se verificaron
+re-introduciendo el bug a proposito**: con el bug, 2 tests fallan; sin el, 16
+pasan. Un test que nunca se vio fallar no prueba nada.
+
+Y una segunda vuelta de lo mismo: la primera version de esos tests **pasaba con
+el archivo roto**, porque matcheaba el comentario que explica el bug en vez de
+la sentencia. La segunda tambien fallaba, por CRLF: git deja `
+` al final de
+linea, `.` no matchea `
+` y `$` sin flag `m` solo matchea fin de string, asi
+que `--.*$` no borraba nada. Quedo como `--[^
+
+]*`.
+
+**CERRADO Y VERIFICADO EN PRODUCCION (30-ago-2026).** Con el SQL corregido:
+
+```
+GET  /rest/v1/public_booking_tracking  -> 401 permission denied for view
+PATCH /rest/v1/public_reviews          -> 401 permission denied for view
+GET  /rest/v1/public_reviews           -> 200  (la landing las sigue leyendo)
+npm run rls:check                      -> exit 0, 17 cerradas, 4 publicas
+```
+
+Ademas, la mitad del punto 2 que a la manana no se podia probar quedo probada:
+simulando un usuario logueado que no es admin ni dueno de nada
+(`sub` = un UUID inventado, dentro de BEGIN/ROLLBACK), `bookings`, `profiles`,
+`bikes` y `job_messages` devuelven **0, 0, 0, 0**. Un cliente no ve nada de
+otro. Las politicas reales de la base lo confirman:
+`bookings_select_own_or_admin` es `auth.uid() = client_id OR es admin` - y esa
+excepcion de admin es la que hizo que el primer test diera un falso positivo,
+porque el UUID elegido era la cuenta de admin de Diego.
+
+
 ## 59. El cobro sin reserva avisaba una vez y despues se olvidaba (30-ago-2026)
 
 Auditoria pre-lanzamiento, punto 12. La regla de Diego no era una pregunta
