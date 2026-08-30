@@ -3151,7 +3151,7 @@ function appendMechMessage(msg, scroll = true) {
   const bubble = document.createElement('div');
   bubble.style.cssText = `max-width:75%;padding:8px 12px;border-radius:${isMech ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:13px;background:${isMech ? 'var(--blue)' : 'var(--white)'};color:${isMech ? '#fff' : 'var(--navy)'};border:${isMech ? 'none' : '1px solid var(--border)'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
-  if (photoMatch) {
+  if (photoMatch && /^https?:\/\//i.test(photoMatch[1])) {
     const img = document.createElement('img');
     img.src = photoMatch[1];
     img.style.cssText = 'max-width:200px;border-radius:8px;display:block;cursor:pointer';

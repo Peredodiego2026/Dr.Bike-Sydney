@@ -1974,7 +1974,7 @@ function openLandingChat(bookingId) {
     const bubble = document.createElement('div');
     bubble.style.cssText = 'max-width:75%;padding:9px 13px;border-radius:' + (isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:15px;line-height:1.4;word-break:break-word;background:' + (isClient ? '#2563eb' : '#fff') + ';color:' + (isClient ? '#fff' : '#0D1F3C') + ';border:' + (isClient ? 'none' : '1px solid #E2E8F0');
     const pm = (m.message || '').match(/^\[PHOTO:(.*)\]$/);
-    if (pm) { const img = document.createElement('img'); img.src = pm[1]; img.style.cssText = 'max-width:200px;border-radius:10px;display:block;cursor:pointer'; img.addEventListener('click', function() { window.open(pm[1], '_blank'); }); bubble.style.padding = '4px'; bubble.appendChild(img); }
+    if (pm && /^https?:\/\//i.test(pm[1])) { const img = document.createElement('img'); img.src = pm[1]; img.style.cssText = 'max-width:200px;border-radius:10px;display:block;cursor:pointer'; img.addEventListener('click', function() { window.open(pm[1], '_blank'); }); bubble.style.padding = '4px'; bubble.appendChild(img); }
     else bubble.textContent = m.message;
     wrap.appendChild(bubble); msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
   }

@@ -3524,7 +3524,7 @@ function appendClientMsg(msg, container, scroll) {
   const bubble = document.createElement('div');
   bubble.style.cssText = `max-width:75%;padding:9px 13px;border-radius:${isClient ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};font-size:15px;line-height:1.4;word-break:break-word;background:${isClient ? '#2563EB' : '#fff'};color:${isClient ? '#fff' : '#0D1F3C'};border:${isClient ? 'none' : '1px solid #E2E8F0'}`;
   const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
-  if (photoMatch) {
+  if (photoMatch && /^https?:\/\//i.test(photoMatch[1])) {
     const img = document.createElement('img');
     img.src = photoMatch[1];
     img.alt = 'Photo';
