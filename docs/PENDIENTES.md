@@ -7306,3 +7306,73 @@ la verdad, y por eso es el unico que puede decidir un reembolso. Una red que
 sabe, en vez de cuatro parches que adivinan.
 
 15 tests nuevos. 876/876, corrido 4 veces.
+
+## 60. El PIN del mecanico solo estaba blindado en la puerta de entrada (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 3. El PIN es de 4 digitos. Lo unico entre
+alguien que lo adivina y el nombre, telefono y direccion exacta de cada cliente
+del dia es el bloqueo por intentos fallidos - y ese bloqueo cubria **una sola**
+de las catorce rutas que aceptan el PIN.
+
+### El estado real, no el que decia la auditoria
+
+La auditoria (y viejas notas) hablaban de "sin bloqueo". Falso: el bloqueo
+existe desde el 2026-06-29 (5 fallos / 15 min, respaldado en la tabla
+`login_attempts`, cross-instance). Lo que estaba mal era **donde** estaba puesto.
+
+`handleMechanic` (role=mechanic, la pantalla de login) llamaba `isLoginLocked`
+antes de autenticar. Pero las otras trece rutas - `mechanic-jobs`,
+`mechanic-update-status`, `mechanic-parts`, `mechanic-messages`,
+`mechanic-location`, ... - autentican pasando el mismo PIN a `authMechanic`, y
+**ninguna** consultaba el bloqueo. La unica barrera ahi era el rate limit
+generico de 30/min por IP.
+
+### Verificado contra produccion
+
+```
+POST /api/auth?role=mechanic       PIN malo x6 -> 401 401 401 401 401 429
+POST /api/auth?role=mechanic-jobs  PIN malo x8 -> 401 401 401 401 401 401 401 401
+```
+
+El login corta al sexto. `mechanic-jobs` no corta nunca. 10.000 PINs a 30/min
+son ~5 horas desde una sola IP, y minutos repartido en varias. El que lo saca
+entra a `mechanic-jobs` y ve la agenda entera con direcciones.
+
+### El arreglo
+
+El bloqueo se movio **adentro de `authMechanic`**, que es el unico camino que
+comparten las catorce rutas. Ahora:
+
+- consulta `isLoginLocked` antes de procesar un PIN, y corta con 429 sin
+  siquiera leer la base;
+- cuenta el fallo (`recordLoginFailure`) en cualquier ruta, no solo en login;
+- limpia el contador con un PIN correcto.
+
+Aplica **solo al camino del PIN**. Un token de sesion es un HMAC de 256 bits,
+no algo que se adivine de a 4 digitos, y uno vencido es un evento normal, no un
+ataque - un pedido con token nunca toca el contador ni el bloqueo. Si lo
+tocara, un mecanico con la sesion vencida se autobloquearia al reabrir la app.
+
+`handleMechanic` se simplifico para no contar doble: el bloqueo, el contador y
+el reset viven ahora en `authMechanic`; el handler solo agrega el header
+`Retry-After`, que es propio de la UI de reintento del login.
+
+### La otra mitad del punto 3 ya estaba
+
+"PIN por mecanico o rotable sin tocar codigo": ya existe. `handleAdminSetMechanicPin`
+(role=admin-set-mechanic-pin) deja a Diego fijar o rotar el PIN de cada
+mecanico desde Admin, guardado como `pin_hash` (HMAC), nunca en texto plano, y
+devuelto una sola vez para entregarselo al mecanico. El PIN es por-contacto, o
+sea por-mecanico. No hay nada que hacer aca.
+
+### Lo que NO se hizo
+
+- **No se cambio el largo del PIN** (sigue 4 digitos). Con el bloqueo cubriendo
+  las catorce rutas, el espacio de 10.000 ya no es fuerza-bruteable online. Un
+  PIN mas largo es mejora incremental, no cierre de agujero.
+- **No se probo el 429 en las trece rutas contra produccion despues del fix**
+  porque el fix todavia no esta deployado. Se probo la funcion `authMechanic`
+  directa con 6 tests (bloqueo, conteo, reset, y que el token no toca nada). El
+  429 en `mechanic-jobs` hay que confirmarlo en produccion despues del merge.
+
+6 tests nuevos. 882/882.
