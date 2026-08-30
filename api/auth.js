@@ -29,6 +29,7 @@ import {
   recordCompletionOutcome,
 } from './_completion-notify.js';
 import { completionVerdict } from './_completion-guard.js';
+import { occupiedBookings, expiredHoldIds, slotVerdict, HOLD_MINUTES } from './_slot-hold.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
@@ -4013,7 +4014,14 @@ async function handleGetAvailability(req, res) {
     await Promise.all([
       sb
         .from('bookings')
-        .select('scheduled_time,van_number,service_name')
+        // created_at + stripe_payment_intent_id are what tell a live booking
+        // apart from an abandoned hold. Both already exist on the table -
+        // checked against the live schema on 2026-08-31 - so this select does
+        // not depend on a migration having been run (CLAUDE.md: PostgREST
+        // rejects the WHOLE query on an unknown column).
+        .select(
+          'id,scheduled_time,van_number,service_name,status,created_at,stripe_payment_intent_id'
+        )
         .eq('scheduled_date', date)
         .in('status', ['pending', 'confirmed', 'enroute', 'in_progress', 'arrived']),
       // van_number too: a block is per van (0 = all of them), and reading only
@@ -4033,7 +4041,15 @@ async function handleGetAvailability(req, res) {
   const neededMin =
     (requestedService?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
 
-  const busyIntervals = buildBusyIntervals(bookings || [], durationByService);
+  // A hold is a booking that has not been paid for yet. An ABANDONED one
+  // must stop blocking its slot, or every client who changes their mind at
+  // the payment screen permanently retires a sellable hour.
+  //
+  // Expiry is lazy because it has to be: the window is 15 minutes and Vercel
+  // Hobby refuses crons more frequent than daily (see the deploy error quoted
+  // at the top of api/send-cron.js). Nothing here waits for a background job.
+  const liveBookings = occupiedBookings(bookings || []);
+  const busyIntervals = buildBusyIntervals(liveBookings, durationByService);
   const blockIntervals = buildBlockIntervals(overrides, vans);
 
   const nowSydney = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
