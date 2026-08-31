@@ -7519,3 +7519,591 @@ telefono y direccion de cada cliente en un solo lugar. Ninguna variable de
 entorno ni campo de admin puede redirigirlo.
 
 17 tests nuevos. 899/899.
+
+## 62. Los analytics arrancaban antes de que nadie aceptara nada (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 7. **44 paginas** cargaban Google Analytics,
+PostHog y el *session replay* de Sentry en el `<head>`, antes de que el
+visitante tuviera oportunidad de decir nada. No habia banner.
+
+El session replay no es un detalle tecnico: **graba lo que la persona hace en
+pantalla**. Arrancar eso sin preguntar es distinto de dejar una cookie.
+
+### Por que no alcanzaba el Consent Mode de Google
+
+La solucion "oficial" de Google es declarar `gtag('consent','default', denied)`
+antes de cargar el tag. Eso evita que GA escriba cookies, **pero el script se
+carga igual y habla con Google igual** - y no hace absolutamente nada por
+PostHog ni por Sentry.
+
+Asi que el bloqueo es de verdad: cada tag de analytics viaja como
+`<script type="text/plain" data-consent="analytics">`, que **ningun navegador
+ejecuta**. `js/consent.js` los reescribe a `<script>` reales solo cuando hay
+consentimiento. No hay nada que "des-enviar", porque no se envio nada.
+
+El Consent Mode se declara **ademas**, en denied. Asi, si alguien agrega un tag
+nuevo y se olvida del envoltorio, degrada a sin-cookies en vez de a rastreado.
+
+### Las dos formas de analytics, y por que hicieron falta dos mecanismos
+
+1. **Tags** (GA en las 44 paginas, PostHog y Sentry en index.html): se
+   neutralizan con `type="text/plain"`.
+2. **Codigo** (PostHog en la landing se inicia desde `js/landing-inline.js`, no
+   hay tag que neutralizar): se registra con `window.drbikeOnConsent(fn)`, que
+   corre la funcion ya mismo si hay consentimiento o al aceptar, y nunca si no.
+
+El segundo caso tenia una trampa. El snippet de instalacion de PostHog deja
+`window.posthog` con un **stub truthy**, y `js/app.js` y `js/cta-tracking.js`
+guardan cada `capture()` con `if (window.posthog)`. Sin limpiarlo, todas esas
+llamadas creerian que el rastreo esta activo y encolarian eventos para un
+consentimiento que quiza nunca llegue. Se guarda el stub en una variable, se
+limpia el global, y se restaura solo al aceptar.
+
+Y **falla cerrado**: si `js/consent.js` no cargara, el resultado seguro es no
+rastrear, nunca rastrear sin haber preguntado.
+
+### Por que un script y no 44 ediciones a mano
+
+`scripts/consent-gate.mjs` hace la transformacion. Editar 44 archivos a mano es
+como se escapa uno, y **una pagina que se escapa sigue rastreando en silencio y
+no se nota**. El script es idempotente, asi que se puede volver a correr despues
+de que `generate-suburb-pages.mjs` genere paginas nuevas, y trae un `--check`
+que sale con exit 1 nombrando las paginas sin proteger (`npm run consent:check`).
+
+**No toca `<script type="application/ld+json">`**, que es lo que Google lee para
+mostrar precios y zonas en los resultados de busqueda. Bloquear eso hubiera
+costado en silencio todo el trabajo de SEO de las paginas de suburbio. Hay un
+test que lo verifica.
+
+### Verificado haciendo fallar los guardas a proposito
+
+Se desprotegio `bondi.html` a mano: el test fallo nombrando la pagina y
+`npm run consent:check` salio con exit 1. Restaurada, 26/26 y exit 0. **Un test
+que nunca se vio fallar no prueba nada** - la misma leccion de la entrada 58.
+
+### Lo que NO se verifico
+
+- **No se abrio el navegador** (prohibido en esta sesion). Que el banner se vea
+  bien lo tiene que mirar Diego despues del deploy.
+- **`sw.js` subio a v98/v71** porque el banner es contenido nuevo. Sin eso, un
+  visitante que ya entro seguiria con la version vieja cacheada.
+- **El `?v=` de `js/landing-inline.js`** lo agarro `npm run check`, no yo:
+  cambie el archivo y no actualice el hash en `landing.html`. Exactamente la
+  trampa que documenta CLAUDE.md, y el guard automatico funciono.
+
+26 tests nuevos. 928/928.
+
+## 63. La politica de privacidad prometia algo que no se podia hacer (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 9: *"Si un cliente pide 'borren todo lo mio' o
+pide una copia de sus datos, hoy no hay forma."*
+
+`privacy.html` ya prometia las dos cosas, bajo la Privacy Act 1988, y
+**responder dentro de los 30 dias**:
+
+> Access the personal information we hold about you
+> Request deletion of your personal information (subject to our legal
+> retention obligations)
+
+Contestar por email es un proceso **valido**: la ley australiana no exige un
+boton de autoservicio. **El hueco no era el boton.** Era que cuando alguien
+pidiera de verdad, no habia forma de hacerlo: significaba escribir SQL a mano
+sobre una docena de tablas y acordarse, de memoria, de cuales guardan datos
+personales. Una promesa que no se puede ejecutar es peor que ninguna, porque
+esta publicada en el sitio.
+
+### Lo que hace que esto no sea un DELETE
+
+`privacy.html` **tambien** promete guardar los registros de reservas **7 anos**,
+por obligacion fiscal australiana. Leidas rapido las dos promesas se
+contradicen. No: la respuesta a "borren todo lo mio" es **anonimizar**. El
+registro financiero queda con sus fechas e importes - que es lo que exige la
+ATO - y se le saca toda la identidad.
+
+Asi que **ningun paso borra una fila de `bookings`**, nunca, y hay un test que
+falla si una edicion futura lo cambia. Tambien hay un test que verifica que las
+columnas financieras (`service_price`, `callout_fee`,
+`stripe_payment_intent_id`, ...) **no** esten entre las que se tocan: anonimizar
+de mas destruye el registro fiscal, que es el otro error posible.
+
+### Por que imprime SQL en vez de ejecutarlo
+
+Un endpoint HTTP que anonimiza un cliente **es un arma**: una llamada mal hecha,
+o un bug en un chequeo de autenticacion, y los registros de alguien real quedan
+sin datos sin deshacer. Un script que **imprime SQL revisado es una herramienta**:
+Diego lo lee, ve que tablas toca y por que, y lo corre el mismo - igual que
+todas las migraciones de este proyecto.
+
+El bloque sale con `BEGIN;` al principio y `-- COMMIT;` **comentado** al final,
+a proposito: se corre, se miran los conteos de filas afectadas, y recien ahi se
+descomenta. Un cliente con 2 reservas no deberia tocar 40 filas.
+
+### El bug que aparecio corriendolo
+
+La primera version parseaba los argumentos con
+`args[args.indexOf('--id') + 1]`. `indexOf` devuelve **-1** cuando la bandera no
+esta, y `-1 + 1` es **0** - asi que leia `args[0]`, que era la cadena literal
+`--forget`, y generaba:
+
+```sql
+WHERE client_id = 'forget'::uuid
+```
+
+SQL con un WHERE basura, apuntado a registros reales. **No lo encontre
+leyendolo: lo encontre corriendolo.** Ahora hay una funcion `flag()` que
+devuelve `null` cuando falta, y validacion de formato de uuid y de email antes
+de construir nada. Con un test que lo fija.
+
+### La deriva de esquema, que es el riesgo real a largo plazo
+
+`api/_privacy.js` es la fuente de verdad de donde vive el dato personal. Una
+migracion que agregue una columna con un nombre, un telefono o una direccion y
+no la agregue ahi crea un dato que **ningun pedido de borrado va a alcanzar, y
+nada lo dice**.
+
+No se puede chequear automaticamente desde el repo: leer `information_schema`
+necesita la service key, que no esta ni debe estar aca. Asi que
+`docs/RUNBOOK-PRIVACY.md` seccion 3 trae la consulta que lista toda columna con
+pinta de dato personal, para correr **despues de cada migracion** y comparar
+contra `PII_MAP` y `NOT_PERSONAL`. Toda tabla esta en una de las dos listas, y
+las no-personales llevan el motivo escrito - hay tests que lo exigen.
+
+### Lo que el runbook admite que NO cubre
+
+Escrito en la seccion 4, para informarselo al cliente en la respuesta:
+
+- **Supabase Auth**: `auth.users` vive fuera de `public`. Se borra a mano desde
+  el panel, y es a proposito que sea manual porque cascadea.
+- **Stripe**: los pagos quedan alla con su propia retencion.
+- **Los backups nocturnos**: contienen copias previas a la anonimizacion. Es
+  correcto - son registros historicos - pero si el pedido es explicito hay que
+  borrar esos correos.
+- **Emails ya enviados**: no se pueden retirar de la casilla del cliente.
+
+Prometer mas de lo que se puede cumplir es exactamente el problema que este
+runbook vino a arreglar; el runbook no lo repite.
+
+22 tests nuevos. 950/950.
+
+## 64. El banner de cookies era una losa de lado a lado (30-ago-2026)
+
+Diego, mirandolo en produccion apenas se deployo la entrada 62: *"el baner se ve
+asi... creo que hay que hacerlo de otro color como azul claro difuminado y mas
+chico esta muy ancho"*.
+
+Tenia razon. La primera version era `left:0; right:0; bottom:0` con fondo blanco
+solido: en una pantalla de 1900px, **una losa cruzando la pagina entera para una
+sola frase**. Funcionalmente correcta, visualmente pesada.
+
+### Lo que cambio
+
+Tarjeta flotante de **440px maximo**, abajo a la derecha (fuera del camino de
+lectura), con 16px de aire en los cuatro lados, esquinas de 14px y fondo azul
+translucido con `backdrop-filter: blur(16px)`.
+
+El azul se arma con `color-mix` en vez de un tinte fijo, y eso **no es
+decoracion**: los dos temas necesitan cosas opuestas y los tokens ya lo
+resuelven. `--white` es blanco en claro y **es el color de la tarjeta oscura**
+en oscuro, asi que la misma expresion da una tarjeta azul suave en claro y una
+tarjeta oscura teñida de azul en oscuro. **Una regla, dos temas, ningun bloque
+`[data-theme]` que mantener sincronizado** - que es exactamente la deuda que
+produjo los 160 parches de la entrada 48.
+
+`background` se declara **dos veces** a proposito: un navegador sin `color-mix`
+anidado ignora la segunda y se queda con la tarjeta tematizada plana. Legible
+en todos lados, esmerilada donde se puede.
+
+### "Mas chico" no salio del area tactil
+
+Los botones **siguen midiendo 44px de alto**, que es la regla mobile del
+proyecto. El volumen venia del padding (`12px 20px`), no de la altura, asi que
+eso es lo que bajo (`8px 16px`), mas texto de 13px a 12.5px. Se ve
+sensiblemente mas chico y sigue siendo pulsable con el pulgar.
+
+### El contraste se calculo, no se miro
+
+El fondo cambio de blanco puro a `#f0f4fe`, asi que todo el texto encima
+cambio de relacion. Medido con la formula WCAG:
+
+```
+--gray  #475569 sobre #f0f4fe -> 6.88:1   OK AA
+--blue  #2563eb sobre #f0f4fe -> 4.70:1   OK AA
+--navy  #0d1f3c sobre #f0f4fe -> 14.92:1  OK AA
+blanco  sobre el boton --blue -> 5.17:1   OK AA
+```
+
+Los cuatro pasan el minimo AA de **4.5:1** para texto normal. Hay 4 tests que
+recalculan esto, para que un ajuste futuro del tinte no baje ninguno en
+silencio - la leccion de la entrada 57, donde la tarjeta y la pagina estaban a
+1.07:1 y el check pasaba porque solo medía la tinta.
+
+### El bump del service worker no era opcional
+
+`js/consent.js` se carga **sin `?v=`**, igual que `js/i18n.js` y
+`js/landing-inline.js`. `npm run check` no lo marca porque no esta en la lista
+de assets versionados. Eso significa que **solo un bump de `CACHE_STATIC`
+entrega el banner nuevo**: sin el, todo navegador que ya entro seguiria viendo
+la losa ancha para siempre. v98 -> v99.
+
+### Un test que fallo por matchear su propio comentario, otra vez
+
+El test "no hay bloque `[data-theme]`" leia el archivo entero, y el comentario
+que **explica** por que no hay un `[data-theme]` contiene esa cadena. Fallaba
+sobre codigo correcto. Ahora mira solo el string de estilo
+(`bar.style.cssText`), no la prosa. **Tercera vez en esta sesion** que un guard
+matchea su propia explicacion (ver 58 y 62): cuando un test lee texto fuente,
+hay que acotar la ventana a codigo antes de afirmar.
+
+9 tests nuevos. 937/937.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador** (prohibido en esta sesion). Diego tiene que mirar
+el resultado en celular y compu despues del deploy. Lo que si esta verificado
+por calculo es el contraste; lo que no se puede calcular es si el lugar y el
+tamaño le gustan.
+
+## 65. Nada le decia a un usuario de teclado donde estaba parado (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 13. Dos fallas, **ninguna visible para alguien
+que usa mouse**, que es exactamente por que sobrevivieron tanto.
+
+### 1. No habia "saltar al contenido" en ninguna parte
+
+Un usuario de teclado tabulaba por **todo el encabezado** antes de llegar a la
+pagina. En la SPA, donde el router redibuja la pantalla sin recargar, eso pasa
+en **cada cambio de pantalla**.
+
+Ahora `index.html` y `landing.html` abren con un `.skip-link` que es lo primero
+del orden de tabulacion. Esta escondido con `left:-9999px` y **no** con
+`display:none`, porque `display:none` lo sacaria del orden de tabulacion, que es
+lo unico que no puede pasar.
+
+### 2. No habia estilo de foco, y seis reglas tiraban el del navegador
+
+Solo dos componentes (`.celebrate-close`, `.gift-close`) tenian
+`:focus-visible`. Todo lo demas dependia del anillo propio del navegador - y
+**seis reglas lo apagaban con `outline: none`**. Cuatro de ellas en la regla
+**base**, no en `:focus`, asi que aplicaban siempre:
+
+```
+css/main.css      .review-textarea:focus
+css/main.css      .form-input:focus
+css/main.css      .gift-body input, .gift-body textarea
+css/admin.css     .inp
+css/mechanic.css  .pin-inp        <- el campo del PIN del mecanico
+css/mechanic.css  .notes-inp
+```
+
+`.pin-inp` es el peor: se tabula al campo del PIN y **nada en pantalla dice
+donde estas**.
+
+Las seis se limpiaron. El anillo global vive en `css/variables.css` - un archivo
+que por lo demas solo tiene tokens - porque **es la unica hoja de estilos que
+cargan las cinco superficies**: `track.html` no carga ninguna otra. Cualquier
+lugar mas "correcto" habria dejado una superficie sin cubrir.
+
+`:focus-visible` y no `:focus`: un click con mouse no debe dejar un anillo
+puesto. El navegador ya sabe distinguir; el punto es dejarlo decidir. Y
+`outline` en vez de `box-shadow` porque un outline no lo recorta
+`overflow:hidden` ni lo deforma el `border-radius` del padre.
+
+`--focus-ring` tiene valor en los dos temas: `#2563eb` en claro (5.17:1 sobre
+blanco) y `#93c5fd` en oscuro (6.73:1 sobre la tarjeta). WCAG 1.4.11 pide 3:1
+contra lo que este al lado; hay un test que lo **calcula**.
+
+### El agujero que aparecio de rebote: `css/main.css` no estaba vigilado
+
+`css/main.css` llevaba un `?v=` escrito a mano (`20260827a`) y **no estaba en
+`scripts/versioned-assets-check.mjs`**. O sea: edite `main.css` para arreglar el
+foco, `npm run check` quedo **verde**, y el arreglo habria sido invisible para
+todo navegador que ya entro.
+
+Es el **mismo hueco que mordio a `mechanic.html` cuatro dias antes** (entrada
+14.11 / el comentario del propio script). Se agrego `css/main.css` a la lista,
+en las dos paginas que lo cargan, y el check inmediatamente marco lo que
+faltaba. Deja de ser algo que hay que acordarse.
+
+### Dos errores propios que valen mas que el codigo
+
+1. **El guard reportaba rota toda pagina correcta.** Comparaba el indice de
+   `class="skip-link"` - un atributo, siempre unos caracteres *adentro* de su
+   propio `<a>` - contra el indice del primer `<a>`. Encontrado corriendolo.
+2. **Correr prettier sobre `js/i18n.js` rompio dos tests que ya existian**
+   (`live-route`, `profile-card-and-birthday`): buscan cadenas por indice y el
+   reformateo las movio. Se revirtio el archivo y las traducciones se
+   re-insertaron **preservando el fin de linea CRLF**, sin reformatear. Leccion:
+   `npm run format` cubre `js/`, pero i18n.js es un diccionario que otros tests
+   leen posicionalmente - no se formatea de paso.
+
+### Lo que NO se hizo
+
+- **No se recorrio la reserva entera sin mouse.** Eso necesita un navegador y
+  esta prohibido en esta sesion. Lo que si esta: el anillo existe, es visible en
+  los dos temas por calculo, y ninguna regla lo apaga. **Falta que Diego tabule
+  el flujo** y avise si algun modal atrapa el foco.
+- **No se auditaron trampas de foco en modales.** `Escape` cierra en los seis
+  modales que se revisaron (`js/app.js` x3, `landing-inline.js` x2,
+  `mechanic.js` x1), pero que el foco vuelva al disparador al cerrar no se
+  verifico.
+
+16 tests nuevos. 966/966.
+
+## 66. Un lector de pantalla no se enteraba de nada (30-ago-2026)
+
+Auditoria pre-lanzamiento, punto 15: *"que anuncie el cambio de paso, que lea
+los errores al ocurrir, y que el mapa tenga alternativa en texto"*.
+
+La app tenia **exactamente dos regiones `aria-live`, y las dos eran spinners de
+carga**. Un pago fallido, un cambio de paso en el asistente de reserva, y el
+mecanico moviendose por el mapa: los tres se le anunciaban a **nadie**.
+
+### El helper, y por que tiene la forma que tiene
+
+`announce(mensaje, { assertive })` en `js/components.js`, con **dos regiones
+persistentes** creadas una vez y en las que se escribe.
+
+No se inserta un elemento nuevo que traiga `role="alert"` puesto. Un lector
+anuncia una region viva cuando su **contenido cambia**; un elemento que llega ya
+con su texto se anuncia de forma inconsistente, y en algunas combinaciones no se
+anuncia nunca. Esta es la forma que funciona en todos.
+
+Dos canales, y la distincion importa:
+- **polite** espera una pausa. Estados, cambios de paso, el mecanico moviendose.
+- **assertive** interrumpe. **Solo errores**: un pago que fallo no puede esperar
+  a que el lector termine la oracion en la que esta.
+
+Y limpia el texto antes de escribirlo: **dos pagos fallidos seguidos es un caso
+real**, y una region cuyo texto no cambio no dice nada.
+
+`.sr-only` usa la receta `clip-path` de 1px, no `display:none` ni
+`visibility:hidden` - las dos sacan el elemento del arbol de accesibilidad, que
+es lo unico que no puede pasar.
+
+### Los errores
+
+`showToast()` creaba un `div` pelado, sin `role` ni `aria-live`. Ahora anuncia
+por la region viva, y el toast lleva `aria-hidden="true"`: sin eso el lector
+lee el mismo mensaje **dos veces**.
+
+### El cambio de paso
+
+Los tres pasos del asistente se redibujan **dentro de la misma pantalla sin
+tocar el hash**, asi que no habia ninguna senal - el lector simplemente
+encontraba contenido distinto bajo el cursor.
+
+Se engancho en `scrollStepToTop()`, que ya era el unico lugar que corre en cada
+cambio de paso, en las dos superficies. Un solo punto en vez de tres.
+
+### El mapa
+
+`#tracking-map` es un lienzo de tiles: ilegible, y un lector que aterriza ahi
+encuentra un hueco sin etiqueta. Ahora lleva `aria-hidden="true"` y al lado hay
+un `#map-alt` que dice lo mismo en texto, alimentado desde `paintETA()` para que
+no pueda quedar viejo.
+
+Con guarda de repeticion: eso repinta **cada pocos segundos** mientras el
+mecanico se mueve, y un lector repitiendo la misma oracion en loop es peor que
+el silencio.
+
+### El bug del guard, que es la parte que mas vale
+
+El chequeo de traducciones cortaba el diccionario asi:
+
+```js
+dict.slice(dict.indexOf(`  ${lang}: {`))   // hasta el FINAL del archivo
+```
+
+Para `es`, eso incluye el bloque `zh` entero. **Una cadena traducida solo al
+chino satisfacia tambien el chequeo del espanol.** El guard pasaba sobre una
+traduccion faltante de verdad.
+
+Se encontro **borrando una a proposito** para ver si el guard la agarraba. No
+la agarro. Ahora `langBlockOf()` corta hasta el siguiente idioma, y el mismo
+arreglo se aplico a `tests/unit/keyboard-access.test.js`, que tenia el error
+identico. Verificado volviendo a borrarla: ahora si falla.
+
+**Un test que nunca se vio fallar no prueba nada** - cuarta vez en esta sesion
+(ver 58, 62, 64).
+
+### Las cadenas habladas y el agujero del i18n-check
+
+Las seis cadenas nuevas pasan **adentro** de `translateValue()` via `announce()`,
+y `scripts/i18n-check.mjs` solo ve las que estan **afuera**. Es el hueco que
+CLAUDE.md documenta: una traduccion faltante ahi es silenciosa, la cadena sale
+en ingles y el check queda verde.
+
+Por eso `scripts/a11y-check.mjs` las verifica por nombre, una por una.
+
+### Lo que NO se verifico
+
+**No se probo con un lector de pantalla real** (NVDA, VoiceOver, TalkBack). Eso
+necesita un navegador, prohibido en esta sesion. Lo que si esta verificado: las
+regiones existen, tienen la forma que los lectores anuncian de forma confiable,
+los tres disparadores estan conectados, y las seis cadenas estan en los tres
+idiomas. **Lo que falta es que alguien lo escuche.**
+
+19 tests nuevos. 985/985.
+
+## 67. El reembolso automatico podia saltearse el aviso (31-ago-2026)
+
+Diego, leyendo el resumen de la entrada 59: *"cuando pase esto me tiene que
+llegar un mensaje que se genero un pago sin reserva... aunque el cliente no
+puede avanzar en nuestra pagina en los pasos del booking para pagar asi que no
+creo que pase"*.
+
+Las dos mitades de esa frase tenian respuesta, y ninguna era la esperada.
+
+### "No creo que pase": ya paso, un mes entero
+
+El huerfano no aparece porque alguien avance sin pagar. Aparece al reves:
+**primero se cobra, despues se escribe la reserva.** El huerfano es exactamente
+lo que queda cuando el cobro sale bien y la escritura falla.
+
+`js/app.js:1863` lo documenta: entre el **2026-07-04 y el 2026-08-05 le paso a
+TODOS los invitados, SIEMPRE** - el front dejaba pagar y recien despues pedia
+iniciar sesion, `create-booking` respondia 401, y la reserva nunca existia. El
+5 de agosto una clienta real pago $20 y no recibio nada: ni recibo, ni
+confirmacion, ni el aviso de reembolso, porque los tres iban a un email
+inventado que caia en la casilla de Diego (`js/app.js:2497`).
+
+Eso ya esta arreglado. Pero la clase de falla es estructural al orden
+cobro -> reserva, y por eso existe el barrido.
+
+### El hueco que su pedido destapo
+
+`orphanAction` devolvia `'refund'` apenas el pago pasaba las 24h, **mirara o no
+si Diego habia sido avisado**. Y eso no es un caso raro: **es el ordinario.**
+
+El barrido corre **una vez por dia**. Un pago hecho poco despues de una corrida
+ya tiene mas de 24h la primera vez que el barrido lo ve - asi que iba derecho a
+`'refund'`, y Diego recibia **solo el aviso del reembolso, nunca el aviso del
+huerfano**. Perdia la oportunidad de convertir un trabajo real en una reserva
+real antes de que la plata volviera.
+
+Ahora **nada se reembolsa antes de avisarle**. Sin `orphan_alerted`, la accion
+es `'alert'`, tenga la edad que tenga.
+
+### Y el backstop, porque la regla nueva tiene su propio modo de falla
+
+Si no hay numero de WhatsApp configurado, o Twilio esta caido varios dias,
+`orphan_alerted` **nunca se marca**. Un "nunca reembolsar antes de avisar" puro
+dejaria la plata del cliente adentro **para siempre**, que es justo la falla que
+todo esto vino a terminar.
+
+`ORPHAN_HARD_REFUND_AFTER_HOURS = 72`: a los tres dias la plata vuelve, haya
+llegado el mensaje o no. Hay un test que exige que ese plazo sea **mayor** que
+el normal, o nunca aplicaria.
+
+### El mensaje decia algo que no podia cumplir
+
+Decia *"Create the booking within 24h or it refunds itself"*. Con un barrido
+diario, "dentro de 24h" no es cierto: la proxima oportunidad de actuar es la
+proxima corrida. Ahora dice que lo cree **hoy**, y que se reembolsa en la
+corrida siguiente.
+
+### Lo que depende de algo que NO se pudo verificar
+
+Todo esto asume que el numero de WhatsApp del admin esta cargado
+(`van_zones` con `van_number = 0` y `suburb = '__whatsapp__'`). **No se puede
+leer desde aca**: RLS lo esconde del rol anonimo, correctamente. Si no esta
+cargado, el handler hace `continue` y el unico rastro es un `console.error` en
+los logs de Vercel que no lee nadie.
+
+Queda como verificacion pendiente de Diego, con el SQL en el chat.
+
+18 tests en el archivo (3 reescritos, 3 nuevos).
+
+## 68. Reserva primero, cobro despues (31-ago-2026)
+
+Diego: *"debe ser primero la reserva... el sentido comun de la pagina web es
+bloquear primero la fecha y la hora, y despues ocurre el pago. No entiendo por
+que estaba al reves."*
+
+Nadie lo decidio al reves. El paso 2 del asistente pide fecha y hora, asi que
+cualquiera asume que el turno queda tomado ahi - pero elegir una fecha solo
+escribia `window.appState.date`, **en la memoria del navegador**. Habia UNA
+escritura a la base y venia al final, despues del cobro.
+
+### Lo que compra, y lo que NO (correccion registrada)
+
+Le dije a Diego que dos clientes eligiendo el mismo horario dejan al segundo
+**cobrado y sin reserva**, y use eso para empujar el cambio como urgente.
+**Era falso**, y se lo corregi: `api/auth.js` atrapa el `23505` de
+`bookings_unique_slot` y **reembolsa** antes de devolver 409.
+
+Lo que el cambio realmente compra:
+- la tarjeta **no se toca** por un turno que el cliente no puede tener, en vez
+  de un cobro y una devolucion que tarda dias en aclararse;
+- no depende de que el reembolso funcione - que es justo lo que falla cuando
+  Stripe es lo que esta caido;
+- coincide con lo que el visitante ya asume.
+
+### Sin migracion, a proposito
+
+Una retencion **no es una tabla ni una columna nueva**: es una reserva con
+`status='pending'` y **sin** `stripe_payment_intent_id`, que vence por
+`created_at`. Las tres columnas ya existian (verificado contra el esquema vivo).
+
+Eso importa mas que la elegancia: aca el SQL se corre a mano y el codigo llega
+a main antes, asi que un diseno que necesitara una columna nueva estaria roto en
+produccion hasta que Diego corriera el archivo.
+
+**La expiracion es perezosa porque tiene que serlo**: la ventana son 15 minutos
+y Vercel Hobby no permite crons sub-diarios. Se resuelve en los dos lugares que
+importan - al leer disponibilidad (una retencion vencida no ocupa) y al escribir
+(se cancelan las vencidas del turno antes de insertar, o el indice unico
+rechazaria la nueva).
+
+### Un handler, no dos
+
+`hold-slot` **reusa `handleCreateBooking`**. Cobertura, tarifa por zona, turno
+bloqueado y precios de membresia ya viven ahi; un segundo handler se
+desincronizaria. La bandera se pone **en la ruta**, no se lee del body, o
+`create-booking` podria ser convencido de saltear la verificacion de pago.
+
+### Los tres bugs que encontro la revision, no la ejecucion
+
+Diego pidio revisarlo tres veces antes del PR. Los tres aparecieron ahi, y
+**ninguno habria fallado un test existente**:
+
+1. **`holdOnly` se leia antes de declararse.** Estaba junto a la compuerta de
+   pago y el chequeo de cobertura lo usa ~130 lineas antes. Un `const` leido
+   antes de su declaracion **tira en ejecucion**, y `node --check` no lo ve:
+   valida sintaxis, no referencias. Habria roto **todas** las reservas.
+
+2. **Una direccion que el geocodificador no resuelve quedaba bloqueada.** La
+   regla "sin pago no hay reserva" es correcta para una reserva real, pero una
+   retencion **nunca** lleva pago - asi que sin exceptuarla, esas reservas se
+   perdian. Son las que Diego igual puede atender: el `console.warn` de esa rama
+   existe justamente para que las confirme a mano.
+
+3. **El peor: una retencion quemaba el codigo de descuento y los creditos por
+   recomendacion del cliente.** Los dos bloques estan **despues** del insert, asi
+   que la retencion llegaba y los gastaba. Un checkout abandonado le costaba al
+   cliente su codigo de un solo uso y sus creditos, sin haber comprado nada y sin
+   forma de notarlo. Ahora los dos van con `&& !holdOnly`, y el cliente **ni
+   siquiera manda** el codigo al retener - dos capas, para que quitar el guard
+   no alcance para reintroducirlo.
+
+Los tres tienen test, y el del descuento se verifico **reintroduciendo el bug a
+proposito**: con el bug, falla; sin el, pasa.
+
+### Dos tests viejos que fijaban texto literal
+
+`coverage-resolution` y `referral-credits` afirmaban las lineas exactas que
+cambie. Los cambios eran correctos y los tests fragiles: ahora matchean los
+**operandos** que les importan, con el termino nuevo opcional. **No se aflojo lo
+que protegen** - la invariante "un pago que existe siempre se verifica" quedo
+mas fuerte que antes, porque una retencion que trae un pago ahora se **rechaza**
+en vez de resolverse de algun modo razonable.
+
+47 tests nuevos. 1051/1051, corrido 3 veces.
+
+### Lo que NO se verifico
+
+**No se hizo una reserva real de punta a punta.** No se abrio el navegador
+(prohibido en esta sesion) ni se disparo un cobro contra Stripe. Lo verificado
+son las decisiones y el orden. **Falta que Diego haga una reserva de prueba**
+despues del deploy - y en particular que compruebe que al elegir un horario y
+llegar al pago, ese horario ya no aparece disponible en otra pestana.

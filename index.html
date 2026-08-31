@@ -43,7 +43,7 @@
     <meta name="apple-mobile-web-app-title" content="Dr. Bike" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="css/variables.css?v=20260713" />
-    <link rel="stylesheet" href="css/main.css?v=20260827a" />
+    <link rel="stylesheet" href="css/main.css?v=dbd0385557" />
     <link rel="stylesheet" href="css/home.css?v=20260825b" />
     <!-- Google Analytics -->
     <!-- Meta Pixel removed 2026-07-28. It was initialising with the literal
@@ -53,8 +53,9 @@
        the loader from Meta Business Manager here with the real id. The
        fbq('track', ...) calls in js/app.js are all guarded with `window.fbq &&`,
        so they start working again on their own and need no edit. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
-    <script>
+    <script src="/js/consent.js"></script>
+    <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+    <script type="text/plain" data-consent="analytics">
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
@@ -63,11 +64,11 @@
       gtag('config', 'G-GXYD68JXZW');
     </script>
     <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
-    <script
+    <script type="text/plain" data-consent="analytics"
       src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js"
       crossorigin="anonymous"
     ></script>
-    <script>
+    <script type="text/plain" data-consent="analytics">
       Sentry.onLoad(function () {
         Sentry.init({
           dsn: 'https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488',
@@ -86,7 +87,7 @@
       });
     </script>
     <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
-    <script>
+    <script type="text/plain" data-consent="analytics">
       !(function (t, e) {
         var o, n, p, r;
         e.__SV ||
@@ -260,6 +261,9 @@
     </style>
   </head>
   <body>
+    <!-- First thing in the tab order. Audit point 13: without it a keyboard
+         user tabs through the whole header on every screen change. -->
+    <a class="skip-link" href="#app">Skip to content</a>
     <div id="boot-loader" role="status" aria-live="polite">
       <div class="boot-mark">
         <img src="images/logo-db.png" alt="" width="88" height="62" fetchpriority="high" />
@@ -2183,7 +2187,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=bb9ee0097b" type="module"></script>
+    <script src="js/app.js?v=490261e0aa" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';

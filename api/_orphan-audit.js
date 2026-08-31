@@ -48,6 +48,13 @@ const DEFAULT_GRACE_MINUTES = 15; // a booking mid-flight is not an orphan
 // not change that; only running the sweep more often would.
 export const ORPHAN_REFUND_AFTER_HOURS = 24;
 
+// The backstop for when the alert itself is what is broken. If no admin
+// WhatsApp is configured, or Twilio is down for days, `orphan_alerted` never
+// gets set - and a rule of "never refund before telling him" would then keep a
+// client's money forever, which is the exact failure this whole thing exists to
+// end. After three days the money goes back whether the message landed or not.
+export const ORPHAN_HARD_REFUND_AFTER_HOURS = 72;
+
 // What to do with a payment already established to have no booking behind it.
 // Call this only on confirmed orphans - it does not re-check that.
 //
@@ -57,7 +64,11 @@ export const ORPHAN_REFUND_AFTER_HOURS = 24;
 //   'wait'   alerted and still inside the deadline; the next run decides
 export function orphanAction(
   pi,
-  { nowSeconds, refundAfterHours = ORPHAN_REFUND_AFTER_HOURS } = {}
+  {
+    nowSeconds,
+    refundAfterHours = ORPHAN_REFUND_AFTER_HOURS,
+    hardRefundAfterHours = ORPHAN_HARD_REFUND_AFTER_HOURS,
+  } = {}
 ) {
   const md = pi?.metadata || {};
   if (md.orphan_refunded) return 'done';
@@ -66,9 +77,25 @@ export function orphanAction(
   // a guess would give away money that may well have a booking behind it, so
   // an unaged payment can only ever be alerted about.
   const created = Number(pi?.created);
-  if (Number.isFinite(created) && nowSeconds - created >= refundAfterHours * 3600) return 'refund';
+  const ageHours = Number.isFinite(created) ? (nowSeconds - created) / 3600 : null;
 
-  return md.orphan_alerted ? 'wait' : 'alert';
+  // NOTHING is refunded before Diego has been told. He asked for exactly this:
+  // "cuando pase esto me tiene que llegar un mensaje que se genero un pago sin
+  // reserva."
+  //
+  // The first version failed him on the ordinary case. The sweep runs ONCE A
+  // DAY, so a payment made shortly after a run is already older than the 24h
+  // deadline the first time the sweep sees it - and the old code went straight
+  // to 'refund'. He would have received the refund notice and never the alert,
+  // losing the chance to turn a real job into a real booking before the money
+  // went back.
+  if (!md.orphan_alerted) {
+    if (ageHours !== null && ageHours >= hardRefundAfterHours) return 'refund';
+    return 'alert';
+  }
+
+  if (ageHours !== null && ageHours >= refundAfterHours) return 'refund';
+  return 'wait';
 }
 
 // Exported so the filtering can be tested without a Stripe account. Every

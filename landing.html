@@ -5,7 +5,8 @@
        initialising with the literal PIXEL_ID_HERE: no data collected, an error
        in the console on every page view, and Facebook's script loaded anyway. -->
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+  <script src="/js/consent.js"></script>
+  <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
   
 
   <meta charset="UTF-8">
@@ -42,7 +43,7 @@
 
   <!-- Booking wizard styles (from index.html CSS) -->
   <link rel="stylesheet" href="css/variables.css?v=20260622">
-  <link rel="stylesheet" href="css/main.css?v=20260827a">
+  <link rel="stylesheet" href="css/main.css?v=dbd0385557">
   <link rel="stylesheet" href="css/home.css?v=20260825b">
 
   <script type="application/ld+json">
@@ -55,7 +56,7 @@
   <link rel="stylesheet" href="css/landing.css?v=20260827a">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
-  <script src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
+  <script type="text/plain" data-consent="analytics" src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
   
   <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
   
@@ -71,6 +72,8 @@
      without a width media query - a desktop opening index.html directly must
      still get the SPA layout untouched. -->
 <body data-surface="landing">
+<!-- First thing in the tab order. Audit point 13. -->
+<a class="skip-link" href="#main-content">Skip to content</a>
 
 
 
@@ -107,7 +110,7 @@
     </button>
   </div>
 </nav>
-<main>
+<main id="main-content" tabindex="-1">
   <!-- 6.1 + 6.2 Trust Badges -->
   <div id="trust-badges" style="background:var(--surface);border-bottom:1px solid var(--border);padding:8px 24px">
     <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:20px">
@@ -1360,13 +1363,13 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=2775a8b319"></script>
+<script src="js/landing-inline.js?v=ee4ad3f878"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=d753faa212"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing
      router.js, supabase.js, components.js or stripe.js here loads each of them
      a second time, under a URL the imports inside app.js never resolve to. -->
-<script src="js/app.js?v=bb9ee0097b" type="module"></script>
+<script src="js/app.js?v=490261e0aa" type="module"></script>
 <script src="js/live-prices.js?v=20260728a" defer></script>
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>

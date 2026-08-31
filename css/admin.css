@@ -1498,7 +1498,6 @@ body {
   font-size: 13px;
   color: var(--navy);
   font-family: var(--sans);
-  outline: none;
   transition: border-color 0.15s;
   background: #fff;
 }
@@ -1762,13 +1761,13 @@ body {
     grid-template-columns: 1fr !important;
   }
   /* Zone manager */
-/* Booking filters */
+  /* Booking filters */
   #booking-filters {
     flex-wrap: wrap;
     gap: 8px;
   }
   /* Coupon form */
-/* Page */
+  /* Page */
   .page {
     padding: 10px;
     gap: 10px;

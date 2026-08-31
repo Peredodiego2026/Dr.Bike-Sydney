@@ -246,13 +246,63 @@ export function createEmptyState(iconHtml, title, subtitle = '') {
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
+// ── Screen reader announcements ──────────────────────────────────────────────
+// Audit point 15: the app had two aria-live regions, both loading spinners. An
+// error, a step change, or the mechanic moving on the map was announced to
+// nobody.
+//
+// Two PERSISTENT regions, created once and written into, rather than inserting
+// a new element that carries role="alert". Screen readers announce a live
+// region when its CONTENT changes; an element that arrives already holding its
+// text is announced inconsistently, and not at all in some combinations. This
+// is the shape that works everywhere.
+//
+// polite   - waits for a pause. Status, step changes, the mechanic moving.
+// assertive - interrupts. Errors only: a payment that failed cannot wait for
+//             the reader to finish the sentence it is on.
+let _liveRegions = null;
+function liveRegions() {
+  if (_liveRegions) return _liveRegions;
+  const make = (mode) => {
+    const el = document.createElement('div');
+    el.className = 'sr-only';
+    el.setAttribute('aria-live', mode);
+    el.setAttribute('aria-atomic', 'true');
+    el.setAttribute('role', mode === 'assertive' ? 'alert' : 'status');
+    document.body.appendChild(el);
+    return el;
+  };
+  _liveRegions = { polite: make('polite'), assertive: make('assertive') };
+  return _liveRegions;
+}
+
+/**
+ * Say something to a screen reader. Invisible to everyone else.
+ *
+ * Re-announcing the SAME string is a real case (two failed payments in a row),
+ * and a live region whose text did not change says nothing. Clearing it first,
+ * then setting on the next frame, makes the repeat land.
+ */
+export function announce(message, { assertive = false } = {}) {
+  if (!message) return;
+  const region = liveRegions()[assertive ? 'assertive' : 'polite'];
+  region.textContent = '';
+  requestAnimationFrame(() => {
+    region.textContent = translateValue(message);
+  });
+}
 export function showToast(message, type = 'success') {
   document.querySelector('.toast')?.remove();
   const toast = Object.assign(document.createElement('div'), {
     className: `toast toast--${type}`,
     textContent: translateValue(message),
   });
+  // aria-hidden: the words are announced through the live region below, and
+  // without this a screen reader reads the same message twice.
+  toast.setAttribute('aria-hidden', 'true');
   document.body.appendChild(toast);
+  // An error interrupts; a success waits its turn.
+  announce(message, { assertive: type === 'error' });
   requestAnimationFrame(() => toast.classList.add('toast--visible'));
   setTimeout(() => {
     toast.classList.remove('toast--visible');

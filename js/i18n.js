@@ -14,6 +14,23 @@ export const LANGUAGES = [
 
 const dict = {
   es: {
+    // El turno se pierde ANTES de tocar la tarjeta (api/_slot-hold.js), asi
+    // que este mensaje es el que reemplaza a un cobro y su reembolso.
+    'That time is no longer available. Please pick another time.': 'Ese horario ya no esta disponible. Elegi otro, por favor.',
+    // Screen reader strings (audit point 15). The three "Step N of 3" labels
+    // are NOT flagged by scripts/i18n-check.mjs: they are passed INTO
+    // translateValue() via announce(), and the check only sees strings
+    // outside it. That is the documented gap in CLAUDE.md - added by hand,
+    // in the same commit that created them.
+    'Live map. Waiting for the mechanic position.': 'Mapa en vivo. Esperando la posicion del mecanico.',
+    'Mechanic on the way': 'Mecanico en camino',
+    'min': 'min',
+    'Step 1 of 3: choose a service': 'Paso 1 de 3: elegi un servicio',
+    'Step 2 of 3: choose a date and time': 'Paso 2 de 3: elegi fecha y hora',
+    'Step 3 of 3: your address': 'Paso 3 de 3: tu direccion',
+    // Skip link (audit point 13). All three languages in the same commit
+    // that creates the string, per the project rule.
+    'Skip to content': 'Saltar al contenido',
     // Catalogue services added to the All Services modal (landing.html) and
     // the mobile home (index.html) on 2026-08-02. Every one of these exists in
     // the Supabase `services` table and was bookable already - they were just
@@ -1456,6 +1473,14 @@ const dict = {
     'your@email.com': 'tu@correo.com',
   },
   zh: {
+    'That time is no longer available. Please pick another time.': '该时间段已不可预约，请另选时间。',
+    'Live map. Waiting for the mechanic position.': '实时地图。正在等待技师位置。',
+    'Mechanic on the way': '技师正在前往',
+    'min': '分钟',
+    'Step 1 of 3: choose a service': '第 1 步，共 3 步：选择服务',
+    'Step 2 of 3: choose a date and time': '第 2 步，共 3 步：选择日期和时间',
+    'Step 3 of 3: your address': '第 3 步，共 3 步：您的地址',
+    'Skip to content': '跳至主要内容',
     // Catalogue services added 2026-08-02 - see the note in the es block.
     'E-bike Diagnostic': '电动车诊断',
     'Full system scan, firmware check and error code review.':
