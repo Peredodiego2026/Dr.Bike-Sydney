@@ -389,7 +389,9 @@ document.addEventListener('click', function (e) {
       saveService(d.id);
       break;
     case 'open-photo':
-      window.open(d.url, '_blank');
+      // Second guard, at the sink: whatever produces data-url in future, only
+      // an http(s) URL is ever handed to window.open().
+      if (/^https?:\/\//i.test(d.url || '')) window.open(d.url, '_blank');
       break;
     case 'edit-notif-number':
       editNotifNumber(d.id);
@@ -7287,9 +7289,13 @@ function appendAdminChatMsg(msg, scroll = true) {
   const bg = isAdmin ? 'var(--blue)' : 'var(--off)';
   const color = isAdmin ? '#fff' : 'var(--navy)';
 
-  // Photo message
-  const isPhoto = msg.message?.startsWith('[PHOTO:');
-  const photoUrl = isPhoto ? msg.message.replace('[PHOTO:', '').replace(']', '') : null;
+  // Photo message. Only an http(s) URL counts as a photo: the message text is
+  // client-supplied, and photoUrl ends up in window.open() via data-url, so a
+  // [PHOTO:javascript:...] message would otherwise be a click-to-run sink in
+  // the admin session. Anything else falls through to the escaped text bubble.
+  const photoMatch = msg.message?.match(/^\[PHOTO:(.*)\]$/);
+  const isPhoto = !!photoMatch && /^https?:\/\//i.test(photoMatch[1]);
+  const photoUrl = isPhoto ? photoMatch[1] : null;
 
   bubble.innerHTML = `
     <div style="font-size:11px;color:var(--mgray);font-weight:600">${label}</div>
