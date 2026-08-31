@@ -16,15 +16,17 @@ const dict = {
   es: {
     // El turno se pierde ANTES de tocar la tarjeta (api/_slot-hold.js), asi
     // que este mensaje es el que reemplaza a un cobro y su reembolso.
-    'That time is no longer available. Please pick another time.': 'Ese horario ya no esta disponible. Elegi otro, por favor.',
+    'That time is no longer available. Please pick another time.':
+      'Ese horario ya no esta disponible. Elegi otro, por favor.',
     // Screen reader strings (audit point 15). The three "Step N of 3" labels
     // are NOT flagged by scripts/i18n-check.mjs: they are passed INTO
     // translateValue() via announce(), and the check only sees strings
     // outside it. That is the documented gap in CLAUDE.md - added by hand,
     // in the same commit that created them.
-    'Live map. Waiting for the mechanic position.': 'Mapa en vivo. Esperando la posicion del mecanico.',
+    'Live map. Waiting for the mechanic position.':
+      'Mapa en vivo. Esperando la posicion del mecanico.',
     'Mechanic on the way': 'Mecanico en camino',
-    'min': 'min',
+    min: 'min',
     'Step 1 of 3: choose a service': 'Paso 1 de 3: elegi un servicio',
     'Step 2 of 3: choose a date and time': 'Paso 2 de 3: elegi fecha y hora',
     'Step 3 of 3: your address': 'Paso 3 de 3: tu direccion',
@@ -358,14 +360,12 @@ const dict = {
     'Your mechanic will come to this address': 'Tu mecánico va a llegar a esta dirección',
     "Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs. Further out, like Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are.":
       'Las visitas del día cubren todo lo que esté a unos 45 minutos de nuestra base en Northern Beaches: Northern Beaches, North Shore, Hornsby, el CBD, Inner West y Eastern Suburbs. Más lejos, como Western Sydney, Sutherland Shire o las Blue Mountains, igual vamos, pero con coordinación previa en vez de el mismo día. Poné tu dirección al reservar y te decimos en cuál estás.',
-    "Why is the visit & diagnosis fee different for my suburb?":
+    'Why is the visit & diagnosis fee different for my suburb?':
       '¿Por qué la visita y diagnóstico cambia según mi suburbio?',
     "Because it pays for the trip, and what a trip really costs is time, not kilometres. From our Northern Beaches base the CBD is about 40 minutes across the Spit Bridge, while Hornsby is further away on the map but only 30 minutes up the motorway — so the CBD costs a little more. We work the fee out from real driving time to your address, which is why it's exact rather than a flat rate.":
       'Porque paga el viaje, y lo que un viaje cuesta de verdad es tiempo, no kilómetros. Desde nuestra base en Northern Beaches, el CBD está a unos 40 minutos cruzando el Spit Bridge, mientras que Hornsby queda más lejos en el mapa pero a solo 30 minutos por autopista, así que el CBD cuesta un poco más. Calculamos la tarifa con el tiempo real de manejo hasta tu dirección, por eso es exacta y no una tarifa plana.',
-    "We quote that area case by case":
-      'Esa zona la cotizamos caso por caso',
-    "Continue - book at no cost":
-      'Continuar - reservar sin costo',
+    'We quote that area case by case': 'Esa zona la cotizamos caso por caso',
+    'Continue - book at no cost': 'Continuar - reservar sin costo',
     "It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.":
       'Está fuera de nuestra zona de visitas del día, así que no hay un precio fijo para mostrarte, pero igual vamos. Reservá normalmente y el último paso te pide el precio en vez de la tarjeta: sin cargo, y el mecánico te responde personalmente.',
     "We don't reach that address yet": 'Todavía no llegamos a esa dirección',
@@ -373,33 +373,37 @@ const dict = {
       'Sin costo - revisamos tu dirección y te respondemos personalmente.',
     'Ask for my price': 'Consultar mi precio',
     'What the visit & diagnosis covers': 'Qué cubre la visita y diagnóstico',
-    'A mechanic comes to you, inspects the whole bike and tells you exactly what it needs. If the repair is not possible - a part we do not carry, or a job that needs a machinist or welding - you are told on the spot and the service fee is not charged. The visit & diagnosis covers that inspection and is not refunded.': 'Un mecánico va hasta vos, revisa la bici entera y te dice exactamente qué necesita. Si la reparación no es posible - un repuesto que no llevamos, o un trabajo que necesita tornero o soldadura - te lo decimos ahí mismo y no se cobra el servicio. La visita y el diagnóstico cubren esa revisión y no se reembolsan.',
+    'A mechanic comes to you, inspects the whole bike and tells you exactly what it needs. If the repair is not possible - a part we do not carry, or a job that needs a machinist or welding - you are told on the spot and the service fee is not charged. The visit & diagnosis covers that inspection and is not refunded.':
+      'Un mecánico va hasta vos, revisa la bici entera y te dice exactamente qué necesita. Si la reparación no es posible - un repuesto que no llevamos, o un trabajo que necesita tornero o soldadura - te lo decimos ahí mismo y no se cobra el servicio. La visita y el diagnóstico cubren esa revisión y no se reembolsan.',
     'Waiting for a mechanic': 'Esperando un mecánico',
     'Assigned to your booking': 'Asignado a tu reserva',
     'Send a gift card': 'Regalar una tarjeta',
     'Any cyclist you know, delivered by email': 'Para cualquier ciclista, se entrega por email',
-    'Buy': 'Comprar',
-    'Recipient': 'Para',
-    'Sender': 'De',
+    Buy: 'Comprar',
+    Recipient: 'Para',
+    Sender: 'De',
     'Another amount': 'Otro monto',
     'Between $20 and $1000.': 'Entre $20 y $1000.',
     'Continue to payment': 'Continuar al pago',
-    'Optional': 'Opcional',
+    Optional: 'Opcional',
     'Secured by Stripe - delivered by email': 'Pago seguro con Stripe - se entrega por email',
     'We send the card straight to them.': 'La tarjeta le llega directo a esa persona.',
-    'The whole Dr. Bike team wishes you a great one.': 'Todo el equipo de Dr. Bike te desea un gran día.',
-    'Saved': 'Guardado',
+    'The whole Dr. Bike team wishes you a great one.':
+      'Todo el equipo de Dr. Bike te desea un gran día.',
+    Saved: 'Guardado',
     'Profile & settings': 'Perfil y ajustes',
-    'Birthday': 'Cumpleaños',
-    'Tell us the day and we\'ll send you something on it. We don\'t ask for the year.': 'Decinos el día y te mandamos algo. No te pedimos el año.',
-    'Day': 'Día',
-    'Month': 'Mes',
+    Birthday: 'Cumpleaños',
+    "Tell us the day and we'll send you something on it. We don't ask for the year.":
+      'Decinos el día y te mandamos algo. No te pedimos el año.',
+    Day: 'Día',
+    Month: 'Mes',
     'Pick a day and a month': 'Elegí un día y un mes',
     'That day does not exist in that month': 'Ese día no existe en ese mes',
     'Could not save your birthday': 'No pudimos guardar tu cumpleaños',
     'Saved - see you on the day': 'Guardado - nos vemos ese día',
     'Happy birthday, NAME!': '¡Feliz cumpleaños, NAME!',
-    'Check your email - there is something from us in there.': 'Revisá tu email, que te dejamos algo.',
+    'Check your email - there is something from us in there.':
+      'Revisá tu email, que te dejamos algo.',
     'We need to price this one by hand': 'Este lo tenemos que cotizar a mano',
     'We sent your enquiry to the mechanic': 'Le enviamos tu consulta al mecánico',
     "We're checking your address and will get back to you shortly.":
@@ -430,7 +434,7 @@ const dict = {
     'Paid online now via Stripe': 'Se paga ahora en línea con Stripe',
     'Promo discount': 'Descuento promocional',
     'Qualified & background-checked': 'Calificado y con antecedentes verificados',
-    'ETA': 'Llegada',
+    ETA: 'Llegada',
     'by road': 'por ruta',
     'straight line': 'en línea recta',
     'Mechanic is right outside!': '¡El mecánico está en la puerta!',
@@ -839,7 +843,7 @@ const dict = {
     'Yes, cancel': 'Sí, cancelar',
     'Sign out of your account?': '¿Cerrar sesión de tu cuenta?',
     'Yes, sign out': 'Sí, cerrar sesión',
-    "What does a visit cost?": '¿Cuánto Me Cuesta?',
+    'Check my diagnosis fee': 'Calculá el precio de tu diagnóstico',
     "What's your suburb?": '¿Cuál es tu suburbio?',
     "We'll check your visit & diagnosis fee - takes 2 seconds.":
       'Vamos a chequear tu visita y diagnóstico - toma 2 segundos.',
@@ -1058,7 +1062,8 @@ const dict = {
     '2 free minor repairs per month (any repair under $60)':
       '2 reparaciones menores gratis por mes (cualquier arreglo de menos de $60)',
     '1 free Tune-Up per month': '1 Ajuste gratis por mes',
-    'Visit & diagnosis included on covered visits': 'Visita y diagnóstico incluida en las visitas cubiertas',
+    'Visit & diagnosis included on covered visits':
+      'Visita y diagnóstico incluida en las visitas cubiertas',
     '1 emergency callout per month (visit & diagnosis fee applies, from $25 depending on your suburb)':
       '1 visita de emergencia por mes (se cobra la visita y diagnóstico, desde $25 según tu suburbio)',
     'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
@@ -1254,8 +1259,10 @@ const dict = {
     'Select a date.': 'Elegí una fecha.',
     'Signed out successfully': 'Sesión cerrada con éxito',
     'Thanks for your feedback!': '¡Gracias por tu opinión!',
-    'Your review is now on our page. Thank you for taking the time.': 'Tu reseña ya está en nuestra página. Gracias por tomarte el tiempo.',
-    'Would you share it on Google too? It helps other Sydney cyclists find us.': '¿La compartirías también en Google? Ayuda a que otros ciclistas de Sídney nos encuentren.',
+    'Your review is now on our page. Thank you for taking the time.':
+      'Tu reseña ya está en nuestra página. Gracias por tomarte el tiempo.',
+    'Would you share it on Google too? It helps other Sydney cyclists find us.':
+      '¿La compartirías también en Google? Ayuda a que otros ciclistas de Sídney nos encuentren.',
     'That service is no longer available. Please pick a new one.':
       'Ese servicio ya no está disponible. Por favor, elegí uno nuevo.',
     'Tracking link copied!': '¡Enlace de rastreo copiado!',
@@ -1430,7 +1437,8 @@ const dict = {
     // every language until 2026-07-28 because the amount was baked into the
     // string: "Pay $20.00 Visit & Diagnosis" matches no key, and it is the button
     // the client presses to pay.
-    'Confirm & Pay $CALLOUT Visit & Diagnosis': 'Confirmar y pagar la visita y diagnóstico de $CALLOUT',
+    'Confirm & Pay $CALLOUT Visit & Diagnosis':
+      'Confirmar y pagar la visita y diagnóstico de $CALLOUT',
     'Pay $CALLOUT Visit & Diagnosis': 'Pagar la visita y diagnóstico de $CALLOUT',
 
     // ── track.html (public tracking link) — was English-only until 2026-07-26
@@ -1471,12 +1479,95 @@ const dict = {
       'Si ese correo tiene reservas, acabamos de enviarte los enlaces de seguimiento de todas.',
     'Connection error. Try again.': 'Error de conexión. Intenta de nuevo.',
     'your@email.com': 'tu@correo.com',
+    // ── Supabase `services` catalog ──────────────────────────────────────────
+    // Booking step 1 (js/app.js renderStep1 -> createServiceCard) prints `name`
+    // and `description` straight out of the Supabase `services` table. Those are
+    // DATA, not markup, so scripts/i18n-check.mjs cannot see them - which is why
+    // 32 of the 33 descriptions and 11 of the 33 names rendered in English for
+    // every Spanish and Chinese client while the check stayed green.
+    //
+    // Two rules for this block:
+    //  1. A catalog row that also exists under a MARKETING name above must reuse
+    //     that exact translation. The table says "Chain Install", the landing
+    //     card says "Chain Replacement"; two different Spanish words for them
+    //     would put two names for one service in front of the same client.
+    //  2. It stays LAST in the dictionary. sourceOf()'s reverse index keeps the
+    //     FIRST definition of a translated string, so the marketing name keeps
+    //     winning the lookup js/live-prices.js does - the one it needs to match
+    //     a card heading back to a priced row.
+    //
+    // After editing a service in Admin > Services & Prices, run
+    // `npm run services:check`: it reads the live table and names every row
+    // whose name or description no longer has an entry here. Editing the
+    // English text in Admin does not break anything - that row just falls back
+    // to English until someone adds the new wording below.
+    'Brake Pad Install': 'Reemplazo de Pastillas de Freno',
+    'Brake Bleed': 'Purga Hidráulica',
+    'Bar Tape Install': 'Cinta de Manubrio',
+    'Chain Install': 'Reemplazo de Cadena',
+    'Cassette Install': 'Cambio de Cassette/Piñón Libre',
+    'Bottom Bracket Install': 'Servicio de Caja Pedalera',
+    'E-bike service': 'Servicio de E-Bike',
+    'External Cable Install': 'Cables y Fundas',
+    'Wheel Truing — Minor': 'Centrado de Rueda - Menor',
+    'Wheel Truing — Major': 'Centrado de Rueda - Mayor',
+    'Tyre / Tube Install': 'Reparación de Pinchazo',
+    'Pad alignment, cable tension, lever reach':
+      'Centramos las pastillas, ajustamos el cable y la distancia de la maneta',
+    'Full hydraulic brake system installation.':
+      'Instalamos el sistema de frenos hidráulicos completo.',
+    'Disc brake pad replacement per end.': 'Cambio de pastillas de freno a disco, por rueda.',
+    'Full hydraulic bleed per end. Both ends $105.':
+      'Purga hidráulica completa, por rueda. Las dos, $105.',
+    'Height, fore-aft and tilt optimised': 'Ajustamos altura, retroceso e inclinación del asiento',
+    'Professional bar tape wrap on drop bars.': 'Encintado profesional de manubrio de ruta.',
+    'Remove and refit handlebars.': 'Sacamos y volvemos a montar el manubrio.',
+    'Clean, adjust and regrease headset': 'Limpiamos, engrasamos y ajustamos la dirección',
+    'True the hanger derailleur with specifics tools. The setting of the gears are included in the price':
+      'Enderezamos la patilla de cambio con herramienta específica. El ajuste de los cambios va incluido en el precio.',
+    'Fit and size a new chain.': 'Colocamos una cadena nueva y la dejamos a la medida.',
+    'Cassette removal and refitting.': 'Sacamos el cassette viejo y montamos el nuevo.',
+    'BB removal and new unit installation.': 'Sacamos la caja pedalera y colocamos una nueva.',
+    'Software update for e-bike motor and display.':
+      'Actualizamos el software del motor y la pantalla de la e-bike.',
+    'Check cables connections and all the bolts and adjustments of brakes and gears':
+      'Revisamos cables y conexiones, apretamos toda la tornillería y ajustamos frenos y cambios',
+    'Front or rear derailleur installation.': 'Instalamos el cambio delantero o trasero.',
+    'Derailleur indexing and cable tension adjustment.':
+      'Ajustamos el cambio y la tensión del cable para que entre limpio.',
+    'Replace outer and inner cables.': 'Cambiamos los cables y las fundas.',
+    'Professional fitting of accessories.': 'Montaje profesional de accesorios.',
+    'Full assembly of a new boxed bike. Price change depending on the size and kind of bike.':
+      'Armamos tu bici nueva desde la caja. El precio cambia según el tamaño y el tipo de bici.',
+    'Urgent same-day help. Contact us directly on 0433 963 250 and we quote your repair.':
+      'Ayuda urgente el mismo día. Llamanos al 0433 963 250 y te pasamos el precio de la reparación.',
+    'Safety check, gear & brake adjustment, tyre pressure and drivetrain lube.':
+      'Revisión de seguridad, ajuste de cambios y frenos, presión de cubiertas y lubricado de la transmisión.',
+    'Tune-Up plus drivetrain clean, minor wheel true and inspection report.':
+      'Todo el Tune-Up más limpieza de transmisión, centrado suave de ruedas e informe de revisión.',
+    'Everything in Standard plus new cables, wheel truing and headset check.':
+      'Todo lo del Standard más cables nuevos, centrado de ruedas y revisión de la dirección.',
+    'Complete strip-and-rebuild. Every component inspected, adjusted or replaced.':
+      'Desarme y armado completo. Revisamos, ajustamos o cambiamos cada componente.',
+    'Air spring disassembly and new o-rings.':
+      'Desarmamos el resorte neumático y ponemos o-rings nuevos.',
+    'Full lower leg strip, clean and oil refresh.':
+      'Desarme completo de barras, limpieza y aceite nuevo.',
+    'Spoke tension adjustment for small deviations.':
+      'Ajustamos la tensión de los rayos para desvíos chicos.',
+    'Tyre and tube replacement per wheel.': 'Cambio de cubierta y cámara, por rueda.',
+    'Significant spoke tension correction.':
+      'Corregimos desvíos grandes ajustando la tensión de los rayos.',
+    'Tubeless conversion per wheel.': 'Conversión a tubeless, por rueda.',
+    'Per spoke, includes wheel re-true': 'Por rayo, con centrado de la rueda incluido',
+    'New tyre fitted, tyre cost extra': 'Colocamos la cubierta nueva; la cubierta se cobra aparte',
   },
   zh: {
-    'That time is no longer available. Please pick another time.': '该时间段已不可预约，请另选时间。',
+    'That time is no longer available. Please pick another time.':
+      '该时间段已不可预约，请另选时间。',
     'Live map. Waiting for the mechanic position.': '实时地图。正在等待技师位置。',
     'Mechanic on the way': '技师正在前往',
-    'min': '分钟',
+    min: '分钟',
     'Step 1 of 3: choose a service': '第 1 步，共 3 步：选择服务',
     'Step 2 of 3: choose a date and time': '第 2 步，共 3 步：选择日期和时间',
     'Step 3 of 3: your address': '第 3 步，共 3 步：您的地址',
@@ -1776,14 +1867,12 @@ const dict = {
     'Your mechanic will come to this address': '您的技工将前往此地址',
     "Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs. Further out, like Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are.":
       '当日上门服务覆盖距离我们 Northern Beaches 基地约 45 分钟车程内的所有地区：Northern Beaches、North Shore、Hornsby、CBD、Inner West 和 Eastern Suburbs。更远的地区，如 Western Sydney、Sutherland Shire 或 Blue Mountains，我们仍会前往，但需另行安排，非当日服务。预订时输入您的地址，我们会告知您属于哪一种。',
-    "Why is the visit & diagnosis fee different for my suburb?":
+    'Why is the visit & diagnosis fee different for my suburb?':
       '为什么不同区域的上门检查费不一样？',
     "Because it pays for the trip, and what a trip really costs is time, not kilometres. From our Northern Beaches base the CBD is about 40 minutes across the Spit Bridge, while Hornsby is further away on the map but only 30 minutes up the motorway — so the CBD costs a little more. We work the fee out from real driving time to your address, which is why it's exact rather than a flat rate.":
       '因为它支付的是行程，而行程的真正成本是时间，不是公里数。从我们 Northern Beaches 的基地出发，CBD 需要约 40 分钟穿过 Spit Bridge，而 Hornsby 在地图上更远，走高速却只需 30 分钟——所以 CBD 稍贵一些。我们根据到您地址的实际驾驶时间计算费用，因此是精确的，而非统一定价。',
-    "We quote that area case by case":
-      '该地区我们逐例报价',
-    "Continue - book at no cost":
-      '继续 — 免费预订',
+    'We quote that area case by case': '该地区我们逐例报价',
+    'Continue - book at no cost': '继续 — 免费预订',
     "It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.":
       '该地址不在我们的当日服务范围内，因此没有固定价格可以展示，但我们仍会前往。照常预订即可，最后一步会请您咨询价格而不是付款：不收费用，技工会亲自回复您。',
     "We don't reach that address yet": '我们暂时无法到达该地址',
@@ -1791,27 +1880,29 @@ const dict = {
       '不收费 - 我们会核实您的地址并亲自回复。',
     'Ask for my price': '咨询我的价格',
     'What the visit & diagnosis covers': '上门检查费包含什么',
-    'A mechanic comes to you, inspects the whole bike and tells you exactly what it needs. If the repair is not possible - a part we do not carry, or a job that needs a machinist or welding - you are told on the spot and the service fee is not charged. The visit & diagnosis covers that inspection and is not refunded.': '技师上门，全面检查你的自行车，并告诉你它需要什么。如果无法维修——缺少配件，或需要车工或焊接——我们会当场告知，不收取服务费。上门检查费涵盖这次检查本身，不予退款。',
+    'A mechanic comes to you, inspects the whole bike and tells you exactly what it needs. If the repair is not possible - a part we do not carry, or a job that needs a machinist or welding - you are told on the spot and the service fee is not charged. The visit & diagnosis covers that inspection and is not refunded.':
+      '技师上门，全面检查你的自行车，并告诉你它需要什么。如果无法维修——缺少配件，或需要车工或焊接——我们会当场告知，不收取服务费。上门检查费涵盖这次检查本身，不予退款。',
     'Waiting for a mechanic': '等待技师',
     'Assigned to your booking': '已分配给你的预约',
     'Send a gift card': '送一张礼品卡',
     'Any cyclist you know, delivered by email': '送给任何骑行者，通过邮件送达',
-    'Buy': '购买',
-    'Recipient': '致',
-    'Sender': '来自',
+    Buy: '购买',
+    Recipient: '致',
+    Sender: '来自',
     'Another amount': '其他金额',
     'Between $20 and $1000.': '介于 $20 至 $1000。',
     'Continue to payment': '继续付款',
-    'Optional': '可选',
+    Optional: '可选',
     'Secured by Stripe - delivered by email': '由 Stripe 保障 - 通过邮件送达',
     'We send the card straight to them.': '我们会直接将卡发送给对方。',
     'The whole Dr. Bike team wishes you a great one.': '整个 Dr. Bike 团队祝你度过美好的一天。',
-    'Saved': '已保存',
+    Saved: '已保存',
     'Profile & settings': '个人资料与设置',
-    'Birthday': '生日',
-    'Tell us the day and we\'ll send you something on it. We don\'t ask for the year.': '告诉我们日期，那天我们会送你一份礼物。我们不需要年份。',
-    'Day': '日',
-    'Month': '月',
+    Birthday: '生日',
+    "Tell us the day and we'll send you something on it. We don't ask for the year.":
+      '告诉我们日期，那天我们会送你一份礼物。我们不需要年份。',
+    Day: '日',
+    Month: '月',
     'Pick a day and a month': '请选择日期和月份',
     'That day does not exist in that month': '该月没有这一天',
     'Could not save your birthday': '无法保存你的生日',
@@ -1848,7 +1939,7 @@ const dict = {
     'Paid online now via Stripe': '通过 Stripe 在线支付',
     'Promo discount': '优惠折扣',
     'Qualified & background-checked': '持证并通过背景审查',
-    'ETA': '预计到达',
+    ETA: '预计到达',
     'by road': '实际路线',
     'straight line': '直线距离',
     'Mechanic is right outside!': '技师已到门口！',
@@ -1871,7 +1962,11 @@ const dict = {
     'Cable check & replace if worn': '线管检查，磨损时更换',
     'Bearing check (BB, headset, hubs)': '轴承检查（五通、头碗、花鼓）',
     'Everything in Standard Service': '包含标准保养的所有项目',
-    'Bottom bracket service': '五通保养',
+    // Distinct from the 'Bottom Bracket Service' CARD below on purpose: both said
+    // 五通保养, and sourceOf()'s reverse index keeps the first definition, so
+    // js/live-prices.js recovered this bullet instead of the card and left that
+    // card on its hardcoded price for every Chinese visitor.
+    'Bottom bracket service': '五通中轴保养',
     'Headset adjustment & grease': '头碗调整与润滑',
     'Comprehensive component report': '全面零件状况报告',
     'Full bike rebuild': '整车翻新',
@@ -1889,7 +1984,9 @@ const dict = {
     'Cable tension adjustment': '线管张力调整',
     'Limit screw set': '限位螺丝调整',
     'Test ride': '试骑',
-    'Pad replacement': '刹车片更换',
+    // Distinct from the 'Brake Pad Replacement' card below - see the note on
+    // 'Bottom bracket service' above. Same collision, same consequence.
+    'Pad replacement': '更换刹车皮',
     'Cable tension & rotor/rim check': '线管张力与刹车盘/轮圈检查',
     'Bedding in if disc': '碟刹磨合（如适用）',
     'Remove, clean & replace chain': '拆卸、清洁并更换链条',
@@ -1989,7 +2086,8 @@ const dict = {
     '1 emergency callout/month': '每月1次紧急上门',
     'Unlimited services per month': '每月无限次服务',
     '20% off parts': '零件享8折',
-    'Unlimited services per month, visit & diagnosis fee always included': '每月无限次服务，上门检查费全免',
+    'Unlimited services per month, visit & diagnosis fee always included':
+      '每月无限次服务，上门检查费全免',
     'Same-day priority': '当天优先服务',
     'Unlimited emergency callouts': '无限次紧急上门',
     'Dedicated mechanic': '专属技工',
@@ -2093,7 +2191,8 @@ const dict = {
     'Priority booking': '优先预约',
     'Email support': '邮件支持',
     '2 Standard Services': '2次Standard服务',
-    '2 free Standard Services/month, visit & diagnosis fee included': '每月2次免费Standard服务，含上门检查费',
+    '2 free Standard Services/month, visit & diagnosis fee included':
+      '每月2次免费Standard服务，含上门检查费',
     'Phone support': '电话支持',
     'Free safety check': '免费安全检查',
     'Unlimited Services': '无限次服务',
@@ -2231,9 +2330,10 @@ const dict = {
     'Yes, cancel': '是的，取消',
     'Sign out of your account?': '确定要退出登录吗？',
     'Yes, sign out': '是的，退出登录',
-    "What does a visit cost?": '我的费用是多少？',
+    'Check my diagnosis fee': '查询上门检查费',
     "What's your suburb?": '您在哪个区？',
-    "We'll check your visit & diagnosis fee - takes 2 seconds.": '我们来查一下您的上门检查费——只需2秒。',
+    "We'll check your visit & diagnosis fee - takes 2 seconds.":
+      '我们来查一下您的上门检查费——只需2秒。',
     'Check My Fee': '查询我的费用',
     'Checking your area...': '正在查询您的区域...',
     'Comparing against our Sydney zones': '正在与我们的悉尼分区进行比对',
@@ -2413,7 +2513,8 @@ const dict = {
     '2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month':
       '每月2次免费小额维修（低于$60）+ 1次免费洗车 + 1次免费基础调校',
     'Visit & diagnosis included': '含上门检查费',
-    '1 emergency callout per month (visit & diagnosis fee applies)': '每月1次紧急上门（需付上门检查费）',
+    '1 emergency callout per month (visit & diagnosis fee applies)':
+      '每月1次紧急上门（需付上门检查费）',
     '3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month':
       '每月3次免费小额维修（低于$60）+ 2次免费洗车 + 1次免费基础调校',
     '15% off extra services, plus 5% more': '额外服务享85折，再多减5%',
@@ -2616,8 +2717,10 @@ const dict = {
     'Select a date.': '请选择日期。',
     'Signed out successfully': '已成功退出登录',
     'Thanks for your feedback!': '感谢您的反馈！',
-    'Your review is now on our page. Thank you for taking the time.': '您的评价已发布在我们的页面上。感谢您抽出时间。',
-    'Would you share it on Google too? It helps other Sydney cyclists find us.': '也愿意在 Google 上分享吗？这能帮助更多悉尼骑行者找到我们。',
+    'Your review is now on our page. Thank you for taking the time.':
+      '您的评价已发布在我们的页面上。感谢您抽出时间。',
+    'Would you share it on Google too? It helps other Sydney cyclists find us.':
+      '也愿意在 Google 上分享吗？这能帮助更多悉尼骑行者找到我们。',
     'That service is no longer available. Please pick a new one.':
       '该服务已不可用，请选择新的服务。',
     'Tracking link copied!': '追踪链接已复制！',
@@ -2801,6 +2904,62 @@ const dict = {
       '如果该邮箱有任何预订，我们已将全部追踪链接发送至该邮箱。',
     'Connection error. Try again.': '连接错误，请重试。',
     'your@email.com': 'your@email.com',
+    // ── Supabase `services` catalog ──────────────────────────────────────────
+    // Same block as in `es`, same two rules - see the comment there. The names
+    // reuse the marketing translations already defined above (e.g. the catalog
+    // row "Chain Install" gets '链条更换', which is what the landing card's
+    // "Chain Replacement" already says).
+    'Brake Pad Install': '刹车片更换',
+    'Brake Bleed': '油压刹车排气',
+    'Bar Tape Install': '车把带',
+    'Chain Install': '链条更换',
+    'Cassette Install': '飞轮/棘轮更换',
+    'Bottom Bracket Install': '五通保养',
+    'E-bike service': '电动车服务',
+    'External Cable Install': '线管与线壳',
+    'Wheel Truing — Minor': '车轮校正 - 轻度',
+    'Wheel Truing — Major': '车轮校正 - 重度',
+    'Tyre / Tube Install': '爆胎修理',
+    'Pad alignment, cable tension, lever reach': '刹车皮定位、线材张力和手柄距离调整',
+    'Full hydraulic brake system installation.': '完整安装液压刹车系统。',
+    'Disc brake pad replacement per end.': '更换碟刹刹车皮，前后各计一次。',
+    'Full hydraulic bleed per end. Both ends $105.': '单端液压油完整排气。前后一起 $105。',
+    'Height, fore-aft and tilt optimised': '优化坐垫高度、前后位置和倾角',
+    'Professional bar tape wrap on drop bars.': '为弯把提供专业手把带缠绕。',
+    'Remove and refit handlebars.': '拆下并重新安装车把。',
+    'Clean, adjust and regrease headset': '清洁、调整并重新润滑碗组',
+    'True the hanger derailleur with specifics tools. The setting of the gears are included in the price':
+      '用专用工具校正变速吊耳，价格已包含变速调整。',
+    'Fit and size a new chain.': '安装新链条并调整到合适长度。',
+    'Cassette removal and refitting.': '拆下飞轮并重新安装。',
+    'BB removal and new unit installation.': '拆下中轴并安装新中轴。',
+    'Software update for e-bike motor and display.': '为电动车电机和显示屏更新软件。',
+    'Check cables connections and all the bolts and adjustments of brakes and gears':
+      '检查线材接头和所有螺栓，并调整刹车和变速',
+    'Front or rear derailleur installation.': '安装前变速器或后变速器。',
+    'Derailleur indexing and cable tension adjustment.': '变速器档位微调和线材张力调整。',
+    'Replace outer and inner cables.': '更换内线和外套管。',
+    'Professional fitting of accessories.': '专业安装各类配件。',
+    'Full assembly of a new boxed bike. Price change depending on the size and kind of bike.':
+      '从纸箱完整组装新车。价格视车架尺寸和车型而定。',
+    'Urgent same-day help. Contact us directly on 0433 963 250 and we quote your repair.':
+      '当天紧急救援。请直接致电 0433 963 250，我们为您报价。',
+    'Safety check, gear & brake adjustment, tyre pressure and drivetrain lube.':
+      '安全检查、变速与刹车调整、轮胎气压和传动系统上油。',
+    'Tune-Up plus drivetrain clean, minor wheel true and inspection report.':
+      '包含 Tune-Up，另加传动清洗、轻度校圈和检查报告。',
+    'Everything in Standard plus new cables, wheel truing and headset check.':
+      '包含 Standard 的全部内容，另加更换线材、校圈和碗组检查。',
+    'Complete strip-and-rebuild. Every component inspected, adjusted or replaced.':
+      '整车拆解后重新组装。每个零件都会检查、调整或更换。',
+    'Air spring disassembly and new o-rings.': '拆解气弹簧并更换全新 O 形圈。',
+    'Full lower leg strip, clean and oil refresh.': '完整拆解下管、清洁并更换润滑油。',
+    'Spoke tension adjustment for small deviations.': '针对轻微偏摆调整辐条张力。',
+    'Tyre and tube replacement per wheel.': '更换外胎和内胎，每轮计价。',
+    'Significant spoke tension correction.': '针对较大偏摆进行辐条张力校正。',
+    'Tubeless conversion per wheel.': '每轮真空胎改装。',
+    'Per spoke, includes wheel re-true': '按辐条计价，含轮组重新校正',
+    'New tyre fitted, tyre cost extra': '安装新外胎，外胎另行计价',
   },
 };
 

@@ -3,6 +3,7 @@
 // Five things Diego hit on his own phone the day the birthday field shipped.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import { hasKey, dictBlock } from '../../scripts/lib/dict-keys.mjs';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const appjs = read('js/app.js');
@@ -74,10 +75,13 @@ describe('saving a birthday says so, and keeps saying so', () => {
     expect(appjs).toMatch(/if \(status\) status\.style\.display = 'none';/);
   });
 
+  // Asked per dictionary rather than by counting quoted occurrences: prettier
+  // unquotes an identifier-like key like Saved on the next commit that touches
+  // i18n.js, and the old count went to zero (docs/PENDIENTES.md 69).
   it('"Saved" is translated', () => {
-    const first = i18njs.indexOf("'Saved':");
-    expect(first).toBeGreaterThan(-1);
-    expect(i18njs.indexOf("'Saved':", first + 1)).toBeGreaterThan(-1);
+    for (const lang of ['es', 'zh']) {
+      expect(hasKey(dictBlock(i18njs, lang), 'Saved'), `missing from ${lang}`).toBe(true);
+    }
   });
 });
 

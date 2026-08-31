@@ -17,6 +17,7 @@
 // Needs network (reads Supabase with the public anon key), so it is NOT part
 // of `npm run check` - CI must not depend on a live table.
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { missingCatalogTranslations } from './lib/dict-keys.mjs';
 
 const SUPABASE_URL = 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY =
@@ -201,7 +202,7 @@ function categoryCardNames(file) {
   return out;
 }
 
-const res = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,price`, {
+const res = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,price,description`, {
   headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
 });
 if (!res.ok) {
@@ -427,10 +428,39 @@ if (ldUnmatched.length) {
   console.log('');
 }
 
+// ── The catalog's own words ─────────────────────────────────────────────────
+// The booking wizard prints `name` and `description` from this table verbatim
+// (js/app.js renderStep1 -> createServiceCard), and js/i18n.js translates them
+// as a post-render pass keyed on the exact English text. So a row whose wording
+// is not in the dictionary renders in English to Spanish and Chinese clients,
+// and nothing anywhere says so: scripts/i18n-check.mjs reads the surfaces, not
+// the table. That is how 32 of 33 descriptions and 11 of 33 names sat
+// untranslated with a green `npm run check` (docs/PENDIENTES.md 69).
+//
+// This is also the ONLY thing that notices an edit made in Admin > Services &
+// Prices: rewording a description there detaches it from its dictionary key and
+// that card quietly falls back to English.
+const i18nMissing = missingCatalogTranslations(services, readFileSync('js/i18n.js', 'utf8'));
+
+if (i18nMissing.length) {
+  bad++;
+  console.log('CATALOG WORDING WITH NO TRANSLATION  (renders in English to es/zh)');
+  console.log('The booking wizard prints these straight from the table. i18n-check');
+  console.log('cannot see them - they are data, not markup.\n');
+  for (const r of i18nMissing) {
+    console.log(`  x ${r.service} (${r.kind}) - missing ${r.missing.join(' and ')}`);
+    console.log(`      "${r.text.length > 90 ? r.text.slice(0, 90) + '...' : r.text}"`);
+  }
+  console.log('\n  fix: add the exact English string to the Supabase catalog block at the');
+  console.log('       end of both dictionaries in js/i18n.js, then bump CACHE_STATIC in');
+  console.log('       sw.js or returning visitors keep the old dictionary.\n');
+}
+
 console.log(
   `Checked ${cards.length} cards on ${pages.length} pages, and ${ldOffers.length} structured-data ` +
     `offers on ${ldPages.length} pages, against ${services.length} services.`
 );
-if (!bad && !priceDrift.length) console.log('Everything in the catalog is advertised and matched.');
+if (!bad && !priceDrift.length)
+  console.log('Everything in the catalog is advertised, matched and translated.');
 // Deliberately never fails the build: this is a report for Diego, and a
 // transient network blip must not look like a content problem.
