@@ -93,6 +93,22 @@
         s.setAttribute(a.name, a.value);
       }
       if (!old.src) s.text = old.textContent;
+      // A script built with createElement() is async by DEFAULT - the attribute
+      // is not needed and copying it is not enough. So a cloned <script src>
+      // could still execute AFTER an inline clone further down the document
+      // that needs it. That is exactly what happened to Sentry: the loader was
+      // still in flight when the init block ran, so `Sentry` was undefined,
+      // the init threw, and error monitoring was silently dead for everyone who
+      // accepted cookies (docs/PENDIENTES.md 71).
+      //
+      // This loop already meant to preserve order - "Order is preserved by
+      // inserting each clone where the placeholder sat" - but it only preserved
+      // POSITION. async=false is what preserves EXECUTION order.
+      //
+      // Only for tags that did not ask to be async themselves: Google
+      // Analytics' loader carries async on purpose and does not need ordering
+      // (gtag() is defined by the inline block, not by the loader).
+      if (s.src && !old.hasAttribute('async')) s.async = false;
       old.parentNode.insertBefore(s, old);
       old.parentNode.removeChild(old);
     }

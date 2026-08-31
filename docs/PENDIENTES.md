@@ -8333,3 +8333,77 @@ Diego, y es lo unico que cierra esto:
    los devuelve al gate, y nadie comprobo que revivan al aceptar.
 3. Que admin y mechanic sigan andando: se les movio el bootstrap de gtag y se
    les bumpeo el `?v=`.
+
+## 71. Aceptar las cookies dejaba Sentry sin inicializar (31-ago-2026)
+
+Consecuencia directa del arreglo de 70, encontrada por Diego el mismo dia:
+
+```
+Uncaught ReferenceError: Sentry is not defined
+    at <anonymous>:2:5
+    at enableAnalytics (consent.js:96:22)
+```
+
+Ya no rompia los botones - el bloque vive en la pagina, aislado, y un throw ahi
+no mata js/landing-inline.js. Pero **el monitoreo de errores estaba muerto para
+todo el que aceptaba las cookies**, que es justo el unico caso en que deberia
+funcionar.
+
+### Un default del navegador, no una linea que falte
+
+`enableAnalytics()` revive los `<script type="text/plain">` clonandolos. El
+comentario del bucle decia: *"Order is preserved by inserting each clone where
+the placeholder sat"*.
+
+Preservaba la **posicion**. No la **ejecucion**.
+
+Un `<script>` creado con `document.createElement()` es **async por defecto** -
+no hace falta el atributo, y copiar los atributos del original no lo cambia.
+Asi que el loader de Sentry (clonado primero, con `src`) seguia bajando cuando
+el bloque de init (clonado despues, inline) ya se estaba ejecutando. `Sentry`
+no existia todavia.
+
+Es un bug del bucle, no de Sentry: le pasaria a cualquier vendor cuyo init
+dependa de su loader.
+
+### El arreglo
+
+```js
+if (s.src && !old.hasAttribute('async')) s.async = false;
+```
+
+`async = false` en un script insertado por JS es lo que fuerza el orden de
+ejecucion por orden de insercion. La condicion importa: el loader de Google
+Analytics lleva `async` a proposito y no necesita orden - `gtag()` lo define el
+bloque inline, no el loader - y bloquearlo seria una regresion de velocidad a
+cambio de nada.
+
+### El test corre el bucle de verdad
+
+`tests/unit/consent-script-order.test.js` extrae el cuerpo de
+`enableAnalytics()` **del archivo que se despacha** y lo ejecuta contra un DOM
+falso minimo. La invariante es de comportamiento - que el nodo insertado tenga
+`async === false` -, no el texto de la linea que lo pone, asi que testear una
+copia no habria servido.
+
+Verificado quitando la linea: falla; con ella, pasa. 6 tests nuevos, 1090 en
+total.
+
+### De paso, los otros dos avisos de la consola
+
+- `manifest.json`: `share_target` no declaraba `enctype`. Chrome avisaba en cada
+  carga. Ahora dice `application/x-www-form-urlencoded`, que es lo que ya usaba
+  por defecto.
+- `<meta name="apple-mobile-web-app-capable">` esta deprecado. `mechanic.html`
+  ya llevaba los dos; `admin.html`, `index.html` y `landing.html` ahora tambien.
+  No se quita el viejo: iOS todavia lo lee.
+
+`[live-prices] no Supabase match for "Custom Quote"` **no es un bug**: esa
+tarjeta nombra una categoria, no un servicio con precio. El aviso es deliberado
+y esta documentado en js/live-prices.js.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador.** Falta que Diego **acepte** las cookies en la
+landing y confirme que ya no aparece `Sentry is not defined` en la consola.
+Que Sentry efectivamente reporte a su panel no lo comprueba ningun test de acá.

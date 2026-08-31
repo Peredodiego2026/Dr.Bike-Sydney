@@ -1,3 +1,9 @@
+// v104 (2026-08-31): aceptar las cookies tiraba `Sentry is not defined` desde
+// consent.js. Un <script> creado con createElement es async POR DEFECTO, asi
+// que el loader clonado corria DESPUES del bloque de init que lo necesita, y
+// Sentry quedaba sin inicializar para todo el que aceptaba. Toca js/consent.js
+// (que no lleva ?v=, solo este bump lo renueva), manifest.json y el meta
+// mobile-web-app-capable de admin/index/landing.
 // v103 (2026-08-31): la landing no tenia NINGUN boton funcionando para quien
 // no aceptaba cookies. js/landing-inline.js llamaba Sentry.onLoad() en la linea
 // 9 y el loader de Sentry esta detras del consentimiento: ReferenceError, y el
@@ -105,7 +111,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v103';
+const CACHE_STATIC = 'drbike-static-v104';
 const CACHE_PAGES  = 'drbike-pages-v74';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
