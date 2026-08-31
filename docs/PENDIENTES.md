@@ -8107,3 +8107,138 @@ en vez de resolverse de algun modo razonable.
 son las decisiones y el orden. **Falta que Diego haga una reserva de prueba**
 despues del deploy - y en particular que compruebe que al elegir un horario y
 llegar al pago, ese horario ya no aparece disponible en otra pestana.
+
+## 69. El catalogo de servicios salia en ingles, y ningun check podia verlo (31-ago-2026)
+
+Diego lo vio como cliente: el paso 1 de la reserva, en espanol, con las tarjetas
+en ingles. "Chain Install / Fit and size a new chain."
+
+### La causa raiz: es copia de cara al cliente que vive en una base de datos
+
+`js/app.js` `renderStep1()` llama a `createServiceCard(s)` (`js/components.js`),
+que imprime `s.name` y `s.description` **tal cual los devuelve la tabla
+`services` de Supabase**. `js/i18n.js` traduce despues, caminando los nodos de
+texto y cambiando los que coinciden **exacto** con una clave del diccionario.
+
+O sea: el texto del catalogo es copia de interfaz, pero es un **dato**. Y
+`scripts/i18n-check.mjs` lee las **superficies** - el HTML y los templates de
+`innerHTML` en `js/`. La tabla no la lee nadie. Esa es toda la causa: el check
+que existe justamente para que nada llegue a main sin traducir **no puede ver**
+un tercio de la copia que el cliente lee en la primera pantalla de la reserva.
+
+Medido contra la tabla en vivo el 31-ago-2026, 33 servicios:
+
+- **32 de 33 descripciones** sin entrada en `es` ni en `zh`.
+- **11 de 33 nombres** tampoco. Eso no estaba en el pedido: el pedido hablaba de
+  descripciones. Pero el nombre y la descripcion son la misma tarjeta, y arreglar
+  la mitad de abajo dejaba "Chain Install" en ingles arriba.
+- La unica que si estaba traducida (`E-bike Diagnostic`) lo estaba **por
+  casualidad**: alguien la habia agregado por la tarjeta estatica de marketing,
+  que tiene el mismo texto.
+
+`npm run check` estuvo verde todo el tiempo. Nunca hubo nada que lo pusiera rojo.
+
+### Por que al diccionario y no a columnas nuevas
+
+Se evaluo `description_es` / `description_zh` en Supabase. Se descarto:
+
+1. **Los nombres ya viven en el diccionario y no se pueden mover.** `sourceOf()`
+   (el indice inverso de `js/i18n.js`) es lo que usa `js/live-prices.js` para
+   volver del texto renderizado al nombre ingles y enganchar la tarjeta con su
+   fila de precio. Con las descripciones en Postgres, el titulo de la tarjeta se
+   traduciria desde un lado y el cuerpo desde el otro.
+2. **El mecanismo ya funcionaba.** No habia nada que construir, solo que llenar.
+3. **Cero migracion.** Nada que correr a mano, nada que se rompa si no se corre -
+   que en este repo es el modo de falla de siempre (ver 24.x, "merged code is not
+   a migrated DB").
+4. **Diego no escribe chino.** Con columnas, cada servicio nuevo lo obliga a
+   llenar `description_zh` a mano o dejarla en NULL.
+
+El costo de la decision, dicho sin maquillar: **si Diego reescribe una
+descripcion desde Admin > Services & Prices, la clave deja de coincidir y esa
+tarjeta vuelve a ingles en silencio.** No rompe nada - el fallback del i18n es
+siempre el ingles - pero nadie se entera.
+
+### El backstop, porque un fallback silencioso no alcanza
+
+`npm run services:check` (`scripts/services-sync-check.mjs`) ya existia para
+exactamente esta clase de problema: lee la tabla en vivo y nombra las tarjetas
+que quedaron desenganchadas despues de editar servicios en Admin. Ahora tambien
+lee `description` y lista **toda fila cuyo nombre o descripcion no tiene entrada
+en `es` y `zh`**, con el texto exacto que hay que agregar.
+
+No va en `npm run check` a proposito: necesita red, y esa decision ya estaba
+tomada en ese archivo - el CI no puede depender de una tabla viva.
+
+La logica de lectura del diccionario salio a `scripts/lib/dict-keys.mjs` para que
+el test la pueda usar sin importar `js/i18n.js` (que toca `localStorage`,
+`navigator` y `document.dispatchEvent`). Ese modulo trae adentro el guard del
+bug 66: cada corte de idioma **termina en el idioma siguiente**, no al final del
+archivo, asi que una cadena traducida solo al chino no puede volver a pasar por
+espanola.
+
+### Los dos bugs que encontro el test, mas viejos que este cambio
+
+Escribiendo el test del indice inverso aparecieron **dos colisiones vivas, solo
+en chino**, anteriores a este cambio:
+
+- el bullet `'Pad replacement'` de `js/app.js` y la tarjeta
+  `'Brake Pad Replacement'` decian los dos **刹车片更换**;
+- `'Bottom bracket service'` y `'Bottom Bracket Service'`, los dos **五通保养**.
+
+`sourceOf()` se queda con la **primera** definicion, y en los dos casos la
+primera es el bullet, que no es un servicio. Consecuencia en produccion: para un
+visitante en chino esas dos tarjetas **no enganchaban con la tabla** y se
+quedaban con el precio escrito a mano en el HTML para siempre; editar el precio
+en Admin no llegaba nunca. Con un `console.warn` que nadie lee.
+
+En espanol las cuatro cadenas tenian texto distinto, asi que el bug era invisible
+leyendo el archivo - solo se ve corriendo el reverso en los dos idiomas.
+Arreglado reescribiendo los dos bullets (`更换刹车皮`, `五通中轴保养`): son texto
+de solo lectura, nunca se leen de vuelta del DOM. El test ahora recorre **la
+union de los alias de marketing y los nombres del catalogo, en es y zh**, y exige
+que cada uno vuelva a caer en una fila real.
+
+### El boton del hero
+
+`What does a visit cost?` paso a **`Check my diagnosis fee`**.
+
+El servicio se llama **"Visit & Diagnosis"** en la factura, el email, el panel y
+el boton de pago (`Confirm & Pay $X Visit & Diagnosis`). El boton no usaba
+ninguna de esas palabras. Diego propuso "Diagnostic price"; se descarto por dos
+razones: *diagnostic* seria una cuarta palabra para lo mismo cuando el resto de
+la app dice *diagnosis*, y es una etiqueta, no un boton - el control abre
+"What's your suburb?" y calcula.
+
+- ES: `Calculá el precio de tu diagnóstico` (las palabras de Diego, con el voseo
+  que ya usa el sitio).
+- ZH: `查询上门检查费`. **No** se uso 诊断: el diccionario chino ya dice 上门检查费
+  en las ~20 cadenas de "visit & diagnosis fee", y cambiar solo el boton hubiera
+  creado el mismo problema de dos nombres. 上门 ademas ya dice "vamos a tu casa",
+  que es lo que el ingles pierde.
+
+La clave vieja se borro de los dos diccionarios: una clave huerfana es peso
+muerto que el proximo lector tiene que descartar.
+
+### Cache
+
+`sw.js` `CACHE_STATIC` a `v102`. `js/i18n.js` se importa **sin `?v=`** (se quito
+el 28-jul-2026 a proposito, ver 3.2-cache), asi que este bump es lo unico que
+renueva el diccionario en un visitante que ya entro. Los `?v=` de `js/app.js` y
+`js/landing-inline.js` en `index.html` y `landing.html` tambien subieron:
+`scripts/versioned-assets-check.mjs` los exige y da el hash exacto.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador** (prohibido en esta sesion). Nadie vio las tarjetas
+renderizadas ni el boton nuevo en el hero.
+
+Lo que **falta que mire Diego**, concretamente:
+
+1. **El boton en espanol es largo** - `Calculá el precio de tu diagnóstico`, 35
+   caracteres contra 22 del ingles. Si envuelve feo en el hero, el reemplazo
+   corto es `Precio de tu diagnóstico`.
+2. **Las 33 descripciones en la pantalla real**, en es y en zh. El test prueba
+   que el diccionario devuelve la traduccion, no que entre en la tarjeta.
+3. Las dos cadenas chinas reescritas (`更换刹车皮`, `五通中轴保养`) aparecen en las
+   listas de "que incluye" de `js/app.js`.

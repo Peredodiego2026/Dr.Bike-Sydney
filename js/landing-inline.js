@@ -1339,7 +1339,7 @@ function bkServiceNameFrom(card) {
 }
 
 
-// ── "What does a visit cost?" zone price checker ───────────────────────────────────────
+// ── "Check my diagnosis fee" zone price checker ───────────────────────────────────────
 // Public, no login needed - calls role:'zone-price' (api/auth.js), which uses
 // the exact same callout_zones lookup that actually charges the customer
 // (matchCalloutZone), so this can never quote a different number than what

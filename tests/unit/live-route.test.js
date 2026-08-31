@@ -12,6 +12,7 @@
 //     away" for an eight-kilometre drive.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import { hasKey, dictBlock } from '../../scripts/lib/dict-keys.mjs';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const eta = read('api/_eta.js');
@@ -136,11 +137,17 @@ describe('the time beside it says what kind of time it is', () => {
     expect(fn.slice(0, 200)).toMatch(/if \(_routeShown\) return;/);
   });
 
+  // This used to count occurrences of "'KEY':" in the file and call two of them
+  // "all three languages". That proved neither WHICH dictionaries the key landed
+  // in (docs/PENDIENTES.md 66) nor survived prettier unquoting an identifier-like
+  // key - lint-staged rewrites 'ETA' to ETA on any commit that touches i18n.js,
+  // and the count silently dropped to zero (docs/PENDIENTES.md 69). Ask each
+  // dictionary by name instead.
   it('in all three languages', () => {
     for (const key of ['by road', 'straight line', 'Mechanic is right outside!', 'ETA']) {
-      const first = i18n.indexOf("'" + key + "':");
-      expect(first, `${key} missing`).toBeGreaterThan(-1);
-      expect(i18n.indexOf("'" + key + "':", first + 1), `${key} only one language`).toBeGreaterThan(-1);
+      for (const lang of ['es', 'zh']) {
+        expect(hasKey(dictBlock(i18n, lang), key), `${key} missing from ${lang}`).toBe(true);
+      }
     }
   });
 });

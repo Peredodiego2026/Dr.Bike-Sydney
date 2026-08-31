@@ -569,7 +569,7 @@ export async function matchCalloutZone(sb, address) {
   const { data: zones } = await sb.from('callout_zones').select('name,callout_fee,suburbs');
   const addr = (address || '').trim().toLowerCase();
   // Bidirectional on purpose: a full booking address ("123 Beach Rd, Bondi
-  // Beach NSW") CONTAINS the shorter DB suburb, but "What does a visit cost?" takes a
+  // Beach NSW") CONTAINS the shorter DB suburb, but "Check my diagnosis fee" takes a
   // bare suburb name and the DB entry is sometimes the more specific "Bondi
   // Beach"/"Bondi Junction" - "bondi" alone never contains either, so every
   // plain suburb name silently reported "not covered" (found in production,
@@ -586,7 +586,7 @@ export async function matchCalloutZone(sb, address) {
   return zone ? { calloutFee: Number(zone.callout_fee), zoneName: zone.name } : null;
 }
 
-// The "What does a visit cost?" button on the marketing page - public/no-auth on
+// The "Check my diagnosis fee" button on the marketing page - public/no-auth on
 // purpose, same reasoning as handleCheckCoverage: a visitor should be able to
 // see their price before creating an account or starting a booking, not just
 // after. Returns the fee so the UI can show it (handleCheckCoverage only

@@ -1,3 +1,8 @@
+// v102 (2026-08-31): el catalogo de servicios de Supabase se traduce. Las 33
+// descripciones y 11 de los 33 nombres salian en ingles porque son DATOS de la
+// tabla `services`, no markup, y scripts/i18n-check.mjs no los ve. Tambien el
+// boton del hero pasa de "What does a visit cost?" a "Check my diagnosis fee".
+// Toca js/i18n.js, que se importa sin ?v= y solo este bump lo renueva.
 // v90 (2026-08-26): el fee pasa a llamarse "Visita y diagnostico" en las 21
 // superficies, con la explicacion de que cubre arriba del boton de pagar.
 // Toca js/i18n.js, que se importa sin ?v= y solo este bump lo renueva.
@@ -93,7 +98,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v101';
+const CACHE_STATIC = 'drbike-static-v102';
 const CACHE_PAGES  = 'drbike-pages-v74';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

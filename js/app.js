@@ -506,7 +506,7 @@ async function loadLeaflet() {
   }
 }
 
-// ── "What does a visit cost?" zone price checker ───────────────────────────────────────
+// ── "Check my diagnosis fee" zone price checker ───────────────────────────────────────
 // Public, no login needed - same role:'zone-price' endpoint the desktop hero
 // button calls (js/landing-inline.js), so the two surfaces can never disagree
 // on a price. matchCalloutZone (api/auth.js) is the single source of truth
