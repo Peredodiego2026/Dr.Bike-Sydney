@@ -1,9 +1,9 @@
-window.dataLayer = window.dataLayer || [];
-function gtag() {
-  dataLayer.push(arguments);
-}
-gtag('js', new Date());
-gtag('config', 'G-GXYD68JXZW');
+// The gtag() bootstrap that used to sit here now lives in the page, gated
+// behind consent (<script type="text/plain" data-consent="analytics">), the
+// way index.html carries it. In a .js file it was invisible to
+// scripts/consent-gate.mjs, so it configured Google Analytics on every load
+// without asking - the same mismatch that killed the landing page's buttons
+// on 2026-08-31 (docs/PENDIENTES.md 70).
 
 // ── THEME ────────────────────────────────────────────────────────────────────
 (function () {
