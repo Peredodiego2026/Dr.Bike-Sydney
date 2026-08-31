@@ -838,12 +838,55 @@
          first client leaves a review after a completed job - #reviews-empty
          below covers that state, swapped for real cards automatically once
          any exist. No fabricated content, no fake "Google Review" label. -->
-    <div id="reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px"></div>
-    <div id="reviews-empty" style="display:none;text-align:center;padding:32px 20px;margin-bottom:32px">
-      <div style="font-size:32px;margin-bottom:12px">&#128172;</div>
-      <p style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:6px">Be the first to leave a review</p>
-      <p style="font-size:15px;color:var(--gray);max-width:380px;margin:0 auto">Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.</p>
+
+    <!-- ── Reviews on Google ───────────────────────────────────────────────
+         Quoted by hand, verbatim, from the Google Business Profile linked
+         below (place 0x6762fdefebf19285:0x52872725f8bdca88). Two reasons this
+         is not pulled from the Places API: it caps at five reviews that Google
+         picks, and it costs a Cloud account - neither is worth it at this
+         volume. Adding one is editing this block.
+         RULES, because this section already shipped fabricated once:
+           - text verbatim, in the English it was written in;
+           - the name as the reviewer published it;
+           - the link goes to the real profile, so any claim here is checkable.
+         Never write a card for a review that does not exist. -->
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
+        <img src="images/google-logo.svg" alt="Google" style="width:52px">
+        <span style="font-size:20px;font-weight:800;color:var(--navy)">5.0</span>
+        <span style="color:var(--amber-bright);font-size:17px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+        <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="font-size:15px;color:var(--blue);font-weight:600;text-decoration:none">2 reviews on Google</a>
+      </div>
     </div>
+    <div id="google-reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px">
+      <div class="review-card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">A</div>
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:15px;color:var(--navy)">Aldana Jacquet</div>
+            <div style="font-size:13px;color:var(--gray)">August 2026</div>
+          </div>
+        </div>
+        <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p style="font-size:15px;color:var(--gray);line-height:1.6">Amazing service! Super friendly, professional and efficient. They fixed my bike brakes perfectly and did a great job with the service. Highly recommend!</p>
+      </div>
+      <div class="review-card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:15px;color:var(--navy)">Shaun Murphy</div>
+            <div style="font-size:13px;color:var(--gray)">August 2026</div>
+          </div>
+        </div>
+        <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p style="font-size:15px;color:var(--gray);line-height:1.6">Our electric bike has been regularly serviced and highly recommended these guys. Quick and courteous.</p>
+      </div>
+    </div>
+    <div id="reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px"></div>
+    <!-- The old "Be the first to leave a review" empty state lived here. It
+         made sense when the section was blank; under two real Google reviews it
+         contradicted what the visitor could see. js/landing-inline.js now just
+         leaves #reviews-grid empty when there are no in-app reviews yet. -->
     <div style="text-align:center;margin-bottom:8px">
       <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);padding:10px 20px;border-radius:8px;font-size:15px;font-weight:600;color:var(--gray);text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.08)">
         <img src="images/google-logo.svg" alt="Google" style="width:52px">
@@ -1406,7 +1449,7 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=fa5e4e8b61"></script>
+<script src="js/landing-inline.js?v=fd2a66579b"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=d753faa212"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing

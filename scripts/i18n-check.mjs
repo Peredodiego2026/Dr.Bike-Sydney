@@ -45,6 +45,14 @@ const ALLOWED = new Set([
   // which read the same in every language.
   'DR. BIKE SYDNEY',
   'ana@example.com',
+  // Reviews quoted verbatim from the Google Business Profile, and the names
+  // the reviewers published them under. A translated quote is no longer a
+  // quote - and the link next to them goes to the original, where the English
+  // is what a visitor will read. Adding a review here means adding its text.
+  'Aldana Jacquet',
+  'Shaun Murphy',
+  'Amazing service! Super friendly, professional and efficient. They fixed my bike brakes perfectly and did a great job with the service. Highly recommend!',
+  'Our electric bike has been regularly serviced and highly recommended these guys. Quick and courteous.',
   // Brand and people
   'Dr. Bike Sydney',
   'Dr. Bike',

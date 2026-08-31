@@ -24,14 +24,26 @@ const SURFACES = ['js/app.js', 'js/landing-inline.js', 'landing.html'];
 const sources = SURFACES.map((f) => ({ file: f, src: readFileSync(join(root, f), 'utf8') }));
 
 describe('the Google review link', () => {
-  it('is the same link on every surface - one place to change, not three', () => {
-    const found = sources.flatMap(({ src }) =>
-      [...src.matchAll(/https:\/\/(?:maps\.app\.goo\.gl|g\.page|search\.google\.com)\/[^\s"'<)]+/g)].map(
-        (m) => m[0]
-      )
+  // Was an exact count of 3. That broke the moment the link was used a fourth
+  // time legitimately (the Google reviews badge on the landing), while a count
+  // never checked the thing that matters - three copies could all sit in one
+  // file and two surfaces could have none. Per-surface presence plus global
+  // identity is what "one place to change" actually means.
+  const linksIn = (src) =>
+    [...src.matchAll(/https:\/\/(?:maps\.app\.goo\.gl|g\.page|search\.google\.com)\/[^\s"'<)]+/g)].map(
+      (m) => m[0]
     );
-    expect(found.length).toBe(3); // landing, SPA, and the landing's rendered block
-    expect(new Set(found).size).toBe(1); // all identical
+
+  it('is present on every surface', () => {
+    for (const { file, src } of sources) {
+      expect(linksIn(src).length, `${file} has no Google review link`).toBeGreaterThan(0);
+    }
+  });
+
+  it('and every occurrence is the same link', () => {
+    const found = sources.flatMap(({ src }) => linksIn(src));
+    expect(found.length).toBeGreaterThanOrEqual(sources.length);
+    expect(new Set(found).size, `found ${[...new Set(found)].join(' AND ')}`).toBe(1);
   });
 
   it('never goes back to a name-based short link, which is the format Google killed', () => {

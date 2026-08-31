@@ -1479,6 +1479,8 @@ const dict = {
       'Si ese correo tiene reservas, acabamos de enviarte los enlaces de seguimiento de todas.',
     'Connection error. Try again.': 'Error de conexión. Intenta de nuevo.',
     'your@email.com': 'tu@correo.com',
+    'August 2026': 'Agosto 2026',
+    '2 reviews on Google': '2 reseñas en Google',
     // ── Supabase `services` catalog ──────────────────────────────────────────
     // Booking step 1 (js/app.js renderStep1 -> createServiceCard) prints `name`
     // and `description` straight out of the Supabase `services` table. Those are
@@ -2904,6 +2906,8 @@ const dict = {
       '如果该邮箱有任何预订，我们已将全部追踪链接发送至该邮箱。',
     'Connection error. Try again.': '连接错误，请重试。',
     'your@email.com': 'your@email.com',
+    'August 2026': '2026年8月',
+    '2 reviews on Google': 'Google 上的 2 条评价',
     // ── Supabase `services` catalog ──────────────────────────────────────────
     // Same block as in `es`, same two rules - see the comment there. The names
     // reuse the marketing translations already defined above (e.g. the catalog
