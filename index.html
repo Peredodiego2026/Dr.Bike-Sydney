@@ -65,27 +65,40 @@
       gtag('config', 'G-GXYD68JXZW');
     </script>
     <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
-    <script type="text/plain" data-consent="analytics"
-      src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js"
-      crossorigin="anonymous"
-    ></script>
     <script type="text/plain" data-consent="analytics">
-      Sentry.onLoad(function () {
-        Sentry.init({
-          dsn: 'https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488',
-          environment: 'production',
-          release: 'drbike@1.0.0',
-          tracesSampleRate: 0.2,
-          replaysSessionSampleRate: 0.1,
-          replaysOnErrorSampleRate: 1.0,
-          integrations: [Sentry.replayIntegration(), Sentry.browserTracingIntegration()],
-          beforeSend: function (event) {
-            var url = (event.request && event.request.url) || '';
-            if (url.startsWith('data:')) return null;
-            return event;
-          },
-        });
-      });
+      // Loads the SDK itself, on purpose. This used to be two gated tags - the
+      // loader and this init - and js/consent.js revives them by cloning. A cloned
+      // <script src> fetches asynchronously while a cloned INLINE script runs the
+      // instant it is inserted, so the init always won the race and threw
+      // "Sentry is not defined" (docs/PENDIENTES.md 73). Setting async=false on the
+      // loader does not help: that orders src scripts against EACH OTHER, and an
+      // inline script never waits for any of them.
+      //
+      // onload is the only thing that actually means "the SDK has run".
+      (function () {
+        var s = document.createElement('script');
+        s.src = 'https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js';
+        s.crossOrigin = 'anonymous';
+        s.onload = function () {
+          Sentry.onLoad(function () {
+            Sentry.init({
+              dsn: 'https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488',
+              environment: 'production',
+              release: 'drbike@1.0.0',
+              tracesSampleRate: 0.2,
+              replaysSessionSampleRate: 0.1,
+              replaysOnErrorSampleRate: 1.0,
+              integrations: [Sentry.replayIntegration(), Sentry.browserTracingIntegration()],
+              beforeSend: function (event) {
+                var url = (event.request && event.request.url) || '';
+                if (url.startsWith('data:')) return null;
+                return event;
+              },
+            });
+          });
+        };
+        document.head.appendChild(s);
+      })();
     </script>
     <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
     <script type="text/plain" data-consent="analytics">

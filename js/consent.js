@@ -94,16 +94,16 @@
       }
       if (!old.src) s.text = old.textContent;
       // A script built with createElement() is async by DEFAULT - the attribute
-      // is not needed and copying it is not enough. So a cloned <script src>
-      // could still execute AFTER an inline clone further down the document
-      // that needs it. That is exactly what happened to Sentry: the loader was
-      // still in flight when the init block ran, so `Sentry` was undefined,
-      // the init threw, and error monitoring was silently dead for everyone who
-      // accepted cookies (docs/PENDIENTES.md 71).
+      // is not needed and copying it is not enough - so cloned <script src> tags
+      // would otherwise execute in any order relative to EACH OTHER. This keeps
+      // them in document order, which is what this loop always claimed to do and
+      // only ever did for position.
       //
-      // This loop already meant to preserve order - "Order is preserved by
-      // inserting each clone where the placeholder sat" - but it only preserved
-      // POSITION. async=false is what preserves EXECUTION order.
+      // What it does NOT do, and the first attempt at the Sentry bug assumed it
+      // did (docs/PENDIENTES.md 73): make an INLINE clone wait. An inline script
+      // runs the instant it is inserted, whatever any src script is doing. A
+      // block that needs a vendor loaded has to load it itself and act in its
+      // onload - which is what the Sentry tag in the pages now does.
       //
       // Only for tags that did not ask to be async themselves: Google
       // Analytics' loader carries async on purpose and does not need ordering
