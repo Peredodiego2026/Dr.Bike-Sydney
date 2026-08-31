@@ -8013,3 +8013,97 @@ los logs de Vercel que no lee nadie.
 Queda como verificacion pendiente de Diego, con el SQL en el chat.
 
 18 tests en el archivo (3 reescritos, 3 nuevos).
+
+## 68. Reserva primero, cobro despues (31-ago-2026)
+
+Diego: *"debe ser primero la reserva... el sentido comun de la pagina web es
+bloquear primero la fecha y la hora, y despues ocurre el pago. No entiendo por
+que estaba al reves."*
+
+Nadie lo decidio al reves. El paso 2 del asistente pide fecha y hora, asi que
+cualquiera asume que el turno queda tomado ahi - pero elegir una fecha solo
+escribia `window.appState.date`, **en la memoria del navegador**. Habia UNA
+escritura a la base y venia al final, despues del cobro.
+
+### Lo que compra, y lo que NO (correccion registrada)
+
+Le dije a Diego que dos clientes eligiendo el mismo horario dejan al segundo
+**cobrado y sin reserva**, y use eso para empujar el cambio como urgente.
+**Era falso**, y se lo corregi: `api/auth.js` atrapa el `23505` de
+`bookings_unique_slot` y **reembolsa** antes de devolver 409.
+
+Lo que el cambio realmente compra:
+- la tarjeta **no se toca** por un turno que el cliente no puede tener, en vez
+  de un cobro y una devolucion que tarda dias en aclararse;
+- no depende de que el reembolso funcione - que es justo lo que falla cuando
+  Stripe es lo que esta caido;
+- coincide con lo que el visitante ya asume.
+
+### Sin migracion, a proposito
+
+Una retencion **no es una tabla ni una columna nueva**: es una reserva con
+`status='pending'` y **sin** `stripe_payment_intent_id`, que vence por
+`created_at`. Las tres columnas ya existian (verificado contra el esquema vivo).
+
+Eso importa mas que la elegancia: aca el SQL se corre a mano y el codigo llega
+a main antes, asi que un diseno que necesitara una columna nueva estaria roto en
+produccion hasta que Diego corriera el archivo.
+
+**La expiracion es perezosa porque tiene que serlo**: la ventana son 15 minutos
+y Vercel Hobby no permite crons sub-diarios. Se resuelve en los dos lugares que
+importan - al leer disponibilidad (una retencion vencida no ocupa) y al escribir
+(se cancelan las vencidas del turno antes de insertar, o el indice unico
+rechazaria la nueva).
+
+### Un handler, no dos
+
+`hold-slot` **reusa `handleCreateBooking`**. Cobertura, tarifa por zona, turno
+bloqueado y precios de membresia ya viven ahi; un segundo handler se
+desincronizaria. La bandera se pone **en la ruta**, no se lee del body, o
+`create-booking` podria ser convencido de saltear la verificacion de pago.
+
+### Los tres bugs que encontro la revision, no la ejecucion
+
+Diego pidio revisarlo tres veces antes del PR. Los tres aparecieron ahi, y
+**ninguno habria fallado un test existente**:
+
+1. **`holdOnly` se leia antes de declararse.** Estaba junto a la compuerta de
+   pago y el chequeo de cobertura lo usa ~130 lineas antes. Un `const` leido
+   antes de su declaracion **tira en ejecucion**, y `node --check` no lo ve:
+   valida sintaxis, no referencias. Habria roto **todas** las reservas.
+
+2. **Una direccion que el geocodificador no resuelve quedaba bloqueada.** La
+   regla "sin pago no hay reserva" es correcta para una reserva real, pero una
+   retencion **nunca** lleva pago - asi que sin exceptuarla, esas reservas se
+   perdian. Son las que Diego igual puede atender: el `console.warn` de esa rama
+   existe justamente para que las confirme a mano.
+
+3. **El peor: una retencion quemaba el codigo de descuento y los creditos por
+   recomendacion del cliente.** Los dos bloques estan **despues** del insert, asi
+   que la retencion llegaba y los gastaba. Un checkout abandonado le costaba al
+   cliente su codigo de un solo uso y sus creditos, sin haber comprado nada y sin
+   forma de notarlo. Ahora los dos van con `&& !holdOnly`, y el cliente **ni
+   siquiera manda** el codigo al retener - dos capas, para que quitar el guard
+   no alcance para reintroducirlo.
+
+Los tres tienen test, y el del descuento se verifico **reintroduciendo el bug a
+proposito**: con el bug, falla; sin el, pasa.
+
+### Dos tests viejos que fijaban texto literal
+
+`coverage-resolution` y `referral-credits` afirmaban las lineas exactas que
+cambie. Los cambios eran correctos y los tests fragiles: ahora matchean los
+**operandos** que les importan, con el termino nuevo opcional. **No se aflojo lo
+que protegen** - la invariante "un pago que existe siempre se verifica" quedo
+mas fuerte que antes, porque una retencion que trae un pago ahora se **rechaza**
+en vez de resolverse de algun modo razonable.
+
+47 tests nuevos. 1051/1051, corrido 3 veces.
+
+### Lo que NO se verifico
+
+**No se hizo una reserva real de punta a punta.** No se abrio el navegador
+(prohibido en esta sesion) ni se disparo un cobro contra Stripe. Lo verificado
+son las decisiones y el orden. **Falta que Diego haga una reserva de prueba**
+despues del deploy - y en particular que compruebe que al elegir un horario y
+llegar al pago, ese horario ya no aparece disponible en otra pestana.

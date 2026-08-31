@@ -34,7 +34,18 @@ describe('the credit can be spent', () => {
   // A guest has no profile, so no credits. `user` is null for them.
   it('a guest is skipped, not errored', () => {
     const block = auth.slice(auth.indexOf('// 6b. Referral credit'), auth.indexOf('// 6b.') + 3000);
-    expect(block).toMatch(/if \(user\) \{/);
+    // `&& !holdOnly` joined this when slot holds landed. What this test is
+    // about is the `user` term: a guest has no profile and therefore no
+    // credits, so the whole block is skipped rather than throwing.
+    expect(block).toMatch(/if \(user( && !holdOnly)? \) ?\{|if \(user( && !holdOnly)?\) \{/);
+  });
+
+  // Credits are spent when the booking is BOUGHT, never when the slot is merely
+  // held. Without this, a client who held a slot and then walked away from the
+  // payment screen would have had their credits spent on nothing.
+  it('a hold never spends credits', () => {
+    const block = auth.slice(auth.indexOf('// 6b. Referral credit'), auth.indexOf('// 6b.') + 3000);
+    expect(block).toMatch(/if \(user && !holdOnly\)/);
   });
 
   // Losing a booking is far worse than a late discount.
@@ -130,7 +141,9 @@ describe('the migration', () => {
 
   it('only the server may move the money', () => {
     expect(sql).toMatch(/revoke all on function public\.spend_referral_credits/);
-    expect(sql).toMatch(/grant execute on function public\.spend_referral_credits\(uuid, numeric\) to service_role;/);
+    expect(sql).toMatch(
+      /grant execute on function public\.spend_referral_credits\(uuid, numeric\) to service_role;/
+    );
   });
 
   it('and it can be run twice', () => {
