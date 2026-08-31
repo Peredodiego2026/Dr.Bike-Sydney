@@ -1,3 +1,8 @@
+// v105 (2026-08-31): la pantalla de login y 2FA del admin era ilegible en modo
+// oscuro. La tarjeta era background:#fff escrito a mano y su texto es
+// var(--navy), que en oscuro es #eef2f7: 1.12:1, casi blanco sobre blanco.
+// El fondo tenia el bug espejo (var(--navy) usado como fondo). Toca
+// js/admin.js, css/admin.css (mas .inp) y js/mechanic.js.
 // v104 (2026-08-31): aceptar las cookies tiraba `Sentry is not defined` desde
 // consent.js. Un <script> creado con createElement es async POR DEFECTO, asi
 // que el loader clonado corria DESPUES del bloque de init que lo necesita, y
@@ -111,7 +116,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v104';
+const CACHE_STATIC = 'drbike-static-v105';
 const CACHE_PAGES  = 'drbike-pages-v74';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

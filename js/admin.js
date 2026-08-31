@@ -2280,10 +2280,10 @@ function checkAdminAuth() {
   const overlay = document.createElement('div');
   overlay.id = 'admin-login-overlay';
   overlay.style.cssText =
-    'position:fixed;inset:0;background:var(--navy);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
+    'position:fixed;inset:0;background:var(--navy-surface);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-      <div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <!-- dark-theme-check: off - the logo is blue ink on transparent, so its tile stays light in both themes --><div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><!-- dark-theme-check: on --><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
       <div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:var(--gray);margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
@@ -2540,7 +2540,7 @@ function _showLoginCard(innerHtml) {
 }
 
 function _loginCardHeader() {
-  return '<div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px">Dr. Bike Admin</div>';
+  return '<!-- dark-theme-check: off - the logo is blue ink on transparent, so its tile stays light in both themes --><div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><!-- dark-theme-check: on --><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div><div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px">Dr. Bike Admin</div>';
 }
 
 const _inp =

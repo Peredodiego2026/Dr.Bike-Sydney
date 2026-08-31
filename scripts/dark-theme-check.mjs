@@ -257,9 +257,21 @@ const DARK_SURFACES = ['js/mechanic.js', 'js/admin.js'];
 const LITERAL_ALLOWED = [
   // Modal scrims and shadows: black at real strength is correct in both themes.
   /rgba\(0,\s*0,\s*0,\s*0?\.[3-9]\d*\)/,
-  // White text ON a coloured fill, which the FILL check above already covers.
-  /#fff\b|#ffffff\b/i,
 ];
+// White is the one literal whose meaning depends on the property. As INK it is
+// almost always right - white text on a filled blue button reads the same in
+// both themes, and the FILL check above already guards those. As a GROUND it is
+// the bug: a background no theme can repaint, under text that the dark theme
+// DOES repaint.
+//
+// That is what hid the admin sign-in screen. The card was background:#fff and
+// its title was color:var(--navy); in dark --navy is #eef2f7, so the whole
+// screen was near-white ink on a white card - 1.12:1. Diego could not see the
+// 2FA code he was typing.
+//
+// It was not the allowlist that let it through: the pattern below only matched
+// SIX-digit hex, so the three-digit #fff was never looked at at all.
+const WHITE_INK_ONLY = /^#(?:fff|ffffff)$/i;
 for (const file of DARK_SURFACES) {
   let src;
   try {
@@ -285,7 +297,12 @@ for (const file of DARK_SURFACES) {
     // The first regex missed the second entirely, which is how the chat bubble
     // kept navy text on a white pill while the app around it went dark.
     const painted = [
-      ...line.matchAll(/(?:color|background|border-bottom|border-top|border)\s*:\s*(?:[^;"'`]*\s)?(#[0-9a-fA-F]{6}|rgba\(0,\s*0,\s*0,\s*0?\.[0-2]\d*\))/g),
+      // The property is captured now, because whether a literal is acceptable
+      // depends on it - see WHITE_INK_ONLY. Three-digit hex is matched too: it
+      // was the gap that hid background:#fff for as long as the check existed.
+      ...line.matchAll(
+        /(color|background|border-bottom|border-top|border)\s*:\s*(?:[^;"'`]*\s)?(#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgba\(0,\s*0,\s*0,\s*0?\.[0-2]\d*\))/g
+      ),
       // Any quoted hex, anywhere in these two files. Requiring a `color:` on
       // the same line still missed the colour MAPS - `cancelled: '#FEF2F2'`,
       // `const statusBg = isOut ? '#FEF2F2' : ...` - which are assigned to a
@@ -294,8 +311,12 @@ for (const file of DARK_SURFACES) {
       ...line.matchAll(/['"](#[0-9a-fA-F]{6})['"]/g),
     ];
     for (const m of painted) {
-      const literal = m[1];
+      // The property-aware pattern captures (prop, literal); the quoted-hex one
+      // captures the literal alone and has no property to judge.
+      const prop = m.length > 2 ? m[1] : null;
+      const literal = m.length > 2 ? m[2] : m[1];
       if (LITERAL_ALLOWED.some((re) => re.test(literal))) continue;
+      if (WHITE_INK_ONLY.test(literal) && (prop === null || prop === 'color')) continue;
       problems.push(
         `${file}:${i + 1} paints with the literal ${literal}, which no theme can reach - ` +
           `it stays exactly that colour in dark mode. Use a var(--token), or if it must not ` +
