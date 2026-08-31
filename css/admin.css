@@ -1492,14 +1492,19 @@ body {
 }
 .inp {
   width: 100%;
+  /* min-width:0 matters inside the flex rows this class is used in: an <input>
+     carries an implicit min-width from its size attribute, so two of them side
+     by side refused to shrink and pushed a horizontal scrollbar into the
+     phone-in booking modal. */
+  min-width: 0;
   padding: 9px 12px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   font-size: 13px;
   color: var(--navy);
   font-family: var(--sans);
   transition: border-color 0.15s;
-  background: #fff;
+  background: var(--white);
 }
 .inp:focus {
   border-color: var(--blue);

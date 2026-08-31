@@ -8407,3 +8407,90 @@ y esta documentado en js/live-prices.js.
 **No se abrio el navegador.** Falta que Diego **acepte** las cookies en la
 landing y confirme que ya no aparece `Sentry is not defined` en la consola.
 Que Sentry efectivamente reporte a su panel no lo comprueba ningun test de acá.
+
+## 72. La pantalla de login del admin era ilegible en modo oscuro (31-ago-2026)
+
+Diego mando una captura de la pantalla de 2FA: el titulo "Dr. Bike Admin", el
+subtitulo y **los seis digitos que estaba tipeando** en gris clarisimo, casi
+invisibles sobre blanco.
+
+### Dos mitades del mismo error, en el mismo bloque
+
+La tarjeta:
+
+```html
+<div style="background:#fff; ...">
+  <div style="color:var(--navy)">Dr. Bike Admin</div>
+```
+
+`background:#fff` escrito a mano - ningun tema lo puede repintar. Y su texto es
+`var(--navy)`, que en oscuro vale `#eef2f7`: tinta clara, hecha para fondos
+oscuros. **Casi blanco sobre blanco: 1.12:1.** El subtitulo, 2.21:1.
+
+El fondo tenia el bug espejo: `background:var(--navy)`. En claro `--navy` es
+`#0d1f3c` y se ve como el telon oscuro que se queria; en oscuro es `#eef2f7` y
+la pantalla entera se volvia casi blanca. **Tinta usada como fondo.**
+
+Medido, no mirado: 1.12:1 el titulo, 1.12:1 los digitos, 2.21:1 el subtitulo.
+
+### Por que ningun check lo vio
+
+`scripts/dark-theme-check.mjs` rechaza literales de color en `js/admin.js`
+justamente para esto. No lo agarro por dos razones distintas:
+
+1. **Su patron solo matcheaba hex de SEIS digitos.** `#fff`, de tres, nunca
+   fue mirado. El `#fff` que estaba en `LITERAL_ALLOWED` era ademas correcto
+   *como tinta* - blanco sobre un boton azul se lee igual en los dos temas -
+   pero no distinguia la propiedad, asi que tampoco habria servido.
+2. **`--navy` es un token**, y usar un token como fondo no dispara nada.
+
+Ahora el patron captura la **propiedad** ademas del literal: blanco sigue
+permitido en `color:`, prohibido en `background:`. Y matchea tres digitos.
+
+Al cerrarlo aparecieron dos literales legitimos en `js/mechanic.js` - el canvas
+de firma, que **tiene que** ser blanco en los dos temas porque la imagen va a
+la factura. La razon ya estaba escrita ahi; lo que faltaba era el cerco
+`dark-theme-check: off/on` que la hace legible para la maquina.
+
+### El token correcto existia, y un test viejo me corrigio
+
+El primer arreglo puso `#admin-login-overlay { background: var(--navy) }` en
+`css/admin.css` con un override para oscuro. **`tests/unit/dark-theme.test.js`
+lo rechazo**: ya hay una regla que prohibe pintar cualquier fondo con `--navy`.
+
+Tenia razon. El token es **`--navy-surface`**: el mismo navy, declarado como
+fondo oscuro y **deliberadamente no invertido** en el bloque oscuro. Un solo
+valor, los dos temas, sin override ni regla nueva.
+
+En oscuro la tarjeta (`--white`, `#1a2942`) queda a 1.13:1 de ese fondo, apenas
+debajo del paso de 1.15 del proyecto. Lo que la separa es el **borde** que se le
+agrego: `--border` compuesto da **2.28:1** contra el fondo. Sin ese borde el
+arreglo dejaba el texto legible sobre una tarjeta sin bordes - el error de 12.15
+otra vez, en su version suave.
+
+### De paso, `.inp`
+
+La clase de todos los inputs del admin tenia `background: #fff` y
+`border: 1.5px solid #e2e8f0` a mano. Sobrevivia porque hay un override
+`[data-theme='dark'] .inp`, pero ese override existe para pelear contra estos
+literales, y cualquier input nuevo que no lo herede nace roto. Ahora son
+`var(--white)` y `var(--border)`.
+
+Tambien le falta `min-width: 0`: un `<input>` arrastra un ancho minimo implicito
+de su atributo `size`, asi que dos en la misma fila flex se negaban a encoger y
+metian una **barra de scroll horizontal** en el modal "New booking (phone-in)".
+Es lo que se ve en la captura de Diego.
+
+El presupuesto de `scripts/color-check.mjs` para `css/admin.css` bajo de 114 a
+113. Solo baja, nunca sube.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador.** Los contrastes estan calculados, no vistos. Falta
+que Diego mire, en modo oscuro:
+
+1. La pantalla de login y la de 2FA - que se lean el titulo, el subtitulo y los
+   digitos mientras los tipea.
+2. Que la tarjeta se distinga del fondo (el borde tiene que verse).
+3. El modal "New booking (phone-in)": que ya no tenga barra de scroll
+   horizontal. El `min-width:0` deberia alcanzar, pero eso se ve mirando.

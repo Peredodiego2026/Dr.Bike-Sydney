@@ -1659,10 +1659,12 @@ function openCompleteModal(id) {
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:var(--red)">*</span></label>
+          <!-- dark-theme-check: off -->
           <!-- background:#fff is deliberate and must stay a literal: you sign on white
                paper in either theme, the stroke is drawn in a dark ink that only reads
                on white, and this image goes into the client's invoice. -->
           <canvas id="sig-canvas" width="600" height="120" style="width:100%;max-width:100%;height:120px;border:1.5px solid var(--border);border-radius:8px;background:#fff;touch-action:none;display:block"></canvas>
+          <!-- dark-theme-check: on -->
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
         <div id="sig-banner" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
