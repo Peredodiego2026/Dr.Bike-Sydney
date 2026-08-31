@@ -178,13 +178,36 @@ const authSrc = readFileSync(
 
 describe('create-booking: an unresolved address can never be a free booking', () => {
   it('verifies any request that carries a payment, whatever the computed fee', () => {
-    expect(authSrc).toMatch(/if \(!isAdmin && \(calloutFee > 0 \|\| hasPaymentRef\)\)/);
+    // Matched on the operands rather than the whole line. The gate gained a
+    // `!holdOnly` term when slot holds landed (api/_slot-hold.js), and pinning
+    // the exact text made a correct change look like a regression. What must
+    // never move is that BOTH a real fee and a payment reference still force
+    // verification.
+    expect(authSrc).toMatch(/if \([^)]*!isAdmin && \(calloutFee > 0 \|\| hasPaymentRef\)\)/);
     // the old gate is what let a $0 fee skip verification
     expect(authSrc).not.toMatch(/if \(!isAdmin && calloutFee > 0\) \{/);
   });
 
+  // The only way `!holdOnly` could weaken the gate above is a request that
+  // claims to be a hold AND carries a payment. That is refused outright, so the
+  // invariant keeps having no exceptions rather than one carefully-reasoned one.
+  it('refuses a hold that carries a payment, instead of skipping verification', () => {
+    expect(authSrc).toMatch(/if \(holdOnly && hasPaymentRef\)/);
+    expect(authSrc).toContain('A hold cannot carry a payment');
+  });
+
   it('refuses an unresolved address that has no payment behind it', () => {
-    expect(authSrc).toMatch(/if \(!hasPaymentRef && !isAdmin\)/);
+    // `&& !holdOnly` joined this condition when slot holds landed. A hold never
+    // carries a payment by definition, so without the exemption every address
+    // the geocoder could not resolve would be turned away before the client
+    // could pay for it - losing bookings that are servable by hand.
+    //
+    // What must not move: with a REAL booking and no payment, this still
+    // refuses. The check runs again on the paying call, where hasPaymentRef is
+    // true, which is the condition that was always required.
+    expect(authSrc).toMatch(/if \(!hasPaymentRef && !isAdmin( && !holdOnly)?\)/);
+    // And the exemption must be exactly that - never a blanket removal.
+    expect(authSrc).not.toMatch(/if \(!isAdmin\) \{[\s\S]{0,80}couldn't work out the trip/);
   });
 
   it('only accepts a paid amount that is one of the real bands', () => {
@@ -309,7 +332,11 @@ describe('the far peninsula is $35 to the tip, not a rejection', () => {
 
   it('Church Point does not match "291 Church St, Parramatta"', () => {
     expect(matchFarPeninsula('291 Church St, Parramatta NSW 2150')).toBeNull();
-    const r = resolveCoverage({ address: '291 Church St, Parramatta NSW 2150', minutes: 52, km: 41 });
+    const r = resolveCoverage({
+      address: '291 Church St, Parramatta NSW 2150',
+      minutes: 52,
+      km: 41,
+    });
     expect(r.covered).toBe('out');
   });
 
@@ -319,7 +346,9 @@ describe('the far peninsula is $35 to the tip, not a rejection', () => {
     expect(matchFarPeninsula('')).toBeNull();
     expect(matchFarPeninsula(null)).toBeNull();
     expect(matchNearNorth('Sydney NSW 2000')).toBeNull();
-    expect(resolveCoverage({ address: 'Sydney NSW 2000', minutes: 25, km: 18 }).calloutFee).toBe(45);
+    expect(resolveCoverage({ address: 'Sydney NSW 2000', minutes: 25, km: 18 }).calloutFee).toBe(
+      45
+    );
   });
 
   it('$35 is a fee a booking is allowed to be charged', () => {

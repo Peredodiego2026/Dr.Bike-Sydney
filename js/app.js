@@ -2085,6 +2085,11 @@ function wireMechanicPreferencePicker(screen, mechanics) {
 // booking exists, so the next booking pays for itself.
 let _paidIntent = null;
 let _paidBookingKey = null;
+// The slot held for this booking, taken BEFORE the card is charged. Module
+// scope for the same reason as _paidIntent: renderPayment() runs again on
+// every navigation to #payment, so a local would be lost and the client would
+// end up asking for a second hold on a slot they already hold.
+let _heldBookingId = null;
 
 // Nothing could work out what the trip to this address costs. This used to
 // guess: it read `callout_zones` straight from the browser and charged
@@ -2350,6 +2355,10 @@ async function renderPayment() {
         bike_id: window.appState.bikeId || null,
         preferred_mechanic_id: window.appState.preferredMechanicId || null,
         payment_intent_id: realPI,
+        // The row this booking already has. The server updates it instead of
+        // inserting, so the slot is never released between the hold and the
+        // payment landing.
+        hold_booking_id: _heldBookingId,
         discount_code:
           !isTest && window.appState.discountCode ? window.appState.discountCode : null,
         utm_source: sessionStorage.getItem('utm_source') || null,
@@ -2372,6 +2381,8 @@ async function renderPayment() {
     // does not exist yet, this is the only record that the client already paid.
     _paidIntent = null;
     _paidBookingKey = null;
+    // The hold became the booking, so it must not be reused for the next one.
+    _heldBookingId = null;
     // And the checkout is no longer abandoned, so the row that would have
     // triggered a "do you still need it?" email in three hours has to go. RLS
     // limits the delete to their own row; best effort, because a booking that
@@ -2483,8 +2494,80 @@ async function renderPayment() {
     location || '',
     calloutFee,
   ].join('|');
-  if (_paidBookingKey !== paymentKey) _paidIntent = null;
+  // A different booking is a different hold. Without clearing it here, a client
+  // who goes back to change the time and returns would pay for the NEW slot
+  // while `hold_booking_id` still pointed at the row holding the OLD one - and
+  // the server would update that row, moving their appointment to a time they
+  // did not pick. The stale hold is just forgotten: it expires on its own after
+  // HOLD_MINUTES and gets swept by the next booking on that slot.
+  if (_paidBookingKey !== paymentKey) {
+    _paidIntent = null;
+    _heldBookingId = null;
+  }
   _paidBookingKey = paymentKey;
+
+  // Take the slot BEFORE the card is touched.
+  //
+  // Diego: "debe ser primero la reserva... el sentido comun de la pagina web
+  // es bloquear primero la fecha y la hora, y despues ocurre el pago." Step 2
+  // of this wizard asks for a date and time, so every visitor already assumes
+  // the slot is theirs from that moment. It was not: picking a date only set
+  // window.appState.date, in this browser, and the database learned nothing
+  // until the single write at the end - after the charge.
+  //
+  // What that cost: two people can pick the same hour, both reach payment, and
+  // both pay. api/auth.js catches the unique-index clash and refunds the
+  // second one, so nobody LOSES money - but a charge and a refund on a card
+  // takes days to clear and reads like a mistake to the person it happens to.
+  // Holding first means the card is never touched for a slot they cannot have.
+  //
+  // Memoised: renderPayment() runs on every navigation to #payment, and asking
+  // twice would leave a second row holding the same hour.
+  async function holdSlot() {
+    if (_heldBookingId) return _heldBookingId;
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    const user = session?.user || null;
+    const meta = (user && user.user_metadata) || {};
+    const email = user ? user.email : window.appState.guestEmail || '';
+    if (!email) throw new Error(translateValue('We need an email to send your receipt.'));
+
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'hold-slot',
+        access_token: session?.access_token || null,
+        client_name: meta.full_name || meta.name || window.appState.guestName || '',
+        client_email: email,
+        client_phone: window.appState.guestPhone || null,
+        client_lang: getLang(),
+        service_id: service.id || null,
+        service_name: service.name,
+        scheduled_date: date,
+        scheduled_time: time,
+        address: location || 'Home',
+        bike_id: window.appState.bikeId || null,
+        preferred_mechanic_id: window.appState.preferredMechanicId || null,
+        // Deliberately NOT sent. A discount is spent when the booking is
+        // bought, not when the slot is held - see the guard in api/auth.js.
+        // Sending it here would be harmless today and a trap the day somebody
+        // removes that guard.
+      }),
+    });
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      // 409 is the slot going to somebody else while this client was typing.
+      // It is the ordinary outcome, not an error state - and it happens with
+      // their card untouched, which is the entire point.
+      throw new Error(
+        body.error || translateValue('That time is no longer available. Please pick another time.')
+      );
+    }
+    _heldBookingId = body.id || null;
+    return _heldBookingId;
+  }
 
   async function chargeOnce(paymentMethodId) {
     if (_paidIntent) return _paidIntent;
@@ -2533,6 +2616,8 @@ async function renderPayment() {
       amountCents: Math.round(calloutFee * 100),
       label: 'Dr. Bike Sydney - Visit & diagnosis',
       onPayment: async (paymentMethodId) => {
+        // Slot first, card second.
+        await holdSlot();
         const pi = await chargeOnce(paymentMethodId);
         await finalizeBooking(pi, { isTest: false });
       },
@@ -2549,6 +2634,8 @@ async function renderPayment() {
       btn.textContent = 'Processing payment...';
       errEl.hidden = true;
       try {
+        // Slot first, card second.
+        await holdSlot();
         const paymentIntent = await chargeOnce();
         await finalizeBooking(paymentIntent, { isTest: false });
       } catch (e) {

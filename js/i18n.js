@@ -14,6 +14,9 @@ export const LANGUAGES = [
 
 const dict = {
   es: {
+    // El turno se pierde ANTES de tocar la tarjeta (api/_slot-hold.js), asi
+    // que este mensaje es el que reemplaza a un cobro y su reembolso.
+    'That time is no longer available. Please pick another time.': 'Ese horario ya no esta disponible. Elegi otro, por favor.',
     // Screen reader strings (audit point 15). The three "Step N of 3" labels
     // are NOT flagged by scripts/i18n-check.mjs: they are passed INTO
     // translateValue() via announce(), and the check only sees strings
@@ -1470,6 +1473,7 @@ const dict = {
     'your@email.com': 'tu@correo.com',
   },
   zh: {
+    'That time is no longer available. Please pick another time.': '该时间段已不可预约，请另选时间。',
     'Live map. Waiting for the mechanic position.': '实时地图。正在等待技师位置。',
     'Mechanic on the way': '技师正在前往',
     'min': '分钟',

@@ -979,6 +979,12 @@ async function handleCreateBooking(req, res) {
     time_to_book_seconds,
     preferred_mechanic_id,
     client_lang,
+    // Reserve the slot BEFORE charging. `hold_only` runs every check below and
+    // writes the row with no payment attached; `hold_booking_id` comes back on
+    // the second call, after the card cleared, and updates that same row
+    // instead of inserting a new one. See api/_slot-hold.js for why.
+    hold_only,
+    hold_booking_id,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!scheduled_date || !scheduled_time)
@@ -1005,6 +1011,11 @@ async function handleCreateBooking(req, res) {
     user = data.user;
   }
 
+  // Declared here, not beside the payment gate that also reads it: the
+  // coverage check further down uses it too, and a `const` read before its
+  // declaration throws at runtime - which `node --check` does not catch.
+  // Found in review, before it shipped.
+  const holdOnly = hold_only === true;
   const guestEmail = String(req.body.client_email || '').trim();
   const isGuest = !user;
   if (isGuest) {
@@ -1066,7 +1077,16 @@ async function handleCreateBooking(req, res) {
   // With NO payment behind it, though, an unresolved address must not become
   // a booking: that is the free-booking hole. It goes to the quote flow.
   if (coverage.covered === 'unknown') {
-    if (!hasPaymentRef && !isAdmin) {
+    // `holdOnly` belongs here, and leaving it out was a regression found in
+    // review. A hold never carries a payment - that is its definition - so
+    // without this every unresolvable address would be turned away at the
+    // hold, and those bookings are ones Diego can still serve: the warning
+    // below exists precisely so he can confirm them by hand.
+    //
+    // Nothing is weakened. The hold takes no money and expires on its own;
+    // the real booking runs this same check again, and by then a payment IS
+    // present, which is the condition that was always required.
+    if (!hasPaymentRef && !isAdmin && !holdOnly) {
       return res.status(400).json({
         error:
           "We couldn't work out the trip to that address - message us on WhatsApp and we'll sort it out.",
@@ -1197,7 +1217,20 @@ async function handleCreateBooking(req, res) {
   // all. Any request carrying a payment reference is verified now, whatever
   // the computed fee - a payment that exists must always be checked.
   let verifiedPI = null;
-  if (!isAdmin && (calloutFee > 0 || hasPaymentRef)) {
+  // A hold is the step BEFORE the card is touched, so there is nothing to
+  // verify. Everything above this line - coverage, the zone fee, the blocked
+  // slot, membership pricing - already ran, which is the point of reusing this
+  // handler instead of writing a second one that would drift out of step.
+  // (`holdOnly` is declared at the top of the function - it is read long
+  // before this point, by the coverage check.)
+  // A hold is by definition BEFORE any payment. A request that both carries a
+  // payment reference and asks to skip verification is not a hold, and
+  // resolving that ambiguity either way would put an exception into the one
+  // invariant this handler cannot have exceptions in: a payment that exists is
+  // always verified (tests/unit/coverage-resolution.test.js). So it is refused.
+  if (holdOnly && hasPaymentRef)
+    return res.status(400).json({ error: 'A hold cannot carry a payment' });
+  if (!holdOnly && !isAdmin && (calloutFee > 0 || hasPaymentRef)) {
     if (!process.env.STRIPE_SECRET_KEY) return res.status(402).json({ error: 'Payment required' });
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     try {
@@ -1267,53 +1300,129 @@ async function handleCreateBooking(req, res) {
     if (pm) preferredMechanicId = pm.id;
   }
 
+  // 4c. Sweep abandoned holds off this slot before writing to it.
+  //
+  // `bookings_unique_slot` covers every status except cancelled, so a hold
+  // somebody walked away from still blocks the index even though
+  // handleGetAvailability has already stopped showing it as busy. Without
+  // this the next person to want that hour gets a 23505 - which, on the paid
+  // path, means a charge and a refund for a slot that was actually free.
+  //
+  // Lazy, because it has to be: the window is 15 minutes and Vercel Hobby
+  // refuses crons more frequent than daily. Scoped to this slot and van so it
+  // can never touch a booking nobody asked about.
+  {
+    const { data: sameSlot } = await sb
+      .from('bookings')
+      .select('id,status,created_at,stripe_payment_intent_id')
+      .eq('scheduled_date', scheduled_date)
+      .eq('scheduled_time', scheduled_time)
+      .eq('van_number', vanNumber)
+      .neq('status', 'cancelled');
+    const stale = expiredHoldIds(sameSlot || []).filter((id) => id !== hold_booking_id);
+    if (stale.length) {
+      const { error: sweepErr } = await sb
+        .from('bookings')
+        .update({ status: 'cancelled', cancellation_reason: 'hold expired' })
+        .in('id', stale);
+      // Not fatal: if the sweep fails the insert below just hits the unique
+      // index and is handled there. Silence would be the problem, not failure.
+      if (sweepErr) console.error('[create-booking] hold sweep failed:', sweepErr.message);
+    }
+  }
+
   // 5. Insert with server-set fields only
   const meta = (user && user.user_metadata) || {};
   // A guest booking carries no account, only a way to reach the person.
   // bookings.user_id became nullable in scripts/add-guest-bookings.sql.
-  const { data: booking, error: insErr } = await sb
-    .from('bookings')
-    .insert([
-      {
-        user_id: user ? user.id : null,
-        client_id: user ? user.id : null,
-        client_name: meta.full_name || meta.name || String(req.body.client_name || '').trim(),
-        client_email: user ? user.email || '' : guestEmail,
-        client_phone: String(req.body.client_phone || '').trim() || null,
-        service_name: svc.name,
-        service_price: servicePrice,
-        callout_fee: calloutFee,
-        scheduled_date,
-        scheduled_time,
-        address: address || 'Home',
-        status: 'pending',
-        van_number: vanNumber,
-        preferred_mechanic_id: preferredMechanicId,
-        stripe_payment_intent_id: verifiedPI,
-        // A bike belongs to an account (bikes.client_id), so a guest has none -
-        // and must not be able to attach their booking to somebody else's by
-        // passing an id.
-        bike_id: (!isGuest && bike_id) || null,
-        utm_source: utm_source || null,
-        utm_medium: utm_medium || null,
-        utm_campaign: utm_campaign || null,
-        // Which language this client is reading the app in, so the confirmation
-        // and every later reminder/cron email goes out in it. Whitelisted here
-        // because the DB has a CHECK constraint on the column.
-        client_lang: ['en', 'es', 'zh'].includes(client_lang) ? client_lang : 'en',
-        // Client-reported elapsed time, only trusted within a sane range - a
-        // bogus/manipulated value would just skew the "avg time to book" KPI,
-        // it's never used for pricing or access control.
-        time_to_book_seconds:
-          Number.isFinite(Number(time_to_book_seconds)) &&
-          Number(time_to_book_seconds) >= 0 &&
-          Number(time_to_book_seconds) <= 86400
-            ? Math.round(Number(time_to_book_seconds))
-            : null,
-      },
-    ])
-    .select()
-    .single();
+  const row = {
+    user_id: user ? user.id : null,
+    client_id: user ? user.id : null,
+    client_name: meta.full_name || meta.name || String(req.body.client_name || '').trim(),
+    client_email: user ? user.email || '' : guestEmail,
+    client_phone: String(req.body.client_phone || '').trim() || null,
+    service_name: svc.name,
+    service_price: servicePrice,
+    callout_fee: calloutFee,
+    scheduled_date,
+    scheduled_time,
+    address: address || 'Home',
+    status: 'pending',
+    van_number: vanNumber,
+    preferred_mechanic_id: preferredMechanicId,
+    stripe_payment_intent_id: verifiedPI,
+    // A bike belongs to an account (bikes.client_id), so a guest has none -
+    // and must not be able to attach their booking to somebody else's by
+    // passing an id.
+    bike_id: (!isGuest && bike_id) || null,
+    utm_source: utm_source || null,
+    utm_medium: utm_medium || null,
+    utm_campaign: utm_campaign || null,
+    // Which language this client is reading the app in, so the confirmation
+    // and every later reminder/cron email goes out in it. Whitelisted here
+    // because the DB has a CHECK constraint on the column.
+    client_lang: ['en', 'es', 'zh'].includes(client_lang) ? client_lang : 'en',
+    // Client-reported elapsed time, only trusted within a sane range - a
+    // bogus/manipulated value would just skew the "avg time to book" KPI,
+    // it's never used for pricing or access control.
+    time_to_book_seconds:
+      Number.isFinite(Number(time_to_book_seconds)) &&
+      Number(time_to_book_seconds) >= 0 &&
+      Number(time_to_book_seconds) <= 86400
+        ? Math.round(Number(time_to_book_seconds))
+        : null,
+  };
+
+  // Two ways in. A hold inserts; the call that comes back after the card
+  // cleared updates the row it already has, so the slot is never released
+  // between the two - which is the whole reason the hold exists.
+  //
+  // The update is scoped to a row that is STILL an unpaid hold
+  // (stripe_payment_intent_id is null): if it expired and was swept, or
+  // somebody else has since paid for it, this matches nothing and the caller
+  // is told rather than quietly overwriting a real booking.
+  let booking = null;
+  let insErr = null;
+  if (hold_booking_id) {
+    const { data, error } = await sb
+      .from('bookings')
+      .update(row)
+      .eq('id', hold_booking_id)
+      .is('stripe_payment_intent_id', null)
+      .eq('status', 'pending')
+      .select()
+      .maybeSingle();
+    booking = data;
+    insErr = error;
+    if (!error && !data) {
+      // The hold is gone. Refunding here is the same duty as the 23505 path
+      // below: money was taken for a slot that cannot be honoured.
+      let refunded = false;
+      if (verifiedPI) {
+        try {
+          await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+            payment_intent: verifiedPI,
+          });
+          refunded = true;
+        } catch (e) {
+          console.error('[create-booking] expired-hold refund failed:', verifiedPI, e.message);
+        }
+      }
+      return res.status(409).json({
+        error:
+          'That time slot is no longer held for you.' +
+          (refunded
+            ? ' Your payment has been refunded.'
+            : verifiedPI
+              ? ' We could not process your refund automatically - contact us and we will sort it out.'
+              : ' Please pick another time.'),
+      });
+    }
+  } else {
+    const { data, error } = await sb.from('bookings').insert([row]).select().single();
+    booking = data;
+    insErr = error;
+  }
 
   if (insErr) {
     if (insErr.code === '23505') {
@@ -1376,8 +1485,17 @@ async function handleCreateBooking(req, res) {
   // separate SELECT-then-UPDATE (racy), queried a discount_amount column
   // that doesn't exist (silently never matched, discount was never applied),
   // and compared discount_type to 'percentage' instead of the real 'percent'.
+  //
+  // NOT during a hold. Found in review: this block sits AFTER the insert, so a
+  // hold would have reached it and burned a single-use code - and, further
+  // down, spent the client's referral credits - for a booking nobody had paid
+  // for yet. A checkout the client then abandons would have cost them both,
+  // with nothing to show for it and no way to notice.
+  //
+  // The second call, the one that carries the payment, runs this block
+  // normally. A discount is spent when the booking is BOUGHT.
   let codeDiscount = 0;
-  if (discount_code) {
+  if (discount_code && !holdOnly) {
     const code = String(discount_code).trim().toUpperCase();
     const { data: rows } = await sb.rpc('consume_discount_code', { p_code: code });
     const dc = rows && rows[0];
@@ -1408,7 +1526,9 @@ async function handleCreateBooking(req, res) {
   //
   // A guest has no profile and therefore no credits - `user` is null and this
   // whole block is skipped.
-  if (user) {
+  // Same reasoning as the discount code above: credits are spent when the
+  // booking is paid for, never when the slot is merely held.
+  if (user && !holdOnly) {
     const remaining = Math.max(0, servicePrice - codeDiscount);
     if (remaining > 0) {
       // Atomic: SELECT ... FOR UPDATE inside the function. Two bookings started
@@ -5049,6 +5169,7 @@ async function handler(req, res) {
           role === 'join-waitlist' ||
           role === 'apply-referral' ||
           role === 'create-booking' ||
+          role === 'hold-slot' ||
           role === 'check-coverage' ||
           // Analytics is one authenticated admin changing a date filter, not a
           // login attempt - the default 5/min locks the screen out on the third
@@ -5098,6 +5219,13 @@ async function handler(req, res) {
   if (role === 'google-calendar-ticket') return handleGoogleCalendarTicket(req, res);
   if (role === 'client-bookings') return handleClientBookings(req, res);
   if (role === 'create-booking') return handleCreateBooking(req, res);
+  // Same handler, same checks. The flag is set HERE rather than trusted from
+  // the body, so `create-booking` can never be talked into skipping payment
+  // verification by passing hold_only itself.
+  if (role === 'hold-slot') {
+    req.body = { ...req.body, hold_only: true, hold_booking_id: null };
+    return handleCreateBooking(req, res);
+  }
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
   if (role === 'zone-price') return handleZonePrice(req, res);
   if (role === 'address-suggest') return handleAddressSuggest(req, res);
