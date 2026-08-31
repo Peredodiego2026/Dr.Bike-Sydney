@@ -8494,3 +8494,87 @@ que Diego mire, en modo oscuro:
 2. Que la tarjeta se distinga del fondo (el borde tiene que verse).
 3. El modal "New booking (phone-in)": que ya no tenga barra de scroll
    horizontal. El `min-width:0` deberia alcanzar, pero eso se ve mirando.
+
+## 73. El arreglo de 71 no servia, y el test lo tapo (31-ago-2026)
+
+Diego volvio a mandar el mismo error despues de que 71 estuviera desplegado:
+
+```
+Uncaught ReferenceError: Sentry is not defined
+    enableAnalytics https://drbikesydney.com.au/js/consent.js:112
+```
+
+Las lineas eran 96 y 120 antes del arreglo y 112 y 136 despues: **el codigo nuevo
+estaba en produccion y el error seguia igual.**
+
+### Lo que 71 asumio, y esta mal
+
+71 puso `s.async = false` en los clones con `src` y lo llamo arreglado. La regla
+real es mas chica de lo que asumi:
+
+> `async = false` ordena la ejecucion **de los scripts con `src` entre si**.
+
+Un script **inline** no participa de ese orden: se ejecuta **en el instante en
+que se lo inserta en el DOM**, sin esperar a ningun `src` pendiente. Sentry venia
+en dos tags gateados - el loader (`src`) y el init (inline) - asi que el init
+siguio ganando la carrera exactamente igual que antes.
+
+### Por que el test no lo agarro: media la creencia, no el comportamiento
+
+`tests/unit/consent-script-order.test.js` corria el bucle real contra un DOM
+falso y afirmaba:
+
+```js
+expect(loader.async).toBe(false);
+```
+
+El flag efectivamente quedaba en `false`. El test pasaba, el PR decia
+"verificado quitando la linea: rojo", y **produccion seguia rota**. Verifique la
+propiedad que yo creia relevante en vez de la unica que importa: cual de los dos
+scripts corre primero. Un DOM falso no puede reproducir esa carrera, asi que el
+test nunca la vio.
+
+Es el mismo error que la memoria del proyecto ya nombra para el modo oscuro
+("el contraste se calcula, no se mira"): medir el proxy en vez del efecto.
+
+### El arreglo real
+
+Un solo bloque gateado por pagina, que **carga el SDK el mismo** y inicializa
+dentro de su `onload`:
+
+```js
+var s = document.createElement('script');
+s.src = 'https://js-de.sentry-cdn.com/....min.js';
+s.onload = function () { Sentry.onLoad(function () { Sentry.init({...}); }); };
+document.head.appendChild(s);
+```
+
+`onload` es lo unico que significa "el SDK ya corrio". El orden deja de depender
+de como `js/consent.js` reviva los tags. El tag `<script src>` suelto se elimino
+de `landing.html` y de `index.html`: era el que creaba la carrera.
+
+`consent-gate.mjs` lo sigue viendo gateado por su matcher de `body`
+(`/Sentry\.onLoad\s*\(/`), no por el de `src`.
+
+`s.async = false` se queda en `js/consent.js`: es correcto para lo que si hace -
+ordenar los clones con `src` entre si - y su comentario ahora dice explicitamente
+lo que **no** hace, para que nadie vuelva a apoyarse en eso.
+
+### El test nuevo verifica estructura, y lo dice
+
+La carrera no se puede reproducir sin un navegador, asi que el test no finge que
+si. Verifica lo unico que la hace imposible: que no exista un tag loader suelto,
+y que **toda** aparicion de `Sentry.` en el bloque este despues de la asignacion
+de `onload`. Mas un test que impide que el comentario falso vuelva.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador.** Diego tiene que **aceptar las cookies** en la
+landing y confirmar que `Sentry is not defined` ya no aparece. Esta vez el error
+tambien serviria de prueba al reves: si aparece, el arreglo volvio a estar mal.
+
+Y una advertencia para el proximo: **Diego tiene AdBlock Plus.** Es probable que
+`js-de.sentry-cdn.com` le quede bloqueado igual. Eso ya no rompe nada - el
+`onload` simplemente no dispara y no se inicializa nada - pero significa que
+"no veo el error" no prueba que Sentry este reportando. Eso se confirma en el
+panel de Sentry, no en la consola.

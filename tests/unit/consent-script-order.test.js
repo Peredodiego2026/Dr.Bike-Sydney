@@ -1,138 +1,83 @@
 // tests/unit/consent-script-order.test.js
 //
-// Accepting cookies threw `Sentry is not defined` out of consent.js:96, and
-// error monitoring was dead for every visitor who accepted.
+// Accepting cookies threw `Sentry is not defined`, and error monitoring was
+// dead for exactly the visitors who opted in.
 //
-// js/consent.js revives the gated <script> tags by cloning them. A script built
-// with document.createElement() is async BY DEFAULT - the attribute is not
-// needed and copying attributes does not change it - so the cloned Sentry
-// LOADER was still in flight when the cloned Sentry INIT block, which sits
-// after it in the document, executed. The loop's own comment said "Order is
-// preserved by inserting each clone where the placeholder sat": it preserved
-// position, not execution order.
+// js/consent.js revives the gated <script> tags by cloning them. Sentry shipped
+// as TWO gated tags - a loader with src, and an inline block calling
+// Sentry.onLoad(). A cloned <script src> fetches asynchronously; a cloned INLINE
+// script runs the instant it is inserted. The init always won that race.
 //
-// This runs the real loop out of the real file against a minimal fake DOM,
-// because the invariant is behavioural: what matters is the flag on the node
-// that gets inserted, not the text of the line that sets it.
+// The first fix set async=false on the cloned loader, and this file asserted
+// that flag. It passed while production still threw: async=false orders src
+// scripts against EACH OTHER, and an inline script never waits for any of them.
+// Asserting the flag was asserting the belief, not the behaviour.
+//
+// The real fix is structural - one gated block that loads the SDK itself and
+// initialises inside its onload, the only thing that means "the SDK has run".
+// That is what these tests pin, by structure, since the race cannot be
+// reproduced in a fake DOM.
 
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 
 const src = fs.readFileSync(new URL('../../js/consent.js', import.meta.url), 'utf8');
+const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
+const PAGES = ['landing.html', 'index.html'];
 
-// Pull enableAnalytics' body out of the shipped file. Testing a copy would
-// pass forever after someone edited the original.
-function enableAnalyticsBody() {
-  const start = src.indexOf('function enableAnalytics() {');
-  expect(start, 'enableAnalytics not found - fix this extractor').toBeGreaterThan(-1);
-  const open = src.indexOf('{', start);
-  let depth = 0;
-  for (let i = open; i < src.length; i++) {
-    if (src[i] === '{') depth++;
-    else if (src[i] === '}') {
-      depth--;
-      if (depth === 0) return src.slice(open + 1, i);
-    }
-  }
-  throw new Error('unbalanced braces walking enableAnalytics');
-}
+const gatedBlocks = (html) =>
+  [
+    ...html.matchAll(/<script type="text\/plain" data-consent="analytics">([\s\S]*?)<\/script>/g),
+  ].map((m) => m[1]);
 
-// The smallest DOM the loop touches. Nodes record the order they were inserted
-// so the test can assert on it.
-function fakeDom(tags) {
-  const inserted = [];
-  const parent = {
-    insertBefore: (node) => inserted.push(node),
-    removeChild: () => {},
-  };
-  const nodes = tags.map((t) => ({
-    src: t.src || '',
-    textContent: t.text || '',
-    attributes: Object.entries({
-      type: 'text/plain',
-      'data-consent': 'analytics',
-      ...(t.src ? { src: t.src } : {}),
-      ...(t.async ? { async: '' } : {}),
-    }).map(([name, value]) => ({ name, value })),
-    hasAttribute(name) {
-      return this.attributes.some((a) => a.name === name);
-    },
-    parentNode: parent,
-  }));
-  const document = {
-    querySelectorAll: () => nodes,
-    createElement: () => ({
-      attrs: {},
-      async: true, // the browser default for a created script
-      setAttribute(n, v) {
-        this.attrs[n] = v;
-        if (n === 'src') this.src = v;
-        if (n === 'async') this.async = true;
-      },
-    }),
-  };
-  return { document, inserted };
-}
+describe('Sentry does not race its own loader', () => {
+  for (const page of PAGES) {
+    const html = read(page);
 
-function run(tags) {
-  const { document, inserted } = fakeDom(tags);
-  // eslint-disable-next-line no-new-func
-  new Function('document', 'gtag', enableAnalyticsBody())(document, () => {});
-  return inserted;
-}
+    it(`${page} has exactly one Sentry block`, () => {
+      const blocks = gatedBlocks(html).filter((b) => b.includes('Sentry.init('));
+      expect(blocks).toHaveLength(1);
+    });
 
-describe('reviving the gated scripts keeps them in order', () => {
-  // Exactly the two tags landing.html and index.html carry, in document order.
-  const SENTRY = [
-    { src: 'https://js-de.sentry-cdn.com/abc.min.js' },
-    { text: 'Sentry.onLoad(function () { Sentry.init({}); });' },
-  ];
+    // The separate loader tag is what created the race. Its absence is the fix.
+    it(`${page} has no standalone Sentry loader tag`, () => {
+      const loaderTags = [...html.matchAll(/<script[^>]*\bsrc="[^"]*sentry-cdn[^"]*"[^>]*>/g)];
+      expect(loaderTags).toHaveLength(0);
+    });
 
-  it('the loader is not left async, so it runs before the init that needs it', () => {
-    const [loader, init] = run(SENTRY);
-    expect(loader.src).toBe('https://js-de.sentry-cdn.com/abc.min.js');
-    expect(loader.async).toBe(false);
-    expect(init.text).toContain('Sentry.init');
-  });
-
-  it('and both are still inserted, in document order', () => {
-    const out = run(SENTRY);
-    expect(out).toHaveLength(2);
-    expect(out[0].src).toContain('sentry-cdn');
-    expect(out[1].src).toBeUndefined();
-  });
-
-  // Google Analytics' loader carries async on purpose and needs no ordering:
-  // gtag() is defined by the inline block, not by the loader. Forcing it to
-  // block would be a regression in page speed for no benefit.
-  it('a tag that asked to be async stays async', () => {
-    const [loader] = run([
-      { src: 'https://www.googletagmanager.com/gtag/js?id=G-X', async: true },
-      { text: "gtag('config', 'G-X');" },
-    ]);
-    expect(loader.async).toBe(true);
-  });
-
-  it('an inline-only block still gets its code', () => {
-    const [only] = run([{ text: "console.log('hi');" }]);
-    expect(only.text).toBe("console.log('hi');");
-    expect(only.async).toBe(true); // untouched: nothing to order against
-  });
-});
-
-describe('the pages still declare the pair the fix depends on', () => {
-  const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-
-  for (const page of ['landing.html', 'index.html']) {
-    it(`${page} has the Sentry loader before the Sentry init`, () => {
-      const html = read(page);
-      const loader = html.indexOf('js-de.sentry-cdn.com');
-      const init = html.indexOf('Sentry.onLoad(');
-      expect(loader).toBeGreaterThan(-1);
-      expect(init).toBeGreaterThan(-1);
-      // Order is what consent.js now preserves; if these ever swap, the fix
-      // above stops helping and the page throws again on accept.
-      expect(loader).toBeLessThan(init);
+    it(`${page} loads the SDK in-block and inits inside its onload`, () => {
+      const block = gatedBlocks(html).find((b) => b.includes('Sentry.init('));
+      expect(block).toContain('createElement(');
+      expect(block).toContain('sentry-cdn.com');
+      const onload = block.indexOf('s.onload');
+      expect(onload, 'the block never sets onload').toBeGreaterThan(-1);
+      // Every use of the global must sit after - and so inside - onload.
+      for (const m of block.matchAll(/\bSentry\./g)) {
+        expect(m.index, `a Sentry.* call at ${m.index} sits outside onload`).toBeGreaterThan(onload);
+      }
     });
   }
+});
+
+describe('consent.js still orders the src clones it does control', () => {
+  // Correct on its own terms and worth keeping - it just was never what fixed
+  // Sentry, and the comment above it now says so.
+  it('keeps cloned src scripts in document order', () => {
+    expect(src).toContain("if (s.src && !old.hasAttribute('async')) s.async = false;");
+  });
+
+  it('and leaves a tag that asked to be async alone', () => {
+    expect(src).toContain("!old.hasAttribute('async')");
+    // Google Analytics' loader carries async on purpose.
+    expect(read('index.html')).toMatch(/data-consent="analytics" async src="[^"]*googletagmanager/);
+  });
+
+  // The claim that used to live here was false. Keep it from coming back as a
+  // comment that misleads the next reader.
+  it('does not claim async=false orders inline scripts', () => {
+    const start = src.indexOf('// A script built with createElement()');
+    expect(start).toBeGreaterThan(-1);
+    const block = src.slice(start, src.indexOf('if (s.src &&', start));
+    expect(block).toMatch(/does NOT do|never waits|runs the instant/i);
+  });
 });
