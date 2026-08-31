@@ -7944,3 +7944,72 @@ los tres disparadores estan conectados, y las seis cadenas estan en los tres
 idiomas. **Lo que falta es que alguien lo escuche.**
 
 19 tests nuevos. 985/985.
+
+## 67. El reembolso automatico podia saltearse el aviso (31-ago-2026)
+
+Diego, leyendo el resumen de la entrada 59: *"cuando pase esto me tiene que
+llegar un mensaje que se genero un pago sin reserva... aunque el cliente no
+puede avanzar en nuestra pagina en los pasos del booking para pagar asi que no
+creo que pase"*.
+
+Las dos mitades de esa frase tenian respuesta, y ninguna era la esperada.
+
+### "No creo que pase": ya paso, un mes entero
+
+El huerfano no aparece porque alguien avance sin pagar. Aparece al reves:
+**primero se cobra, despues se escribe la reserva.** El huerfano es exactamente
+lo que queda cuando el cobro sale bien y la escritura falla.
+
+`js/app.js:1863` lo documenta: entre el **2026-07-04 y el 2026-08-05 le paso a
+TODOS los invitados, SIEMPRE** - el front dejaba pagar y recien despues pedia
+iniciar sesion, `create-booking` respondia 401, y la reserva nunca existia. El
+5 de agosto una clienta real pago $20 y no recibio nada: ni recibo, ni
+confirmacion, ni el aviso de reembolso, porque los tres iban a un email
+inventado que caia en la casilla de Diego (`js/app.js:2497`).
+
+Eso ya esta arreglado. Pero la clase de falla es estructural al orden
+cobro -> reserva, y por eso existe el barrido.
+
+### El hueco que su pedido destapo
+
+`orphanAction` devolvia `'refund'` apenas el pago pasaba las 24h, **mirara o no
+si Diego habia sido avisado**. Y eso no es un caso raro: **es el ordinario.**
+
+El barrido corre **una vez por dia**. Un pago hecho poco despues de una corrida
+ya tiene mas de 24h la primera vez que el barrido lo ve - asi que iba derecho a
+`'refund'`, y Diego recibia **solo el aviso del reembolso, nunca el aviso del
+huerfano**. Perdia la oportunidad de convertir un trabajo real en una reserva
+real antes de que la plata volviera.
+
+Ahora **nada se reembolsa antes de avisarle**. Sin `orphan_alerted`, la accion
+es `'alert'`, tenga la edad que tenga.
+
+### Y el backstop, porque la regla nueva tiene su propio modo de falla
+
+Si no hay numero de WhatsApp configurado, o Twilio esta caido varios dias,
+`orphan_alerted` **nunca se marca**. Un "nunca reembolsar antes de avisar" puro
+dejaria la plata del cliente adentro **para siempre**, que es justo la falla que
+todo esto vino a terminar.
+
+`ORPHAN_HARD_REFUND_AFTER_HOURS = 72`: a los tres dias la plata vuelve, haya
+llegado el mensaje o no. Hay un test que exige que ese plazo sea **mayor** que
+el normal, o nunca aplicaria.
+
+### El mensaje decia algo que no podia cumplir
+
+Decia *"Create the booking within 24h or it refunds itself"*. Con un barrido
+diario, "dentro de 24h" no es cierto: la proxima oportunidad de actuar es la
+proxima corrida. Ahora dice que lo cree **hoy**, y que se reembolsa en la
+corrida siguiente.
+
+### Lo que depende de algo que NO se pudo verificar
+
+Todo esto asume que el numero de WhatsApp del admin esta cargado
+(`van_zones` con `van_number = 0` y `suburb = '__whatsapp__'`). **No se puede
+leer desde aca**: RLS lo esconde del rol anonimo, correctamente. Si no esta
+cargado, el handler hace `continue` y el unico rastro es un `console.error` en
+los logs de Vercel que no lee nadie.
+
+Queda como verificacion pendiente de Diego, con el SQL en el chat.
+
+18 tests en el archivo (3 reescritos, 3 nuevos).
