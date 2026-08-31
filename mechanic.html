@@ -4,6 +4,14 @@
 <!-- Google tag (gtag.js) -->
 <script src="/js/consent.js"></script>
 <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+<script type="text/plain" data-consent="analytics">
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag('js', new Date());
+  gtag('config', 'G-GXYD68JXZW');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#0D1F3C">
@@ -243,6 +251,6 @@
 </div>
 
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script src="js/mechanic.js?v=cdccbd66bc"></script>
+<script src="js/mechanic.js?v=690d56089a"></script>
 </body>
 </html>

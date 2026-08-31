@@ -8242,3 +8242,94 @@ Lo que **falta que mire Diego**, concretamente:
    que el diccionario devuelve la traduccion, no que entre en la tarjeta.
 3. Las dos cadenas chinas reescritas (`更换刹车皮`, `五通中轴保养`) aparecen en las
    listas de "que incluye" de `js/app.js`.
+
+## 70. La landing no tenia un solo boton funcionando para quien no aceptaba cookies (31-ago-2026)
+
+Diego lo reporto asi: "no puedo apretar los botones en la landing, mecanicos no
+aparece nada". Services, View Services, My Account, Book a Service: nada. La
+pagina se veia perfecta.
+
+### Una linea
+
+`js/landing-inline.js` linea 9:
+
+```js
+Sentry.onLoad(function() { Sentry.init({ ... }); });
+```
+
+El loader de Sentry esta detras del consentimiento
+(`<script type="text/plain" data-consent="analytics" src="js-de.sentry-cdn.com/...">`),
+asi que sin aceptar cookies **`Sentry` no existe**. `ReferenceError`. Y ese
+archivo es **quince bloques `<script>` concatenados compartiendo UN solo scope
+de nivel superior** - su propio encabezado lo dice: "that order is load-bearing".
+Un throw en la linea 9 mata las ~1500 lineas de abajo, donde viven TODOS los
+`addEventListener` de la landing:
+
+- `hero-book-btn` (Reservar Servicio), `hero-services-btn`, `nav-services-btn`
+- todo el panel `acct-*` de Mi Cuenta
+- `loadMechanics()` - por eso la seccion de mecanicos se veia vacia; el endpoint
+  respondia 200 con el mecanico, nadie lo pedia
+
+### La causa raiz no es la linea, es de donde salio
+
+`d5bb2f8` ("perf(landing): extract inline scripts, cut landing.html to 111KB")
+saco los quince bloques inline de `landing.html` a `js/landing-inline.js`. Dos
+de esos bloques eran **bootstraps de vendors que `scripts/consent-gate.mjs`
+tenia gateados**.
+
+Ese script gatea leyendo **etiquetas del HTML**. Fuera del HTML, dejo de verlos.
+Y quedo el desajuste exacto que rompe: **el gate se cayo del que LLAMA y siguio
+puesto en el que CARGA.**
+
+- **Sentry**: el loader nunca corre, el init si -> ReferenceError -> landing
+  muerta para todo el que rechace cookies, use Firefox con Enhanced Tracking
+  Protection (el default), Brave, o cualquier bloqueador.
+- **Google Analytics**: `gtag()` se define solo, asi que no tiro nada. Solo
+  empezo a configurar GA en cada visita **sin permiso** - que es exactamente lo
+  que ese script existe para impedir. Es lo que se veia en la consola de Diego
+  como `Cookie "_ga_GXYD68JXZW" has been rejected`.
+
+El mismo desajuste estaba en `js/admin.js` y `js/mechanic.js`, que arrancan con
+el mismo bootstrap de gtag suelto. Lo encontro el check nuevo, no una lectura.
+
+`index.html` nunca estuvo afectado: ahi los dos bloques siguen inline y gateados.
+
+### El arreglo, y por que NO es un guard
+
+Lo tentador es `if (typeof Sentry !== 'undefined')`. **Esta mal**: corta el
+crash y deja Sentry muerto para siempre, porque ese archivo corre una sola vez,
+antes de que exista el consentimiento. El bloque tiene que volver al HTML, en un
+`<script type="text/plain" data-consent="analytics">` que `js/consent.js` pueda
+revivir cuando el visitante acepte - que es como `index.html` lo tiene desde el
+principio. Ahora las cuatro superficies lo hacen igual.
+
+### El backstop
+
+`scripts/consent-gate.mjs --check` solo miraba etiquetas, y por eso estuvo verde
+todo el tiempo que la landing estuvo rota. Ahora tambien lee **los .js que cada
+pagina carga incondicionalmente** y falla si alguno toca un global de un vendor
+gateado. Los patrones salieron a `scripts/lib/consent-vendors.mjs` para poder
+testearlos.
+
+Solo estan los dos que mordieron. PostHog no esta: su snippet instala un stub
+propio y ya pasa por `window.drbikeOnConsent()` - hecho bien desde el principio,
+en el mismo archivo, tres bloques mas abajo del que rompia.
+
+**`npm run check` ahora corre `consent:check`.** Antes estaba suelto en su propio
+npm script y el CI no lo llamaba, asi que nadie lo corria.
+
+Verificado **reintroduciendo el bug a proposito**: con el, `consent:check` sale 1
+y dos tests se ponen rojos; sin el, verde. 14 tests nuevos, 1084 en total.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador** (prohibido en esta sesion). Lo que falta que haga
+Diego, y es lo unico que cierra esto:
+
+1. **Rechazar las cookies** en la landing y probar Reservar Servicio, View
+   Services, Mi Cuenta y que aparezcan los mecanicos. Ese es el caso que estaba
+   roto.
+2. **Aceptarlas** y confirmar que Sentry y GA vuelven a registrar - el arreglo
+   los devuelve al gate, y nadie comprobo que revivan al aceptar.
+3. Que admin y mechanic sigan andando: se les movio el bootstrap de gtag y se
+   les bumpeo el `?v=`.

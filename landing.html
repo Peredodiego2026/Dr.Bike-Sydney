@@ -7,6 +7,14 @@
   <!-- Google tag (gtag.js) -->
   <script src="/js/consent.js"></script>
   <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+  <script type="text/plain" data-consent="analytics">
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-GXYD68JXZW');
+  </script>
   
 
   <meta charset="UTF-8">
@@ -57,6 +65,24 @@
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
   <script type="text/plain" data-consent="analytics" src="https://js-de.sentry-cdn.com/dbe16e37f69ca4ae1724ab697c0f4255.min.js" crossorigin="anonymous"></script>
+  <script type="text/plain" data-consent="analytics">
+    Sentry.onLoad(function () {
+      Sentry.init({
+        dsn: 'https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488',
+        environment: 'production',
+        release: 'drbike@1.0.0',
+        tracesSampleRate: 0.2,
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1.0,
+        integrations: [Sentry.replayIntegration(), Sentry.browserTracingIntegration()],
+        beforeSend: function (event) {
+          var url = (event.request && event.request.url) || '';
+          if (url.startsWith('data:')) return null;
+          return event;
+        },
+      });
+    });
+  </script>
   
   <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
   
@@ -1363,7 +1389,7 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=528981d508"></script>
+<script src="js/landing-inline.js?v=fa5e4e8b61"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=d753faa212"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing

@@ -28,6 +28,7 @@
 // script. Only the four analytics vendors below.
 
 import fs from 'node:fs';
+import { VENDOR_USES } from './lib/consent-vendors.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -132,6 +133,68 @@ for (const file of files) {
   } else if (checkOnly && !final.includes('/js/consent.js')) {
     ungated.push(`${rel} (gated tags but consent.js missing)`);
   }
+}
+
+// ── The half that lived outside the HTML ────────────────────────────────────
+// Everything above reads TAGS. It found nothing wrong on 2026-08-31 while the
+// landing page was dead in every browser that had not accepted cookies.
+//
+// What happened: d5bb2f8 extracted landing.html's 15 inline <script> blocks
+// into js/landing-inline.js for page weight. Two of those blocks were vendor
+// bootstraps that this script had gated. Out of the HTML, they were invisible
+// to it - so the gate came off, while the loader <script src> they depend on
+// stayed gated in the page.
+//
+//   - Sentry: the loader never ran, so `Sentry` did not exist, and
+//     `Sentry.onLoad()` on line 9 of a file that is ONE top-level scope threw
+//     ReferenceError. Every listener defined below it - Book a Service, View
+//     Services, My Account, the mechanics carousel - was never attached. The
+//     landing page had no working buttons for anyone who declined cookies,
+//     used Firefox with Enhanced Tracking Protection, or ran a blocker.
+//   - Google Analytics: gtag() defines itself, so it threw nothing. It just
+//     configured GA on every view without asking, which is the exact thing
+//     this file exists to prevent.
+//
+// So: a JS file the page loads UNCONDITIONALLY may not touch a vendor global
+// that only exists after consent. Only the two that bit are listed - a vendor
+// whose snippet defines its own stub (PostHog) is not in this class, and
+// guessing at more would cost false positives, which is how a check stops
+// being read.
+
+const leaks = [];
+for (const file of files) {
+  const rel = path.relative(root, file);
+  const html = fs.readFileSync(file, 'utf8');
+  // Local <script src> with no data-consent: it runs on every view, always.
+  for (const m of html.matchAll(/<script\b([^>]*)\bsrc="([^"]+)"([^>]*)>/g)) {
+    const attrs = m[1] + m[3];
+    if (/data-consent/.test(attrs)) continue;
+    const src = m[2];
+    if (/^https?:|^\/\//.test(src)) continue; // third-party, not ours to read
+    const jsPath = path.join(root, src.replace(/^\//, '').split('?')[0]);
+    if (!fs.existsSync(jsPath)) continue;
+    const js = fs.readFileSync(jsPath, 'utf8');
+    for (const v of VENDOR_USES) {
+      if (v.re.test(js)) {
+        leaks.push({ page: rel, js: path.relative(root, jsPath), vendor: v.name, why: v.why });
+      }
+    }
+  }
+}
+
+if (checkOnly && leaks.length) {
+  console.error(`\nconsent-check: ${leaks.length} ungated script(s) use a consent-gated vendor\n`);
+  for (const l of new Map(leaks.map((x) => [x.js + x.vendor, x])).values()) {
+    console.error(`  x ${l.js} uses ${l.vendor} - loaded unconditionally by ${l.page}`);
+    console.error(`      ${l.why}`);
+  }
+  console.error(
+    '\n  fix: move that bootstrap back into the page as\n' +
+      '       <script type="text/plain" data-consent="analytics">, the way index.html\n' +
+      '       carries it. Do not just guard it - a guard leaves the vendor dead\n' +
+      '       forever, because this file only runs once, before consent.\n'
+  );
+  process.exit(1);
 }
 
 if (checkOnly) {

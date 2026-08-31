@@ -1,3 +1,10 @@
+// v103 (2026-08-31): la landing no tenia NINGUN boton funcionando para quien
+// no aceptaba cookies. js/landing-inline.js llamaba Sentry.onLoad() en la linea
+// 9 y el loader de Sentry esta detras del consentimiento: ReferenceError, y el
+// archivo entero (un solo scope) moria antes de enganchar un solo listener.
+// El init de Sentry y el bootstrap de gtag vuelven al HTML, gateados. Toca
+// landing.html, admin.html, mechanic.html, js/landing-inline.js, js/admin.js
+// y js/mechanic.js.
 // v102 (2026-08-31): el catalogo de servicios de Supabase se traduce. Las 33
 // descripciones y 11 de los 33 nombres salian en ingles porque son DATOS de la
 // tabla `services`, no markup, y scripts/i18n-check.mjs no los ve. Tambien el
@@ -98,7 +105,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v102';
+const CACHE_STATIC = 'drbike-static-v103';
 const CACHE_PAGES  = 'drbike-pages-v74';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

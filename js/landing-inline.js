@@ -3,28 +3,19 @@
 // that order is load-bearing, they share this file's top-level scope
 // exactly like they shared the page's global scope before.
 
-window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');
+// The gtag() bootstrap lives in landing.html, gated behind consent, exactly
+// as it does in index.html - and for the same reason the Sentry init does.
+// Extracting it here took it out of scripts/consent-gate.mjs's sight and it
+// ran on every view, consent or not.
 
 
-  Sentry.onLoad(function() {
-    Sentry.init({
-      dsn: "https://dbe16e37f69ca4ae1724ab697c0f4255@o4511637539651584.ingest.de.sentry.io/4511637556625488",
-      environment: "production",
-      release: "drbike@1.0.0",
-      tracesSampleRate: 0.2,
-      replaysSessionSampleRate: 0.1,
-      replaysOnErrorSampleRate: 1.0,
-      integrations: [
-        Sentry.replayIntegration(),
-        Sentry.browserTracingIntegration(),
-      ],
-      beforeSend: function(event) {
-        const url = (event.request && event.request.url) || '';
-        if (url.startsWith('data:')) return null;
-        return event;
-      },
-    });
-  });
+  // Sentry init lives in landing.html, gated behind consent, exactly as it
+  // does in index.html. It used to be HERE, and that was the bug: the
+  // extraction to this file (d5bb2f8) moved it out of the HTML, so
+  // scripts/consent-gate.mjs stopped seeing it and stopped gating it, while
+  // the CDN <script> it depends on stayed gated in the page. Loader absent,
+  // caller present: `Sentry is not defined` on line 9, and since this file
+  // is one top-level scope, EVERY listener below it went unattached.
 
 
   // PostHog's own install snippet (copy-pasted, same as the one still inline
