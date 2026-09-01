@@ -85,6 +85,12 @@ export async function authMechanic(req) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const token = req.body?.token;
   const pin = req.body?.pin;
+  // Minimum stays 4, not 6, even though handleAdminSetMechanicPin now issues
+  // six digits: pin_hash is one-way, so a PIN handed out before 2026-09-01
+  // cannot be detected or migrated here - raising this floor would lock those
+  // mechanics out with a misleading "PIN required". They keep working until
+  // Diego reissues them from Admin, which is the step that actually retires
+  // the short ones.
   if (!token && (!pin || String(pin).trim().length < 4))
     return { error: 'PIN required', status: 401 };
 
@@ -4418,15 +4424,31 @@ async function handleSubmitClaim(req, res) {
 // new mechanic without Diego running SQL by hand. The plaintext PIN is
 // returned exactly once, in this response, for the admin to hand to the
 // mechanic - it is never stored or retrievable again after this call.
-async function handleAdminSetMechanicPin(req, res) {
+export async function handleAdminSetMechanicPin(req, res) {
   const { access_token, contact_id, pin } = req.body || {};
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const auth = await verifyAdminSession(access_token, SERVICE_KEY);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   if (!contact_id) return res.status(400).json({ error: 'contact_id required' });
 
-  const finalPin = pin ? String(pin).trim() : String(Math.floor(1000 + Math.random() * 9000));
-  if (!/^\d{4}$/.test(finalPin)) return res.status(400).json({ error: 'PIN must be 4 digits' });
+  // Six digits, not four (2026-09-01). The mechanic login sends ONLY a PIN -
+  // there is no username to attribute a failed attempt to - so the whole
+  // namespace is one shared secret and its size is the defence. Four digits is
+  // 10k combinations: against the per-IP lockout (5 tries / 15 min) an attacker
+  // spread over ~100 addresses exhausts that in hours. Six digits is 1M, which
+  // turns those hours into weeks.
+  //
+  // crypto.randomInt, not Math.random: Math.random is not meant to be
+  // unguessable, which is exactly wrong for a credential. (The arrival PIN
+  // already uses crypto.randomInt.)
+  //
+  // Login still ACCEPTS 4+ digits on purpose - see authMechanic. PINs issued
+  // before today are stored as a one-way hash, so their length cannot be read
+  // back and they cannot be migrated automatically; they keep working until
+  // Diego reissues them from Admin. Reissuing every mechanic is what actually
+  // retires the 4-digit ones.
+  const finalPin = pin ? String(pin).trim() : String(crypto.randomInt(100000, 1000000));
+  if (!/^\d{6}$/.test(finalPin)) return res.status(400).json({ error: 'PIN must be 6 digits' });
 
   const { error } = await auth.sb
     .from('escalation_contacts')
