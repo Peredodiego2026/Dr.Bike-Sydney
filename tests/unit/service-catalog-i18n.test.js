@@ -22,10 +22,16 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { hasKey, dictBlock, missingCatalogTranslations } from '../../scripts/lib/dict-keys.mjs';
+import { dictSource, composedSource } from '../helpers/i18n-source.js';
 
 const root = new URL('../../', import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, root), 'utf8');
-const i18nSrc = read('js/i18n.js');
+// Un archivo por idioma desde el split del 01-sep-2026. Se componen con los
+// marcadores viejos para que el recorte de abajo siga funcionando igual - y
+// ahora el aislamiento es estructural: el contenido de `es` termina donde
+// empieza el archivo de `zh`, asi que una traduccion china ya no puede
+// satisfacer una afirmacion sobre el espanol (PENDIENTES 66).
+const i18nSrc = ['  es: {', dictSource('es'), '  zh: {', dictSource('zh')].join('\n');
 
 // setLang() dispatches on `document`, which the node test environment has no
 // version of. The shim has to be in place before the module is evaluated, and
@@ -176,8 +182,11 @@ describe('the shipped dictionary covers the whole catalog', () => {
   });
 
   // The point of the exercise: a Spanish client must not read English.
-  it('really returns Spanish, not the English fallback', () => {
-    setLang('es');
+  it('really returns Spanish, not the English fallback', async () => {
+    // setLang es asincrono desde que los diccionarios se cargan por idioma: el
+    // idioma cambia RECIEN cuando su archivo llego, para que nada se pinte a
+    // medio traducir. La app hace este mismo await en el arranque.
+    await setLang('es');
     for (const [, description] of CATALOG) {
       expect(translateValue(description)).not.toBe(description);
     }
@@ -186,8 +195,8 @@ describe('the shipped dictionary covers the whole catalog', () => {
     );
   });
 
-  it('and really returns Chinese', () => {
-    setLang('zh');
+  it('and really returns Chinese', async () => {
+    await setLang('zh');
     for (const [, description] of CATALOG) {
       expect(translateValue(description)).not.toBe(description);
     }
@@ -262,10 +271,13 @@ describe('the hero fee button', () => {
     }
   });
 
-  it('is translated into both languages', () => {
-    setLang('es');
+  // await en los dos setLang: desde que los diccionarios se cargan por idioma,
+  // el cambio ocurre cuando su archivo llego, no antes. Sin esperar, esta
+  // afirmacion leia el idioma que dejo puesto el test anterior.
+  it('is translated into both languages', async () => {
+    await setLang('es');
     expect(translateValue('Check my diagnosis fee')).toBe('Calculá el precio de tu diagnóstico');
-    setLang('zh');
+    await setLang('zh');
     expect(translateValue('Check my diagnosis fee')).toBe('查询上门检查费');
   });
 

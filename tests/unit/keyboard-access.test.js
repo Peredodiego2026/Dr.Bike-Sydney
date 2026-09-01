@@ -13,6 +13,7 @@
 //      PIN field. Tab into it and nothing on screen tells you where you are.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import { dictSource, composedSource } from '../helpers/i18n-source.js';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const vars = read('css/variables.css');
@@ -162,7 +163,12 @@ describe('the guard is wired in and catches regressions', () => {
 
 describe('the new string ships in all three languages', () => {
   it('has es and zh, in the same commit that created it', () => {
-    const i18n = read('js/i18n.js');
+    // Un archivo por idioma desde el split del 01-sep-2026. Se componen con los
+    // marcadores viejos para que el recorte de abajo siga funcionando igual - y
+    // ahora el aislamiento es estructural: el contenido de `es` termina donde
+    // empieza el archivo de `zh`, asi que una traduccion china ya no puede
+    // satisfacer una afirmacion sobre el espanol (PENDIENTES 66).
+    const i18n = ['  es: {', dictSource('es'), '  zh: {', dictSource('zh')].join('\n');
     for (const lang of ['es', 'zh']) {
       // One block only. Slicing to the end of the file would let a
       // Chinese-only translation satisfy the Spanish assertion - the same

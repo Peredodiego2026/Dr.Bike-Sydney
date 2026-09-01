@@ -8665,3 +8665,100 @@ reportar la equivocada le costaria las 2 resenas.
 
 Aparte: su categoria en Google dice "Taller mecanico" (Mechanic), que en
 Australia se lee como taller de **autos**. Deberia ser "Bicycle repair shop".
+
+## 70. El punto 10 apuntaba al lugar equivocado (01-sep-2026)
+
+La auditoria decia: *"js/app.js pesa 295 KB... el cliente se baja el asistente
+entero, el mapa, Stripe y el chat antes de ver un precio"*.
+
+**Medido contra produccion antes de tocar nada, tres de esas cuatro cosas eran
+falsas:**
+
+| Afirmacion | Realidad |
+|---|---|
+| app.js = 295 KB | **78 KB en la red** - Vercel comprime |
+| "se baja Stripe" | Se carga en el pago (`js/stripe.js:25`) |
+| "se baja el mapa" | Se carga al abrir el seguimiento |
+
+Alguien miro el tamano del archivo en disco, no lo que viaja. Vale como
+recordatorio: **el peso de una pagina se mide con la red, no con `ls`.**
+
+### Lo que la auditoria no vio
+
+`js/i18n.js` viajaba en **64 KB** - casi tanto como toda la app - y llevaba
+**los tres idiomas a todos los visitantes**:
+
+- espanol: 1157 claves
+- chino: 1157 claves
+- ingles: **ninguna** (es el idioma fuente; las claves SON el ingles)
+
+Un cliente leyendo la app en ingles se bajaba **164 KB de espanol y chino que
+no iba a usar nunca**. Y `translateValue()` ni consulta el diccionario cuando el
+idioma es ingles: devuelve el texto tal cual. O sea que para la mayoria de los
+visitantes de Sidney ese archivo se descargaba **para no usarse jamas**.
+
+### El resultado
+
+```
+ANTES                        64.2 KB  a todos
+AHORA  visitante en ingles    3.3 KB  (ahorra 60.9 KB)
+       visitante en espanol  35.8 KB  (ahorra 28.3 KB)
+       visitante en chino    34.3 KB  (ahorra 29.9 KB)
+```
+
+Para el cliente tipico - en la calle, con datos moviles - eso es **casi la mitad
+de todo el JavaScript de la app**, y es mas de lo que se puede sacar de
+`js/app.js` sin meter un empaquetador que este proyecto no tiene.
+
+### El requisito que mandaba sobre el ahorro
+
+Diego, al pedirlo: *"debemos asegurarnos de que la gente, cuando entre a la
+aplicacion, lo vea en su lenguaje - que espanol, todo en espanol; que ingles,
+todo en ingles; que chino, todo en chino"*. El ahorro era secundario.
+
+Por eso el diccionario se **espera** antes de la primera pantalla, en las tres
+superficies del cliente (`js/app.js` antes de `router.init()`,
+`js/landing-modules.js` y `track.html`). Sin eso un cliente en espanol veria la
+primera vista en ingles y la veria cambiar un instante despues - **peor que
+tardar 40ms mas**, porque el parpadeo se nota y la demora no.
+
+Y `setLang()` cambia el idioma **recien cuando el diccionario esta en la mano**.
+Si `currentLang` se moviera primero, entre ese momento y la llegada del archivo
+cada `translateValue()` devolveria ingles - y el evento `langchange`, que es lo
+que repinta, caeria justo en esa ventana.
+
+### Verificado clave por clave, no por conteo
+
+Se comparo cada diccionario nuevo contra el original de `origin/main`:
+**1157 claves y 1157 valores identicos** en los dos idiomas. Un conteo igual no
+prueba nada - dos diccionarios pueden tener 1157 claves cada uno y no ser el
+mismo.
+
+Y los guards se verificaron **rompiendolos a proposito**: sacar el `await` de la
+SPA hace fallar 2 tests; mover `currentLang` antes del `ensureLang` hace fallar
+el que vigila el orden.
+
+### Un bug de clase entera que desaparecio
+
+Media docena de tests y dos scripts recortaban `js/i18n.js` entre `  es: {` y
+`  zh: {`. Ese recorte era la causa de PENDIENTES 66: recortar hasta el final
+del archivo hacia que el bloque `es` contuviera el `zh`, y **una cadena
+traducida solo al chino satisfacia tambien la afirmacion del espanol**.
+
+Con un archivo por idioma **no hay nada que recortar**. El aislamiento paso de
+accidental a estructural. `tests/helpers/i18n-source.js` existe para que ningun
+test vuelva a inventar el recorte.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador** (prohibido en esta sesion). Que las tres pantallas
+se vean en el idioma correcto lo tiene que mirar Diego: entrar en ingles, en
+espanol y en chino, y cambiar de idioma con el selector estando en la reserva.
+Lo verificado por codigo es que el diccionario esta cargado antes de pintar y
+que no falta ni una traduccion.
+
+**El `?v=` sigue prohibido** para los tres archivos, y hay un test que lo vigila.
+`sw.js` subio a v108/v75, que es lo unico que entrega la version nueva a un
+navegador que ya entro.
+
+17 tests nuevos. 1127/1127.

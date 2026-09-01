@@ -163,27 +163,30 @@ const LOOKS_LIKE_CODE = [
 const looksLikeCode = (text) => LOOKS_LIKE_CODE.some((re) => re.test(text));
 
 // ── The dictionary ──────────────────────────────────────────────────────────
-// js/i18n.js keeps `dict` module-private (nothing outside needs it), so load a
-// copy with that one word exported rather than widening the real module's API.
+// The dictionaries moved out of js/i18n.js into one file per language on
+// 2026-09-01: all three shipped to every visitor, so somebody reading the app
+// in English downloaded 164 KB of Spanish and Chinese they would never use.
+//
+// They are plain default exports now, so this no longer needs the probe-module
+// trick that existed only to reach a module-private `dict`.
 async function loadDict() {
-  const src = read('js/i18n.js');
-  const tmp = path.join(ROOT, 'node_modules', '.i18n-check-probe.mjs');
-  fs.writeFileSync(tmp, src.replace('const dict = {', 'export const dict = {'));
-  try {
-    const mod = await import(`file:///${tmp.replace(/\\/g, '/')}?t=${Date.now()}`);
-    return mod.dict;
-  } finally {
-    fs.rmSync(tmp, { force: true });
+  const out = {};
+  for (const lang of ['es', 'zh']) {
+    const file = path.join(ROOT, `js/i18n-${lang}.js`);
+    const mod = await import(`file:///${file.replace(/\\/g, '/')}?t=${Date.now()}`);
+    out[lang] = mod.default;
   }
+  return out;
 }
 
 // Duplicate keys survive `import` (the last one wins), so they have to be found
 // in the source text.
 function duplicateKeys(lang) {
-  const src = read('js/i18n.js');
-  const start = src.indexOf(`\n  ${lang}: {`);
-  const end = lang === 'es' ? src.indexOf('\n  zh: {') : src.lastIndexOf('\n};');
-  const block = src.slice(start, end);
+  // One file per language now, so the block IS the file. No slicing between
+  // language markers - and that is a bug class gone, not just tidier: slicing
+  // to the end of the old file made the `es` block contain `zh`, so a
+  // Chinese-only translation satisfied a Spanish check (PENDIENTES 66).
+  const block = read(`js/i18n-${lang}.js`);
   const seen = new Set();
   const dups = new Set();
   const re = /^\s{4}(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|([A-Za-z_$][\w$]*)):/gm;
@@ -345,8 +348,20 @@ const esKeys = new Set(Object.keys(dict.es));
 const zhKeys = new Set(Object.keys(dict.zh));
 const onlyEs = [...esKeys].filter((k) => !zhKeys.has(k));
 const onlyZh = [...zhKeys].filter((k) => !esKeys.has(k));
-if (onlyEs.length) problems.push(`${onlyEs.length} key(s) in es but not zh:\n    ${onlyEs.slice(0, 10).map((k) => JSON.stringify(k)).join('\n    ')}`);
-if (onlyZh.length) problems.push(`${onlyZh.length} key(s) in zh but not es:\n    ${onlyZh.slice(0, 10).map((k) => JSON.stringify(k)).join('\n    ')}`);
+if (onlyEs.length)
+  problems.push(
+    `${onlyEs.length} key(s) in es but not zh:\n    ${onlyEs
+      .slice(0, 10)
+      .map((k) => JSON.stringify(k))
+      .join('\n    ')}`
+  );
+if (onlyZh.length)
+  problems.push(
+    `${onlyZh.length} key(s) in zh but not es:\n    ${onlyZh
+      .slice(0, 10)
+      .map((k) => JSON.stringify(k))
+      .join('\n    ')}`
+  );
 
 // 2. duplicates
 for (const lang of ['es', 'zh']) {

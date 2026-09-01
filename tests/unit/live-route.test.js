@@ -13,13 +13,19 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { hasKey, dictBlock } from '../../scripts/lib/dict-keys.mjs';
+import { dictSource, composedSource } from '../helpers/i18n-source.js';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const eta = read('api/_eta.js');
 const auth = read('api/auth.js');
 const app = read('js/app.js');
 const css = read('css/main.css');
-const i18n = read('js/i18n.js');
+// Un archivo por idioma desde el split del 01-sep-2026. Se componen con los
+// marcadores viejos para que el recorte de abajo siga funcionando igual - y
+// ahora el aislamiento es estructural: el contenido de `es` termina donde
+// empieza el archivo de `zh`, asi que una traduccion china ya no puede
+// satisfacer una afirmacion sobre el espanol (PENDIENTES 66).
+const i18n = ['  es: {', dictSource('es'), '  zh: {', dictSource('zh')].join('\n');
 
 describe('the router returns a real line', () => {
   it('asks for the geometry, not just a duration', () => {

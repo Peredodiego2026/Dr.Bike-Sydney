@@ -11,6 +11,7 @@
 // not been greeted by his own app.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import { dictSource, composedSource, TRANSLATED } from '../helpers/i18n-source.js';
 
 const appjs = fs.readFileSync(new URL('../../js/app.js', import.meta.url), 'utf8');
 const cronjs = fs.readFileSync(new URL('../../api/send-cron.js', import.meta.url), 'utf8');
@@ -105,10 +106,13 @@ describe('the app greets on the day', () => {
     expect(appjs).toMatch(/title: translateValue\('Happy birthday, NAME!'\)/);
   });
 
+  // Antes esto buscaba la clave DOS VECES en el mismo archivo y asumia que la
+  // primera era el espanol y la segunda el chino - cierto solo por el orden en
+  // que estaban declarados. Con un archivo por idioma se le pregunta a cada uno
+  // por separado, que es lo que la afirmacion siempre quiso decir.
   it('is translated into both other languages', () => {
-    const es = i18njs.indexOf("'Happy birthday, NAME!'");
-    const zh = i18njs.indexOf("'Happy birthday, NAME!'", es + 1);
-    expect(es).toBeGreaterThan(-1);
-    expect(zh).toBeGreaterThan(-1);
+    for (const lang of TRANSLATED) {
+      expect(dictSource(lang), `falta en ${lang}`).toContain("'Happy birthday, NAME!'");
+    }
   });
 });

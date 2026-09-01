@@ -381,7 +381,12 @@ init();
      (status changes, ETA, email lookup) without hooking each one. -->
 <script type="module">
   // No ?v= - see the note in landing.html. Refreshed by the sw.js cache name.
-  import { getLang, translateScreen, translateValue, dateLocale } from './js/i18n.js';
+  import { getLang, translateScreen, translateValue, dateLocale, ensureLang } from './js/i18n.js';
+
+  // El diccionario antes de la primera traduccion, igual que en la SPA y la
+  // landing. Esta pagina la abre un cliente esperando al mecanico: verla
+  // parpadear de idioma es peor aca que en ningun lado.
+  await ensureLang(getLang());
 
   window.__trackI18n = { translateValue: translateValue, dateLocale: dateLocale };
   document.documentElement.lang = getLang();

@@ -71,6 +71,7 @@ import {
   getLang,
   setLang,
   translateScreen,
+  ensureLang,
   translateValue,
   dateLocale,
   sourceOf,
@@ -6255,6 +6256,19 @@ function renderSpaLangSwitcher() {
     });
   });
 }
+
+// El diccionario ANTES de la primera pantalla.
+//
+// router.init() pinta y traduce. Sin esperar aca, un cliente en espanol o en
+// chino veria la primera vista en ingles y la veria cambiar un instante
+// despues - peor que tardar los 40ms que tarda el archivo, porque el
+// parpadeo se nota y la demora no.
+//
+// Es un await de nivel superior en un modulo ES: retrasa la evaluacion de
+// este archivo hasta que el diccionario llego. Para un visitante en INGLES no
+// retrasa nada: ensureLang('en') resuelve de inmediato y no baja ningun
+// archivo, que es el motivo entero de haber separado los diccionarios.
+await ensureLang(getLang());
 
 router.init();
 

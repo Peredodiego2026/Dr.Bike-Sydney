@@ -12,6 +12,7 @@
 //    pueda hacer click en cualquier parte fuera del cuadro para se cierre"
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import { dictSource, composedSource } from '../helpers/i18n-source.js';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const app = read('js/app.js');
@@ -19,7 +20,12 @@ const components = read('js/components.js');
 const mainCss = read('css/main.css');
 const vars = read('css/variables.css');
 const indexHtml = read('index.html');
-const i18n = read('js/i18n.js');
+// Un archivo por idioma desde el split del 01-sep-2026. Se componen con los
+// marcadores viejos para que el recorte de abajo siga funcionando igual - y
+// ahora el aislamiento es estructural: el contenido de `es` termina donde
+// empieza el archivo de `zh`, asi que una traduccion china ya no puede
+// satisfacer una afirmacion sobre el espanol (PENDIENTES 66).
+const i18n = ['  es: {', dictSource('es'), '  zh: {', dictSource('zh')].join('\n');
 
 describe('the progress bar says which step is happening now', () => {
   // The old code had two states: passed and not passed, both flat. Every step
