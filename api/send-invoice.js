@@ -11,6 +11,7 @@ import {
 } from './_security.js';
 import PDFDocument from 'pdfkit';
 import { computeInvoiceTotals } from './_invoice-math.js';
+import { withSentry } from './_sentry.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const sb = createClient(
@@ -339,7 +340,7 @@ function buildPDF({
   });
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (await guard(req, res, { rateMax: 20, rateWindow: 60000 })) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -783,3 +784,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Email failed' });
   }
 }
+
+// Un error aca no puede quedar solo en los logs de Vercel, que nadie mira.
+// Punto 20 de la auditoria: hasta el 2026-09-01 este archivo podia fallar en
+// produccion sin dejar rastro en ningun lado accionable.
+export default withSentry(handler, 'send-invoice');

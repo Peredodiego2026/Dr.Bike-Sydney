@@ -141,7 +141,7 @@ body {
   border-color: var(--red-bright);
 }
 .coupon-btn-activate {
-  color: var(--green);
+  color: var(--green-text);
   border-color: var(--green);
 }
 .coupon-btn-delete {
@@ -540,7 +540,7 @@ body {
   font-size: 15px;
   font-weight: 700;
   white-space: nowrap;
-  color: var(--red);
+  color: var(--red-text);
 }
 /* The big numbers on the Expenses summary. NO `color` on purpose - it inherits.
    The first version said `color: var(--navy)` with a comment claiming 16.43:1
@@ -776,7 +776,7 @@ body {
   border-radius: 20px;
 }
 .kpi-trend.up {
-  color: var(--green);
+  color: var(--green-text);
   background: var(--green-lt);
 }
 .kpi-trend.dn {
@@ -817,12 +817,12 @@ body {
 }
 .card-action {
   font-size: 12px;
-  color: var(--blue);
+  color: var(--blue-text);
   cursor: pointer;
   font-weight: 600;
 }
 .card-action:hover {
-  color: var(--blue-dark);
+  color: var(--blue-dark-text);
 }
 .card-body {
   padding: 0;
@@ -874,7 +874,7 @@ body {
 }
 .status.confirmed {
   background: #eff6ff;
-  color: var(--blue-dark);
+  color: var(--blue-dark-text);
 }
 .status.pending {
   background: var(--amber-lt);
@@ -882,15 +882,15 @@ body {
 }
 .status.enroute {
   background: var(--green-lt);
-  color: var(--green);
+  color: var(--green-text);
 }
 .status.in_progress {
   background: var(--green-lt);
-  color: var(--green);
+  color: var(--green-text);
 }
 .status.arrived {
   background: var(--green-lt);
-  color: var(--green);
+  color: var(--green-text);
 }
 .status.completed {
   background: var(--border-lt);
@@ -902,7 +902,7 @@ body {
 }
 .status.cancelled {
   background: var(--red-lt);
-  color: var(--red);
+  color: var(--red-text);
 }
 .status-dot {
   width: 5px;
@@ -921,7 +921,7 @@ body {
 }
 .mech-tag.v1 {
   background: #eff6ff;
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .mech-tag.v2 {
   background: var(--amber-lt);
@@ -976,7 +976,7 @@ body {
 .sch-price {
   font-size: 13px;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--blue-text);
   margin-left: auto;
   white-space: nowrap;
 }
@@ -1077,7 +1077,7 @@ body {
 }
 .van-online.on {
   background: var(--green-lt);
-  color: var(--green);
+  color: var(--green-text);
 }
 .van-online.off {
   background: var(--border-lt);
@@ -1199,7 +1199,7 @@ body {
 }
 .seg-risk {
   background: var(--red-lt);
-  color: var(--red);
+  color: var(--red-text);
 }
 .cl-stats {
   display: grid;
@@ -1274,14 +1274,14 @@ body {
   color: #f2f2f7;
 }
 .pl-val.pos {
-  color: var(--green);
+  color: var(--green-text);
   font-weight: 600;
 }
 .pl-val.neg {
   color: var(--red-bright);
 }
 .pl-val.total {
-  color: var(--blue);
+  color: var(--blue-text);
   font-weight: 700;
   font-size: 15px;
 }
@@ -1333,16 +1333,16 @@ body {
   color: var(--green-ink);
 }
 .bas-cell--gst-purchases .bas-cell-value {
-  color: var(--green);
+  color: var(--green-text);
 }
 .bas-cell--net {
   background: var(--blue-lt);
 }
 .bas-cell--net .bas-cell-label {
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .bas-cell--net .bas-cell-value {
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .bas-warn {
   margin-top: 12px;
@@ -1818,7 +1818,7 @@ body {
     letter-spacing: 0.05em;
   }
   .mobile-bottom-nav a.active {
-    color: var(--blue);
+    color: var(--blue-text);
   }
   .mobile-bottom-nav a svg {
     width: 20px;
@@ -1859,7 +1859,7 @@ body {
     grid-row: 1;
     font-size: 15px !important;
     font-weight: 700;
-    color: var(--blue) !important;
+    color: var(--blue-text) !important;
     justify-content: flex-end;
   }
   #page-dashboard .tbl tbody td[data-label='Service'] {
@@ -2071,7 +2071,7 @@ body {
   }
   tbody td.blue {
     font-weight: 700;
-    color: var(--blue-dark);
+    color: var(--blue-dark-text);
   }
   .footer {
     margin-top: 24px;
@@ -2614,7 +2614,7 @@ body {
 .cal-block-tooltip-time {
   font-size: 11px;
   font-weight: 700;
-  color: var(--red);
+  color: var(--red-text);
 }
 .cal-block-tooltip-reason {
   font-size: 11px;

@@ -159,7 +159,7 @@ function byId(id) {
     saveWhatsappNumber();
   });
   byId('auto-wire-24').addEventListener('click', function (event) {
-    sendTestSMS();
+    sendTestSMS(event.currentTarget);
   });
   byId('trig-new_booking').addEventListener('click', function (event) {
     toggleTrigger(event.currentTarget, 'new_booking');
@@ -770,8 +770,7 @@ async function toggleTrigger(el, key) {
   }
 }
 
-async function sendTestSMS() {
-  const btn = event.target;
+async function sendTestSMS(btn) {
   btn.textContent = 'Sending...';
   btn.disabled = true;
   try {
@@ -886,7 +885,7 @@ async function loadCashHandover() {
           <div style="font-size:13px;color:var(--mgray)">${g.jobs.length} cash job${g.jobs.length !== 1 ? 's' : ''} pending</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px;font-weight:800;color:var(--green)">$${g.total.toLocaleString('en-AU')}</span>
+          <span style="font-size:20px;font-weight:800;color:var(--green-text)">$${g.total.toLocaleString('en-AU')}</span>
           <button data-cash-settle="${esc(key)}" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
         </div>
       </div>
@@ -1035,7 +1034,7 @@ async function loadExpenses() {
 
   _expenses = await fetchExpenses();
   if (!_expenses.available) {
-    box.innerHTML = `<div style="color:var(--red);font-size:13px;line-height:1.6;padding:16px 0">${esc(_expenses.reason || 'Could not read the expenses')}</div>`;
+    box.innerHTML = `<div style="color:var(--red-text);font-size:13px;line-height:1.6;padding:16px 0">${esc(_expenses.reason || 'Could not read the expenses')}</div>`;
     return;
   }
   const rows = _expenses.expenses || [];
@@ -1061,7 +1060,7 @@ async function loadExpenses() {
         </div>
         <div class="exp-amount">–$${Number(e.amount).toLocaleString('en-AU', { minimumFractionDigits: 2 })}</div>
         <button data-action="delete-expense" data-id="${esc(e.id)}" data-desc="${esc(e.description)}" title="Delete"
-          style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;min-width:34px;min-height:34px;font-size:14px;cursor:pointer">&#10005;</button>
+          style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;min-width:34px;min-height:34px;font-size:14px;cursor:pointer">&#10005;</button>
       </div>`
     )
     .join('');
@@ -1186,17 +1185,17 @@ function showFinanceError(message, periodStr) {
   if (period) period.textContent = periodStr;
   const rows = document.getElementById('fin-pl-rows');
   if (rows)
-    rows.innerHTML = `<div class="pl-row" style="color:var(--red);font-size:13px;line-height:1.5;display:block">Could not read the bookings for this period, so there are no figures to show: ${esc(message)}<br>This is NOT a month with no work - nothing was read at all. Reload the page, and sign in again if it keeps happening.</div>`;
+    rows.innerHTML = `<div class="pl-row" style="color:var(--red-text);font-size:13px;line-height:1.5;display:block">Could not read the bookings for this period, so there are no figures to show: ${esc(message)}<br>This is NOT a month with no work - nothing was read at all. Reload the page, and sign in again if it keeps happening.</div>`;
   const chart = document.getElementById('fin-chart');
   if (chart)
     chart.innerHTML =
-      '<div style="color:var(--red);font-size:13px;margin:auto">No data read - see the message above</div>';
+      '<div style="color:var(--red-text);font-size:13px;margin:auto">No data read - see the message above</div>';
   const txSub = document.getElementById('fin-tx-sub');
   if (txSub) txSub.textContent = 'Could not be read · ' + periodStr;
   const txBody = document.getElementById('fin-tx-body');
   if (txBody)
     txBody.innerHTML =
-      '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:32px;font-size:13px">Could not read the transactions for this period</td></tr>';
+      '<tr><td colspan="7" style="text-align:center;color:var(--red-text);padding:32px;font-size:13px">Could not read the transactions for this period</td></tr>';
   // Nothing to export, and the old figures must not survive as if they were
   // this period's.
   window._finData = null;
@@ -1332,7 +1331,7 @@ async function loadFinance() {
   document.getElementById('fin-pl-period').textContent = periodStr;
   // Never let an unreadable expense table look like a business with no costs.
   const expNote = !_expenses.available
-    ? `<div class="pl-row" style="color:var(--red);font-size:13px;line-height:1.5;display:block">Costs are missing from this P&amp;L: ${esc(_expenses.reason || 'the expenses could not be read')}</div>`
+    ? `<div class="pl-row" style="color:var(--red-text);font-size:13px;line-height:1.5;display:block">Costs are missing from this P&amp;L: ${esc(_expenses.reason || 'the expenses could not be read')}</div>`
     : exp.total === 0
       ? '<div class="pl-row" style="color:var(--mgray);font-size:13px;line-height:1.5;display:block">No expenses loaded for this period. Add them on the Expenses screen - until then this is revenue, not profit.</div>'
       : '';
@@ -1580,7 +1579,7 @@ function exportFinancePDF() {
     tbody tr:nth-child(even){background:var(--surface)}
     tbody td{padding:9px 12px;border-bottom:1px solid var(--border-lt);color:var(--gray)}
     tbody td.bold{font-weight:700;color:#0D1F3C}
-    tbody td.blue{font-weight:700;color:var(--blue)}
+    tbody td.blue{font-weight:700;color:var(--blue-text)}
     .footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
     .footer-left{font-size:11px;color:var(--gray-lt)}
     .print-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer}
@@ -1611,7 +1610,7 @@ function exportFinancePDF() {
     ${
       d.held > 0
         ? `<div class="card" style="border-left:4px solid var(--blue)">
-        <div class="card-h"><div><div class="card-t">Collected, not yet earned</div><div class="card-s">Visit &amp; diagnosis fees already charged on jobs that have not happened yet</div></div><div style="font-size:22px;font-weight:800;color:var(--blue)">$${d.held.toLocaleString('en-AU')}</div></div>
+        <div class="card-h"><div><div class="card-t">Collected, not yet earned</div><div class="card-s">Visit &amp; diagnosis fees already charged on jobs that have not happened yet</div></div><div style="font-size:22px;font-weight:800;color:var(--blue-text)">$${d.held.toLocaleString('en-AU')}</div></div>
         <div style="padding:0 16px 14px;font-size:13px;color:var(--mgray);line-height:1.6">${d.heldCount} booking${d.heldCount === 1 ? '' : 's'} paid for. This is money in the Stripe account, deliberately left out of revenue above - it is not earned until the mechanic rides out.</div>
       </div>`
         : ''
@@ -1748,7 +1747,7 @@ function openBlockModal() {
               )
               .join('')}
           </div>
-          <button data-action="select-all-slots" data-value="true" style="background:none;border:none;color:var(--blue);font-size:13px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0">Select all</button>
+          <button data-action="select-all-slots" data-value="true" style="background:none;border:none;color:var(--blue-text);font-size:13px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0">Select all</button>
           <button data-action="select-all-slots" data-value="false" style="background:none;border:none;color:var(--mgray);font-size:13px;cursor:pointer;font-family:var(--sans);margin-top:6px;padding:0;margin-left:12px">Clear all</button>
         </div>
         <div>
@@ -1757,7 +1756,7 @@ function openBlockModal() {
         </div>
         <div style="display:flex;gap:10px;margin-top:4px">
           <button data-action="save-blocks" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Block selected slots</button>
-          <button data-action="unblock-selected" style="flex:1;padding:12px;background:var(--off);color:var(--red);border:1.5px solid var(--red-edge);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock selected</button>
+          <button data-action="unblock-selected" style="flex:1;padding:12px;background:var(--off);color:var(--red-text);border:1.5px solid var(--red-edge);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Unblock selected</button>
         </div>
         <button data-action="unblock-date" style="background:none;border:none;color:var(--mgray);font-size:12px;cursor:pointer;font-family:var(--sans);text-decoration:underline;padding:2px;text-align:center">Unblock every slot for this date instead</button>
       </div>
@@ -1912,7 +1911,7 @@ async function sendBroadcastPush() {
       data: { session },
     } = await sb.auth.getSession();
     if (!session?.access_token) {
-      res.innerHTML = '<span style="color:var(--red)">Session expired - sign in again.</span>';
+      res.innerHTML = '<span style="color:var(--red-text)">Session expired - sign in again.</span>';
       return;
     }
 
@@ -1950,11 +1949,11 @@ async function sendBroadcastPush() {
       })
     );
 
-    res.innerHTML = `<span style="color:var(--green)">✅ Sent to ${sent} subscriber${sent !== 1 ? 's' : ''}!</span>`;
+    res.innerHTML = `<span style="color:var(--green-text)">✅ Sent to ${sent} subscriber${sent !== 1 ? 's' : ''}!</span>`;
     document.getElementById('bc-title').value = '';
     document.getElementById('bc-body').value = '';
   } catch (e) {
-    res.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
+    res.innerHTML = `<span style="color:var(--red-text)">Error: ${e.message}</span>`;
   }
 }
 
@@ -1987,7 +1986,7 @@ async function loadReferralLeaderboard() {
         <div style="font-size:11px;color:var(--mgray)">Code: ${esc(p.referral_code || '—')} · ${esc(p.membership_plan || 'No plan')}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:15px;font-weight:700;color:var(--blue)">${p.referral_count} referral${p.referral_count !== 1 ? 's' : ''}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--blue-text)">${p.referral_count} referral${p.referral_count !== 1 ? 's' : ''}</div>
         <div style="font-size:11px;color:var(--mgray)">saved $${savings}</div>
       </div>
     </div>`;
@@ -2043,7 +2042,7 @@ async function loadCoupons() {
     console.log('[loadCoupons]', { data, error });
 
     if (error) {
-      grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--red);grid-column:1/-1">❌ ${error.message}<br><small style="color:var(--mgray)">Check that the discount_codes table exists in Supabase and RLS allows select.</small></div>`;
+      grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--red-text);grid-column:1/-1">❌ ${error.message}<br><small style="color:var(--mgray)">Check that the discount_codes table exists in Supabase and RLS allows select.</small></div>`;
       return;
     }
     if (!data?.length) {
@@ -2101,7 +2100,7 @@ async function loadCoupons() {
           <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? 'var(--red-edge)' : 'var(--green-edge)'};border-radius:8px;background:${isActive ? 'var(--red-lt)' : 'var(--green-lt)'};color:${isActive ? 'var(--red)' : 'var(--green)'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             ${isActive ? 'Deactivate' : 'Activate'}
           </button>
-          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid var(--red-edge);border-radius:8px;background:var(--red-lt);color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid var(--red-edge);border-radius:8px;background:var(--red-lt);color:var(--red-text);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -2110,7 +2109,7 @@ async function loadCoupons() {
       .join('');
   } catch (e) {
     console.error('[loadCoupons] exception:', e);
-    grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--red);grid-column:1/-1">❌ Exception: ${escapeHtml(e.message)}</div>`;
+    grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--red-text);grid-column:1/-1">❌ Exception: ${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -2292,7 +2291,7 @@ function checkAdminAuth() {
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
         style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         data-enter="submit-admin-login">
-      <div id="admin-pass-err" style="color:var(--red);font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
+      <div id="admin-pass-err" style="color:var(--red-text);font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
       <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
     </div>`;
   document.body.appendChild(overlay);
@@ -2435,7 +2434,7 @@ async function _startMFAEnrollment() {
       _completeAdminLogin({ access_token: _mfaTempToken, refresh_token: _mfaTempRefresh });
     } else {
       _showLoginCard(
-        '<div style="color:var(--red);padding:20px;font-size:13px">' +
+        '<div style="color:var(--red-text);padding:20px;font-size:13px">' +
           (e.message || 'Setup failed') +
           '</div>'
       );
@@ -2553,7 +2552,7 @@ function _totpInputHTML() {
   <input type="text" id="admin-totp-inp" placeholder="000000" aria-label="6-digit authentication code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:24px;font-weight:700;text-align:center;letter-spacing:10px"
     data-enter="submit-totp-code">
-  <div id="admin-totp-err" style="color:var(--red);font-size:13px;margin-bottom:10px;display:none"></div>
+  <div id="admin-totp-err" style="color:var(--red-text);font-size:13px;margin-bottom:10px;display:none"></div>
   <button data-action="submit-totp-code" style="${_btn}">Verify →</button>`;
 }
 
@@ -2564,7 +2563,7 @@ function _enrollHTML(qrSvg, secret) {
   <input type="text" id="admin-enroll-inp" placeholder="Enter 6-digit code to confirm" aria-label="6-digit code to confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
     style="${_inp}font-size:20px;font-weight:700;text-align:center;letter-spacing:8px"
     data-enter="submit-mfa-setup-code">
-  <div id="admin-enroll-err" style="color:var(--red);font-size:13px;margin-bottom:10px;display:none"></div>
+  <div id="admin-enroll-err" style="color:var(--red-text);font-size:13px;margin-bottom:10px;display:none"></div>
   <button data-action="submit-mfa-setup-code" style="${_btn}">Activate 2FA →</button>`;
 }
 
@@ -2722,7 +2721,7 @@ async function loadDashboard() {
           <td data-label="Time">${timeStr}</td>
           <td data-label="Van"><span class="mech-tag v${vanNum}">Van ${vanNum}</span></td>
           <td data-label="Status"><span style="background:${stBg2[st]};color:${stColors2[st]};padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600">${stLabel2[st] || st}</span></td>
-          <td data-label="Total" style="font-weight:700;color:var(--blue)">${anMoney(anBookingRevenue(b))}</td>
+          <td data-label="Total" style="font-weight:700;color:var(--blue-text)">${anMoney(anBookingRevenue(b))}</td>
         </tr>`;
         })
         .join('');
@@ -2894,11 +2893,11 @@ function renderBookingsTable(data) {
       <td data-label="Status"><span class="status ${stClass[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
       <td data-label="Price"><b>${anMoney(anBookingRevenue(b))}</b></td>
       <td data-label="Actions" style="white-space:nowrap">
-        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
-        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
+        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
+        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
+        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
         ${!isCancelled ? `<button data-bk-action="reschedule" data-id="${b.id}" data-date="${b.scheduled_date || ''}" style="background:var(--amber-lt);color:var(--amber);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Reschedule</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
+        ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
       </td>
     </tr>`;
     })
@@ -3245,8 +3244,8 @@ function renderBookingDetail(b) {
     ${row('Time', esc(b.scheduled_time || '—'))}
     ${row('Address', esc(b.address || '—'))}
     ${row('Van', `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${vanColor(b.van_number)};display:inline-block"></span>Van ${b.van_number || 1}</span>`)}
-    ${row('Phone', b.client_phone ? `<a href="tel:${esc(b.client_phone)}" style="color:var(--blue);text-decoration:none">${esc(b.client_phone)}</a>` : '')}
-    ${row('Email', b.client_email ? `<a href="mailto:${esc(b.client_email)}" style="color:var(--blue);text-decoration:none">${esc(b.client_email)}</a>` : '')}
+    ${row('Phone', b.client_phone ? `<a href="tel:${esc(b.client_phone)}" style="color:var(--blue-text);text-decoration:none">${esc(b.client_phone)}</a>` : '')}
+    ${row('Email', b.client_email ? `<a href="mailto:${esc(b.client_email)}" style="color:var(--blue-text);text-decoration:none">${esc(b.client_email)}</a>` : '')}
     ${row('Callout fee', b.callout_fee !== null && b.callout_fee !== undefined ? '$' + Number(b.callout_fee).toFixed(2) : '')}
     ${row('Discount', b.discount_applied ? '−$' + Number(b.discount_applied).toFixed(2) + (b.discount_code ? ' (' + esc(b.discount_code) + ')' : '') : '')}
     ${row('Total', '<b style="font-size:14px">$' + total.toFixed(2) + '</b>')}
@@ -3256,15 +3255,15 @@ function renderBookingDetail(b) {
   const actions = [];
   if (isPending)
     actions.push(
-      `<button data-action="bkd-confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Confirm</button>`
+      `<button data-action="bkd-confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Confirm</button>`
     );
   if (!isCancelled)
     actions.push(
-      `<button data-action="bkd-chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Chat</button>`
+      `<button data-action="bkd-chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Chat</button>`
     );
   if (b.tracking_token)
     actions.push(
-      `<button data-action="bkd-track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Track link</button>`
+      `<button data-action="bkd-track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Track link</button>`
     );
   if (!isCancelled)
     actions.push(
@@ -3272,7 +3271,7 @@ function renderBookingDetail(b) {
     );
   if (!isCancelled)
     actions.push(
-      `<button data-action="bkd-cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>`
+      `<button data-action="bkd-cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>`
     );
   document.getElementById('bkd-actions').innerHTML = actions.join('');
 }
@@ -5634,7 +5633,7 @@ function renderLTV(all) {
       return `<tr>
       <td data-label="Client"><b>${esc(c.name)}</b></td>
       <td data-label="Jobs">${c.jobs}</td>
-      <td data-label="LTV"><b style="color:var(--green)">${anMoney(c.ltv)}</b></td>
+      <td data-label="LTV"><b style="color:var(--green-text)">${anMoney(c.ltv)}</b></td>
       <td data-label="Last service">${lastStr} <span style="color:var(--mgray);font-size:11px">(${ds > 9000 ? 'never' : ds <= 0 ? 'today' : ds + 'd ago'})</span></td>
       <td data-label="Status"><span class="status ${isChurned ? 'cancelled' : 'confirmed'}">${isChurned ? 'Churned' : 'Active'}</span></td>
     </tr>`;
@@ -5732,7 +5731,7 @@ async function renderMechStats() {
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🚐 Van ${v}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
           <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:${colors[v]}">${totalJobs}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Jobs done</div></div>
-          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">${anMoney(totalRev)}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Revenue</div></div>
+          <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green-text)">${anMoney(totalRev)}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Revenue</div></div>
           <div style="background:var(--white);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--gold)">${avgRating}${avgRating !== '—' ? '★' : ''}</div><div style="font-size:11px;color:var(--mgray);margin-top:2px;text-transform:uppercase">Avg rating</div></div>
         </div>
         <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">Utilisation: ${util}% · ${totalJobs}/${maxSlots} slots</div>
@@ -5849,7 +5848,7 @@ async function loadClients() {
   // Without this, a permissions or network failure rendered the friendly
   // "No clients yet" message - indistinguishable from genuinely having none.
   if (error) {
-    grid.innerHTML = `<div style="grid-column:1/-1;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red);padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red-text);padding:14px 16px;border-radius:10px;font-size:13px;font-weight:600">❌ Could not load clients: ${esc(error.message)}</div>`;
     return;
   }
   if (!data || data.length === 0) {
@@ -6045,7 +6044,7 @@ function renderVanZones() {
       </div>
       <div style="padding:16px 20px">
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--blue-lt);color:var(--blue);border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
+          ${van.suburbs.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--blue-lt);color:var(--blue-text);border:1px solid rgba(24,72,200,0.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500">${s}<span data-action="remove-suburb" data-id="${van.id}" data-suburb="${esc(s)}" style="cursor:pointer;font-size:15px;opacity:.6;line-height:1">×</span></span>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
           <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" data-enter="add-suburb" data-id="${van.id}"
@@ -6229,7 +6228,7 @@ function renderOrphanResults(box, data) {
         : '';
       const who = o.email
         ? esc(o.email)
-        : '<span style="color:var(--red)">no email on the payment</span>';
+        : '<span style="color:var(--red-text)">no email on the payment</span>';
       return `<a href="${esc(o.stripeUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:12px;text-decoration:none;background:var(--white);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:12px;padding:14px 16px;cursor:pointer">
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:700;color:var(--navy)">$${o.amount.toFixed(2)} ${esc(o.currency)}${flag}</div>
@@ -6289,7 +6288,7 @@ async function loadClaims() {
         )
         .join('');
       const invoice = c.invoice_url
-        ? `<a href="${esc(c.invoice_url)}" target="_blank" rel="noopener" style="font-size:13px;color:var(--blue);text-decoration:underline">View invoice screenshot</a>`
+        ? `<a href="${esc(c.invoice_url)}" target="_blank" rel="noopener" style="font-size:13px;color:var(--blue-text);text-decoration:underline">View invoice screenshot</a>`
         : '<span style="font-size:13px;color:var(--mgray)">No invoice attached</span>';
       return `
     <div style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${st.color};border-radius:12px;padding:14px 16px">
@@ -6386,7 +6385,7 @@ async function loadContacts() {
       </div>
       <div style="display:flex;gap:8px">
         <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
-        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
+        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
       </div>
     </div>`
     )
@@ -6479,7 +6478,7 @@ async function loadInventory() {
 
   const { data, error } = await sb.from('parts_inventory').select('*').order('name');
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red)">Error: ${escapeHtml(error.message)}<br><small>Run the SQL migration first (see console)</small></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red-text)">Error: ${escapeHtml(error.message)}<br><small>Run the SQL migration first (see console)</small></td></tr>`;
     console.log(
       `SQL: CREATE TABLE parts_inventory (id uuid PRIMARY KEY, name text, category text, stock integer, min_stock integer, cost_price numeric, created_at timestamptz)`
     );
@@ -6542,14 +6541,14 @@ function renderInventory() {
       <td data-label="Stock" style="font-weight:700;font-size:15px;color:${isLow ? 'var(--red)' : 'var(--navy)'}">${p.stock}</td>
       <td data-label="Min" style="color:var(--mgray)">${p.min_stock}</td>
       <td data-label="Cost">$${parseFloat(p.cost_price || 0).toFixed(2)}</td>
-      <td data-label="Client price" style="font-weight:700;color:var(--blue)">${p.sell_price !== null && p.sell_price !== undefined ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
+      <td data-label="Client price" style="font-weight:700;color:var(--blue-text)">${p.sell_price !== null && p.sell_price !== undefined ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
       <td data-label="Status"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusCl}">${statusTxt}</span></td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">−</button>
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">+</button>
           <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-part" data-id="${p.id}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="delete-part" data-id="${p.id}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -6678,7 +6677,7 @@ async function loadServices() {
 
   const { data, error } = await sb.from('services').select('*').order('name');
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--red)">Error: ${escapeHtml(error.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--red-text)">Error: ${escapeHtml(error.message)}</td></tr>`;
     return;
   }
 
@@ -6763,12 +6762,12 @@ function renderServices() {
     return `<tr>
       <td data-label="Service" style="font-weight:600;color:var(--navy)">${escapeHtml(s.name)}</td>
       <td data-label="Category" style="color:var(--mgray)">${escapeHtml(s.category || '')}</td>
-      <td data-label="Price" style="font-weight:700;font-size:15px;color:var(--blue)">$${parseFloat(s.price || 0).toFixed(0)}</td>
+      <td data-label="Price" style="font-weight:700;font-size:15px;color:var(--blue-text)">$${parseFloat(s.price || 0).toFixed(0)}</td>
       <td data-label="Duration" style="color:var(--mgray)">${durationLabel(s)}</td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
           <button data-action="open-service-modal" data-id="${s.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-service" data-id="${s.id}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="delete-service" data-id="${s.id}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
@@ -7044,7 +7043,7 @@ async function loadCalendar() {
         <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:4px;font-size:13px;font-weight:${isToday ? '700' : '400'};background:${isToday ? 'var(--blue)' : 'transparent'};color:${isToday ? '#fff' : isCurMonth ? 'var(--navy)' : 'var(--mgray)'}">${cur.getDate()}</div>
         ${
           dayBlocks.length
-            ? `<div class="cal-block-badge" tabindex="0" style="font-size:11px;font-weight:600;background:var(--red-lt);color:var(--red);border-radius:20px;padding:1px 7px;display:inline-block;margin-bottom:3px;white-space:nowrap">🚫 ${dayBlocks.length} blocked
+            ? `<div class="cal-block-badge" tabindex="0" style="font-size:11px;font-weight:600;background:var(--red-lt);color:var(--red-text);border-radius:20px;padding:1px 7px;display:inline-block;margin-bottom:3px;white-space:nowrap">🚫 ${dayBlocks.length} blocked
                 <div class="cal-block-tooltip">
                   ${dayBlocks
                     .map(
@@ -7188,7 +7187,7 @@ async function loadCalendar() {
             (
               b
             ) => `<div style="background:var(--red-lt);border-left:3px solid var(--red);border-radius:6px;padding:6px 8px">
-              <div style="font-size:11px;font-weight:700;color:var(--red)">🚫 ${esc(b.time_slot)} · ${b.van_number ? 'Van ' + b.van_number : 'All vans'}</div>
+              <div style="font-size:11px;font-weight:700;color:var(--red-text)">🚫 ${esc(b.time_slot)} · ${b.van_number ? 'Van ' + b.van_number : 'All vans'}</div>
               ${b.reason ? `<div style="font-size:11px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.reason)}</div>` : ''}
             </div>`
           )
@@ -7586,11 +7585,11 @@ async function loadMemberships() {
   );
   const statusBadge = {
     active:
-      '<span style="background:var(--green-lt);color:var(--green);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
+      '<span style="background:var(--green-lt);color:var(--green-text);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Active</span>',
     past_due:
       '<span style="background:var(--amber-lt);color:var(--amber);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Past Due</span>',
     cancelled:
-      '<span style="background:var(--red-lt);color:var(--red);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
+      '<span style="background:var(--red-lt);color:var(--red-text);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Cancelled</span>',
     paused:
       '<span style="background:var(--border-lt);color:var(--gray);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">Paused</span>',
   };
@@ -7712,7 +7711,7 @@ async function loadNotifNumbers() {
         <button data-action="edit-notif-number" data-id="${c.id}"
           style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
         <button data-action="delete-notif-number" data-id="${c.id}"
-          style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
+          style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
       </div>
     </div>`;
     })
@@ -7911,11 +7910,11 @@ async function loadMechanicProfiles() {
       const initials = ((c.first_name || '?')[0] + (c.last_name || '')[0]).toUpperCase();
       const avatarHTML = c.photo_url
         ? `<img src="${esc(c.photo_url)}" alt="${esc(name)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
-        : `<div style="width:80px;height:80px;border-radius:50%;background:var(--blue-lt);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${esc(initials)}</div>`;
+        : `<div style="width:80px;height:80px;border-radius:50%;background:var(--blue-lt);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue-text)">${esc(initials)}</div>`;
       const roleTag =
         c.role === 'manager'
           ? '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--amber-lt);color:var(--amber-ink)">⭐ Manager</span>'
-          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-lt);color:var(--green)">🔧 Mechanic</span>';
+          : '<span style="position:absolute;top:10px;right:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-lt);color:var(--green-text)">🔧 Mechanic</span>';
 
       return `
     <div class="card" style="padding:0;overflow:hidden;width:300px;position:relative">
@@ -8355,7 +8354,7 @@ setTimeout(() => {
     'display:none;position:fixed;top:68px;right:16px;width:360px;max-height:480px;overflow-y:auto;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:200';
   panel.innerHTML = `<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white)">
     <div style="font-size:15px;font-weight:700;color:var(--navy)">🔔 Notifications</div>
-    <button data-action="mark-all-read" style="font-size:13px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Mark all read</button>
+    <button data-action="mark-all-read" style="font-size:13px;color:var(--blue-text);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Mark all read</button>
   </div>
   <div id="notif-list" style="padding:8px"><div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">Loading...</div></div>`;
   document.body.appendChild(panel);

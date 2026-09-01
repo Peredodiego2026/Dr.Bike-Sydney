@@ -61,7 +61,12 @@ if (!/:focus-visible\s*\{[^}]*outline:/.test(vars)) {
 if (!/--focus-ring:/.test(vars)) {
   problems.push('css/variables.css: --focus-ring is not defined.');
 }
-const darkBlock = vars.slice(vars.indexOf("[data-theme='dark']"));
+// Se corta por la REGLA (el selector seguido de su llave), no por la cadena
+// suelta: el 2026-09-01 un comentario dentro de :root menciono el selector y
+// esto empezo a cortar ahi, devolviendo los valores del tema claro como si
+// fueran los del oscuro. Un guard que se rompe con un comentario no es un
+// guard.
+const darkBlock = /\[data-theme='dark'\]\s*\{[\s\S]*/.exec(vars)?.[0] ?? '';
 if (!/--focus-ring:/.test(darkBlock)) {
   problems.push("css/variables.css: --focus-ring has no [data-theme='dark'] value.");
 }
@@ -100,22 +105,17 @@ for (const sheet of SHEETS) {
   }
 }
 
-
-// Slice ONE language block, not "from here to the end of the file".
+// One language, one file - since the dictionaries were split out of js/i18n.js
+// on 2026-09-01 so a visitor only downloads the language they actually read.
 //
-// The first version used dict.slice(indexOf(`  ${lang}: {`)) - which, for es,
-// runs all the way past the zh block. A string translated ONLY into Chinese
-// therefore satisfied the Spanish check too, and the guard passed on a real
-// missing translation. Found by deleting one on purpose; it would never have
-// shown up otherwise.
-function langBlockOf(dict, lang) {
-  const start = dict.indexOf(`  ${lang}: {`);
-  if (start === -1) return '';
-  const ends = ['en', 'es', 'zh']
-    .filter((l) => l !== lang)
-    .map((l) => dict.indexOf(`  ${l}: {`, start + 1))
-    .filter((i) => i > start);
-  return dict.slice(start, ends.length ? Math.min(...ends) : undefined);
+// That split retired a bug rather than just moving code. This used to slice
+// js/i18n.js from `  es: {` to the end of the file, which ran straight past the
+// `zh` block - so a string translated ONLY into Chinese satisfied the Spanish
+// check too, and the guard passed on a real missing translation (PENDIENTES
+// 66, found by deleting one on purpose). With a file per language there is no
+// slicing left, and so no way to get it wrong.
+function langBlockOf(lang) {
+  return read(`js/i18n-${lang}.js`);
 }
 // ── 3. A screen reader is told when something happens ───────────────────────
 // Audit point 15: the app had two aria-live regions, both loading spinners. An
@@ -147,7 +147,9 @@ if (!components.includes("toast.setAttribute('aria-hidden', 'true')")) {
 
 // The map is a canvas of tiles: hidden from the reader AND replaced by text.
 if (!app.includes('id="tracking-map"') || !app.includes('aria-hidden="true" role="presentation"')) {
-  problems.push('js/app.js: the tracking map is not aria-hidden - a reader finds an unlabelled blank.');
+  problems.push(
+    'js/app.js: the tracking map is not aria-hidden - a reader finds an unlabelled blank.'
+  );
 }
 if (!app.includes('id="map-alt"')) {
   problems.push('js/app.js: the map has no #map-alt text equivalent.');
@@ -170,24 +172,21 @@ const SPOKEN = [
   'Mechanic on the way',
   'Live map. Waiting for the mechanic position.',
 ];
-const dict = read('js/i18n.js');
 for (const lang of ['es', 'zh']) {
-  const langBlock = langBlockOf(dict, lang);
+  const langBlock = langBlockOf(lang);
   for (const s of SPOKEN) {
     if (!langBlock.includes(`'${s}'`)) {
       problems.push(
-        `js/i18n.js: "${s}" has no ${lang} translation (spoken string - i18n-check cannot see it).`
+        `js/i18n-${lang}.js: "${s}" has no translation (spoken string - i18n-check cannot see it).`
       );
     }
   }
 }
 
 // ── 4. The skip link's own words exist in all three languages ───────────────
-const i18n = read('js/i18n.js');
 for (const lang of ['es', 'zh']) {
-  const block = langBlockOf(i18n, lang);
-  if (!block.includes("'Skip to content'")) {
-    problems.push(`js/i18n.js: "Skip to content" has no ${lang} translation.`);
+  if (!langBlockOf(lang).includes("'Skip to content'")) {
+    problems.push(`js/i18n-${lang}.js: "Skip to content" has no translation.`);
   }
 }
 

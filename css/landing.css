@@ -67,13 +67,13 @@ img {
   color: var(--navy);
 }
 .nav-logo .wm-blue {
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .nav-logo .wm-tag {
   display: block;
   font-size: 11px;
   font-weight: 400;
-  color: var(--blue);
+  color: var(--blue-text);
   letter-spacing: 0;
   margin-top: -2px;
 }
@@ -99,7 +99,7 @@ img {
 }
 .nav-links a:hover,
 .nav-links button:hover {
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .nav-lang-btn {
   font-family: inherit;
@@ -120,7 +120,7 @@ img {
   background: var(--gray-light);
 }
 .nav-lang-btn.active {
-  color: var(--blue);
+  color: var(--blue-text);
   background: var(--blue-light);
 }
 .nav-book {
@@ -154,7 +154,7 @@ img {
 }
 .hero-badge {
   background: var(--blue-light);
-  color: var(--blue);
+  color: var(--blue-text);
   padding: 4px 14px;
   border-radius: var(--radius-full);
   font-size: 13px;
@@ -325,7 +325,7 @@ img {
 }
 .section-badge {
   background: var(--blue-light);
-  color: var(--blue);
+  color: var(--blue-text);
   padding: 4px 14px;
   border-radius: var(--radius-full);
   font-size: 13px;
@@ -348,7 +348,7 @@ img {
   display: inline-block;
   margin-top: 48px;
   border: 2px solid var(--blue);
-  color: var(--blue);
+  color: var(--blue-text);
   background: transparent;
   padding: 12px 32px;
   border-radius: var(--radius);
@@ -413,7 +413,7 @@ img {
 .stat-mini-n {
   font-size: 22px;
   font-weight: 800;
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .stat-mini-l {
   font-size: 11px;
@@ -480,7 +480,7 @@ section.visible {
   font-family: inherit;
 }
 .faq-q:hover {
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .faq-icon {
   transition: transform 300ms ease;
@@ -562,7 +562,7 @@ section.visible {
 }
 .service-option .so-price {
   font-weight: 800;
-  color: var(--blue);
+  color: var(--blue-text);
   font-size: 16px;
 }
 .service-option .so-desc {
@@ -643,7 +643,7 @@ section.visible {
 }
 .summary-total .st-amount {
   font-weight: 800;
-  color: var(--blue);
+  color: var(--blue-text);
   font-size: 24px;
 }
 /* ── All Services section ─────────────────────────────────────────────────── */
@@ -707,7 +707,7 @@ section.visible {
 .svc-price {
   font-weight: 800;
   font-size: 18px;
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .svc-desc {
   font-size: 13px;
@@ -847,7 +847,7 @@ html.drbike-wizard-open #faqbot-win {
   border-color: var(--gray-lt);
 }
 .nav-lang-toggle[aria-expanded='true'] {
-  color: var(--blue);
+  color: var(--blue-text);
   border-color: var(--blue);
   background: var(--blue-lt);
 }
@@ -895,7 +895,7 @@ html.drbike-wizard-open #faqbot-win {
   color: var(--navy);
 }
 .nav-lang-option[aria-selected='true'] {
-  color: var(--blue);
+  color: var(--blue-text);
   background: var(--blue-lt);
 }
 .nav-lang-check {

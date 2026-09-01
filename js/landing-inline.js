@@ -139,7 +139,7 @@ function lpDateLocale() {
       .map((m, i) => {
         const avatarHTML = m.photo_url
           ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
-          : `<div style="width:76px;height:76px;border-radius:50%;background:var(--blue-lt);border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue)">${mechInitials(m.name)}</div>`;
+          : `<div style="width:76px;height:76px;border-radius:50%;background:var(--blue-lt);border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue-text)">${mechInitials(m.name)}</div>`;
         const roundedRating = m.rating ? Math.round(m.rating) : 0;
         const stars = m.rating ? '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating) : '';
         return `
@@ -226,7 +226,7 @@ function lpDateLocale() {
     const body = document.getElementById('mech-detail-body');
     const avatarHTML = m.photo_url
       ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
-      : `<div style="width:96px;height:96px;border-radius:50%;background:var(--blue-lt);border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--blue)">${mechInitials(m.name)}</div>`;
+      : `<div style="width:96px;height:96px;border-radius:50%;background:var(--blue-lt);border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--blue-text)">${mechInitials(m.name)}</div>`;
     body.innerHTML = `
       <div style="height:110px;background:var(--blue-lt);overflow:hidden"><img src="images/mechanic-working.webp" style="width:100%;height:100%;object-fit:cover" alt=""></div>
       <div style="display:flex;justify-content:center;margin-top:-48px">${avatarHTML}</div>
@@ -707,7 +707,7 @@ function acctWhen(dateStr, timeStr) {
 function acctActionButtons(id, date, time) {
   return '<div style="display:flex;gap:6px">'
     + '<button class="acct-resched-btn" data-id="' + esc(id) + '" data-date="' + esc(date||'') + '" data-time="' + esc(time||'') + '" style="flex:1;padding:7px;border:1px solid var(--border);border-radius:6px;background:var(--white);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;color:var(--navy)">Reschedule</button>'
-    + '<button class="acct-cancel-btn" data-id="' + esc(id) + '" style="flex:1;padding:7px;border:1px solid var(--red-lt);border-radius:6px;background:var(--white);color:var(--red);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Cancel</button>'
+    + '<button class="acct-cancel-btn" data-id="' + esc(id) + '" style="flex:1;padding:7px;border:1px solid var(--red-lt);border-radius:6px;background:var(--white);color:var(--red-text);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Cancel</button>'
     + '</div>';
 }
 
@@ -771,7 +771,7 @@ function acctMembershipButtonsHtml(isPaused) {
 // the panel, this navigates away from it.
 function profileLinkHtml() {
   return (
-    '<button class="account-profile-btn" style="width:100%;min-height:40px;padding:10px;margin-bottom:8px;border:1.5px solid var(--blue-edge);border-radius:8px;background:var(--white);color:var(--blue-dark);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">' +
+    '<button class="account-profile-btn" style="width:100%;min-height:40px;padding:10px;margin-bottom:8px;border:1.5px solid var(--blue-edge);border-radius:8px;background:var(--white);color:var(--blue-dark-text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">' +
     '<span aria-hidden="true">&#9881;</span>' +
     '<span>Profile &amp; settings</span>' +
     '</button>'
@@ -987,7 +987,7 @@ function openAccountPanel(session) {
             fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ role:'client-cancel', access_token:ss.access_token, booking_id:id, client_id:ss.user.id }) })
               .then(function(r) {
                 if (r.ok) { openAccountPanel(ss); return; }
-                if (box) box.innerHTML = '<div style="font-size:12px;color:var(--red);margin-bottom:6px">Could not cancel. Please call us.</div>' + acctActionButtons(id, box.dataset.date, box.dataset.time);
+                if (box) box.innerHTML = '<div style="font-size:12px;color:var(--red-text);margin-bottom:6px">Could not cancel. Please call us.</div>' + acctActionButtons(id, box.dataset.date, box.dataset.time);
               });
           });
           return;
@@ -1006,7 +1006,7 @@ function openAccountPanel(session) {
             + '<div style="margin-bottom:8px">'
             + '<label for="acct-resched-time" style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px">New time</label>'
             + '<select id="acct-resched-time" disabled style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box"><option>Loading available times...</option></select>'
-            + '<div id="acct-resched-err" style="display:none;font-size:12px;color:var(--red);margin-top:4px"></div>'
+            + '<div id="acct-resched-err" style="display:none;font-size:12px;color:var(--red-text);margin-top:4px"></div>'
             + '</div>'
             + '<div style="display:flex;gap:6px">'
             + '<button class="acct-resched-save-btn" data-id="' + esc(id) + '" style="flex:1;padding:7px;border:none;border-radius:6px;background:var(--blue);color:var(--white);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">Save</button>'
@@ -1362,7 +1362,7 @@ function feeCheckInputHtml() {
     '<div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px">What\'s your suburb?</div>'
     + '<div style="font-size:13px;color:var(--gray);margin-bottom:18px">We\'ll check your visit & diagnosis fee - takes 2 seconds.</div>'
     + '<input type="text" class="fee-check-input" placeholder="e.g. Bondi, Parramatta, Cronulla..." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;color:var(--navy)">'
-    + '<div class="fee-check-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px"></div>'
+    + '<div class="fee-check-err" style="display:none;color:var(--red-text);font-size:13px;margin-top:8px"></div>'
     + '<button class="fee-check-submit" type="button" style="width:100%;margin-top:16px;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Check My Fee</button>'
   );
 }
@@ -1388,7 +1388,7 @@ function feeCheckResultHtml(zoneName, fee) {
   return feeCheckCardHtml(
     '<div style="text-align:center">'
     + '<div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">' + esc(zoneName) + '</div>'
-    + '<div class="fee-check-amount" style="font-size:48px;font-weight:900;color:var(--blue);line-height:1;font-variant-numeric:tabular-nums" data-target="' + Number(fee) + '">$0</div>'
+    + '<div class="fee-check-amount" style="font-size:48px;font-weight:900;color:var(--blue-text);line-height:1;font-variant-numeric:tabular-nums" data-target="' + Number(fee) + '">$0</div>'
     + '<div style="font-size:13px;color:var(--gray);margin-top:12px;max-width:280px;margin-left:auto;margin-right:auto">Calculated from the distance to our base on the Northern Beaches - the same fee you\'ll see when you book.</div>'
     + '<button class="fee-check-continue" type="button" style="width:100%;margin-top:22px;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Continue to Booking &rarr;</button>'
     + '<button class="fee-check-again" type="button" style="width:100%;margin-top:6px;padding:10px;background:transparent;color:var(--gray);border:none;font-size:13px;cursor:pointer;font-family:inherit">Check another suburb</button>'
@@ -1567,8 +1567,6 @@ document.addEventListener('DOMContentLoaded', function() {
     el.addEventListener('focus', function() { this.style.borderColor = 'var(--blue)'; });
     el.addEventListener('blur', function() { this.style.borderColor = 'var(--border)'; });
   });
-  wire('giftcard-modal-close-btn', function() { closeGiftCardModal(); });
-  wire('gift-submit', function() { submitGiftCard(); });
   wire('newsletter-subscribe-btn', function() { subscribeNewsletter(); });
   wire('auth-modal-close-btn', function() { closeAuthModal(); });
   wire('tab-signin', function() { showAuthTab('signin'); });
@@ -1583,12 +1581,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (membershipModal) {
     membershipModal.addEventListener('click', function(e) {
       if (e.target === membershipModal) closeMembershipModal();
-    });
-  }
-  const giftcardModal = byId('giftcard-modal');
-  if (giftcardModal) {
-    giftcardModal.addEventListener('click', function(e) {
-      if (e.target === giftcardModal) closeGiftCardModal();
     });
   }
 
@@ -1848,7 +1840,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '</div>',
           '</div>',
         '</div>',
-        '<div id="rv-err" style="display:none;font-size:13px;color:var(--red);padding:8px 10px;background:var(--red-lt);border-radius:8px;text-align:center"></div>',
+        '<div id="rv-err" style="display:none;font-size:13px;color:var(--red-text);padding:8px 10px;background:var(--red-lt);border-radius:8px;text-align:center"></div>',
         '<button id="rv-submit" style="width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Submit review</button>',
         '<button id="rv-skip" style="width:100%;padding:8px;background:none;border:none;font-size:13px;color:var(--gray-lt);cursor:pointer;font-family:inherit">Maybe later</button>',
       '</div>',
@@ -1962,7 +1954,7 @@ function openLandingChat(bookingId) {
     + '<div style="width:100%;max-width:420px;height:min(620px,90vh);background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.25);display:flex;flex-direction:column;overflow:hidden">'
     +   '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0">'
     +     '<div style="width:38px;height:38px;border-radius:50%;background:var(--blue-dark);display:flex;align-items:center;justify-content:center;font-size:18px">&#128295;</div>'
-    +     '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div><div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Online now</div></div>'
+    +     '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div><div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--green-text)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Online now</div></div>'
     +     '<button id="landing-chat-close" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--gray-lt);width:32px;height:32px;border-radius:50%">&#215;</button>'
     +   '</div>'
     +   '<div id="landing-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)"></div>'

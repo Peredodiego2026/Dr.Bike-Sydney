@@ -9,6 +9,29 @@
   /* Focus ring. Must clear 3:1 against whatever sits next to it
      (WCAG 1.4.11). #2563eb on white is 5.17:1. */
   --focus-ring: #2563eb;
+
+  /* Texto vs relleno: dos papeles, dos tokens.
+
+     Un acento no puede hacer los dos en tema oscuro. Para LEERSE como texto
+     sobre una tarjeta oscura tiene que ser claro; para aguantar texto blanco
+     ENCIMA tiene que ser oscuro. Con un solo valor quedaba en el medio y
+     fallaba en los dos a la vez: medido el 2026-08-30, --blue daba 3.30:1
+     como texto y 3.68:1 con blanco encima, cuando el minimo AA es 4.5:1.
+
+     En tema CLARO no hay conflicto - sobre blanco el mismo valor sirve para
+     las dos cosas - asi que aca son el mismo color y el tema claro no cambia
+     nada. La division vive entera en el bloque de tema oscuro de abajo.
+
+     El nombre del selector NO se escribe aca a proposito: media docena de
+     scripts cortan este archivo buscando esa cadena, y una mencion en un
+     comentario los hace cortar en el lugar equivocado - los valores nuevos
+     terminaron en :root la primera vez que se escribio esta misma nota. */
+  --blue-text: var(--blue);
+  --blue-dark-text: var(--blue-dark);
+  --green-text: var(--green);
+  --red-text: var(--red);
+  --purple-text: var(--purple);
+  --cyan-text: var(--cyan);
   --green: #15803d;
   --green-lt: #f0fdf4;
   --amber: #b45309;
@@ -58,7 +81,7 @@
   --amber-edge: #fcd34d; /* the edge of an attention box   */
   --on-amber: #ffffff; /* ink ON an amber fill - see the dark block */
   --slate: #64748b; /* between --gray and --gray-lt   */
-  --cyan: #0891b2; /* avatars                        */
+  --cyan: #07819e; /* oscurecido: el blanco encima daba 3.68:1, ahora 4.52 */ /* avatars                        */
 
   /* ── Shorthand aliases (mechanic.css / admin.css compat) ───────────────── */
   --off: #f8fafc; /* = --surface   */
@@ -198,7 +221,7 @@
   --navy: #eef2f7;
   --gray: #9fb0c6;
   --mgray: #9fb0c6;
-  --gray-lt: #8092ab;
+  --gray-lt: #8f9fb5;
   --slate: #93a3b8;
   --navy2: #24354f;
 
@@ -211,13 +234,26 @@
      background under white text, and coloured text on the dark card - so they
      sit mid-range rather than at either extreme. --blue-dark was the worst
      offender in light values: #1e40af on navy is 2:1, invisible. */
-  --blue: #3b82f6;
-  --blue-dark: #4285f0;
-  --blue-deep: #5b9bff;
+  --blue: #3472d8;
+  /* La otra mitad de cada acento: el valor que se LEE.
+
+     Los rellenos de arriba se oscurecieron para que el texto blanco encima
+     llegue a 4.5:1. Estos se aclararon para llegar a 4.5:1 sobre la tarjeta,
+     el panel y la pagina. Cada numero salio de la formula WCAG buscando el
+     valor MAS CERCANO al original que cumple - no de elegir a ojo un color
+     que pareciera claro. */
+  --blue-text: #669ef8;
+  --blue-dark-text: #6a9ff3;
+  --green-text: #3eb369;
+  --red-text: #f47a7a;
+  --purple-text: #ac8bf9;
+  --cyan-text: #4cabbc;
+  --blue-dark: #3a75d3;
+  --blue-deep: #609eff;
   --blue-soft: #93c5fd;
   --blue-pale: #bfdbfe;
   --blue2: #1d4ed8;
-  --green: #16a34a;
+  --green: #12873d;
   --green-bright: #4ade80;
   --green-ink: #6ee7b7;
   --amber: #fbbf24;
@@ -226,10 +262,10 @@
   --on-amber: #1c1608;
   --gold: #fbbf24;
   --orange: #fbbf24;
-  --red: #ef4444;
-  --red-bright: #f87171;
-  --purple: #9064f7;
-  --cyan: #0d8ea5;
+  --red: #d73d3d;
+  --red-bright: #f87575;
+  --purple: #845ce3;
+  --cyan: #0c8196;
   --wa: #25d366;
 
   /* Tints: pale panel fills. In light these are near-white washes; the same

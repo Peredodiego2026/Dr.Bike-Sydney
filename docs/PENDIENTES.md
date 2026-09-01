@@ -8665,3 +8665,548 @@ reportar la equivocada le costaria las 2 resenas.
 
 Aparte: su categoria en Google dice "Taller mecanico" (Mechanic), que en
 Australia se lee como taller de **autos**. Deberia ser "Bicycle repair shop".
+
+## 70. El punto 10 apuntaba al lugar equivocado (01-sep-2026)
+
+La auditoria decia: *"js/app.js pesa 295 KB... el cliente se baja el asistente
+entero, el mapa, Stripe y el chat antes de ver un precio"*.
+
+**Medido contra produccion antes de tocar nada, tres de esas cuatro cosas eran
+falsas:**
+
+| Afirmacion | Realidad |
+|---|---|
+| app.js = 295 KB | **78 KB en la red** - Vercel comprime |
+| "se baja Stripe" | Se carga en el pago (`js/stripe.js:25`) |
+| "se baja el mapa" | Se carga al abrir el seguimiento |
+
+Alguien miro el tamano del archivo en disco, no lo que viaja. Vale como
+recordatorio: **el peso de una pagina se mide con la red, no con `ls`.**
+
+### Lo que la auditoria no vio
+
+`js/i18n.js` viajaba en **64 KB** - casi tanto como toda la app - y llevaba
+**los tres idiomas a todos los visitantes**:
+
+- espanol: 1157 claves
+- chino: 1157 claves
+- ingles: **ninguna** (es el idioma fuente; las claves SON el ingles)
+
+Un cliente leyendo la app en ingles se bajaba **164 KB de espanol y chino que
+no iba a usar nunca**. Y `translateValue()` ni consulta el diccionario cuando el
+idioma es ingles: devuelve el texto tal cual. O sea que para la mayoria de los
+visitantes de Sidney ese archivo se descargaba **para no usarse jamas**.
+
+### El resultado
+
+```
+ANTES                        64.2 KB  a todos
+AHORA  visitante en ingles    3.3 KB  (ahorra 60.9 KB)
+       visitante en espanol  35.8 KB  (ahorra 28.3 KB)
+       visitante en chino    34.3 KB  (ahorra 29.9 KB)
+```
+
+Para el cliente tipico - en la calle, con datos moviles - eso es **casi la mitad
+de todo el JavaScript de la app**, y es mas de lo que se puede sacar de
+`js/app.js` sin meter un empaquetador que este proyecto no tiene.
+
+### El requisito que mandaba sobre el ahorro
+
+Diego, al pedirlo: *"debemos asegurarnos de que la gente, cuando entre a la
+aplicacion, lo vea en su lenguaje - que espanol, todo en espanol; que ingles,
+todo en ingles; que chino, todo en chino"*. El ahorro era secundario.
+
+Por eso el diccionario se **espera** antes de la primera pantalla, en las tres
+superficies del cliente (`js/app.js` antes de `router.init()`,
+`js/landing-modules.js` y `track.html`). Sin eso un cliente en espanol veria la
+primera vista en ingles y la veria cambiar un instante despues - **peor que
+tardar 40ms mas**, porque el parpadeo se nota y la demora no.
+
+Y `setLang()` cambia el idioma **recien cuando el diccionario esta en la mano**.
+Si `currentLang` se moviera primero, entre ese momento y la llegada del archivo
+cada `translateValue()` devolveria ingles - y el evento `langchange`, que es lo
+que repinta, caeria justo en esa ventana.
+
+### Verificado clave por clave, no por conteo
+
+Se comparo cada diccionario nuevo contra el original de `origin/main`:
+**1157 claves y 1157 valores identicos** en los dos idiomas. Un conteo igual no
+prueba nada - dos diccionarios pueden tener 1157 claves cada uno y no ser el
+mismo.
+
+Y los guards se verificaron **rompiendolos a proposito**: sacar el `await` de la
+SPA hace fallar 2 tests; mover `currentLang` antes del `ensureLang` hace fallar
+el que vigila el orden.
+
+### Un bug de clase entera que desaparecio
+
+Media docena de tests y dos scripts recortaban `js/i18n.js` entre `  es: {` y
+`  zh: {`. Ese recorte era la causa de PENDIENTES 66: recortar hasta el final
+del archivo hacia que el bloque `es` contuviera el `zh`, y **una cadena
+traducida solo al chino satisfacia tambien la afirmacion del espanol**.
+
+Con un archivo por idioma **no hay nada que recortar**. El aislamiento paso de
+accidental a estructural. `tests/helpers/i18n-source.js` existe para que ningun
+test vuelva a inventar el recorte.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador** (prohibido en esta sesion). Que las tres pantallas
+se vean en el idioma correcto lo tiene que mirar Diego: entrar en ingles, en
+espanol y en chino, y cambiar de idioma con el selector estando en la reserva.
+Lo verificado por codigo es que el diccionario esta cargado antes de pintar y
+que no falta ni una traduccion.
+
+**El `?v=` sigue prohibido** para los tres archivos, y hay un test que lo vigila.
+`sw.js` subio a v108/v75, que es lo unico que entrega la version nueva a un
+navegador que ya entro.
+
+17 tests nuevos. 1127/1127.
+
+## 71. El modo oscuro: los dos papeles, separados de verdad (01-sep-2026)
+
+Punto 14. La auditoria decia que el check exige 3:1 cuando el minimo AA para
+texto normal es 4.5:1, y que *"los acentos estan calibrados a 3:1 porque cumplen
+doble funcion"*.
+
+**Al medirlo, el diagnostico se quedaba corto.** Los seis acentos duales no
+estaban calibrados a 3:1 para preservar un papel: **fallaban en los dos a la
+vez.**
+
+```
+            como texto   con blanco encima
+--blue        3.30            3.68
+--green       3.68            3.30
+--red         3.22            3.76
+--purple      3.09            3.92
+--cyan        3.14            3.87
+--blue-dark   3.38            3.59
+```
+
+Estaban en el medio, mal para las dos cosas. La mitad del problema -el texto
+blanco de los botones a 3.30:1- **la auditoria ni la mencionaba**, y es la mas
+visible.
+
+### Por que no se arregla subiendo el numero
+
+Un color no puede servir de texto sobre una tarjeta oscura Y de relleno con
+blanco encima: para **leerse** tiene que ser claro, para **aguantar blanco**
+tiene que ser oscuro. Direcciones opuestas, un solo valor.
+
+La salida es dos tokens. `--blue` queda como **relleno**, nace `--blue-text`
+para el **texto**.
+
+### Lo que hace que esto sea de bajo riesgo
+
+**En tema claro los dos valen lo mismo.** Sobre blanco no hay conflicto: el
+mismo azul sirve de texto y de fondo de boton. Asi que `--blue-text` es
+literalmente `var(--blue)` en `:root`, y **el tema claro no cambia** salvo
+`--cyan`, que daba 3.68:1 con blanco encima y se oscurecio a 4.52.
+
+Toda la division vive en el bloque de tema oscuro.
+
+### La migracion: 285 usos, solo texto
+
+Se migro **unicamente** `color:`. Un borde o un icono no es texto - WCAG pide
+3:1 para elementos de interfaz y 4.5:1 para texto, y los rellenos ya cumplen lo
+suyo.
+
+El riesgo real era `background-color`, `border-color` y `caret-color`: **las
+tres terminan en "color"**. Un reemplazo ingenuo habria repintado los fondos con
+el color del texto. Se uso un lookbehind que las excluye, y hay un test que
+verifica que **ningun fondo, borde o icono** quedo apuntando a un token de
+texto. Da 0.
+
+### El bug que me hice solo, y es el quinto de su clase
+
+Al escribir el comentario que explica la division, **escribi el nombre del
+selector del tema oscuro dentro de el**. Media docena de scripts cortan
+`css/variables.css` buscando esa cadena, y todos empezaron a cortar en mi
+comentario - dentro de `:root`.
+
+Resultado: **los valores nuevos del tema oscuro se escribieron en el tema
+claro.** El check seguia leyendo los viejos y reportando los mismos 7 fallos, lo
+cual fue la unica pista.
+
+Se arreglo por las dos puntas: el comentario ya no nombra el selector (y dice
+por que), y los scripts cortan por la **regla** -selector seguido de su llave-
+en vez de por la cadena suelta. Hay un test que falla si el nombre vuelve a
+aparecer en un comentario antes de la regla.
+
+**Quinta vez en este proyecto que un texto en prosa rompe una herramienta que
+lee texto** (ver 58, 62, 64, 66). El patron ya es claro: cuando algo lee codigo
+como texto, hay que acotar la ventana a codigo, y no escribir en los comentarios
+las cadenas que esa herramienta busca.
+
+### Verificado rompiendolo
+
+- Devolver `--blue-text` a su valor viejo -> falla el test de AA en oscuro.
+- Apuntar un `background` a un token de texto -> falla el test de la migracion.
+
+Los valores no se eligieron a ojo: un script busco, para cada acento, **el color
+mas cercano al original** que cumple 4.5:1 en su papel. Por eso los cambios son
+minimos (`--red` de `#ef4444` a `#d73d3d`) y la app sigue viendose igual.
+
+`dark-theme-check` ahora informa: **peor tinta 4.50:1, peor blanco sobre relleno
+4.50:1**. Antes: 3.09 y 3.30.
+
+31 tests nuevos. 1158/1158.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador.** Que el modo oscuro se vea bien lo tiene que mirar
+Diego, en admin y en la app del mecanico, que son las dos superficies que pueden
+ser oscuras. Lo verificado por calculo es el contraste de cada token en cada
+papel y en los dos temas.
+
+## 72. El link de seguimiento no caducaba nunca (01-sep-2026)
+
+Punto 5. La auditoria pedia decidir y aplicar **si caduca, cuando, y que largo
+tiene**. La respuesta a la primera era: **no caduca**.
+
+Un link mandado por email en agosto seguia devolviendo, en diciembre, la
+**direccion exacta del cliente** y su **PIN de llegada** - con el trabajo
+terminado hacia meses. El token es la credencial: quien lo tenga ve todo.
+
+### El largo ya estaba bien
+
+Es un UUID v4 (`gen_random_uuid()`): 122 bits. Adivinarlo no es una amenaza
+realista y no habia nada que cambiar. **Lo que faltaba era el tiempo.**
+
+### Por que no se apaga de golpe al terminar el trabajo
+
+**El mismo link se usa para dejar la resena.** El email de review que sale al
+completar lleva `/track.html?token=...`, y de ahi salen las resenas que muestra
+la landing. Matarlo al completar romperia ese flujo.
+
+Asi que caduca en dos escalones, y **cada dato se apaga cuando deja de tener
+sentido**:
+
+| Cuando | Que entrega |
+|---|---|
+| **full** - por venir, en curso, o termino hace <7 dias | Todo |
+| **limited** - de 7 a 90 dias | Sigue vivo para la resena, **sin** direccion, PIN, notas ni posicion |
+| **expired** - pasados 90 dias | 410 Gone |
+
+Los cuatro campos que se quitan son exactamente los que dolerian si el link se
+filtra, y ninguno significa nada para un trabajo terminado hace semanas.
+
+### Decisiones chicas que importan
+
+**Un trabajo sin terminar da todo, sin importar la fecha.** Una reserva
+reprogramada varias veces puede tener una `scheduled_date` vieja y ser el
+trabajo de manana.
+
+**Sin fecha legible degrada a `limited`, no a `expired`.** Quitar los datos
+sensibles es la respuesta segura; romper el link de alguien por una fila rara
+seria peor que el riesgo que evita.
+
+**Las claves se borran, no se mandan en `null`.** Un cliente que ve
+`address: null` cree que se perdio su direccion; ausente dice "esto ya no se
+informa".
+
+**El corte va antes de buscar la posicion del mecanico.** Un link vencido no
+tiene por que costar una consulta mas.
+
+### Sin migracion
+
+El ancla es `scheduled_date`, no `completed_at`: ya esta en la fila y en la
+consulta que el endpoint hace, asi que esto no espera a ningun SQL - y aca el
+codigo llega a main antes de que Diego corra el archivo.
+
+### El cliente ya degradaba bien
+
+`js/app.js:3171` ya mostraba el PIN solo con `booking.arrival_pin && preArrival`,
+y `track.html:165` ya renderiza `bkg.address || '—'` y valida las coordenadas
+antes de usarlas. **No hizo falta tocar el front**: los campos ausentes ya
+estaban contemplados.
+
+23 tests nuevos. 1181/1181.
+
+## 73. "No se reembolsa", sin decir que la ley no se puede excluir (01-sep-2026)
+
+Punto 8. Pedia dos cosas: que el aviso llegue **antes del boton de pago**, y que
+**no choque con las garantias obligatorias de la ACL**.
+
+**La primera ya estaba.** El bloque "What the visit & diagnosis covers" vive en
+la pantalla de resumen, arriba del boton, y su comentario en el codigo ya
+explicaba por que: *"a policy like that is only defensible if it was stated up
+front"*.
+
+**La segunda no.** El texto decia, sin calificar:
+
+> *"The visit & diagnosis covers that inspection and is not refunded."*
+
+Bajo la Australian Consumer Law las garantias del consumidor **no se pueden
+excluir por contrato ni firmando**. Si la inspeccion no se hizo con el cuidado y
+la pericia debidos, el cliente tiene derecho a un remedio diga lo que diga la
+pantalla. Afirmar "no se reembolsa" a secas, justo antes de cobrar, es una
+afirmacion enganosa sobre sus derechos - y "no refunds" es de los casos que la
+ACCC persigue mas activamente.
+
+### Lo que se hizo
+
+Se agrego, **inmediatamente debajo** del aviso y en la misma pantalla:
+
+> *"This does not affect your rights under the Australian Consumer Law, which
+> cannot be excluded."*
+
+**No se invento un texto legal nuevo.** `terms.html` ya usaba exactamente esa
+formula para sus propias clausulas (*"except as required by Australian Consumer
+Law"*) y ya reconocia en su seccion 9 que las garantias no se pueden excluir. Lo
+que faltaba era ponerlo **donde el cliente lo lee**: en la pantalla del cobro, no
+en los terminos que nadie abre antes de pagar.
+
+### Por que como frase aparte
+
+El aviso original es una cadena larga que ya estaba traducida a los dos idiomas.
+Meterle el calificador adentro habria cambiado la clave y **invalidado las dos
+traducciones existentes**. Como frase propia se agrega una clave nueva y las
+viejas siguen sirviendo.
+
+Esta en los tres idiomas, en el mismo commit. Un aviso legal que solo aparece en
+ingles no le avisa al cliente que esta leyendo la app en espanol - y ese es
+justo el que mas lo necesita.
+
+11 tests nuevos, incluido que el calificador este **cerca** del aviso (a menos
+de 400 caracteres) y no perdido en otra parte del archivo. Verificado
+borrandolo: 3 tests fallan.
+
+1192/1192.
+
+### Lo que NO se hizo
+
+**Esto no es asesoramiento legal.** El texto reusa la formula que el propio
+proyecto ya tenia en sus terminos, que es lo conservador. Antes de lanzar
+conviene que un abogado australiano mire las dos pantallas - la de cobro y
+terms.html - de una sola vez.
+
+## 74. Cabeceras y alertas: los dos que quedaban del blindaje (01-sep-2026)
+
+### Punto 1 - la CSP tenia cuatro puertas abiertas a la nada
+
+El veredicto era **FUERTE** y lo era: CSP completa, HSTS con preload,
+`X-Frame-Options: DENY`, `nosniff`, `Permissions-Policy`. Faltaba endurecer.
+
+Se quitaron **cuatro hosts permitidos que no usa nadie** - verificado por grep
+sobre todos los `*.html` y `*.js`, cero apariciones fuera de la propia cabecera:
+
+| Quitado | Por que sobraba |
+|---|---|
+| `api.mapbox.com` | El mapa usa Leaflet con tiles de OpenStreetMap |
+| `*.mapbox.com` | Idem, en `img-src` |
+| `www.gstatic.com` | Sin usar |
+| `connect.facebook.net` | Es el SDK de Facebook; en el repo solo hay un `<a href>` a la pagina |
+
+Cada host permitido es una via por la que un tercero comprometido podria
+ejecutar codigo en el sitio. De 39 entradas a 33.
+
+**Y el test cuida las dos direcciones**: falla si alguno de los cuatro vuelve, y
+tambien **si se cae uno de los que si hacen falta**. Sacar de mas rompe la app en
+silencio y solo se nota cuando un cliente no puede pagar.
+
+### `'unsafe-inline'` se queda, y esta escrito por que
+
+La auditoria permitia documentarlo si no se podia. No se puede, y el motivo no
+es pereza:
+
+- **Nonces**: hay que generarlos **por peticion** y escribirlos en el HTML
+  servido. Este sitio es **HTML estatico en Vercel**: no hay render por peticion
+  donde ponerlo. Habria que convertir las cinco paginas en funciones.
+- **Hashes**: alcanzarian si todos los scripts inline se conocieran al
+  construir. No es el caso: `js/consent.js` **crea elementos `<script>` en
+  tiempo de ejecucion** cuando el visitante acepta las cookies - asi es como los
+  analytics quedan bloqueados hasta que hay permiso (punto 7).
+
+Sacarlo hoy **romperia el banner de cookies**. Cambiar una proteccion real y
+funcionando por una teorica es mal negocio.
+
+Como `vercel.json` es JSON y **no admite comentarios**, el razonamiento vive en
+`docs/SECURITY-HEADERS.md`, con la receta para agregar un host nuevo. Hay un
+test que verifica que ese documento exista y explique las dos alternativas
+descartadas: la auditoria permitia documentar por que no se puede, no dejarlo
+sin explicacion.
+
+### Punto 20 - Sentry estaba cargado, pero casi nadie le hablaba
+
+*"Sentry esta cargado. Alguien mira los errores?"*
+
+Medido: **5 de 28 archivos de `api/` reportaban**. Los otros 23 podian fallar en
+produccion **sin dejar rastro en ningun lado que alguien mire**.
+
+Y los que faltaban eran justo los tres escenarios que la auditoria nombraba:
+
+| Sin reportar | El escenario |
+|---|---|
+| `send-message.js` | *"Twilio rechaza los SMS y el mecanico no se entera de su trabajo"* |
+| `send-cron.js` | Si esto se cae no corren los recordatorios, ni el backup, ni el reembolso automatico de pagos huerfanos |
+| `create-subscription.js` | Cobros recurrentes |
+
+Los **ocho** endpoints publicos que faltaban quedaron envueltos en `withSentry`.
+Un test recorre `api/` y falla si aparece uno nuevo sin envolver - no hay lista
+que mantener a mano.
+
+### Un tropiezo que vale anotar
+
+El script que agregaba el `import` lo puso **dentro de un import multilinea** en
+dos archivos: la heuristica "despues del ultimo `\nimport `" encuentra la
+PRIMERA linea de un import de varias y mete el nuevo en el medio de su lista de
+nombres. `node --check` lo agarro al instante.
+
+Y se verifico que las fallas de carga que quedan (`supabaseKey is required`,
+`Missing API key`) **son previas**: se cargo la version original del archivo
+desde git y da el mismo error. Son SDK que se construyen al importar y necesitan
+variables de entorno que en local no estan.
+
+34 tests nuevos, verificados rompiendolos: devolver un host muerto a la CSP hace
+fallar uno; desenvolver un endpoint hace fallar dos.
+
+1226/1226.
+
+## 75. Imagenes que hacen saltar la pagina, y un embudo sin el "por que" (01-sep-2026)
+
+### Punto 11 - 26 atributos que faltaban
+
+De 16 `<img>` en las tres paginas del cliente, **13 no declaraban sus
+dimensiones** y **14 no decian como cargar**.
+
+Sin `width`/`height` el navegador no sabe cuanto espacio reservar hasta que la
+imagen llega: dibuja la pagina, la imagen aterriza, y **todo lo de abajo salta**.
+El cliente que iba a tocar un boton toca otra cosa. Google lo mide (Cumulative
+Layout Shift) y lo usa para posicionar.
+
+No hacen falta las dimensiones de pantalla - el CSS sigue mandando - sino la
+**proporcion**, que es lo que el navegador usa para reservar el hueco. Por eso
+se escribieron las **dimensiones reales de cada archivo, leidas de sus bytes**:
+`logo-db.png` 600x423, `hero-van.webp` 1672x941, `mechanic-working.webp`
+1122x1402. Hay un test que compara la proporcion contra esos numeros.
+
+**`loading` no va igual en todas.** `lazy` en una imagen que se ve al abrir la
+pagina la **retrasa**: el navegador la descubre mas tarde. El logo y el hero van
+`eager`; lo de abajo de la linea de flotacion, `lazy`. Y `decoding="async"` en
+todas, que deja seguir pintando mientras se decodifica.
+
+El formato ya estaba bien: las dos imagenes grandes son webp. `logo-db.png` es
+PNG a proposito - lleva transparencia y lo usan el manifest y los iconos.
+
+### Punto 17 - el embudo ya decia donde, no por que
+
+La auditoria decia *"no sabemos en que paso exacto se va la gente"*. **Medido:
+los cinco pasos si se median** - `select_service`, `select_date`, `address`,
+`quote_summary`, `payment`, mas `booking_completed`. La caida entre pasos era
+visible desde antes.
+
+Lo que faltaba era la razon de **la ultima caida**, que es la cara: alguien
+llego al pago y no pago. ¿Tarjeta rechazada? ¿Le parecio caro? ¿El horario se lo
+gano otro?
+
+Dos agregados, y ni uno mas - un embudo con veinte eventos no se mira:
+
+1. **El precio de la visita viaja con el resumen.** "¿Se va por el precio?" no
+   se puede contestar sin el numero. Ahora se ve si una zona de $45 convierte
+   peor que una de $25, y si conviene tocar el precio o el texto que lo explica.
+
+2. **`payment_failed` con la categoria del fallo**: `card_declined`,
+   `slot_taken`, `missing_email` u `other`, mas si el fallo fue **antes o
+   despues del cobro** - si ya se habia cobrado, el problema es escribir la
+   reserva y eso se arregla distinto.
+
+**Se manda una categoria, nunca el mensaje crudo.** El error de Stripe puede
+traer datos del banco o del cliente, y esto sale a un servicio de terceros. Hay
+un test que verifica que el mensaje sin procesar no se mande.
+
+15 tests nuevos, verificados rompiendolos. 1241/1241.
+
+## 76. Las dos carreras del cobro, y tres bugs vivos que aparecieron mirandolas (01-sep-2026)
+
+Punto 4 de la auditoria: *"El servidor recalcula la tarifa por zona y reembolsa
+lo que no coincide. Falta probar carreras: la misma reserva diez veces en un
+segundo, y cancelar en el instante en que el mecanico completa. Cerrado cuando
+hay un test que dispara ambas y demuestra que no se duplica el cobro."*
+
+### Carrera 1 - diez veces en un segundo: ya estaba cubierta
+
+Cuatro capas, todas verificadas con `Promise.all` sobre las funciones reales, no
+leyendo el codigo y suponiendo:
+
+1. `slotVerdict()` reconoce la retencion propia, asi que diez toques del mismo
+   boton ven **una** retencion, no diez.
+2. Diez personas distintas sobre el mismo horario: una entra, nueve rebotan
+   **antes** de que se les toque la tarjeta.
+3. Un mismo PaymentIntent no puede respaldar dos reservas.
+4. Y por debajo, un indice unico en la base que no depende de la app; si aun asi
+   choca con un pago detras, se reembolsa.
+
+### Carrera 2 - cancelar mientras el mecanico completa: faltaba una direccion
+
+El lado del mecanico ya estaba bien (`completionVerdict()`: completar algo
+cancelado se rechaza, completar dos veces no ejecuta nada la segunda vez).
+
+**El lado del cliente no.** `handleClientCancel` leia el estado, comprobaba que
+fuera `pending`/`confirmed`, y despues escribia **sin volver a comprobarlo** - un
+check-then-act de manual. Entre la lectura y el `PATCH`, el mecanico podia
+terminar el trabajo: el `PATCH` pisaba `completed` con `cancelled` y a
+continuacion **se reembolsaba un trabajo que se hizo de verdad**.
+
+El arreglo deja que decida la base:
+
+- El filtro de estado va **tambien en la escritura** (`&status=in.(pending,confirmed)`).
+- `Prefer: return=representation` en vez de `minimal`, porque `minimal` devuelve
+  204 tanto si cambio una fila como si no cambio ninguna, y esa diferencia es
+  justo la que decide si se reembolsa.
+- Cero filas devueltas -> `409 CANCEL_RACE_LOST`, y **no se toca la plata**.
+
+### Tres bugs vivos que aparecieron mirando eso
+
+**1. El credito de referido no se devolvia nunca al cancelar.**
+`notifyAdminCancellation(bk)` usaba `SERVICE_KEY` y `booking_id`, que estan
+declarados dentro de `handleClientCancel` y no ahi. En ejecucion eso es un
+`ReferenceError`, y cae dentro de un `try/catch` que solo logea - asi que el
+bloque entero no corria nunca en silencio. El comentario de esa misma funcion
+dice: *"el cliente gasta $15 que se gano, cancela esa misma tarde, y la plata
+simplemente desaparece sin que ninguna pantalla lo admita"*. Eso es exactamente
+lo que estaba pasando.
+
+**2. El mail de pago fallido decia "This is attempt 1" siempre.**
+`api/send-email.js` leia `attemptCount` y `monthsAgo` con `typeof x !==
+'undefined'`, pero **nunca los sacaba de `req.body`**. El `typeof` evitaba el
+error, asi que nadie se entero: el tercer intento de cobro se anunciaba como el
+primero, y el mail de reactivacion nunca decia cuantos meses pasaron. Los dos
+valores si se enviaban (`stripe-webhook.js:615`, `send-cron.js:169`,
+`send-reminders.js:172`).
+
+**3. "Enviar SMS de prueba" del admin estaba roto en Firefox.**
+`sendTestSMS()` usaba el global implicito `event`. Chrome tiene `window.event`
+durante el despacho; Firefox no, y el boton tiraba `ReferenceError` antes de
+hacer nada. El listener ya recibia el evento, solo no se lo pasaba. Diego usa
+Firefox.
+
+### El guard: `no-undef`
+
+Los tres son la misma forma - una variable fuera de alcance. **Sintaxis valida,
+`node --check` verde, revienta recien en produccion.** Es el mismo bug que el
+`holdOnly` de la reserva antes del cobro, encontrado hace dos dias.
+
+`eslint.config.js` no tenia `no-undef`. Ahora si, con los globals del navegador
+y de los CDN declarados para que hable solo de errores de verdad - sin esa
+lista, la regla grita 900 veces por `document` y nadie la deja encendida.
+
+De paso salieron tres lineas muertas en `js/landing-inline.js` que llamaban a
+`closeGiftCardModal`/`submitGiftCard`, borradas cuando el modal se mudo a
+`js/gift-card.js`. No rompian nada (`wire()` no hace nada si el elemento falta)
+pero no podian funcionar nunca.
+
+### Verificacion
+
+16 tests nuevos. **Los 8 arreglos se verificaron rompiendolos uno por uno** y
+exigiendo que el test fallara. Dos hallazgos de ese proceso:
+
+- Un mutante mal apuntado se leia como "guard decorativo": `Prefer:
+  'return=representation'` aparece dos veces en `api/auth.js` y la mutacion caia
+  en la primera, que esta en otra funcion. El decorativo era el mutante.
+- Uno **si** era decorativo: neutralizar `if (!Array.isArray(updated) ||
+  updated.length === 0)` dejaba pasar el 409 y se reembolsaba igual, y ningun
+  test lo notaba. Se agrego el que faltaba.
+
+`npm run check`, `npm run lint` y `npm test` verdes por codigo de salida.
+1257/1257.

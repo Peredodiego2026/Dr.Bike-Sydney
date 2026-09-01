@@ -18,6 +18,7 @@ import {
   verifyMechanicToken,
   isAdminAccessToken,
 } from './_security.js';
+import { withSentry } from './_sentry.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -29,7 +30,7 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY || ''
 );
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -115,3 +116,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Something went wrong' });
   }
 }
+
+// Un error aca no puede quedar solo en los logs de Vercel, que nadie mira.
+// Punto 20 de la auditoria: hasta el 2026-09-01 este archivo podia fallar en
+// produccion sin dejar rastro en ningun lado accionable.
+export default withSentry(handler, 'send-push');

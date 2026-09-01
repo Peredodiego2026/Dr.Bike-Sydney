@@ -9,12 +9,13 @@
   recipientForBooking,
 } from './_security.js';
 import { translateEmailHtml, translateEmailSubject, normalizeLang } from './_email-i18n.js';
-export default async function handler(req, res) {
+import { withSentry } from './_sentry.js';
+async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if (verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { to, type, referralCount } = req.body;
+  const { to, type, referralCount, attemptCount, monthsAgo } = req.body;
   let {
     name,
     clientName,
@@ -318,7 +319,7 @@ export default async function handler(req, res) {
       subject: `⚠️ Payment failed — Dr. Bike Sydney membership`,
       html: `${header('#B45309', '⚠️', 'Payment failed')}
         <div style="padding:32px 28px">
-          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, we couldn't process your membership payment of <strong>$${price}</strong>. This is attempt ${typeof attemptCount !== 'undefined' ? attemptCount : 1}.</p>
+          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, we couldn't process your membership payment of <strong>$${price}</strong>. This is attempt ${attemptCount || 1}.</p>
           <div style="background:#FEF9C3;border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #FCD34D">
             <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 4px">⚡ Action needed</p>
             <p style="font-size:12px;color:#B45309;margin:0;line-height:1.6">Please update your payment method to keep your membership active. Your access will be paused if payment fails again.</p>
@@ -331,7 +332,7 @@ export default async function handler(req, res) {
       subject: `🚲 We miss you, ${name} — here's $15 to come back`,
       html: `${header('#0A58CA', '🚲', 'We miss you!')}
         <div style="padding:32px 28px">
-          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, it's been a while since your last service with us${typeof monthsAgo !== 'undefined' && monthsAgo ? ' (' + monthsAgo + ' months ago)' : ''}. Your bike misses the open road!</p>
+          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, it's been a while since your last service with us${monthsAgo ? ' (' + monthsAgo + ' months ago)' : ''}. Your bike misses the open road!</p>
           <div style="background:#EEF3FC;border-radius:16px;padding:28px;margin-bottom:24px;text-align:center">
             <div style="font-size:42px;margin-bottom:8px">🎁</div>
             <div style="font-size:13px;color:#2563EB;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">Welcome back offer</div>
@@ -342,7 +343,7 @@ export default async function handler(req, res) {
             </div>
           </div>
           <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:24px">
-            <p style="font-size:13px;color:#0D1F3C;font-weight:600;margin:0 0 8px">🔧 Your bike may need some love after ${typeof monthsAgo !== 'undefined' && monthsAgo ? monthsAgo + ' months' : 'this time'}</p>
+            <p style="font-size:13px;color:#0D1F3C;font-weight:600;margin:0 0 8px">🔧 Your bike may need some love after ${monthsAgo ? monthsAgo + ' months' : 'this time'}</p>
             <p style="font-size:12px;color:#475569;margin:0;line-height:1.8">
               &bull; Brake pads wear out and can become unsafe<br>
               &bull; Cables stretch and affect shifting precision<br>
@@ -477,3 +478,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Something went wrong' });
   }
 }
+
+// Un error aca no puede quedar solo en los logs de Vercel, que nadie mira.
+// Punto 20 de la auditoria: hasta el 2026-09-01 este archivo podia fallar en
+// produccion sin dejar rastro en ningun lado accionable.
+export default withSentry(handler, 'send-email');

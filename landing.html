@@ -52,7 +52,7 @@
 
   <!-- Booking wizard styles (from index.html CSS) -->
   <link rel="stylesheet" href="css/variables.css?v=20260622">
-  <link rel="stylesheet" href="css/main.css?v=dbd0385557">
+  <link rel="stylesheet" href="css/main.css?v=1a0e6d512f">
   <link rel="stylesheet" href="css/home.css?v=20260825b">
 
   <script type="application/ld+json">
@@ -126,7 +126,7 @@
 <nav class="navbar">
   <div class="container">
     <a href="#" class="nav-logo">
-      <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="36" style="width:auto;display:block">
+      <img decoding="async" loading="eager" width="600" height="423" src="images/logo-db.png" alt="Dr. Bike Sydney" height="36" style="width:auto;display:block">
       <div>
         <span class="wm-text">Dr. <span class="wm-blue">Bike</span> Sydney</span>
         <span class="wm-tag">Healthy bikes, happy riders</span>
@@ -137,7 +137,7 @@
       <button id="nav-services-btn" type="button">Services</button>
       <a href="#mechanics">Mechanics</a>
       <a href="#memberships">Memberships</a>
-      <a href="#fleet" style="color:var(--blue);font-weight:700">Fleet &#x2192;</a>
+      <a href="#fleet" style="color:var(--blue-text);font-weight:700">Fleet &#x2192;</a>
       <a href="#about">About</a>
     </div>
 
@@ -191,7 +191,7 @@
     <div class="hero-left">
       <span class="hero-badge">Mobile Service &middot; Sydney Wide</span>
       <h1 class="hero-h1">Professional Bike Service at Your Doorstep</h1>
-      <p style="font-size:18px;font-weight:600;color:var(--blue);margin:0 0 12px;letter-spacing:0.01em">Healthy bikes, happy riders</p>
+      <p style="font-size:18px;font-weight:600;color:var(--blue-text);margin:0 0 12px;letter-spacing:0.01em">Healthy bikes, happy riders</p>
       <p class="hero-p">Mobile bicycle mechanic in Sydney. We come to you, fully equipped.</p>
 
       <div class="hero-btns">
@@ -202,7 +202,7 @@
           Check my diagnosis fee
         </button>
       </div>
-      <p style="margin-top:12px;font-size:15px;color:var(--gray)">Or call <a href="tel:+61433963250" style="color:var(--blue);font-weight:600">0433 963 250</a> / <a href="https://wa.me/61433963250" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600">WhatsApp</a></p>
+      <p style="margin-top:12px;font-size:15px;color:var(--gray)">Or call <a href="tel:+61433963250" style="color:var(--blue-text);font-weight:600">0433 963 250</a> / <a href="https://wa.me/61433963250" target="_blank" rel="noopener" style="color:var(--blue-text);font-weight:600">WhatsApp</a></p>
 
       <div class="hero-stats">
         <div class="hero-stat">
@@ -230,7 +230,7 @@
     </div>
 
     <div class="hero-image" style="padding:0;overflow:hidden">
-      <img src="images/hero-van.webp" alt="Dr. Bike Sydney mobile van" width="1672" height="941" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:16px">
+      <img decoding="async" loading="eager" src="images/hero-van.webp" alt="Dr. Bike Sydney mobile van" width="1672" height="941" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:16px">
     </div>
   </div>
 </section>
@@ -380,7 +380,7 @@
 
     <div style="display:inline-flex;align-items:center;gap:0;background:var(--border);border-radius:9999px;padding:4px;margin:14px 0 26px">
       <button id="toggle-monthly" style="padding:8px 24px;border-radius:9999px;border:none;font-size:15px;font-weight:600;cursor:pointer;background:var(--blue);color:white;font-family:inherit;transition:all 200ms">Monthly</button>
-      <button id="toggle-annual" style="padding:8px 24px;border-radius:9999px;border:none;font-size:15px;font-weight:600;cursor:pointer;background:transparent;color:var(--gray);font-family:inherit;transition:all 200ms">Annual <span style="background:var(--green-lt);color:var(--green);font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:4px">Save 20%</span></button>
+      <button id="toggle-annual" style="padding:8px 24px;border-radius:9999px;border:none;font-size:15px;font-weight:600;cursor:pointer;background:transparent;color:var(--gray);font-family:inherit;transition:all 200ms">Annual <span style="background:var(--green-lt);color:var(--green-text);font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:4px">Save 20%</span></button>
     </div>
 
     <div class="memberships-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.6vw,24px);max-width:900px;margin:0 auto">
@@ -390,16 +390,16 @@
         <div class="plan-price">
           <span id="price-basic" class="amount">$67</span>
           <span id="period-basic" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-basic" style="display:none;font-size:13px;color:var(--green);font-weight:600;margin-top:4px">$643<span>/yr - save</span> $161</div>
+          <div id="annual-note-basic" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$643<span>/yr - save</span> $161</div>
         </div>
         <ul>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>1 free minor repair (under $60) + 1 free bike wash per month</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>5% off extra services</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis applies (from $25, depending on your suburb)</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (72hs)</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 free minor repair (under $60) + 1 free bike wash per month</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>5% off extra services</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis applies (from $25, depending on your suburb)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (72hs)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
         </ul>
-        <button class="lp-get-started lp-hover-fill" data-plan="basic" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
+        <button class="lp-get-started lp-hover-fill" data-plan="basic" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue-text);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
         <button class="lp-learn-more" data-plan="basic" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
       </div>
       <!-- Standard -->
@@ -409,16 +409,16 @@
         <div class="plan-price">
           <span id="price-standard" class="amount">$97</span>
           <span id="period-standard" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-standard" style="display:none;font-size:13px;color:var(--green);font-weight:600;margin-top:4px">$931<span>/yr - save</span> $233</div>
+          <div id="annual-note-standard" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$931<span>/yr - save</span> $233</div>
         </div>
         <ul>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis included</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>10% off extra services</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (48hs)</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>1 emergency callout per month (visit & diagnosis fee applies)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis included</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>10% off extra services</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (48hs)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 emergency callout per month (visit & diagnosis fee applies)</li>
         </ul>
         <button class="lp-get-started lp-hover-dark" data-plan="standard" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
         <button class="lp-learn-more" data-plan="standard" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
@@ -429,19 +429,19 @@
         <div class="plan-price">
           <span id="price-vip" class="amount">$197</span>
           <span id="period-vip" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-vip" style="display:none;font-size:13px;color:var(--green);font-weight:600;margin-top:4px">$1,891<span>/yr - save</span> $473</div>
+          <div id="annual-note-vip" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$1,891<span>/yr - save</span> $473</div>
         </div>
         <ul>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis included</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>15% off extra services, plus 5% more</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (24hs)</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>1 emergency callout per month (visit & diagnosis fee waived in your zone)</li>
-          <li><span style="color:var(--green);font-weight:700;margin-right:8px">&#10003;</span>Dedicated mechanic</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis included</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>15% off extra services, plus 5% more</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (24hs)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 emergency callout per month (visit & diagnosis fee waived in your zone)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Dedicated mechanic</li>
         </ul>
-        <button class="lp-get-started lp-hover-fill" data-plan="vip" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
+        <button class="lp-get-started lp-hover-fill" data-plan="vip" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue-text);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
         <button class="lp-learn-more" data-plan="vip" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
       </div>
     </div>
@@ -463,7 +463,7 @@
           <div style="font-size:15px;color:rgba(255,255,255,0.8);margin-top:2px">Send a Dr. Bike gift card by email - perfect for any cyclist</div>
         </div>
       </div>
-      <button id="giftcard-open-btn" style="padding:13px 28px;background:var(--white);color:var(--purple);border:none;border-radius:var(--radius);font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;white-space:nowrap">Buy a gift card</button>
+      <button id="giftcard-open-btn" style="padding:13px 28px;background:var(--white);color:var(--purple-text);border:none;border-radius:var(--radius);font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;white-space:nowrap">Buy a gift card</button>
     </div>
   </div>
 </section>
@@ -477,7 +477,7 @@
     <p style="text-align:center;color:var(--gray);margin-bottom:48px">All prices include a visit & diagnosis fee (from $25, depending on your suburb). We come to you.</p>
 
     <!-- Esenciales -->
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Essentials</h3>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue-text);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Essentials</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
       <div class="svc-card">
         <div class="svc-icon"><span style="display:inline-block;width:22px;height:22px;background-color:var(--blue);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span></div>
@@ -510,7 +510,7 @@
     </div>
 
     <!-- Tyres & Wheels -->
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Tyres &amp; Wheels</h3>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue-text);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Tyres &amp; Wheels</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
       <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div>
@@ -557,7 +557,7 @@
     </div>
 
     <!-- Brakes -->
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Brakes</h3>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue-text);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Brakes</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
       <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
@@ -590,7 +590,7 @@
     </div>
 
     <!-- Drivetrain -->
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Drivetrain</h3>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue-text);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Drivetrain</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
       <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M3 12H1M23 12h-2M19.07 19.07l-1.41-1.41M6.34 6.34L4.93 4.93"/></svg></div>
@@ -637,7 +637,7 @@
     </div>
 
     <!-- Cables & Accessories -->
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Cables &amp; Accessories</h3>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue-text);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Cables &amp; Accessories</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
       <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
@@ -691,7 +691,7 @@
     </div>
 
     <!-- E-Bike & Electronics -->
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">E-Bike &amp; Electronics</h3>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue-text);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">E-Bike &amp; Electronics</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
       <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><polyline points="13 2 4 14 12 14 11 22 20 10 12 10 13 2"/></svg></div>
@@ -717,7 +717,7 @@
     </div>
 
     <!-- Suspension -->
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Suspension</h3>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue-text);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Suspension</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
       <div class="svc-card">
         <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4"/><path d="M8 6h8M8 18h8"/><path d="M10 6c0 4-2 4-2 6s2 2 2 6M14 6c0 4 2 4 2 6s-2 2-2 6"/></svg></div>
@@ -736,7 +736,7 @@
     </div>
 
     <!-- Assembly -->
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Assembly</h3>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--blue-text);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)">Assembly</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px" class="svc-grid">
       <!-- Same card as index.html: a floor, not a fixed price. See the comment
            there and the data-price-from block in js/live-prices.js. -->
@@ -755,7 +755,7 @@
     <div style="border:1.5px solid var(--blue);border-radius:12px;padding:20px 24px;margin-bottom:40px;background:var(--blue-lt)">
       <div style="font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:4px">Emergency Service</div>
       <p style="color:var(--gray);font-size:0.9rem;margin:0 0 8px">Urgent same-day help. Call us and we quote your repair on the spot.</p>
-      <a href="tel:+61433963250" style="color:var(--blue);font-weight:700;font-size:1rem">0433 963 250</a>
+      <a href="tel:+61433963250" style="color:var(--blue-text);font-weight:700;font-size:1rem">0433 963 250</a>
     </div>
 
     <p style="text-align:center;margin-top:40px;color:var(--gray);font-size:0.9rem">
@@ -818,7 +818,7 @@
       </div>
 
       <div class="about-image" style="padding:0;overflow:hidden">
-        <img src="images/mechanic-working.webp" alt="Dr. Bike Sydney mechanic servicing a bike" style="width:100%;height:100%;object-fit:cover;border-radius:16px" loading="lazy">
+        <img width="1122" height="1402" src="images/mechanic-working.webp" alt="Dr. Bike Sydney mechanic servicing a bike" style="width:100%;height:100%;object-fit:cover;border-radius:16px" loading="lazy">
       </div>
     </div>
   </div>
@@ -852,10 +852,10 @@
          Never write a card for a review that does not exist. -->
     <div style="text-align:center;margin-bottom:24px">
       <div style="display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
-        <img src="images/google-logo.svg" alt="Google" style="width:52px">
+        <img decoding="async" loading="lazy" width="24" height="24" src="images/google-logo.svg" alt="Google" style="width:52px">
         <span style="font-size:20px;font-weight:800;color:var(--navy)">5.0</span>
         <span style="color:var(--amber-bright);font-size:17px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-        <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="font-size:15px;color:var(--blue);font-weight:600;text-decoration:none">2 reviews on Google</a>
+        <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="font-size:15px;color:var(--blue-text);font-weight:600;text-decoration:none">2 reviews on Google</a>
       </div>
     </div>
     <div id="google-reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px">
@@ -889,7 +889,7 @@
          leaves #reviews-grid empty when there are no in-app reviews yet. -->
     <div style="text-align:center;margin-bottom:8px">
       <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);padding:10px 20px;border-radius:8px;font-size:15px;font-weight:600;color:var(--gray);text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.08)">
-        <img src="images/google-logo.svg" alt="Google" style="width:52px">
+        <img decoding="async" loading="lazy" width="24" height="24" src="images/google-logo.svg" alt="Google" style="width:52px">
         <span>Leave us a review</span>
       </a>
     </div>
@@ -1022,7 +1022,7 @@
     <div style="background:var(--blue);border-radius:var(--radius-lg);padding:40px 32px;color:white;position:sticky;top:80px">
       <h3 style="font-size:20px;font-weight:800">Still have questions?</h3>
       <p style="color:rgba(255,255,255,0.85);margin:12px 0 28px;font-size:15px">We're here to help! Contact us and we'll get back to you within the hour.</p>
-      <button id="contact-us-btn" style="background:white;color:var(--blue);padding:12px 28px;border-radius:var(--radius);font-weight:600;border:none;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Contact Us</button>
+      <button id="contact-us-btn" style="background:white;color:var(--blue-text);padding:12px 28px;border-radius:var(--radius);font-weight:600;border:none;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Contact Us</button>
       <hr style="border:none;border-top:1px solid rgba(255,255,255,0.2);margin:28px 0">
       <div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.9);font-size:15px">
@@ -1093,11 +1093,11 @@
 
         <div style="display:flex;gap:32px;margin-top:26px">
           <div style="text-align:center">
-            <div style="font-size:2rem;font-weight:900;color:var(--blue)">50+</div>
+            <div style="font-size:2rem;font-weight:900;color:var(--blue-text)">50+</div>
             <div style="font-size:13px;color:var(--gray-lt);font-weight:600">bikes serviced</div>
           </div>
           <div style="text-align:center">
-            <div style="font-size:2rem;font-weight:900;color:var(--green)">2h</div>
+            <div style="font-size:2rem;font-weight:900;color:var(--green-text)">2h</div>
             <div style="font-size:13px;color:var(--gray-lt);font-weight:600">response time</div>
           </div>
           <div style="text-align:center">
@@ -1194,7 +1194,7 @@
       <!-- Col 1: Brand -->
       <div>
         <div style="display:flex;gap:10px;align-items:center">
-          <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block">
+          <img decoding="async" loading="eager" width="600" height="423" src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block">
           <span style="font-weight:700;font-size:18px;letter-spacing:-0.2px;color:var(--white)">Dr. <span style="color:var(--blue-soft)">Bike</span> Sydney</span>
         </div>
         <p style="color:var(--blue-soft);font-size:15px;font-weight:600;margin-top:12px">Healthy bikes, happy riders</p>
@@ -1283,7 +1283,7 @@
     <div id="membership-form" style="padding:28px">
       <div style="background:var(--blue-lt);border-radius:10px;padding:14px 18px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
         <span style="font-weight:600;color:var(--navy)">Monthly Total</span>
-        <span id="membership-plan-price" style="font-size:20px;font-weight:800;color:var(--blue)">$67/month</span>
+        <span id="membership-plan-price" style="font-size:20px;font-weight:800;color:var(--blue-text)">$67/month</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <input id="membership-name" type="text" placeholder="Full Name" aria-label="Full Name" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:8px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box;background-color:white !important">
@@ -1350,8 +1350,8 @@
   <div style="background:var(--white);border-radius:16px;padding:32px 28px;width:100%;max-width:400px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.15)">
     <button id="auth-modal-close-btn" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--gray-lt);line-height:1">&#x2715;</button>
     <div style="text-align:center;margin-bottom:20px">
-      <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="34" style="width:auto;display:inline-block;margin-bottom:8px">
-      <div style="font-size:18px;font-weight:700;color:var(--navy);letter-spacing:-0.2px">Dr. <span style="color:var(--blue)">Bike</span> Sydney</div>
+      <img decoding="async" loading="eager" width="600" height="423" src="images/logo-db.png" alt="Dr. Bike Sydney" height="34" style="width:auto;display:inline-block;margin-bottom:8px">
+      <div style="font-size:18px;font-weight:700;color:var(--navy);letter-spacing:-0.2px">Dr. <span style="color:var(--blue-text)">Bike</span> Sydney</div>
       <div id="auth-title" style="font-size:15px;color:var(--gray);margin-top:4px">Sign in to your account</div>
     </div>
     <div style="display:flex;background:var(--border-lt);border-radius:8px;padding:3px;margin-bottom:20px">
@@ -1372,9 +1372,9 @@
          whose desktop redirect dropped the token out of the #hash. Both halves
          fixed 2026-08-06. -->
     <div id="auth-forgot-wrap" style="text-align:right;margin-top:-6px;margin-bottom:12px">
-      <button id="auth-forgot-btn" type="button" style="background:none;border:none;padding:6px 0;min-height:44px;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">Forgot Password?</button>
+      <button id="auth-forgot-btn" type="button" style="background:none;border:none;padding:6px 0;min-height:44px;color:var(--blue-text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">Forgot Password?</button>
     </div>
-    <div id="auth-error" style="display:none;color:var(--red);font-size:13px;margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border-radius:6px;border:1px solid var(--red-edge)"></div>
+    <div id="auth-error" style="display:none;color:var(--red-text);font-size:13px;margin-bottom:10px;padding:10px 12px;background:var(--red-lt);border-radius:6px;border:1px solid var(--red-edge)"></div>
     <div id="auth-reset-sent" style="display:none;text-align:center;margin-bottom:10px;padding:12px;background:var(--green-lt);border-radius:8px;color:var(--green-ink);font-size:14px;font-weight:600">If that email has an account, we just sent a reset link.</div>
     <button id="auth-submit" style="width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;font-family:inherit">Sign In</button>
     <div style="position:relative;text-align:center;margin-bottom:14px">
@@ -1404,13 +1404,13 @@
     <div style="padding:24px 28px;border-bottom:1px solid var(--border-lt);display:flex;justify-content:space-between;align-items:center">
       <div>
         <div id="lp-pi-plan-label" style="font-size:13px;color:var(--gray);font-weight:600;letter-spacing:1px;text-transform:uppercase">Basic Plan</div>
-        <div id="lp-pi-price" style="font-size:24px;font-weight:800;color:var(--blue);margin-top:4px">$67/month</div>
+        <div id="lp-pi-price" style="font-size:24px;font-weight:800;color:var(--blue-text);margin-top:4px">$67/month</div>
       </div>
       <button id="lp-pi-close" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gray)">&#215;</button>
     </div>
     <div style="padding:28px">
       <div style="margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">INCLUDES</div>
+        <div style="font-size:11px;font-weight:700;color:var(--green-text);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">INCLUDES</div>
         <ul id="lp-pi-includes-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--gray)"></ul>
       </div>
       <div style="margin-bottom:20px;padding:14px;background:var(--amber-lt);border-radius:8px;border:1px solid #fed7aa">
@@ -1418,7 +1418,7 @@
         <p id="lp-pi-excludes-text" style="font-size:13px;color:#7c2d12;margin:0"></p>
       </div>
       <div style="padding:14px;background:var(--blue-lt);border-radius:8px;border:1px solid var(--blue-edge);margin-bottom:24px">
-        <div style="font-size:11px;font-weight:700;color:var(--blue-dark);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">SAVINGS EXAMPLE</div>
+        <div style="font-size:11px;font-weight:700;color:var(--blue-dark-text);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">SAVINGS EXAMPLE</div>
         <p id="lp-pi-savings" style="font-size:13px;color:var(--blue2);margin:0"></p>
       </div>
       <button id="lp-pi-get-started" data-plan="basic" style="width:100%;padding:13px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Get Started - $67/month</button>
@@ -1449,13 +1449,13 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=fd2a66579b"></script>
+<script src="js/landing-inline.js?v=9384304a3e"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
-<script type="module" src="js/landing-modules.js?v=d753faa212"></script>
+<script type="module" src="js/landing-modules.js?v=72dbfef149"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing
      router.js, supabase.js, components.js or stripe.js here loads each of them
      a second time, under a URL the imports inside app.js never resolve to. -->
-<script src="js/app.js?v=7d2ddc30fc" type="module"></script>
+<script src="js/app.js?v=c064df9cec" type="module"></script>
 <script src="js/live-prices.js?v=20260728a" defer></script>
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>

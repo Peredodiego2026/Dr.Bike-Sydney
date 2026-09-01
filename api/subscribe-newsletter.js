@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize, isValidEmail, verifyTurnstile } from './_security.js';
+import { withSentry } from './_sentry.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (await guard(req, res, { rateMax: 20, rateWindow: 60000 })) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -81,3 +82,8 @@ export default async function handler(req, res) {
 
   return res.status(200).json({ success: true, message: 'Subscribed!' });
 }
+
+// Un error aca no puede quedar solo en los logs de Vercel, que nadie mira.
+// Punto 20 de la auditoria: hasta el 2026-09-01 este archivo podia fallar en
+// produccion sin dejar rastro en ningun lado accionable.
+export default withSentry(handler, 'subscribe-newsletter');

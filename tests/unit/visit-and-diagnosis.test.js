@@ -9,11 +9,17 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { dictSource, composedSource } from '../helpers/i18n-source.js';
 
 const root = new URL('../../', import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, root), 'utf8');
 const appjs = read('js/app.js');
-const i18njs = read('js/i18n.js');
+// Un archivo por idioma desde el split del 01-sep-2026. Se componen con los
+// marcadores viejos para que el recorte de abajo siga funcionando igual - y
+// ahora el aislamiento es estructural: el contenido de `es` termina donde
+// empieza el archivo de `zh`, asi que una traduccion china ya no puede
+// satisfacer una afirmacion sobre el espanol (PENDIENTES 66).
+const i18njs = ['  es: {', dictSource('es'), '  zh: {', dictSource('zh')].join('\n');
 const mail = read('api/send-email.js');
 const terms = read('terms.html');
 

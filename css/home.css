@@ -102,7 +102,7 @@
   color: var(--navy);
 }
 .spa-lang__option[aria-selected='true'] {
-  color: var(--blue);
+  color: var(--blue-text);
   background: var(--blue-lt);
 }
 .spa-lang__check {
@@ -308,7 +308,7 @@
   margin-bottom: 4px;
 }
 [data-screen='home'] .service-price {
-  color: var(--blue);
+  color: var(--blue-text);
   font-size: 20px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -327,7 +327,7 @@
 }
 [data-screen='home'] .section-badge {
   background: var(--blue-light);
-  color: var(--blue);
+  color: var(--blue-text);
   padding: 4px 14px;
   border-radius: var(--radius-full);
   font-size: 11px;
@@ -353,7 +353,7 @@
 [data-screen='home'] .btn-outline-blue {
   display: inline-block;
   border: 2px solid var(--blue);
-  color: var(--blue);
+  color: var(--blue-text);
   background: transparent;
   padding: 11px 28px;
   border-radius: var(--radius);
@@ -423,7 +423,7 @@
 [data-screen='home'] .stat-mini-n {
   font-size: 18px;
   font-weight: 800;
-  color: var(--blue);
+  color: var(--blue-text);
 }
 [data-screen='home'] .stat-mini-l {
   font-size: 10px;
@@ -697,7 +697,7 @@
   content: '+';
   font-size: 20px;
   font-weight: 400;
-  color: var(--blue);
+  color: var(--blue-text);
   flex-shrink: 0;
   line-height: 1;
 }

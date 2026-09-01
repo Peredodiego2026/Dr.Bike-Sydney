@@ -50,9 +50,19 @@ export function hasKey(block, key) {
 // Returns null rather than an empty string when the marker is gone: an empty
 // block would report every key as missing, which reads like a content problem
 // instead of the parser problem it is.
+// Since the split of 2026-09-01 the dictionaries live one per file
+// (js/i18n-es.js, js/i18n-zh.js). Handed one of those, `src` IS the block and
+// there is nothing to slice - which is how the bug described above stopped
+// being possible rather than merely being handled. The marker path stays for
+// callers that pass a composed source.
 export function dictBlock(src, lang) {
   const start = src.indexOf(`\n  ${lang}: {`);
-  if (start < 0) return null;
+  if (start < 0) {
+    // No marker: either a single language's file, or something that is not a
+    // dictionary at all. A real one has quoted keys, and telling them apart by
+    // content beats returning null and reporting every key as missing.
+    return /^\s*['"]/m.test(src) ? src : null;
+  }
   const others = LANGS.filter((l) => l !== lang)
     .map((l) => src.indexOf(`\n  ${l}: {`, start + 1))
     .filter((i) => i > 0);
