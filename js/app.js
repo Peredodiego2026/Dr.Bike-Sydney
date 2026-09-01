@@ -1477,7 +1477,15 @@ async function renderServiceSummary() {
     return;
   }
   if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
-  if (window.posthog) posthog.capture('booking_step_viewed', { step: 'quote_summary' });
+  if (window.posthog)
+    posthog.capture('booking_step_viewed', {
+      step: 'quote_summary',
+      // El precio de la visita, para poder preguntarle al embudo si una zona
+      // de $45 convierte peor que una de $25. Sin el numero, "se va por el
+      // precio" no se puede contestar, solo suponer.
+      callout_fee: calloutFee,
+      service_price: serviceTotal,
+    });
 
   // The coverage call below is a network round trip, so this screen has the
   // same blank-box problem as Profile - and this one sits in the paid flow.
@@ -2646,6 +2654,29 @@ async function renderPayment() {
         // translateValue, not a bare literal: this is the single most important
         // sentence in the app - it tells a client their money left and their
         // booking did not - and it was shipping in English to es/zh clients.
+        // Un pago que falla es la caida mas cara del embudo y hasta ahora era
+        // invisible: se veia gente llegando al pago y no completando, sin
+        // saber si la tarjeta fue rechazada o si se arrepintieron.
+        //
+        // Se manda una CATEGORIA, nunca el mensaje crudo: puede traer datos
+        // del banco o del cliente, y esto sale a un servicio de terceros.
+        if (window.posthog) {
+          const raw = String((e && e.message) || '');
+          const reason = /declin|insufficient|card/i.test(raw)
+            ? 'card_declined'
+            : /no longer available|no longer held|just booked/i.test(raw)
+              ? 'slot_taken'
+              : /email/i.test(raw)
+                ? 'missing_email'
+                : 'other';
+          posthog.capture('payment_failed', {
+            reason,
+            // Si ya se habia cobrado, el problema es escribir la reserva, no
+            // el cobro - y eso se arregla distinto.
+            after_charge: !!_paidIntent,
+            callout_fee: calloutFee,
+          });
+        }
         errEl.textContent = _paidIntent
           ? translateValue(
               'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'

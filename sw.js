@@ -126,8 +126,8 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v110';
-const CACHE_PAGES  = 'drbike-pages-v77';
+const CACHE_STATIC = 'drbike-static-v111';
+const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
 // too, without their query, and every one of those entries was dead weight:

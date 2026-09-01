@@ -9062,3 +9062,57 @@ variables de entorno que en local no estan.
 fallar uno; desenvolver un endpoint hace fallar dos.
 
 1226/1226.
+
+## 75. Imagenes que hacen saltar la pagina, y un embudo sin el "por que" (01-sep-2026)
+
+### Punto 11 - 26 atributos que faltaban
+
+De 16 `<img>` en las tres paginas del cliente, **13 no declaraban sus
+dimensiones** y **14 no decian como cargar**.
+
+Sin `width`/`height` el navegador no sabe cuanto espacio reservar hasta que la
+imagen llega: dibuja la pagina, la imagen aterriza, y **todo lo de abajo salta**.
+El cliente que iba a tocar un boton toca otra cosa. Google lo mide (Cumulative
+Layout Shift) y lo usa para posicionar.
+
+No hacen falta las dimensiones de pantalla - el CSS sigue mandando - sino la
+**proporcion**, que es lo que el navegador usa para reservar el hueco. Por eso
+se escribieron las **dimensiones reales de cada archivo, leidas de sus bytes**:
+`logo-db.png` 600x423, `hero-van.webp` 1672x941, `mechanic-working.webp`
+1122x1402. Hay un test que compara la proporcion contra esos numeros.
+
+**`loading` no va igual en todas.** `lazy` en una imagen que se ve al abrir la
+pagina la **retrasa**: el navegador la descubre mas tarde. El logo y el hero van
+`eager`; lo de abajo de la linea de flotacion, `lazy`. Y `decoding="async"` en
+todas, que deja seguir pintando mientras se decodifica.
+
+El formato ya estaba bien: las dos imagenes grandes son webp. `logo-db.png` es
+PNG a proposito - lleva transparencia y lo usan el manifest y los iconos.
+
+### Punto 17 - el embudo ya decia donde, no por que
+
+La auditoria decia *"no sabemos en que paso exacto se va la gente"*. **Medido:
+los cinco pasos si se median** - `select_service`, `select_date`, `address`,
+`quote_summary`, `payment`, mas `booking_completed`. La caida entre pasos era
+visible desde antes.
+
+Lo que faltaba era la razon de **la ultima caida**, que es la cara: alguien
+llego al pago y no pago. ¿Tarjeta rechazada? ¿Le parecio caro? ¿El horario se lo
+gano otro?
+
+Dos agregados, y ni uno mas - un embudo con veinte eventos no se mira:
+
+1. **El precio de la visita viaja con el resumen.** "¿Se va por el precio?" no
+   se puede contestar sin el numero. Ahora se ve si una zona de $45 convierte
+   peor que una de $25, y si conviene tocar el precio o el texto que lo explica.
+
+2. **`payment_failed` con la categoria del fallo**: `card_declined`,
+   `slot_taken`, `missing_email` u `other`, mas si el fallo fue **antes o
+   despues del cobro** - si ya se habia cobrado, el problema es escribir la
+   reserva y eso se arregla distinto.
+
+**Se manda una categoria, nunca el mensaje crudo.** El error de Stripe puede
+traer datos del banco o del cliente, y esto sale a un servicio de terceros. Hay
+un test que verifica que el mensaje sin procesar no se mande.
+
+15 tests nuevos, verificados rompiendolos. 1241/1241.

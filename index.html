@@ -280,7 +280,7 @@
     <a class="skip-link" href="#app">Skip to content</a>
     <div id="boot-loader" role="status" aria-live="polite">
       <div class="boot-mark">
-        <img src="images/logo-db.png" alt="" width="88" height="62" fetchpriority="high" />
+        <img decoding="async" loading="eager" src="images/logo-db.png" alt="" width="88" height="62" fetchpriority="high" />
       </div>
       <div class="boot-tag">Healthy bikes, happy riders</div>
     </div>
@@ -325,7 +325,7 @@
           "
         >
           <div style="display: flex; align-items: center; gap: 8px">
-            <img
+            <img decoding="async" loading="eager" width="600" height="423"
               src="images/logo-db.png"
               alt="Dr. Bike Sydney"
               height="28"
@@ -364,7 +364,7 @@
         <header id="home-desktop-nav" aria-label="Site navigation">
           <div class="home-nav-inner">
             <a href="#home" class="home-nav-logo">
-              <img
+              <img decoding="async" loading="eager" width="600" height="423"
                 src="images/logo-db.png"
                 alt="Dr. Bike Sydney"
                 height="34"
@@ -644,7 +644,7 @@
               </div>
             </div>
             <div class="hero-image">
-              <img
+              <img decoding="async" loading="eager"
                 src="images/hero-van.webp"
                 alt="Dr. Bike Sydney mobile van"
                 width="1672"
@@ -999,7 +999,7 @@
                  real numbers back once they exist. -->
               </div>
               <div class="about-image">
-                <img
+                <img width="1122" height="1402"
                   src="images/mechanic-working.webp"
                   alt="Dr. Bike Sydney mechanic servicing a bike"
                   style="width: 100%; height: 100%; object-fit: cover"
@@ -1930,7 +1930,7 @@
               <!-- Brand -->
               <div>
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px">
-                  <img
+                  <img decoding="async" loading="eager" width="600" height="423"
                     src="images/logo-db.png"
                     alt="Dr. Bike Sydney"
                     height="28"
@@ -2201,7 +2201,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=1c7ea9b429" type="module"></script>
+    <script src="js/app.js?v=c064df9cec" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';
