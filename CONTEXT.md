@@ -1,5 +1,46 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
+## Current state (2026-08-31) — read this first
+
+- **Ritmo: sin apuro.** Diego, al cierre: *"no te apures con nada, si lo
+  podemos hacer con paciencia tenemos 2 meses mas de trabajo antes del
+  lanzamiento"*. Nada se despacha a las corridas.
+
+- **UNA CORRECCION QUE IMPORTA MAS QUE EL CODIGO.** Le dije a Diego que dos
+  clientes eligiendo el mismo horario dejan al segundo **cobrado y sin
+  reserva**, y use eso para empujar un refactor urgente del flujo de pago.
+  **Es falso.** `api/auth.js:1319` atrapa el `23505` de `bookings_unique_slot`
+  y **reembolsa** antes de devolver 409, avisandole al cliente. Lo verifique
+  leyendo el codigo DESPUES de haberlo afirmado, y se lo corregi a Diego.
+  La carrera existe; la perdida de plata no. Quien lea esto para justificar
+  cirugia urgente sobre los pagos, que lea ese handler primero.
+
+- **`feat/booking-before-payment` esta PARKED, empujada, SIN PR.** Contiene la
+  logica pura de retenciones (`api/_slot-hold.js`, 26 tests) y el descuento de
+  retenciones vencidas en `handleGetAvailability`. **No esta conectada**:
+  hacerlo toca create-booking, el webhook y el flujo de invitados.
+  Sin migracion a proposito - una retencion es una reserva `pending` SIN
+  payment intent que vence por `created_at`, y las tres columnas ya existen.
+  La expiracion es perezosa porque Vercel Hobby no permite crons sub-diarios.
+
+- **#374 mergeado:** nada se reembolsa antes de avisarle a Diego. El barrido
+  corre UNA VEZ POR DIA, asi que un pago hecho poco despues de una corrida ya
+  pasaba las 24h la primera vez que se lo veia e iba derecho a reembolso -
+  Diego recibia solo el aviso del reembolso, nunca el del huerfano. Backstop
+  a 72h por si el WhatsApp esta caido.
+
+- **El WhatsApp del admin SI esta configurado** (`+61433963250`, verificado por
+  Diego con SQL). De ese dato depende que llegue cualquier aviso.
+
+- **PENDIENTE DIEGO:** registrarse en GST eligiendo como fecha de efecto la de
+  su primera compra de herramientas/van - no facturo a ningun cliente todavia,
+  asi que retroactivar no le cuesta nada y le habilita reclamar lo comprado.
+  Con esa fecha se activa el flag `GST_REGISTERED`. Y guardar el primer mail
+  de backup (llega ~19:00 hora de Sydney) para probar una restauracion.
+
+- **El banner de cookies le gusto.** Test count: **997**.
+
+## Current state (2026-08-30)
 
 - **Accesibilidad (puntos 13 y 15), cerrados al final de la sesion.** El campo
   del PIN del mecanico apagaba el anillo de foco: se tabulaba a el y nada en
@@ -7,24 +48,20 @@
   en la regla BASE. Y no habia "saltar al contenido" en ninguna parte.
   El anillo global vive en `css/variables.css` porque **es la unica hoja que
   cargan las cinco superficies** - track.html no carga ninguna otra.
-
 - **Un lector de pantalla no se enteraba de nada.** Dos regiones `aria-live`
   en toda la app, las dos spinners de carga. Ahora `announce()` cubre errores
   (interrumpiendo), el cambio de paso del asistente, y el mapa (que es un
   lienzo de tiles: `aria-hidden` + `#map-alt` en texto).
   **NO se probo con un lector real** - eso necesita navegador.
-
 - **`css/main.css` no estaba vigilado por `versioned-assets-check`.** Lo edite,
   `npm run check` quedo VERDE, y el arreglo habria sido invisible para todo
   navegador que ya entro. Mismo hueco que mordio a mechanic.html cuatro dias
   antes. Ya esta en la lista.
-
 - **El guard de traducciones pasaba sobre traducciones faltantes.** Cortaba el
   diccionario hasta el FINAL del archivo, asi que para `es` incluia el bloque
   `zh` entero y una cadena traducida solo al chino satisfacia el chequeo del
   espanol. Encontrado **borrando una a proposito**. Corregido en
   `scripts/a11y-check.mjs` y en `tests/unit/keyboard-access.test.js`.
-
 - **Punto 14 (contraste) medido, NO arreglado.** 9 tokens del modo oscuro caen
   bajo 4.5:1, y **6 fallan en los DOS papeles a la vez** (como texto Y con
   texto blanco encima). No se arregla subiendo el numero: un color legible
@@ -32,20 +69,18 @@
   tiene que ser oscuro. La salida es separar los papeles en tokens distintos y
   migrar ~207 usos. Es de la escala del punto 10. La medicion completa esta en
   el chip de tarea que quedo abierto.
-
 - **Test count: 994.** check, lint, a11y:check, consent:check y rls:check en
   exit 0. **10 de 20 puntos de la auditoria cerrados.**
-
 - **PENDIENTE DIEGO, lo unico que bloquea:** la fecha de registro de GST (con
   eso se activa el flag y factura/panel/BAS/chatbot pasan a modo registrado),
   mirar el banner de cookies en celular y compu, recorrer una reserva solo con
   Tab, y guardar el primer mail de backup para probar una restauracion.
-
 - **Leccion que se repitio CUATRO veces:** un test que nunca se vio fallar no
   prueba nada. Dos veces un guard matcheo su propio comentario, una vez CRLF
   hizo que un regex no borrara nada, y una vez el corte del diccionario dejo
   pasar una traduccion faltante. Todos los guards de esta sesion se
   verificaron re-introduciendo el bug a proposito.
+
 ## Current state (2026-08-27) — read this first
 
 - **`main` is at the merge of #355.** The block below covers #346 through #355,
