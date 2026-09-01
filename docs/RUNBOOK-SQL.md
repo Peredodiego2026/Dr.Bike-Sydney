@@ -687,3 +687,47 @@ vistas y sus permisos. Tiene que decir `public_booking_tracking ->
 (no public access)` y `public_reviews -> SELECT`. Cualquier otra cosa, o
 cualquier otra vista con un permiso de escritura, sigue abierta. Despues corre
 `npm run rls:check` desde el repo: tiene que salir en verde y con exit 0.
+
+---
+
+## 12. `clear-legacy-plaintext-pins.sql` (31-ago-2026) — NO urgente, pero conviene
+
+**Que arregla.** La tabla de mecanicos (`escalation_contacts`) tiene dos
+columnas para el PIN: `pin_hash`, que es el PIN cifrado, y `pin`, que es el PIN
+**escrito tal cual, legible**. La segunda es la vieja. Cualquier fila que
+todavia tenga algo ahi es un PIN que se puede leer entrando a la base.
+
+**Por que no es urgente.** RLS ya impide que nadie de afuera lea esa tabla
+(verificado el 31-ago con la anon key: devuelve 0 filas). O sea que no esta
+expuesto a internet — es higiene, no un agujero abierto. Es lo contrario del
+punto 11.
+
+**Por que igual conviene.** Un PIN legible en la base lo ve cualquiera que
+consiga acceso a Supabase por cualquier via (una clave filtrada, un backup, una
+pestana abierta). Cifrado, no.
+
+**Esto se limpia solo, de a poco.** Cuando un mecanico entra con un PIN viejo,
+la app le calcula el cifrado y lo guarda sola. Y cuando vos le cambias el PIN
+desde Admin > Mechanic Profiles, tambien. Las filas que quedan son las de quien
+no entro ni le rotaste el PIN desde entonces.
+
+**LO UNICO QUE PUEDE SALIR MAL, y como lo evita el script.** Si borras el PIN
+legible de un mecanico que **no** tiene el cifrado todavia, le sacas el acceso:
+ese era su unico dato para entrar. Por eso el script esta en cuatro pasos y el
+paso 3 **solo toca las filas que ya tienen el cifrado**. El paso 2 te lista
+aparte las que se quedarian sin acceso, para que las arregles antes.
+
+**Como arreglar una fila del paso 2** (si el paso 2 no devuelve nada, saltealo):
+o ese mecanico entra una vez a la app — y se migra solo — o le poner un PIN
+nuevo desde Admin > Mechanic Profiles, que ya guarda el cifrado y borra el
+legible en la misma operacion.
+
+**Como saber que quedo bien.** El paso 4 tiene que decir
+`remaining_plaintext = 0`. Si no da 0, lo que queda son las filas del paso 2:
+el script las dejo a proposito, no fallo.
+
+**Ojo con "limpiar" el codigo despues.** Mientras quede aunque sea una fila sin
+cifrado, `api/auth.js` necesita el camino viejo para dejarla entrar. Recien
+cuando el paso 4 de 0 y siga dando 0 se puede borrar ese pedazo de codigo.
+Borrarlo antes deja al mecanico afuera con un cartel de "Invalid PIN" que no
+explica nada.
