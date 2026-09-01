@@ -30,6 +30,7 @@ import {
 } from './_completion-notify.js';
 import { completionVerdict } from './_completion-guard.js';
 import { occupiedBookings, expiredHoldIds, slotVerdict, HOLD_MINUTES } from './_slot-hold.js';
+import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
@@ -3582,6 +3583,20 @@ async function handlePublicTrack(req, res) {
   if (!data?.length) return res.status(404).json({ error: 'Booking not found' });
   const booking = data[0];
 
+  // Hasta cuando vale este link. Ver api/_tracking-scope.js: un link mandado
+  // por email en agosto devolvia la direccion exacta y el PIN de llegada en
+  // diciembre, con el trabajo terminado hace meses.
+  //
+  // Se corta ACA, antes de ir a buscar la posicion del mecanico: un link
+  // vencido no tiene por que costar una consulta mas.
+  const scope = trackingScope(booking);
+  if (scope === 'expired') {
+    return res.status(410).json({
+      error: 'This tracking link has expired.',
+      expired: true,
+    });
+  }
+
   // Fetch mechanic location server-side (bypasses RLS on mechanic_locations)
   let mechanic_location = null;
   const isActive = ['confirmed', 'enroute', 'en_route', 'in_progress', 'arrived'].includes(
@@ -3678,7 +3693,13 @@ async function handlePublicTrack(req, res) {
   // tracking_token and arrival_pin. arrival_pin belongs here - it is the code
   // the client reads out to the mechanic on arrival, so the client is exactly
   // who is meant to have it.
-  return res.status(200).json({ ...booking, mechanic_location, mechanic_profile });
+  // Pasada la ventana, el link sigue vivo - la resena se deja con el mismo
+  // link - pero deja de entregar direccion, PIN y posicion. Ninguno de los tres
+  // significa nada para un trabajo terminado hace semanas, y son exactamente
+  // los que dolerian si el link se filtra.
+  return res
+    .status(200)
+    .json(applyTrackingScope({ ...booking, mechanic_location, mechanic_profile }, scope));
 }
 
 // Increment uses_count on a discount/gift code after it is actually used in a booking.

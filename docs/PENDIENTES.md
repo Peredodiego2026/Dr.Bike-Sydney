@@ -8858,3 +8858,67 @@ minimos (`--red` de `#ef4444` a `#d73d3d`) y la app sigue viendose igual.
 Diego, en admin y en la app del mecanico, que son las dos superficies que pueden
 ser oscuras. Lo verificado por calculo es el contraste de cada token en cada
 papel y en los dos temas.
+
+## 72. El link de seguimiento no caducaba nunca (01-sep-2026)
+
+Punto 5. La auditoria pedia decidir y aplicar **si caduca, cuando, y que largo
+tiene**. La respuesta a la primera era: **no caduca**.
+
+Un link mandado por email en agosto seguia devolviendo, en diciembre, la
+**direccion exacta del cliente** y su **PIN de llegada** - con el trabajo
+terminado hacia meses. El token es la credencial: quien lo tenga ve todo.
+
+### El largo ya estaba bien
+
+Es un UUID v4 (`gen_random_uuid()`): 122 bits. Adivinarlo no es una amenaza
+realista y no habia nada que cambiar. **Lo que faltaba era el tiempo.**
+
+### Por que no se apaga de golpe al terminar el trabajo
+
+**El mismo link se usa para dejar la resena.** El email de review que sale al
+completar lleva `/track.html?token=...`, y de ahi salen las resenas que muestra
+la landing. Matarlo al completar romperia ese flujo.
+
+Asi que caduca en dos escalones, y **cada dato se apaga cuando deja de tener
+sentido**:
+
+| Cuando | Que entrega |
+|---|---|
+| **full** - por venir, en curso, o termino hace <7 dias | Todo |
+| **limited** - de 7 a 90 dias | Sigue vivo para la resena, **sin** direccion, PIN, notas ni posicion |
+| **expired** - pasados 90 dias | 410 Gone |
+
+Los cuatro campos que se quitan son exactamente los que dolerian si el link se
+filtra, y ninguno significa nada para un trabajo terminado hace semanas.
+
+### Decisiones chicas que importan
+
+**Un trabajo sin terminar da todo, sin importar la fecha.** Una reserva
+reprogramada varias veces puede tener una `scheduled_date` vieja y ser el
+trabajo de manana.
+
+**Sin fecha legible degrada a `limited`, no a `expired`.** Quitar los datos
+sensibles es la respuesta segura; romper el link de alguien por una fila rara
+seria peor que el riesgo que evita.
+
+**Las claves se borran, no se mandan en `null`.** Un cliente que ve
+`address: null` cree que se perdio su direccion; ausente dice "esto ya no se
+informa".
+
+**El corte va antes de buscar la posicion del mecanico.** Un link vencido no
+tiene por que costar una consulta mas.
+
+### Sin migracion
+
+El ancla es `scheduled_date`, no `completed_at`: ya esta en la fila y en la
+consulta que el endpoint hace, asi que esto no espera a ningun SQL - y aca el
+codigo llega a main antes de que Diego corra el archivo.
+
+### El cliente ya degradaba bien
+
+`js/app.js:3171` ya mostraba el PIN solo con `booking.arrival_pin && preArrival`,
+y `track.html:165` ya renderiza `bkg.address || '—'` y valida las coordenadas
+antes de usarlas. **No hizo falta tocar el front**: los campos ausentes ya
+estaban contemplados.
+
+23 tests nuevos. 1181/1181.
