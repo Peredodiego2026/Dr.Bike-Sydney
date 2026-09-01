@@ -9210,3 +9210,61 @@ exigiendo que el test fallara. Dos hallazgos de ese proceso:
 
 `npm run check`, `npm run lint` y `npm test` verdes por codigo de salida.
 1257/1257.
+## 77. El backup dejo de ser una promesa (01-sep-2026)
+
+Punto 19 de la auditoria. La queja nunca fue "no hay backups" - era que **nadie
+habia restaurado uno nunca**, y un backup sin restauracion de prueba es una
+promesa, no un hecho. La entrada 61 cerro la primera mitad: el archivo llega
+todas las noches, y Diego confirmo el 01-sep que lo recibio. Esta cierra la
+segunda.
+
+### Lo que se probo, y con que
+
+`scripts/restore-backup.mjs` lee un backup y lo devuelve a una base. El
+round-trip se manejo **con el codigo real de produccion en los dos lados**:
+`buildBackup()` escribe, `validateBackup()` lee, y las filas se comparan campo
+por campo. Si la forma se desvia de cualquiera de los dos lados, el test falla -
+que es lo unico que mantiene restaurable el archivo que Diego recibe.
+
+Verificado end to end fuera de los tests tambien: se genero un archivo de 1202
+filas (151 KB), se escribio a disco como el que llega por mail, y se paso por el
+restaurador desde la linea de comandos. Volvio completo.
+
+Lo que sobrevive intacto: acentos, chino, nulos, objetos anidados, y una tabla
+de **1200 filas** - mas de una pagina de PostgREST, que es donde un volcado
+ingenuo se corta en 1000 y el archivo se ve completo igual.
+
+### Y rechaza lo que tiene que rechazar
+
+Un archivo truncado a mano de 1200 a 900 filas se detecta al instante
+(`bookings: dice 1200 filas y trae 900`) y sale con exit 1. Un test que nunca se
+vio fallar no prueba nada, asi que tambien se verifico al reves.
+
+### Las guardas, y por que cada una
+
+Una restauracion **escribe**. Todo esta armado para que no pueda escribir en el
+lugar equivocado:
+
+- **`--dry-run` es el modo por defecto**, no una opcion. Escribir exige `--url` y
+  `--key` explicitos.
+- **Se niega a escribir sobre el proyecto de produccion** salvo
+  `--i-know-this-is-live`. Restaurar encima de una base sana es como un backup
+  se convierte en el desastre que venia a evitar.
+- **Un backup incompleto se rechaza** salvo `--allow-incomplete`. Restaurar
+  media base en silencio es peor que no restaurar.
+- **Nunca borra.** Las filas se upsertean por lotes; nada aca elimina datos.
+
+### Un arreglo de diseno que aparecio al testear
+
+La primera version corria su CLI **al importarse**: el test importaba
+`validateBackup()` y el top-level llamaba `process.exit(1)` por falta de
+`--file`. Un modulo que termina el proceso al importarse no es un modulo. El CLI
+quedo detras de `IS_CLI`, comparando `import.meta.url` con `process.argv[1]`.
+
+No fue una concesion al test: es lo que permite que el test maneje **el
+validador de verdad** en vez de una copia que se desincroniza.
+
+`npm run backup:verify -- <archivo>` para revisar cada backup que llega. No
+escribe nada.
+
+13 tests nuevos. 1123/1123.

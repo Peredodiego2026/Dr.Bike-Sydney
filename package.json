@@ -50,6 +50,7 @@
     "consent:check": "node scripts/consent-gate.mjs --check",
     "privacy:export": "node scripts/privacy-runbook.mjs --export",
     "privacy:forget": "node scripts/privacy-runbook.mjs --forget",
+    "backup:verify": "node scripts/restore-backup.mjs --dry-run --file",
     "suburbs:generate": "node scripts/generate-suburb-pages.mjs",
     "blog:translate": "node scripts/translate-blog-posts.mjs",
     "static-pages:translate": "node scripts/translate-static-pages.mjs"
