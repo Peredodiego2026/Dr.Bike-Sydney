@@ -49,7 +49,8 @@ convert, never raise it.
 - `index.html` - Mobile SPA (PRODUCTION). Hash router. ~450 lines HTML + js/app.js.
 - `landing.html` - Desktop marketing + booking modal (PRODUCTION). ~2600 lines.
 - `admin.html` - Manager dashboard. Server-side auth via /api/auth.
-- `mechanic.html` - Mechanic app, PIN login 3250.
+- `mechanic.html` - Mechanic app, PIN login 3250 (still valid, but see
+  "Mechanic PIN" below - PINs issued from Admin are 6 digits since 2026-09-01).
 - `track.html` - Public booking tracking (shareable link).
 - `middleware.js` - Vercel Edge Function. Matcher: '/'. Routes mobile->index.html, desktop->landing.html.
 
@@ -157,7 +158,17 @@ mobile->index.html, desktop->landing.html. Full one-page routing was not retried
   NOT a flat $20 - see the Payments section above
 - Phone: 0433 963 250 / +61433963250
 - WhatsApp: wa.me/61433963250
-- Mechanic PIN: 3250
+- Mechanic PIN: 3250 - **4 digits, and the last one that will be.** Since
+  2026-09-01 `handleAdminSetMechanicPin` issues **6-digit** PINs
+  (`crypto.randomInt`, not `Math.random`). The mechanic login sends only a PIN
+  with no username, so a failed attempt belongs to no account and a per-account
+  lockout is not expressible - the size of the PIN space IS the defence, and
+  4 digits is 10k, which a distributed guesser walks in hours.
+  `authMechanic` still accepts 4+ digits **on purpose**: `pin_hash` is one-way,
+  so a PIN issued before that date cannot be detected or migrated, and raising
+  the floor would lock those mechanics out. 3250 keeps working until Diego
+  reissues it from Admin > Mechanic Profiles - reissuing every mechanic is what
+  actually retires the 4-digit ones. Do not quote a new PIN here.
 
 ## Trademark status
 See the `trademark-status` skill for current IP Australia search results and registration strategy.
