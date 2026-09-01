@@ -13,6 +13,7 @@ function logSendFailure(label, r, ref) {
 }
 
 import { isAdminEmail } from './auth.js';
+import { withSentry } from './_sentry.js';
 
 const sb = createClient(
   'https://tgpipbloisahufaywhqb.supabase.co',
@@ -104,7 +105,7 @@ async function handle2hReminders(req, res) {
   return res.status(200).json({ sent, checked: bookings.length });
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   // 2h reminders: called by cron as GET /api/send-reminders?type=2h
   if (req.query?.type === '2h') return handle2hReminders(req, res);
 
@@ -181,3 +182,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: error.message });
   }
 }
+
+// Un error aca no puede quedar solo en los logs de Vercel, que nadie mira.
+// Punto 20 de la auditoria: hasta el 2026-09-01 este archivo podia fallar en
+// produccion sin dejar rastro en ningun lado accionable.
+export default withSentry(handler, 'send-reminders');

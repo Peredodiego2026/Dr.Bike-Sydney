@@ -13,6 +13,7 @@ import {
 } from './_security.js';
 import { smsBody, waBody, normalizeLang } from './_message-i18n.js';
 import { drivingEtaMinutes } from './_eta.js';
+import { withSentry } from './_sentry.js';
 
 const sb = createClient(
   process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co',
@@ -348,7 +349,7 @@ async function handleEta(req, res) {
   return res.status(200).json({ minutes });
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if (verifyInternalAuth(req, res)) return;
 
@@ -359,3 +360,8 @@ export default async function handler(req, res) {
   if (channel === 'eta') return handleEta(req, res);
   return handleSMS(req, res);
 }
+
+// Un error aca no puede quedar solo en los logs de Vercel, que nadie mira.
+// Punto 20 de la auditoria: hasta el 2026-09-01 este archivo podia fallar en
+// produccion sin dejar rastro en ningun lado accionable.
+export default withSentry(handler, 'send-message');

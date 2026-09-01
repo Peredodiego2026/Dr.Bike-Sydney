@@ -14,6 +14,7 @@ import {
   backupFilename,
   MAX_JSON_BYTES,
 } from './_backup.js';
+import { withSentry } from './_sentry.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -1191,7 +1192,7 @@ async function handleB2B(req, res) {
 }
 
 // ── Router ────────────────────────────────────────────────────────────────────
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST')
     return res.status(405).json({ error: 'Method not allowed' });
 
@@ -1276,3 +1277,8 @@ export default async function handler(req, res) {
       'Missing ?type= (birthday|reengagement|abandoned|abandoned-checkout|service|upsell|b2b|completion-retry|all)',
   });
 }
+
+// Un error aca no puede quedar solo en los logs de Vercel, que nadie mira.
+// Punto 20 de la auditoria: hasta el 2026-09-01 este archivo podia fallar en
+// produccion sin dejar rastro en ningun lado accionable.
+export default withSentry(handler, 'send-cron');

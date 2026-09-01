@@ -8980,3 +8980,85 @@ borrandolo: 3 tests fallan.
 proyecto ya tenia en sus terminos, que es lo conservador. Antes de lanzar
 conviene que un abogado australiano mire las dos pantallas - la de cobro y
 terms.html - de una sola vez.
+
+## 74. Cabeceras y alertas: los dos que quedaban del blindaje (01-sep-2026)
+
+### Punto 1 - la CSP tenia cuatro puertas abiertas a la nada
+
+El veredicto era **FUERTE** y lo era: CSP completa, HSTS con preload,
+`X-Frame-Options: DENY`, `nosniff`, `Permissions-Policy`. Faltaba endurecer.
+
+Se quitaron **cuatro hosts permitidos que no usa nadie** - verificado por grep
+sobre todos los `*.html` y `*.js`, cero apariciones fuera de la propia cabecera:
+
+| Quitado | Por que sobraba |
+|---|---|
+| `api.mapbox.com` | El mapa usa Leaflet con tiles de OpenStreetMap |
+| `*.mapbox.com` | Idem, en `img-src` |
+| `www.gstatic.com` | Sin usar |
+| `connect.facebook.net` | Es el SDK de Facebook; en el repo solo hay un `<a href>` a la pagina |
+
+Cada host permitido es una via por la que un tercero comprometido podria
+ejecutar codigo en el sitio. De 39 entradas a 33.
+
+**Y el test cuida las dos direcciones**: falla si alguno de los cuatro vuelve, y
+tambien **si se cae uno de los que si hacen falta**. Sacar de mas rompe la app en
+silencio y solo se nota cuando un cliente no puede pagar.
+
+### `'unsafe-inline'` se queda, y esta escrito por que
+
+La auditoria permitia documentarlo si no se podia. No se puede, y el motivo no
+es pereza:
+
+- **Nonces**: hay que generarlos **por peticion** y escribirlos en el HTML
+  servido. Este sitio es **HTML estatico en Vercel**: no hay render por peticion
+  donde ponerlo. Habria que convertir las cinco paginas en funciones.
+- **Hashes**: alcanzarian si todos los scripts inline se conocieran al
+  construir. No es el caso: `js/consent.js` **crea elementos `<script>` en
+  tiempo de ejecucion** cuando el visitante acepta las cookies - asi es como los
+  analytics quedan bloqueados hasta que hay permiso (punto 7).
+
+Sacarlo hoy **romperia el banner de cookies**. Cambiar una proteccion real y
+funcionando por una teorica es mal negocio.
+
+Como `vercel.json` es JSON y **no admite comentarios**, el razonamiento vive en
+`docs/SECURITY-HEADERS.md`, con la receta para agregar un host nuevo. Hay un
+test que verifica que ese documento exista y explique las dos alternativas
+descartadas: la auditoria permitia documentar por que no se puede, no dejarlo
+sin explicacion.
+
+### Punto 20 - Sentry estaba cargado, pero casi nadie le hablaba
+
+*"Sentry esta cargado. Alguien mira los errores?"*
+
+Medido: **5 de 28 archivos de `api/` reportaban**. Los otros 23 podian fallar en
+produccion **sin dejar rastro en ningun lado que alguien mire**.
+
+Y los que faltaban eran justo los tres escenarios que la auditoria nombraba:
+
+| Sin reportar | El escenario |
+|---|---|
+| `send-message.js` | *"Twilio rechaza los SMS y el mecanico no se entera de su trabajo"* |
+| `send-cron.js` | Si esto se cae no corren los recordatorios, ni el backup, ni el reembolso automatico de pagos huerfanos |
+| `create-subscription.js` | Cobros recurrentes |
+
+Los **ocho** endpoints publicos que faltaban quedaron envueltos en `withSentry`.
+Un test recorre `api/` y falla si aparece uno nuevo sin envolver - no hay lista
+que mantener a mano.
+
+### Un tropiezo que vale anotar
+
+El script que agregaba el `import` lo puso **dentro de un import multilinea** en
+dos archivos: la heuristica "despues del ultimo `\nimport `" encuentra la
+PRIMERA linea de un import de varias y mete el nuevo en el medio de su lista de
+nombres. `node --check` lo agarro al instante.
+
+Y se verifico que las fallas de carga que quedan (`supabaseKey is required`,
+`Missing API key`) **son previas**: se cargo la version original del archivo
+desde git y da el mismo error. Son SDK que se construyen al importar y necesitan
+variables de entorno que en local no estan.
+
+34 tests nuevos, verificados rompiendolos: devolver un host muerto a la CSP hace
+fallar uno; desenvolver un endpoint hace fallar dos.
+
+1226/1226.
