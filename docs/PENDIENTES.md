@@ -9116,3 +9116,97 @@ traer datos del banco o del cliente, y esto sale a un servicio de terceros. Hay
 un test que verifica que el mensaje sin procesar no se mande.
 
 15 tests nuevos, verificados rompiendolos. 1241/1241.
+
+## 76. Las dos carreras del cobro, y tres bugs vivos que aparecieron mirandolas (01-sep-2026)
+
+Punto 4 de la auditoria: *"El servidor recalcula la tarifa por zona y reembolsa
+lo que no coincide. Falta probar carreras: la misma reserva diez veces en un
+segundo, y cancelar en el instante en que el mecanico completa. Cerrado cuando
+hay un test que dispara ambas y demuestra que no se duplica el cobro."*
+
+### Carrera 1 - diez veces en un segundo: ya estaba cubierta
+
+Cuatro capas, todas verificadas con `Promise.all` sobre las funciones reales, no
+leyendo el codigo y suponiendo:
+
+1. `slotVerdict()` reconoce la retencion propia, asi que diez toques del mismo
+   boton ven **una** retencion, no diez.
+2. Diez personas distintas sobre el mismo horario: una entra, nueve rebotan
+   **antes** de que se les toque la tarjeta.
+3. Un mismo PaymentIntent no puede respaldar dos reservas.
+4. Y por debajo, un indice unico en la base que no depende de la app; si aun asi
+   choca con un pago detras, se reembolsa.
+
+### Carrera 2 - cancelar mientras el mecanico completa: faltaba una direccion
+
+El lado del mecanico ya estaba bien (`completionVerdict()`: completar algo
+cancelado se rechaza, completar dos veces no ejecuta nada la segunda vez).
+
+**El lado del cliente no.** `handleClientCancel` leia el estado, comprobaba que
+fuera `pending`/`confirmed`, y despues escribia **sin volver a comprobarlo** - un
+check-then-act de manual. Entre la lectura y el `PATCH`, el mecanico podia
+terminar el trabajo: el `PATCH` pisaba `completed` con `cancelled` y a
+continuacion **se reembolsaba un trabajo que se hizo de verdad**.
+
+El arreglo deja que decida la base:
+
+- El filtro de estado va **tambien en la escritura** (`&status=in.(pending,confirmed)`).
+- `Prefer: return=representation` en vez de `minimal`, porque `minimal` devuelve
+  204 tanto si cambio una fila como si no cambio ninguna, y esa diferencia es
+  justo la que decide si se reembolsa.
+- Cero filas devueltas -> `409 CANCEL_RACE_LOST`, y **no se toca la plata**.
+
+### Tres bugs vivos que aparecieron mirando eso
+
+**1. El credito de referido no se devolvia nunca al cancelar.**
+`notifyAdminCancellation(bk)` usaba `SERVICE_KEY` y `booking_id`, que estan
+declarados dentro de `handleClientCancel` y no ahi. En ejecucion eso es un
+`ReferenceError`, y cae dentro de un `try/catch` que solo logea - asi que el
+bloque entero no corria nunca en silencio. El comentario de esa misma funcion
+dice: *"el cliente gasta $15 que se gano, cancela esa misma tarde, y la plata
+simplemente desaparece sin que ninguna pantalla lo admita"*. Eso es exactamente
+lo que estaba pasando.
+
+**2. El mail de pago fallido decia "This is attempt 1" siempre.**
+`api/send-email.js` leia `attemptCount` y `monthsAgo` con `typeof x !==
+'undefined'`, pero **nunca los sacaba de `req.body`**. El `typeof` evitaba el
+error, asi que nadie se entero: el tercer intento de cobro se anunciaba como el
+primero, y el mail de reactivacion nunca decia cuantos meses pasaron. Los dos
+valores si se enviaban (`stripe-webhook.js:615`, `send-cron.js:169`,
+`send-reminders.js:172`).
+
+**3. "Enviar SMS de prueba" del admin estaba roto en Firefox.**
+`sendTestSMS()` usaba el global implicito `event`. Chrome tiene `window.event`
+durante el despacho; Firefox no, y el boton tiraba `ReferenceError` antes de
+hacer nada. El listener ya recibia el evento, solo no se lo pasaba. Diego usa
+Firefox.
+
+### El guard: `no-undef`
+
+Los tres son la misma forma - una variable fuera de alcance. **Sintaxis valida,
+`node --check` verde, revienta recien en produccion.** Es el mismo bug que el
+`holdOnly` de la reserva antes del cobro, encontrado hace dos dias.
+
+`eslint.config.js` no tenia `no-undef`. Ahora si, con los globals del navegador
+y de los CDN declarados para que hable solo de errores de verdad - sin esa
+lista, la regla grita 900 veces por `document` y nadie la deja encendida.
+
+De paso salieron tres lineas muertas en `js/landing-inline.js` que llamaban a
+`closeGiftCardModal`/`submitGiftCard`, borradas cuando el modal se mudo a
+`js/gift-card.js`. No rompian nada (`wire()` no hace nada si el elemento falta)
+pero no podian funcionar nunca.
+
+### Verificacion
+
+16 tests nuevos. **Los 8 arreglos se verificaron rompiendolos uno por uno** y
+exigiendo que el test fallara. Dos hallazgos de ese proceso:
+
+- Un mutante mal apuntado se leia como "guard decorativo": `Prefer:
+  'return=representation'` aparece dos veces en `api/auth.js` y la mutacion caia
+  en la primera, que esta en otra funcion. El decorativo era el mutante.
+- Uno **si** era decorativo: neutralizar `if (!Array.isArray(updated) ||
+  updated.length === 0)` dejaba pasar el 409 y se reembolsaba igual, y ningun
+  test lo notaba. Se agrego el que faltaba.
+
+`npm run check`, `npm run lint` y `npm test` verdes por codigo de salida.
+1257/1257.

@@ -159,7 +159,7 @@ function byId(id) {
     saveWhatsappNumber();
   });
   byId('auto-wire-24').addEventListener('click', function (event) {
-    sendTestSMS();
+    sendTestSMS(event.currentTarget);
   });
   byId('trig-new_booking').addEventListener('click', function (event) {
     toggleTrigger(event.currentTarget, 'new_booking');
@@ -770,8 +770,7 @@ async function toggleTrigger(el, key) {
   }
 }
 
-async function sendTestSMS() {
-  const btn = event.target;
+async function sendTestSMS(btn) {
   btn.textContent = 'Sending...';
   btn.disabled = true;
   try {

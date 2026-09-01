@@ -2554,20 +2554,43 @@ async function handleClientCancel(req, res) {
   if (!['pending', 'confirmed'].includes(bk.status))
     return res.status(400).json({ error: 'Booking cannot be cancelled' });
 
+  // El filtro de estado va TAMBIEN en la escritura, no solo en la lectura de
+  // arriba. Sin el, esto era un check-then-act clasico: se leia 'confirmed', y
+  // entre esa lectura y este PATCH el mecanico podia terminar el trabajo. El
+  // PATCH pisaba 'completed' con 'cancelled' y despues reembolsaba un trabajo
+  // que se hizo de verdad - la carrera exacta del punto 4 de la auditoria.
+  //
+  // Con el filtro, la base decide: si el estado ya se movio, no matchea ninguna
+  // fila y la carrera esta perdida, sin haber tocado nada.
   const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(
+      booking_id
+    )}&status=in.(pending,confirmed)`,
     {
       method: 'PATCH',
       headers: {
         apikey: SERVICE_KEY,
         Authorization: `Bearer ${SERVICE_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
+        // representation, no minimal: hace falta SABER si actualizo algo.
+        // `minimal` devuelve 204 tanto si cambio una fila como si no cambio
+        // ninguna, y esa diferencia es justo lo que decide si se reembolsa.
+        Prefer: 'return=representation',
       },
       body: JSON.stringify({ status: 'cancelled' }),
     }
   );
   if (!updateResp.ok) return res.status(500).json({ error: 'Failed to cancel booking' });
+
+  const updated = await updateResp.json().catch(() => []);
+  if (!Array.isArray(updated) || updated.length === 0) {
+    // Alguien llego primero. Puede ser el mecanico completando, o un segundo
+    // toque del mismo boton. En los dos casos: no se reembolsa nada.
+    return res.status(409).json({
+      error: 'This booking was just updated - refresh to see its current state.',
+      code: 'CANCEL_RACE_LOST',
+    });
+  }
 
   // Notify first person on waitlist for this slot (fire-and-forget)
   notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time).catch(() => {});
@@ -2578,14 +2601,14 @@ async function handleClientCancel(req, res) {
   // Auto-refund the $20 callout fee for >=24h notice (per terms.html section 6),
   // then tell Diego the outcome (fire-and-forget - never block the client's
   // cancel response on this).
-  notifyAdminCancellation(bk).catch((e) =>
+  notifyAdminCancellation(bk, SERVICE_KEY).catch((e) =>
     console.error('[client-cancel] refund/notify failed:', e.message)
   );
 
   return res.status(200).json({ ok: true });
 }
 
-async function notifyAdminCancellation(bk) {
+async function notifyAdminCancellation(bk, SERVICE_KEY) {
   const hours = hoursUntilAppointment(bk.scheduled_date, bk.scheduled_time);
   const eligibleForRefund = hours >= 24;
 
@@ -2603,7 +2626,7 @@ async function notifyAdminCancellation(bk) {
       const { data: creditRow, error: readErr } = await sbAdmin
         .from('bookings')
         .select('referral_credit_applied')
-        .eq('id', booking_id)
+        .eq('id', bk.id)
         .single();
       if (readErr) throw new Error(readErr.message);
       const creditToRestore = Number(creditRow?.referral_credit_applied) || 0;
@@ -2616,12 +2639,12 @@ async function notifyAdminCancellation(bk) {
       await sbAdmin
         .from('bookings')
         .update({ referral_credit_applied: 0 })
-        .eq('id', booking_id)
+        .eq('id', bk.id)
         .gt('referral_credit_applied', 0);
     } catch (e) {
       // `throw null` above is the "nothing to restore" path, not a failure.
       if (e) {
-        console.error('[client-cancel] referral credit restore failed:', booking_id, e.message);
+        console.error('[client-cancel] referral credit restore failed:', bk.id, e.message);
       }
     }
   }

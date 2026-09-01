@@ -1567,8 +1567,6 @@ document.addEventListener('DOMContentLoaded', function() {
     el.addEventListener('focus', function() { this.style.borderColor = 'var(--blue)'; });
     el.addEventListener('blur', function() { this.style.borderColor = 'var(--border)'; });
   });
-  wire('giftcard-modal-close-btn', function() { closeGiftCardModal(); });
-  wire('gift-submit', function() { submitGiftCard(); });
   wire('newsletter-subscribe-btn', function() { subscribeNewsletter(); });
   wire('auth-modal-close-btn', function() { closeAuthModal(); });
   wire('tab-signin', function() { showAuthTab('signin'); });
@@ -1583,12 +1581,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (membershipModal) {
     membershipModal.addEventListener('click', function(e) {
       if (e.target === membershipModal) closeMembershipModal();
-    });
-  }
-  const giftcardModal = byId('giftcard-modal');
-  if (giftcardModal) {
-    giftcardModal.addEventListener('click', function(e) {
-      if (e.target === giftcardModal) closeGiftCardModal();
     });
   }
 
