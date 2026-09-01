@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <link rel="stylesheet" href="css/variables.css?v=20260827-dark2">
-<link rel="stylesheet" href="css/admin.css?v=626610003a">
+<link rel="stylesheet" href="css/admin.css?v=9bafd2bcc6">
 <style>
 @media(max-width:768px){
   .content{padding:12px 10px !important}
@@ -213,7 +213,7 @@
 
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
-      <div id="dash-error" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red);padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px"></div>
+      <div id="dash-error" style="display:none;background:#FEF2F2;border:1px solid var(--red-edge);color:var(--red-text);padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px"></div>
       <div class="kpis">
         <div class="kpi-card blue">
           <div class="kpi-label">Revenue today</div>
@@ -397,7 +397,7 @@
         <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Reassign to van</div>
         <input type="hidden" id="reassign-booking-id">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          <button style="padding:16px;border:2px solid var(--blue);border-radius:10px;background:var(--blue-lt);color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-6">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
+          <button style="padding:16px;border:2px solid var(--blue);border-radius:10px;background:var(--blue-lt);color:var(--blue-text);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-6">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
           <button style="padding:16px;border:2px solid var(--amber);border-radius:10px;background:var(--amber-lt);color:var(--amber);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-7">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
         </div>
         <button style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-8">Cancel</button>
@@ -462,7 +462,7 @@
             <option value="2">Van 2 - North Shore</option>
           </select>
         </div>
-        <div id="acb-error" style="display:none;font-size:12px;color:var(--red);margin-bottom:12px"></div>
+        <div id="acb-error" style="display:none;font-size:12px;color:var(--red-text);margin-bottom:12px"></div>
         <div style="display:flex;gap:10px">
           <button data-action="acb-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Create booking</button>
           <button data-action="acb-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
@@ -495,7 +495,7 @@
             <option value="17:00">5:00 PM</option>
           </select>
         </div>
-        <div id="admin-resched-error" style="display:none;font-size:12px;color:var(--red);margin-bottom:12px"></div>
+        <div id="admin-resched-error" style="display:none;font-size:12px;color:var(--red-text);margin-bottom:12px"></div>
         <div style="display:flex;gap:10px">
           <button data-action="admin-resched-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Reschedule</button>
           <button data-action="admin-resched-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
@@ -699,12 +699,12 @@
       <div class="kpis" id="fin-kpis">
         <div class="kpi-card blue" style="text-align:center">
           <div class="kpi-label">REVENUE (INCL. GST)</div>
-          <div class="kpi-value" id="fk-revenue" style="color:var(--blue)">$0</div>
+          <div class="kpi-value" id="fk-revenue" style="color:var(--blue-text)">$0</div>
           <div class="kpi-sub" id="fk-jobs">0 jobs</div>
         </div>
         <div class="kpi-card green" style="text-align:center">
           <div class="kpi-label">GST COLLECTED</div>
-          <div class="kpi-value" id="fk-gst" style="color:var(--green)">$0</div>
+          <div class="kpi-value" id="fk-gst" style="color:var(--green-text)">$0</div>
           <div class="kpi-sub">10% · payable to ATO</div>
         </div>
         <div class="kpi-card orange" style="text-align:center">
@@ -714,7 +714,7 @@
         </div>
         <div class="kpi-card red" style="text-align:center">
           <div class="kpi-label">EST. NET PROFIT</div>
-          <div class="kpi-value" id="fk-profit" style="color:var(--red)">$0</div>
+          <div class="kpi-value" id="fk-profit" style="color:var(--red-text)">$0</div>
           <div class="kpi-sub" id="fk-margin">0% margin</div>
         </div>
       </div>
@@ -729,7 +729,7 @@
             <div style="font-size:15px;font-weight:700;color:var(--navy)">Collected, not yet earned</div>
             <div id="fk-held-sub" style="font-size:13px;color:var(--mgray);margin-top:3px;line-height:1.5">&mdash;</div>
           </div>
-          <div id="fk-held" style="flex-shrink:0;font-size:26px;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums">$0</div>
+          <div id="fk-held" style="flex-shrink:0;font-size:26px;font-weight:800;color:var(--blue-text);font-variant-numeric:tabular-nums">$0</div>
         </div>
       </div>
 
@@ -893,7 +893,7 @@
           </label>
           <button data-action="save-expense" class="btn-save" style="min-height:44px">Add expense</button>
         </div>
-        <div id="exp-form-err" style="display:none;color:var(--red);font-size:13px;margin-top:10px"></div>
+        <div id="exp-form-err" style="display:none;color:var(--red-text);font-size:13px;margin-top:10px"></div>
       </div>
       <div id="exp-totals" style="margin-bottom:16px"></div>
       <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px">
@@ -965,7 +965,7 @@
       </div>
 
       <!-- Fills in only when a query actually fails. Never a silent zero. -->
-      <div id="an-error" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red);padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600"></div>
+      <div id="an-error" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red-text);padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600"></div>
 
       <div class="an-kpis" id="an-kpis">
         <div class="an-tile"><div class="an-tile-label">Loading</div><div class="an-tile-value is-empty">&mdash;</div></div>
@@ -1198,8 +1198,8 @@
 
           <!-- Zone legend -->
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--blue-lt);color:var(--blue)">🚐 Van 1 — Inner West / Eastern / CBD</span>
-            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#F0FDF4;color:var(--green)">🚐 Van 2 — North Shore / Manly / Beaches</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--blue-lt);color:var(--blue-text)">🚐 Van 1 — Inner West / Eastern / CBD</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#F0FDF4;color:var(--green-text)">🚐 Van 2 — North Shore / Manly / Beaches</span>
             <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--amber-lt);color:var(--amber-ink)">⭐ All zones — Manager</span>
           </div>
 
@@ -1242,7 +1242,7 @@
           </div>
           <button class="btn-save" style="margin-top:10px" id="auto-wire-23">Save number</button>
           <details style="margin-top:10px">
-            <summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600">How to activate ›</summary>
+            <summary style="font-size:12px;color:var(--blue-text);cursor:pointer;font-weight:600">How to activate ›</summary>
             <ol style="font-size:12px;color:var(--mgray);margin:8px 0 0 16px;line-height:2">
               <li>console.twilio.com → Messaging → Senders → WhatsApp Senders</li>
               <li>Connect sender + Meta Business verification (1–3 days)</li>
@@ -1256,12 +1256,12 @@
         <div class="setting-card">
           <div class="setting-title">Integrations</div>
           <div class="setting-sub">Live status of connected services</div>
-          <div class="setting-row"><span class="setting-label">Stripe payments</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Active (live)</span></div>
-          <div class="setting-row"><span class="setting-label">Supabase database</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Connected</span></div>
-          <div class="setting-row"><span class="setting-label">Google Sign-In</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Active</span></div>
-          <div class="setting-row"><span class="setting-label">Resend email</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Active</span></div>
+          <div class="setting-row"><span class="setting-label">Stripe payments</span><span class="setting-val" style="color:var(--green-text);font-weight:500">✓ Active (live)</span></div>
+          <div class="setting-row"><span class="setting-label">Supabase database</span><span class="setting-val" style="color:var(--green-text);font-weight:500">✓ Connected</span></div>
+          <div class="setting-row"><span class="setting-label">Google Sign-In</span><span class="setting-val" style="color:var(--green-text);font-weight:500">✓ Active</span></div>
+          <div class="setting-row"><span class="setting-label">Resend email</span><span class="setting-val" style="color:var(--green-text);font-weight:500">✓ Active</span></div>
           <div class="setting-row"><span class="setting-label">Twilio SMS/WhatsApp</span><span id="integ-twilio" class="setting-val" style="color:var(--amber-bright);font-weight:500">⚠ Needs keys</span></div>
-          <div class="setting-row"><span class="setting-label">Vercel hosting</span><span class="setting-val" style="color:var(--green);font-weight:500">✓ Live</span></div>
+          <div class="setting-row"><span class="setting-label">Vercel hosting</span><span class="setting-val" style="color:var(--green-text);font-weight:500">✓ Live</span></div>
           <button style="margin-top:10px;width:100%;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-24">📱 Send test SMS to your number</button>
         </div>
 
@@ -1298,10 +1298,10 @@
       </div>
       <!-- KPIs -->
       <div class="kpis" style="margin-bottom:20px">
-        <div class="kpi-card blue" style="text-align:center"><div class="kpi-label">TOTAL PARTS</div><div class="kpi-value" id="inv-total-parts" style="color:var(--blue)">—</div><div class="kpi-sub">in inventory</div></div>
+        <div class="kpi-card blue" style="text-align:center"><div class="kpi-label">TOTAL PARTS</div><div class="kpi-value" id="inv-total-parts" style="color:var(--blue-text)">—</div><div class="kpi-sub">in inventory</div></div>
         <div class="kpi-card orange" style="text-align:center"><div class="kpi-label">LOW STOCK</div><div class="kpi-value" id="inv-low-stock" style="color:var(--amber-bright)">—</div><div class="kpi-sub">below minimum</div></div>
-        <div class="kpi-card green" style="text-align:center"><div class="kpi-label">STOCK VALUE</div><div class="kpi-value" id="inv-stock-value" style="color:var(--green)">$—</div><div class="kpi-sub">at cost price</div></div>
-        <div class="kpi-card red" style="text-align:center"><div class="kpi-label">USED THIS MONTH</div><div class="kpi-value" id="inv-used-month" style="color:var(--red)">$—</div><div class="kpi-sub">parts cost</div></div>
+        <div class="kpi-card green" style="text-align:center"><div class="kpi-label">STOCK VALUE</div><div class="kpi-value" id="inv-stock-value" style="color:var(--green-text)">$—</div><div class="kpi-sub">at cost price</div></div>
+        <div class="kpi-card red" style="text-align:center"><div class="kpi-label">USED THIS MONTH</div><div class="kpi-value" id="inv-used-month" style="color:var(--red-text)">$—</div><div class="kpi-sub">parts cost</div></div>
       </div>
       <!-- Search -->
       <div style="position:relative;margin-bottom:16px;max-width:360px">
@@ -1330,9 +1330,9 @@
       </div>
       <!-- KPIs -->
       <div class="kpis" style="margin-bottom:20px">
-        <div class="kpi-card blue" style="text-align:center"><div class="kpi-label">TOTAL SERVICES</div><div class="kpi-value" id="svc-total" style="color:var(--blue)">—</div><div class="kpi-sub">in the catalog</div></div>
-        <div class="kpi-card purple" style="text-align:center"><div class="kpi-label">CATEGORIES</div><div class="kpi-value" id="svc-cats" style="color:var(--purple)">—</div><div class="kpi-sub">service groups</div></div>
-        <div class="kpi-card green" style="text-align:center"><div class="kpi-label">AVG PRICE</div><div class="kpi-value" id="svc-avg" style="color:var(--green)">$—</div><div class="kpi-sub">across all services</div></div>
+        <div class="kpi-card blue" style="text-align:center"><div class="kpi-label">TOTAL SERVICES</div><div class="kpi-value" id="svc-total" style="color:var(--blue-text)">—</div><div class="kpi-sub">in the catalog</div></div>
+        <div class="kpi-card purple" style="text-align:center"><div class="kpi-label">CATEGORIES</div><div class="kpi-value" id="svc-cats" style="color:var(--purple-text)">—</div><div class="kpi-sub">service groups</div></div>
+        <div class="kpi-card green" style="text-align:center"><div class="kpi-label">AVG PRICE</div><div class="kpi-value" id="svc-avg" style="color:var(--green-text)">$—</div><div class="kpi-sub">across all services</div></div>
         <div class="kpi-card orange" style="text-align:center"><div class="kpi-label">PRICE RANGE</div><div class="kpi-value" id="svc-range" style="color:var(--amber);font-size:18px">$—</div><div class="kpi-sub">lowest - highest</div></div>
       </div>
       <!-- Search -->
@@ -1572,5 +1572,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=3b940d90f5"></script>
+<script src="js/admin.js?v=c626db0c7e"></script>
 </body></html>

@@ -27,7 +27,14 @@
 import { readFileSync } from 'node:fs';
 
 const VARS = 'css/variables.css';
-const SURFACES = ['css/admin.css', 'js/admin.js', 'admin.html', 'css/mechanic.css', 'js/mechanic.js', 'mechanic.html'];
+const SURFACES = [
+  'css/admin.css',
+  'js/admin.js',
+  'admin.html',
+  'css/mechanic.css',
+  'js/mechanic.js',
+  'mechanic.html',
+];
 
 // A token whose value is deliberately the same in both themes. Each one needs
 // a reason, so an omission can never hide here as an "exception".
@@ -52,11 +59,15 @@ const SAME_IN_BOTH = new Set([
 const strip = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 
 const vars = readFileSync(VARS, 'utf8');
-const rootBlock = strip(vars).split(/:root\s*\{/)[1]?.split(/^\}/m)[0] ?? '';
+const rootBlock =
+  strip(vars)
+    .split(/:root\s*\{/)[1]
+    ?.split(/^\}/m)[0] ?? '';
 const darkBlock = strip(vars).match(/\[data-theme='dark'\]\s*\{([\s\S]*?)^\}/m)?.[1] ?? '';
 
 const valueOf = (block, token) =>
-  block.match(new RegExp('(?:^|;|\\{)\\s*' + token + '\\s*:\\s*([^;]+);', 'm'))?.[1]?.trim() ?? null;
+  block.match(new RegExp('(?:^|;|\\{)\\s*' + token + '\\s*:\\s*([^;]+);', 'm'))?.[1]?.trim() ??
+  null;
 
 const declared = [...rootBlock.matchAll(/^\s*(--[a-z0-9-]+)\s*:\s*([^;]+);/gim)].map((m) => [
   m[1],
@@ -137,27 +148,64 @@ for (const m of darkBlock.matchAll(/^\s*(--[a-z0-9-]+)\s*:/gim)) {
 //   INK  - written as text on a dark ground.
 //   FILL - a filled button or badge, under hard-coded white text.
 //
-// The three in BOTH lists are the hard case. Their two constraints move in
-// opposite directions: light enough to read as text on navy means too light to
-// carry white text, and there is no value that clears AA (4.5) both ways. They
-// are tuned to clear AA-large (3.0) in both roles, which is the band bold UI
-// text lives in, and this check pins that so a later "let's brighten the
-// green" cannot quietly make every green button unreadable.
+// Hasta el 2026-09-01 seis tokens estaban en LAS DOS listas, y esta nota decia
+// que "no hay valor que cumpla AA (4.5) de las dos formas, asi que se ajustan
+// a AA-large (3.0) en los dos papeles".
+//
+// Era cierto para UN token. La salida era dos: --blue quedo como relleno
+// (oscuro, para que el blanco encima llegue a 4.5:1) y nacio --blue-text para
+// el texto (claro, para llegar a 4.5:1 sobre la tarjeta). En tema claro los
+// dos valen lo mismo, porque sobre blanco no hay conflicto.
+//
+// Medido antes de tocar nada: los seis fallaban en AMBOS papeles a la vez, no
+// estaban optimizados para uno. --blue daba 3.30:1 como texto y 3.68:1 con
+// blanco encima; --purple 3.09 y 3.92. Estaban en el medio, mal para las dos
+// cosas.
+//
+// Por eso el umbral ahora es 4.5 y no 3.0: el minimo AA real para texto
+// normal. Los badges de 11-12px en negrita NO son "texto grande" - eso empieza
+// en 18.66px negrita o 24px normal - asi que 3.0 nunca fue el numero correcto
+// para ellos.
 const GROUNDS = { 'the card (--white)': null, 'the panel (--off)': null, 'the page': '#0f1a2e' };
-const INK = ['--navy','--gray','--gray-lt','--slate','--blue','--blue-dark','--blue-deep',
-  '--blue-soft','--green','--green-bright','--green-ink','--amber','--amber-ink','--amber-bright',
-  '--red','--red-bright','--purple','--cyan'];
+const INK = [
+  '--navy',
+  '--gray',
+  '--gray-lt',
+  '--slate',
+  '--blue-text',
+  '--blue-dark-text',
+  '--blue-deep',
+  '--blue-soft',
+  '--green-text',
+  '--green-bright',
+  '--green-ink',
+  '--amber',
+  '--amber-ink',
+  '--amber-bright',
+  '--red-text',
+  '--red-bright',
+  '--purple-text',
+  '--cyan-text',
+];
 // --amber is deliberately absent: its only filled site is the mechanic's
 // "En route" button, and css/mechanic.css gives that button dark ink in dark
 // mode precisely so --amber can stay bright for the many places it is text.
 // --wa is absent too - white on WhatsApp green is 1.98:1 in BOTH themes, which
 // is WhatsApp's own button and not something this theme introduced or may fix.
-const FILL = ['--blue','--blue-dark','--green','--red','--purple','--cyan'];
-const MIN = 3.0;
+const FILL = ['--blue', '--blue-dark', '--green', '--red', '--purple', '--cyan'];
+// AA para texto normal. Era 3.0 mientras un solo token hacia los dos papeles;
+// ahora que estan separados, cada uno puede cumplir el suyo de verdad.
+const MIN = 4.5;
 
 const toRgb = (h) => {
   const v = h.trim().replace('#', '');
-  const full = v.length === 3 ? v.split('').map((c) => c + c).join('') : v;
+  const full =
+    v.length === 3
+      ? v
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : v;
   return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
 };
 const luminance = (rgb) => {
@@ -341,7 +389,9 @@ const worstInk = Math.min(
   )
 );
 const worstFill = Math.min(
-  ...FILL.map((t) => (isHex(valueOf(darkBlock, t)) ? ratio('#ffffff', valueOf(darkBlock, t)) : Infinity))
+  ...FILL.map((t) =>
+    isHex(valueOf(darkBlock, t)) ? ratio('#ffffff', valueOf(darkBlock, t)) : Infinity
+  )
 );
 console.log(
   `dark-theme-check: OK (${covered} colour tokens with dark values; worst ink ` +

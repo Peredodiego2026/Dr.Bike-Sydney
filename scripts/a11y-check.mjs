@@ -61,7 +61,12 @@ if (!/:focus-visible\s*\{[^}]*outline:/.test(vars)) {
 if (!/--focus-ring:/.test(vars)) {
   problems.push('css/variables.css: --focus-ring is not defined.');
 }
-const darkBlock = vars.slice(vars.indexOf("[data-theme='dark']"));
+// Se corta por la REGLA (el selector seguido de su llave), no por la cadena
+// suelta: el 2026-09-01 un comentario dentro de :root menciono el selector y
+// esto empezo a cortar ahi, devolviendo los valores del tema claro como si
+// fueran los del oscuro. Un guard que se rompe con un comentario no es un
+// guard.
+const darkBlock = /\[data-theme='dark'\]\s*\{[\s\S]*/.exec(vars)?.[0] ?? '';
 if (!/--focus-ring:/.test(darkBlock)) {
   problems.push("css/variables.css: --focus-ring has no [data-theme='dark'] value.");
 }

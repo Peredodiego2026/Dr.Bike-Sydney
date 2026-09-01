@@ -382,7 +382,7 @@ async function loadTimeSlots(screen, date, serviceId) {
         )
         .join('') +
       '</div>' +
-      '<div id="waitlist-msg" style="font-size:13px;color:var(--red);margin-bottom:10px;display:none"></div>' +
+      '<div id="waitlist-msg" style="font-size:13px;color:var(--red-text);margin-bottom:10px;display:none"></div>' +
       '<button id="waitlist-submit" style="width:100%;padding:12px;background:var(--green);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Notify Me When a Slot Opens</button>' +
       '</div></div>';
 
@@ -429,7 +429,7 @@ async function loadTimeSlots(screen, date, serviceId) {
         screen.querySelector('#waitlist-form').innerHTML =
           '<div style="text-align:center;padding:8px 0">' +
           '<div style="font-size:24px;margin-bottom:8px">✅</div>' +
-          '<div style="font-weight:700;color:var(--green);font-size:15px">You\'re on the waitlist!</div>' +
+          '<div style="font-weight:700;color:var(--green-text);font-size:15px">You\'re on the waitlist!</div>' +
           '<div style="font-size:13px;color:var(--gray);margin-top:4px"><span>We\'ll email</span> ' +
           user.email +
           ' <span>if a slot opens up on</span> ' +
@@ -525,7 +525,7 @@ function feeCheckInputHtml() {
 <h2 class="confirm-box__title">What's your suburb?</h2>
 <p class="confirm-box__msg">We'll check your visit & diagnosis fee - takes 2 seconds.</p>
 <input type="text" class="fee-check-input" placeholder="e.g. Bondi, Parramatta, Cronulla..." style="width:100%;min-height:44px;margin-top:14px;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font-family);outline:none;box-sizing:border-box">
-<div class="fee-check-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px"></div>
+<div class="fee-check-err" style="display:none;color:var(--red-text);font-size:13px;margin-top:8px"></div>
 <div class="confirm-box__actions">
   <button type="button" class="confirm-box__btn confirm-box__btn--cancel" data-act="close">Cancel</button>
   <button type="button" class="confirm-box__btn confirm-box__btn--go fee-check-submit">Check My Fee</button>
@@ -552,7 +552,7 @@ function feeCheckResultHtml(zoneName, fee) {
   return `
 <div style="text-align:center">
   <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">${escapeHtml(zoneName)}</div>
-  <div class="fee-check-amount" style="font-size:44px;font-weight:900;color:var(--blue);line-height:1;font-variant-numeric:tabular-nums" data-target="${Number(fee)}">$0</div>
+  <div class="fee-check-amount" style="font-size:44px;font-weight:900;color:var(--blue-text);line-height:1;font-variant-numeric:tabular-nums" data-target="${Number(fee)}">$0</div>
   <p class="confirm-box__msg" style="margin-top:10px">Calculated from the distance to our base on the Northern Beaches - the same fee you'll see when you book.</p>
 </div>
 <div class="confirm-box__actions" style="flex-direction:column">
@@ -872,7 +872,7 @@ async function renderBookService() {
       ? `<div id="resume-draft" style="display:flex;align-items:center;gap:12px;background:var(--blue-lt);border:1px solid var(--blue-edge);border-radius:12px;padding:12px 14px;margin:0 0 16px">
            <span style="font-size:20px" aria-hidden="true">↩️</span>
            <div style="flex:1;min-width:0">
-             <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">You have a booking in progress</div>
+             <div style="font-size:13px;font-weight:700;color:var(--blue-dark-text)">You have a booking in progress</div>
              <div style="font-size:12px;color:var(--gray);margin-top:2px">${escapeHtml(window.appState.service.name || '')}</div>
            </div>
            <button id="resume-draft-btn" style="flex-shrink:0;min-height:36px;padding:8px 14px;background:var(--blue-dark);color:var(--white);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Continue</button>
@@ -883,12 +883,12 @@ async function renderBookService() {
       ${createHeader('Book a Service', true, '#home')}
       ${resumeHtml}
       <div id="diag-block" style="background:var(--blue-lt);border-radius:12px;padding:16px;margin:0 0 20px;border:1px solid var(--blue-edge)">
-        <div style="font-size:13px;font-weight:700;color:var(--blue-dark);margin-bottom:6px">Not sure what your bike needs?</div>
+        <div style="font-size:13px;font-weight:700;color:var(--blue-dark-text);margin-bottom:6px">Not sure what your bike needs?</div>
         <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Take a photo or describe the problem — our AI will recommend the right service.</div>
         <div style="display:flex;align-items:center;gap:8px;width:100%">
           <label style="flex-shrink:0;cursor:pointer">
             <input type="file" accept="image/*" capture="environment" id="diag-photo" style="display:none">
-            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid var(--blue-edge);border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:var(--blue-dark);cursor:pointer;white-space:nowrap">Photo</div>
+            <div id="diag-photo-btn" style="height:44px;display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid var(--blue-edge);border-radius:8px;padding:0 12px;font-size:13px;font-weight:600;color:var(--blue-dark-text);cursor:pointer;white-space:nowrap">Photo</div>
           </label>
           <input type="text" id="diag-text" placeholder="Describe the problem..." aria-label="Describe the problem" style="flex:1;min-width:0;height:44px;border:1.5px solid var(--blue-edge);border-radius:8px;padding:0 12px;font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;background:var(--white)">
           <button id="diag-ask-btn" style="flex-shrink:0;height:44px;background:var(--blue-dark);color:white;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Ask AI</button>
@@ -1609,7 +1609,7 @@ async function renderServiceSummary() {
       <!-- Payment split note -->
       <div style="display:flex;gap:10px;background:var(--blue-lt);border-radius:10px;padding:12px 14px;margin-bottom:16px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div style="font-size:13px;color:var(--blue);line-height:1.55">
+        <div style="font-size:13px;color:var(--blue-text);line-height:1.55">
           <strong>How payment works:</strong> ${translateValue(
             'The $CALLOUT visit & diagnosis fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.'
           )
@@ -1781,12 +1781,12 @@ async function renderServiceSummary() {
   ${field('guest-name', 'Your name', 'text', 'Jane Smith', 'name')}
   ${field('guest-email', 'Email', 'email', 'you@email.com', 'email')}
   ${field('guest-phone', 'Mobile', 'tel', '0400 000 000', 'tel')}
-  <div id="guest-err" style="display:none;color:var(--red);font-size:13px;margin-top:10px"></div>
+  <div id="guest-err" style="display:none;color:var(--red-text);font-size:13px;margin-top:10px"></div>
   <div class="confirm-box__actions">
     <button type="button" class="confirm-box__btn confirm-box__btn--go" data-act="go">${translateValue('Continue')}</button>
   </div>
   <button type="button" data-act="signin"
-          style="display:block;width:100%;min-height:44px;margin-top:8px;background:none;border:none;color:var(--blue);font-family:var(--font-family);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline">
+          style="display:block;width:100%;min-height:44px;margin-top:8px;background:none;border:none;color:var(--blue-text);font-family:var(--font-family);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline">
     ${translateValue('I already have an account')}
   </button>
 </div>`;
@@ -2020,7 +2020,7 @@ async function loadMechanicPreferencePicker() {
           .toUpperCase();
         const avatarHTML = m.photo_url
           ? `<img src="${escapeHtml(m.photo_url)}" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover">`
-          : `<div style="width:52px;height:52px;border-radius:50%;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--blue)">${escapeHtml(initials)}</div>`;
+          : `<div style="width:52px;height:52px;border-radius:50%;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--blue-text)">${escapeHtml(initials)}</div>`;
         // "jobs" stays its own text node (not pre-translated into the string)
         // so translateScreen's automatic re-walk can still catch it if the
         // user switches language after this card is already on screen -
@@ -2264,7 +2264,7 @@ async function renderPayment() {
           <span style="font-size:13px;color:var(--gray)">Visit & diagnosis</span>
           ${
             isIncludedVisit
-              ? `<span style="font-size:11px;font-weight:700;color:var(--green);background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
+              ? `<span style="font-size:11px;font-weight:700;color:var(--green-text);background:#05966915;padding:3px 10px;border-radius:20px">Included in your membership</span>`
               : `<span style="font-weight:700;color:var(--navy)">$${calloutFee.toFixed(2)}</span>`
           }
         </div>
@@ -2296,9 +2296,9 @@ async function renderPayment() {
 
       <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--gray-lt)">
         Prefer to book manually?
-        <a href="https://wa.me/61433963250?text=${waText}" style="color:var(--blue);font-weight:600">WhatsApp us</a>
+        <a href="https://wa.me/61433963250?text=${waText}" style="color:var(--blue-text);font-weight:600">WhatsApp us</a>
         or
-        <a href="tel:+61433963250" style="color:var(--blue);font-weight:600">call 0433 963 250</a>
+        <a href="tel:+61433963250" style="color:var(--blue-text);font-weight:600">call 0433 963 250</a>
       </div>
     </div>
     ${
@@ -2845,7 +2845,7 @@ async function renderTrackingPicker(screen) {
       });
     });
   } catch (e) {
-    listEl.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--red);font-size:13px">Could not load bookings. Try again.</div>`;
+    listEl.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--red-text);font-size:13px">Could not load bookings. Try again.</div>`;
   }
 }
 
@@ -2869,7 +2869,7 @@ async function renderTracking() {
     <!-- Header -->
     <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid var(--border)">
       <div style="font-size:18px;font-weight:700;color:var(--navy)">Live Tracking</div>
-      <button id="change-booking-btn" style="background:none;border:none;font-size:13px;color:var(--blue);cursor:pointer;font-weight:600;font-family:inherit;padding:8px 0;display:flex;align-items:center;gap:4px">
+      <button id="change-booking-btn" style="background:none;border:none;font-size:13px;color:var(--blue-text);cursor:pointer;font-weight:600;font-family:inherit;padding:8px 0;display:flex;align-items:center;gap:4px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         Change booking
       </button>
@@ -2896,7 +2896,7 @@ async function renderTracking() {
          unreachable. -->
     <div style="flex-shrink:0;max-height:52dvh;overflow-y:auto;background:var(--white);border-top:1px solid var(--border)">
       <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border-lt)">
-        <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue)">
+        <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue-text)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
         <div style="min-width:0">
@@ -2910,7 +2910,7 @@ async function renderTracking() {
       </div>
       <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid var(--border-lt)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <div style="font-size:13px;color:var(--blue)"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
+        <div style="font-size:13px;color:var(--blue-text)"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
       </div>
       <div style="display:flex;gap:4px;padding:10px 16px">
         ${['Confirmed', 'En Route', 'Arrived', 'Done']
@@ -3423,7 +3423,7 @@ function openMechanicProfile(p, booking, screen) {
     .toUpperCase();
   const avatarHTML = p.photo_url
     ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15)">`
-    : `<div style="width:88px;height:88px;border-radius:50%;background:var(--blue-lt);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--blue)">${escapeHtml(initials)}</div>`;
+    : `<div style="width:88px;height:88px;border-radius:50%;background:var(--blue-lt);border:3px solid var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--blue-text)">${escapeHtml(initials)}</div>`;
 
   const statParts = [];
   if (p.jobs_completed > 0)
@@ -3498,7 +3498,7 @@ function openClientChat(bookingId, screen) {
         <div style="width:38px;height:38px;border-radius:50%;background:var(--blue-dark);display:flex;align-items:center;justify-content:center;color:var(--white);flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></div>
         <div style="min-width:0;flex:1">
           <div style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div>
-          <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Online now</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--green-text)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Online now</div>
         </div>
       </div>
       <div id="client-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)"></div>
@@ -3934,9 +3934,9 @@ async function renderLogin() {
     <div class="login-wrap">
       <div class="login-logo" style="letter-spacing:-0.3px;font-size:24px">
         <img src="images/logo-db.png" alt="Dr. Bike Sydney" height="32" style="width:auto;display:block">
-        <span>Dr. <span style="color:var(--blue)">Bike</span> Sydney</span>
+        <span>Dr. <span style="color:var(--blue-text)">Bike</span> Sydney</span>
       </div>
-      <p style="text-align:center;font-size:13px;font-weight:600;color:var(--blue);margin:0 0 12px">Healthy bikes, happy riders</p>
+      <p style="text-align:center;font-size:13px;font-weight:600;color:var(--blue-text);margin:0 0 12px">Healthy bikes, happy riders</p>
       <h2 class="login-title">${isReset ? 'Reset Password' : isSignup ? 'Create Account' : 'Welcome Back!'}</h2>
       <p class="login-sub text-secondary text-center">${isReset ? "Enter your email and we'll send you a reset link" : isSignup ? 'Join Dr. Bike Sydney' : 'Login to your account'}</p>
       ${
@@ -3989,7 +3989,7 @@ async function renderLogin() {
       ${
         isReset
           ? `<div style="text-align:center;margin-top:14px">
-        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:var(--blue);font-weight:600">WhatsApp us</span></a>
+        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:var(--blue-text);font-weight:600">WhatsApp us</span></a>
       </div>`
           : ''
       }
@@ -4155,7 +4155,7 @@ function renderResetSent(email) {
         <button class="link-btn" id="back-to-signin-btn">Back to sign in</button>
       </div>
       <div style="text-align:center;margin-top:14px">
-        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:var(--blue);font-weight:600">WhatsApp us</span></a>
+        <a href="https://wa.me/61433963250?text=${encodeURIComponent("Hi Dr. Bike! I can't remember which email I used to sign up - can you help me find my account?")}" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-text-secondary)">Don't remember your email either? <span style="color:var(--blue-text);font-weight:600">WhatsApp us</span></a>
       </div>
     </div>
     ${createBottomNav('profile')}
@@ -4204,7 +4204,7 @@ function promptNewPassword() {
       <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Choose a new password for your account.</div>
       <input id="reset-pw-inp" type="password" placeholder="New password" aria-label="New password" autocomplete="new-password"
         style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:15px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;margin-bottom:10px">
-      <div id="reset-pw-err" style="display:none;color:var(--red);font-size:13px;margin-bottom:10px"></div>
+      <div id="reset-pw-err" style="display:none;color:var(--red-text);font-size:13px;margin-bottom:10px"></div>
       <button id="reset-pw-btn" class="btn btn--primary btn--full">Update password</button>
     </div>
   `;
@@ -4436,7 +4436,7 @@ async function renderMyBookings() {
               <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${escapeHtml(booking.address || '--')}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Visit & diagnosis</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
             </div>
-            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid var(--red-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
+            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid var(--red-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red-text);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
             ${
               booking.status === 'completed' &&
               (booking.photo_before_url || booking.photo_after_url)
@@ -4502,7 +4502,7 @@ async function renderMyBookings() {
                 .toUpperCase();
               const avatarHTML = p.photo_url
                 ? `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">`
-                : `<div style="width:44px;height:44px;border-radius:50%;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--blue)">${escapeHtml(initials)}</div>`;
+                : `<div style="width:44px;height:44px;border-radius:50%;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--blue-text)">${escapeHtml(initials)}</div>`;
               const metaParts = [];
               if (p.jobs_completed > 0) metaParts.push(`${p.jobs_completed} services`);
               if (p.rating) metaParts.push(`★ ${p.rating}`);
@@ -4984,11 +4984,11 @@ async function renderProfile() {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
         <div style="background:var(--blue-lt);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--blue-edge)">
-          <div style="font-size:28px;font-weight:800;color:var(--blue-dark)">${referralCount}</div>
+          <div style="font-size:28px;font-weight:800;color:var(--blue-dark-text)">${referralCount}</div>
           <div style="font-size:13px;color:var(--gray);margin-top:2px;font-weight:600">Friends referred</div>
         </div>
         <div style="background:var(--green-lt);border-radius:12px;padding:16px;text-align:center;border:1px solid #BBF7D0">
-          <div style="font-size:28px;font-weight:800;color:var(--green)">$${credits}</div>
+          <div style="font-size:28px;font-weight:800;color:var(--green-text)">$${credits}</div>
           <div style="font-size:13px;color:var(--gray);margin-top:2px;font-weight:600">Credits earned</div>
         </div>
       </div>
@@ -5048,7 +5048,7 @@ async function renderProfile() {
             <div style="font-size:15px;font-weight:600;color:var(--navy)">🎁 <span>Send a gift card</span></div>
             <div style="font-size:13px;color:var(--gray);margin-top:2px">Any cyclist you know, delivered by email</div>
           </div>
-          <button id="gift-open-btn" style="flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Buy</button>
+          <button id="gift-open-btn" style="flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue-text);background:var(--white);white-space:nowrap">Buy</button>
         </div>
       </div>
 
@@ -5070,9 +5070,9 @@ async function renderProfile() {
                   `<option value="${i + 1}"${bdayMonth === i + 1 ? ' selected' : ''}>${translateValue(m)}</option>`
               ).join('')}
             </select>
-            <button id="bday-save" style="flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">${translateValue('Save')}</button>
+            <button id="bday-save" style="flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue-text);background:var(--white);white-space:nowrap">${translateValue('Save')}</button>
           </div>
-          <div id="bday-status" style="display:${bdayDay && bdayMonth ? 'flex' : 'none'};align-items:center;gap:6px;margin-top:10px;font-size:13px;font-weight:600;color:var(--green)"><span aria-hidden="true">&#10003;</span><span>${translateValue('Saved')}</span></div>
+          <div id="bday-status" style="display:${bdayDay && bdayMonth ? 'flex' : 'none'};align-items:center;gap:6px;margin-top:10px;font-size:13px;font-weight:600;color:var(--green-text)"><span aria-hidden="true">&#10003;</span><span>${translateValue('Saved')}</span></div>
         </div>
       </div>
 
@@ -5086,14 +5086,14 @@ async function renderProfile() {
                   <div style="font-size:15px;font-weight:600;color:var(--navy)">💳 Card on file</div>
                   <div style="font-size:13px;color:var(--gray);margin-top:2px">Auto-charged when your mechanic completes a job</div>
                 </div>
-                <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--red);color:var(--red);background:var(--white);white-space:nowrap">Remove</button>
+                <button id="remove-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--red);color:var(--red-text);background:var(--white);white-space:nowrap">Remove</button>
               </div>`
               : `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="min-width:0">
                   <div style="font-size:15px;font-weight:600;color:var(--navy)">No card saved</div>
                   <div style="font-size:13px;color:var(--gray);margin-top:2px">Save a card so your mechanic can charge you automatically instead of using EFTPOS</div>
                 </div>
-                <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Add card</button>
+                <button id="add-card-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue-text);background:var(--white);white-space:nowrap">Add card</button>
               </div>`
           }
         </div>
@@ -5108,8 +5108,8 @@ async function renderProfile() {
           </div>
           ${
             typeof Notification !== 'undefined' && Notification.permission === 'granted'
-              ? '<span style="flex-shrink:0;font-size:13px;font-weight:600;color:var(--green);white-space:nowrap">✓ <span>Enabled</span></span>'
-              : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue);background:var(--white);white-space:nowrap">Enable</button>'
+              ? '<span style="flex-shrink:0;font-size:13px;font-weight:600;color:var(--green-text);white-space:nowrap">✓ <span>Enabled</span></span>'
+              : '<button id="push-enable-btn" style="flex-shrink:0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--blue);color:var(--blue-text);background:var(--white);white-space:nowrap">Enable</button>'
           }
         </div>
       </div>

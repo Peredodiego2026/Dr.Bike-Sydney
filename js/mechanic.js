@@ -801,7 +801,7 @@ async function load() {
       const box = document.getElementById('jobs-list');
       box.textContent = '';
       const msg = document.createElement('div');
-      msg.style.cssText = 'text-align:center;padding:40px;color:var(--red)';
+      msg.style.cssText = 'text-align:center;padding:40px;color:var(--red-text)';
       // textContent, not innerHTML: e.message went into markup unescaped.
       msg.textContent = 'Could not load your jobs — ' + e.message;
       const retry = document.createElement('button');
@@ -1136,7 +1136,7 @@ function card(j) {
       ${!done ? `${isPending || (st === 'confirmed' && !j.mechanic_id) ? `<button class="abtn primary accept" data-action="accept" data-id="${j.id}">Accept</button><button class="abtn danger" data-action="reject" data-id="${j.id}">Reject</button>` : st === 'confirmed' ? `<button class="abtn primary go" data-action="enroute" data-id="${j.id}">En route</button>` : isEnroute ? `<button class="abtn primary accept" data-action="arrived" data-id="${j.id}">Arrived</button>` : st === 'arrived' || st === 'inprogress' || st === 'in_progress' ? `<button class="abtn primary done" data-action="complete" data-id="${j.id}">Complete</button>` : ``}` : `<button class="abtn undo" data-action="undo" data-id="${j.id}">Undo</button>`}
     </div>
     ${!done ? `<input class="notes-inp" placeholder="Mechanic notes..." aria-label="Mechanic notes" value="${esc(j.mnotes)}" data-notes-id="${j.id}">` : ''}
-    ${isPending ? `<div style="text-align:center;font-size:11px;color:var(--green);padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
+    ${isPending ? `<div style="text-align:center;font-size:11px;color:var(--green-text);padding:6px 0;font-weight:600">Tap Accept to take this job</div>` : ''}
     </div>
   </div>`;
 }
@@ -1316,7 +1316,7 @@ function promptArrivalPin(id) {
       <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Ask the client for their 4-digit code and enter it below.</div>
       <input id="pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="4-digit arrival code"
         style="width:100%;box-sizing:border-box;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);color:var(--navy);background:var(--off)">
-      <div id="pin-error" style="display:none;color:var(--red);font-size:13px;margin-top:8px"></div>
+      <div id="pin-error" style="display:none;color:var(--red-text);font-size:13px;margin-top:8px"></div>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button id="pin-cancel-btn" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
         <button id="pin-confirm-btn" style="flex:2;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirm arrival</button>
@@ -1578,7 +1578,7 @@ function openCompleteModal(id) {
       ${
         j.discount_applied > 0
           ? `<div style="margin:16px 16px 0;background:var(--green-lt);border:1.5px solid var(--green-edge);border-radius:10px;padding:12px 14px">
-        <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
+        <div style="font-size:13px;font-weight:700;color:var(--green-text);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">💳 Discount to apply</div>
         <div style="font-size:15px;color:var(--green-ink)">Deduct <b>$${Number(j.discount_applied).toFixed(2)}</b>${j.discount_code ? ` (code ${esc(j.discount_code)})` : ' (referral credit)'} from the service total. Collect <b>$${Math.max(0, (j.price || 0) - Number(j.discount_applied)).toFixed(2)}</b>.</div>
       </div>`
           : ''
@@ -1597,11 +1597,11 @@ function openCompleteModal(id) {
           <button type="button" data-action="open-parts-picker" id="parts-used-btn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--off);cursor:pointer;font-family:var(--sans)">
             <span id="parts-used-label" style="font-size:13px;font-weight:600;color:var(--navy)">Add parts used</span>
             <span style="display:flex;align-items:center;gap:8px">
-              <span id="parts-used-count" style="display:none;font-size:11px;font-weight:700;color:var(--blue-dark);background:var(--blue-dark)15;padding:2px 9px;border-radius:20px">0</span>
+              <span id="parts-used-count" style="display:none;font-size:11px;font-weight:700;color:var(--blue-dark-text);background:var(--blue-dark)15;padding:2px 9px;border-radius:20px">0</span>
               <span style="color:var(--gray-lt);font-size:18px;line-height:1">›</span>
             </span>
           </button>
-          <div id="parts-banner" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
+          <div id="parts-banner" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red-text);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Select the parts you used, or confirm "No parts used"</div>
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">💳 Payment breakdown</label>
@@ -1658,7 +1658,7 @@ function openCompleteModal(id) {
           <input id="comp-next" type="hidden" value="">
         </div>
         <div>
-          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:var(--red)">*</span></label>
+          <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Client signature <span style="color:var(--red-text)">*</span></label>
           <!-- dark-theme-check: off -->
           <!-- background:#fff is deliberate and must stay a literal: you sign on white
                paper in either theme, the stroke is drawn in a dark ink that only reads
@@ -1667,13 +1667,13 @@ function openCompleteModal(id) {
           <!-- dark-theme-check: on -->
           <button data-action="clear-sig" style="font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;margin-top:4px;padding:6px 0;font-family:var(--sans)">Clear signature</button>
         </div>
-        <div id="sig-banner" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
+        <div id="sig-banner" style="display:none;background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red-text);padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px">⚠️ Client signature is required to complete the job</div>
         <div id="pay-method-section">
           ${
             j.has_card_on_file
               ? `<div style="background:var(--blue-lt);border:1.5px solid var(--blue-edge);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
                 <span style="font-size:18px" aria-hidden="true">💳</span>
-                <div style="font-size:13px;color:var(--blue-dark);font-weight:600">Will auto-charge the client's card on file - no EFTPOS needed.</div>
+                <div style="font-size:13px;color:var(--blue-dark-text);font-weight:600">Will auto-charge the client's card on file - no EFTPOS needed.</div>
               </div>`
               : `<label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
               <div style="display:flex;gap:8px">
@@ -1751,7 +1751,7 @@ function openCompleteModal(id) {
           (item, i) => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);cursor:pointer;padding:6px 0;border-bottom:1px solid var(--border-lt)">
           <input type="checkbox" class="chk-item" data-idx="${i}" data-required="${item.required}" style="width:18px;height:18px;accent-color:${item.required ? 'var(--red)' : 'var(--green)'};flex-shrink:0" data-change="checklist-changed">
-          <span>${item.label}${item.required ? '<span style="color:var(--red);font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
+          <span>${item.label}${item.required ? '<span style="color:var(--red-text);font-size:11px;font-weight:700;margin-left:4px">REQUIRED</span>' : ''}</span>
         </label>`
         )
         .join('');
@@ -2047,13 +2047,13 @@ function renderChargeBreakdown() {
     });
   }
   if (b.mechDiscountAmount > 0) {
-    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--green);font-weight:600;margin-bottom:6px"><span>Discount (${esc(_mechDiscount.code)})</span><span>−$${b.mechDiscountAmount.toFixed(2)}</span></div>`;
+    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--green-text);font-weight:600;margin-bottom:6px"><span>Discount (${esc(_mechDiscount.code)})</span><span>−$${b.mechDiscountAmount.toFixed(2)}</span></div>`;
   }
   if (b.tip > 0) {
-    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--green);margin-bottom:6px"><span>💚 Tip (yours, 100%)</span><span>$${b.tip.toFixed(2)}</span></div>`;
+    rows += `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--green-text);margin-bottom:6px"><span>💚 Tip (yours, 100%)</span><span>$${b.tip.toFixed(2)}</span></div>`;
   }
   rows += `<div style="height:1px;background:var(--border);margin:8px 0"></div>`;
-  rows += `<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--navy)">TOTAL TO CHARGE (EFTPOS)</span><span style="font-size:20px;font-weight:800;color:var(--green)">$${b.totalToCollect.toFixed(2)}</span></div>`;
+  rows += `<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--navy)">TOTAL TO CHARGE (EFTPOS)</span><span style="font-size:20px;font-weight:800;color:var(--green-text)">$${b.totalToCollect.toFixed(2)}</span></div>`;
   el.innerHTML = rows;
 }
 
@@ -2278,7 +2278,7 @@ async function submitComplete(id) {
       const section = document.getElementById('pay-method-section');
       if (section) {
         section.innerHTML = `
-          <div style="background:var(--red-lt);border:1.5px solid var(--red-edge);border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
+          <div style="background:var(--red-lt);border:1.5px solid var(--red-edge);border-radius:8px;padding:10px 12px;color:var(--red-text);font-size:13px;font-weight:600;margin-bottom:10px">⚠️ ${esc(err.error || 'Card on file could not be charged')}</div>
           <label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">How did the client pay?</label>
           <div style="display:flex;gap:8px">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;background:var(--white)">
@@ -2413,7 +2413,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
           <div style="font-size:11px;color:var(--mgray)">Services</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:20px;font-weight:800;color:var(--green)">$${totalSpent}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--green-text)">$${totalSpent}</div>
           <div style="font-size:11px;color:var(--mgray)">Total spent</div>
         </div>
         <div style="text-align:center">
@@ -2434,11 +2434,11 @@ async function openClientHistory(bookingId, clientName, clientId) {
           return `<div style="border-bottom:1px solid var(--border-lt);padding:12px 0">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(b.service_name || 'Service')}</div>
-            <div style="font-size:13px;font-weight:700;color:var(--green)">$${b.service_price || 0}</div>
+            <div style="font-size:13px;font-weight:700;color:var(--green-text)">$${b.service_price || 0}</div>
           </div>
           <div style="font-size:11px;color:var(--mgray);margin-bottom:4px">${d} ${stars ? '· ' + stars : ''}</div>
           ${b.client_review ? `<div style="font-size:13px;color:var(--gray);font-style:italic">&ldquo;${esc(b.client_review)}&rdquo;</div>` : ''}
-          ${b.mechanic_notes ? `<div style="font-size:11px;color:var(--blue);margin-top:4px">📝 ${esc(b.mechanic_notes)}</div>` : ''}
+          ${b.mechanic_notes ? `<div style="font-size:11px;color:var(--blue-text);margin-top:4px">📝 ${esc(b.mechanic_notes)}</div>` : ''}
         </div>`;
         })
         .join('')}
@@ -2447,7 +2447,7 @@ async function openClientHistory(bookingId, clientName, clientId) {
     const el = document.getElementById('history-content');
     if (el)
       el.innerHTML =
-        '<div style="text-align:center;padding:24px;color:var(--red);font-size:13px">Error loading history</div>';
+        '<div style="text-align:center;padding:24px;color:var(--red-text);font-size:13px">Error loading history</div>';
   }
 }
 
@@ -2530,7 +2530,7 @@ async function loadInventory() {
         html += `<div class="inv-row${low ? ' low' : ''}">
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(item.name)}</div>
-            ${low ? '<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
+            ${low ? '<div style="font-size:11px;color:var(--red-text);font-weight:600;margin-top:2px">Low stock — reorder</div>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <button data-action="update-qty" data-id="${item.id}" data-delta="-1" style="background:var(--border);border:none;border-radius:6px;width:44px;height:44px;font-size:15px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
@@ -2933,7 +2933,7 @@ function profile() {
           ([name, count]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
           <span style="font-size:13px;color:var(--navy)">${name}</span>
-          <span style="font-size:13px;font-weight:700;color:var(--blue)">${count} job${count !== 1 ? 's' : ''}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--blue-text)">${count} job${count !== 1 ? 's' : ''}</span>
         </div>`
         )
         .join('')}
@@ -2945,7 +2945,7 @@ function profile() {
     <div style="padding:0 16px;margin-bottom:20px">${ratingHTML(jobs)}</div>
 
     <div style="padding:0 16px">
-      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red);border:1.5px solid var(--red-edge);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
+      <button data-action="do-logout" style="width:100%;padding:14px;background:var(--red-lt);color:var(--red-text);border:1.5px solid var(--red-edge);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Sign out</button>
     </div>
   </div>`;
 }

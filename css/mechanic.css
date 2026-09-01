@@ -86,7 +86,7 @@
   background: #0d1f3c;
 }
 [data-theme='dark'] .nav-tab.on {
-  color: var(--blue);
+  color: var(--blue-text);
   border-bottom-color: var(--blue);
 }
 [data-theme='dark'] .nav-tabs {
@@ -322,7 +322,7 @@ body {
   letter-spacing: 0.04em;
 }
 .nav-tab.on {
-  color: var(--blue);
+  color: var(--blue-text);
   border-bottom-color: var(--blue);
   font-weight: 700;
 }
@@ -409,7 +409,7 @@ body {
   border: 1.5px solid var(--red-edge);
   border-radius: 8px;
   background: var(--red-lt);
-  color: var(--red);
+  color: var(--red-text);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.4;
@@ -424,7 +424,7 @@ body {
 .job-price {
   font-size: 18px;
   font-weight: 800;
-  color: var(--green);
+  color: var(--green-text);
   margin-bottom: 14px;
   letter-spacing: -0.02em;
 }
@@ -488,7 +488,7 @@ body {
 }
 .abtn.danger {
   background: transparent;
-  color: var(--red);
+  color: var(--red-text);
   border: 1.5px solid var(--red-edge);
   font-weight: 600;
 }

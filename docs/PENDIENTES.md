@@ -8762,3 +8762,99 @@ que no falta ni una traduccion.
 navegador que ya entro.
 
 17 tests nuevos. 1127/1127.
+
+## 71. El modo oscuro: los dos papeles, separados de verdad (01-sep-2026)
+
+Punto 14. La auditoria decia que el check exige 3:1 cuando el minimo AA para
+texto normal es 4.5:1, y que *"los acentos estan calibrados a 3:1 porque cumplen
+doble funcion"*.
+
+**Al medirlo, el diagnostico se quedaba corto.** Los seis acentos duales no
+estaban calibrados a 3:1 para preservar un papel: **fallaban en los dos a la
+vez.**
+
+```
+            como texto   con blanco encima
+--blue        3.30            3.68
+--green       3.68            3.30
+--red         3.22            3.76
+--purple      3.09            3.92
+--cyan        3.14            3.87
+--blue-dark   3.38            3.59
+```
+
+Estaban en el medio, mal para las dos cosas. La mitad del problema -el texto
+blanco de los botones a 3.30:1- **la auditoria ni la mencionaba**, y es la mas
+visible.
+
+### Por que no se arregla subiendo el numero
+
+Un color no puede servir de texto sobre una tarjeta oscura Y de relleno con
+blanco encima: para **leerse** tiene que ser claro, para **aguantar blanco**
+tiene que ser oscuro. Direcciones opuestas, un solo valor.
+
+La salida es dos tokens. `--blue` queda como **relleno**, nace `--blue-text`
+para el **texto**.
+
+### Lo que hace que esto sea de bajo riesgo
+
+**En tema claro los dos valen lo mismo.** Sobre blanco no hay conflicto: el
+mismo azul sirve de texto y de fondo de boton. Asi que `--blue-text` es
+literalmente `var(--blue)` en `:root`, y **el tema claro no cambia** salvo
+`--cyan`, que daba 3.68:1 con blanco encima y se oscurecio a 4.52.
+
+Toda la division vive en el bloque de tema oscuro.
+
+### La migracion: 285 usos, solo texto
+
+Se migro **unicamente** `color:`. Un borde o un icono no es texto - WCAG pide
+3:1 para elementos de interfaz y 4.5:1 para texto, y los rellenos ya cumplen lo
+suyo.
+
+El riesgo real era `background-color`, `border-color` y `caret-color`: **las
+tres terminan en "color"**. Un reemplazo ingenuo habria repintado los fondos con
+el color del texto. Se uso un lookbehind que las excluye, y hay un test que
+verifica que **ningun fondo, borde o icono** quedo apuntando a un token de
+texto. Da 0.
+
+### El bug que me hice solo, y es el quinto de su clase
+
+Al escribir el comentario que explica la division, **escribi el nombre del
+selector del tema oscuro dentro de el**. Media docena de scripts cortan
+`css/variables.css` buscando esa cadena, y todos empezaron a cortar en mi
+comentario - dentro de `:root`.
+
+Resultado: **los valores nuevos del tema oscuro se escribieron en el tema
+claro.** El check seguia leyendo los viejos y reportando los mismos 7 fallos, lo
+cual fue la unica pista.
+
+Se arreglo por las dos puntas: el comentario ya no nombra el selector (y dice
+por que), y los scripts cortan por la **regla** -selector seguido de su llave-
+en vez de por la cadena suelta. Hay un test que falla si el nombre vuelve a
+aparecer en un comentario antes de la regla.
+
+**Quinta vez en este proyecto que un texto en prosa rompe una herramienta que
+lee texto** (ver 58, 62, 64, 66). El patron ya es claro: cuando algo lee codigo
+como texto, hay que acotar la ventana a codigo, y no escribir en los comentarios
+las cadenas que esa herramienta busca.
+
+### Verificado rompiendolo
+
+- Devolver `--blue-text` a su valor viejo -> falla el test de AA en oscuro.
+- Apuntar un `background` a un token de texto -> falla el test de la migracion.
+
+Los valores no se eligieron a ojo: un script busco, para cada acento, **el color
+mas cercano al original** que cumple 4.5:1 en su papel. Por eso los cambios son
+minimos (`--red` de `#ef4444` a `#d73d3d`) y la app sigue viendose igual.
+
+`dark-theme-check` ahora informa: **peor tinta 4.50:1, peor blanco sobre relleno
+4.50:1**. Antes: 3.09 y 3.30.
+
+31 tests nuevos. 1158/1158.
+
+### Lo que NO se verifico
+
+**No se abrio el navegador.** Que el modo oscuro se vea bien lo tiene que mirar
+Diego, en admin y en la app del mecanico, que son las dos superficies que pueden
+ser oscuras. Lo verificado por calculo es el contraste de cada token en cada
+papel y en los dos temas.

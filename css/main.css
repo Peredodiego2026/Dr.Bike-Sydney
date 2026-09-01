@@ -185,7 +185,7 @@ body {
 }
 
 .bottom-nav__tab.active {
-  color: var(--blue);
+  color: var(--blue-text);
 }
 .bottom-nav__tab:hover {
   color: var(--navy);
@@ -240,7 +240,7 @@ body {
 
 .btn--danger {
   background: var(--white);
-  color: var(--red);
+  color: var(--red-text);
   border: 1.5px solid var(--red-lt);
 }
 .btn--danger:hover:not(:disabled) {
@@ -485,10 +485,10 @@ body {
   border-color: var(--red);
 }
 .service-card--emergency .service-card__price {
-  color: var(--red);
+  color: var(--red-text);
 }
 .service-card--emergency .service-card__amount {
-  color: var(--red);
+  color: var(--red-text);
   font-size: 15px;
 }
 
@@ -1972,7 +1972,7 @@ body {
 .gift-amt.is-on {
   border-color: var(--blue);
   background: var(--blue-lt);
-  color: var(--blue-dark);
+  color: var(--blue-dark-text);
 }
 /* The $ sits inside the box so the number field cannot be mistaken for a
    quantity - it read as a bare "28" once typed. */

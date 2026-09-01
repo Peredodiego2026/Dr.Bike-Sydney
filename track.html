@@ -36,14 +36,14 @@ body{font-family:var(--sans);background:var(--surface);color:var(--navy);min-hei
 .top{background:var(--white);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px}
 .logo{display:flex;align-items:center}
 .brand{font-size:17px;font-weight:700;color:var(--navy);letter-spacing:-0.2px}
-.brand span{color:var(--blue)}
+.brand span{color:var(--blue-text)}
 .wrap{max-width:520px;margin:0 auto;padding:20px}
 .card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
 .status-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
 .pending{background:var(--amber-lt);color:var(--amber)}
-.confirmed{background:var(--blue-lt);color:var(--blue)}
-.enroute{background:var(--green-lt);color:var(--green)}
-.completed{background:var(--green-lt);color:var(--green)}
+.confirmed{background:var(--blue-lt);color:var(--blue-text)}
+.enroute{background:var(--green-lt);color:var(--green-text)}
+.completed{background:var(--green-lt);color:var(--green-text)}
 .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-lt);font-size:13px}
 .row:last-child{border:none}
 .lbl{color:var(--mgray)}
@@ -91,7 +91,7 @@ async function init(){
     // ?id=-only since every booking already has a tracking_token, but if
     // one somehow is, send them to recover a real link instead of a dead end.
     if(bookingId){
-      content.innerHTML = '<div class="card"><div class="err">This link is no longer valid.<br><br><a href="/track.html" style="color:var(--blue)">Look up your booking by email →</a></div></div>';
+      content.innerHTML = '<div class="card"><div class="err">This link is no longer valid.<br><br><a href="/track.html" style="color:var(--blue-text)">Look up your booking by email →</a></div></div>';
       return;
     }
     showEmailForm(content);
@@ -115,7 +115,7 @@ async function init(){
   }
   if(!bkg){
     content.innerHTML = reachedServer
-      ? '<div class="card"><div class="err">Booking not found.<br><br><a href="/" style="color:var(--blue)">← Back to Dr. Bike</a></div></div>'
+      ? '<div class="card"><div class="err">Booking not found.<br><br><a href="/" style="color:var(--blue-text)">← Back to Dr. Bike</a></div></div>'
       : '<div class="card"><div class="err">We could not reach Dr. Bike. Check your connection and try again - your booking is safe.<br><br><button id="track-retry" style="margin-top:14px;min-height:44px;padding:0 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Try again</button></div></div>';
     document.getElementById('track-retry')?.addEventListener('click', () => window.location.reload());
     return;
@@ -148,7 +148,7 @@ async function init(){
       </div>
       ${mechStatDivider}
       <div style="flex:1;text-align:center">
-        <div style="font-size:15px;font-weight:700;color:var(--green);display:flex;align-items:center;justify-content:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:var(--green)"></span>Live</div>
+        <div style="font-size:15px;font-weight:700;color:var(--green-text);display:flex;align-items:center;justify-content:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:var(--green)"></span>Live</div>
         <div style="font-size:10px;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">Location</div>
       </div>
     </div>`;
@@ -169,8 +169,8 @@ async function init(){
             in English on a Spanish page. The label already says Van, so the
             value is the number and the person. -->
        <div class="row"><span class="lbl">Van</span><span>${Number(bkg.van_number)||1}${mech.name?' · '+escHtml(mech.name):''}</span></div>
-       <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue)">$${Number(bkg.service_price)||0}</span></div>
-       ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div><div id="track-eta" style="display:none;font-size:13px;font-weight:700;color:var(--blue);text-align:center;margin-top:6px"></div>`:''}
+       <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue-text)">$${Number(bkg.service_price)||0}</span></div>
+       ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div><div id="track-eta" style="display:none;font-size:13px;font-weight:700;color:var(--blue-text);text-align:center;margin-top:6px"></div>`:''}
      </div>
 
      ${(bkg.status==='enroute'||bkg.status==='in_progress')?`
@@ -195,7 +195,7 @@ async function init(){
      <div class="card" style="background:var(--green-lt);border-color:#6EE7B7">
        <div style="font-size:24px;margin-bottom:8px">🚐</div>
        <div style="font-size:14px;font-weight:700;color:var(--green-ink)">${bkg.status==='enroute'?'Your mechanic is on the way!':'Your mechanic has arrived!'}</div>
-       <div style="font-size:12px;color:var(--green);margin-top:4px">This page updates automatically</div>
+       <div style="font-size:12px;color:var(--green-text);margin-top:4px">This page updates automatically</div>
      </div>`:''}
 
     ${bkg.status==='completed'?`
@@ -203,7 +203,7 @@ async function init(){
       <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px">✅ Service completed</div>
       ${bkg.mechanic_notes?`<div style="background:var(--surface);border-radius:8px;padding:12px;font-size:13px;color:var(--navy);margin-bottom:10px">📝 ${escHtml(bkg.mechanic_notes)}</div>`:''}
       ${bkg.parts_used?`<div style="font-size:12px;color:var(--mgray);margin-bottom:6px"><span>🔧 Parts:</span> ${escHtml(bkg.parts_used)}</div>`:''}
-      ${bkg.next_service_date?`<div style="font-size:12px;color:var(--green);font-weight:600"><span>📅 Next service:</span> ${new Date(bkg.next_service_date+'T00:00:00').toLocaleDateString(tLoc(),{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
+      ${bkg.next_service_date?`<div style="font-size:12px;color:var(--green-text);font-weight:600"><span>📅 Next service:</span> ${new Date(bkg.next_service_date+'T00:00:00').toLocaleDateString(tLoc(),{day:'numeric',month:'long',year:'numeric'})}</div>`:''}
     </div>`:''}
 
     <div class="card" style="text-align:center">
@@ -335,7 +335,7 @@ function showEmailForm(content) {
       <div style="font-size:13px;color:var(--mgray);margin-bottom:16px">Enter the email you used to book</div>
       <input id="track-email" type="email" placeholder="your@email.com" aria-label="Email" style="width:100%;min-height:44px;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);outline:none;margin-bottom:10px">
       <button id="track-email-btn" style="width:100%;min-height:44px;padding:12px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Find my bookings →</button>
-      <div id="track-email-err" style="display:none;color:var(--red);font-size:13px;margin-top:8px;text-align:center"></div>
+      <div id="track-email-err" style="display:none;color:var(--red-text);font-size:13px;margin-top:8px;text-align:center"></div>
     </div>`;
 
   document.getElementById('track-email-btn').addEventListener('click', async function() {
