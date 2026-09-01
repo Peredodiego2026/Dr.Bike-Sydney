@@ -13,6 +13,12 @@
 // version nueva a un navegador que ya entro es subir CACHE_STATIC en sw.js.
 
 export default {
+  // Punto 8 de la auditoria: la ACL no se puede excluir por contrato ni
+  // firmando, asi que decir "no se reembolsa" a secas antes de un cobro es
+  // una afirmacion enganosa sobre los derechos del cliente - un area que la
+  // ACCC persigue activamente. Misma formula que ya usa terms.html.
+  'This does not affect your rights under the Australian Consumer Law, which cannot be excluded.':
+    '这不影响您在《澳大利亚消费者法》下不可排除的权利。',
   'That time is no longer available. Please pick another time.': '该时间段已不可预约，请另选时间。',
   'Live map. Waiting for the mechanic position.': '实时地图。正在等待技师位置。',
   'Mechanic on the way': '技师正在前往',

@@ -8922,3 +8922,61 @@ antes de usarlas. **No hizo falta tocar el front**: los campos ausentes ya
 estaban contemplados.
 
 23 tests nuevos. 1181/1181.
+
+## 73. "No se reembolsa", sin decir que la ley no se puede excluir (01-sep-2026)
+
+Punto 8. Pedia dos cosas: que el aviso llegue **antes del boton de pago**, y que
+**no choque con las garantias obligatorias de la ACL**.
+
+**La primera ya estaba.** El bloque "What the visit & diagnosis covers" vive en
+la pantalla de resumen, arriba del boton, y su comentario en el codigo ya
+explicaba por que: *"a policy like that is only defensible if it was stated up
+front"*.
+
+**La segunda no.** El texto decia, sin calificar:
+
+> *"The visit & diagnosis covers that inspection and is not refunded."*
+
+Bajo la Australian Consumer Law las garantias del consumidor **no se pueden
+excluir por contrato ni firmando**. Si la inspeccion no se hizo con el cuidado y
+la pericia debidos, el cliente tiene derecho a un remedio diga lo que diga la
+pantalla. Afirmar "no se reembolsa" a secas, justo antes de cobrar, es una
+afirmacion enganosa sobre sus derechos - y "no refunds" es de los casos que la
+ACCC persigue mas activamente.
+
+### Lo que se hizo
+
+Se agrego, **inmediatamente debajo** del aviso y en la misma pantalla:
+
+> *"This does not affect your rights under the Australian Consumer Law, which
+> cannot be excluded."*
+
+**No se invento un texto legal nuevo.** `terms.html` ya usaba exactamente esa
+formula para sus propias clausulas (*"except as required by Australian Consumer
+Law"*) y ya reconocia en su seccion 9 que las garantias no se pueden excluir. Lo
+que faltaba era ponerlo **donde el cliente lo lee**: en la pantalla del cobro, no
+en los terminos que nadie abre antes de pagar.
+
+### Por que como frase aparte
+
+El aviso original es una cadena larga que ya estaba traducida a los dos idiomas.
+Meterle el calificador adentro habria cambiado la clave y **invalidado las dos
+traducciones existentes**. Como frase propia se agrega una clave nueva y las
+viejas siguen sirviendo.
+
+Esta en los tres idiomas, en el mismo commit. Un aviso legal que solo aparece en
+ingles no le avisa al cliente que esta leyendo la app en espanol - y ese es
+justo el que mas lo necesita.
+
+11 tests nuevos, incluido que el calificador este **cerca** del aviso (a menos
+de 400 caracteres) y no perdido en otra parte del archivo. Verificado
+borrandolo: 3 tests fallan.
+
+1192/1192.
+
+### Lo que NO se hizo
+
+**Esto no es asesoramiento legal.** El texto reusa la formula que el propio
+proyecto ya tenia en sus terminos, que es lo conservador. Antes de lanzar
+conviene que un abogado australiano mire las dos pantallas - la de cobro y
+terms.html - de una sola vez.

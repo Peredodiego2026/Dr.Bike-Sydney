@@ -13,6 +13,12 @@
 // version nueva a un navegador que ya entro es subir CACHE_STATIC en sw.js.
 
 export default {
+  // Punto 8 de la auditoria: la ACL no se puede excluir por contrato ni
+  // firmando, asi que decir "no se reembolsa" a secas antes de un cobro es
+  // una afirmacion enganosa sobre los derechos del cliente - un area que la
+  // ACCC persigue activamente. Misma formula que ya usa terms.html.
+  'This does not affect your rights under the Australian Consumer Law, which cannot be excluded.':
+    'Esto no afecta tus derechos bajo la Ley del Consumidor de Australia, que no se pueden excluir.',
   // El turno se pierde ANTES de tocar la tarjeta (api/_slot-hold.js), asi
   // que este mensaje es el que reemplaza a un cobro y su reembolso.
   'That time is no longer available. Please pick another time.':

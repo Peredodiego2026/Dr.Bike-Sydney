@@ -1628,6 +1628,9 @@ async function renderServiceSummary() {
         <div style="font-size:13px;color:var(--gray);line-height:1.55">
           <strong style="color:var(--navy)">${translateValue('What the visit & diagnosis covers')}</strong><br>
           ${translateValue('A mechanic comes to you, inspects the whole bike and tells you exactly what it needs. If the repair is not possible - a part we do not carry, or a job that needs a machinist or welding - you are told on the spot and the service fee is not charged. The visit & diagnosis covers that inspection and is not refunded.')}
+          <div style="margin-top:8px;font-size:12px;color:var(--gray)">${translateValue(
+            'This does not affect your rights under the Australian Consumer Law, which cannot be excluded.'
+          )}</div>
         </div>
       </div>
 
