@@ -8578,3 +8578,90 @@ Y una advertencia para el proximo: **Diego tiene AdBlock Plus.** Es probable que
 `onload` simplemente no dispara y no se inicializa nada - pero significa que
 "no veo el error" no prueba que Sentry este reportando. Eso se confirma en el
 panel de Sentry, no en la consola.
+
+## 74. Las resenas de Google, en la landing (31-ago-2026)
+
+La seccion de testimonios llevaba desde siempre mostrando "Be the first to leave
+a review", mientras el negocio tenia **5,0 estrellas con 2 resenas en Google**.
+Diego lo noto cuando una clienta le dejo 5 estrellas con foto y no aparecio en
+ningun lado.
+
+### No era un bug: son dos sistemas que no se hablan
+
+`landing.html` lee la vista `public_reviews`, que sale de
+`bookings.client_rating` / `client_review` - resenas que el cliente deja **dentro
+de la app**, con el link que le llega por email y SMS al completar el trabajo.
+Google es otro mundo y **no habia ninguna integracion** (grep sobre todo el repo:
+cero).
+
+La contradiccion estaba a la vista: el boton "Leave us a review" de esa misma
+seccion manda a Google, o sea que la landing empujaba a la gente hacia el unico
+lugar cuyas resenas no podia mostrar.
+
+### Por que a mano y no por la API de Places
+
+Se evaluo Google Places API y se descarto por ahora:
+
+- devuelve **maximo 5 resenas** y **Google elige cuales** - limite duro;
+- **no trae las fotos** que suben los clientes;
+- necesita cuenta de Google Cloud con tarjeta.
+
+Con 2 resenas, montar eso es sobre-ingenieria. A mano es gratis, sin limite, y
+se eligen cuales. Cuando haya ~30, la API pasa a convenir y esto se reemplaza.
+
+### La regla que hace que esto no sea el bug viejo
+
+Esta seccion **ya existio con resenas inventadas** etiquetadas "Google Review",
+y se borraron por riesgo real con la ACCC (ver el encabezado de
+`scripts/create-public-reviews-view.sql`). Lo que hace legitima esta version:
+
+- el texto va **textual y en el ingles en que fue escrito** - una cita traducida
+  deja de ser una cita, y el link al lado va al original;
+- el nombre es el que el autor publico;
+- hay link al perfil real, asi que **cualquiera puede verificar cada tarjeta**.
+
+Las citas y los nombres estan en `ALLOWED` de `scripts/i18n-check.mjs`: no se
+traducen a proposito, y esa lista es el registro revisable de lo que la pagina
+afirma que alguien dijo. El resto - "2 reviews on Google", el mes - si se
+traduce como cualquier otra copia.
+
+### El empty state se fue
+
+"Be the first to leave a review" debajo de dos resenas visibles contradecia lo
+que el visitante tiene delante. `js/landing-inline.js` ahora simplemente deja
+`#reviews-grid` vacio cuando todavia no hay resenas en la app.
+
+### Los tests, y uno viejo que se reforzo
+
+`tests/unit/google-reviews-section.test.js` fija lo que convertiria esto de
+nuevo en el problema anterior: que **el numero del badge coincida con las
+tarjetas** (decir "2 reviews" sobre tres tarjetas es la pagina mintiendo sobre
+su propio contenido), que cada cita este declarada textual en `ALLOWED`, y que
+el link al perfil siga ahi.
+
+`google-review-link.test.js` afirmaba `found.length === 3`. Ese conteo se rompio
+al usar el link una cuarta vez de forma legitima, y ademas nunca verifico lo que
+importa: tres copias podian estar todas en un archivo y dos superficies quedarse
+sin ninguna. Ahora exige **presencia por superficie** e **identidad global**, que
+es lo que "one place to change" queria decir.
+
+### Lo que NO se verifico, y lo que quedo abierto
+
+**No se abrio el navegador.** Falta que Diego mire la seccion renderizada, en
+claro y en oscuro, y en los 3 idiomas.
+
+**Y hay un duplicado en Google Business Profile, confirmado y sin resolver:**
+
+```
+LA BUENA (5,0 con 2 resenas)  1s0x6762fdefebf19285:0x52872725f8bdca88  /g/11nq1s1k4b
+LA DUPLICADA (vacia)          1s0x24ff468d2df1986f:0x5a31db3433dbe8b0  /g/11zfsvwcxn
+coordenadas de las dos:       -33.8482439, 150.9319747   IDENTICAS
+```
+
+Identificadores distintos, misma ubicacion exacta: son dos fichas. Reparte las
+resenas y la autoridad de busqueda entre las dos. **Falta saber cual gestiona
+Diego** (boton "Leer resenas" de su panel) antes de reportar o reclamar nada -
+reportar la equivocada le costaria las 2 resenas.
+
+Aparte: su categoria en Google dice "Taller mecanico" (Mechanic), que en
+Australia se lee como taller de **autos**. Deberia ser "Bicycle repair shop".

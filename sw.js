@@ -1,3 +1,8 @@
+// v107 (2026-08-31): la landing muestra las resenas de Google. Son las 2 reales
+// del perfil, citadas a mano y textuales, con link al perfil para que cualquiera
+// las verifique. Se quito el empty state "Be the first to leave a review", que
+// contradecia lo que el visitante ve. Toca landing.html, js/landing-inline.js
+// y js/i18n.js (que se importa sin ?v=, solo este bump lo renueva).
 // v106 (2026-08-31): el arreglo de v104 no servia. `async = false` ordena los
 // scripts con src ENTRE SI; un script inline corre apenas se inserta y no
 // espera a ninguno, asi que el init de Sentry seguia ganandole a su loader.
@@ -121,7 +126,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v106';
+const CACHE_STATIC = 'drbike-static-v107';
 const CACHE_PAGES  = 'drbike-pages-v74';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

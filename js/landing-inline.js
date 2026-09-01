@@ -632,17 +632,14 @@ let _authMode = 'signin';
     .limit(6)
     .then(function (res) {
       const grid = document.getElementById('reviews-grid');
-      const empty = document.getElementById('reviews-empty');
       const reviews = (res && res.data) || [];
-      if (!reviews.length) {
-        if (empty) empty.style.display = 'block';
-        return;
-      }
+      // No empty state any more: the Google block above this grid is always
+      // visible, so an empty in-app grid is simply nothing extra to show.
+      if (!reviews.length) return;
       if (grid) grid.innerHTML = reviews.map(reviewCardHTML).join('');
     })
     .catch(function () {
-      const empty = document.getElementById('reviews-empty');
-      if (empty) empty.style.display = 'block';
+      // Nothing to do: the Google reviews above are static markup and stay put.
     });
 }());
 
