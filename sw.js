@@ -1,3 +1,8 @@
+// v118 (2026-09-03): la pantalla en blanco de verdad. renderServiceSummary
+// leia calloutFee y serviceTotal 44 y 12 lineas arriba de su propio const,
+// dentro de un if (window.posthog): ReferenceError antes del primer
+// innerHTML, y el div de la pantalla quedaba vacio. Solo reventaba con las
+// cookies aceptadas, que es por que ninguna prueba lo veia. PENDIENTES 81.
 // v117 (2026-09-02): la pantalla en blanco a mitad de una reserva. Al
 // desplegar, este mismo worker hace skipWaiting(), BORRA los caches viejos y
 // llama a clients.claim(): toma el control de una pestana que sigue corriendo
@@ -159,7 +164,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v117';
+const CACHE_STATIC = 'drbike-static-v118';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
