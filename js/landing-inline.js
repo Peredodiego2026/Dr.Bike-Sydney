@@ -2109,3 +2109,20 @@ function openLandingChat(bookingId) {
 }());
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+// Cuando se despliega algo, el service worker nuevo hace skipWaiting(), BORRA
+// los caches viejos y llama a clients.claim(): toma el control de esta
+      // pestana mientras sigue corriendo el JS que ya se habia cargado. A partir
+      // de ahi la pagina pide piezas que el cache que estaba usando ya no tiene,
+      // y el primer import que falla la deja en blanco - sin error visible, sin
+      // spinner, sin nada que tocar.
+      //
+      // Pasa a cualquiera que tenga la app abierta durante un deploy. Recargar
+      // una sola vez al cambiar de controlador es la unica salida limpia; el
+      // borrador de reserva vive en localStorage, asi que el cliente vuelve con
+      // su "tenes una reserva en curso" intacta.
+let swReloaded = false;
+navigator.serviceWorker.addEventListener('controllerchange', function () {
+  if (swReloaded) return;
+  swReloaded = true;
+  location.reload();
+});
