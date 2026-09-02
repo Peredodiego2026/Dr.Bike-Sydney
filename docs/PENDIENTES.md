@@ -9390,3 +9390,77 @@ nada.
 
 `npm run check`, `npm run lint` y `npm test` verdes por codigo de salida.
 1276/1276.
+
+## 75. El arreglo del login en oscuro estaba a medias (02-sep-2026)
+
+El 72 dio por resuelta la pantalla de login y 2FA del admin. **No lo estaba.**
+La tarjeta y la clase `.inp` quedaron bien; los tres campos donde Diego escribe
+-- email, contrasena y el codigo de 6 digitos -- siguieron ilegibles.
+
+### Lo que el 72 no vio
+
+Esos tres inputs no usan la clase `.inp`: se arman con estilo inline en
+`js/admin.js` (dos en el bloque del login, y la constante `_inp` que comparten
+el 2FA y el alta de 2FA). Y ninguno declaraba **fondo**.
+
+Un `<input>` sin `background` cae al blanco propio del navegador. Al lado tiene
+`color:var(--navy)`, que en oscuro vale `#eef2f7`. **Texto casi blanco sobre
+blanco, 1.12:1, mientras escribis tu contrasena.**
+
+Es el mismo numero del 72, en el mismo formulario, un elemento mas adentro.
+
+### Por que ningun check lo agarro, ni el que se amplio en el 72
+
+El 72 cerro el hueco de los literales: `#fff` como fondo pasa a estar prohibido
+y el patron ahora matchea hex de tres digitos. Nada de eso aplica aca, porque
+**no hay literal que marcar**. El bug es lo que el estilo NO dice: declara la
+tinta y se calla sobre el fondo, y el navegador decide por el.
+
+Un chequeo que busca colores mal escritos no puede ver un color ausente.
+
+### Como aparecio
+
+Renderizando la pagina, no leyendola. `npm run look` (llego con el #388, de otra
+sesion) abre un Chromium sin ventana, y en la captura del overlay en oscuro los
+dos campos se veian **blancos** sobre la tarjeta oscura. Escribiendo un email de
+prueba con `--fill` quedo a la vista que el texto tipeado no se lee.
+
+Esto vale anotarlo: el 72 se cerro con contraste **calculado** y salio a
+produccion diciendo que la pantalla estaba arreglada. El calculo era correcto
+para lo que medi -- tinta contra la tarjeta -- y la pantalla seguia rota, porque
+el elemento que importaba no era la tarjeta. Es la tercera vez en dos dias que
+verificar el proxy en vez del efecto deja pasar un bug vivo (ver 71 y 73).
+
+### El arreglo, y el guard
+
+`background:var(--white)` en los tres estilos inline. `--white` en oscuro es
+`#1a2942`, asi que el campo queda oscuro como la tarjeta y el texto tipeado lo
+lee cualquiera.
+
+`tests/unit/login-inputs-dark.test.js` fija la forma, no la linea: **todo estilo
+inline de `js/admin.js` que pinte texto con un token y tenga forma de campo
+(padding + borde) tiene que declarar tambien su fondo**. Mas la medicion de
+`--navy` sobre `--white` en oscuro contra AA. Verificado quitando el arreglo:
+los tres campos fallan por nombre.
+
+### Lo que SI se verifico esta vez
+
+Con `npm run look`, en la pagina renderizada:
+
+- **La seccion de resenas de Google** (#382): logo, 5.0, las dos tarjetas con
+  su texto y "Agosto 2026" traducido. Correcta.
+- **El boton del diagnostico en espanol** (#377): `Calculá el precio de tu
+  diagnóstico` entra en una linea y no envuelve. La duda del 377 queda cerrada:
+  no hace falta el reemplazo corto.
+- **Las 33 descripciones del catalogo en el paso 1 de la reserva** (#377), en
+  espanol y en movil: las 33 traducidas, cada una en su tarjeta, con los
+  encabezados de categoria tambien traducidos.
+- **El login del admin en oscuro**, antes y despues de este arreglo.
+
+### Lo que sigue sin verificar
+
+- El catalogo en **chino**.
+- El modal "New booking (phone-in)" y su barra de scroll horizontal (72).
+- `index.html` en movil reporta una caja con **+364px de scroll horizontal** en
+  la fila de badges ("100% Satisfaccion..."). Puede ser un carrusel intencional
+  o un desborde. Sin mirar.

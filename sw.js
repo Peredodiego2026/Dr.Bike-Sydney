@@ -1,3 +1,8 @@
+// v112 (2026-09-02): los campos del login y del 2FA del admin seguian sin
+// leerse en modo oscuro. #380 arreglo la tarjeta y la clase .inp, pero estos
+// tres inputs se arman con estilo inline y NO declaraban fondo: el navegador
+// les pone blanco y el texto es var(--navy), que en oscuro es casi blanco.
+// Encontrado renderizando la pagina con npm run look, no leyendola.
 // v107 (2026-08-31): la landing muestra las resenas de Google. Son las 2 reales
 // del perfil, citadas a mano y textuales, con link al perfil para que cualquiera
 // las verifique. Se quito el empty state "Be the first to leave a review", que
@@ -126,7 +131,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v111';
+const CACHE_STATIC = 'drbike-static-v112';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
