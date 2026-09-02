@@ -2286,10 +2286,10 @@ function checkAdminAuth() {
       <div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:var(--gray);margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
-        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
         data-enter="focus-admin-pass">
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
-        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
         data-enter="submit-admin-login">
       <div id="admin-pass-err" style="color:var(--red-text);font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
       <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
@@ -2543,7 +2543,7 @@ function _loginCardHeader() {
 }
 
 const _inp =
-  'width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
+  'width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
 const _btn =
   'width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
 
