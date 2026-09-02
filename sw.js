@@ -1,3 +1,9 @@
+// v113 (2026-09-02): las resenas de Google llegan a la SPA movil. El #382 las
+// puso solo en landing.html, asi que el escritorio mostraba 2 resenas de 5
+// estrellas y el movil - por donde entra la mayoria - seguia diciendo "Be the
+// first to leave a review". Tambien hello@ pasa a contact@ (send-push y el pie
+// del reporte del admin) y el tagline suelto del sidebar entra en el bloque
+// de marca. Toca index.html, admin.html, js/admin.js y api/send-push.js.
 // v112 (2026-09-02): los campos del login y del 2FA del admin seguian sin
 // leerse en modo oscuro. #380 arreglo la tarjeta y la clase .inp, pero estos
 // tres inputs se arman con estilo inline y NO declaraban fondo: el navegador
@@ -131,7 +137,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v112';
+const CACHE_STATIC = 'drbike-static-v113';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

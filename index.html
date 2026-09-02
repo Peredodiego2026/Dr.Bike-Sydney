@@ -55,7 +55,12 @@
        fbq('track', ...) calls in js/app.js are all guarded with `window.fbq &&`,
        so they start working again on their own and need no edit. -->
     <script src="/js/consent.js"></script>
-    <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+    <script
+      type="text/plain"
+      data-consent="analytics"
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"
+    ></script>
     <script type="text/plain" data-consent="analytics">
       window.dataLayer = window.dataLayer || [];
       function gtag() {
@@ -280,7 +285,15 @@
     <a class="skip-link" href="#app">Skip to content</a>
     <div id="boot-loader" role="status" aria-live="polite">
       <div class="boot-mark">
-        <img decoding="async" loading="eager" src="images/logo-db.png" alt="" width="88" height="62" fetchpriority="high" />
+        <img
+          decoding="async"
+          loading="eager"
+          src="images/logo-db.png"
+          alt=""
+          width="88"
+          height="62"
+          fetchpriority="high"
+        />
       </div>
       <div class="boot-tag">Healthy bikes, happy riders</div>
     </div>
@@ -325,10 +338,13 @@
           "
         >
           <div style="display: flex; align-items: center; gap: 8px">
-            <img decoding="async" loading="eager"
+            <img
+              decoding="async"
+              loading="eager"
               src="images/logo-db.png"
               alt="Dr. Bike Sydney"
-              width="40" height="28"
+              width="40"
+              height="28"
               style="width: auto; display: block"
             />
             <span
@@ -364,10 +380,13 @@
         <header id="home-desktop-nav" aria-label="Site navigation">
           <div class="home-nav-inner">
             <a href="#home" class="home-nav-logo">
-              <img decoding="async" loading="eager"
+              <img
+                decoding="async"
+                loading="eager"
                 src="images/logo-db.png"
                 alt="Dr. Bike Sydney"
-                width="48" height="34"
+                width="48"
+                height="34"
                 style="width: auto; display: block"
               />
               <div>
@@ -644,7 +663,9 @@
               </div>
             </div>
             <div class="hero-image">
-              <img decoding="async" loading="eager"
+              <img
+                decoding="async"
+                loading="eager"
                 src="images/hero-van.webp"
                 alt="Dr. Bike Sydney mobile van"
                 width="1672"
@@ -999,7 +1020,9 @@
                  real numbers back once they exist. -->
               </div>
               <div class="about-image">
-                <img width="1122" height="1402"
+                <img
+                  width="1122"
+                  height="1402"
                   src="images/mechanic-working.webp"
                   alt="Dr. Bike Sydney mechanic servicing a bike"
                   style="width: 100%; height: 100%; object-fit: cover"
@@ -1020,17 +1043,134 @@
                 Don't just take our word for it. Here's what Sydney cyclists have to say.
               </p>
             </div>
-            <div class="reviews-grid" id="reviews-grid"></div>
-            <div id="reviews-empty" style="display: none; text-align: center; padding: 28px 16px">
-              <div style="font-size: 28px; margin-bottom: 10px">&#128172;</div>
-              <p style="font-weight: 700; font-size: 15px; color: var(--navy); margin-bottom: 6px">
-                Be the first to leave a review
-              </p>
-              <p style="font-size: 13px; color: var(--gray); max-width: 340px; margin: 0 auto">
-                Real reviews from Sydney cyclists will show up here as soon as clients start sharing
-                their experience.
-              </p>
+            <!-- ── Reviews on Google ─────────────────────────────────────
+                 The same hand-quoted block landing.html carries, because this
+                 page is where most clients actually land. #382 added it there
+                 and not here, so mobile kept saying "be the first" under a
+                 profile that already had two 5-star reviews.
+                 Rules, unchanged: text verbatim in the English it was written
+                 in, the name as the reviewer published it, and a link to the
+                 real profile so any card can be checked. Never write a card for
+                 a review that does not exist. -->
+            <div style="text-align: center; margin-bottom: 20px">
+              <div
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 8px;
+                  flex-wrap: wrap;
+                  justify-content: center;
+                "
+              >
+                <img
+                  decoding="async"
+                  loading="lazy"
+                  width="24"
+                  height="24"
+                  src="images/google-logo.svg"
+                  alt="Google"
+                  style="width: 46px"
+                />
+                <span style="font-size: 18px; font-weight: 800; color: var(--navy)">5.0</span>
+                <span
+                  style="color: var(--amber-bright); font-size: 15px"
+                  aria-label="5 out of 5 stars"
+                  >&#9733;&#9733;&#9733;&#9733;&#9733;</span
+                >
+                <a
+                  href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7"
+                  target="_blank"
+                  rel="noopener"
+                  style="
+                    font-size: 14px;
+                    color: var(--blue);
+                    font-weight: 600;
+                    text-decoration: none;
+                  "
+                  >2 reviews on Google</a
+                >
+              </div>
             </div>
+            <div class="reviews-grid" id="google-reviews-grid">
+              <div class="review-card">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+                  <div
+                    style="
+                      width: 40px;
+                      height: 40px;
+                      border-radius: 50%;
+                      background: var(--purple);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: var(--white);
+                      font-weight: 700;
+                      font-size: 14px;
+                      flex-shrink: 0;
+                    "
+                  >
+                    A
+                  </div>
+                  <div style="min-width: 0">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--navy)">
+                      Aldana Jacquet
+                    </div>
+                    <div style="font-size: 12px; color: var(--gray)">August 2026</div>
+                  </div>
+                </div>
+                <div
+                  style="color: var(--amber-bright); font-size: 14px; margin-bottom: 6px"
+                  aria-label="5 out of 5 stars"
+                >
+                  &#9733;&#9733;&#9733;&#9733;&#9733;
+                </div>
+                <p style="font-size: 14px; color: var(--gray); line-height: 1.6">
+                  Amazing service! Super friendly, professional and efficient. They fixed my bike
+                  brakes perfectly and did a great job with the service. Highly recommend!
+                </p>
+              </div>
+              <div class="review-card">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+                  <div
+                    style="
+                      width: 40px;
+                      height: 40px;
+                      border-radius: 50%;
+                      background: var(--green);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: var(--white);
+                      font-weight: 700;
+                      font-size: 14px;
+                      flex-shrink: 0;
+                    "
+                  >
+                    S
+                  </div>
+                  <div style="min-width: 0">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--navy)">
+                      Shaun Murphy
+                    </div>
+                    <div style="font-size: 12px; color: var(--gray)">August 2026</div>
+                  </div>
+                </div>
+                <div
+                  style="color: var(--amber-bright); font-size: 14px; margin-bottom: 6px"
+                  aria-label="5 out of 5 stars"
+                >
+                  &#9733;&#9733;&#9733;&#9733;&#9733;
+                </div>
+                <p style="font-size: 14px; color: var(--gray); line-height: 1.6">
+                  Our electric bike has been regularly serviced and highly recommended these guys.
+                  Quick and courteous.
+                </p>
+              </div>
+            </div>
+            <div class="reviews-grid" id="reviews-grid"></div>
+            <!-- The "Be the first to leave a review" empty state lived here. The
+                 Google block above is always visible now, so an empty in-app
+                 grid is simply nothing extra to show. -->
           </div>
         </section>
 
@@ -1604,7 +1744,9 @@
                 "
               >
                 <span style="font-weight: 600; color: var(--navy)">Monthly Total</span>
-                <span id="ms-price" style="font-size: 20px; font-weight: 800; color: var(--blue-text)"
+                <span
+                  id="ms-price"
+                  style="font-size: 20px; font-weight: 800; color: var(--blue-text)"
                   >$67/month</span
                 >
               </div>
@@ -1804,7 +1946,12 @@
                 </div>
                 <div
                   id="pi-price"
-                  style="font-size: 24px; font-weight: 800; color: var(--blue-text); margin-top: 4px"
+                  style="
+                    font-size: 24px;
+                    font-weight: 800;
+                    color: var(--blue-text);
+                    margin-top: 4px;
+                  "
                 >
                   $67/month
                 </div>
@@ -1930,10 +2077,13 @@
               <!-- Brand -->
               <div>
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px">
-                  <img decoding="async" loading="eager"
+                  <img
+                    decoding="async"
+                    loading="eager"
                     src="images/logo-db.png"
                     alt="Dr. Bike Sydney"
-                    width="40" height="28"
+                    width="40"
+                    height="28"
                     style="width: auto; display: block"
                   />
                   <span
@@ -2253,21 +2403,15 @@
             .limit(6)
             .then(function (res) {
               var grid = document.getElementById('reviews-grid');
-              var empty = document.getElementById('reviews-empty');
               var reviews = (res && res.data) || [];
-              if (!reviews.length) {
-                if (empty) empty.style.display = 'block';
-                return;
-              }
-              // Now that this can run a second time, the empty state has to be able
-              // to go away again - the first client's review lands on a page that is
-              // currently saying there are none.
-              if (empty) empty.style.display = 'none';
+              // No empty state any more: the Google block above this grid is
+              // always visible, so having no in-app reviews yet shows nothing
+              // extra rather than a contradiction.
+              if (!reviews.length) return;
               if (grid) grid.innerHTML = reviews.map(reviewCardHTML).join('');
             })
             .catch(function () {
-              var empty = document.getElementById('reviews-empty');
-              if (empty) empty.style.display = 'block';
+              // Nothing to do: the Google reviews above are static markup.
             });
         }
         loadReviews();

@@ -164,10 +164,14 @@ describe('a new review shows up without reopening the app', () => {
     expect(app).toMatch(/window\.drbikeReloadReviews\?\.\(\)/);
   });
 
-  // Now that it can run twice, the first review lands on a page currently
-  // saying there are none.
-  it('the empty state can go away again', () => {
-    expect(indexHtml).toMatch(/if \(empty\) empty\.style\.display = 'none';/);
+  // This used to assert the line that hid the "Be the first to leave a review"
+  // empty state. That state is gone: the Google reviews block above the grid is
+  // always visible, so an empty in-app grid is nothing extra to show rather
+  // than a contradiction. What the test protects is unchanged - a review left
+  // now has to appear without reopening the page - so it checks the refill.
+  it('re-running the loader refills the grid', () => {
+    expect(indexHtml).toMatch(/grid\.innerHTML = reviews\.map\(reviewCardHTML\)/);
+    expect(indexHtml).not.toContain("getElementById('reviews-empty')");
   });
 
   it('a missing loader does not break the thank-you', () => {
