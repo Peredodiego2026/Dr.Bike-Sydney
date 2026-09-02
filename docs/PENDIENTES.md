@@ -9904,3 +9904,28 @@ hoy esta muerta y su clase esta bloqueada, pero la arquitectura sigue
 convirtiendo cualquier error de render en una pagina muerta sin salida. Un
 `try/catch` por pantalla con un estado de error y un boton de reintentar es un
 cambio aparte, deliberado, no para meterlo de contrabando en este.
+
+## 84. El interruptor de zonas no llegaba al despacho (03-sep-2026)
+
+Diego pidio dejar la Van 2 sin zonas para que todo vaya a la Van 1. Apagar una
+zona en Admin pone `active = false` - no borra la fila, y eso es a proposito
+(su regla: nunca borrar filas).
+
+**Todos los lectores respetaban ese flag menos el que decidia el reparto.**
+Zone Manager, las tarjetas de Van 1 / Van 2 y el conteo de disponibilidad
+filtran por `active = true`. `matchVanZone()` en `api/auth.js` - la funcion que
+decide **que mecanico recibe el trabajo** - leia la tabla sin filtrar.
+
+O sea: una zona apagada desaparecia de la pantalla y **seguia despachando**. El
+SMS le llegaba igual al mecanico que Diego creia haber sacado de ese suburbio.
+
+Arreglado: `matchVanZone()` filtra por `active = true`.
+
+### Lo que quedo sin tocar, a proposito
+
+`api/auth.js:4209` cuenta las vans para calcular cuantos turnos ofrecer, y
+tampoco filtra por `active`. **No se cambio.** Si se le agrega el filtro y la
+Van 2 se queda sin filas activas, la Van 2 sale del conteo y la app ofrece
+menos turnos por dia. Eso es una decision de negocio (¿trabaja el Mecanico 2 o
+no?), no un bug, y no es lo que Diego pidio. Si algun dia la Van 2 deja de
+trabajar de verdad, ese es el lugar.
