@@ -374,7 +374,16 @@ export function aggregateMechanicStats(jobs, { maxReviews = 8 } = {}) {
 // pre-check (handleCheckCoverage) and handleCreateBooking's own dispatch step,
 // so the two can never disagree about what counts as "covered".
 async function matchVanZone(sb, address) {
-  const { data: vz } = await sb.from('van_zones').select('van_number,suburb').neq('van_number', 0);
+  // `active` is honoured here too. Every other reader filters on it - Zone
+  // Manager, the van cards, the availability count - so a zone switched off in
+  // Admin vanishes from the screen while this line kept dispatching to it. The
+  // one place the flag has to bite is the one deciding which mechanic gets the
+  // job, and it was the only one ignoring it.
+  const { data: vz } = await sb
+    .from('van_zones')
+    .select('van_number,suburb')
+    .neq('van_number', 0)
+    .eq('active', true);
   const addr = (address || '').toLowerCase();
   const match = (vz || []).find((z) => z.suburb && addr.includes(String(z.suburb).toLowerCase()));
   return match && Number(match.van_number) ? Number(match.van_number) : null;
