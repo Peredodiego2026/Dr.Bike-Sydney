@@ -113,34 +113,20 @@ export async function authMechanic(req) {
   const contacts = await resp.json();
 
   let mechanic = null;
-  let matchedByPlaintext = false;
   const mid = token ? verifyToken(token) : null;
   if (mid) {
     mechanic = contacts.find((c) => c.id === mid);
   }
   if (!mechanic && pin) {
-    const cleanPin = String(pin).trim();
-    const pinHash = hashPin(cleanPin);
-    mechanic = contacts.find((c) => c.pin_hash && c.pin_hash === pinHash);
-    if (!mechanic) {
-      mechanic = contacts.find((c) => c.pin && c.pin === cleanPin);
-      matchedByPlaintext = !!mechanic;
-    }
-    if (mechanic && matchedByPlaintext && !mechanic.pin_hash) {
-      fetch(
-        `${SUPABASE_URL}/rest/v1/escalation_contacts?id=eq.${encodeURIComponent(mechanic.id)}`,
-        {
-          method: 'PATCH',
-          headers: {
-            apikey: SERVICE_KEY,
-            Authorization: `Bearer ${SERVICE_KEY}`,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal',
-          },
-          body: JSON.stringify({ pin_hash: pinHash }),
-        }
-      ).catch(() => {});
-    }
+    // pin_hash only. There used to be a second lookup here against a plaintext
+    // `pin` column, plus a background PATCH that back-filled the hash the first
+    // time someone logged in with a legacy PIN. Both are gone: that column does
+    // not exist in this database (verified 2026-09-03 - `where pin is not null`
+    // fails with `42703: column "pin" does not exist`), so `c.pin` was always
+    // undefined and neither branch could ever run. Removing them changes no
+    // behaviour; it removes a fallback that read as a live risk in every
+    // security review and was not one.
+    mechanic = contacts.find((c) => c.pin_hash && c.pin_hash === hashPin(String(pin).trim()));
   }
 
   if (!mechanic) {
@@ -4503,9 +4489,15 @@ export async function handleAdminSetMechanicPin(req, res) {
   const finalPin = pin ? String(pin).trim() : String(crypto.randomInt(100000, 1000000));
   if (!/^\d{6}$/.test(finalPin)) return res.status(400).json({ error: 'PIN must be 6 digits' });
 
+  // Only pin_hash. This also wrote `pin: null` to clear a legacy plaintext
+  // column - but that column DOES NOT EXIST in this database. Verified against
+  // production 2026-09-03: a `where pin is not null` on escalation_contacts
+  // fails with `42703: column "pin" does not exist`. PostgREST rejects a write
+  // naming an unknown column, so the `pin: null` turned every Reset PIN into a
+  // 500. The button could not have worked for anyone, whatever their role.
   const { error } = await auth.sb
     .from('escalation_contacts')
-    .update({ pin_hash: hashPin(finalPin), pin: null }) // pin: null clears any legacy plaintext value
+    .update({ pin_hash: hashPin(finalPin) })
     .eq('id', contact_id);
   if (error) return res.status(500).json({ error: error.message });
   return res.status(200).json({ ok: true, pin: finalPin });

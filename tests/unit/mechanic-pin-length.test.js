@@ -82,13 +82,19 @@ describe('mechanic PIN length', () => {
     expect(res.body.pin).toMatch(/^\d{6}$/);
   });
 
-  it('accepts a 6-digit PIN and stores it hashed, clearing any plaintext', async () => {
+  it('accepts a 6-digit PIN and stores only its hash', async () => {
     const res = await call('123456');
     expect(res.statusCode).toBe(200);
     expect(res.body.pin).toBe('123456');
     const [payload] = updateSpy.mock.calls[0];
-    // The PIN itself must never be what lands in the row.
-    expect(payload.pin).toBeNull();
+    // The PIN itself must never be what lands in the row - the point this test
+    // has always made. It used to check `payload.pin` was null, back when the
+    // update also wrote that column to clear it; the column does not exist in
+    // this database, and naming it made PostgREST reject the whole write. So
+    // the assertion is now the stronger one: no field of the payload carries
+    // the PIN, under any name.
+    expect(Object.values(payload)).not.toContain('123456');
+    expect(payload).not.toHaveProperty('pin');
     expect(payload.pin_hash).toEqual(expect.any(String));
     expect(payload.pin_hash).not.toContain('123456');
   });
