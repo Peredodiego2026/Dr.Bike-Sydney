@@ -4,12 +4,16 @@
 CREATE TABLE IF NOT EXISTS bikes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   client_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  nickname TEXT NOT NULL DEFAULT 'My Bike',      -- e.g. "Red Trek", "Commuter"
+  -- `name`, no `nickname`: es el nombre que la tabla tiene DE VERDAD en
+  -- produccion, y el que js/app.js selecciona e inserta. Verificado contra la
+  -- base el 02-sep-2026; hasta entonces este archivo decia `nickname` y
+  -- recrear la tabla con el habria roto Mis Bicis entera.
+  name TEXT NOT NULL DEFAULT 'My Bike',          -- e.g. "Red Trek", "Commuter"
   brand TEXT,
   model TEXT,
   color TEXT,
   year INTEGER,
-  bike_type TEXT,  -- 'road', 'mtb', 'hybrid', 'ebike', 'cargo', 'folding'
+  type TEXT,       -- 'road', 'mtb', 'hybrid', 'ebike', 'cargo', 'folding'
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()

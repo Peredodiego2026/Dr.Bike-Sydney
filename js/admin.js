@@ -8183,13 +8183,16 @@ async function viewClientBikes(clientId, clientName) {
   const bikeRows =
     (bikes || []).length === 0
       ? '<p style="color:var(--mgray);font-size:15px;text-align:center;padding:20px">No bikes registered yet.</p>'
-      : (bikes || [])
+      : // La tabla tiene `name` y `type`. Esto leia los nombres viejos del
+        // script de creacion, que no existen, y cada bici de cada cliente se
+        // veia como "undefined" y sin tipo (docs/PENDIENTES.md 78).
+        (bikes || [])
           .map(
             (b) => `
         <div style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px">
-          <div style="font-weight:700;font-size:15px">${esc(b.nickname)}</div>
+          <div style="font-weight:700;font-size:15px">${esc(b.name)}</div>
           <div style="font-size:13px;color:var(--mgray);margin-top:3px">
-            ${[b.year, b.brand, b.model, b.color, TYPE_LABELS[b.bike_type]].filter(Boolean).map(esc).join(' · ') || 'No details'}
+            ${[b.year, b.brand, b.model, b.color, TYPE_LABELS[b.type]].filter(Boolean).map(esc).join(' · ') || 'No details'}
           </div>
         </div>`
           )
