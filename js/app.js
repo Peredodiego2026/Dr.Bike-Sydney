@@ -1482,15 +1482,6 @@ async function renderServiceSummary() {
     return;
   }
   if (window.gtag) gtag('event', 'checkout_progress', { step: 3 });
-  if (window.posthog)
-    posthog.capture('booking_step_viewed', {
-      step: 'quote_summary',
-      // El precio de la visita, para poder preguntarle al embudo si una zona
-      // de $45 convierte peor que una de $25. Sin el numero, "se va por el
-      // precio" no se puede contestar, solo suponer.
-      callout_fee: calloutFee,
-      service_price: serviceTotal,
-    });
 
   // The coverage call below is a network round trip, so this screen has the
   // same blank-box problem as Profile - and this one sits in the paid flow.
@@ -1536,6 +1527,22 @@ async function renderServiceSummary() {
     ? 0
     : applySurcharge(Number(coverage.calloutFee) || 0, date);
   const grandTotal = serviceTotal + calloutFee;
+
+  // El precio de la visita, para poder preguntarle al embudo si una zona de
+  // $45 convierte peor que una de $25. Sin el numero, "se va por el precio" no
+  // se puede contestar, solo suponer.
+  //
+  // Va aca y no arriba con el `checkout_progress`: los dos valores recien
+  // existen en esta linea. Leerlos antes de su `const` no es un dato en cero,
+  // es un ReferenceError que corta la funcion antes del primer innerHTML y
+  // deja la pantalla literalmente vacia - ver docs/PENDIENTES.md 81.
+  if (window.posthog)
+    posthog.capture('booking_step_viewed', {
+      step: 'quote_summary',
+      callout_fee: calloutFee,
+      service_price: serviceTotal,
+    });
+
   const inclusions = getServiceInclusions(service.name);
   const dur = formatServiceDuration(service);
 

@@ -9806,3 +9806,101 @@ Y queda una consecuencia a mirar: **la recarga interrumpe lo que el cliente
 estuviera haciendo**. Con el borrador guardado eso es aceptable en el flujo de
 reserva, pero si alguna vez hay una pantalla con datos sin guardar, esa recarga
 se los lleva.
+
+## 81. La pantalla en blanco, la causa de verdad (03-sep-2026)
+
+La 80 arreglo un problema real de service worker, pero **no era este**. Diego
+volvio a reportar: "sigue yendose a blanco en los mismos lugares". Esa frase es
+el dato: **en los mismos lugares** significa determinista, y un service worker
+que toma el control durante un deploy no es determinista. Habia un bug de
+codigo, y estaba a la vista.
+
+### Que pasaba
+
+`renderServiceSummary()` en `js/app.js` leia `calloutFee` y `serviceTotal`
+**44 y 12 lineas arriba de su propio `const`**:
+
+```js
+if (window.posthog)
+  posthog.capture('booking_step_viewed', {
+    callout_fee: calloutFee,      // linea 1491
+    service_price: serviceTotal,  // linea 1492
+  });
+...
+const serviceTotal = ...          // linea 1504
+const calloutFee = ...            // linea 1535
+```
+
+Eso es la zona muerta temporal (TDZ) de `const`: no da `undefined`, **tira
+`ReferenceError: Cannot access 'calloutFee' before initialization`**.
+
+Y lo tira **antes del primer `screen.innerHTML`** de la funcion. Ahi esta el
+sintoma exacto: el router no construye pantallas, solo le pone `active` a divs
+que `index.html` ya trae vacios y deja que `js/app.js` los llene. Si el render
+revienta antes de escribir, queda:
+
+```html
+<div data-screen="service-summary" class="screen active"></div>
+```
+
+Una pagina blanca, a pantalla completa, **sin nada que tocar** - porque la barra
+de navegacion tambien vive adentro de ese `innerHTML`. Sin spinner, sin error,
+sin scroll. Igual que la describio Diego.
+
+### Por que ninguna prueba lo vio
+
+Por el `if (window.posthog)`.
+
+PostHog lo carga `js/consent.js` **solo despues de aceptar las cookies de
+analitica**. Sin aceptar, la linea no se ejecuta y el flujo de reserva anda
+perfecto. Diego habia aceptado; los barridos automatizados, no. Por eso el
+recorrido con clicks reales y las cinco formas de borrador roto pasaron todas:
+ninguna tenia PostHog cargado.
+
+Aceptar cookies no deberia cambiar lo que hace la app. Durante un deploy
+decidio si la app **funcionaba**.
+
+### Verificado ejecutando, no leyendo
+
+`tests/unit/quote-summary-renders.test.js` saca la funcion real de `js/app.js`
+y **la ejecuta** en un `vm` con stubs. Contra el codigo roto:
+
+```
+ReferenceError: Cannot access 'calloutFee' before initialization   (html: 0 caracteres)
+```
+
+Con el arreglo, las dos rutas - con analitica y sin - producen el mismo HTML,
+byte por byte.
+
+### Y "Bookings no me aparece nada" era lo mismo
+
+`renderMyBookings()` esta bien escrita: escribe el encabezado y las pestanas
+antes de pedir nada, y tiene estado vacio para las tres respuestas posibles. No
+mostraba nada porque **no habia nada que mostrar**: cada intento de reservar
+moria en el resumen, asi que Diego nunca llego a crear una reserva. Un solo bug,
+dos sintomas.
+
+### Enforcement
+
+`scripts/tdz-check.mjs`, dentro de `npm run check`. `no-use-before-define` a
+secas marca 13 casos inofensivos en este repo (el clasico `close()` que
+referencia un `onKey` declarado abajo pero que corre recien al hacer click), y
+13 comentarios `eslint-disable` habrian tapado justo el que importaba. Este
+chequea la forma que **siempre** revienta: la lectura y la declaracion en el
+**mismo cuerpo de funcion**, sin nada que difiera la lectura.
+
+Verificado en las dos direcciones: falla contra el `js/app.js` de `origin/main`
+(marca 1491 y 1492), pasa con el arreglo.
+
+Es la tercera vez que un bug de alcance de variables llega a produccion en este
+repo - el comentario de `eslint.config.js` ya nombraba las otras dos.
+
+### Lo que queda abierto
+
+**Cualquier otra excepcion en un render sigue dando pantalla blanca.** El
+despachador de `screenchange` llama a las diez funciones de render sin
+`try/catch`, y todas las pantallas salen vacias de `index.html`. La causa de
+hoy esta muerta y su clase esta bloqueada, pero la arquitectura sigue
+convirtiendo cualquier error de render en una pagina muerta sin salida. Un
+`try/catch` por pantalla con un estado de error y un boton de reintentar es un
+cambio aparte, deliberado, no para meterlo de contrabando en este.
