@@ -15,6 +15,14 @@
 // esta bloqueado a proposito en .claude/settings.local.json. Esto es Chromium
 // headless dentro de un proceso de node: sin ventana, sin GPU, sin panel.
 //
+// LO QUE CUESTA
+//
+// Pico medido: 647 MB de Chromium con la landing entera cargada, y se libera
+// entero al terminar. Antes de bajarlo eran 920. La maquina de Diego tiene
+// 15,7 GB y suele andar con 2,5 libres (Firefox se lleva 4,8), asi que el
+// script se planta solo si hay menos de 1,6 GB libres en vez de arrastrar el
+// equipo: el cierre de Claude Desktop del 02-sep 09:36 fue por RAM, no por GPU.
+//
 // LO QUE MIDE, ADEMAS DE LA FOTO
 //
 // Mirar una captura encuentra lo obvio y se pierde lo importante. El reporte
@@ -33,6 +41,7 @@
 //   npm run look -- admin.html --el "#admin-create-booking-modal"
 //   npm run look -- landing.html --prod        (produccion, no el repo local)
 import { chromium, devices } from 'playwright';
+import os from 'node:os';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -80,6 +89,7 @@ function parseArgs(argv) {
     keepAnim: false,
     el: null,
     strips: false,
+    retina: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -101,6 +111,7 @@ function parseArgs(argv) {
     else if (a === '--prod') o.prod = true;
     else if (a === '--el') o.el = next();
     else if (a === '--strips') o.strips = true;
+    else if (a === '--2x') o.retina = true;
     else if (a === '--keep-animations') o.keepAnim = true;
     else if (a.startsWith('--')) throw new Error(`opcion desconocida: ${a}`);
     else o.target = a;
@@ -222,7 +233,45 @@ const local = o.prod ? null : await serve();
 const base = o.prod ? PROD : `http://127.0.0.1:${local.port}`;
 const url = `${base}/${o.target.replace(/^\//, '')}`;
 
-const browser = await chromium.launch();
+// ── freno de RAM ────────────────────────────────────────────────────────────
+//
+// La maquina de Diego tiene 15,7 GB y suele andar con 2,5 GB libres: Firefox se
+// come 4,8 GB y Chrome otros 1,8. De los 10 cierres de Claude Desktop, nueve
+// fueron por el panel del navegador (GPU) y el decimo - el del 02-sep 09:36,
+// Event 1002 - fue por RAM.
+//
+// Un Chromium headless con la landing cargada llega a 920 MB de pico (medido,
+// no estimado). Con 2,5 GB libres entra, pero deja el margen justo en la zona
+// donde Windows empezo a paginar ese dia. Asi que esto se planta solo en vez de
+// arrastrar la maquina, y dice que cerrar.
+const freeGB = os.freemem() / 1024 ** 3;
+const NEED_GB = 1.6;
+if (freeGB < NEED_GB) {
+  console.error(`\n  RAM libre: ${freeGB.toFixed(2)} GB. No arranco por debajo de ${NEED_GB} GB.`);
+  console.error('  Un Chromium headless con una pagina cargada pide hasta 0,9 GB de pico,');
+  console.error('  y este equipo ya se quedo sin memoria una vez (02-sep 09:36).');
+  console.error('  Cerra alguna ventana de Firefox o Chrome y volve a intentar.\n');
+  local?.server.close();
+  process.exit(2);
+}
+if (freeGB < 3) {
+  console.error(
+    `  (RAM libre ${freeGB.toFixed(2)} GB - justo. Si algo se pone lento, cerra Firefox.)`
+  );
+}
+
+const browser = await chromium.launch({
+  // Cada uno de estos apaga algo que un navegador de verdad necesita y esta
+  // medicion no: extensiones, sincronizacion, servicios de fondo, GPU.
+  args: [
+    '--disable-extensions',
+    '--disable-background-networking',
+    '--disable-sync',
+    '--disable-gpu',
+    '--renderer-process-limit=2',
+    '--js-flags=--max-old-space-size=256',
+  ],
+});
 // --mobile tiene que EMULAR un telefono, no solo achicar la ventana.
 // index.html mira navigator.userAgent y redirige a landing.html si no reconoce
 // un movil: con el user-agent de escritorio que trae Playwright, pedir
@@ -238,7 +287,11 @@ const context = await browser.newContext({
   ...(device || {}),
   viewport: o.viewport,
   colorScheme: o.dark ? 'dark' : 'light',
-  deviceScaleFactor: 2,
+  // 1x por defecto, no 2x. Una captura de pagina completa de la landing mide
+  // ~18.000px de alto: a 2x el mapa de bits solo es de ~200 MB, y el texto se
+  // lee igual a 1x. `--2x` sube el detalle cuando de verdad hace falta mirar
+  // un borde o una sombra.
+  deviceScaleFactor: o.retina ? 2 : 1,
   // Sin esto la landing puede pedir permiso de ubicacion y quedarse esperando.
   permissions: [],
 });

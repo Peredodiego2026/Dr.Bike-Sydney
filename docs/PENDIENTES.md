@@ -9370,5 +9370,23 @@ Los cuatro se verificaron **rompiendolos**. De ahi salio que el guard del
 el hash del CSS, no el desborde. Queda escrito en el test que el efecto se mide
 con `npm run look`, que no corre en CI.
 
+### El costo en memoria, porque no es gratis
+
+La otra sesion levanto la objecion correcta: de los 10 cierres de Claude
+Desktop, nueve fueron por el panel del navegador, pero **el del 02-sep 09:36
+(Event 1002) fue por RAM** - 2,7 GB libres de 15,7, con Firefox y Chrome
+abiertos. Una herramienta que esquiva la causa de nueve y camina hacia la del
+decimo no es una herramienta segura.
+
+Medido en vez de estimado: el pico real era **920 MB**, no los 400-600 que
+parecian. Con las extensiones, la sincronizacion, los servicios de fondo y la
+GPU apagados, y bajando las capturas de 2x a 1x (una pagina completa de la
+landing mide 18.000px de alto: a 2x el mapa de bits solo son ~200 MB), el pico
+quedo en **647 MB**, y se libera entero al terminar.
+
+Ademas el script **se planta solo** si hay menos de 1,6 GB libres, y dice que
+cerrar. Verificado subiendo el umbral a 99 GB: sale con codigo 2 sin abrir
+nada.
+
 `npm run check`, `npm run lint` y `npm test` verdes por codigo de salida.
 1276/1276.
