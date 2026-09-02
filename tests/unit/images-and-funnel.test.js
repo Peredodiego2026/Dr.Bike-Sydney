@@ -141,3 +141,37 @@ describe('el embudo ya decia donde, ahora dice por que', () => {
     expect(ev).not.toMatch(/message:\s*e\.message/);
   });
 });
+
+// El 2026-09-02 el logo salio a produccion midiendo 423px de alto en las TRES
+// superficies de cliente. La etiqueta habia quedado con DOS `height` - el
+// inyectado por el script del punto 11 y el que ya estaba - y el navegador se
+// queda con el primero sin avisar.
+//
+// El test de proporcion de arriba paso en verde sobre esa pagina rota: leia el
+// primer `height=` de la etiqueta, 423, y 600/423 es justo la proporcion real
+// del archivo. Comprobaba mi suposicion, no el efecto.
+//
+// Esto comprueba el efecto: un logo de encabezado no puede declararse de 60px
+// para arriba (el mas grande de verdad es 88x62, en la SPA). `scripts/html-attrs-check.mjs` cubre la causa - atributos
+// repetidos en cualquier etiqueta de cualquier pagina.
+describe('el logo se declara del tamano al que se dibuja', () => {
+  it.each(PAGES)('%s: ninguna copia del logo pide un alto absurdo', (page) => {
+    const tooBig = imgs(read(page))
+      .filter((t) => /logo-db\.png/.test(srcOf(t)))
+      .map((t) => Number((/\bheight="(\d+)"/.exec(t) || [])[1]))
+      // 120px: el logo legitimo mas grande del repo es el de la SPA, 88x62. El
+      // bug declaraba 423. Cualquier umbral entre medio sirve; este no roza
+      // ningun tamano real.
+      .filter((h) => h > 120);
+    expect(tooBig).toEqual([]);
+  });
+
+  it('y declara un solo alto, no dos', () => {
+    for (const page of PAGES) {
+      for (const tag of imgs(read(page))) {
+        expect((tag.match(/\bheight=/g) || []).length, `${page} ${srcOf(tag)}`).toBeLessThan(2);
+        expect((tag.match(/\bwidth=/g) || []).length, `${page} ${srcOf(tag)}`).toBeLessThan(2);
+      }
+    }
+  });
+});
