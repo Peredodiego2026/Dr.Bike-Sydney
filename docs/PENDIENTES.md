@@ -9744,3 +9744,65 @@ simular sin sus scripts.
 Y el `ReferenceError: Sentry is not defined` que aparecio al aceptar cookies en
 este barrido **es del backend falso** cortando el CDN - pero confirma lo ya
 sabido: a quien tenga un bloqueador, ese error le sale igual en produccion.
+
+## 80. La pantalla en blanco a mitad de una reserva (02-sep-2026)
+
+Diego, desde el celular, dentro de su cuenta: entra a reservar, la app le ofrece
+"tenes una reserva en curso", aprieta Continuar y **la pantalla se va a blanco
+total**. Sin spinner, sin error, sin nada que tocar. Le paso mas de una vez el
+mismo dia - el dia en que salieron **cuatro deploys seguidos**.
+
+### No se pudo reproducir con el codigo, y eso era el dato
+
+Se intento en serio: recorrer el flujo con clicks reales contra un backend
+falso, y despues saltar directo al resumen con la reserva armada. Despues, cinco
+formas distintas de borrador guardado - hora en 24h, servicio sin precio,
+servicio como texto plano, sin `location`, servicio que ya no existe en el
+catalogo. **Ninguna** produjo la pantalla en blanco: el resumen renderizo sus
+1168 caracteres las cinco veces.
+
+Que el codigo aguante todo eso y a Diego se le rompa significa que el problema
+no estaba en el codigo desplegado sino en **el estado del navegador**.
+
+### La causa, en sw.js, y es estructural
+
+```
+install:   self.skipWaiting()      se activa sin esperar
+activate:  caches.delete(viejo)    BORRA los caches en uso
+           self.clients.claim()    toma el control de la pestana abierta
+```
+
+...y **nadie recargaba**. Secuencia completa: el cliente tiene la app abierta
+corriendo la version anterior; sale un deploy; el worker nuevo se instala, borra
+el cache que esa pagina estaba usando y le toma el control. La pagina sigue
+ejecutando el JS viejo, pero lo siguiente que pida va contra un cache que ya no
+lo tiene. El import falla, el render muere a la mitad, y lo que queda es una
+pantalla blanca.
+
+**No es de Diego.** Le pasa a cualquier cliente que tenga la app abierta cuando
+se despliega - con la diferencia de que un cliente no avisa, se va.
+
+Los cuatro deploys de ese dia no crearon el problema: lo dispararon cuatro
+veces. La causa estaba desde que existe `skipWaiting()` sin su contraparte.
+
+### El arreglo
+
+`controllerchange` -> recargar **una vez**, con guard contra el bucle. Es la
+contraparte estandar de `skipWaiting()` + `claim()`. El borrador de reserva vive
+en `localStorage`, asi que el cliente vuelve a "tenes una reserva en curso" con
+todo lo que habia elegido, en vez de volver a la nada.
+
+Va en las dos superficies que registran el worker: `index.html` y
+`js/landing-inline.js`.
+
+### Lo que NO se verifico
+
+**No se vio la pantalla en blanco arreglada**, porque nunca se pudo reproducir.
+Lo que si se verifico es el mecanismo: `sw.js` hace las tres cosas, y ahora las
+dos paginas escuchan el cambio de controlador. **Que el sintoma desaparezca solo
+lo puede confirmar Diego**, usando la app durante el proximo deploy.
+
+Y queda una consecuencia a mirar: **la recarga interrumpe lo que el cliente
+estuviera haciendo**. Con el borrador guardado eso es aceptable en el flujo de
+reserva, pero si alguna vez hay una pantalla con datos sin guardar, esa recarga
+se los lleva.

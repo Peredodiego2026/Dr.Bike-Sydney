@@ -1,3 +1,10 @@
+// v117 (2026-09-02): la pantalla en blanco a mitad de una reserva. Al
+// desplegar, este mismo worker hace skipWaiting(), BORRA los caches viejos y
+// llama a clients.claim(): toma el control de una pestana que sigue corriendo
+// el JS anterior, y el primer modulo que esa pagina pide ya no esta. El import
+// falla y la pantalla queda blanca, sin error ni spinner. Le pasa a cualquier
+// cliente que tenga la app abierta durante un deploy. index.html y
+// js/landing-inline.js ahora recargan una vez al cambiar de controlador.
 // v116 (2026-09-02): cuando falla la carga de horarios en el paso 2 de la
 // reserva, el aviso se pintaba al final de la pantalla, debajo del boton fijo
 // de Continuar y de la barra inferior. Se alcanzaba scrolleando, pero lo que
@@ -152,7 +159,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v116';
+const CACHE_STATIC = 'drbike-static-v117';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
