@@ -9690,3 +9690,57 @@ Detalle sin arreglar: en `Mis Reservas` el backend falso no responde con la
 forma que espera `getBookings()`, asi que se vio el estado de error y no la
 lista. El estado de error, eso si, esta bien hecho: icono, titulo y una frase
 que dice que hacer.
+
+## 79. Los pasos 2 y 3 de la reserva, recorridos como los recorre un cliente (02-sep-2026)
+
+Ultima pieza del recorrido del cliente que faltaba mirar. Se hizo **navegando**,
+no llamando funciones: elegir servicio, elegir dia, elegir hora - los mismos
+clicks, contra el backend falso.
+
+### Lo que estaba bien
+
+El paso 2 (`Elegi Fecha y Hora`) se ve correcto en movil: calendario en espanol,
+el dia de hoy marcado, los dias pasados deshabilitados, la seccion de horas
+debajo y el boton Continuar deshabilitado hasta que hay hora elegida.
+
+### Lo unico que aparecio, y es de UX
+
+Cuando la carga de horarios **falla**, el aviso ("Could not load available
+times" + Retry) se pinta al final de `#time-grid`, que queda **debajo de las dos
+barras `position: fixed`**: el boton Continuar (`.sticky-bottom`, a 72px del
+fondo) y la barra de navegacion (72px de alto).
+
+Lo que la persona ve sin moverse es una frase **cortada a la mitad** y ningun
+boton. Se alcanza scrolleando - hay 210px disponibles y `.screen.active` reserva
+`padding-bottom: 10rem` -, pero hay que darse cuenta.
+
+Importa porque **no es un caso raro**: Diego confirmo que las horas "demoran unos
+segundos en aparecer", asi que una conexion lenta puede llevar a ese estado.
+
+Arreglo: `scrollIntoView({ block: 'center' })` sobre el boton de reintentar
+cuando se pinta el aviso.
+
+### Tres falsos positivos propios en este barrido, que valen mas que el hallazgo
+
+1. **"El error queda inalcanzable."** La primera captura era `fullPage`, y ahi
+   los elementos `position: fixed` se dibujan fuera de su sitio. Se repitio con
+   captura de **viewport** - la que ve la persona - y el problema resulto real
+   pero mas suave: tapado, no inalcanzable.
+2. **La medicion decia `alcanzableConScroll: false`**, y estaba mal: su
+   `techoDeLasBarras` daba 0. Recalculado a mano con los numeros crudos (boton
+   en 632-678, barra desde 592, 210px de scroll) da que **si se alcanza**. Se
+   reporto lo segundo, no lo primero.
+3. **Los horarios "no cargaban".** Era el backend falso devolviendo strings
+   cuando el codigo espera objetos con `.available` (`slots.every(s =>
+   !s.available)`). En produccion cargan.
+
+### Lo que sigue sin verse
+
+El **paso 3** (resumen y pago). Llegar pide una hora elegida y el flujo completo
+de direccion y cobertura; con el backend falso el boton Continuar quedo
+deshabilitado. La pantalla de pago monta Stripe Elements, que no se puede
+simular sin sus scripts.
+
+Y el `ReferenceError: Sentry is not defined` que aparecio al aceptar cookies en
+este barrido **es del backend falso** cortando el CDN - pero confirma lo ya
+sabido: a quien tenga un bloqueador, ese error le sale igual en produccion.

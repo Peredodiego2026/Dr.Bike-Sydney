@@ -1,3 +1,8 @@
+// v116 (2026-09-02): cuando falla la carga de horarios en el paso 2 de la
+// reserva, el aviso se pintaba al final de la pantalla, debajo del boton fijo
+// de Continuar y de la barra inferior. Se alcanzaba scrolleando, pero lo que
+// se veia sin moverse era una frase cortada y ningun boton. Ahora el aviso se
+// trae a la vista. Toca js/app.js.
 // v115 (2026-09-02): en Admin > Clientes cada bici se veia como "undefined".
 // El codigo leia b.nickname y b.bike_type, que NO son columnas de la tabla:
 // se llaman name y type. Lo mismo decia scripts/create-bikes-table.sql, que
@@ -147,7 +152,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v115';
+const CACHE_STATIC = 'drbike-static-v116';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

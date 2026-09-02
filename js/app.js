@@ -350,9 +350,14 @@ async function loadTimeSlots(screen, date, serviceId) {
       '<div style="font-size:13px;color:var(--gray);margin-bottom:14px">Please check your connection and try again.</div>' +
       '<button id="retry-slots-btn" style="padding:11px 20px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Retry</button>' +
       '</div>';
-    screen
-      .querySelector('#retry-slots-btn')
-      ?.addEventListener('click', () => loadTimeSlots(screen, date, serviceId));
+    const retry = screen.querySelector('#retry-slots-btn');
+    retry?.addEventListener('click', () => loadTimeSlots(screen, date, serviceId));
+    // El aviso se pinta al final de la pantalla, debajo del boton fijo de
+    // Continuar y de la barra de navegacion, que son las dos `position: fixed`.
+    // Se alcanza scrolleando, pero lo que se ve sin moverse es una frase
+    // cortada a la mitad y ningun boton - justo cuando algo fallo y la persona
+    // necesita el boton. Se lo trae a la vista.
+    retry?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     return;
   }
   const allBooked = slots.length > 0 && slots.every((s) => !s.available);
