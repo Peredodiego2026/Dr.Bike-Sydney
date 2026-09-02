@@ -58,11 +58,19 @@ const PAGES = [
   // keyboard-access work (point 13) edited main.css and `npm run check` stayed
   // green, so the focus ring would have shipped invisible to every returning
   // browser. Both pages load it, so both are checked.
+  // css/home.css se suma el 2026-09-02, por la misma razon exacta que main.css
+  // cuatro dias antes: era el ultimo `?v=` escrito a mano de index.html
+  // ("20260825b"), no estaba en esta lista, y mordio apenas alguien lo toco.
+  // Arreglando el desborde de las tarjetas de servicio en el celular,
+  // `npm run check` quedo verde con el archivo cambiado y el `?v=` viejo - el
+  // arreglo habria salido invisible para todo navegador que ya hubiera
+  // entrado. index.html es la pagina de celular, o sea la superficie principal.
   {
     html: 'index.html',
     assets: [
       { path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/main.css', re: /href="css\/main\.css\?v=([a-zA-Z0-9]+)"/ },
+      { path: 'css/home.css', re: /href="css\/home\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
   {

@@ -9268,3 +9268,125 @@ validador de verdad** en vez de una copia que se desincroniza.
 escribe nada.
 
 13 tests nuevos. 1123/1123.
+
+## 78. Ojos propios, y el logo roto que encontraron primero (02-sep-2026)
+
+Diego: *"aqui hay otro error en la landing se ve todo desordenado igual que el
+cuadro de booking manual. necesito darte ojos para que puedas navegar tu... son
+muchas paginas no te puedo mandar 2000 pantallazos"*.
+
+Tenia razon en las dos cosas: los errores eran reales, y el metodo - el saca un
+pantallazo con el celular, yo adivino que CSS lo causa - no escala a 77 paginas.
+
+### `npm run look`
+
+Chromium sin ventana dentro de un proceso de node. **No es el panel del
+navegador de Claude**, que abre una ventana con GPU y viene congelando Claude
+Desktop (van 10 cierres, todos despues de abrirlo) y esta bloqueado a proposito
+en `.claude/settings.local.json`.
+
+```
+npm run look -- index.html --mobile --lang es
+npm run look -- admin.html --dark --el "#admin-create-booking-modal > div"
+npm run look -- landing.html --strips
+npm run look -- landing.html --prod
+```
+
+Deja la captura en `.look/` (ignorado por git) y ademas **mide**, que es la
+mitad que importa: errores de consola filtrando el ruido de las extensiones,
+si la pagina se va de ancho y **que elemento** la empuja, cajas cuyo contenido
+queda cortado, e hijos que se pasan del padre. Mirar una foto encuentra lo
+obvio; el numero encuentra el resto.
+
+Detalles que costaron: `networkidle` nunca termina en este sitio (el widget de
+chat deja conexiones abiertas), las animaciones de entrada se miden como
+desbordes que no existen si no se congelan, y el service worker sirve JS viejo
+si no se lo desregistra antes.
+
+**Y la herramienta me mintio una vez, antes de que la arreglara.** `--mobile`
+solo achicaba la ventana. `index.html` mira `navigator.userAgent` y redirige a
+`landing.html` si no reconoce un movil, asi que pedir la SPA a 390px devolvia
+**la landing apretada en 390px** - y sus desbordes se leian como bugs de la app
+de celular. Llegue a "arreglar" un footer que no estaba roto antes de que
+`location.pathname` me dijera que estaba mirando otra pagina. Ahora `--mobile`
+emula un iPhone 14 de verdad, user-agent incluido. Ese arreglo se revirtio.
+
+### El logo roto - regresion mia, viva en produccion
+
+Lo que Diego llamaba "la landing se ve todo desordenado" era esto:
+
+```html
+<img width="600" height="423" src="images/logo-db.png" ... height="36">
+```
+
+**El HTML se queda con el PRIMER atributo y descarta el segundo sin decir
+nada.** No hay error de consola, no hay warning, no falla ningun build. El logo
+paso a medir 423px de alto en vez de 36 y, con `style="width:auto"`, se estiro
+a 600px de ancho tapando media pagina.
+
+Lo genero el script del punto 11 (#386, ya mergeado): agregaba `width`/`height`
+a toda imagen que no tuviera `width`. El logo tenia `height` pero no `width`,
+paso el filtro, y quedo con dos.
+
+**Siete etiquetas, en las tres superficies de cliente**: `index.html` (3),
+`landing.html` (3), `track.html` (1). Vivas en produccion desde que se mergeo
+el #386 hasta hoy.
+
+Y el test que escribi con ese cambio **paso en verde sobre la pagina rota**:
+leia el primer `height=` de la etiqueta - 423 - y 600/423 es exactamente la
+proporcion real del archivo, asi que la comprobacion de proporcion daba bien.
+Verificaba mi propia suposicion en vez del efecto.
+
+### Los otros dos
+
+**El modal de reserva telefonica del admin.** Cada campo sobresalia 26px del
+panel y quedaba cortado. `admin.html` no carga `css/main.css`, asi que no
+hereda ningun reset: el unico `box-sizing: border-box` de `css/admin.css` vivia
+dentro de `@media print`. Con `width:100%`, los 12px de padding a cada lado mas
+1.5px de borde se suman ENCIMA. Alguien ya habia intentado arreglarlo antes con
+`min-width:0`, que trata la barra de scroll y no la causa.
+
+**Las tarjetas de servicio en el celular.** Cada una sobresalia 14px de su
+grilla y se le cortaba el borde derecho junto con el final de la descripcion.
+Una columna `1fr` es `minmax(auto, 1fr)`: no puede encogerse por debajo del
+min-content de su contenido. `min-width:0` deja que la tarjeta se achique y el
+texto envuelva.
+
+### Tres guards nuevos
+
+1. **`scripts/html-attrs-check.mjs`** (en `npm run check`, o sea bloquea el
+   merge): falla si cualquier etiqueta de cualquiera de las 48 paginas repite
+   un atributo. Un atributo repetido nunca es intencional.
+2. **El test del logo mide el efecto**, no la causa: ninguna copia puede
+   declararse de mas de 120px de alto (la mas grande de verdad es 88x62), y
+   ninguna imagen puede declarar dos `width` o dos `height`.
+3. **`css/home.css` entra en `versioned-assets-check`**: era el ultimo `?v=`
+   escrito a mano de `index.html` y mordio en el acto - `npm run check` quedaba
+   verde con el archivo cambiado y el `?v=` viejo, o sea que el arreglo de las
+   tarjetas habria salido invisible para todo navegador que ya hubiera entrado.
+
+Los cuatro se verificaron **rompiendolos**. De ahi salio que el guard del
+`box-sizing` del admin es de la fuente, no del efecto: la mutacion la agarraba
+el hash del CSS, no el desborde. Queda escrito en el test que el efecto se mide
+con `npm run look`, que no corre en CI.
+
+### El costo en memoria, porque no es gratis
+
+La otra sesion levanto la objecion correcta: de los 10 cierres de Claude
+Desktop, nueve fueron por el panel del navegador, pero **el del 02-sep 09:36
+(Event 1002) fue por RAM** - 2,7 GB libres de 15,7, con Firefox y Chrome
+abiertos. Una herramienta que esquiva la causa de nueve y camina hacia la del
+decimo no es una herramienta segura.
+
+Medido en vez de estimado: el pico real era **920 MB**, no los 400-600 que
+parecian. Con las extensiones, la sincronizacion, los servicios de fondo y la
+GPU apagados, y bajando las capturas de 2x a 1x (una pagina completa de la
+landing mide 18.000px de alto: a 2x el mapa de bits solo son ~200 MB), el pico
+quedo en **647 MB**, y se libera entero al terminar.
+
+Ademas el script **se planta solo** si hay menos de 1,6 GB libres, y dice que
+cerrar. Verificado subiendo el umbral a 99 GB: sale con codigo 2 sin abrir
+nada.
+
+`npm run check`, `npm run lint` y `npm test` verdes por codigo de salida.
+1276/1276.

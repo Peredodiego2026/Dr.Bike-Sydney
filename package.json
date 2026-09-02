@@ -33,7 +33,7 @@
     "format:check": "prettier --check api/ js/ css/",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "node scripts/check.mjs && node scripts/i18n-check.mjs && node scripts/plan-prices-check.mjs && node scripts/icons-check.mjs && node scripts/color-check.mjs && node scripts/dark-theme-check.mjs && node scripts/versioned-assets-check.mjs && node scripts/a11y-check.mjs && node scripts/consent-gate.mjs --check",
+    "check": "node scripts/check.mjs && node scripts/i18n-check.mjs && node scripts/plan-prices-check.mjs && node scripts/icons-check.mjs && node scripts/html-attrs-check.mjs && node scripts/color-check.mjs && node scripts/dark-theme-check.mjs && node scripts/versioned-assets-check.mjs && node scripts/a11y-check.mjs && node scripts/consent-gate.mjs --check",
     "predeploy": "npm run check && vitest run --passWithNoTests",
     "deploy": "npx vercel --prod --yes",
     "test:e2e": "playwright test",
@@ -53,7 +53,9 @@
     "backup:verify": "node scripts/restore-backup.mjs --dry-run --file",
     "suburbs:generate": "node scripts/generate-suburb-pages.mjs",
     "blog:translate": "node scripts/translate-blog-posts.mjs",
-    "static-pages:translate": "node scripts/translate-static-pages.mjs"
+    "static-pages:translate": "node scripts/translate-static-pages.mjs",
+    "look": "node scripts/look.mjs",
+    "attrs:check": "node scripts/html-attrs-check.mjs"
   },
   "lint-staged": {
     "api/**/*.js": [

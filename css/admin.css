@@ -1492,6 +1492,14 @@ body {
 }
 .inp {
   width: 100%;
+  /* admin.html no carga css/main.css, asi que no hereda ningun reset: el unico
+     `box-sizing: border-box` de este archivo vive dentro de `@media print`.
+     Sin esto, `width:100%` mide solo el contenido y los 27px de padding mas
+     borde se suman ENCIMA - cada input sobresalia 26px del panel del modal de
+     reserva telefonica y quedaba cortado (medido con `npm run look`).
+     El `min-width:0` de abajo se agrego intentando arreglar justo esto, y
+     trato el sintoma - la barra de scroll - sin tocar la causa. */
+  box-sizing: border-box;
   /* min-width:0 matters inside the flex rows this class is used in: an <input>
      carries an implicit min-width from its size attribute, so two of them side
      by side refused to shrink and pushed a horizontal scrollbar into the

@@ -107,3 +107,29 @@ describe('UI: boton + modal + envio', () => {
     expect(fn).toMatch(/adminAccessToken\(\)/);
   });
 });
+
+// El 2026-09-02 este modal se veia con todos los campos cortados por la derecha
+// (Diego mando el pantallazo, otra vez). Medido con `npm run look`: cada .inp
+// sobresalia exactamente 26px de su contenedor - los 12px de padding a cada
+// lado mas 1.5px de borde a cada lado, sumados ENCIMA del `width:100%`.
+//
+// admin.html no carga css/main.css, asi que no hereda ningun reset: el unico
+// `box-sizing: border-box` de css/admin.css vivia dentro de `@media print`.
+//
+// Esto es un guard de la FUENTE, no del efecto - el efecto se mide con
+// `npm run look -- admin.html --el "#admin-create-booking-modal > div"`, que no
+// corre en CI. Sirve para que sacar la linea sea un test rojo y no un
+// pantallazo de Diego dentro de tres semanas.
+describe('los campos del modal no se salen del panel', () => {
+  const adminCss = readFileSync(new URL('../../css/admin.css', import.meta.url), 'utf8');
+
+  it('.inp declara box-sizing: border-box', () => {
+    const rule = adminCss.slice(adminCss.indexOf('\n.inp {'), adminCss.indexOf('.inp:focus'));
+    expect(rule).toMatch(/box-sizing:\s*border-box/);
+  });
+
+  it('y sigue haciendo falta, porque admin.html no hereda ningun reset', () => {
+    const html = readFileSync(new URL('../../admin.html', import.meta.url), 'utf8');
+    expect(html).not.toMatch(/href="css\/main\.css/);
+  });
+});

@@ -268,6 +268,14 @@
   margin-bottom: 32px;
 }
 [data-screen='home'] .service-card {
+  /* Una columna `1fr` es en realidad `minmax(auto, 1fr)`: no puede encogerse
+     por debajo del min-content de su contenido. La fila de adentro - icono,
+     nombre, precio y descripcion - pedia 14px mas de los que hay en un
+     telefono, asi que cada tarjeta sobresalia 14px de la grilla y se le cortaba
+     el borde derecho junto con el final del texto. Con min-width:0 la tarjeta
+     puede achicarse y el texto envuelve, que es lo que tenia que pasar.
+     Medido con `npm run look -- index.html --mobile`. */
+  min-width: 0;
   padding: 20px;
   border-radius: 12px;
   border: 1px solid var(--border);

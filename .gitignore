@@ -54,3 +54,6 @@ logs/
 *.njsproj
 *.sln
 .env*
+
+# capturas de scripts/look.mjs - locales, no se versionan
+.look/
