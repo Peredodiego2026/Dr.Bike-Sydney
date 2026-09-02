@@ -1677,7 +1677,7 @@ function exportFinancePDF() {
     </table>
 
     <div class="footer">
-      <div class="footer-left">Dr. Bike Sydney · ABN 87 654 025 287 · hello@drbikesydney.com.au · This report is for internal use only.</div>
+      <div class="footer-left">Dr. Bike Sydney · ABN 87 654 025 287 · contact@drbikesydney.com.au · This report is for internal use only.</div>
       <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
     </div>
   </div></body></html>`);

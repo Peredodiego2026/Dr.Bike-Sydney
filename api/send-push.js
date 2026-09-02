@@ -25,7 +25,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KE
 if (!SUPABASE_KEY) console.error('SUPABASE_KEY missing in send-push.js');
 
 webpush.setVapidDetails(
-  process.env.VAPID_EMAIL || 'mailto:hello@drbikesydney.com.au',
+  process.env.VAPID_EMAIL || 'mailto:contact@drbikesydney.com.au',
   process.env.VAPID_PUBLIC_KEY || '',
   process.env.VAPID_PRIVATE_KEY || ''
 );

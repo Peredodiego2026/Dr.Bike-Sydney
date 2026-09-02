@@ -9464,3 +9464,82 @@ Con `npm run look`, en la pagina renderizada:
 - `index.html` en movil reporta una caja con **+364px de scroll horizontal** en
   la fila de badges ("100% Satisfaccion..."). Puede ser un carrusel intencional
   o un desborde. Sin mirar.
+
+## 76. Barrido visual de las cuatro superficies, y lo que encontro (02-sep-2026)
+
+Primer barrido completo con `npm run look` sobre landing, SPA, admin y mechanic,
+en claro y en oscuro. Cuatro errores reales, tres falsos positivos que valen
+tanto como los errores porque evitan "arreglar" lo que no esta roto.
+
+### El caro: la SPA movil no tenia las resenas de Google
+
+El #382 puso el bloque en `landing.html` y **no en `index.html`**. Resultado: en
+escritorio se veian dos resenas de 5 estrellas, y en **movil - por donde entra
+la mayoria de los clientes** - la seccion seguia diciendo "Be the first to leave
+a review", bajo un perfil de Google que ya tenia dos.
+
+La regla de `CLAUDE.md` es revisar las cuatro superficies. El test que escribi
+para el #382 leia **una**, asi que no podia ver el hueco. Ahora recorre las dos
+y ademas exige que **coincidan**: mismas citas, mismo orden, mismo numero en el
+badge. Escritorio y movil contandole cosas distintas al mismo visitante sobre el
+mismo negocio es el modo de falla que esto cierra.
+
+### `hello@` no era la direccion de nadie
+
+Quedaba en dos lugares - `api/send-push.js` (el contacto VAPID de las
+notificaciones push) y el pie de los reportes impresos de `js/admin.js`. Diego
+lee el correo en `contact@`, y `BUSINESS_EMAILS` de `api/_security.js` ya
+listaba solo `contact@` y `noreply@`: o sea que `hello@` **ni siquiera era
+reconocida como direccion propia** por los guardas que filtran mensajes
+salientes. Unificadas.
+
+### El tagline suelto del sidebar del admin
+
+"Healthy bikes, happy riders" vivia en un `div` propio entre `.sb-brand` y la
+navegacion, sin pertenecer a ninguno de los dos. Se leia como una linea de texto
+azul flotando. **El contraste estaba bien** - se midio: 6.46:1 en claro y 9.11:1
+en oscuro, ambos sobre 4.5 - asi que el problema era de ubicacion, no de
+legibilidad. Entro al bloque de marca, bajo "Admin Panel".
+
+### Los tres falsos positivos, y por que importan
+
+1. **"La landing esta rota en oscuro."** Casi se reporta como bug grave: la
+   captura mostraba una franja blanca enorme entre el hero y el footer. Se
+   comparo la captura clara con la oscura y son **identicas byte a byte**.
+   `landing.css`, `main.css` y `home.css` tienen **cero** reglas
+   `[data-theme='dark']`, y ni `landing.html` ni `index.html` setean nunca ese
+   atributo: solo `js/admin.js` y `js/mechanic.js` lo hacen. **La landing y la
+   SPA no tienen modo oscuro**, y lo que se vio era su diseno normal.
+2. **+364px de desborde horizontal** en la fila de badges de `index.html`. Es un
+   carrusel deslizable a proposito: el padre lleva `overflow-x:auto` y el hijo
+   `width:max-content`.
+3. **+8px en los numeros 1-2-3-4** de "Proceso Simple de 4 Pasos". Son insignias
+   posicionadas en la esquina con `top:-8px; right:-8px`. Sobresalen por diseno.
+
+### Dos tests propios que se rompieron por fragiles
+
+Al correr prettier sobre `index.html`:
+
+- `google-reviews-section` comparaba el texto crudo del `<p>`. Prettier envuelve
+  un parrafo largo en varias lineas y el navegador vuelve a colapsar ese espacio
+  al renderizar, asi que ahora se compara con el espacio colapsado - contenido,
+  no formato.
+- `consent-script-order` exigia `data-consent="analytics" async src=` en ese
+  orden. El orden de los atributos lo decide prettier. Ahora se busca el tag y
+  se verifican sus partes por separado.
+
+Ninguno de los dos se aflojo: los dos verifican lo mismo de una forma que no
+depende del formateo.
+
+### Lo que NO se reviso
+
+Se vieron **las pantallas de entrada**, no el interior:
+
+- **mechanic logueado** (lista de trabajos, completar un trabajo): necesita PIN
+  y backend.
+- **admin por dentro** (Bookings, Finance, Analytics, Calendario): los KPI salen
+  vacios sin backend.
+- **pasos 2 y 3 de la reserva** (calendario y pago).
+
+Para eso hace falta correr contra produccion con sesion iniciada, que es entrar
+al sistema real y lo decide Diego.

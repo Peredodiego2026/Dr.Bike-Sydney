@@ -68,8 +68,13 @@ describe('consent.js still orders the src clones it does control', () => {
 
   it('and leaves a tag that asked to be async alone', () => {
     expect(src).toContain("!old.hasAttribute('async')");
-    // Google Analytics' loader carries async on purpose.
-    expect(read('index.html')).toMatch(/data-consent="analytics" async src="[^"]*googletagmanager/);
+    // Google Analytics' loader carries async on purpose. Attribute ORDER is
+    // prettier's business, so match the tag by its parts, not by their order.
+    const gaTag = read('index.html').match(/<script[^>]*googletagmanager[^>]*>/);
+    expect(gaTag, 'no GA loader tag in index.html').not.toBeNull();
+    expect(gaTag[0]).toContain('data-consent="analytics"');
+    // As its own attribute, not as part of "async" inside some other value.
+    expect(gaTag[0].split(/\s+/)).toContain('async');
   });
 
   // The claim that used to live here was false. Keep it from coming back as a
