@@ -389,7 +389,11 @@ init();
   await ensureLang(getLang());
 
   window.__trackI18n = { translateValue: translateValue, dateLocale: dateLocale };
-  document.documentElement.lang = getLang();
+  // `document.documentElement.lang` lo pone js/i18n.js, para las tres paginas y
+  // tambien al CAMBIAR de idioma. Aca vivia una copia que corria una sola vez
+  // al arrancar y escribia el codigo de dos letras: pisaba el `zh-CN` correcto
+  // con un `zh` pelado, y si el cliente cambiaba de idioma en esta pagina el
+  // atributo se quedaba en el anterior.
 
   var debounce = null;
   function translateAll() {

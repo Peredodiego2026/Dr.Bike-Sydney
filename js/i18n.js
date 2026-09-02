@@ -78,7 +78,45 @@ function detectLang() {
   return SUPPORTED.has(nav) ? nav : 'en';
 }
 
+// Lo que va en `<html lang>`, que NO es el codigo de dos letras.
+//
+//   en -> en-AU  el negocio es australiano y la copia esta en ingles de alla
+//   es -> es      la copia esta escrita en espanol rioplatense ("tenes",
+//                 "calcula"), asi que es-ES seria mentira y es-AR seria
+//                 estrecho para el resto de los hispanohablantes de Sydney
+//   zh -> zh-CN   chino simplificado; sin la region, un lector de pantalla no
+//                 sabe si leerlo en mandarin o en cantones
+//
+// Deliberadamente NO se reusa DATE_LOCALES (mas abajo): ahi `es` es `es-ES`
+// porque para formatear una fecha la region si importa y Espana es el default
+// razonable. Para declarar el idioma del texto, no.
+const HTML_LANG = { en: 'en-AU', es: 'es', zh: 'zh-CN' };
+
+/**
+ * Declara en el documento el idioma que se esta mostrando.
+ *
+ * Las tres paginas traen `<html lang="en">` escrito a mano y nadie lo movia
+ * nunca, asi que una pagina traducida entera al chino seguia diciendo que
+ * estaba en ingles. Eso rompe dos cosas concretas:
+ *
+ *  - Un lector de pantalla elige la voz por este atributo: leia el espanol y
+ *    el chino con voz inglesa, que es entre incomprensible y ofensivo.
+ *  - El navegador decide si ofrecer "traducir esta pagina" comparando este
+ *    atributo con el idioma del visitante. Declarando siempre `en`, a un
+ *    cliente francofono en la version inglesa se le ofrecia bien, pero a uno
+ *    hispanohablante YA en la version espanola se le podia ofrecer traducir
+ *    del ingles algo que ya estaba en su idioma.
+ *
+ * Google tambien lo usa para saber que version indexar.
+ */
+function applyDocumentLang(lang) {
+  try {
+    document.documentElement.lang = HTML_LANG[lang] || lang;
+  } catch {}
+}
+
 let currentLang = detectLang();
+applyDocumentLang(currentLang);
 
 export function getLang() {
   return currentLang;
@@ -117,6 +155,10 @@ export function setLang(lang) {
   } catch {}
   return ensureLang(lang).then(() => {
     currentLang = lang;
+    // Junto con currentLang y antes del evento, por el mismo motivo que el
+    // orden de arriba: quien escuche `langchange` y repinte tiene que leer un
+    // documento que ya declara el idioma nuevo.
+    applyDocumentLang(lang);
     document.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
   });
 }
