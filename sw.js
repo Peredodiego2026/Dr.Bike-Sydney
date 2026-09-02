@@ -1,3 +1,8 @@
+// v114 (2026-09-02): tres pantallas del admin mostraban la palabra "Client"
+// en vez del nombre, para toda reserva cargada por telefono: el calendario en
+// vista mes y en vista dia, y el reporte financiero que se imprime. Leian solo
+// profiles.full_name, y una reserva telefonica no tiene perfil. Ademas el
+// titulo de Analytics salia en minuscula por faltar en el mapa `titles`.
 // v113 (2026-09-02): las resenas de Google llegan a la SPA movil. El #382 las
 // puso solo en landing.html, asi que el escritorio mostraba 2 resenas de 5
 // estrellas y el movil - por donde entra la mayoria - seguia diciendo "Be the
@@ -137,7 +142,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v113';
+const CACHE_STATIC = 'drbike-static-v114';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
