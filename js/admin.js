@@ -499,6 +499,7 @@ document.addEventListener('focusout', function (e) {
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
 const titles = {
   dashboard: 'Dashboard',
+  analytics: 'Analytics',
   contacts: 'Escalation Contacts',
   bookings: 'Bookings',
   vans: 'Vans & Mechanics',
@@ -1657,7 +1658,7 @@ function exportFinancePDF() {
             '<tr><td>' +
             (finRevenueDate(j) || '—') +
             '</td><td class="bold">' +
-            escapeHtml(j.profiles?.full_name || 'Client') +
+            escapeHtml(j.client_name || j.profiles?.full_name || 'Client') +
             '</td><td>' +
             escapeHtml(j.service_name || '—') +
             '</td><td>Van ' +
@@ -7061,7 +7062,10 @@ async function loadCalendar() {
           .slice(0, 3)
           .map((j) => {
             const st = j.status || 'pending';
-            const nm = j.profiles?.full_name?.split(' ')[0] || 'Client';
+            // client_name primero: una reserva telefonica no tiene perfil, y
+          // leyendo solo profiles.full_name todas se veian como "Client".
+          const nm =
+            (j.client_name || j.profiles?.full_name)?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
             return `<div style="font-size:11px;background:${stBg[st] || 'var(--border-lt)'};border-left:2px solid ${stColors[st] || 'var(--gray)'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-action="view-booking" data-id="${j.id}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${vanColor(j.van_number)};margin-right:3px"></span>${tm} ${esc(nm)}</div>`;
           })
@@ -7198,7 +7202,10 @@ async function loadCalendar() {
             : dayJobs
                 .map((j) => {
                   const st = j.status || 'pending';
-                  const name = j.profiles?.full_name?.split(' ')[0] || 'Client';
+                  // client_name primero, igual que la vista de mes: una
+                  // reserva telefonica no tiene perfil.
+                  const name =
+                    (j.client_name || j.profiles?.full_name)?.split(' ')[0] || 'Client';
                   const time = j.scheduled_time || '';
                   const van = j.van_number || 1;
                   return `<div style="background:${stBg[st] || 'var(--border-lt)'};border-left:3px solid ${stColors[st] || 'var(--gray)'};border-radius:6px;padding:6px 8px;cursor:pointer" data-action="view-booking" data-id="${j.id}">

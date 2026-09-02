@@ -9543,3 +9543,78 @@ Se vieron **las pantallas de entrada**, no el interior:
 
 Para eso hace falta correr contra produccion con sesion iniciada, que es entrar
 al sistema real y lo decide Diego.
+
+## 77. Las reservas telefonicas se veian como "Client" en tres pantallas (02-sep-2026)
+
+Barrido de las pantallas INTERNAS del admin - las que necesitan sesion - con un
+backend falso local en vez de autenticarse contra produccion.
+
+### El hallazgo: el nombre del cliente que no aparece
+
+Una reserva tomada por telefono (Admin > New booking) **no tiene cuenta de
+usuario**: su nombre vive en `bookings.client_name` y `profiles` es null. Tres
+lugares leian solo `profiles.full_name`, asi que todas esas reservas mostraban
+la palabra literal **"Client"**:
+
+- `js/admin.js:7064` - el **calendario en vista mes**, la pantalla donde Diego
+  lee su dia;
+- `js/admin.js:7205` - el calendario en vista dia/semana;
+- `js/admin.js:1660` - el **reporte financiero** que se imprime y se exporta, y
+  que puede terminar en manos del contador.
+
+No es cosmetico: son exactamente las reservas que Diego carga a mano para los
+trabajos que entran por WhatsApp o telefono, que es el flujo que se le
+recomendo usar para el trabajo hecho fuera de la app. El mismo archivo ya
+resolvia el nombre bien en la tabla de reservas (1394) y en el panel (2716), asi
+que era una inconsistencia, no una decision.
+
+**El tercero lo encontro el test, no yo.** Se escribio para fijar los dos
+primeros y salto un tercero que no habia visto.
+
+### El titulo de Analytics salia en minuscula
+
+`titles` (js/admin.js:500) tiene las 18 paginas del panel **menos `analytics`**.
+La linea que lo usa es `titles[page] || page`, asi que el encabezado mostraba la
+clave cruda: la unica pagina del panel que se veia asi.
+
+### Como se llego a las pantallas internas, sin credenciales
+
+Diego ofrecio quitarle la seguridad a las paginas para poder navegarlas. **No se
+hizo**: el sitio esta online con datos reales y pagos LIVE, y ese tipo de cambio
+"temporal" es el que queda puesto. Tampoco se acepto el codigo de 2FA que
+ofrecio pasar.
+
+En cambio se levanto un **backend falso local**: un script de Playwright que
+sirve el repo e intercepta toda peticion a `supabase.co` y a `/api/`,
+respondiendo con datos inventados. Las librerias (supabase-js desde jsdelivr) se
+dejan bajar de verdad - sin eso `js/admin.js` muere en `createClient()` y no
+carga ni una pantalla. Lo que se corta es lo que llama a casa: analitica, pagos,
+captcha.
+
+Con eso se recorrieron 12 pantallas del admin en claro y en oscuro. Los datos
+falsos se eligieron para **estresar** la UI, no para verse bien: un nombre de 29
+caracteres, un suburbio largo, los cinco estados de reserva, importes de dos y
+tres cifras.
+
+**Limitacion, dicha para el proximo:** el backend falso NO aplica los filtros de
+PostgREST del query string. Finance parecio contar una reserva cancelada como
+ingreso pagado; se verifico contra el codigo y **no es un bug** - `loadFinance()`
+filtra con `.eq('status','completed')`. Los numeros que muestra ese backend no
+son los que mostraria la base.
+
+### Lo que se reviso y estaba bien
+
+Dashboard, Bookings, Vans, Clients, Finance, Analytics, Memberships, Services,
+Calendar, Zone Manager, Escalation Contacts y Expenses, en los dos temas. Nada
+ilegible, nada desbordado, los importes de la tabla de reservas correctos
+($69+$25=$94, $369+$45=$414) y los badges de estado con su color.
+
+Un detalle cosmetico sin arreglar: en Bookings la columna de acciones no tiene
+ancho fijo, asi que la fila en estado `pending` (cinco botones) se extiende mas
+a la derecha que las demas (cuatro o uno) y la tabla se ve despareja.
+
+### Lo que sigue sin verse
+
+La app del mecanico **con sesion**. Se intento restaurando una sesion guardada
+en el navegador y no alcanza: la app la valida contra el servidor. Eso es una
+buena senal de seguridad, y deja esa pantalla fuera de este metodo.
