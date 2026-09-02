@@ -1,3 +1,8 @@
+// v115 (2026-09-02): en Admin > Clientes cada bici se veia como "undefined".
+// El codigo leia b.nickname y b.bike_type, que NO son columnas de la tabla:
+// se llaman name y type. Lo mismo decia scripts/create-bikes-table.sql, que
+// era la mitad peligrosa - recrear la tabla con ese script habria roto Mis
+// Bicis entera, lecturas y escrituras.
 // v114 (2026-09-02): tres pantallas del admin mostraban la palabra "Client"
 // en vez del nombre, para toda reserva cargada por telefono: el calendario en
 // vista mes y en vista dia, y el reporte financiero que se imprime. Leian solo
@@ -142,7 +147,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v114';
+const CACHE_STATIC = 'drbike-static-v115';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

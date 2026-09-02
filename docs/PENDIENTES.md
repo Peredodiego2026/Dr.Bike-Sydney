@@ -9618,3 +9618,75 @@ a la derecha que las demas (cuatro o uno) y la tabla se ve despareja.
 La app del mecanico **con sesion**. Se intento restaurando una sesion guardada
 en el navegador y no alcanza: la app la valida contra el servidor. Eso es una
 buena senal de seguridad, y deja esa pantalla fuera de este metodo.
+
+## 78. Cada bici de cada cliente se veia como "undefined" en el admin (02-sep-2026)
+
+Barrido de la SPA de cliente y de la landing, con el mismo backend falso del 77.
+
+### La tabla se llama distinto de como el codigo creia
+
+`bikes` tiene las columnas **`name`** y **`type`**. Preguntado a la base con la
+anon key el 02-sep-2026:
+
+```
+select=id,name,brand,model,color,year,type  ->  200 []
+select=id,nickname,bike_type                ->  42703 "bikes.nickname does not exist"
+```
+
+Dos lugares creian otra cosa:
+
+1. **`js/admin.js:8190`** - `viewClientBikes()` hacia `select('*')` y despues
+   pintaba `b.nickname` y `TYPE_LABELS[b.bike_type]`. Como el select pedia todo,
+   la consulta **funcionaba**, y la tarjeta imprimia la palabra literal
+   **"undefined"** con el tipo en blanco. En Admin > Clientes > ver bicis, para
+   todos los clientes.
+
+2. **`scripts/create-bikes-table.sql`** - declaraba `nickname` y `bike_type`.
+
+### La mitad peligrosa era el .sql, no el bug visible
+
+El de admin es feo. El del script es destructivo: **recrear la tabla desde ese
+archivo habria renombrado las columnas debajo de `js/app.js`**, que selecciona
+*e inserta* `name` y `type`. Mis Bicis habria dejado de funcionar entera - leer
+y guardar - y el archivo que lo rompia es justamente el que alguien consultaria
+para hacerlo bien.
+
+Es la contracara del modo de falla que este repo ya tiene documentado: no
+"codigo mergeado que la base no tiene", sino **documentacion de la base que el
+codigo desmiente**.
+
+### Por que sobrevivio tanto
+
+Una columna que no existe normalmente **rompe fuerte**: PostgREST rechaza la
+consulta entera y la pantalla muestra un error. Eso se nota. Aca no paso, porque
+`select('*')` trae todo y el error se degrada a un `undefined` impreso en una
+tarjeta. El sintoma mas leve posible para el bug de fondo.
+
+### El test fija las dos mitades entre si
+
+`tests/unit/bikes-schema.test.js`: el `.sql` tiene que declarar `name` y `type`
+y **no** `nickname` ni `bike_type`; toda columna que `js/app.js` selecciona tiene
+que estar declarada; y ni `js/admin.js` ni `js/app.js` pueden leer `.nickname` ni
+`.bike_type`. Ignora comentarios e ids de markup (`id="bike-nickname"` es un
+input, y esta bien).
+
+### Un falso positivo propio, para el registro
+
+En Mis Bicis de la SPA las tarjetas tambien decian "undefined" durante el
+barrido. **Eso era culpa de los datos falsos** - se cargaron con `brand/model/
+type` y sin `name`. `js/app.js` estaba correcto todo el tiempo. Se verifico
+contra el codigo antes de tocar nada.
+
+### Lo que se reviso de la SPA y la landing
+
+Con sesion de cliente simulada: Inicio, Mis Reservas, Perfil, Mis Bicis, Login y
+el paso 1 de la reserva, en movil. De la landing, membresias, FAQ y pie.
+
+**Lo que no se vio:** los pasos 2 y 3 de la reserva (calendario y pago) - montar
+el estado de reserva que necesitan quedo fuera de alcance -, y la app del
+mecanico con sesion, que valida contra el servidor.
+
+Detalle sin arreglar: en `Mis Reservas` el backend falso no responde con la
+forma que espera `getBookings()`, asi que se vio el estado de error y no la
+lista. El estado de error, eso si, esta bien hecho: icono, titulo y una frase
+que dice que hacer.
