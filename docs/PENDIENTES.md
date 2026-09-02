@@ -10008,3 +10008,94 @@ Van 2 se queda sin filas activas, la Van 2 sale del conteo y la app ofrece
 menos turnos por dia. Eso es una decision de negocio (¿trabaja el Mecanico 2 o
 no?), no un bug, y no es lo que Diego pidio. Si algun dia la Van 2 deja de
 trabajar de verdad, ese es el lugar.
+
+## 85. La pagina decia estar en ingles aunque estuviera en chino (03-sep-2026)
+
+Diego: *"debemos asegurarnos de que la gente, cuando entre a la aplicacion, lo
+vea en su lenguaje"*. La deteccion automatica ya funcionaba - `detectLang()`
+mira `localStorage` y despues `navigator.language`, y sirve espanol a un
+telefono en espanol y chino a uno en chino desde antes. Lo que faltaba era que
+el **documento lo dijera**.
+
+Las tres paginas de cliente traen `<html lang="en">` escrito a mano y nadie lo
+movia. Una pagina traducida entera al chino seguia declarandose inglesa.
+
+### Que rompia, concretamente
+
+- **Un lector de pantalla elige la voz por ese atributo.** Leia el espanol y el
+  chino con voz inglesa: entre incomprensible y ofensivo.
+- **El navegador decide si ofrecer "traducir esta pagina" comparando ese
+  atributo con el idioma del visitante.** Declarando siempre `en`, a un cliente
+  hispanohablante que ya estaba viendo la version en espanol se le podia
+  ofrecer traducirla del ingles.
+- Google lo usa para saber que version indexar.
+
+### Lo que se hizo
+
+`js/i18n.js` es el dueno del atributo, porque ya es el dueno de `currentLang`.
+Se aplica al arrancar y **tambien al cambiar de idioma**, antes de disparar
+`langchange` - por el mismo motivo que el resto de ese orden: quien escuche el
+evento y repinte tiene que leer un documento que ya declara el idioma nuevo.
+
+No es el codigo de dos letras:
+
+```
+en -> en-AU   el negocio es australiano
+es -> es      la copia es rioplatense ("tenes", "calcula"), asi que es-ES
+              seria falso y es-AR estrecho para el resto de Sydney
+zh -> zh-CN   sin la region, un lector de pantalla no sabe si leer mandarin
+              o cantones
+```
+
+Deliberadamente **no** se reusa `DATE_LOCALES`, donde `es` es `es-ES`: para
+formatear una fecha la region importa y Espana es el default razonable; para
+declarar el idioma del texto, no. Son dos mapas a proposito.
+
+`track.html` tenia su propia copia de esto, que **corria una sola vez al
+arrancar y escribia el codigo de dos letras**: pisaba el `zh-CN` correcto con un
+`zh` pelado, y si el cliente cambiaba de idioma en esa pagina el atributo se
+quedaba en el anterior. Se borro; ahora hay un solo dueno.
+
+`sw.js` sube a `drbike-static-v119`, que es lo que hace que un visitante que ya
+entro reciba el `i18n.js` nuevo.
+
+### El bug de mi propia herramienta
+
+`scripts/look.mjs` escribia la eleccion de idioma en `drbike_lang`, con guion
+BAJO. La clave real de `js/i18n.js` es `drbike-lang`, con guion medio. Asi que
+`--lang` no cambiaba nada: escribia una clave que nadie lee, la app caia en
+`detectLang()` y devolvia el idioma del navegador. Yo lo habia leido como "la
+app ignora la eleccion" en vez de "mi herramienta escribe en el lugar
+equivocado", y quedo anotado asi en la memoria. Corregido.
+
+Con eso arreglado, la verificacion es directa: las tres paginas, los tres
+idiomas, y ademas **cambiando de idioma con el selector** - `en-AU` antes del
+clic, `zh-CN` despues.
+
+### Los tests, y uno que era decorativo
+
+Seis mutantes, todos detectados. Dos correcciones salieron de ahi:
+
+- El test del orden comparaba la posicion de la palabra `langchange`, que
+  aparece antes **en el comentario que explica ese mismo orden**. Medía texto,
+  no codigo. Ahora compara contra `dispatchEvent(`.
+- El test del arranque buscaba `applyDocumentLang(currentLang)` sin anclar, asi
+  que **comentar la linea lo dejaba pasar**: el patron se encontraba a si mismo
+  dentro del comentario. Ahora esta anclado al principio de linea.
+
+### Lo que NO se hizo: el cuarto caso
+
+Un cliente con el telefono en frances, portugues o arabe cae en ingles. Eso
+sigue igual y es una decision de Diego, no un bug. Lo que ya existe sin
+codigo nuevo es la traduccion propia del navegador, y **este cambio es
+justamente lo que la hace funcionar bien**: con el idioma declarado de verdad,
+Chrome, Edge y Safari pueden ofrecer traducir cuando el visitante habla otro
+idioma, y dejan de ofrecerlo cuando la pagina ya esta en el suyo.
+
+Meter un widget de Google Translate seria otra cosa: `script-src` no permite
+ningun dominio de Google Translate hoy, habria que sumarlo a la CSP, pasa por
+la puerta de consentimiento de cookies, y agrega un script de terceros a
+paginas que cobran con tarjeta.
+
+`npm run check`, `npm run lint` y `npm test` verdes por codigo de salida.
+1348/1348.

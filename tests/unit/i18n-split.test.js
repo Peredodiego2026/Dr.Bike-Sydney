@@ -180,3 +180,60 @@ describe('la regla del ?v= sigue en pie', () => {
     }
   });
 });
+
+// El documento tiene que DECIR en que idioma esta. Las tres paginas traen
+// `<html lang="en">` escrito a mano y nadie lo movia: una pagina traducida
+// entera al chino seguia declarandose inglesa.
+//
+// Rompe dos cosas concretas. Un lector de pantalla elige la voz por este
+// atributo, asi que leia el chino y el espanol con voz inglesa. Y el navegador
+// decide si ofrecer "traducir esta pagina" comparando este atributo con el
+// idioma del visitante: declarando siempre `en`, a un hispanohablante que ya
+// estaba viendo la version espanola se le podia ofrecer traducirla del ingles.
+//
+// Verificado ademas en un navegador de verdad con `npm run look`, que reporta
+// el `lang=` que quedo: las tres paginas, los tres idiomas, y tambien despues
+// de cambiar de idioma con el selector.
+describe('el documento declara el idioma que se esta mostrando', () => {
+  const i18n = read('js/i18n.js');
+
+  it('se aplica al arrancar, con el idioma detectado', () => {
+    // Anclado al principio de linea: la llamada esta en el nivel de arriba
+    // del modulo. Sin el ancla, comentar la linea dejaba pasar el test - el
+    // patron se encontraba a si mismo dentro del comentario.
+    expect(i18n).toMatch(/^applyDocumentLang\(currentLang\);/m);
+  });
+
+  it('y tambien al cambiar de idioma', () => {
+    const fn = i18n.slice(i18n.indexOf('export function setLang'));
+    expect(fn).toMatch(/applyDocumentLang\(lang\)/);
+    // Antes del evento: quien escuche `langchange` y repinte tiene que leer un
+    // documento que ya declara el idioma nuevo.
+    // Se compara contra el dispatchEvent, no contra la palabra 'langchange':
+    // esa aparece antes en el comentario que explica justamente este orden, y
+    // la primera version de este test la encontraba ahi y fallaba midiendo
+    // texto en vez de codigo.
+    expect(fn.indexOf('applyDocumentLang(lang)')).toBeLessThan(fn.indexOf('dispatchEvent('));
+  });
+
+  // No es el codigo de dos letras. `zh` a secas no le dice a un lector de
+  // pantalla si leer mandarin o cantones, y `en-AU` es el ingles del negocio.
+  it('usa etiquetas BCP-47, no el codigo suelto', () => {
+    expect(i18n).toMatch(/HTML_LANG = \{[^}]*en: 'en-AU'[^}]*zh: 'zh-CN'/s);
+  });
+
+  // La copia esta escrita en espanol rioplatense, asi que es-ES seria falso.
+  // DATE_LOCALES si usa es-ES, porque para formatear una fecha la region
+  // importa - por eso son dos mapas y no uno.
+  it("y para el espanol no hereda el es-ES de las fechas", () => {
+    expect(i18n).toMatch(/HTML_LANG = \{[^}]*es: 'es'/s);
+  });
+
+  // track.html tenia su propia copia que corria una sola vez al arrancar y
+  // escribia el codigo de dos letras, pisando el zh-CN correcto con `zh`.
+  it('y ninguna pagina se lo escribe por su cuenta', () => {
+    for (const page of ['index.html', 'landing.html', 'track.html']) {
+      expect(read(page), page).not.toMatch(/documentElement\.lang\s*=/);
+    }
+  });
+});

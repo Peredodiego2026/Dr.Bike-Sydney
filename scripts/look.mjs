@@ -298,10 +298,16 @@ const context = await browser.newContext({
 
 // El idioma se guarda en localStorage, asi que hay que ponerlo ANTES de que
 // corra el primer script de la pagina.
+//
+// La clave es 'drbike-lang' con guion MEDIO - es la STORAGE_KEY de js/i18n.js.
+// Nacio escrita con guion bajo, asi que `--lang` no cambiaba nada: escribia una
+// clave que nadie lee, la app caia en detectLang() y devolvia el idioma del
+// navegador. Yo lo lei como "la app ignora la eleccion" en vez de "mi
+// herramienta escribe en el lugar equivocado".
 if (o.lang) {
   await context.addInitScript((lang) => {
     try {
-      localStorage.setItem('drbike_lang', lang);
+      localStorage.setItem('drbike-lang', lang);
     } catch {}
   }, o.lang);
 }
