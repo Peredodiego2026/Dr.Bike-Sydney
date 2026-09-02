@@ -690,44 +690,40 @@ cualquier otra vista con un permiso de escritura, sigue abierta. Despues corre
 
 ---
 
-## 12. `clear-legacy-plaintext-pins.sql` (31-ago-2026) — NO urgente, pero conviene
+## 12. `check-mechanic-pin-columns.sql` (31-ago-2026, corregido el 03-sep)
 
-**Que arregla.** La tabla de mecanicos (`escalation_contacts`) tiene dos
-columnas para el PIN: `pin_hash`, que es el PIN cifrado, y `pin`, que es el PIN
-**escrito tal cual, legible**. La segunda es la vieja. Cualquier fila que
-todavia tenga algo ahi es un PIN que se puede leer entrando a la base.
+**Este documento decia que habia PINs legibles en la base. Era falso.**
 
-**Por que no es urgente.** RLS ya impide que nadie de afuera lea esa tabla
-(verificado el 31-ago con la anon key: devuelve 0 filas). O sea que no esta
-expuesto a internet — es higiene, no un agujero abierto. Es lo contrario del
-punto 11.
+La version anterior de esta seccion mandaba correr un script para limpiar una
+columna `pin` en texto plano en `escalation_contacts`. Diego lo corrio el
+03-sep y fallo en la primera consulta:
 
-**Por que igual conviene.** Un PIN legible en la base lo ve cualquiera que
-consiga acceso a Supabase por cualquier via (una clave filtrada, un backup, una
-pestana abierta). Cifrado, no.
+```
+ERROR: 42703: column "pin" does not exist
+```
 
-**Esto se limpia solo, de a poco.** Cuando un mecanico entra con un PIN viejo,
-la app le calcula el cifrado y lo guarda sola. Y cuando vos le cambias el PIN
-desde Admin > Mechanic Profiles, tambien. Las filas que quedan son las de quien
-no entro ni le rotaste el PIN desde entonces.
+**Esa columna no existe.** Nunca hubo PINs legibles. El unico dato del PIN que
+guarda la base es `pin_hash`, que es de una via.
 
-**LO UNICO QUE PUEDE SALIR MAL, y como lo evita el script.** Si borras el PIN
-legible de un mecanico que **no** tiene el cifrado todavia, le sacas el acceso:
-ese era su unico dato para entrar. Por eso el script esta en cuatro pasos y el
-paso 3 **solo toca las filas que ya tienen el cifrado**. El paso 2 te lista
-aparte las que se quedarian sin acceso, para que las arregles antes.
+**De donde salio el error.** Lo escribi leyendo `api/auth.js`, que consultaba
+`c.pin` como camino alternativo, en vez de preguntarle a la base. Es
+exactamente el error que este documento existe para evitar: el codigo mergeado
+no prueba lo que hay en la base.
 
-**Como arreglar una fila del paso 2** (si el paso 2 no devuelve nada, saltealo):
-o ese mecanico entra una vez a la app — y se migra solo — o le poner un PIN
-nuevo desde Admin > Mechanic Profiles, que ya guarda el cifrado y borra el
-legible en la misma operacion.
+**Lo que destapo, y si era un problema de verdad.** Al no existir la columna,
+`handleAdminSetMechanicPin` la nombraba igual al guardar (`pin: null`), y
+PostgREST rechaza una escritura que menciona una columna inexistente. O sea que
+el boton **Reset PIN devolvia error 500 para todos**. Arreglado en el mismo PR.
 
-**Como saber que quedo bien.** El paso 4 tiene que decir
-`remaining_plaintext = 0`. Si no da 0, lo que queda son las filas del paso 2:
-el script las dejo a proposito, no fallo.
+**El script que queda es de solo lectura** y no cambia nada. Sirve para dos
+cosas:
 
-**Ojo con "limpiar" el codigo despues.** Mientras quede aunque sea una fila sin
-cifrado, `api/auth.js` necesita el camino viejo para dejarla entrar. Recien
-cuando el paso 4 de 0 y siga dando 0 se puede borrar ese pedazo de codigo.
-Borrarlo antes deja al mecanico afuera con un cartel de "Invalid PIN" que no
-explica nada.
+1. Confirmar que las columnas del PIN son las que se esperan (solo `pin_hash`).
+   Si alguna vez aparece una columna `pin`, **eso si** es un problema y hay que
+   migrar los valores a `pin_hash` y borrarla.
+2. Ver que contactos no tienen PIN puesto, o sea que no pueden entrar a
+   `mechanic.html`. Se arregla desde
+   **Settings > Notification Numbers > editar el contacto > Reset PIN**.
+
+**Ojo con la ruta:** el PIN NO esta en "Mechanic Profile" (esa pantalla es la
+ficha que ve el cliente: foto, bio, rating). Esta en Settings.

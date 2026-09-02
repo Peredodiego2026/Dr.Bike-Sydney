@@ -17,6 +17,7 @@
 // one path all fourteen routes share, so these tests drive that function
 // directly rather than asserting on source text.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import crypto from 'node:crypto';
 
 // The counter is real state in a real table in production; here it is a mock so
 // the test controls "locked or not" and can watch what got called.
@@ -38,7 +39,23 @@ vi.mock('../../api/_security.js', async (importOriginal) => {
 const { authMechanic } = await import('../../api/auth.js');
 
 const GOOD_PIN = '3250';
-const contact = { id: 'mech-1', pin: GOOD_PIN, active: true, first_name: 'Sam', van_number: 1 };
+// The fixture carries pin_hash, not the PIN. It used to be `pin: GOOD_PIN` - a
+// plaintext column that does not exist in this database - so the "correct PIN"
+// case was passing through a fallback branch that could never run against
+// production. Hashed here exactly the way api/auth.js hashes it, so the test
+// drives the path that actually authenticates a mechanic.
+const hashPin = (p) =>
+  crypto
+    .createHmac('sha256', process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || '')
+    .update(String(p).trim())
+    .digest('hex');
+const contact = {
+  id: 'mech-1',
+  pin_hash: hashPin(GOOD_PIN),
+  active: true,
+  first_name: 'Sam',
+  van_number: 1,
+};
 
 let fetchMock;
 beforeEach(() => {

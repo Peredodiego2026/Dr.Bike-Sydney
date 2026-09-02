@@ -7063,9 +7063,8 @@ async function loadCalendar() {
           .map((j) => {
             const st = j.status || 'pending';
             // client_name primero: una reserva telefonica no tiene perfil, y
-          // leyendo solo profiles.full_name todas se veian como "Client".
-          const nm =
-            (j.client_name || j.profiles?.full_name)?.split(' ')[0] || 'Client';
+            // leyendo solo profiles.full_name todas se veian como "Client".
+            const nm = (j.client_name || j.profiles?.full_name)?.split(' ')[0] || 'Client';
             const tm = j.scheduled_time || '';
             return `<div style="font-size:11px;background:${stBg[st] || 'var(--border-lt)'};border-left:2px solid ${stColors[st] || 'var(--gray)'};border-radius:3px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-action="view-booking" data-id="${j.id}"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${vanColor(j.van_number)};margin-right:3px"></span>${tm} ${esc(nm)}</div>`;
           })
@@ -7204,8 +7203,7 @@ async function loadCalendar() {
                   const st = j.status || 'pending';
                   // client_name primero, igual que la vista de mes: una
                   // reserva telefonica no tiene perfil.
-                  const name =
-                    (j.client_name || j.profiles?.full_name)?.split(' ')[0] || 'Client';
+                  const name = (j.client_name || j.profiles?.full_name)?.split(' ')[0] || 'Client';
                   const time = j.scheduled_time || '';
                   const van = j.van_number || 1;
                   return `<div style="background:${stBg[st] || 'var(--border-lt)'};border-left:3px solid ${stColors[st] || 'var(--gray)'};border-radius:6px;padding:6px 8px;cursor:pointer" data-action="view-booking" data-id="${j.id}">
@@ -7751,7 +7749,16 @@ function updateZoneVisibility() {
   const zoneWrap = document.getElementById('notif-modal-zone-wrap');
   const pinWrap = document.getElementById('notif-modal-pin-wrap');
   if (zoneWrap) zoneWrap.style.display = role === 'manager' ? 'none' : 'block';
-  if (pinWrap) pinWrap.style.display = role === 'mechanic' ? 'block' : 'none';
+  // The PIN shows for BOTH roles. It used to be `role === 'mechanic'`, which
+  // assumed the manager and the mechanic are different people - and Diego, the
+  // only manager, is also the mechanic who logs into mechanic.html. The effect
+  // was that the one person who needed to rotate his own PIN was the one person
+  // the UI hid the button from; there was no other way to reach it. The zone
+  // field above is genuinely manager-irrelevant (a manager covers all zones),
+  // the PIN is not: mechanic.html takes a PIN and nothing else, whatever role
+  // the contact carries. handleAdminSetMechanicPin never checked the role
+  // either, so this only ever hid a working endpoint.
+  if (pinWrap) pinWrap.style.display = 'block';
 }
 
 async function editNotifNumber(id) {
