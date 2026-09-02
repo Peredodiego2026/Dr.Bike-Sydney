@@ -9905,6 +9905,85 @@ convirtiendo cualquier error de render en una pagina muerta sin salida. Un
 `try/catch` por pantalla con un estado de error y un boton de reintentar es un
 cambio aparte, deliberado, no para meterlo de contrabando en este.
 
+## 82. El chatbot cotizaba un precio que la reserva no puede cobrar (03-sep-2026)
+
+Diego pregunto: "el chat bot esta conectado con todo el universo Dr bike y
+data? no va a responder info incorrecta?". La respuesta corta era **si,
+respondia mal** - en el precio de la visita.
+
+El prompt de `api/chat.js` seguia anunciando la escalera de tres bandas:
+
+```
+- Up to 20 minutes (Northern Beaches): $25
+- 20 to 32 minutes (North Shore, Hornsby): $35
+- 32 to 45 minutes (CBD, Inner West, Eastern Suburbs): $45
+```
+
+`api/_coverage.js` ya cobraba con **dos**: $25 hasta 25 minutos reales, $45
+hasta 45, y $35 pasa a ser exclusivamente el tope de la peninsula norte.
+
+Resultado, en plata:
+
+| Cliente | Le decia el bot | Le cobraba la app |
+|---|---|---|
+| Chatswood, Hornsby, North Sydney, Lane Cove | $35 | **$45** |
+| Newport, Avalon, Palm Beach | $45 | **$35** |
+
+`tests/unit/coverage-resolution.test.js` venia afirmando desde agosto que "$35
+ya no es una banda de tiempo". Contra el codigo que cobra, que estaba bien.
+Nadie miro el chatbot.
+
+Los precios de los **servicios** nunca se desviaron, y por una razon concreta:
+se leen de Supabase en cada request. El precio de la visita era texto escrito a
+mano. Esa es toda la diferencia.
+
+### El arreglo
+
+`formatFeeBands()` construye el bloque desde `FEE_BANDS` y `PENINSULA_FAR_FEE`,
+y el "BEYOND 45 MINUTES" interpola `PERIMETER_MAX_MINUTES`. Ya no hay ningun
+numero tipeado dos veces. `tests/unit/chatbot-quotes-real-fees.test.js` falla
+si el bot llegara a nombrar un precio que la reserva rechazaria.
+
+Tambien se corrigio el parrafo de "por que varia la tarifa", que explicaba que
+el CBD sale un poco mas que Hornsby - con dos bandas los dos pagan $45.
+
+### Lo que el bot SI tiene bien
+
+- **Servicios y precios**: de la tabla `services`, en vivo.
+- **Membresias**: coinciden con `terms.html` e `index.html` (verificado).
+- **Recargo de domingo y feriado**: 20%, correcto.
+- **Fuera del perimetro**: no inventa precio, manda al pedido de cotizacion.
+- **No revela el prompt, no cambia de personaje, no escribe codigo.**
+
+## 83. PENDIENTE - vender la foto y la descripcion, que es lo que nos diferencia
+
+Pedido de Diego (03-sep-2026), textual:
+
+> "en alguna parte hay que hacerle marketing a la seccion de sacar fotos o
+> agregar una descripcion de la bici si no sabes que es lo que tiene! ese es el
+> game changing de nosotros"
+
+**Que existe hoy:** en la SPA, dentro de "Book a Service", una caja
+`#diag-block` que dice "Not sure what your bike needs?" con un boton de foto y
+un campo de texto, contra `/api/chat?type=diagnose`. Funciona y devuelve el
+servicio recomendado con precio.
+
+**El problema:** esta **solo adentro del flujo de reserva**, es decir, se lo
+encuentra el que ya decidio reservar. El cliente que no sabe que tiene la bici
+-- justamente el que esto resuelve -- no llega nunca, porque no empieza una
+reserva para algo que no sabe nombrar.
+
+**Donde deberia estar y no esta:**
+- La landing: no hay ninguna seccion que lo muestre.
+- El home de la SPA: no aparece.
+- No hay ninguna pagina propia que Google pueda indexar por "no se que le pasa
+  a mi bici".
+
+**Sin decidir todavia** (es una decision de producto y de marca, de Diego):
+como se llama de cara al cliente, si va arriba o abajo en la landing, si lleva
+una foto de ejemplo, y si merece su propia pagina para SEO. No escribir codigo
+antes de eso.
+
 ## 84. El interruptor de zonas no llegaba al despacho (03-sep-2026)
 
 Diego pidio dejar la Van 2 sin zonas para que todo vaya a la Van 1. Apagar una
