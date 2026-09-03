@@ -7,6 +7,16 @@ copia, se pega, se lee el resultado.
 
 ## 0. RESULTADO: el 2026-08-10 no faltaba ninguno
 
+> **CADUCADO (2026-09-03).** Este resultado es del 10-ago y desde entonces
+> **entraron 16 migraciones nuevas** (de `add-expenses-table.sql` en adelante).
+> Ninguna de ellas quedo verificada contra la base por este documento. Algunas
+> tienen constancia en otro lado - `fix-availability-blocks.sql` la corrio Diego
+> el 16-ago, `referral-credits-spendable.sql` y `enable-realtime-bookings.sql`
+> el 27-ago, y que `lock-public-views.sql` esta aplicado lo confirma
+> `npm run rls:check` en cada corrida - pero **el resto no tiene constancia de
+> nada**. La consulta de la seccion 3 ya las cubre a todas: hay que volver a
+> correrla. Hasta entonces, "la base esta al dia" es una suposicion, no un dato.
+
 Diego corrio la consulta de la seccion 3 contra produccion el mismo dia. **Las
 30 migraciones dieron `OK`.** Ademas:
 
@@ -135,7 +145,10 @@ with
      and exists (select 1 from fn where f='refund_referral_credits'))
   union all select 23, 'add-cancellation-reason.sql', 'bookings.cancellation_reason',
     exists (select 1 from col where t='bookings' and c='cancellation_reason')
-  union all select 24, 'create-van-inventory-table.sql', 'tabla van_inventory',
+  -- Numerado 16 y no 24: hasta 2026-09-03 esta fila y la de
+  -- referral-credits-spendable compartian el numero 24, asi que la tabla salia
+  -- con dos filas "#24" distintas y no habia forma de nombrar una sin ambiguedad.
+  union all select 16, 'create-van-inventory-table.sql', 'tabla van_inventory',
     exists (select 1 from tbl where t = 'van_inventory')
   union all select 25, 'create-newsletter-table.sql', 'tabla newsletter_subscribers',
     exists (select 1 from tbl where t = 'newsletter_subscribers')
@@ -187,15 +200,44 @@ with
     exists (select 1 from col where t='bookings' and c='parts_cost_actual')
   union all select 44, 'add-geo-cache.sql', 'tabla geo_cache (cache de direcciones y rutas)',
     exists (select 1 from tbl where t = 'geo_cache')
+  -- Las dos de abajo faltaban en esta consulta hasta 2026-09-03. No son
+  -- columnas ni tablas, que es por que se pasaron por alto: una es una
+  -- publicacion y la otra son permisos. Ninguna deja rastro en
+  -- information_schema.columns, que es donde mira casi todo lo de arriba.
+  union all select 45, 'enable-realtime-bookings.sql', 'las 3 tablas en la publicacion supabase_realtime + replica identity full en bookings',
+    ((select count(*) = 3 from pg_publication_tables
+        where pubname = 'supabase_realtime'
+          and tablename in ('bookings','mechanic_locations','job_messages'))
+     and coalesce((select relreplident = 'f' from pg_class
+                     where oid = 'public.bookings'::regclass), false))
+  -- Esta es la unica fila de la tabla que se pone en rojo por algo que SOBRA
+  -- en vez de por algo que falta: mide que anon y authenticated NO tengan
+  -- permiso de escritura sobre las dos vistas publicas. Con la vista corriendo
+  -- con los privilegios de su dueño, un UPDATE ahi escribe en `bookings` sin
+  -- que RLS se entere. Fue una fuga real, verificada en produccion el 30-ago.
+  union all select 46, 'lock-public-views.sql', 'anon/authenticated sin escritura en las vistas publicas, y public_booking_tracking sin ningun permiso',
+    (not exists (select 1 from information_schema.role_table_grants
+                   where table_schema = 'public'
+                     and table_name in ('public_reviews','public_booking_tracking')
+                     and grantee in ('anon','authenticated')
+                     and privilege_type in ('INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'))
+     and not exists (select 1 from information_schema.role_table_grants
+                       where table_schema = 'public'
+                         and table_name = 'public_booking_tracking'
+                         and grantee in ('anon','authenticated')))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 38 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 41 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
+
+Los numeros de la columna `#` **no son un orden y tienen huecos** (no hay 5 a 9).
+Son etiquetas estables: sirven para nombrar una fila en un chat sin ambiguedad,
+nada mas. Lo unico que hay que mirar es la columna `estado`.
 
 Falta un script en esa lista a proposito:
 `backfill-referral-codes-2026-07-20.sql` no agrega ninguna columna, arregla
