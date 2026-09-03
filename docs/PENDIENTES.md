@@ -10149,9 +10149,146 @@ numero once.
 `RENDERERS`. `tests/unit/quote-request-flow.test.js` afirmaba la forma vieja
 sobre `quote-sent`; se actualizo a la nueva sin aflojar lo que comprueba.
 
+
+## 86. El BAS declaraba un cero que nadie habia calculado (03-sep-2026)
+
+El export del BAS imprimia:
+
+```
+G10 — Capital Purchases: $0
+G11 — Non-capital Purchases: $0
+1B  — GST Credits on Purchases: $0
+NET GST PAYABLE TO ATO: $<gst de ventas>
+```
+
+Ninguno de esos ceros se habia calculado. Estaban escritos a mano en la
+plantilla. Y el problema no es cosmetico: **presentar el BAS con 1B en cero es
+declarar que no se reclama ningun credito de GST**. Para un negocio con gastos
+registrados, eso es pagarle a la ATO mas de lo que corresponde.
+
+Peor todavia era el nombre de la ultima linea: "NET GST PAYABLE TO ATO" sobre
+el GST de ventas a secas. No era el neto - era el bruto, presentado como neto.
+
+### Los gastos siempre estuvieron ahi
+
+`expenses` es una tabla real y el P&L **de la misma pantalla** viene restando
+esos gastos hace meses. El BAS simplemente nunca los miro: `_finData` no los
+llevaba.
+
+### Por que no se calcula 1B automaticamente y punto
+
+Porque no se puede, con lo que hay guardado. La tabla `expenses` tiene
+`amount`, `category`, `spent_on` - y **nada** que diga si esa compra llevaba
+GST ni si es de capital o corriente. La ATO necesita las dos cosas. Dividir el
+total por 11 seria reemplazar un numero mal por otro numero mal, esta vez en
+una presentacion impositiva.
+
+Tampoco sirve meter el total en G11: **los sueldos no son una compra** (van en
+W1/W2), y `payroll` es una de las categorias.
+
+### Lo que hace ahora
+
+- G10, G11 y 1B dicen `NOT CALCULATED`, con un parrafo que explica por que y
+  que advierte explicitamente que un 1B en cero es pagar de mas.
+- La linea del neto pasa a llamarse "GST ON SALES, BEFORE ANY CREDITS AT 1B".
+- Se agrega un bloque con los gastos reales del periodo por categoria,
+  rotulado **"Supporting information, not BAS figures"**, con el total y con
+  los sueldos senalados aparte.
+- Si no hay gastos cargados, lo dice y apunta a Admin > Expenses, que es
+  justamente lo que hace que 1B parezca cero.
+- Si los gastos no se pudieron leer, lo dice en lugar de inventar ceros.
+
+G1, G2, G3 y 1A siguen calculandose: esos si salen de los datos.
+
+## 87. La columna de acciones de Bookings (03-sep-2026)
+
+Cada fila dibujaba entre **uno y cinco botones** segun el estado, dentro de una
+celda `white-space:nowrap`, y cada boton traia su propio `margin-right` salvo
+el ultimo escrito. Tres consecuencias:
+
+1. El ancho de la columna saltaba segun cual fuera la fila mas ancha.
+2. Cuando el ultimo boton no se dibujaba (un trabajo completado no tiene
+   "Confirm"), el anterior se quedaba con un margen colgando que nadie veia
+   pero que corria todo lo demas.
+3. Una reserva cancelada no dibujaba **nada**, asi que la celda se colapsaba y
+   la fila quedaba visualmente rota.
+
+Arreglado de raiz, no con parches: `flex` con `gap` en el contenedor - el
+espacio pertenece al contenedor, asi que no puede sobrevivir a un hijo oculto -
+y `min-width` igual en todos los botones para que la columna deje de saltar.
+La fila cancelada dice "Cancelled" en gris en vez de quedar vacia.
+
+De paso los estilos salieron de los atributos `style` y pasaron a clases con
+tokens, que es lo que ademas los hace correctos en modo oscuro.
+
+## 88. El modulo de privacidad estaba escrito y no lo llamaba nadie (03-sep-2026)
+
+`privacy.html` promete, bajo la Privacy Act 1988, dar **una copia** de los datos
+personales y **borrarlos** a pedido, respondiendo **dentro de los 30 dias**.
+
+`api/_privacy.js` sabe hacer las dos cosas desde agosto, y
+`tests/unit/privacy-requests.test.js` (22 pruebas) demuestra que los planes que
+arma estan bien. Lo que nadie reviso fue si **alguien lo llamaba**. No lo
+llamaba nadie.
+
+Asi que si un cliente escribia, cumplir la promesa significaba encontrar un
+archivo en el repositorio.
+
+### Y el runbook estaba peor que eso
+
+`docs/RUNBOOK-PRIVACY.md` es el documento que Diego habria abierto. Nombraba
+**1 de las 9 tablas** con datos personales. Corriendo lo que decia, el nombre de
+esa persona quedaba igual en `profiles`, mas sus bicicletas, sus mensajes, sus
+checkouts abandonados y **tres listas de correo**.
+
+La cabecera de `api/_privacy.js` afirmaba desde el dia uno:
+
+> docs/RUNBOOK-PRIVACY.md is GENERATED from it by scripts/privacy-check.mjs, so
+> the runbook Diego pastes into Supabase cannot drift away from what the code says.
+
+**Ese script no existia.** Por eso se desvio: la garantia estaba escrita en un
+comentario en vez de en un archivo ejecutable.
+
+### Lo que se hizo
+
+**1. `scripts/privacy-check.mjs`, dentro de `npm run check`.** Genera la seccion
+de SQL del runbook desde `PII_MAP` y falla si el archivo quedo viejo. La prosa
+que Diego lee primero - que hacer, por que es anonimizar y no borrar, los 7
+anos - es texto a mano arriba de los marcadores y no se toca nunca. El runbook
+paso de 1 a 9 tablas, con el motivo de retencion de cada una.
+
+**2. `admin-privacy-plan` en `api/auth.js`.** Detras de `verifyAdminSession`.
+Devuelve los dos planes para una persona concreta. Rechaza un id que no sea un
+UUID: un id mal formado no matchea nada y produce SQL que **parece completo y no
+borra a nadie**, que es el peor resultado posible de esta funcion. Acepta email
+solo, porque un invitado no tiene fila en `profiles` pero si tiene reservas con
+su nombre.
+
+**3. El boton.** Admin > Clients > cada tarjeta > **Privacy request**. Muestra
+los dos bloques de SQL listos para copiar: primero la copia (solo lectura),
+despues el borrado, con la advertencia de que no tiene vuelta atras.
+
+### Por que muestra el SQL y no lo ejecuta
+
+No es timidez, son tres razones concretas:
+
+- **El borrado es irreversible y no se puede verificar desde ahi.** Los valores
+  originales no quedan guardados en ningun lado: un clic de mas no tiene undo
+  ni rastro para reconstruir.
+- **Hay que confirmar que el pedido viene de esa persona ANTES.** Ese juicio es
+  de Diego y ocurre fuera de la pantalla.
+- **La regla del proyecto:** el SQL que cambia datos lo lee y lo pega Diego en
+  Supabase, no lo dispara un boton que se puede apretar dos veces.
+
+### Lo que sigue sin cubrir
+
+El cliente **no** tiene autoservicio: no hay boton de "borrar mi cuenta" en la
+app. No hace falta - responder por email dentro de los 30 dias es un proceso
+valido bajo la ley australiana - pero conviene decirlo en vez de suponerlo.
+
 ---
 
-## 86. El invitado recibia el email de resena y no podia dejarla (03-sep-2026)
+## 89. El invitado recibia el email de resena y no podia dejarla (03-sep-2026)
 
 Buscando que faltaba de la captacion de resenas -que el pedido daba por "hay
 que armarla", cuando en realidad estaba armada entera y con guards- aparecio
@@ -10231,3 +10368,4 @@ no aceptaba tokens. La decision de mantener el link vivo despues del trabajo
 
 La cadena entera con un trabajo real completado. Sigue necesitando que un
 mecanico complete un trabajo de verdad, y eso no lo puede hacer una IA.
+

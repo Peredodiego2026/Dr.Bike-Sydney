@@ -1,6 +1,7 @@
 // Handles admin auth (?role=admin) and mechanic auth (?role=mechanic).
 // Vercel rewrites map /api/admin-auth and /api/mechanic-auth to this file.
 import { createClient } from '@supabase/supabase-js';
+import { REDACTED, anonymisationPlan, exportPlan } from './_privacy.js';
 import Stripe from 'stripe';
 import crypto from 'crypto';
 import { geocodeAddress, drivingRoute, drivingRouteGeometry, suggestAddresses } from './_eta.js';
@@ -4809,6 +4810,49 @@ const EXPENSE_CATEGORIES = [
   'other',
 ];
 
+// The SQL for a privacy request, for one named person.
+//
+// privacy.html promises, under the Privacy Act 1988, both a copy of what we
+// hold and erasure of it, answered within 30 days. api/_privacy.js has known
+// how to build that SQL since August; nothing ever called it, so answering
+// meant finding a file in the repo. This is what puts it in front of Diego.
+//
+// It RETURNS SQL, it does not run it. Neither reason is caution for its own
+// sake: erasure is irreversible and unverifiable from here - the original
+// values are kept nowhere - and the rule in this project is that
+// data-changing SQL is read and pasted by Diego in Supabase, never fired by a
+// button he might hit twice. Whether the request really came from that person
+// is a judgement call that has to happen before any of it runs, and it is his.
+async function handleAdminPrivacyPlan(req, res) {
+  const { access_token, client_id, email } = req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const clientId = client_id || null;
+  const clientEmail = email || null;
+  if (!clientId && !clientEmail) {
+    return res.status(400).json({ error: 'Need a client id or an email' });
+  }
+  // A guest booking carries an email and no profile, so an id is not always
+  // there - but a wrong-shaped one would match nothing and produce SQL that
+  // looks complete and erases nobody.
+  if (clientId && !/^[0-9a-f-]{36}$/i.test(clientId)) {
+    return res.status(400).json({ error: 'That client id is not a valid UUID' });
+  }
+
+  try {
+    const target = { clientId, email: clientEmail };
+    return res.status(200).json({
+      exportPlan: exportPlan(target),
+      anonymisePlan: anonymisationPlan(target),
+      redacted: REDACTED,
+    });
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
+}
+
 async function handleAdminExpensesList(req, res) {
   const { access_token } = req.body || {};
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -5334,6 +5378,7 @@ async function handler(req, res) {
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   if (role === 'submit-claim') return handleSubmitClaim(req, res);
   if (role === 'admin-orphan-audit') return handleAdminOrphanAudit(req, res);
+  if (role === 'admin-privacy-plan') return handleAdminPrivacyPlan(req, res);
   if (role === 'admin-expenses-list') return handleAdminExpensesList(req, res);
   if (role === 'admin-expenses-save') return handleAdminExpensesSave(req, res);
   if (role === 'admin-expenses-delete') return handleAdminExpensesDelete(req, res);

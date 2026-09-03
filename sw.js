@@ -1,7 +1,7 @@
 // v121 (2026-09-03): el invitado no podia dejar su resena. El link del email
 // lleva ahora el tracking_token (`&t=`), y submitReview lo manda cuando no hay
 // sesion. Cambian js/app.js, js/supabase.js y los dos diccionarios, asi que el
-// cache viejo tiene que irse. PENDIENTES 86.
+// cache viejo tiene que irse. PENDIENTES 89.
 // v120 (2026-09-03): red de seguridad por pantalla. Un render que revienta
 // antes de escribir ya no deja la pagina en blanco: muestra una tarjeta de
 // error con reintento. Cambian js/app.js, css/main.css y los dos

@@ -2629,3 +2629,86 @@ body {
   color: var(--gray);
   margin-top: 1px;
 }
+
+/* ── Bookings: the actions column ─────────────────────────────────────────────
+   Between one and five buttons per row depending on status, inside a
+   white-space:nowrap cell, each carrying its own margin-right except the last
+   one written. Two things went wrong with that: the column width jumped with
+   whatever the widest row happened to be, and when the last button was hidden
+   (a completed job has no Confirm) the one before it kept a trailing margin
+   nobody could see but everything after could feel. A cancelled row rendered
+   nothing at all, so the cell collapsed and the row sat visually broken.
+
+   Flex plus gap fixes it structurally: the gap belongs to the container, so it
+   cannot survive a hidden child, and the buttons share one size. */
+.bk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+}
+.bk-act {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: Inter, sans-serif;
+  line-height: 1.35;
+  white-space: nowrap;
+  cursor: pointer;
+  /* Every label sits on the same footprint, so the column stops jumping
+     between rows and the buttons read as one set rather than five widths. */
+  min-width: 66px;
+  text-align: center;
+}
+.bk-act:hover {
+  filter: brightness(0.96);
+}
+.bk-act--confirm {
+  background: var(--green-lt);
+  color: var(--green-text);
+}
+.bk-act--chat {
+  background: var(--purple-lt);
+  color: var(--purple-text);
+}
+.bk-act--track {
+  background: var(--blue-lt);
+  color: var(--blue-text);
+}
+.bk-act--resched {
+  background: var(--amber-lt);
+  color: var(--amber);
+}
+.bk-act--cancel {
+  background: var(--red-lt);
+  color: var(--red-text);
+}
+/* A cancelled booking has no actions left. Saying so keeps the row the same
+   height as its neighbours instead of collapsing into a blank cell. */
+.bk-actions__none {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-lt);
+
+/* The privacy request button. Deliberately quieter than Bikes and Chat: it is
+   the rarest action on the card and the only one that leads somewhere
+   irreversible, so it should be findable without inviting a stray click. */
+.cl-privacy-btn {
+  width: 100%;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  color: var(--mgray);
+  cursor: pointer;
+}
+.cl-privacy-btn:hover {
+  color: var(--navy);
+  border-color: var(--mgray);
+}

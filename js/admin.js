@@ -1422,6 +1422,11 @@ async function loadFinance() {
     // never summed into it - see where it is computed.
     held,
     heldCount: heldJobs.length,
+    // What the business actually spent in this period, by category. The P&L
+    // already had it; the BAS export did not, and printed "1B: $0" as though
+    // it had checked. See exportBAS().
+    expenses: exp,
+    expensesAvailable: _expenses.available !== false,
     periodStr,
     dateFrom,
     dateTo,
@@ -1479,6 +1484,40 @@ function exportFinanceCSV() {
   a.click();
 }
 
+// Supporting information for the three boxes this app refuses to fill in.
+// Deliberately NOT presented as G10/G11: payroll is not a purchase (wages are
+// W1/W2), and nothing here records whether a given expense carried GST. It is
+// the raw material for the accountant, labelled as such.
+function basExpensesBlock(d) {
+  if (!d.expensesAvailable) {
+    return `
+RECORDED EXPENSES: could not be read for this period. The figures above cover
+sales only.`;
+  }
+  const byCat = d.expenses?.byCat || {};
+  const lines = Object.entries(byCat)
+    .filter(([, amount]) => amount > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, amount]) => `  ${EXPENSE_LABELS[cat] || cat}: ${anMoney(amount)}`);
+
+  if (!lines.length) {
+    return `
+RECORDED EXPENSES FOR THIS PERIOD: none.
+If that is wrong, add them in Admin > Expenses before your agent lodges — an
+empty list here is what makes 1B look like zero.`;
+  }
+
+  const payroll = byCat.payroll || 0;
+  return `
+RECORDED EXPENSES FOR THIS PERIOD
+Supporting information, not BAS figures.
+${lines.join('\n')}
+  ─────
+  Total recorded: ${anMoney(d.expenses.total)}${
+    payroll ? `\n  Of which payroll: ${anMoney(payroll)} — wages are not a G11 purchase.` : ''
+  }`;
+}
+
 function exportBAS() {
   const d = window._finData;
   if (!d) return;
@@ -1490,13 +1529,27 @@ Generated: ${new Date().toLocaleDateString('en-AU')}
 G1 — Total Sales (incl GST): $${d.revenue.toLocaleString('en-AU')}
 G2 — Export Sales: $0
 G3 — Other GST-free Sales: $0
-G10 — Capital Purchases: $0
-G11 — Non-capital Purchases: $0
+G10 — Capital Purchases: NOT CALCULATED — see below
+G11 — Non-capital Purchases: NOT CALCULATED — see below
 
 1A — GST on Sales (G1/11): $${d.gst.toLocaleString('en-AU')}
-1B — GST Credits on Purchases: $0
-NET GST PAYABLE TO ATO: $${d.gst.toLocaleString('en-AU')}
+1B — GST Credits on Purchases: NOT CALCULATED — see below
+GST ON SALES, BEFORE ANY CREDITS AT 1B: $${d.gst.toLocaleString('en-AU')}
 
+WHY G10, G11 AND 1B ARE BLANK
+This app records what the business spent, but not two things the ATO needs
+for those boxes: whether each purchase actually carried GST, and whether it
+was capital or non-capital. Neither can be guessed from what is stored, and
+a guess here becomes a wrong lodgement.
+
+They used to print "$0", which reads as a figure that was worked out. It was
+not. Lodging with 1B at $0 claims NO GST credits at all — for a business with
+recorded expenses, that means paying the ATO more than it is owed.
+
+Give the figures below to your tax agent and let them fill those three boxes.
+${basExpensesBlock(d)}
+
+SALES DETAIL
 Jobs completed: ${d.jobCount}
 Average job value: ${anMoney(d.avgJob)}
 Basis: service_price + callout_fee, as recorded on each completed booking.
@@ -2893,12 +2946,15 @@ function renderBookingsTable(data) {
       <td data-label="Van"><span class="mech-tag v${b.van_number || 1}">Van ${b.van_number || 1}</span></td>
       <td data-label="Status"><span class="status ${stClass[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
       <td data-label="Price"><b>${anMoney(anBookingRevenue(b))}</b></td>
-      <td data-label="Actions" style="white-space:nowrap">
-        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
-        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="reschedule" data-id="${b.id}" data-date="${b.scheduled_date || ''}" style="background:var(--amber-lt);color:var(--amber);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Reschedule</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
+      <td data-label="Actions">
+        <div class="bk-actions">
+          ${isPending ? `<button class="bk-act bk-act--confirm" data-bk-action="confirm" data-id="${b.id}">Confirm</button>` : ''}
+          ${!isCancelled ? `<button class="bk-act bk-act--chat" data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}">Chat</button>` : ''}
+          ${b.tracking_token ? `<button class="bk-act bk-act--track" data-bk-action="track" data-token="${b.tracking_token}" title="Copy tracking link">Track</button>` : ''}
+          ${!isCancelled ? `<button class="bk-act bk-act--resched" data-bk-action="reschedule" data-id="${b.id}" data-date="${b.scheduled_date || ''}">Reschedule</button>` : ''}
+          ${!isCancelled ? `<button class="bk-act bk-act--cancel" data-bk-action="cancel" data-id="${b.id}">Cancel</button>` : ''}
+          ${isCancelled ? '<span class="bk-actions__none">Cancelled</span>' : ''}
+        </div>
       </td>
     </tr>`;
     })
@@ -5890,6 +5946,11 @@ async function loadClients() {
         <button data-cl-action="chat" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Chat</button>`
         }
       </div>
+      <!-- A guest has no profile row but still has bookings with their name on
+           them, so the request has to be answerable for them too - by email. -->
+      <div style="margin-top:8px">
+        <button data-cl-action="privacy" data-id="${c.isGuest ? '' : c.id}" data-email="${esc(c.email || '')}" data-name="${esc(name).replace(/"/g, '&quot;')}" class="cl-privacy-btn">Privacy request</button>
+      </div>
     </div>`;
     })
     .join('');
@@ -5903,6 +5964,8 @@ async function loadClients() {
       if (!btn) return;
       if (btn.dataset.clAction === 'bikes') viewClientBikes(btn.dataset.id, btn.dataset.name);
       else if (btn.dataset.clAction === 'chat') openAdminChat(btn.dataset.id, btn.dataset.name);
+      else if (btn.dataset.clAction === 'privacy')
+        openPrivacyRequest(btn.dataset.id, btn.dataset.email, btn.dataset.name);
     });
   }
   // A count query that failed falls back to what was rendered, and says so
@@ -8217,6 +8280,116 @@ async function viewClientBikes(clientId, clientName) {
       ${bikeRows}
     </div>`;
   modal.style.display = 'flex';
+}
+
+// ── Privacy requests ──────────────────────────────────────────────────────────
+//
+// privacy.html promises, under the Privacy Act 1988, a copy of what we hold
+// and erasure of it, answered within 30 days. api/_privacy.js has known how to
+// build that SQL since August. Nothing called it, so honouring the promise
+// meant finding a file in the repo and knowing which of nine tables hold
+// personal data - which is why docs/PENDIENTES.md listed it as a designed
+// capability rather than a shipped one.
+//
+// This shows the SQL. It does not run it, and that is the design, not timidity:
+//
+//   - Erasure is irreversible. The original values are kept nowhere, so a
+//     mis-click has no undo and no audit trail to reconstruct from.
+//   - The request has to be verified as coming from the real person FIRST.
+//     That judgement is Diego's and it happens outside this screen.
+//   - Data-changing SQL in this project is read and pasted in Supabase, never
+//     fired by a button that can be double-clicked.
+async function openPrivacyRequest(clientId, email, clientName) {
+  const modal = document.getElementById('reassign-modal');
+  if (!modal) return;
+
+  const shell = (body) => `
+    <div style="background:var(--white);border-radius:16px;padding:24px;max-width:720px;width:100%;max-height:85vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">Privacy request — ${esc(clientName || email || 'client')}</div>
+        <button data-action="close-reassign-modal" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--navy)">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--mgray);margin-bottom:16px">Privacy Act 1988 - you have 30 days to answer. Run these in Supabase yourself.</div>
+      ${body}
+    </div>`;
+
+  modal.querySelector('div').innerHTML = shell(
+    '<div style="padding:28px 0;text-align:center;color:var(--mgray);font-size:14px">Building the SQL…</div>'
+  );
+  modal.style.display = 'flex';
+
+  let plan;
+  try {
+    const token = await adminAccessToken();
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-privacy-plan',
+        access_token: token,
+        client_id: clientId || null,
+        email: email || null,
+      }),
+    });
+    plan = await res.json();
+    if (!res.ok || plan.error) throw new Error(plan.error || 'Could not build the SQL');
+  } catch (e) {
+    modal.querySelector('div').innerHTML = shell(
+      `<div style="background:var(--red-lt);color:var(--red-text);border-radius:10px;padding:14px 16px;font-size:14px">${esc(e.message)}</div>`
+    );
+    return;
+  }
+
+  const exportSql = plan.exportPlan.map((s) => s.sql).join('\n');
+  const anonSql = [
+    'BEGIN;',
+    '',
+    ...plan.anonymisePlan.flatMap((s) => [`-- ${s.table}: ${s.why}`, s.sql, '']),
+    '-- Check the result BEFORE committing. If anything looks wrong: ROLLBACK;',
+    'COMMIT;',
+  ].join('\n');
+
+  const block = (id, sql) =>
+    `<pre id="${id}" style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.55;overflow-x:auto;white-space:pre;margin:0;color:var(--navy)">${esc(sql)}</pre>`;
+
+  const copyBtn = (target, label) =>
+    `<button data-privacy-copy="${target}" style="min-height:36px;padding:8px 14px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">${label}</button>`;
+
+  modal.querySelector('div').innerHTML = shell(`
+    <div style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">1. Send them a copy</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:1px">Read-only. Run this first and email them the result.</div>
+        </div>
+        ${copyBtn('privacy-export-sql', 'Copy')}
+      </div>
+      ${block('privacy-export-sql', exportSql)}
+    </div>
+
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">2. Erase them</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:1px">Only after you have sent the copy and confirmed it is really them.</div>
+        </div>
+        ${copyBtn('privacy-anon-sql', 'Copy')}
+      </div>
+      <div style="background:var(--amber-lt);color:var(--amber);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.55;margin-bottom:8px">
+        <b>This cannot be undone.</b> Nothing here deletes a booking — the financial record stays for the 7 years the ATO requires, with the identity stripped out of it. The original values are not saved anywhere.
+      </div>
+      ${block('privacy-anon-sql', anonSql)}
+    </div>`);
+
+  modal.querySelectorAll('[data-privacy-copy]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const text = document.getElementById(btn.dataset.privacyCopy)?.textContent || '';
+      navigator.clipboard
+        .writeText(text)
+        .then(() => showToast('SQL copied — paste it in Supabase'))
+        .catch(() => prompt('Copy this SQL:', text));
+    });
+  });
 }
 
 // ── Newsletter subscribers ────────────────────────────────────────────────────
