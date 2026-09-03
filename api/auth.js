@@ -33,6 +33,7 @@ import { completionVerdict } from './_completion-guard.js';
 import { occupiedBookings, expiredHoldIds, slotVerdict, HOLD_MINUTES } from './_slot-hold.js';
 import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { reviewCredential, reviewGate } from './_review-auth.js';
+import { shortClientName } from './_privacy.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
@@ -329,14 +330,16 @@ export async function applyMembershipPricing(
   };
 }
 
-// Privacy-safe display name for a client's review shown publicly (e.g. "Sarah M.")
-export function shortClientName(name) {
-  const parts = String(name || '')
-    .trim()
-    .split(/\s+/);
-  if (!parts[0]) return 'Dr. Bike client';
-  return parts.length > 1 ? `${parts[0]} ${parts[1][0]}.` : parts[0];
-}
+// Privacy-safe display name for a client's review shown publicly ("Sarah M.").
+// Vive en api/_privacy.js desde 2026-09-03: api/chat.js necesita el mismo
+// enmascarado y no puede importar este archivo entero -es un handler completo,
+// con Stripe y Supabase adentro- solo para recortar un nombre.
+//
+// Se re-exporta para no romper a quien ya lo importaba de aca. Y se re-exporta
+// asi, y no con `export { x } from ...`, porque esa forma NO trae el nombre al
+// alcance local: la linea de abajo que lo llama habria tirado ReferenceError en
+// produccion, y `node --check` la da por buena porque es sintaxis valida.
+export { shortClientName };
 
 // Aggregates a mechanic's completed-job rows (client_rating/client_review/client_name)
 // into { jobs_completed, rating, reviews } - shared by handlePublicTrack (one mechanic)

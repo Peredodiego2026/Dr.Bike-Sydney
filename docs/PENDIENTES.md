@@ -10435,3 +10435,76 @@ ninguna migracion de `docs/RUNBOOK-SQL.md`. Si alguna no existiera, PostgREST
 rechaza la consulta **entera** y el reintento devuelve `skipped: query failed`
 todos los dias sin que nadie lo mire. Vienen del esquema viejo y lo mas probable
 es que esten; hace falta preguntarselo a la base para saberlo.
+
+---
+
+## 91. Una ruta publica devolvia el nombre completo de cada cliente (03-sep-2026)
+
+Recorriendo la cadena de resenas hasta donde termina -que es la landing y la
+home, no la base- aparecio que hay **dos caminos** por los que una resena sale
+a internet, y solo uno recortaba el nombre.
+
+| Camino | Nombre | Quien lo usa |
+|---|---|---|
+| Vista `public_reviews` | `Sarah M.`, recortado en SQL | `index.html` y `js/landing-inline.js`, con la anon key |
+| `GET /api/chat?type=reviews` | **nombre y apellido enteros** | nadie del repo |
+
+El segundo es publico, sin autenticacion, y lee `bookings` **directo con la
+service key**, que ignora RLS. Que la vista enmascare no lo tapaba: no pasa por
+la vista.
+
+### No lo llama nadie, y contesta igual
+
+`git grep type=reviews` sobre todo el repo no encuentra un solo consumidor - ni
+una reescritura en `vercel.json`. Vino de un `get-reviews.js` que se fusiono
+adentro de `chat.js` para no pasarse del limite de 12 funciones de Vercel.
+
+Pero **responde desde internet**. Verificado el 2026-09-03:
+
+```
+GET https://drbikesydney.com.au/api/chat?type=reviews
+  -> 200  {"reviews":[]}
+```
+
+Vacio **porque todavia no hay ninguna resena**. Iba a devolver nombre, apellido
+y servicio contratado de cada cliente el dia del primer trabajo terminado - que
+es exactamente lo que esta sesion estuvo desbloqueando (89 y 90).
+
+### El arreglo, y una trampa en el camino
+
+`shortClientName()` se mudo de `api/auth.js` a `api/_privacy.js`, que no importa
+nada y por eso cualquier handler lo puede traer. `chat.js` no podia importar
+`auth.js`: es un handler completo, con Stripe y Supabase adentro, y arrastrarlo
+por una funcion de cinco lineas se paga en cada arranque en frio.
+
+La trampa: el primer intento dejo en `auth.js`
+
+```js
+export { shortClientName } from './_privacy.js';
+```
+
+Esa forma re-exporta pero **no trae el nombre al alcance local**, y `auth.js` lo
+LLAMA doce lineas mas abajo. Habria sido un `ReferenceError` en produccion, en
+el perfil publico de un mecanico. `node --check` lo da por bueno: es sintaxis
+valida. Lo agarro importar el modulo de verdad y llamar la funcion.
+
+### Verificado
+
+- **El guard se vio fallar**: devolviendo el nombre crudo en `chat.js`, 1 falla.
+- **Y un falso positivo propio**: el test importaba `api/auth.js` para llamar la
+  funcion de verdad, y con la suite entera corriendo ese import pasaba de 5s y
+  moria por timeout. Se cambio por una comprobacion de la FORMA del re-export;
+  la resolucion en ejecucion ya la prueba `mechanic-stats.test.js`, que lo
+  importa de `auth.js` y lo llama. El timeout es, ademas, la mejor evidencia de
+  por que `chat.js` no puede importar `auth.js`.
+- Los dos modulos se importaron de verdad y se llamo la funcion, no solo
+  `node --check`.
+- El endpoint y la vista, los dos probados **contra produccion**: `200` y vacios.
+- 1424 tests, `npm run check` exit 0.
+
+### Lo que no se hizo, a proposito
+
+**No se borro el endpoint**, aunque no lo llame nadie en el repo. Que no haya
+consumidores adentro no prueba que no los haya afuera, y enmascarar el nombre
+cierra la fuga igual. Si Diego confirma que nada externo lo usa, sacarlo es una
+linea menos de superficie publica.

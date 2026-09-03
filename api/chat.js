@@ -1,5 +1,6 @@
 ﻿import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 import { FEE_BANDS, PENINSULA_FAR_FEE, PERIMETER_MAX_MINUTES } from './_coverage.js';
+import { shortClientName } from './_privacy.js';
 
 // ── The visit fee, in the assistant's words ───────────────────────────────
 // Built from the same constants the booking actually charges with, because
@@ -215,10 +216,21 @@ async function handler(req, res) {
       .order('created_at', { ascending: false })
       .limit(9);
     if (error) return res.status(500).json({ error: error.message });
+    // El nombre sale recortado a "Sarah M.", igual que la vista public_reviews.
+    // Salia ENTERO, y esta ruta es publica y sin autenticacion: cualquiera
+    // podia pedir GET /api/chat?type=reviews y llevarse nombre y apellido de
+    // cada cliente que dejo una resena, con el servicio que contrato al lado.
+    //
+    // Que la vista enmascare no alcanzaba, porque esto no pasa por la vista:
+    // lee `bookings` directo con la service key, que ignora RLS.
+    //
+    // Hoy contesta `{"reviews":[]}` - no hay ninguna resena todavia, verificado
+    // contra produccion el 2026-09-03 - asi que no filtro nada de nadie. Se
+    // volvia fuga sola, el dia de la primera resena.
     const reviews = (data || []).map((r) => ({
       review_rating: r.client_rating,
       review_comment: r.client_review,
-      client_name: r.client_name || r.profiles?.full_name || null,
+      client_name: shortClientName(r.client_name || r.profiles?.full_name),
       service_type: r.service_name || null,
     }));
     return res.status(200).json({ reviews });
