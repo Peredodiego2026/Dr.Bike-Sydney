@@ -120,7 +120,10 @@ describe('the client: the booking runs to the end, then asks instead of paying',
   it('the confirmation screen exists and is routable', () => {
     expect(routerjs).toMatch(/'quote-sent'/);
     expect(indexhtml).toMatch(/data-screen="quote-sent"/);
-    expect(appjs).toMatch(/if \(detail\.route === 'quote-sent'\) renderQuoteSent\(\);/);
+    // The dispatcher became a route -> renderer map on 2026-09-03, so every
+    // screen could go through the error net (see screen-error-state.test.js).
+    // Same property as before: 'quote-sent' reaches renderQuoteSent.
+    expect(appjs).toMatch(/'quote-sent':\s*renderQuoteSent,/);
   });
 
   it('the confirmation is a next step, not an apology', () => {

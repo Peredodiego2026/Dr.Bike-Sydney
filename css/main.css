@@ -1349,6 +1349,61 @@ body {
   line-height: 1.6;
 }
 
+/* ── Screen error ─────────────────────────────────────────────────────────────
+   Shown when a screen's render throws before it wrote anything. The alternative
+   is what a customer actually got for a day: a blank white page with nothing to
+   tap (docs/PENDIENTES.md 81). Deliberately calmer than an alert - the amber
+   ring says "this did not work" without implying money or data was lost, and
+   the two buttons are the only two useful moves. */
+.screen-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+  min-height: 60vh;
+}
+.screen-error__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--amber-lt);
+  color: var(--amber);
+}
+.screen-error__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy);
+}
+.screen-error__sub {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.6;
+  max-width: 34ch;
+}
+.screen-error__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 280px;
+  margin-top: var(--space-2);
+}
+/* The second action is an <a>, so it needs the button's own box back. */
+.screen-error__actions .btn {
+  width: 100%;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 /* ── Toast ───────────────────────────────────────────────────────────────────── */
 .toast {
   position: fixed;

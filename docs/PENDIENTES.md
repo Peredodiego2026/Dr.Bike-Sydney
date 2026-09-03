@@ -10099,3 +10099,52 @@ paginas que cobran con tarjeta.
 
 `npm run check`, `npm run lint` y `npm test` verdes por codigo de salida.
 1348/1348.
+
+## 85. La red de seguridad por pantalla (03-sep-2026)
+
+Cierra lo que la 81 dejo abierto a proposito. La causa concreta de la pantalla
+en blanco murio y su clase entera quedo bloqueada por `scripts/tdz-check.mjs`,
+pero la arquitectura seguia convirtiendo **cualquier** error de dibujado en una
+pagina muerta sin salida.
+
+`index.html` trae cada pantalla como un div **vacio** y `js/app.js` es lo unico
+que la llena. Un render que revienta antes de su primer `screen.innerHTML =`
+deja una pagina blanca a pantalla completa y **sin nada que tocar**, porque la
+barra de navegacion tambien vive adentro de ese `innerHTML`.
+
+### Dos reglas, y la segunda es la que la hace segura
+
+**1. Solo se reemplaza una pantalla que no dibujo NADA.** Aparece una tarjeta
+de error con "Probar de nuevo" y "Volver al inicio".
+
+**2. Una pantalla que ya dibujo y despues falla se deja intacta.** Si el render
+saco su HTML y murio recien al conectar un boton, la pagina sigue siendo util:
+borrarla para poner una tarjeta de error seria empeorarla. Ese caso recibe un
+aviso flotante, no un reemplazo.
+
+Esa segunda regla es el riesgo real de cualquier red de seguridad, y esta
+cubierta por un test.
+
+### Nada se traga
+
+Toda falla llega a la consola y a Sentry etiquetada con la pantalla
+(`tags: { screen }`). Una pantalla que le falla en silencio a un cliente sigue
+siendo algo de lo que nos enteramos.
+
+### Como se verifico
+
+`tests/unit/screen-error-state.test.js` **ejecuta** las tres funciones sacadas
+de `js/app.js` en un `vm`: pantalla vacia, pantalla ya dibujada, error
+sincronico, error asincronico, y el boton de reintentar (que efectivamente
+vuelve a llamar al render). Ocho pruebas.
+
+Ademas el despachador dejo de llamar a los renders sueltos: ahora es un mapa
+`ruta -> render` que pasa entero por la red, y un test falla si alguna pantalla
+vuelve a esquivarla. Es el error que va a cometer el que agregue la pantalla
+numero once.
+
+### Lo que cambio de forma
+
+`if (detail.route === 'x') renderX();` diez veces paso a ser un objeto
+`RENDERERS`. `tests/unit/quote-request-flow.test.js` afirmaba la forma vieja
+sobre `quote-sent`; se actualizo a la nueva sin aflojar lo que comprueba.
