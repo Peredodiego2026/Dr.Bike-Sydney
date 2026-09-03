@@ -10369,3 +10369,69 @@ no aceptaba tokens. La decision de mantener el link vivo despues del trabajo
 La cadena entera con un trabajo real completado. Sigue necesitando que un
 mecanico complete un trabajo de verdad, y eso no lo puede hacer una IA.
 
+
+---
+
+## 90. El reintento le mandaba al invitado el link viejo (03-sep-2026)
+
+Secuela inmediata de la 89, y del mismo tipo: **dos listas de columnas que
+tienen que coincidir y nada las ataba.**
+
+`/api/send-cron?type=completion-retry` -que corre dentro del cron diario
+`type=all`, verificado- vuelve a armar la factura, el email de resena y el SMS
+con `buildCompletionCalls`, pero a partir de una fila que arma **su propia**
+consulta:
+
+```js
+.select('id, client_name, client_email, ... mechanic_id, completion_notifications')
+```
+
+El dia anterior el link de resena empezo a llevar el `tracking_token`, que es
+lo unico que le permite resenar a un invitado. Esa consulta no lo pedia.
+
+### Por que no se rompe nada visible
+
+PostgREST no se queja de una columna que no le pediste. Llega `undefined`,
+`buildCompletionCalls` cae al link sin token, y el reintento sale **con un dato
+menos que el envio original**. Ningun error, ningun log, ninguna alerta.
+
+Y le pasaba justo al cliente cuyo primer intento habia fallado: **el unico al
+que el reintento existe para rescatar.**
+
+### El guard no fija una lista escrita a mano
+
+`tests/unit/completion-retry-columns.test.js` **deduce** los campos leyendo
+`api/_completion-notify.js` (`booking?.<campo>`) y los compara contra el select.
+Agregar un campo nuevo alla y olvidarse aca falla solo, sin que nadie tenga que
+acordarse. Comprueba ademas que el handler siga enganchado al cron diario y que
+`vercel.json` siga teniendo ese cron: un reintento que no llama nadie es una red
+que no existe.
+
+### Dos falsos positivos propios, que valen mas que el hallazgo
+
+1. **El regex matcheaba dentro de un comentario.** `_completion-notify.js`
+   explica el bug del invitado escribiendo `booking.client_id` en prosa, y el
+   test pedia `client_id` como columna. Se sacan los comentarios antes de
+   escanear.
+2. **Y el que los sacaba no sacaba nada.** `//.*$` sobre archivos con CRLF:
+   `.` no matchea un terminador de linea y `$` sin `m` pide fin de cadena, asi
+   que en una linea terminada en `\r` la sustitucion **no hacia nada**. Es
+   exactamente el error de CRLF que este repo ya tenia anotado. Se normaliza
+   `\r` primero.
+
+Los dos aparecieron porque el test se corrio esperando verlo fallar, no verlo
+pasar.
+
+### Verificado
+
+- **El guard se vio fallar**: sacando `tracking_token` del select, 2 fallas.
+  Restaurado, verde.
+- 1413 tests, `npm run check` exit 0.
+
+### Lo que queda sin verificar
+
+Esa consulta tambien pide `parts_charged` y `tip_amount`, que no figuran en
+ninguna migracion de `docs/RUNBOOK-SQL.md`. Si alguna no existiera, PostgREST
+rechaza la consulta **entera** y el reintento devuelve `skipped: query failed`
+todos los dias sin que nadie lo mire. Vienen del esquema viejo y lo mas probable
+es que esten; hace falta preguntarselo a la base para saberlo.

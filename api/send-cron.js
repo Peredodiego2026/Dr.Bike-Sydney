@@ -522,12 +522,20 @@ async function handleCompletionRetry(req, res) {
   const sb = makeSb();
   const since = new Date(Date.now() - COMPLETION_RETRY_LOOKBACK_DAYS * 86400000).toISOString();
 
+  // Toda columna que buildCompletionCalls lee de la fila tiene que estar aca.
+  // Una que falte no rompe nada visible: llega `undefined`, y el reintento sale
+  // con un dato menos que el envio original. `tracking_token` entro tarde por
+  // eso mismo - el link de resena lo lleva desde 2026-09-03 y esta consulta no
+  // lo pedia, asi que el reintento le mandaba al invitado el link viejo, el que
+  // no lo deja resenar (docs/PENDIENTES.md 89). Lo vigila
+  // tests/unit/completion-retry-columns.test.js.
   const { data: rows, error } = await sb
     .from('bookings')
     .select(
       'id, client_name, client_email, client_phone, service_name, service_price, callout_fee, ' +
         'scheduled_date, scheduled_time, address, suburb, discount_applied, parts_charged, ' +
-        'tip_amount, mechanic_notes, next_service_date, mechanic_id, completion_notifications'
+        'tip_amount, mechanic_notes, next_service_date, mechanic_id, tracking_token, ' +
+        'completion_notifications'
     )
     .eq('status', 'completed')
     .gte('completed_at', since)
