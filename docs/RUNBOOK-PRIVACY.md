@@ -26,50 +26,134 @@ falla si alguien lo cambia.
 
 ---
 
-## 1. "Quiero una copia de todo lo que tienen sobre mi"
+<!-- BEGIN GENERATED: no edites a mano, sale de api/_privacy.js -->
 
-```bash
-node scripts/privacy-runbook.mjs --export --email cliente@ejemplo.com
+## Las tablas que guardan datos personales
+
+Salen de `PII_MAP` en `api/_privacy.js`. Son **9**, y estan todas aca:
+
+| Tabla | Se puede borrar la fila | Por que |
+|---|---|---|
+| `bookings` | **NO** | Financial record. privacy.html commits to 7 years for tax compliance, so the row stays and only the identity is stripped. |
+| `profiles` | **NO** | Deleting it would orphan the bookings that must be kept. Anonymised in place instead. |
+| `bikes` | si | A bicycle is the client’s property, not a financial record. Nothing requires keeping it. |
+| `job_messages` | si | Chat between client and mechanic. No retention obligation. |
+| `checkout_attempts` | si | An abandoned checkout. Nothing was charged, nothing to keep. |
+| `claims` | **NO** | A claim can become a dispute. Kept as a record, stripped of identity. |
+| `waitlist` | si | A request to be told about a slot. No obligation once withdrawn. |
+| `newsletter_subscribers` | si | Marketing consent. Withdrawing it is exactly this request. |
+| `notifications` | si | Delivered messages. Content can name the person and the address. |
+
+Lo que se sobrescribe queda como `[removed at client request]`. Un NULL seria ambiguo - "nunca hubo nombre" o "se lo quitaron" - y varias de estas columnas son NOT NULL.
+
+## Como sacar el SQL para un cliente concreto
+
+**Desde el panel, que es lo mas facil:** Admin > Clients > el cliente >
+**Privacy request**. Ahi salen los dos bloques listos para copiar, ya con
+el id y el email de esa persona.
+
+Los bloques de abajo son la misma cosa con datos de ejemplo, para que este
+documento sirva aunque el panel no abra.
+
+## 1. "Quiero una copia de todo lo que tienen mio"
+
+```sql
+SELECT * FROM bookings WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid OR client_email = 'cliente@ejemplo.com';
+SELECT * FROM profiles WHERE id = '00000000-0000-0000-0000-000000000000'::uuid OR email = 'cliente@ejemplo.com';
+SELECT * FROM bikes WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid;
+SELECT * FROM job_messages WHERE booking_id IN (SELECT id FROM bookings WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid);
+SELECT * FROM checkout_attempts WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid;
+SELECT * FROM claims WHERE client_email = 'cliente@ejemplo.com';
+SELECT * FROM waitlist WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid OR client_email = 'cliente@ejemplo.com';
+SELECT * FROM newsletter_subscribers WHERE email = 'cliente@ejemplo.com';
+SELECT * FROM notifications WHERE user_id = '00000000-0000-0000-0000-000000000000'::uuid;
 ```
-
-Imprime una consulta por tabla. Corre cada una en **Supabase -> SQL Editor** y
-usa el boton **Export** para bajar el resultado.
-
-**Una consulta que devuelve 0 filas tambien se informa.** "No tenemos nada tuyo
-en X" es parte de la respuesta, no algo que se omite.
-
-Mandale al cliente el conjunto completo por email. Plazo: 30 dias. Sin cargo,
-salvo que el pedido implique un esfuerzo desproporcionado (ver `privacy.html`).
-
----
 
 ## 2. "Borren todo lo mio"
 
-**Primero corre el export del punto 1 y guardalo.** Despues de anonimizar no
-hay vuelta atras, y el cliente puede pedir su copia despues.
+Se corre **despues** de haberle mandado la copia, y una vez que confirmaste
+que es esa persona. No tiene vuelta atras: los valores originales no quedan
+guardados en ningun lado.
 
-```bash
-node scripts/privacy-runbook.mjs --forget --email cliente@ejemplo.com
+```sql
+BEGIN;
+
+-- bookings: Financial record. privacy.html commits to 7 years for tax compliance, so the row stays and only the identity is stripped.
+UPDATE bookings
+   SET client_name = '[removed at client request]',
+       client_email = '[removed at client request]',
+       client_phone = '[removed at client request]',
+       address = '[removed at client request]',
+       address_lat = NULL,
+       address_lng = NULL,
+       arrival_pin = NULL,
+       notes = NULL,
+       mechanic_notes = NULL,
+       client_signature_url = NULL,
+       photo_before_url = NULL,
+       photo_after_url = NULL,
+       client_review = NULL
+ WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid
+    OR client_email = 'cliente@ejemplo.com';
+
+-- profiles: Deleting it would orphan the bookings that must be kept. Anonymised in place instead.
+UPDATE profiles
+   SET full_name = '[removed at client request]',
+       email = '[removed at client request]',
+       phone = '[removed at client request]',
+       avatar_url = NULL,
+       birthday = NULL,
+       push_subscription = NULL
+ WHERE id = '00000000-0000-0000-0000-000000000000'::uuid
+    OR email = 'cliente@ejemplo.com';
+
+-- bikes: A bicycle is the client’s property, not a financial record. Nothing requires keeping it.
+UPDATE bikes
+   SET notes = NULL
+ WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid;
+
+-- job_messages: Chat between client and mechanic. No retention obligation.
+UPDATE job_messages
+   SET message = '[removed at client request]'
+ WHERE booking_id IN (SELECT id FROM bookings WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid);
+
+-- checkout_attempts: An abandoned checkout. Nothing was charged, nothing to keep.
+UPDATE checkout_attempts
+   SET address = '[removed at client request]'
+ WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid;
+
+-- claims: A claim can become a dispute. Kept as a record, stripped of identity.
+UPDATE claims
+   SET client_name = '[removed at client request]',
+       client_email = '[removed at client request]',
+       phone = '[removed at client request]',
+       description = '[removed at client request]',
+       photo_urls = NULL,
+       resolution_notes = NULL
+ WHERE client_email = 'cliente@ejemplo.com';
+
+-- waitlist: A request to be told about a slot. No obligation once withdrawn.
+UPDATE waitlist
+   SET client_name = '[removed at client request]',
+       client_email = '[removed at client request]'
+ WHERE client_id = '00000000-0000-0000-0000-000000000000'::uuid
+    OR client_email = 'cliente@ejemplo.com';
+
+-- newsletter_subscribers: Marketing consent. Withdrawing it is exactly this request.
+UPDATE newsletter_subscribers
+   SET email = '[removed at client request]'
+ WHERE email = 'cliente@ejemplo.com';
+
+-- notifications: Delivered messages. Content can name the person and the address.
+UPDATE notifications
+   SET body = NULL
+ WHERE user_id = '00000000-0000-0000-0000-000000000000'::uuid;
+
+-- Revisa el resultado ANTES de confirmar. Si algo no cuadra: ROLLBACK;
+COMMIT;
 ```
 
-o, si tenes el id del perfil:
-
-```bash
-node scripts/privacy-runbook.mjs --forget --id 73c5409b-6298-43b4-9aa6-6ac2a0716c40
-```
-
-Imprime un bloque que **empieza con `BEGIN;` y termina con `-- COMMIT;`
-comentado**, a proposito:
-
-1. Pega todo y corre hasta el `BEGIN`.
-2. Mira los conteos de filas afectadas. ¿Tienen sentido? Un cliente con 2
-   reservas no deberia tocar 40 filas.
-3. Si algo no cuadra: `ROLLBACK;` y avisa.
-4. Si esta bien: descomenta `COMMIT;` y corrélo.
-
-El script **no se conecta a la base**. Solo imprime SQL para que lo revises. Un
-endpoint HTTP que anonimiza un cliente esta a un bug de autenticacion de dejar
-sin datos a alguien real, sin deshacer.
+<!-- END GENERATED -->
 
 ---
 

@@ -5946,6 +5946,11 @@ async function loadClients() {
         <button data-cl-action="chat" data-id="${c.id}" data-name="${esc(name).replace(/"/g, '&quot;')}" style="flex:1;padding:7px;background:var(--off);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);color:var(--navy)">Chat</button>`
         }
       </div>
+      <!-- A guest has no profile row but still has bookings with their name on
+           them, so the request has to be answerable for them too - by email. -->
+      <div style="margin-top:8px">
+        <button data-cl-action="privacy" data-id="${c.isGuest ? '' : c.id}" data-email="${esc(c.email || '')}" data-name="${esc(name).replace(/"/g, '&quot;')}" class="cl-privacy-btn">Privacy request</button>
+      </div>
     </div>`;
     })
     .join('');
@@ -5959,6 +5964,8 @@ async function loadClients() {
       if (!btn) return;
       if (btn.dataset.clAction === 'bikes') viewClientBikes(btn.dataset.id, btn.dataset.name);
       else if (btn.dataset.clAction === 'chat') openAdminChat(btn.dataset.id, btn.dataset.name);
+      else if (btn.dataset.clAction === 'privacy')
+        openPrivacyRequest(btn.dataset.id, btn.dataset.email, btn.dataset.name);
     });
   }
   // A count query that failed falls back to what was rendered, and says so
@@ -8273,6 +8280,116 @@ async function viewClientBikes(clientId, clientName) {
       ${bikeRows}
     </div>`;
   modal.style.display = 'flex';
+}
+
+// ── Privacy requests ──────────────────────────────────────────────────────────
+//
+// privacy.html promises, under the Privacy Act 1988, a copy of what we hold
+// and erasure of it, answered within 30 days. api/_privacy.js has known how to
+// build that SQL since August. Nothing called it, so honouring the promise
+// meant finding a file in the repo and knowing which of nine tables hold
+// personal data - which is why docs/PENDIENTES.md listed it as a designed
+// capability rather than a shipped one.
+//
+// This shows the SQL. It does not run it, and that is the design, not timidity:
+//
+//   - Erasure is irreversible. The original values are kept nowhere, so a
+//     mis-click has no undo and no audit trail to reconstruct from.
+//   - The request has to be verified as coming from the real person FIRST.
+//     That judgement is Diego's and it happens outside this screen.
+//   - Data-changing SQL in this project is read and pasted in Supabase, never
+//     fired by a button that can be double-clicked.
+async function openPrivacyRequest(clientId, email, clientName) {
+  const modal = document.getElementById('reassign-modal');
+  if (!modal) return;
+
+  const shell = (body) => `
+    <div style="background:var(--white);border-radius:16px;padding:24px;max-width:720px;width:100%;max-height:85vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">Privacy request — ${esc(clientName || email || 'client')}</div>
+        <button data-action="close-reassign-modal" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--navy)">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--mgray);margin-bottom:16px">Privacy Act 1988 - you have 30 days to answer. Run these in Supabase yourself.</div>
+      ${body}
+    </div>`;
+
+  modal.querySelector('div').innerHTML = shell(
+    '<div style="padding:28px 0;text-align:center;color:var(--mgray);font-size:14px">Building the SQL…</div>'
+  );
+  modal.style.display = 'flex';
+
+  let plan;
+  try {
+    const token = await adminAccessToken();
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'admin-privacy-plan',
+        access_token: token,
+        client_id: clientId || null,
+        email: email || null,
+      }),
+    });
+    plan = await res.json();
+    if (!res.ok || plan.error) throw new Error(plan.error || 'Could not build the SQL');
+  } catch (e) {
+    modal.querySelector('div').innerHTML = shell(
+      `<div style="background:var(--red-lt);color:var(--red-text);border-radius:10px;padding:14px 16px;font-size:14px">${esc(e.message)}</div>`
+    );
+    return;
+  }
+
+  const exportSql = plan.exportPlan.map((s) => s.sql).join('\n');
+  const anonSql = [
+    'BEGIN;',
+    '',
+    ...plan.anonymisePlan.flatMap((s) => [`-- ${s.table}: ${s.why}`, s.sql, '']),
+    '-- Check the result BEFORE committing. If anything looks wrong: ROLLBACK;',
+    'COMMIT;',
+  ].join('\n');
+
+  const block = (id, sql) =>
+    `<pre id="${id}" style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.55;overflow-x:auto;white-space:pre;margin:0;color:var(--navy)">${esc(sql)}</pre>`;
+
+  const copyBtn = (target, label) =>
+    `<button data-privacy-copy="${target}" style="min-height:36px;padding:8px 14px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">${label}</button>`;
+
+  modal.querySelector('div').innerHTML = shell(`
+    <div style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">1. Send them a copy</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:1px">Read-only. Run this first and email them the result.</div>
+        </div>
+        ${copyBtn('privacy-export-sql', 'Copy')}
+      </div>
+      ${block('privacy-export-sql', exportSql)}
+    </div>
+
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">2. Erase them</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:1px">Only after you have sent the copy and confirmed it is really them.</div>
+        </div>
+        ${copyBtn('privacy-anon-sql', 'Copy')}
+      </div>
+      <div style="background:var(--amber-lt);color:var(--amber);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.55;margin-bottom:8px">
+        <b>This cannot be undone.</b> Nothing here deletes a booking — the financial record stays for the 7 years the ATO requires, with the identity stripped out of it. The original values are not saved anywhere.
+      </div>
+      ${block('privacy-anon-sql', anonSql)}
+    </div>`);
+
+  modal.querySelectorAll('[data-privacy-copy]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const text = document.getElementById(btn.dataset.privacyCopy)?.textContent || '';
+      navigator.clipboard
+        .writeText(text)
+        .then(() => showToast('SQL copied — paste it in Supabase'))
+        .catch(() => prompt('Copy this SQL:', text));
+    });
+  });
 }
 
 // ── Newsletter subscribers ────────────────────────────────────────────────────

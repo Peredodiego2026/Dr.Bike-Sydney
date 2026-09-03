@@ -2692,4 +2692,23 @@ body {
   font-size: 11px;
   font-weight: 600;
   color: var(--gray-lt);
+
+/* The privacy request button. Deliberately quieter than Bikes and Chat: it is
+   the rarest action on the card and the only one that leads somewhere
+   irreversible, so it should be findable without inviting a stray click. */
+.cl-privacy-btn {
+  width: 100%;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  color: var(--mgray);
+  cursor: pointer;
+}
+.cl-privacy-btn:hover {
+  color: var(--navy);
+  border-color: var(--mgray);
 }
