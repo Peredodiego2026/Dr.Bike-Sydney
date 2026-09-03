@@ -10148,3 +10148,74 @@ numero once.
 `if (detail.route === 'x') renderX();` diez veces paso a ser un objeto
 `RENDERERS`. `tests/unit/quote-request-flow.test.js` afirmaba la forma vieja
 sobre `quote-sent`; se actualizo a la nueva sin aflojar lo que comprueba.
+
+## 86. El BAS declaraba un cero que nadie habia calculado (03-sep-2026)
+
+El export del BAS imprimia:
+
+```
+G10 — Capital Purchases: $0
+G11 — Non-capital Purchases: $0
+1B  — GST Credits on Purchases: $0
+NET GST PAYABLE TO ATO: $<gst de ventas>
+```
+
+Ninguno de esos ceros se habia calculado. Estaban escritos a mano en la
+plantilla. Y el problema no es cosmetico: **presentar el BAS con 1B en cero es
+declarar que no se reclama ningun credito de GST**. Para un negocio con gastos
+registrados, eso es pagarle a la ATO mas de lo que corresponde.
+
+Peor todavia era el nombre de la ultima linea: "NET GST PAYABLE TO ATO" sobre
+el GST de ventas a secas. No era el neto - era el bruto, presentado como neto.
+
+### Los gastos siempre estuvieron ahi
+
+`expenses` es una tabla real y el P&L **de la misma pantalla** viene restando
+esos gastos hace meses. El BAS simplemente nunca los miro: `_finData` no los
+llevaba.
+
+### Por que no se calcula 1B automaticamente y punto
+
+Porque no se puede, con lo que hay guardado. La tabla `expenses` tiene
+`amount`, `category`, `spent_on` - y **nada** que diga si esa compra llevaba
+GST ni si es de capital o corriente. La ATO necesita las dos cosas. Dividir el
+total por 11 seria reemplazar un numero mal por otro numero mal, esta vez en
+una presentacion impositiva.
+
+Tampoco sirve meter el total en G11: **los sueldos no son una compra** (van en
+W1/W2), y `payroll` es una de las categorias.
+
+### Lo que hace ahora
+
+- G10, G11 y 1B dicen `NOT CALCULATED`, con un parrafo que explica por que y
+  que advierte explicitamente que un 1B en cero es pagar de mas.
+- La linea del neto pasa a llamarse "GST ON SALES, BEFORE ANY CREDITS AT 1B".
+- Se agrega un bloque con los gastos reales del periodo por categoria,
+  rotulado **"Supporting information, not BAS figures"**, con el total y con
+  los sueldos senalados aparte.
+- Si no hay gastos cargados, lo dice y apunta a Admin > Expenses, que es
+  justamente lo que hace que 1B parezca cero.
+- Si los gastos no se pudieron leer, lo dice en lugar de inventar ceros.
+
+G1, G2, G3 y 1A siguen calculandose: esos si salen de los datos.
+
+## 87. La columna de acciones de Bookings (03-sep-2026)
+
+Cada fila dibujaba entre **uno y cinco botones** segun el estado, dentro de una
+celda `white-space:nowrap`, y cada boton traia su propio `margin-right` salvo
+el ultimo escrito. Tres consecuencias:
+
+1. El ancho de la columna saltaba segun cual fuera la fila mas ancha.
+2. Cuando el ultimo boton no se dibujaba (un trabajo completado no tiene
+   "Confirm"), el anterior se quedaba con un margen colgando que nadie veia
+   pero que corria todo lo demas.
+3. Una reserva cancelada no dibujaba **nada**, asi que la celda se colapsaba y
+   la fila quedaba visualmente rota.
+
+Arreglado de raiz, no con parches: `flex` con `gap` en el contenedor - el
+espacio pertenece al contenedor, asi que no puede sobrevivir a un hijo oculto -
+y `min-width` igual en todos los botones para que la columna deje de saltar.
+La fila cancelada dice "Cancelled" en gris en vez de quedar vacia.
+
+De paso los estilos salieron de los atributos `style` y pasaron a clases con
+tokens, que es lo que ademas los hace correctos en modo oscuro.
