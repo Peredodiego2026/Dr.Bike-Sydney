@@ -66,6 +66,7 @@ Corrido sobre `origin/main` en `3c4739b`, juzgado por codigo de salida:
 | `npm run check` (11 scripts) | exit 0 |
 | `npx vitest run` | **1348 tests, 96 archivos, 0 fallas** |
 | `npm run rls:check` (contra produccion, con la anon key) | exit 0 - 17 tablas/vistas cerradas, 4 publicas sirviendo a proposito |
+| La consulta de `docs/RUNBOOK-SQL.md`, corrida por Diego en Supabase | `Success. No rows returned` - **las 41 migraciones aplicadas**, cero pendientes |
 
 ## Lo que sigue sin probarse
 
