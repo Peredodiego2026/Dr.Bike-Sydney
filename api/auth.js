@@ -32,6 +32,7 @@ import {
 import { completionVerdict } from './_completion-guard.js';
 import { occupiedBookings, expiredHoldIds, slotVerdict, HOLD_MINUTES } from './_slot-hold.js';
 import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
+import { reviewCredential, reviewGate } from './_review-auth.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
@@ -2483,13 +2484,23 @@ async function handleMechanicComplete(req, res) {
 const NOTIFY_COLS =
   'id,client_name,client_email,client_phone,service_name,service_price,callout_fee,scheduled_date,scheduled_time,address,suburb';
 
-// discount_applied is behind a migration that may not have run on every
-// environment - same try-then-fall-back handleMechanicJobs uses for it.
+// discount_applied and tracking_token are behind migrations that may not have
+// run on every environment - same try-then-fall-back handleMechanicJobs uses
+// for it. PostgREST 400s the WHOLE query on an unknown column, so asking for
+// them unconditionally would mean no invoice and no review request at all
+// rather than one without a discount line.
+//
+// Verified against production on 2026-09-03: `tracking_token` exists there
+// (POST /api/auth?role=public-track with a random UUID answers 404 "Booking
+// not found", which it can only do after the column resolves). The fallback is
+// for a fresh environment, not for prod.
 async function readBookingForNotifications(bookingId, sbHdr) {
   const url = (cols) =>
     `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&id=eq.${encodeURIComponent(bookingId)}&limit=1`;
   try {
-    let r = await fetch(url(`${NOTIFY_COLS},discount_applied`), { headers: sbHdr });
+    let r = await fetch(url(`${NOTIFY_COLS},discount_applied,tracking_token`), { headers: sbHdr });
+    if (!r.ok) r = await fetch(url(`${NOTIFY_COLS},tracking_token`), { headers: sbHdr });
+    if (!r.ok) r = await fetch(url(`${NOTIFY_COLS},discount_applied`), { headers: sbHdr });
     if (!r.ok) r = await fetch(url(NOTIFY_COLS), { headers: sbHdr });
     if (!r.ok) return null;
     return (await r.json())?.[0] || null;
@@ -3919,40 +3930,55 @@ async function handleMechanicPreferenceStatus(req, res) {
   return res.status(200).json({ enabled });
 }
 
+// Dos credenciales, porque hay dos clases de cliente. El razonamiento completo
+// y las dos decisiones puras estan en api/_review-auth.js; aca queda solo la
+// parte que habla con la base.
+//
+// Este endpoint no llevaba NINGUNA autenticacion en su momento: cualquiera con
+// un booking_id (que ni siquiera era secreto, ver handlePublicTrack arriba)
+// podia puntuar cualquier trabajo terminado.
 async function handleClientReview(req, res) {
-  const { booking_id, access_token, client_id, rating, comment, photo_base64 } = req.body;
-  if (!booking_id) return res.status(400).json({ error: 'booking_id required' });
-  if (!access_token || !client_id)
-    return res.status(400).json({ error: 'access_token and client_id required' });
-  if (!rating || rating < 1 || rating > 5)
-    return res.status(400).json({ error: 'rating must be 1-5' });
+  const { booking_id, access_token, client_id, tracking_token, rating, comment, photo_base64 } =
+    req.body;
+
+  const cred = reviewCredential(req.body);
+  if (cred.error) return res.status(cred.status).json({ error: cred.error });
+  const byToken = cred.mode === 'token';
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
-  // This endpoint used to take no auth at all - anyone who had a booking_id
-  // (which didn't even need to be a secret, see handlePublicTrack above)
-  // could post a rating/review/photo to any completed job. Same
-  // access_token -> client_id -> booking.client_id chain the other
-  // client-* handlers already use.
-  const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
-  });
-  if (!userResp.ok) return res.status(401).json({ error: 'Invalid or expired session' });
-  const userData = await userResp.json();
-  if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+  if (!byToken) {
+    const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+    });
+    if (!userResp.ok) return res.status(401).json({ error: 'Invalid or expired session' });
+    const userData = await userResp.json();
+    if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
+  }
 
+  // scheduled_date es contra lo que trackingScope() mide la edad del link; solo
+  // hace falta en el camino del token, pero pedirla siempre deja una sola forma
+  // de consulta.
+  const filter = byToken
+    ? `tracking_token=eq.${encodeURIComponent(tracking_token)}`
+    : `id=eq.${encodeURIComponent(booking_id)}`;
   const checkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_rating&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_rating,scheduled_date&${filter}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!checkResp.ok) return res.status(500).json({ error: 'Database error' });
   const rows = await checkResp.json();
-  if (!rows?.length) return res.status(404).json({ error: 'Booking not found' });
+  // Un token equivocado y un booking_id equivocado dan el mismo 404: la
+  // respuesta no puede decirle a nadie si un token existe.
+  const gate = reviewGate(rows?.[0], { mode: cred.mode, client_id });
+  if (!gate.ok) return res.status(gate.status).json({ error: gate.error, ...(gate.expired && { expired: true }) });
   const booking = rows[0];
-  if (booking.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
-  if (booking.status !== 'completed')
-    return res.status(400).json({ error: 'Booking not completed yet' });
-  if (booking.client_rating) return res.status(409).json({ error: 'Already reviewed' });
+
+  // From here on the id comes off the row the checks above actually passed,
+  // never off the request. On the token path booking_id is not a credential
+  // and may be absent, stale or somebody else's; writing to it would let a
+  // valid token for one booking review a different one.
+  const targetId = booking.id;
 
   // Upload photo to Supabase Storage if provided
   let client_photo_url = null;
@@ -3961,7 +3987,7 @@ async function handleClientReview(req, res) {
       const base64Data = photo_base64.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
       const ts = Date.now();
-      const storagePath = `reviews/${booking_id}/client_${ts}.jpg`;
+      const storagePath = `reviews/${targetId}/client_${ts}.jpg`;
       const storageResp = await fetch(
         `${SUPABASE_URL}/storage/v1/object/job-photos/${storagePath}`,
         {
@@ -3991,7 +4017,7 @@ async function handleClientReview(req, res) {
     ...(client_photo_url && { client_photo_url }),
   };
   const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(targetId)}`,
     {
       method: 'PATCH',
       headers: {

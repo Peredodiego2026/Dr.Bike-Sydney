@@ -10149,6 +10149,7 @@ numero once.
 `RENDERERS`. `tests/unit/quote-request-flow.test.js` afirmaba la forma vieja
 sobre `quote-sent`; se actualizo a la nueva sin aflojar lo que comprueba.
 
+
 ## 86. El BAS declaraba un cero que nadie habia calculado (03-sep-2026)
 
 El export del BAS imprimia:
@@ -10284,3 +10285,87 @@ No es timidez, son tres razones concretas:
 El cliente **no** tiene autoservicio: no hay boton de "borrar mi cuenta" en la
 app. No hace falta - responder por email dentro de los 30 dias es un proceso
 valido bajo la ley australiana - pero conviene decirlo en vez de suponerlo.
+
+---
+
+## 89. El invitado recibia el email de resena y no podia dejarla (03-sep-2026)
+
+Buscando que faltaba de la captacion de resenas -que el pedido daba por "hay
+que armarla", cuando en realidad estaba armada entera y con guards- aparecio
+que la cadena termina en una pared para el unico cliente que un negocio sin
+lanzar tiene.
+
+### Los dos muros, en archivos distintos
+
+Ninguno de los dos parece roto por separado. Ahi vivio.
+
+```
+js/supabase.js:100   if (!session?.user) throw 'Please sign in to leave a review.'
+api/auth.js:3961     if (booking.client_id !== client_id) return 403
+```
+
+Y `api/auth.js:1341` crea las reservas de invitado asi:
+
+```js
+user_id: user ? user.id : null,
+client_id: user ? user.id : null,
+```
+
+O sea que para un invitado la segunda condicion **no podia dar verdadera
+nunca**. Sin sesion, el primer muro. Y si el invitado se creaba una cuenta
+despues y volvia al link, el segundo: `null` no es igual al uuid nuevo.
+
+**Un negocio que todavia no lanzo no tiene ni una cuenta creada.** Sus primeros
+clientes son todos invitados. Este era el camino de la PRIMERA resena, la que
+mas pesa cuando el competidor de al lado tiene 11 y nosotros 2.
+
+### La segunda credencial
+
+El `tracking_token` de la propia reserva. Es un UUID v4 (122 bits) que
+`/api/auth?role=public-track` **ya** cambia por la direccion del cliente y su
+PIN de llegada: aceptarlo para puntuar un trabajo concede estrictamente menos
+de lo que ya concede. Tiene indice unico, asi que identifica la reserva por si
+solo - en ese camino el `booking_id` del pedido no se consulta, y la escritura
+usa `booking.id`, el de la fila que paso los chequeos.
+
+Caduca con el mismo reloj que la pagina de seguimiento
+(`api/_tracking-scope.js`): a los 90 dias, 410.
+
+El link del email y del SMS pasa de `/?review=<id>` a `/?review=<id>&t=<token>`.
+
+**Y con las dos credenciales presentes gana el token**, no la sesion. Ese es el
+caso que un arreglo ingenuo se pierde: el invitado que se crea una cuenta y
+hace clic en el link ya firmado. Si ganara la sesion, el servidor compararia
+`null` contra su uuid nuevo y contestaria 403 por un trabajo que es
+evidentemente suyo.
+
+### El comentario que justificaba una decision con un flujo inexistente
+
+`api/_tracking-scope.js:24` explicaba por que el token no se apaga al terminar
+el trabajo:
+
+> *el email de review va con `/track.html?token=...`*
+
+**Falso.** El email mandaba `/?review=<id>`, sin token, y `handleClientReview`
+no aceptaba tokens. La decision de mantener el link vivo despues del trabajo
+-que es correcta- estaba escrita sobre un flujo que no existia. Ahora existe.
+
+### Verificado, no supuesto
+
+- **Contra produccion**, antes de tocar nada: `POST /api/auth` con
+  `role=client-review` y sin sesion contesta `400 access_token and client_id
+  required`. El endpoint desplegado exigia sesion de verdad, no solo en el
+  codigo que yo leia.
+- **Contra produccion**: `bookings.tracking_token` existe. `role=public-track`
+  con un UUID al azar contesta `404 Booking not found`, cosa que solo puede
+  hacer si la columna resuelve. Si no existiera, seria 500.
+- **El guard se vio fallar.** Se reintrodujo el bug a proposito (sacar
+  `mode !== 'token'` de `reviewGate`) y `tests/unit/guest-can-review.test.js`
+  paso a **6 fallas**. Restaurado, verde.
+- 1379 tests, `npm run check` exit 0, `npm run lint` 0 errores.
+
+### Lo que NO se verifico
+
+La cadena entera con un trabajo real completado. Sigue necesitando que un
+mecanico complete un trabajo de verdad, y eso no lo puede hacer una IA.
+

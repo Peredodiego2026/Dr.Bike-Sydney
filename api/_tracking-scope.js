@@ -20,10 +20,18 @@
 //
 // POR QUE NO SE APAGA DE GOLPE AL TERMINAR EL TRABAJO
 //
-// El mismo link se le manda al cliente para que deje su resena despues del
-// servicio (api/auth.js manda el email de review con /track.html?token=...).
-// Matarlo al completar romperia ese flujo, que es de donde salen las resenas
-// que la landing muestra.
+// El mismo TOKEN es lo que le permite al cliente dejar su resena despues del
+// servicio. Matarlo al completar romperia ese flujo, que es de donde salen las
+// resenas que la landing muestra.
+//
+// CORREGIDO el 2026-09-03: esta linea decia que el email de resena manda
+// `/track.html?token=...`, y era falso. Mandaba `/?review=<id>`, sin ningun
+// token, y `handleClientReview` no aceptaba tokens. O sea que el motivo por el
+// que este archivo decidio no apagar el link al terminar el trabajo describia
+// un flujo que no existia - y mientras tanto ningun invitado podia resenar.
+// Ahora si existe: el link es `/?review=<id>&t=<token>` y el token es la
+// credencial del invitado, que es el unico que no tiene otra. Ver
+// api/_review-auth.js.
 //
 // Asi que caduca en dos escalones, y cada dato se apaga cuando deja de tener
 // sentido:

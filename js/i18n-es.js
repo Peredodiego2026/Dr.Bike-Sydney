@@ -1569,4 +1569,9 @@ export default {
   'Nothing you entered has been lost. Try again, or go back and come in from the home screen.':
     'No se perdio nada de lo que cargaste. Proba de nuevo, o volve y entra desde la pantalla de inicio.',
   'Something on this screen did not load': 'Algo de esta pantalla no cargo',
+  // Los dos errores de la pantalla de resena. Salen del servidor y se muestran
+  // con translateValue(), no estan escritos en el markup - que es por que
+  // scripts/i18n-check.mjs no los ve y hay que acordarse de ponerlos aca.
+  'Please sign in to leave a review.': 'Inicia sesion para dejar tu resena.',
+  'This review link has expired.': 'Este link para dejar la resena ya vencio.',
 };
