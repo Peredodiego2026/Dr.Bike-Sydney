@@ -6054,6 +6054,79 @@ async function updateHomeNav() {
   } catch {}
 }
 
+// ── The net under every screen ────────────────────────────────────────────────
+//
+// index.html ships each screen as an EMPTY div and js/app.js is the only thing
+// that fills it. So a render function that throws before its first
+// `screen.innerHTML =` leaves a full-bleed white page with nothing to tap - the
+// bottom nav is inside that innerHTML too. That is what a customer saw for a
+// whole day (docs/PENDIENTES.md 81): one variable read above its own `const`,
+// and the booking flow was a dead end with no error, no spinner and no way
+// back.
+//
+// That specific cause is fixed and its whole class is blocked at build time by
+// scripts/tdz-check.mjs. This is the net under the next one.
+//
+// Two rules, and the second is the one that makes it safe:
+//
+//   1. Only ever replace a screen that rendered NOTHING. A render that got its
+//      HTML out and then failed while wiring a listener leaves a usable page;
+//      wiping it for an error card would be a downgrade. Those get a toast.
+//   2. Never swallow. Every failure reaches the console and Sentry with the
+//      route name, so a screen that fails quietly for a customer is still
+//      something we find out about.
+function screenErrorHtml() {
+  return `
+  <div class="screen-error">
+    <div class="screen-error__icon" aria-hidden="true">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="13"></line><line x1="12" y1="16.5" x2="12.01" y2="16.5"></line></svg>
+    </div>
+    <div class="screen-error__title">This screen did not load</div>
+    <p class="screen-error__sub">Nothing you entered has been lost. Try again, or go back and come in from the home screen.</p>
+    <div class="screen-error__actions">
+      <button type="button" class="btn btn--primary" id="screen-error-retry">Try again</button>
+      <a href="#home" class="btn btn--ghost">Back to home</a>
+    </div>
+  </div>`;
+}
+
+function handleScreenError(route, render, err) {
+  console.error(`[render] ${route} failed:`, err);
+  if (window.Sentry?.captureException) {
+    window.Sentry.captureException(err, { tags: { screen: route } });
+  }
+
+  const screen = document.querySelector(`[data-screen="${route}"]`);
+  if (!screen) return;
+
+  // Rule 1: something rendered, so the page is still usable. Say so and leave
+  // it alone.
+  if (screen.innerHTML.trim()) {
+    showToast(translateValue('Something on this screen did not load'));
+    return;
+  }
+
+  screen.innerHTML = screenErrorHtml();
+  translateScreen(screen);
+  screen.querySelector('#screen-error-retry')?.addEventListener('click', () => {
+    screen.innerHTML = '';
+    runScreenRender(route, render);
+  });
+}
+
+// Renders are a mix of sync and async, so a failure arrives as a throw OR as a
+// rejected promise. Both have to land in the same place.
+function runScreenRender(route, render) {
+  try {
+    const result = render();
+    if (result && typeof result.catch === 'function') {
+      result.catch((e) => handleScreenError(route, render, e));
+    }
+  } catch (e) {
+    handleScreenError(route, render, e);
+  }
+}
+
 // ── Screen event router ───────────────────────────────────────────────────────
 document.addEventListener('screenchange', ({ detail }) => {
   if (window.gtag)
@@ -6072,16 +6145,22 @@ document.addEventListener('screenchange', ({ detail }) => {
         });
     }
   }
-  if (detail.route === 'book-service') renderBookService();
-  if (detail.route === 'service-summary') renderServiceSummary();
-  if (detail.route === 'quote-sent') renderQuoteSent();
-  if (detail.route === 'payment') renderPayment();
-  if (detail.route === 'tracking') renderTracking();
-  if (detail.route === 'review') renderReview();
-  if (detail.route === 'login') renderLogin();
-  if (detail.route === 'my-bookings') renderMyBookings();
-  if (detail.route === 'profile') renderProfile();
-  if (detail.route === 'my-bikes') renderMyBikes();
+  // Every one of these goes through the net above. None of them may be called
+  // bare here again - tests/unit/screen-error-state.test.js enforces it.
+  const RENDERERS = {
+    'book-service': renderBookService,
+    'service-summary': renderServiceSummary,
+    'quote-sent': renderQuoteSent,
+    payment: renderPayment,
+    tracking: renderTracking,
+    review: renderReview,
+    login: renderLogin,
+    'my-bookings': renderMyBookings,
+    profile: renderProfile,
+    'my-bikes': renderMyBikes,
+  };
+  const render = RENDERERS[detail.route];
+  if (render) runScreenRender(detail.route, render);
   if (detail.route === 'home') {
     updateHomeNav();
     showBirthdayGreeting();

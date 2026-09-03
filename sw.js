@@ -1,3 +1,7 @@
+// v120 (2026-09-03): red de seguridad por pantalla. Un render que revienta
+// antes de escribir ya no deja la pagina en blanco: muestra una tarjeta de
+// error con reintento. Cambian js/app.js, css/main.css y los dos
+// diccionarios, asi que el cache viejo tiene que irse. PENDIENTES 85.
 // v118 (2026-09-03): la pantalla en blanco de verdad. renderServiceSummary
 // leia calloutFee y serviceTotal 44 y 12 lineas arriba de su propio const,
 // dentro de un if (window.posthog): ReferenceError antes del primer
@@ -164,7 +168,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v119';
+const CACHE_STATIC = 'drbike-static-v120';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

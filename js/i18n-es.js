@@ -1564,4 +1564,9 @@ export default {
   'Tubeless conversion per wheel.': 'Conversión a tubeless, por rueda.',
   'Per spoke, includes wheel re-true': 'Por rayo, con centrado de la rueda incluido',
   'New tyre fitted, tyre cost extra': 'Colocamos la cubierta nueva; la cubierta se cobra aparte',
+  // La pantalla de error que reemplaza la pagina en blanco (PENDIENTES 81).
+  'This screen did not load': 'Esta pantalla no cargo',
+  'Nothing you entered has been lost. Try again, or go back and come in from the home screen.':
+    'No se perdio nada de lo que cargaste. Proba de nuevo, o volve y entra desde la pantalla de inicio.',
+  'Something on this screen did not load': 'Algo de esta pantalla no cargo',
 };

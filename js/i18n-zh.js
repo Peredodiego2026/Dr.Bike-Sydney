@@ -1411,4 +1411,9 @@ export default {
   'Tubeless conversion per wheel.': '每轮真空胎改装。',
   'Per spoke, includes wheel re-true': '按辐条计价，含轮组重新校正',
   'New tyre fitted, tyre cost extra': '安装新外胎，外胎另行计价',
+  // La pantalla de error que reemplaza la pagina en blanco (PENDIENTES 81).
+  'This screen did not load': '此页面未能加载',
+  'Nothing you entered has been lost. Try again, or go back and come in from the home screen.':
+    '您填写的内容都没有丢失。请重试，或返回并从首页进入。',
+  'Something on this screen did not load': '此页面有部分内容未能加载',
 };
