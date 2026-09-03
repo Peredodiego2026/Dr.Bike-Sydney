@@ -1416,4 +1416,9 @@ export default {
   'Nothing you entered has been lost. Try again, or go back and come in from the home screen.':
     '您填写的内容都没有丢失。请重试，或返回并从首页进入。',
   'Something on this screen did not load': '此页面有部分内容未能加载',
+  // Los dos errores de la pantalla de resena. Salen del servidor y se muestran
+  // con translateValue(), no estan escritos en el markup - que es por que
+  // scripts/i18n-check.mjs no los ve y hay que acordarse de ponerlos aca.
+  'Please sign in to leave a review.': '请先登录再留下评价。',
+  'This review link has expired.': '此评价链接已过期。',
 };

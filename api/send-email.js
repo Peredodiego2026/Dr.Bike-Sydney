@@ -26,6 +26,7 @@ async function handler(req, res) {
     address,
     price,
     bookingId,
+    reviewToken,
     mechNotes,
     nextService,
     referralCode,
@@ -56,6 +57,15 @@ async function handler(req, res) {
   price = Number(price) || 0;
   // bookingId used in URLs — whitelist only alphanumeric and dashes
   if (bookingId) bookingId = String(bookingId).replace(/[^a-zA-Z0-9-]/g, '');
+  // Same treatment, same reason: reviewToken is a UUID that goes straight into
+  // an href. A stricter shape than bookingId's on purpose - anything that is
+  // not a well-formed UUID is dropped rather than scrubbed, because a mangled
+  // token produces a link that silently fails to authorise instead of one that
+  // obviously does not work.
+  if (reviewToken) {
+    reviewToken = String(reviewToken).trim();
+    if (!/^[0-9a-fA-F-]{36}$/.test(reviewToken)) reviewToken = '';
+  }
 
   const gst = Math.round((price || 0) / 11);
   const net = (price || 0) - gst;
@@ -214,7 +224,7 @@ async function handler(req, res) {
             <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 12px">Rate your experience</p>
             <div style="font-size:32px;letter-spacing:4px">⭐⭐⭐⭐⭐</div>
           </div>
-          <a href="https://drbikesydney.com.au/?review=${bookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Leave a review →</a>
+          <a href="https://drbikesydney.com.au/?review=${bookingId}${reviewToken ? `&t=${reviewToken}` : ''}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Leave a review →</a>
           <p style="font-size:12px;color:#94A3B8;text-align:center;margin:0">It takes less than 30 seconds and helps other Sydney cyclists find us 🙏</p>
         </div>${footer()}`,
     },

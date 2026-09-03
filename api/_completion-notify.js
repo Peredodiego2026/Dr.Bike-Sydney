@@ -85,7 +85,26 @@ export function buildCompletionCalls({
   const clientName = booking?.client_name || 'Client';
   const service = booking?.service_name || 'Service';
   const t = calcCompletionTotals({ booking, partsCharged, tipAmount });
-  const reviewLink = `https://drbikesydney.com.au/?review=${id}`;
+  // The review link carries the booking's tracking_token as `t`.
+  //
+  // Without it, a guest client cannot leave a review at all - and a guest is
+  // what a client of a business with no accounts yet IS. api/auth.js:1341 sets
+  // both user_id and client_id to null for a guest booking, and
+  // handleClientReview matched booking.client_id against the id on the
+  // session: no session meant "Please sign in to leave a review", and signing
+  // up afterwards meant 403, because null never equals a new account's uuid.
+  // Every guest got the email, and every guest hit a wall.
+  //
+  // The token is the credential this project already trusts for exactly this
+  // person: it is what /api/auth?role=public-track trades for their address
+  // and arrival PIN. Posting a review with it is strictly less than that.
+  // A booking with no token (an environment where
+  // scripts/add-tracking-token.sql has not run) falls back to the old link,
+  // which still works for a client who has an account.
+  const reviewToken = String(booking?.tracking_token || '');
+  const reviewLink = reviewToken
+    ? `https://drbikesydney.com.au/?review=${id}&t=${reviewToken}`
+    : `https://drbikesydney.com.au/?review=${id}`;
   const calls = [];
 
   if (email) {
@@ -115,7 +134,14 @@ export function buildCompletionCalls({
     });
     calls.push({
       path: '/api/send-email',
-      body: { type: 'review_request', to: email, name: clientName, service, bookingId: id },
+      body: {
+        type: 'review_request',
+        to: email,
+        name: clientName,
+        service,
+        bookingId: id,
+        reviewToken,
+      },
     });
   }
 

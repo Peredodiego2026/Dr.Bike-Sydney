@@ -273,12 +273,20 @@ function clearBookingDraft() {
     sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
     history.replaceState({}, '', '/');
   }
-  // Handle review link from SMS/email: /?review=bookingId
+  // Handle review link from SMS/email: /?review=bookingId&t=trackingToken
+  //
+  // `t` is what lets a GUEST review at all. A guest booking carries no account
+  // (api/auth.js writes client_id: null), so the session chain the endpoint
+  // used to demand could never match, and the review screen dead-ended on
+  // "Please sign in to leave a review". Read it BEFORE the replaceState below,
+  // which is what wipes the query string out of the address bar.
   const reviewId = p.get('review');
   if (reviewId) {
+    const reviewToken = p.get('t') || '';
     history.replaceState({}, '', '/');
     window.appState.bookingId = reviewId;
     window._pendingReview = reviewId;
+    window._pendingReviewToken = reviewToken;
   }
 })();
 
@@ -3891,7 +3899,13 @@ async function renderReview() {
         btn.textContent = 'Uploading photo...';
         photoBase64 = await compressImageToBase64(reviewPhotoFile);
       }
-      await submitReview(bookingId || 'demo', currentRating, textarea.value.trim(), photoBase64);
+      await submitReview(
+        bookingId || 'demo',
+        currentRating,
+        textarea.value.trim(),
+        photoBase64,
+        window._pendingReviewToken || ''
+      );
     } catch (e) {
       errEl.textContent = translateValue(e.message || 'Could not submit review. Please try again.');
       errEl.hidden = false;

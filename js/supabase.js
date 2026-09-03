@@ -93,19 +93,35 @@ export async function getBookingStatus(bookingId) {
   return data;
 }
 
-export async function submitReview(bookingId, rating, comment, photoBase64) {
+// `trackingToken` comes off the review link (`/?review=<id>&t=<token>`) and is
+// the only credential a GUEST has: their booking was created with
+// client_id: null, so there is no session that could ever match it. Without
+// this branch the guest - which is what every client of a business with no
+// accounts yet is - was told to sign in to review a job they had just paid
+// for, and signing up would not have helped either (the server answered 403,
+// because null never equals a new account's uuid).
+//
+// When a token is present it WINS over the session, even for a signed-in
+// user. It is scoped to this one booking, which the session is not: a guest
+// who books without an account and creates one later is signed in as somebody
+// the booking has never heard of, and the session path would answer 403 for a
+// job that is plainly theirs. The session stays the credential for the other
+// entry point - opening a past job from your own bookings list, where there is
+// no emailed link and no token to carry.
+export async function submitReview(bookingId, rating, comment, photoBase64, trackingToken) {
   const {
     data: { session },
   } = await sb.auth.getSession();
-  if (!session?.user) throw new Error('Please sign in to leave a review.');
+  if (!session?.user && !trackingToken) throw new Error('Please sign in to leave a review.');
   const resp = await fetch('/api/auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       role: 'client-review',
       booking_id: bookingId,
-      access_token: session.access_token,
-      client_id: session.user.id,
+      ...(trackingToken
+        ? { tracking_token: trackingToken }
+        : { access_token: session.access_token, client_id: session.user.id }),
       rating,
       comment,
       photo_base64: photoBase64 || null,
