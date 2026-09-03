@@ -1422,6 +1422,11 @@ async function loadFinance() {
     // never summed into it - see where it is computed.
     held,
     heldCount: heldJobs.length,
+    // What the business actually spent in this period, by category. The P&L
+    // already had it; the BAS export did not, and printed "1B: $0" as though
+    // it had checked. See exportBAS().
+    expenses: exp,
+    expensesAvailable: _expenses.available !== false,
     periodStr,
     dateFrom,
     dateTo,
@@ -1479,6 +1484,40 @@ function exportFinanceCSV() {
   a.click();
 }
 
+// Supporting information for the three boxes this app refuses to fill in.
+// Deliberately NOT presented as G10/G11: payroll is not a purchase (wages are
+// W1/W2), and nothing here records whether a given expense carried GST. It is
+// the raw material for the accountant, labelled as such.
+function basExpensesBlock(d) {
+  if (!d.expensesAvailable) {
+    return `
+RECORDED EXPENSES: could not be read for this period. The figures above cover
+sales only.`;
+  }
+  const byCat = d.expenses?.byCat || {};
+  const lines = Object.entries(byCat)
+    .filter(([, amount]) => amount > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, amount]) => `  ${EXPENSE_LABELS[cat] || cat}: ${anMoney(amount)}`);
+
+  if (!lines.length) {
+    return `
+RECORDED EXPENSES FOR THIS PERIOD: none.
+If that is wrong, add them in Admin > Expenses before your agent lodges — an
+empty list here is what makes 1B look like zero.`;
+  }
+
+  const payroll = byCat.payroll || 0;
+  return `
+RECORDED EXPENSES FOR THIS PERIOD
+Supporting information, not BAS figures.
+${lines.join('\n')}
+  ─────
+  Total recorded: ${anMoney(d.expenses.total)}${
+    payroll ? `\n  Of which payroll: ${anMoney(payroll)} — wages are not a G11 purchase.` : ''
+  }`;
+}
+
 function exportBAS() {
   const d = window._finData;
   if (!d) return;
@@ -1490,13 +1529,27 @@ Generated: ${new Date().toLocaleDateString('en-AU')}
 G1 — Total Sales (incl GST): $${d.revenue.toLocaleString('en-AU')}
 G2 — Export Sales: $0
 G3 — Other GST-free Sales: $0
-G10 — Capital Purchases: $0
-G11 — Non-capital Purchases: $0
+G10 — Capital Purchases: NOT CALCULATED — see below
+G11 — Non-capital Purchases: NOT CALCULATED — see below
 
 1A — GST on Sales (G1/11): $${d.gst.toLocaleString('en-AU')}
-1B — GST Credits on Purchases: $0
-NET GST PAYABLE TO ATO: $${d.gst.toLocaleString('en-AU')}
+1B — GST Credits on Purchases: NOT CALCULATED — see below
+GST ON SALES, BEFORE ANY CREDITS AT 1B: $${d.gst.toLocaleString('en-AU')}
 
+WHY G10, G11 AND 1B ARE BLANK
+This app records what the business spent, but not two things the ATO needs
+for those boxes: whether each purchase actually carried GST, and whether it
+was capital or non-capital. Neither can be guessed from what is stored, and
+a guess here becomes a wrong lodgement.
+
+They used to print "$0", which reads as a figure that was worked out. It was
+not. Lodging with 1B at $0 claims NO GST credits at all — for a business with
+recorded expenses, that means paying the ATO more than it is owed.
+
+Give the figures below to your tax agent and let them fill those three boxes.
+${basExpensesBlock(d)}
+
+SALES DETAIL
 Jobs completed: ${d.jobCount}
 Average job value: ${anMoney(d.avgJob)}
 Basis: service_price + callout_fee, as recorded on each completed booking.
@@ -2893,12 +2946,15 @@ function renderBookingsTable(data) {
       <td data-label="Van"><span class="mech-tag v${b.van_number || 1}">Van ${b.van_number || 1}</span></td>
       <td data-label="Status"><span class="status ${stClass[st] || 'pending'}"><span class="status-dot"></span>${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
       <td data-label="Price"><b>${anMoney(anBookingRevenue(b))}</b></td>
-      <td data-label="Actions" style="white-space:nowrap">
-        ${isPending ? `<button data-bk-action="confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Confirm</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Chat</button>` : ''}
-        ${b.tracking_token ? `<button data-bk-action="track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px" title="Copy tracking link">Track</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="reschedule" data-id="${b.id}" data-date="${b.scheduled_date || ''}" style="background:var(--amber-lt);color:var(--amber);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;margin-right:4px">Reschedule</button>` : ''}
-        ${!isCancelled ? `<button data-bk-action="cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>` : ''}
+      <td data-label="Actions">
+        <div class="bk-actions">
+          ${isPending ? `<button class="bk-act bk-act--confirm" data-bk-action="confirm" data-id="${b.id}">Confirm</button>` : ''}
+          ${!isCancelled ? `<button class="bk-act bk-act--chat" data-bk-action="chat" data-id="${b.id}" data-name="${esc(name)}">Chat</button>` : ''}
+          ${b.tracking_token ? `<button class="bk-act bk-act--track" data-bk-action="track" data-token="${b.tracking_token}" title="Copy tracking link">Track</button>` : ''}
+          ${!isCancelled ? `<button class="bk-act bk-act--resched" data-bk-action="reschedule" data-id="${b.id}" data-date="${b.scheduled_date || ''}">Reschedule</button>` : ''}
+          ${!isCancelled ? `<button class="bk-act bk-act--cancel" data-bk-action="cancel" data-id="${b.id}">Cancel</button>` : ''}
+          ${isCancelled ? '<span class="bk-actions__none">Cancelled</span>' : ''}
+        </div>
       </td>
     </tr>`;
     })
