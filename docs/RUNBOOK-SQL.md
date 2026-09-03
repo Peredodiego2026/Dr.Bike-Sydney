@@ -5,17 +5,30 @@ copia, se pega, se lee el resultado.
 
 ---
 
-## 0. RESULTADO: el 2026-08-10 no faltaba ninguno
+## 0. RESULTADO: el 2026-09-03 no falta ninguna
 
-> **CADUCADO (2026-09-03).** Este resultado es del 10-ago y desde entonces
-> **entraron 16 migraciones nuevas** (de `add-expenses-table.sql` en adelante).
-> Ninguna de ellas quedo verificada contra la base por este documento. Algunas
-> tienen constancia en otro lado - `fix-availability-blocks.sql` la corrio Diego
-> el 16-ago, `referral-credits-spendable.sql` y `enable-realtime-bookings.sql`
-> el 27-ago, y que `lock-public-views.sql` esta aplicado lo confirma
-> `npm run rls:check` en cada corrida - pero **el resto no tiene constancia de
-> nada**. La consulta de la seccion 3 ya las cubre a todas: hay que volver a
-> correrla. Hasta entonces, "la base esta al dia" es una suposicion, no un dato.
+**Diego corrio la consulta de la seccion 3 contra produccion el 2026-09-03, ya
+con las 41 filas, y devolvio `Success. No rows returned`.** La version que
+corrio estaba filtrada a `where not ok`, asi que cero filas significa cero
+pendientes: **las 41 dieron OK, incluidas las 16 migraciones que entraron
+despues del 10-ago y que hasta ese momento no tenian ninguna constancia.**
+
+Eso cubre tambien las dos que esta consulta no miraba hasta ese mismo dia:
+`enable-realtime-bookings.sql` (la publicacion `supabase_realtime` y el
+`replica identity full`) y `lock-public-views.sql` (que `anon` no tenga
+escritura sobre las vistas publicas). Ninguna de las dos deja rastro en
+`information_schema.columns`, que es donde mira casi todo el resto - por eso se
+habian pasado por alto durante un mes.
+
+**Lo que este resultado NO dice.** Que el esquema este completo no dice que el
+codigo lo use bien. El mismo dia, `bookings.tracking_token` estaba impecable en
+la base y el flujo de resenas no lo aceptaba como credencial, asi que ningun
+cliente invitado podia dejar una resena (`docs/PENDIENTES.md` 86). Esta
+consulta responde una sola pregunta - si falta correr un script - y nada mas.
+
+---
+
+### El resultado anterior, del 2026-08-10
 
 Diego corrio la consulta de la seccion 3 contra produccion el mismo dia. **Las
 30 migraciones dieron `OK`.** Ademas:
@@ -30,8 +43,9 @@ O sea que los tres que `docs/PENDIENTES.md` daba por pendientes -
 `add-checkout-attempts.sql` (11.2) - **ya estaban corridos**. El documento
 estaba desactualizado, no la base.
 
-**Que sigue faltando entonces.** Nada de SQL. Lo que queda son pruebas de
-verdad, que la base sola no puede demostrar y que solo puede hacer Diego:
+**Que sigue faltando entonces.** Nada de SQL - y sigue sin faltar al 03-sep.
+Lo que queda son pruebas de verdad, que la base sola no puede demostrar y que
+solo puede hacer Diego:
 
 1. Una reserva **sin iniciar sesion** desde el celular, de punta a punta, y
    comprobar que llegan el email al cliente y el WhatsApp a Diego.
@@ -40,6 +54,10 @@ verdad, que la base sola no puede demostrar y que solo puede hacer Diego:
    mostrar).
 3. El simulacro de restauracion del backup, en
    [RUNBOOK-BACKUP-RESTORE.md](RUNBOOK-BACKUP-RESTORE.md).
+4. **Completar un trabajo de verdad** desde la app del mecanico y comprobar que
+   salen la factura, el email de resena y el SMS - y que el link del email deja
+   dejar la resena. Es la unica parte de la cadena de resenas que ningun test
+   puede cubrir (`docs/PENDIENTES.md` 86).
 
 **El resto del documento se conserva** como esta: sirve para la proxima vez, y
 para cualquier maquina o proyecto nuevo donde haya que rehacer la base desde
