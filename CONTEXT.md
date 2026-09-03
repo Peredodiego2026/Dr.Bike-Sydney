@@ -133,13 +133,17 @@
 
 ### What is NOT done
 
-- **A 20-point pre-launch audit exists and none of it is fixed yet.** Security,
-  Australian legal compliance, performance, accessibility, marketing and ops,
-  probed against production. The three gaps with immediate consequence: the
-  mechanic's shared 4-digit PIN, analytics running before any cookie consent, and
-  `js/app.js` at 295 KB in one file. The single most important unanswered question
-  is whether **RLS actually blocks a client from reading another client's rows** -
-  nobody has tested it with the anon key.
+- ~~**A 20-point pre-launch audit exists and none of it is fixed yet.**~~
+  **SUPERSEDED 2026-09-03: the list now lives in
+  `docs/AUDITORIA-PRELANZAMIENTO.md`, with per-point evidence.** 17 of the 20
+  points were identified and are closed; points 6, 16 and 18 could not be
+  recovered from anywhere in the repo and are declared as holes, not as done.
+  Every gap this paragraph named is closed: the 4-digit PIN (PR #398, 6 digits
+  now), analytics before consent (it was 44 pages; `consent-gate.mjs` guards it),
+  and `js/app.js` at 295 KB - which was measured wrong, it travels in 78 KB; the
+  real weight was `js/i18n.js` shipping all three languages to every visitor.
+  **RLS was tested with the anon key**: RLS itself was fine, the public views
+  bypassed it, and `npm run rls:check` re-probes production on every run.
 
 - **Diego reports still seeing two scrollbars on the desktop landing.** The cause
   found and fixed on 26-Aug was `overflow-x: hidden` on BOTH `html` and `body`,
