@@ -10508,3 +10508,49 @@ valida. Lo agarro importar el modulo de verdad y llamar la funcion.
 consumidores adentro no prueba que no los haya afuera, y enmascarar el nombre
 cierra la fuga igual. Si Diego confirma que nada externo lo usa, sacarlo es una
 linea menos de superficie publica.
+
+## 92. El BAS salia con el ABN sin completar (03-sep-2026)
+
+El export del BAS escribia, literal:
+
+```
+ABN: [Your ABN here]
+```
+
+...mientras el reporte de Finanzas que se imprime, **treinta lineas mas abajo
+del mismo archivo**, escribia el ABN real a mano, dos veces. Alguien lo cargo en
+un lado y se olvido del otro.
+
+Nadie lo iba a ver en pantalla. El BAS es un `.txt` que se descarga y se abre
+**delante del contador**, que es el peor momento posible para descubrir que la
+casilla del ABN dice "[Your ABN here]".
+
+### El arreglo, y la trampa que tenia adentro
+
+Los tres lugares leen ahora `DRBIKE_ABN`.
+
+La trampa: dos de esos tres estaban dentro de un template literal gigante
+(`win.document.write(\`...\`)` de 143 lineas). Un `${DRBIKE_ABN}` que cae en un
+string comun **se imprime tal cual**, y `node --check` lo da por bueno: es
+sintaxis valida. Leyendo el codigo los dos casos se ven identicos.
+
+Por eso `tests/unit/bas-abn.test.js` **ejecuta** `exportBAS()` en un `vm` y mira
+el archivo que sale, en vez de leer la fuente. Comprueba que la linea del ABN
+traiga el numero, que no haya quedado ningun `${` sin resolver, y que el ABN del
+BAS **coincida con el de la factura que recibe el cliente** - si no, el contador
+esta conciliando dos negocios distintos.
+
+La extraccion del test tuvo que hacer balanceo de llaves: estas funciones tienen
+HTML con `}` al principio de linea, y el corte ingenuo por `\n}\n` cae a la
+mitad.
+
+### Contexto: todavia no hay GST registrado
+
+Diego confirmo el 03-sep que **no esta registrado en GST**, y que **no salio
+ninguna factura todavia** - no hubo clientes cobrados. Asi que no hay nada mal
+emitido hacia atras.
+
+La app esta construida para un negocio registrado (la factura dice "GST
+included", `business.html` promete "GST receipts") y **eso es a proposito**: es
+donde va. Lo unico que importa es el orden - registrarse antes de la primera
+factura cobrada. No es una decision de codigo.
