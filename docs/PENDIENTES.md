@@ -10768,3 +10768,112 @@ dos trampas que este archivo ya tiene anotadas.
 ### Solo local
 
 Nada de esto esta en produccion hasta que Diego mergee el PR.
+
+
+---
+
+## 95. Rotar el PIN del mecanico no cerraba ninguna sesion (04-sep-2026)
+
+**Hallazgo 4 de la auditoria. El informe lo llama "medio"; es el eslabon del
+medio de la cadena que hace criticos a los otros dos.**
+
+```
+api/auth.js:51        TOKEN_TTL_MS = 60 dias
+api/auth.js:59        payload = { mid, exp }        <- nada mas
+api/_security.js:395  verifyMechanicToken solo mira firma y expiracion
+```
+
+Nada en el token se referia al PIN. "Reset PIN" en Admin cambiaba lo que hace
+falta para el PROXIMO login y dejaba trabajando, hasta 60 dias, todos los
+tokens que ya estaban en un telefono. Un telefono perdido, vendido o robado
+seguia entrando al panel del mecanico dos meses despues de que Diego "revocara"
+el acceso.
+
+### La cadena, que el informe no nombra junta
+
+```
+PIN de 4 digitos (10.000 combinaciones; bloqueo por IP, no por cuenta)
+  -> token de 60 dias que rotar el PIN no mata          <- ESTE PUNTO
+    -> cobro de importe arbitrario a una tarjeta guardada (punto 94)
+```
+
+### Lo que se hizo
+
+- **`sv` (session version) en el token.** `makeToken(mid, sv)` lo firma;
+  `verifyMechanicTokenPayload` lo devuelve; `authMechanic` lo compara contra
+  `escalation_contacts.session_version`. Si no coincide, el token no vale.
+- **`handleAdminSetMechanicPin` incrementa ese numero.** Ahi es donde "Reset
+  PIN" pasa a revocar de verdad.
+- **TTL de 60 dias a 14.** No mas corto a proposito: una completacion sin senal
+  se aparca en el outbox del telefono y se reenvia con el token guardado al
+  momento del vaciado. Una ventana muy corta deja un trabajo hecho fuera de
+  cobertura sin poder cerrarse hasta que el mecanico vuelva a entrar. 14 dias
+  cubre una ausencia normal y recorta la exposicion tres cuartas partes.
+- **`verifyMechanicToken` no cambio de firma.** `api/send-push.js` la usa para
+  saber QUIEN es y no tiene la fila del mecanico para comparar; sigue
+  devolviendo el id. La comprobacion de version vive donde estan los dos datos.
+
+### La columna no existe todavia, y el codigo lo aguanta
+
+`scripts/*.sql` en este proyecto **se corren a mano** (hallazgo 5 de la
+auditoria, real). Asi que la columna existe en el codigo antes que en la base.
+
+- **Al leer:** `Number(candidate.session_version) || 0`. Sin columna da
+  `undefined -> NaN -> 0`, y los tokens se emiten con `sv: 0`. Compara 0 con 0:
+  **el check es inerte hasta que se corra la migracion, nunca equivocado.**
+  Y desplegarlo NO desloguea a nadie, porque un token viejo sin `sv` tambien
+  lee 0.
+- **Al escribir:** PostgREST **rechaza un UPDATE que nombre una columna
+  desconocida**, y eso no es teorico aca: es exactamente como el `pin: null`
+  convertia cada Reset PIN en un 500 (arreglado el 03-sep). Por eso la columna
+  se LEE primero y solo se escribe si la lectura demuestra que esta. El patron
+  del reintento ya existia en `handleMechanicComplete` con `parts_cost_actual`.
+
+### Y Admin dice la verdad sobre lo que hizo el boton
+
+La respuesta trae `sessions_revoked`. Si es falso, el cartel del PIN nuevo
+agrega: *"WARNING: their old sign-in is still valid for up to 14 days."*
+Mostrar "PIN reseteado" mientras el telefono viejo sigue entrando es peor que
+no decir nada.
+
+### PENDIENTE DIEGO - hasta que corras esto, el arreglo NO esta activo
+
+```sql
+alter table public.escalation_contacts
+  add column if not exists session_version integer not null default 0;
+```
+
+El archivo completo, con comentarios y una consulta de verificacion, esta en
+`scripts/add-mechanic-session-version.sql`. Se puede correr dos veces sin
+romper nada y no desloguea a nadie por si solo.
+
+### Lo que NO se hizo, a proposito
+
+**No se subio el minimo del PIN a 6 digitos.** `pin_hash` es de una via: un PIN
+emitido antes del 01-sep no se puede detectar ni migrar, y subir el piso dejaria
+a esos mecanicos afuera con un "PIN required" que no explica nada. Lo que retira
+los de 4 digitos es que Diego los reemita desde Admin - y ahora reemitirlos
+ademas cierra las sesiones viejas, que es lo que faltaba.
+
+### Verificado
+
+16 tests, vistos fallar en **cuatro mutaciones distintas**:
+
+- El token deja de llevar `sv`: 1 rojo.
+- `authMechanic` deja de comparar: 3 rojos.
+- La rotacion del PIN deja de incrementar: 1 rojo.
+- El TTL vuelve a 60 dias: 2 rojos.
+
+El test del TTL **mide la expiracion de un token de verdad** (a los 13 dias
+vale, a los 15 no) en vez de leer la constante: leer la constante es testear el
+proxy, y el proxy ya dejo pasar un bug en este repo.
+
+`makeToken` se **levanta del fuente y se ejecuta**, no se reimplementa - una
+copia en el test seguiria en verde si la de verdad cambiara.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1440 tests).
+
+### Solo local
+
+Nada de esto esta en produccion hasta que Diego mergee el PR. Y aun mergeado,
+la revocacion no funciona hasta que corra el SQL.

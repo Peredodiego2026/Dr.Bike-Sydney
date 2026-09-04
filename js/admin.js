@@ -7890,8 +7890,16 @@ async function generateMechanicPin() {
       return;
     }
     document.getElementById('notif-modal-pin-status').textContent = 'PIN is set';
+    // sessions_revoked is false when the database does not have
+    // escalation_contacts.session_version yet (scripts/*.sql are run by hand).
+    // Saying so matters: without that column a reset changes the PIN but the
+    // mechanic's old phone keeps working for up to 14 days, and being told
+    // "PIN reset" while that is true is worse than being told nothing.
+    const revoked = data.sessions_revoked
+      ? 'Their old phone has been signed out.'
+      : 'WARNING: their old sign-in is still valid for up to 14 days. Run scripts/add-mechanic-session-version.sql to fix this.';
     alert(
-      `Login PIN for mechanic.html: ${data.pin}\n\nShare this with the mechanic now - it won't be shown again.`
+      `Login PIN for mechanic.html: ${data.pin}\n\nShare this with the mechanic now - it won't be shown again.\n\n${revoked}`
     );
   } finally {
     btn.disabled = false;
