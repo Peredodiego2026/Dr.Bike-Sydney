@@ -881,7 +881,11 @@ function alert2(j) {
   const d = document.createElement('div');
   d.style.cssText =
     'position:fixed;top:80px;left:16px;right:16px;background:var(--green);color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
-  d.innerHTML = `<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${j.service_name} · ${esc(j.suburb)} · $${j.service_price}</span>`;
+  // service_name is NOT a safe string. api/stripe-webhook.js falls back to the
+  // browser-supplied bk_service_name metadata when the service row is missing,
+  // so an attacker who books once ($25 call-out) can store markup in it. The
+  // suburb next to it was already escaped; this one was not.
+  d.innerHTML = `<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${esc(j.service_name)} · ${esc(j.suburb)} · $${esc(j.service_price)}</span>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d);
   setTimeout(() => d.remove(), 6000);
@@ -3041,10 +3045,10 @@ function renderAgenda() {
           <div style="width:52px;font-size:11px;color:var(--gray-lt);padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(j.service)}</div>
-            <div style="font-size:13px;color:var(--gray);margin-top:2px">${esc(j.client)} · ${j.suburb || j.address || '—'}</div>
+            <div style="font-size:13px;color:var(--gray);margin-top:2px">${esc(j.client)} · ${esc(j.suburb || j.address || '—')}</div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-              <span style="font-size:11px;font-weight:600;color:${color}">${j.status.toUpperCase()}</span>
-              <span style="font-size:13px;font-weight:700;color:var(--navy)">$${j.price}</span>
+              <span style="font-size:11px;font-weight:600;color:${color}">${esc(String(j.status || '').toUpperCase())}</span>
+              <span style="font-size:13px;font-weight:700;color:var(--navy)">$${esc(j.price)}</span>
             </div>
           </div>
         </div>`;
