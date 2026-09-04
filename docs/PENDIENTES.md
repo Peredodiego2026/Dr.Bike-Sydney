@@ -10996,3 +10996,58 @@ EN EL PREVIEW, el problema es mio y no suyo: que no mergee.
 
 Nada de esto esta en produccion hasta que Diego mergee el PR. Y aun mergeado,
 no bloquea nada hasta que se encienda `ADMIN_REQUIRE_AAL2`.
+
+---
+
+## 98. Abrir el panel no genera ni un renglon de `[admin-aal]` (04-sep-2026)
+
+**Encontrado mirando los logs de produccion despues de mergear el punto 96, no
+leyendo el codigo.**
+
+Diego mergeo los cuatro PR, cerro el panel, lo abrio, entro con su codigo, y
+todo funciono. Los logs del deploy de produccion tenian **cero renglones
+`[admin-aal]`**.
+
+No es una falla del guard: es que `verifyAdminSession` corre **unicamente en
+las catorce rutas `admin-*`**, y abrir el panel no llama a ninguna. La mayor
+parte del tablero lee Supabase **directo desde el navegador**.
+
+### Y eso vuelve a decir lo mismo que el punto 96 sobre RLS
+
+Si abrir el panel entero no toca el servidor, entonces el AAL2 en
+`verifyAdminSession` cubre menos de lo que parece. **Las politicas RLS son la
+mitad que falta, y ahora hay evidencia de produccion, no un razonamiento.**
+
+### Lo que se agrego
+
+`logAdminTokenLevel()` en `handleAdmin`, en los tres puntos donde el login
+entrega un token:
+
+```
+after-password    el token de signInWithPassword (el que viaja como temp_token)
+after-totp        el que devuelve /factors/{id}/verify
+after-enrolment   el que devuelve el enrolamiento
+```
+
+Registra `aal`, `amr` y **`has_aal_claim`** - este ultimo porque `aal: null` es
+ambiguo (¿el claim no esta, o esta vacio?) y la pregunta (a) necesita una
+respuesta sin ambiguedad.
+
+Con un solo login de Diego quedan contestadas las dos preguntas que el punto 96
+dejo abiertas a proposito:
+
+- **(a)** ¿el JWT de este proyecto trae `aal`, y con que valores?
+- **(b)** ¿`/factors/{id}/verify` devuelve un token DISTINTO del de la
+  contrasena? Si devolviera el mismo AAL1, encender `ADMIN_REQUIRE_AAL2`
+  rechazaria **el login correcto** - el apagon, alcanzado desde el otro lado.
+
+**Solo registra.** No devuelve nada, no lanza nada, y ninguna decision depende
+de el. Y no escribe el token en el log: un token en un log es una credencial en
+un log - hay un test que lo vigila.
+
+### Verificado
+
+8 tests, vistos fallar en dos mutaciones: medir el token equivocado (1 rojo) y
+escribir el token entero en el log (1 rojo).
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1502 tests).
