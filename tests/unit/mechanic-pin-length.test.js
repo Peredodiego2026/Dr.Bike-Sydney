@@ -33,6 +33,15 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
+// verifyAdminSession now asks GoTrue whether this account has a verified TOTP
+// factor (audit finding 1). Without this stub the unit test would reach the
+// real Supabase over the network and time out - and a test that touches the
+// network is not a unit test.
+vi.stubGlobal(
+  'fetch',
+  vi.fn(async () => ({ ok: true, json: async () => ({ factors: [] }) }))
+);
+
 const { handleAdminSetMechanicPin } = await import('../../api/auth.js');
 
 function makeRes() {

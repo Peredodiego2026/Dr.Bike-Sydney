@@ -10877,3 +10877,122 @@ copia en el test seguiria en verde si la de verdad cambiara.
 
 Nada de esto esta en produccion hasta que Diego mergee el PR. Y aun mergeado,
 la revocacion no funciona hasta que corra el SQL.
+
+
+---
+
+## 96. El segundo factor del admin era una pantalla, no una puerta (04-sep-2026)
+
+**Hallazgo 1 de la auditoria, el critico. Confirmado leyendo el codigo:
+`grep -ri "aal"` sobre todo el repo daba CERO resultados antes de este PR.**
+
+```
+api/auth.js  verifyAdminSession()  valida el token y el email de la lista.
+                                   Nada mas. Ninguna de las 13 rutas admin
+                                   mira el nivel de aseguramiento.
+api/auth.js  el login devuelve `temp_token` - el access_token REAL de
+             Supabase, AAL1 - en el cuerpo de la respuesta, ANTES del TOTP.
+```
+
+Quien tenga la contrasena lo lee de la pestana de red, cierra el cartel del
+TOTP y usa ese token en las trece rutas. El segundo factor era una pantalla
+que se podia cerrar.
+
+### Lo que se entrego: OBSERVAR, no bloquear
+
+`api/_admin-aal.js` calcula el veredicto y `verifyAdminSession` lo registra en
+CADA pedido de admin. **No rechaza nada.** El bloqueo existe en el codigo y se
+enciende con `ADMIN_REQUIRE_AAL2=1` en Vercel.
+
+```
+[admin-aal] {"verdict":"aal1-with-factor","would_reject":true,"enforcing":false,
+             "aal":"aal1","amr":["password"],"has_verified_factor":true}
+```
+
+**El paso siguiente NO es otro PR: es encender esa variable.** Y no se enciende
+hasta que esos renglones muestren, sobre dias de trabajo real de Diego, que
+ninguna operacion legitima habria sido rechazada. Si aparece UN solo rechazo de
+algo legitimo, se arregla la regla, no se avanza.
+
+### Por que la regla es CONDICIONAL, y por que eso no es un detalle
+
+```
+tiene un factor TOTP verificado?  -> exigir AAL2
+no tiene ninguno?                 -> dejar pasar AAL1  (si no, no puede enrolarse)
+```
+
+Hay **UN SOLO email de admin en todo el sistema**
+(`ADMIN_ALLOWED_EMAILS = [ADMIN_TEST_EMAIL]`). Y `js/admin.js` completa el
+login con un token AAL1 en dos lugares a proposito: cuando todavia no hay TOTP
+enrolado (`setup_mfa`), y cuando el enrolamiento falla, con el comentario
+literal *"don't lock the admin out"*.
+
+"Rechazar AAL1" a secas deja al unico admin afuera del panel **sin poder ni
+siquiera enrolarse**, y el arreglo queda del otro lado de la puerta que se
+acaba de cerrar. El bypass real es aceptar AAL1 cuando SI hay factor. Cerrar el
+otro caso no agrega seguridad y si agrega el apagon.
+
+### Dos cosas que NO se asumieron, y que fallan ABIERTO
+
+1. **Que el JWT de este proyecto traiga el claim `aal`.** Nadie decodifico
+   todavia un token real de este proyecto. Si el claim no esta, el veredicto es
+   `no-aal-claim` y **deja pasar aunque este en modo bloqueo**. Asumir lo
+   contrario es como se llega al apagon por suposicion.
+2. **Que la consulta de factores vuelva.** Si falla o se pasa de tiempo,
+   `hasVerifiedFactor` queda en `null` y tampoco rechaza nunca.
+
+El log del `[admin-aal]` incluye `aal` y `amr` crudos justamente para
+RESPONDER esas dos preguntas con datos en vez de con una lectura. Cuando Diego
+entre una vez, los renglones dicen si el claim existe, con que valores, y si el
+token posterior al TOTP es AAL2 o el mismo AAL1.
+
+### Un bug propio, encontrado corriendo la suite y no leyendo el codigo
+
+La consulta de factores agrego un `fetch` delante de **cada** pedido de admin.
+Sin abortarlo, un Supabase lento cuelga el panel entero - un apagon de otro
+tipo, causado por el PR que existe para evitar apagones. Aparecio como un
+timeout de 5s en `tests/unit/mechanic-pin-length.test.js`. Ahora lleva
+`AbortSignal.timeout(4000)`, y agotar el tiempo deja el veredicto sin poder
+rechazar. Y la consulta solo se paga cuando el token NO es ya AAL2.
+
+### LO QUE FALTA, Y ES LA MITAD DEL ALCANCE: las politicas RLS
+
+`js/admin.js` consulta Supabase **directo desde el navegador** con ese mismo
+token. Las politicas dicen, todas:
+
+```sql
+exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+```
+
+**Miran el rol y nunca el AAL.** Un token AAL1 pasa todas. O sea que cerrar
+`verifyAdminSession` cierra las 13 rutas y deja abierto todo lo que el
+navegador hace directo.
+
+**NO se toco, y es deliberado.** Endurecer RLS con `auth.jwt()->>'aal' = 'aal2'`
+sobre un token que todavia no se sabe si es AAL2 deja el panel muerto - y un
+cambio de RLS **no tiene el rollback de un deploy de Vercel**. Se hace despues
+de que los logs respondan la pregunta 2, no antes.
+
+### Verificado
+
+17 tests, vistos fallar en **cinco mutaciones**:
+
+- La regla se vuelve absoluta ("rechazar AAL1" a secas): **3 rojos**, entre
+  ellos los dos del apagon. Ese es el test que no se podia saltear.
+- El claim ausente pasa a rechazar: 1 rojo.
+- El bypass real deja de marcarse: 2 rojos.
+- Se enciende por defecto: 1 rojo.
+- Se saca el `AbortSignal.timeout`: 1 rojo.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1441 tests).
+
+### Lo prueba Diego, no yo
+
+**No tengo sus credenciales de admin y no puedo probar este flujo.** La
+checklist para el preview esta en la descripcion del PR. Si algo de eso falla
+EN EL PREVIEW, el problema es mio y no suyo: que no mergee.
+
+### Solo local
+
+Nada de esto esta en produccion hasta que Diego mergee el PR. Y aun mergeado,
+no bloquea nada hasta que se encienda `ADMIN_REQUIRE_AAL2`.
