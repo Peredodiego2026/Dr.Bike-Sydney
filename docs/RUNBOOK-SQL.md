@@ -243,13 +243,19 @@ with
                        where table_schema = 'public'
                          and table_name = 'public_booking_tracking'
                          and grantee in ('anon','authenticated')))
+  -- 47 entro el 2026-09-04 con el punto 95 de PENDIENTES. Sin esta columna,
+  -- resetear el PIN de un mecanico NO cierra las sesiones que ese PIN abrio:
+  -- el codigo la tolera ausente a proposito, asi que la app funciona igual y
+  -- el arreglo esta simplemente inerte. Admin lo avisa en el cartel del PIN.
+  union all select 47, 'add-mechanic-session-version.sql', 'escalation_contacts.session_version (rotar el PIN revoca las sesiones)',
+    exists (select 1 from col where t='escalation_contacts' and c='session_version')
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 41 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 42 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
