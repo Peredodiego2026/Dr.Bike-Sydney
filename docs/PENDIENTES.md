@@ -10554,3 +10554,113 @@ La app esta construida para un negocio registrado (la factura dice "GST
 included", `business.html` promete "GST receipts") y **eso es a proposito**: es
 donde va. Lo unico que importa es el orden - registrarse antes de la primera
 factura cobrada. No es una decision de codigo.
+
+
+---
+
+## 93. El nombre del servicio lo escribia el navegador, y el mecanico lo ejecutaba (04-sep-2026)
+
+**Hallazgo 2 de la auditoria tecnica del profesor sobre `f496270`. Confirmado
+leyendo el codigo, no la auditoria.** XSS almacenado en la app del mecanico,
+con un costo de entrada de una tarifa de visita (~$25).
+
+### La cadena, en tres archivos
+
+```
+api/create-payment-session.js:46   bk_service_name: s(booking.serviceName, 120)
+                                   -> 120 caracteres del navegador, en la
+                                      metadata del PaymentIntent
+
+api/stripe-webhook.js:169          priceForService() devuelve null si el
+                                   servicio no existe. NO lanza.
+api/stripe-webhook.js:349          service_name: svc?.name || md.bk_service_name
+                                   -> guarda ese string en `bookings`, para
+                                      siempre
+
+js/mechanic.js:884                 ${j.service_name} dentro de innerHTML, SIN
+                                   escapar, y escapando esc(j.suburb) en LA
+                                   MISMA LINEA
+```
+
+El aviso "New booking!" que le salta al mecanico en tiempo real es el que
+ejecuta. Y el mecanico es la sesion que tiene el token de 60 dias y el poder de
+cerrar trabajos cobrando (ver el punto 3 de la auditoria).
+
+### Arreglado en las dos puntas, a proposito
+
+Escapar en el render arregla la pantalla. Rechazar en el webhook arregla la
+base. Se hicieron las dos porque cada una sola deja media falla viva: si solo
+se escapa, el dato sucio sigue guardado y el proximo lugar que lo muestre
+vuelve a ser vulnerable; si solo se rechaza, cualquier fila sucia ya escrita
+sigue ejecutandose.
+
+- `api/stripe-webhook.js`: `if (!svc)` reembolsa y no reserva, exactamente como
+  ya hacia con un importe que no coincide. Y el row ahora usa `svc.name`, nunca
+  `md.bk_service_name`: el string del navegador ya no tiene ningun camino a la
+  base.
+- `js/mechanic.js`: `esc()` en `service_name`, `service_price`, y en el
+  calendario semanal en `j.suburb || j.address` y `j.status`.
+
+### Hermanos, buscados
+
+Se barrieron TODAS las interpolaciones de `innerHTML` en `js/mechanic.js` y
+`js/admin.js` (73 y 184 candidatas). `admin.js` ya escapaba todo lo que viene
+de la base - el informe tenia razon, la superficie era la app del mecanico. En
+`mechanic.js` aparecieron tres hermanos ademas del citado, los tres en el
+calendario semanal: `j.suburb || j.address` (la direccion la escribe el
+cliente), `j.status` y `j.price`. Los `item.label` de los checklists son
+constantes del propio archivo; los `data-...="${j.client.replace(/"/g,'&quot;')}"`
+son atributos entrecomillados y no se puede salir de ellos. No se tocaron.
+
+### Un bug vivo que NO estaba en la auditoria, y que NO se arreglo
+
+`api/auth.js:671` (`handleRequestQuote`) inserta en `bookings`:
+
+```js
+service_name: String(service_name).slice(0, 120),
+service_price: Number(service_price) || 0,
+```
+
+Los dos vienen del cuerpo del pedido, sin contrastarse contra `services` - y
+`service_id` llega en el body y no se usa. O sea: hay una SEGUNDA via para
+meter un `service_name` arbitrario en la base, y esta es gratis (un pedido de
+presupuesto no cobra nada). El XSS quedo muerto igual, porque el arreglo del
+render cubre las dos vias.
+
+**No se arreglo aqui porque no es un cambio tecnico, es de negocio:** si un
+presupuesto solo puede nombrar un servicio del catalogo, un cliente que pide
+algo que no esta en la lista deja de poder pedirlo, y eso es perder un lead.
+Lo decide Diego, no una sesion cerrando un hallazgo de seguridad.
+
+### Verificado
+
+Los dos tests se vieron fallar con el bug puesto, y se comprobo que la mutacion
+rompio lo que se creia romper:
+
+- `tests/unit/webhook-unknown-service.test.js` **ejecuta**
+  `handlePaymentIntentSucceeded` con Stripe y Supabase falsos, en vez de leer
+  su fuente. Sacando el guard y devolviendo el fallback: 2 de 4 en rojo, y el
+  mensaje de error muestra el `<img src=x onerror=alert(1)>` llegando al row.
+- `tests/unit/mechanic-render-escaping.test.js` **ejecuta las plantillas
+  reales** sacadas del archivo con `new Function`, usando el `esc()` real del
+  propio `mechanic.js`. Sacando los 5 escapes: 6 de 7 en rojo. El que quedo
+  verde es el del suburbio del aviso, que ya estaba escapado y no se mutO -
+  la comprobacion del mutante.
+
+**Una trampa propia, del tipo que este archivo ya tiene anotado dos veces.**
+La primera version afirmaba `expect(html).not.toContain('onerror=')` y fallaba
+sobre el codigo YA ARREGLADO: un payload bien escapado se lee
+`&lt;img src=x onerror=alert(1)&gt;`, que contiene `onerror=` como texto
+inerte. Era testear el proxy en vez del efecto. La version que quedo cuenta los
+`<` del HTML producido y los compara contra un render con un valor inocuo: un
+valor bien escapado aporta CERO aperturas de etiqueta, sea cual sea su
+contenido.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1435 tests, 104 archivos).
+`mechanic.html` movio su `?v=` a `c1d856b1ef` - y eso ya no depende de
+acordarse: `scripts/versioned-assets-check.mjs` cubre `js/mechanic.js` desde
+hace tiempo, aunque `CLAUDE.md` todavia dice que hay que recordarlo a mano.
+
+### Solo local
+
+Nada de esto esta en produccion hasta que Diego mergee el PR.

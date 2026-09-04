@@ -275,7 +275,9 @@ export function shouldCreateBookingFor(pi) {
   return { ok: true };
 }
 
-async function handlePaymentIntentSucceeded(pi) {
+// Exported for tests: this is where a tampered payment turns into a real row,
+// so it is asserted by running it, not by reading its source.
+export async function handlePaymentIntentSucceeded(pi) {
   const verdict = shouldCreateBookingFor(pi);
   if (!verdict.ok) return { skipped: verdict.reason };
   const md = pi.metadata;
@@ -291,6 +293,28 @@ async function handlePaymentIntentSucceeded(pi) {
   if (existing?.length) return { alreadyBooked: existing[0].id };
 
   const svc = await priceForService({ id: md.bk_service_id, name: md.bk_service_name });
+
+  // priceForService() returns null when nothing in `services` matches - it does
+  // not throw, so until now the row below silently fell back to `svc?.name ||
+  // md.bk_service_name`, i.e. a 120-char string straight from whoever's browser
+  // held the page, stored forever and rendered in the mechanic's app. That was
+  // the stored-XSS entry point, and it also wrote service_price: 0.
+  //
+  // There is no legitimate booking without a service, so this is refused the
+  // same way an amount mismatch is: refund, do not book. A service genuinely
+  // deleted from the table between the PaymentIntent and this webhook lands
+  // here too - the client gets their money back rather than a $0 job.
+  if (!svc) {
+    console.error(
+      `[webhook] unknown service for ${pi.id}: id=${md.bk_service_id || '-'} name=${JSON.stringify(md.bk_service_name || '')} - refunding instead of creating a booking`
+    );
+    try {
+      await stripe.refunds.create({ payment_intent: pi.id });
+    } catch (e) {
+      console.error(`[webhook] refund failed for ${pi.id}:`, e.message);
+    }
+    return { rejected: 'unknown service', service: md.bk_service_name || null };
+  }
   const vanNumber = await vanForAddress(md.bk_address);
   const email = md.email || pi.receipt_email || null;
   const accountId = await accountForEmail(email);
@@ -346,8 +370,10 @@ async function handlePaymentIntentSucceeded(pi) {
     client_name: md.bk_name || '',
     client_email: email,
     client_phone: md.bk_phone || null,
-    service_name: svc?.name || md.bk_service_name || 'Service',
-    service_price: Number(svc?.price) || 0,
+    // Always the table's own name, never md.bk_service_name: the browser's
+    // string must not reach the database. The !svc guard above makes this safe.
+    service_name: svc.name,
+    service_price: Number(svc.price) || 0,
     callout_fee: calloutFee,
     scheduled_date: md.bk_date || null,
     scheduled_time: md.bk_time || null,
