@@ -30,6 +30,7 @@ import {
   recordCompletionOutcome,
 } from './_completion-notify.js';
 import { completionVerdict } from './_completion-guard.js';
+import { chargeCapVerdict, DEFAULT_MAX_CHARGE_AUD, DEFAULT_MAX_TIP_AUD } from './_charge-cap.js';
 import { occupiedBookings, expiredHoldIds, slotVerdict, HOLD_MINUTES } from './_slot-hold.js';
 import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { reviewCredential, reviewGate } from './_review-auth.js';
@@ -2167,7 +2168,7 @@ async function handleMechanicComplete(req, res) {
   // always for. This guard is for the other case - the replay minutes or hours
   // later, once that key has expired.
   const guardResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=status,final_charge_status&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=status,final_charge_status,service_price,discount_applied&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: sbHdr }
   ).catch(() => null);
   const guardRow = guardResp?.ok ? (await guardResp.json().catch(() => []))?.[0] : null;
@@ -2194,6 +2195,90 @@ async function handleMechanicComplete(req, res) {
       guardRow?.status
     );
     return res.status(verdict.status).json(verdict.body);
+  }
+
+  // ── What may be charged ────────────────────────────────────────────────
+  // Audit finding 3 (2026-09-04): the only check on final_charge_amount used
+  // to be `> 0`, and the line below it charges that number to a saved card.
+  // See api/_charge-cap.js for why this is a ceiling plus a log rather than a
+  // strict recomputation - in short, an outboxed completion replayed the next
+  // morning must not be refused because a part's price moved overnight.
+  //
+  // The parts are priced from parts_inventory, never from the request: the
+  // phone posts unit_price and total in parts_charged.items and neither is
+  // read here. A lookup that cannot be trusted (bad ids, network) leaves
+  // partsSell null, which drops back to the absolute cap alone - a completion
+  // is never blocked by a failed lookup.
+  const chargedItems = Array.isArray(parts_charged?.items) ? parts_charged.items : [];
+  let partsSell = 0;
+  if (chargedItems.length) {
+    partsSell = null;
+    const sellIds = [
+      ...new Set(
+        chargedItems
+          .map((p) => p?.id)
+          .filter(
+            (id) =>
+              typeof id === 'string' &&
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+          )
+      ),
+    ];
+    // Every charged line must resolve to a row, or the total is a guess.
+    if (sellIds.length === chargedItems.length) {
+      try {
+        const sellResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/parts_inventory?select=id,sell_price&id=in.(${sellIds
+            .map((id) => `"${id}"`)
+            .join(',')})`,
+          { headers: sbHdr }
+        );
+        if (sellResp.ok) {
+          const sellRows = await sellResp.json();
+          if (sellRows.length === sellIds.length) {
+            const sellById = new Map(sellRows.map((r) => [r.id, Number(r.sell_price) || 0]));
+            partsSell = chargedItems.reduce(
+              (sum, p) => sum + (parseInt(p?.qty, 10) || 0) * (sellById.get(p.id) || 0),
+              0
+            );
+          }
+        }
+      } catch (e) {
+        console.warn('[mechanic-complete] parts_inventory sell_price lookup failed:', e.message);
+      }
+    }
+  }
+
+  const cap = chargeCapVerdict({
+    finalChargeAmount: final_charge_amount,
+    tipAmount: tip_amount,
+    servicePrice: guardRow?.service_price,
+    discountApplied: guardRow?.discount_applied,
+    partsSell,
+    maxCharge: Number(process.env.MECHANIC_MAX_CHARGE_AUD) || DEFAULT_MAX_CHARGE_AUD,
+    maxTip: Number(process.env.MECHANIC_MAX_TIP_AUD) || DEFAULT_MAX_TIP_AUD,
+  });
+
+  // Logged on EVERY completion, accepted or not. These lines are the evidence
+  // for whether a strict server-side recomputation can be turned on later
+  // without refusing real work: if `discrepancy` is 0 or a small negative
+  // (discounts only ever lower it) across weeks of real jobs, it can.
+  console.log(
+    '[mechanic-complete] amount',
+    JSON.stringify({ booking_id, ...cap, parts_lines: chargedItems.length })
+  );
+  if (!cap.ok) {
+    captureMessage(`mechanic-complete refused an amount: ${cap.reason}`, 'error', {
+      booking_id,
+      mechanic_id: auth.mechanic?.id || null,
+      ...cap,
+    });
+    return res.status(400).json({
+      error:
+        'This amount could not be accepted. Check the total and try again, or contact the office.',
+      code: 'AMOUNT_REJECTED',
+      reason: cap.reason,
+    });
   }
 
   // Card-on-file auto-charge (Diego, 2026-07-22): if the client has a saved
@@ -5271,7 +5356,7 @@ async function readPostHog(days) {
   };
 }
 
-import { withSentry } from './_sentry.js';
+import { withSentry, captureMessage } from './_sentry.js';
 export default withSentry(handler, 'auth');
 async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';
