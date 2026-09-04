@@ -10997,6 +10997,73 @@ EN EL PREVIEW, el problema es mio y no suyo: que no mergee.
 Nada de esto esta en produccion hasta que Diego mergee el PR. Y aun mergeado,
 no bloquea nada hasta que se encienda `ADMIN_REQUIRE_AAL2`.
 
+
+---
+
+## 97. El presupuesto tambien dejaba que el navegador eligiera el servicio (04-sep-2026)
+
+**Bug vivo encontrado cerrando el punto 93. NO estaba en la auditoria del
+profesor.** Decidido y pedido por Diego el 04-sep.
+
+`handleRequestQuote` (`api/auth.js`) escribia en `bookings`:
+
+```js
+service_name: String(service_name).slice(0, 120),
+service_price: Number(service_price) || 0,
+```
+
+Los dos del cuerpo del pedido, sin contrastar contra `services`. Y `service_id`
+**llegaba en el body y no se leia nunca** - `js/app.js` ya lo mandaba.
+
+Era la SEGUNDA via por la que un navegador elegia que va en
+`bookings.service_name`. La primera (el webhook de Stripe, punto 93) costaba
+una tarifa de visita; **esta era gratis**, porque un presupuesto no cobra nada.
+El XSS quedo muerto igual con el arreglo del render, pero el dato sucio seguia
+entrando a la base, y el precio inventado seguia llegando al panel.
+
+### Por que no se arreglo en el punto 93
+
+Porque no es una decision tecnica. Si un presupuesto solo puede nombrar un
+servicio del catalogo, alguien que quiere algo que no esta en la lista deja de
+poder pedirlo por ese formulario - y eso es perder un contacto. **Se le
+pregunto a Diego y dijo que si.**
+
+El costo real es chico: no surge de la UI de la app, donde el servicio siempre
+sale del catalogo cargado del servidor (`window.appState.service.id`).
+
+### Lo que se hizo
+
+- El servicio se resuelve **exactamente como `handleGetPrice`**: por `id`,
+  despues por `name`, y `400 'Unknown service'` si no aparece. Mismo codigo,
+  mismo mensaje - no se invento un camino nuevo.
+- `service_name` sale del catalogo. `service_price` se **recalcula** con
+  `applySurcharge(svc.price, scheduled_date)`, que es literalmente lo que
+  `js/app.js` hace antes de mostrarlo, asi que un pedido legitimo cae en el
+  mismo numero.
+- **El WhatsApp que le llega a Diego tambien** usa el nombre del catalogo.
+  Antes la fila decia una cosa y el aviso otra.
+
+### Verificado
+
+9 tests que **ejecutan el handler** con un Supabase falso y miran la fila que
+se escribio de verdad. Leer el fuente buscando `svc.name` habria pasado sobre
+un handler que resuelve el servicio y despues escribe la copia del body igual.
+
+Vistos fallar en dos mutaciones:
+
+- Se restauran las dos escrituras del navegador: **5 rojos**.
+- Se acepta un servicio inexistente en vez de rechazarlo: **1 rojo**.
+
+El test del recargo de domingo esta puesto para que el arreglo no cambie
+silenciosamente el numero que el cliente vio en pantalla.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1503 tests).
+
+### Solo local
+
+Nada de esto esta en produccion hasta que Diego mergee el PR.
+
+
 ---
 
 ## 98. Abrir el panel no genera ni un renglon de `[admin-aal]` (04-sep-2026)

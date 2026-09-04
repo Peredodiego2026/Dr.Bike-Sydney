@@ -684,12 +684,14 @@ async function handleAddressSuggest(req, res) {
 // Stored as a booking row with status 'quote_requested' so it inherits the
 // admin detail view, the chat and the client history for free. Every revenue
 // figure keys off 'completed', so an unanswered enquiry cannot inflate them.
-async function handleRequestQuote(req, res) {
+// Exported for tests: this is the second place a browser string used to
+// reach bookings.service_name, so it is asserted by running it.
+export async function handleRequestQuote(req, res) {
   const {
     access_token,
     service_id,
     service_name,
-    service_price,
+    // service_price is deliberately NOT read: it is recomputed below.
     scheduled_date,
     scheduled_time,
     address,
@@ -716,6 +718,37 @@ async function handleRequestQuote(req, res) {
     userId = data?.user?.id || null;
   }
 
+  // The service is resolved against the catalogue, exactly the way
+  // handleGetPrice does it - same two lookups, same 'Unknown service'.
+  //
+  // Until 2026-09-04 this handler wrote `String(service_name).slice(0, 120)`
+  // and `Number(service_price)` straight from the request body into
+  // `bookings`. That was the SECOND way a browser-chosen string reached that
+  // column (docs/PENDIENTES.md 93 closed the first, in the Stripe webhook),
+  // and unlike that one it was free - an enquiry is not charged. `service_id`
+  // was already being sent and was simply never read.
+  //
+  // Diego's call, 2026-09-04: an enquiry may only name a service from the
+  // catalogue. The trade-off is real and was put to him - somebody wanting
+  // something not on the list can no longer send it through this form - and
+  // it does not arise from the app's own UI, where the service is always
+  // picked from the server-loaded catalogue (js/app.js submitQuoteRequest
+  // sends window.appState.service.id).
+  let svc = null;
+  if (service_id) {
+    const r = await sb.from('services').select('name,price').eq('id', service_id).maybeSingle();
+    svc = r.data;
+  }
+  if (!svc && service_name) {
+    const r = await sb.from('services').select('name,price').eq('name', service_name).maybeSingle();
+    svc = r.data;
+  }
+  if (!svc) return res.status(400).json({ error: 'Unknown service' });
+  // Recomputed, not taken from the body: js/app.js works out the same figure
+  // with applySurcharge() before showing it, so a legitimate enquiry lands on
+  // the identical number and a tampered one is simply ignored.
+  const quotedPrice = applySurcharge(Number(svc.price), scheduled_date);
+
   const { data: row, error } = await sb
     .from('bookings')
     .insert([
@@ -725,8 +758,8 @@ async function handleRequestQuote(req, res) {
         client_name: String(client_name || '').slice(0, 120),
         client_email: String(client_email || '').slice(0, 160) || null,
         client_phone: String(client_phone).slice(0, 40),
-        service_name: String(service_name).slice(0, 120),
-        service_price: Number(service_price) || 0,
+        service_name: svc.name,
+        service_price: quotedPrice,
         // No trip, no fee. Nothing is charged for an enquiry.
         callout_fee: 0,
         scheduled_date: scheduled_date || null,
@@ -757,7 +790,7 @@ async function handleRequestQuote(req, res) {
   // the array: filter(Boolean) drops an empty string, so the '' separators
   // that used to sit in here were removed and never printed.
   const waFields = [
-    `Servicio: ${service_name}`,
+    `Servicio: ${svc.name}`,
     scheduled_date ? `Fecha que necesito: ${scheduled_date} ${scheduled_time || ''}`.trim() : '',
     `Direccion: ${address}`,
     client_name ? `Nombre: ${client_name}` : '',
@@ -784,7 +817,7 @@ async function handleRequestQuote(req, res) {
       data: {
         clientName: client_name || 'Cliente',
         clientPhone: client_phone,
-        service: service_name,
+        service: svc.name,
         date: scheduled_date,
         time: scheduled_time,
         address,
