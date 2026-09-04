@@ -12,7 +12,7 @@ import {
   isLoginLocked,
   recordLoginFailure,
   clearLoginFailures,
-  verifyMechanicToken,
+  verifyMechanicTokenPayload,
   LOGIN_LOCK_MINUTES,
   SELF_BASE_URL,
   normalizeAUPhone,
@@ -53,7 +53,17 @@ function hashPin(pin) {
 // ── Mechanic session token (stateless, HMAC-signed) ──────────────────────────
 // token = base64url(payload).base64url(sig). Lets the mechanic app prove an
 // earlier successful login without resending the raw PIN on every request.
-const TOKEN_TTL_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
+// 14 days, down from 60 (audit finding 4, 2026-09-04). Sixty days is
+// effectively "never ask for the PIN again": a token stolen off a phone that
+// was lost or sold stayed valid for two months, and until the session-version
+// check below there was nothing that could end it early.
+//
+// Not shorter than this on purpose. A completion with no signal is parked in
+// an offline outbox on the mechanic's phone and replayed with whatever token
+// is stored at flush time (js/mechanic.js) - too short a window and a job done
+// out of coverage cannot be closed until the mechanic logs in again. Fourteen
+// days covers a normal absence and still cuts the exposure by three quarters.
+const TOKEN_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 function b64url(buf) {
   return Buffer.from(buf)
@@ -62,15 +72,15 @@ function b64url(buf) {
     .replace(/\//g, '_')
     .replace(/=+$/, '');
 }
-function makeToken(mid) {
+function makeToken(mid, sv = 0) {
   const secret = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || '';
-  const payload = b64url(JSON.stringify({ mid, exp: Date.now() + TOKEN_TTL_MS }));
+  // sv defaults to 0 so a database where the session_version column has not
+  // been created yet mints tokens that match what authMechanic reads back
+  // (also 0). The check is inert until the migration runs, never wrong.
+  const payload = b64url(JSON.stringify({ mid, exp: Date.now() + TOKEN_TTL_MS, sv: Number(sv) || 0 }));
   const sig = b64url(crypto.createHmac('sha256', secret).update(payload).digest());
   return `${payload}.${sig}`;
 }
-// One implementation, in _security.js, so /api/send-push can identify a mechanic
-// without importing this whole module.
-const verifyToken = verifyMechanicToken;
 
 // Shared mechanic auth: accepts a session token OR a PIN (dual-accept during
 // migration). Returns { mechanic } on success, or { error, status } on failure.
@@ -117,9 +127,27 @@ export async function authMechanic(req) {
   const contacts = await resp.json();
 
   let mechanic = null;
-  const mid = token ? verifyToken(token) : null;
-  if (mid) {
-    mechanic = contacts.find((c) => c.id === mid);
+  const claims = token ? verifyMechanicTokenPayload(token) : null;
+  if (claims) {
+    const candidate = contacts.find((c) => c.id === claims.mid);
+    // The token is only as current as the mechanic's session version. Rotating
+    // the PIN from Admin bumps that number, and every token minted before the
+    // rotation stops matching here - which is what makes "Reset PIN" actually
+    // revoke access rather than just change what the next login needs.
+    //
+    // A database without the column reads undefined -> 0, and tokens are minted
+    // with sv 0, so this compares 0 === 0 and changes nothing until the
+    // migration in scripts/add-mechanic-session-version.sql has been run.
+    if (candidate && (Number(candidate.session_version) || 0) === claims.sv) mechanic = candidate;
+    else if (candidate)
+      console.warn(
+        '[authMechanic] stale token for mechanic',
+        claims.mid,
+        '- token sv',
+        claims.sv,
+        'vs current',
+        candidate.session_version
+      );
   }
   if (!mechanic && pin) {
     // pin_hash only. There used to be a second lookup here against a plaintext
@@ -1738,7 +1766,7 @@ async function handleMechanic(req, res) {
     name: mechanicName(mechanic),
     phone: mechanic.phone,
     role: mechanic.role || 'mechanic',
-    token: makeToken(mechanic.id),
+    token: makeToken(mechanic.id, mechanic.session_version),
     // null = "all zones" (see admin.html mechanic profile). The client used
     // to have no way to know this and just kept whatever van the mechanic
     // last picked on the login screen's own selector - harmless now that
@@ -4610,12 +4638,42 @@ export async function handleAdminSetMechanicPin(req, res) {
   // fails with `42703: column "pin" does not exist`. PostgREST rejects a write
   // naming an unknown column, so the `pin: null` turned every Reset PIN into a
   // 500. The button could not have worked for anyone, whatever their role.
+  // Rotating the PIN has to END the sessions the old PIN opened, or "Reset
+  // PIN" revokes nothing: a mechanic token lasts 14 days and, before this,
+  // nothing in it referred to the PIN at all (audit finding 4, 2026-09-04).
+  // Bumping session_version invalidates every token minted before this moment
+  // (see authMechanic).
+  //
+  // scripts/*.sql in this project are run BY HAND, so the column may not exist
+  // yet - and PostgREST rejects an UPDATE naming an unknown column outright,
+  // which is exactly how the `pin: null` above turned every Reset PIN into a
+  // 500. So the column is read first, and only written when the read proves it
+  // is there. `revoked` goes back to Admin so Diego is told the truth about
+  // what this button did, instead of being shown a new PIN and left to assume
+  // the old sessions are gone.
+  const update = { pin_hash: hashPin(finalPin) };
+  let revoked = false;
+  const { data: cur, error: readErr } = await auth.sb
+    .from('escalation_contacts')
+    .select('session_version')
+    .eq('id', contact_id)
+    .maybeSingle();
+  if (!readErr && cur && cur.session_version !== undefined) {
+    update.session_version = (Number(cur.session_version) || 0) + 1;
+    revoked = true;
+  } else if (readErr) {
+    console.warn(
+      '[admin-set-mechanic-pin] session_version unavailable, PIN rotated without revoking sessions:',
+      readErr.message
+    );
+  }
+
   const { error } = await auth.sb
     .from('escalation_contacts')
-    .update({ pin_hash: hashPin(finalPin) })
+    .update(update)
     .eq('id', contact_id);
   if (error) return res.status(500).json({ error: error.message });
-  return res.status(200).json({ ok: true, pin: finalPin });
+  return res.status(200).json({ ok: true, pin: finalPin, sessions_revoked: revoked });
 }
 
 // Payments Stripe took that no booking ever claimed, over a date range Diego

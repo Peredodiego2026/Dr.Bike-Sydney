@@ -392,7 +392,15 @@ function b64url(buf) {
     .replace(/=+$/, '');
 }
 
-export function verifyMechanicToken(token) {
+// The whole verified payload, not just the id: authMechanic needs `sv` (the
+// session version) to tell a token issued before the mechanic's PIN was
+// rotated from one issued after it. Rotating the PIN used to leave every
+// existing 60-day token working, which made "reset this mechanic's PIN" a
+// gesture that revoked nothing (audit finding 4, 2026-09-04).
+//
+// Returns null on any failure - bad signature, malformed, expired - exactly
+// as before, so a caller that only needs the id can treat null the same way.
+export function verifyMechanicTokenPayload(token) {
   try {
     const secret = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || '';
     if (!secret) return null; // fail closed
@@ -406,10 +414,21 @@ export function verifyMechanicToken(token) {
       Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()
     );
     if (!data.mid || !data.exp || Date.now() > data.exp) return null;
-    return data.mid;
+    // A token minted before this change carries no `sv`. It reads as 0, which
+    // is what session_version defaults to, so those tokens keep working until
+    // the PIN is actually rotated - deploying this does not sign anyone out.
+    return { mid: data.mid, sv: Number(data.sv) || 0 };
   } catch {
     return null;
   }
+}
+
+// Unchanged signature for every caller that only needs to know WHO the token
+// belongs to (api/send-push.js). The session-version check lives in
+// authMechanic, which is the only place that has the mechanic's row to compare
+// against.
+export function verifyMechanicToken(token) {
+  return verifyMechanicTokenPayload(token)?.mid || null;
 }
 
 // True only for a signed-in user whose profiles.role is 'admin'. Two hops on

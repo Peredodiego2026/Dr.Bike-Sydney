@@ -23,7 +23,13 @@ const updateSpy = vi.fn(async () => ({ error: null }));
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'u1', email: ADMIN } }, error: null }) },
-    from: () => ({ update: (payload) => ({ eq: async (_c, id) => updateSpy(payload, id) }) }),
+    // select/maybeSingle joined 2026-09-04: rotating a PIN now reads
+    // session_version first so it can bump it (audit finding 4). Returning a
+    // row here means these tests exercise the path a migrated database takes.
+    from: () => ({
+      update: (payload) => ({ eq: async (_c, id) => updateSpy(payload, id) }),
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { session_version: 3 }, error: null }) }) }),
+    }),
   }),
 }));
 
