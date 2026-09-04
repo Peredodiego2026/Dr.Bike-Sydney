@@ -1,6 +1,89 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-08-31) — read this first
+## Current state (2026-09-03) — read this first
+
+- **La auditoria de 20 puntos ya no vive en un chat.** Estaba referenciada en
+  17 lugares de `docs/PENDIENTES.md` y en dos lineas de este archivo que se
+  contradecian ("10 de 20 cerrados" contra "none of it is fixed yet"), pero la
+  lista en si no existia en ningun archivo. Reconstruida desde evidencia del
+  repo en **`docs/AUDITORIA-PRELANZAMIENTO.md`**: **17 de 20 cerrados**, y los
+  puntos **6, 16 y 18 declarados como huecos** - no aparecen en ninguna parte y
+  no se inventaron. Ese archivo reemplaza a las dos lineas viejas.
+
+- **La base esta al dia, y es un dato, no una suposicion.** Diego corrio la
+  consulta del runbook el 03-sep: `Success. No rows returned`, o sea **las 41
+  migraciones aplicadas**. Eso cerro las 12 que desde el 10-ago no tenian
+  constancia de nada. La consulta ademas no miraba dos migraciones
+  (`enable-realtime-bookings.sql` y `lock-public-views.sql`) porque no son
+  columnas ni tablas: una es una publicacion y la otra son permisos, y ninguna
+  deja rastro en `information_schema.columns`. Ya estan en la consulta.
+
+- **EL HALLAZGO DE LA SESION: ningun cliente invitado podia dejar una resena.**
+  El pedido de Diego era "dejar armado el sistema de captacion de resenas". Ya
+  estaba armado entero y con guards - lo que no estaba era que funcionara para
+  el unico cliente que un negocio sin lanzar tiene. Dos muros en archivos
+  distintos, ninguno roto por separado:
+
+  ```
+  js/supabase.js  sin sesion -> "Please sign in to leave a review."
+  api/auth.js     booking.client_id !== client_id -> 403
+  ```
+
+  Y `api/auth.js:1341` crea las reservas de invitado con `client_id: null`. Esa
+  condicion no podia dar verdadera nunca para un invitado, ni creandose una
+  cuenta despues. **Todos recibian el email de resena y ninguno podia dejarla.**
+  Arreglado con el `tracking_token` como segunda credencial (PENDIENTES 89).
+
+- **Y tuvo dos secuelas, las dos del mismo tipo: dos listas que tienen que
+  coincidir y nada las ataba.**
+  - **90:** el reintento (`send-cron?type=completion-retry`) rearma el email
+    desde SU PROPIA consulta, que no pedia `tracking_token`. Le mandaba el link
+    viejo justo al cliente cuyo primer intento habia fallado - el unico al que
+    el reintento existe para rescatar.
+  - **91:** hay DOS caminos por los que una resena sale a internet y solo uno
+    recortaba el nombre. `GET /api/chat?type=reviews` es publico, sin auth, lee
+    `bookings` con la service key y devolvia **nombre y apellido enteros**. No
+    lo llama nada del repo y responde igual desde internet. Hoy contesta vacio
+    porque no hay resenas; se volvia fuga sola el dia del primer trabajo.
+
+- **VERIFICADO EN PRODUCCION, no en local.** Despues de mergear:
+
+  ```
+  POST /api/auth {"role":"client-review","tracking_token":"<uuid al azar>","rating":5}
+    -> 404 "Booking not found"     (antes: 400 "access_token and client_id required")
+  ```
+
+  El 404 es la prueba: el servidor **acepto el token como credencial** y fue a
+  buscar la reserva. El camino del invitado esta vivo. Ademas `sw.js` sirve
+  `drbike-static-v121` y `index.html` el `?v=` nuevo de `js/app.js`.
+
+- **Tres trampas propias en esta sesion, que valen mas que los hallazgos.**
+  1. `export { x } from './y.js'` re-exporta pero **no trae el nombre al
+     alcance local**, y `auth.js` lo llamaba doce lineas mas abajo:
+     `ReferenceError` en produccion que `node --check` da por bueno.
+  2. Un guard que escaneaba `booking.<campo>` matcheaba **dentro de un
+     comentario**.
+  3. Y el codigo que sacaba los comentarios **no sacaba nada**: `//.*$` sobre
+     CRLF no sustituye, porque `.` no matchea un terminador de linea. Es el
+     mismo error de CRLF que este repo ya tenia anotado.
+
+  Las tres aparecieron por correr los tests **esperando verlos fallar**. Todos
+  los guards de esta sesion se verificaron reintroduciendo el bug a proposito.
+
+- **Lo que sigue sin probarse, y no es codigo faltante:** la cadena de resena de
+  punta a punta con un trabajo real completado (necesita un mecanico de verdad),
+  el punto 15 con un lector de pantalla real, y los 3 puntos de la auditoria que
+  no se recuperaron.
+
+- **PENDIENTE DIEGO:** reemitir su PIN desde Admin (sigue con el de 4 digitos),
+  el abogado de marcas (fecha real: 31-ene-2027), el link corto de "escribir
+  resena" desde Google Business Profile - hoy el boton cae en la ficha de Maps y
+  cada tap de mas pierde resenas -, y decidir si se borra
+  `/api/chat?type=reviews`, que no lo llama nada del repo.
+
+- Test count: **1424**, en 102 archivos. `npm run check` son **12** scripts.
+
+## Current state (2026-08-31)
 
 - **Ritmo: sin apuro.** Diego, al cierre: *"no te apures con nada, si lo
   podemos hacer con paciencia tenemos 2 meses mas de trabajo antes del
