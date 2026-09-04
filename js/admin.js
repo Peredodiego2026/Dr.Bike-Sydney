@@ -1518,12 +1518,19 @@ ${lines.join('\n')}
   }`;
 }
 
+// The one place this file states the ABN. It used to be written by hand in the
+// printed report and left as the literal placeholder "[Your ABN here]" in the
+// BAS - in the same file, thirty lines apart. Nobody would have caught it on
+// screen: the BAS is a downloaded .txt that only gets opened in front of an
+// accountant, which is the worst possible moment to find out.
+const DRBIKE_ABN = '87 654 025 287';
+
 function exportBAS() {
   const d = window._finData;
   if (!d) return;
   const content = `DR. BIKE SYDNEY — BAS SUMMARY
 Period: ${d.periodStr}
-ABN: [Your ABN here]
+ABN: ${DRBIKE_ABN}
 Generated: ${new Date().toLocaleDateString('en-AU')}
 
 G1 — Total Sales (incl GST): $${d.revenue.toLocaleString('en-AU')}
@@ -1645,7 +1652,7 @@ function exportFinancePDF() {
         <div class="brand-icon">🚲</div>
         <div>
           <div class="brand-name">Dr. Bike Sydney</div>
-          <div class="brand-sub">drbikesydney.com.au · ABN 87 654 025 287</div>
+          <div class="brand-sub">drbikesydney.com.au · ABN ${DRBIKE_ABN}</div>
         </div>
       </div>
       <div class="report-info">
@@ -1731,7 +1738,7 @@ function exportFinancePDF() {
     </table>
 
     <div class="footer">
-      <div class="footer-left">Dr. Bike Sydney · ABN 87 654 025 287 · contact@drbikesydney.com.au · This report is for internal use only.</div>
+      <div class="footer-left">Dr. Bike Sydney · ABN ${DRBIKE_ABN} · contact@drbikesydney.com.au · This report is for internal use only.</div>
       <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
     </div>
   </div></body></html>`);
