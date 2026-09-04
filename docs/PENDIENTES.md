@@ -10664,3 +10664,107 @@ hace tiempo, aunque `CLAUDE.md` todavia dice que hay que recordarlo a mano.
 ### Solo local
 
 Nada de esto esta en produccion hasta que Diego mergee el PR.
+
+
+---
+
+## 94. El importe que se le cobraba a la tarjeta lo decidia el telefono (04-sep-2026)
+
+**Hallazgo 3 de la auditoria tecnica. Confirmado leyendo el codigo.**
+
+`handleMechanicComplete` tenia UNA sola comprobacion sobre el importe:
+
+```js
+if (!skip_auto_charge && Number(final_charge_amount) > 0 && process.env.STRIPE_SECRET_KEY) {
+  ...
+  amount: Math.round(Number(final_charge_amount) * 100),
+```
+
+Ese numero lo calcula `calcChargeBreakdown()` en `js/mechanic.js` y viaja en el
+cuerpo del pedido. Sin tope, sin contraste contra el servicio ni contra los
+repuestos. Del otro lado hay una tarjeta guardada del cliente y un
+`off_session: true, confirm: true`.
+
+### Por que es urgente, y no es este hallazgo solo
+
+Es el ultimo eslabon de una cadena de tres:
+
+```
+PIN de 4 digitos (10.000 combinaciones, bloqueo por IP pero no por cuenta)
+  -> token de mecanico de 60 dias que rotar el PIN no invalida (punto 95)
+    -> cobro de importe arbitrario a una tarjeta guardada  <- ESTE
+```
+
+### Lo que se hizo: un TECHO, no un recalculo estricto
+
+`api/_charge-cap.js` (funcion pura, sin red) decide, y `handleMechanicComplete`
+la llama ANTES de crear el PaymentIntent.
+
+- Los repuestos se valoran leyendo `sell_price` de `parts_inventory`. El
+  `unit_price` y el `total` que manda el telefono en `parts_charged.items` **no
+  se leen**.
+- El precio del servicio y el descuento salen de la fila de `bookings`, del
+  mismo SELECT que ya hacia el guard de duplicados - cero pedidos extra.
+- `esperado = max(0, service_price - discount_applied) + repuestos`
+- Se rechaza si el importe supera `esperado * 1.2 + 50`, o el techo absoluto de
+  $2000, o si no es un numero, o si es negativo.
+- La propina tiene su propio techo ($500). No se cobra a la tarjeta, pero SI se
+  escribe en la reserva y se suma en las pantallas de finanzas, asi que una
+  propina absurda corrompe los reportes en vez de la tarjeta.
+- Los dos techos se leen de `MECHANIC_MAX_CHARGE_AUD` y `MECHANIC_MAX_TIP_AUD`.
+  **No hay que configurar nada**: sin la variable, valen los defaults.
+
+### Por que un techo y no la igualdad exacta
+
+Porque el modo de fallo del estricto es un mecanico parado en la calle que no
+puede cerrar un trabajo que ya hizo. Una completacion se aparca en un outbox
+offline en el telefono y se reenvia cuando vuelve la senal, a veces a la manana
+siguiente (`api/_completion-guard.js`). Un recalculo exacto rechazaria esa
+completacion porque el precio de un repuesto se movio de noche.
+
+Un techo no puede hacer eso: solo rechaza importes que ningun trabajo real
+alcanza, y ya deja acotado el dano maximo de la cadena. Mismo criterio que el
+despliegue de AAL2: observar antes de bloquear.
+
+**Y se loguea SIEMPRE**, aceptado o rechazado:
+
+```
+[mechanic-complete] amount {"booking_id":"...","received":149,"expected":149,"discrepancy":0,...}
+```
+
+Esos renglones son la evidencia para decidir despues si el estricto se puede
+encender. Si a lo largo de semanas de trabajos reales `discrepancy` es 0 o un
+negativo chico (los descuentos solo bajan), se puede. **Lo deciden los logs, no
+una lectura del codigo.**
+
+Si el lookup de repuestos no vuelve, `expected` queda en null y solo aplica el
+techo absoluto. Una consulta que falla nunca bloquea una completacion.
+
+### Lo que NO se toco, a proposito
+
+- **La propina no se cobra a la tarjeta.** `paymentIntents.create` usa solo
+  `final_charge_amount`; el `tip_amount` viaja aparte y se cobra por EFTPOS o
+  en efectivo. Parece raro y es deliberado - no se unifico.
+- **El descuento del mecanico** (`parts_charged.discount_amount`) sigue
+  viniendo del telefono. Solo BAJA el cobro, asi que no es parte de la cadena
+  de ataque; anotado, no arreglado.
+
+### Verificado
+
+19 tests. Se vieron fallar en dos mutaciones distintas, y se comprobo en las
+dos que se rompio lo que se creia romper:
+
+- Sacando la llamada a `chargeCapVerdict` de `api/auth.js`: **5 en rojo** (los
+  del cableado). El de "los repuestos se valoran desde la base" quedo verde
+  correctamente - esa consulta no se muto.
+- Sacando los dos techos del modulo puro: **4 en rojo** (los del veredicto).
+
+El test del cableado saca los comentarios antes de buscar, con `[^\n]*` y no
+`.*$`, porque el archivo es CRLF y `.` no matchea un terminador de linea - las
+dos trampas que este archivo ya tiene anotadas.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0.
+
+### Solo local
+
+Nada de esto esta en produccion hasta que Diego mergee el PR.
