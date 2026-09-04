@@ -1,5 +1,128 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
+## Current state (2026-09-04) - read this first
+
+**Sesion de cierre de los hallazgos de seguridad de la auditoria del profesor
+sobre `f496270`.** Nueve PR. Siete mergeados y en produccion, dos esperando.
+
+### Lo que se cerro
+
+| PR | Hallazgo | Estado |
+|---|---|---|
+| #411 | XSS almacenado en la app del mecanico | en produccion |
+| #412 | El importe lo decidia el telefono | en produccion |
+| #413 | Rotar el PIN no revocaba sesiones | en produccion + SQL corrido |
+| #414 | MFA del admin (modo observar) | en produccion, **sin bloquear** |
+| #415 | El presupuesto elegia el servicio | en produccion, **verificado ahi** |
+| #416 | Medir el nivel del token en el login | en produccion |
+| #417 | Migraciones sin fila en el runbook | en produccion |
+| #418 | Fotos de reclamos en URL adivinable | abierto, falta bucket |
+| #419 | El SQL de RLS + AAL2 | abierto, no se corre solo |
+
+### EL DATO QUE DESBLOQUEA TODO LO DEMAS
+
+El punto 96 dejo dos preguntas abiertas **a proposito**, porque asumirlas
+llevaba al apagon por los dos lados. Produccion las contesto el 04-sep:
+
+```
+[admin-aal] {"verdict":"aal2","aal":"aal2","amr":["totp","password"]}
+```
+
+- **El JWT de este proyecto SI trae el claim `aal`**, y vale `aal2`.
+- **El token posterior al TOTP SI es distinto** del que da la contrasena. Si
+  hubiera sido el mismo, encender `ADMIN_REQUIRE_AAL2` habria rechazado **el
+  login correcto**.
+
+Sin ese renglon, el runbook de RLS (#419) no se podia escribir. Quien lo lea
+para justificar apurar el encendido: los datos son de UNA sesion, no de dias.
+
+### Y UN HALLAZGO QUE CAMBIA EL ALCANCE DEL PUNTO 96
+
+**Abrir el panel entero no genera ni un renglon `[admin-aal]`.** Verificado en
+los logs de produccion despues de que Diego entrara y usara el tablero:
+`verifyAdminSession` corre solo en las 14 rutas `admin-*`, y **el panel lee
+Supabase directo desde el navegador**.
+
+O sea: cerrar el servidor cubre menos de lo que parece. **Las politicas RLS son
+la mitad que falta**, y eso ya no es un razonamiento - hay dos evidencias
+(punto 98). Ahi vive #419.
+
+### Verificado EN PRODUCCION, no en local
+
+```
+GET  /mechanic.html          -> js/mechanic.js?v=c1d856b1ef   (el hash de #411)
+POST /api/auth               -> 400 {"error":"Unknown service"}
+     {"role":"request-quote","service_name":"ZZZ-TEST-NO-EXISTE",...}
+```
+
+El 400 es la prueba de #415: antes ese mismo pedido escribia una fila con el
+nombre y el precio que mandaba el navegador.
+
+### PENDIENTE DIEGO, en orden de importancia
+
+1. **Mergear #418 y #419.** #419 va despues de #418 (lo contiene).
+2. **Crear el bucket `claim-evidence`** (Storage > New bucket > **Public: NO**).
+   Sin el, las fotos de reclamos siguen en el bucket publico - aunque la ruta
+   ya no se puede adivinar, que era la via practica.
+3. **Usar el panel unos dias** y avisar. Con esos logs se decide si se enciende
+   `ADMIN_REQUIRE_AAL2=1` en Vercel. **Ahora mismo no bloquea nada.**
+4. **Leer `docs/RUNBOOK-RLS-AAL2.md` entero** y correrlo paso a paso, sin apuro.
+   Un cambio de RLS **no tiene Instant Rollback**.
+
+### CUATRO TRAMPAS PROPIAS DE ESTA SESION, que valen mas que los hallazgos
+
+Las cuatro salieron de **poner el bug de vuelta y exigir el rojo**. Ninguna se
+habria visto leyendo el codigo.
+
+1. **`indexOf` devuelve -1, y -1 es menor que todo.** Un test afirmaba
+   `indexOf(A) < indexOf(B)` para probar un orden. Al mutar, A desaparecia,
+   `indexOf` daba -1, y el test **quedaba verde sobre exactamente el bug que
+   vigilaba**. Es la familia de "un patron que no se encuentra no hace fallar
+   al test que lo busca", que este repo ya tenia anotada tres veces.
+2. **`not.toContain('onerror=')` es testear el proxy.** Un payload BIEN
+   escapado se lee `&lt;img src=x onerror=alert(1)&gt;` y contiene `onerror=`
+   como texto inerte. La asercion fallaba sobre el codigo ya arreglado. Lo que
+   funciona es contar las aperturas de etiqueta contra un render inocuo: un
+   valor bien escapado aporta CERO, sea cual sea su contenido.
+3. **Un `fetch` sin abortar delante de cada pedido de admin.** Lo agrego el
+   propio PR que existe para evitar apagones. Aparecio como un timeout de 5s en
+   un test ajeno, no leyendo el diff. Lleva `AbortSignal.timeout(4000)`.
+4. **`await import('api/auth.js')` en un test que no lo necesitaba.** Con la
+   suite entera corriendo pasa de 5s y muere - el mismo timeout del punto 88.
+   La funcion ni siquiera se exporta: las aserciones eran sobre el fuente.
+
+### DOS PATRONES QUE ESTA SESION USO TRES VECES Y CONVIENE COPIAR
+
+- **Observar antes de bloquear.** El AAL2 (#414), el techo del importe (#412) y
+  el runbook de RLS (#419) salieron los tres calculando el veredicto,
+  registrandolo, y **dejando pasar**. Los logs deciden cuando bloquear, no la
+  lectura del codigo. En #412 y #414 el interruptor es una variable de entorno,
+  que se apaga **sin consumir el unico paso de rollback de Vercel**.
+- **Tolerar que la columna no exista.** `scripts/*.sql` se corren a mano, asi
+  que el codigo llega antes que la base. Al LEER: `Number(x) || 0`, que sin
+  columna da 0 igual que el default - inerte, nunca equivocado. Al ESCRIBIR:
+  **leer la columna primero**, porque PostgREST devuelve 500 ante una columna
+  desconocida, que es exactamente como el `pin: null` rompia el boton de Reset
+  PIN. Y decirle a Diego si la revocacion se aplico o no, en vez de mostrarle
+  "PIN reseteado" mientras el telefono viejo sigue entrando.
+
+### Lo que se anoto y NO se empezo
+
+- **`job-photos` sigue publico** para fotos de trabajos, perfiles de mecanicos
+  y resenas. Hacerlo privado rompe cada `<img>` de la app. Las rutas de esas
+  tres llevan un UUID de reserva o de contacto, asi que **no son enumerables**
+  como si lo era la de reclamos - por eso se cerro primero esa.
+- **La extension del archivo sale de `file.name.split('.').pop()`** en las tres
+  subidas del navegador, sin validar el tipo. Requiere ser mecanico o admin
+  autenticado, y el bucket es publico: subir un `.html` daria hosting arbitrario
+  en el dominio de Supabase. Riesgo bajo, real, sin arreglar.
+- **`parts_charged.discount_amount`** sigue viniendo del telefono. Solo BAJA el
+  cobro, asi que no es parte de la cadena de ataque.
+
+### Test count: 1549. `check`, `lint` y `test` en exit 0.
+
+---
+
 ## Current state (2026-09-03) — read this first
 
 - **La auditoria de 20 puntos ya no vive en un chat.** Estaba referenciada en
