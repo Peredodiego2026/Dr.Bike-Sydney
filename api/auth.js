@@ -31,11 +31,17 @@ import {
 } from './_completion-notify.js';
 import { completionVerdict } from './_completion-guard.js';
 import { chargeCapVerdict, DEFAULT_MAX_CHARGE_AUD, DEFAULT_MAX_TIP_AUD } from './_charge-cap.js';
+import { readTokenClaims, adminAalVerdict } from './_admin-aal.js';
 import { occupiedBookings, expiredHoldIds, slotVerdict, HOLD_MINUTES } from './_slot-hold.js';
 import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { reviewCredential, reviewGate } from './_review-auth.js';
 import { shortClientName } from './_privacy.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
+// The factor lookup runs in front of every admin request. Four seconds is
+// long enough for a healthy Supabase and short enough that a sick one costs a
+// pause, not the panel.
+const ADMIN_FACTOR_LOOKUP_TIMEOUT_MS = 4000;
+
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
@@ -4766,7 +4772,70 @@ async function verifyAdminSession(access_token, SERVICE_KEY) {
   // Only emails on the admin allowlist may use admin-* roles (same check the
   // admin login flow itself uses).
   if (!isAdminEmail(user.email)) return { error: 'Not authorized', status: 403 };
-  return { sb, user };
+
+  // ── Second factor: OBSERVING, not blocking (audit finding 1, 2026-09-04) ──
+  // See api/_admin-aal.js for why the rule is conditional and why this ships
+  // switched off. Short version: there is ONE admin email in the whole system,
+  // and refusing an AAL1 token from an account with no TOTP enrolled locks the
+  // only admin out of the panel with the fix on the far side of the door.
+  //
+  // ADMIN_REQUIRE_AAL2=1 in Vercel turns the same decision into a block. Do
+  // not set it until the [admin-aal] lines below have shown, over real days of
+  // Diego's own work, that nothing legitimate would have been refused. A
+  // Vercel env var only takes effect on a NEW deployment - changing it does
+  // not touch deployments already built.
+  const claims = readTokenClaims(access_token);
+  let hasVerifiedFactor = null;
+  // Only worth asking when the token is not already AAL2: if it is, the
+  // account plainly has a factor, and every admin request would otherwise pay
+  // for a round trip that cannot change the answer.
+  if (claims.aal !== 'aal2') {
+    try {
+      // Timed out on purpose. This sits in front of every admin request, and
+      // an un-aborted fetch that hangs would hang the whole panel - a slow
+      // dependency turning into an outage is exactly what this PR exists to
+      // avoid. A timeout leaves hasVerifiedFactor null, which never rejects.
+      const meR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+        signal: AbortSignal.timeout(ADMIN_FACTOR_LOOKUP_TIMEOUT_MS),
+      });
+      if (meR.ok) {
+        const me = await meR.json();
+        hasVerifiedFactor = (Array.isArray(me.factors) ? me.factors : []).some(
+          (f) => f.factor_type === 'totp' && f.status === 'verified'
+        );
+      }
+    } catch (e) {
+      // Stays null - "could not tell" - which never rejects.
+      console.warn('[admin-aal] factor lookup failed:', e.message);
+    }
+  }
+  const aal = adminAalVerdict({
+    aal: claims.aal,
+    hasVerifiedFactor,
+    enforce: process.env.ADMIN_REQUIRE_AAL2 === '1',
+  });
+  // Logged on EVERY admin request. `amr` is included because it is the other
+  // half of the answer to "did this session actually do TOTP" and nobody has
+  // seen this project's real token yet.
+  console.log(
+    '[admin-aal]',
+    JSON.stringify({
+      verdict: aal.verdict,
+      would_reject: aal.wouldReject,
+      enforcing: process.env.ADMIN_REQUIRE_AAL2 === '1',
+      aal: claims.aal ?? null,
+      amr: Array.isArray(claims.amr) ? claims.amr.map((m) => m?.method || m) : null,
+      has_verified_factor: hasVerifiedFactor,
+    })
+  );
+  if (!aal.allow)
+    return {
+      error: 'Your session needs the authenticator step. Sign out and sign in again.',
+      status: 401,
+    };
+
+  return { sb, user, aal };
 }
 
 // Cleans up a booking's synced calendar event after an admin-side cancel
