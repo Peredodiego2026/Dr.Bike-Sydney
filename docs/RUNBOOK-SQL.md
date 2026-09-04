@@ -66,6 +66,48 @@ la seccion 3 y se vuelve a correr.
 
 ---
 
+## 0.b UNA COSA QUE NO ES SQL: el bucket `claim-evidence` (04-sep-2026)
+
+**Estado: falta crearlo.** Hasta que exista, las fotos y la factura de un
+reclamo se siguen guardando en el bucket publico `job-photos` - el codigo cae
+ahi a proposito, porque perder la evidencia que un cliente acaba de mandar es
+peor que guardarla en un lugar demasiado legible.
+
+Lo que ya cambio sin que hagas nada: la carpeta dejo de ser la hora
+(`claims/1757000000000/`) y paso a ser un identificador al azar, asi que **ya
+no se puede adivinar ni enumerar**. Eso solo cierra la parte practica del
+agujero; el bucket publico sigue siendo publico.
+
+### Como se crea (30 segundos, no es SQL)
+
+1. Supabase > **Storage** > **New bucket**
+2. Nombre exacto: `claim-evidence`
+3. **Public bucket: NO** (dejarlo apagado - ese es el punto)
+4. Create
+
+No hace falta ninguna policy: el servidor escribe y lee con la service key,
+que ignora RLS, y el panel recibe un link firmado que vence en una hora.
+
+### Como se comprueba que quedo bien
+
+Mandar un reclamo de prueba desde `claims.html` con una foto, abrir
+**Admin > Claims** y ver la miniatura. Si se ve, el link firmado funciona.
+Y en los logs de Vercel **no tiene que aparecer**:
+
+```
+[submit-claim] claim-evidence rejected the upload (HTTP 404) - falling back to the public bucket
+```
+
+Si aparece ese renglon, el bucket no existe o esta mal escrito el nombre.
+
+### Lo que NO arregla
+
+Las fotos de reclamos **que ya estan subidas** siguen en el bucket publico, en
+su URL de siempre. Son pocas y de pruebas; si en algun momento hubo una real,
+se borra a mano desde Storage.
+
+---
+
 ## 1. Para que existe este documento
 
 Hay codigo que ya esta en produccion y que **no funciona hasta que alguien

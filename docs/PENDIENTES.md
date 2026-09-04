@@ -11193,3 +11193,92 @@ Vistos fallar en tres mutaciones:
   protege nada.
 
 `npm run check` 0, `npm run lint` 0, `npm test` 0.
+
+
+---
+
+## 100. La factura y las fotos de un reclamo estaban en una URL adivinable (04-sep-2026)
+
+**Hallazgo 8 de la auditoria tecnica.**
+
+```js
+const ts = Date.now();
+const path = `claims/${ts}/${label}_${idx}.jpg`;
+// -> https://<proyecto>.supabase.co/storage/v1/object/public/job-photos/claims/1757000000000/invoice_0.jpg
+```
+
+Bucket **publico**, carpeta = **una marca de tiempo**, y solo cuatro nombres de
+archivo posibles por reclamo (`photo_0`, `photo_1`, `photo_2`, `invoice_0`).
+
+Sin login y sin token, cualquiera que supiera aproximadamente **cuando** una
+persona mando un reclamo tenia su factura y las fotos de su bicicleta rota. Y
+sin saber la hora, un dia entero son ~8,6e7 milisegundos: caro, no imposible.
+
+### Dos cosas rotas, y solo una se arregla desde el codigo
+
+1. **La ruta se podia adivinar** -> `crypto.randomUUID()` en vez de
+   `Date.now()`. De ~8,6e7 posibilidades por dia a ~5e36. **Esto ya esta.**
+2. **El bucket es publico** -> hay que crear uno privado, y los buckets se
+   crean a mano en el panel de Supabase, igual que las migraciones.
+
+### Como convive con un bucket que todavia no existe
+
+`uploadB64` intenta `claim-evidence` (privado) y, si no esta, **cae a
+`job-photos`** avisando en el log. Perder la evidencia que un cliente acaba de
+mandar es peor que guardarla en un lugar demasiado legible - y con la carpeta
+al azar ya no se encuentra sola.
+
+Lo que se guarda en `claims.photo_urls` cambia segun donde cayo:
+
+```
+claim-evidence/claims/<uuid>/photo_0.jpg          privado -> se firma al leerlo
+https://.../public/job-photos/claims/<uuid>/...   publico -> se devuelve tal cual
+```
+
+`handleAdminClaimsList` firma las primeras con `expiresIn: 3600` y **deja
+intactas las segundas**, asi que ningun reclamo viejo se rompe. Si la firma
+falla devuelve `null`, nunca la ruta cruda, y `js/admin.js` filtra los nulos en
+vez de renderizar `src="null"`.
+
+### PENDIENTE DIEGO - no es SQL, son 30 segundos
+
+Supabase > **Storage** > **New bucket** > nombre `claim-evidence` >
+**Public bucket: NO** > Create. No hace falta ninguna policy.
+
+Los pasos completos y como comprobarlo estan en `docs/RUNBOOK-SQL.md`, seccion
+0.b. Hasta que lo cree, el punto 1 igual protege: la ruta ya no se adivina.
+
+### Lo que NO arregla
+
+Las fotos de reclamos **ya subidas** siguen en el bucket publico, en su URL de
+siempre, y ninguna migracion las mueve. Son de prueba; si hubiera una real, se
+borra a mano desde Storage.
+
+Y el bucket `job-photos` sigue publico para todo lo demas - fotos de trabajos,
+de perfil de mecanicos, de resenas. Eso es un proyecto aparte: hacerlo privado
+rompe cada `<img>` que hoy las muestra. **Anotado, no empezado.**
+
+### Verificado, y un test decorativo cazado en el acto
+
+13 tests. Tres mutaciones:
+
+- Vuelve `Date.now()`: **2 rojos**.
+- La lista devuelve las filas crudas sin firmar: **1 rojo**.
+- Se prueba primero el bucket publico: **PASO EN VERDE**.
+
+Esa tercera es la que importa. La asercion era
+`indexOf('put(CLAIM_BUCKET)') < indexOf('put(CLAIM_FALLBACK_BUCKET)')`, y al
+mutar, la llamada al bucket privado **desaparecia**: `indexOf` devolvia `-1`, y
+`-1 < n` es verdadero. El test quedaba verde sobre exactamente el bug para el
+que fue escrito. Corregido exigiendo que las dos existan antes de comparar el
+orden; con el arreglo, la mutacion da 1 rojo.
+
+Es la misma familia que las tres que este archivo ya tiene anotadas: **un
+patron que no se encuentra no hace fallar al test que lo busca.**
+
+Y una segunda trampa propia: un `await import('../../api/auth.js')` que no
+aportaba nada (la funcion no se exporta, las aserciones eran sobre el fuente)
+hacia fallar el archivo por timeout de 5s **solo con la suite entera
+corriendo** - el mismo timeout que ya esta anotado en el punto 88.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1515 tests).

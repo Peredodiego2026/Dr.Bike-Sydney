@@ -4570,6 +4570,12 @@ async function handleVapidPublicKey(req, res) {
   return res.status(200).json({ key: process.env.VAPID_PUBLIC_KEY || null });
 }
 
+// Where a claim's evidence goes. Private on purpose - see uploadB64 below.
+// CLAIM_FALLBACK_BUCKET is the public bucket the rest of the app uses; it is
+// only reached when the private one has not been created yet.
+const CLAIM_BUCKET = 'claim-evidence';
+const CLAIM_FALLBACK_BUCKET = 'job-photos';
+
 // ── Claims (warranty/complaint reports) ─────────────────────────────────────
 // Public submit endpoint + admin-only list/update. The claims table has RLS
 // with no public policies - everything goes through here with the service key,
@@ -4592,18 +4598,34 @@ async function handleSubmitClaim(req, res) {
     return res.status(400).json({ error: 'Invalid service date' });
 
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-  const ts = Date.now();
+  // Audit finding 8 (2026-09-04). This used to be `Date.now()`, which made the
+  // whole path guessable: `claims/<a millisecond>/invoice_0.jpg`, with only
+  // four possible filenames per claim. Anyone who knew roughly WHEN somebody
+  // complained - or who was willing to walk a day's worth of milliseconds -
+  // could pull a stranger's damage photos and their invoice out of a public
+  // bucket. A random id makes the folder unguessable on its own, before any
+  // question of bucket permissions.
+  const folder = crypto.randomUUID();
 
   // Photos arrive as client-side-compressed base64 JPEGs (claims.html caps
   // them at 1280px), max 3 + optional invoice screenshot, each <= ~1.5MB
   // decoded so the whole request stays under Vercel's body limit.
+  //
+  // They are written to CLAIM_BUCKET, which is meant to be a private bucket -
+  // an invoice and photographs of somebody's damaged property are not public
+  // documents. Buckets are created by hand in the Supabase dashboard, exactly
+  // like the SQL migrations, so this falls back to the existing public bucket
+  // when the private one is not there yet: losing the evidence a client just
+  // submitted would be worse than storing it somewhere over-readable, and the
+  // random folder above already stops it being found. Admin says which one it
+  // landed in. See docs/RUNBOOK-SQL.md.
   async function uploadB64(b64, label, idx) {
-    try {
-      const data = String(b64).replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(data, 'base64');
-      if (buffer.length > 1_500_000) return null;
-      const path = `claims/${ts}/${label}_${idx}.jpg`;
-      const up = await fetch(`${SUPABASE_URL}/storage/v1/object/job-photos/${path}`, {
+    const data = String(b64).replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(data, 'base64');
+    if (buffer.length > 1_500_000) return null;
+    const path = `claims/${folder}/${label}_${idx}.jpg`;
+    const put = (bucket) =>
+      fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
         method: 'POST',
         headers: {
           apikey: SERVICE_KEY,
@@ -4613,7 +4635,22 @@ async function handleSubmitClaim(req, res) {
         },
         body: buffer,
       });
-      return up.ok ? `${SUPABASE_URL}/storage/v1/object/public/job-photos/${path}` : null;
+    try {
+      const up = await put(CLAIM_BUCKET);
+      // A private object has no public URL: the path is stored instead, and
+      // handleAdminClaimsList signs it on the way out.
+      if (up.ok) return `${CLAIM_BUCKET}/${path}`;
+      console.warn(
+        `[submit-claim] ${CLAIM_BUCKET} rejected the upload (HTTP ${up.status}) - falling back to the public bucket. Create it in Supabase > Storage, private.`
+      );
+    } catch (e) {
+      console.warn(`[submit-claim] ${CLAIM_BUCKET} upload threw:`, e.message);
+    }
+    try {
+      const up = await put(CLAIM_FALLBACK_BUCKET);
+      return up.ok
+        ? `${SUPABASE_URL}/storage/v1/object/public/${CLAIM_FALLBACK_BUCKET}/${path}`
+        : null;
     } catch {
       return null;
     }
@@ -4788,7 +4825,56 @@ async function handleAdminClaimsList(req, res) {
     .order('created_at', { ascending: false })
     .limit(200);
   if (error) return res.status(500).json({ error: error.message });
-  return res.status(200).json(data || []);
+
+  // Evidence stored in the private bucket has no public URL - the row holds
+  // `claim-evidence/claims/<uuid>/photo_0.jpg`. Sign it here, for one hour,
+  // so the panel can show it without the object being readable by anyone who
+  // learns the path. Rows written before the private bucket existed still
+  // hold a full public URL and are passed through untouched (audit finding 8).
+  const signed = await Promise.all(
+    (data || []).map(async (c) => ({
+      ...c,
+      photo_urls: await Promise.all((c.photo_urls || []).map(signClaimEvidence)),
+      invoice_url: await signClaimEvidence(c.invoice_url),
+    }))
+  );
+  return res.status(200).json(signed);
+}
+
+// A stored reference is either a full public URL (old rows, and the fallback
+// path) or `<bucket>/<path>` inside the private bucket. Only the second kind
+// is signed; anything else comes back exactly as it went in, so this can never
+// break a claim that was filed before the private bucket existed.
+//
+// A failure returns null rather than the raw reference: handing the panel a
+// path it cannot load is confusing, and handing it something that LOOKS like a
+// URL and is not would be worse.
+async function signClaimEvidence(ref) {
+  if (!ref || typeof ref !== 'string') return ref ?? null;
+  const prefix = `${CLAIM_BUCKET}/`;
+  if (!ref.startsWith(prefix)) return ref;
+  const path = ref.slice(prefix.length);
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/${CLAIM_BUCKET}/${path}`, {
+      method: 'POST',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ expiresIn: 3600 }),
+    });
+    if (!r.ok) {
+      console.warn(`[admin-claims] could not sign ${path}: HTTP ${r.status}`);
+      return null;
+    }
+    const d = await r.json();
+    return d?.signedURL ? `${SUPABASE_URL}/storage/v1${d.signedURL}` : null;
+  } catch (e) {
+    console.warn(`[admin-claims] signing threw for ${path}:`, e.message);
+    return null;
+  }
 }
 
 async function handleAdminClaimsUpdate(req, res) {

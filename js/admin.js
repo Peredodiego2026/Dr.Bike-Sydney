@@ -6352,7 +6352,10 @@ async function loadClaims() {
             year: 'numeric',
           })
         : '—';
+      // A null slips in when the server could not sign a private evidence file
+      // (audit finding 8) - rendering it would give an <img> with src="null".
       const photos = (c.photo_urls || [])
+        .filter(Boolean)
         .map(
           (u) =>
             `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--border)"></a>`
