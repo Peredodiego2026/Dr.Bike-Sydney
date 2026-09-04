@@ -11282,3 +11282,87 @@ hacia fallar el archivo por timeout de 5s **solo con la suite entera
 corriendo** - el mismo timeout que ya esta anotado en el punto 88.
 
 `npm run check` 0, `npm run lint` 0, `npm test` 0 (1515 tests).
+
+---
+
+## 101. Las reglas de la base miran el rol y nunca el segundo factor (04-sep-2026)
+
+**La otra mitad del hallazgo 1.** El punto 96 cerro las 14 rutas del servidor.
+El punto 98 mostro, con logs de produccion, que **el panel casi no las usa**.
+
+Todas las politicas RLS de admin dicen lo mismo:
+
+```sql
+exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
+```
+
+Miran el rol. **Nunca el AAL.** Un `access_token` conseguido solo con la
+contrasena - el que `handleAdmin` entrega como `temp_token`, ANTES del TOTP -
+pasa todas ellas y lee `bookings` entero desde el navegador.
+
+### Por que recien ahora, y no en el punto 96
+
+Porque hasta el 04-sep no habia forma honesta de saber si el token posterior al
+TOTP era distinto del de la contrasena. Escribir una politica que exija `aal2`
+sobre un token que no lo trae **mata el panel**, y un cambio de RLS **no tiene
+el Instant Rollback que tiene un deploy**.
+
+El punto 98 puso el instrumento; produccion contesto:
+
+```
+[admin-aal] {"verdict":"aal2","aal":"aal2","amr":["totp","password"]}
+```
+
+Con eso, y solo con eso, se puede escribir el SQL.
+
+### Lo que se entrego: un runbook, NO un script
+
+`docs/RUNBOOK-RLS-AAL2.md`. **Nada corre solo, y no hay que correrlo hoy.**
+
+- **Agrega, no reescribe.** Una politica `as restrictive` por tabla, que se suma
+  con Y a las que ya estan. No hay un solo `drop` de una politica ajena - y hay
+  un test que lo exige. Reescribir obligaria a conocer el nombre exacto de cada
+  politica **en produccion**, y el repo no es prueba de lo que produccion tiene.
+  Borrar la equivocada deja a alguien afuera sin vuelta atras.
+- **Falla abierto.** La condicion es
+  `(auth.jwt() ->> 'aal') is distinct from 'aal1'`, no `= 'aal2'`. Si el claim
+  algun dia no viniera, deja pasar en vez de cerrar todo. Es la misma decision
+  que `api/_admin-aal.js`, escrita otra vez en la base.
+- **Es condicional.** `or not exists (... auth.mfa_factors ... status = 'verified')`.
+  Un admin sin autenticador entra igual, porque si no, no puede ni configurarlo.
+  Es el apagon, y esta cubierto por un test.
+- **Cuatro pasos, cada uno con su reversion ESCRITA ARRIBA** y su comprobacion.
+  El paso 1 no toca ninguna politica: solo crea la funcion y la prueba sola.
+  `bookings` va **ultima**, y con un dia de por medio: es la tabla que lee cada
+  cliente para ver sus propias reservas, asi que un error ahi no rompe el panel,
+  rompe la app.
+
+### Por que NO esta en `scripts/`
+
+Si estuviera, apareceria en la consulta del `RUNBOOK-SQL` como `>>> FALTA <<<`,
+que es una invitacion a correrlo sin leer las precauciones. Es el unico SQL del
+proyecto que no se puede correr asi. **Hay un test que lo mantiene fuera de
+`scripts/`.**
+
+### Verificado
+
+17 tests sobre las propiedades de seguridad del propio documento - un documento
+no se verifica solo. Vistos fallar en **seis mutaciones**:
+
+- La regla pasa a `= 'aal2'` (cerraria todo si faltara el claim): 1 rojo.
+- Una politica deja de ser `restrictive` - la falla que **se ve identica en el
+  panel de Supabase y hace lo contrario**, porque una permisiva se suma con O y
+  amplia el acceso en vez de limitarlo: 1 rojo.
+- Se quita la condicion del enrolamiento, o sea el apagon: 1 rojo.
+- `bookings` deja de ir ultima: 1 rojo.
+- La reversion pasa a ir DESPUES del paso que deshace - una reversion que se lee
+  cuando el panel ya esta oscuro: 1 rojo.
+- Se agrega un `drop` de una politica ajena: 1 rojo.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0.
+
+### Lo que NO resuelve
+
+- **`ADMIN_REQUIRE_AAL2` sigue apagado.** Es la mitad del servidor. Las dos son
+  independientes; conviene no encenderlas el mismo dia.
+- **`job-photos` sigue publico** para todo lo que no sea un reclamo (punto 100).
