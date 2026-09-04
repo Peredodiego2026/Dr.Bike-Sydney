@@ -11118,3 +11118,78 @@ un log - hay un test que lo vigila.
 escribir el token entero en el log (1 rojo).
 
 `npm run check` 0, `npm run lint` 0, `npm test` 0 (1502 tests).
+
+
+---
+
+## 99. Una migracion nueva podia no llegar nunca a la consulta que la vigila (04-sep-2026)
+
+**Hallazgo 5 de la auditoria tecnica: las migraciones se corren A MANO.**
+
+Y no se pueden automatizar: los scripts corren con permisos de dueÃ±o de la
+base, credenciales que ni la app ni Claude tienen ni deberian tener
+(`docs/RUNBOOK-SQL.md` seccion 1). Asi que el riesgo real no es "fallo el
+pipeline" - es que una migracion entre al repo y **nadie le avise a Diego que
+existe**.
+
+`docs/RUNBOOK-SQL.md` seccion 3 ya resuelve la mitad buena del problema: una
+consulta que le pregunta a la base cual falta. Pero esa consulta vale lo que
+vale su propia lista. **Un script agregado a `scripts/` sin su fila en la
+consulta hace que la consulta conteste "todo OK" mientras falta una
+migracion de verdad.**
+
+### No es hipotetico: ya estaba pasando cuando se escribio esto
+
+`scripts/add-mechanic-session-version.sql` entro esta misma manana con el punto
+95 y la consulta no lo miraba. Diego lo corrio porque yo se lo pase por chat,
+no porque el runbook se lo pidiera. La proxima vez que nadie lo pase por chat,
+el codigo sale a produccion esperando una columna que no esta.
+
+Y ya habia pasado antes: `enable-realtime-bookings.sql` y `lock-public-views.sql`
+estuvieron **un mes** en el documento sin que la consulta preguntara por ellos
+(ver la seccion 0 del runbook).
+
+### Lo que se hizo
+
+`scripts/migrations-check.mjs`, en `npm run check`. Compara los `.sql` de
+`scripts/` contra los que la consulta de la seccion 3 **realmente nombra**, y
+falla nombrando el archivo suelto.
+
+- Mira **adentro de la consulta**, no en todo el documento. Que un script este
+  mencionado en la prosa no es lo mismo que estar vigilado - esa distincion es
+  justo la que dejo pasar las dos de arriba durante un mes.
+- Si el ancla de la consulta desaparece, **falla ruidosamente** en vez de pasar
+  sobre un texto vacio.
+- Las exclusiones viven en `NOT_A_MIGRATION` con **una razon escrita cada una**,
+  y hay un test que exige esa razon. Una exclusion sin motivo es como se
+  esconde la proxima migracion de verdad. Hoy son tres: un backfill de datos,
+  un SELECT de diagnostico y la reparacion puntual de una reserva del 05-ago.
+- Y falla tambien si una exclusion nombra un archivo que ya no existe.
+
+Se agrego la fila 47 al runbook (`escalation_contacts.session_version`), que
+era la que faltaba.
+
+### Lo que esto NO hace, y hay que decirlo
+
+**No corre nada, y no sabe si la base esta al dia.** Sigue haciendo falta que
+Diego pegue la consulta en Supabase. Lo unico que garantiza es que cuando la
+pegue, la consulta pregunte por TODO lo que hay en el repo.
+
+La otra mitad - que el codigo tolere una columna que todavia no existe - no se
+puede chequear con un script: se resuelve caso por caso, como en el punto 95.
+
+### Verificado
+
+8 tests. **El check se corre como proceso y se juzga por su codigo de salida**,
+no reimplementando su logica.
+
+Vistos fallar en tres mutaciones:
+
+- Se planta un `.sql` que el runbook no nombra: el check da exit 1 y **dice el
+  nombre del archivo**. El test lo borra en un `finally`, porque un archivo
+  plantado que sobrevive rompe `npm run check` para todos.
+- Se saca la fila 47 del runbook: 3 rojos.
+- Se saca el check de `npm run check`: 1 rojo - sin eso, nada de lo anterior
+  protege nada.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0.
