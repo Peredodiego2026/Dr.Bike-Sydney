@@ -42,6 +42,28 @@ import { auditOrphanPayments } from './_orphan-audit.js';
 // pause, not the panel.
 const ADMIN_FACTOR_LOOKUP_TIMEOUT_MS = 4000;
 
+// The two questions api/_admin-aal.js says it cannot answer by reading code:
+// does THIS project's JWT carry an `aal` claim, and does the token that comes
+// back from /factors/{id}/verify differ from the one signInWithPassword gave?
+//
+// verifyAdminSession's own [admin-aal] line cannot answer them, because it only
+// runs on the fourteen admin-* routes and simply opening the panel calls none
+// of them (most of the dashboard reads Supabase straight from the browser).
+// This runs on every admin login instead, which is the one thing that always
+// happens. Logging only - no behaviour depends on it.
+function logAdminTokenLevel(stage, token) {
+  const c = readTokenClaims(token);
+  console.log(
+    '[admin-aal-login]',
+    JSON.stringify({
+      stage,
+      aal: c.aal ?? null,
+      amr: Array.isArray(c.amr) ? c.amr.map((m) => m?.method || m) : null,
+      has_aal_claim: 'aal' in c,
+    })
+  );
+}
+
 
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
@@ -1630,6 +1652,7 @@ async function handleAdmin(req, res) {
     });
     const d = await r.json();
     if (!r.ok) return res.status(401).json({ error: d.message || 'Invalid authenticator code' });
+    logAdminTokenLevel('after-totp', d.access_token);
     return res.status(200).json({ access_token: d.access_token, refresh_token: d.refresh_token });
   }
 
@@ -1694,6 +1717,7 @@ async function handleAdmin(req, res) {
     const verD = await verR.json();
     if (!verR.ok)
       return res.status(401).json({ error: verD.message || 'Invalid code — try again' });
+    logAdminTokenLevel('after-enrolment', verD.access_token);
     return res
       .status(200)
       .json({ access_token: verD.access_token, refresh_token: verD.refresh_token });
@@ -1716,6 +1740,7 @@ async function handleAdmin(req, res) {
 
   const userToken = data.session.access_token;
   const userRefresh = data.session.refresh_token;
+  logAdminTokenLevel('after-password', userToken);
 
   // Check for an enrolled+verified TOTP factor. Read it from the user object —
   // GoTrue has no standalone factors-list endpoint, so the previous GET /factors
