@@ -106,6 +106,20 @@ Las fotos de reclamos **que ya estan subidas** siguen en el bucket publico, en
 su URL de siempre. Son pocas y de pruebas; si en algun momento hubo una real,
 se borra a mano desde Storage.
 
+## 0.c HAY OTRO RUNBOOK, Y NO SE MEZCLA CON ESTE (04-sep-2026)
+
+`docs/RUNBOOK-RLS-AAL2.md` trae SQL que **no es una migracion** y que **no hay
+que correr por inercia**. Cambia las reglas de permisos de la base para que el
+panel exija el codigo del autenticador, y un cambio de reglas **no tiene el
+boton de rollback que tiene Vercel**.
+
+Por eso ese SQL vive en su propio documento y NO en `scripts/`: si estuviera
+ahi, apareceria en la consulta de la seccion 3 como `>>> FALTA <<<`, que es una
+invitacion a correrlo sin leer las precauciones. Hay un test que lo mantiene
+fuera de `scripts/`.
+
+Se lee entero, se corre paso a paso y se prueba entre medio. Nada urgente.
+
 ---
 
 ## 1. Para que existe este documento
