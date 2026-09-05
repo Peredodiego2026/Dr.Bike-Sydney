@@ -184,3 +184,56 @@ describe('it is not filed as a migration', () => {
     }
   });
 });
+
+describe('the runbook says whether it has been applied', () => {
+  // This repo's recurring documentation bug is a file that stops matching
+  // reality: CONTEXT.md once carried two lines contradicting each other, and
+  // AUDITORIA-PRELANZAMIENTO.md listed three points as unrecoverable for months
+  // after they could have been recovered. A runbook that still reads "do not
+  // run this today" after it HAS been run invites running it twice.
+  const applied = /## APLICADO EL \d{4}-\d{2}-\d{2}/.test(doc);
+
+  it('does not tell the reader to hold off on something already done', () => {
+    if (applied) {
+      expect(doc).not.toMatch(/Nada de esto se corre solo, y no hay que\s+correrlo hoy/);
+    }
+  });
+
+  it('names every policy it claims to have applied', () => {
+    if (!applied) return;
+    // Scoped to the applied table and matched as plain substrings. The first
+    // version built a RegExp from a template string and the escaping came out
+    // wrong: the whole match collapsed to the bare word "RESTRICTIVE", so it
+    // passed no matter which row was deleted. Found by deleting one and seeing
+    // the test stay green - the fifth self-inflicted trap of this session, and
+    // the same family as the other four.
+    const start = doc.indexOf('| tabla | politica | permissive |');
+    expect(start, 'the applied table is gone').toBeGreaterThan(-1);
+    // The table ends at the first blank line after it. CRLF and LF both, since
+    // this file is checked out CRLF on Windows and LF in CI.
+    const end = doc.slice(start).search(/\r?\n\r?\n/);
+    const table = doc.slice(start, start + (end === -1 ? doc.length : end));
+    for (const t of [
+      'availability',
+      'bookings',
+      'discount_codes',
+      'mechanic_locations',
+      'van_zones',
+    ]) {
+      expect(table, `${t} is not a row in the applied table`).toContain(
+        `${t}_requires_second_factor`
+      );
+    }
+    // Five rows, every one of them RESTRICTIVE. A row that said PERMISSIVE
+    // would be reporting a policy that grants instead of restricts.
+    expect((table.match(/RESTRICTIVE/g) || []).length).toBe(5);
+    expect(table).not.toMatch(/PERMISSIVE/);
+  });
+
+  it('keeps the reversions, because they are the way out if one has to go', () => {
+    // Applied does not mean the drops become dead weight - they are the only
+    // exit if a policy turns out to block something real.
+    expect(doc).toMatch(/drop policy if exists bookings_requires_second_factor/);
+    expect(doc).toMatch(/El texto original, conservado/);
+  });
+});
