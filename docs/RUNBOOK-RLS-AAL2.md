@@ -1,7 +1,58 @@
 # RUNBOOK RLS + AAL2 - la otra mitad del hallazgo 1
 
-Escrito el 2026-09-04. Para Diego. **Nada de esto se corre solo, y no hay que
-correrlo hoy.** Se lee entero primero.
+Escrito el 2026-09-04.
+
+## APLICADO EL 2026-09-05. No hay que volver a correrlo.
+
+Diego corrio los cuatro pasos y la comprobacion final devolvio las **cinco**
+politicas en `RESTRICTIVE`:
+
+| tabla | politica | permissive |
+|---|---|---|
+| `availability` | `availability_requires_second_factor` | RESTRICTIVE |
+| `bookings` | `bookings_requires_second_factor` | RESTRICTIVE |
+| `discount_codes` | `discount_codes_requires_second_factor` | RESTRICTIVE |
+| `mechanic_locations` | `mechanic_locations_requires_second_factor` | RESTRICTIVE |
+| `van_zones` | `van_zones_requires_second_factor` | RESTRICTIVE |
+
+`npm run rls:check` sigue en exit 0 despues de aplicarlas: 21 tablas cerradas
+al anonimo, 4 publicas sirviendo. Las politicas nuevas apuntan a
+`authenticated`, asi que no tocan ese lado - **pero eso se comprobo, no se
+supuso**.
+
+**Lo que reemplazo al dia de espera antes de `bookings`.** El documento pedia
+dejar pasar un dia porque esa tabla la lee cada cliente. Se resolvio con un
+dato en vez de con una espera:
+
+```sql
+select count(*) from auth.mfa_factors where status = 'verified';  -- devolvio 1
+```
+
+Ese 1 es Diego. **Ningun cliente tiene un segundo factor**, asi que todos caen
+en la rama `not exists` de la funcion y pasan. Si algun dia ese numero sube
+porque un cliente enrola TOTP, esa cuenta pasa a necesitar AAL2 para ver sus
+propias reservas - **es el unico escenario en que este cambio puede molestar a
+un cliente**, y hoy no existe.
+
+### Dos borrados accidentales, y la leccion de presentacion
+
+Durante la aplicacion, dos bloques de reversion se pegaron por error: primero
+el de las tres politicas del paso 3, despues el de `bookings`. Nada se rompio
+(borrar una politica restrictiva solo devuelve las cosas a como estaban), pero
+el estado quedo a medias y hubo que rehacerlo.
+
+**La causa fue como estaba escrito, no quien lo corrio:** las reversiones
+estaban intercaladas con los pasos, en el mismo mensaje, listas para copiar. La
+forma correcta es dar **solo** los `create` y entregar un `drop` unicamente
+cuando algo falla, y de a una tabla. Queda anotado para el proximo runbook.
+
+---
+
+## El texto original, conservado
+
+Se deja tal cual para la proxima base que haya que armar desde cero, y porque
+las reversiones de cada paso siguen siendo el camino de salida si alguna
+politica hay que sacar.
 
 ---
 

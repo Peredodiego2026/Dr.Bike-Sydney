@@ -40,6 +40,8 @@ describe('the repo as it stands', () => {
 describe('a migration the runbook never asks about', () => {
   const planted = join(root, 'scripts', 'zz-planted-by-a-test.sql');
 
+  // Same reason as abn-single-source.test.js: this spawns the checker three
+  // times, and process spawns get slow when the whole suite is running.
   it('fails the check, and names the file', () => {
     writeFileSync(planted, '-- planted by migrations-check.test.js\nselect 1;\n');
     try {
@@ -52,7 +54,7 @@ describe('a migration the runbook never asks about', () => {
       unlinkSync(planted);
     }
     expect(runCheck().code).toBe(0);
-  });
+  }, 20000);
 });
 
 describe('the exclusion list', () => {

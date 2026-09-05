@@ -11622,3 +11622,91 @@ copias que se separan es como un arreglo queda a medias.
 **`job-photos` sigue siendo publico.** Esto acota QUE se puede guardar ahi; no
 cambia que lo guardado se ve con solo tener el link. Sigue anotado, sigue sin
 empezar.
+
+## 105. El runbook de RLS + AAL2, aplicado (05-sep-2026)
+
+**Diego corrio los cuatro pasos del punto 101.** La otra mitad del hallazgo 1
+esta cerrada: las politicas de la base ya no miran solo el rol.
+
+| tabla | politica | permissive |
+|---|---|---|
+| `availability` | `availability_requires_second_factor` | RESTRICTIVE |
+| `bookings` | `bookings_requires_second_factor` | RESTRICTIVE |
+| `discount_codes` | `discount_codes_requires_second_factor` | RESTRICTIVE |
+| `mechanic_locations` | `mechanic_locations_requires_second_factor` | RESTRICTIVE |
+| `van_zones` | `van_zones_requires_second_factor` | RESTRICTIVE |
+
+`npm run rls:check` sigue en exit 0 despues de aplicarlas - 21 tablas cerradas
+al anonimo, 4 publicas sirviendo. Las nuevas apuntan a `authenticated`, asi que
+no tocan ese lado, **pero eso se comprobo en vez de suponerlo**.
+
+### El dia de espera se reemplazo por un dato
+
+El runbook pedia dejar pasar un dia antes de `bookings`, porque esa tabla la
+lee cada cliente para ver sus propias reservas. Se resolvio preguntando:
+
+```sql
+select count(*) from auth.mfa_factors where status = 'verified';  -- 1
+```
+
+Ese 1 es Diego. **Ningun cliente tiene segundo factor**, asi que todos caen en
+la rama `not exists` de `has_second_factor()` y pasan. Un dato es mejor que una
+espera.
+
+**El unico escenario en que esto puede molestar a un cliente** es que alguno
+enrole TOTP: esa cuenta pasaria a necesitar AAL2 para ver sus propias reservas.
+Hoy no existe, y si el numero de arriba sube algun dia, hay que mirarlo.
+
+### Dos borrados accidentales, y la culpa es de como estaba escrito
+
+Durante la aplicacion se pegaron por error dos bloques de reversion: primero el
+de las tres politicas del paso 3, despues el de `bookings`. Nada se rompio -
+borrar una politica restrictiva devuelve las cosas a como estaban - pero el
+estado quedo a medias y hubo que rehacerlo.
+
+**La causa no fue quien lo corrio: fue como se lo entregue.** Los `create` y
+los `drop` iban intercalados en el mismo mensaje, los dos listos para copiar.
+La forma correcta es entregar **solo** los `create`, y dar un `drop` unicamente
+cuando algo falla, de a una tabla. Anotado para el proximo runbook.
+
+### LA TRAMPA DE LA SESION, y es la quinta del mismo tipo
+
+El test nuevo que verifica la tabla de "aplicado" hacia esto:
+
+```js
+new RegExp(`${t}_requires_second_factor\S*\s*\|\s*RESTRICTIVE`)
+```
+
+Se borro una fila de la tabla y **el test siguio en verde**. Imprimiendo el
+match: valia `"RESTRICTIVE"` a secas. El patron colapsaba, la primera mitad
+matcheaba vacio, y la asercion pasaba sin importar que fila faltara.
+
+Es la misma familia que las otras cuatro de estos dos dias, y **la unica razon
+por la que se encontro fue borrar una fila a proposito y exigir el rojo**.
+Reescrito sin construir un regex: se acota el texto a la tabla y se buscan
+substrings, mas contar que haya exactamente 5 `RESTRICTIVE` y ningun
+`PERMISSIVE`.
+
+### Y un timeout, tambien de los ya anotados
+
+`abn-single-source.test.js` pasaba solo y fallaba con la suite entera: 6.3s
+contra el limite de 5. Lanza tres procesos y `abn-check.mjs` recorre el repo
+entero; con todo corriendo a la vez, compiten por CPU. Mismo perfil que el
+punto 88. Se les subio el limite a 20s a ese test y al de `migrations-check`,
+que lanza procesos igual.
+
+### Verificado
+
+20 tests sobre el runbook, vistos fallar en cuatro mutaciones: dejar el aviso
+de "no correrlo hoy" cuando ya se corrio, sacar una tabla de la lista de
+aplicadas, que una fila diga `PERMISSIVE`, y borrar las reversiones.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1591 tests),
+`npm run rls:check` 0 contra produccion.
+
+### Lo que queda
+
+- **El bucket `claim-evidence` sigue sin crearse** (punto 100). Es lo unico
+  pendiente que necesita a Diego y no esta hecho.
+- **`ADMIN_REQUIRE_AAL2` sigue apagado** (punto 96). Es la mitad del servidor y
+  se enciende con una variable en Vercel, cuando los logs lo respalden.

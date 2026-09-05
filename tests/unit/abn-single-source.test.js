@@ -74,6 +74,11 @@ describe('the ATO checksum', () => {
 describe('a second, different ABN appearing anywhere', () => {
   const planted = join(root, 'zz-planted-by-a-test.html');
 
+  // 20s, not the default 5. This spawns `node scripts/abn-check.mjs` three
+  // times and that script walks the whole repo; alone it takes under a second,
+  // but with the full suite competing for CPU it went to 6.3s and died on the
+  // timeout. Same shape as docs/PENDIENTES.md 88 - green in isolation, red only
+  // when everything runs.
   it('fails the check and prints both numbers', () => {
     // A plausible-looking but different ABN, the way a half-finished find and
     // replace would leave one behind.
@@ -89,7 +94,7 @@ describe('a second, different ABN appearing anywhere', () => {
       unlinkSync(planted);
     }
     expect(runCheck().code).toBe(0);
-  });
+  }, 20000);
 });
 
 describe('what it looks at', () => {
