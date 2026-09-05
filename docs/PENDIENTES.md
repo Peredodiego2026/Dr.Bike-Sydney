@@ -11366,3 +11366,103 @@ no se verifica solo. Vistos fallar en **seis mutaciones**:
 - **`ADMIN_REQUIRE_AAL2` sigue apagado.** Es la mitad del servidor. Las dos son
   independientes; conviene no encenderlas el mismo dia.
 - **`job-photos` sigue publico** para todo lo que no sea un reclamo (punto 100).
+
+---
+
+## 102. Los tres puntos que la auditoria daba por perdidos, y el ABN en 45 archivos (05-sep-2026)
+
+**Dos cosas: se recuperaron los puntos 6, 16 y 18 de la auditoria de 20 puntos,
+y el 6 resulto tener media falla viva.**
+
+### Los tres puntos perdidos
+
+`docs/AUDITORIA-PRELANZAMIENTO.md` los listaba como `NO RECUPERADO` desde que
+se reconstruyo la lista: su enunciado solo habia existido en un chat. Estaban
+en los transcripts (`~/.claude/projects/*.jsonl`).
+
+```
+6.  ABN y GST visibles, y en las facturas - ATENCION (contable / ATO)
+16. Paginas de suburbio - HUECO
+18. Prueba social - HUECO ("el unico bloqueante real del lanzamiento")
+```
+
+**Como se sabe que son de ESA lista y no de otra.** Los transcripts tienen
+varias listas numeradas, y los primeros greps devolvieron puntos de tres listas
+mezclados - "6. Cache-busting", "6. El pasaporte de la bici", "18. 4 tablas sin
+historial de migracion". El ancla fue el **punto 15**: su texto recuperado
+coincide **palabra por palabra** con lo que la tabla ya tenia escrito para el
+15, y los cuatro comparten un formato (`N. **Titulo - ESTADO.**`) que ninguna
+otra lista usa. Sin ese ancla habria documentado tres puntos equivocados con
+total confianza.
+
+### El punto 6: la factura estaba bien, el ABN no
+
+La mitad fiscal ya estaba cerrada. `api/send-invoice.js` tiene las tres cosas
+que la ATO exige para que un documento sea una factura y no un recibo:
+`Tax Invoice`, el ABN, y el GST **desglosado en su propio renglon**.
+
+Lo que no estaba: **el ABN escrito a mano en 45 archivos** - `api/auth.js`,
+`api/send-email.js`, `api/send-invoice.js` (3 veces), `api/_email-i18n.js`,
+`js/admin.js`, y cada `.html` del sitio - **sin nada que los atara**.
+
+Es exactamente el bug del BAS de hace ocho dias (punto 92, PR #410), donde el
+ABN estaba a mano tres veces en UN archivo, alguien lleno dos y se olvido de la
+tercera, y el BAS salio diciendo `ABN: [Your ABN here]`. A 45 archivos el mismo
+error es mas facil de cometer y mucho mas dificil de ver.
+
+### `scripts/abn-check.mjs`, en `npm run check`
+
+Comprueba dos cosas, y la segunda no la puede hacer una persona a ojo:
+
+1. **Que todos los ABN del repo sean el mismo numero.**
+2. **Que ese numero pase el checksum de la ATO.** Once digitos no alcanzan: el
+   ultimo es digito verificador, asi que un error de tipeo o dos digitos
+   permutados producen un numero que **parece perfectamente valido en una
+   factura** y no lo es.
+
+El ABN actual (`87 654 025 287`) **pasa el checksum**. Eso no prueba que sea el
+de Diego - prueba que no es un numero inventado, que era el caso peor.
+
+**Dos exclusiones, las dos con la razon escrita en el archivo:**
+
+- `.claude/` - la skill `trademark-status` cita los ABN de OTRAS empresas
+  encontradas en IP Australia ("THE BIKE DOC" en Melbourne, un "DR BIKE" en
+  VIC 3083). **El check los encontro en su primera corrida**, que es buena
+  evidencia de que el patron funciona.
+- `tests/` - el propio test planta un ABN distinto a proposito para probar que
+  el check lo agarra. Un test nunca es un documento fiscal.
+
+### Los otros dos siguen abiertos, y ninguno es codigo
+
+- **16 (paginas de suburbio):** son **60** (20 suburbios x 3 idiomas) y de 198
+  lineas solo difieren 12 - **94% identicas**, que es literalmente la
+  definicion de *doorway page* de Google. No se arregla escribiendo mas texto:
+  necesita datos locales reales, y eso Diego solo lo puede dar desde Sydney
+  (nov-2026).
+- **18 (prueba social):** 0 resenas, 0 perfiles de mecanico, 0 fotos de
+  trabajos. El sistema de captacion **ya esta armado y con guards** (puntos
+  89-91); lo que falta son clientes.
+
+**El marcador queda en 18 de 20**, con los dos abiertos identificados en vez de
+desconocidos.
+
+### Verificado
+
+14 tests. El check se corre **como proceso y se juzga por su codigo de salida**.
+Visto fallar en cinco mutaciones:
+
+- Se quita el checksum de la ATO: 2 rojos.
+- Deja de fallar cuando no encuentra ningun ABN - el modo en que un guard se
+  vuelve decorativo, tildando verde sobre cero comprobaciones: 1 rojo.
+- Deja de detectar un segundo ABN distinto: 1 rojo.
+- Se saca de `npm run check`: 1 rojo.
+- **Se le cambia un digito al ABN de `api/send-invoice.js`** - o sea el
+  escenario del BAS, sobre la factura del cliente: el check lo agarra, exit 1.
+
+**Una trampa propia:** el test importa `isValidAbn` del script, y el script
+hacia su trabajo a nivel de modulo - importarlo recorria el arbol y llamaba a
+`process.exit(1)`. El archivo de test **moria en el import, antes de la primera
+asercion**: `Tests no tests`. El cuerpo ejecutable quedo detras de una
+comprobacion de "soy el comando".
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1563 tests).
