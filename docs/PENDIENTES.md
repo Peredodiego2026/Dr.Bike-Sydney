@@ -11466,3 +11466,82 @@ asercion**: `Tests no tests`. El cuerpo ejecutable quedo detras de una
 comprobacion de "soy el comando".
 
 `npm run check` 0, `npm run lint` 0, `npm test` 0 (1563 tests).
+
+## 103. Cuatro tablas con datos de clientes estaban fuera del guard de RLS (05-sep-2026)
+
+**Continuacion del hallazgo de la auditoria del 23-ago sobre las cuatro tablas
+sin historial de migracion.** Diego pidio revisarlas.
+
+### Lo que ya estaba bien
+
+`docs/RUNBOOK-SQL.md` 3.1 ya las tenia documentadas, y Diego habia corrido la
+consulta el 23-ago: `callout_zones`, `waitlist`, `claims` y `notification_log`
+las cuatro con **RLS ON**, y el 0-policies de `claims` y `notification_log` es
+correcto a proposito (RLS activo sin policy niega a todos, y el service key
+saltea RLS).
+
+**Verificado otra vez hoy contra produccion**, con la anon key, lectura y
+escritura:
+
+```
+waitlist          READ 200 rows=0   WRITE 401 DENIED by RLS
+claims            READ 200 rows=0   WRITE 401 DENIED by RLS
+notification_log  READ 200 rows=0   WRITE 401 DENIED by RLS
+```
+
+### Lo que NO estaba bien
+
+**Esa respuesta era de una sola vez.** `scripts/rls-check.mjs` - el unico
+chequeo que le pregunta a produccion en vez de al repo - cubria 17 tablas y
+**solo una de las cuatro** (`callout_zones`, y como publica por diseño).
+
+Las tres que guardan nombre, email, telefono, el texto de un reclamo y las URL
+de las fotos y la factura estuvieron **trece dias fuera del guard**. Nada
+impedia que alguien les agregara una policy permisiva y nadie se enterara -
+que es exactamente lo que paso con `availability` en agosto.
+
+### Y apareció una quinta
+
+Al escribir el test, `checkout_attempts` **tampoco estaba clasificada**. No
+figuraba en el hallazgo de agosto porque SI tiene script de migracion, pero
+estaba fuera del guard igual. Comprobada: `READ 200 rows=0`,
+`WRITE 401 DENIED`. `js/app.js` la escribe desde el navegador, pero **solo con
+sesion iniciada** (decision de Diego, 28-jul), asi que el rechazo anonimo es lo
+correcto y no un flujo roto.
+
+`rls-check` pasa de 17 a **21 tablas**.
+
+### El test que importa no es el que se esperaria
+
+No es "las tres estan en la lista" - eso es la respuesta de hoy, escrita otra
+vez. Es: **toda tabla que el navegador toque tiene que estar clasificada** como
+cerrada o como publica-por-diseño. Una tabla nueva que nadie clasifique es
+literalmente como aparecieron estas cinco.
+
+**Encontro `checkout_attempts` en su primera corrida.** Igual que `abn-check`
+encontro los ABN de terceros en la suya - una señal razonable de que el patron
+mira donde dice mirar.
+
+### Lo que este guard NO hace, y hay que decirlo
+
+**`npm run rls:check` no corre en CI.** El workflow corre `lint`, `check` y
+`test`, y nada mas. Pega contra produccion, asi que meterlo trae un modo de
+fallo nuevo: **Supabase caido bloquearia PRs que no tienen nada que ver**.
+
+Es una decision operativa de Diego, no tecnica, y por eso **no la tome**. Hay
+un test que afirma que hoy NO esta en CI: si alguien lo agrega, ese test falla
+y obliga a que sea deliberado.
+
+### Verificado
+
+10 tests. Vistos fallar en cuatro mutaciones:
+
+- Se saca `claims` de la lista: 1 rojo.
+- `claims` queda clasificada como cerrada Y como publica a la vez: 1 rojo.
+- Se borra el aviso de "no agregarles policies": 1 rojo. Ese aviso importa
+  porque el 0-policies **parece un olvido** y "arreglarlo" abriria acceso que
+  hoy esta correctamente denegado.
+- Aparece una tabla nueva sin clasificar: 1 rojo, **y nombra el archivo**.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1573 tests),
+`npm run rls:check` 0 contra produccion.

@@ -71,6 +71,28 @@ const MUST_BE_EMPTY = [
   'stripe_events',
   'escalation_contacts',
   'bike_service_history',
+  // The three the 2026-08-23 audit found had no migration script and had never
+  // been checked (docs/RUNBOOK-SQL.md 3.1). Diego ran the RLS query by hand that
+  // day and all three came back correct - but a one-off answer stops being true
+  // the moment somebody adds a policy, and nothing was watching them. They hold
+  // client names, emails, phones, complaint text and the URLs of claim photos
+  // and invoices.
+  //
+  // claims and notification_log have RLS ON and ZERO policies, which is not an
+  // oversight: in Postgres, RLS with no policy denies everyone, and the
+  // service_role key bypasses RLS by design. Both tables are only ever touched
+  // by the server. DO NOT 'fix' them by adding policies - that would open
+  // access which is currently, correctly, denied.
+  'waitlist',
+  'claims',
+  'notification_log',
+  // Found by tests/unit/rls-check-coverage.test.js on its first run: a fifth
+  // table nobody had classified. It has a migration script, unlike the three
+  // above, which is why the 2026-08-23 audit did not list it - and it was
+  // outside this guard all the same. js/app.js writes it from the browser, but
+  // only for signed-in clients (Diego, 2026-07-28), so an anonymous write being
+  // refused is the correct behaviour and not a broken flow.
+  'checkout_attempts',
   // The view whose whole row set was the leak. After
   // scripts/lock-public-views.sql this 401s, which also counts as closed.
   'public_booking_tracking',

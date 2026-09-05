@@ -369,6 +369,18 @@ no aparece en el resultado, es que no existe con ese nombre - avisar cual.
 **RESULTADO (Diego lo corrio el 2026-08-23): las cuatro estan bien, no hace
 falta ningun script.**
 
+**Y desde el 2026-09-05 hay un guard que lo mantiene cierto.** La respuesta de
+agosto era de una sola vez: dejaba de valer el dia que alguien le agregara una
+policy a cualquiera de las cuatro, y nada lo vigilaba. Las tres que guardan
+datos de clientes estuvieron trece dias fuera de `npm run rls:check`, que es el
+unico chequeo que le pregunta a **produccion** con la anon key.
+
+Ahora las cubre - y al escribir el test aparecio una **quinta**,
+`checkout_attempts`, que tampoco estaba: tiene script de migracion (por eso la
+auditoria no la listo) y estaba fuera del guard igual. Verificadas las cuatro
+nuevas contra produccion el 05-sep: lectura vacia y escritura anonima con
+`401 DENIED by RLS`.
+
 | tabla | rls | policies | veredicto |
 |---|---|---|---|
 | `callout_zones` | RLS ON | 2 | OK - catalogo publico de precios |
