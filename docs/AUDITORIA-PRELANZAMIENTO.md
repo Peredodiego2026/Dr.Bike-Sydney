@@ -100,8 +100,9 @@ puede afirmar:
 
 1. **Punto 15 con un lector de pantalla real.** El codigo esta y tiene tests;
    nadie lo escucho.
-2. **Los 3 puntos no recuperados (6, 16, 18).** Podrian estar cerrados o podrian
-   no haberse tocado nunca. No se sabe.
+2. **~~Los 3 puntos no recuperados (6, 16, 18).~~** Recuperados el 2026-09-05
+   de los transcripts - ver la seccion de arriba. El 6 estaba cerrado y ahora
+   tiene guard; el 16 y el 18 siguen abiertos y ninguno es codigo.
 3. **La cadena completa de resena contra produccion.** El disparo
    (mecanico completa -> invoice + email + SMS -> pantalla de resena -> link de
    Google) tiene tests por partes y ninguna corrida de punta a punta con un

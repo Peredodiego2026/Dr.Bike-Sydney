@@ -11545,3 +11545,80 @@ y obliga a que sea deliberado.
 
 `npm run check` 0, `npm run lint` 0, `npm test` 0 (1573 tests),
 `npm run rls:check` 0 contra produccion.
+
+## 104. Las subidas de fotos guardaban la extension y el tipo que decia el navegador (05-sep-2026)
+
+**Anotado en el punto 100 y no arreglado entonces. Este es el arreglo.**
+
+Las tres subidas del navegador van al bucket **publico** `job-photos`, y las
+tres armaban el nombre del archivo con el nombre que traia el archivo del
+usuario:
+
+```js
+const ext = file.name.split('.').pop() || 'jpg';       // js/mechanic.js x2, js/admin.js
+.upload(path, file, { contentType: file.type, ... })   // el del chat, ademas
+```
+
+Las dos cosas las elige el navegador. Y el `accept="image/*"` de los inputs
+**parece un control y no lo es**: filtra el dialogo de elegir archivo. Un
+archivo arrastrado, o una linea en las herramientas de desarrollo, pasa de
+largo.
+
+O sea que un mecanico - o quien adivine el PIN de 4 digitos - podia dejar
+`page.html` servido como `text/html` en el dominio de Supabase del negocio.
+
+### Defensa en profundidad, y se dice asi a proposito
+
+**No se verifico si ese bucket sirve HTML embebido o fuerza una descarga.** No
+hace falta que sea cierto para que la regla valga: guardar unicamente lo que
+decis que es una foto es lo correcto igual. Escribirlo como "cierra un vector
+de phishing" seria afirmar algo que no comprobe.
+
+`safeImageUpload(file)` elige la extension y el content-type **de una lista
+fija**, nunca del archivo. Acepta JPG, PNG, WEBP y HEIC. **SVG no**: es un
+contenedor de scripts, no una foto.
+
+### El test encontro un bug en mi propio arreglo
+
+La primera version miraba el tipo declarado y, si no lo reconocia, **caia al
+nombre del archivo**. Con eso, `page.html` renombrado `photo.jpg` y declarado
+`text/html` **pasaba** - exactamente el unico caso que el helper existe para
+frenar.
+
+Lo agarro el test `refuses HTML dressed up with a photo name`, no releer el
+codigo. Ahora un tipo declarado que no esta en la lista se rechaza de una, y el
+nombre se consulta **solo** cuando el navegador no declara tipo (algunos
+selectores de Android mandan vacio para HEIC; rechazarlos romperia una subida
+real).
+
+### Y otro test se matcheo a si mismo
+
+La asercion "ya no pasa `contentType: file.type`" **fallaba sobre el codigo ya
+arreglado**: lo unico que quedaba con ese texto era **el comentario del propio
+helper**, que nombra lo que saco. Es la cuarta vez que este repo se lleva
+puesto ese patron. El test ahora saca los comentarios antes de buscar, con una
+clase que excluye saltos de linea y no `.*$`, porque los archivos son CRLF.
+
+### El helper esta duplicado, y eso esta atado
+
+`js/mechanic.js` y `js/admin.js` son scripts clasicos sin `import` - el mismo
+motivo por el que `esc()` esta duplicado. Hay un test que compara las dos
+copias **byte a byte** y otro que **ejecuta la de `admin.js`**, porque dos
+copias que se separan es como un arreglo queda a medias.
+
+### Verificado
+
+15 tests. Tres mutaciones:
+
+- Vuelve el fallback al nombre con tipo declarado (el bug que el test
+  encontro): 2 rojos.
+- Se vuelve a leer la extension del nombre del archivo: 2 rojos.
+- Las dos copias del helper divergen: 1 rojo.
+
+`npm run check` 0, `npm run lint` 0, `npm test` 0 (1588 tests).
+
+### Lo que sigue sin resolver
+
+**`job-photos` sigue siendo publico.** Esto acota QUE se puede guardar ahi; no
+cambia que lo guardado se ve con solo tener el link. Sigue anotado, sigue sin
+empezar.

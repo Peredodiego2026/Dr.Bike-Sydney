@@ -7910,10 +7910,60 @@ async function generateMechanicPin() {
   }
 }
 
+// Every browser upload in this app lands in the PUBLIC `job-photos` bucket, and
+// until 2026-09-05 all three picked the stored filename apart from the name the
+// user's own file had - `file.name.split('.').pop()` - and the chat one handed
+// Supabase `contentType: file.type` on top of that. Both come from the browser.
+// `accept="image/*"` on the input is a filter for the file-picker dialog, not a
+// check: a dragged file, or one line in devtools, walks straight past it.
+//
+// So a mechanic - or whoever guessed the PIN - could store `page.html` served as
+// `text/html` on the business's own Supabase domain. This is defence in depth:
+// it was not verified whether that bucket serves HTML inline or forces a
+// download, and storing only what you claim is a photo is the right rule either
+// way.
+//
+// Returns { ok, ext, contentType } - the extension and the type are chosen HERE,
+// from a fixed list, never taken from the file.
+function safeImageUpload(file) {
+  const ALLOWED = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    heic: 'image/heic',
+    heif: 'image/heif',
+  };
+  if (!file) return { ok: false, reason: 'No file' };
+  // The declared type is checked first because it is what a picture actually
+  // carries; the name is only consulted when the browser offers no type (some
+  // Android pickers send an empty string for HEIC).
+  const declared = String(file.type || '').toLowerCase();
+  const REFUSED = { ok: false, reason: 'Only photos can be uploaded (JPG, PNG, WEBP, HEIC)' };
+  // A declared type that is not on the list is REFUSED outright - the name is
+  // never consulted as a second chance. An earlier version fell through to the
+  // name, so `page.html` renamed `photo.jpg` and declared `text/html` was
+  // accepted: the one case this whole helper exists to stop. Caught by a test,
+  // not by reading it back.
+  if (declared) {
+    const ext = Object.keys(ALLOWED).find((e) => ALLOWED[e] === declared);
+    return ext ? { ok: true, ext, contentType: ALLOWED[ext] } : REFUSED;
+  }
+  // Only when the browser offers no type at all: some Android pickers send an
+  // empty string for HEIC.
+  const named = String(file.name || '').split('.').pop().toLowerCase();
+  if (!Object.prototype.hasOwnProperty.call(ALLOWED, named)) return REFUSED;
+  const ext = named;
+  return { ok: true, ext, contentType: ALLOWED[ext] };
+}
+
 async function uploadMechanicPhoto(file, contactId) {
-  const ext = file.name.split('.').pop() || 'jpg';
-  const path = `profiles/${contactId || 'new'}_${Date.now()}.${ext}`;
-  const { error } = await sb.storage.from('job-photos').upload(path, file, { upsert: true });
+  const kind = safeImageUpload(file);
+  if (!kind.ok) throw new Error(kind.reason);
+  const path = `profiles/${contactId || 'new'}_${Date.now()}.${kind.ext}`;
+  const { error } = await sb.storage
+    .from('job-photos')
+    .upload(path, file, { upsert: true, contentType: kind.contentType });
   if (error) throw error;
   const { data: urlData } = sb.storage.from('job-photos').getPublicUrl(path);
   return urlData?.publicUrl || null;
