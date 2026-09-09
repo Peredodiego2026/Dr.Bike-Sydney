@@ -11710,3 +11710,77 @@ aplicadas, que una fila diga `PERMISSIVE`, y borrar las reversiones.
   pendiente que necesita a Diego y no esta hecho.
 - **`ADMIN_REQUIRE_AAL2` sigue apagado** (punto 96). Es la mitad del servidor y
   se enciende con una variable en Vercel, cuando los logs lo respalden.
+
+---
+
+## 106. "Leave a Google Review" abria la ficha, no el cuadro de resena (10-sep-2026)
+
+Habia **un solo link de Google** en toda la app y este repo tenia un guard que
+exigia que fuera **identico en todas partes**. Ese era el invariante
+equivocado: un mismo URL hacia dos trabajos distintos y solo servia para uno.
+
+| Rol | Texto | A donde tiene que ir |
+|---|---|---|
+| **Leer** | "5.0 - 2 reviews on Google" | La ficha de Maps. Estaba bien |
+| **Escribir** | "Leave a Google Review", "Leave us a review", "Also leave a Google review?" | El cuadro de escribir resena. **Estaba mal** |
+
+Los tres botones de escribir apuntaban a la ficha. El cliente que acababa de
+poner 5 estrellas en la app aterrizaba en una pantalla con Como llegar, Llamar,
+Sitio web, Fotos y Guardar, y todavia tenia que encontrar "Resenas" y despues
+"Escribir una resena".
+
+### Por que un tap perdido ahi no se recupera
+
+El pedido de resena sale **una sola vez** por trabajo
+(`api/_completion-notify.js`). El reintento diario reenvia lo que **fallo al
+enviarse**, nunca lo que el cliente ignoro. No hay segunda oportunidad por
+cliente. Con 2 resenas contra las 11 del competidor de al lado, ese tap es todo
+el punto de la funcion.
+
+### El link, y de donde salio
+
+Google Business Profile > "Pedir una resena". **Verificado el 10-sep siguiendolo:**
+
+```
+https://g.page/r/CbDo2zM02zFaEBM/review
+  -> search.google.com/local/writereview?placeid=ChIJb5jxLY1G_yQRsOjbMzTbMVo
+```
+
+La pantalla de login que aparece en el medio es de Google, no nuestra: dejar una
+resena exige cuenta. Un cliente ya logueado cae en las estrellas.
+
+**No es el formato que estuvo muerto.** El que Google retiro en 2022 es el que
+lleva el nombre del negocio (`g.page/r/drbikesydney/review`); este lleva un
+codigo opaco. El guard sigue rechazando el otro.
+
+### El guard cambia de invariante
+
+De "todos iguales" a **"cada rol con su link"**. Clasifica cada aparicion por la
+etiqueta que sigue al `href`, no por una lista de archivo:linea escrita a mano -
+esa lista se pudre la primera vez que alguien mueve un bloque.
+
+### El falso positivo propio, y es el de siempre
+
+La primera version tomaba **400 caracteres** despues del `href` para leer la
+etiqueta. En los tres botones de escribir, entre el `href` y el texto hay estilos
+inline y el SVG del logo de Google con sus cuatro `path`: 400 caracteres no
+llegaban ni al final del `style=`. Los tres quedaban clasificados como
+`unknown`... **y dos afirmaciones pasaban igual, sobre un conjunto vacio.**
+
+Se arreglo sacando los `<svg>` y los `style=` antes de medir la ventana.
+Aparecio **imprimiendo las ventanas** en vez de confiar en ellas.
+
+### Verificado
+
+- **El guard se vio fallar**: devolviendo el link viejo al CTA de `js/app.js`,
+  2 fallas.
+- El link, seguido de verdad hasta `writereview` (arriba).
+- 1595 tests, `npm run check` exit 0, `npm run lint` 0 errores.
+- `?v=` de `js/app.js` y `js/landing-inline.js` bumpeados; `sw.js` a v122.
+
+### Lo que queda abierto
+
+`landing.html:858` e `index.html:1081` dicen **"2 reviews on Google"** y
+**"5.0"** escritos a mano. El dia que llegue la tercera resena, la landing va a
+seguir diciendo 2. No se toco en este PR: hay que decidir si se muestra el
+numero real o si directamente no se dice cantidad.
