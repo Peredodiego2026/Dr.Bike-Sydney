@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <link rel="stylesheet" href="css/variables.css?v=20260827-dark2">
-<link rel="stylesheet" href="css/admin.css?v=6222e1b9e8">
+<link rel="stylesheet" href="css/admin.css?v=544ca882da">
 <style>
 @media(max-width:768px){
   .content{padding:12px 10px !important}
@@ -344,15 +344,15 @@
             <div style="font-size:10px;font-weight:600;color:var(--mgray);text-transform:uppercase;margin-bottom:4px">Client name</div>
             <input type="text" id="bk-f-search" class="inp" placeholder="Search client..." aria-label="Search client">
           </div>
-          <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-2">Filter</button>
-          <button style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-3">Reset</button>
+          <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-2">Filter</button>
+          <button style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:var(--sans)" id="auto-wire-3">Reset</button>
         </div>
       </div>
 
       <div class="card">
         <div class="card-hdr">
           <div><div class="card-title">All bookings</div><div class="card-sub" id="bk-sub">Loading from Supabase...</div></div>
-          <button data-action="open-admin-create-booking" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">+ New booking</button>
+          <button data-action="open-admin-create-booking" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap">+ New booking</button>
         </div>
         <div class="card-body tbl-scroll" style="overflow-x:auto">
           <table class="tbl">
@@ -361,7 +361,7 @@
           </table>
         </div>
         <div style="padding:14px 20px;text-align:center">
-          <button id="bk-load-more" style="display:none;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Load 100 more</button>
+          <button id="bk-load-more" style="display:none;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Load 100 more</button>
         </div>
       </div>
     </div>
@@ -385,8 +385,8 @@
           <textarea id="cancel-notes" class="inp" style="height:70px;resize:none" placeholder="Additional notes..."></textarea>
         </div>
         <div style="display:flex;gap:10px">
-          <button style="flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-4">Cancel booking</button>
-          <button style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-5">Go back</button>
+          <button style="flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-4">Cancel booking</button>
+          <button style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans)" id="auto-wire-5">Go back</button>
         </div>
       </div>
     </div>
@@ -397,10 +397,10 @@
         <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px">Reassign to van</div>
         <input type="hidden" id="reassign-booking-id">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          <button style="padding:16px;border:2px solid var(--blue);border-radius:10px;background:var(--blue-lt);color:var(--blue-text);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-6">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
-          <button style="padding:16px;border:2px solid var(--amber);border-radius:10px;background:var(--amber-lt);color:var(--amber);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-7">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
+          <button style="padding:16px;border:2px solid var(--blue);border-radius:10px;background:var(--blue-lt);color:var(--blue-text);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)" id="auto-wire-6">Van 1<br><span style="font-size:11px;font-weight:400">Inner West</span></button>
+          <button style="padding:16px;border:2px solid var(--amber);border-radius:10px;background:var(--amber-lt);color:var(--amber);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)" id="auto-wire-7">Van 2<br><span style="font-size:11px;font-weight:400">North Shore</span></button>
         </div>
-        <button style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-8">Cancel</button>
+        <button style="width:100%;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:13px;cursor:pointer;font-family:var(--sans)" id="auto-wire-8">Cancel</button>
       </div>
     </div>
 
@@ -464,8 +464,8 @@
         </div>
         <div id="acb-error" style="display:none;font-size:12px;color:var(--red-text);margin-bottom:12px"></div>
         <div style="display:flex;gap:10px">
-          <button data-action="acb-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Create booking</button>
-          <button data-action="acb-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+          <button data-action="acb-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Create booking</button>
+          <button data-action="acb-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans)">Cancel</button>
         </div>
       </div>
     </div>
@@ -497,8 +497,8 @@
         </div>
         <div id="admin-resched-error" style="display:none;font-size:12px;color:var(--red-text);margin-bottom:12px"></div>
         <div style="display:flex;gap:10px">
-          <button data-action="admin-resched-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Reschedule</button>
-          <button data-action="admin-resched-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+          <button data-action="admin-resched-confirm" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Reschedule</button>
+          <button data-action="admin-resched-close" style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans)">Cancel</button>
         </div>
       </div>
     </div>
@@ -534,7 +534,7 @@
               <option value="1">Van 1</option>
               <option value="2">Van 2</option>
             </select>
-            <button id="route-mode-btn" style="padding:7px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Optimise by distance</button>
+            <button id="route-mode-btn" style="padding:7px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Optimise by distance</button>
           </div>
         </div>
         <div id="route-map" style="height:340px;border-radius:10px;overflow:hidden;background:var(--border-lt);margin-bottom:14px"></div>
@@ -683,15 +683,15 @@
         <!-- Fila 2: view pills + export -->
         <div style="display:flex;align-items:center;gap:8px">
           <div style="display:flex;background:var(--off);border-radius:8px;padding:3px;gap:2px;flex:1">
-            <button id="fv-month" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:var(--blue);color:#fff;transition:all .15s">Monthly</button>
-            <button id="fv-quarter" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:transparent;color:var(--mgray);transition:all .15s">Quarterly</button>
-            <button id="fv-year" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;background:transparent;color:var(--mgray);transition:all .15s">Annual</button>
+            <button id="fv-month" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:var(--blue);color:#fff;transition:all .15s">Monthly</button>
+            <button id="fv-quarter" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray);transition:all .15s">Quarterly</button>
+            <button id="fv-year" style="flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);background:transparent;color:var(--mgray);transition:all .15s">Annual</button>
           </div>
-          <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap" id="auto-wire-9">
+          <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:5px;white-space:nowrap" id="auto-wire-9">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             PDF
           </button>
-          <button style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap" id="auto-wire-10">CSV</button>
+          <button style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap" id="auto-wire-10">CSV</button>
         </div>
       </div>
 
@@ -751,7 +751,7 @@
       <div class="card" style="margin-top:16px">
         <div class="card-hdr">
           <div><div class="card-title">🇦🇺 BAS Summary — ATO Reporting</div><div class="card-sub">Business Activity Statement · GST quarterly obligations</div></div>
-          <button style="background:var(--navy-surface);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-11">Export BAS</button>
+          <button style="background:var(--navy-surface);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-11">Export BAS</button>
         </div>
         <div class="bas-grid" id="bas-grid">
           <div class="bas-cell bas-cell--sales">
@@ -801,7 +801,7 @@
           <div style="font-size:22px;font-weight:700;color:var(--navy)">Escalation Contacts</div>
           <div style="font-size:13px;color:var(--mgray);margin-top:4px">When the chatbot can't help, it shows these contacts to clients</div>
         </div>
-        <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:8px" id="auto-wire-12">
+        <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:8px" id="auto-wire-12">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New contact
         </button>
@@ -840,8 +840,8 @@
           </select>
         </div>
         <div style="display:flex;gap:10px">
-          <button style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-13">Save</button>
-          <button style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif" id="auto-wire-14">Cancel</button>
+          <button style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-13">Save</button>
+          <button style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans)" id="auto-wire-14">Cancel</button>
         </div>
       </div>
     </div>
@@ -912,17 +912,17 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
           <label style="display:block">
             <span style="display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">From</span>
-            <input type="date" id="orphan-from" value="2026-07-04" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:Inter,sans-serif;color:var(--navy);background:var(--white);min-height:44px">
+            <input type="date" id="orphan-from" value="2026-07-04" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);color:var(--navy);background:var(--white);min-height:44px">
           </label>
           <label style="display:block">
             <span style="display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">To</span>
-            <input type="date" id="orphan-to" value="2026-08-05" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:Inter,sans-serif;color:var(--navy);background:var(--white);min-height:44px">
+            <input type="date" id="orphan-to" value="2026-08-05" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);color:var(--navy);background:var(--white);min-height:44px">
           </label>
           <!-- color:#fff, not var(--white): dark mode redefines --white to near-black,
                which put dark ink on the blue button - measured at 2.9:1 before this
                line changed. The literal hex is the documented exception for
                admin/mechanic (see CLAUDE.md). -->
-          <button id="orphan-run" data-action="run-orphan-audit" style="background:var(--blue);color:#fff;border:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:14px;font-family:Inter,sans-serif;cursor:pointer;min-height:44px">Check this range</button>
+          <button id="orphan-run" data-action="run-orphan-audit" style="background:var(--blue);color:#fff;border:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:14px;font-family:var(--sans);cursor:pointer;min-height:44px">Check this range</button>
         </div>
       </div>
       <div id="orphan-results" style="display:flex;flex-direction:column;gap:12px;overflow-y:auto"></div>
@@ -931,7 +931,7 @@
     <!-- ZONES -->
     <div id="page-zones" class="page">
       <div id="zones-container"></div>
-      <button class="add-van-btn" style="display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:Inter,sans-serif;transition:all .15s;width:100%;margin-top:8px" id="auto-wire-15">
+      <button class="add-van-btn" style="display:flex;align-items:center;gap:8px;background:var(--off);border:1.5px dashed var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;font-size:14px;color:var(--mgray);font-family:var(--sans);transition:all .15s;width:100%;margin-top:8px" id="auto-wire-15">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add another van
       </button>
@@ -1063,7 +1063,7 @@
     <div id="page-coupons" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">Discount Codes</div>
-        <button id="btn-toggle-coupon-form" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;gap:6px">
+        <button id="btn-toggle-coupon-form" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:6px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Create code
         </button>
@@ -1076,7 +1076,7 @@
           <label for="c-code" style="font-size:11px;font-weight:600;color:var(--mgray);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Code</label>
           <div style="display:flex;gap:8px">
             <input id="c-code" class="inp" style="margin:0;flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.1em;font-size:15px" placeholder="e.g. NEWRIDER20">
-            <button style="white-space:nowrap;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:Inter,sans-serif;color:var(--navy)" id="auto-wire-17">Random</button>
+            <button style="white-space:nowrap;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);cursor:pointer;font-size:12px;font-family:var(--sans);color:var(--navy)" id="auto-wire-17">Random</button>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -1103,8 +1103,8 @@
           </div>
         </div>
         <div style="display:flex;gap:8px">
-          <button style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:none;font-family:Inter,sans-serif;cursor:pointer;color:var(--navy);font-size:13px" id="auto-wire-18">Cancel</button>
-          <button id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Create code</button>
+          <button style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:none;font-family:var(--sans);cursor:pointer;color:var(--navy);font-size:13px" id="auto-wire-18">Cancel</button>
+          <button id="c-save-btn" style="flex:2;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer">Create code</button>
         </div>
       </div>
 
@@ -1124,7 +1124,7 @@
           <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">How it works</div>
           <div style="font-size:12px;color:var(--mgray);line-height:1.6">Finds all clients whose last completed service was 6+ months ago and sends a friendly reminder email with a booking link.</div>
         </div>
-        <button id="reminder-btn" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+        <button id="reminder-btn" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">
           Send reminders now
         </button>
         <div id="reminder-result" style="margin-top:12px;font-size:13px;display:none"></div>
@@ -1608,5 +1608,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=2ba47e37f1"></script>
+<script src="js/admin.js?v=9912f1a4d5"></script>
 </body></html>
