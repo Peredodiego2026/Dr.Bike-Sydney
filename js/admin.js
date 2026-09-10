@@ -7989,6 +7989,15 @@ async function generateMechanicPin() {
 //
 // Returns { ok, ext, contentType } - the extension and the type are chosen HERE,
 // from a fixed list, never taken from the file.
+//
+// tests/unit/photo-upload-type.test.js compares this function byte for byte
+// against the copy in js/mechanic.js. Committing a change here runs prettier
+// on the whole file, and prettier wants to wrap the
+// .split('.').pop().toLowerCase() chain below onto 4 lines even though it is
+// well under printWidth - that broke the parity test once already
+// (2026-09-10). The directive below sits outside the range the test
+// extracts, so it does not itself have to match the other copy.
+// prettier-ignore
 function safeImageUpload(file) {
   const ALLOWED = {
     jpg: 'image/jpeg',
@@ -8015,10 +8024,7 @@ function safeImageUpload(file) {
   }
   // Only when the browser offers no type at all: some Android pickers send an
   // empty string for HEIC.
-  const named = String(file.name || '')
-    .split('.')
-    .pop()
-    .toLowerCase();
+  const named = String(file.name || '').split('.').pop().toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(ALLOWED, named)) return REFUSED;
   const ext = named;
   return { ok: true, ext, contentType: ALLOWED[ext] };
