@@ -138,6 +138,71 @@ img {
   background: var(--blue-dark);
 }
 
+/* ── Trust bar (marquee) ──────────────────────────────────────────────────── */
+/* Replaced a static, wrap-if-needed row of badges (2026-09-10) - see the HTML
+   comment above #trust-badges in landing.html for the full history. The two
+   .trust-marquee__seq spans in the markup are identical copies of the same
+   sequence; animating the track exactly -50% moves the first copy fully out
+   of view at the same instant the second copy reaches the start position, so
+   the loop has no visible seam. */
+.trust-marquee {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
+  overflow: hidden;
+}
+.trust-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: trust-marquee-scroll 32s linear infinite;
+}
+.trust-marquee:hover .trust-marquee__track {
+  animation-play-state: paused;
+}
+@keyframes trust-marquee-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.trust-marquee__seq {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 10px;
+}
+.trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.trust-marquee__slogan {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--blue);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trust-marquee__track {
+    animation: none;
+  }
+  .trust-marquee {
+    overflow-x: auto;
+  }
+}
+
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .hero {
   min-height: 0;
@@ -316,7 +381,6 @@ img {
     background: var(--blue-dark) !important;
   }
 }
-
 
 .section-center {
   text-align: center;
@@ -952,4 +1016,3 @@ html.drbike-wizard-open #faqbot-win {
     padding: clamp(7px, 1.1vh, 10px) !important;
   }
 }
-

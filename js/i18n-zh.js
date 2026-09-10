@@ -608,6 +608,9 @@ export default {
   'Verified Mechanic': '认证技工',
   'Background Checked': '背景审查',
   'Fully Insured': '全额保险',
+  'ASAP Response': '即时响应',
+  'Transparent Pricing': '价格透明',
+  'Sydney Wide': '覆盖全悉尼',
   // Hero (landing-specific strings not already in the mobile dict)
   'Mobile Service · Sydney Wide': '上门服务 · 覆盖全悉尼',
   'Professional Bike Service at Your Doorstep': '专业自行车服务，直达家门口',
