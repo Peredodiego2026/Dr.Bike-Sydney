@@ -11784,3 +11784,97 @@ Aparecio **imprimiendo las ventanas** en vez de confiar en ellas.
 **"5.0"** escritos a mano. El dia que llegue la tercera resena, la landing va a
 seguir diciendo 2. No se toco en este PR: hay que decidir si se muestra el
 numero real o si directamente no se dice cantidad.
+
+---
+
+## 107. Los contadores de resenas dejan de estar escritos a mano (10-sep-2026)
+
+`landing.html` e `index.html` decian **"5.0 ★★★★★ 2 reviews on Google"** con los
+dos numeros tipeados en el HTML. No estaban mal ese dia: el problema era que
+**nadie los iba a actualizar nunca**. El dia de la tercera resena las dos
+paginas iban a seguir diciendo dos, y el dia de la vigesima tambien - justo
+cuando mas conviene mostrar traccion.
+
+### Dos origenes, y uno no se puede automatizar
+
+| | De donde sale | Se actualiza solo |
+|---|---|---|
+| **Propias** | `bookings`, las deja el cliente en la pantalla de estrellas (desde la app o desde el link del email) | **Si**, gratis |
+| **Google** | Diego las copia de su ficha a Admin > Settings | No: Google no avisa nada de nuestro propio perfil |
+
+Leer la ficha de Google **necesita la Places API**, que exige tarjeta en Google
+Cloud. Diego pregunto si se podia poner un bot a mirar Google Maps cada 24h: se
+puede escribir, pero es acceso automatizado a Maps -prohibido por los terminos,
+con la ficha del negocio como prenda- y ademas no tendria donde correr (el
+proyecto esta en 12 de 12 funciones de Vercel y Playwright no entra en una).
+
+Asi que la decision fue: **la maquina entera funciona hoy y gratis**, con las
+propias en vivo y las de Google cargadas a mano, y el dia que haya clave la
+llamada se enchufa en el mismo endpoint sin tocar nada mas.
+
+### Como quedo
+
+- `GET /api/chat?type=site-stats` devuelve `{own, google}`, con `s-maxage=300`.
+  **Dentro de `chat.js`**, no en un archivo nuevo: 12 de 12 funciones.
+- Las cuentas y las validaciones viven en `api/_review-stats.js`, puras.
+- El relleno del DOM vive en `js/app.js`, **una sola implementacion para las dos
+  superficies**: `landing.html` tambien carga `js/app.js`.
+- **Sin dato no se dibuja nada.** Los elementos arrancan `hidden`; si el fetch
+  falla la pagina queda como esta y el link a Google sigue andando.
+
+### Se sirve desde el servidor por un motivo medido
+
+Los ajustes viven en el hack de clave/valor de siempre (`van_zones` con
+`van_number = 0`, el mismo que guarda el WhatsApp). **Anon no ve esas filas**:
+probado el 10-sep contra produccion, `van_zones?van_number=eq.0` con la anon key
+devuelve `[]` aunque la tabla figure como publica y anon vea sus otras 46 filas.
+Por eso el navegador no las puede leer directo.
+
+### Las estrellas ahora siguen al promedio
+
+Eran cinco fijas al lado del numero. Cinco estrellas dibujadas junto a un "4.7"
+son una afirmacion que el propio numero desmiente.
+
+### El bug que encontro un test, y era invisible
+
+`Number('')` es **0**, no `NaN`. Un campo que Diego nunca lleno salia por la API
+como `count: 0`, que es un dato distinto: *"todavia no lo cargue"* no es *"tengo
+cero resenas"*. La pagina igual no lo dibujaba -0 es falsy- asi que no se veia
+desde afuera. Aparecio **probando el caso del campo vacio**, no mirando el
+codigo.
+
+### Un guard que cambio de invariante, a proposito
+
+`google-reviews-section.test.js` exigia que **el numero del badge fuera igual a
+la cantidad de tarjetas**: "2 reviews on Google" sobre tres tarjetas era la
+pagina mintiendo sobre su propio contenido, que es el problema que dejaron los
+testimonios inventados.
+
+Ese invariante ya no se puede exigir, y no por comodidad: el badge describe **la
+ficha** de Google y las tarjetas son **una muestra** de ella. Un negocio con 14
+resenas que muestra 2 citas textuales no miente; manda a leer las 14. Lo que
+sigue vigilado es lo que si seria mentira: una tarjeta que no sea una cita real,
+y un numero escrito a mano que nadie actualice.
+
+### El falso positivo propio, y van tres en esta area
+
+El guard nuevo busca `\d+ reviews? on Google` para que nadie vuelva a tipear un
+contador... y **matcheo el comentario que explica por que ese texto se fue**.
+Tercera vez que un regex se acusa a si mismo leyendo un comentario de este repo.
+Se sacan los `<!-- -->` antes de escanear.
+
+### Verificado
+
+- **Renderizado de verdad**, con el endpoint simulado: la landing muestra
+  `5.0 ★★★★★ 14 resenas en Google` y `4.9 ★★★★★ · 12 resenas de nuestros
+  clientes`, en espanol, con el plural correcto.
+- **Los dos guards se vieron fallar**: tipeando "2 reviews on Google" de vuelta
+  en `landing.html`, y con el campo vacio en `googleStats`.
+- 1616 tests, `npm run check` exit 0, `npm run lint` 0 errores.
+- `?v=` de `js/app.js` y `js/admin.js` bumpeados; `sw.js` a v123.
+
+### Lo que queda para Diego
+
+Cargar los dos numeros en **Admin > Settings > Google reviews**. Hasta que lo
+haga, ese bloque muestra el logo y "Resenas en Google" sin ninguna cifra - que
+es correcto, no un error.

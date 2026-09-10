@@ -6438,6 +6438,70 @@ if (window._pendingReview) {
   setTimeout(() => router.navigate('review'), 200);
 }
 
+// ── Los dos contadores de resenas ────────────────────────────────────────────
+//
+// Vive aca, y no en js/landing-inline.js ni en un modulo de index.html, porque
+// landing.html carga js/app.js igual que index.html: una sola implementacion
+// cubre las dos superficies, con los mismos ids en las dos.
+//
+// Antes eran cuatro numeros escritos a mano ("5.0" y "2 reviews on Google", en
+// cada pagina). Nadie los iba a tocar: el dia de la tercera resena las dos iban
+// a seguir diciendo dos.
+//
+// Sin dato NO se dibuja nada. Ni un cero, ni el numero de la semana pasada: los
+// elementos arrancan `hidden` en el HTML y solo se muestran si el servidor
+// mando algo. Si el fetch falla, la pagina queda como esta y el link a Google
+// sigue andando, que es lo unico que no puede faltar.
+(async function loadReviewStats() {
+  const ratingEl = document.getElementById('google-rating');
+  const starsEl = document.getElementById('google-stars');
+  const countLink = document.getElementById('google-count-link');
+  const ownEl = document.getElementById('own-stats');
+  if (!ratingEl && !ownEl) return;
+
+  let stats;
+  try {
+    const resp = await fetch('/api/chat?type=site-stats');
+    if (!resp.ok) return;
+    stats = await resp.json();
+  } catch {
+    return;
+  }
+
+  // Las estrellas siguen al promedio en vez de ser cinco fijas. Cinco estrellas
+  // dibujadas al lado de un "4.7" son una afirmacion que el numero desmiente.
+  const starsFor = (n) => {
+    const full = Math.round(Number(n));
+    return '★'.repeat(full) + '☆'.repeat(Math.max(0, 5 - full));
+  };
+  const show = (el, text) => {
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = false;
+  };
+  const counted = (n, one, many) => translateValue(n === 1 ? one : many).replace('{n}', n);
+
+  const g = stats?.google || {};
+  if (g.rating) {
+    show(ratingEl, g.rating);
+    show(starsEl, starsFor(g.rating));
+    if (starsEl) starsEl.setAttribute('aria-label', `${g.rating} out of 5 stars`);
+  }
+  // 0 no se muestra: "0 reviews on Google" no es prueba social, es lo contrario.
+  if (countLink && g.count) {
+    countLink.textContent = counted(g.count, '{n} review on Google', '{n} reviews on Google');
+  }
+
+  const o = stats?.own || {};
+  if (o.count) {
+    show(
+      ownEl,
+      `${o.rating} ${starsFor(o.rating)} · ` +
+        counted(o.count, '{n} review from our clients', '{n} reviews from our clients')
+    );
+  }
+})();
+
 // Published for the non-module scripts on the page (js/live-prices.js needs
 // sourceOf to map a translated service-card heading back to its English name).
 // Object.assign because landing.html's own inline module publishes the same

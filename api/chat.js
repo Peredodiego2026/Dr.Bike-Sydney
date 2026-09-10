@@ -1,6 +1,7 @@
 ﻿import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 import { FEE_BANDS, PENINSULA_FAR_FEE, PERIMETER_MAX_MINUTES } from './_coverage.js';
 import { shortClientName } from './_privacy.js';
+import { reviewStats, googleStats } from './_review-stats.js';
 
 // ── The visit fee, in the assistant's words ───────────────────────────────
 // Built from the same constants the booking actually charges with, because
@@ -234,6 +235,64 @@ async function handler(req, res) {
       service_type: r.service_name || null,
     }));
     return res.status(200).json({ reviews });
+  }
+
+  // GET ?type=site-stats - los dos contadores de resenas que muestran la
+  // landing y la home. Aca y no en un archivo propio porque el proyecto esta en
+  // 12 de 12 funciones de Vercel.
+  //
+  // POR QUE EXISTE
+  //
+  // Los numeros estaban escritos a mano en el HTML ("5.0" y "2 reviews on
+  // Google", landing.html:856 e index.html:1075). Nadie los iba a actualizar:
+  // el dia de la tercera resena la landing seguiria diciendo dos, y el dia de
+  // la vigesima tambien. Justo cuando mas conviene mostrar traccion.
+  //
+  // DOS ORIGENES DISTINTOS, Y UNO NO SE PUEDE AUTOMATIZAR
+  //
+  //   own     las resenas de la app - las deja el cliente en la pantalla de
+  //           estrellas, sea desde la app o desde el link del email. Salen de
+  //           `bookings` y se actualizan solas. Gratis.
+  //
+  //   google  las resenas de la ficha de Google. Google NO nos avisa de nada:
+  //           leerlas necesita la Places API, que exige tarjeta. Hasta
+  //           entonces Diego las carga a mano en Admin > Settings, y quedan en
+  //           el mismo almacen clave/valor que el resto de los ajustes
+  //           (van_zones con van_number=0, el hack que ya guarda el WhatsApp).
+  //           El dia que haya clave, esto se enchufa aca y nada mas cambia.
+  //
+  // Se sirve desde el servidor y no directo desde el navegador porque anon NO
+  // ve las filas de ajustes: probado el 2026-09-10 contra produccion, con la
+  // anon key `van_zones?van_number=eq.0` devuelve `[]` aunque la tabla figure
+  // como publica y anon vea sus otras 46 filas.
+  if (req.method === 'GET' && req.query.type === 'site-stats') {
+    res.setHeader('Cache-Control', 's-maxage=300');
+    const { createClient } = await import('@supabase/supabase-js');
+    const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
+    const supabase = createClient(sbUrl, process.env.SUPABASE_SERVICE_KEY);
+
+    const [ownResp, cfgResp] = await Promise.all([
+      supabase
+        .from('bookings')
+        .select('client_rating')
+        .not('client_rating', 'is', null)
+        .eq('status', 'completed'),
+      supabase
+        .from('van_zones')
+        .select('suburb,postcode')
+        .eq('van_number', 0)
+        .in('suburb', ['__google_rating__', '__google_reviews__']),
+    ]);
+
+    const cfg = {};
+    (cfgResp.data || []).forEach((r) => {
+      cfg[r.suburb] = r.postcode;
+    });
+
+    return res.status(200).json({
+      own: reviewStats((ownResp.data || []).map((r) => r.client_rating)),
+      google: googleStats(cfg.__google_rating__, cfg.__google_reviews__),
+    });
   }
 
   if (await guard(req, res, { rateMax: 10, rateWindow: 60000 })) return; // 10/min AI endpoints

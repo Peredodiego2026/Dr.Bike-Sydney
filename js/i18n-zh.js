@@ -1421,4 +1421,13 @@ export default {
   // scripts/i18n-check.mjs no los ve y hay que acordarse de ponerlos aca.
   'Please sign in to leave a review.': '请先登录再留下评价。',
   'This review link has expired.': '此评价链接已过期。',
+  // Los contadores de resenas. `{n}` lo reemplaza js/app.js con el numero.
+  // El chino no distingue singular de plural, pero las dos claves tienen que
+  // existir igual: js/app.js elige una u otra antes de traducir.
+  // Ninguna de las de `{n}` la detecta scripts/i18n-check.mjs.
+  'Reviews on Google': '谷歌评价',
+  '{n} review on Google': '{n} 条谷歌评价',
+  '{n} reviews on Google': '{n} 条谷歌评价',
+  '{n} review from our clients': '{n} 条客户评价',
+  '{n} reviews from our clients': '{n} 条客户评价',
 };

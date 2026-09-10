@@ -850,13 +850,21 @@
            - the name as the reviewer published it;
            - the link goes to the real profile, so any claim here is checkable.
          Never write a card for a review that does not exist. -->
+    <!-- El "5.0" y el "2 reviews on Google" estaban escritos a mano aca. Nadie
+         los iba a actualizar: el dia de la tercera resena esto seguiria
+         diciendo dos, y el dia de la vigesima tambien. Ahora los llena
+         js/landing-inline.js desde /api/chat?type=site-stats, y si no hay dato
+         no se dibuja ningun numero - nunca un cero ni una cifra vieja.
+         Las cinco estrellas fijas se fueron con ellos: al lado de un promedio
+         que puede no ser 5, eran una afirmacion propia. -->
     <div style="text-align:center;margin-bottom:24px">
       <div style="display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
         <img decoding="async" loading="lazy" width="24" height="24" src="images/google-logo.svg" alt="Google" style="width:52px">
-        <span style="font-size:20px;font-weight:800;color:var(--navy)">5.0</span>
-        <span style="color:var(--amber-bright);font-size:17px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-        <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="font-size:15px;color:var(--blue-text);font-weight:600;text-decoration:none">2 reviews on Google</a>
+        <span id="google-rating" style="font-size:20px;font-weight:800;color:var(--navy)" hidden></span>
+        <span id="google-stars" style="color:var(--amber-bright);font-size:17px" hidden></span>
+        <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="font-size:15px;color:var(--blue-text);font-weight:600;text-decoration:none" id="google-count-link">Reviews on Google</a>
       </div>
+      <div id="own-stats" style="font-size:14px;color:var(--gray);margin-top:10px" hidden></div>
     </div>
     <div id="google-reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px">
       <div class="review-card">
@@ -1455,7 +1463,7 @@
 <!-- js/app.js is the only entry point - see the note in index.html. Listing
      router.js, supabase.js, components.js or stripe.js here loads each of them
      a second time, under a URL the imports inside app.js never resolve to. -->
-<script src="js/app.js?v=9591065376" type="module"></script>
+<script src="js/app.js?v=7e8b754c8d" type="module"></script>
 <script src="js/live-prices.js?v=20260728a" defer></script>
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>

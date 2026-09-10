@@ -1574,4 +1574,14 @@ export default {
   // scripts/i18n-check.mjs no los ve y hay que acordarse de ponerlos aca.
   'Please sign in to leave a review.': 'Inicia sesion para dejar tu resena.',
   'This review link has expired.': 'Este link para dejar la resena ya vencio.',
+  // Los contadores de resenas. `{n}` lo reemplaza js/app.js con el numero; hay
+  // singular y plural aparte porque "1 resenas" es un error que se ve.
+  // Las cuatro de `{n}` no las detecta scripts/i18n-check.mjs: no estan en el
+  // markup, son argumentos de translateValue(). Si faltan, el visitante ve el
+  // ingles y ningun check se queja.
+  'Reviews on Google': 'Reseñas en Google',
+  '{n} review on Google': '{n} reseña en Google',
+  '{n} reviews on Google': '{n} reseñas en Google',
+  '{n} review from our clients': '{n} reseña de nuestros clientes',
+  '{n} reviews from our clients': '{n} reseñas de nuestros clientes',
 };

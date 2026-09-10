@@ -1071,13 +1071,17 @@
                   alt="Google"
                   style="width: 46px"
                 />
-                <span style="font-size: 18px; font-weight: 800; color: var(--navy)">5.0</span>
+                <!-- Escritos a mano hasta 2026-09-10, y por eso condenados a
+                     quedar viejos. Los llena el modulo de mas abajo desde
+                     /api/chat?type=site-stats; sin dato no se dibuja nada. -->
                 <span
-                  style="color: var(--amber-bright); font-size: 15px"
-                  aria-label="5 out of 5 stars"
-                  >&#9733;&#9733;&#9733;&#9733;&#9733;</span
-                >
+                  id="google-rating"
+                  style="font-size: 18px; font-weight: 800; color: var(--navy)"
+                  hidden
+                ></span>
+                <span id="google-stars" style="color: var(--amber-bright); font-size: 15px" hidden></span>
                 <a
+                  id="google-count-link"
                   href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7"
                   target="_blank"
                   rel="noopener"
@@ -1087,9 +1091,10 @@
                     font-weight: 600;
                     text-decoration: none;
                   "
-                  >2 reviews on Google</a
+                  >Reviews on Google</a
                 >
               </div>
+              <div id="own-stats" style="font-size: 13px; color: var(--gray); margin-top: 8px" hidden></div>
             </div>
             <div class="reviews-grid" id="google-reviews-grid">
               <div class="review-card">
@@ -2368,7 +2373,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=9591065376" type="module"></script>
+    <script src="js/app.js?v=7e8b754c8d" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';
