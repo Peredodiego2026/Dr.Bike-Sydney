@@ -1252,6 +1252,42 @@
           </details>
         </div>
 
+        <!-- ══ GOOGLE REVIEWS ══
+             The only two numbers left on the whole site that a person types.
+             Everything else about reviews updates itself; these cannot, because
+             Google never tells us anything about our own listing - reading it
+             needs the paid Places API. Until then this is the input, and the
+             landing and the home read it from here.
+             Left empty, neither number is drawn: an empty field shows nothing,
+             never a zero and never a stale figure. -->
+        <div class="setting-card">
+          <div class="setting-title" style="display:flex;align-items:center;gap:8px"><span>⭐</span> Google reviews</div>
+          <div class="setting-sub">What the landing shows next to the Google logo. Open your listing and copy what it says.</div>
+          <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap">
+            <div style="flex:1;min-width:120px">
+              <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Rating</div>
+              <input id="google-rating-input" class="inp" placeholder="5.0" inputmode="decimal" aria-label="Google rating">
+            </div>
+            <div style="flex:1;min-width:120px">
+              <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">How many</div>
+              <input id="google-reviews-input" class="inp" placeholder="2" inputmode="numeric" aria-label="Number of Google reviews">
+            </div>
+          </div>
+          <div id="google-reviews-status" style="font-size:12px;padding:8px 12px;background:var(--off);border-radius:8px;line-height:1.6;color:var(--mgray);margin-top:8px">
+            Nothing set — the Google block shows no numbers.
+          </div>
+          <button class="btn-save" style="margin-top:10px" id="google-reviews-save-btn">Save</button>
+          <details style="margin-top:10px">
+            <summary style="font-size:12px;color:var(--blue-text);cursor:pointer;font-weight:600">Where do I find them? ›</summary>
+            <ol style="font-size:12px;color:var(--mgray);margin:8px 0 0 16px;line-height:2">
+              <li>Search <code>Dr. Bike Sydney</code> on Google, signed in as the owner</li>
+              <li>Your business panel appears above the results</li>
+              <li>Copy the rating and the review count it shows</li>
+              <li>Paste them here. The site catches up within 5 minutes</li>
+            </ol>
+          </details>
+        </div>
+
         <!-- ══ INTEGRATIONS ══ -->
         <div class="setting-card">
           <div class="setting-title">Integrations</div>
@@ -1572,5 +1608,5 @@
 </nav>
 
 
-<script src="js/admin.js?v=f529f74cea"></script>
+<script src="js/admin.js?v=2ba47e37f1"></script>
 </body></html>

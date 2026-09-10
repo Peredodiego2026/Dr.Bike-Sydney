@@ -58,19 +58,36 @@ for (const file of SURFACES) {
       expect(cards.length).toBeGreaterThan(0);
     });
 
-    // "2 reviews on Google" over three cards, or over one, is the page lying
-    // about its own content - the exact failure the fabricated cards were.
-    it('the count in the link matches the number of cards', () => {
-      const m = section.match(/>(\d+) reviews? on Google</);
-      expect(m, 'the "N reviews on Google" link is gone').not.toBeNull();
-      expect(Number(m[1])).toBe(cards.length);
+    // CAMBIO DE INVARIANTE, 2026-09-10. Esto exigia que el numero del badge
+    // fuera igual a la cantidad de tarjetas: "2 reviews on Google" sobre tres
+    // tarjetas era la pagina mintiendo sobre su propio contenido.
+    //
+    // Ya no se puede exigir eso, y no por comodidad: el badge dejo de estar
+    // escrito en el HTML. Ahora sale de /api/chat?type=site-stats con el numero
+    // que Diego copia de su ficha, y las tarjetas siguen siendo un par de citas
+    // textuales elegidas a mano. Son dos cosas distintas: el badge describe la
+    // FICHA de Google, las tarjetas son una MUESTRA de ella. Un negocio con 14
+    // resenas que muestra 2 citas no miente - manda a leer las 14.
+    //
+    // Lo que sigue siendo mentira, y sigue vigilado: una tarjeta que no sea una
+    // cita real (el bloque de abajo), y un numero escrito a mano que despues
+    // nadie actualiza (tests/unit/review-stats.test.js).
+    it('the badge is not hand-typed any more', () => {
+      const clean = section.replace(/<!--[\s\S]*?-->/g, ' ');
+      expect(clean, 'a count was typed back into the page').not.toMatch(
+        /\d+\s*reviews? on Google/i
+      );
+      expect(section, 'the slot the server fills is gone').toContain('id="google-count-link"');
     });
 
-    it('every card shows five stars, matching the 5.0 headline', () => {
-      expect(section).toContain('>5.0<');
+    it('every card shows five stars, and the headline no longer claims one', () => {
       const starRuns = [...section.matchAll(/aria-label="5 out of 5 stars"/g)];
-      // One per card, plus the headline.
-      expect(starRuns.length).toBe(cards.length + 1);
+      // Una por tarjeta y ninguna mas: la del encabezado se fue con el "5.0"
+      // fijo. Cinco estrellas al lado de un promedio que puede no ser 5 son una
+      // afirmacion que el propio numero desmiente, asi que ahora las dibuja
+      // js/app.js a partir de la nota real.
+      expect(starRuns.length).toBe(cards.length);
+      expect(section.replace(/<!--[\s\S]*?-->/g, ' ')).not.toContain('>5.0<');
     });
   });
 
@@ -107,9 +124,16 @@ describe('the two surfaces agree', () => {
     expect(a).toEqual(b);
   });
 
-  it('same headline count', () => {
-    const counts = SURFACES.map((f) => sectionOf(f).match(/>(\d+) reviews? on Google</)[1]);
-    expect(new Set(counts).size, `counts differ: ${counts.join(' vs ')}`).toBe(1);
+  // Antes esto comparaba los dos numeros escritos a mano. Ya no hay dos
+  // numeros: hay un endpoint, y las dos paginas lo leen con los mismos ids
+  // desde js/app.js, que las dos cargan. No pueden discrepar salvo que alguien
+  // le cambie el id a una sola - que es lo que se comprueba aca.
+  it('same headline, because both read the same slots', () => {
+    for (const id of ['google-rating', 'google-stars', 'google-count-link', 'own-stats']) {
+      for (const f of SURFACES) {
+        expect(sectionOf(f), `${f} perdio #${id}`).toContain(`id="${id}"`);
+      }
+    }
   });
 });
 

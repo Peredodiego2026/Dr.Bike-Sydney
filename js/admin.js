@@ -7414,6 +7414,12 @@ const SETTING_KEYS = [
   '__biz_email__',
   '__biz_abn__',
   '__whatsapp__',
+  // Los dos numeros de la ficha de Google. Google no nos avisa de nada sobre
+  // nuestro propio perfil - leerlo necesita la Places API, que exige tarjeta -
+  // asi que estos los carga Diego a mano y la landing los lee de aca via
+  // /api/chat?type=site-stats.
+  '__google_rating__',
+  '__google_reviews__',
 ];
 
 async function loadSettings() {
@@ -7436,6 +7442,9 @@ async function loadSettings() {
   set('set-biz-phone', '__biz_phone__');
   set('set-biz-email', '__biz_email__');
   set('set-biz-abn', '__biz_abn__');
+  set('google-rating-input', '__google_rating__');
+  set('google-reviews-input', '__google_reviews__');
+  showGoogleReviewsStatus(map['__google_rating__'], map['__google_reviews__']);
 
   const waInput = document.getElementById('wa-number-input');
   const waStatus = document.getElementById('wa-status');
@@ -7470,6 +7479,61 @@ async function loadSettings() {
 
   // Check Twilio status dynamically
   checkTwilioStatus();
+}
+
+// ── Los dos numeros de la ficha de Google ────────────────────────────────────
+//
+// Se validan aca Y en api/_review-stats.js. No es duplicacion por descuido: lo
+// de aca le dice a Diego que se equivoco mientras tiene el campo delante; lo
+// del servidor es lo que impide que un valor malo llegue a la landing, venga de
+// donde venga. Si algun dia se guarda desde otro lado, la landing sigue a salvo.
+function showGoogleReviewsStatus(rating, count) {
+  const el = document.getElementById('google-reviews-status');
+  if (!el) return;
+  const hasRating = rating !== undefined && rating !== null && String(rating).trim() !== '';
+  const hasCount = count !== undefined && count !== null && String(count).trim() !== '';
+  if (!hasRating && !hasCount) {
+    el.textContent = 'Nothing set — the Google block shows no numbers.';
+    el.style.color = '';
+    return;
+  }
+  const parts = [];
+  if (hasRating) parts.push(`${rating} stars`);
+  if (hasCount) parts.push(`${count} reviews`);
+  el.textContent = `Showing: ${parts.join(' · ')}`;
+  el.style.color = 'var(--green)';
+}
+
+async function saveGoogleReviews() {
+  const ratingEl = document.getElementById('google-rating-input');
+  const countEl = document.getElementById('google-reviews-input');
+  const rating = (ratingEl?.value || '').trim().replace(',', '.');
+  const count = (countEl?.value || '').trim();
+
+  // Vacio es una respuesta valida: es como se saca un numero de la landing.
+  if (rating && !(Number(rating) > 0 && Number(rating) <= 5)) {
+    showToast('The rating has to be between 0 and 5 (e.g. 4.8)');
+    return;
+  }
+  if (count && !/^\d+$/.test(count)) {
+    showToast('How many reviews has to be a whole number');
+    return;
+  }
+
+  const rows = [
+    { van_number: 0, suburb: '__google_rating__', postcode: rating, active: true },
+    { van_number: 0, suburb: '__google_reviews__', postcode: count, active: true },
+  ];
+  const { error } = await sb.from('van_zones').upsert(rows, { onConflict: 'van_number,suburb' });
+  if (error) {
+    showToast('Save failed: ' + error.message);
+    return;
+  }
+  if (ratingEl) ratingEl.value = rating;
+  showGoogleReviewsStatus(rating, count);
+  // 5 minutos es el s-maxage de /api/chat?type=site-stats. Decirlo evita el
+  // "lo guarde y la web sigue igual" que ya paso con otros cambios.
+  showToast('Saved — the site catches up within 5 minutes');
 }
 
 async function saveWhatsappNumber() {
@@ -8674,6 +8738,11 @@ async function loadAvgServiceTime() {
 }
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => loadAvgServiceTime(), 1200);
+});
+
+byId('google-reviews-save-btn').addEventListener('click', function (event) {
+  event.preventDefault();
+  saveGoogleReviews();
 });
 
 // The Connect button used to be a plain link to an endpoint that asked for no

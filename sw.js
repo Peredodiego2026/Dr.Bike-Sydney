@@ -1,3 +1,7 @@
+// v123 (2026-09-10): los contadores de resenas dejan de estar escritos a mano.
+// La landing y la home los leen de /api/chat?type=site-stats; el de Google lo
+// carga Diego en Admin > Settings, el propio se calcula solo. Cambian
+// js/app.js, js/admin.js y los dos diccionarios. PENDIENTES 107.
 // v122 (2026-09-10): el boton "Leave a Google Review" abria la ficha de Maps en
 // vez del cuadro de escribir resena. Cambian js/app.js y js/landing-inline.js,
 // y los dos ya llevan su `?v=` nuevo - el HTML es network-first, asi que con eso
@@ -177,7 +181,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v122';
+const CACHE_STATIC = 'drbike-static-v123';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
