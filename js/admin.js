@@ -370,6 +370,12 @@ document.addEventListener('click', function (e) {
     case 'save-expense':
       saveExpense();
       break;
+    case 'edit-expense':
+      editExpense(d.id);
+      break;
+    case 'cancel-edit-expense':
+      cancelEditExpense();
+      break;
     case 'delete-expense':
       deleteExpense(d.id, d.desc);
       break;
@@ -1060,6 +1066,8 @@ async function loadExpenses() {
           </div>
         </div>
         <div class="exp-amount">–$${Number(e.amount).toLocaleString('en-AU', { minimumFractionDigits: 2 })}</div>
+        <button data-action="edit-expense" data-id="${esc(e.id)}" title="Edit"
+          style="background:var(--blue-lt);border:1.5px solid var(--border);color:var(--blue-text);border-radius:6px;min-width:34px;min-height:34px;font-size:14px;cursor:pointer">&#9998;</button>
         <button data-action="delete-expense" data-id="${esc(e.id)}" data-desc="${esc(e.description)}" title="Delete"
           style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;min-width:34px;min-height:34px;font-size:14px;cursor:pointer">&#10005;</button>
       </div>`
@@ -1077,9 +1085,11 @@ async function saveExpense() {
   };
   if (err) err.style.display = 'none';
 
+  const editId = document.getElementById('exp-edit-id')?.value || null;
   const payload = {
     role: 'admin-expenses-save',
     access_token: await adminAccessToken(),
+    id: editId || undefined,
     spent_on: document.getElementById('exp-date')?.value,
     description: document.getElementById('exp-desc')?.value,
     amount: document.getElementById('exp-amount')?.value,
@@ -1096,15 +1106,49 @@ async function saveExpense() {
     });
     const d = await r.json();
     if (!r.ok) return show(d.error || `Could not save (HTTP ${r.status})`);
-    showToast('Expense added ✓');
-    document.getElementById('exp-desc').value = '';
-    document.getElementById('exp-amount').value = '';
-    document.getElementById('exp-recurring').checked = false;
+    showToast(editId ? 'Expense updated ✓' : 'Expense added ✓');
+    cancelEditExpense();
     _expenses = null; // the P&L has to re-read
     loadExpenses();
   } catch (e) {
     show(e.message);
   }
+}
+
+function editExpense(id) {
+  const row = (_expenses?.expenses || []).find((e) => String(e.id) === String(id));
+  if (!row) return showToast('Could not find that expense - reload and try again');
+
+  document.getElementById('exp-edit-id').value = row.id;
+  document.getElementById('exp-date').value = row.spent_on || '';
+  document.getElementById('exp-desc').value = row.description || '';
+  document.getElementById('exp-amount').value = row.amount ?? '';
+  document.getElementById('exp-category').value = EXPENSE_LABELS[row.category]
+    ? row.category
+    : 'other';
+  document.getElementById('exp-recurring').checked = !!row.recurring_monthly;
+
+  const saveBtn = document.getElementById('exp-save-btn');
+  if (saveBtn) saveBtn.textContent = 'Save changes';
+  const cancelBtn = document.getElementById('exp-cancel-btn');
+  if (cancelBtn) cancelBtn.style.display = '';
+
+  document.getElementById('page-expenses')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEditExpense() {
+  document.getElementById('exp-edit-id').value = '';
+  document.getElementById('exp-desc').value = '';
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-recurring').checked = false;
+
+  const saveBtn = document.getElementById('exp-save-btn');
+  if (saveBtn) saveBtn.textContent = 'Add expense';
+  const cancelBtn = document.getElementById('exp-cancel-btn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+
+  const err = document.getElementById('exp-form-err');
+  if (err) err.style.display = 'none';
 }
 
 async function deleteExpense(id, description) {
