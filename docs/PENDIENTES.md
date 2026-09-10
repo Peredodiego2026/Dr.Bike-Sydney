@@ -11878,3 +11878,58 @@ Se sacan los `<!-- -->` antes de escanear.
 Cargar los dos numeros en **Admin > Settings > Google reviews**. Hasta que lo
 haga, ese bloque muestra el logo y "Resenas en Google" sin ninguna cifra - que
 es correcto, no un error.
+
+---
+
+## 108. Una ruta publica que no llamaba nadie (10-sep-2026)
+
+`GET /api/chat?type=reviews` venia de un `get-reviews.js` que se fusiono dentro
+de `chat.js` por el limite de 12 funciones de Vercel. Devolvia las resenas
+leyendo `bookings` con la service key -que ignora RLS- y hasta el 03-sep salia
+con el **nombre completo** del cliente (seccion 91).
+
+Ahi se le puso el enmascarado y la fuga quedo tapada. Lo que no se resolvio ese
+dia es lo de fondo: **una ruta publica, sin autenticacion, que no usa nadie es
+superficie regalada.** Taparle la fuga no la justifica.
+
+### Lo que se comprobo antes de borrarla, y no fue leyendo el codigo
+
+| Que | Resultado |
+|---|---|
+| `git grep` sobre todo el repo | Ningun consumidor. Solo el endpoint, docs y sus propios tests |
+| `vercel.json` | Ninguna reescritura apunta ahi |
+| **Logs de produccion de Vercel, 30 dias** | `/api/chat`: **2 llamadas**, y las dos eran las pruebas de esta sesion (una `cache=MISS` y la siguiente `cache=HIT` un segundo despues) |
+| `/api/get-reviews`, la ruta vieja | **404** desde la fusion. Un consumidor externo que la usara ya estaba roto, y nadie se quejo |
+| Que devolvia | `{"reviews":[]}` - no hay resenas todavia, o sea que nada que lo consumiera podia hacer algo util |
+
+El unico hueco que los logs no cubren es una integracion que Diego tuviera
+planeada y todavia no conectada. Se le pregunto; no habia ninguna.
+
+### Lo que se fue con el
+
+- La rama entera de `?type=reviews`
+- El `import { shortClientName }` de `chat.js`, que existia **solo** para eso.
+  `shortClientName` se queda en `api/_privacy.js`: `api/auth.js` lo sigue usando
+  para el perfil publico de un mecanico, y ese archivo no importa nada, asi que
+  es el lugar correcto para una funcion de privacidad.
+
+### El guard cambia de trabajo
+
+`public-reviews-name-masked.test.js` vigilaba que **ese** endpoint enmascarara.
+Ahora vigila que **no vuelva**: ni la rama, ni el import. El codigo borrado es
+facil de resucitar con un revert sin que nadie recuerde por que se habia ido.
+
+Y trae su chequeo de que la deteccion funciona: si el stripComments se rompe,
+las dos afirmaciones pasarian sobre una cadena vacia.
+
+### El mismo tropiezo, cuarta vez en esta area
+
+El guard busca `req.query.type === 'reviews'`... y el comentario que explica el
+borrado nombra `?type=reviews`. Hay que sacar los comentarios antes de escanear.
+Van cuatro veces que un regex de esta zona se acusa a si mismo leyendo la prosa
+que lo rodea.
+
+### Verificado
+
+- **El guard se vio fallar**: resucitando la rama en `chat.js`, 1 falla.
+- Nada del cliente cambio, asi que no hay `?v=` que bumpear ni `sw.js` que subir.
