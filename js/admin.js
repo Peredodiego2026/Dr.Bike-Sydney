@@ -887,7 +887,7 @@ async function loadCashHandover() {
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <span style="font-size:20px;font-weight:800;color:var(--green-text)">$${g.total.toLocaleString('en-AU')}</span>
-          <button data-cash-settle="${esc(key)}" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Mark handed over</button>
+          <button data-cash-settle="${esc(key)}" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Mark handed over</button>
         </div>
       </div>
       <div style="font-size:13px;color:var(--mgray)">
@@ -2079,7 +2079,7 @@ function showToast(msg) {
     t = document.createElement('div');
     t.id = 'admin-toast';
     t.style.cssText =
-      'position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;font-family:Inter,sans-serif';
+      'position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;font-family:var(--sans)';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -2158,10 +2158,10 @@ async function loadCoupons() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? 'var(--red-edge)' : 'var(--green-edge)'};border-radius:8px;background:${isActive ? 'var(--red-lt)' : 'var(--green-lt)'};color:${isActive ? 'var(--red)' : 'var(--green)'};font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="toggle-coupon" data-id="${c.id}" data-value="${!isActive}" style="flex:1;padding:9px;border:1.5px solid ${isActive ? 'var(--red-edge)' : 'var(--green-edge)'};border-radius:8px;background:${isActive ? 'var(--red-lt)' : 'var(--green-lt)'};color:${isActive ? 'var(--red)' : 'var(--green)'};font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">
             ${isActive ? 'Deactivate' : 'Activate'}
           </button>
-          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid var(--red-edge);border-radius:8px;background:var(--red-lt);color:var(--red-text);font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          <button data-action="delete-coupon" data-id="${c.id}" data-code="${esc(c.code)}" style="padding:9px 14px;border:1.5px solid var(--red-edge);border-radius:8px;background:var(--red-lt);color:var(--red-text);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -2197,7 +2197,7 @@ function toast(msg) {
     t = document.createElement('div');
     t.id = 'admin-toast';
     t.style.cssText =
-      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;font-family:Inter,sans-serif';
+      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;font-family:var(--sans)';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -2340,20 +2340,20 @@ function checkAdminAuth() {
   const overlay = document.createElement('div');
   overlay.id = 'admin-login-overlay';
   overlay.style.cssText =
-    'position:fixed;inset:0;background:var(--navy-surface);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
+    'position:fixed;inset:0;background:var(--navy-surface);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:var(--sans)';
   overlay.innerHTML = `
     <div style="background:var(--white);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
       <!-- dark-theme-check: off - the logo is blue ink on transparent, so its tile stays light in both themes --><div style="width:56px;height:56px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><!-- dark-theme-check: on --><img src="images/logo-db.png" alt="Dr. Bike Sydney" height="30" style="width:auto;display:block"></div>
       <div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px">Dr. Bike Admin</div>
       <div style="font-size:13px;color:var(--gray);margin-bottom:28px">Operations dashboard</div>
       <input type="email" id="admin-email-inp" placeholder="Email" aria-label="Email" autocomplete="username"
-        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:Inter,sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:var(--sans);outline:none;margin-bottom:10px;box-sizing:border-box"
         data-enter="focus-admin-pass">
       <input type="password" id="admin-pass-inp" placeholder="Password" aria-label="Password" autocomplete="current-password"
-        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:Inter,sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box"
+        style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:var(--sans);outline:none;margin-bottom:12px;box-sizing:border-box"
         data-enter="submit-admin-login">
       <div id="admin-pass-err" style="color:var(--red-text);font-size:13px;margin-bottom:10px;display:none">Invalid credentials</div>
-      <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Sign in →</button>
+      <button data-action="submit-admin-login" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">Sign in →</button>
     </div>`;
   document.body.appendChild(overlay);
   setTimeout(() => document.getElementById('admin-email-inp')?.focus(), 100);
@@ -2604,9 +2604,9 @@ function _loginCardHeader() {
 }
 
 const _inp =
-  'width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:Inter,sans-serif;outline:none;box-sizing:border-box;margin-bottom:12px';
+  'width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--navy);background:var(--white);font-family:var(--sans);outline:none;box-sizing:border-box;margin-bottom:12px';
 const _btn =
-  'width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif';
+  'width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)';
 
 function _totpInputHTML() {
   return `<div style="font-size:13px;color:var(--gray);margin-bottom:28px">Enter the 6-digit code from your authenticator app</div>
@@ -3319,23 +3319,23 @@ function renderBookingDetail(b) {
   const actions = [];
   if (isPending)
     actions.push(
-      `<button data-action="bkd-confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Confirm</button>`
+      `<button data-action="bkd-confirm" data-id="${b.id}" style="background:var(--green-lt);color:var(--green-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">Confirm</button>`
     );
   if (!isCancelled)
     actions.push(
-      `<button data-action="bkd-chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Chat</button>`
+      `<button data-action="bkd-chat" data-id="${b.id}" data-name="${esc(name)}" style="background:var(--purple-lt);color:var(--purple-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">Chat</button>`
     );
   if (b.tracking_token)
     actions.push(
-      `<button data-action="bkd-track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Track link</button>`
+      `<button data-action="bkd-track" data-token="${b.tracking_token}" style="background:var(--blue-lt);color:var(--blue-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">Track link</button>`
     );
   if (!isCancelled)
     actions.push(
-      `<button data-action="bkd-reassign" data-id="${b.id}" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Reassign van</button>`
+      `<button data-action="bkd-reassign" data-id="${b.id}" style="background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">Reassign van</button>`
     );
   if (!isCancelled)
     actions.push(
-      `<button data-action="bkd-cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>`
+      `<button data-action="bkd-cancel" data-id="${b.id}" style="background:var(--red-lt);color:var(--red-text);border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>`
     );
   document.getElementById('bkd-actions').innerHTML = actions.join('');
 }
@@ -6105,12 +6105,12 @@ function renderVanZones() {
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <span style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap">👤</span>
           <input id="driver-${van.id}" value="${esc(van.driverName || '')}" placeholder="Mechanic name" aria-label="Mechanic name"
-            style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:6px 10px;font-size:13px;color:#fff;font-family:Inter,sans-serif;outline:none;flex:1;min-width:0"
+            style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:6px 10px;font-size:13px;color:#fff;font-family:var(--sans);outline:none;flex:1;min-width:0"
             data-blur="save-driver-name" data-id="${van.id}">
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div style="font-size:11px;color:rgba(255,255,255,0.6)">${van.suburbs.length} suburbs</div>
-          <button data-action="save-van-zone" data-id="${van.id}" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;font-family:Inter,sans-serif">Save changes</button>
+          <button data-action="save-van-zone" data-id="${van.id}" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;font-family:var(--sans)">Save changes</button>
         </div>
       </div>
       <div style="padding:16px 20px">
@@ -6119,8 +6119,8 @@ function renderVanZones() {
         </div>
         <div style="display:flex;gap:8px">
           <input id="inp-${van.id}" placeholder="Add suburb (e.g. Bondi)" aria-label="Add suburb" data-enter="add-suburb" data-id="${van.id}"
-            style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:Inter,sans-serif;outline:none">
-          <button data-action="add-suburb" data-id="${van.id}" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">+ Add</button>
+            style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:var(--sans);outline:none">
+          <button data-action="add-suburb" data-id="${van.id}" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans)">+ Add</button>
         </div>
       </div>
     </div>`;
@@ -6386,7 +6386,7 @@ async function loadClaims() {
             .join('')}
         </select>
         <input data-claim-notes="${esc(c.id)}" class="inp" placeholder="Resolution notes" aria-label="Resolution notes" value="${esc(c.resolution_notes || '')}" style="flex:1;min-width:180px;padding:7px 10px;font-size:13px">
-        <button data-claim-save="${esc(c.id)}" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
+        <button data-claim-save="${esc(c.id)}" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
       </div>
     </div>`;
     })
@@ -6458,8 +6458,8 @@ async function loadContacts() {
         <span style="background:${roleBg[c.role] || 'var(--border-lt)'};color:${roleColors[c.role] || 'var(--gray)'};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:capitalize;flex-shrink:0">${c.role}</span>
       </div>
       <div style="display:flex;gap:8px">
-        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Edit</button>
-        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Delete</button>
+        <button data-action="edit-contact" data-id="${c.id}" data-first-name="${esc(c.first_name)}" data-last-name="${esc(c.last_name)}" data-phone="${esc(c.phone)}" data-email="${esc(c.email || '')}" data-role="${esc(c.role)}" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:var(--sans);font-weight:500">Edit</button>
+        <button data-action="delete-contact" data-id="${c.id}" style="flex:1;background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:7px;padding:7px;font-size:13px;cursor:pointer;font-family:var(--sans);font-weight:500">Delete</button>
       </div>
     </div>`
     )
@@ -7851,9 +7851,9 @@ async function loadNotifNumbers() {
       <div style="display:flex;align-items:center;gap:8px;padding-left:46px">
         <span style="font-size:13px;color:var(--mgray);flex:1">${esc(c.phone)} · ${channelIcon[channel]} ${channel.toUpperCase()}</span>
         <button data-action="edit-notif-number" data-id="${c.id}"
-          style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;white-space:nowrap">Edit</button>
+          style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:var(--sans);font-weight:500;white-space:nowrap">Edit</button>
         <button data-action="delete-notif-number" data-id="${c.id}"
-          style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">✕</button>
+          style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:var(--sans);font-weight:500">✕</button>
       </div>
     </div>`;
     })
@@ -8015,7 +8015,10 @@ function safeImageUpload(file) {
   }
   // Only when the browser offers no type at all: some Android pickers send an
   // empty string for HEIC.
-  const named = String(file.name || '').split('.').pop().toLowerCase();
+  const named = String(file.name || '')
+    .split('.')
+    .pop()
+    .toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(ALLOWED, named)) return REFUSED;
   const ext = named;
   return { ok: true, ext, contentType: ALLOWED[ext] };
@@ -8676,7 +8679,7 @@ setTimeout(() => {
     'display:none;position:fixed;top:68px;right:16px;width:360px;max-height:480px;overflow-y:auto;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:200';
   panel.innerHTML = `<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white)">
     <div style="font-size:15px;font-weight:700;color:var(--navy)">🔔 Notifications</div>
-    <button data-action="mark-all-read" style="font-size:13px;color:var(--blue-text);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500">Mark all read</button>
+    <button data-action="mark-all-read" style="font-size:13px;color:var(--blue-text);background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:500">Mark all read</button>
   </div>
   <div id="notif-list" style="padding:8px"><div style="padding:20px;text-align:center;color:var(--mgray);font-size:13px">Loading...</div></div>`;
   document.body.appendChild(panel);
