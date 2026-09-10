@@ -198,11 +198,14 @@ habria visto leyendo el codigo.
   el punto 15 con un lector de pantalla real, y los 3 puntos de la auditoria que
   no se recuperaron.
 
-- **PENDIENTE DIEGO:** reemitir su PIN desde Admin (sigue con el de 4 digitos),
-  el abogado de marcas (fecha real: 31-ene-2027), el link corto de "escribir
-  resena" desde Google Business Profile - hoy el boton cae en la ficha de Maps y
-  cada tap de mas pierde resenas -, y decidir si se borra
-  `/api/chat?type=reviews`, que no lo llama nada del repo.
+- **PENDIENTE DIEGO:** reemitir su PIN desde Admin (sigue con el de 4 digitos)
+  y el abogado de marcas (fecha real: 31-ene-2027).
+  Cerrados el 10-sep: el **link corto de "escribir resena"** lo saco de Google
+  Business Profile y ya esta en los tres CTA (PENDIENTES 106), y
+  **`/api/chat?type=reviews` se borro** (PENDIENTES 108) despues de ver en los
+  logs de produccion de Vercel que en 30 dias tuvo 2 llamadas, las dos propias.
+  Los contadores de resenas dejaron de estar escritos a mano (PENDIENTES 107):
+  **falta que Diego cargue los dos numeros de Google en Admin > Settings.**
 
 - Test count: **1424**, en 102 archivos. `npm run check` son **12** scripts.
 

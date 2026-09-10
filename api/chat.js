@@ -1,6 +1,5 @@
 ﻿import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 import { FEE_BANDS, PENINSULA_FAR_FEE, PERIMETER_MAX_MINUTES } from './_coverage.js';
-import { shortClientName } from './_privacy.js';
 import { reviewStats, googleStats } from './_review-stats.js';
 
 // ── The visit fee, in the assistant's words ───────────────────────────────
@@ -196,46 +195,31 @@ async function handleDiagnose(req, res) {
 import { withSentry } from './_sentry.js';
 export default withSentry(handler, 'chat');
 async function handler(req, res) {
-  // GET ?type=reviews - merged from get-reviews.js to stay under Vercel 12-function limit
   // Route to sub-handlers
   if (req.method === 'GET' && req.query.type === 'health') return handleHealth(req, res);
   if (req.method === 'POST' && req.query.type === 'diagnose') return handleDiagnose(req, res);
 
-  if (req.method === 'GET' && req.query.type === 'reviews') {
-    res.setHeader('Cache-Control', 's-maxage=300');
-    const { createClient } = await import('@supabase/supabase-js');
-    const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
-    const supabase = createClient(sbUrl, process.env.SUPABASE_SERVICE_KEY);
-    const { data, error } = await supabase
-      .from('bookings')
-      .select(
-        'client_rating, client_review, client_name, service_name, created_at, profiles(full_name)'
-      )
-      .not('client_rating', 'is', null)
-      .not('client_review', 'is', null)
-      .gte('client_rating', 4)
-      .order('created_at', { ascending: false })
-      .limit(9);
-    if (error) return res.status(500).json({ error: error.message });
-    // El nombre sale recortado a "Sarah M.", igual que la vista public_reviews.
-    // Salia ENTERO, y esta ruta es publica y sin autenticacion: cualquiera
-    // podia pedir GET /api/chat?type=reviews y llevarse nombre y apellido de
-    // cada cliente que dejo una resena, con el servicio que contrato al lado.
-    //
-    // Que la vista enmascare no alcanzaba, porque esto no pasa por la vista:
-    // lee `bookings` directo con la service key, que ignora RLS.
-    //
-    // Hoy contesta `{"reviews":[]}` - no hay ninguna resena todavia, verificado
-    // contra produccion el 2026-09-03 - asi que no filtro nada de nadie. Se
-    // volvia fuga sola, el dia de la primera resena.
-    const reviews = (data || []).map((r) => ({
-      review_rating: r.client_rating,
-      review_comment: r.client_review,
-      client_name: shortClientName(r.client_name || r.profiles?.full_name),
-      service_type: r.service_name || null,
-    }));
-    return res.status(200).json({ reviews });
-  }
+  // BORRADO 2026-09-10: `?type=reviews`.
+  //
+  // Venia de un `get-reviews.js` que se fusiono aca por el limite de 12
+  // funciones de Vercel. Devolvia las resenas leyendo `bookings` con la service
+  // key, que ignora RLS - y con el nombre entero del cliente hasta el 03-sep,
+  // cuando se le puso el enmascarado que ya tiene la vista `public_reviews`.
+  //
+  // Lo que lo condeno no fue la fuga (esa quedo tapada): fue que **no lo llamaba
+  // nadie**, y una ruta publica sin autenticacion que nadie usa es superficie
+  // regalada. Lo que muestra resenas en la landing y en la home es la vista
+  // `public_reviews`, consultada directo con la anon key, que enmascara en SQL.
+  //
+  // Antes de borrarlo, el 10-sep:
+  //   - `git grep` sobre todo el repo: ningun consumidor, ni una reescritura
+  //     en vercel.json
+  //   - logs de produccion de Vercel, 30 dias: `/api/chat` con 2 llamadas, y
+  //     las dos eran las pruebas de esta misma sesion
+  //   - `/api/get-reviews`, la ruta vieja, ya devolvia 404 desde la fusion: un
+  //     consumidor externo que la usara ya estaba roto y nadie se quejo
+  //   - contestaba `{"reviews":[]}`: no hay resenas todavia, asi que nada que
+  //     lo consumiera podia estar haciendo algo util
 
   // GET ?type=site-stats - los dos contadores de resenas que muestran la
   // landing y la home. Aca y no en un archivo propio porque el proyecto esta en

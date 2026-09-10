@@ -225,12 +225,15 @@ export function exportPlan({ clientId = null, email = null }) {
 /**
  * El nombre de un cliente tal como se puede mostrar en publico: "Sarah M.".
  *
- * Vivia en api/auth.js, que lo usa para las resenas que sirve el perfil de un
- * mecanico. Se mudo aca el 2026-09-03 porque `api/chat.js?type=reviews`
+ * Lo usa api/auth.js para las resenas que sirve el perfil publico de un
+ * mecanico, que es hoy su unico consumidor.
+ *
+ * Vivia alla y se mudo aca el 2026-09-03 porque `api/chat.js?type=reviews`
  * necesitaba el mismo enmascarado y no puede importar auth.js entero -es un
  * handler completo, con su Stripe y su Supabase adentro- solo para recortar un
- * nombre. Este archivo no importa nada, asi que cualquier handler lo puede
- * traer sin costo.
+ * nombre. Ese endpoint se borro el 2026-09-10 (no lo llamaba nadie), asi que el
+ * motivo de la mudanza ya no existe; se queda igual porque este archivo no
+ * importa nada y es el lugar correcto para una funcion de privacidad.
  *
  * La vista `public_reviews` hace exactamente lo mismo en SQL
  * (`split_part` + `left(...,1)`). Que haya dos implementaciones no es ideal,

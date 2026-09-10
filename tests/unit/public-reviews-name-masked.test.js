@@ -1,18 +1,24 @@
 // tests/unit/public-reviews-name-masked.test.js
 //
-// Hay DOS caminos por los que una resena sale a internet, y hasta el
+// Habia DOS caminos por los que una resena sale a internet, y hasta el
 // 2026-09-03 solo uno recortaba el nombre:
 //
 //   1. La vista `public_reviews` -> "Sarah M.", recortado en SQL.
 //      Es la que consultan index.html y js/landing-inline.js con la anon key.
 //   2. `GET /api/chat?type=reviews` -> nombre y apellido enteros.
-//      Publico, sin autenticacion, y lee `bookings` con la service key, que
-//      ignora RLS. No lo llama nada del repo, pero responde igual desde
-//      internet: verificado el 2026-09-03, contesta 200.
+//      Publico, sin autenticacion, y leia `bookings` con la service key, que
+//      ignora RLS. Se le puso el mismo enmascarado el 03-sep.
 //
-// Hoy los dos devuelven vacio porque no hay ninguna resena. El segundo se
-// volvia fuga solo, el dia del primer trabajo terminado - que es justo lo que
-// esta sesion estuvo desbloqueando.
+// **El segundo ya no existe: se borro el 2026-09-10.** No lo llamaba nadie -
+// ni el repo, ni nadie desde internet: 30 dias de logs de produccion daban 2
+// llamadas a `/api/chat`, y las dos eran pruebas propias. Una ruta publica sin
+// autenticacion que nadie usa es superficie regalada, y taparle la fuga no la
+// justifica.
+//
+// Asi que ahora este archivo vigila dos cosas distintas: que el camino que
+// queda siga enmascarando, y que **el que se fue no vuelva**. Lo segundo
+// importa porque el codigo borrado es facil de resucitar de un git revert sin
+// que nadie recuerde por que se habia ido.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -60,17 +66,37 @@ describe('shortClientName, ahora en el modulo de privacidad', () => {
   });
 });
 
-describe('los dos caminos publicos enmascaran', () => {
-  it('el endpoint de chat no devuelve el nombre crudo', () => {
-    const src = read('api/chat.js');
-    const block = src.slice(src.indexOf("req.query.type === 'reviews'"));
-    const body = block.slice(0, block.indexOf('return res.status(200).json({ reviews })'));
-    expect(body).toMatch(/client_name: shortClientName\(/);
-    // La forma exacta que filtraba.
-    expect(body).not.toMatch(/client_name: r\.client_name \|\|/);
+describe('el camino que se borro no vuelve', () => {
+  const chat = read('api/chat.js');
+  // El comentario que explica el borrado nombra `?type=reviews`, asi que hay
+  // que sacar los comentarios antes de buscarlo. Es el mismo tropiezo que ya
+  // se repitio tres veces en esta area del codigo.
+  const code = chat
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((l) => l.replace(/\r/g, '').replace(/\/\/.*$/, ''))
+    .join('\n');
+
+  it('la deteccion funciona (el resto del archivo sigue ahi)', () => {
+    // Sin esto, un stripComments roto dejaria `code` vacio y las dos
+    // afirmaciones de abajo pasarian sobre la nada.
+    expect(code).toMatch(/req\.query\.type === 'health'/);
+    expect(code).toMatch(/req\.query\.type === 'site-stats'/);
   });
 
-  it('y la vista lo recorta en SQL', () => {
+  it('no hay ninguna rama que responda ?type=reviews', () => {
+    expect(code, 'volvio el endpoint que nadie llamaba').not.toMatch(
+      /req\.query\.type === 'reviews'/
+    );
+  });
+
+  it('ni quedo el import que solo servia para eso', () => {
+    expect(code, 'shortClientName ya no se usa en chat.js').not.toMatch(/shortClientName/);
+  });
+});
+
+describe('el camino publico que queda enmascara', () => {
+  it('la vista lo recorta en SQL', () => {
     const sql = read('scripts/create-public-reviews-view.sql');
     expect(sql).toMatch(/split_part\(b\.client_name/);
     expect(sql).toMatch(/as display_name/);
