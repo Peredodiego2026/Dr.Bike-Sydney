@@ -661,6 +661,9 @@ export default {
   'Verified Mechanic': 'Mecánico Verificado',
   'Background Checked': 'Antecedentes Verificados',
   'Fully Insured': 'Totalmente Asegurado',
+  'ASAP Response': 'Respuesta Inmediata',
+  'Transparent Pricing': 'Precios Transparentes',
+  'Sydney Wide': 'Toda Sydney',
   // Hero (landing-specific strings not already in the mobile dict)
   'Mobile Service · Sydney Wide': 'Servicio Móvil · Toda Sydney',
   'Professional Bike Service at Your Doorstep': 'Servicio Profesional de Bicicletas en tu Puerta',
