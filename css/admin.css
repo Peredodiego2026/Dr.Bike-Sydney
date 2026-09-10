@@ -20,6 +20,27 @@
       rather than in a private block here. Converting a hand-written hex to one
       of those tokens is forbidden: it would follow the theme when the author
       meant it not to.
+
+   Groups 3 and 4 promised above were never written down - found while
+   editing this file 2026-09-10, not investigated further here. Whoever
+   picks this up: the comment said "four groups" and only ever described
+   two, this one included.
+
+   Found the same day: this comment was never closed at all - it and
+   everything after it, including the body{} rule right below, was
+   swallowed as a comment until the next comment terminator in the file
+   happened to close it instead. body's font-family/background/color/flex
+   layout have been silently inert this whole time, however long that
+   turns out to be - git blame on this line, if it matters for anything
+   downstream of that. Whatever admin.html actually looks like today did
+   not come from this rule. */
+:root {
+  /* Noto Sans, admin.html only (Diego's request, 2026-09-10, after
+     comparing 10 options in an Artifact) - overrides the site-wide --sans
+     (Inter) from css/variables.css. Scoped here because admin.html is the
+     only page that loads this file, so nothing else is affected. */
+  --sans: 'Noto Sans', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
 body {
   font-family: var(--sans);
   background: var(--border-lt);
@@ -132,7 +153,7 @@ body {
   border-radius: 6px;
   background: none;
   cursor: pointer;
-  font-family: Inter, sans-serif;
+  font-family: var(--sans);
   font-weight: 600;
   border: 1px solid;
 }
@@ -2654,7 +2675,7 @@ body {
   padding: 5px 10px;
   font-size: 11px;
   font-weight: 600;
-  font-family: Inter, sans-serif;
+  font-family: var(--sans);
   line-height: 1.35;
   white-space: nowrap;
   cursor: pointer;
@@ -2692,6 +2713,7 @@ body {
   font-size: 11px;
   font-weight: 600;
   color: var(--gray-lt);
+}
 
 /* The privacy request button. Deliberately quieter than Bikes and Chat: it is
    the rarest action on the card and the only one that leads somewhere
