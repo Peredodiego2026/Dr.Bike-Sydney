@@ -1,3 +1,8 @@
+// v122 (2026-09-10): el boton "Leave a Google Review" abria la ficha de Maps en
+// vez del cuadro de escribir resena. Cambian js/app.js y js/landing-inline.js,
+// y los dos ya llevan su `?v=` nuevo - el HTML es network-first, asi que con eso
+// alcanzaba. El nombre del cache sube igual para que la copia vieja de esos dos
+// archivos no quede ocupando lugar para siempre. PENDIENTES 106.
 // v121 (2026-09-03): el invitado no podia dejar su resena. El link del email
 // lleva ahora el tracking_token (`&t=`), y submitReview lo manda cuando no hay
 // sesion. Cambian js/app.js, js/supabase.js y los dos diccionarios, asi que el
@@ -172,7 +177,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v121';
+const CACHE_STATIC = 'drbike-static-v122';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
