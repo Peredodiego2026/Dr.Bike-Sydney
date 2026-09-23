@@ -387,7 +387,9 @@ export default {
   'Sunday & public holiday rate': '周日及公共假期费率',
   'Your Quote': '您的报价',
   Location: '位置',
-  "What's included": '服务内容',
+  "What we'll check": '我们将检查的项目',
+  'Only what your bike needs gets touched': '只处理您的自行车实际需要的项目',
+  'Pay online now': '立即在线支付',
   'Service fee': '服务费',
   'Paid online now via Stripe': '通过 Stripe 在线支付',
   'Promo discount': '优惠折扣',
@@ -402,7 +404,7 @@ export default {
   'Enter code (optional)': '输入代码（可选）',
   Apply: '应用',
   'Checking...': '正在验证...',
-  'How payment works:': '支付方式说明：',
+  'Then, at your door:': '之后，在您家门口：',
   'Please try again.': '请重试。',
   // Service inclusions (shown on the Quote screen)
   'Gear adjustment & cable tension': '变速调整与线管张力',
@@ -1315,8 +1317,8 @@ export default {
   '© 2026 Dr. Bike Sydney. All rights reserved. · ABN: 87 654 025 287':
     '© 2026 Dr. Bike Sydney. 版权所有。· ABN: 87 654 025 287',
 
-  'The $CALLOUT visit & diagnosis fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.':
-    '$CALLOUT 的上门检查费现在通过 Stripe 收取。服务费（$SERVICE）在技师到达时用银行卡（EFTPOS）直接支付给技师。',
+  "once your bike is diagnosed, the mechanic goes ahead with the repair - $DOORAMOUNT, paid at your door when it's done.":
+    '车辆诊断完成后，技师将开始维修 - $DOORAMOUNT，在您家门口完成后支付。',
 
   'Confirm & Pay $CALLOUT Visit & Diagnosis': '确认并支付 $CALLOUT 上门检查费',
   'Pay $CALLOUT Visit & Diagnosis': '支付 $CALLOUT 上门检查费',

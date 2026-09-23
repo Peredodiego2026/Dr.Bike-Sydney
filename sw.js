@@ -1,3 +1,8 @@
+// v124 (2026-09-23): la pantalla de cotizacion deja de sumar el service fee y
+// la visita en un solo "Total". Ahora "Pay online now" muestra solo lo que
+// Stripe cobra hoy, y "Then, at your door" (rojo suave, ya no gris) explica
+// que el service fee se paga despues, en la puerta. Cambian js/app.js y los
+// dos diccionarios.
 // v123 (2026-09-10): los contadores de resenas dejan de estar escritos a mano.
 // La landing y la home los leen de /api/chat?type=site-stats; el de Google lo
 // carga Diego en Admin > Settings, el propio se calcula solo. Cambian
@@ -181,7 +186,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v123';
+const CACHE_STATIC = 'drbike-static-v124';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
