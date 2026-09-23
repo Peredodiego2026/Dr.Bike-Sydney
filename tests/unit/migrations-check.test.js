@@ -31,17 +31,25 @@ function runCheck() {
   }
 }
 
+// Same reason as abn-single-source.test.js, and the same half-applied fix:
+// this lived on the planted-file test below and not on the one right here,
+// which spawns the checker too and kept flaking under the full suite.
+const SPAWN_TIMEOUT_MS = 20000;
+
 describe('the repo as it stands', () => {
-  it('passes', () => {
-    expect(runCheck().code).toBe(0);
-  });
+  it(
+    'passes',
+    () => {
+      expect(runCheck().code).toBe(0);
+    },
+    SPAWN_TIMEOUT_MS
+  );
 });
 
 describe('a migration the runbook never asks about', () => {
   const planted = join(root, 'scripts', 'zz-planted-by-a-test.sql');
 
-  // Same reason as abn-single-source.test.js: this spawns the checker three
-  // times, and process spawns get slow when the whole suite is running.
+  // Spawns the checker three times - see SPAWN_TIMEOUT_MS above.
   it('fails the check, and names the file', () => {
     writeFileSync(planted, '-- planted by migrations-check.test.js\nselect 1;\n');
     try {
@@ -54,7 +62,7 @@ describe('a migration the runbook never asks about', () => {
       unlinkSync(planted);
     }
     expect(runCheck().code).toBe(0);
-  }, 20000);
+  }, SPAWN_TIMEOUT_MS);
 });
 
 describe('the exclusion list', () => {
