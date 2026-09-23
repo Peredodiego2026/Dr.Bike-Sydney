@@ -47,7 +47,7 @@ describe('the old name is gone from every surface', () => {
   });
 
   it('the new name is what the summary shows', () => {
-    expect(appjs).toMatch(/visit & diagnosis fee is charged now via Stripe/);
+    expect(appjs).toMatch(/Pay online now/);
   });
 });
 

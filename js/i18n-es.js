@@ -433,7 +433,9 @@ export default {
   'Sunday & public holiday rate': 'Tarifa de domingo y feriado',
   'Your Quote': 'Tu Cotización',
   Location: 'Ubicación',
-  "What's included": 'Qué incluye',
+  "What we'll check": 'Qué vamos a revisar',
+  'Only what your bike needs gets touched': 'Solo se toca lo que tu bici realmente necesita',
+  'Pay online now': 'Pagá online ahora',
   'Service fee': 'Costo del servicio',
   'Paid online now via Stripe': 'Se paga ahora en línea con Stripe',
   'Promo discount': 'Descuento promocional',
@@ -448,7 +450,7 @@ export default {
   'Enter code (optional)': 'Ingresá el código (opcional)',
   Apply: 'Aplicar',
   'Checking...': 'Verificando...',
-  'How payment works:': 'Cómo funciona el pago:',
+  'Then, at your door:': 'Después, en tu puerta:',
   'Please try again.': 'Por favor, intentá de nuevo.',
   // Service inclusions (shown on the Quote screen)
   'Gear adjustment & cable tension': 'Ajuste de cambios y tensión de cables',
@@ -1431,11 +1433,11 @@ export default {
   '© 2026 Dr. Bike Sydney. All rights reserved. · ABN: 87 654 025 287':
     '© 2026 Dr. Bike Sydney. Todos los derechos reservados. · ABN: 87 654 025 287',
 
-  // Interpolated sentence: the two amounts are substituted after the lookup
-  // (a text node containing a number can never match a dictionary key), so
-  // the placeholders CALLOUT and SERVICE must survive translation verbatim.
-  'The $CALLOUT visit & diagnosis fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.':
-    'La visita y diagnóstico de $CALLOUT se cobra ahora con Stripe. El servicio ($SERVICE) se le paga al mecánico con tarjeta (EFTPOS) cuando llega.',
+  // Interpolated sentence: the amount is substituted after the lookup (a
+  // text node containing a number can never match a dictionary key), so the
+  // placeholder DOORAMOUNT must survive translation verbatim.
+  "once your bike is diagnosed, the mechanic goes ahead with the repair - $DOORAMOUNT, paid at your door when it's done.":
+    'una vez diagnosticada tu bici, el mecánico procede a hacer la reparación - $DOORAMOUNT, que se paga en tu puerta cuando termina.',
 
   // The two pay buttons, same placeholder trick. They shipped in English in
   // every language until 2026-07-28 because the amount was baked into the

@@ -1534,7 +1534,6 @@ async function renderServiceSummary() {
   const calloutFee = coverage.needsQuote
     ? 0
     : applySurcharge(Number(coverage.calloutFee) || 0, date);
-  const grandTotal = serviceTotal + calloutFee;
 
   // El precio de la visita, para poder preguntarle al embudo si una zona de
   // $45 convierte peor que una de $25. Sin el numero, "se va por el precio" no
@@ -1578,7 +1577,8 @@ async function renderServiceSummary() {
         inclusions
           ? `
       <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;padding:14px 16px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-secondary);margin-bottom:10px">What's included</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-secondary);margin-bottom:2px">What we'll check</div>
+        <div style="font-size:11.5px;color:var(--color-text-secondary);opacity:0.75;margin-bottom:10px">Only what your bike needs gets touched</div>
         ${inclusions
           .map(
             (item) => `
@@ -1594,33 +1594,21 @@ async function renderServiceSummary() {
 
       ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--amber-ink);margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
-      <!-- Pricing breakdown -->
-      <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
-        <div style="padding:0 0 2px">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--color-border)">
-            <span style="font-size:13px;color:var(--color-text-secondary)">Service fee</span>
-            <span style="font-size:13px;font-weight:600" id="q-service-price">$${serviceTotal.toFixed(2)}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--color-border)">
-            <div>
-              <span style="font-size:13px;color:var(--color-text-secondary)">Visit & diagnosis</span>
-              <div style="font-size:11px;color:var(--color-text-secondary);opacity:0.7;margin-top:1px">Paid online now via Stripe</div>
-            </div>
-            <span style="font-size:13px;font-weight:600">$${calloutFee.toFixed(2)}</span>
-          </div>
-          <div id="q-discount-row" style="display:none;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--color-border)">
-            <span style="font-size:13px;color:var(--color-success)">Promo discount</span>
-            <span style="font-size:13px;font-weight:600;color:var(--color-success)" id="q-discount-amt"></span>
-          </div>
-          <div id="q-credit-row" style="display:none;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--color-border)">
-            <span style="font-size:13px;color:var(--color-success)">Referral credit</span>
-            <span style="font-size:13px;font-weight:600;color:var(--color-success)" id="q-credit-amt"></span>
-          </div>
+      <!-- Pay online now: this is the ONLY amount Stripe actually charges on
+           this screen, so it is the only number that gets to look like a
+           total. The old card summed it with the service fee into one
+           "Total" that matched neither the button below it nor the amount
+           that actually left the card - see docs/PENDIENTES.md for the
+           2026-09 quote-screen rework. -->
+      <div style="border:1.5px solid var(--blue);background:var(--blue-lt);border-radius:12px;padding:13px 14px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--blue-dark);text-transform:uppercase;letter-spacing:0.04em">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-dark)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Pay online now
+          </span>
+          <span style="font-size:19px;font-weight:800;color:var(--blue)">$${calloutFee.toFixed(2)}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px;background:var(--color-bg)">
-          <span style="font-size:15px;font-weight:700">Total</span>
-          <span style="font-size:20px;font-weight:800;color:var(--color-primary)" id="summary-total-amount">$${grandTotal.toFixed(2)}</span>
-        </div>
+        <div style="font-size:11.5px;color:var(--blue-dark);opacity:0.8;margin-top:4px">Visit & diagnosis</div>
       </div>
 
       <!-- Discount code -->
@@ -1634,15 +1622,22 @@ async function renderServiceSummary() {
         <div id="referral-msg" style="font-size:13px;margin-top:6px;min-height:16px"></div>
       </div>
 
-      <!-- Payment split note -->
-      <div style="display:flex;gap:10px;background:var(--blue-lt);border-radius:10px;padding:12px 14px;margin-bottom:16px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div style="font-size:13px;color:var(--blue-text);line-height:1.55">
-          <strong>How payment works:</strong> ${translateValue(
-            'The $CALLOUT visit & diagnosis fee is charged now via Stripe. The service fee ($SERVICE) is paid to the mechanic directly by card (EFTPOS) when they arrive.'
-          )
-            .replace('CALLOUT', calloutFee.toFixed(2))
-            .replace('SERVICE', `<span id="q-svc-note">${serviceTotal.toFixed(2)}</span>`)}
+      <!-- Then, at your door: the OTHER amount, and the one a promo code or
+           referral credit actually changes - the callout fee above never
+           discounts. Soft red, not gray: gray read as "done, ignore it",
+           which is backwards for the number the client still owes. -->
+      <div style="display:flex;gap:10px;background:var(--red-lt);border-radius:12px;padding:12px 14px;margin-bottom:16px">
+        <div style="width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
+        <div style="font-size:13px;color:var(--red-text);line-height:1.55;flex:1">
+          <strong>Then, at your door:</strong> ${translateValue(
+            "once your bike is diagnosed, the mechanic goes ahead with the repair - $DOORAMOUNT, paid at your door when it's done."
+          ).replace('DOORAMOUNT', `<span id="q-door-amount">${serviceTotal.toFixed(2)}</span>`)}
+          <div id="q-discount-row" style="display:none;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px solid var(--red-edge);font-size:12px">
+            <span>Promo discount</span><span id="q-discount-amt" style="font-weight:700"></span>
+          </div>
+          <div id="q-credit-row" style="display:none;justify-content:space-between;margin-top:4px;font-size:12px">
+            <span>Referral credit</span><span id="q-credit-amt" style="font-weight:700"></span>
+          </div>
         </div>
       </div>
 
@@ -1691,8 +1686,10 @@ async function renderServiceSummary() {
       row.style.display = used > 0 ? 'flex' : 'none';
       amt.textContent = '-$' + used.toFixed(2);
     }
-    const totalEl = screen.querySelector('#summary-total-amount');
-    if (totalEl) totalEl.textContent = '$' + (_currentServiceTotal - used + calloutFee).toFixed(2);
+    // The callout fee above never discounts - only the door amount does, so
+    // that is the only figure this screen still owes an update.
+    const doorEl = screen.querySelector('#q-door-amount');
+    if (doorEl) doorEl.textContent = (_currentServiceTotal - used).toFixed(2);
   };
 
   // Read the balance and show it. A guest has no profile and no credits, so
@@ -1731,10 +1728,6 @@ async function renderServiceSummary() {
       _currentServiceTotal = Math.max(0, serviceTotal - disc);
       window.appState.discountCode = code;
       window.appState.discountAmount = disc;
-      const svcEl = screen.querySelector('#q-service-price');
-      if (svcEl) svcEl.textContent = '$' + _currentServiceTotal.toFixed(2);
-      const svcNoteEl = screen.querySelector('#q-svc-note');
-      if (svcNoteEl) svcNoteEl.textContent = _currentServiceTotal.toFixed(2);
       const discRow = screen.querySelector('#q-discount-row');
       const discAmt = screen.querySelector('#q-discount-amt');
       if (discRow && discAmt) {
