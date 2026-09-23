@@ -7,17 +7,17 @@ sobre `f496270`.** Nueve PR. Siete mergeados y en produccion, dos esperando.
 
 ### Lo que se cerro
 
-| PR | Hallazgo | Estado |
-|---|---|---|
-| #411 | XSS almacenado en la app del mecanico | en produccion |
-| #412 | El importe lo decidia el telefono | en produccion |
-| #413 | Rotar el PIN no revocaba sesiones | en produccion + SQL corrido |
-| #414 | MFA del admin (modo observar) | en produccion, **sin bloquear** |
-| #415 | El presupuesto elegia el servicio | en produccion, **verificado ahi** |
-| #416 | Medir el nivel del token en el login | en produccion |
-| #417 | Migraciones sin fila en el runbook | en produccion |
-| #418 | Fotos de reclamos en URL adivinable | abierto, falta bucket |
-| #419 | El SQL de RLS + AAL2 | abierto, no se corre solo |
+| PR   | Hallazgo                              | Estado                            |
+| ---- | ------------------------------------- | --------------------------------- |
+| #411 | XSS almacenado en la app del mecanico | en produccion                     |
+| #412 | El importe lo decidia el telefono     | en produccion                     |
+| #413 | Rotar el PIN no revocaba sesiones     | en produccion + SQL corrido       |
+| #414 | MFA del admin (modo observar)         | en produccion, **sin bloquear**   |
+| #415 | El presupuesto elegia el servicio     | en produccion, **verificado ahi** |
+| #416 | Medir el nivel del token en el login  | en produccion                     |
+| #417 | Migraciones sin fila en el runbook    | en produccion                     |
+| #418 | Fotos de reclamos en URL adivinable   | abierto, falta bucket             |
+| #419 | El SQL de RLS + AAL2                  | abierto, no se corre solo         |
 
 ### EL DATO QUE DESBLOQUEA TODO LO DEMAS
 
@@ -125,6 +125,12 @@ habria visto leyendo el codigo.
 
 ## Current state (2026-09-03) — read this first
 
+> Ese dia trabajaron **dos sesiones en paralelo**. Lo que sigue hasta
+> "LA OTRA MITAD DEL DIA" es la sesion de resenas; despues viene la de la
+> pantalla en blanco. Ninguna de las dos sabia de la otra mientras trabajaba,
+> y por eso las dos llegaron por su cuenta a que `/api/chat?type=reviews`
+> habia que borrarla.
+
 - **La auditoria de 20 puntos ya no vive en un chat.** Estaba referenciada en
   17 lugares de `docs/PENDIENTES.md` y en dos lineas de este archivo que se
   contradecian ("10 de 20 cerrados" contra "none of it is fixed yet"), pero la
@@ -209,11 +215,118 @@ habria visto leyendo el codigo.
 
 - Test count: **1424**, en 102 archivos. `npm run check` son **12** scripts.
 
+### LA OTRA MITAD DEL DIA — la sesion de la pantalla en blanco
+
+- **EL HALLAZGO: una variable leida antes de existir dejaba la app en blanco a
+  mitad de una reserva.** Diego, desde el celular: apretaba Continuar en el
+  resumen y la pantalla se iba a **blanco total** - sin spinner, sin error, sin
+  nada que tocar. Lo reporto dos veces.
+
+  La primera explicacion fue el service worker (PENDIENTES 80, PR #394) y era un
+  bug real, pero **no era este**. Cuando Diego dijo _"sigue yendose a blanco en
+  los mismos lugares"_, esa frase fue el dato: **los mismos lugares** es
+  determinista, y un worker tomando el control durante un deploy no lo es.
+
+  `renderServiceSummary()` leia `calloutFee` y `serviceTotal` **44 y 12 lineas
+  arriba de su propio `const`**. Eso es la zona muerta temporal: no da
+  `undefined`, tira `ReferenceError` - y lo tira **antes del primer
+  `screen.innerHTML`**. El router no construye pantallas, solo les pone `active`
+  a divs que `index.html` trae vacios, asi que la pagina queda literalmente
+  vacia, y sin nada que tocar porque la barra de navegacion vive adentro de ese
+  mismo `innerHTML`.
+
+- **Por que ninguna prueba lo vio, y esto es lo que hay que recordar:** estaba
+  detras de `if (window.posthog)`. La analitica la carga `js/consent.js` **solo
+  despues de aceptar las cookies**. Diego habia aceptado; los barridos
+  automatizados no. Se recorrio el flujo con clicks reales y con cinco formas de
+  borrador roto y **paso todo**. Aceptar cookies no deberia cambiar lo que hace
+  la app; durante un deploy decidio si **funcionaba**.
+  → Los barridos del flujo de cliente se corren **dos veces**, con la analitica
+  realmente definida y sin ella.
+
+- **"Bookings no me aparece nada" era el mismo bug.** Esa pantalla esta bien
+  escrita y tiene estado vacio para las tres respuestas posibles. No mostraba
+  nada porque **no habia nada**: cada intento de reservar moria en el resumen,
+  asi que nunca se creo una reserva. Una causa, dos sintomas.
+
+- **Dos guards nuevos en `npm run check`, los dos verificados en las dos
+  direcciones** (fallan contra el codigo roto, pasan con el arreglo):
+  - `scripts/tdz-check.mjs` - leer un `const`/`let` arriba de su declaracion
+    **en el mismo cuerpo de funcion**. `no-use-before-define` a secas marca 13
+    casos inofensivos en este repo, y 13 `eslint-disable` habrian tapado el que
+    importaba. Es la **tercera** vez que un bug de alcance de variables llega a
+    produccion aca; `eslint.config.js` ya nombraba las otras dos.
+  - `scripts/privacy-check.mjs` - ver mas abajo.
+
+- **La red de seguridad por pantalla (PENDIENTES 85).** La causa murio y su
+  clase quedo bloqueada, pero la arquitectura seguia convirtiendo **cualquier**
+  error de dibujado en una pagina muerta. Ahora: una pantalla que no dibujo nada
+  recibe una tarjeta de error con reintento; **una que ya dibujo y despues falla
+  se deja intacta** y solo recibe un aviso flotante - borrar una pagina usable
+  para poner un error seria empeorarla. Esa segunda regla es el riesgo real de
+  cualquier red de seguridad y tiene test propio. Nada se traga: todo va a la
+  consola y a Sentry etiquetado con la pantalla. El despachador dejo de llamar
+  renders sueltos: es un mapa `ruta -> render`, y un test falla si alguna
+  pantalla lo esquiva.
+
+- **El chatbot cotizaba un precio que la reserva no puede cobrar (86).**
+  Anunciaba la escalera de tres bandas ($25/$35/$45) meses despues de que
+  `_coverage.js` pasara a dos. Chatswood, Hornsby, North Sydney y Lane Cove
+  oian **$35** y pagaban **$45**; Newport, Avalon y Palm Beach oian $45 y
+  pagaban $35. Los precios de los **servicios** nunca se desviaron porque se
+  leen de Supabase en cada request; la tarifa de visita era prosa escrita a
+  mano. El arreglo no fue corregir la prosa sino **dejar de que sea prosa**:
+  `formatFeeBands()` la genera desde `FEE_BANDS`.
+
+- **El interruptor de zonas no llegaba al despacho (84).** Zone Manager, las
+  tarjetas de van y el conteo de turnos filtran por `active = true`.
+  `matchVanZone()` - la que decide **que mecanico recibe el trabajo** - leia sin
+  filtrar. Una zona apagada desaparecia de la pantalla y **seguia despachando**.
+
+- **El modulo de privacidad estaba escrito y no lo llamaba nadie (88).**
+  `privacy.html` promete copia y borrado en 30 dias bajo la Privacy Act 1988.
+  `api/_privacy.js` sabia hacerlo desde agosto, con 22 tests. Nadie lo llamaba.
+  Y el runbook que Diego habria abierto nombraba **1 de las 9 tablas** con datos
+  personales. La cabecera del modulo afirmaba que el runbook se generaba con
+  `scripts/privacy-check.mjs` - **que no existia**. La garantia estaba escrita
+  en un comentario en vez de en un archivo ejecutable, que es exactamente como
+  se desvio. Ahora: generador real en `npm run check` (runbook de 1 a 9 tablas),
+  endpoint `admin-privacy-plan` detras de auth de admin, y boton en
+  **Admin > Clients > Privacy request**. **Muestra el SQL, no lo ejecuta**: el
+  borrado es irreversible, hay que confirmar que el pedido viene de esa persona
+  antes, y el SQL que cambia datos lo pega Diego en Supabase.
+
+- **El BAS declaraba un cero que nadie habia calculado (87, 92).** Imprimia
+  `1B — GST Credits on Purchases: $0`, y la ultima linea se llamaba "NET GST
+  PAYABLE TO ATO" sobre el GST de ventas a secas: era el bruto presentado como
+  neto. Presentar el BAS con 1B en cero **declara que no se reclama ningun
+  credito de GST**. No se calcula automaticamente porque no se puede: la tabla
+  `expenses` no guarda si una compra llevaba GST ni si era de capital, y dividir
+  por 11 seria otro numero mal dentro de una presentacion impositiva. Ahora dice
+  `NOT CALCULATED` con la explicacion, y adjunta los gastos reales por
+  categoria para el contador. Ocho dias despues el ABN aparecio escrito a mano
+  en **45 archivos** y se le puso chequeo de coincidencia y de checksum de la
+  ATO (PR #421).
+
+- **Contexto fiscal, porque explica que NO es un bug:** Diego **no esta
+  registrado en GST** y **no salio ninguna factura todavia** - no hubo clientes
+  cobrados. La app esta construida para un negocio registrado (la factura dice
+  "GST included") **a proposito**: es donde va. Lo unico que importa es el
+  orden - **registrarse antes de la primera factura cobrada**. No es una
+  decision de codigo.
+
+- **PENDIENTE DIEGO, de esta mitad:** registrarse en GST antes de cobrar, una
+  reserva de prueba real de punta a punta, y las cuatro decisiones sobre la
+  foto/descripcion de la bici (PENDIENTES 83) - como se llama, donde va en la
+  landing, si lleva foto de ejemplo, si merece pagina propia para SEO. Ese
+  diagnostico **ya funciona** pero vive solo adentro del flujo de reserva, asi
+  que lo encuentra el que ya decidio reservar, no el que no sabe que tiene.
+
 ## Current state (2026-08-31)
 
-- **Ritmo: sin apuro.** Diego, al cierre: *"no te apures con nada, si lo
+- **Ritmo: sin apuro.** Diego, al cierre: _"no te apures con nada, si lo
   podemos hacer con paciencia tenemos 2 meses mas de trabajo antes del
-  lanzamiento"*. Nada se despacha a las corridas.
+  lanzamiento"_. Nada se despacha a las corridas.
 
 - **UNA CORRECCION QUE IMPORTA MAS QUE EL CODIGO.** Le dije a Diego que dos
   clientes eligiendo el mismo horario dejan al segundo **cobrado y sin
@@ -581,6 +694,7 @@ habria visto leyendo el codigo.
 - Older entries below.
 
 ## Current state (2026-08-03)
+
 - **No open PRs.** #159 (`fix/unify-app-icon`), #160 (`fix/audit-batch-5`) and #161
   (`fix/phantom-prices`) are all merged and live. `main` is `edda6b9`. The only unmerged remote
   branches are 5 dependabot bumps. An earlier version of this block called #159 an OPEN PR: it
@@ -606,7 +720,7 @@ habria visto leyendo el codigo.
   at 129, `npm run services:check` reports both sides of the mismatch. That is the check working,
   not a regression.
 - **Backups exist now (2026-08-03), and they did not before.** The project is on Supabase's free
-  plan, which takes *no* automatic backups - the dashboard said `LAST BACKUP: No backups`. A
+  plan, which takes _no_ automatic backups - the dashboard said `LAST BACKUP: No backups`. A
   separate **private** repo, `Peredodiego2026/Dr.Bike-Sydney-backups`, now runs a nightly Action
   that commits `schema.sql` / `data.sql` / `roles.sql`. Private and separate because this repo is
   public and a dump is customer PII, and so the database password never touches a public repo.
@@ -626,11 +740,12 @@ habria visto leyendo el codigo.
   served `max-age=31536000, immutable`. A browser holding an old image never revalidates it, so
   changing an image without changing its URL reaches nobody. Every icon reference now carries
   `?v=2`. This is why "Diego sees an old page" happened in Firefox with no service worker
-  registered - but it only explains stale *images*. HTML is `max-age=0, s-maxage=0,
-  must-revalidate` and production serves the current build, so **stale text is still undiagnosed.**
+  registered - but it only explains stale _images_. HTML is `max-age=0, s-maxage=0,
+must-revalidate` and production serves the current build, so **stale text is still undiagnosed.**
 - Older entries below.
 
 ## Current state (2026-07-27)
+
 - **The live punch list is `docs/PENDIENTES.md`** (created 2026-07-27). It is the single place
   that answers "what is left", split by who has to do it. This file stays the session journal.
 - **2026-07-27, later:** PRs #108-#114 all merged (send-push auth, the i18n gate's inline-script
@@ -686,7 +801,7 @@ habria visto leyendo el codigo.
   5 blog posts** (mechanism is ready, it is translation work).
 - **Vercel env gap found 2026-07-26, RESTATED 2026-07-27 because the original wording was wrong:**
   the claim was "every scheduled email has been returning 401". That overstated it. Verified in
-  code: `CRON_SECRET` only guards the *scheduled* types - `send-reminders` (2h) and send-cron's
+  code: `CRON_SECRET` only guards the _scheduled_ types - `send-reminders` (2h) and send-cron's
   birthday/reengagement/abandoned/service/advance/noshow/all. The transactional mail (booking
   confirmation, invoice, password reset, welcome, review request) and send-cron's public `b2b`
   and `upsell` types never touch that guard, which is why Diego still receives mail normally.
@@ -718,7 +833,7 @@ habria visto leyendo el codigo.
 - **2026-07-22 (PRs #82-89):** Business-logic batch (surcharge recompute, discount reuse, membership limits, call-out fee refund on amount-mismatch rejection, membership tiers revised to 3 free-quota categories per Diego); stale $57/$147 prices fixed across admin/terms/chatbot, then Diego separately edited Basic->$67 and VIP->$197+annuals directly in the Stripe Dashboard (**these are Legacy Plan objects — editable in-place without a new price ID; always check "Subscriptions: X active" before touching a price, see `project_stripe_legacy_plan_risk` memory**); card-on-file with auto-charge at job completion (safe-fails to EFTPOS/Cash with HTTP 402 `AUTO_CHARGE_FAILED` if the charge fails — never silently marks a job paid; SQL migration `scripts/add-card-on-file-columns.sql` status unconfirmed, ask Diego); bike service history gated to Standard/VIP members; Emergency Service option added (direct contact, bypasses booking flow); npm audit fix (0 vulnerabilities); design-discipline passes (`--blue`/`--navy` tokens corrected, 128 landing.html colour values normalized across 119 lines, mechanic status colors unified, ~150+ font sizes forced onto the real type scale, 9 category emojis + mechanic avatar replaced with hand-drawn SVG icons); critical/visual-polish batch (duplicate-click listener bug in mechanic app fixed — was opening 3 tabs / double-sending WhatsApp; fabricated admin stats removed; wizard scroll-to-top added to `router.js`, **not yet confirmed working in a real browser**).
 - **2026-07-21 (PRs #74-81), security-heavy day:** **CRITICAL, fixed in PR #81:** the public tracking endpoint accepted a guessable `booking_id` as equivalent to the real secret `tracking_token` — chained with the booking-lookup-by-email endpoint, this leaked home address + arrival PIN + live mechanic GPS to anyone who knew a client's email, no login needed. Also fixed same PR: any authenticated mechanic could complete/reject/mark-arrived/change status on ANY booking company-wide (not just their own), and `handleClientReview` had no auth check at all (booking_id alone let anyone post a rating/comment/photo to any completed job). SW bumped to v32. **~~Flagged but NOT fixed~~ — all three were fixed later and this line was stale; re-verified in code 2026-07-26:** van selection is forced server-side to the mechanic's own `van_number` (api/auth.js handleMechanicLocation); `handleClientHistory` now requires the caller to hold a booking with that client; the Calendar OAuth flow uses an admin-minted HMAC ticket carried as the OAuth `state` and verified in the callback. Same day: 3 rounds of XSS attribute-escaping fixes (`escapeHtml()` wasn't escaping quotes, breakout in 7 attribute sites, then avatar-initials fallback, then 5 more found sweeping for the same bug), admin dark-mode toggle bug + dead chart code removed, password-reset UI/email redesigned + full i18n, clients can now optionally pick a preferred mechanic (admin-gated).
 - **2026-07-20 (PRs #58-73):** `discount_codes` full-table enumeration via anon key closed (security); password reset flow was completely non-functional — emails were never actually delivering — implemented for real; mechanic app now scopes jobs/job-acceptance to the mechanic's own van (was seeing all vans company-wide); timer-bar Complete button no longer bypasses the signature/parts/photos requirement; `referral_code` discovered never being saved to the DB at all; user-controlled names/bio/messages now escaped before rendering as HTML (XSS); mobile SPA turned out to have its own separate set of fake reviews independent from landing.html's (also removed); Vercel edge CDN was caching HTML pages past deploys (fixed); reschedule now checks real availability instead of trusting the client; ~96 more unlabeled form inputs given accessible names across mobile/mechanic/admin (accessibility sweep continued from 07-19).
-- **2026-07-18/19 (Claude session):** Real reviews replace fake testimonials (PR #38, visible cards + JSON-LD aggregateRating/review both were fake, both removed; `scripts/create-public-reviews-view.sql` applied by Diego, `public_reviews` view live, 0 rows until first real review - no further deploy needed for that). Security follow-ups from 07-17 verified live with 0 real-world impact during the vulnerable window (Vercel logs checked). i18n: mobile SPA booking wizard was already ~95% translated (correcting an earlier wrong claim in this same session that it was 0%) - real gap was `showToast()` never calling the translator + 37 missing dict entries (toasts, dynamic button text, form placeholders), fixed PR #41. 3 SW cache bumps this session (v28→v29→v30) - **reminder for future sessions: js/*.js and css/*.css changes ALWAYS need a cache bump, the SW is cache-first with no revalidation, this has now bitten 4 separate PRs (#33/#38/#41 + this note).** Production audit (roadmap Aug items, see docs/ROADMAP.md - now corrected, most of Aug was already done in earlier sessions but never checked off): sitemap.xml had 28 URLs for suburb/blog pages that were never built, all serving duplicate landing.html content - trimmed to the 4 real pages (PR #43). 16 form inputs had no accessible name for screen readers (placeholder-only) - added aria-label/proper label association (PR #44). Predictive maintenance MVP already exists and is more complete than "MVP" - `api/send-cron.js?type=service` runs daily, 2-tier (mechanic-set date > service-type fallback), already in prod. `docs/ROADMAP.md` August section corrected to match verified reality. Diego still owes: manual GPS live-tracking test (July gate's one open item) — **DONE: Diego tested live tracking in production 2026-07-27 and it works.**
+- **2026-07-18/19 (Claude session):** Real reviews replace fake testimonials (PR #38, visible cards + JSON-LD aggregateRating/review both were fake, both removed; `scripts/create-public-reviews-view.sql` applied by Diego, `public_reviews` view live, 0 rows until first real review - no further deploy needed for that). Security follow-ups from 07-17 verified live with 0 real-world impact during the vulnerable window (Vercel logs checked). i18n: mobile SPA booking wizard was already ~95% translated (correcting an earlier wrong claim in this same session that it was 0%) - real gap was `showToast()` never calling the translator + 37 missing dict entries (toasts, dynamic button text, form placeholders), fixed PR #41. 3 SW cache bumps this session (v28→v29→v30) - **reminder for future sessions: js/_.js and css/_.css changes ALWAYS need a cache bump, the SW is cache-first with no revalidation, this has now bitten 4 separate PRs (#33/#38/#41 + this note).** Production audit (roadmap Aug items, see docs/ROADMAP.md - now corrected, most of Aug was already done in earlier sessions but never checked off): sitemap.xml had 28 URLs for suburb/blog pages that were never built, all serving duplicate landing.html content - trimmed to the 4 real pages (PR #43). 16 form inputs had no accessible name for screen readers (placeholder-only) - added aria-label/proper label association (PR #44). Predictive maintenance MVP already exists and is more complete than "MVP" - `api/send-cron.js?type=service` runs daily, 2-tier (mechanic-set date > service-type fallback), already in prod. `docs/ROADMAP.md` August section corrected to match verified reality. Diego still owes: manual GPS live-tracking test (July gate's one open item) — **DONE: Diego tested live tracking in production 2026-07-27 and it works.**
 - **2026-07-17 (Claude session, parallel to another active session same day):** Landing i18n (PR #31/#32/#33, SW→v28) + Lighthouse image/cache/diet work + GrowthBook lang-switch fix (PR #34) all merged, `main` at 36a75a4. This branch (`chore/doctor-cleanup`, own worktree at `../Dr.Bike-Sydney-doctor-cleanup`) adds a Claude Code setup cleanup: unused skills disabled, 2 unused MCP servers disabled, CLAUDE.md's Trademark status section moved to a `trademark-status` skill. Another session has a stashed CONTEXT.md edit ("mechanic-PIN handoff note") pending on its own branch — not touched here.
 - **Incident 11 Jul (historical, resolved):** a local AI agent (opencode CLI, runs with Diego's git credential) pushed a redesign directly to main; bad deploys poisoned cached assets. Restored via 38620c6 + SW bump to v24 (edf249b). The bot's work is preserved in local branches `backup/otra-app-2026-07-11` (same tip as remote `origin/fase-0-rediseno`) and `backup/otra-app-ultimo-1e82016` (local-only, divergent line) — **Fase 0 shipped 2026-07-13, so per this file's own prior note these 3 are ripe for deletion; not yet done, confirm with Diego first (see `project_fase0_handoff` memory).** Root cause: no branch protection — any local tool with the stored credential could push to main.
 - **Branch protection ON (2026-07-11):** main rejects direct pushes for everyone incl. admin (enforce_admins). All changes reach main via PR with the `quality-gate` CI check green. Merging to main still auto-deploys to prod.
@@ -753,37 +868,42 @@ habria visto leyendo el codigo.
 - **Blocker:** Still need Diego to confirm backups + ops model (vans/mechanics/bookings-day). Slot index waits on a duplicate pre-check.
 
 ## Confirmed schema facts (2026-06-29)
+
 - `bookings.scheduled_time` is `time without time zone` (not text) — verify client sends "HH:MM" not "8:00 AM". **2026-08-16: this line was right and nobody acted on it for months. Three live bugs came out of exactly this** (see Current state). Client-side conversion now lives in `js/time-format.js`; the server accepts all three shapes in `slotToMinutes`.
 - `availability` (verified 2026-08-16, after `scripts/fix-availability-blocks.sql`): `available boolean default true`, `service_id text NULL`, `van_number int NOT NULL default 0` (0 = all vans), `time_slot text`, unique on `(date, time_slot, van_number)`. There is **no** `blocked` column and there never was.
 - Schema drift: redundant columns exist (rating vs client_rating **— corrected 2026-07-27: this pair was never real, `bookings.rating` does not exist**, review_text vs client_review, photo_before/before_photo_url/photo_before_url, client_signature vs client_signature_url, original_price vs service_price). Cleanup candidate — confirm which are authoritative before dropping.
 - Desktop `bkProceed` does NOT set van_number → those bookings are NULL-van and won't be covered by a per-van slot unique index.
 
 ## Session log
-| Date | Summary | Files |
-|---|---|---|
-| 2026-06-29 | SDD retrofit: deep audit vs 2yr/500+ client vision. Generated requirements/design/tasks. | requirements.md, design.md, tasks.md, CONTEXT.md |
-| 2026-06-29 (s3) | TASK #4 DONE (mechanic PIN: hash+token+lockout, 4a-4d). Chat fixes: SPA chat map-overlap, landing client↔mechanic chat (login-gated), landing floating FAQ chatbot. #5 Phase 1 RLS hardening (bookings/discount_codes/bike_service_history). Reset admin MFA (Diego was locked out). | api/auth.js, api/_security.js, js/mechanic.js, mechanic.html, js/app.js, index.html, landing.html, + SQL |
-| 2026-07-11 | Incident recovery follow-up: branch protection on main (PR + quality-gate + enforce_admins), WIP secured to fase0 (4ae7e74), bot backup branches reviewed (keep until Fase 0 ships; remote copy = origin/fase-0-rediseno), 5 fully-merged dead branches deleted (redesign-ui, saneamiento-prod, landing-modals, fix/mobile-buttons, landing-pc), CONTEXT.md + CLAUDE.md refreshed to real state. | CONTEXT.md, CLAUDE.md |
-| 2026-07-13 | Fase 0 (Home + Cuentas + Medallas) shipped, PR #5, verified live w/ Playwright (SW v25). | index.html, js/app.js, css/*, PR #5 |
-| 2026-07-17 | Landing i18n complete (PR #31/32/33, SW v28), Lighthouse image/cache/CSS diet (PR #34), GrowthBook lang-switch fix, RLS/CORS/race-condition security pass (PR #36: bookings/mechanic_locations/discount_codes/van_zones had no real RLS, Google Calendar refresh token in plaintext - rotated). | landing.html, js/i18n.js, api/*, SQL |
-| 2026-07-18/19 | Real reviews replace fake testimonials (PR #38/39/40), i18n toast coverage (PR #41), sitemap trimmed 28->4 real URLs (PR #43), 16 aria-labels (PR #44), Turnstile bot protection, Dependabot config, 3 unauthenticated customer-email endpoints closed, SW v28->v32 across the stretch. | landing.html, index.html, api/*, sw.js |
-| 2026-07-20 | discount_codes enumeration closed, password reset actually implemented (was silently broken), mechanic app van-scoping fixed, referral_code save bug fixed, XSS escaping on names/bio/messages, mobile SPA's own fake reviews removed, Vercel edge cache bug fixed, ~96 more aria-labels. | api/auth.js, js/mechanic.js, js/app.js, various |
-| 2026-07-21 | **Critical security (PR #81):** public tracking IDOR (address/PIN/GPS leak via booking_id) + mechanic cross-van ownership bypass + unauthenticated client review posting, all closed, SW v32. 3 rounds of escapeHtml() quote-breakout fixes. Preferred-mechanic feature, password-reset redesign. Flagged not fixed: van selection has no server binding, client-history lookup unscoped, Calendar OAuth callback ungated. | api/auth.js, js/app.js, track.html |
-| 2026-07-22 | Business-logic batch (PR #82-84), card-on-file + auto-charge (PR #84), Standard/VIP service-history gate, npm audit fix, design-discipline passes (PR #85-88: color tokens, type scale, SVG icons), critical+visual-polish batch (PR #89: duplicate-click bug, fake stats removed, wizard scroll, SW v33). | js/app.js, js/mechanic.js, css/*, landing.html, PR #82-89 |
-| 2026-07-26 | Session-start audit: verified handoff doc against git (accurate), found CONTEXT.md stale by 10 days/42 PRs and fixed it, found+removed 3 fully-merged stale worktrees + 1 empty dir + 1 superseded stash, found an unused prepared worktree (fix/remaining-bugs-batch1) left by prior session. | CONTEXT.md |
-| 2026-07-26 (later) | PRs #90-93. Punch-list batch (landing hero crop 55%->0.1%, mechanic contrast 2.56->4.83:1, scrollable nav tabs, 44px touch targets, case-insensitive suburb dedupe, Sentry CSP). Section B (loadDashboard had no error handling and rendered a Supabase failure as a confident $0; "Stripe: Active (test)" corrected to live; generic :hover for the 70 unclassed clickables on landing; list-card shadows dropped). **The live tracking ETA was blocked by our own CSP** - `router.project-osrm.org` was missing from connect-src, so the map worked but "Estimated arrival" never appeared. Real driving ETA now replaces the hardcoded "10-20 min" in SMS/WhatsApp/push; **the enroute WhatsApp had never been delivered** (endpoint takes {to,template,data}, was handed the SMS shape, 400 every time). Client now notified on accept and on arrival - the accept push existed but was wired to the Undo button. SW v33->v36. | js/admin.js, js/mechanic.js, api/send-message.js, api/_eta.js, css/*, vercel.json |
-| 2026-07-26 (evening) | Branch `fix/pricing-consistency`, 3 commits, **not pushed**. (1) Pricing consistency across all surfaces + 20 suburb pages + 3 languages + chatbot, stale $57 placeholders and stale unit-test prices. (2) 3-language i18n audit by walking every text node/placeholder/aria-label and testing it against the dict: +100 entries, 35 duplicate keys dropped, es/zh parity 934/934, track.html wired to i18n, `dateLocale()`, live-prices reverse-lookup fix. (3) Security: Origin/Referer was the only gate on send-email/send-message/send-push and send-invoice had none - recipients are now server-vouched; 4 unrate-limited auth.js roles; track.html stored XSS. SW v37->v38. | js/i18n.js, js/app.js, js/live-prices.js, js/mechanic.js, track.html, landing.html, index.html, terms.html, api/_security.js, api/send-email.js, api/send-message.js, api/send-invoice.js, api/auth.js, api/chat.js, tests/unit/* |
+
+| Date                 | Summary                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Files                                                                                                                                                                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-29           | SDD retrofit: deep audit vs 2yr/500+ client vision. Generated requirements/design/tasks.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | requirements.md, design.md, tasks.md, CONTEXT.md                                                                                                                                                                                  |
+| 2026-06-29 (s3)      | TASK #4 DONE (mechanic PIN: hash+token+lockout, 4a-4d). Chat fixes: SPA chat map-overlap, landing client↔mechanic chat (login-gated), landing floating FAQ chatbot. #5 Phase 1 RLS hardening (bookings/discount_codes/bike_service_history). Reset admin MFA (Diego was locked out).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | api/auth.js, api/_security.js, js/mechanic.js, mechanic.html, js/app.js, index.html, landing.html, + SQL                                                                                                                          |
+| 2026-07-11           | Incident recovery follow-up: branch protection on main (PR + quality-gate + enforce_admins), WIP secured to fase0 (4ae7e74), bot backup branches reviewed (keep until Fase 0 ships; remote copy = origin/fase-0-rediseno), 5 fully-merged dead branches deleted (redesign-ui, saneamiento-prod, landing-modals, fix/mobile-buttons, landing-pc), CONTEXT.md + CLAUDE.md refreshed to real state.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | CONTEXT.md, CLAUDE.md                                                                                                                                                                                                             |
+| 2026-07-13           | Fase 0 (Home + Cuentas + Medallas) shipped, PR #5, verified live w/ Playwright (SW v25).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | index.html, js/app.js, css/*, PR #5                                                                                                                                                                                               |
+| 2026-07-17           | Landing i18n complete (PR #31/32/33, SW v28), Lighthouse image/cache/CSS diet (PR #34), GrowthBook lang-switch fix, RLS/CORS/race-condition security pass (PR #36: bookings/mechanic_locations/discount_codes/van_zones had no real RLS, Google Calendar refresh token in plaintext - rotated).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | landing.html, js/i18n.js, api/*, SQL                                                                                                                                                                                              |
+| 2026-07-18/19        | Real reviews replace fake testimonials (PR #38/39/40), i18n toast coverage (PR #41), sitemap trimmed 28->4 real URLs (PR #43), 16 aria-labels (PR #44), Turnstile bot protection, Dependabot config, 3 unauthenticated customer-email endpoints closed, SW v28->v32 across the stretch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | landing.html, index.html, api/*, sw.js                                                                                                                                                                                            |
+| 2026-07-20           | discount_codes enumeration closed, password reset actually implemented (was silently broken), mechanic app van-scoping fixed, referral_code save bug fixed, XSS escaping on names/bio/messages, mobile SPA's own fake reviews removed, Vercel edge cache bug fixed, ~96 more aria-labels.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | api/auth.js, js/mechanic.js, js/app.js, various                                                                                                                                                                                   |
+| 2026-07-21           | **Critical security (PR #81):** public tracking IDOR (address/PIN/GPS leak via booking_id) + mechanic cross-van ownership bypass + unauthenticated client review posting, all closed, SW v32. 3 rounds of escapeHtml() quote-breakout fixes. Preferred-mechanic feature, password-reset redesign. Flagged not fixed: van selection has no server binding, client-history lookup unscoped, Calendar OAuth callback ungated.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | api/auth.js, js/app.js, track.html                                                                                                                                                                                                |
+| 2026-07-22           | Business-logic batch (PR #82-84), card-on-file + auto-charge (PR #84), Standard/VIP service-history gate, npm audit fix, design-discipline passes (PR #85-88: color tokens, type scale, SVG icons), critical+visual-polish batch (PR #89: duplicate-click bug, fake stats removed, wizard scroll, SW v33).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | js/app.js, js/mechanic.js, css/*, landing.html, PR #82-89                                                                                                                                                                         |
+| 2026-07-26           | Session-start audit: verified handoff doc against git (accurate), found CONTEXT.md stale by 10 days/42 PRs and fixed it, found+removed 3 fully-merged stale worktrees + 1 empty dir + 1 superseded stash, found an unused prepared worktree (fix/remaining-bugs-batch1) left by prior session.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | CONTEXT.md                                                                                                                                                                                                                        |
+| 2026-07-26 (later)   | PRs #90-93. Punch-list batch (landing hero crop 55%->0.1%, mechanic contrast 2.56->4.83:1, scrollable nav tabs, 44px touch targets, case-insensitive suburb dedupe, Sentry CSP). Section B (loadDashboard had no error handling and rendered a Supabase failure as a confident $0; "Stripe: Active (test)" corrected to live; generic :hover for the 70 unclassed clickables on landing; list-card shadows dropped). **The live tracking ETA was blocked by our own CSP** - `router.project-osrm.org` was missing from connect-src, so the map worked but "Estimated arrival" never appeared. Real driving ETA now replaces the hardcoded "10-20 min" in SMS/WhatsApp/push; **the enroute WhatsApp had never been delivered** (endpoint takes {to,template,data}, was handed the SMS shape, 400 every time). Client now notified on accept and on arrival - the accept push existed but was wired to the Undo button. SW v33->v36. | js/admin.js, js/mechanic.js, api/send-message.js, api/_eta.js, css/*, vercel.json                                                                                                                                                 |
+| 2026-07-26 (evening) | Branch `fix/pricing-consistency`, 3 commits, **not pushed**. (1) Pricing consistency across all surfaces + 20 suburb pages + 3 languages + chatbot, stale $57 placeholders and stale unit-test prices. (2) 3-language i18n audit by walking every text node/placeholder/aria-label and testing it against the dict: +100 entries, 35 duplicate keys dropped, es/zh parity 934/934, track.html wired to i18n, `dateLocale()`, live-prices reverse-lookup fix. (3) Security: Origin/Referer was the only gate on send-email/send-message/send-push and send-invoice had none - recipients are now server-vouched; 4 unrate-limited auth.js roles; track.html stored XSS. SW v37->v38.                                                                                                                                                                                                                                                | js/i18n.js, js/app.js, js/live-prices.js, js/mechanic.js, track.html, landing.html, index.html, terms.html, api/_security.js, api/send-email.js, api/send-message.js, api/send-invoice.js, api/auth.js, api/chat.js, tests/unit/* |
 
 ## Key decisions
+
 - Spec marked `v0-retrofit`: the code is the source of truth; spec is verified against it.
 - Vision assumptions (2yr, 500+ clients in 8 months, solo non-technical founder, live money) treated as working context — confirm with Diego.
 
 ## Open questions
+
 - Exact RLS policies per table? Backups enabled + tested? Supabase plan/limits?
 - Does `bookings.bike_id` exist? Keep desktop manual (unpaid) booking flow or unify with paid mobile flow?
 - Ops model at 500 clients: vans, mechanics, bookings/day, suburb coverage?
 
 ## Divergences (implementation vs design pending fix)
+
 - Bookings (incl. price) are inserted client-side (anon key) — design target is server-authoritative (TASK-011/014).
 - One-time payment not reconciled server-side; webhook ignores it (TASK-012).
 - Stripe webhook returns 200 before DB write (TASK-013).
