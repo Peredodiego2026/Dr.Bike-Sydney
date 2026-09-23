@@ -1,3 +1,7 @@
+// v125 (2026-09-23): fuera del area del mismo dia la pantalla de cotizacion
+// decia "Pay online now $0.00" arriba de un boton que dice "Ask for my price".
+// Ahora ese caso muestra el service fee como referencia y no promete ningun
+// cobro. Cambian js/app.js y los dos diccionarios.
 // v124 (2026-09-23): la pantalla de cotizacion deja de sumar el service fee y
 // la visita en un solo "Total". Ahora "Pay online now" muestra solo lo que
 // Stripe cobra hoy, y "Then, at your door" (rojo suave, ya no gris) explica
@@ -186,7 +190,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v124';
+const CACHE_STATIC = 'drbike-static-v125';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

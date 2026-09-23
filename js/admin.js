@@ -1169,6 +1169,11 @@ async function deleteExpense(id, description) {
     const d = await r.json();
     if (!r.ok) return showToast(d.error || `Could not delete (HTTP ${r.status})`);
     showToast('Expense deleted');
+    // Deleting the row that is open in the form above leaves the form holding
+    // a dead id. Saving it then updated nothing and still said "Expense
+    // updated" - the server answers 200 for an update that matched no row.
+    if (String(document.getElementById('exp-edit-id')?.value || '') === String(id))
+      cancelEditExpense();
     _expenses = null;
     loadExpenses();
   } catch (e) {

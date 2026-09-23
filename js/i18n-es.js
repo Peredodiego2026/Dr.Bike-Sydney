@@ -437,7 +437,8 @@ export default {
   'Only what your bike needs gets touched': 'Solo se toca lo que tu bici realmente necesita',
   'Pay online now': 'Pagá online ahora',
   'Service fee': 'Costo del servicio',
-  'Paid online now via Stripe': 'Se paga ahora en línea con Stripe',
+  "We'll confirm the visit & diagnosis fee for your address when we reply.":
+    'Te confirmamos el costo de la visita y diagnóstico para tu dirección cuando te respondamos.',
   'Promo discount': 'Descuento promocional',
   'Qualified & background-checked': 'Calificado y con antecedentes verificados',
   ETA: 'Llegada',

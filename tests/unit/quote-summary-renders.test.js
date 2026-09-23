@@ -46,7 +46,10 @@ function sourceOf(name) {
 // Every identifier the function reaches for that we have not defined resolves
 // to a stub, so this exercises the function's own control flow - not the
 // helpers', which have their own tests.
-function renderSummary({ analytics }) {
+// `covered` decides what check-coverage answers. The default is the dropped
+// request - no reply, so the function falls through to needsQuote, which is
+// what every assertion in this file ran against until 2026-09-23.
+function renderSummary({ analytics, covered = false }) {
   let html = '';
   // Any element the function looks up after writing the HTML: it only wires
   // listeners and flips styles on these, so one shape answers for all of them.
@@ -99,7 +102,22 @@ function renderSummary({ analytics }) {
     applySurcharge: (n) => Number(n) || 0,
     isSurchargeDay: () => false,
     getServiceInclusions: () => [],
-    fetch: async () => ({ ok: false, json: async () => ({}) }),
+    fetch: async (url, opts) => {
+      const body = opts?.body ? JSON.parse(opts.body) : {};
+      if (covered && body.role === 'check-coverage') {
+        return {
+          ok: true,
+          json: async () => ({
+            covered: true,
+            needsQuote: false,
+            calloutFee: 45,
+            minutes: 12,
+            km: 6,
+          }),
+        };
+      }
+      return { ok: false, json: async () => ({}) };
+    },
     Number,
     Boolean,
     String,
@@ -146,6 +164,37 @@ describe('the quote summary renders instead of going white', () => {
     const on = await renderSummary({ analytics: true });
     const off = await renderSummary({ analytics: false });
     expect(on.html).toBe(off.html);
+  });
+});
+
+// The 2026-09 rework made the visit fee the one figure on this screen that
+// looks like a total. Out of the same-day area that fee is 0 and nothing is
+// charged at all, so the card shipped reading "Pay online now $0.00" directly
+// above a button that says "Ask for my price". Comments are stripped first:
+// the ones explaining this bug name the very strings being searched for.
+describe('what the quote screen promises depends on whether we can serve the address', () => {
+  const strip = (h) => h.replace(/<!--[\s\S]*?-->/g, '');
+
+  it('inside the area it shows the fee that Stripe is about to charge', async () => {
+    const { html } = await renderSummary({ analytics: false, covered: true });
+    const body = strip(html);
+    expect(body).toContain('Pay online now');
+    expect(body).toContain('$45.00');
+    expect(body).toContain('Then, at your door');
+  });
+
+  it('outside it, no payment is announced and no zero is shown', async () => {
+    const { html } = await renderSummary({ analytics: false, covered: false });
+    const body = strip(html);
+    expect(body).not.toContain('Pay online now');
+    expect(body, 'a $0.00 "total" over an "Ask for my price" button').not.toContain('$0.00');
+  });
+
+  it('and nothing is promised about a trip nobody agreed to make', async () => {
+    const { html } = await renderSummary({ analytics: false, covered: false });
+    const body = strip(html);
+    expect(body).not.toContain('Then, at your door');
+    expect(body).toContain("We'll confirm the visit");
   });
 });
 

@@ -11933,3 +11933,110 @@ que lo rodea.
 
 - **El guard se vio fallar**: resucitando la rama en `chat.js`, 1 falla.
 - Nada del cliente cambio, asi que no hay `?v=` que bumpear ni `sw.js` que subir.
+
+---
+
+## 109. Dos commits que nunca llegaron a main, y el que los escribio dijo que si (23-sep-2026)
+
+El boton de editar un gasto en Admin y el arreglo de los inputs superpuestos
+del formulario se commitearon a `feat/admin-noto-sans-font` **despues de que
+la PR #434 ya estaba mergeada**. El push salio bien - una rama acepta commits
+aunque su PR este cerrada - y los dos quedaron colgando de una rama muerta.
+
+| | |
+|---|---|
+| PR #434 mergeada | 2026-09-10 15:03 Sydney, en `96401e6` |
+| `cf70ae7` (editar gastos + box-sizing) | commiteado 16:35 Sydney, **una hora y media despues** |
+| Llego a main | no |
+| Lo que se le dijo a Diego | "Todo pusheado a la misma PR... sigue esperando tu merge" |
+
+Diego mergeo, vio verde, y durante dos semanas el panel no tuvo el boton que
+el creia haber aprobado.
+
+### La comprobacion que lo habria evitado dura un segundo
+
+```
+gh pr view <n> --json state -q .state
+```
+
+Se corrio `gh pr view 434` ANTES de ese push, cuando todavia decia OPEN, y no
+se volvio a correr despues de que Diego dijera "mergeado". El estado que
+importa es el del momento del push, no el de hace veinte minutos.
+
+**Es la tercera vez.** Las dos anteriores estan en la memoria del proyecto
+("Check PR state before pushing follow-ups"). Lo que cambia esta vez es que
+se detecto: `grep editExpense js/admin.js` no devolvio nada sobre main.
+
+### Como se recupero
+
+`git cherry-pick cf70ae7` sobre una rama nueva desde main. El `?v=` del
+commit huerfano NO se cherry-pickeo: el hash se recalcula contra el archivo
+final, y arrastrar el viejo solo garantiza que no coincida.
+
+---
+
+## 110. "Pay online now $0.00" arriba de un boton que dice "Ask for my price" (23-sep-2026)
+
+El rework de la pantalla de cotizacion (PENDIENTES 109 lo precede por un dia)
+hizo que la visita y diagnostico fuera **la unica cifra que parece un total**,
+porque es la unica que Stripe cobra ahi. Fuera del area del mismo dia esa
+cifra es **0**: no hay zona, no hay fee, no se cobra nada y el boton pide un
+presupuesto en vez de pagar.
+
+La tarjeta azul se renderizaba igual. El cliente fuera de zona veia:
+
+```
+PAY ONLINE NOW                 $0.00
+Visit & diagnosis
+...
+Then, at your door: ... the repair - $59.00, paid at your door
+...
+No charge - we check your address and reply personally.
+[ Ask for my price ]
+```
+
+Cuatro afirmaciones y tres se contradicen. El bloque rojo es peor que el
+$0.00: describe un mecanico llegando a una puerta a la que nadie acepto ir
+todavia.
+
+### Por que ningun test lo vio, y estaba a la vista
+
+`tests/unit/quote-summary-renders.test.js` stubea `fetch` devolviendo
+`{ok:false}` siempre. O sea que **cada asercion de ese archivo corria contra
+el camino needsQuote** - exactamente el roto - y solo miraba que el HTML
+tuviera mas de 500 caracteres y dijera "Tune-Up". Pasaba en verde sobre el
+bug que existia para vigilar.
+
+Ahora el helper toma `covered` y hay tres afirmaciones por camino. **Vistas
+fallar**: mutando la condicion del ternario a `false`, 2 rojos.
+
+### Lo que muestra ahora fuera de zona
+
+El service fee como referencia, y una linea diciendo que el costo de la
+visita se confirma al responder. Ninguna promesa de cobro.
+
+---
+
+## 111. Guardar un gasto borrado decia "Expense updated" (23-sep-2026)
+
+Con un gasto abierto en el formulario de edicion, borrarlo desde la lista
+dejaba el `exp-edit-id` apuntando a una fila muerta. Al guardar:
+
+```js
+await sb.from('expenses').update(payload).eq('id', id).select().maybeSingle()
+// -> { data: null, error: null }
+```
+
+PostgREST no considera un error que un update no toque ninguna fila. El
+handler devolvia 200 con `{expense: null}` y la pantalla mostraba
+**"Expense updated"** sobre algo que no se escribio en ningun lado.
+
+Arreglado en los dos lados, a proposito:
+
+- **Servidor**: si venia `id` y `data` es null, 404 "That expense no longer
+  exists". Cualquier consumidor - no solo esta pantalla - deja de recibir un
+  200 por un no-op.
+- **Cliente**: borrar la fila que se esta editando cierra el formulario.
+
+El servidor es el arreglo de fondo; el del cliente evita que el caso comun
+llegue a pedirlo.
