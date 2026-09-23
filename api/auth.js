@@ -64,7 +64,6 @@ function logAdminTokenLevel(stage, token) {
   );
 }
 
-
 const ADMIN_TEST_EMAIL = 'peredo.dm@gmail.com';
 
 // Only these emails may hold an admin session (see handleAdmin). Add more
@@ -105,7 +104,9 @@ function makeToken(mid, sv = 0) {
   // sv defaults to 0 so a database where the session_version column has not
   // been created yet mints tokens that match what authMechanic reads back
   // (also 0). The check is inert until the migration runs, never wrong.
-  const payload = b64url(JSON.stringify({ mid, exp: Date.now() + TOKEN_TTL_MS, sv: Number(sv) || 0 }));
+  const payload = b64url(
+    JSON.stringify({ mid, exp: Date.now() + TOKEN_TTL_MS, sv: Number(sv) || 0 })
+  );
   const sig = b64url(crypto.createHmac('sha256', secret).update(payload).digest());
   return `${payload}.${sig}`;
 }
@@ -4151,7 +4152,10 @@ async function handleClientReview(req, res) {
   // Un token equivocado y un booking_id equivocado dan el mismo 404: la
   // respuesta no puede decirle a nadie si un token existe.
   const gate = reviewGate(rows?.[0], { mode: cred.mode, client_id });
-  if (!gate.ok) return res.status(gate.status).json({ error: gate.error, ...(gate.expired && { expired: true }) });
+  if (!gate.ok)
+    return res
+      .status(gate.status)
+      .json({ error: gate.error, ...(gate.expired && { expired: true }) });
   const booking = rows[0];
 
   // From here on the id comes off the row the checks above actually passed,
@@ -4769,10 +4773,7 @@ export async function handleAdminSetMechanicPin(req, res) {
     );
   }
 
-  const { error } = await auth.sb
-    .from('escalation_contacts')
-    .update(update)
-    .eq('id', contact_id);
+  const { error } = await auth.sb.from('escalation_contacts').update(update).eq('id', contact_id);
   if (error) return res.status(500).json({ error: error.message });
   return res.status(200).json({ ok: true, pin: finalPin, sessions_revoked: revoked });
 }
@@ -5267,6 +5268,10 @@ async function handleAdminExpensesSave(req, res) {
     ? await auth.sb.from('expenses').update(payload).eq('id', id).select().maybeSingle()
     : await auth.sb.from('expenses').insert(payload).select().maybeSingle();
   if (error) return res.status(500).json({ error: error.message });
+  // An update that matched no row comes back {data: null, error: null}, so
+  // without this the screen said "Expense updated" over a row that had been
+  // deleted in another tab - or in this one, before the form was closed.
+  if (id && !data) return res.status(404).json({ error: 'That expense no longer exists' });
   return res.status(200).json({ expense: data });
 }
 

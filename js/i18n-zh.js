@@ -391,7 +391,8 @@ export default {
   'Only what your bike needs gets touched': '只处理您的自行车实际需要的项目',
   'Pay online now': '立即在线支付',
   'Service fee': '服务费',
-  'Paid online now via Stripe': '通过 Stripe 在线支付',
+  "We'll confirm the visit & diagnosis fee for your address when we reply.":
+    '我们回复时会确认您所在地址的上门检查费。',
   'Promo discount': '优惠折扣',
   'Qualified & background-checked': '持证并通过背景审查',
   ETA: '预计到达',

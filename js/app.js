@@ -1599,7 +1599,24 @@ async function renderServiceSummary() {
            total. The old card summed it with the service fee into one
            "Total" that matched neither the button below it nor the amount
            that actually left the card - see docs/PENDIENTES.md for the
-           2026-09 quote-screen rework. -->
+           2026-09 quote-screen rework.
+           Outside the same-day area there IS no charge now and no agreed
+           visit fee, so this card would read "Pay online now $0.00" over a
+           button that says "Ask for my price". That version shipped on
+           2026-09-23 and is what the needsQuote branch below exists to
+           stop: an out-of-area quote request shows the service fee as an
+           indication and promises nothing about a payment. -->
+      ${
+        coverage.needsQuote
+          ? `
+      <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px;padding:13px 16px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--color-text-secondary)">Service fee</span>
+          <span style="font-size:15px;font-weight:700">$${serviceTotal.toFixed(2)}</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--color-text-secondary);opacity:0.8;margin-top:5px;line-height:1.5">We'll confirm the visit &amp; diagnosis fee for your address when we reply.</div>
+      </div>`
+          : `
       <div style="border:1.5px solid var(--blue);background:var(--blue-lt);border-radius:12px;padding:13px 14px;margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--blue-dark);text-transform:uppercase;letter-spacing:0.04em">
@@ -1609,7 +1626,8 @@ async function renderServiceSummary() {
           <span style="font-size:19px;font-weight:800;color:var(--blue)">$${calloutFee.toFixed(2)}</span>
         </div>
         <div style="font-size:11.5px;color:var(--blue-dark);opacity:0.8;margin-top:4px">Visit & diagnosis</div>
-      </div>
+      </div>`
+      }
 
       <!-- Discount code -->
       <div style="margin-bottom:14px">
@@ -1625,7 +1643,15 @@ async function renderServiceSummary() {
       <!-- Then, at your door: the OTHER amount, and the one a promo code or
            referral credit actually changes - the callout fee above never
            discounts. Soft red, not gray: gray read as "done, ignore it",
-           which is backwards for the number the client still owes. -->
+           which is backwards for the number the client still owes.
+           Hidden for an out-of-area request: there is no visit booked yet, so
+           describing what happens "then, at your door" describes a trip
+           nobody has agreed to make. paintTotals() and applyDiscount() both
+           null-check the ids below, so neither breaks when this is absent. -->
+      ${
+        coverage.needsQuote
+          ? ''
+          : `
       <div style="display:flex;gap:10px;background:var(--red-lt);border-radius:12px;padding:12px 14px;margin-bottom:16px">
         <div style="width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
         <div style="font-size:13px;color:var(--red-text);line-height:1.55;flex:1">
@@ -1639,7 +1665,8 @@ async function renderServiceSummary() {
             <span>Referral credit</span><span id="q-credit-amt" style="font-weight:700"></span>
           </div>
         </div>
-      </div>
+      </div>`
+      }
 
       <!-- What the fee buys. This sits BEFORE the card, deliberately: the fee
            is not refunded when a repair turns out not to be viable, and a
@@ -1670,7 +1697,6 @@ async function renderServiceSummary() {
     ${createBottomNav('home')}
   `;
 
-  let _appliedDiscount = 0;
   let _currentServiceTotal = serviceTotal;
   // The client's referral balance. Display only: api/auth.js recomputes the
   // spend server-side and is the authority, exactly like the promo code. Shown
@@ -1724,7 +1750,6 @@ async function renderServiceSummary() {
     msg.textContent = 'Checking...';
 
     const applyDiscount = (disc, label) => {
-      _appliedDiscount = disc;
       _currentServiceTotal = Math.max(0, serviceTotal - disc);
       window.appState.discountCode = code;
       window.appState.discountAmount = disc;
@@ -1778,7 +1803,6 @@ async function renderServiceSummary() {
         'Referral credit applied! -$' + refData.credit.toFixed(2) + ' off'
       );
     } catch (e) {
-      _appliedDiscount = 0;
       msg.style.color = 'var(--color-error)';
       msg.textContent = translateValue(e.message || 'Invalid code');
     }
