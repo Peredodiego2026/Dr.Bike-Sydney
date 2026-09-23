@@ -25,6 +25,18 @@ import { isValidAbn } from '../../scripts/abn-check.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
+// Every test that calls runCheck() needs this, not just the one that calls it
+// three times. `node scripts/abn-check.mjs` walks the whole repo: alone it is
+// under a second, but with the full suite competing for CPU it goes past the
+// default 5s and dies on the timeout - green in isolation, red only when
+// everything runs (docs/PENDIENTES.md 88).
+//
+// It lived on ONE of the two tests in this file until 2026-09-23, so the other
+// kept flaking in CI for weeks. It sits next to runCheck() now because that is
+// what makes a test slow: a third test that spawns the checker cannot forget it
+// without also ignoring the constant right above the helper it is calling.
+const SPAWN_TIMEOUT_MS = 20000;
+
 function runCheck() {
   try {
     execFileSync('node', ['scripts/abn-check.mjs'], { cwd: root, stdio: 'pipe' });
@@ -35,9 +47,13 @@ function runCheck() {
 }
 
 describe('the repo as it stands', () => {
-  it('carries exactly one ABN, and it passes', () => {
-    expect(runCheck().code).toBe(0);
-  });
+  it(
+    'carries exactly one ABN, and it passes',
+    () => {
+      expect(runCheck().code).toBe(0);
+    },
+    SPAWN_TIMEOUT_MS
+  );
 });
 
 describe('the ATO checksum', () => {
@@ -74,11 +90,7 @@ describe('the ATO checksum', () => {
 describe('a second, different ABN appearing anywhere', () => {
   const planted = join(root, 'zz-planted-by-a-test.html');
 
-  // 20s, not the default 5. This spawns `node scripts/abn-check.mjs` three
-  // times and that script walks the whole repo; alone it takes under a second,
-  // but with the full suite competing for CPU it went to 6.3s and died on the
-  // timeout. Same shape as docs/PENDIENTES.md 88 - green in isolation, red only
-  // when everything runs.
+  // Spawns the checker three times - see SPAWN_TIMEOUT_MS at the top.
   it('fails the check and prints both numbers', () => {
     // A plausible-looking but different ABN, the way a half-finished find and
     // replace would leave one behind.
@@ -94,7 +106,7 @@ describe('a second, different ABN appearing anywhere', () => {
       unlinkSync(planted);
     }
     expect(runCheck().code).toBe(0);
-  }, 20000);
+  }, SPAWN_TIMEOUT_MS);
 });
 
 describe('what it looks at', () => {
