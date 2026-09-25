@@ -1,3 +1,10 @@
+// v127 (2026-09-25): el mapa de Track seguia tapando todo despues de v126.
+// v126 cambio el CSS, y el CSS no era quien decidia: despues de cargar
+// Leaflet, renderTracking le fija una altura en pixeles al mapa. Ese calculo
+// medía el panel de abajo con mapEl.nextElementSibling, que dejo de ser el
+// panel cuando se metio el <p> para lectores de pantalla entre los dos.
+// Medía ~0, asi que el mapa se llevaba 83% de la pantalla y los botones
+// quedaban abajo del corte. Ahora toma la mitad y no mide nada.
 // v126 (2026-09-25): en Track el mapa se comia la pantalla. Era el unico
 // elemento que crecia, asi que se quedaba con todo lo que el panel de abajo
 // no necesitaba - 63% de la pantalla en un iPhone 14, 65% en un 14 Plus.
@@ -196,7 +203,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v126';
+const CACHE_STATIC = 'drbike-static-v127';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
