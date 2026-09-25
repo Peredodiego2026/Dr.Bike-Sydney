@@ -3035,12 +3035,24 @@ async function renderTracking() {
 
   // Set explicit pixel height on map container before Leaflet reads dimensions.
   // flex:1 can return 0 in some browsers/timing; explicit px is always reliable.
+  //
+  // This overrides the flex layout above, so it - not the CSS - is what
+  // actually decides how big the map is. It used to size the map as
+  // "everything the bottom panel does not need", measuring the panel through
+  // `mapEl.nextElementSibling`. That is NOT the panel: the sr-only <p id="map-alt">
+  // sits between them (it was added later, for audit point 15). So the height it
+  // measured was ~0, the map took the whole screen minus the bars, and the
+  // buttons ended up below the fold - 698px of map on an 844px iPhone, 83% of
+  // the screen, measured against production on 2026-09-25.
+  //
+  // It takes HALF the space now and measures nothing. Nothing to go stale when
+  // the panel's content changes, and no sibling to quietly stop being the
+  // panel: whatever the panel ends up holding, it scrolls inside its own box.
   const mapEl = screen.querySelector('#tracking-map');
-  const bottomPanel = mapEl.nextElementSibling;
   const topH = 89; // header(52) + status bar(37)
   const navH = 56; // bottom nav (position:fixed)
-  const bottomH = bottomPanel ? bottomPanel.getBoundingClientRect().height : 158;
-  const mapH = Math.max(140, window.innerHeight - topH - navH - bottomH);
+  const available = Math.max(280, window.innerHeight - topH - navH);
+  const mapH = Math.max(140, Math.round(available * 0.5));
   mapEl.style.height = mapH + 'px';
   mapEl.style.flex = 'none';
 
@@ -3259,18 +3271,15 @@ async function renderTracking() {
         const pinValue = screen.querySelector('#arrival-pin-value');
         if (pinValue) pinValue.textContent = booking.arrival_pin;
         if (pinBadge) pinBadge.style.display = 'flex';
-        // mapH below was computed against the bottom panel's height BEFORE
-        // this badge existed - showing it grows the panel by ~40px with
-        // nothing to absorb the difference (this screen has no scroll
-        // anywhere by design), which pushed the Message/Share buttons
-        // behind the fixed bottom nav with no way to reach them. Redo the
-        // same calculation now that the panel's real height is final.
-        if (bottomPanel) {
-          const newBottomH = bottomPanel.getBoundingClientRect().height;
-          const newMapH = Math.max(140, window.innerHeight - topH - navH - newBottomH);
-          mapEl.style.height = newMapH + 'px';
-          requestAnimationFrame(() => _trackingMap?.invalidateSize?.({ animate: false }));
-        }
+        // Showing this badge grows the panel by ~40px. There used to be a
+        // recalculation of the map height here to make room for it, because
+        // the panel could not scroll and the extra 40px pushed the
+        // Message/Share buttons behind the fixed bottom nav.
+        //
+        // It is gone for two reasons. It never worked - it re-used the same
+        // `bottomPanel` that was really the sr-only <p>, so it recomputed the
+        // same wrong number. And it is no longer needed: the panel scrolls
+        // inside its own box now, so it absorbs its own content.
       }
     }
 

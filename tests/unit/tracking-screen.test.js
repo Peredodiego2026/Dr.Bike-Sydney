@@ -83,6 +83,54 @@ describe('the bottom panel can be scrolled', () => {
 //
 // Both carrying flex:1 is what splits the space in half, and it is the whole
 // fix. Take it off the panel and the map balloons back.
+// The CSS above is only half the story, and for a while it was the half that
+// did not matter. After Leaflet loads, renderTracking sets an explicit pixel
+// height on the map and `flex:none` - Leaflet needs a definite size - so THAT
+// is what really decides how big the map is.
+//
+// It used to size the map as "the screen minus whatever the bottom panel
+// needs", reading the panel through `mapEl.nextElementSibling`. That stopped
+// being the panel when the sr-only <p id="map-alt"> was added between them for
+// audit point 15. The measured height was ~0, so the map took the whole screen
+// minus the bars: 698px of map on an 844px iPhone (83%), with the Message and
+// Share buttons rendered BELOW the fold on every size measured.
+//
+// Measured against production, 2026-09-25, before and after:
+//   iPhone 14      698px (83%) -> 350px (41%)
+//   iPhone SE      521px (78%) -> 261px (39%)
+//   iPhone 14 Plus 750px (84%) -> 376px (42%)
+//
+// The first fix for Diego's report changed only the flex values in the
+// template and did nothing, because this code overrode them a moment later.
+describe('the runtime height of the map', () => {
+  // Comments stripped first. The prose above and the comment in js/app.js both
+  // NAME nextElementSibling to explain why it is gone, and a guard that scans
+  // the raw source matches its own explanation and passes. Fifth time in this
+  // repo (PENDIENTES 106, 107, 108).
+  const stripComments = (s) => s.replace(/\/\/[^\r\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+  const sizing = stripComments(
+    tracking.slice(tracking.indexOf('Set explicit pixel height'), tracking.indexOf('Init map'))
+  );
+  const trackingCode = stripComments(tracking);
+
+  it('is a share of the viewport, not a measurement of another element', () => {
+    expect(sizing).toMatch(/window\.innerHeight/);
+    expect(sizing).toMatch(/\*\s*0\.5/);
+  });
+
+  // The specific trap: the element next to the map is the sr-only <p>, and
+  // anything that walks to a sibling to measure it will silently measure that.
+  it('never sizes itself from a sibling', () => {
+    expect(sizing).not.toMatch(/nextElementSibling/);
+    expect(trackingCode).not.toMatch(/nextElementSibling[\s\S]{0,400}getBoundingClientRect/);
+  });
+
+  it('leaves the other half for the panel', () => {
+    // 0.5 of the space below the bars, so the panel gets the same.
+    expect(sizing).toMatch(/available\s*\*\s*0\.5/);
+  });
+});
+
 describe('the map does not take over the screen', () => {
   const panelStart = tracking.indexOf('Bottom panel');
 
