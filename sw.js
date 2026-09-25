@@ -1,3 +1,9 @@
+// v126 (2026-09-25): en Track el mapa se comia la pantalla. Era el unico
+// elemento que crecia, asi que se quedaba con todo lo que el panel de abajo
+// no necesitaba - 63% de la pantalla en un iPhone 14, 65% en un 14 Plus.
+// Ahora mapa y panel se reparten el espacio mitad y mitad: 43-45%. Cambia
+// js/app.js, que ya lleva su ?v= nuevo; el cache sube para que la copia
+// vieja no quede ocupando lugar.
 // v125 (2026-09-23): fuera del area del mismo dia la pantalla de cotizacion
 // decia "Pay online now $0.00" arriba de un boton que dice "Ask for my price".
 // Ahora ese caso muestra el service fee como referencia y no promete ningun
@@ -190,7 +196,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v125';
+const CACHE_STATIC = 'drbike-static-v126';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

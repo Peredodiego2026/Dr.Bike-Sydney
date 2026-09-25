@@ -2952,20 +2952,35 @@ async function renderTracking() {
       <span id="status-text" style="font-size:13px;font-weight:600;color:var(--navy)">Loading booking...</span>
     </div>
 
-    <!-- Map: flex:1 fills all remaining space between status bar and bottom panel -->
+    <!-- The map and the panel below it each take HALF the space under the
+         status bar - the matching flex:1 on both is the whole fix. The map
+         used to be the only thing that grew, so it got "everything the panel
+         does not need", and the panel's content is a fixed ~224px: the taller
+         the phone the bigger the map. Measured at 63% of the screen on a 14
+         and 65% on a 14 Plus (2026-09-25); Diego's report was "el mapa queda
+         muy grande, no se puede ver nada mas". It lands at 43-45% on every
+         size now.
+         min-height keeps it a usable map on a short screen. There is no
+         max-height: the 50/50 split already caps it at half, and a cap that
+         never binds reads like it is the thing doing the work. -->
     <!-- aria-hidden: a canvas of map tiles is not readable, and a screen
          reader landing in it finds an unlabelled blank. What it conveys
          lives in #map-alt below, kept in sync and announced when it
          changes (audit point 15). -->
-    <div id="tracking-map" style="flex:1;min-height:34dvh;display:block" aria-hidden="true" role="presentation"></div>
+    <div id="tracking-map" style="flex:1;min-height:30dvh;display:block" aria-hidden="true" role="presentation"></div>
     <p id="map-alt" class="sr-only">Live map. Waiting for the mechanic position.</p>
 
     <!-- Bottom panel. overflow-y:auto because the screen itself is
          height:100dvh; overflow:hidden - Leaflet needs a container of a known
          size, so the SCREEN cannot scroll. Without this the panel is simply
          clipped and everything past the fold, buttons included, is
-         unreachable. -->
-    <div style="flex-shrink:0;max-height:52dvh;overflow-y:auto;background:var(--white);border-top:1px solid var(--border)">
+         unreachable.
+         flex:1 and not flex-shrink:0: it takes the other half, so there is
+         no dead gap on a tall phone. min-height:0 is what
+         makes the scroll work at all - a flex item defaults to
+         min-height:auto, refuses to shrink under its content, and pushes the
+         buttons out of the screen instead of scrolling them. -->
+    <div style="flex:1;min-height:0;overflow-y:auto;background:var(--white);border-top:1px solid var(--border)">
       <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border-lt)">
         <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue-text)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
