@@ -57,13 +57,45 @@ describe('the bottom panel can be scrolled', () => {
   });
 
   it('so the panel scrolls instead', () => {
-    expect(tracking).toMatch(/max-height:52dvh;overflow-y:auto/);
+    expect(tracking).toMatch(/overflow-y:auto/);
+  });
+
+  // A flex item defaults to min-height:auto, which means "never shrink below
+  // your content". A panel like that does not scroll - it pushes the buttons
+  // off the screen instead, which is the exact thing overflow-y:auto is here
+  // to prevent. The two only work together.
+  it('and it is allowed to shrink, or overflow-y:auto does nothing', () => {
+    expect(tracking).toMatch(/flex:1;min-height:0;overflow-y:auto/);
   });
 
   // Without a floor the map collapses to nothing when the panel is tall.
   it('the map keeps a minimum height', () => {
-    expect(tracking).toMatch(/id="tracking-map" style="flex:1;min-height:34dvh/);
+    expect(tracking).toMatch(/id="tracking-map" style="flex:1;min-height:30dvh/);
     expect(tracking).not.toMatch(/id="tracking-map" style="flex:1;min-height:0/);
+  });
+});
+
+// The map used to be the ONLY thing that grew: flex:1 on the map, a fixed
+// height on the panel. That reads as "the map gets whatever the panel does not
+// need", and the panel's content is a fixed ~224px - so the taller the phone,
+// the bigger the map. Measured at 63% of the screen on an iPhone 14 and 65% on
+// a 14 Plus before this changed (2026-09-25).
+//
+// Both carrying flex:1 is what splits the space in half, and it is the whole
+// fix. Take it off the panel and the map balloons back.
+describe('the map does not take over the screen', () => {
+  const panelStart = tracking.indexOf('Bottom panel');
+
+  it('the map grows', () => {
+    expect(tracking).toMatch(/id="tracking-map" style="flex:1/);
+  });
+
+  it('and so does the panel, so they split the space instead of the map taking it', () => {
+    const panel = tracking.slice(panelStart, panelStart + 900);
+    expect(panel).toMatch(/style="flex:1;min-height:0/);
+    // flex-shrink:0 is what it used to say. That is what let the map grow
+    // unopposed, so it must not come back.
+    expect(panel).not.toMatch(/style="flex-shrink:0/);
   });
 });
 
