@@ -2985,18 +2985,38 @@ async function renderTracking() {
         <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue-text)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
-        <div style="min-width:0">
-          <div id="mechanic-name" style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div>
-          <div id="mechanic-meta" style="font-size:13px;color:var(--gray);margin-top:1px"></div>
-        </div>
-        <div id="eta-badge" style="margin-left:auto;flex-shrink:0;text-align:right">
-          <div id="eta-text" style="font-size:13px;color:var(--gray)">Waiting for a mechanic</div>
+        <!-- Label over name, and no third line. It used to be the name over a
+             services-and-rating pair, which falls back to the literal
+             "Dr. Bike Sydney" for a mechanic with neither - so a brand new
+             mechanic read as "Diego / Dr. Bike Sydney" stacked, which is what
+             Diego saw and called out (2026-09-26): the company name under the
+             person's name says nothing the client did not already know. The
+             services and rating still exist, on the profile the chevron
+             opens. -->
+        <div style="min-width:0;flex:1">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gray-lt)">Your mechanic</div>
+          <div id="mechanic-name" style="font-size:16px;font-weight:700;color:var(--navy);line-height:1.15">Not assigned yet</div>
         </div>
         <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-lt)" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid var(--border-lt)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <div style="font-size:13px;color:var(--blue-text)"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
+
+      <!-- Arrival time as the headline. It used to be one cramped line on the
+           right of the card - "ETA 05:55 pm · 1876 min · 1889.2 km by road" -
+           where the three numbers competed and none of them won. The time is
+           the only one the client is actually waiting for. -->
+      <div style="padding:11px 16px 12px;border-bottom:1px solid var(--border-lt)">
+        <div id="eta-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gray-lt);display:none">ETA</div>
+        <div id="eta-time" style="font-size:27px;font-weight:800;color:var(--navy);line-height:1.1;display:none"></div>
+        <div id="eta-text" style="font-size:12.5px;color:var(--gray);margin-top:3px">Waiting for a mechanic</div>
+      </div>
+
+      <!-- The code the client reads out at the door. Soft red on a pink
+           ground, not the app's blue: it is the one thing on this screen the
+           client has to DO something with, and it was getting lost in a row
+           of blue notices. --><div id="arrival-pin-badge" style="display:none;margin:10px 16px 0;border-radius:12px;padding:11px 14px;text-align:center;background:var(--red-lt);border:1px solid var(--red-edge)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--red-text)">Your arrival code</div>
+        <div id="arrival-pin-value" style="font-size:29px;font-weight:800;letter-spacing:0.14em;line-height:1.2;color:var(--red-text)">----</div>
+        <div style="font-size:11px;color:var(--red-text);opacity:0.85">Read this to your mechanic when they arrive</div>
       </div>
       <div style="display:flex;gap:4px;padding:10px 16px">
         ${['Confirmed', 'En Route', 'Arrived', 'Done']
@@ -3045,14 +3065,15 @@ async function renderTracking() {
   // buttons ended up below the fold - 698px of map on an 844px iPhone, 83% of
   // the screen, measured against production on 2026-09-25.
   //
-  // It takes HALF the space now and measures nothing. Nothing to go stale when
+  // It takes a fixed share of the viewport now and measures nothing. Nothing to
+  // go stale when
   // the panel's content changes, and no sibling to quietly stop being the
   // panel: whatever the panel ends up holding, it scrolls inside its own box.
   const mapEl = screen.querySelector('#tracking-map');
   const topH = 89; // header(52) + status bar(37)
   const navH = 56; // bottom nav (position:fixed)
   const available = Math.max(280, window.innerHeight - topH - navH);
-  const mapH = Math.max(140, Math.round(available * 0.5));
+  const mapH = Math.max(140, Math.round(available * 0.45));
   mapEl.style.height = mapH + 'px';
   mapEl.style.flex = 'none';
 
@@ -3093,23 +3114,56 @@ async function renderTracking() {
   let _routeShown = false;
   let _routeFitted = false;
 
+  // "1876 min" is a true number nobody reads as "31 hours". Minutes up to an
+  // hour, then hours - with the minutes kept while they still tell you
+  // something, and dropped once the number is long enough that they do not.
+  function formatRideTime(min) {
+    if (!Number.isFinite(min) || min < 1) return '';
+    const m = Math.round(min);
+    if (m < 60) return `${m} ${translateValue('min')}`;
+    const h = Math.floor(m / 60);
+    const rest = m % 60;
+    if (h < 10 && rest) return `${h} ${translateValue('h')} ${rest} ${translateValue('min')}`;
+    return `${h} ${translateValue('h')}`;
+  }
+
+  // The time goes in its own big line; everything else is the small print
+  // under it. setEtaMessage() below is the same block with no time - "waiting
+  // for a mechanic" has no clock to show.
   function paintETA({ minutes, km, byRoad }) {
     const el = screen.querySelector('#eta-text');
+    const timeEl = screen.querySelector('#eta-time');
+    const labelEl = screen.querySelector('#eta-label');
     if (!el) return;
     const eta = new Date(Date.now() + minutes * 60000);
     const etaStr = eta.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
     const distance = km === null || km === undefined ? '' : ` \u00b7 ${km.toFixed(1)} km`;
+    if (labelEl) labelEl.style.display = 'block';
+    if (timeEl) {
+      timeEl.style.display = 'block';
+      timeEl.textContent = byRoad ? etaStr : `~${etaStr}`;
+    }
     // "by road" against "straight line" is not decoration. One of these numbers
     // is a real driving time and the other is a guess, and the client is
     // entitled to know which one they are looking at.
     el.textContent = byRoad
-      ? `${translateValue('ETA')} ${etaStr} \u00b7 ${minutes} min${distance} ${translateValue('by road')}`
-      : `${translateValue('ETA')} ~${etaStr}${distance} ${translateValue('straight line')}`;
+      ? `${formatRideTime(minutes)}${distance} ${translateValue('by road')}`
+      : `${distance.replace(' \u00b7 ', '')} ${translateValue('straight line')}`.trim();
     // The map's text equivalent. Polite: the mechanic moving is not an
     // interruption, and this repaints every few seconds.
     describeMap(
       `${translateValue('Mechanic on the way')}. ${minutes} ${translateValue('min')}${distance}.`
     );
+  }
+
+  // A message where the time would be: no clock, no label, just the sentence.
+  function setEtaMessage(msg) {
+    const timeEl = screen.querySelector('#eta-time');
+    const labelEl = screen.querySelector('#eta-label');
+    const el = screen.querySelector('#eta-text');
+    if (timeEl) timeEl.style.display = 'none';
+    if (labelEl) labelEl.style.display = 'none';
+    if (el) el.textContent = msg;
   }
 
   // Keeps #map-alt in step with the map, and says it once when it changes.
@@ -3129,8 +3183,7 @@ async function renderTracking() {
     if (_routeShown) return;
     const distKm = haversineKm(mechCoords, clientCoords);
     if (distKm < 0.1) {
-      const el = screen.querySelector('#eta-text');
-      if (el) el.textContent = translateValue('Mechanic is right outside!');
+      setEtaMessage(translateValue('Mechanic is right outside!'));
       describeMap(translateValue('Mechanic is right outside!'));
       return;
     }
@@ -3227,19 +3280,11 @@ async function renderTracking() {
     if (booking.mechanic_id && booking.mechanic_profile?.name) {
       const p = booking.mechanic_profile;
       const nameEl = screen.querySelector('#mechanic-name');
-      const metaEl = screen.querySelector('#mechanic-meta');
       const avatarEl = screen.querySelector('#mechanic-avatar');
       if (nameEl) nameEl.textContent = p.name.split(' ')[0];
       // Assigned, but not necessarily moving yet. updateETA overwrites this
       // the moment a real position arrives.
-      const etaEl = screen.querySelector('#eta-text');
-      if (etaEl && !_mechanicMarker) etaEl.textContent = translateValue('Assigned to your booking');
-      if (metaEl) {
-        const parts = [];
-        if (p.jobs_completed > 0) parts.push(`${p.jobs_completed} services`);
-        if (p.rating) parts.push(`★ ${p.rating}`);
-        metaEl.textContent = parts.join('  ·  ') || 'Dr. Bike Sydney';
-      }
+      if (!_mechanicMarker) setEtaMessage(translateValue('Assigned to your booking'));
       if (avatarEl) {
         if (p.photo_url) {
           avatarEl.innerHTML = `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
@@ -3270,7 +3315,7 @@ async function renderTracking() {
         const pinBadge = screen.querySelector('#arrival-pin-badge');
         const pinValue = screen.querySelector('#arrival-pin-value');
         if (pinValue) pinValue.textContent = booking.arrival_pin;
-        if (pinBadge) pinBadge.style.display = 'flex';
+        if (pinBadge) pinBadge.style.display = 'block';
         // Showing this badge grows the panel by ~40px. There used to be a
         // recalculation of the map height here to make room for it, because
         // the panel could not scroll and the extra 40px pushed the

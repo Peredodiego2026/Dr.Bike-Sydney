@@ -1,3 +1,11 @@
+// v128 (2026-09-26): el panel de Track se reordena. Fuera el "Dr. Bike Sydney"
+// debajo del nombre del mecanico (era el respaldo de la linea de servicios y
+// rating cuando el mecanico no tiene ninguno de los dos); ahora dice "Your
+// mechanic" arriba y el nombre abajo. La hora de llegada pasa a una linea
+// propia y grande, con el tiempo en horas cuando los minutos dejan de leerse
+// (1876 min -> 31 h). El codigo de llegada pasa a un cuadro rojo suave. El
+// mapa baja de 50% a 45% del espacio para que los botones no queden bajo la
+// barra. Cambian js/app.js, css/main.css y los dos diccionarios.
 // v127 (2026-09-25): el mapa de Track seguia tapando todo despues de v126.
 // v126 cambio el CSS, y el CSS no era quien decidia: despues de cargar
 // Leaflet, renderTracking le fija una altura en pixeles al mapa. Ese calculo
@@ -203,7 +211,7 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v127';
+const CACHE_STATIC = 'drbike-static-v128';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
