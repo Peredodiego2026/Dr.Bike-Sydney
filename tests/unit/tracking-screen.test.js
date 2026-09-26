@@ -115,7 +115,7 @@ describe('the runtime height of the map', () => {
 
   it('is a share of the viewport, not a measurement of another element', () => {
     expect(sizing).toMatch(/window\.innerHeight/);
-    expect(sizing).toMatch(/\*\s*0\.5/);
+    expect(sizing).toMatch(/available\s*\*\s*0\.\d+/);
   });
 
   // The specific trap: the element next to the map is the sr-only <p>, and
@@ -125,9 +125,13 @@ describe('the runtime height of the map', () => {
     expect(trackingCode).not.toMatch(/nextElementSibling[\s\S]{0,400}getBoundingClientRect/);
   });
 
-  it('leaves the other half for the panel', () => {
-    // 0.5 of the space below the bars, so the panel gets the same.
-    expect(sizing).toMatch(/available\s*\*\s*0\.5/);
+  // Under half, not half: the panel below carries the arrival time, the four
+  // steps and the code box, and on an 844px phone a straight 50/50 left the
+  // Message button 5px under the fixed nav. Measured against production.
+  it('gives the panel a little more than the map', () => {
+    const share = Number(sizing.match(/available\s*\*\s*(0\.\d+)/)[1]);
+    expect(share).toBeLessThanOrEqual(0.5);
+    expect(share, 'a map under a third of the screen stops being a map').toBeGreaterThan(0.3);
   });
 });
 
@@ -156,7 +160,7 @@ describe('it does not claim a mechanic is coming before one is', () => {
   it('says assigned once one accepts, until a position arrives', () => {
     expect(tracking).toMatch(/translateValue\('Assigned to your booking'\)/);
     // updateETA owns the text from the first real position onward.
-    expect(tracking).toMatch(/if \(etaEl && !_mechanicMarker\)/);
+    expect(tracking).toMatch(/if \(!_mechanicMarker\) setEtaMessage\(/);
   });
 
   it('both strings are translated', () => {
@@ -165,5 +169,69 @@ describe('it does not claim a mechanic is coming before one is', () => {
       expect(first).toBeGreaterThan(-1);
       expect(i18njs.indexOf(`'${k}':`, first + 1)).toBeGreaterThan(-1);
     }
+  });
+});
+
+// Diego, looking at a real booking in progress (2026-09-26): the card read
+// "Diego" with "Dr. Bike Sydney" stacked under it, which is the fallback the
+// meta line used when a mechanic has no completed jobs and no rating yet. The
+// company name under the person's name tells the client nothing they did not
+// already know - they booked it.
+//
+// And the three arrival numbers shared one cramped line on the right of that
+// same card: "ETA 05:55 pm · 1876 min · 1889.2 km by road".
+describe('who is coming, and when', () => {
+  // HTML comments too, not just JS ones: this markup lives inside a template
+  // literal, and the comment explaining why the company name went away names
+  // it. Sixth time a guard in this repo has matched its own explanation.
+  const stripComments = (s) =>
+    s
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/\/\/[^\r\n]*/g, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+  const code = stripComments(tracking);
+
+  it('labels the person instead of naming the company under them', () => {
+    expect(tracking).toMatch(/>Your mechanic</);
+    expect(code, 'the company name is back under the mechanic').not.toMatch(/Dr\. Bike Sydney/);
+  });
+
+  it('has no meta line left to fall back to it', () => {
+    expect(code).not.toMatch(/mechanic-meta/);
+  });
+
+  it('gives the arrival time a line of its own', () => {
+    expect(tracking).toMatch(/id="eta-time"/);
+    expect(tracking).toMatch(/id="eta-label"/);
+  });
+
+  // The states with no clock to show - waiting, assigned, right outside - go
+  // through one helper that hides the time rather than writing a sentence into
+  // the slot where a time belongs.
+  it('and hides it when there is no time to show', () => {
+    expect(code).toMatch(/function setEtaMessage/);
+    expect(code).toMatch(/timeEl\.style\.display = 'none'/);
+  });
+
+  // 1876 min is a true number that nobody reads as "31 hours".
+  it('says hours once minutes stop being readable', () => {
+    expect(code).toMatch(/function formatRideTime/);
+    expect(code).toMatch(/Math\.floor\(m \/ 60\)/);
+  });
+});
+
+// The one thing on this screen the client has to DO something with. It was a
+// blue notice among blue notices; Diego asked for it to read as important.
+describe('the arrival code', () => {
+  it('stands apart from the blue, on the red tokens', () => {
+    const badge = tracking.slice(tracking.indexOf('id="arrival-pin-badge"'), tracking.indexOf('id="arrival-pin-badge"') + 400);
+    expect(badge).toMatch(/var\(--red-lt\)/);
+    expect(badge).toMatch(/var\(--red-edge\)/);
+  });
+
+  // It is a centred block now, not a flex row, and showing it with 'flex'
+  // would lay its three lines out side by side.
+  it('is shown as a block, which is what its markup is', () => {
+    expect(tracking).toMatch(/pinBadge\.style\.display = 'block'/);
   });
 });
