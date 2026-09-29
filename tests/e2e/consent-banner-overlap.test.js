@@ -36,6 +36,36 @@ async function tapTarget(page, selector) {
   }, selector);
 }
 
+// Step 1 renders twice: an empty shell, then again once the service list has
+// come back from Supabase. Waiting for ".service-card" can land between the
+// two, and a click there is thrown away by the second render - which is what
+// made this file flaky on WebKit. A card with a PRICE in it only exists after
+// the real list has arrived, and #cal-wrap only exists on step 2, so the two
+// waits together say "the click actually took".
+async function openTheDateStep(page) {
+  // Step 1 renders TWICE: an empty shell first, then again once the service
+  // list has come back from Supabase. Waiting for ".service-card" lands
+  // between the two and the click is thrown away by the second render, which
+  // is what made this file flaky. The category headings are built from the
+  // loaded list, so they only exist after it has arrived; #step1-services is
+  // the list itself, as opposed to the collapsed summary above it, whose
+  // cards look identical and do nothing when clicked.
+  await page.waitForSelector('.category-header', { timeout: 30000 });
+  const picked = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('#step1-services .service-card')].filter(
+      (c) => c.offsetParent !== null
+    );
+    // Emergency Service opens a modal instead of advancing and is named
+    // differently in each language, so pick by what a bookable card has: a price.
+    const card = cards.find((c) => /\$\s?\d/.test(c.textContent));
+    card?.click();
+    return card ? card.textContent.replace(/\s+/g, ' ').trim().slice(0, 40) : null;
+  });
+  if (!picked) throw new Error('no bookable service card on the list');
+  // #cal-wrap only exists on step 2, so this is what says the click took.
+  await page.waitForSelector('#cal-wrap', { timeout: 30000 });
+  await page.waitForSelector('.screen.active .sticky-bottom .btn', { timeout: 30000 });
+}
 test.describe('the cookie card does not take taps meant for the app', () => {
   test.skip(({ isMobile }) => !isMobile, 'Mobile UA required - middleware serves index.html');
 
@@ -44,17 +74,11 @@ test.describe('the cookie card does not take taps meant for the app', () => {
   // they ignore it.
   test('the wizard button under it is still the thing a finger hits', async ({ page }) => {
     await goto(page, '/#book-service');
-    await page.waitForSelector('.service-card', { timeout: 20000 });
-
     await expect(page.locator('#drbike-consent'), 'no cookie card, so this test proves nothing').toHaveCount(1);
 
     // Picking a service advances to the date step, whose Continue button is the
     // first of the three that were covered.
-    await page.evaluate(() => {
-      const cards = [...document.querySelectorAll('.service-card')].filter((c) => c.offsetParent !== null);
-      cards.find((c) => !/emergen/i.test(c.textContent))?.click();
-    });
-    await page.waitForSelector('.screen.active .sticky-bottom .btn', { timeout: 20000 });
+    await openTheDateStep(page);
 
     const btn = await tapTarget(page, '.screen.active .sticky-bottom .btn');
     expect(btn.found).toBe(true);
@@ -78,12 +102,7 @@ test.describe('the cookie card does not take taps meant for the app', () => {
 
   test('answering it puts the bar back where it was', async ({ page }) => {
     await goto(page, '/#book-service');
-    await page.waitForSelector('.service-card', { timeout: 20000 });
-    await page.evaluate(() => {
-      const cards = [...document.querySelectorAll('.service-card')].filter((c) => c.offsetParent !== null);
-      cards.find((c) => !/emergen/i.test(c.textContent))?.click();
-    });
-    await page.waitForSelector('.screen.active .sticky-bottom .btn', { timeout: 20000 });
+    await openTheDateStep(page);
 
     const lifted = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--consent-h').trim()
