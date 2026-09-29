@@ -73,11 +73,17 @@ const PAGES = [
       { path: 'css/home.css', re: /href="css\/home\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
+  // css/landing.css se suma el 2026-09-29, por tercera vez la misma historia.
+  // Llevaba un "?v=20260910" escrito a mano y no estaba en esta lista, asi que
+  // el arreglo del cartel de cookies - que lo toca - habria salido invisible
+  // para todo escritorio que ya hubiera entrado, con npm run check en verde.
+  // Era el ultimo ?v= a mano que quedaba en landing.html.
   {
     html: 'landing.html',
     assets: [
       { path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/main.css', re: /href="css\/main\.css\?v=([a-zA-Z0-9]+)"/ },
+      { path: 'css/landing.css', re: /href="css\/landing\.css\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-inline.js', re: /src="js\/landing-inline\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-modules.js', re: /src="js\/landing-modules\.js\?v=([a-zA-Z0-9]+)"/ },
     ],
