@@ -475,7 +475,7 @@ async function resolveAddressCoverage(address) {
 // in `callout_zones`. A logged-in customer there saw $20 on the payment
 // screen, paid $20, and handleCreateBooking recomputed $45, refused the
 // amount and REFUNDED them. From their side the booking simply failed.
-async function calloutFeeForAddress(address, scheduledDate) {
+export async function calloutFeeForAddress(address, scheduledDate) {
   const coverage = await resolveAddressCoverage(address);
   return {
     coverage,

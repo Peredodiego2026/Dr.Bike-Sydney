@@ -16,7 +16,8 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
-import { matchCalloutZone, applySurcharge, applyMembershipPricing } from './auth.js';
+import { calloutFeeForAddress, applySurcharge, applyMembershipPricing } from './auth.js';
+import { VALID_FEES } from './_coverage.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const sb = createClient(
@@ -266,8 +267,7 @@ export function shouldCreateBookingFor(pi) {
   if (pi.invoice) return { ok: false, reason: 'subscription invoice' };
   if (pi.metadata?.giftCard === 'true') return { ok: false, reason: 'gift card' };
   const md = pi.metadata || {};
-  if (!md.bk_service_name && !md.bk_service_id)
-    return { ok: false, reason: 'no booking metadata' };
+  if (!md.bk_service_name && !md.bk_service_id) return { ok: false, reason: 'no booking metadata' };
   // Metadata without a slot cannot become a row: scheduled_date and
   // scheduled_time are what the mechanic's day is built from.
   if (!md.bk_date || !md.bk_time) return { ok: false, reason: 'incomplete metadata' };
@@ -328,14 +328,68 @@ export async function handlePaymentIntentSucceeded(pi) {
   // this, this fallback path was the one place in the app that turned a
   // tampered Stripe charge straight into a real booking with a mechanic
   // dispatched, no verification at all.
-  let calloutFee = 20;
+  // EL MISMO resolutor que usa handleCreateBooking: tiempo de manejo desde
+  // la base, con la tabla de zonas solo como respaldo (api/_coverage.js).
+  //
+  // Hasta el 29-sep-2026 esto miraba SOLO `callout_zones` y caia a $20 si el
+  // suburbio no tenia fila. Los dos caminos cobran por tiempo de manejo, asi
+  // que cualquier suburbio sin fila - North Sydney, Balmain, Potts Point,
+  // Maroubra - se cobraba $45 y aca se recalculaba $20, y este webhook
+  // devolvia la plata. Paso de verdad:
+  //
+  //   [webhook] amount mismatch for pi_3UKoVPPPGSm5cT7J1vttUHp5:
+  //   charged $45, authoritative price $20 - refunding
+  //
+  // La reserva la habia creado el navegador un segundo antes, asi que quedo
+  // una visita agendada con el cobro devuelto. CLAUDE.md ya documentaba esta
+  // trampa para handleCreateBooking; el arreglo nunca llego hasta aca.
+  let calloutFee = null;
+  let coverage = null;
   try {
-    const match = await matchCalloutZone(sb, md.bk_address);
-    if (match) calloutFee = match.calloutFee;
+    const priced = await calloutFeeForAddress(md.bk_address, md.bk_date);
+    calloutFee = priced.fee;
+    coverage = priced.coverage;
   } catch (e) {
-    console.error('[webhook] matchCalloutZone failed, falling back to $20:', e.message);
+    console.error('[webhook] coverage lookup failed:', e.message);
   }
-  calloutFee = applySurcharge(calloutFee, md.bk_date);
+
+  // Fuera del perimetro no se agenda: eso ya era la regla y no cambia.
+  if (coverage && coverage.covered === 'out') {
+    console.error(
+      `[webhook] out of area for ${pi.id}: ${md.bk_address} - refunding instead of creating a booking`
+    );
+    try {
+      await stripe.refunds.create({ payment_intent: pi.id });
+    } catch (e) {
+      console.error(`[webhook] refund failed for ${pi.id}:`, e.message);
+    }
+    return { rejected: 'out of area', address: md.bk_address || null };
+  }
+
+  // Sin direccion resuelta no hay cifra con que comparar. La misma salida
+  // que handleCreateBooking: se acepta lo cobrado SI es una de las bandas
+  // reales para esa fecha. Cubre la caida del geocodificador sin reabrir el
+  // agujero del importe inventado - $0.50 no es una banda.
+  const amountReceived = pi.amount_received / 100;
+  if (calloutFee === null) {
+    const bands = VALID_FEES.map((f) => Math.round(applySurcharge(f, md.bk_date) * 100));
+    if (!bands.includes(Math.round(amountReceived * 100))) {
+      console.error(
+        `[webhook] unresolved address and $${amountReceived} is not a band fee for ${pi.id} - refunding`
+      );
+      try {
+        await stripe.refunds.create({ payment_intent: pi.id });
+      } catch (e) {
+        console.error(`[webhook] refund failed for ${pi.id}:`, e.message);
+      }
+      return { rejected: 'unresolved address', charged: amountReceived };
+    }
+    console.warn(
+      `[webhook] coverage unresolved for ${pi.id}, accepting the band fee paid ($${amountReceived}) - confirm by hand:`,
+      md.bk_address
+    );
+    calloutFee = amountReceived;
+  }
 
   if (accountId && md.bk_guest !== '1') {
     const servicePrice = applySurcharge(Number(svc?.price) || 0, md.bk_date);
@@ -351,7 +405,6 @@ export async function handlePaymentIntentSucceeded(pi) {
     calloutFee = priced.calloutFee;
   }
 
-  const amountReceived = pi.amount_received / 100;
   if (Math.round(amountReceived * 100) !== Math.round(calloutFee * 100)) {
     console.error(
       `[webhook] amount mismatch for ${pi.id}: charged $${amountReceived}, authoritative price $${calloutFee} - refunding instead of creating a booking`
