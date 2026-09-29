@@ -1253,7 +1253,7 @@ async function renderBookService() {
     // nothing else, so Diego got an address with no idea what the person
     // wanted. It now carries the same fields as the one the server writes at
     // the end of the quote flow, so both land in his WhatsApp looking alike.
-    function showCoverageBlock(addr, info) {
+    function showCoverageBlock(addr, info, clientName) {
       const box = screen.querySelector('#s3-coverage-msg');
       const wa = screen.querySelector('#s3-coverage-wa');
       if (!box || !wa) return;
@@ -1269,12 +1269,29 @@ async function renderBookService() {
       // drops an empty string, so a '' used as a separator silently vanished
       // and the greeting ran straight into the fields.
       const fields = [
+        clientName ? `${translateValue('Client:')} ${clientName}` : '',
         svc ? `${translateValue('Service:')} ${svc}` : '',
         when ? `${translateValue('Date:')} ${when}` : '',
         `${translateValue('Address:')} ${addr}`,
         trip ? `${translateValue('Distance from your base:')} ${trip}` : '',
       ].filter(Boolean);
-      const text = translateValue('Hi! Do you cover this address?') + '\n\n' + fields.join('\n');
+      // Diego, 2026-09-29, holding an enquiry from Concord: "quiero saber bien
+      // por que me llego el mensaje". It opened with a question and listed a
+      // job, and nothing in it said it came from the website or that the
+      // address had been measured and found too far - so an out-of-zone
+      // enquiry read exactly like any other WhatsApp.
+      //
+      // Worth knowing: the client is typing in WhatsApp before they send, so
+      // any of this can be edited out, and the Concord one was - it arrived
+      // with no distance line and "Edited" on it. What cannot be edited is the
+      // row submitQuoteRequest writes server-side; this button is the shortcut
+      // past that, which is the trade it has always made.
+      const text =
+        translateValue('Hi! Do you cover this address?') +
+        '\n\n' +
+        fields.join('\n') +
+        '\n\n' +
+        translateValue('Sent from your website - this address is outside the same-day zone.');
       wa.href = 'https://wa.me/61433963250?text=' + encodeURIComponent(text);
       box.style.display = 'block';
       // block:'nearest', not 'center': centring a panel near the bottom of a
@@ -1388,7 +1405,20 @@ async function renderBookService() {
           // customer who had already picked a service, a date and a time.
           if (warnedAddress !== addr) {
             warnedAddress = addr;
-            showCoverageBlock(addr, data);
+            // Signed in, so we know who is asking. A guest has not been asked
+            // for a name at this step - that is the contact step - so for them
+            // the line is left out rather than guessed.
+            let who = '';
+            try {
+              const {
+                data: { session },
+              } = await sb.auth.getSession();
+              const m = session?.user?.user_metadata || {};
+              who = m.full_name || m.name || '';
+            } catch {
+              // no session to read - the message goes without a name
+            }
+            showCoverageBlock(addr, data, who);
             btn.textContent = translateValue('Continue anyway');
             btn.disabled = false;
             return;

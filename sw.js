@@ -218,7 +218,10 @@
 // v130: js/consent.js changed. It is loaded bare, with no ?v=, so this number
 // is the only thing that delivers the new file - and what changed in it is
 // what stops the cookie card sitting on top of the booking buttons.
-const CACHE_STATIC = 'drbike-static-v130';
+// v131: js/i18n-es.js y js/i18n-zh.js cambiaron. Se importan sin ?v=, asi que
+// este numero es lo unico que entrega las cadenas nuevas - si no, el cliente
+// que ya entro sigue viendo el mensaje viejo en su idioma.
+const CACHE_STATIC = 'drbike-static-v131';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
