@@ -34,15 +34,24 @@ describe('handlePaymentIntentSucceeded - no longer trusts pi.amount_received as 
     'handlePaymentIntentSucceeded'
   );
 
-  it('imports the same authoritative-price functions the real booking flow uses', () => {
+  // Estas dos afirmaciones fijaban matchCalloutZone, y fijar esa funcion es lo
+  // que costo plata: la tabla de zonas caia a $20 para cualquier suburbio sin
+  // fila, mientras el cliente pagaba la banda por tiempo de manejo. El
+  // 29-sep-2026 este webhook devolvio un pago correcto de $45 - ver
+  // tests/unit/webhook-refunded-a-real-payment.test.js. La intencion no cambia
+  // - el precio no sale del pago - pero la fuente autoritativa ahora es el
+  // mismo resolutor que usa handleCreateBooking.
+  it('imports the same authoritative-price function the real booking flow uses', () => {
     expect(webhookjs).toMatch(
-      /import \{ matchCalloutZone, applySurcharge, applyMembershipPricing \} from '\.\/auth\.js';/
+      /import \{ calloutFeeForAddress, applySurcharge, applyMembershipPricing \} from '\.\/auth\.js';/
     );
   });
 
-  it('recomputes calloutFee from callout_zones instead of reading it off the payment', () => {
-    expect(fn).toMatch(/matchCalloutZone\(sb, md\.bk_address\)/);
-    expect(fn).toMatch(/applySurcharge\(calloutFee, md\.bk_date\)/);
+  it('recomputes calloutFee from the coverage resolver, not from the payment', () => {
+    expect(fn).toMatch(/calloutFeeForAddress\(md\.bk_address, md\.bk_date\)/);
+    expect(fn, 'la tabla de zonas sola es lo que devolvia pagos buenos').not.toMatch(
+      /matchCalloutZone\(/
+    );
     expect(fn).not.toMatch(/callout_fee:\s*pi\.amount_received\s*\/\s*100/);
   });
 
