@@ -285,6 +285,12 @@ export default {
   'Select Date': '选择日期',
   "We're fully booked until DATEHERE": '我们在 DATEHERE 之前已约满',
   'Pick a date from then and we will come to you.': '请选择之后的日期，我们会上门服务。',
+  'Need it sooner? Tell us what happened and we will see what we can do.':
+    '需要更早吗？告诉我们情况，我们看看能做些什么。',
+  'Hi! I need a bike service before DATEHERE - can you come any sooner?':
+    '您好！我需要在 DATEHERE 之前修自行车，能提前上门吗？',
+  'Sent from your website - you are showing as fully booked until then.':
+    '通过您的网站发送 — 您的网站显示在此之前已约满。',
   'Select Time': '选择时间',
   January: '一月',
   February: '二月',

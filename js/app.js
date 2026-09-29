@@ -1172,6 +1172,31 @@ async function renderBookService() {
         </div>`;
     }
 
+    // A client who needs the bike THIS week and reads "fully booked until
+    // November" leaves, and Diego never hears they were there. He asked for
+    // the opposite: "quiero saber que el cliente esta ahi y me necesita".
+    //
+    // Same shape as the out-of-zone handoff further down: the message says
+    // what they wanted and why it arrived, so it does not read like any other
+    // WhatsApp. They can still edit it before sending - that is WhatsApp.
+    const closedWaLines = [];
+    if (_closedUntil) {
+      closedWaLines.push(
+        translateValue(
+          'Hi! I need a bike service before DATEHERE - can you come any sooner?'
+        ).replace('DATEHERE', formatDate(_closedUntil))
+      );
+      if (window.appState.service && window.appState.service.name) {
+        closedWaLines.push('', translateValue('Service:') + ' ' + window.appState.service.name);
+      }
+      closedWaLines.push(
+        '',
+        translateValue('Sent from your website - you are showing as fully booked until then.')
+      );
+    }
+    const closedWaHref =
+      'https://wa.me/61433963250?text=' + encodeURIComponent(closedWaLines.join('\n'));
+
     screen.innerHTML = `
       ${createHeader('Choose Date & Time', true, '#book-service')}
       <div class="section-label">Select Date</div>
@@ -1180,6 +1205,8 @@ async function renderBookService() {
           ? `<div style="background:var(--amber-tint);border:1px solid var(--amber-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px">
                <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px">${translateValue("We're fully booked until DATEHERE").replace('DATEHERE', formatDate(_closedUntil))}</div>
                <div style="font-size:13px;color:var(--color-text);line-height:1.5">${translateValue('Pick a date from then and we will come to you.')}</div>
+               <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-top:6px">${translateValue('Need it sooner? Tell us what happened and we will see what we can do.')}</div>
+               <a href="${closedWaHref}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box;margin-top:10px">${translateValue('💬 Ask on WhatsApp')}</a>
              </div>`
           : ''
       }
