@@ -1059,7 +1059,7 @@ async function handleRemoveCard(req, res) {
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
-async function handleCreateBooking(req, res) {
+export async function handleCreateBooking(req, res) {
   const {
     access_token,
     service_id,
@@ -1124,7 +1124,21 @@ async function handleCreateBooking(req, res) {
     // Membership pricing is looked up by account, so a guest can never reach a
     // waived $0 call-out - and with no charge there would be nothing
     // authenticating the request at all.
-    if (!payment_intent_id && !checkout_session_id)
+    //
+    // `holdOnly` is the exception, and leaving it out broke every guest
+    // booking for 29 days (PR #376, 31-aug to 29-sep 2026). The hold is the
+    // call that RESERVES the slot before the card is touched, so by
+    // definition it cannot carry a payment yet: the client pressed Pay, this
+    // answered 402 Payment required, and the card was never reached. Diego
+    // could still pay because he was signed in; nobody without an account
+    // could, by card or by wallet. The identical exemption 60 lines below -
+    // the coverage gate - was remembered. This one was not.
+    //
+    // Nothing is weakened. A hold takes no money, burns no discount and
+    // expires on its own; the REAL booking runs this same check again, and
+    // by then a payment IS present, which is the condition that was always
+    // required.
+    if (!payment_intent_id && !checkout_session_id && !holdOnly)
       return res.status(402).json({ error: 'Payment required' });
   }
 

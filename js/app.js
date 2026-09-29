@@ -2670,6 +2670,22 @@ async function renderPayment() {
         const pi = await chargeOnce(paymentMethodId);
         await finalizeBooking(pi, { isTest: false });
       },
+      // The wallet used to fail in total silence - see js/stripe.js. The
+      // card button below has said what went wrong since it was written;
+      // Apple Pay and Google Pay said nothing at all, which is how a
+      // customer ends up messaging "it would not let me pay" with no idea
+      // why. Same two messages as the card path, on purpose.
+      onError: (e) => {
+        const errEl = screen.querySelector('#payment-error');
+        if (!errEl) return;
+        errEl.textContent = _paidIntent
+          ? translateValue(
+              'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
+            )
+          : (e && e.message) ||
+            translateValue('Payment failed. Please check your card details and try again.');
+        errEl.hidden = false;
+      },
     });
     if (prSupported) {
       screen.querySelector('#payment-request-btn').hidden = false;

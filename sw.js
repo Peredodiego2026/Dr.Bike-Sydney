@@ -211,7 +211,11 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v128';
+// v129: js/stripe.js changed. It is imported by js/app.js as a bare module
+// specifier with no ?v=, so nothing but this number delivers the new file -
+// and what changed in it is the wallet error path, which is the half of the
+// "nobody could pay" fix that Apple Pay and Google Pay go through.
+const CACHE_STATIC = 'drbike-static-v129';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
