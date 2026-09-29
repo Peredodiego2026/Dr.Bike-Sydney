@@ -323,6 +323,9 @@ export default {
   // Booking flow - Step 2 (calendar)
   'Choose Date & Time': 'Elegí Fecha y Hora',
   'Select Date': 'Elegí la fecha',
+  "We're fully booked until DATEHERE": 'Estamos completos hasta el DATEHERE',
+  'Pick a date from then and we will come to you.':
+    'Elegí una fecha desde entonces y vamos hasta tu casa.',
   'Select Time': 'Elegí la hora',
   January: 'Enero',
   February: 'Febrero',

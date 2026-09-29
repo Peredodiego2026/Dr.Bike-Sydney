@@ -283,6 +283,8 @@ export default {
   // Booking flow - Step 2 (calendar)
   'Choose Date & Time': '选择日期和时间',
   'Select Date': '选择日期',
+  "We're fully booked until DATEHERE": '我们在 DATEHERE 之前已约满',
+  'Pick a date from then and we will come to you.': '请选择之后的日期，我们会上门服务。',
   'Select Time': '选择时间',
   January: '一月',
   February: '二月',

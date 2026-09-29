@@ -752,6 +752,28 @@ async function renderBookService() {
   let _calYear = today.getFullYear();
   let _calMonth = today.getMonth();
 
+  // "Fully booked until ___", set by Diego in the admin panel while he is not
+  // in Sydney. Until this existed the calendar offered every hour of every
+  // day, and on 29-sep-2026 a client reached the last step for the next
+  // morning while the van was a thousand kilometres away.
+  //
+  // The client side only greys the days out. What actually refuses the
+  // booking is the same check in handleCreateBooking - a stale tab or a saved
+  // draft never sees this code.
+  let _closedUntil = null;
+  async function loadClosedUntil() {
+    try {
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'closed-until' }),
+      });
+      _closedUntil = r.ok ? (await r.json()).closedUntil || null : null;
+    } catch {
+      _closedUntil = null;
+    }
+  }
+
   const CAT_ORDER = [
     'Scheduled services',
     'Brakes',
@@ -1065,6 +1087,18 @@ async function renderBookService() {
 
   // ── Step 2: Date & Time ───────────────────────────────────────────────────
   async function renderStep2() {
+    // Asked once per visit to this step. A failure leaves it null, which is
+    // the open calendar - the server refuses a closed date anyway, so failing
+    // open here costs a confusing error at worst, never a lost booking.
+    await loadClosedUntil();
+    if (_closedUntil) {
+      const [cy, cm] = _closedUntil.split('-').map(Number);
+      // Landing on a month where every day is greyed out reads as broken.
+      if (new Date(cy, cm - 1, 1) > new Date(_calYear, _calMonth, 1)) {
+        _calYear = cy;
+        _calMonth = cm - 1;
+      }
+    }
     if (window.posthog) posthog.capture('booking_step_viewed', { step: 'select_date' });
     scrollStepToTop('Step 2 of 3: choose a date and time');
     if (!document.getElementById('cal-styles')) {
@@ -1120,7 +1154,8 @@ async function renderBookService() {
       for (let d = 1; d <= daysInMonth; d++) {
         const ds = `${_calYear}-${String(_calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dt = new Date(_calYear, _calMonth, d);
-        const disabled = dt < today || dt > maxDate;
+        const beforeWeReopen = _closedUntil ? ds < _closedUntil : false;
+        const disabled = dt < today || dt > maxDate || beforeWeReopen;
         const isSel = ds === window.appState.date;
         const isToday = dt.getTime() === today.getTime();
         cells += `<button type="button" class="cal-day${isSel ? ' cal-sel' : ''}${isToday ? ' cal-today' : ''}${disabled ? ' cal-dis' : ''}" ${disabled ? 'disabled' : ''} data-date="${ds}">${d}</button>`;
@@ -1140,6 +1175,14 @@ async function renderBookService() {
     screen.innerHTML = `
       ${createHeader('Choose Date & Time', true, '#book-service')}
       <div class="section-label">Select Date</div>
+      ${
+        _closedUntil
+          ? `<div style="background:var(--amber-tint);border:1px solid var(--amber-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+               <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px">${translateValue("We're fully booked until DATEHERE").replace('DATEHERE', formatDate(_closedUntil))}</div>
+               <div style="font-size:13px;color:var(--color-text);line-height:1.5">${translateValue('Pick a date from then and we will come to you.')}</div>
+             </div>`
+          : ''
+      }
       <div id="cal-wrap" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">${buildCal()}</div>
       <div class="section-label">Select Time</div>
       <div class="time-grid" id="time-grid">

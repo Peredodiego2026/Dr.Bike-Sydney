@@ -313,6 +313,9 @@ document.addEventListener('click', function (e) {
     case 'select-all-slots':
       selectAllSlots(d.value === 'true');
       break;
+    case 'save-closed-until':
+      saveClosedUntil();
+      break;
     case 'save-blocks':
       saveBlocks();
       break;
@@ -1814,6 +1817,14 @@ function openBlockModal() {
         <button data-action="close-block-modal" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">✕</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Fully booked until</div>
+          <div style="display:flex;gap:8px">
+            <input type="date" id="closed-until" class="inp" aria-label="Fully booked until" style="margin:0;flex:1" min="${today}">
+            <button data-action="save-closed-until" style="padding:10px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+          </div>
+          <div style="font-size:11px;color:var(--mgray);margin-top:6px;line-height:1.5">Clients see "We're fully booked until ..." and can only pick dates from then. Clear the field and press Save to open up again.</div>
+        </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Van</div>
           <select id="block-van" class="inp" aria-label="Van" style="margin:0">
@@ -1872,6 +1883,8 @@ function openBlockModal() {
       </div>
     </div>`;
   document.body.appendChild(modal);
+  // Show what is set today, so Save is a change and not a guess.
+  loadClosedUntil();
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
   });
@@ -1927,6 +1940,51 @@ async function saveBlocks() {
     `✅ ${slots.length} slot${slots.length > 1 ? 's' : ''} blocked for ${new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`
   );
   loadCalendar();
+}
+
+// "Fully booked until ___" - the whole of the away setting, from here.
+//
+// Blocking a day at a time is the wrong tool for five weeks away: 35 trips
+// through this modal, 18 checkboxes each. And a client who sees five weeks of
+// "fully booked on this date" reads a business that is broken or swamped and
+// leaves, where "we are fully booked until 3 November" keeps them and lets
+// them book for after.
+async function loadClosedUntil() {
+  const input = document.getElementById('closed-until');
+  if (!input) return;
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'closed-until' }),
+    });
+    if (r.ok) input.value = (await r.json()).closedUntil || '';
+  } catch (e) {
+    // Not fatal: the field simply opens empty, and saving still works.
+    console.warn('[closed-until] could not read the current value:', e.message);
+  }
+}
+
+async function saveClosedUntil() {
+  const date = document.getElementById('closed-until').value;
+  const token = await adminAccessToken();
+  if (!token) return showToast('Your admin session expired - reload and sign in');
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'admin-closed-until', access_token: token, date }),
+    });
+    const d = await r.json();
+    if (!r.ok) return showToast('Error: ' + (d.error || r.status));
+    showToast(
+      d.closedUntil
+        ? `Clients can only book from ${d.closedUntil}`
+        : 'Open again - every date is bookable'
+    );
+  } catch (e) {
+    showToast('Error: ' + e.message);
+  }
 }
 
 // Diego found this in production (18-ago-2026): the only unblock button

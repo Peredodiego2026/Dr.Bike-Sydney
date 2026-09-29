@@ -1144,6 +1144,23 @@ export async function handleCreateBooking(req, res) {
 
   const isAdmin = !isGuest && (user.email || '').toLowerCase() === ADMIN_TEST_EMAIL;
 
+  // Closed until Diego is back in Sydney. Checked here, before the service
+  // lookup and long before Stripe, so a date he cannot serve never reaches a
+  // card. The client calendar greys these days out; this is what makes that
+  // a rule rather than a suggestion - a stale tab, a saved draft or a direct
+  // call would otherwise walk straight past it.
+  //
+  // Not for the admin: Diego entering a booking by hand is him deciding to
+  // serve it, which is the one case the setting should not override.
+  if (!isAdmin) {
+    const shut = await closedUntil(SERVICE_KEY);
+    if (shut && scheduled_date < shut) {
+      return res.status(409).json({
+        error: 'We are fully booked until ' + shut + ' - please pick a date from then.',
+      });
+    }
+  }
+
   // 2. Authoritative service price from the services table
   let svc = null;
   if (service_id) {
@@ -4125,6 +4142,83 @@ async function handleMechanicPreferenceStatus(req, res) {
   return res.status(200).json({ enabled });
 }
 
+// ── Fully booked until ___ ─────────────────────────────────────────────────
+//
+// The calendar had no way to say "not this month". It offered every hour of
+// every day, so a client in Curl Curl could pay for tomorrow while the van is
+// a thousand kilometres away. On 29-sep-2026 one nearly did: she reached the
+// last step for the next morning, and the only reason it did not happen is
+// that her address was out of the service area.
+//
+// Stored on the van_zones(van_number=0) sentinel row that the business
+// details, the WhatsApp number and the alert triggers already use. That is a
+// hack, and it is the right one here: a new table means a migration, and a
+// migration is something Diego has to run by hand - which is precisely the
+// delay this exists to remove.
+const CLOSED_UNTIL_KEY = '__setting_closed_until__';
+
+// The only shape accepted anywhere: YYYY-MM-DD, which is also the shape that
+// compares correctly as a plain string.
+const isIsoDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v));
+
+// Dates are compared as YYYY-MM-DD strings, which sort correctly, and
+// "today" is Sydney's today - not the server's, which is UTC and is a day
+// behind for most of Sydney's morning.
+function sydneyToday() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney' }).format(new Date());
+}
+
+// A date already past is treated as no setting at all. A shop that stays shut
+// forever because nobody remembered to clear the field is worse than no
+// setting, and it would fail silently - there is no error to notice.
+async function closedUntil(SERVICE_KEY) {
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/van_zones?select=postcode&van_number=eq.0&suburb=eq.${CLOSED_UNTIL_KEY}`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (!resp.ok) return null;
+    const rows = await resp.json();
+    const value = String(rows[0]?.postcode || '').trim();
+    if (!isIsoDate(value)) return null;
+    return value > sydneyToday() ? value : null;
+  } catch {
+    // Fails OPEN, deliberately. Not being able to read the setting must never
+    // turn into "no bookings today" - the same rule the coverage lookup
+    // follows when a geocoder is down.
+    return null;
+  }
+}
+
+async function handleClosedUntil(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  return res.status(200).json({ closedUntil: await closedUntil(SERVICE_KEY) });
+}
+
+async function handleAdminClosedUntil(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const raw = String(req.body?.date || '').trim();
+  // An empty string is how the field is cleared. Anything else has to be a
+  // real date in the future: saving a past one would look like it worked and
+  // do nothing, because the reader above ignores it.
+  if (raw && !isIsoDate(raw)) return res.status(400).json({ error: 'Use a date like 2026-11-03' });
+  if (raw && raw <= sydneyToday())
+    return res.status(400).json({ error: 'That date has already passed' });
+
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { error } = await sb
+    .from('van_zones')
+    .upsert(
+      { van_number: 0, suburb: CLOSED_UNTIL_KEY, postcode: raw, active: true },
+      { onConflict: 'van_number,suburb' }
+    );
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ closedUntil: raw || null });
+}
+
 // Dos credenciales, porque hay dos clases de cliente. El razonamiento completo
 // y las dos decisiones puras estan en api/_review-auth.js; aca queda solo la
 // parte que habla con la base.
@@ -4458,6 +4552,14 @@ async function handleGetAvailability(req, res) {
     isToday,
     nowMin,
   });
+
+  // Inside the closed window nothing is on offer, whatever the calendar and
+  // the bookings say. Belt and braces with the gate in handleCreateBooking:
+  // this one keeps the hours off the screen, that one refuses the booking.
+  const shutUntil = await closedUntil(SUPABASE_KEY);
+  if (shutUntil && date < shutUntil) {
+    for (const s of slots) s.available = false;
+  }
 
   res.setHeader('Cache-Control', 'no-store, no-cache');
   return res.status(200).json(slots);
@@ -5686,6 +5788,7 @@ async function handler(req, res) {
           role === 'create-booking' ||
           role === 'hold-slot' ||
           role === 'check-coverage' ||
+          role === 'closed-until' ||
           // Analytics is one authenticated admin changing a date filter, not a
           // login attempt - the default 5/min locks the screen out on the third
           // range change.
@@ -5742,6 +5845,9 @@ async function handler(req, res) {
     return handleCreateBooking(req, res);
   }
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
+  // Public on purpose, same as the coverage and fee checks: the calendar has
+  // to know before anyone signs in or starts paying.
+  if (role === 'closed-until') return handleClosedUntil(req, res);
   if (role === 'zone-price') return handleZonePrice(req, res);
   if (role === 'address-suggest') return handleAddressSuggest(req, res);
   if (role === 'request-quote') return handleRequestQuote(req, res);
@@ -5759,6 +5865,7 @@ async function handler(req, res) {
   if (role === 'admin-privacy-plan') return handleAdminPrivacyPlan(req, res);
   if (role === 'admin-expenses-list') return handleAdminExpensesList(req, res);
   if (role === 'admin-expenses-save') return handleAdminExpensesSave(req, res);
+  if (role === 'admin-closed-until') return handleAdminClosedUntil(req, res);
   if (role === 'admin-expenses-delete') return handleAdminExpensesDelete(req, res);
   if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
