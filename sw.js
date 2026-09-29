@@ -221,7 +221,10 @@
 // v131: js/i18n-es.js y js/i18n-zh.js cambiaron. Se importan sin ?v=, asi que
 // este numero es lo unico que entrega las cadenas nuevas - si no, el cliente
 // que ya entro sigue viendo el mensaje viejo en su idioma.
-const CACHE_STATIC = 'drbike-static-v131';
+// v132: y cambiaron otra vez, por el cartel de "completos hasta el ___".
+// v133: los diccionarios cambiaron otra vez, por el boton de WhatsApp en el
+// cartel de "completos hasta el ___". Se importan sin ?v=.
+const CACHE_STATIC = 'drbike-static-v133';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

@@ -752,6 +752,28 @@ async function renderBookService() {
   let _calYear = today.getFullYear();
   let _calMonth = today.getMonth();
 
+  // "Fully booked until ___", set by Diego in the admin panel while he is not
+  // in Sydney. Until this existed the calendar offered every hour of every
+  // day, and on 29-sep-2026 a client reached the last step for the next
+  // morning while the van was a thousand kilometres away.
+  //
+  // The client side only greys the days out. What actually refuses the
+  // booking is the same check in handleCreateBooking - a stale tab or a saved
+  // draft never sees this code.
+  let _closedUntil = null;
+  async function loadClosedUntil() {
+    try {
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'closed-until' }),
+      });
+      _closedUntil = r.ok ? (await r.json()).closedUntil || null : null;
+    } catch {
+      _closedUntil = null;
+    }
+  }
+
   const CAT_ORDER = [
     'Scheduled services',
     'Brakes',
@@ -1065,6 +1087,18 @@ async function renderBookService() {
 
   // ── Step 2: Date & Time ───────────────────────────────────────────────────
   async function renderStep2() {
+    // Asked once per visit to this step. A failure leaves it null, which is
+    // the open calendar - the server refuses a closed date anyway, so failing
+    // open here costs a confusing error at worst, never a lost booking.
+    await loadClosedUntil();
+    if (_closedUntil) {
+      const [cy, cm] = _closedUntil.split('-').map(Number);
+      // Landing on a month where every day is greyed out reads as broken.
+      if (new Date(cy, cm - 1, 1) > new Date(_calYear, _calMonth, 1)) {
+        _calYear = cy;
+        _calMonth = cm - 1;
+      }
+    }
     if (window.posthog) posthog.capture('booking_step_viewed', { step: 'select_date' });
     scrollStepToTop('Step 2 of 3: choose a date and time');
     if (!document.getElementById('cal-styles')) {
@@ -1120,7 +1154,8 @@ async function renderBookService() {
       for (let d = 1; d <= daysInMonth; d++) {
         const ds = `${_calYear}-${String(_calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dt = new Date(_calYear, _calMonth, d);
-        const disabled = dt < today || dt > maxDate;
+        const beforeWeReopen = _closedUntil ? ds < _closedUntil : false;
+        const disabled = dt < today || dt > maxDate || beforeWeReopen;
         const isSel = ds === window.appState.date;
         const isToday = dt.getTime() === today.getTime();
         cells += `<button type="button" class="cal-day${isSel ? ' cal-sel' : ''}${isToday ? ' cal-today' : ''}${disabled ? ' cal-dis' : ''}" ${disabled ? 'disabled' : ''} data-date="${ds}">${d}</button>`;
@@ -1137,9 +1172,44 @@ async function renderBookService() {
         </div>`;
     }
 
+    // A client who needs the bike THIS week and reads "fully booked until
+    // November" leaves, and Diego never hears they were there. He asked for
+    // the opposite: "quiero saber que el cliente esta ahi y me necesita".
+    //
+    // Same shape as the out-of-zone handoff further down: the message says
+    // what they wanted and why it arrived, so it does not read like any other
+    // WhatsApp. They can still edit it before sending - that is WhatsApp.
+    const closedWaLines = [];
+    if (_closedUntil) {
+      closedWaLines.push(
+        translateValue(
+          'Hi! I need a bike service before DATEHERE - can you come any sooner?'
+        ).replace('DATEHERE', formatDate(_closedUntil))
+      );
+      if (window.appState.service && window.appState.service.name) {
+        closedWaLines.push('', translateValue('Service:') + ' ' + window.appState.service.name);
+      }
+      closedWaLines.push(
+        '',
+        translateValue('Sent from your website - you are showing as fully booked until then.')
+      );
+    }
+    const closedWaHref =
+      'https://wa.me/61433963250?text=' + encodeURIComponent(closedWaLines.join('\n'));
+
     screen.innerHTML = `
       ${createHeader('Choose Date & Time', true, '#book-service')}
       <div class="section-label">Select Date</div>
+      ${
+        _closedUntil
+          ? `<div style="background:var(--amber-tint);border:1px solid var(--amber-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+               <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px">${translateValue("We're fully booked until DATEHERE").replace('DATEHERE', formatDate(_closedUntil))}</div>
+               <div style="font-size:13px;color:var(--color-text);line-height:1.5">${translateValue('Pick a date from then and we will come to you.')}</div>
+               <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-top:6px">${translateValue('Need it sooner? Tell us what happened and we will see what we can do.')}</div>
+               <a href="${closedWaHref}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box;margin-top:10px">${translateValue('💬 Ask on WhatsApp')}</a>
+             </div>`
+          : ''
+      }
       <div id="cal-wrap" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">${buildCal()}</div>
       <div class="section-label">Select Time</div>
       <div class="time-grid" id="time-grid">

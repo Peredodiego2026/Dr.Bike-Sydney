@@ -323,6 +323,15 @@ export default {
   // Booking flow - Step 2 (calendar)
   'Choose Date & Time': 'Elegí Fecha y Hora',
   'Select Date': 'Elegí la fecha',
+  "We're fully booked until DATEHERE": 'Agenda completa hasta DATEHERE',
+  'Pick a date from then and we will come to you.':
+    'Elegí una fecha desde entonces y vamos hasta tu casa.',
+  'Need it sooner? Tell us what happened and we will see what we can do.':
+    '¿Lo necesitás antes? Contanos qué te pasó y vemos qué podemos hacer.',
+  'Hi! I need a bike service before DATEHERE - can you come any sooner?':
+    '¡Hola! Necesito un servicio para mi bici antes de DATEHERE. ¿Pueden venir antes?',
+  'Sent from your website - you are showing as fully booked until then.':
+    'Enviado desde su sitio web: figuran como completos hasta esa fecha.',
   'Select Time': 'Elegí la hora',
   January: 'Enero',
   February: 'Febrero',
