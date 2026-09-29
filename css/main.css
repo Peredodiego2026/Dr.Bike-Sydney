@@ -27,6 +27,13 @@ a {
   text-decoration: none;
 }
 
+/* How far the cookie card has to sit above the bottom edge to clear the nav.
+   A plain 56px and not var(--bottom-nav-h): that token already carries
+   env(safe-area-inset-bottom) and so does the card's own bottom, and adding
+   the inset twice leaves a visible gap on a phone with a home indicator. */
+:root {
+  --consent-lift: 56px;
+}
 /* ── Base ────────────────────────────────────────────────────────────────────── */
 /* On BODY only, never on both. `overflow-x: hidden` forces the other axis from
    `visible` to `auto`, so declaring it on <html> as well made both elements
@@ -502,6 +509,8 @@ body {
      would leave 56px of dead air at the bottom of a desktop screen. */
   :root {
     --bottom-nav-h: 0px;
+    /* No nav here, so the consent card has nothing to clear. */
+    --consent-lift: 0px;
   }
   .screen.active:not([data-screen='home']) {
     max-width: 680px;
@@ -510,11 +519,21 @@ body {
 }
 
 /* ── Sticky Bottom ───────────────────────────────────────────────────────────── */
+/* --consent-h is published by js/consent.js while the cookie card is on
+   screen, and removed the moment it is answered. Without it this bar sat
+   UNDER the card - fixed to the bottom, z-index 50 against the card's 9998 -
+   so from 30-aug to 29-sep-2026 every button in the booking wizard was
+   untappable on a phone until the visitor dealt with the cookie card:
+   Continue, Continue to Summary, and Confirm & Pay. Measured on five phone
+   sizes, in English and Spanish, all of them covered.
+
+   A variable and not a constant because the card is a different height in
+   each language. 0px is the default, so nothing moves once it is gone. */
 .sticky-bottom {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(72px + env(safe-area-inset-bottom));
+  bottom: calc(72px + env(safe-area-inset-bottom) + var(--consent-h, 0px));
   z-index: 50;
   padding: var(--space-3) var(--space-4) var(--space-2);
   background: linear-gradient(to top, var(--color-bg) 90%, transparent);

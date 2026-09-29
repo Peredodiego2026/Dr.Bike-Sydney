@@ -215,7 +215,10 @@
 // specifier with no ?v=, so nothing but this number delivers the new file -
 // and what changed in it is the wallet error path, which is the half of the
 // "nobody could pay" fix that Apple Pay and Google Pay go through.
-const CACHE_STATIC = 'drbike-static-v129';
+// v130: js/consent.js changed. It is loaded bare, with no ?v=, so this number
+// is the only thing that delivers the new file - and what changed in it is
+// what stops the cookie card sitting on top of the booking buttons.
+const CACHE_STATIC = 'drbike-static-v130';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
