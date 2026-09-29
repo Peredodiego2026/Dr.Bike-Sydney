@@ -425,10 +425,13 @@ export default {
     'Mandanos la dirección por WhatsApp y te decimos si podemos llegar.',
   '💬 Ask on WhatsApp': '💬 Consultar por WhatsApp',
   'Hi! Do you cover this address?': '¡Hola! ¿Llegan a esta dirección?',
+  'Client:': 'Cliente:',
   'Service:': 'Servicio:',
   'Date:': 'Fecha:',
   'Address:': 'Dirección:',
   'Distance from your base:': 'Distancia desde su base:',
+  'Sent from your website - this address is outside the same-day zone.':
+    'Enviado desde su sitio web: esta direccion esta fuera de la zona del mismo dia.',
   'Continue anyway': 'Continuar igual',
   "The visit & diagnosis fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
     'La visita y diagnóstico (desde $25, según tu suburbio) cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
