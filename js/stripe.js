@@ -85,7 +85,7 @@ export async function createPaymentForm(containerId) {
 
 export async function createPaymentRequestButton(
   containerId,
-  { amountCents, label = 'Dr. Bike Sydney', onPayment }
+  { amountCents, label = 'Dr. Bike Sydney', onPayment, onError = null }
 ) {
   const stripe = await initStripe();
   const container = document.getElementById(containerId);
@@ -106,8 +106,15 @@ export async function createPaymentRequestButton(
     try {
       await onPayment(ev.paymentMethod.id);
       ev.complete('success');
-    } catch {
+    } catch (e) {
+      // The sheet has to be completed or it hangs. But telling ONLY the
+      // sheet is how a wallet failure became invisible: this used to be a
+      // bare `catch {}`, so Apple Pay showed its cross, closed, and the
+      // page underneath still read "enter your card" as though nothing had
+      // been pressed. Diego, reproducing it on 29-sep-2026: "cargo... y
+      // volvio a la pagina de pago... como si no hubiera apretado pagar".
       ev.complete('fail');
+      if (onError) onError(e);
     }
   });
 
