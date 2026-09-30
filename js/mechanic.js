@@ -2155,10 +2155,8 @@ function safeImageUpload(file) {
   }
   // Only when the browser offers no type at all: some Android pickers send an
   // empty string for HEIC.
-  const named = String(file.name || '')
-    .split('.')
-    .pop()
-    .toLowerCase();
+  const nameParts = String(file.name || '').split('.');
+  const named = nameParts.pop().toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(ALLOWED, named)) return REFUSED;
   const ext = named;
   return { ok: true, ext, contentType: ALLOWED[ext] };
