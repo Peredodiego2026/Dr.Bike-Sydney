@@ -140,6 +140,39 @@ describe('el embudo ya decia donde, ahora dice por que', () => {
     expect(ev).not.toMatch(/reason:\s*raw/);
     expect(ev).not.toMatch(/message:\s*e\.message/);
   });
+
+  // Hasta el 30-sep-2026 solo el boton de tarjeta mandaba payment_failed;
+  // Apple Pay y Google Pay fallaban sin dejar rastro. Aca se corre la funcion
+  // de verdad: lo que importa es que evento sale, no que texto hay.
+  it('un pago con billetera que falla tambien se mide, y dice que fue billetera', () => {
+    const decl = 'const trackPaymentFailed = ';
+    const start = app.indexOf(decl) + decl.length;
+    const end = start + app.slice(start).search(/\r?\n {2}\};/);
+    const sent = [];
+    const posthog = { capture: (name, props) => sent.push({ name, props }) };
+    const track = new Function(
+      'window',
+      'posthog',
+      '_paidIntent',
+      'calloutFee',
+      'return ' + app.slice(start, end) + '\n}'
+    )({ posthog }, posthog, null, 45);
+
+    track(new Error('Your card was declined. Card 4000 0000 0000 0002'), 'wallet');
+    expect(sent).toEqual([
+      {
+        name: 'payment_failed',
+        props: { reason: 'card_declined', method: 'wallet', after_charge: false, callout_fee: 45 },
+      },
+    ]);
+    expect(JSON.stringify(sent)).not.toContain('4000');
+
+    const wallet = app.slice(
+      app.indexOf('onError: (e) =>'),
+      app.indexOf("querySelector('#pay-btn').addEventListener")
+    );
+    expect(wallet).toContain("trackPaymentFailed(e, 'wallet')");
+  });
 });
 
 // El 2026-09-02 el logo salio a produccion midiendo 423px de alto en las TRES
