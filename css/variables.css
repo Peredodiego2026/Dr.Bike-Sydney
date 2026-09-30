@@ -100,6 +100,11 @@
      or its last row lands underneath the bar - which is how the tracking
      screen's Message and Share buttons became unreachable. */
   --bottom-nav-h: calc(56px + env(safe-area-inset-bottom));
+  /* El navbar de landing.html es sticky, asi que tapa lo alto de cualquier
+     seccion a la que se salte por ancla. Vive aca y no en css/landing.css
+     porque lo leen dos reglas - la altura del navbar y el margen de salto -
+     y escribirlo dos veces es como se desincroniza. */
+  --navbar-h: 64px;
 
   /* ── Legacy aliases (backward compat) ───────────────────────────────────── */
   /* These three were declared ONLY in css/landing.css's second :root, which
