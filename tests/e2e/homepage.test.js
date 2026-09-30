@@ -39,6 +39,42 @@ test.describe('Landing page', () => {
     await page.locator('a[href="#services"]').first().click();
     await expect(page.locator('#services')).toBeInViewport();
   });
+
+  test('the navbar anchors scroll to their section, clear of the sticky navbar', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    for (const id of ['mechanics', 'memberships', 'fleet', 'about']) {
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.locator(`a[href="#${id}"]`).first().click();
+      await expect(page.locator(`#${id}`)).toBeInViewport();
+      // Estar en pantalla no alcanza: antes del 30-sep-2026 la seccion
+      // llegaba con 64px metidos DEBAJO del navbar sticky y el test pasaba
+      // igual. Lo que importa es donde frena el scroll.
+      // El scroll de esta pagina es smooth, asi que medir apenas termina el
+      // clic lo agarra a mitad de camino - y a mitad de camino la seccion
+      // todavia esta por debajo del navbar, o sea que la afirmacion pasa sola.
+      // Primera version de este test: verde contra una produccion que NO tenia
+      // el arreglo. Hay que esperar a que el scroll frene de verdad.
+      await page.waitForFunction(() => {
+        const y = Math.round(window.scrollY);
+        if (window.__lastY === y) return true;
+        window.__lastY = y;
+        return false;
+      }, null, { polling: 250, timeout: 10000 });
+      await page.evaluate(() => delete window.__lastY);
+
+      const tapado = await page.evaluate((id) => {
+        const nav = document.querySelector('.navbar').getBoundingClientRect();
+        const sec = document.getElementById(id).getBoundingClientRect();
+        return Math.round(nav.bottom - sec.top);
+      }, id);
+      expect(
+        tapado,
+        `#${id} quedo ${tapado}px debajo del navbar al saltar`
+      ).toBeLessThanOrEqual(24);
+    }
+  });
 });
 
 // Landing.html at a narrow viewport (responsive check). Runs on the desktop UA only:
