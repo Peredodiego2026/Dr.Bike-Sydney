@@ -76,10 +76,14 @@ test.describe('Landing page', () => {
         const sec = document.getElementById(id).getBoundingClientRect();
         return Math.round(nav.bottom - sec.top);
       }, id);
+      // Era 24 hasta el 30-sep-2026: la animacion de entrada dejaba cada
+      // seccion 20px mas abajo al saltar, y despues la subia bajo el navbar.
+      // js/landing-inline.js revealNow() la revela antes del salto; lo que
+      // queda es redondeo.
       expect(
         tapado,
         `#${id} quedo ${tapado}px debajo del navbar al saltar`
-      ).toBeLessThanOrEqual(24);
+      ).toBeLessThanOrEqual(2);
     }
   });
 });
