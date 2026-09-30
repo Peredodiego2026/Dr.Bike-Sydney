@@ -37,6 +37,16 @@ import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { reviewCredential, reviewGate } from './_review-auth.js';
 import { shortClientName } from './_privacy.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
+import {
+  JOB_PHOTO_BUCKET,
+  JOB_PHOTO_TYPES,
+  newJobPhotoPath,
+  jobPhotoPath,
+  isJobPhotoRef,
+  signJobPhoto,
+  signPhotoMessages,
+  createJobPhotoUpload,
+} from './_job-photos.js';
 // The factor lookup runs in front of every admin request. Four seconds is
 // long enough for a healthy Supabase and short enough that a sick one costs a
 // pause, not the panel.
@@ -2071,7 +2081,18 @@ async function handleClientBookings(req, res) {
   if (!bookingsResp.ok) return res.status(500).json({ error: 'Failed to fetch bookings' });
   const data = await bookingsResp.json();
   if ((data || []).length >= CLIENT_BOOKINGS_LIMIT) res.setHeader('X-Truncated', 'true');
-  return res.status(200).json(data || []);
+  // A photo in the private bucket is stored as a reference, not a URL. This
+  // client has just proved the bookings are theirs, so sign them here
+  // (api/_job-photos.js). Old public URLs pass through untouched.
+  const opts = jobPhotoOpts();
+  const signed = await Promise.all(
+    (data || []).map(async (b) => ({
+      ...b,
+      photo_before_url: await signJobPhoto(b.photo_before_url, b.id, opts),
+      photo_after_url: await signJobPhoto(b.photo_after_url, b.id, opts),
+    }))
+  );
+  return res.status(200).json(signed);
 }
 
 async function handleMechanicAccept(req, res) {
@@ -2573,8 +2594,15 @@ async function handleMechanicComplete(req, res) {
     tip_amount: Number(tip_amount) || 0,
     next_service_date: next_service_date || null,
   };
-  if (photo_before_url) payload.photo_before_url = photo_before_url;
-  if (photo_after_url) payload.photo_after_url = photo_after_url;
+  // A reference into the private bucket is kept only if it points at THIS
+  // booking's folder - otherwise one job could carry another job's photo and
+  // get it signed for the wrong client (api/_job-photos.js). A full URL is the
+  // fallback path, and every photo taken before the bucket existed.
+  const photoValue = (v) => (isJobPhotoRef(v) ? (jobPhotoPath(v, booking_id) ? v : null) : v);
+  const beforeValue = photoValue(photo_before_url);
+  const afterValue = photoValue(photo_after_url);
+  if (beforeValue) payload.photo_before_url = beforeValue;
+  if (afterValue) payload.photo_after_url = afterValue;
   if (client_signature_url) payload.client_signature_url = client_signature_url;
   if (duration_seconds) payload.service_duration_seconds = duration_seconds;
 
@@ -3573,7 +3601,9 @@ async function handleMechanicMessages(req, res) {
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!resp.ok) return res.status(500).json({ error: 'Failed to load messages' });
-  return res.status(200).json(await resp.json());
+  return res
+    .status(200)
+    .json(await signPhotoMessages(await resp.json(), booking_id, jobPhotoOpts()));
 }
 
 async function handleMechanicMessageSend(req, res) {
@@ -3656,7 +3686,9 @@ async function handleClientMessages(req, res) {
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!resp.ok) return res.status(500).json({ error: 'Failed to load messages' });
-  return res.status(200).json(await resp.json());
+  return res
+    .status(200)
+    .json(await signPhotoMessages(await resp.json(), booking_id, jobPhotoOpts()));
 }
 
 async function handleClientMessageSend(req, res) {
@@ -3716,7 +3748,9 @@ async function notifyClientOfMechanicMessage(bookingId, message, SERVICE_KEY) {
     body: JSON.stringify({
       clientId,
       title: `Message about your ${bkData[0].service_name || 'service'}`,
-      body: message.slice(0, 100),
+      // A photo message is `[PHOTO:<storage reference>]` - not something to
+      // put on somebody's lock screen.
+      body: /^\[PHOTO:/.test(message) ? '📷 Photo' : message.slice(0, 100),
       url: '/index.html#tracking',
       tag: 'mechanic-message',
     }),
@@ -4994,6 +5028,93 @@ async function signClaimEvidence(ref) {
   }
 }
 
+// ── Job photos (private bucket, api/_job-photos.js) ──────────────────────────
+function jobPhotoOpts() {
+  return {
+    supabaseUrl: SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY,
+  };
+}
+
+async function bookingParties(bookingId, SERVICE_KEY) {
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=client_id,mechanic_id&id=eq.${encodeURIComponent(bookingId)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  return r.ok ? ((await r.json())?.[0] ?? null) : null;
+}
+
+// A one-time upload URL into the private bucket, for the mechanic on that job
+// only. The mechanic app used to upload straight into the public bucket with
+// the anon key; it still does when this answers 503 - which is every time
+// until the bucket has been created in the Supabase dashboard.
+export async function handleMechanicPhotoUploadUrl(req, res) {
+  const auth = await authMechanic(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const { booking_id, kind, ext } = req.body || {};
+  const path = newJobPhotoPath(booking_id, kind, ext);
+  if (!path) return res.status(400).json({ error: 'Invalid photo request' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const bk = await bookingParties(booking_id, SERVICE_KEY);
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+  if (bk.mechanic_id !== auth.mechanic.id) return res.status(403).json({ error: 'Forbidden' });
+
+  const up = await createJobPhotoUpload(path, jobPhotoOpts());
+  if (!up.token) {
+    console.warn(
+      `[job-photos] ${JOB_PHOTO_BUCKET} refused an upload URL (HTTP ${up.status}) - the mechanic app falls back to the public bucket. Create it in Supabase > Storage, private.`
+    );
+    return res.status(503).json({ error: 'Private photo storage unavailable', fallback: true });
+  }
+  return res.status(200).json({
+    bucket: JOB_PHOTO_BUCKET,
+    path,
+    token: up.token,
+    ref: `${JOB_PHOTO_BUCKET}/${path}`,
+    contentType: JOB_PHOTO_TYPES[String(ext).toLowerCase()],
+  });
+}
+
+// Signs photo references for whoever may see that booking: its mechanic
+// (mechanic token), its client (their own session) or an admin. Screens that
+// read job_messages straight from the database or over realtime get the raw
+// reference and ask here; the API reads sign on the way out and never need to.
+export async function handlePhotoSign(req, res) {
+  const { booking_id, refs, access_token, client_id, token } = req.body || {};
+  const list = Array.isArray(refs) ? refs.slice(0, 20) : [];
+  if (!booking_id || !list.length)
+    return res.status(400).json({ error: 'booking_id and refs required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const bk = await bookingParties(booking_id, SERVICE_KEY);
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+
+  let allowed = false;
+  if (token) {
+    const auth = await authMechanic(req);
+    if (auth.error) return res.status(auth.status).json({ error: auth.error });
+    allowed = bk.mechanic_id === auth.mechanic.id;
+  } else if (client_id) {
+    if (!access_token) return res.status(401).json({ error: 'Sign in required' });
+    const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+    });
+    if (!userResp.ok) return res.status(401).json({ error: 'Invalid or expired session' });
+    const userData = await userResp.json();
+    allowed = userData.id === client_id && bk.client_id === client_id;
+  } else {
+    const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+    if (auth.error) return res.status(auth.status).json({ error: auth.error });
+    allowed = true;
+  }
+  if (!allowed) return res.status(403).json({ error: 'Forbidden' });
+
+  const opts = jobPhotoOpts();
+  const urls = await Promise.all(
+    list.map((r) => (isJobPhotoRef(r) ? signJobPhoto(r, booking_id, opts) : null))
+  );
+  return res.status(200).json({ urls });
+}
+
 async function handleAdminClaimsUpdate(req, res) {
   const { access_token, id, status, resolution_notes } = req.body || {};
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -5796,6 +5917,8 @@ async function handler(req, res) {
           // Same reason: the Finance screen re-reads the expenses on every
           // change of month, quarter or year, and 5/min locks it on the third.
           role === 'admin-expenses-list' ||
+          // One call per photo that arrives in an open chat.
+          role === 'photo-sign' ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -5814,6 +5937,8 @@ async function handler(req, res) {
   if (role === 'mechanic-parts-update') return handleMechanicPartsUpdate(req, res);
   if (role === 'mechanic-messages') return handleMechanicMessages(req, res);
   if (role === 'mechanic-message-send') return handleMechanicMessageSend(req, res);
+  if (role === 'mechanic-photo-upload-url') return handleMechanicPhotoUploadUrl(req, res);
+  if (role === 'photo-sign') return handlePhotoSign(req, res);
   if (role === 'client-messages') return handleClientMessages(req, res);
   if (role === 'client-message-send') return handleClientMessageSend(req, res);
   if (role === 'mechanic-checklist') return handleMechanicChecklist(req, res);

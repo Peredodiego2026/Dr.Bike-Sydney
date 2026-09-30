@@ -68,8 +68,9 @@ la seccion 3 y se vuelve a correr.
 
 ## 0.b UNA COSA QUE NO ES SQL: el bucket `claim-evidence` (04-sep-2026)
 
-**Estado: falta crearlo.** Hasta que exista, las fotos y la factura de un
-reclamo se siguen guardando en el bucket publico `job-photos` - el codigo cae
+**Estado: creado por Diego, privado (visto en Supabase el 30-sep-2026).** Lo
+que sigue queda como registro. Hasta que existio, las fotos y la factura de un
+reclamo se seguian guardando en el bucket publico `job-photos` - el codigo cae
 ahi a proposito, porque perder la evidencia que un cliente acaba de mandar es
 peor que guardarla en un lugar demasiado legible.
 
@@ -105,6 +106,42 @@ Si aparece ese renglon, el bucket no existe o esta mal escrito el nombre.
 Las fotos de reclamos **que ya estan subidas** siguen en el bucket publico, en
 su URL de siempre. Son pocas y de pruebas; si en algun momento hubo una real,
 se borra a mano desde Storage.
+
+## 0.b2 OTRO BUCKET: `job-photos-private` (30-sep-2026)
+
+**Estado: falta crearlo.** Las fotos de antes/despues de un trabajo y las fotos
+del chat del mecanico. Hasta que exista, la app del mecanico las sigue subiendo
+al bucket publico `job-photos`, igual que siempre: el servidor contesta "no
+hay bucket" y la app cae ahi a proposito (`api/_job-photos.js`).
+
+### Como se crea (30 segundos, no es SQL)
+
+1. Supabase > **Storage** > **New bucket**
+2. Nombre exacto: `job-photos-private`
+3. **Public bucket: NO**
+4. Create
+
+Tampoco hace falta ninguna policy: el servidor le da al mecanico un link de
+subida de un solo uso para ESE trabajo, y cada pantalla que muestra la foto
+pide un link firmado que vence en una hora (el email de la factura, un ano).
+
+### Como se comprueba que quedo bien
+
+Un trabajo completado con foto desde la app del mecanico, y despues en los
+logs de Vercel **no tiene que aparecer**:
+
+```
+[job-photos] job-photos-private refused an upload URL (HTTP 400) - the mechanic app falls back to the public bucket
+```
+
+Y en la base, `photo_before_url` de ese trabajo empieza con
+`job-photos-private/jobs/` en vez de `https://`.
+
+### Lo que NO arregla
+
+Las fotos que ya estan subidas siguen publicas en su URL de siempre. Las
+fotos de perfil de los mecanicos y las de las resenas **se quedan en el bucket
+publico a proposito**: las primeras se muestran en la pagina publica.
 
 ## 0.c HAY OTRO RUNBOOK, Y NO SE MEZCLA CON ESTE (04-sep-2026)
 

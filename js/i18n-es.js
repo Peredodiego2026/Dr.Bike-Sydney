@@ -486,6 +486,7 @@ export default {
   'Full bike rebuild': 'Reconstrucción completa de la bici',
   'All bearings serviced or replaced': 'Todos los rodamientos revisados o reemplazados',
   'Before & after photos': 'Fotos de antes y después',
+  'Photo unavailable': 'Foto no disponible',
   'Detailed parts condition report': 'Informe detallado del estado de las piezas',
   'Brake pad check': 'Revisión de pastillas de freno',
   'Tyre & wheel inspection': 'Inspección de neumáticos y ruedas',

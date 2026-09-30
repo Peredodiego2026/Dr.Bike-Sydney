@@ -224,7 +224,8 @@
 // v132: y cambiaron otra vez, por el cartel de "completos hasta el ___".
 // v133: los diccionarios cambiaron otra vez, por el boton de WhatsApp en el
 // cartel de "completos hasta el ___". Se importan sin ?v=.
-const CACHE_STATIC = 'drbike-static-v133';
+// v134: "Photo unavailable", para una foto del chat que no se pudo firmar.
+const CACHE_STATIC = 'drbike-static-v134';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

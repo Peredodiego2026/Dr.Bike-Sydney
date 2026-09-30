@@ -7425,9 +7425,52 @@ function openAdminChat(bookingId, clientName) {
         table: 'job_messages',
         filter: `booking_id=eq.${bookingId}`,
       },
-      (payload) => appendAdminChatMsg(payload.new)
+      async (payload) => {
+        const [msg] = await signAdminChatPhotos(bookingId, [payload.new]);
+        // The signing is a round trip: the chat may have been closed, or
+        // switched to another job, while it was out.
+        if (adminChatBookingId === bookingId) appendAdminChatMsg(msg);
+      }
     )
     .subscribe();
+}
+
+// A chat photo in the private bucket is stored as a reference,
+// `[PHOTO:job-photos-private/...]`, not a URL (api/_job-photos.js). The panel
+// reads job_messages straight from the database and over realtime, so it asks
+// the server to sign them - twenty per call, the server's own cap. Old photos
+// hold a public URL and are left alone.
+const PRIVATE_PHOTO_MSG = /^\[PHOTO:(job-photos-private\/.*)\]$/;
+async function signAdminChatPhotos(bookingId, messages) {
+  const refs = messages.map((m) => m?.message?.match(PRIVATE_PHOTO_MSG)?.[1]).filter(Boolean);
+  if (!refs.length) return messages;
+  const urls = [];
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    for (let i = 0; i < refs.length; i += 20) {
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'photo-sign',
+          booking_id: bookingId,
+          refs: refs.slice(i, i + 20),
+          access_token: session?.access_token,
+        }),
+      });
+      urls.push(...(r.ok ? (await r.json()).urls || [] : []));
+    }
+  } catch (e) {
+    console.warn('[admin-chat] could not sign chat photos:', e.message);
+  }
+  let n = 0;
+  return messages.map((m) => {
+    if (!PRIVATE_PHOTO_MSG.test(m?.message || '')) return m;
+    const url = urls[n++];
+    return { ...m, message: url ? `[PHOTO:${url}]` : 'Photo unavailable' };
+  });
 }
 
 function closeAdminChat() {
@@ -7451,8 +7494,10 @@ async function loadAdminChatMessages(bookingId) {
       '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">No messages yet.</div>';
     return;
   }
+  const signed = await signAdminChatPhotos(bookingId, data);
+  if (adminChatBookingId !== bookingId) return;
   msgs.innerHTML = '';
-  data.forEach((m) => appendAdminChatMsg(m, false));
+  signed.forEach((m) => appendAdminChatMsg(m, false));
   msgs.scrollTop = msgs.scrollHeight;
 }
 
@@ -8131,7 +8176,8 @@ function safeImageUpload(file) {
   }
   // Only when the browser offers no type at all: some Android pickers send an
   // empty string for HEIC.
-  const named = String(file.name || '').split('.').pop().toLowerCase();
+  const nameParts = String(file.name || '').split('.');
+  const named = nameParts.pop().toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(ALLOWED, named)) return REFUSED;
   const ext = named;
   return { ok: true, ext, contentType: ALLOWED[ext] };
