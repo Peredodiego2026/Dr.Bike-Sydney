@@ -72,9 +72,12 @@ const BUDGET = {
   'css/landing.css': 1,
   'css/admin.css': 113,
   'css/mechanic.css': 29,
-  'js/app.js': 96,
+  // app.js 96 -> 111 and mechanic.js 0 -> 1 on 2026-09-30 are NOT new hex: they
+  // were always there, hidden by the `image/*` bug in stripComments() below.
+  // mechanic.js's one is the signature canvas ink, which has to stay hex.
+  'js/app.js': 111,
   'js/admin.js': 11,
-  'js/mechanic.js': 0,
+  'js/mechanic.js': 1,
   'js/components.js': 28,
   'js/stripe.js': 5,
   'js/landing-inline.js': 68,
@@ -157,12 +160,20 @@ function normalise(hex) {
 // otherwise fail the check, and so would track.html:13, which is a comment
 // explaining that the retired blue used to live there. Blanked out rather than
 // deleted so line numbers in the output still point at the real line.
+//
+// One pass, leftmost match wins, and a `/*` glued to a word is not a comment.
+// Until 2026-09-30 block comments were stripped first and on their own, so
+// `accept="image/*"` in js/app.js:925 opened a "comment" that ran to the next
+// `*/`, a thousand lines later - and every hex in between went uncounted. Same
+// for `// scripts/*.sql`: the `/*` inside a line comment is not a start either.
 function stripComments(src) {
   const blank = m => m.replace(/[^\n]/g, ' ');
   return src
     .replace(/<!--[\s\S]*?-->/g, blank)
-    .replace(/\/\*[\s\S]*?\*\//g, blank)
-    .replace(/(^|[^:"'`\\])\/\/[^\n]*/g, (m, p) => p + blank(m.slice(p.length)));
+    .replace(/(^|[^\w*])\/\*[\s\S]*?\*\/|(^|[^:"'`\\])\/\/[^\n]*/g, (m, p1, p2) => {
+      const p = p1 ?? p2;
+      return p + blank(m.slice(p.length));
+    });
 }
 
 function colours(file) {
