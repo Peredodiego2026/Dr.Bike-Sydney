@@ -46,7 +46,20 @@ img {
   z-index: 100;
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  height: 64px;
+  height: var(--navbar-h);
+}
+
+/* Saltar a #fleet dejaba la seccion medio metida debajo del navbar: el
+   navegador la lleva a lo alto de la ventana y el navbar sticky se le
+   sienta encima. Diego, 30-sep-2026, sobre el enlace Fleet: "no queda
+   cuadrada al primer clic".
+
+   scroll-margin-top le dice al navegador que reserve ese alto AL SALTAR.
+   No mueve nada mientras se lee la pagina, solo cambia donde frena el
+   scroll - por eso vale para todas las secciones con ancla y no solo para
+   la que se noto: #mechanics, #memberships y #about tenian lo mismo. */
+section[id] {
+  scroll-margin-top: var(--navbar-h);
 }
 .navbar .container {
   display: flex;

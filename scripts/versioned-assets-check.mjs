@@ -35,6 +35,7 @@ const PAGES = [
   {
     html: 'admin.html',
     assets: [
+      { path: 'css/variables.css', re: /href="css\/variables\.css\?v=([a-zA-Z0-9-]+)"/ },
       { path: 'js/admin.js', re: /src="js\/admin\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/admin.css', re: /href="css\/admin\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
@@ -48,6 +49,7 @@ const PAGES = [
   {
     html: 'mechanic.html',
     assets: [
+      { path: 'css/variables.css', re: /href="css\/variables\.css\?v=([a-zA-Z0-9-]+)"/ },
       { path: 'js/mechanic.js', re: /src="js\/mechanic\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/mechanic.css', re: /href="css\/mechanic\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
@@ -68,11 +70,18 @@ const PAGES = [
   {
     html: 'index.html',
     assets: [
+      { path: 'css/variables.css', re: /href="css\/variables\.css\?v=([a-zA-Z0-9-]+)"/ },
       { path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/main.css', re: /href="css\/main\.css\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/home.css', re: /href="css\/home\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
+  // css/variables.css se suma el 2026-09-30, y es la que faltaba de verdad:
+  // la cargan las CUATRO superficies, llevaba un ?v= a mano DISTINTO en cada
+  // una (20260622, 20260713, 20260809, 20260827-dark2) y no estaba vigilada.
+  // Es el archivo de los tokens: un cambio ahi que no se entrega deja reglas
+  // apuntando a una variable que no existe, y en CSS eso no falla - se ignora
+  // en silencio. Justo lo que habria pasado con --navbar-h.
   // css/landing.css se suma el 2026-09-29, por tercera vez la misma historia.
   // Llevaba un "?v=20260910" escrito a mano y no estaba en esta lista, asi que
   // el arreglo del cartel de cookies - que lo toca - habria salido invisible
@@ -81,6 +90,7 @@ const PAGES = [
   {
     html: 'landing.html',
     assets: [
+      { path: 'css/variables.css', re: /href="css\/variables\.css\?v=([a-zA-Z0-9-]+)"/ },
       { path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/main.css', re: /href="css\/main\.css\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/landing.css', re: /href="css\/landing\.css\?v=([a-zA-Z0-9]+)"/ },
