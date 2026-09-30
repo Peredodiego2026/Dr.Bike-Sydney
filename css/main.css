@@ -1426,7 +1426,12 @@ body {
 /* ── Toast ───────────────────────────────────────────────────────────────────── */
 .toast {
   position: fixed;
-  bottom: calc(var(--bottom-nav-height, 72px) + var(--space-4));
+  /* This read var(--bottom-nav-height, 72px), a token that never existed, so
+     72px is what always rendered - and the home-indicator inset never got
+     added. On an iPhone the nav grows by that inset (--bottom-nav-h) and the
+     toast ended up sitting on it. 72px stays, so desktop, where it clears the
+     booking bar, does not move; the inset is the fix. */
+  bottom: calc(72px + env(safe-area-inset-bottom) + var(--space-4));
   left: 50%;
   transform: translateX(-50%) translateY(16px);
   background: var(--color-surface);

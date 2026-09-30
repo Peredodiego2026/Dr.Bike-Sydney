@@ -377,6 +377,24 @@ document.querySelectorAll('section').forEach(function(s) {
   observer.observe(s);
 });
 
+// A jump to a section aims at its box as it is at that instant, and a section
+// not revealed yet is still 20px low (the translateY above). The reveal then
+// slides it up, under the sticky navbar: Fleet never landed square on the
+// first click. So the target is revealed before the jump, transition off, and
+// its box is already where it will stay.
+function revealNow(s) {
+  if (!s || s.tagName !== 'SECTION' || s.classList.contains('visible')) return;
+  s.style.transition = 'none';
+  s.classList.add('visible');
+  void s.offsetHeight;
+  s.style.transition = 'opacity 500ms ease, transform 500ms ease';
+}
+document.addEventListener('click', function(e) {
+  const a = e.target.closest && e.target.closest('a[href^="#"]');
+  if (a) revealNow(document.getElementById(a.getAttribute('href').slice(1)));
+}, true);
+if (location.hash) revealNow(document.getElementById(location.hash.slice(1)));
+
 const secs = document.querySelectorAll('section[id]');
 const nls = document.querySelectorAll('nav a[href^="#"]');
 window.addEventListener('scroll', function() {
