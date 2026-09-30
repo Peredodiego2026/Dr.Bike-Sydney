@@ -2758,6 +2758,35 @@ async function renderPayment() {
     return _paidIntent;
   }
 
+  // Un pago que falla es la caida mas cara del embudo y hasta ahora era
+  // invisible: se veia gente llegando al pago y no completando, sin
+  // saber si la tarjeta fue rechazada o si se arrepintieron. Hasta el
+  // 30-sep-2026 solo lo mandaba el boton de tarjeta: Apple Pay y Google Pay
+  // fallaban sin dejar rastro. `method` separa los dos.
+  //
+  // Se manda una CATEGORIA, nunca el mensaje crudo: puede traer datos
+  // del banco o del cliente, y esto sale a un servicio de terceros.
+  const trackPaymentFailed = (e, method) => {
+    if (window.posthog) {
+      const raw = String((e && e.message) || '');
+      const reason = /declin|insufficient|card/i.test(raw)
+        ? 'card_declined'
+        : /no longer available|no longer held|just booked/i.test(raw)
+          ? 'slot_taken'
+          : /email/i.test(raw)
+            ? 'missing_email'
+            : 'other';
+      posthog.capture('payment_failed', {
+        reason,
+        method,
+        // Si ya se habia cobrado, el problema es escribir la reserva, no
+        // el cobro - y eso se arregla distinto.
+        after_charge: !!_paidIntent,
+        callout_fee: calloutFee,
+      });
+    }
+  };
+
   if (calloutFee > 0) {
     await createPaymentForm('card-element');
 
@@ -2776,6 +2805,7 @@ async function renderPayment() {
       // customer ends up messaging "it would not let me pay" with no idea
       // why. Same two messages as the card path, on purpose.
       onError: (e) => {
+        trackPaymentFailed(e, 'wallet');
         const errEl = screen.querySelector('#payment-error');
         if (!errEl) return;
         errEl.textContent = _paidIntent
@@ -2807,29 +2837,7 @@ async function renderPayment() {
         // translateValue, not a bare literal: this is the single most important
         // sentence in the app - it tells a client their money left and their
         // booking did not - and it was shipping in English to es/zh clients.
-        // Un pago que falla es la caida mas cara del embudo y hasta ahora era
-        // invisible: se veia gente llegando al pago y no completando, sin
-        // saber si la tarjeta fue rechazada o si se arrepintieron.
-        //
-        // Se manda una CATEGORIA, nunca el mensaje crudo: puede traer datos
-        // del banco o del cliente, y esto sale a un servicio de terceros.
-        if (window.posthog) {
-          const raw = String((e && e.message) || '');
-          const reason = /declin|insufficient|card/i.test(raw)
-            ? 'card_declined'
-            : /no longer available|no longer held|just booked/i.test(raw)
-              ? 'slot_taken'
-              : /email/i.test(raw)
-                ? 'missing_email'
-                : 'other';
-          posthog.capture('payment_failed', {
-            reason,
-            // Si ya se habia cobrado, el problema es escribir la reserva, no
-            // el cobro - y eso se arregla distinto.
-            after_charge: !!_paidIntent,
-            callout_fee: calloutFee,
-          });
-        }
+        trackPaymentFailed(e, 'card');
         errEl.textContent = _paidIntent
           ? translateValue(
               'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
