@@ -34,10 +34,17 @@ test.describe('Landing page', () => {
     await expect(page.locator('#nav-auth-btn')).toContainText('Sign In');
   });
 
-  test('navbar links work', async ({ page }) => {
+  // 'Services' dejo de ser un enlace a #services: hoy es un boton que abre
+  // el modal de precios, y la seccion #services ya no existe (un clic en vez
+  // de dos, js/landing-inline.js). El test seguia buscando el enlace viejo y
+  // llevaba tiempo en rojo, que es como una suite deja de mirarse.
+  //
+  // Ahora cubre las dos clases de item que tiene el menu, no una sola.
+  test('the Services button opens the price list', async ({ page }) => {
     await page.goto('/');
-    await page.locator('a[href="#services"]').first().click();
-    await expect(page.locator('#services')).toBeInViewport();
+    await expect(page.locator('#services-modal')).toBeHidden();
+    await page.locator('#nav-services-btn').click();
+    await expect(page.locator('#services-modal')).toBeVisible();
   });
 
   test('the navbar anchors scroll to their section, clear of the sticky navbar', async ({
