@@ -1983,6 +1983,34 @@ function openLandingChat(bookingId) {
     wrap.appendChild(bubble); msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
   }
 
+  // A chat photo in the private bucket is stored as a reference,
+  // `[PHOTO:job-photos-private/...]`, not a URL (api/_job-photos.js). This chat
+  // reads job_messages straight from the database and over realtime, so it
+  // asks the server to sign them - twenty per call, the server's own cap.
+  const PRIVATE_PHOTO = /^\[PHOTO:(job-photos-private\/.*)\]$/;
+  async function signPhotos(list) {
+    const refs = list.map(function(m) { const pm = (m.message || '').match(PRIVATE_PHOTO); return pm ? pm[1] : null; }).filter(Boolean);
+    if (!refs.length) return list;
+    const urls = [];
+    try {
+      const sess = (await _sb.auth.getSession()).data.session;
+      for (let i = 0; i < refs.length; i += 20) {
+        const r = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'photo-sign', booking_id: bookingId, refs: refs.slice(i, i + 20), access_token: sess && sess.access_token, client_id: sess && sess.user && sess.user.id }),
+        });
+        urls.push.apply(urls, r.ok ? ((await r.json()).urls || []) : []);
+      }
+    } catch (e) { console.warn('Could not sign chat photos:', e.message); }
+    let n = 0;
+    return list.map(function(m) {
+      if (!PRIVATE_PHOTO.test(m.message || '')) return m;
+      const url = urls[n++];
+      return Object.assign({}, m, { message: url ? '[PHOTO:' + url + ']' : 'Photo unavailable' });
+    });
+  }
+
   async function sendMsg() {
     const text = inp.value.trim(); if (!text) return; inp.value = '';
     const sess = (await _sb.auth.getSession()).data.session;
@@ -1998,14 +2026,15 @@ function openLandingChat(bookingId) {
     const res = await _sb.from('job_messages').select('*').eq('booking_id', bookingId).order('created_at', { ascending: true });
     msgs.innerHTML = '';
     if (!res.data || !res.data.length) { msgs.innerHTML = '<div data-empty style="text-align:center;padding:40px 20px;color:var(--gray);margin:auto"><div style="font-size:40px;margin-bottom:10px">&#128172;</div><div style="font-size:15px;font-weight:600;color:var(--navy)">No messages yet</div><div style="font-size:13px;margin-top:4px">Send a message to your mechanic</div></div>'; }
-    else res.data.forEach(append);
+    else (await signPhotos(res.data)).forEach(append);
   }());
 
   if (_landingChatChannel) _sb.removeChannel(_landingChatChannel);
   _landingChatChannel = _sb.channel('landing-chat-' + bookingId)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_messages', filter: 'booking_id=eq.' + bookingId }, function(payload) {
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_messages', filter: 'booking_id=eq.' + bookingId }, async function(payload) {
+      const signed = (await signPhotos([payload.new]))[0];
       const empty = msgs.querySelector('[data-empty]'); if (empty) empty.remove();
-      append(payload.new);
+      append(signed);
     })
     .subscribe();
 }

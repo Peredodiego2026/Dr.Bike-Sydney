@@ -3881,15 +3881,46 @@ function openClientChat(bookingId, screen) {
         table: 'job_messages',
         filter: `booking_id=eq.${bookingId}`,
       },
-      (payload) => {
+      async (payload) => {
+        const msg = await signClientChatPhoto(payload.new, bookingId);
         const msgs = panel.querySelector('#client-chat-msgs');
         if (msgs) {
           msgs.querySelector('[data-empty]')?.remove();
-          appendClientMsg(payload.new, msgs, true);
+          appendClientMsg(msg, msgs, true);
         }
       }
     )
     .subscribe();
+}
+
+// A chat photo in the private bucket arrives over realtime as a reference,
+// `[PHOTO:job-photos-private/...]`, because realtime hands over the raw row
+// (api/_job-photos.js). The API read above signs on the way out; this does the
+// same for the one message realtime delivers.
+async function signClientChatPhoto(msg, bookingId) {
+  const ref = msg?.message?.match(/^\[PHOTO:(job-photos-private\/.*)\]$/)?.[1];
+  if (!ref) return msg;
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'photo-sign',
+        booking_id: bookingId,
+        refs: [ref],
+        access_token: session?.access_token,
+        client_id: session?.user?.id,
+      }),
+    });
+    const url = resp.ok ? (await resp.json()).urls?.[0] : null;
+    if (url) return { ...msg, message: `[PHOTO:${url}]` };
+  } catch (e) {
+    console.warn('Could not sign chat photo:', e.message);
+  }
+  return { ...msg, message: translateValue('Photo unavailable') };
 }
 
 function appendClientMsg(msg, container, scroll) {

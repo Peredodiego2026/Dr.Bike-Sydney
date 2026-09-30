@@ -12,6 +12,7 @@ import {
 import PDFDocument from 'pdfkit';
 import { computeInvoiceTotals } from './_invoice-math.js';
 import { withSentry } from './_sentry.js';
+import { signJobPhoto } from './_job-photos.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const sb = createClient(
@@ -445,8 +446,16 @@ async function handler(req, res) {
       }
       checklistNotes = sanitize(bkg.pre_service_notes || '');
       durationSecs = bkg.service_duration_seconds;
-      photoBeforeUrl = bkg.photo_before_url || '';
-      photoAfterUrl = bkg.photo_after_url || '';
+      // A photo in the private bucket is a reference, and this email is read
+      // weeks later, so it gets a year instead of the hour the screens use.
+      // The image in the email is the client's own record of the job.
+      const photoOpts = {
+        supabaseUrl: process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co',
+        serviceKey: process.env.SUPABASE_SERVICE_KEY,
+        expiresIn: 60 * 60 * 24 * 365,
+      };
+      photoBeforeUrl = (await signJobPhoto(bkg.photo_before_url, bookingId, photoOpts)) || '';
+      photoAfterUrl = (await signJobPhoto(bkg.photo_after_url, bookingId, photoOpts)) || '';
       if (bkg.bikes) {
         bikeName = [bkg.bikes.year, bkg.bikes.brand, bkg.bikes.model, bkg.bikes.color]
           .filter(Boolean)
