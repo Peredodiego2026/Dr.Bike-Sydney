@@ -587,6 +587,6 @@ document.addEventListener('click', (ev) => {
   const retry = ev.target.closest('[data-shop-retry]');
   if (retry) {
     ev.preventDefault();
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    window.dispatchEvent(new Event('hashchange'));
   }
 });
