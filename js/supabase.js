@@ -108,7 +108,17 @@ export async function getBookingStatus(bookingId) {
 // job that is plainly theirs. The session stays the credential for the other
 // entry point - opening a past job from your own bookings list, where there is
 // no emailed link and no token to carry.
-export async function submitReview(bookingId, rating, comment, photoBase64, trackingToken) {
+// `photoWebOk` is the client's answer to "Dr. Bike Sydney can show this photo
+// on its website" - only ever true when they ticked it (api/auth.js
+// handleClientReview).
+export async function submitReview(
+  bookingId,
+  rating,
+  comment,
+  photoBase64,
+  trackingToken,
+  photoWebOk = false
+) {
   const {
     data: { session },
   } = await sb.auth.getSession();
@@ -125,6 +135,7 @@ export async function submitReview(bookingId, rating, comment, photoBase64, trac
       rating,
       comment,
       photo_base64: photoBase64 || null,
+      photo_web_ok: photoWebOk === true,
     }),
   });
   const data = await resp.json();

@@ -444,6 +444,9 @@ export default {
   'All bearings serviced or replaced': '所有轴承保养或更换',
   'Before & after photos': '服务前后对比照片',
   'Photo unavailable': '照片无法显示',
+  'Dr. Bike Sydney can show this photo on its website':
+    'Dr. Bike Sydney 可以在其网站上展示这张照片',
+  'Optional. You can ask us to remove it anytime.': '可选。您可以随时要求我们删除。',
   'Detailed parts condition report': '详细零件状况报告',
   'Brake pad check': '刹车片检查',
   'Tyre & wheel inspection': '轮胎与车轮检查',

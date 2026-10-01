@@ -10,8 +10,15 @@
 // Where the photos already are - nothing new is stored to build the gallery:
 //   - bookings.photo_before_url / photo_after_url
 //   - job_messages rows that read `[PHOTO:<url or reference>]`
+//   - bookings.client_photo_url, the photo a client adds to their review
 // Each is either a reference into the private bucket (api/_job-photos.js) or a
 // public URL, for everything uploaded before 30-sep-2026.
+//
+// A review photo belongs to the client. It may go on the website only if they
+// ticked "Dr. Bike Sydney can show this photo on its website" when they
+// uploaded it, which api/auth.js handleClientReview records in the file name
+// (`client_<ts>_web.jpg`). Every review photo uploaded before that box existed
+// has no `_web`, so none of them can be published - the safe default.
 //
 // "Show on website" COPIES the photo into the public bucket, under
 // `showcase/`. The private original never becomes public, and "remove from
@@ -25,13 +32,15 @@ export const SHOWCASE_BUCKET = 'job-photos';
 export const SHOWCASE_FOLDER = 'showcase';
 const LEGACY_BUCKET = 'job-photos';
 
-// `jobs/<booking>/<file>` or `chat/<booking>/<file>` - the only two folders a
-// job photo lives in, in either bucket. Profiles, reviews and claims are not
-// job photos and never reach the gallery or the website through here.
-const JOB_PATH = /^(jobs|chat)\/([0-9a-f-]{8,64})\/([a-z0-9_]+\.[a-z0-9]+)$/i;
+// `jobs/`, `chat/` or `reviews/<booking>/<file>` - the folders a photo of a job
+// lives in, in either bucket. Mechanic profiles and claims are not, and never
+// reach the gallery or the website through here.
+const JOB_PATH = /^(jobs|chat|reviews)\/([0-9a-f-]{8,64})\/([a-z0-9_]+\.[a-z0-9]+)$/i;
 
-// Where a stored value points: { bucket, path, folder, bookingId, file }, or
-// null for anything that is not a job photo.
+// Where a stored value points: { bucket, path, folder, bookingId, file, webOk },
+// or null for anything that is not a job photo. `webOk` is whether it may be
+// shown on the website: always for the mechanic's photos, only with the
+// client's `_web` for a review photo.
 export function photoSource(value, supabaseUrl) {
   if (typeof value !== 'string' || !value) return null;
   let bucket;
@@ -49,7 +58,8 @@ export function photoSource(value, supabaseUrl) {
   }
   const m = path.match(JOB_PATH);
   if (!m) return null;
-  return { bucket, path, folder: m[1], bookingId: m[2], file: m[3] };
+  const webOk = m[1] !== 'reviews' || /_web\.[a-z0-9]+$/i.test(m[3]);
+  return { bucket, path, folder: m[1], bookingId: m[2], file: m[3], webOk };
 }
 
 // The copy's file name in `showcase/`. Deterministic, so the same photo marked
@@ -61,19 +71,21 @@ export function showcaseName(src) {
 // Only names this module could have produced may be deleted from `showcase/`.
 export function isShowcaseName(name) {
   return (
-    typeof name === 'string' && /^(jobs|chat)_[0-9a-f-]{8,64}_[a-z0-9_]+\.[a-z0-9]+$/i.test(name)
+    typeof name === 'string' &&
+    /^(jobs|chat|reviews)_[0-9a-f-]{8,64}_[a-z0-9_]+\.[a-z0-9]+$/i.test(name)
   );
 }
 
 // When the photo was taken, from the file name (`before_1759200000000.jpg`,
-// `1759200000000.jpg`). Null when it cannot tell.
+// `1759200000000.jpg`, `client_1759200000000_web.jpg`). Null when it cannot tell.
 export function takenAt(file) {
-  const m = String(file || '').match(/(\d{13})\.[a-z0-9]+$/i);
+  const m = String(file || '').match(/(\d{13})(?:_web)?\.[a-z0-9]+$/i);
   return m ? new Date(Number(m[1])).toISOString() : null;
 }
 
 function kindOf(src) {
   if (src.folder === 'chat') return 'chat';
+  if (src.folder === 'reviews') return 'review';
   return /^after_/i.test(src.file) ? 'after' : 'before';
 }
 
@@ -107,11 +119,13 @@ export function collectPhotos({ bookings, messages, supabaseUrl }) {
       booking_date: b.scheduled_date || null,
       taken_at: takenAt(src.file) || fallbackTime || null,
       showcase_name: showcaseName(src),
+      web_ok: src.webOk,
     });
   };
   for (const b of bookings || []) {
     add(b.photo_before_url, null, b.id);
     add(b.photo_after_url, null, b.id);
+    add(b.client_photo_url, null, b.id);
   }
   for (const m of messages || []) {
     const hit = typeof m?.message === 'string' ? m.message.match(PHOTO_MESSAGE) : null;

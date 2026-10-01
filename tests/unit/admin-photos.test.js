@@ -24,6 +24,9 @@ const PRIV_BEFORE = `job-photos-private/jobs/${B1}/before_1759200000000.jpg`;
 const OLD_AFTER = `${URL_BASE}/storage/v1/object/public/job-photos/jobs/${B1}/after_1759100000000.jpg`;
 const CHAT = `job-photos-private/chat/${B3}/1759300000000.png`;
 
+// The client's review photo, uploaded WITHOUT ticking "can show on website".
+const REVIEW_NO = `job-photos-private/reviews/${B1}/client_1759250000000.jpg`;
+const REVIEW_YES = `job-photos-private/reviews/${B1}/client_1759250000000_web.jpg`;
 let copyWorks = true;
 let calls = [];
 // The showcase folder and its order file, as Storage would hold them.
@@ -67,6 +70,7 @@ globalThis.fetch = async (url, init = {}) => {
         scheduled_date: '2026-11-04',
         photo_before_url: PRIV_BEFORE,
         photo_after_url: OLD_AFTER,
+        client_photo_url: REVIEW_NO,
       },
       // B2 claims a photo that lives in B1's folder: it must not show under B2.
       // A file B1 itself does not list, so it is the folder check that keeps
@@ -169,10 +173,27 @@ describe('what counts as a job photo', () => {
     });
   });
 
-  it('profiles, reviews, claims and anything climbing out of its folder do not', () => {
+  it('a review photo does, and may go on the website only with the client\'s "_web"', () => {
+    expect(
+      gallery.photoSource(`job-photos-private/reviews/${B1}/client_1759200000000_web.jpg`, URL_BASE)
+    ).toMatchObject({ folder: 'reviews', webOk: true });
+    expect(
+      gallery.photoSource(`job-photos-private/reviews/${B1}/client_1759200000000.jpg`, URL_BASE)
+    ).toMatchObject({ folder: 'reviews', webOk: false });
+    // Every review photo uploaded before the box existed: no `_web`, so no.
+    expect(
+      gallery.photoSource(
+        `${URL_BASE}/storage/v1/object/public/job-photos/reviews/${B1}/client_1.jpg`,
+        URL_BASE
+      )
+    ).toMatchObject({ webOk: false });
+    // The mechanic's photos are the business's own.
+    expect(gallery.photoSource(PRIV_BEFORE, URL_BASE).webOk).toBe(true);
+  });
+
+  it('profiles, claims and anything climbing out of its folder do not', () => {
     for (const v of [
       `${URL_BASE}/storage/v1/object/public/job-photos/profiles/abc_1.jpg`,
-      `${URL_BASE}/storage/v1/object/public/job-photos/reviews/${B1}/client_1.jpg`,
       `${URL_BASE}/storage/v1/object/public/job-photos/claims/${B1}/photo_0.jpg`,
       `job-photos-private/jobs/${B1}/../x.jpg`,
       'https://evil.example/photo.jpg',
@@ -214,8 +235,12 @@ describe('the list (role admin-photos-list)', () => {
     const chat = byKey[`job-photos-private/chat/${B3}/1759300000000.png`];
     expect(chat).toMatchObject({ kind: 'chat', client_name: 'Carol', service_name: 'Flat tyre' });
 
+    const review = byKey[REVIEW_NO];
+    expect(review).toMatchObject({ kind: 'review', client_name: 'Alice', web_ok: false });
+    expect(before.web_ok).toBe(true);
+
     expect(r.body.photos.filter((p) => p.booking_id === B2)).toEqual([]);
-    expect(r.body.photos).toHaveLength(3);
+    expect(r.body.photos).toHaveLength(4);
   });
 
   it('newest first', async () => {
@@ -260,6 +285,25 @@ describe('show on website (role admin-photos-feature)', () => {
           c.url.endsWith(`/object/job-photos/showcase/jobs_${B1}_before_1759200000000.jpg`)
       )
     ).toBe(true);
+  });
+
+  it('refuses a review photo the client did not allow, without touching Storage', async () => {
+    const r = await call(handleAdminPhotosFeature, {
+      access_token: 'admin-token',
+      refs: [REVIEW_NO],
+    });
+    expect(r.statusCode).toBe(403);
+    expect(r.body.not_allowed).toEqual([REVIEW_NO]);
+    expect(storageCalls()).toEqual([]);
+  });
+
+  it('publishes a review photo the client allowed', async () => {
+    const r = await call(handleAdminPhotosFeature, {
+      access_token: 'admin-token',
+      refs: [REVIEW_YES],
+    });
+    expect(r.body.done).toEqual([REVIEW_YES]);
+    expect(showcase.has(`reviews_${B1}_client_1759250000000_web.jpg`)).toBe(true);
   });
 
   it('refuses anything that is not a job photo, without touching Storage', async () => {

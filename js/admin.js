@@ -6560,6 +6560,7 @@ const PH_ICON = {
   up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>',
   down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>',
   x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>',
 };
 
 async function photosApi(role, extra = {}) {
@@ -6623,7 +6624,12 @@ function filteredPhotos() {
   });
 }
 
-const PHOTO_KIND_LABEL = { before: 'Before', after: 'After', chat: 'Chat' };
+const PHOTO_KIND_LABEL = { before: 'Before', after: 'After', chat: 'Chat', review: 'Review' };
+// A review photo goes on the website only if its client ticked the box when
+// they uploaded it (api/_photo-gallery.js). The server refuses it either way;
+// this is so the panel says so instead of failing.
+const PHOTO_NOT_ALLOWED = 'The client did not allow website use';
+const canPublish = (p) => !p.on_website && p.web_ok !== false;
 
 function photoDay(p) {
   const d = p.taken_at || p.booking_date;
@@ -6726,7 +6732,11 @@ function renderWebsiteView(list) {
         .map(
           (p) => `<div class="ph-tile-wrap${p.on_website ? ' on-web' : ''}">
             ${photoTile(p)}
-            <button type="button" class="ph-star-toggle${p.on_website ? ' on' : ''}" data-ph-star="${esc(p.key)}" aria-pressed="${p.on_website ? 'true' : 'false'}" aria-label="${p.on_website ? 'Remove from website' : 'Show on website'}">${p.on_website ? PH_ICON.star : PH_ICON.starOutline}</button>
+            ${
+              p.on_website || p.web_ok !== false
+                ? `<button type="button" class="ph-star-toggle${p.on_website ? ' on' : ''}" data-ph-star="${esc(p.key)}" aria-pressed="${p.on_website ? 'true' : 'false'}" aria-label="${p.on_website ? 'Remove from website' : 'Show on website'}">${p.on_website ? PH_ICON.star : PH_ICON.starOutline}</button>`
+                : `<button type="button" class="ph-star-toggle locked" disabled aria-label="${PHOTO_NOT_ALLOWED}" title="${PHOTO_NOT_ALLOWED}">${PH_ICON.lock}</button>`
+            }
           </div>`
         )
         .join('')}</div>`
@@ -6813,9 +6823,7 @@ function renderPhotoActionBar() {
   document.getElementById('ph-sel-count').textContent =
     picked.length === 1 ? '1 selected' : `${picked.length} selected`;
   bar.querySelector('[data-ph-action="download-selected"]').disabled = !picked.some((p) => p.url);
-  bar.querySelector('[data-ph-action="feature-selected"]').disabled = !picked.some(
-    (p) => !p.on_website
-  );
+  bar.querySelector('[data-ph-action="feature-selected"]').disabled = !picked.some(canPublish);
   bar.querySelector('[data-ph-action="unfeature-selected"]').disabled = !picked.some(
     (p) => p.on_website
   );
@@ -6861,16 +6869,21 @@ function downloadPhotos(items) {
 }
 
 async function featurePhotos(items) {
-  const todo = items.filter((p) => !p.on_website);
-  if (!todo.length) return;
+  const todo = items.filter(canPublish);
+  const locked = items.filter((p) => !p.on_website && p.web_ok === false).length;
+  if (!todo.length) {
+    if (locked) showToast(PHOTO_NOT_ALLOWED);
+    return;
+  }
   try {
     const d = await photosApi('admin-photos-feature', { refs: todo.map((p) => p.ref) });
+    const skipped = locked ? ` · ${locked} skipped: the client did not allow it` : '';
     showToast(
-      d.failed?.length
+      (d.failed?.length
         ? `${d.done.length} on the website · ${d.failed.length} could not be copied`
         : todo.length === 1
           ? 'On the website ✓'
-          : `${todo.length} photos on the website ✓`
+          : `${todo.length} photos on the website ✓`) + skipped
     );
   } catch (e) {
     showToast('Could not add to website: ' + e.message);
@@ -6914,8 +6927,14 @@ function showViewerPhoto() {
   document.getElementById('ph-v-meta').innerHTML =
     `<strong>${esc(p.client_name || 'Client')}</strong><br>${esc(p.service_name || 'Service')} · ${esc(PHOTO_KIND_LABEL[p.kind])} · ${esc(photoDay(p))}<br>${_photoViewerIdx + 1} of ${_photoViewerList.length}${p.on_website ? ' · &#11088; On website' : ''}`;
   const fb = document.getElementById('ph-v-feature');
-  fb.textContent = p.on_website ? 'Remove from website' : '⭐ Show on website';
-  fb.classList.toggle('ph-btn-primary', !p.on_website);
+  const locked = !p.on_website && p.web_ok === false;
+  fb.textContent = p.on_website
+    ? 'Remove from website'
+    : locked
+      ? PHOTO_NOT_ALLOWED
+      : '⭐ Show on website';
+  fb.disabled = locked;
+  fb.classList.toggle('ph-btn-primary', !p.on_website && !locked);
   fb.classList.toggle('ph-btn-danger', !!p.on_website);
 }
 

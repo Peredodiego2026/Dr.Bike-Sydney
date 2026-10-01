@@ -4273,9 +4273,17 @@ async function handleAdminClosedUntil(req, res) {
 // Este endpoint no llevaba NINGUNA autenticacion en su momento: cualquiera con
 // un booking_id (que ni siquiera era secreto, ver handlePublicTrack arriba)
 // podia puntuar cualquier trabajo terminado.
-async function handleClientReview(req, res) {
-  const { booking_id, access_token, client_id, tracking_token, rating, comment, photo_base64 } =
-    req.body;
+export async function handleClientReview(req, res) {
+  const {
+    booking_id,
+    access_token,
+    client_id,
+    tracking_token,
+    rating,
+    comment,
+    photo_base64,
+    photo_web_ok,
+  } = req.body;
 
   const cred = reviewCredential(req.body);
   if (cred.error) return res.status(cred.status).json({ error: cred.error });
@@ -4319,17 +4327,27 @@ async function handleClientReview(req, res) {
   // valid token for one booking review a different one.
   const targetId = booking.id;
 
-  // Upload photo to Supabase Storage if provided
+  // Upload photo to Supabase Storage if provided.
+  //
+  // Private bucket first, like the job photos (api/_job-photos.js): a client's
+  // photo can show their home or their street. The public bucket is only the
+  // fallback for a project where the private one does not exist.
+  //
+  // The client's answer to "Dr. Bike Sydney can show this photo on its
+  // website" travels IN THE FILE NAME (`client_<ts>_web.jpg`), so the consent
+  // is fixed to that exact photo at the moment it was given, needs no new
+  // column, and Admin > Photos refuses to put any other review photo on the
+  // website (api/_photo-gallery.js). Unticked - or sent by an older page that
+  // never asks - means no.
   let client_photo_url = null;
   if (photo_base64) {
     try {
       const base64Data = photo_base64.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
       const ts = Date.now();
-      const storagePath = `reviews/${targetId}/client_${ts}.jpg`;
-      const storageResp = await fetch(
-        `${SUPABASE_URL}/storage/v1/object/job-photos/${storagePath}`,
-        {
+      const storagePath = `reviews/${targetId}/client_${ts}${photo_web_ok === true ? '_web' : ''}.jpg`;
+      const put = (bucket) =>
+        fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${storagePath}`, {
           method: 'POST',
           headers: {
             apikey: SERVICE_KEY,
@@ -4338,12 +4356,17 @@ async function handleClientReview(req, res) {
             'x-upsert': 'true',
           },
           body: buffer,
-        }
-      );
-      if (storageResp.ok) {
-        client_photo_url = `${SUPABASE_URL}/storage/v1/object/public/job-photos/${storagePath}`;
+        });
+      const privateResp = await put(JOB_PHOTO_BUCKET);
+      if (privateResp.ok) {
+        client_photo_url = `${JOB_PHOTO_BUCKET}/${storagePath}`;
       } else {
-        console.warn('[client-review] photo upload failed:', await storageResp.text());
+        const storageResp = await put('job-photos');
+        if (storageResp.ok) {
+          client_photo_url = `${SUPABASE_URL}/storage/v1/object/public/job-photos/${storagePath}`;
+        } else {
+          console.warn('[client-review] photo upload failed:', await storageResp.text());
+        }
       }
     } catch (e) {
       console.warn('[client-review] photo upload error:', e.message);
@@ -5140,7 +5163,7 @@ export async function handleAdminPhotosList(req, res) {
   const cols = 'id,client_name,service_name,scheduled_date,status';
   const [bkR, msgR] = await Promise.all([
     fetch(
-      `${SUPABASE_URL}/rest/v1/bookings?select=${cols},photo_before_url,photo_after_url&or=(photo_before_url.not.is.null,photo_after_url.not.is.null)&order=scheduled_date.desc&limit=1000`,
+      `${SUPABASE_URL}/rest/v1/bookings?select=${cols},photo_before_url,photo_after_url,client_photo_url&or=(photo_before_url.not.is.null,photo_after_url.not.is.null,client_photo_url.not.is.null)&order=scheduled_date.desc&limit=1000`,
       { headers: h }
     ),
     fetch(
@@ -5220,9 +5243,13 @@ export async function handleAdminPhotosFeature(req, res) {
   const opts = jobPhotoOpts();
   const done = [];
   const failed = [];
+  // A review photo whose client did not tick "can show on website" is refused
+  // here, not just greyed out in the panel (api/_photo-gallery.js).
+  const notAllowed = [];
   for (const ref of refs) {
     const src = photoSource(ref, SUPABASE_URL);
-    if (src && (await copyToShowcase(src, opts))) done.push(ref);
+    if (src && !src.webOk) notAllowed.push(ref);
+    else if (src && (await copyToShowcase(src, opts))) done.push(ref);
     else failed.push(ref);
   }
   // New photos go to the end of the carousel, in the order they were picked.
@@ -5231,7 +5258,10 @@ export async function handleAdminPhotosFeature(req, res) {
       done.map((r) => showcaseName(photoSource(r, SUPABASE_URL))),
       opts
     );
-  return res.status(failed.length && !done.length ? 502 : 200).json({ done, failed });
+  const body = { done, failed, not_allowed: notAllowed };
+  if (!done.length && notAllowed.length && !failed.length)
+    return res.status(403).json({ ...body, error: 'The client did not allow website use' });
+  return res.status(failed.length && !done.length ? 502 : 200).json(body);
 }
 
 // "Remove from website": deletes only the copies in the showcase folder.
