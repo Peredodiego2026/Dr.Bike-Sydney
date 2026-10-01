@@ -342,6 +342,30 @@ with
   -- el arreglo esta simplemente inerte. Admin lo avisa en el cartel del PIN.
   union all select 47, 'add-mechanic-session-version.sql', 'escalation_contacts.session_version (rotar el PIN revoca las sesiones)',
     exists (select 1 from col where t='escalation_contacts' and c='session_version')
+  -- 48 entro el 2026-10-01 con la tienda de repuestos LEBYCLE. No alcanza con
+  -- que las tablas existan: lo que importa es que NO tengan ninguna politica.
+  -- Ahi viven los precios de compra de Diego, y con RLS encendido y cero
+  -- politicas la anon key - la que lleva cualquier navegador - no lee ni una
+  -- fila. Si algun dia aparece una politica de lectura, esta fila da FALTA, que
+  -- es exactamente lo que se quiere: seria una fuga, no una mejora.
+  union all select 48, 'shop-catalog.sql', 'shop_products y shop_variants existen, con RLS encendido y SIN politicas',
+    (exists (select 1 from col where t='shop_products' and c='slug')
+     and exists (select 1 from col where t='shop_variants' and c='sku')
+     and coalesce((select bool_and(c.relrowsecurity) from pg_class c
+                     where c.relname in ('shop_products','shop_variants')), false)
+     and not exists (select 1 from pg_policy p join pg_class c on c.oid = p.polrelid
+                       where c.relname in ('shop_products','shop_variants')))
+  -- 49 entro el 2026-10-02 con el cobro de la tienda. Las dos tablas guardan
+  -- nombre, telefono y direccion de quien compra, asi que valen las mismas
+  -- cero politicas que el catalogo: una politica mal escrita aca no filtra
+  -- precios, filtra datos personales.
+  union all select 49, 'shop-orders.sql', 'shop_orders y shop_order_items existen, con RLS encendido y SIN politicas',
+    (exists (select 1 from col where t='shop_orders' and c='payment_intent_id')
+     and exists (select 1 from col where t='shop_order_items' and c='unit_price')
+     and coalesce((select bool_and(c.relrowsecurity) from pg_class c
+                     where c.relname in ('shop_orders','shop_order_items')), false)
+     and not exists (select 1 from pg_policy p join pg_class c on c.oid = p.polrelid
+                       where c.relname in ('shop_orders','shop_order_items')))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado

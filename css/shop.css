@@ -1,0 +1,632 @@
+/* css/shop.css - la tienda de repuestos LEBYCLE.
+ *
+ * Todo sale de los tokens de css/variables.css. Un hex escrito a mano aca no
+ * lo puede pisar el tema oscuro, que es como "No jobs today" quedo a 1.03:1 de
+ * contraste (docs/PENDIENTES.md 12.15).
+ *
+ * El rojo de los precios es --red: es el mismo lenguaje de rockandroad.cl, la
+ * tienda que Diego eligio de referencia, donde el precio es lo primero que se
+ * lee de cada producto. */
+
+/* ── La franja del inicio ─────────────────────────────────────────────────── */
+
+.shop-band {
+  padding: 56px 0;
+  background: var(--white);
+}
+
+.shop-band__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.shop-band__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--navy);
+}
+
+.shop-band__sub {
+  font-size: 14px;
+  color: var(--gray);
+  margin-top: 6px;
+}
+
+.shop-band__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 9px;
+  background: var(--blue);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+/* Un estante que corre de costado: en el inicio la tienda es una invitacion,
+ * no un catalogo. El cliente que quiere ver todo tiene el boton. */
+.shop-band__rail {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+}
+
+.shop-band__rail::-webkit-scrollbar {
+  height: 6px;
+}
+
+.shop-band__rail::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.shop-band__rail .shop-card {
+  width: 168px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+/* ── La tarjeta de producto ───────────────────────────────────────────────── */
+
+.shop-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.shop-card__shot {
+  position: relative;
+  height: 140px;
+  background: var(--surface);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Las fotos del catalogo vienen con fondo blanco. Sin esto, cada una dibuja su
+ * propio cuadrado blanco adentro del gris y la grilla entera se ve rota. */
+.shop-card__shot img {
+  max-height: 78%;
+  max-width: 82%;
+  width: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+[data-theme='dark'] .shop-card__shot {
+  background: var(--white);
+}
+
+[data-theme='dark'] .shop-card__shot img {
+  mix-blend-mode: normal;
+}
+
+.shop-card__sizes {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 0 10px 0 10px;
+}
+
+.shop-card__price {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--red);
+  margin-top: 9px;
+}
+
+/* Dos lineas reservadas siempre. Sin esto un nombre largo empuja la tarjeta y
+ * la fila entera queda despareja - fue lo primero que Diego noto de la grilla. */
+.shop-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.35;
+  margin-top: 3px;
+  min-height: 35px;
+}
+
+/* ── La tienda ────────────────────────────────────────────────────────────── */
+
+.shop-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0 12px;
+}
+
+.shop-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  /* En espanol dice "Todos los productos" y en ingles "All products": sin esto
+   * el boton se parte en dos lineas y empuja la fila entera. */
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 0 14px 0 12px;
+  border: 1.5px solid var(--blue);
+  border-radius: 9px;
+  background: var(--blue-lt);
+  color: var(--blue-dark);
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.shop-count {
+  font-size: 12.5px;
+  color: var(--gray-lt);
+}
+
+/* Un select nativo se estira hasta ocupar lo que le den, y con el texto
+ * traducido se comia media pantalla. Va acotado y con el texto recortado. */
+.shop-sort {
+  margin-left: auto;
+  min-height: 40px;
+  max-width: 44%;
+  text-overflow: ellipsis;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 16px;
+}
+
+@media (min-width: 560px) {
+  .shop-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .shop-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .shop-card__shot {
+    height: 190px;
+  }
+}
+
+.shop-empty {
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.shop-empty__icon {
+  font-size: 34px;
+}
+
+.shop-empty__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-top: 10px;
+}
+
+.shop-empty__sub {
+  font-size: 13.5px;
+  color: var(--gray);
+  margin-top: 5px;
+}
+
+/* ── El panel de filtros, a pantalla completa ─────────────────────────────── */
+
+.shop-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-sheet__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 8px 0 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.shop-sheet__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.shop-sheet__body {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 8px 16px 20px;
+}
+
+.shop-sheet__foot {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.shop-group {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin: 20px 0 6px;
+}
+
+.shop-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.shop-check input {
+  width: 19px;
+  height: 19px;
+  accent-color: var(--blue);
+  flex-shrink: 0;
+}
+
+.shop-check__name {
+  font-size: 15px;
+  color: var(--navy);
+  flex-grow: 1;
+}
+
+.shop-check__n {
+  font-size: 13px;
+  color: var(--gray-lt);
+}
+
+/* ── La ficha del producto ────────────────────────────────────────────────── */
+
+.shop-hero {
+  height: 230px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.shop-hero img {
+  max-height: 82%;
+  max-width: 84%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+[data-theme='dark'] .shop-hero {
+  background: var(--white);
+}
+
+[data-theme='dark'] .shop-hero img {
+  mix-blend-mode: normal;
+}
+
+.shop-brand {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.shop-title {
+  margin: 5px 0 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--navy);
+}
+
+.shop-price {
+  font-size: 25px;
+  font-weight: 800;
+  color: var(--red);
+  letter-spacing: -0.02em;
+}
+
+.shop-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.shop-opt {
+  min-height: 46px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4px 15px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  background: var(--white);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  text-align: left;
+}
+
+.shop-opt[aria-pressed='true'] {
+  border: 2px solid var(--blue);
+  background: var(--blue-lt);
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.shop-opt__hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--gray-lt);
+}
+
+.shop-opt[aria-pressed='true'] .shop-opt__hint {
+  color: var(--blue-dark);
+}
+
+/* ── La barra de comprar, pegada abajo ────────────────────────────────────── */
+
+/* El mismo arreglo que .sticky-bottom en css/main.css, por el mismo motivo:
+ * el cartel de cookies es fixed con z-index 9998 y se come lo que este abajo
+ * de todo. Del 30-ago al 29-sep-2026 tapo los botones del wizard de reserva y
+ * nadie lo vio hasta que un cliente no pudo pagar. La tienda nacio despues,
+ * asi que no heredaba el arreglo: sin esta linea, "Add to cart" queda debajo
+ * del cartel hasta que el visitante lo responde.
+ *
+ * --consent-h lo publica js/consent.js mientras el cartel esta en pantalla y
+ * lo saca al responderlo. Es variable y no constante porque el cartel mide
+ * distinto en cada idioma. */
+.shop-buy {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  margin-bottom: var(--consent-h, 0px);
+  border-top: 1px solid var(--border);
+  background: var(--white);
+}
+
+.shop-qty {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.shop-qty button {
+  width: 42px;
+  height: 46px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 19px;
+  color: var(--gray);
+  font-family: inherit;
+}
+
+.shop-qty__n {
+  width: 28px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-add {
+  flex-grow: 1;
+  min-height: 48px;
+  border: none;
+  border-radius: 9px;
+  background: var(--blue);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.shop-add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── El carrito ───────────────────────────────────────────────────────────── */
+
+.shop-line {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-lt);
+}
+
+.shop-line__shot {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-line__shot img {
+  max-height: 78%;
+  max-width: 78%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+[data-theme='dark'] .shop-line__shot {
+  background: var(--white);
+}
+
+[data-theme='dark'] .shop-line__shot img {
+  mix-blend-mode: normal;
+}
+
+.shop-line__name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.3;
+}
+
+.shop-line__variant {
+  font-size: 12.5px;
+  color: var(--gray);
+  margin-top: 2px;
+}
+
+.shop-line__price {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-line--gone {
+  opacity: 0.6;
+}
+
+.shop-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 16px 0 4px;
+}
+
+.shop-total__label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.shop-total__value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-note {
+  font-size: 12.5px;
+  color: var(--gray);
+  margin-top: 4px;
+}
+
+/* El carrito del encabezado, con su contador. */
+.shop-cart-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-cart-btn__n {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--red);
+  color: var(--white);
+  font-size: 10.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* `hidden` es display:none puesto por el navegador, y lo pisa cualquier regla
+ * de autor que declare display. `.bottom-nav__tab` es display:flex, asi que
+ * sin esta linea el tab de la tienda se ve SIEMPRE, tenga permiso o no quien
+ * mira. Se descubrio recorriendo la app con otra cuenta, no leyendo el codigo:
+ * el JS ponia `hidden` correctamente y el CSS lo ignoraba. */
+.bottom-nav__tab[hidden],
+[data-shop-tab][hidden] {
+  display: none;
+}
+
+/* La barra de comprar se apoya en el fondo de la pantalla aunque el contenido
+ * sea corto: `.screen.active` ya es flex column con min-height 100dvh, asi que
+ * alcanza con empujarla.
+ *
+ * No hay que descontar la barra de cinco pestanas: en esta app el bottom-nav
+ * vive DENTRO de [data-screen="home"], asi que en una pantalla interna no
+ * existe. Se midio en el navegador - el nav devuelve altura 0 aca - en vez de
+ * suponerlo por los bocetos, donde si aparecia. */
+[data-screen='shop-product'].active,
+[data-screen='cart'].active {
+  padding-bottom: calc(96px + var(--consent-h, 0px));
+}
+
+/* Fija al fondo, como .sticky-bottom en css/main.css y por el mismo motivo: el
+ * cartel de cookies es fixed con z-index 9998 y tapa lo que quede debajo. En
+ * flujo no alcanzaba - con el carrito corto la barra quedaba a mitad de
+ * pantalla, y con el cartel abierto se escondia atras.
+ *
+ * No se descuentan los 72px de la barra de cinco pestanas: en esta app el
+ * bottom-nav vive DENTRO de [data-screen="home"], asi que en una pantalla
+ * interna no existe. Medido en el navegador, no supuesto. */
+.shop-buy {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--consent-h, 0px);
+  z-index: 60;
+}

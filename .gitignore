@@ -57,3 +57,15 @@ logs/
 
 # capturas de scripts/look.mjs - locales, no se versionan
 .look/
+
+# La lista mayorista de LEBYCLE y todo lo que se derive de ella. Lo que Diego
+# paga por cada pieza es suyo y de nadie mas, y un repo es para siempre: un
+# archivo que entra hoy queda en el historial aunque se borre manana.
+# El catalogo vive en Supabase (scripts/shop-catalog.sql), con RLS encendido y
+# cero politicas, y se lee solo por api/shop.js. Aca no entra nunca.
+data/shop-catalog.json
+data/lebycle*
+images/shop/
+scripts/seed-shop-catalog.local.*
+*LEBYCLE*.csv
+*LEBYCLE*.xlsx

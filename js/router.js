@@ -10,6 +10,13 @@ const ROUTES = [
   'my-bookings',
   'profile',
   'my-bikes',
+  // La tienda de repuestos. Solo la ve quien el servidor deja (api/shop.js);
+  // la ruta existe para todos porque ocultarla no agregaria seguridad y si
+  // romperia el boton Atras de quien si tiene permiso.
+  'shop',
+  'shop-product',
+  'cart',
+  'shop-checkout',
 ];
 
 const router = {

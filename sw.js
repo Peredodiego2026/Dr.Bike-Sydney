@@ -1,3 +1,8 @@
+// v136 (2026-10-02): entra la tienda de repuestos LEBYCLE, visible solo para
+// quien el servidor deja (api/shop.js). Nuevos: js/shop.js, js/shop-ui.js y
+// css/shop.css. Cambian index.html (la franja del inicio, cuatro pantallas y
+// el tab Shop oculto), js/router.js, js/app.js y los dos diccionarios, que
+// suman 38 cadenas de la tienda.
 // v128 (2026-09-26): el panel de Track se reordena. Fuera el "Dr. Bike Sydney"
 // debajo del nombre del mecanico (era el respaldo de la linea de servicios y
 // rating cuando el mecanico no tiene ninguno de los dos); ahora dice "Your
@@ -227,7 +232,7 @@
 // v134: "Photo unavailable", para una foto del chat que no se pudo firmar.
 // v135: la casilla "puede mostrar esta foto en su sitio web" de la resena, y
 // js/supabase.js manda la respuesta (photo_web_ok).
-const CACHE_STATIC = 'drbike-static-v135';
+const CACHE_STATIC = 'drbike-static-v136';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

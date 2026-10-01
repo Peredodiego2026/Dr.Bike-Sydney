@@ -19,8 +19,22 @@
       // knows how to finish the flow (PASSWORD_RECOVERY in js/app.js), so when a
       // recovery token is present we simply stay here and let it.
       var isRecovery = /type=recovery|access_token=/.test(window.location.hash || '');
+      // La tienda de repuestos es la misma SPA en el telefono y en la
+      // computadora: la grilla pasa sola a cuatro columnas en pantalla ancha
+      // (css/shop.css). Sin esta excepcion, abrir #shop desde una computadora
+      // rebota a landing.html, que no tiene ninguna de estas pantallas.
+      // El hash NO sobrevive el salto desde landing.html: se midio en el
+      // navegador y al llegar aca window.location.hash viene vacio, asi que la
+      // excepcion nunca se cumplia. Por eso la ruta viaja en la query, que si
+      // sobrevive, y js/app.js la convierte en hash antes de que el router
+      // mire la URL.
+      var shopView = new URLSearchParams(window.location.search).get('view') || '';
+      var isShop =
+        /^(shop|shop-product|cart|shop-checkout)$/.test(shopView) ||
+        /^#(shop|shop-product|cart|shop-checkout)/.test(window.location.hash || '');
       if (
         !isRecovery &&
+        !isShop &&
         !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
       ) {
         window.location.replace('/landing.html');
@@ -46,6 +60,7 @@
     <link rel="stylesheet" href="css/variables.css?v=b58e9c267c" />
     <link rel="stylesheet" href="css/main.css?v=44e8421f05" />
     <link rel="stylesheet" href="css/home.css?v=863962effe" />
+    <link rel="stylesheet" href="css/shop.css?v=93218ac3a0" />
     <!-- Google Analytics -->
     <!-- Meta Pixel removed 2026-07-28. It was initialising with the literal
        string PIXEL_ID_HERE, so it collected nothing, logged "[Meta Pixel] -
@@ -914,6 +929,10 @@
             </div>
           </div>
         </section>
+
+        <!-- La tienda de repuestos. Arranca oculta y la muestra
+             mountShopBand() solo si el servidor devuelve catalogo. -->
+        <section id="shop-band" class="shop-band" hidden></section>
 
         <!-- About -->
         <section id="about" style="padding: 64px 0; background: var(--gray-light)">
@@ -2298,6 +2317,25 @@
             </svg>
             <span>Track</span>
           </a>
+          <!-- Arranca oculto. Lo muestra refreshShopAccess() en js/app.js
+               solo para quien el servidor deja entrar a la tienda. -->
+          <a href="#shop" class="bottom-nav__tab" aria-label="Shop" data-shop-tab hidden>
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="9" cy="20" r="1.4"></circle>
+              <circle cx="18" cy="20" r="1.4"></circle>
+              <path d="M2 3h2.2l2.3 11.5a2 2 0 0 0 2 1.5h7.9a2 2 0 0 0 2-1.6L20 7H5.3"></path>
+            </svg>
+            <span>Shop</span>
+          </a>
           <a href="#my-bikes" class="bottom-nav__tab" aria-label="My Bikes">
             <span
               style="
@@ -2343,6 +2381,10 @@
       <div data-screen="my-bookings" class="screen"></div>
       <div data-screen="profile" class="screen"></div>
       <div data-screen="my-bikes" class="screen"></div>
+      <div data-screen="shop" class="screen"></div>
+      <div data-screen="shop-product" class="screen"></div>
+      <div data-screen="cart" class="screen"></div>
+      <div data-screen="shop-checkout" class="screen"></div>
     </div>
     <!-- #app -->
 
@@ -2373,7 +2415,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=ac87eaf9a7" type="module"></script>
+    <script src="js/app.js?v=2e3da7355d" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';

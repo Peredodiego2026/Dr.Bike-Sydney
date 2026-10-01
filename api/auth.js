@@ -6055,6 +6055,7 @@ async function readPostHog(days) {
   };
 }
 
+import { handleShop } from './_shop.js';
 import { withSentry, captureMessage } from './_sentry.js';
 export default withSentry(handler, 'auth');
 async function handler(req, res) {
@@ -6187,6 +6188,9 @@ async function handler(req, res) {
   if (role === 'admin-photos-order') return handleAdminPhotosOrder(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
+  // La tienda de repuestos. Entra por /api/shop, que vercel.json reescribe
+  // aca: Vercel admite 12 funciones y este proyecto ya tenia 12.
+  if (role === 'shop') return handleShop(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);
   return handleAdmin(req, res);
 }

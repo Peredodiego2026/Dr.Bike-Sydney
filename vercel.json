@@ -11,6 +11,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/shop",
+      "destination": "/api/auth?role=shop"
+    },
+    {
       "source": "/api/send-b2b-inquiry",
       "destination": "/api/send-cron?type=b2b"
     },
