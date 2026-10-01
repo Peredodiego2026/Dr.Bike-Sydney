@@ -2155,10 +2155,51 @@ function safeImageUpload(file) {
   }
   // Only when the browser offers no type at all: some Android pickers send an
   // empty string for HEIC.
-  const named = String(file.name || '').split('.').pop().toLowerCase();
+  const nameParts = String(file.name || '').split('.');
+  const named = nameParts.pop().toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(ALLOWED, named)) return REFUSED;
   const ext = named;
   return { ok: true, ext, contentType: ALLOWED[ext] };
+}
+
+// The private bucket first (api/_job-photos.js): the server hands out a
+// one-time upload URL for this job only, and what gets stored is a reference
+// that is signed each time someone who may see the job opens it. Returns that
+// reference, or null when the private upload is not available - until the
+// bucket is created in Supabase that is every time, and the caller falls back
+// to the public bucket exactly as before.
+async function uploadPrivateJobPhoto(bookingId, file, which, kind) {
+  const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'mechanic-photo-upload-url',
+        token: stored.token || '',
+        booking_id: bookingId,
+        kind: which,
+        ext: kind.ext,
+      }),
+    });
+    if (!r.ok) return null;
+    const up = await r.json();
+    // Re-wrapped so the stored type is the one chosen from the list: for a
+    // File, supabase-js sends multipart and the part carries file.type, the
+    // browser's claim, whatever `contentType` says.
+    const body = new Blob([file], { type: kind.contentType });
+    const { error } = await sb.storage
+      .from(up.bucket)
+      .uploadToSignedUrl(up.path, up.token, body, { contentType: kind.contentType });
+    if (error) {
+      console.warn('Private photo upload failed - using the public bucket:', error.message);
+      return null;
+    }
+    return up.ref;
+  } catch (e) {
+    console.warn('Private photo upload threw - using the public bucket:', e.message);
+    return null;
+  }
 }
 
 async function uploadPhoto(bookingId, file, type) {
@@ -2169,6 +2210,8 @@ async function uploadPhoto(bookingId, file, type) {
     return null;
   }
   try {
+    const ref = await uploadPrivateJobPhoto(bookingId, file, type, kind);
+    if (ref) return ref;
     const path = `jobs/${bookingId}/${type}_${Date.now()}.${kind.ext}`;
     const { data, error } = await sb.storage
       .from('job-photos')
@@ -3241,16 +3284,19 @@ async function sendMechPhoto() {
     toast(kind.reason);
     return;
   }
-  const path = `chat/${mechChatBookingId}/${Date.now()}.${kind.ext}`;
-  const { data, error } = await sb.storage
-    .from('job-photos')
-    .upload(path, file, { contentType: kind.contentType, upsert: false });
-  if (error) {
-    toast('Upload failed');
-    return;
+  let url = await uploadPrivateJobPhoto(mechChatBookingId, file, 'chat', kind);
+  if (!url) {
+    const path = `chat/${mechChatBookingId}/${Date.now()}.${kind.ext}`;
+    const { data, error } = await sb.storage
+      .from('job-photos')
+      .upload(path, file, { contentType: kind.contentType, upsert: false });
+    if (error) {
+      toast('Upload failed');
+      return;
+    }
+    const { data: urlData } = sb.storage.from('job-photos').getPublicUrl(path);
+    url = urlData?.publicUrl;
   }
-  const { data: urlData } = sb.storage.from('job-photos').getPublicUrl(path);
-  const url = urlData?.publicUrl;
   if (!url) {
     toast('Could not get photo URL');
     return;

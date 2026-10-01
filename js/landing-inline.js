@@ -377,6 +377,24 @@ document.querySelectorAll('section').forEach(function(s) {
   observer.observe(s);
 });
 
+// A jump to a section aims at its box as it is at that instant, and a section
+// not revealed yet is still 20px low (the translateY above). The reveal then
+// slides it up, under the sticky navbar: Fleet never landed square on the
+// first click. So the target is revealed before the jump, transition off, and
+// its box is already where it will stay.
+function revealNow(s) {
+  if (!s || s.tagName !== 'SECTION' || s.classList.contains('visible')) return;
+  s.style.transition = 'none';
+  s.classList.add('visible');
+  void s.offsetHeight;
+  s.style.transition = 'opacity 500ms ease, transform 500ms ease';
+}
+document.addEventListener('click', function(e) {
+  const a = e.target.closest && e.target.closest('a[href^="#"]');
+  if (a) revealNow(document.getElementById(a.getAttribute('href').slice(1)));
+}, true);
+if (location.hash) revealNow(document.getElementById(location.hash.slice(1)));
+
 const secs = document.querySelectorAll('section[id]');
 const nls = document.querySelectorAll('nav a[href^="#"]');
 window.addEventListener('scroll', function() {
@@ -1762,6 +1780,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const p = new URLSearchParams(window.location.search);
   const reviewId = p.get('review');
   if (!reviewId) return;
+  // `t` is the credential the emailed link carries (api/_review-auth.js). This
+  // modal used to read only `review` and send no credential at all, so the
+  // server refused every review left from a computer with "access_token and
+  // client_id, or tracking_token, required". js/app.js reads `t` the same way;
+  // on landing.html this script runs first and clears the URL before it can.
+  const reviewToken = p.get('t') || '';
   history.replaceState({}, '', '/');
 
   let currentRating = 0;
@@ -1839,6 +1863,13 @@ document.addEventListener('DOMContentLoaded', function() {
               '</button>',
             '</div>',
           '</div>',
+          '<label id="rv-photo-web" style="display:none;align-items:flex-start;gap:10px;margin-top:12px;min-height:44px;cursor:pointer">',
+            '<input type="checkbox" id="rv-photo-web-ok" style="width:20px;height:20px;margin:2px 0 0;flex-shrink:0;accent-color:var(--blue)">',
+            '<span style="display:flex;flex-direction:column;gap:2px">',
+              '<span style="font-size:14px;color:var(--navy)">Dr. Bike Sydney can show this photo on its website</span>',
+              '<span style="font-size:12px;color:var(--gray)">Optional. You can ask us to remove it anytime.</span>',
+            '</span>',
+          '</label>',
         '</div>',
         '<div id="rv-err" style="display:none;font-size:13px;color:var(--red-text);padding:8px 10px;background:var(--red-lt);border-radius:8px;text-align:center"></div>',
         '<button id="rv-submit" style="width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Submit review</button>',
@@ -1875,6 +1906,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const lbl = document.getElementById('rv-photo-lbl');
     lbl.style.borderColor = 'var(--blue)';
     lbl.style.background = 'var(--blue-lt)';
+    // Asked only once there is a photo, unticked: website use is opt-in.
+    document.getElementById('rv-photo-web').style.display = 'flex';
   });
 
   // Photo remove
@@ -1887,6 +1920,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const lbl = document.getElementById('rv-photo-lbl');
     lbl.style.borderColor = 'var(--border)';
     lbl.style.background = 'var(--surface)';
+    document.getElementById('rv-photo-web').style.display = 'none';
+    document.getElementById('rv-photo-web-ok').checked = false;
   });
 
   // Submit
@@ -1897,11 +1932,31 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.disabled = true; btn.textContent = 'Submitting...'; errEl.style.display = 'none';
     const comment = (document.getElementById('rv-comment').value || '').trim();
 
-    const doSubmit = function(photoBase64) {
+    const webOk = document.getElementById('rv-photo-web-ok').checked;
+    const doSubmit = async function(photoBase64) {
+      // Same rule as js/supabase.js submitReview: the link's token wins, the
+      // session is the fallback, and with neither there is nothing to send.
+      let cred = null;
+      if (reviewToken) cred = { tracking_token: reviewToken };
+      else {
+        try {
+          const sess = (await _sb.auth.getSession()).data.session;
+          if (sess && sess.user) cred = { access_token: sess.access_token, client_id: sess.user.id };
+        } catch (e) {
+          console.warn('[review] could not read the session:', e.message);
+        }
+      }
+      if (!cred) {
+        errEl.textContent = 'Please sign in to leave a review.';
+        errEl.style.display = 'block';
+        btn.textContent = 'Submit review';
+        btn.disabled = false;
+        return;
+      }
       fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'client-review', booking_id: reviewId, rating: currentRating, comment: comment, photo_base64: photoBase64 || null })
+        body: JSON.stringify(Object.assign({ role: 'client-review', booking_id: reviewId, rating: currentRating, comment: comment, photo_base64: photoBase64 || null, photo_web_ok: !!photoBase64 && webOk }, cred))
       })
       .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
       .then(function(res) {
@@ -1983,6 +2038,34 @@ function openLandingChat(bookingId) {
     wrap.appendChild(bubble); msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
   }
 
+  // A chat photo in the private bucket is stored as a reference,
+  // `[PHOTO:job-photos-private/...]`, not a URL (api/_job-photos.js). This chat
+  // reads job_messages straight from the database and over realtime, so it
+  // asks the server to sign them - twenty per call, the server's own cap.
+  const PRIVATE_PHOTO = /^\[PHOTO:(job-photos-private\/.*)\]$/;
+  async function signPhotos(list) {
+    const refs = list.map(function(m) { const pm = (m.message || '').match(PRIVATE_PHOTO); return pm ? pm[1] : null; }).filter(Boolean);
+    if (!refs.length) return list;
+    const urls = [];
+    try {
+      const sess = (await _sb.auth.getSession()).data.session;
+      for (let i = 0; i < refs.length; i += 20) {
+        const r = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'photo-sign', booking_id: bookingId, refs: refs.slice(i, i + 20), access_token: sess && sess.access_token, client_id: sess && sess.user && sess.user.id }),
+        });
+        urls.push.apply(urls, r.ok ? ((await r.json()).urls || []) : []);
+      }
+    } catch (e) { console.warn('Could not sign chat photos:', e.message); }
+    let n = 0;
+    return list.map(function(m) {
+      if (!PRIVATE_PHOTO.test(m.message || '')) return m;
+      const url = urls[n++];
+      return Object.assign({}, m, { message: url ? '[PHOTO:' + url + ']' : 'Photo unavailable' });
+    });
+  }
+
   async function sendMsg() {
     const text = inp.value.trim(); if (!text) return; inp.value = '';
     const sess = (await _sb.auth.getSession()).data.session;
@@ -1998,14 +2081,15 @@ function openLandingChat(bookingId) {
     const res = await _sb.from('job_messages').select('*').eq('booking_id', bookingId).order('created_at', { ascending: true });
     msgs.innerHTML = '';
     if (!res.data || !res.data.length) { msgs.innerHTML = '<div data-empty style="text-align:center;padding:40px 20px;color:var(--gray);margin:auto"><div style="font-size:40px;margin-bottom:10px">&#128172;</div><div style="font-size:15px;font-weight:600;color:var(--navy)">No messages yet</div><div style="font-size:13px;margin-top:4px">Send a message to your mechanic</div></div>'; }
-    else res.data.forEach(append);
+    else (await signPhotos(res.data)).forEach(append);
   }());
 
   if (_landingChatChannel) _sb.removeChannel(_landingChatChannel);
   _landingChatChannel = _sb.channel('landing-chat-' + bookingId)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_messages', filter: 'booking_id=eq.' + bookingId }, function(payload) {
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_messages', filter: 'booking_id=eq.' + bookingId }, async function(payload) {
+      const signed = (await signPhotos([payload.new]))[0];
       const empty = msgs.querySelector('[data-empty]'); if (empty) empty.remove();
-      append(payload.new);
+      append(signed);
     })
     .subscribe();
 }

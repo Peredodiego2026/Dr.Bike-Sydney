@@ -36,7 +36,10 @@ vi.mock('stripe', () => ({
 // three of its functions matter here and all three are pure arithmetic from
 // the caller's point of view, so they are replaced rather than exercised.
 vi.mock('../../api/auth.js', () => ({
-  matchCalloutZone: async () => ({ calloutFee: 25 }),
+  calloutFeeForAddress: async () => ({
+    coverage: { covered: 'in', calloutFee: 25 },
+    fee: 25,
+  }),
   applySurcharge: (n) => n,
   applyMembershipPricing: async (_sb, _id, _date, _svc, calloutFee) => ({ calloutFee }),
 }));

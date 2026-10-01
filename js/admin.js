@@ -313,6 +313,9 @@ document.addEventListener('click', function (e) {
     case 'select-all-slots':
       selectAllSlots(d.value === 'true');
       break;
+    case 'save-closed-until':
+      saveClosedUntil();
+      break;
     case 'save-blocks':
       saveBlocks();
       break;
@@ -514,6 +517,7 @@ const titles = {
   finance: 'Finance',
   zones: 'Zone Manager',
   claims: 'Claims',
+  photos: 'Photos',
   orphans: 'Orphan Payments',
   expenses: 'Expenses',
   settings: 'Settings',
@@ -535,6 +539,7 @@ const subs = {
   analytics: 'Sign-ups · bookings · revenue · funnel · traffic',
   zones: 'Assign suburbs to each van',
   claims: 'Warranty claims from clients - review evidence and resolve',
+  photos: 'Every job photo - by job or all together, and the ones on the website',
   orphans: 'Money Stripe took with no booking behind it - read-only, refunds stay in Stripe',
   expenses: 'What the business actually spent - this is what the P&L subtracts',
   settings: 'System settings',
@@ -554,6 +559,7 @@ function go(page, btn) {
   document.getElementById('sb-overlay').classList.remove('open');
   if (page === 'zones') loadVanZones();
   if (page === 'claims') loadClaims();
+  if (page === 'photos') loadPhotos();
   if (page === 'expenses') loadExpenses();
   if (page === 'finance') {
     const now = new Date();
@@ -1814,6 +1820,14 @@ function openBlockModal() {
         <button data-action="close-block-modal" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mgray)">✕</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:var(--off);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Fully booked until</div>
+          <div style="display:flex;gap:8px">
+            <input type="date" id="closed-until" class="inp" aria-label="Fully booked until" style="margin:0;flex:1" min="${today}">
+            <button data-action="save-closed-until" style="padding:10px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)">Save</button>
+          </div>
+          <div style="font-size:11px;color:var(--mgray);margin-top:6px;line-height:1.5">Clients see "We're fully booked until ..." and can only pick dates from then. Clear the field and press Save to open up again.</div>
+        </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:6px;text-transform:uppercase">Van</div>
           <select id="block-van" class="inp" aria-label="Van" style="margin:0">
@@ -1872,6 +1886,8 @@ function openBlockModal() {
       </div>
     </div>`;
   document.body.appendChild(modal);
+  // Show what is set today, so Save is a change and not a guess.
+  loadClosedUntil();
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
   });
@@ -1927,6 +1943,51 @@ async function saveBlocks() {
     `✅ ${slots.length} slot${slots.length > 1 ? 's' : ''} blocked for ${new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`
   );
   loadCalendar();
+}
+
+// "Fully booked until ___" - the whole of the away setting, from here.
+//
+// Blocking a day at a time is the wrong tool for five weeks away: 35 trips
+// through this modal, 18 checkboxes each. And a client who sees five weeks of
+// "fully booked on this date" reads a business that is broken or swamped and
+// leaves, where "we are fully booked until 3 November" keeps them and lets
+// them book for after.
+async function loadClosedUntil() {
+  const input = document.getElementById('closed-until');
+  if (!input) return;
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'closed-until' }),
+    });
+    if (r.ok) input.value = (await r.json()).closedUntil || '';
+  } catch (e) {
+    // Not fatal: the field simply opens empty, and saving still works.
+    console.warn('[closed-until] could not read the current value:', e.message);
+  }
+}
+
+async function saveClosedUntil() {
+  const date = document.getElementById('closed-until').value;
+  const token = await adminAccessToken();
+  if (!token) return showToast('Your admin session expired - reload and sign in');
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'admin-closed-until', access_token: token, date }),
+    });
+    const d = await r.json();
+    if (!r.ok) return showToast('Error: ' + (d.error || r.status));
+    showToast(
+      d.closedUntil
+        ? `Clients can only book from ${d.closedUntil}`
+        : 'Open again - every date is bookable'
+    );
+  } catch (e) {
+    showToast('Error: ' + e.message);
+  }
 }
 
 // Diego found this in production (18-ago-2026): the only unblock button
@@ -2127,8 +2188,11 @@ function showToast(msg) {
   if (!t) {
     t = document.createElement('div');
     t.id = 'admin-toast';
+    // pointer-events:none - it fades to opacity 0 but stays in the page, so it
+    // used to swallow every click on whatever sat under its corner, forever,
+    // after the first toast. Found on the Photos action bar (01-oct-2026).
     t.style.cssText =
-      'position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;font-family:var(--sans)';
+      'position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;font-family:var(--sans);pointer-events:none';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -6475,6 +6539,496 @@ async function loadClaims() {
   });
 }
 
+// ── PHOTOS ────────────────────────────────────────────────────────────────────
+// Every job photo in one place (api/_photo-gallery.js): by job, all together,
+// or only the ones on the website. "Select" works like a phone gallery - tap to
+// pick, then download, show on the website or take off it. "Show on website"
+// copies the photo into a public folder for the landing-page carousel; the
+// private original is never made public, and "remove" deletes only the copy.
+let _photos = [];
+let _photosView = 'jobs';
+let _photoSel = null; // Set of keys while selecting, null otherwise
+let _photoViewerList = [];
+let _photoViewerIdx = -1;
+let _photosWired = false;
+let _website = []; // the landing carousel, in order: [{ name, url }]
+
+const PH_ICON = {
+  star: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+  starOutline:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>',
+};
+
+async function photosApi(role, extra = {}) {
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) throw new Error('Admin session expired - sign in again');
+  const r = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role, access_token: session.access_token, ...extra }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+  return d;
+}
+
+async function loadPhotos() {
+  wirePhotos();
+  const box = document.getElementById('photos-content');
+  box.innerHTML = '<div class="ph-empty">Loading photos...</div>';
+  try {
+    const d = await photosApi('admin-photos-list');
+    _photos = d.photos || [];
+    _website = d.website || [];
+    if (d.website_known === false) showToast('Could not check which photos are on the website');
+  } catch (e) {
+    box.innerHTML = `<div class="ph-empty"><strong>Could not load photos</strong>${esc(e.message)}</div>`;
+    return;
+  }
+  const services = [...new Set(_photos.map((p) => p.service_name).filter(Boolean))].sort();
+  const sel = document.getElementById('ph-service');
+  const current = sel.value;
+  sel.innerHTML =
+    '<option value="">All services</option>' +
+    services.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  sel.value = services.includes(current) ? current : '';
+  renderPhotos();
+}
+
+function filteredPhotos() {
+  const q = document.getElementById('ph-q').value.trim().toLowerCase();
+  const service = document.getElementById('ph-service').value;
+  const kind = document.getElementById('ph-kind').value;
+  const from = document.getElementById('ph-from').value;
+  const to = document.getElementById('ph-to').value;
+  return _photos.filter((p) => {
+    if (
+      q &&
+      !String(p.client_name || '')
+        .toLowerCase()
+        .includes(q)
+    )
+      return false;
+    if (service && p.service_name !== service) return false;
+    if (kind && p.kind !== kind) return false;
+    const day = (p.taken_at || p.booking_date || '').slice(0, 10);
+    if (from && (!day || day < from)) return false;
+    if (to && (!day || day > to)) return false;
+    return true;
+  });
+}
+
+const PHOTO_KIND_LABEL = { before: 'Before', after: 'After', chat: 'Chat', review: 'Review' };
+// A review photo goes on the website only if its client ticked the box when
+// they uploaded it (api/_photo-gallery.js). The server refuses it either way;
+// this is so the panel says so instead of failing.
+const PHOTO_NOT_ALLOWED = 'The client did not allow website use';
+const canPublish = (p) => !p.on_website && p.web_ok !== false;
+
+function photoDay(p) {
+  const d = p.taken_at || p.booking_date;
+  return d
+    ? new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'No date';
+}
+
+function photoTile(p) {
+  const picked = _photoSel?.has(p.key);
+  const img = p.url
+    ? `<img src="${esc(p.url)}" alt="${esc(PHOTO_KIND_LABEL[p.kind])} - ${esc(p.client_name || '')}" loading="lazy">`
+    : '<span class="ph-tile-missing">Could not load this photo</span>';
+  return `<button type="button" class="ph-tile${picked ? ' sel' : ''}" data-ph-key="${esc(p.key)}" aria-pressed="${picked ? 'true' : 'false'}">
+    ${img}
+    <span class="ph-chip">${esc(PHOTO_KIND_LABEL[p.kind])}</span>
+    ${p.on_website ? '<span class="ph-star" title="On website">&#11088; Web</span>' : ''}
+    <span class="ph-check">${picked ? '&#10003;' : ''}</span>
+  </button>`;
+}
+
+function renderPhotos() {
+  const box = document.getElementById('photos-content');
+  const list = filteredPhotos();
+  _photoViewerList = list;
+  document.getElementById('photos-app').classList.toggle('ph-selecting', !!_photoSel);
+  document.getElementById('ph-count').textContent =
+    `${list.length} of ${_photos.length} photos` +
+    (_website.length ? ` · ${_website.length} on the website` : '');
+
+  if (!_photos.length && !_website.length) {
+    box.innerHTML =
+      '<div class="ph-empty"><div style="font-size:36px;margin-bottom:8px">&#128247;</div><strong>No photos yet</strong>Before/after photos from the mechanic app and photos sent in the job chat will appear here.</div>';
+  } else if (_photosView === 'website') {
+    box.innerHTML = renderWebsiteView(list);
+  } else if (!list.length) {
+    box.innerHTML =
+      '<div class="ph-empty"><strong>No photos match</strong>Try clearing a filter.</div>';
+  } else if (_photosView === 'jobs') {
+    const groups = new Map();
+    for (const p of list) {
+      if (!groups.has(p.booking_id)) groups.set(p.booking_id, []);
+      groups.get(p.booking_id).push(p);
+    }
+    box.innerHTML = [...groups.values()]
+      .map((items) => {
+        const p = items[0];
+        const date = p.booking_date
+          ? new Date(p.booking_date + 'T00:00:00').toLocaleDateString('en-AU', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })
+          : photoDay(p);
+        return `<div class="ph-job">
+          <div class="ph-job-head">
+            <div style="min-width:0">
+              <div class="ph-job-title">${esc(p.client_name || 'Client')}</div>
+              <div class="ph-job-sub">${esc(p.service_name || 'Service')} · ${esc(date)} · ${items.length} photo${items.length === 1 ? '' : 's'}</div>
+            </div>
+            <button type="button" class="ph-job-link" data-ph-booking="${esc(p.booking_id)}">Open booking &rsaquo;</button>
+          </div>
+          <div class="ph-grid">${items.map(photoTile).join('')}</div>
+        </div>`;
+      })
+      .join('');
+  } else {
+    // All photos: one folder, newest first, with a heading per month.
+    let html = '';
+    let month = '';
+    let grid = [];
+    const flush = () => {
+      if (grid.length) html += `<div class="ph-grid">${grid.join('')}</div>`;
+      grid = [];
+    };
+    for (const p of list) {
+      const d = p.taken_at || p.booking_date;
+      const m = d
+        ? new Date(d).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+        : 'No date';
+      if (m !== month) {
+        flush();
+        month = m;
+        html += `<div class="ph-month">${esc(m)}</div>`;
+      }
+      grid.push(photoTile(p));
+    }
+    flush();
+    box.innerHTML = html;
+  }
+  renderPhotoActionBar();
+}
+
+// The "On website" tab: every photo on the left with a star to put it on or
+// take it off, and the landing carousel on the right, in the order it runs.
+function renderWebsiteView(list) {
+  const pool = list.length
+    ? `<div class="ph-grid">${list
+        .map(
+          (p) => `<div class="ph-tile-wrap${p.on_website ? ' on-web' : ''}">
+            ${photoTile(p)}
+            ${
+              p.on_website || p.web_ok !== false
+                ? `<button type="button" class="ph-star-toggle${p.on_website ? ' on' : ''}" data-ph-star="${esc(p.key)}" aria-pressed="${p.on_website ? 'true' : 'false'}" aria-label="${p.on_website ? 'Remove from website' : 'Show on website'}">${p.on_website ? PH_ICON.star : PH_ICON.starOutline}</button>`
+                : `<button type="button" class="ph-star-toggle locked" disabled aria-label="${PHOTO_NOT_ALLOWED}" title="${PHOTO_NOT_ALLOWED}">${PH_ICON.lock}</button>`
+            }
+          </div>`
+        )
+        .join('')}</div>`
+    : '<div class="ph-empty"><strong>No photos match</strong>Try clearing a filter.</div>';
+  const n = _website.length;
+  const rows = _website
+    .map((w, i) => {
+      const p = _photos.find((x) => x.showcase_name === w.name);
+      const who = p ? esc(p.client_name || 'Client') : 'Photo';
+      const meta = p
+        ? `${esc(p.service_name || 'Service')} · ${esc(PHOTO_KIND_LABEL[p.kind])}`
+        : 'Original no longer in Photos';
+      return `<li class="ph-web-row">
+        <span class="ph-web-pos">${i + 1}</span>
+        <img src="${esc(w.url)}" alt="" loading="lazy">
+        <div class="ph-web-who"><strong>${who}</strong><span>${meta}</span></div>
+        <button type="button" class="ph-web-btn" data-ph-move="${esc(w.name)}" data-dir="-1" aria-label="Move up"${i === 0 ? ' disabled' : ''}>${PH_ICON.up}</button>
+        <button type="button" class="ph-web-btn" data-ph-move="${esc(w.name)}" data-dir="1" aria-label="Move down"${i === n - 1 ? ' disabled' : ''}>${PH_ICON.down}</button>
+        <button type="button" class="ph-web-btn danger" data-ph-unweb="${esc(w.name)}" aria-label="Remove from website">${PH_ICON.x}</button>
+      </li>`;
+    })
+    .join('');
+  const preview = n
+    ? `<div class="ph-web-preview">
+        <img src="${esc(_website[0].url)}" alt="First photo of the carousel">
+        <span class="ph-web-preview-tag">Landing preview</span>
+        <div class="ph-web-dots">${'<span></span>'.repeat(Math.min(n, 8))}</div>
+      </div>`
+    : '';
+  return `<div class="ph-web">
+    <div>
+      <div class="ph-web-hint">Tap the star on a photo to put it on the website. Tap the photo to see it big.</div>
+      ${pool}
+    </div>
+    <aside class="ph-web-panel" aria-label="Website carousel">
+      <div class="ph-web-head"><strong>On the website · ${n}</strong><span>Carousel order</span></div>
+      ${preview}
+      ${n ? `<ol class="ph-web-list">${rows}</ol>` : '<div class="ph-web-empty">Nothing on the website yet. Tap the star on any photo.</div>'}
+    </aside>
+  </div>`;
+}
+
+async function moveWebsitePhoto(name, dir) {
+  const names = _website.map((w) => w.name);
+  const i = names.indexOf(name);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= names.length) return;
+  [names[i], names[j]] = [names[j], names[i]];
+  const before = _website;
+  _website = names.map((n) => before.find((w) => w.name === n));
+  renderPhotos();
+  try {
+    await photosApi('admin-photos-order', { names });
+  } catch (e) {
+    showToast('Could not save the order: ' + e.message);
+    _website = before;
+    renderPhotos();
+  }
+}
+
+// A copy whose original is no longer in Photos can still be taken down.
+async function removeWebsiteCopy(name) {
+  const p = _photos.find((x) => x.showcase_name === name);
+  if (p) return unfeaturePhotos([p]);
+  if (!confirm('Take this photo off the website?')) return;
+  try {
+    await photosApi('admin-photos-unfeature', { names: [name] });
+    showToast('Removed from the website');
+  } catch (e) {
+    showToast('Could not remove: ' + e.message);
+    return;
+  }
+  await loadPhotos();
+}
+
+function renderPhotoActionBar() {
+  const bar = document.getElementById('ph-actionbar');
+  const btn = document.getElementById('ph-select-btn');
+  btn.textContent = _photoSel ? 'Cancel' : 'Select';
+  btn.classList.toggle('on', !!_photoSel);
+  bar.hidden = !_photoSel;
+  if (!_photoSel) return;
+  const picked = _photos.filter((p) => _photoSel.has(p.key));
+  document.getElementById('ph-sel-count').textContent =
+    picked.length === 1 ? '1 selected' : `${picked.length} selected`;
+  bar.querySelector('[data-ph-action="download-selected"]').disabled = !picked.some((p) => p.url);
+  bar.querySelector('[data-ph-action="feature-selected"]').disabled = !picked.some(canPublish);
+  bar.querySelector('[data-ph-action="unfeature-selected"]').disabled = !picked.some(
+    (p) => p.on_website
+  );
+}
+
+function photoFileName(p) {
+  const ext = p.path.split('.').pop() || 'jpg';
+  const day = (p.taken_at || p.booking_date || '').slice(0, 10);
+  return (
+    [day, p.client_name, p.service_name, p.kind]
+      .filter(Boolean)
+      .join('_')
+      .replace(/[^a-z0-9_-]+/gi, '-')
+      .slice(0, 80) +
+    '.' +
+    ext
+  );
+}
+
+// Storage serves the file as an attachment when the URL carries ?download=,
+// so this works for a signed private URL and an old public one alike, without
+// fetching the bytes into the page.
+function downloadPhotos(items) {
+  const ready = items.filter((p) => p.url);
+  ready.forEach((p, i) => {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href =
+        p.url +
+        (p.url.includes('?') ? '&' : '?') +
+        'download=' +
+        encodeURIComponent(photoFileName(p));
+      // Ignored cross-origin, where ?download= does the work; on any same-origin
+      // URL it stops the click from navigating away from the panel instead.
+      a.download = photoFileName(p);
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }, i * 400);
+  });
+  if (ready.length > 1) showToast(`Downloading ${ready.length} photos`);
+}
+
+async function featurePhotos(items) {
+  const todo = items.filter(canPublish);
+  const locked = items.filter((p) => !p.on_website && p.web_ok === false).length;
+  if (!todo.length) {
+    if (locked) showToast(PHOTO_NOT_ALLOWED);
+    return;
+  }
+  try {
+    const d = await photosApi('admin-photos-feature', { refs: todo.map((p) => p.ref) });
+    const skipped = locked ? ` · ${locked} skipped: the client did not allow it` : '';
+    showToast(
+      (d.failed?.length
+        ? `${d.done.length} on the website · ${d.failed.length} could not be copied`
+        : todo.length === 1
+          ? 'On the website ✓'
+          : `${todo.length} photos on the website ✓`) + skipped
+    );
+  } catch (e) {
+    showToast('Could not add to website: ' + e.message);
+    return;
+  }
+  _photoSel = null;
+  await loadPhotos();
+}
+
+async function unfeaturePhotos(items) {
+  const todo = items.filter((p) => p.on_website);
+  if (!todo.length) return;
+  const what = todo.length === 1 ? 'this photo' : `these ${todo.length} photos`;
+  if (!confirm(`Take ${what} off the website? The original stays in Photos.`)) return;
+  try {
+    await photosApi('admin-photos-unfeature', { names: todo.map((p) => p.showcase_name) });
+    showToast(
+      todo.length === 1 ? 'Removed from the website' : `${todo.length} removed from the website`
+    );
+  } catch (e) {
+    showToast('Could not remove: ' + e.message);
+    return;
+  }
+  _photoSel = null;
+  await loadPhotos();
+}
+
+function openPhotoViewer(key) {
+  _photoViewerIdx = _photoViewerList.findIndex((p) => p.key === key);
+  if (_photoViewerIdx < 0) return;
+  document.getElementById('ph-viewer').hidden = false;
+  showViewerPhoto();
+}
+
+function showViewerPhoto() {
+  const p = _photoViewerList[_photoViewerIdx];
+  if (!p) return;
+  const img = document.getElementById('ph-v-img');
+  img.src = p.url || '';
+  img.alt = `${PHOTO_KIND_LABEL[p.kind]} - ${p.client_name || ''}`;
+  document.getElementById('ph-v-meta').innerHTML =
+    `<strong>${esc(p.client_name || 'Client')}</strong><br>${esc(p.service_name || 'Service')} · ${esc(PHOTO_KIND_LABEL[p.kind])} · ${esc(photoDay(p))}<br>${_photoViewerIdx + 1} of ${_photoViewerList.length}${p.on_website ? ' · &#11088; On website' : ''}`;
+  const fb = document.getElementById('ph-v-feature');
+  const locked = !p.on_website && p.web_ok === false;
+  fb.textContent = p.on_website
+    ? 'Remove from website'
+    : locked
+      ? PHOTO_NOT_ALLOWED
+      : '⭐ Show on website';
+  fb.disabled = locked;
+  fb.classList.toggle('ph-btn-primary', !p.on_website && !locked);
+  fb.classList.toggle('ph-btn-danger', !!p.on_website);
+}
+
+function closePhotoViewer() {
+  document.getElementById('ph-viewer').hidden = true;
+  document.getElementById('ph-v-img').src = '';
+  _photoViewerIdx = -1;
+}
+
+function stepPhotoViewer(delta) {
+  if (!_photoViewerList.length) return;
+  _photoViewerIdx = (_photoViewerIdx + delta + _photoViewerList.length) % _photoViewerList.length;
+  showViewerPhoto();
+}
+
+function wirePhotos() {
+  if (_photosWired) return;
+  _photosWired = true;
+  const page = document.getElementById('page-photos');
+  page.addEventListener('click', async (e) => {
+    const tab = e.target.closest('[data-ph-view]');
+    if (tab) {
+      _photosView = tab.dataset.phView;
+      page.querySelectorAll('[data-ph-view]').forEach((t) => t.classList.toggle('on', t === tab));
+      renderPhotos();
+      return;
+    }
+    const star = e.target.closest('[data-ph-star]');
+    if (star) {
+      const p = _photos.find((x) => x.key === star.dataset.phStar);
+      if (p) await (p.on_website ? unfeaturePhotos([p]) : featurePhotos([p]));
+      return;
+    }
+    const move = e.target.closest('[data-ph-move]');
+    if (move) {
+      await moveWebsitePhoto(move.dataset.phMove, Number(move.dataset.dir));
+      return;
+    }
+    const unweb = e.target.closest('[data-ph-unweb]');
+    if (unweb) {
+      await removeWebsiteCopy(unweb.dataset.phUnweb);
+      return;
+    }
+    const tile = e.target.closest('[data-ph-key]');
+    if (tile) {
+      const key = tile.dataset.phKey;
+      if (_photoSel) {
+        if (_photoSel.has(key)) _photoSel.delete(key);
+        else _photoSel.add(key);
+        renderPhotos();
+      } else {
+        openPhotoViewer(key);
+      }
+      return;
+    }
+    const bk = e.target.closest('[data-ph-booking]');
+    if (bk) {
+      openBookingDetail(bk.dataset.phBooking);
+      return;
+    }
+    const act = e.target.closest('[data-ph-action]')?.dataset.phAction;
+    if (!act) return;
+    const picked = () => _photos.filter((p) => _photoSel?.has(p.key));
+    const current = _photoViewerList[_photoViewerIdx];
+    if (act === 'toggle-select') {
+      _photoSel = _photoSel ? null : new Set();
+      renderPhotos();
+    } else if (act === 'download-selected') downloadPhotos(picked());
+    else if (act === 'feature-selected') await featurePhotos(picked());
+    else if (act === 'unfeature-selected') await unfeaturePhotos(picked());
+    else if (act === 'close-viewer') closePhotoViewer();
+    else if (act === 'prev') stepPhotoViewer(-1);
+    else if (act === 'next') stepPhotoViewer(1);
+    else if (act === 'download-one' && current) downloadPhotos([current]);
+    else if (act === 'toggle-feature-one' && current) {
+      closePhotoViewer();
+      if (current.on_website) await unfeaturePhotos([current]);
+      else await featurePhotos([current]);
+    } else if (act === 'open-booking' && current) {
+      closePhotoViewer();
+      openBookingDetail(current.booking_id);
+    }
+  });
+  for (const id of ['ph-q', 'ph-service', 'ph-kind', 'ph-from', 'ph-to']) {
+    document.getElementById(id).addEventListener('input', renderPhotos);
+  }
+  document.addEventListener('keydown', (e) => {
+    if (document.getElementById('ph-viewer').hidden) return;
+    if (e.key === 'Escape') closePhotoViewer();
+    else if (e.key === 'ArrowLeft') stepPhotoViewer(-1);
+    else if (e.key === 'ArrowRight') stepPhotoViewer(1);
+  });
+}
+
 // ── ESCALATION CONTACTS ───────────────────────────────────────────────────────
 async function loadContacts() {
   const { data } = await sb
@@ -7367,9 +7921,52 @@ function openAdminChat(bookingId, clientName) {
         table: 'job_messages',
         filter: `booking_id=eq.${bookingId}`,
       },
-      (payload) => appendAdminChatMsg(payload.new)
+      async (payload) => {
+        const [msg] = await signAdminChatPhotos(bookingId, [payload.new]);
+        // The signing is a round trip: the chat may have been closed, or
+        // switched to another job, while it was out.
+        if (adminChatBookingId === bookingId) appendAdminChatMsg(msg);
+      }
     )
     .subscribe();
+}
+
+// A chat photo in the private bucket is stored as a reference,
+// `[PHOTO:job-photos-private/...]`, not a URL (api/_job-photos.js). The panel
+// reads job_messages straight from the database and over realtime, so it asks
+// the server to sign them - twenty per call, the server's own cap. Old photos
+// hold a public URL and are left alone.
+const PRIVATE_PHOTO_MSG = /^\[PHOTO:(job-photos-private\/.*)\]$/;
+async function signAdminChatPhotos(bookingId, messages) {
+  const refs = messages.map((m) => m?.message?.match(PRIVATE_PHOTO_MSG)?.[1]).filter(Boolean);
+  if (!refs.length) return messages;
+  const urls = [];
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    for (let i = 0; i < refs.length; i += 20) {
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'photo-sign',
+          booking_id: bookingId,
+          refs: refs.slice(i, i + 20),
+          access_token: session?.access_token,
+        }),
+      });
+      urls.push(...(r.ok ? (await r.json()).urls || [] : []));
+    }
+  } catch (e) {
+    console.warn('[admin-chat] could not sign chat photos:', e.message);
+  }
+  let n = 0;
+  return messages.map((m) => {
+    if (!PRIVATE_PHOTO_MSG.test(m?.message || '')) return m;
+    const url = urls[n++];
+    return { ...m, message: url ? `[PHOTO:${url}]` : 'Photo unavailable' };
+  });
 }
 
 function closeAdminChat() {
@@ -7393,8 +7990,10 @@ async function loadAdminChatMessages(bookingId) {
       '<div style="text-align:center;color:var(--mgray);font-size:13px;padding:20px">No messages yet.</div>';
     return;
   }
+  const signed = await signAdminChatPhotos(bookingId, data);
+  if (adminChatBookingId !== bookingId) return;
   msgs.innerHTML = '';
-  data.forEach((m) => appendAdminChatMsg(m, false));
+  signed.forEach((m) => appendAdminChatMsg(m, false));
   msgs.scrollTop = msgs.scrollHeight;
 }
 
@@ -8073,7 +8672,8 @@ function safeImageUpload(file) {
   }
   // Only when the browser offers no type at all: some Android pickers send an
   // empty string for HEIC.
-  const named = String(file.name || '').split('.').pop().toLowerCase();
+  const nameParts = String(file.name || '').split('.');
+  const named = nameParts.pop().toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(ALLOWED, named)) return REFUSED;
   const ext = named;
   return { ok: true, ext, contentType: ALLOWED[ext] };

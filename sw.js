@@ -1,3 +1,24 @@
+// v128 (2026-09-26): el panel de Track se reordena. Fuera el "Dr. Bike Sydney"
+// debajo del nombre del mecanico (era el respaldo de la linea de servicios y
+// rating cuando el mecanico no tiene ninguno de los dos); ahora dice "Your
+// mechanic" arriba y el nombre abajo. La hora de llegada pasa a una linea
+// propia y grande, con el tiempo en horas cuando los minutos dejan de leerse
+// (1876 min -> 31 h). El codigo de llegada pasa a un cuadro rojo suave. El
+// mapa baja de 50% a 45% del espacio para que los botones no queden bajo la
+// barra. Cambian js/app.js, css/main.css y los dos diccionarios.
+// v127 (2026-09-25): el mapa de Track seguia tapando todo despues de v126.
+// v126 cambio el CSS, y el CSS no era quien decidia: despues de cargar
+// Leaflet, renderTracking le fija una altura en pixeles al mapa. Ese calculo
+// medía el panel de abajo con mapEl.nextElementSibling, que dejo de ser el
+// panel cuando se metio el <p> para lectores de pantalla entre los dos.
+// Medía ~0, asi que el mapa se llevaba 83% de la pantalla y los botones
+// quedaban abajo del corte. Ahora toma la mitad y no mide nada.
+// v126 (2026-09-25): en Track el mapa se comia la pantalla. Era el unico
+// elemento que crecia, asi que se quedaba con todo lo que el panel de abajo
+// no necesitaba - 63% de la pantalla en un iPhone 14, 65% en un 14 Plus.
+// Ahora mapa y panel se reparten el espacio mitad y mitad: 43-45%. Cambia
+// js/app.js, que ya lleva su ?v= nuevo; el cache sube para que la copia
+// vieja no quede ocupando lugar.
 // v125 (2026-09-23): fuera del area del mismo dia la pantalla de cotizacion
 // decia "Pay online now $0.00" arriba de un boton que dice "Ask for my price".
 // Ahora ese caso muestra el service fee como referencia y no promete ningun
@@ -190,7 +211,23 @@
 // something to cut out); and i18n only rewrites text nodes, so it cannot swap
 // an icon back. What Diego's browser was holding was never captured, so the
 // cache bump is the cure, not the proven diagnosis.
-const CACHE_STATIC = 'drbike-static-v125';
+// v129: js/stripe.js changed. It is imported by js/app.js as a bare module
+// specifier with no ?v=, so nothing but this number delivers the new file -
+// and what changed in it is the wallet error path, which is the half of the
+// "nobody could pay" fix that Apple Pay and Google Pay go through.
+// v130: js/consent.js changed. It is loaded bare, with no ?v=, so this number
+// is the only thing that delivers the new file - and what changed in it is
+// what stops the cookie card sitting on top of the booking buttons.
+// v131: js/i18n-es.js y js/i18n-zh.js cambiaron. Se importan sin ?v=, asi que
+// este numero es lo unico que entrega las cadenas nuevas - si no, el cliente
+// que ya entro sigue viendo el mensaje viejo en su idioma.
+// v132: y cambiaron otra vez, por el cartel de "completos hasta el ___".
+// v133: los diccionarios cambiaron otra vez, por el boton de WhatsApp en el
+// cartel de "completos hasta el ___". Se importan sin ?v=.
+// v134: "Photo unavailable", para una foto del chat que no se pudo firmar.
+// v135: la casilla "puede mostrar esta foto en su sitio web" de la resena, y
+// js/supabase.js manda la respuesta (photo_web_ok).
+const CACHE_STATIC = 'drbike-static-v135';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

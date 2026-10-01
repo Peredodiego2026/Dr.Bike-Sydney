@@ -39,6 +39,19 @@ const PAGES = [
 // doesn't get lost in expected third-party chatter.
 const IGNORE_CONSOLE = [
   /Cloudflare Turnstile/i, // fails outside the allowed domain, expected in this environment
+  // Turnstile pide su propio /cdn-cgi/challenge-platform/ y ese pedido
+  // devuelve 401 en un navegador automatizado: Cloudflare le niega el
+  // desafio a propósito. Hacia caer 13 tests, todos la misma pagina - la
+  // portada, mas /parramatta, /penrith, /st-george y /sutherland-shire, que
+  // REDIRIGEN a la portada, por tres idiomas.
+  //
+  // Comprobado en el navegador de Diego el 30-sep-2026: el widget se dibuja
+  // y dice "Verify you are human" en el formulario de flotas y en el
+  // newsletter. El 401 es del entorno de prueba, no del sitio.
+  //
+  // Solo esa ruta. Un 404 en turnstile/v0/api.js - el script de verdad -
+  // tiene que seguir rompiendo el test.
+  /challenges\.cloudflare\.com\/cdn-cgi\/challenge-platform/,
   /Failed to load resource.*404.*favicon/i,
   // GrowthBook's own CDN bundle (js/landing-modules.js) prints this on
   // landing.html - a styled debug line with a NaN in it. Traced to their

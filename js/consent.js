@@ -233,7 +233,13 @@
       'left:16px',
       'right:16px',
       'bottom:16px',
-      'bottom:calc(16px + env(safe-area-inset-bottom,0px))',
+      // --consent-lift is the height of a bottom nav bar, when the surface
+      // has one (css/main.css sets it; the other 46 pages that load this
+      // file do not, so there it resolves to 0 and nothing moves). The
+      // comment below used to claim the card sat above the SPA's nav. It
+      // did not: measured on an iPhone 14 it covered 40px of it, and all of
+      // the Continue/Pay bar above it. This is what makes the claim true.
+      'bottom:calc(16px + env(safe-area-inset-bottom,0px) + var(--consent-lift, 0px))',
       'max-width:440px',
       'margin-left:auto', // bottom-right on desktop, out of the reading path
       'z-index:9998',
@@ -294,8 +300,32 @@
     const no = button(t.decline, false);
     const yes = button(t.accept, true);
 
+    // How much vertical room the card takes, published for the page to read.
+    //
+    // This is the whole fix for a bug that sat in production from
+    // 30-aug to 29-sep-2026: the card is fixed to the bottom and so is the
+    // booking wizard's button bar, neither knew about the other, and the
+    // card won on z-index. Measured on an iPhone 14, the card occupied
+    // 518-648px and the "Confirm & Pay" button 538-584px - so the button
+    // was not merely overlapped, it was invisible, and elementFromPoint at
+    // its centre returned the card's paragraph. Every phone size tested
+    // behaved the same, in English and in Spanish.
+    //
+    // A measurement and not a constant, because the card is two lines in
+    // English, three in Spanish, and different again in Chinese - a fixed
+    // number would be right in one language and wrong in the others.
+    function publishHeight() {
+      if (!bar.parentNode) return;
+      const h = Math.ceil(bar.getBoundingClientRect().height);
+      // 12px so the two do not end up flush against each other.
+      document.documentElement.style.setProperty('--consent-h', h + 12 + 'px');
+    }
+
     function close() {
       if (bar.parentNode) bar.parentNode.removeChild(bar);
+      document.documentElement.style.removeProperty('--consent-h');
+      window.removeEventListener('resize', publishHeight);
+      window.removeEventListener('orientationchange', publishHeight);
     }
     no.addEventListener('click', function () {
       write(KEY, 'denied');
@@ -314,6 +344,9 @@
     bar.appendChild(msg);
     bar.appendChild(actions);
     document.body.appendChild(bar);
+    publishHeight();
+    window.addEventListener('resize', publishHeight);
+    window.addEventListener('orientationchange', publishHeight);
   }
 
   if (document.readyState === 'loading') {

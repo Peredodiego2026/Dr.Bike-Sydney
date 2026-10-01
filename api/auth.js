@@ -37,6 +37,29 @@ import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { reviewCredential, reviewGate } from './_review-auth.js';
 import { shortClientName } from './_privacy.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
+import {
+  JOB_PHOTO_BUCKET,
+  JOB_PHOTO_TYPES,
+  newJobPhotoPath,
+  jobPhotoPath,
+  isJobPhotoRef,
+  signJobPhoto,
+  signPhotoMessages,
+  createJobPhotoUpload,
+} from './_job-photos.js';
+import {
+  photoSource,
+  collectPhotos,
+  signMany,
+  listShowcase,
+  copyToShowcase,
+  removeFromShowcase,
+  showcasePublicUrl,
+  showcaseName,
+  settleOrder,
+  readOrder,
+  writeOrder,
+} from './_photo-gallery.js';
 // The factor lookup runs in front of every admin request. Four seconds is
 // long enough for a healthy Supabase and short enough that a sick one costs a
 // pause, not the panel.
@@ -475,7 +498,7 @@ async function resolveAddressCoverage(address) {
 // in `callout_zones`. A logged-in customer there saw $20 on the payment
 // screen, paid $20, and handleCreateBooking recomputed $45, refused the
 // amount and REFUNDED them. From their side the booking simply failed.
-async function calloutFeeForAddress(address, scheduledDate) {
+export async function calloutFeeForAddress(address, scheduledDate) {
   const coverage = await resolveAddressCoverage(address);
   return {
     coverage,
@@ -1059,7 +1082,7 @@ async function handleRemoveCard(req, res) {
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
-async function handleCreateBooking(req, res) {
+export async function handleCreateBooking(req, res) {
   const {
     access_token,
     service_id,
@@ -1124,11 +1147,42 @@ async function handleCreateBooking(req, res) {
     // Membership pricing is looked up by account, so a guest can never reach a
     // waived $0 call-out - and with no charge there would be nothing
     // authenticating the request at all.
-    if (!payment_intent_id && !checkout_session_id)
+    //
+    // `holdOnly` is the exception, and leaving it out broke every guest
+    // booking for 29 days (PR #376, 31-aug to 29-sep 2026). The hold is the
+    // call that RESERVES the slot before the card is touched, so by
+    // definition it cannot carry a payment yet: the client pressed Pay, this
+    // answered 402 Payment required, and the card was never reached. Diego
+    // could still pay because he was signed in; nobody without an account
+    // could, by card or by wallet. The identical exemption 60 lines below -
+    // the coverage gate - was remembered. This one was not.
+    //
+    // Nothing is weakened. A hold takes no money, burns no discount and
+    // expires on its own; the REAL booking runs this same check again, and
+    // by then a payment IS present, which is the condition that was always
+    // required.
+    if (!payment_intent_id && !checkout_session_id && !holdOnly)
       return res.status(402).json({ error: 'Payment required' });
   }
 
   const isAdmin = !isGuest && (user.email || '').toLowerCase() === ADMIN_TEST_EMAIL;
+
+  // Closed until Diego is back in Sydney. Checked here, before the service
+  // lookup and long before Stripe, so a date he cannot serve never reaches a
+  // card. The client calendar greys these days out; this is what makes that
+  // a rule rather than a suggestion - a stale tab, a saved draft or a direct
+  // call would otherwise walk straight past it.
+  //
+  // Not for the admin: Diego entering a booking by hand is him deciding to
+  // serve it, which is the one case the setting should not override.
+  if (!isAdmin) {
+    const shut = await closedUntil(SERVICE_KEY);
+    if (shut && scheduled_date < shut) {
+      return res.status(409).json({
+        error: 'We are fully booked until ' + shut + ' - please pick a date from then.',
+      });
+    }
+  }
 
   // 2. Authoritative service price from the services table
   let svc = null;
@@ -2040,7 +2094,18 @@ async function handleClientBookings(req, res) {
   if (!bookingsResp.ok) return res.status(500).json({ error: 'Failed to fetch bookings' });
   const data = await bookingsResp.json();
   if ((data || []).length >= CLIENT_BOOKINGS_LIMIT) res.setHeader('X-Truncated', 'true');
-  return res.status(200).json(data || []);
+  // A photo in the private bucket is stored as a reference, not a URL. This
+  // client has just proved the bookings are theirs, so sign them here
+  // (api/_job-photos.js). Old public URLs pass through untouched.
+  const opts = jobPhotoOpts();
+  const signed = await Promise.all(
+    (data || []).map(async (b) => ({
+      ...b,
+      photo_before_url: await signJobPhoto(b.photo_before_url, b.id, opts),
+      photo_after_url: await signJobPhoto(b.photo_after_url, b.id, opts),
+    }))
+  );
+  return res.status(200).json(signed);
 }
 
 async function handleMechanicAccept(req, res) {
@@ -2542,8 +2607,15 @@ async function handleMechanicComplete(req, res) {
     tip_amount: Number(tip_amount) || 0,
     next_service_date: next_service_date || null,
   };
-  if (photo_before_url) payload.photo_before_url = photo_before_url;
-  if (photo_after_url) payload.photo_after_url = photo_after_url;
+  // A reference into the private bucket is kept only if it points at THIS
+  // booking's folder - otherwise one job could carry another job's photo and
+  // get it signed for the wrong client (api/_job-photos.js). A full URL is the
+  // fallback path, and every photo taken before the bucket existed.
+  const photoValue = (v) => (isJobPhotoRef(v) ? (jobPhotoPath(v, booking_id) ? v : null) : v);
+  const beforeValue = photoValue(photo_before_url);
+  const afterValue = photoValue(photo_after_url);
+  if (beforeValue) payload.photo_before_url = beforeValue;
+  if (afterValue) payload.photo_after_url = afterValue;
   if (client_signature_url) payload.client_signature_url = client_signature_url;
   if (duration_seconds) payload.service_duration_seconds = duration_seconds;
 
@@ -3542,7 +3614,9 @@ async function handleMechanicMessages(req, res) {
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!resp.ok) return res.status(500).json({ error: 'Failed to load messages' });
-  return res.status(200).json(await resp.json());
+  return res
+    .status(200)
+    .json(await signPhotoMessages(await resp.json(), booking_id, jobPhotoOpts()));
 }
 
 async function handleMechanicMessageSend(req, res) {
@@ -3625,7 +3699,9 @@ async function handleClientMessages(req, res) {
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!resp.ok) return res.status(500).json({ error: 'Failed to load messages' });
-  return res.status(200).json(await resp.json());
+  return res
+    .status(200)
+    .json(await signPhotoMessages(await resp.json(), booking_id, jobPhotoOpts()));
 }
 
 async function handleClientMessageSend(req, res) {
@@ -3685,7 +3761,9 @@ async function notifyClientOfMechanicMessage(bookingId, message, SERVICE_KEY) {
     body: JSON.stringify({
       clientId,
       title: `Message about your ${bkData[0].service_name || 'service'}`,
-      body: message.slice(0, 100),
+      // A photo message is `[PHOTO:<storage reference>]` - not something to
+      // put on somebody's lock screen.
+      body: /^\[PHOTO:/.test(message) ? '📷 Photo' : message.slice(0, 100),
       url: '/index.html#tracking',
       tag: 'mechanic-message',
     }),
@@ -4111,6 +4189,83 @@ async function handleMechanicPreferenceStatus(req, res) {
   return res.status(200).json({ enabled });
 }
 
+// ── Fully booked until ___ ─────────────────────────────────────────────────
+//
+// The calendar had no way to say "not this month". It offered every hour of
+// every day, so a client in Curl Curl could pay for tomorrow while the van is
+// a thousand kilometres away. On 29-sep-2026 one nearly did: she reached the
+// last step for the next morning, and the only reason it did not happen is
+// that her address was out of the service area.
+//
+// Stored on the van_zones(van_number=0) sentinel row that the business
+// details, the WhatsApp number and the alert triggers already use. That is a
+// hack, and it is the right one here: a new table means a migration, and a
+// migration is something Diego has to run by hand - which is precisely the
+// delay this exists to remove.
+const CLOSED_UNTIL_KEY = '__setting_closed_until__';
+
+// The only shape accepted anywhere: YYYY-MM-DD, which is also the shape that
+// compares correctly as a plain string.
+const isIsoDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v));
+
+// Dates are compared as YYYY-MM-DD strings, which sort correctly, and
+// "today" is Sydney's today - not the server's, which is UTC and is a day
+// behind for most of Sydney's morning.
+function sydneyToday() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney' }).format(new Date());
+}
+
+// A date already past is treated as no setting at all. A shop that stays shut
+// forever because nobody remembered to clear the field is worse than no
+// setting, and it would fail silently - there is no error to notice.
+async function closedUntil(SERVICE_KEY) {
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/van_zones?select=postcode&van_number=eq.0&suburb=eq.${CLOSED_UNTIL_KEY}`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (!resp.ok) return null;
+    const rows = await resp.json();
+    const value = String(rows[0]?.postcode || '').trim();
+    if (!isIsoDate(value)) return null;
+    return value > sydneyToday() ? value : null;
+  } catch {
+    // Fails OPEN, deliberately. Not being able to read the setting must never
+    // turn into "no bookings today" - the same rule the coverage lookup
+    // follows when a geocoder is down.
+    return null;
+  }
+}
+
+async function handleClosedUntil(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  return res.status(200).json({ closedUntil: await closedUntil(SERVICE_KEY) });
+}
+
+async function handleAdminClosedUntil(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const raw = String(req.body?.date || '').trim();
+  // An empty string is how the field is cleared. Anything else has to be a
+  // real date in the future: saving a past one would look like it worked and
+  // do nothing, because the reader above ignores it.
+  if (raw && !isIsoDate(raw)) return res.status(400).json({ error: 'Use a date like 2026-11-03' });
+  if (raw && raw <= sydneyToday())
+    return res.status(400).json({ error: 'That date has already passed' });
+
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { error } = await sb
+    .from('van_zones')
+    .upsert(
+      { van_number: 0, suburb: CLOSED_UNTIL_KEY, postcode: raw, active: true },
+      { onConflict: 'van_number,suburb' }
+    );
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ closedUntil: raw || null });
+}
+
 // Dos credenciales, porque hay dos clases de cliente. El razonamiento completo
 // y las dos decisiones puras estan en api/_review-auth.js; aca queda solo la
 // parte que habla con la base.
@@ -4118,9 +4273,17 @@ async function handleMechanicPreferenceStatus(req, res) {
 // Este endpoint no llevaba NINGUNA autenticacion en su momento: cualquiera con
 // un booking_id (que ni siquiera era secreto, ver handlePublicTrack arriba)
 // podia puntuar cualquier trabajo terminado.
-async function handleClientReview(req, res) {
-  const { booking_id, access_token, client_id, tracking_token, rating, comment, photo_base64 } =
-    req.body;
+export async function handleClientReview(req, res) {
+  const {
+    booking_id,
+    access_token,
+    client_id,
+    tracking_token,
+    rating,
+    comment,
+    photo_base64,
+    photo_web_ok,
+  } = req.body;
 
   const cred = reviewCredential(req.body);
   if (cred.error) return res.status(cred.status).json({ error: cred.error });
@@ -4164,17 +4327,27 @@ async function handleClientReview(req, res) {
   // valid token for one booking review a different one.
   const targetId = booking.id;
 
-  // Upload photo to Supabase Storage if provided
+  // Upload photo to Supabase Storage if provided.
+  //
+  // Private bucket first, like the job photos (api/_job-photos.js): a client's
+  // photo can show their home or their street. The public bucket is only the
+  // fallback for a project where the private one does not exist.
+  //
+  // The client's answer to "Dr. Bike Sydney can show this photo on its
+  // website" travels IN THE FILE NAME (`client_<ts>_web.jpg`), so the consent
+  // is fixed to that exact photo at the moment it was given, needs no new
+  // column, and Admin > Photos refuses to put any other review photo on the
+  // website (api/_photo-gallery.js). Unticked - or sent by an older page that
+  // never asks - means no.
   let client_photo_url = null;
   if (photo_base64) {
     try {
       const base64Data = photo_base64.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
       const ts = Date.now();
-      const storagePath = `reviews/${targetId}/client_${ts}.jpg`;
-      const storageResp = await fetch(
-        `${SUPABASE_URL}/storage/v1/object/job-photos/${storagePath}`,
-        {
+      const storagePath = `reviews/${targetId}/client_${ts}${photo_web_ok === true ? '_web' : ''}.jpg`;
+      const put = (bucket) =>
+        fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${storagePath}`, {
           method: 'POST',
           headers: {
             apikey: SERVICE_KEY,
@@ -4183,12 +4356,17 @@ async function handleClientReview(req, res) {
             'x-upsert': 'true',
           },
           body: buffer,
-        }
-      );
-      if (storageResp.ok) {
-        client_photo_url = `${SUPABASE_URL}/storage/v1/object/public/job-photos/${storagePath}`;
+        });
+      const privateResp = await put(JOB_PHOTO_BUCKET);
+      if (privateResp.ok) {
+        client_photo_url = `${JOB_PHOTO_BUCKET}/${storagePath}`;
       } else {
-        console.warn('[client-review] photo upload failed:', await storageResp.text());
+        const storageResp = await put('job-photos');
+        if (storageResp.ok) {
+          client_photo_url = `${SUPABASE_URL}/storage/v1/object/public/job-photos/${storagePath}`;
+        } else {
+          console.warn('[client-review] photo upload failed:', await storageResp.text());
+        }
       }
     } catch (e) {
       console.warn('[client-review] photo upload error:', e.message);
@@ -4444,6 +4622,14 @@ async function handleGetAvailability(req, res) {
     isToday,
     nowMin,
   });
+
+  // Inside the closed window nothing is on offer, whatever the calendar and
+  // the bookings say. Belt and braces with the gate in handleCreateBooking:
+  // this one keeps the hours off the screen, that one refuses the booking.
+  const shutUntil = await closedUntil(SUPABASE_KEY);
+  if (shutUntil && date < shutUntil) {
+    for (const s of slots) s.available = false;
+  }
 
   res.setHeader('Cache-Control', 'no-store, no-cache');
   return res.status(200).json(slots);
@@ -4875,6 +5061,243 @@ async function signClaimEvidence(ref) {
   } catch (e) {
     console.warn(`[admin-claims] signing threw for ${path}:`, e.message);
     return null;
+  }
+}
+
+// ── Job photos (private bucket, api/_job-photos.js) ──────────────────────────
+function jobPhotoOpts() {
+  return {
+    supabaseUrl: SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY,
+  };
+}
+
+async function bookingParties(bookingId, SERVICE_KEY) {
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?select=client_id,mechanic_id&id=eq.${encodeURIComponent(bookingId)}&limit=1`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  return r.ok ? ((await r.json())?.[0] ?? null) : null;
+}
+
+// A one-time upload URL into the private bucket, for the mechanic on that job
+// only. The mechanic app used to upload straight into the public bucket with
+// the anon key; it still does when this answers 503 - which is every time
+// until the bucket has been created in the Supabase dashboard.
+export async function handleMechanicPhotoUploadUrl(req, res) {
+  const auth = await authMechanic(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const { booking_id, kind, ext } = req.body || {};
+  const path = newJobPhotoPath(booking_id, kind, ext);
+  if (!path) return res.status(400).json({ error: 'Invalid photo request' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const bk = await bookingParties(booking_id, SERVICE_KEY);
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+  if (bk.mechanic_id !== auth.mechanic.id) return res.status(403).json({ error: 'Forbidden' });
+
+  const up = await createJobPhotoUpload(path, jobPhotoOpts());
+  if (!up.token) {
+    console.warn(
+      `[job-photos] ${JOB_PHOTO_BUCKET} refused an upload URL (HTTP ${up.status}) - the mechanic app falls back to the public bucket. Create it in Supabase > Storage, private.`
+    );
+    return res.status(503).json({ error: 'Private photo storage unavailable', fallback: true });
+  }
+  return res.status(200).json({
+    bucket: JOB_PHOTO_BUCKET,
+    path,
+    token: up.token,
+    ref: `${JOB_PHOTO_BUCKET}/${path}`,
+    contentType: JOB_PHOTO_TYPES[String(ext).toLowerCase()],
+  });
+}
+
+// Signs photo references for whoever may see that booking: its mechanic
+// (mechanic token), its client (their own session) or an admin. Screens that
+// read job_messages straight from the database or over realtime get the raw
+// reference and ask here; the API reads sign on the way out and never need to.
+export async function handlePhotoSign(req, res) {
+  const { booking_id, refs, access_token, client_id, token } = req.body || {};
+  const list = Array.isArray(refs) ? refs.slice(0, 20) : [];
+  if (!booking_id || !list.length)
+    return res.status(400).json({ error: 'booking_id and refs required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const bk = await bookingParties(booking_id, SERVICE_KEY);
+  if (!bk) return res.status(404).json({ error: 'Booking not found' });
+
+  let allowed = false;
+  if (token) {
+    const auth = await authMechanic(req);
+    if (auth.error) return res.status(auth.status).json({ error: auth.error });
+    allowed = bk.mechanic_id === auth.mechanic.id;
+  } else if (client_id) {
+    if (!access_token) return res.status(401).json({ error: 'Sign in required' });
+    const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${access_token}` },
+    });
+    if (!userResp.ok) return res.status(401).json({ error: 'Invalid or expired session' });
+    const userData = await userResp.json();
+    allowed = userData.id === client_id && bk.client_id === client_id;
+  } else {
+    const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+    if (auth.error) return res.status(auth.status).json({ error: auth.error });
+    allowed = true;
+  }
+  if (!allowed) return res.status(403).json({ error: 'Forbidden' });
+
+  const opts = jobPhotoOpts();
+  const urls = await Promise.all(
+    list.map((r) => (isJobPhotoRef(r) ? signJobPhoto(r, booking_id, opts) : null))
+  );
+  return res.status(200).json({ urls });
+}
+
+// ── Admin > Photos (api/_photo-gallery.js) ───────────────────────────────────
+// Every job photo, newest first, with the client, service and date of its
+// booking, signed for an hour, and whether it is on the website.
+const UUID_RE = /^[0-9a-f-]{8,64}$/i;
+export async function handleAdminPhotosList(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const h = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const cols = 'id,client_name,service_name,scheduled_date,status';
+  const [bkR, msgR] = await Promise.all([
+    fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=${cols},photo_before_url,photo_after_url,client_photo_url&or=(photo_before_url.not.is.null,photo_after_url.not.is.null,client_photo_url.not.is.null)&order=scheduled_date.desc&limit=1000`,
+      { headers: h }
+    ),
+    fetch(
+      `${SUPABASE_URL}/rest/v1/job_messages?select=booking_id,message,created_at&message=like.*PHOTO:*&order=created_at.desc&limit=2000`,
+      { headers: h }
+    ),
+  ]);
+  if (!bkR.ok || !msgR.ok) return res.status(500).json({ error: 'Could not load photos' });
+  const bookings = (await bkR.json()) || [];
+  const messages = (await msgR.json()) || [];
+
+  // A chat photo can belong to a booking with no before/after photo: fetch
+  // those bookings too, so every photo has a client and a service.
+  const known = new Set(bookings.map((b) => b.id));
+  const missing = [
+    ...new Set(messages.map((m) => m.booking_id).filter((id) => UUID_RE.test(String(id || '')))),
+  ].filter((id) => !known.has(id));
+  for (let i = 0; i < missing.length; i += 100) {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&id=in.(${missing.slice(i, i + 100).join(',')})`,
+      { headers: h }
+    );
+    if (r.ok) bookings.push(...((await r.json()) || []));
+  }
+
+  const opts = jobPhotoOpts();
+  const photos = collectPhotos({ bookings, messages, supabaseUrl: SUPABASE_URL });
+  const signed = await signMany(
+    photos.filter((p) => p.bucket === JOB_PHOTO_BUCKET).map((p) => p.path),
+    opts
+  );
+  let onSite = null;
+  let order = [];
+  try {
+    const listed = await listShowcase(opts);
+    onSite = new Set(listed);
+    order = settleOrder(await readOrder(opts), listed);
+  } catch (e) {
+    console.warn('[admin-photos] could not list the website photos:', e.message);
+  }
+  return res.status(200).json({
+    photos: photos.map((p) => ({
+      ...p,
+      url: p.bucket === JOB_PHOTO_BUCKET ? signed.get(p.path) || null : p.ref,
+      on_website: onSite ? onSite.has(p.showcase_name) : null,
+      website_url: onSite?.has(p.showcase_name)
+        ? showcasePublicUrl(p.showcase_name, SUPABASE_URL)
+        : null,
+    })),
+    website_known: !!onSite,
+    // The carousel, in order, with each copy's public URL - including any
+    // copy whose original is no longer in the list, so it can still be removed.
+    website: order.map((name) => ({ name, url: showcasePublicUrl(name, SUPABASE_URL) })),
+  });
+}
+
+// Keeps showcase/_order.json in step with the folder after a copy or a
+// removal. The photos already moved; a failure here only costs the order,
+// so it is logged, not returned as an error.
+async function resyncWebsiteOrder(first, opts) {
+  try {
+    const listed = await listShowcase(opts);
+    await writeOrder(settleOrder([...(await readOrder(opts)), ...first], listed), opts);
+  } catch (e) {
+    console.warn('[admin-photos] could not update the website order:', e.message);
+  }
+}
+
+// "Show on website": copies the photos into the public showcase folder. The
+// private original stays private (api/_photo-gallery.js).
+export async function handleAdminPhotosFeature(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const refs = Array.isArray(req.body?.refs) ? req.body.refs.slice(0, 50) : [];
+  if (!refs.length) return res.status(400).json({ error: 'refs required' });
+  const opts = jobPhotoOpts();
+  const done = [];
+  const failed = [];
+  // A review photo whose client did not tick "can show on website" is refused
+  // here, not just greyed out in the panel (api/_photo-gallery.js).
+  const notAllowed = [];
+  for (const ref of refs) {
+    const src = photoSource(ref, SUPABASE_URL);
+    if (src && !src.webOk) notAllowed.push(ref);
+    else if (src && (await copyToShowcase(src, opts))) done.push(ref);
+    else failed.push(ref);
+  }
+  // New photos go to the end of the carousel, in the order they were picked.
+  if (done.length)
+    await resyncWebsiteOrder(
+      done.map((r) => showcaseName(photoSource(r, SUPABASE_URL))),
+      opts
+    );
+  const body = { done, failed, not_allowed: notAllowed };
+  if (!done.length && notAllowed.length && !failed.length)
+    return res.status(403).json({ ...body, error: 'The client did not allow website use' });
+  return res.status(failed.length && !done.length ? 502 : 200).json(body);
+}
+
+// "Remove from website": deletes only the copies in the showcase folder.
+export async function handleAdminPhotosUnfeature(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const names = Array.isArray(req.body?.names) ? req.body.names.slice(0, 200) : [];
+  if (!names.length) return res.status(400).json({ error: 'names required' });
+  const opts = jobPhotoOpts();
+  try {
+    const removed = await removeFromShowcase(names, opts);
+    if (removed.length) await resyncWebsiteOrder([], opts);
+    return res.status(200).json({ removed });
+  } catch (e) {
+    console.warn('[admin-photos] remove failed:', e.message);
+    return res.status(502).json({ error: 'Could not remove from website' });
+  }
+}
+
+// The order the photos run in on the landing carousel. Only names that are
+// actually in the showcase folder are kept; any left out go to the end.
+export async function handleAdminPhotosOrder(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const names = Array.isArray(req.body?.names) ? req.body.names.slice(0, 500) : [];
+  if (!names.length) return res.status(400).json({ error: 'names required' });
+  const opts = jobPhotoOpts();
+  try {
+    const order = settleOrder(names, await listShowcase(opts));
+    await writeOrder(order, opts);
+    return res.status(200).json({ order });
+  } catch (e) {
+    console.warn('[admin-photos] order failed:', e.message);
+    return res.status(502).json({ error: 'Could not save the order' });
   }
 }
 
@@ -5672,6 +6095,7 @@ async function handler(req, res) {
           role === 'create-booking' ||
           role === 'hold-slot' ||
           role === 'check-coverage' ||
+          role === 'closed-until' ||
           // Analytics is one authenticated admin changing a date filter, not a
           // login attempt - the default 5/min locks the screen out on the third
           // range change.
@@ -5679,6 +6103,10 @@ async function handler(req, res) {
           // Same reason: the Finance screen re-reads the expenses on every
           // change of month, quarter or year, and 5/min locks it on the third.
           role === 'admin-expenses-list' ||
+          // One call per photo that arrives in an open chat.
+          role === 'photo-sign' ||
+          // Admin > Photos re-reads the list after every select-and-act.
+          role.startsWith('admin-photos-') ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -5697,6 +6125,8 @@ async function handler(req, res) {
   if (role === 'mechanic-parts-update') return handleMechanicPartsUpdate(req, res);
   if (role === 'mechanic-messages') return handleMechanicMessages(req, res);
   if (role === 'mechanic-message-send') return handleMechanicMessageSend(req, res);
+  if (role === 'mechanic-photo-upload-url') return handleMechanicPhotoUploadUrl(req, res);
+  if (role === 'photo-sign') return handlePhotoSign(req, res);
   if (role === 'client-messages') return handleClientMessages(req, res);
   if (role === 'client-message-send') return handleClientMessageSend(req, res);
   if (role === 'mechanic-checklist') return handleMechanicChecklist(req, res);
@@ -5728,6 +6158,9 @@ async function handler(req, res) {
     return handleCreateBooking(req, res);
   }
   if (role === 'check-coverage') return handleCheckCoverage(req, res);
+  // Public on purpose, same as the coverage and fee checks: the calendar has
+  // to know before anyone signs in or starts paying.
+  if (role === 'closed-until') return handleClosedUntil(req, res);
   if (role === 'zone-price') return handleZonePrice(req, res);
   if (role === 'address-suggest') return handleAddressSuggest(req, res);
   if (role === 'request-quote') return handleRequestQuote(req, res);
@@ -5745,8 +6178,13 @@ async function handler(req, res) {
   if (role === 'admin-privacy-plan') return handleAdminPrivacyPlan(req, res);
   if (role === 'admin-expenses-list') return handleAdminExpensesList(req, res);
   if (role === 'admin-expenses-save') return handleAdminExpensesSave(req, res);
+  if (role === 'admin-closed-until') return handleAdminClosedUntil(req, res);
   if (role === 'admin-expenses-delete') return handleAdminExpensesDelete(req, res);
   if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
+  if (role === 'admin-photos-list') return handleAdminPhotosList(req, res);
+  if (role === 'admin-photos-feature') return handleAdminPhotosFeature(req, res);
+  if (role === 'admin-photos-unfeature') return handleAdminPhotosUnfeature(req, res);
+  if (role === 'admin-photos-order') return handleAdminPhotosOrder(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);

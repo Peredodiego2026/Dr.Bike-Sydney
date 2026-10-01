@@ -752,6 +752,28 @@ async function renderBookService() {
   let _calYear = today.getFullYear();
   let _calMonth = today.getMonth();
 
+  // "Fully booked until ___", set by Diego in the admin panel while he is not
+  // in Sydney. Until this existed the calendar offered every hour of every
+  // day, and on 29-sep-2026 a client reached the last step for the next
+  // morning while the van was a thousand kilometres away.
+  //
+  // The client side only greys the days out. What actually refuses the
+  // booking is the same check in handleCreateBooking - a stale tab or a saved
+  // draft never sees this code.
+  let _closedUntil = null;
+  async function loadClosedUntil() {
+    try {
+      const r = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'closed-until' }),
+      });
+      _closedUntil = r.ok ? (await r.json()).closedUntil || null : null;
+    } catch {
+      _closedUntil = null;
+    }
+  }
+
   const CAT_ORDER = [
     'Scheduled services',
     'Brakes',
@@ -1065,6 +1087,18 @@ async function renderBookService() {
 
   // ── Step 2: Date & Time ───────────────────────────────────────────────────
   async function renderStep2() {
+    // Asked once per visit to this step. A failure leaves it null, which is
+    // the open calendar - the server refuses a closed date anyway, so failing
+    // open here costs a confusing error at worst, never a lost booking.
+    await loadClosedUntil();
+    if (_closedUntil) {
+      const [cy, cm] = _closedUntil.split('-').map(Number);
+      // Landing on a month where every day is greyed out reads as broken.
+      if (new Date(cy, cm - 1, 1) > new Date(_calYear, _calMonth, 1)) {
+        _calYear = cy;
+        _calMonth = cm - 1;
+      }
+    }
     if (window.posthog) posthog.capture('booking_step_viewed', { step: 'select_date' });
     scrollStepToTop('Step 2 of 3: choose a date and time');
     if (!document.getElementById('cal-styles')) {
@@ -1120,7 +1154,8 @@ async function renderBookService() {
       for (let d = 1; d <= daysInMonth; d++) {
         const ds = `${_calYear}-${String(_calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dt = new Date(_calYear, _calMonth, d);
-        const disabled = dt < today || dt > maxDate;
+        const beforeWeReopen = _closedUntil ? ds < _closedUntil : false;
+        const disabled = dt < today || dt > maxDate || beforeWeReopen;
         const isSel = ds === window.appState.date;
         const isToday = dt.getTime() === today.getTime();
         cells += `<button type="button" class="cal-day${isSel ? ' cal-sel' : ''}${isToday ? ' cal-today' : ''}${disabled ? ' cal-dis' : ''}" ${disabled ? 'disabled' : ''} data-date="${ds}">${d}</button>`;
@@ -1137,9 +1172,44 @@ async function renderBookService() {
         </div>`;
     }
 
+    // A client who needs the bike THIS week and reads "fully booked until
+    // November" leaves, and Diego never hears they were there. He asked for
+    // the opposite: "quiero saber que el cliente esta ahi y me necesita".
+    //
+    // Same shape as the out-of-zone handoff further down: the message says
+    // what they wanted and why it arrived, so it does not read like any other
+    // WhatsApp. They can still edit it before sending - that is WhatsApp.
+    const closedWaLines = [];
+    if (_closedUntil) {
+      closedWaLines.push(
+        translateValue(
+          'Hi! I need a bike service before DATEHERE - can you come any sooner?'
+        ).replace('DATEHERE', formatDate(_closedUntil))
+      );
+      if (window.appState.service && window.appState.service.name) {
+        closedWaLines.push('', translateValue('Service:') + ' ' + window.appState.service.name);
+      }
+      closedWaLines.push(
+        '',
+        translateValue('Sent from your website - you are showing as fully booked until then.')
+      );
+    }
+    const closedWaHref =
+      'https://wa.me/61433963250?text=' + encodeURIComponent(closedWaLines.join('\n'));
+
     screen.innerHTML = `
       ${createHeader('Choose Date & Time', true, '#book-service')}
       <div class="section-label">Select Date</div>
+      ${
+        _closedUntil
+          ? `<div style="background:var(--amber-tint);border:1px solid var(--amber-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+               <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px">${translateValue("We're fully booked until DATEHERE").replace('DATEHERE', formatDate(_closedUntil))}</div>
+               <div style="font-size:13px;color:var(--color-text);line-height:1.5">${translateValue('Pick a date from then and we will come to you.')}</div>
+               <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-top:6px">${translateValue('Need it sooner? Tell us what happened and we will see what we can do.')}</div>
+               <a href="${closedWaHref}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box;margin-top:10px">${translateValue('💬 Ask on WhatsApp')}</a>
+             </div>`
+          : ''
+      }
       <div id="cal-wrap" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">${buildCal()}</div>
       <div class="section-label">Select Time</div>
       <div class="time-grid" id="time-grid">
@@ -1253,7 +1323,7 @@ async function renderBookService() {
     // nothing else, so Diego got an address with no idea what the person
     // wanted. It now carries the same fields as the one the server writes at
     // the end of the quote flow, so both land in his WhatsApp looking alike.
-    function showCoverageBlock(addr, info) {
+    function showCoverageBlock(addr, info, clientName) {
       const box = screen.querySelector('#s3-coverage-msg');
       const wa = screen.querySelector('#s3-coverage-wa');
       if (!box || !wa) return;
@@ -1269,12 +1339,29 @@ async function renderBookService() {
       // drops an empty string, so a '' used as a separator silently vanished
       // and the greeting ran straight into the fields.
       const fields = [
+        clientName ? `${translateValue('Client:')} ${clientName}` : '',
         svc ? `${translateValue('Service:')} ${svc}` : '',
         when ? `${translateValue('Date:')} ${when}` : '',
         `${translateValue('Address:')} ${addr}`,
         trip ? `${translateValue('Distance from your base:')} ${trip}` : '',
       ].filter(Boolean);
-      const text = translateValue('Hi! Do you cover this address?') + '\n\n' + fields.join('\n');
+      // Diego, 2026-09-29, holding an enquiry from Concord: "quiero saber bien
+      // por que me llego el mensaje". It opened with a question and listed a
+      // job, and nothing in it said it came from the website or that the
+      // address had been measured and found too far - so an out-of-zone
+      // enquiry read exactly like any other WhatsApp.
+      //
+      // Worth knowing: the client is typing in WhatsApp before they send, so
+      // any of this can be edited out, and the Concord one was - it arrived
+      // with no distance line and "Edited" on it. What cannot be edited is the
+      // row submitQuoteRequest writes server-side; this button is the shortcut
+      // past that, which is the trade it has always made.
+      const text =
+        translateValue('Hi! Do you cover this address?') +
+        '\n\n' +
+        fields.join('\n') +
+        '\n\n' +
+        translateValue('Sent from your website - this address is outside the same-day zone.');
       wa.href = 'https://wa.me/61433963250?text=' + encodeURIComponent(text);
       box.style.display = 'block';
       // block:'nearest', not 'center': centring a panel near the bottom of a
@@ -1388,7 +1475,20 @@ async function renderBookService() {
           // customer who had already picked a service, a date and a time.
           if (warnedAddress !== addr) {
             warnedAddress = addr;
-            showCoverageBlock(addr, data);
+            // Signed in, so we know who is asking. A guest has not been asked
+            // for a name at this step - that is the contact step - so for them
+            // the line is left out rather than guessed.
+            let who = '';
+            try {
+              const {
+                data: { session },
+              } = await sb.auth.getSession();
+              const m = session?.user?.user_metadata || {};
+              who = m.full_name || m.name || '';
+            } catch {
+              // no session to read - the message goes without a name
+            }
+            showCoverageBlock(addr, data, who);
             btn.textContent = translateValue('Continue anyway');
             btn.disabled = false;
             return;
@@ -2658,6 +2758,35 @@ async function renderPayment() {
     return _paidIntent;
   }
 
+  // Un pago que falla es la caida mas cara del embudo y hasta ahora era
+  // invisible: se veia gente llegando al pago y no completando, sin
+  // saber si la tarjeta fue rechazada o si se arrepintieron. Hasta el
+  // 30-sep-2026 solo lo mandaba el boton de tarjeta: Apple Pay y Google Pay
+  // fallaban sin dejar rastro. `method` separa los dos.
+  //
+  // Se manda una CATEGORIA, nunca el mensaje crudo: puede traer datos
+  // del banco o del cliente, y esto sale a un servicio de terceros.
+  const trackPaymentFailed = (e, method) => {
+    if (window.posthog) {
+      const raw = String((e && e.message) || '');
+      const reason = /declin|insufficient|card/i.test(raw)
+        ? 'card_declined'
+        : /no longer available|no longer held|just booked/i.test(raw)
+          ? 'slot_taken'
+          : /email/i.test(raw)
+            ? 'missing_email'
+            : 'other';
+      posthog.capture('payment_failed', {
+        reason,
+        method,
+        // Si ya se habia cobrado, el problema es escribir la reserva, no
+        // el cobro - y eso se arregla distinto.
+        after_charge: !!_paidIntent,
+        callout_fee: calloutFee,
+      });
+    }
+  };
+
   if (calloutFee > 0) {
     await createPaymentForm('card-element');
 
@@ -2669,6 +2798,23 @@ async function renderPayment() {
         await holdSlot();
         const pi = await chargeOnce(paymentMethodId);
         await finalizeBooking(pi, { isTest: false });
+      },
+      // The wallet used to fail in total silence - see js/stripe.js. The
+      // card button below has said what went wrong since it was written;
+      // Apple Pay and Google Pay said nothing at all, which is how a
+      // customer ends up messaging "it would not let me pay" with no idea
+      // why. Same two messages as the card path, on purpose.
+      onError: (e) => {
+        trackPaymentFailed(e, 'wallet');
+        const errEl = screen.querySelector('#payment-error');
+        if (!errEl) return;
+        errEl.textContent = _paidIntent
+          ? translateValue(
+              'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
+            )
+          : (e && e.message) ||
+            translateValue('Payment failed. Please check your card details and try again.');
+        errEl.hidden = false;
       },
     });
     if (prSupported) {
@@ -2691,29 +2837,7 @@ async function renderPayment() {
         // translateValue, not a bare literal: this is the single most important
         // sentence in the app - it tells a client their money left and their
         // booking did not - and it was shipping in English to es/zh clients.
-        // Un pago que falla es la caida mas cara del embudo y hasta ahora era
-        // invisible: se veia gente llegando al pago y no completando, sin
-        // saber si la tarjeta fue rechazada o si se arrepintieron.
-        //
-        // Se manda una CATEGORIA, nunca el mensaje crudo: puede traer datos
-        // del banco o del cliente, y esto sale a un servicio de terceros.
-        if (window.posthog) {
-          const raw = String((e && e.message) || '');
-          const reason = /declin|insufficient|card/i.test(raw)
-            ? 'card_declined'
-            : /no longer available|no longer held|just booked/i.test(raw)
-              ? 'slot_taken'
-              : /email/i.test(raw)
-                ? 'missing_email'
-                : 'other';
-          posthog.capture('payment_failed', {
-            reason,
-            // Si ya se habia cobrado, el problema es escribir la reserva, no
-            // el cobro - y eso se arregla distinto.
-            after_charge: !!_paidIntent,
-            callout_fee: calloutFee,
-          });
-        }
+        trackPaymentFailed(e, 'card');
         errEl.textContent = _paidIntent
           ? translateValue(
               'Payment received but the booking could not be saved. Tap Pay again to retry, or contact us.'
@@ -2952,36 +3076,71 @@ async function renderTracking() {
       <span id="status-text" style="font-size:13px;font-weight:600;color:var(--navy)">Loading booking...</span>
     </div>
 
-    <!-- Map: flex:1 fills all remaining space between status bar and bottom panel -->
+    <!-- The map and the panel below it each take HALF the space under the
+         status bar - the matching flex:1 on both is the whole fix. The map
+         used to be the only thing that grew, so it got "everything the panel
+         does not need", and the panel's content is a fixed ~224px: the taller
+         the phone the bigger the map. Measured at 63% of the screen on a 14
+         and 65% on a 14 Plus (2026-09-25); Diego's report was "el mapa queda
+         muy grande, no se puede ver nada mas". It lands at 43-45% on every
+         size now.
+         min-height keeps it a usable map on a short screen. There is no
+         max-height: the 50/50 split already caps it at half, and a cap that
+         never binds reads like it is the thing doing the work. -->
     <!-- aria-hidden: a canvas of map tiles is not readable, and a screen
          reader landing in it finds an unlabelled blank. What it conveys
          lives in #map-alt below, kept in sync and announced when it
          changes (audit point 15). -->
-    <div id="tracking-map" style="flex:1;min-height:34dvh;display:block" aria-hidden="true" role="presentation"></div>
+    <div id="tracking-map" style="flex:1;min-height:30dvh;display:block" aria-hidden="true" role="presentation"></div>
     <p id="map-alt" class="sr-only">Live map. Waiting for the mechanic position.</p>
 
     <!-- Bottom panel. overflow-y:auto because the screen itself is
          height:100dvh; overflow:hidden - Leaflet needs a container of a known
          size, so the SCREEN cannot scroll. Without this the panel is simply
          clipped and everything past the fold, buttons included, is
-         unreachable. -->
-    <div style="flex-shrink:0;max-height:52dvh;overflow-y:auto;background:var(--white);border-top:1px solid var(--border)">
+         unreachable.
+         flex:1 and not flex-shrink:0: it takes the other half, so there is
+         no dead gap on a tall phone. min-height:0 is what
+         makes the scroll work at all - a flex item defaults to
+         min-height:auto, refuses to shrink under its content, and pushes the
+         buttons out of the screen instead of scrolling them. -->
+    <div style="flex:1;min-height:0;overflow-y:auto;background:var(--white);border-top:1px solid var(--border)">
       <div id="mechanic-card" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border-lt)">
         <div id="mechanic-avatar" style="width:40px;height:40px;background:var(--blue-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;color:var(--blue-text)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
-        <div style="min-width:0">
-          <div id="mechanic-name" style="font-size:15px;font-weight:700;color:var(--navy)">Your mechanic</div>
-          <div id="mechanic-meta" style="font-size:13px;color:var(--gray);margin-top:1px"></div>
-        </div>
-        <div id="eta-badge" style="margin-left:auto;flex-shrink:0;text-align:right">
-          <div id="eta-text" style="font-size:13px;color:var(--gray)">Waiting for a mechanic</div>
+        <!-- Label over name, and no third line. It used to be the name over a
+             services-and-rating pair, which falls back to the literal
+             "Dr. Bike Sydney" for a mechanic with neither - so a brand new
+             mechanic read as "Diego / Dr. Bike Sydney" stacked, which is what
+             Diego saw and called out (2026-09-26): the company name under the
+             person's name says nothing the client did not already know. The
+             services and rating still exist, on the profile the chevron
+             opens. -->
+        <div style="min-width:0;flex:1">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gray-lt)">Your mechanic</div>
+          <div id="mechanic-name" style="font-size:16px;font-weight:700;color:var(--navy);line-height:1.15">Not assigned yet</div>
         </div>
         <svg id="mechanic-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-lt)" stroke-width="2.5" style="display:none;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div id="arrival-pin-badge" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--blue-lt);border-bottom:1px solid var(--border-lt)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <div style="font-size:13px;color:var(--blue-text)"><b>Your code: <span id="arrival-pin-value" style="font-size:15px;letter-spacing:1px">----</span></b> — read this to your mechanic when they arrive</div>
+
+      <!-- Arrival time as the headline. It used to be one cramped line on the
+           right of the card - "ETA 05:55 pm · 1876 min · 1889.2 km by road" -
+           where the three numbers competed and none of them won. The time is
+           the only one the client is actually waiting for. -->
+      <div style="padding:11px 16px 12px;border-bottom:1px solid var(--border-lt)">
+        <div id="eta-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gray-lt);display:none">ETA</div>
+        <div id="eta-time" style="font-size:27px;font-weight:800;color:var(--navy);line-height:1.1;display:none"></div>
+        <div id="eta-text" style="font-size:12.5px;color:var(--gray);margin-top:3px">Waiting for a mechanic</div>
+      </div>
+
+      <!-- The code the client reads out at the door. Soft red on a pink
+           ground, not the app's blue: it is the one thing on this screen the
+           client has to DO something with, and it was getting lost in a row
+           of blue notices. --><div id="arrival-pin-badge" style="display:none;margin:10px 16px 0;border-radius:12px;padding:11px 14px;text-align:center;background:var(--red-lt);border:1px solid var(--red-edge)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--red-text)">Your arrival code</div>
+        <div id="arrival-pin-value" style="font-size:29px;font-weight:800;letter-spacing:0.14em;line-height:1.2;color:var(--red-text)">----</div>
+        <div style="font-size:11px;color:var(--red-text);opacity:0.85">Read this to your mechanic when they arrive</div>
       </div>
       <div style="display:flex;gap:4px;padding:10px 16px">
         ${['Confirmed', 'En Route', 'Arrived', 'Done']
@@ -3020,12 +3179,25 @@ async function renderTracking() {
 
   // Set explicit pixel height on map container before Leaflet reads dimensions.
   // flex:1 can return 0 in some browsers/timing; explicit px is always reliable.
+  //
+  // This overrides the flex layout above, so it - not the CSS - is what
+  // actually decides how big the map is. It used to size the map as
+  // "everything the bottom panel does not need", measuring the panel through
+  // `mapEl.nextElementSibling`. That is NOT the panel: the sr-only <p id="map-alt">
+  // sits between them (it was added later, for audit point 15). So the height it
+  // measured was ~0, the map took the whole screen minus the bars, and the
+  // buttons ended up below the fold - 698px of map on an 844px iPhone, 83% of
+  // the screen, measured against production on 2026-09-25.
+  //
+  // It takes a fixed share of the viewport now and measures nothing. Nothing to
+  // go stale when
+  // the panel's content changes, and no sibling to quietly stop being the
+  // panel: whatever the panel ends up holding, it scrolls inside its own box.
   const mapEl = screen.querySelector('#tracking-map');
-  const bottomPanel = mapEl.nextElementSibling;
   const topH = 89; // header(52) + status bar(37)
   const navH = 56; // bottom nav (position:fixed)
-  const bottomH = bottomPanel ? bottomPanel.getBoundingClientRect().height : 158;
-  const mapH = Math.max(140, window.innerHeight - topH - navH - bottomH);
+  const available = Math.max(280, window.innerHeight - topH - navH);
+  const mapH = Math.max(140, Math.round(available * 0.45));
   mapEl.style.height = mapH + 'px';
   mapEl.style.flex = 'none';
 
@@ -3066,23 +3238,56 @@ async function renderTracking() {
   let _routeShown = false;
   let _routeFitted = false;
 
+  // "1876 min" is a true number nobody reads as "31 hours". Minutes up to an
+  // hour, then hours - with the minutes kept while they still tell you
+  // something, and dropped once the number is long enough that they do not.
+  function formatRideTime(min) {
+    if (!Number.isFinite(min) || min < 1) return '';
+    const m = Math.round(min);
+    if (m < 60) return `${m} ${translateValue('min')}`;
+    const h = Math.floor(m / 60);
+    const rest = m % 60;
+    if (h < 10 && rest) return `${h} ${translateValue('h')} ${rest} ${translateValue('min')}`;
+    return `${h} ${translateValue('h')}`;
+  }
+
+  // The time goes in its own big line; everything else is the small print
+  // under it. setEtaMessage() below is the same block with no time - "waiting
+  // for a mechanic" has no clock to show.
   function paintETA({ minutes, km, byRoad }) {
     const el = screen.querySelector('#eta-text');
+    const timeEl = screen.querySelector('#eta-time');
+    const labelEl = screen.querySelector('#eta-label');
     if (!el) return;
     const eta = new Date(Date.now() + minutes * 60000);
     const etaStr = eta.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
     const distance = km === null || km === undefined ? '' : ` \u00b7 ${km.toFixed(1)} km`;
+    if (labelEl) labelEl.style.display = 'block';
+    if (timeEl) {
+      timeEl.style.display = 'block';
+      timeEl.textContent = byRoad ? etaStr : `~${etaStr}`;
+    }
     // "by road" against "straight line" is not decoration. One of these numbers
     // is a real driving time and the other is a guess, and the client is
     // entitled to know which one they are looking at.
     el.textContent = byRoad
-      ? `${translateValue('ETA')} ${etaStr} \u00b7 ${minutes} min${distance} ${translateValue('by road')}`
-      : `${translateValue('ETA')} ~${etaStr}${distance} ${translateValue('straight line')}`;
+      ? `${formatRideTime(minutes)}${distance} ${translateValue('by road')}`
+      : `${distance.replace(' \u00b7 ', '')} ${translateValue('straight line')}`.trim();
     // The map's text equivalent. Polite: the mechanic moving is not an
     // interruption, and this repaints every few seconds.
     describeMap(
       `${translateValue('Mechanic on the way')}. ${minutes} ${translateValue('min')}${distance}.`
     );
+  }
+
+  // A message where the time would be: no clock, no label, just the sentence.
+  function setEtaMessage(msg) {
+    const timeEl = screen.querySelector('#eta-time');
+    const labelEl = screen.querySelector('#eta-label');
+    const el = screen.querySelector('#eta-text');
+    if (timeEl) timeEl.style.display = 'none';
+    if (labelEl) labelEl.style.display = 'none';
+    if (el) el.textContent = msg;
   }
 
   // Keeps #map-alt in step with the map, and says it once when it changes.
@@ -3102,8 +3307,7 @@ async function renderTracking() {
     if (_routeShown) return;
     const distKm = haversineKm(mechCoords, clientCoords);
     if (distKm < 0.1) {
-      const el = screen.querySelector('#eta-text');
-      if (el) el.textContent = translateValue('Mechanic is right outside!');
+      setEtaMessage(translateValue('Mechanic is right outside!'));
       describeMap(translateValue('Mechanic is right outside!'));
       return;
     }
@@ -3200,19 +3404,11 @@ async function renderTracking() {
     if (booking.mechanic_id && booking.mechanic_profile?.name) {
       const p = booking.mechanic_profile;
       const nameEl = screen.querySelector('#mechanic-name');
-      const metaEl = screen.querySelector('#mechanic-meta');
       const avatarEl = screen.querySelector('#mechanic-avatar');
       if (nameEl) nameEl.textContent = p.name.split(' ')[0];
       // Assigned, but not necessarily moving yet. updateETA overwrites this
       // the moment a real position arrives.
-      const etaEl = screen.querySelector('#eta-text');
-      if (etaEl && !_mechanicMarker) etaEl.textContent = translateValue('Assigned to your booking');
-      if (metaEl) {
-        const parts = [];
-        if (p.jobs_completed > 0) parts.push(`${p.jobs_completed} services`);
-        if (p.rating) parts.push(`★ ${p.rating}`);
-        metaEl.textContent = parts.join('  ·  ') || 'Dr. Bike Sydney';
-      }
+      if (!_mechanicMarker) setEtaMessage(translateValue('Assigned to your booking'));
       if (avatarEl) {
         if (p.photo_url) {
           avatarEl.innerHTML = `<img src="${escapeHtml(p.photo_url)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
@@ -3243,19 +3439,16 @@ async function renderTracking() {
         const pinBadge = screen.querySelector('#arrival-pin-badge');
         const pinValue = screen.querySelector('#arrival-pin-value');
         if (pinValue) pinValue.textContent = booking.arrival_pin;
-        if (pinBadge) pinBadge.style.display = 'flex';
-        // mapH below was computed against the bottom panel's height BEFORE
-        // this badge existed - showing it grows the panel by ~40px with
-        // nothing to absorb the difference (this screen has no scroll
-        // anywhere by design), which pushed the Message/Share buttons
-        // behind the fixed bottom nav with no way to reach them. Redo the
-        // same calculation now that the panel's real height is final.
-        if (bottomPanel) {
-          const newBottomH = bottomPanel.getBoundingClientRect().height;
-          const newMapH = Math.max(140, window.innerHeight - topH - navH - newBottomH);
-          mapEl.style.height = newMapH + 'px';
-          requestAnimationFrame(() => _trackingMap?.invalidateSize?.({ animate: false }));
-        }
+        if (pinBadge) pinBadge.style.display = 'block';
+        // Showing this badge grows the panel by ~40px. There used to be a
+        // recalculation of the map height here to make room for it, because
+        // the panel could not scroll and the extra 40px pushed the
+        // Message/Share buttons behind the fixed bottom nav.
+        //
+        // It is gone for two reasons. It never worked - it re-used the same
+        // `bottomPanel` that was really the sr-only <p>, so it recomputed the
+        // same wrong number. And it is no longer needed: the panel scrolls
+        // inside its own box now, so it absorbs its own content.
       }
     }
 
@@ -3696,15 +3889,46 @@ function openClientChat(bookingId, screen) {
         table: 'job_messages',
         filter: `booking_id=eq.${bookingId}`,
       },
-      (payload) => {
+      async (payload) => {
+        const msg = await signClientChatPhoto(payload.new, bookingId);
         const msgs = panel.querySelector('#client-chat-msgs');
         if (msgs) {
           msgs.querySelector('[data-empty]')?.remove();
-          appendClientMsg(payload.new, msgs, true);
+          appendClientMsg(msg, msgs, true);
         }
       }
     )
     .subscribe();
+}
+
+// A chat photo in the private bucket arrives over realtime as a reference,
+// `[PHOTO:job-photos-private/...]`, because realtime hands over the raw row
+// (api/_job-photos.js). The API read above signs on the way out; this does the
+// same for the one message realtime delivers.
+async function signClientChatPhoto(msg, bookingId) {
+  const ref = msg?.message?.match(/^\[PHOTO:(job-photos-private\/.*)\]$/)?.[1];
+  if (!ref) return msg;
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'photo-sign',
+        booking_id: bookingId,
+        refs: [ref],
+        access_token: session?.access_token,
+        client_id: session?.user?.id,
+      }),
+    });
+    const url = resp.ok ? (await resp.json()).urls?.[0] : null;
+    if (url) return { ...msg, message: `[PHOTO:${url}]` };
+  } catch (e) {
+    console.warn('Could not sign chat photo:', e.message);
+  }
+  return { ...msg, message: translateValue('Photo unavailable') };
 }
 
 function appendClientMsg(msg, container, scroll) {
@@ -3845,6 +4069,13 @@ async function renderReview() {
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--white)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
+      <label id="review-photo-web" style="display:none;align-items:flex-start;gap:10px;margin-top:12px;min-height:44px;cursor:pointer">
+        <input type="checkbox" id="review-photo-web-ok" style="width:20px;height:20px;margin:2px 0 0;flex-shrink:0;accent-color:var(--color-primary)">
+        <span style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14px;color:var(--navy)">Dr. Bike Sydney can show this photo on its website</span>
+          <span style="font-size:12px;color:var(--gray)">Optional. You can ask us to remove it anytime.</span>
+        </span>
+      </label>
     </div>
     <div id="review-error" class="booking-error" hidden></div>
     <button class="btn btn--primary btn--full" id="submit-review-btn">Submit Review</button>
@@ -3886,6 +4117,9 @@ async function renderReview() {
     const lbl = screen.querySelector('#review-photo-label');
     lbl.style.borderColor = 'var(--color-primary)';
     lbl.style.background = 'var(--blue-lt)';
+    // The website question only makes sense once there is a photo to ask
+    // about. Unticked by default: using it is opt-in, never assumed.
+    screen.querySelector('#review-photo-web').style.display = 'flex';
   });
 
   screen.querySelector('#review-photo-remove').addEventListener('click', function (e) {
@@ -3897,6 +4131,8 @@ async function renderReview() {
     const lbl = screen.querySelector('#review-photo-label');
     lbl.style.borderColor = 'var(--border)';
     lbl.style.background = 'var(--surface)';
+    screen.querySelector('#review-photo-web').style.display = 'none';
+    screen.querySelector('#review-photo-web-ok').checked = false;
   });
 
   screen.querySelector('#submit-review-btn').addEventListener('click', async () => {
@@ -3921,7 +4157,8 @@ async function renderReview() {
         currentRating,
         textarea.value.trim(),
         photoBase64,
-        window._pendingReviewToken || ''
+        window._pendingReviewToken || '',
+        !!photoBase64 && screen.querySelector('#review-photo-web-ok').checked
       );
     } catch (e) {
       errEl.textContent = translateValue(e.message || 'Could not submit review. Please try again.');

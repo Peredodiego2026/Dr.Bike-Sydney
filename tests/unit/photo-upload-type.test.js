@@ -149,7 +149,10 @@ describe('the three upload sites use it', () => {
   });
 
   it('every upload pins the content type to kind.contentType', () => {
-    expect((mechCode.match(/contentType: kind\.contentType/g) || []).length).toBe(2);
+    // Three in mechanic.js since 2026-09-30: the job photo and the chat photo
+    // into the public bucket, plus the private upload both try first
+    // (uploadPrivateJobPhoto, api/_job-photos.js).
+    expect((mechCode.match(/contentType: kind\.contentType/g) || []).length).toBe(3);
     expect((adminCode.match(/contentType: kind\.contentType/g) || []).length).toBe(1);
   });
 });

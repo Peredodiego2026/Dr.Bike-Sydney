@@ -2734,3 +2734,633 @@ body {
   color: var(--navy);
   border-color: var(--mgray);
 }
+
+/* ── Photos (Admin > Photos, js/admin.js loadPhotos) ──────────────────────── */
+.ph-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.ph-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--off);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+}
+.ph-tab {
+  border: none;
+  background: transparent;
+  color: var(--mgray);
+  font: 600 13px var(--sans);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.ph-tab.on {
+  background: var(--white);
+  color: var(--navy);
+  box-shadow: var(--shadow);
+}
+.ph-select-btn {
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  font: 600 13px var(--sans);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.ph-select-btn.on {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--white);
+}
+.ph-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.ph-filters .inp {
+  width: auto;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+.ph-filters input[type='search'] {
+  flex: 1;
+  min-width: 160px;
+}
+.ph-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--mgray);
+}
+.ph-count {
+  font-size: 12px;
+  color: var(--mgray);
+  margin-bottom: 12px;
+}
+.ph-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 80px;
+}
+.ph-empty {
+  text-align: center;
+  color: var(--mgray);
+  padding: 48px 16px;
+  font-size: 13px;
+}
+.ph-empty strong {
+  display: block;
+  color: var(--navy);
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.ph-job {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.ph-job-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.ph-job-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.ph-job-sub {
+  font-size: 12px;
+  color: var(--mgray);
+}
+.ph-job-link {
+  font: 600 12px var(--sans);
+  color: var(--blue-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 4px 0;
+}
+.ph-month {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mgray);
+  margin: 8px 0 -4px;
+}
+.ph-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+}
+.ph-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--off);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+}
+.ph-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ph-tile-missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 11px;
+  color: var(--mgray);
+  padding: 8px;
+  text-align: center;
+}
+.ph-chip {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+.ph-star {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: var(--amber-bright);
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+.ph-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.3);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+  font-weight: 700;
+}
+.ph-selecting .ph-check {
+  display: flex;
+}
+.ph-tile.sel {
+  outline: 3px solid var(--blue);
+  outline-offset: -3px;
+}
+.ph-tile.sel img {
+  opacity: 0.8;
+}
+.ph-tile.sel .ph-check {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+.ph-actionbar {
+  /* Fixed, like a phone gallery's toolbar: sticky did not hold on the phone
+     layout, where the bar ended up below the last photo, off screen.
+     Dark in BOTH themes on purpose (literal rgba, not --navy, which turns
+     light in dark mode): it is the phone-gallery toolbar Diego picked. */
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
+  /* Above the cookie card while it is up (js/consent.js publishes its height). */
+  bottom: calc(18px + var(--consent-h, 0px));
+  z-index: 8000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(13, 31, 60, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+  padding: 8px;
+}
+@media (max-width: 768px) {
+  /* Clear the admin's own bottom nav (60px + the home-indicator inset). */
+  .ph-actionbar {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px) + var(--consent-h, 0px));
+  }
+  .ph-content {
+    padding-bottom: 160px;
+  }
+  /* Two even columns instead of a ragged wrap, search across both. */
+  .ph-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ph-filters input[type='search'] {
+    grid-column: span 2;
+  }
+  .ph-filters .inp,
+  .ph-date .inp {
+    width: 100%;
+    min-width: 0;
+  }
+  .ph-date {
+    min-width: 0;
+  }
+}
+.ph-actionbar[hidden] {
+  display: none;
+}
+.ph-sel-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  padding: 0 10px 0 8px;
+  white-space: nowrap;
+}
+.ph-actions {
+  display: flex;
+  gap: 4px;
+}
+.ph-act {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.95);
+  font: 600 12px var(--sans);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  min-height: 56px;
+  white-space: nowrap;
+}
+.ph-act svg {
+  width: 22px;
+  height: 22px;
+}
+.ph-act-primary {
+  background: var(--blue);
+}
+.ph-act-danger {
+  color: rgba(253, 164, 164, 1);
+}
+.ph-act:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+/* The "On website" tab: every photo on the left, the carousel on the right. */
+.ph-web {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .ph-web {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ph-web-panel {
+    order: -1;
+  }
+}
+.ph-web-hint {
+  font-size: 13px;
+  color: var(--mgray);
+  margin-bottom: 10px;
+}
+.ph-tile-wrap {
+  position: relative;
+}
+.ph-tile-wrap .ph-tile {
+  width: 100%;
+}
+.ph-star-toggle {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(13, 31, 60, 1);
+}
+.ph-star-toggle.on {
+  background: var(--amber-bright);
+  color: rgba(255, 255, 255, 1);
+}
+/* A review photo whose client did not allow website use. */
+.ph-star-toggle.locked {
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: not-allowed;
+}
+.ph-star-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+.ph-tile-wrap .ph-star {
+  /* The star button says it already. */
+  display: none;
+}
+.ph-tile-wrap.on-web .ph-tile img {
+  opacity: 0.55;
+}
+.ph-web-panel {
+  /* Dark in both themes, like the action bar - it previews the website. */
+  background: rgba(13, 31, 60, 1);
+  color: rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 12px;
+}
+.ph-web-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.ph-web-head strong {
+  font-size: 16px;
+}
+.ph-web-head span {
+  font-size: 12px;
+  color: rgba(201, 212, 229, 1);
+}
+.ph-web-preview {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 180px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.ph-web-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ph-web-preview-tag {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(13, 31, 60, 1);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.ph-web-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.ph-web-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.ph-web-dots span:first-child {
+  width: 18px;
+  background: rgba(255, 255, 255, 1);
+}
+.ph-web-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.ph-web-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 8px;
+}
+.ph-web-pos {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(201, 212, 229, 1);
+  width: 16px;
+  text-align: center;
+}
+.ph-web-row img {
+  width: 56px;
+  height: 42px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.ph-web-who {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ph-web-who strong {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ph-web-who span {
+  font-size: 11px;
+  color: rgba(201, 212, 229, 1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ph-web-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.ph-web-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.ph-web-btn.danger {
+  color: rgba(253, 164, 164, 1);
+}
+.ph-web-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.ph-web-empty {
+  font-size: 13px;
+  color: rgba(201, 212, 229, 1);
+  padding: 8px 2px;
+}
+.ph-btn {
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  font: 600 13px var(--sans);
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 40px;
+}
+.ph-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ph-btn-primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--white);
+}
+.ph-btn-danger {
+  color: var(--red-text);
+  border-color: var(--red-lt);
+}
+.ph-viewer {
+  position: fixed;
+  inset: 0;
+  /* Under the admin toast (9999), so its confirmation shows on top. */
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 16px 16px;
+}
+.ph-viewer[hidden] {
+  display: none;
+}
+.ph-viewer img {
+  max-width: 100%;
+  max-height: calc(100vh - 220px);
+  object-fit: contain;
+  border-radius: 8px;
+}
+.ph-v-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 26px;
+  cursor: pointer;
+}
+.ph-v-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 64px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 34px;
+  cursor: pointer;
+}
+.ph-v-prev {
+  left: 12px;
+}
+.ph-v-next {
+  right: 12px;
+}
+.ph-v-panel {
+  margin-top: 14px;
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ph-v-meta {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ph-v-meta strong {
+  font-size: 15px;
+}
+.ph-v-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (max-width: 768px) {
+  /* Count and three buttons have to fit a 390px phone without clipping.
+     After the base .ph-act / .ph-sel-count rules on purpose: placed earlier
+     in the file, the base rules won and this never applied. */
+  .ph-act {
+    padding: 8px 9px;
+    font-size: 11px;
+  }
+  .ph-sel-count {
+    padding: 0 4px;
+    font-size: 12px;
+  }
+}

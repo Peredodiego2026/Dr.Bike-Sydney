@@ -32,6 +32,7 @@ export default {
     'Mapa en vivo. Esperando la posicion del mecanico.',
   'Mechanic on the way': 'Mecanico en camino',
   min: 'min',
+  h: 'h',
   'Step 1 of 3: choose a service': 'Paso 1 de 3: elegi un servicio',
   'Step 2 of 3: choose a date and time': 'Paso 2 de 3: elegi fecha y hora',
   'Step 3 of 3: your address': 'Paso 3 de 3: tu direccion',
@@ -161,6 +162,9 @@ export default {
   'Cancel booking': 'Cancelar reserva',
   Close: 'Cerrar',
   'Your mechanic': 'Tu mecánico',
+  'Not assigned yet': 'Todavía sin asignar',
+  'Your arrival code': 'Tu código de llegada',
+  'Read this to your mechanic when they arrive': 'Decíselo al mecánico cuando llegue',
   'Rate this mechanic': 'Calificar a este mecánico',
   'Your review': 'Tu reseña',
   'Client reviews': 'Reseñas de clientes',
@@ -319,6 +323,15 @@ export default {
   // Booking flow - Step 2 (calendar)
   'Choose Date & Time': 'Elegí Fecha y Hora',
   'Select Date': 'Elegí la fecha',
+  "We're fully booked until DATEHERE": 'Agenda completa hasta DATEHERE',
+  'Pick a date from then and we will come to you.':
+    'Elegí una fecha desde entonces y vamos hasta tu casa.',
+  'Need it sooner? Tell us what happened and we will see what we can do.':
+    '¿Lo necesitás antes? Contanos qué te pasó y vemos qué podemos hacer.',
+  'Hi! I need a bike service before DATEHERE - can you come any sooner?':
+    '¡Hola! Necesito un servicio para mi bici antes de DATEHERE. ¿Pueden venir antes?',
+  'Sent from your website - you are showing as fully booked until then.':
+    'Enviado desde su sitio web: figuran como completos hasta esa fecha.',
   'Select Time': 'Elegí la hora',
   January: 'Enero',
   February: 'Febrero',
@@ -421,10 +434,13 @@ export default {
     'Mandanos la dirección por WhatsApp y te decimos si podemos llegar.',
   '💬 Ask on WhatsApp': '💬 Consultar por WhatsApp',
   'Hi! Do you cover this address?': '¡Hola! ¿Llegan a esta dirección?',
+  'Client:': 'Cliente:',
   'Service:': 'Servicio:',
   'Date:': 'Fecha:',
   'Address:': 'Dirección:',
   'Distance from your base:': 'Distancia desde su base:',
+  'Sent from your website - this address is outside the same-day zone.':
+    'Enviado desde su sitio web: esta direccion esta fuera de la zona del mismo dia.',
   'Continue anyway': 'Continuar igual',
   "The visit & diagnosis fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
     'La visita y diagnóstico (desde $25, según tu suburbio) cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
@@ -470,6 +486,11 @@ export default {
   'Full bike rebuild': 'Reconstrucción completa de la bici',
   'All bearings serviced or replaced': 'Todos los rodamientos revisados o reemplazados',
   'Before & after photos': 'Fotos de antes y después',
+  'Photo unavailable': 'Foto no disponible',
+  'Dr. Bike Sydney can show this photo on its website':
+    'Dr. Bike Sydney puede mostrar esta foto en su sitio web',
+  'Optional. You can ask us to remove it anytime.':
+    'Opcional. Podés pedirnos que la quitemos cuando quieras.',
   'Detailed parts condition report': 'Informe detallado del estado de las piezas',
   'Brake pad check': 'Revisión de pastillas de freno',
   'Tyre & wheel inspection': 'Inspección de neumáticos y ruedas',

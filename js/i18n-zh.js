@@ -23,6 +23,7 @@ export default {
   'Live map. Waiting for the mechanic position.': '实时地图。正在等待技师位置。',
   'Mechanic on the way': '技师正在前往',
   min: '分钟',
+  h: '小时',
   'Step 1 of 3: choose a service': '第 1 步，共 3 步：选择服务',
   'Step 2 of 3: choose a date and time': '第 2 步，共 3 步：选择日期和时间',
   'Step 3 of 3: your address': '第 3 步，共 3 步：您的地址',
@@ -136,6 +137,9 @@ export default {
   'Cancel booking': '取消预订',
   Close: '关闭',
   'Your mechanic': '您的技工',
+  'Not assigned yet': '尚未安排技工',
+  'Your arrival code': '您的到达验证码',
+  'Read this to your mechanic when they arrive': '技工到达时请把这个号码念给他',
   'Rate this mechanic': '给这位技工评分',
   'Your review': '您的评价',
   'Client reviews': '客户评价',
@@ -279,6 +283,14 @@ export default {
   // Booking flow - Step 2 (calendar)
   'Choose Date & Time': '选择日期和时间',
   'Select Date': '选择日期',
+  "We're fully booked until DATEHERE": '我们在 DATEHERE 之前已约满',
+  'Pick a date from then and we will come to you.': '请选择之后的日期，我们会上门服务。',
+  'Need it sooner? Tell us what happened and we will see what we can do.':
+    '需要更早吗？告诉我们情况，我们看看能做些什么。',
+  'Hi! I need a bike service before DATEHERE - can you come any sooner?':
+    '您好！我需要在 DATEHERE 之前修自行车，能提前上门吗？',
+  'Sent from your website - you are showing as fully booked until then.':
+    '通过您的网站发送 — 您的网站显示在此之前已约满。',
   'Select Time': '选择时间',
   January: '一月',
   February: '二月',
@@ -375,10 +387,13 @@ export default {
     '请通过 WhatsApp 把地址发给我们，我们会告诉您能否安排。',
   '💬 Ask on WhatsApp': '💬 通过 WhatsApp 咨询',
   'Hi! Do you cover this address?': '您好！请问这个地址你们能上门吗？',
+  'Client:': '客户：',
   'Service:': '服务：',
   'Date:': '日期：',
   'Address:': '地址：',
   'Distance from your base:': '距离你们基地：',
+  'Sent from your website - this address is outside the same-day zone.':
+    '通过您的网站发送 — 此地址不在当日服务范围内。',
   'Continue anyway': '仍然继续',
   "The visit & diagnosis fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
     '上门检查费（从$25起，视郊区而定）包含技工的车费。悉尼大部分地区均可提供服务。',
@@ -428,6 +443,10 @@ export default {
   'Full bike rebuild': '整车翻新',
   'All bearings serviced or replaced': '所有轴承保养或更换',
   'Before & after photos': '服务前后对比照片',
+  'Photo unavailable': '照片无法显示',
+  'Dr. Bike Sydney can show this photo on its website':
+    'Dr. Bike Sydney 可以在其网站上展示这张照片',
+  'Optional. You can ask us to remove it anytime.': '可选。您可以随时要求我们删除。',
   'Detailed parts condition report': '详细零件状况报告',
   'Brake pad check': '刹车片检查',
   'Tyre & wheel inspection': '轮胎与车轮检查',

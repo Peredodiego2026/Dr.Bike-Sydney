@@ -46,7 +46,20 @@ img {
   z-index: 100;
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  height: 64px;
+  height: var(--navbar-h);
+}
+
+/* Saltar a #fleet dejaba la seccion medio metida debajo del navbar: el
+   navegador la lleva a lo alto de la ventana y el navbar sticky se le
+   sienta encima. Diego, 30-sep-2026, sobre el enlace Fleet: "no queda
+   cuadrada al primer clic".
+
+   scroll-margin-top le dice al navegador que reserve ese alto AL SALTAR.
+   No mueve nada mientras se lee la pagina, solo cambia donde frena el
+   scroll - por eso vale para todas las secciones con ancla y no solo para
+   la que se noto: #mechanics, #memberships y #about tenian lo mismo. */
+section[id] {
+  scroll-margin-top: var(--navbar-h);
 }
 .navbar .container {
   display: flex;
@@ -865,7 +878,12 @@ body[data-surface='landing'] .sticky-bottom {
   /* the 72px offset in css/main.css reserves room for the bottom nav, which is
      display:none from 768px up */
   body[data-surface='landing'] .sticky-bottom {
-    bottom: 0;
+    /* ...but --consent-h still has to survive, or this rule puts the action bar
+       straight back under the cookie card. On desktop the card is bottom-right
+       and the bar is full-width, so it covered the RIGHT of the button rather
+       than all of it: measured at 1024px, the right 42% of "Confirm & Pay" did
+       not respond to a click. Less obvious than the phone, same cause. */
+    bottom: var(--consent-h, 0px);
   }
 }
 
