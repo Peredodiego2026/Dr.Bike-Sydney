@@ -461,7 +461,10 @@ suben el presupuesto entre un 25% y un 40%.
 - El costo no es proporcional al código. Las 6,192 líneas de `api/auth.js` valen mucho más
   por línea que las 1,614 del diccionario de español.
 - Estas cifras son **costo de reemplazo**, no valor de mercado del negocio. Reconstruir esto
-  cuesta lo que dice la tabla; lo que vale depende de los ingresos que genere.
+  cuesta lo que dice la tabla; lo que vale el negocio depende de la ganancia que genere.
+  **Para cuánto se puede VENDER Dr. Bike, ver `docs/VALOR-DE-VENTA.md`** - es otra
+  aritmética y da otros números: el precio de venta no incluye el costo del software, pero
+  el software sube el múltiplo que se aplica a la ganancia.
 - Las tarifas son rangos de industria, no cotizaciones. Para un número firme hay que pedir
   presupuesto con este mismo documento como pliego de alcance.
 - **La tienda está diseñada pero no construida.** El alcance de la sección 5 se leyó de los
