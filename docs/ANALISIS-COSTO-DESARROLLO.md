@@ -1,14 +1,14 @@
 # ANÁLISIS DE COSTO DE DESARROLLO - Dr. Bike Sydney
 
-Versión 2 - 2026-10-01 (v1: 2026-09-24)
+Versión 3 - 2026-10-01 (v2: 2026-10-01, v1: 2026-09-24)
 Pregunta: cuánto costaría mandar a construir esta aplicación a una empresa de desarrollo,
 incluyendo la tienda que está en diseño.
 Método: inventario medido sobre el repositorio + estimación por módulo + tarifas de mercado.
 
 > Las cifras de código son medidas reales sobre el repo en el merge de `55e3d6c` (main al
 > 1-oct-2026). Las tarifas son rangos de mercado de la industria, no cotizaciones recibidas.
-> **La tienda no existe en el código todavía** - su estimación es alcance a futuro, marcado
-> como tal en la sección 5.
+> **La tienda no existe en el código todavía**, pero sí está diseñada: su alcance se leyó
+> del canvas "Dr. Bike Shop Mockups" (25 artboards, 1-oct-2026), no se inventó. Sección 5.
 
 ---
 
@@ -22,18 +22,33 @@ Método: inventario medido sobre el repositorio + estimación por módulo + tari
 | **B. Alcance comercial equivalente** | 290-395 días-persona | $464k - $790k | $276k - $553k | $128k - $300k | $70k - $158k |
 | **C. Solo MVP** | 150-210 días-persona | $240k - $420k | $143k - $294k | $66k - $160k | $36k - $84k |
 
-### 1.2 Con la tienda incluida (nivel 2, el realista)
+### 1.2 Con la tienda incluida (alcance leído del canvas de diseño)
 
 | Escenario | Esfuerzo | Agencia AU premium | Agencia AU mediana | Nearshore | Offshore |
 |---|---|---|---|---|---|
-| **A + tienda** | 555-770 días-persona | **$888k - $1,540k** | $527k - $1,078k | $244k - $585k | $133k - $308k |
-| **B + tienda** | 365-500 días-persona | $584k - $1,000k | $347k - $700k | $161k - $380k | $88k - $200k |
+| **A + tienda custom** | 731-1,024 días-persona | **$1,170k - $2,048k** | $694k - $1,434k | $322k - $778k | $175k - $410k |
+| **B + tienda custom** | 541-754 días-persona | $866k - $1,508k | $514k - $1,056k | $238k - $573k | $130k - $302k |
+| **B + tienda sobre Shopify** | 355-470 días-persona | $568k - $940k | $337k - $658k | $156k - $357k | $85k - $188k |
+
+### 1.3 Los tres números, en limpio
+
+Si hay que quedarse con tres cifras para la app completa **más** la tienda:
+
+| | Quién lo haría | Precio aproximado |
+|---|---|---|
+| **Barato** | Offshore, tienda sobre Shopify | **$220,000** |
+| **Lo más probable** | Agencia australiana normal, tienda custom | **$800,000** |
+| **Caro** | Agencia grande de Sydney, todo custom | **$1,600,000** |
+
+Y solo la tienda, por separado: **barato $100,000 / probable $350,000 / caro $550,000**.
+Sobre Shopify con integración, la tienda baja a **$53,000 - $125,000**.
 
 Todo en AUD, excluye GST, excluye infraestructura y mantenimiento.
 
 **Número para citar:** la app tal como está hoy la cotizaría una agencia de Sydney de gama
-media entre **$456,000 y $931,000 AUD**. Con la tienda, entre **$527,000 y $1,078,000**.
-Una agencia premium cruza el millón en ambos casos.
+media entre **$456,000 y $931,000 AUD**. Con la tienda custom, entre **$694,000 y
+$1,434,000**. Con la tienda montada sobre Shopify, entre **$337,000 y $658,000** - y esa
+diferencia es la decisión más cara que hay sobre la mesa hoy (sección 5.4).
 
 **Lo que cambió desde el 24 de septiembre:** +2,793 líneas de producción, +1,856 de tests,
 +85 casos de test, una página nueva en el panel admin (Photos), bucket privado para fotos
@@ -207,80 +222,125 @@ sola tarifa, pero cotiza sobre esta media.
 
 ---
 
-## 5. La tienda (alcance a futuro, todavía sin código)
+## 5. La tienda (alcance leído del canvas de diseño, 1-oct-2026)
 
-> **Nada de esto existe en el repositorio al 1-oct-2026.** Busqué archivos, ramas y commits
-> de tienda / shop / carrito / producto: no hay ninguno. Lo que sigue es estimación de
-> alcance, no medición. Los números se afinan cuando el alcance esté definido.
+> Fuente: el canvas **"Dr. Bike Shop Mockups"** (25 artboards, actualizado el 1-oct-2026).
+> El diseño está decidido; **el código todavía no existe** en el repositorio. El alcance de
+> abajo está leído de los mockups, no inventado. Lo que falta diseñar está marcado.
 
-### 5.1 Tres niveles de tienda
+### 5.1 Qué dicen los mockups
 
-**Nivel 1 - Catálogo con cobro (35-50 días)**
-- Catálogo de productos en Supabase (accesorios, repuestos, merchandising)
-- Ficha de producto, carrito en el navegador
-- Checkout reutilizando el PaymentIntent de Stripe que ya existe
-- Admin: CRUD de productos + lista de pedidos
-- Entrega: el mecánico lo lleva en la visita, o retiro. **Sin envío postal.**
-- Obligatorio en este repo: 3 idiomas, tests, los 14 gates de CI, tema claro y oscuro
+**Modelo de negocio:** dropshipping de **un solo proveedor, LEBYCLE**. Fotos del catálogo
+2026 de LEBYCLE (páginas 41-115), precios tomados de su tienda oficial en AliExpress para
+Australia, medidos el 30-sep-2026. Posicionamiento declarado: "una sola marca, a propósito -
+precio de taller, directo de fábrica".
 
-**Nivel 2 - Tienda completa con envío (75-105 días)** <- el realista
-Todo lo del nivel 1, más:
-- Stock real ligado a `parts_inventory` y al inventario de furgoneta
-- Envío: integración con Australia Post o Sendle, cálculo de costo por peso y código postal,
-  etiquetas, número de seguimiento
-- Variantes de producto (talla, color), múltiples imágenes, búsqueda y filtros
-- Cupones aplicables a productos, GST en la factura, factura fiscal australiana válida
-- Emails de pedido, envío y entrega en 3 idiomas; devoluciones y reembolsos
-- Admin: pedidos con estados, picking, informes de ventas, márgenes
-- Descuento automático para miembros Basic/Standard/VIP
+**Volumen:** 154 productos distintos salidos de una planilla de 1,020 líneas (las medidas y
+los calces viven dentro de cada producto). El canvas menciona un modelo de 296 productos.
 
-**Nivel 3 - B2B y marketplace (130-180 días)**
-Todo lo del nivel 2, más:
-- Cuentas B2B con precios por cliente, órdenes de compra, facturación a 30 días
-- Proveedores, dropshipping, reposición automática de stock
-- Catálogo de terceros (tiendas de bici haciendo overflow, lo que el roadmap pone en 2027)
+**Superficie diseñada y decidida:**
 
-### 5.2 Costo de la tienda por nivel
+| Pieza | Estado en el canvas |
+|---|---|
+| Franja de tienda en la home | Elegida (opción C, con los cambios de Diego) |
+| Página Shop (hero, barra de confianza, bloque LEBYCLE, "New this week") | Elegida (opción 1) |
+| Página de categoría con filtros | Elegida (opción 4) |
+| Catálogo completo, 20 por página, 4 por fila, selector 20/30/50 | Elegida (grid A) |
+| Ficha de producto con matriz de variantes | Diseñada (nueva) |
+| Celular: lista, menú hamburguesa, ficha de producto, gestos | Elegida (opción A + menú) |
+| **Carrito y checkout** | **Sin diseñar todavía** |
+| **Admin de productos y pedidos** | **Sin diseñar todavía** |
 
-| Nivel | Esfuerzo | AU premium | AU mediana | Nearshore | Offshore |
-|---|---|---|---|---|---|
-| 1. Catálogo con cobro | 35-50 días | $56k - $100k | $33k - $70k | $15k - $38k | $8k - $20k |
-| **2. Tienda completa** | **75-105 días** | **$120k - $210k** | **$71k - $147k** | **$33k - $80k** | **$18k - $42k** |
-| 3. B2B / marketplace | 130-180 días | $208k - $360k | $124k - $252k | $57k - $137k | $31k - $72k |
+**Funciones que los mockups ya comprometen:**
 
-### 5.3 Por qué la tienda no es barata en este repo
+1. **6 categorías** (Brakes, Drivetrain, Wheels, Cockpit, Tools, Care) más Clearance.
+2. **Filtros facetados** con contadores por tipo (46 disc pads, 38 rim shoes, 24 rotors...).
+3. **Matriz de variantes.** El tubo de cámara es un producto con **41 combinaciones**:
+   medida de rueda x tipo de válvula (Schrader/Presta) x largo de válvula (32/48/60 mm).
+   Un precio, 41 SKU.
+4. **"Calza con mi bici".** Lee la bici guardada en el perfil del cliente ("Your Giant
+   Escape 3 takes 700 x 23/28C") y tiene botón "Only show what fits". Esto necesita una
+   base de datos de calces, que no es un campo: es un modelo de datos nuevo.
+5. **"In the van now" vs "Made to order"** como filtro de disponibilidad. Eso se lee de
+   `parts_inventory`, la misma tabla que el mecánico usa para descontar repuestos.
+6. **"Order before your service and we fit it free"** - une un pedido de tienda con una
+   reserva de servicio.
+7. **Envío gratis sobre $80**, envío con seguimiento a toda Australia, garantía 12 meses.
+8. **Selector de idioma en el encabezado** - o sea, los 3 idiomas sobre 154-296 productos.
+9. Badges New / Sale / Order, precio anterior tachado, orden por precio, buscador,
+   migas de pan, productos relacionados, ayuda por WhatsApp con foto.
 
-Una tienda aislada es un problema resuelto. Aquí no está aislada:
+Dos cosas quedaron abiertas en los propios mockups: `[CONFIRMAR PLAZO DE ENTREGA]` y
+`[FOTO DE LA VAN]`.
 
-1. **Cuatro superficies, no una.** Catálogo y carrito tienen que vivir en la SPA móvil, en
-   la landing de escritorio, en el admin (gestión) y tocar la app del mecánico (stock de
-   furgoneta). Una tienda nueva se construye una vez; esta se construye cuatro veces.
-2. **Tres idiomas obligatorios por CI.** `scripts/i18n-check.mjs` bloquea el merge si un
-   string de producto no tiene `es` y `zh`. No es opcional, es un gate.
-3. **El stock ya existe y hay que no romperlo.** `parts_inventory` lo usa el mecánico para
-   descontar repuestos en un trabajo. Vender el mismo repuesto por web significa una sola
-   fuente de verdad y bloqueos de concurrencia reales.
-4. **Pagos ya en vivo.** El webhook de Stripe actual decide reembolsos sobre reservas.
-   Meter pedidos de tienda en ese flujo es cirugía sobre dinero real, no feature nueva.
-5. **GST y factura fiscal australiana.** `api/send-invoice.js` ya genera PDF para servicios.
-   Productos tienen otro tratamiento de impuesto y de envío.
-6. **Los 14 gates y 1,577 tests.** Todo lo nuevo tiene que pasar colores, accesibilidad,
-   consentimiento, tema oscuro, assets versionados. Es calidad, pero es trabajo.
+### 5.2 Estimación de esfuerzo de la tienda
 
-### 5.4 Alternativa: no construirla (recomendación a considerar)
-
-| Opción | Costo inicial | Mensual | Trade-off |
+| # | Módulo | Días (min) | Días (max) |
 |---|---|---|---|
-| **Custom en este repo (nivel 2)** | $71k - $147k | ~$0 extra | Control total, un solo login, stock unificado, descuento de miembros nativo |
-| **Shopify + enlace desde la app** | $8k - $25k (tema + setup) | ~$50-200 AUD | Rápido y barato, pero dos sistemas: dos logins, stock duplicado, sin descuento de membresía automático |
-| **Shopify + integración real** | $25k - $65k | ~$80-300 AUD | Lo mejor de ambos, pero la integración (SSO, stock, membresías) es la parte caliente y hay que mantenerla |
-| **WooCommerce autogestionado** | $12k - $35k | ~$40-120 AUD | Más barato que Shopify a largo plazo, más mantenimiento y riesgo de seguridad |
+| 1 | Modelo de datos + importación del catálogo LEBYCLE (154-296 productos, ~1,020 variantes, fotos, códigos) | 12 | 18 |
+| 2 | Página Shop + navegación de 6 categorías + buscador | 12 | 16 |
+| 3 | Página de categoría con filtros facetados, orden, badges, precio anterior | 18 | 25 |
+| 4 | Ficha de producto con matriz de variantes (41 combos), tabs, relacionados | 14 | 20 |
+| 5 | Catálogo completo con paginación 20/30/50 | 6 | 9 |
+| 6 | Versión celular de todo + menú hamburguesa | 16 | 22 |
+| 7 | Carrito (invitado + con cuenta) + checkout Stripe + dirección + envío gratis sobre $80 | 20 | 28 |
+| 8 | "Calza con mi bici": base de calces ligada a la tabla `bikes` | 12 | 18 |
+| 9 | "In the van now" ligado a `parts_inventory` sin romper al mecánico | 6 | 10 |
+| 10 | "Pedí antes del servicio y lo instalamos gratis" (pedido unido a reserva) | 6 | 9 |
+| 11 | Operación de dropshipping: pedido a LEBYCLE, seguimiento, emails de estado, devoluciones | 14 | 20 |
+| 12 | Admin: productos, variantes, precios y márgenes, pedidos, sync del proveedor, informes | 22 | 30 |
+| 13 | Descuento de membresía y cupones sobre productos | 5 | 8 |
+| 14 | GST y factura fiscal australiana de productos | 6 | 9 |
+| 15 | i18n en/es/zh de toda la superficie de tienda | 8 | 12 |
+| 16 | Tests, los 14 gates de CI, tema oscuro, accesibilidad | 16 | 22 |
+| 17 | Diseño UX/UI (Diego ya lo hizo; una agencia lo cobra) | 20 | 28 |
+| | **Subtotal técnico** | **213** | **304** |
+| | Gestión de proyecto (~18%) | 38 | 55 |
+| | **TOTAL TIENDA** | **251** | **359** |
 
-**Mi lectura:** si la tienda es para vender accesorios y repuestos a clientes que ya reservan
-servicio, el nivel 1 custom ($33k-70k) gana a Shopify, porque el valor está justamente en que
-el carrito y la reserva compartan cuenta, descuento de membresía y la visita del mecánico.
-Si la tienda es un canal de venta independiente con envío a toda Australia, Shopify con
-integración ($25k-65k) sale mejor que construir el nivel 2 ($71k-147k).
+### 5.3 Costo de la tienda
+
+| Proveedor | Costo |
+|---|---|
+| Agencia AU premium | $402k - $718k |
+| **Agencia AU mediana** | **$238k - $503k** |
+| Freelance senior AU | $176k - $395k |
+| Nearshore | $110k - $273k |
+| Offshore | $60k - $144k |
+
+La traducción profesional de 154-296 productos a español y chino va aparte: **$8,000 a
+$22,000**. Fotografía de producto no hace falta, viene del catálogo del proveedor.
+
+### 5.4 La alternativa que cambia el número: Shopify + integración
+
+Shopify ya trae, de fábrica y gratis con la suscripción, siete de los módulos de la tabla
+5.2: variantes, filtros facetados, carrito, checkout, envío, impuestos, admin de productos
+y pedidos, y multi-idioma. Eso es **la mayor parte del costo**.
+
+Lo que Shopify **no** trae y hay que construir igual, porque es lo que hace distinta a esta
+tienda:
+
+- "Calza con tu Giant Escape 3" leyendo la bici del perfil de Dr. Bike
+- "In the van now" leyendo `parts_inventory`
+- "Pedí antes del servicio y lo instalamos gratis"
+- Descuento automático de membresía Basic / Standard / VIP
+- Una sola cuenta para reservar y comprar
+
+| Camino | Costo inicial | Mensual | Comentario |
+|---|---|---|---|
+| **Todo custom en este repo** | $238k - $503k | ~$50 extra | Control total, una sola base de código, nada que sincronizar |
+| **Shopify + tema + 296 productos importados** | $18k - $45k | $50 - $200 | Rápido, pero dos sistemas: dos cuentas, dos logins, ninguna de las cinco funciones de arriba |
+| **Shopify + integración real (recomendado)** | **$53k - $125k** | $80 - $300 | Shopify hace el comercio, el código propio hace las cinco funciones de Dr. Bike |
+
+**Recomendación:** el tercer camino. Ahorra del orden de **$150,000 a $380,000** contra
+construirlo todo, y conserva exactamente las funciones por las que esta tienda tiene sentido
+existiendo dentro de Dr. Bike y no como un AliExpress más. El riesgo que se acepta es tener
+dos sistemas que hay que mantener sincronizados.
+
+El contra-argumento honesto: con un solo proveedor y 296 productos, el catálogo es chico y
+estable. Si la tienda nunca va a crecer a varios proveedores, el custom se amortiza; si va a
+crecer (el roadmap pone B2B y overflow de tiendas en 2027), Shopify aguanta eso sin que
+nadie programe nada.
 
 ---
 
@@ -289,10 +349,11 @@ integración ($25k-65k) sale mejor que construir el nivel 2 ($71k-147k).
 | Concepto | Costo típico (AUD) |
 |---|---|
 | Redacción legal de términos y privacidad (abogado AU, ACL + Privacy Act) | $3,000 - $8,000 |
-| Términos de venta de productos y política de devoluciones (si hay tienda) | $2,000 - $5,000 |
-| Traducción profesional es/zh (2,404 strings + 24 páginas + catálogo) | $6,000 - $18,000 |
+| Términos de venta y política de devoluciones (obligatorio con tienda) | $2,000 - $5,000 |
+| Traducción profesional es/zh (2,404 strings + 24 páginas) | $6,000 - $15,000 |
+| Traducción de 154-296 productos a es/zh (si la tienda es custom) | $8,000 - $22,000 |
 | Marca, logo y sistema visual (si no existiera) | $3,000 - $10,000 |
-| Fotografía de producto para la tienda | $3,000 - $9,000 |
+| Fotografía de producto | $0 (las fotos vienen del catálogo LEBYCLE) |
 | Fotografía y video de servicio | $2,000 - $5,000 |
 | Auditoría de seguridad / pentest previo a lanzamiento | $8,000 - $25,000 |
 | Registro de marca IP Australia | ~$400 - $1,500 |
@@ -319,7 +380,7 @@ o **$24,000 a $42,000** a tarifa premium. En una semana.
 Esto importa para la decisión: el costo de reemplazo de la app no es un número congelado,
 sube entre $14k y $29k por semana de desarrollo activo. También importa al revés - si la
 tienda se construye al ritmo actual en vez de contratarla, el ahorro es del orden de
-$71k-147k para el nivel 2.
+**$238k-503k** si va custom, o **$53k-125k** si va sobre Shopify.
 
 ---
 
@@ -327,7 +388,7 @@ $71k-147k para el nivel 2.
 
 ### 8.1 Infraestructura (mensual, AUD aproximado)
 
-| Servicio | Hoy | Con tienda nivel 2 |
+| Servicio | Hoy | Con la tienda |
 |---|---|---|
 | Vercel Pro | $30 - $90 | $40 - $120 |
 | Supabase Pro (incluye storage de fotos) | $40 - $160 | $60 - $220 |
@@ -344,7 +405,7 @@ Stripe cobra aparte por transacción (aprox. 1.75% + $0.30 en tarjetas doméstic
 ### 8.2 Mantenimiento
 
 Las agencias cobran un retainer anual del **15% al 25% del costo de construcción**. Sobre un
-build de $700k (app + tienda nivel 2 a tarifa mediana) eso son **$105,000 a $175,000 AUD al
+build de $800k (app + tienda custom a tarifa mediana) eso son **$120,000 a $200,000 AUD al
 año** solo para correcciones, parches de dependencias y cambios menores. Cualquier función
 nueva se cotiza aparte.
 
@@ -355,11 +416,13 @@ nueva se cotiza aparte.
 | Escenario | Equipo típico | Calendario |
 |---|---|---|
 | A (clon 1:1, sin tienda) | 5-6 personas | 8 - 12 meses |
-| A + tienda nivel 2 | 6-7 personas | 10 - 14 meses |
+| A + tienda custom | 6-7 personas | 11 - 16 meses |
 | B (alcance comercial) | 4-5 personas | 6 - 9 meses |
-| B + tienda nivel 2 | 5-6 personas | 8 - 11 meses |
+| B + tienda custom | 5-6 personas | 9 - 13 meses |
+| B + tienda sobre Shopify | 4-5 personas | 7 - 10 meses |
 | C (MVP) | 3 personas | 3 - 4 meses |
-| Solo la tienda nivel 2, sobre la app ya existente | 2-3 personas | 4 - 6 meses |
+| Solo la tienda custom, sobre la app ya existente | 3-4 personas | 6 - 9 meses |
+| Solo la tienda sobre Shopify + integración | 2 personas | 2 - 3 meses |
 
 Los plazos incluyen discovery, ciclos de revisión y UAT. No incluyen el tiempo de Diego
 dando feedback, que en la práctica es el cuello de botella real en proyectos de agencia.
@@ -401,10 +464,13 @@ suben el presupuesto entre un 25% y un 40%.
   cuesta lo que dice la tabla; lo que vale depende de los ingresos que genere.
 - Las tarifas son rangos de industria, no cotizaciones. Para un número firme hay que pedir
   presupuesto con este mismo documento como pliego de alcance.
-- **La tienda está estimada, no medida.** El rango 75-105 días del nivel 2 se mueve
-  fácilmente un 40% según cuántos productos, si hay variantes, si hay envío y si el stock se
-  unifica con el de la furgoneta. Definir eso antes de pedir cotización baja el precio más
-  que negociar la tarifa.
+- **La tienda está diseñada pero no construida.** El alcance de la sección 5 se leyó de los
+  mockups, así que es firme en lo que está dibujado, pero **el carrito, el checkout y el
+  admin de pedidos todavía no se diseñaron**: son los módulos 7 y 12 de la tabla 5.2, entre
+  42 y 58 días, el bloque más grande sin dibujar. Ahí está el margen de error.
+- Los precios de la tienda salen de AliExpress medidos el 30-sep-2026. Un proveedor único en
+  China es un riesgo de negocio (tipo de cambio, plazos, aranceles), no de software, pero
+  afecta el valor de construir la tienda y conviene decidirlo antes de gastar en código.
 
 ---
 
@@ -414,12 +480,16 @@ Si Diego quiere validar el número con el mercado:
 
 1. Enviar las secciones 2 y 3 a tres agencias como especificación de alcance.
 2. Pedir cotización por el **escenario B**, no por el A (el A las asusta y encarece).
-3. Para la tienda, pedir cotización **por separado y por nivel** (sección 5.1). Una agencia
-   que cotiza "la tienda" sin nivel definido siempre cotiza alto y después recorta.
+3. Para la tienda, mandar el canvas "Dr. Bike Shop Mockups" junto con la tabla 5.2 y pedir
+   **dos cotizaciones: una custom y una sobre Shopify**. Sin los mockups toda agencia cotiza
+   alto por las dudas.
 4. Comparar contra las tablas de la sección 1. Cualquier cotización por debajo de $200k para
    el escenario B implica recorte de alcance, offshore sin gestión, o ambas.
 5. Exigir que la cotización diga explícitamente qué incluye en tests, i18n, accesibilidad y
    documentación. Es ahí donde se esconde la diferencia entre $250k y $700k.
-6. Antes de encargar la tienda, decidir la pregunta de la sección 5.4: canal integrado
-   (custom nivel 1) o canal independiente con envío (Shopify integrado). Son presupuestos
-   muy distintos.
+6. Antes de encargar la tienda, decidir la pregunta de la sección 5.4: todo custom o Shopify
+   con integración. Son entre $150,000 y $380,000 de diferencia, y es la decisión más cara
+   que hay pendiente hoy.
+7. Terminar de diseñar el carrito, el checkout y el admin de pedidos antes de pedir
+   cotización de la tienda. Son 42-58 días de los 251-359 totales, y cotizar a ciegas sobre
+   ellos es donde una agencia carga su contingencia.
