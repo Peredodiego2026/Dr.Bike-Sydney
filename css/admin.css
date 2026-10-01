@@ -3087,6 +3087,12 @@ body {
   background: var(--amber-bright);
   color: rgba(255, 255, 255, 1);
 }
+/* A review photo whose client did not allow website use. */
+.ph-star-toggle.locked {
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: not-allowed;
+}
 .ph-star-toggle svg {
   width: 17px;
   height: 17px;

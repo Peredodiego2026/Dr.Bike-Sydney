@@ -1780,6 +1780,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const p = new URLSearchParams(window.location.search);
   const reviewId = p.get('review');
   if (!reviewId) return;
+  // `t` is the credential the emailed link carries (api/_review-auth.js). This
+  // modal used to read only `review` and send no credential at all, so the
+  // server refused every review left from a computer with "access_token and
+  // client_id, or tracking_token, required". js/app.js reads `t` the same way;
+  // on landing.html this script runs first and clears the URL before it can.
+  const reviewToken = p.get('t') || '';
   history.replaceState({}, '', '/');
 
   let currentRating = 0;
@@ -1857,6 +1863,13 @@ document.addEventListener('DOMContentLoaded', function() {
               '</button>',
             '</div>',
           '</div>',
+          '<label id="rv-photo-web" style="display:none;align-items:flex-start;gap:10px;margin-top:12px;min-height:44px;cursor:pointer">',
+            '<input type="checkbox" id="rv-photo-web-ok" style="width:20px;height:20px;margin:2px 0 0;flex-shrink:0;accent-color:var(--blue)">',
+            '<span style="display:flex;flex-direction:column;gap:2px">',
+              '<span style="font-size:14px;color:var(--navy)">Dr. Bike Sydney can show this photo on its website</span>',
+              '<span style="font-size:12px;color:var(--gray)">Optional. You can ask us to remove it anytime.</span>',
+            '</span>',
+          '</label>',
         '</div>',
         '<div id="rv-err" style="display:none;font-size:13px;color:var(--red-text);padding:8px 10px;background:var(--red-lt);border-radius:8px;text-align:center"></div>',
         '<button id="rv-submit" style="width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Submit review</button>',
@@ -1893,6 +1906,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const lbl = document.getElementById('rv-photo-lbl');
     lbl.style.borderColor = 'var(--blue)';
     lbl.style.background = 'var(--blue-lt)';
+    // Asked only once there is a photo, unticked: website use is opt-in.
+    document.getElementById('rv-photo-web').style.display = 'flex';
   });
 
   // Photo remove
@@ -1905,6 +1920,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const lbl = document.getElementById('rv-photo-lbl');
     lbl.style.borderColor = 'var(--border)';
     lbl.style.background = 'var(--surface)';
+    document.getElementById('rv-photo-web').style.display = 'none';
+    document.getElementById('rv-photo-web-ok').checked = false;
   });
 
   // Submit
@@ -1915,11 +1932,31 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.disabled = true; btn.textContent = 'Submitting...'; errEl.style.display = 'none';
     const comment = (document.getElementById('rv-comment').value || '').trim();
 
-    const doSubmit = function(photoBase64) {
+    const webOk = document.getElementById('rv-photo-web-ok').checked;
+    const doSubmit = async function(photoBase64) {
+      // Same rule as js/supabase.js submitReview: the link's token wins, the
+      // session is the fallback, and with neither there is nothing to send.
+      let cred = null;
+      if (reviewToken) cred = { tracking_token: reviewToken };
+      else {
+        try {
+          const sess = (await _sb.auth.getSession()).data.session;
+          if (sess && sess.user) cred = { access_token: sess.access_token, client_id: sess.user.id };
+        } catch (e) {
+          console.warn('[review] could not read the session:', e.message);
+        }
+      }
+      if (!cred) {
+        errEl.textContent = 'Please sign in to leave a review.';
+        errEl.style.display = 'block';
+        btn.textContent = 'Submit review';
+        btn.disabled = false;
+        return;
+      }
       fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'client-review', booking_id: reviewId, rating: currentRating, comment: comment, photo_base64: photoBase64 || null })
+        body: JSON.stringify(Object.assign({ role: 'client-review', booking_id: reviewId, rating: currentRating, comment: comment, photo_base64: photoBase64 || null, photo_web_ok: !!photoBase64 && webOk }, cred))
       })
       .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
       .then(function(res) {

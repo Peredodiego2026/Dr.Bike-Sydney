@@ -4069,6 +4069,13 @@ async function renderReview() {
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--white)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
+      <label id="review-photo-web" style="display:none;align-items:flex-start;gap:10px;margin-top:12px;min-height:44px;cursor:pointer">
+        <input type="checkbox" id="review-photo-web-ok" style="width:20px;height:20px;margin:2px 0 0;flex-shrink:0;accent-color:var(--color-primary)">
+        <span style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14px;color:var(--navy)">Dr. Bike Sydney can show this photo on its website</span>
+          <span style="font-size:12px;color:var(--gray)">Optional. You can ask us to remove it anytime.</span>
+        </span>
+      </label>
     </div>
     <div id="review-error" class="booking-error" hidden></div>
     <button class="btn btn--primary btn--full" id="submit-review-btn">Submit Review</button>
@@ -4110,6 +4117,9 @@ async function renderReview() {
     const lbl = screen.querySelector('#review-photo-label');
     lbl.style.borderColor = 'var(--color-primary)';
     lbl.style.background = 'var(--blue-lt)';
+    // The website question only makes sense once there is a photo to ask
+    // about. Unticked by default: using it is opt-in, never assumed.
+    screen.querySelector('#review-photo-web').style.display = 'flex';
   });
 
   screen.querySelector('#review-photo-remove').addEventListener('click', function (e) {
@@ -4121,6 +4131,8 @@ async function renderReview() {
     const lbl = screen.querySelector('#review-photo-label');
     lbl.style.borderColor = 'var(--border)';
     lbl.style.background = 'var(--surface)';
+    screen.querySelector('#review-photo-web').style.display = 'none';
+    screen.querySelector('#review-photo-web-ok').checked = false;
   });
 
   screen.querySelector('#submit-review-btn').addEventListener('click', async () => {
@@ -4145,7 +4157,8 @@ async function renderReview() {
         currentRating,
         textarea.value.trim(),
         photoBase64,
-        window._pendingReviewToken || ''
+        window._pendingReviewToken || '',
+        !!photoBase64 && screen.querySelector('#review-photo-web-ok').checked
       );
     } catch (e) {
       errEl.textContent = translateValue(e.message || 'Could not submit review. Please try again.');
