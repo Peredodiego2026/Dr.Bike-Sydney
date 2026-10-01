@@ -92,7 +92,7 @@ beforeEach(async () => {
   signedFor = [];
   currentUser = { id: 'u1', email: 'peredo.dm@gmail.com' };
   vi.resetModules();
-  handler = (await import('../../api/shop.js')).default;
+  handler = (await import('../../api/_shop.js')).handleShop;
 });
 
 afterEach(() => {
@@ -161,13 +161,13 @@ describe('sin permiso no hay tienda, y no se nota que existe', () => {
   it('la lista de emails se puede ampliar por variable de entorno', async () => {
     process.env.SHOP_PREVIEW_EMAILS = 'otro@drbikesydney.com.au, peredo.dm@gmail.com';
     vi.resetModules();
-    handler = (await import('../../api/shop.js')).default;
+    handler = (await import('../../api/_shop.js')).handleShop;
     currentUser = { id: 'u3', email: 'OTRO@drbikesydney.com.au' };
     expect((await call()).statusCode).toBe(200);
   });
 
   it('sin la variable puesta, solo entra Diego', async () => {
-    const { previewEmails, maySeeShop } = await import('../../api/shop.js');
+    const { previewEmails, maySeeShop } = await import('../../api/_shop.js');
     expect(previewEmails()).toEqual(['peredo.dm@gmail.com']);
     expect(maySeeShop('alguien@gmail.com')).toBe(false);
     expect(maySeeShop('')).toBe(false);

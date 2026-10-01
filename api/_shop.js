@@ -1,4 +1,10 @@
-// api/shop.js - el catalogo de repuestos LEBYCLE, para quien tenga permiso.
+// api/_shop.js - el catalogo de repuestos LEBYCLE, para quien tenga permiso.
+//
+// Empieza con guion bajo, igual que _security.js o _eta.js, porque NO es una
+// funcion propia: el plan de Vercel admite 12 y el proyecto ya tenia 12. Esta
+// habria sido la 13 y el deploy fallaba entero. Se entra por /api/shop, que
+// vercel.json reescribe a /api/auth?role=shop - el mismo arreglo que ya usan
+// /api/send-b2b-inquiry y /api/mechanic-auth.
 //
 // POR QUE ESTO ES UN ENDPOINT Y NO UN ARCHIVO
 //
@@ -34,7 +40,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { guard } from './_security.js';
 import Stripe from 'stripe';
-import { withSentry } from './_sentry.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -280,7 +285,7 @@ async function handleConfirm(req, res, sb, user) {
   return res.status(200).json({ status: 'paid', orderId: order.id });
 }
 
-async function handler(req, res) {
+export async function handleShop(req, res) {
   if (!(await guard(req, res, { methods: ['GET', 'POST'], limit: 60 }))) return;
 
   const token = readToken(req);
@@ -357,7 +362,3 @@ async function handler(req, res) {
     products: list,
   });
 }
-
-// Como todos los endpoints de este proyecto: un error que nadie ve es un
-// error que nadie arregla (tests/unit/csp-and-error-reporting.test.js).
-export default withSentry(handler, 'shop');

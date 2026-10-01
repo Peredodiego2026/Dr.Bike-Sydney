@@ -97,7 +97,7 @@ beforeEach(async () => {
   orderRow = { id: 'order-1', client_id: 'u1', payment_intent_id: 'pi_test_123', status: 'pending', total: '13.90' };
   process.env.SHOP_STRIPE_SECRET_KEY = 'sk_test_fake';
   vi.resetModules();
-  handler = (await import('../../api/shop.js')).default;
+  handler = (await import('../../api/_shop.js')).handleShop;
 });
 
 afterEach(() => {
@@ -222,7 +222,7 @@ describe('la tienda no cobra de verdad mientras sea un preview', () => {
     delete process.env.SHOP_STRIPE_SECRET_KEY;
     process.env.STRIPE_SECRET_KEY = 'sk_live_del_negocio';
     vi.resetModules();
-    const h = (await import('../../api/shop.js')).default;
+    const h = (await import('../../api/_shop.js')).handleShop;
     const res = await h(
       { method: 'POST', query: { action: 'checkout' }, headers: { authorization: 'Bearer good' }, body: { items: [{ sku: 'TB-20-AV32L', qty: 1 }] } },
       fakeRes()
