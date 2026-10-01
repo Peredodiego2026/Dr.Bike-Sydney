@@ -2734,3 +2734,363 @@ body {
   color: var(--navy);
   border-color: var(--mgray);
 }
+
+/* ── Photos (Admin > Photos, js/admin.js loadPhotos) ──────────────────────── */
+.ph-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.ph-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--off);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+}
+.ph-tab {
+  border: none;
+  background: transparent;
+  color: var(--mgray);
+  font: 600 13px var(--sans);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.ph-tab.on {
+  background: var(--white);
+  color: var(--navy);
+  box-shadow: var(--shadow);
+}
+.ph-select-btn {
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  font: 600 13px var(--sans);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.ph-select-btn.on {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--white);
+}
+.ph-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.ph-filters .inp {
+  width: auto;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+.ph-filters input[type='search'] {
+  flex: 1;
+  min-width: 160px;
+}
+.ph-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--mgray);
+}
+.ph-count {
+  font-size: 12px;
+  color: var(--mgray);
+  margin-bottom: 12px;
+}
+.ph-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 80px;
+}
+.ph-empty {
+  text-align: center;
+  color: var(--mgray);
+  padding: 48px 16px;
+  font-size: 13px;
+}
+.ph-empty strong {
+  display: block;
+  color: var(--navy);
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.ph-job {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.ph-job-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.ph-job-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.ph-job-sub {
+  font-size: 12px;
+  color: var(--mgray);
+}
+.ph-job-link {
+  font: 600 12px var(--sans);
+  color: var(--blue-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 4px 0;
+}
+.ph-month {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mgray);
+  margin: 8px 0 -4px;
+}
+.ph-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+}
+.ph-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--off);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+}
+.ph-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ph-tile-missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 11px;
+  color: var(--mgray);
+  padding: 8px;
+  text-align: center;
+}
+.ph-chip {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+.ph-star {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: var(--amber-bright);
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+.ph-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.3);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+  font-weight: 700;
+}
+.ph-selecting .ph-check {
+  display: flex;
+}
+.ph-tile.sel {
+  outline: 3px solid var(--blue);
+  outline-offset: -3px;
+}
+.ph-tile.sel img {
+  opacity: 0.8;
+}
+.ph-tile.sel .ph-check {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+.ph-actionbar {
+  /* Fixed, like a phone gallery's toolbar: sticky did not hold on the phone
+     layout, where the bar ended up below the last photo, off screen. */
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(760px, calc(100% - 32px));
+  /* Above the cookie card while it is up (js/consent.js publishes its height). */
+  bottom: calc(16px + var(--consent-h, 0px));
+  z-index: 8000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  padding: 10px 14px;
+}
+@media (max-width: 768px) {
+  /* Clear the admin's own bottom nav (60px + the home-indicator inset). */
+  .ph-actionbar {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px) + var(--consent-h, 0px));
+  }
+  .ph-content {
+    padding-bottom: 160px;
+  }
+}
+.ph-actionbar[hidden] {
+  display: none;
+}
+.ph-sel-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.ph-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ph-btn {
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  font: 600 13px var(--sans);
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 40px;
+}
+.ph-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ph-btn-primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--white);
+}
+.ph-btn-danger {
+  color: var(--red-text);
+  border-color: var(--red-lt);
+}
+.ph-viewer {
+  position: fixed;
+  inset: 0;
+  /* Under the admin toast (9999), so its confirmation shows on top. */
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 16px 16px;
+}
+.ph-viewer[hidden] {
+  display: none;
+}
+.ph-viewer img {
+  max-width: 100%;
+  max-height: calc(100vh - 220px);
+  object-fit: contain;
+  border-radius: 8px;
+}
+.ph-v-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 26px;
+  cursor: pointer;
+}
+.ph-v-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 64px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 34px;
+  cursor: pointer;
+}
+.ph-v-prev {
+  left: 12px;
+}
+.ph-v-next {
+  right: 12px;
+}
+.ph-v-panel {
+  margin-top: 14px;
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ph-v-meta {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ph-v-meta strong {
+  font-size: 15px;
+}
+.ph-v-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

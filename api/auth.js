@@ -47,6 +47,15 @@ import {
   signPhotoMessages,
   createJobPhotoUpload,
 } from './_job-photos.js';
+import {
+  photoSource,
+  collectPhotos,
+  signMany,
+  listShowcase,
+  copyToShowcase,
+  removeFromShowcase,
+  showcasePublicUrl,
+} from './_photo-gallery.js';
 // The factor lookup runs in front of every admin request. Four seconds is
 // long enough for a healthy Supabase and short enough that a sick one costs a
 // pause, not the panel.
@@ -5115,6 +5124,104 @@ export async function handlePhotoSign(req, res) {
   return res.status(200).json({ urls });
 }
 
+// ── Admin > Photos (api/_photo-gallery.js) ───────────────────────────────────
+// Every job photo, newest first, with the client, service and date of its
+// booking, signed for an hour, and whether it is on the website.
+const UUID_RE = /^[0-9a-f-]{8,64}$/i;
+export async function handleAdminPhotosList(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const h = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const cols = 'id,client_name,service_name,scheduled_date,status';
+  const [bkR, msgR] = await Promise.all([
+    fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=${cols},photo_before_url,photo_after_url&or=(photo_before_url.not.is.null,photo_after_url.not.is.null)&order=scheduled_date.desc&limit=1000`,
+      { headers: h }
+    ),
+    fetch(
+      `${SUPABASE_URL}/rest/v1/job_messages?select=booking_id,message,created_at&message=like.*PHOTO:*&order=created_at.desc&limit=2000`,
+      { headers: h }
+    ),
+  ]);
+  if (!bkR.ok || !msgR.ok) return res.status(500).json({ error: 'Could not load photos' });
+  const bookings = (await bkR.json()) || [];
+  const messages = (await msgR.json()) || [];
+
+  // A chat photo can belong to a booking with no before/after photo: fetch
+  // those bookings too, so every photo has a client and a service.
+  const known = new Set(bookings.map((b) => b.id));
+  const missing = [
+    ...new Set(messages.map((m) => m.booking_id).filter((id) => UUID_RE.test(String(id || '')))),
+  ].filter((id) => !known.has(id));
+  for (let i = 0; i < missing.length; i += 100) {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=${cols}&id=in.(${missing.slice(i, i + 100).join(',')})`,
+      { headers: h }
+    );
+    if (r.ok) bookings.push(...((await r.json()) || []));
+  }
+
+  const opts = jobPhotoOpts();
+  const photos = collectPhotos({ bookings, messages, supabaseUrl: SUPABASE_URL });
+  const signed = await signMany(
+    photos.filter((p) => p.bucket === JOB_PHOTO_BUCKET).map((p) => p.path),
+    opts
+  );
+  let onSite = null;
+  try {
+    onSite = new Set(await listShowcase(opts));
+  } catch (e) {
+    console.warn('[admin-photos] could not list the website photos:', e.message);
+  }
+  return res.status(200).json({
+    photos: photos.map((p) => ({
+      ...p,
+      url: p.bucket === JOB_PHOTO_BUCKET ? signed.get(p.path) || null : p.ref,
+      on_website: onSite ? onSite.has(p.showcase_name) : null,
+      website_url: onSite?.has(p.showcase_name)
+        ? showcasePublicUrl(p.showcase_name, SUPABASE_URL)
+        : null,
+    })),
+    website_known: !!onSite,
+  });
+}
+
+// "Show on website": copies the photos into the public showcase folder. The
+// private original stays private (api/_photo-gallery.js).
+export async function handleAdminPhotosFeature(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const refs = Array.isArray(req.body?.refs) ? req.body.refs.slice(0, 50) : [];
+  if (!refs.length) return res.status(400).json({ error: 'refs required' });
+  const opts = jobPhotoOpts();
+  const done = [];
+  const failed = [];
+  for (const ref of refs) {
+    const src = photoSource(ref, SUPABASE_URL);
+    if (src && (await copyToShowcase(src, opts))) done.push(ref);
+    else failed.push(ref);
+  }
+  return res.status(failed.length && !done.length ? 502 : 200).json({ done, failed });
+}
+
+// "Remove from website": deletes only the copies in the showcase folder.
+export async function handleAdminPhotosUnfeature(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const names = Array.isArray(req.body?.names) ? req.body.names.slice(0, 200) : [];
+  if (!names.length) return res.status(400).json({ error: 'names required' });
+  try {
+    const removed = await removeFromShowcase(names, jobPhotoOpts());
+    return res.status(200).json({ removed });
+  } catch (e) {
+    console.warn('[admin-photos] remove failed:', e.message);
+    return res.status(502).json({ error: 'Could not remove from website' });
+  }
+}
+
 async function handleAdminClaimsUpdate(req, res) {
   const { access_token, id, status, resolution_notes } = req.body || {};
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -5919,6 +6026,8 @@ async function handler(req, res) {
           role === 'admin-expenses-list' ||
           // One call per photo that arrives in an open chat.
           role === 'photo-sign' ||
+          // Admin > Photos re-reads the list after every select-and-act.
+          role.startsWith('admin-photos-') ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -5993,6 +6102,9 @@ async function handler(req, res) {
   if (role === 'admin-closed-until') return handleAdminClosedUntil(req, res);
   if (role === 'admin-expenses-delete') return handleAdminExpensesDelete(req, res);
   if (role === 'admin-claims-list') return handleAdminClaimsList(req, res);
+  if (role === 'admin-photos-list') return handleAdminPhotosList(req, res);
+  if (role === 'admin-photos-feature') return handleAdminPhotosFeature(req, res);
+  if (role === 'admin-photos-unfeature') return handleAdminPhotosUnfeature(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);

@@ -517,6 +517,7 @@ const titles = {
   finance: 'Finance',
   zones: 'Zone Manager',
   claims: 'Claims',
+  photos: 'Photos',
   orphans: 'Orphan Payments',
   expenses: 'Expenses',
   settings: 'Settings',
@@ -538,6 +539,7 @@ const subs = {
   analytics: 'Sign-ups · bookings · revenue · funnel · traffic',
   zones: 'Assign suburbs to each van',
   claims: 'Warranty claims from clients - review evidence and resolve',
+  photos: 'Every job photo - by job or all together, and the ones on the website',
   orphans: 'Money Stripe took with no booking behind it - read-only, refunds stay in Stripe',
   expenses: 'What the business actually spent - this is what the P&L subtracts',
   settings: 'System settings',
@@ -557,6 +559,7 @@ function go(page, btn) {
   document.getElementById('sb-overlay').classList.remove('open');
   if (page === 'zones') loadVanZones();
   if (page === 'claims') loadClaims();
+  if (page === 'photos') loadPhotos();
   if (page === 'expenses') loadExpenses();
   if (page === 'finance') {
     const now = new Date();
@@ -2185,8 +2188,11 @@ function showToast(msg) {
   if (!t) {
     t = document.createElement('div');
     t.id = 'admin-toast';
+    // pointer-events:none - it fades to opacity 0 but stays in the page, so it
+    // used to swallow every click on whatever sat under its corner, forever,
+    // after the first toast. Found on the Photos action bar (01-oct-2026).
     t.style.cssText =
-      'position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;font-family:var(--sans)';
+      'position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;font-family:var(--sans);pointer-events:none';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -6530,6 +6536,367 @@ async function loadClaims() {
       showToast('Claim updated ✓');
       loadClaims();
     });
+  });
+}
+
+// ── PHOTOS ────────────────────────────────────────────────────────────────────
+// Every job photo in one place (api/_photo-gallery.js): by job, all together,
+// or only the ones on the website. "Select" works like a phone gallery - tap to
+// pick, then download, show on the website or take off it. "Show on website"
+// copies the photo into a public folder for the landing-page carousel; the
+// private original is never made public, and "remove" deletes only the copy.
+let _photos = [];
+let _photosView = 'jobs';
+let _photoSel = null; // Set of keys while selecting, null otherwise
+let _photoViewerList = [];
+let _photoViewerIdx = -1;
+let _photosWired = false;
+
+async function photosApi(role, extra = {}) {
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) throw new Error('Admin session expired - sign in again');
+  const r = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role, access_token: session.access_token, ...extra }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+  return d;
+}
+
+async function loadPhotos() {
+  wirePhotos();
+  const box = document.getElementById('photos-content');
+  box.innerHTML = '<div class="ph-empty">Loading photos...</div>';
+  try {
+    const d = await photosApi('admin-photos-list');
+    _photos = d.photos || [];
+    if (d.website_known === false) showToast('Could not check which photos are on the website');
+  } catch (e) {
+    box.innerHTML = `<div class="ph-empty"><strong>Could not load photos</strong>${esc(e.message)}</div>`;
+    return;
+  }
+  const services = [...new Set(_photos.map((p) => p.service_name).filter(Boolean))].sort();
+  const sel = document.getElementById('ph-service');
+  const current = sel.value;
+  sel.innerHTML =
+    '<option value="">All services</option>' +
+    services.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  sel.value = services.includes(current) ? current : '';
+  renderPhotos();
+}
+
+function filteredPhotos() {
+  const q = document.getElementById('ph-q').value.trim().toLowerCase();
+  const service = document.getElementById('ph-service').value;
+  const kind = document.getElementById('ph-kind').value;
+  const from = document.getElementById('ph-from').value;
+  const to = document.getElementById('ph-to').value;
+  return _photos.filter((p) => {
+    if (_photosView === 'website' && !p.on_website) return false;
+    if (
+      q &&
+      !String(p.client_name || '')
+        .toLowerCase()
+        .includes(q)
+    )
+      return false;
+    if (service && p.service_name !== service) return false;
+    if (kind && p.kind !== kind) return false;
+    const day = (p.taken_at || p.booking_date || '').slice(0, 10);
+    if (from && (!day || day < from)) return false;
+    if (to && (!day || day > to)) return false;
+    return true;
+  });
+}
+
+const PHOTO_KIND_LABEL = { before: 'Before', after: 'After', chat: 'Chat' };
+
+function photoDay(p) {
+  const d = p.taken_at || p.booking_date;
+  return d
+    ? new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'No date';
+}
+
+function photoTile(p) {
+  const picked = _photoSel?.has(p.key);
+  const img = p.url
+    ? `<img src="${esc(p.url)}" alt="${esc(PHOTO_KIND_LABEL[p.kind])} - ${esc(p.client_name || '')}" loading="lazy">`
+    : '<span class="ph-tile-missing">Could not load this photo</span>';
+  return `<button type="button" class="ph-tile${picked ? ' sel' : ''}" data-ph-key="${esc(p.key)}" aria-pressed="${picked ? 'true' : 'false'}">
+    ${img}
+    <span class="ph-chip">${esc(PHOTO_KIND_LABEL[p.kind])}</span>
+    ${p.on_website ? '<span class="ph-star" title="On website">&#11088; Web</span>' : ''}
+    <span class="ph-check">${picked ? '&#10003;' : ''}</span>
+  </button>`;
+}
+
+function renderPhotos() {
+  const box = document.getElementById('photos-content');
+  const list = filteredPhotos();
+  _photoViewerList = list;
+  document.getElementById('photos-app').classList.toggle('ph-selecting', !!_photoSel);
+  const onSite = _photos.filter((p) => p.on_website).length;
+  document.getElementById('ph-count').textContent =
+    `${list.length} of ${_photos.length} photos` + (onSite ? ` · ${onSite} on the website` : '');
+
+  if (!_photos.length) {
+    box.innerHTML =
+      '<div class="ph-empty"><div style="font-size:36px;margin-bottom:8px">&#128247;</div><strong>No photos yet</strong>Before/after photos from the mechanic app and photos sent in the job chat will appear here.</div>';
+  } else if (!list.length) {
+    box.innerHTML =
+      _photosView === 'website'
+        ? '<div class="ph-empty"><strong>Nothing on the website yet</strong>Tap Select, pick photos, then Show on website.</div>'
+        : '<div class="ph-empty"><strong>No photos match</strong>Try clearing a filter.</div>';
+  } else if (_photosView === 'jobs') {
+    const groups = new Map();
+    for (const p of list) {
+      if (!groups.has(p.booking_id)) groups.set(p.booking_id, []);
+      groups.get(p.booking_id).push(p);
+    }
+    box.innerHTML = [...groups.values()]
+      .map((items) => {
+        const p = items[0];
+        const date = p.booking_date
+          ? new Date(p.booking_date + 'T00:00:00').toLocaleDateString('en-AU', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })
+          : photoDay(p);
+        return `<div class="ph-job">
+          <div class="ph-job-head">
+            <div style="min-width:0">
+              <div class="ph-job-title">${esc(p.client_name || 'Client')}</div>
+              <div class="ph-job-sub">${esc(p.service_name || 'Service')} · ${esc(date)} · ${items.length} photo${items.length === 1 ? '' : 's'}</div>
+            </div>
+            <button type="button" class="ph-job-link" data-ph-booking="${esc(p.booking_id)}">Open booking &rsaquo;</button>
+          </div>
+          <div class="ph-grid">${items.map(photoTile).join('')}</div>
+        </div>`;
+      })
+      .join('');
+  } else {
+    // All photos / On website: one folder, newest first, with a heading per month.
+    let html = '';
+    let month = '';
+    let grid = [];
+    const flush = () => {
+      if (grid.length) html += `<div class="ph-grid">${grid.join('')}</div>`;
+      grid = [];
+    };
+    for (const p of list) {
+      const d = p.taken_at || p.booking_date;
+      const m = d
+        ? new Date(d).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+        : 'No date';
+      if (m !== month) {
+        flush();
+        month = m;
+        html += `<div class="ph-month">${esc(m)}</div>`;
+      }
+      grid.push(photoTile(p));
+    }
+    flush();
+    box.innerHTML = html;
+  }
+  renderPhotoActionBar();
+}
+
+function renderPhotoActionBar() {
+  const bar = document.getElementById('ph-actionbar');
+  const btn = document.getElementById('ph-select-btn');
+  btn.textContent = _photoSel ? 'Cancel' : 'Select';
+  btn.classList.toggle('on', !!_photoSel);
+  bar.hidden = !_photoSel;
+  if (!_photoSel) return;
+  const picked = _photos.filter((p) => _photoSel.has(p.key));
+  document.getElementById('ph-sel-count').textContent =
+    picked.length === 1 ? '1 selected' : `${picked.length} selected`;
+  bar.querySelector('[data-ph-action="download-selected"]').disabled = !picked.some((p) => p.url);
+  bar.querySelector('[data-ph-action="feature-selected"]').disabled = !picked.some(
+    (p) => !p.on_website
+  );
+  bar.querySelector('[data-ph-action="unfeature-selected"]').disabled = !picked.some(
+    (p) => p.on_website
+  );
+}
+
+function photoFileName(p) {
+  const ext = p.path.split('.').pop() || 'jpg';
+  const day = (p.taken_at || p.booking_date || '').slice(0, 10);
+  return (
+    [day, p.client_name, p.service_name, p.kind]
+      .filter(Boolean)
+      .join('_')
+      .replace(/[^a-z0-9_-]+/gi, '-')
+      .slice(0, 80) +
+    '.' +
+    ext
+  );
+}
+
+// Storage serves the file as an attachment when the URL carries ?download=,
+// so this works for a signed private URL and an old public one alike, without
+// fetching the bytes into the page.
+function downloadPhotos(items) {
+  const ready = items.filter((p) => p.url);
+  ready.forEach((p, i) => {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href =
+        p.url +
+        (p.url.includes('?') ? '&' : '?') +
+        'download=' +
+        encodeURIComponent(photoFileName(p));
+      // Ignored cross-origin, where ?download= does the work; on any same-origin
+      // URL it stops the click from navigating away from the panel instead.
+      a.download = photoFileName(p);
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }, i * 400);
+  });
+  if (ready.length > 1) showToast(`Downloading ${ready.length} photos`);
+}
+
+async function featurePhotos(items) {
+  const todo = items.filter((p) => !p.on_website);
+  if (!todo.length) return;
+  try {
+    const d = await photosApi('admin-photos-feature', { refs: todo.map((p) => p.ref) });
+    showToast(
+      d.failed?.length
+        ? `${d.done.length} on the website · ${d.failed.length} could not be copied`
+        : todo.length === 1
+          ? 'On the website ✓'
+          : `${todo.length} photos on the website ✓`
+    );
+  } catch (e) {
+    showToast('Could not add to website: ' + e.message);
+    return;
+  }
+  _photoSel = null;
+  await loadPhotos();
+}
+
+async function unfeaturePhotos(items) {
+  const todo = items.filter((p) => p.on_website);
+  if (!todo.length) return;
+  const what = todo.length === 1 ? 'this photo' : `these ${todo.length} photos`;
+  if (!confirm(`Take ${what} off the website? The original stays in Photos.`)) return;
+  try {
+    await photosApi('admin-photos-unfeature', { names: todo.map((p) => p.showcase_name) });
+    showToast(
+      todo.length === 1 ? 'Removed from the website' : `${todo.length} removed from the website`
+    );
+  } catch (e) {
+    showToast('Could not remove: ' + e.message);
+    return;
+  }
+  _photoSel = null;
+  await loadPhotos();
+}
+
+function openPhotoViewer(key) {
+  _photoViewerIdx = _photoViewerList.findIndex((p) => p.key === key);
+  if (_photoViewerIdx < 0) return;
+  document.getElementById('ph-viewer').hidden = false;
+  showViewerPhoto();
+}
+
+function showViewerPhoto() {
+  const p = _photoViewerList[_photoViewerIdx];
+  if (!p) return;
+  const img = document.getElementById('ph-v-img');
+  img.src = p.url || '';
+  img.alt = `${PHOTO_KIND_LABEL[p.kind]} - ${p.client_name || ''}`;
+  document.getElementById('ph-v-meta').innerHTML =
+    `<strong>${esc(p.client_name || 'Client')}</strong><br>${esc(p.service_name || 'Service')} · ${esc(PHOTO_KIND_LABEL[p.kind])} · ${esc(photoDay(p))}<br>${_photoViewerIdx + 1} of ${_photoViewerList.length}${p.on_website ? ' · &#11088; On website' : ''}`;
+  const fb = document.getElementById('ph-v-feature');
+  fb.textContent = p.on_website ? 'Remove from website' : '⭐ Show on website';
+  fb.classList.toggle('ph-btn-primary', !p.on_website);
+  fb.classList.toggle('ph-btn-danger', !!p.on_website);
+}
+
+function closePhotoViewer() {
+  document.getElementById('ph-viewer').hidden = true;
+  document.getElementById('ph-v-img').src = '';
+  _photoViewerIdx = -1;
+}
+
+function stepPhotoViewer(delta) {
+  if (!_photoViewerList.length) return;
+  _photoViewerIdx = (_photoViewerIdx + delta + _photoViewerList.length) % _photoViewerList.length;
+  showViewerPhoto();
+}
+
+function wirePhotos() {
+  if (_photosWired) return;
+  _photosWired = true;
+  const page = document.getElementById('page-photos');
+  page.addEventListener('click', async (e) => {
+    const tab = e.target.closest('[data-ph-view]');
+    if (tab) {
+      _photosView = tab.dataset.phView;
+      page.querySelectorAll('[data-ph-view]').forEach((t) => t.classList.toggle('on', t === tab));
+      renderPhotos();
+      return;
+    }
+    const tile = e.target.closest('[data-ph-key]');
+    if (tile) {
+      const key = tile.dataset.phKey;
+      if (_photoSel) {
+        if (_photoSel.has(key)) _photoSel.delete(key);
+        else _photoSel.add(key);
+        renderPhotos();
+      } else {
+        openPhotoViewer(key);
+      }
+      return;
+    }
+    const bk = e.target.closest('[data-ph-booking]');
+    if (bk) {
+      openBookingDetail(bk.dataset.phBooking);
+      return;
+    }
+    const act = e.target.closest('[data-ph-action]')?.dataset.phAction;
+    if (!act) return;
+    const picked = () => _photos.filter((p) => _photoSel?.has(p.key));
+    const current = _photoViewerList[_photoViewerIdx];
+    if (act === 'toggle-select') {
+      _photoSel = _photoSel ? null : new Set();
+      renderPhotos();
+    } else if (act === 'download-selected') downloadPhotos(picked());
+    else if (act === 'feature-selected') await featurePhotos(picked());
+    else if (act === 'unfeature-selected') await unfeaturePhotos(picked());
+    else if (act === 'close-viewer') closePhotoViewer();
+    else if (act === 'prev') stepPhotoViewer(-1);
+    else if (act === 'next') stepPhotoViewer(1);
+    else if (act === 'download-one' && current) downloadPhotos([current]);
+    else if (act === 'toggle-feature-one' && current) {
+      closePhotoViewer();
+      if (current.on_website) await unfeaturePhotos([current]);
+      else await featurePhotos([current]);
+    } else if (act === 'open-booking' && current) {
+      closePhotoViewer();
+      openBookingDetail(current.booking_id);
+    }
+  });
+  for (const id of ['ph-q', 'ph-service', 'ph-kind', 'ph-from', 'ph-to']) {
+    document.getElementById(id).addEventListener('input', renderPhotos);
+  }
+  document.addEventListener('keydown', (e) => {
+    if (document.getElementById('ph-viewer').hidden) return;
+    if (e.key === 'Escape') closePhotoViewer();
+    else if (e.key === 'ArrowLeft') stepPhotoViewer(-1);
+    else if (e.key === 'ArrowRight') stepPhotoViewer(1);
   });
 }
 
