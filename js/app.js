@@ -66,6 +66,8 @@ import {
 } from './components.js';
 import { openGiftCardModal } from './gift-card.js';
 import { getRiderTier } from './rider-tier.js';
+import { renderShop, renderShopProduct, renderCart, mountShopBand, configureShop } from './shop-ui.js';
+import { canSeeShop } from './shop.js';
 import { toDbTime, toDisplayTime, sameTime } from './time-format.js';
 import {
   getLang,
@@ -6283,6 +6285,27 @@ async function openBirthdayModal(first, accessToken, year) {
   });
 }
 
+// La tienda le pide el catalogo a /api/shop con el token de la sesion. Se
+// toma en el momento, no al arrancar: una sesion que se renueva cambia el
+// token, y uno guardado en una variable envejece.
+configureShop({
+  getToken: async () => {
+    const { data } = await sb.auth.getSession();
+    return data?.session?.access_token || null;
+  },
+});
+
+// La franja del inicio y el acceso a la tienda aparecen solo para quien tiene
+// permiso. Que canSeeShop() diga que si no abre nada: el que decide es el
+// servidor, y sin su catalogo la franja no se dibuja.
+function refreshShopAccess(user) {
+  const allowed = canSeeShop(user);
+  document.querySelectorAll('[data-shop-tab]').forEach((el) => {
+    el.hidden = !allowed;
+  });
+  if (allowed) mountShopBand();
+}
+
 async function updateHomeNav() {
   const targets = [
     { label: 'home-nav-auth-label', btn: 'home-nav-auth-btn' },
@@ -6301,12 +6324,15 @@ async function updateHomeNav() {
     } = await sb.auth.getUser();
 
     if (!user) {
+      refreshShopAccess(null);
       targets.forEach(({ labelEl, btnEl }) => {
         if (labelEl) labelEl.textContent = 'Sign In';
         btnEl.href = '#login';
       });
       return;
     }
+
+    refreshShopAccess(user);
 
     const name = (user.user_metadata?.full_name || user.email || '').split('@')[0].split(' ')[0];
 
@@ -6426,6 +6452,9 @@ document.addEventListener('screenchange', ({ detail }) => {
     'my-bookings': renderMyBookings,
     profile: renderProfile,
     'my-bikes': renderMyBikes,
+    shop: renderShop,
+    'shop-product': renderShopProduct,
+    cart: renderCart,
   };
   const render = RENDERERS[detail.route];
   if (render) runScreenRender(detail.route, render);

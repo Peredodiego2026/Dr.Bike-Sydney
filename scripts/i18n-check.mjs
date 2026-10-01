@@ -37,7 +37,7 @@ const HTML_SURFACES = ['index.html', 'landing.html', 'track.html'];
 // other extracted file) builds its UI from imported data, not hardcoded
 // strings, so it has nothing for stringsFromJs to find - left out on purpose,
 // not an oversight.
-const JS_SURFACES = ['js/app.js', 'js/components.js', 'js/landing-inline.js', 'js/gift-card.js'];
+const JS_SURFACES = ['js/app.js', 'js/components.js', 'js/landing-inline.js', 'js/gift-card.js', 'js/shop-ui.js'];
 
 // Strings that stay in English on purpose.
 const ALLOWED = new Set([
