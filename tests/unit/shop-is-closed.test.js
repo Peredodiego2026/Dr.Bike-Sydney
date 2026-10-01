@@ -21,7 +21,7 @@ const ROWS = {
       section: 'parts',
       price_from: '6.95',
       price_to: '8.95',
-      photo_ref: 'shop-photos/shop/butyl-inner-tube.webp',
+      photo_ref: 'shop-photos/butyl-inner-tube.webp',
       sort_rank: 0,
       cost: '2.80',
     },
@@ -185,7 +185,7 @@ describe('las fotos van firmadas, no publicas', () => {
 
   it('se firman todas de una sola vez, no una llamada por producto', async () => {
     await call();
-    expect(signedFor).toEqual(['shop/butyl-inner-tube.webp']);
+    expect(signedFor).toEqual(['butyl-inner-tube.webp']);
   });
 
   it('la respuesta no se guarda en ningun cache compartido', async () => {

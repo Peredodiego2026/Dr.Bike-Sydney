@@ -26,7 +26,7 @@ create table if not exists shop_products (
   section     text not null check (section in ('parts','tools','accessories','care','gear')),
   price_from  numeric(10,2) not null,
   price_to    numeric(10,2) not null,
-  -- Referencia al bucket privado, nunca una URL: 'shop-photos/shop/<slug>.webp'.
+  -- Referencia al bucket privado, nunca una URL: 'shop-photos/<slug>.webp'.
   -- Una URL guardada es una URL que sigue andando cuando se filtra; una
   -- referencia no sirve de nada sin que el servidor la firme.
   photo_ref   text,
