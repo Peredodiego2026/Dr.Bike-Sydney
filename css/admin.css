@@ -2954,24 +2954,24 @@ body {
 }
 .ph-actionbar {
   /* Fixed, like a phone gallery's toolbar: sticky did not hold on the phone
-     layout, where the bar ended up below the last photo, off screen. */
+     layout, where the bar ended up below the last photo, off screen.
+     Dark in BOTH themes on purpose (literal rgba, not --navy, which turns
+     light in dark mode): it is the phone-gallery toolbar Diego picked. */
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  width: min(760px, calc(100% - 32px));
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
   /* Above the cookie card while it is up (js/consent.js publishes its height). */
-  bottom: calc(16px + var(--consent-h, 0px));
+  bottom: calc(18px + var(--consent-h, 0px));
   z-index: 8000;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
-  padding: 10px 14px;
+  gap: 6px;
+  background: rgba(13, 31, 60, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+  padding: 8px;
 }
 @media (max-width: 768px) {
   /* Clear the admin's own bottom nav (60px + the home-indicator inset). */
@@ -2981,6 +2981,22 @@ body {
   .ph-content {
     padding-bottom: 160px;
   }
+  /* Two even columns instead of a ragged wrap, search across both. */
+  .ph-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ph-filters input[type='search'] {
+    grid-column: span 2;
+  }
+  .ph-filters .inp,
+  .ph-date .inp {
+    width: 100%;
+    min-width: 0;
+  }
+  .ph-date {
+    min-width: 0;
+  }
 }
 .ph-actionbar[hidden] {
   display: none;
@@ -2988,12 +3004,247 @@ body {
 .ph-sel-count {
   font-size: 13px;
   font-weight: 700;
-  color: var(--navy);
+  color: rgba(255, 255, 255, 0.95);
+  padding: 0 10px 0 8px;
+  white-space: nowrap;
 }
 .ph-actions {
   display: flex;
+  gap: 4px;
+}
+.ph-act {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.95);
+  font: 600 12px var(--sans);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  min-height: 56px;
+  white-space: nowrap;
+}
+.ph-act svg {
+  width: 22px;
+  height: 22px;
+}
+.ph-act-primary {
+  background: var(--blue);
+}
+.ph-act-danger {
+  color: rgba(253, 164, 164, 1);
+}
+.ph-act:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+/* The "On website" tab: every photo on the left, the carousel on the right. */
+.ph-web {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .ph-web {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ph-web-panel {
+    order: -1;
+  }
+}
+.ph-web-hint {
+  font-size: 13px;
+  color: var(--mgray);
+  margin-bottom: 10px;
+}
+.ph-tile-wrap {
+  position: relative;
+}
+.ph-tile-wrap .ph-tile {
+  width: 100%;
+}
+.ph-star-toggle {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(13, 31, 60, 1);
+}
+.ph-star-toggle.on {
+  background: var(--amber-bright);
+  color: rgba(255, 255, 255, 1);
+}
+.ph-star-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+.ph-tile-wrap .ph-star {
+  /* The star button says it already. */
+  display: none;
+}
+.ph-tile-wrap.on-web .ph-tile img {
+  opacity: 0.55;
+}
+.ph-web-panel {
+  /* Dark in both themes, like the action bar - it previews the website. */
+  background: rgba(13, 31, 60, 1);
+  color: rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 12px;
+}
+.ph-web-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   gap: 8px;
-  flex-wrap: wrap;
+}
+.ph-web-head strong {
+  font-size: 16px;
+}
+.ph-web-head span {
+  font-size: 12px;
+  color: rgba(201, 212, 229, 1);
+}
+.ph-web-preview {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 180px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.ph-web-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ph-web-preview-tag {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(13, 31, 60, 1);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.ph-web-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.ph-web-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.ph-web-dots span:first-child {
+  width: 18px;
+  background: rgba(255, 255, 255, 1);
+}
+.ph-web-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.ph-web-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 8px;
+}
+.ph-web-pos {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(201, 212, 229, 1);
+  width: 16px;
+  text-align: center;
+}
+.ph-web-row img {
+  width: 56px;
+  height: 42px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.ph-web-who {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ph-web-who strong {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ph-web-who span {
+  font-size: 11px;
+  color: rgba(201, 212, 229, 1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ph-web-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.ph-web-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.ph-web-btn.danger {
+  color: rgba(253, 164, 164, 1);
+}
+.ph-web-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.ph-web-empty {
+  font-size: 13px;
+  color: rgba(201, 212, 229, 1);
+  padding: 8px 2px;
 }
 .ph-btn {
   border: 1.5px solid var(--border);
@@ -3093,4 +3344,17 @@ body {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+@media (max-width: 768px) {
+  /* Count and three buttons have to fit a 390px phone without clipping.
+     After the base .ph-act / .ph-sel-count rules on purpose: placed earlier
+     in the file, the base rules won and this never applied. */
+  .ph-act {
+    padding: 8px 9px;
+    font-size: 11px;
+  }
+  .ph-sel-count {
+    padding: 0 4px;
+    font-size: 12px;
+  }
 }

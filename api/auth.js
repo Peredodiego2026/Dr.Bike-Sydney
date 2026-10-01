@@ -55,6 +55,10 @@ import {
   copyToShowcase,
   removeFromShowcase,
   showcasePublicUrl,
+  showcaseName,
+  settleOrder,
+  readOrder,
+  writeOrder,
 } from './_photo-gallery.js';
 // The factor lookup runs in front of every admin request. Four seconds is
 // long enough for a healthy Supabase and short enough that a sick one costs a
@@ -5169,8 +5173,11 @@ export async function handleAdminPhotosList(req, res) {
     opts
   );
   let onSite = null;
+  let order = [];
   try {
-    onSite = new Set(await listShowcase(opts));
+    const listed = await listShowcase(opts);
+    onSite = new Set(listed);
+    order = settleOrder(await readOrder(opts), listed);
   } catch (e) {
     console.warn('[admin-photos] could not list the website photos:', e.message);
   }
@@ -5184,7 +5191,22 @@ export async function handleAdminPhotosList(req, res) {
         : null,
     })),
     website_known: !!onSite,
+    // The carousel, in order, with each copy's public URL - including any
+    // copy whose original is no longer in the list, so it can still be removed.
+    website: order.map((name) => ({ name, url: showcasePublicUrl(name, SUPABASE_URL) })),
   });
+}
+
+// Keeps showcase/_order.json in step with the folder after a copy or a
+// removal. The photos already moved; a failure here only costs the order,
+// so it is logged, not returned as an error.
+async function resyncWebsiteOrder(first, opts) {
+  try {
+    const listed = await listShowcase(opts);
+    await writeOrder(settleOrder([...(await readOrder(opts)), ...first], listed), opts);
+  } catch (e) {
+    console.warn('[admin-photos] could not update the website order:', e.message);
+  }
 }
 
 // "Show on website": copies the photos into the public showcase folder. The
@@ -5203,6 +5225,12 @@ export async function handleAdminPhotosFeature(req, res) {
     if (src && (await copyToShowcase(src, opts))) done.push(ref);
     else failed.push(ref);
   }
+  // New photos go to the end of the carousel, in the order they were picked.
+  if (done.length)
+    await resyncWebsiteOrder(
+      done.map((r) => showcaseName(photoSource(r, SUPABASE_URL))),
+      opts
+    );
   return res.status(failed.length && !done.length ? 502 : 200).json({ done, failed });
 }
 
@@ -5213,12 +5241,33 @@ export async function handleAdminPhotosUnfeature(req, res) {
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const names = Array.isArray(req.body?.names) ? req.body.names.slice(0, 200) : [];
   if (!names.length) return res.status(400).json({ error: 'names required' });
+  const opts = jobPhotoOpts();
   try {
-    const removed = await removeFromShowcase(names, jobPhotoOpts());
+    const removed = await removeFromShowcase(names, opts);
+    if (removed.length) await resyncWebsiteOrder([], opts);
     return res.status(200).json({ removed });
   } catch (e) {
     console.warn('[admin-photos] remove failed:', e.message);
     return res.status(502).json({ error: 'Could not remove from website' });
+  }
+}
+
+// The order the photos run in on the landing carousel. Only names that are
+// actually in the showcase folder are kept; any left out go to the end.
+export async function handleAdminPhotosOrder(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const names = Array.isArray(req.body?.names) ? req.body.names.slice(0, 500) : [];
+  if (!names.length) return res.status(400).json({ error: 'names required' });
+  const opts = jobPhotoOpts();
+  try {
+    const order = settleOrder(names, await listShowcase(opts));
+    await writeOrder(order, opts);
+    return res.status(200).json({ order });
+  } catch (e) {
+    console.warn('[admin-photos] order failed:', e.message);
+    return res.status(502).json({ error: 'Could not save the order' });
   }
 }
 
@@ -6105,6 +6154,7 @@ async function handler(req, res) {
   if (role === 'admin-photos-list') return handleAdminPhotosList(req, res);
   if (role === 'admin-photos-feature') return handleAdminPhotosFeature(req, res);
   if (role === 'admin-photos-unfeature') return handleAdminPhotosUnfeature(req, res);
+  if (role === 'admin-photos-order') return handleAdminPhotosOrder(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);

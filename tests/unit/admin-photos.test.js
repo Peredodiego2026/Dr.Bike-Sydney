@@ -26,6 +26,10 @@ const CHAT = `job-photos-private/chat/${B3}/1759300000000.png`;
 
 let copyWorks = true;
 let calls = [];
+// The showcase folder and its order file, as Storage would hold them.
+const ON_WEB = `jobs_${B1}_before_1759200000000.jpg`;
+let showcase = new Set();
+let savedOrder = null;
 
 vi.mock('stripe', () => ({ default: class {} }));
 vi.mock('@supabase/supabase-js', () => ({
@@ -96,20 +100,42 @@ globalThis.fetch = async (url, init = {}) => {
   }
   if (u.endsWith('/storage/v1/object/list/job-photos')) {
     return ok([
-      { name: `jobs_${B1}_before_1759200000000.jpg` },
+      ...[...showcase].map((name) => ({ name })),
+      { name: '_order.json' },
       { name: '.emptyFolderPlaceholder' },
     ]);
   }
-  if (u.endsWith('/storage/v1/object/copy')) return copyWorks ? ok({ Key: 'x' }) : no(400);
+  if (u.endsWith('/storage/v1/object/copy')) {
+    if (!copyWorks) return no(400);
+    showcase.add(JSON.parse(init.body).destinationKey.replace('showcase/', ''));
+    return ok({ Key: 'x' });
+  }
+  if (u.endsWith('/object/authenticated/job-photos/showcase/_order.json')) {
+    return savedOrder ? ok({ order: savedOrder }) : no(404);
+  }
   if (u.includes('/storage/v1/object/authenticated/')) return ok({});
-  if (u.includes('/storage/v1/object/job-photos/showcase/') && method === 'POST') return ok({});
-  if (u.endsWith('/storage/v1/object/job-photos') && method === 'DELETE') return ok([]);
+  if (u.endsWith('/object/job-photos/showcase/_order.json') && method === 'POST') {
+    savedOrder = JSON.parse(init.body).order;
+    return ok({});
+  }
+  if (u.includes('/storage/v1/object/job-photos/showcase/') && method === 'POST') {
+    showcase.add(u.split('/showcase/')[1]);
+    return ok({});
+  }
+  if (u.endsWith('/storage/v1/object/job-photos') && method === 'DELETE') {
+    for (const p of JSON.parse(init.body).prefixes) showcase.delete(p.replace('showcase/', ''));
+    return ok([]);
+  }
   return no(503);
 };
 
 const gallery = await import('../../api/_photo-gallery.js');
-const { handleAdminPhotosList, handleAdminPhotosFeature, handleAdminPhotosUnfeature } =
-  await import('../../api/auth.js');
+const {
+  handleAdminPhotosList,
+  handleAdminPhotosFeature,
+  handleAdminPhotosUnfeature,
+  handleAdminPhotosOrder,
+} = await import('../../api/auth.js');
 
 const makeRes = () => {
   const res = { statusCode: null, body: null };
@@ -127,6 +153,8 @@ const storageCalls = () => calls.filter((c) => c.url.includes('/storage/v1/'));
 beforeEach(() => {
   copyWorks = true;
   calls = [];
+  showcase = new Set([ON_WEB]);
+  savedOrder = null;
 });
 
 describe('what counts as a job photo', () => {
@@ -279,5 +307,57 @@ describe('remove from website (role admin-photos-unfeature)', () => {
   it('is for the admin only', async () => {
     const r = await call(handleAdminPhotosUnfeature, { names: ['x'] });
     expect(r.statusCode).toBe(401);
+  });
+});
+
+// The order the photos run in on the landing carousel: showcase/_order.json,
+// next to the copies, so the carousel reads one public file.
+describe('the carousel order', () => {
+  const CHAT_ON_WEB = `chat_${B3}_1759300000000.png`;
+
+  it('the list gives the website photos in the saved order, with public URLs', async () => {
+    showcase.add(CHAT_ON_WEB);
+    savedOrder = [CHAT_ON_WEB, 'jobs_99999999-0000-0000-0000-000000000000_gone_1.jpg', ON_WEB];
+    const r = await call(handleAdminPhotosList, { access_token: 'admin-token' });
+    expect(r.body.website).toEqual([
+      {
+        name: CHAT_ON_WEB,
+        url: `${URL_BASE}/storage/v1/object/public/job-photos/showcase/${CHAT_ON_WEB}`,
+      },
+      { name: ON_WEB, url: `${URL_BASE}/storage/v1/object/public/job-photos/showcase/${ON_WEB}` },
+    ]);
+  });
+
+  it('a photo put on the website goes to the end of the carousel', async () => {
+    savedOrder = [ON_WEB];
+    await call(handleAdminPhotosFeature, { access_token: 'admin-token', refs: [CHAT] });
+    expect(savedOrder).toEqual([ON_WEB, CHAT_ON_WEB]);
+  });
+
+  it('a photo taken off the website leaves the carousel too', async () => {
+    showcase.add(CHAT_ON_WEB);
+    savedOrder = [CHAT_ON_WEB, ON_WEB];
+    await call(handleAdminPhotosUnfeature, { access_token: 'admin-token', names: [CHAT_ON_WEB] });
+    expect(savedOrder).toEqual([ON_WEB]);
+  });
+
+  it('reordering saves the new order, keeps only what is on the website, and loses nobody', async () => {
+    showcase.add(CHAT_ON_WEB);
+    const r = await call(handleAdminPhotosOrder, {
+      access_token: 'admin-token',
+      names: [CHAT_ON_WEB, 'jobs_99999999-0000-0000-0000-000000000000_gone_1.jpg', '../x.jpg'],
+    });
+    expect(r.statusCode).toBe(200);
+    expect(savedOrder).toEqual([CHAT_ON_WEB, ON_WEB]);
+  });
+
+  it('is for the admin only', async () => {
+    const r = await call(handleAdminPhotosOrder, { access_token: 'client-token', names: [ON_WEB] });
+    expect(r.statusCode).toBe(403);
+    expect(savedOrder).toBeNull();
+  });
+
+  it('the order file is never listed as a photo and can never be removed', () => {
+    expect(gallery.isShowcaseName('_order.json')).toBe(false);
   });
 });

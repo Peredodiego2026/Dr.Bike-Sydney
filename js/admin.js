@@ -6551,6 +6551,16 @@ let _photoSel = null; // Set of keys while selecting, null otherwise
 let _photoViewerList = [];
 let _photoViewerIdx = -1;
 let _photosWired = false;
+let _website = []; // the landing carousel, in order: [{ name, url }]
+
+const PH_ICON = {
+  star: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+  starOutline:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+};
 
 async function photosApi(role, extra = {}) {
   const {
@@ -6574,6 +6584,7 @@ async function loadPhotos() {
   try {
     const d = await photosApi('admin-photos-list');
     _photos = d.photos || [];
+    _website = d.website || [];
     if (d.website_known === false) showToast('Could not check which photos are on the website');
   } catch (e) {
     box.innerHTML = `<div class="ph-empty"><strong>Could not load photos</strong>${esc(e.message)}</div>`;
@@ -6596,7 +6607,6 @@ function filteredPhotos() {
   const from = document.getElementById('ph-from').value;
   const to = document.getElementById('ph-to').value;
   return _photos.filter((p) => {
-    if (_photosView === 'website' && !p.on_website) return false;
     if (
       q &&
       !String(p.client_name || '')
@@ -6640,18 +6650,18 @@ function renderPhotos() {
   const list = filteredPhotos();
   _photoViewerList = list;
   document.getElementById('photos-app').classList.toggle('ph-selecting', !!_photoSel);
-  const onSite = _photos.filter((p) => p.on_website).length;
   document.getElementById('ph-count').textContent =
-    `${list.length} of ${_photos.length} photos` + (onSite ? ` · ${onSite} on the website` : '');
+    `${list.length} of ${_photos.length} photos` +
+    (_website.length ? ` · ${_website.length} on the website` : '');
 
-  if (!_photos.length) {
+  if (!_photos.length && !_website.length) {
     box.innerHTML =
       '<div class="ph-empty"><div style="font-size:36px;margin-bottom:8px">&#128247;</div><strong>No photos yet</strong>Before/after photos from the mechanic app and photos sent in the job chat will appear here.</div>';
+  } else if (_photosView === 'website') {
+    box.innerHTML = renderWebsiteView(list);
   } else if (!list.length) {
     box.innerHTML =
-      _photosView === 'website'
-        ? '<div class="ph-empty"><strong>Nothing on the website yet</strong>Tap Select, pick photos, then Show on website.</div>'
-        : '<div class="ph-empty"><strong>No photos match</strong>Try clearing a filter.</div>';
+      '<div class="ph-empty"><strong>No photos match</strong>Try clearing a filter.</div>';
   } else if (_photosView === 'jobs') {
     const groups = new Map();
     for (const p of list) {
@@ -6682,7 +6692,7 @@ function renderPhotos() {
       })
       .join('');
   } else {
-    // All photos / On website: one folder, newest first, with a heading per month.
+    // All photos: one folder, newest first, with a heading per month.
     let html = '';
     let month = '';
     let grid = [];
@@ -6706,6 +6716,90 @@ function renderPhotos() {
     box.innerHTML = html;
   }
   renderPhotoActionBar();
+}
+
+// The "On website" tab: every photo on the left with a star to put it on or
+// take it off, and the landing carousel on the right, in the order it runs.
+function renderWebsiteView(list) {
+  const pool = list.length
+    ? `<div class="ph-grid">${list
+        .map(
+          (p) => `<div class="ph-tile-wrap${p.on_website ? ' on-web' : ''}">
+            ${photoTile(p)}
+            <button type="button" class="ph-star-toggle${p.on_website ? ' on' : ''}" data-ph-star="${esc(p.key)}" aria-pressed="${p.on_website ? 'true' : 'false'}" aria-label="${p.on_website ? 'Remove from website' : 'Show on website'}">${p.on_website ? PH_ICON.star : PH_ICON.starOutline}</button>
+          </div>`
+        )
+        .join('')}</div>`
+    : '<div class="ph-empty"><strong>No photos match</strong>Try clearing a filter.</div>';
+  const n = _website.length;
+  const rows = _website
+    .map((w, i) => {
+      const p = _photos.find((x) => x.showcase_name === w.name);
+      const who = p ? esc(p.client_name || 'Client') : 'Photo';
+      const meta = p
+        ? `${esc(p.service_name || 'Service')} · ${esc(PHOTO_KIND_LABEL[p.kind])}`
+        : 'Original no longer in Photos';
+      return `<li class="ph-web-row">
+        <span class="ph-web-pos">${i + 1}</span>
+        <img src="${esc(w.url)}" alt="" loading="lazy">
+        <div class="ph-web-who"><strong>${who}</strong><span>${meta}</span></div>
+        <button type="button" class="ph-web-btn" data-ph-move="${esc(w.name)}" data-dir="-1" aria-label="Move up"${i === 0 ? ' disabled' : ''}>${PH_ICON.up}</button>
+        <button type="button" class="ph-web-btn" data-ph-move="${esc(w.name)}" data-dir="1" aria-label="Move down"${i === n - 1 ? ' disabled' : ''}>${PH_ICON.down}</button>
+        <button type="button" class="ph-web-btn danger" data-ph-unweb="${esc(w.name)}" aria-label="Remove from website">${PH_ICON.x}</button>
+      </li>`;
+    })
+    .join('');
+  const preview = n
+    ? `<div class="ph-web-preview">
+        <img src="${esc(_website[0].url)}" alt="First photo of the carousel">
+        <span class="ph-web-preview-tag">Landing preview</span>
+        <div class="ph-web-dots">${'<span></span>'.repeat(Math.min(n, 8))}</div>
+      </div>`
+    : '';
+  return `<div class="ph-web">
+    <div>
+      <div class="ph-web-hint">Tap the star on a photo to put it on the website. Tap the photo to see it big.</div>
+      ${pool}
+    </div>
+    <aside class="ph-web-panel" aria-label="Website carousel">
+      <div class="ph-web-head"><strong>On the website · ${n}</strong><span>Carousel order</span></div>
+      ${preview}
+      ${n ? `<ol class="ph-web-list">${rows}</ol>` : '<div class="ph-web-empty">Nothing on the website yet. Tap the star on any photo.</div>'}
+    </aside>
+  </div>`;
+}
+
+async function moveWebsitePhoto(name, dir) {
+  const names = _website.map((w) => w.name);
+  const i = names.indexOf(name);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= names.length) return;
+  [names[i], names[j]] = [names[j], names[i]];
+  const before = _website;
+  _website = names.map((n) => before.find((w) => w.name === n));
+  renderPhotos();
+  try {
+    await photosApi('admin-photos-order', { names });
+  } catch (e) {
+    showToast('Could not save the order: ' + e.message);
+    _website = before;
+    renderPhotos();
+  }
+}
+
+// A copy whose original is no longer in Photos can still be taken down.
+async function removeWebsiteCopy(name) {
+  const p = _photos.find((x) => x.showcase_name === name);
+  if (p) return unfeaturePhotos([p]);
+  if (!confirm('Take this photo off the website?')) return;
+  try {
+    await photosApi('admin-photos-unfeature', { names: [name] });
+    showToast('Removed from the website');
+  } catch (e) {
+    showToast('Could not remove: ' + e.message);
+    return;
+  }
+  await loadPhotos();
 }
 
 function renderPhotoActionBar() {
@@ -6847,6 +6941,22 @@ function wirePhotos() {
       _photosView = tab.dataset.phView;
       page.querySelectorAll('[data-ph-view]').forEach((t) => t.classList.toggle('on', t === tab));
       renderPhotos();
+      return;
+    }
+    const star = e.target.closest('[data-ph-star]');
+    if (star) {
+      const p = _photos.find((x) => x.key === star.dataset.phStar);
+      if (p) await (p.on_website ? unfeaturePhotos([p]) : featurePhotos([p]));
+      return;
+    }
+    const move = e.target.closest('[data-ph-move]');
+    if (move) {
+      await moveWebsitePhoto(move.dataset.phMove, Number(move.dataset.dir));
+      return;
+    }
+    const unweb = e.target.closest('[data-ph-unweb]');
+    if (unweb) {
+      await removeWebsiteCopy(unweb.dataset.phUnweb);
       return;
     }
     const tile = e.target.closest('[data-ph-key]');

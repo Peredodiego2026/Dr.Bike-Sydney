@@ -232,3 +232,54 @@ export async function removeFromShowcase(names, { supabaseUrl, serviceKey, fetch
 export function showcasePublicUrl(name, supabaseUrl) {
   return `${supabaseUrl}/storage/v1/object/public/${SHOWCASE_BUCKET}/${SHOWCASE_FOLDER}/${name}`;
 }
+
+// ── The carousel's order ─────────────────────────────────────────────────────
+// Diego picks the order the photos run in on the landing page. It lives next
+// to the copies, as `showcase/_order.json` in the same public bucket, so the
+// future carousel reads one public file and needs no endpoint, table or
+// migration. isShowcaseName() never matches it, so it is never listed as a
+// photo and "remove from website" can never delete it.
+export const ORDER_FILE = `${SHOWCASE_FOLDER}/_order.json`;
+
+// The saved order, made to agree with what is actually in the folder: names
+// no longer there are dropped, and photos with no place yet go at the end, in
+// name order. Always a full list of the folder's photos.
+export function settleOrder(saved, listed) {
+  const present = new Set(listed);
+  const out = [];
+  for (const n of saved || []) if (present.has(n) && !out.includes(n)) out.push(n);
+  for (const n of [...listed].sort()) if (!out.includes(n)) out.push(n);
+  return out;
+}
+
+export async function readOrder({ supabaseUrl, serviceKey, fetchImpl = fetch }) {
+  try {
+    const r = await fetchImpl(
+      `${supabaseUrl}/storage/v1/object/authenticated/${SHOWCASE_BUCKET}/${ORDER_FILE}`,
+      { headers: hdrs(serviceKey) }
+    );
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d?.order) ? d.order.filter(isShowcaseName) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function writeOrder(order, { supabaseUrl, serviceKey, fetchImpl = fetch }) {
+  const r = await fetchImpl(`${supabaseUrl}/storage/v1/object/${SHOWCASE_BUCKET}/${ORDER_FILE}`, {
+    method: 'POST',
+    headers: hdrs(serviceKey, {
+      'Content-Type': 'application/json',
+      'x-upsert': 'true',
+      // The carousel reads this publicly; a short cache so a reorder shows
+      // within a minute instead of an hour.
+      'cache-control': 'max-age=60',
+    }),
+    body: JSON.stringify({
+      order: order.filter(isShowcaseName),
+      updated_at: new Date().toISOString(),
+    }),
+  });
+  if (!r.ok) throw new Error(`order write failed: HTTP ${r.status}`);
+}
