@@ -33,11 +33,26 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { guard } from './_security.js';
+import Stripe from 'stripe';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
 export const SHOP_BUCKET = 'shop-photos';
+
+// La tienda cobra con su PROPIA clave de Stripe, no con la del negocio. Hoy
+// es una clave de pruebas: mientras el acuerdo con LEBYCLE no este cerrado,
+// un pedido no puede mover plata de verdad. Si la variable no esta puesta, el
+// checkout contesta que no esta configurado en vez de caer en la clave LIVE
+// del resto del sitio - una tienda a medio terminar que cobra en serio es
+// peor que una tienda que no cobra.
+const SHOP_STRIPE_KEY = process.env.SHOP_STRIPE_SECRET_KEY || '';
+const SHOP_MODE = SHOP_STRIPE_KEY.startsWith('sk_live_') ? 'live' : 'test';
+
+// Tope por pedido. No es una regla de negocio: es un freno. Un bug de
+// cantidades o alguien jugando con el carrito no puede terminar en un cobro
+// de cuatro cifras sin que nadie lo mire.
+const MAX_ORDER_AUD = 2000;
 
 // Una hora, igual que las fotos de los trabajos. Lo suficiente para recorrer la
 // tienda sin volver a pedir, y lo bastante corto para que un link reenviado no
@@ -89,6 +104,181 @@ async function signPhotos(sb, refs) {
   return out;
 }
 
+
+// ── El cobro ─────────────────────────────────────────────────────────────────
+//
+// Lo unico que llega del navegador es [{ sku, qty }] y los datos de envio. Los
+// precios NO viajan: se leen de shop_variants aca. Esa es toda la defensa, y
+// es la misma regla que ya salvo al wizard de reservas cuando el importe lo
+// decidia el telefono (PR #412).
+
+function cleanLines(raw) {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const l of raw.slice(0, 50)) {
+    const sku = typeof l?.sku === 'string' ? l.sku.trim() : '';
+    const qty = Math.floor(Number(l?.qty));
+    if (!sku || seen.has(sku) || !Number.isFinite(qty) || qty < 1 || qty > 20) continue;
+    seen.add(sku);
+    out.push({ sku, qty });
+  }
+  return out;
+}
+
+const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
+async function handleCheckout(req, res, sb, user) {
+  const lines = cleanLines(req.body?.items);
+  if (!lines.length) return res.status(400).json({ error: 'Your cart is empty.' });
+
+  // El precio sale de la base, no del pedido.
+  const { data: rows, error } = await sb
+    .from('shop_variants')
+    .select('sku, label, price, shop_products!inner(name, active)')
+    .in(
+      'sku',
+      lines.map((l) => l.sku)
+    );
+  if (error) return res.status(500).json({ error: 'Could not price the cart: ' + error.message });
+
+  const bySku = new Map((rows || []).filter((r) => r.shop_products?.active).map((r) => [r.sku, r]));
+  const missing = lines.filter((l) => !bySku.has(l.sku));
+  if (missing.length) {
+    // Se nombra lo que falta para que el carrito pueda marcarlo. Un "algo
+    // salio mal" obliga al cliente a vaciar el carrito y empezar de nuevo.
+    return res.status(409).json({ error: 'Some items are no longer available.', missing: missing.map((l) => l.sku) });
+  }
+
+  const items = lines.map((l) => {
+    const r = bySku.get(l.sku);
+    const unit = Number(r.price);
+    return {
+      sku: l.sku,
+      name: r.shop_products.name,
+      variant: r.label,
+      qty: l.qty,
+      unit_price: unit,
+      line_total: Number((unit * l.qty).toFixed(2)),
+    };
+  });
+  const subtotal = Number(items.reduce((s, i) => s + i.line_total, 0).toFixed(2));
+  const shipping = 0; // [CONFIRMAR COSTO DE ENVIO] - hasta entonces no se cobra.
+  const total = Number((subtotal + shipping).toFixed(2));
+
+  if (total <= 0) return res.status(400).json({ error: 'Your cart is empty.' });
+  if (total > MAX_ORDER_AUD) {
+    return res.status(400).json({ error: 'That order is over $' + MAX_ORDER_AUD + '. Call us on 0433 963 250 and we sort it out.' });
+  }
+  if (!SHOP_STRIPE_KEY) {
+    return res.status(503).json({ error: 'The shop checkout is not switched on yet.' });
+  }
+
+  const email = str(req.body?.email, 160) || user.email;
+  const order = {
+    client_id: user.id,
+    client_email: email,
+    client_name: str(req.body?.name, 120) || null,
+    client_phone: str(req.body?.phone, 40) || null,
+    ship_address: str(req.body?.address, 240) || null,
+    ship_suburb: str(req.body?.suburb, 80) || null,
+    ship_postcode: str(req.body?.postcode, 12) || null,
+    subtotal,
+    shipping,
+    total,
+    mode: SHOP_MODE,
+    status: 'pending',
+  };
+
+  // La fila se escribe ANTES de cobrar. Si Stripe contesta y el servidor se
+  // cae en el medio, queda un pedido pendiente que se puede cerrar a mano; al
+  // reves quedaria un cobro sin ningun rastro de que se compro.
+  const { data: saved, error: oErr } = await sb.from('shop_orders').insert(order).select('id').single();
+  if (oErr) return res.status(500).json({ error: 'Could not save the order: ' + oErr.message });
+
+  const { error: iErr } = await sb.from('shop_order_items').insert(items.map((i) => ({ ...i, order_id: saved.id })));
+  if (iErr) return res.status(500).json({ error: 'Could not save the order: ' + iErr.message });
+
+  let intent;
+  try {
+    const stripe = new Stripe(SHOP_STRIPE_KEY);
+    intent = await stripe.paymentIntents.create({
+      amount: Math.round(total * 100),
+      currency: 'aud',
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        kind: 'shop_order',
+        order_id: saved.id,
+        email,
+        items: items.map((i) => i.sku + ' x' + i.qty).join(', ').slice(0, 480),
+      },
+    });
+  } catch (e) {
+    // El pedido queda marcado, no borrado: un pedido que desaparece no deja
+    // ver que el cobro fallo.
+    await sb.from('shop_orders').update({ status: 'cancelled', notes: 'Stripe: ' + e.message }).eq('id', saved.id);
+    return res.status(502).json({ error: 'The payment could not be started: ' + e.message });
+  }
+
+  await sb.from('shop_orders').update({ payment_intent_id: intent.id }).eq('id', saved.id);
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  return res.status(200).json({
+    orderId: saved.id,
+    clientSecret: intent.client_secret,
+    mode: SHOP_MODE,
+    // Se devuelve lo que el servidor calculo, para que el carrito pueda
+    // comparar y avisar si no coincide con lo que mostraba.
+    items,
+    subtotal,
+    shipping,
+    total,
+  });
+}
+
+
+// Marcar un pedido como pagado. NO se confia en que el navegador diga que
+// pago: se le pregunta a Stripe por ese cobro y se mira su estado. Un cliente
+// puede llamar a este endpoint cuantas veces quiera; lo unico que decide es lo
+// que Stripe conteste.
+async function handleConfirm(req, res, sb, user) {
+  const orderId = str(req.body?.orderId, 64);
+  if (!orderId) return res.status(400).json({ error: 'Which order?' });
+
+  const { data: order, error } = await sb
+    .from('shop_orders')
+    .select('id, client_id, payment_intent_id, status, total')
+    .eq('id', orderId)
+    .single();
+  if (error || !order) return res.status(404).json({ error: 'Not found' });
+  // Un pedido es de quien lo hizo. Sin esto, cambiar el id en la llamada
+  // mostraria el pedido de otra persona.
+  if (order.client_id && order.client_id !== user.id) return res.status(404).json({ error: 'Not found' });
+  if (order.status === 'paid') return res.status(200).json({ status: 'paid', orderId: order.id });
+  if (!order.payment_intent_id || !SHOP_STRIPE_KEY) return res.status(409).json({ error: 'That order has no payment yet.' });
+
+  let intent;
+  try {
+    const stripe = new Stripe(SHOP_STRIPE_KEY);
+    intent = await stripe.paymentIntents.retrieve(order.payment_intent_id);
+  } catch (e) {
+    return res.status(502).json({ error: 'Could not check the payment: ' + e.message });
+  }
+
+  if (intent.status !== 'succeeded') {
+    return res.status(200).json({ status: intent.status, orderId: order.id });
+  }
+  // El importe tambien se comprueba: un cobro por menos de lo que el pedido
+  // dice no lo deja pagado.
+  if (Math.round(Number(order.total) * 100) !== intent.amount_received) {
+    await sb.from('shop_orders').update({ notes: 'Importe cobrado distinto al del pedido' }).eq('id', order.id);
+    return res.status(409).json({ error: 'The amount paid does not match the order.' });
+  }
+
+  await sb.from('shop_orders').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', order.id);
+  return res.status(200).json({ status: 'paid', orderId: order.id });
+}
+
 export default async function handler(req, res) {
   if (!(await guard(req, res, { methods: ['GET', 'POST'], limit: 60 }))) return;
 
@@ -104,6 +294,15 @@ export default async function handler(req, res) {
   // respuestas distintas le dirian a quien prueba tokens cual de las dos cosas
   // fallo.
   if (uErr || !user || !maySeeShop(user.email)) return res.status(404).json({ error: 'Not found' });
+
+  // Todo lo que sigue ya probo quien es. El catalogo se pide con GET; el
+  // cobro, con POST y ?action=checkout.
+  if (req.method === 'POST' && (req.query?.action === 'checkout' || req.body?.action === 'checkout')) {
+    return handleCheckout(req, res, sb, user);
+  }
+  if (req.method === 'POST' && (req.query?.action === 'confirm' || req.body?.action === 'confirm')) {
+    return handleConfirm(req, res, sb, user);
+  }
 
   const { data: products, error: pErr } = await sb
     .from('shop_products')
