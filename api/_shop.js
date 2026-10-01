@@ -286,7 +286,17 @@ async function handleConfirm(req, res, sb, user) {
 }
 
 export async function handleShop(req, res) {
-  if (!(await guard(req, res, { methods: ['GET', 'POST'], limit: 60 }))) return;
+  // guard() devuelve TRUE cuando ya contesto (metodo equivocado, limite de
+  // peticiones) y FALSE cuando todo esta bien. La primera version de esta linea
+  // tenia la condicion al reves, asi que el handler hacia return siempre y la
+  // tienda contestaba 405 a todo. Los tests no lo vieron porque el doble de
+  // guard devolvia `true`, que con la condicion invertida significaba "segui":
+  // el test heredo el error en vez de atraparlo.
+  //
+  // Un solo metodo por llamada, que es lo que guard admite: el catalogo se lee
+  // con GET y el cobro se manda con POST.
+  const method = req.method === 'GET' ? 'GET' : 'POST';
+  if (await guard(req, res, { method, rateMax: 60, rateWindow: 60000, rateKey: 'shop' })) return;
 
   const token = readToken(req);
   if (!token || !SUPABASE_URL || !SERVICE_KEY) return res.status(404).json({ error: 'Not found' });

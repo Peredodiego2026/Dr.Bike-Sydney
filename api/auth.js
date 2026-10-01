@@ -6065,6 +6065,12 @@ async function handler(req, res) {
   // redirects rather than the POST+JSON shape guard() enforces. They still get
   // a limiter of their own - skipping guard() also skipped the rate limit,
   // which left them the only endpoints here free to hammer.
+  // La tienda de repuestos. Va ANTES del guard de abajo por el mismo motivo
+  // que get-availability: el catalogo se lee con GET y ese guard solo admite
+  // POST, asi que desde aca abajo la tienda contestaba 405 a todo. Tiene su
+  // propio guard adentro (api/_shop.js), con su propio limite.
+  if (role === 'shop') return handleShop(req, res);
+
   if (role === 'get-availability') {
     if (await rateLimit(req, res, { max: 30, windowMs: 60000, key: 'get-availability' })) return;
     return handleGetAvailability(req, res);
@@ -6188,9 +6194,6 @@ async function handler(req, res) {
   if (role === 'admin-photos-order') return handleAdminPhotosOrder(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
-  // La tienda de repuestos. Entra por /api/shop, que vercel.json reescribe
-  // aca: Vercel admite 12 funciones y este proyecto ya tenia 12.
-  if (role === 'shop') return handleShop(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);
   return handleAdmin(req, res);
 }

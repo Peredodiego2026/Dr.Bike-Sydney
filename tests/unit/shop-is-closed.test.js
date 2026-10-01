@@ -68,7 +68,13 @@ function fakeClient(user) {
 let currentUser = { id: 'u1', email: 'peredo.dm@gmail.com' };
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: () => fakeClient(currentUser) }));
-vi.mock('../../api/_security.js', () => ({ guard: async () => true }));
+// guard() devuelve TRUE cuando YA contesto (metodo equivocado, limite de
+// peticiones) y FALSE cuando hay que seguir. Este doble decia `true`, que
+// significa "ya conteste": con la condicion invertida que tenia el handler,
+// el test pasaba igual mientras en produccion la tienda contestaba 405 a
+// todo. Un doble que miente en el mismo sentido que el codigo no prueba
+// nada.
+vi.mock('../../api/_security.js', () => ({ guard: async () => false }));
 
 function fakeRes() {
   const r = { statusCode: 0, body: null, headers: {} };
