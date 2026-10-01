@@ -19,8 +19,22 @@
       // knows how to finish the flow (PASSWORD_RECOVERY in js/app.js), so when a
       // recovery token is present we simply stay here and let it.
       var isRecovery = /type=recovery|access_token=/.test(window.location.hash || '');
+      // La tienda de repuestos es la misma SPA en el telefono y en la
+      // computadora: la grilla pasa sola a cuatro columnas en pantalla ancha
+      // (css/shop.css). Sin esta excepcion, abrir #shop desde una computadora
+      // rebota a landing.html, que no tiene ninguna de estas pantallas.
+      // El hash NO sobrevive el salto desde landing.html: se midio en el
+      // navegador y al llegar aca window.location.hash viene vacio, asi que la
+      // excepcion nunca se cumplia. Por eso la ruta viaja en la query, que si
+      // sobrevive, y js/app.js la convierte en hash antes de que el router
+      // mire la URL.
+      var shopView = new URLSearchParams(window.location.search).get('view') || '';
+      var isShop =
+        /^(shop|shop-product|cart|shop-checkout)$/.test(shopView) ||
+        /^#(shop|shop-product|cart|shop-checkout)/.test(window.location.hash || '');
       if (
         !isRecovery &&
+        !isShop &&
         !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
       ) {
         window.location.replace('/landing.html');
@@ -2401,7 +2415,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=3806db8d02" type="module"></script>
+    <script src="js/app.js?v=2e3da7355d" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';

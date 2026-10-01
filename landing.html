@@ -63,6 +63,7 @@
   </script>
 
   <link rel="stylesheet" href="css/landing.css?v=897283619f">
+  <link rel="stylesheet" href="css/shop.css?v=93218ac3a0">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
   <script type="text/plain" data-consent="analytics">
@@ -138,6 +139,7 @@
       <a href="#mechanics">Mechanics</a>
       <a href="#memberships">Memberships</a>
       <a href="#fleet" style="color:var(--blue-text);font-weight:700">Fleet &#x2192;</a>
+      <a href="/index.html#shop" data-shop-tab hidden>Shop</a>
       <a href="#about">About</a>
     </div>
 
@@ -775,6 +777,8 @@
     </p>
   </div>
 </div>
+
+<section id="shop-band" class="shop-band" hidden></section>
 
 <!-- ── ABOUT ────────────────────────────────────────────────────────────────── -->
 <section id="about" style="padding:96px 0;background:var(--gray-light)">
@@ -1474,7 +1478,7 @@
 <!-- js/app.js is the only entry point - see the note in index.html. Listing
      router.js, supabase.js, components.js or stripe.js here loads each of them
      a second time, under a URL the imports inside app.js never resolve to. -->
-<script src="js/app.js?v=3806db8d02" type="module"></script>
+<script src="js/app.js?v=2e3da7355d" type="module"></script>
 <script src="js/live-prices.js?v=20260728a" defer></script>
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>

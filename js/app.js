@@ -66,7 +66,7 @@ import {
 } from './components.js';
 import { openGiftCardModal } from './gift-card.js';
 import { getRiderTier } from './rider-tier.js';
-import { renderShop, renderShopProduct, renderCart, mountShopBand, configureShop } from './shop-ui.js';
+import { renderShop, renderShopProduct, renderCart, renderShopCheckout, mountShopBand, configureShop } from './shop-ui.js';
 import { canSeeShop } from './shop.js';
 import { toDbTime, toDisplayTime, sameTime } from './time-format.js';
 import {
@@ -6298,6 +6298,22 @@ configureShop({
 // La franja del inicio y el acceso a la tienda aparecen solo para quien tiene
 // permiso. Que canSeeShop() diga que si no abre nada: el que decide es el
 // servidor, y sin su catalogo la franja no se dibuja.
+// Se resuelve sola, no colgada de updateHomeNav(): esa funcion busca los
+// botones del menu del celular y hace return si no estan, que es justo lo que
+// pasa en landing.html. La franja de escritorio no aparecia por eso.
+async function initShopAccess() {
+  try {
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    refreshShopAccess(user);
+  } catch (e) {
+    // Sin sesion o sin red: la tienda no se muestra y no se avisa nada. Nadie
+    // pidio ver una tienda que todavia no sabe si puede ver.
+    refreshShopAccess(null);
+  }
+}
+
 function refreshShopAccess(user) {
   const allowed = canSeeShop(user);
   document.querySelectorAll('[data-shop-tab]').forEach((el) => {
@@ -6455,6 +6471,7 @@ document.addEventListener('screenchange', ({ detail }) => {
     shop: renderShop,
     'shop-product': renderShopProduct,
     cart: renderCart,
+    'shop-checkout': renderShopCheckout,
   };
   const render = RENDERERS[detail.route];
   if (render) runScreenRender(detail.route, render);
@@ -6706,6 +6723,20 @@ window.drbikeOpenGiftCard = openGiftCardModal;
 document.dispatchEvent(new Event('routerinit'));
 renderSpaLangSwitcher();
 updateHomeNav();
+// Una tienda abierta desde landing.html llega como ?view=shop, porque el hash
+// no sobrevive ese salto. Se convierte en ruta antes de que el router mire la
+// URL, y se limpia la query para que recargar no vuelva a forzarla.
+(function shopViewToRoute() {
+  const view = new URLSearchParams(window.location.search).get('view');
+  if (!view || !/^(shop|shop-product|cart|shop-checkout)$/.test(view)) return;
+  const params = new URLSearchParams(window.location.search);
+  params.delete('view');
+  const rest = params.toString();
+  const hash = view + (rest ? '?' + rest : '');
+  window.history.replaceState(null, '', window.location.pathname + '#' + hash);
+})();
+
+initShopAccess();
 // landing.html loads this module too (for the shared booking wizard) AND its
 // own js/landing-inline.js, which wires this exact same button id to its own
 // desktop-styled fee-check modal. Without this guard both handlers fire on

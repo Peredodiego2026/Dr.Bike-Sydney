@@ -24,6 +24,7 @@ import {
   setQty,
   removeFromCart,
   priceCart,
+  clearCart,
 } from './shop.js';
 
 const esc = (s) =>
@@ -34,6 +35,16 @@ const esc = (s) =>
     .replace(/"/g, '&quot;');
 
 const money = (n) => '$' + Number(n).toFixed(2);
+
+// Las pantallas de la tienda viven en index.html. En el celular ya estamos
+// ahi y alcanza el hash; en landing.html no, y un '#shop' a secas se queda
+// en la landing mostrando nada. index.html deja entrar a estas rutas aunque
+// el navegador sea de escritorio (index.html:26).
+const shopHref = (hash) => {
+  if (document.querySelector('[data-screen="shop"]')) return '#' + hash;
+  const [route, query] = hash.split('?');
+  return '/index.html?view=' + route + (query ? '&' + query : '') + '#' + hash;
+};
 
 // El estado de la tienda vive aca y no en la URL: volver atras del producto a
 // la lista tiene que devolver los filtros como estaban. Si estuvieran en el
@@ -66,7 +77,7 @@ function backBtn(label) {
 
 function card(p) {
   const n = p.variants.length;
-  return `<a class="shop-card" href="#shop-product?slug=${encodeURIComponent(p.slug)}" data-shop-link="${esc(p.slug)}">
+  return `<a class="shop-card" href="${shopHref('shop-product?slug=' + encodeURIComponent(p.slug))}" data-shop-link="${esc(p.slug)}">
       <div class="shop-card__shot">
         ${n > 1 ? `<span class="shop-card__sizes">${n} sizes</span>` : ''}
         ${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">` : ''}
@@ -373,7 +384,7 @@ export async function renderCart() {
                  <div class="shop-empty__icon">&#128722;</div>
                  <div class="shop-empty__title">Your cart is empty</div>
                  <div class="shop-empty__sub">Parts you add show up here.</div>
-                 <a href="#shop" class="btn btn-primary" style="margin-top:16px;display:inline-flex">Go to the shop</a>
+                 <a href="${shopHref('shop')}" class="btn btn-primary" style="margin-top:16px;display:inline-flex">Go to the shop</a>
                </div>`
         }
       </div>
@@ -405,6 +416,129 @@ export async function renderCart() {
   paint();
 }
 
+
+// ── El pago ──────────────────────────────────────────────────────────────────
+//
+// El formulario junta a donde va el pedido y se lo manda al servidor con los
+// SKU y las cantidades. Los importes NO viajan: el servidor los recalcula y
+// contesta lo que de verdad va a cobrar, asi que si lo que mostraba el carrito
+// no coincide, el cliente lo ve antes de pagar y no despues.
+
+export async function renderShopCheckout() {
+  const screen = document.querySelector('[data-screen="shop-checkout"]');
+  if (!screen) return;
+  screen.innerHTML = `<div class="screen-content">${spinner('Loading...')}</div>`;
+
+  let catalog;
+  try {
+    catalog = await loadCatalog(getToken);
+  } catch (e) {
+    failed(screen, e);
+    return;
+  }
+  const { items, subtotal } = priceCart(catalog, getCart());
+  if (!items.length) {
+    window.location.hash = 'cart';
+    return;
+  }
+
+  const field = (id, label, type, hint) => `
+    <label for="${id}" class="shop-group" style="display:block">${label}</label>
+    <input id="${id}" type="${type}" ${hint ? `placeholder="${esc(hint)}"` : ''} autocomplete="${id === 'co-email' ? 'email' : 'on'}"
+      style="width:100%;min-height:48px;border:1.5px solid var(--border);border-radius:9px;padding:0 14px;font-size:15px;font-family:inherit;color:var(--navy);background:var(--white)">`;
+
+  screen.innerHTML = `
+    <div class="screen-header" style="display:flex;align-items:center;gap:6px;padding-left:4px">
+      ${backBtn('Back to the cart')}
+      <h1 class="screen-title" style="flex-grow:1;margin:0">Checkout</h1>
+    </div>
+    <div class="screen-content">
+      <div class="shop-group" style="margin-top:0">Your order</div>
+      ${items
+        .map(
+          (i) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14px">
+            <span style="color:var(--navy)">${esc(i.name)} <span style="color:var(--gray)">x${i.qty}</span></span>
+            <span style="font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums">${money(i.total)}</span>
+          </div>`
+        )
+        .join('')}
+      <div class="shop-total">
+        <span class="shop-total__label">Subtotal</span>
+        <span class="shop-total__value">${money(subtotal)}</span>
+      </div>
+
+      ${field('co-name', 'Your name', 'text')}
+      ${field('co-email', 'Email', 'email')}
+      ${field('co-phone', 'Phone', 'tel')}
+      ${field('co-address', 'Street address', 'text')}
+      <div style="display:flex;gap:10px">
+        <div style="flex:2">${field('co-suburb', 'Suburb', 'text')}</div>
+        <div style="flex:1">${field('co-postcode', 'Postcode', 'text')}</div>
+      </div>
+
+      <div id="co-msg" class="shop-note" style="margin-top:14px"></div>
+    </div>
+    <div class="shop-buy">
+      <button type="button" class="shop-add" data-co-pay><span>Place the order</span><span> &middot; ${money(subtotal)}</span></button>
+    </div>`;
+
+  const msg = screen.querySelector('#co-msg');
+  const btn = screen.querySelector('[data-co-pay]');
+  const val = (id) => screen.querySelector('#' + id)?.value.trim() || '';
+
+  btn.addEventListener('click', async () => {
+    // Lo que hace falta para despachar. No se valida nada mas: un pedido que
+    // no se puede entregar no sirve, y todo lo demas lo arregla un llamado.
+    if (!val('co-address') || !val('co-suburb')) {
+      msg.textContent = 'We need an address and a suburb to send this to.';
+      msg.style.color = 'var(--red)';
+      screen.querySelector('#co-address').focus();
+      return;
+    }
+    btn.disabled = true;
+    msg.style.color = 'var(--gray)';
+    msg.textContent = 'Checking the prices...';
+    try {
+      const token = await getToken();
+      const r = await fetch('/api/shop?action=checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({
+          action: 'checkout',
+          items: getCart(),
+          name: val('co-name'),
+          email: val('co-email'),
+          phone: val('co-phone'),
+          address: val('co-address'),
+          suburb: val('co-suburb'),
+          postcode: val('co-postcode'),
+        }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || 'The order could not be placed (' + r.status + ')');
+
+      // El servidor manda lo que de verdad va a cobrar. Si no coincide con lo
+      // que esta pantalla mostraba, se dice - no se cobra callando la
+      // diferencia.
+      if (Math.abs(Number(data.total) - subtotal) > 0.009) {
+        msg.style.color = 'var(--amber)';
+        msg.textContent = 'The price changed to ' + money(data.total) + ' while you were here. Go back and check the cart.';
+        btn.disabled = false;
+        return;
+      }
+      msg.style.color = 'var(--green)';
+      msg.textContent = 'Order ' + String(data.orderId).slice(0, 8) + ' is in. We will email you to confirm.';
+      btn.textContent = 'Order placed';
+      clearCart();
+    } catch (e) {
+      // Nunca un catch vacio: si no se pudo, el motivo se lee en pantalla.
+      msg.style.color = 'var(--red)';
+      msg.textContent = e.message;
+      btn.disabled = false;
+    }
+  });
+}
+
 // ── La franja del inicio ─────────────────────────────────────────────────────
 
 export async function mountShopBand() {
@@ -427,7 +561,7 @@ export async function mountShopBand() {
           <h2 class="shop-band__title">LEBYCLE parts, delivered</h2>
           <div class="shop-band__sub">The same parts we fit, at the door. Tracked delivery across Australia.</div>
         </div>
-        <a href="#shop" class="shop-band__all">Shop all <span aria-hidden="true">&rarr;</span></a>
+        <a href="${shopHref('shop')}" class="shop-band__all">Shop all <span aria-hidden="true">&rarr;</span></a>
       </div>
       <div class="shop-band__rail">${picks.map(card).join('')}</div>
     </div>`;
