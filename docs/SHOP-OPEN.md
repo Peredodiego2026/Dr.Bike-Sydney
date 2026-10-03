@@ -23,16 +23,20 @@ cliente.
       de prueba, los pedidos quedan `mode = 'test'` y no se cobra nada. Las dos
       tienen que ser del mismo modo: una de pruebas con una real hace que el
       checkout conteste 503 antes de crear el pedido.
-- [ ] Un pago que el navegador no llego a confirmar. Hoy el pedido pasa a
-      `paid` (y salen el WhatsApp y el email) cuando la pagina llama a
+- [ ] `scripts/shop-orders-fulfillment.sql` corrido en Supabase (fila 50 de
+      `docs/RUNBOOK-SQL.md`). Sin eso, Admin > Shop Orders lista los pedidos
+      pero no los puede pasar a "pedido a LEBYCLE", "enviado" ni "entregado".
+- [ ] Un pago que el navegador no llego a confirmar. El pedido pasa a `paid`
+      (y salen el WhatsApp y el email) cuando la pagina llama a
       `/api/shop?action=confirm` despues de que Stripe acepta la tarjeta. Si el
       cliente cierra la pestaña justo en ese segundo, Stripe cobro y el pedido
-      queda `pending` sin aviso. Antes de cobrar en serio, algo tiene que
-      barrer esos casos: el panel de pedidos (Admin) mostrando los `pending`
-      con un "revisar en Stripe", o `payment_intent.succeeded` con
+      queda `pending` sin aviso. Hoy se resuelve A MANO: Admin > Shop Orders >
+      filtro "Not paid" > "Check with Stripe" (misma decision que el
+      navegador, `settleOrder()` en `api/_shop.js`, y salen los mismos
+      avisos). Para que sea automatico falta `payment_intent.succeeded` con
       `metadata.kind = 'shop_order'` en `api/stripe-webhook.js` llamando a
-      `notifyPaid()` de `api/_shop.js`. El webhook de hoy ya los ignora
-      (no traen `bk_service_name`), asi que no crea reservas falsas.
+      `settleOrder()`. El webhook de hoy ya los ignora (no traen
+      `bk_service_name`), asi que no crea reservas falsas.
 
 ## El interruptor (dos lineas, una palabra cada una)
 

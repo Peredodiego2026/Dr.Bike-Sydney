@@ -5,9 +5,17 @@
 // Los nombres de producto vienen del catalogo y el nombre del cliente de su
 // propio formulario. Los dos terminan dentro de un HTML que se manda desde
 // nuestro dominio verificado, asi que se escapan como todo lo demas.
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 
 let mail = null;
+let handler;
+
+// Una sola vez y con margen: la primera importacion de send-email.js (Sentry,
+// Supabase) tarda, y con toda la bateria corriendo en paralelo pasaba de los
+// 5 segundos de un test. Fallaba siempre el primero, y solo a veces.
+beforeAll(async () => {
+  handler = (await import('../../api/send-email.js')).default;
+}, 30000);
 
 beforeEach(() => {
   mail = null;
@@ -29,7 +37,6 @@ afterEach(() => {
 });
 
 async function render(body) {
-  const handler = (await import('../../api/send-email.js')).default;
   const res = { statusCode: 0, setHeader() {}, status(c) { this.statusCode = c; return this; }, json(b) { this.body = b; return this; }, end() { return this; } };
   await handler(
     {
@@ -95,5 +102,53 @@ describe('el email del pedido', () => {
     expect(es.html).toContain('Total pagado');
     const zh = (await render({ lang: 'zh' })).mail;
     expect(zh.html).toContain('感谢您的订单');
+  });
+});
+
+describe('el email de enviado', () => {
+  const shipped = (extra) => render({ type: 'shop_shipped', items: undefined, carrier: 'AusPost', trackingNumber: 'AP 123', ...extra });
+
+  it('lleva el numero de seguimiento y el transportista', async () => {
+    const { mail } = await shipped({});
+    expect(mail.subject).toBe('🚚 Your order is on its way — #AB12CD34');
+    expect(mail.html).toContain('AP 123');
+    expect(mail.html).toContain('AusPost');
+  });
+
+  it('el boton aparece solo con un link https', async () => {
+    const ok = (await shipped({ trackingUrl: 'https://auspost.com.au/track?id=AP1&x=2' })).mail.html;
+    expect(ok).toContain('href="https://auspost.com.au/track?id=AP1&amp;x=2"');
+    expect(ok).toContain('Track my parcel');
+    const bad = (await shipped({ trackingUrl: 'javascript:alert(1)' })).mail.html;
+    expect(bad).not.toContain('javascript:');
+    expect(bad).not.toContain('Track my parcel');
+    const quote = (await shipped({ trackingUrl: 'https://x.com/"onmouseover="alert(1)' })).mail.html;
+    expect(quote).not.toContain('onmouseover');
+  });
+
+  it('escapa el transportista', async () => {
+    expect((await shipped({ carrier: '<script>x</script>' })).mail.html).not.toContain('<script>');
+  });
+
+  it('llega traducido', async () => {
+    const es = (await shipped({ lang: 'es' })).mail;
+    expect(es.subject).toBe('🚚 Tu pedido va en camino — #AB12CD34');
+    expect(es.html).toContain('Número de seguimiento');
+    expect(es.html).toContain('>Transportista<');
+  });
+});
+
+describe('el email de reembolso', () => {
+  it('dice cuanto se devolvio', async () => {
+    const { mail } = await render({ type: 'shop_refunded', total: 41.9 });
+    expect(mail.subject).toBe('↩️ Refund for order #AB12CD34');
+    expect(mail.html).toContain('$41.90 AUD');
+    expect(mail.html).toContain('5 to 10 business days');
+  });
+
+  it('llega traducido', async () => {
+    const zh = (await render({ type: 'shop_refunded', lang: 'zh' })).mail;
+    expect(zh.subject).toBe('↩️ 订单退款 #AB12CD34');
+    expect(zh.html).toContain('>已退款<');
   });
 });

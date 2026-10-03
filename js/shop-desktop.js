@@ -543,7 +543,7 @@ async function placeOrder(form) {
   btn.disabled = true;
   coSay('', 'Preparing the payment...');
   try {
-    const data = await startCheckout(await getToken(), getCart(), details);
+    const data = await startCheckout(await getToken(), getCart(), details, getLang());
     // El servidor manda lo que de verdad va a cobrar. Si no coincide con lo
     // que se mostraba, se dice antes: no se cobra callando la diferencia.
     if (Math.abs(Number(data.total) - subtotal) > 0.009) {

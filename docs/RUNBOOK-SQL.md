@@ -366,13 +366,22 @@ with
                      where c.relname in ('shop_orders','shop_order_items')), false)
      and not exists (select 1 from pg_policy p join pg_class c on c.oid = p.polrelid
                        where c.relname in ('shop_orders','shop_order_items')))
+  -- 50 entro el 2026-10-04 con Admin > Shop Orders: el numero de pedido de
+  -- LEBYCLE, el transportista, las fechas de cada paso y el estado 'ordered'.
+  -- Sin esto el panel lista los pedidos pero no puede moverlos.
+  union all select 50, 'shop-orders-fulfillment.sql', 'shop_orders.supplier_ref, carrier, tracking_url, fechas de cada paso, y el estado ordered',
+    (exists (select 1 from col where t='shop_orders' and c='supplier_ref')
+     and exists (select 1 from col where t='shop_orders' and c='refund_id')
+     and exists (select 1 from col where t='shop_orders' and c='tracking_url')
+     and exists (select 1 from pg_constraint where conname = 'shop_orders_status_check'
+                   and pg_get_constraintdef(oid) ilike '%ordered%'))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 42 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 45 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
