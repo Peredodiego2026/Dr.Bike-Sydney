@@ -2162,13 +2162,57 @@ function safeImageUpload(file) {
   return { ok: true, ext, contentType: ALLOWED[ext] };
 }
 
+// A phone photo is 3-5 MB, and every time a client, the invoice email or the
+// admin opens it, Supabase counts it against the plan's transfer quota - the
+// project was in a grace period for exactly that on 03-oct-2026 (PR #467, the
+// mechanic profile photo). So two re-encoded JPEGs go up instead: the photo at
+// 1600px, plenty for any screen and for a client to zoom in, and a 400px copy
+// for the Admin > Photos tiles (api/_job-photos.js thumbPathOf).
+const JOB_PHOTO_MAX_SIDE = 1600;
+const JOB_THUMB_MAX_SIDE = 400;
+const JOB_PHOTO_QUALITY = 0.82;
+
+async function shrinkJobPhoto(file, maxSide) {
+  try {
+    // window. delante, como en admin.js: el linter no tiene createImageBitmap
+    // entre sus globales de script clasico.
+    const bitmap = await window.createImageBitmap(file);
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close?.();
+    return await new Promise((res) => canvas.toBlob(res, 'image/jpeg', JOB_PHOTO_QUALITY));
+  } catch (e) {
+    console.warn('Could not shrink the photo - uploading the original:', e.message);
+    return null;
+  }
+}
+
+// What actually goes up: { body, thumb, ext, contentType }. If the phone
+// cannot decode the photo, the original goes up as before and with no small
+// copy - a big photo is a cost problem, a lost one is a job with no proof. The
+// extension and type still never come from the file: a JPEG of our own, or
+// kind's (safeImageUpload).
+async function prepareJobPhoto(file, kind) {
+  const smaller = await shrinkJobPhoto(file, JOB_PHOTO_MAX_SIDE);
+  const thumb = smaller ? await shrinkJobPhoto(file, JOB_THUMB_MAX_SIDE) : null;
+  // Re-encoding a photo that was already small can make it bigger: then the
+  // original stays, and only the small copy is new.
+  const useSmaller = !!smaller && smaller.size < file.size;
+  const ext = useSmaller ? 'jpg' : kind.ext;
+  const contentType = useSmaller ? 'image/jpeg' : kind.contentType;
+  return { body: useSmaller ? smaller : file, thumb, ext, contentType };
+}
+
 // The private bucket first (api/_job-photos.js): the server hands out a
 // one-time upload URL for this job only, and what gets stored is a reference
 // that is signed each time someone who may see the job opens it. Returns that
 // reference, or null when the private upload is not available - until the
 // bucket is created in Supabase that is every time, and the caller falls back
 // to the public bucket exactly as before.
-async function uploadPrivateJobPhoto(bookingId, file, which, kind) {
+async function uploadPrivateJobPhoto(bookingId, photo, which) {
   const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
   try {
     const r = await fetch('/api/auth', {
@@ -2179,21 +2223,32 @@ async function uploadPrivateJobPhoto(bookingId, file, which, kind) {
         token: stored.token || '',
         booking_id: bookingId,
         kind: which,
-        ext: kind.ext,
+        ext: photo.ext,
+        thumb: !!photo.thumb,
       }),
     });
     if (!r.ok) return null;
     const up = await r.json();
-    // Re-wrapped so the stored type is the one chosen from the list: for a
-    // File, supabase-js sends multipart and the part carries file.type, the
+    // Re-wrapped so the stored type is the one chosen above: for a File,
+    // supabase-js sends multipart and the part carries file.type, the
     // browser's claim, whatever `contentType` says.
-    const body = new Blob([file], { type: kind.contentType });
+    const body = new Blob([photo.body], { type: photo.contentType });
     const { error } = await sb.storage
       .from(up.bucket)
-      .uploadToSignedUrl(up.path, up.token, body, { contentType: kind.contentType });
+      .uploadToSignedUrl(up.path, up.token, body, { contentType: photo.contentType });
     if (error) {
       console.warn('Private photo upload failed - using the public bucket:', error.message);
       return null;
+    }
+    // The small copy is a nicety: if it does not go up, the gallery tile
+    // loads the full photo. Never a reason to fail the job photo.
+    if (photo.thumb && up.thumb_token) {
+      const t = await sb.storage
+        .from(up.bucket)
+        .uploadToSignedUrl(up.thumb_path, up.thumb_token, photo.thumb, {
+          contentType: 'image/jpeg',
+        });
+      if (t.error) console.warn('Thumbnail upload failed:', t.error.message);
     }
     return up.ref;
   } catch (e) {
@@ -2210,12 +2265,13 @@ async function uploadPhoto(bookingId, file, type) {
     return null;
   }
   try {
-    const ref = await uploadPrivateJobPhoto(bookingId, file, type, kind);
+    const photo = await prepareJobPhoto(file, kind);
+    const ref = await uploadPrivateJobPhoto(bookingId, photo, type);
     if (ref) return ref;
-    const path = `jobs/${bookingId}/${type}_${Date.now()}.${kind.ext}`;
+    const path = `jobs/${bookingId}/${type}_${Date.now()}.${photo.ext}`;
     const { data, error } = await sb.storage
       .from('job-photos')
-      .upload(path, file, { upsert: true, contentType: kind.contentType });
+      .upload(path, photo.body, { upsert: true, contentType: photo.contentType });
     if (error) {
       console.warn('Photo upload error:', error.message);
       return null;
@@ -3284,12 +3340,13 @@ async function sendMechPhoto() {
     toast(kind.reason);
     return;
   }
-  let url = await uploadPrivateJobPhoto(mechChatBookingId, file, 'chat', kind);
+  const photo = await prepareJobPhoto(file, kind);
+  let url = await uploadPrivateJobPhoto(mechChatBookingId, photo, 'chat');
   if (!url) {
-    const path = `chat/${mechChatBookingId}/${Date.now()}.${kind.ext}`;
+    const path = `chat/${mechChatBookingId}/${Date.now()}.${photo.ext}`;
     const { data, error } = await sb.storage
       .from('job-photos')
-      .upload(path, file, { contentType: kind.contentType, upsert: false });
+      .upload(path, photo.body, { contentType: photo.contentType, upsert: false });
     if (error) {
       toast('Upload failed');
       return;

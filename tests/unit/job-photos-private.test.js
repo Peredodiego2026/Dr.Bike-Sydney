@@ -287,6 +287,24 @@ describe('the upload URL (role mechanic-photo-upload-url)', () => {
     expect(r.body.ref).toMatch(new RegExp(`^job-photos-private/jobs/${BOOKING}/after_\\d+\\.jpg$`));
     expect(r.body.contentType).toBe('image/jpeg');
     expect(photos.jobPhotoPath(r.body.ref, BOOKING)).not.toBeNull();
+    // No small copy unless the app asks for one.
+    expect(r.body.thumb_token).toBeUndefined();
+  });
+
+  it('with thumb: a second upload URL for the small copy, next to the photo', async () => {
+    const r = await call(handleMechanicPhotoUploadUrl, {
+      token: mechanicToken('mech-1'),
+      booking_id: BOOKING,
+      kind: 'before',
+      ext: 'jpg',
+      thumb: true,
+    });
+    expect(r.statusCode).toBe(200);
+    expect(r.body.thumb_token).toBe('upload-token');
+    expect(r.body.thumb_path).toBe(r.body.path.replace(/\.jpg$/, '_thumb.jpg'));
+    // The small copy lives in the same booking's folder, so the same rules
+    // sign it.
+    expect(photos.jobPhotoPath(`job-photos-private/${r.body.thumb_path}`, BOOKING)).not.toBeNull();
   });
 
   it('not to another mechanic', async () => {

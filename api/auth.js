@@ -46,6 +46,7 @@ import {
   signJobPhoto,
   signPhotoMessages,
   createJobPhotoUpload,
+  thumbPathOf,
 } from './_job-photos.js';
 import {
   photoSource,
@@ -5102,12 +5103,22 @@ export async function handleMechanicPhotoUploadUrl(req, res) {
     );
     return res.status(503).json({ error: 'Private photo storage unavailable', fallback: true });
   }
+  // A second one-time URL for the small copy, when the app has one to send.
+  // Optional both ways: no thumbnail only means the gallery tile loads the
+  // full photo, as every photo taken before 03-oct-2026 does.
+  let thumb = {};
+  if (req.body?.thumb === true) {
+    const thumbPath = thumbPathOf(path);
+    const t = await createJobPhotoUpload(thumbPath, jobPhotoOpts());
+    if (t.token) thumb = { thumb_path: thumbPath, thumb_token: t.token };
+  }
   return res.status(200).json({
     bucket: JOB_PHOTO_BUCKET,
     path,
     token: up.token,
     ref: `${JOB_PHOTO_BUCKET}/${path}`,
     contentType: JOB_PHOTO_TYPES[String(ext).toLowerCase()],
+    ...thumb,
   });
 }
 
@@ -5191,10 +5202,11 @@ export async function handleAdminPhotosList(req, res) {
 
   const opts = jobPhotoOpts();
   const photos = collectPhotos({ bookings, messages, supabaseUrl: SUPABASE_URL });
-  const signed = await signMany(
-    photos.filter((p) => p.bucket === JOB_PHOTO_BUCKET).map((p) => p.path),
-    opts
-  );
+  // The full photos and their small copies in one batch. A photo with no small
+  // copy (everything before 03-oct-2026, a phone that could not make one) just
+  // has no thumb_url, and the tile falls back to the full photo.
+  const privatePaths = photos.filter((p) => p.bucket === JOB_PHOTO_BUCKET).map((p) => p.path);
+  const signed = await signMany([...privatePaths, ...privatePaths.map(thumbPathOf)], opts);
   let onSite = null;
   let order = [];
   try {
@@ -5208,6 +5220,7 @@ export async function handleAdminPhotosList(req, res) {
     photos: photos.map((p) => ({
       ...p,
       url: p.bucket === JOB_PHOTO_BUCKET ? signed.get(p.path) || null : p.ref,
+      thumb_url: p.bucket === JOB_PHOTO_BUCKET ? signed.get(thumbPathOf(p.path)) || null : null,
       on_website: onSite ? onSite.has(p.showcase_name) : null,
       website_url: onSite?.has(p.showcase_name)
         ? showcasePublicUrl(p.showcase_name, SUPABASE_URL)

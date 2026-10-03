@@ -56,6 +56,14 @@ export function newJobPhotoPath(bookingId, kind, ext, now = Date.now()) {
     : `jobs/${bookingId}/${kind}_${now}.${e}`;
 }
 
+// The small copy the mechanic app uploads next to each job photo (400px, a few
+// KB), for the Admin > Photos tiles. Supabase was in a grace period for
+// transfer on 03-oct-2026 (docs/PENDIENTES / PR #467): a grid of full photos
+// would spend in one page view what a month of visits does.
+export function thumbPathOf(path) {
+  return String(path).replace(/\.[a-z0-9]+$/i, '_thumb.jpg');
+}
+
 // The path inside the private bucket IF `ref` is a reference to a photo of
 // THIS booking, null otherwise. Checking the booking is the whole point: the
 // server decides who may see booking X, so a reference that points into
