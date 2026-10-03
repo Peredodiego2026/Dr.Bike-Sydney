@@ -104,6 +104,28 @@ describe('anything else is a no', () => {
   });
 });
 
+// The 400px copy for the Admin > Photos tile (api/_job-photos.js thumbPathOf).
+describe('the small copy', () => {
+  it('goes next to the photo, as <photo>_thumb.jpg', async () => {
+    await review({ photo_web_ok: true, photo_thumb_base64: 'data:image/jpeg;base64,/9j/4AAQ' });
+    expect(uploads).toHaveLength(2);
+    const [photo, thumb] = uploads;
+    expect(thumb).toBe(photo.replace(/\.jpg$/, '_thumb.jpg'));
+  });
+
+  it('is skipped when it is too big to be a thumbnail', async () => {
+    const big = 'data:image/jpeg;base64,' + Buffer.alloc(300_000, 1).toString('base64');
+    await review({ photo_thumb_base64: big });
+    expect(uploads).toHaveLength(1);
+  });
+
+  it('and is never required', async () => {
+    await review({});
+    expect(uploads).toHaveLength(1);
+    expect(patched.client_photo_url).toMatch(/^job-photos-private\/reviews\//);
+  });
+});
+
 describe('before the private bucket exists', () => {
   it('falls back to the public bucket, and the answer still travels with the photo', async () => {
     privateBucketExists = false;

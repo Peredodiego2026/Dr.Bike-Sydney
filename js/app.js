@@ -66,7 +66,14 @@ import {
 } from './components.js';
 import { openGiftCardModal } from './gift-card.js';
 import { getRiderTier } from './rider-tier.js';
-import { renderShop, renderShopProduct, renderCart, renderShopCheckout, mountShopBand, configureShop } from './shop-ui.js';
+import {
+  renderShop,
+  renderShopProduct,
+  renderCart,
+  renderShopCheckout,
+  mountShopBand,
+  configureShop,
+} from './shop-ui.js';
 import { canSeeShop } from './shop.js';
 import { toDbTime, toDisplayTime, sameTime } from './time-format.js';
 import {
@@ -4150,9 +4157,13 @@ async function renderReview() {
     errEl.hidden = true;
     try {
       let photoBase64 = null;
+      let photoThumbBase64 = null;
       if (reviewPhotoFile) {
         btn.textContent = 'Uploading photo...';
         photoBase64 = await compressImageToBase64(reviewPhotoFile);
+        // A 400px copy for the Admin > Photos tile (api/_job-photos.js
+        // thumbPathOf). Optional: without it the tile loads the full photo.
+        photoThumbBase64 = await compressImageToBase64(reviewPhotoFile, 400, 0.8).catch(() => null);
       }
       await submitReview(
         bookingId || 'demo',
@@ -4160,7 +4171,8 @@ async function renderReview() {
         textarea.value.trim(),
         photoBase64,
         window._pendingReviewToken || '',
-        !!photoBase64 && screen.querySelector('#review-photo-web-ok').checked
+        !!photoBase64 && screen.querySelector('#review-photo-web-ok').checked,
+        photoThumbBase64
       );
     } catch (e) {
       errEl.textContent = translateValue(e.message || 'Could not submit review. Please try again.');

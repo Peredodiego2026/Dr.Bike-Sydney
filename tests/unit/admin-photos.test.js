@@ -51,7 +51,7 @@ vi.mock('@supabase/supabase-js', () => ({
 globalThis.fetch = async (url, init = {}) => {
   const u = String(url);
   const method = init.method || 'GET';
-  calls.push({ url: u, method, body: init.body });
+  calls.push({ url: u, method, body: init.body, headers: init.headers || {} });
   const ok = (body) => ({
     ok: true,
     status: 200,
@@ -318,6 +318,58 @@ describe('show on website (role admin-photos-feature)', () => {
     });
     expect(r.body.done).toEqual([REVIEW_YES]);
     expect(showcase.has(`reviews_${B1}_client_1759250000000_web.jpg`)).toBe(true);
+  });
+
+  // The carousel shows these copies to every visitor who reaches it, so Admin
+  // sends a web-sized JPEG and that is what goes public (uploadToShowcase).
+  const jpeg = (bytes = 7) =>
+    'data:image/jpeg;base64,' +
+    Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(bytes - 3, 1)]).toString('base64');
+  const webCopyWrite = () =>
+    storageCalls().find(
+      (c) =>
+        c.method === 'POST' &&
+        c.url.endsWith(`/object/job-photos/showcase/jobs_${B1}_before_1759200000000.jpg`)
+    );
+
+  it('publishes the web-sized copy Admin sends instead of copying the original', async () => {
+    const r = await call(handleAdminPhotosFeature, {
+      access_token: 'admin-token',
+      refs: [PRIV_BEFORE],
+      web: { [PRIV_BEFORE]: jpeg() },
+    });
+    expect(r.body.done).toEqual([PRIV_BEFORE]);
+    const put = webCopyWrite();
+    expect([...put.body.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+    expect(put.headers['Content-Type']).toBe('image/jpeg');
+    // A returning visitor's browser keeps it instead of downloading it again.
+    expect(put.headers['cache-control']).toBe('max-age=604800');
+    expect(storageCalls().some((c) => c.url.endsWith('/object/copy'))).toBe(false);
+  });
+
+  it('anything but a JPEG under the cap is not published - the original is copied instead', async () => {
+    const png = 'data:image/png;base64,' + Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString('base64');
+    for (const web of [png, jpeg(gallery.SHOWCASE_WEB_MAX_BYTES + 1), 42]) {
+      calls = [];
+      const r = await call(handleAdminPhotosFeature, {
+        access_token: 'admin-token',
+        refs: [PRIV_BEFORE],
+        web: { [PRIV_BEFORE]: web },
+      });
+      expect(r.body.done).toEqual([PRIV_BEFORE]);
+      expect(storageCalls().some((c) => c.url.endsWith('/object/copy'))).toBe(true);
+      expect(webCopyWrite()).toBeUndefined();
+    }
+  });
+
+  it('a web copy of a review photo the client did not allow is refused like the photo', async () => {
+    const r = await call(handleAdminPhotosFeature, {
+      access_token: 'admin-token',
+      refs: [REVIEW_NO],
+      web: { [REVIEW_NO]: jpeg() },
+    });
+    expect(r.statusCode).toBe(403);
+    expect(storageCalls()).toEqual([]);
   });
 
   it('refuses anything that is not a job photo, without touching Storage', async () => {

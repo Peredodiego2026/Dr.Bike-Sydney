@@ -54,6 +54,7 @@ import {
   signMany,
   listShowcase,
   copyToShowcase,
+  uploadToShowcase,
   removeFromShowcase,
   showcasePublicUrl,
   showcaseName,
@@ -4284,6 +4285,7 @@ export async function handleClientReview(req, res) {
     comment,
     photo_base64,
     photo_web_ok,
+    photo_thumb_base64,
   } = req.body;
 
   const cred = reviewCredential(req.body);
@@ -4347,8 +4349,8 @@ export async function handleClientReview(req, res) {
       const buffer = Buffer.from(base64Data, 'base64');
       const ts = Date.now();
       const storagePath = `reviews/${targetId}/client_${ts}${photo_web_ok === true ? '_web' : ''}.jpg`;
-      const put = (bucket) =>
-        fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${storagePath}`, {
+      const put = (bucket, path = storagePath, body = buffer) =>
+        fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
           method: 'POST',
           headers: {
             apikey: SERVICE_KEY,
@@ -4356,11 +4358,25 @@ export async function handleClientReview(req, res) {
             'Content-Type': 'image/jpeg',
             'x-upsert': 'true',
           },
-          body: buffer,
+          body,
         });
       const privateResp = await put(JOB_PHOTO_BUCKET);
       if (privateResp.ok) {
         client_photo_url = `${JOB_PHOTO_BUCKET}/${storagePath}`;
+        // The 400px copy the review screen sends along, for the Admin > Photos
+        // tile (api/_job-photos.js thumbPathOf). Best effort: without it the
+        // tile loads the full photo. Capped so it cannot be the real photo
+        // smuggled in twice.
+        if (photo_thumb_base64) {
+          const thumb = Buffer.from(
+            String(photo_thumb_base64).replace(/^data:image\/\w+;base64,/, ''),
+            'base64'
+          );
+          if (thumb.length > 0 && thumb.length <= 200_000) {
+            const t = await put(JOB_PHOTO_BUCKET, thumbPathOf(storagePath), thumb);
+            if (!t.ok) console.warn('[client-review] thumbnail upload failed:', t.status);
+          }
+        }
       } else {
         const storageResp = await put('job-photos');
         if (storageResp.ok) {
@@ -5253,6 +5269,10 @@ export async function handleAdminPhotosFeature(req, res) {
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const refs = Array.isArray(req.body?.refs) ? req.body.refs.slice(0, 50) : [];
   if (!refs.length) return res.status(400).json({ error: 'refs required' });
+  // { ref: base64 } - the web-sized JPEG Admin made of each photo, so the
+  // carousel serves that instead of the original (uploadToShowcase). A photo
+  // without one, or with one that is not a JPEG under the cap, is copied.
+  const web = req.body?.web && typeof req.body.web === 'object' ? req.body.web : {};
   const opts = jobPhotoOpts();
   const done = [];
   const failed = [];
@@ -5262,7 +5282,12 @@ export async function handleAdminPhotosFeature(req, res) {
   for (const ref of refs) {
     const src = photoSource(ref, SUPABASE_URL);
     if (src && !src.webOk) notAllowed.push(ref);
-    else if (src && (await copyToShowcase(src, opts))) done.push(ref);
+    else if (
+      src &&
+      ((typeof web[ref] === 'string' && (await uploadToShowcase(src, web[ref], opts))) ||
+        (await copyToShowcase(src, opts)))
+    )
+      done.push(ref);
     else failed.push(ref);
   }
   // New photos go to the end of the carousel, in the order they were picked.
