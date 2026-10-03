@@ -91,6 +91,23 @@ test.describe('the cookie card does not take taps meant for the app', () => {
   test('and neither does the bottom nav disappear under it', async ({ page }) => {
     await goto(page, '/');
     await page.waitForSelector('.screen.active .bottom-nav a', { timeout: 20000 });
+    // The tab exists before it is where it ends up: measured on production on
+    // 03-oct-2026, at the moment the selector appears the first tab sits 8067px
+    // down (the home screen still sliding in), and 100ms later at the bottom
+    // of the screen. Measuring then asked what is under a point off screen,
+    // got null, and failed 3 out of 3 with nothing wrong for a real visitor.
+    // So: wait until the tab is on screen and has stopped moving.
+    await page.waitForFunction(
+      () => {
+        const b = document.querySelector('.screen.active .bottom-nav a')?.getBoundingClientRect();
+        if (!b || b.bottom > innerHeight || b.top < 0) return false;
+        const settled = window.__navTop === b.top;
+        window.__navTop = b.top;
+        return settled;
+      },
+      null,
+      { polling: 100, timeout: 10000 }
+    );
     await expect(page.locator('#drbike-consent')).toHaveCount(1);
 
     const tab = await tapTarget(page, '.screen.active .bottom-nav a');
