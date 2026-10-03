@@ -13,11 +13,18 @@
 //
 // payment_intent.succeeded is the one that makes a booking survive its own
 // browser. Diego registered it on 2026-08-03; it did nothing until now.
+//
+// The LEBYCLE shop charges with its own key (SHOP_STRIPE_SECRET_KEY, test mode
+// today), and Stripe signs that mode's events with a DIFFERENT secret:
+//   SHOP_STRIPE_WEBHOOK_SECRET -> whsec_... from a webhook registered in the
+//   SHOP's mode (Test mode / sandbox), same URL, event payment_intent.succeeded.
+// An event signed with that secret can only settle shop orders - see viaShop.
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 import { calloutFeeForAddress, applySurcharge, applyMembershipPricing } from './auth.js';
 import { VALID_FEES } from './_coverage.js';
+import { settleOrder, ORDER_FOR_SETTLE } from './_shop.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const sb = createClient(
@@ -457,6 +464,37 @@ export async function handlePaymentIntentSucceeded(pi) {
 }
 
 // ---------------------------------------------------------------------------
+// La tienda LEBYCLE
+// ---------------------------------------------------------------------------
+//
+// Un pedido de la tienda queda pagado cuando el navegador llama a
+// /api/shop?action=confirm. Si el cliente cierra la pestaña justo despues de
+// pagar, esa llamada no llega: Stripe cobro y el pedido queda 'pending' sin
+// aviso. Esto es la red: Stripe avisa aca, y se toma la MISMA decision que el
+// navegador (settleOrder en api/_shop.js - le pregunta a Stripe, compara el
+// importe, mueve pending -> paid en una escritura condicionada y avisa una
+// sola vez). Que lleguen los dos, el navegador y este aviso, no duplica nada.
+//
+// Exportado para los tests: se prueba ejecutandolo.
+export async function handleShopPaymentSucceeded(pi, client = sb) {
+  if (pi?.metadata?.kind !== 'shop_order') return null;
+  const byId = pi.metadata.order_id;
+  let q = client.from('shop_orders').select(ORDER_FOR_SETTLE);
+  q = byId ? q.eq('id', byId) : q.eq('payment_intent_id', pi.id);
+  const { data: order, error } = await q.maybeSingle();
+  // Un error de la base se tira para que Stripe reintente. Un pedido que no
+  // existe no: reintentar durante tres dias no lo va a hacer aparecer.
+  if (error) throw new Error('shop order lookup failed for ' + pi.id + ': ' + error.message);
+  if (!order) return { shop: 'no order for this payment', pi: pi.id };
+  if (order.payment_intent_id !== pi.id) return { shop: 'payment does not belong to that order', pi: pi.id };
+  const out = await settleOrder(client, order, pi.metadata?.lang || '');
+  // 5xx: no se pudo preguntar a Stripe o escribir - que Stripe reintente.
+  // 409 (importe distinto) queda anotado en el pedido y no se reintenta.
+  if (out.code >= 500) throw new Error('shop settle failed for ' + pi.id + ': ' + JSON.stringify(out.body));
+  return { shop: out.body };
+}
+
+// ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
 
@@ -470,11 +508,23 @@ async function handler(req, res) {
   const rawBody = await getRawBody(req);
 
   let event;
+  // La tienda cobra con su propia clave (hoy de pruebas, SHOP_STRIPE_SECRET_KEY),
+  // y Stripe firma los avisos de ese modo con OTRO secreto. Un aviso firmado con
+  // el de la tienda solo puede tocar pedidos de la tienda: nunca reservas ni
+  // membresias, que viven en la cuenta real.
+  let viaShop = false;
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error('Webhook signature error:', err.message);
-    return res.status(400).json({ error: `Webhook error: ${err.message}` });
+    const shopSecret = process.env.SHOP_STRIPE_WEBHOOK_SECRET;
+    try {
+      if (!shopSecret) throw err;
+      event = stripe.webhooks.constructEvent(rawBody, sig, shopSecret);
+      viaShop = true;
+    } catch (err2) {
+      console.error('Webhook signature error:', err2.message);
+      return res.status(400).json({ error: `Webhook error: ${err2.message}` });
+    }
   }
 
   console.log(`[Stripe webhook] Received: ${event.type}`);
@@ -493,8 +543,30 @@ async function handler(req, res) {
   }
 
   try {
+    if (viaShop) {
+      const out =
+        event.type === 'payment_intent.succeeded'
+          ? await handleShopPaymentSucceeded(event.data.object)
+          : { shop: 'ignored ' + event.type };
+      console.log('[Stripe webhook] shop', event.type, '->', JSON.stringify(out));
+      await sb
+        .from('stripe_events')
+        .insert({ id: event.id, type: event.type })
+        .then(
+          () => {},
+          () => {}
+        );
+      return res.status(200).json({ received: true });
+    }
     switch (event.type) {
       case 'payment_intent.succeeded': {
+        // Un pedido de la tienda cobrado con la cuenta real (el dia que tenga
+        // claves live) llega por aca. Nunca es una reserva.
+        const shopOut = await handleShopPaymentSucceeded(event.data.object);
+        if (shopOut) {
+          console.log('[Stripe webhook] shop payment_intent.succeeded ->', JSON.stringify(shopOut));
+          break;
+        }
         const out = await handlePaymentIntentSucceeded(event.data.object);
         console.log('[Stripe webhook] payment_intent.succeeded ->', JSON.stringify(out));
         break;
