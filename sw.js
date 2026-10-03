@@ -1,3 +1,8 @@
+// v137 (2026-10-03): js/shop-ui.js cambio en #465 - la pantalla de error de
+// la tienda gano la flecha de atras y "Ir al inicio" - y ese PR no subio este
+// numero. shop-ui.js se importa sin ?v=, asi que el unico que entrega la
+// version nueva a quien ya visito el sitio es este cache. Sin subirlo, Diego
+// podia seguir viendo la pantalla de error sin salida.
 // v136 (2026-10-02): entra la tienda de repuestos LEBYCLE, visible solo para
 // quien el servidor deja (api/shop.js). Nuevos: js/shop.js, js/shop-ui.js y
 // css/shop.css. Cambian index.html (la franja del inicio, cuatro pantallas y
@@ -232,7 +237,7 @@
 // v134: "Photo unavailable", para una foto del chat que no se pudo firmar.
 // v135: la casilla "puede mostrar esta foto en su sitio web" de la resena, y
 // js/supabase.js manda la respuesta (photo_web_ok).
-const CACHE_STATIC = 'drbike-static-v136';
+const CACHE_STATIC = 'drbike-static-v137';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
