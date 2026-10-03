@@ -1510,4 +1510,5 @@ export default {
   'Suburb': '区名',
   'Postcode': '邮编',
   'Back to the cart': '返回购物车',
+  'Go to the home screen': '返回主页',
 };

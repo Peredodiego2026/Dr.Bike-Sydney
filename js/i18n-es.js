@@ -1666,4 +1666,5 @@ export default {
   'Suburb': 'Suburb',
   'Postcode': 'Codigo postal',
   'Back to the cart': 'Volver al carrito',
+  'Go to the home screen': 'Ir al inicio',
 };

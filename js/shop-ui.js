@@ -10,6 +10,7 @@
 
 import {
   loadCatalog,
+  forgetCatalog,
   findProduct,
   findVariant,
   filterProducts,
@@ -91,13 +92,30 @@ function spinner(msg) {
   return `<div class="shop-empty"><div class="shop-empty__icon">&#128269;</div><div class="shop-empty__title">${esc(msg)}</div></div>`;
 }
 
+// La pantalla de error SIEMPRE lleva la flecha de atras y una salida al inicio.
+//
+// La primera version no las tenia: solo el cartel y un boton "Try again". El
+// 02-oct, con /api/shop devolviendo 405, Diego quedo encerrado ahi - "no sirve
+// ni un boton, esta como congelado". No estaba congelada: era esta pantalla,
+// sin ninguna salida, y el unico boton reintentaba algo que volvia a fallar.
+//
+// Una pantalla de error de la que no se puede salir es peor que el error que
+// la provoco.
 function failed(screen, e) {
   // Nunca un catch vacio: si la tienda no carga, el motivo se lee en pantalla.
-  screen.innerHTML = `<div class="screen-content"><div class="shop-empty">
+  screen.innerHTML = `
+    <div class="screen-header" style="display:flex;align-items:center;gap:6px;padding-left:4px">
+      ${backBtn('Back')}
+      <h1 class="screen-title" style="flex-grow:1;margin:0">Shop</h1>
+    </div>
+    <div class="screen-content"><div class="shop-empty">
       <div class="shop-empty__icon">&#9888;&#65039;</div>
       <div class="shop-empty__title">The shop did not load</div>
       <div class="shop-empty__sub">${esc(e?.message || String(e))}</div>
-      <button type="button" class="btn btn-secondary" data-shop-retry style="margin-top:16px">Try again</button>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px">
+        <button type="button" class="btn btn-secondary" data-shop-retry>Try again</button>
+        <a href="#home" class="btn btn-primary">Go to the home screen</a>
+      </div>
     </div></div>`;
 }
 
@@ -587,6 +605,14 @@ document.addEventListener('click', (ev) => {
   const retry = ev.target.closest('[data-shop-retry]');
   if (retry) {
     ev.preventDefault();
-    window.dispatchEvent(new Event('hashchange'));
+    // Se vuelve a dibujar la pantalla en la que estamos. Antes esto disparaba
+    // un 'hashchange', y como el hash NO cambia al reintentar, el router no
+    // hacia nada: el boton parecia roto.
+    forgetCatalog();
+    const screen = retry.closest('[data-screen]');
+    const again = { shop: renderShop, 'shop-product': renderShopProduct, cart: renderCart, 'shop-checkout': renderShopCheckout }[
+      screen?.dataset.screen
+    ];
+    if (again) again();
   }
 });
