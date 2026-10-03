@@ -10,6 +10,16 @@
 } from './_security.js';
 import { translateEmailHtml, translateEmailSubject, normalizeLang } from './_email-i18n.js';
 import { withSentry } from './_sentry.js';
+
+// The five colours of every summary table in these emails, named once. Mail
+// clients drop custom properties, so they stay hex - scripts/color-check.mjs
+// budgets this file - but a template that reuses them adds no new
+// hand-written colour. bookingTable() below was the first to switch.
+const INK = '#0D1F3C';
+const MUTED = '#475569';
+const RULE = '#E2E8F0';
+const PAPER = '#F8FAFC';
+const BLUE = '#2563EB';
 async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if (verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
@@ -67,6 +77,22 @@ async function handler(req, res) {
     if (!/^[0-9a-fA-F-]{36}$/.test(reviewToken)) reviewToken = '';
   }
 
+  // LEBYCLE shop order (api/_shop.js). Only ever sent by our own server, with
+  // lines it priced itself - but the names come from the catalogue and the
+  // buyer's form, so they are escaped like everything else here.
+  const orderRef = String(req.body.orderRef || '')
+    .replace(/[^A-Z0-9]/gi, '')
+    .toUpperCase()
+    .slice(0, 12);
+  const shopTest = req.body.mode !== 'live';
+  const shopTotal = Number(req.body.total) || 0;
+  const shopShipping = Number(req.body.shipping) || 0;
+  const shopItems = (Array.isArray(req.body.items) ? req.body.items : []).slice(0, 50).map((i) => ({
+    name: sanitize(i?.name),
+    variant: sanitize(i?.variant),
+    qty: Math.max(1, Math.floor(Number(i?.qty)) || 1),
+    lineTotal: Number(i?.line_total) || 0,
+  }));
   const gst = Math.round((price || 0) / 11);
   const net = (price || 0) - gst;
   // Present only on the booking confirmation. A total with no mention of what
@@ -90,14 +116,14 @@ async function handler(req, res) {
     </div></div>`;
 
   const bookingTable = () => `
-    <div style="background:#F8FAFC;border-radius:12px;padding:20px;margin-bottom:24px">
+    <div style="background:${PAPER};border-radius:12px;padding:20px;margin-bottom:24px">
       <table style="width:100%;border-collapse:collapse">
-        <tr><td style="padding:8px 0;color:#475569;font-size:13px">Service</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right">${service}</td></tr>
-        ${date ? `<tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Date & time</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">${date}${time ? ' · ' + time : ''}</td></tr>` : ''}
-        ${address ? `<tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Address</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">${address}</td></tr>` : ''}
-        <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Net amount</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">$${net} AUD</td></tr>
-        <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">GST (10%)</td><td style="padding:8px 0;font-weight:600;color:#475569;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">$${gst} AUD</td></tr>
-        <tr><td style="padding:10px 0 0;font-weight:700;color:#0D1F3C;font-size:14px;border-top:2px solid #E2E8F0">Total</td><td style="padding:10px 0 0;font-weight:800;color:#2563EB;font-size:18px;text-align:right;border-top:2px solid #E2E8F0">$${price} AUD</td></tr>
+        <tr><td style="padding:8px 0;color:${MUTED};font-size:13px">Service</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right">${service}</td></tr>
+        ${date ? `<tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">Date & time</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right;border-top:1px solid ${RULE}">${date}${time ? ' · ' + time : ''}</td></tr>` : ''}
+        ${address ? `<tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">Address</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right;border-top:1px solid ${RULE}">${address}</td></tr>` : ''}
+        <tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">Net amount</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right;border-top:1px solid ${RULE}">$${net} AUD</td></tr>
+        <tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">GST (10%)</td><td style="padding:8px 0;font-weight:600;color:${MUTED};font-size:13px;text-align:right;border-top:1px solid ${RULE}">$${gst} AUD</td></tr>
+        <tr><td style="padding:10px 0 0;font-weight:700;color:${INK};font-size:14px;border-top:2px solid ${RULE}">Total</td><td style="padding:10px 0 0;font-weight:800;color:${BLUE};font-size:18px;text-align:right;border-top:2px solid ${RULE}">$${price} AUD</td></tr>
         ${
           paidNow > 0
             ? `<tr><td colspan="2" style="padding:14px 0 0;font-size:13px">Visit &amp; diagnosis &mdash; already paid: &minus;$${paidNow.toFixed(2)} AUD</td></tr>
@@ -416,6 +442,27 @@ async function handler(req, res) {
             <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6">Your bank uses 3D Secure authentication. Click below to complete verification and keep your membership active.</p>
           </div>
           <a href="https://drbikesydney.com.au/?action=membership" style="display:block;background:#2563EB;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Complete verification →</a>
+        </div>${footer()}`,
+    },
+    shop_order: {
+      subject: `📦 Order received — #${orderRef}`,
+      html: `${header(BLUE, '📦', 'Order received!')}
+        <div style="padding:32px 28px">
+          <p style="color:${MUTED};font-size:14px;margin:0 0 20px;line-height:1.6">Thanks for your order, <strong style="color:${INK}">${name}</strong>. We are ordering your parts now and will email you the tracking number as soon as they ship.</p>
+          ${shopTest ? `<p style="background:${PAPER};border:1px dashed ${RULE};border-radius:10px;padding:10px 14px;color:${MUTED};font-size:12px;margin:0 0 20px">Test order &mdash; no money was taken.</p>` : ''}
+          <div style="background:${PAPER};border-radius:12px;padding:20px;margin-bottom:24px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:0 0 8px;color:${MUTED};font-size:13px">Your order</td><td style="padding:0 0 8px;font-weight:600;color:${INK};font-size:13px;text-align:right">#${orderRef}</td></tr>
+              ${shopItems
+                .map(
+                  (i) => `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${INK}">${i.qty} &times; ${i.name}${i.variant ? `<br><span style="color:${MUTED};font-size:12px">${i.variant}</span>` : ''}</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right;vertical-align:top">$${i.lineTotal.toFixed(2)}</td></tr>`
+                )
+                .join('')}
+              ${shopShipping > 0 ? `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${MUTED}">Shipping</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right">$${shopShipping.toFixed(2)}</td></tr>` : ''}
+              <tr><td style="padding:10px 0 0;font-weight:700;color:${INK};font-size:14px;border-top:2px solid ${RULE}">Total paid</td><td style="padding:10px 0 0;font-weight:800;color:${BLUE};font-size:18px;text-align:right;border-top:2px solid ${RULE}">$${shopTotal.toFixed(2)} AUD</td></tr>
+            </table>
+          </div>
+          <p style="font-size:12px;color:${MUTED};text-align:center;margin:0">Questions? Call us on 0433 963 250.</p>
         </div>${footer()}`,
     },
     booking_confirmation: {

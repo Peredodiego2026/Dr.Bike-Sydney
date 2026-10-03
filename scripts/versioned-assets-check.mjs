@@ -74,6 +74,11 @@ const PAGES = [
       { path: 'js/app.js', re: /src="js\/app\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/main.css', re: /href="css\/main\.css\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/home.css', re: /href="css\/home\.css\?v=([a-zA-Z0-9]+)"/ },
+      // css/shop.css (2026-10-04): la tienda en el celular y la franja del
+      // inicio. Llevaba ?v= con hash desde que nacio pero no estaba en esta
+      // lista: el pago con tarjeta lo toco y npm run check quedo verde con el
+      // ?v= viejo. Las dos paginas lo cargan, asi que se vigila en las dos.
+      { path: 'css/shop.css', re: /href="css\/shop\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
   // css/variables.css se suma el 2026-09-30, y es la que faltaba de verdad:
@@ -96,6 +101,7 @@ const PAGES = [
       { path: 'css/landing.css', re: /href="css\/landing\.css\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-inline.js', re: /src="js\/landing-inline\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-modules.js', re: /src="js\/landing-modules\.js\?v=([a-zA-Z0-9]+)"/ },
+      { path: 'css/shop.css', re: /href="css\/shop\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
   // La tienda de escritorio (2026-10-03). Nace en esta lista para que su

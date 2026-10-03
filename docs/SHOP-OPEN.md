@@ -20,7 +20,19 @@ cliente.
 - [ ] Moneda de la lista mayorista (se calculo como USD a FX 1.4352).
 - [ ] Claves de Stripe **reales** en Vercel: `SHOP_STRIPE_SECRET_KEY`
       (`sk_live_...`) y `SHOP_STRIPE_PUBLISHABLE_KEY` (`pk_live_...`). Con las
-      de prueba, los pedidos quedan `mode = 'test'` y no se cobra nada.
+      de prueba, los pedidos quedan `mode = 'test'` y no se cobra nada. Las dos
+      tienen que ser del mismo modo: una de pruebas con una real hace que el
+      checkout conteste 503 antes de crear el pedido.
+- [ ] Un pago que el navegador no llego a confirmar. Hoy el pedido pasa a
+      `paid` (y salen el WhatsApp y el email) cuando la pagina llama a
+      `/api/shop?action=confirm` despues de que Stripe acepta la tarjeta. Si el
+      cliente cierra la pestaña justo en ese segundo, Stripe cobro y el pedido
+      queda `pending` sin aviso. Antes de cobrar en serio, algo tiene que
+      barrer esos casos: el panel de pedidos (Admin) mostrando los `pending`
+      con un "revisar en Stripe", o `payment_intent.succeeded` con
+      `metadata.kind = 'shop_order'` en `api/stripe-webhook.js` llamando a
+      `notifyPaid()` de `api/_shop.js`. El webhook de hoy ya los ignora
+      (no traen `bk_service_name`), asi que no crea reservas falsas.
 
 ## El interruptor (dos lineas, una palabra cada una)
 

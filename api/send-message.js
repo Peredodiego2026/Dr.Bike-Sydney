@@ -206,6 +206,16 @@ function buildWAMessage(template, data, lang) {
     }
     case 'invoice_pdf_failed':
       return `⚠️ Factura sin PDF adjunto\n\nDiego, el PDF de la factura no se pudo generar. El cliente igual recibió el email con el resumen del servicio, pero sin el adjunto.\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n🧾 ${d.invoiceNumber || '—'}\n\nRevisar: https://drbikesydney.com.au/admin.html`;
+    case 'shop_order': {
+      // Tienda LEBYCLE (api/_shop.js). Llega solo desde nuestro servidor, una
+      // vez por pedido, cuando Stripe confirma el cobro. Lo que sigue es
+      // trabajo de Diego: pedirle las piezas a LEBYCLE.
+      const lines = (Array.isArray(d.lines) ? d.lines : [])
+        .slice(0, 30)
+        .map((l) => `• ${String(l).slice(0, 160)}`)
+        .join('\n');
+      return `🛒 Pedido de la tienda PAGADO${d.test ? ' (PRUEBA: no se cobró dinero)' : ''}\n\n#${d.ref || '—'}\n👤 ${d.clientName || 'Cliente'}${d.phone ? ' · ' + d.phone : ''}\n✉️ ${d.email || '—'}\n📍 ${d.address || '—'}\n\n${lines}\n\n💰 $${d.total || '—'} AUD\n\nAhora: pedirlo a LEBYCLE.`;
+    }
     default:
       return null;
   }
@@ -229,6 +239,7 @@ async function handleWhatsApp(req, res) {
       'client_cancelled',
       'noshow_alert',
       'invoice_pdf_failed',
+      'shop_order',
     ].includes(template)
   ) {
     return res.status(400).json({ error: 'Invalid template' });

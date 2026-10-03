@@ -1302,6 +1302,103 @@
   color: var(--amber);
 }
 
+/* ── La tarjeta (paso 2 del pago) ────────────────────────────────────────── */
+
+.sd-co__details {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.sd-co__details legend {
+  padding: 0;
+}
+
+.sd-co__details:disabled input {
+  background: var(--surface);
+  color: var(--gray);
+}
+
+.sd-pay {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.sd-pay__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sd-pay__edit {
+  border: 0;
+  background: none;
+  padding: 10px 0;
+  min-height: 44px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+.sd-pay__edit:hover {
+  text-decoration: underline;
+}
+
+.sd-pay__test {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px dashed var(--amber);
+  border-radius: 9px;
+  background: var(--amber-lt);
+  color: var(--amber-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sd-pay__secure {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--gray);
+  text-align: center;
+}
+
+.shop-cardform {
+  display: grid;
+  gap: 12px;
+}
+
+.shop-cardform__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* El campo de Stripe es un iframe con su propio alto: el borde va en la caja
+   de afuera, que es la que recibe el foco visible. */
+.shop-cardform__field {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 0 14px;
+  background: var(--white);
+}
+
+.shop-cardform__field > * {
+  width: 100%;
+}
+
+.shop-cardform__field:focus-within {
+  border-color: var(--blue);
+}
+
 /* ── Estados ─────────────────────────────────────────────────────────────── */
 
 .sd-state {

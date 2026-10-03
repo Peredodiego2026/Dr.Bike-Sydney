@@ -38,7 +38,7 @@
 // es informacion comercial, no solo los precios.
 
 import { createClient } from '@supabase/supabase-js';
-import { guard } from './_security.js';
+import { guard, isValidEmail, SELF_BASE_URL } from './_security.js';
 import Stripe from 'stripe';
 
 // Con el mismo respaldo que TODOS los demas archivos de api/. La primera
@@ -64,6 +64,22 @@ export const SHOP_BUCKET = 'shop-photos';
 // peor que una tienda que no cobra.
 const SHOP_STRIPE_KEY = process.env.SHOP_STRIPE_SECRET_KEY || '';
 const SHOP_MODE = SHOP_STRIPE_KEY.startsWith('sk_live_') ? 'live' : 'test';
+
+// La mitad publica de la misma clave: el navegador la necesita para dibujar
+// el campo de la tarjeta. NO es la de js/stripe.js, que es la LIVE del
+// negocio - con esa, el formulario hablaria con otra cuenta que la que creo
+// el cobro, y Stripe lo rechaza. Va por el servidor y no escrita en el
+// navegador para que pasar de pruebas a real sea cambiar dos variables en
+// Vercel, no editar codigo.
+const SHOP_STRIPE_PUBLISHABLE = process.env.SHOP_STRIPE_PUBLISHABLE_KEY || '';
+// Una de pruebas con una real no funciona: Stripe contesta "no such
+// payment_intent" recien al pagar, con el cliente ya mirando la tarjeta.
+// Mejor saberlo antes de crear el pedido.
+const SHOP_KEYS_MATCH = SHOP_STRIPE_PUBLISHABLE.startsWith(SHOP_MODE === 'live' ? 'pk_live_' : 'pk_test_');
+
+// Diego. Es el mismo numero que BUSINESS_PHONES en _security.js, asi que
+// send-message lo acepta como destino de una llamada interna.
+const SHOP_ALERT_PHONE = '0433963250';
 
 // Tope por pedido. No es una regla de negocio: es un freno. Un bug de
 // cantidades o alguien jugando con el carrito no puede terminar en un cobro
@@ -200,11 +216,18 @@ async function handleCheckout(req, res, sb, user) {
   if (total > MAX_ORDER_AUD) {
     return res.status(400).json({ error: 'That order is over $' + MAX_ORDER_AUD + '. Call us on 0433 963 250 and we sort it out.' });
   }
-  if (!SHOP_STRIPE_KEY) {
+  if (!SHOP_STRIPE_KEY || !SHOP_STRIPE_PUBLISHABLE) {
+    return res.status(503).json({ error: 'The shop checkout is not switched on yet.' });
+  }
+  if (!SHOP_KEYS_MATCH) {
+    console.error('[shop] SHOP_STRIPE_SECRET_KEY y SHOP_STRIPE_PUBLISHABLE_KEY no son del mismo modo (test/live)');
     return res.status(503).json({ error: 'The shop checkout is not switched on yet.' });
   }
 
-  const email = str(req.body?.email, 160) || user.email;
+  // A este email va la confirmacion, asi que tiene que ser uno. Si lo que
+  // escribio no lo es, se usa el de la cuenta, que Supabase ya verifico.
+  const typed = str(req.body?.email, 160);
+  const email = isValidEmail(typed) ? typed : user.email;
   const order = {
     client_id: user.id,
     client_email: email,
@@ -235,7 +258,11 @@ async function handleCheckout(req, res, sb, user) {
     intent = await stripe.paymentIntents.create({
       amount: Math.round(total * 100),
       currency: 'aud',
-      automatic_payment_methods: { enabled: true },
+      // Solo tarjeta, que es lo unico que el formulario ofrece. Con los
+      // metodos automaticos, Stripe puede habilitar uno que redirige a otra
+      // pagina, y el cobro quedaria esperando un regreso que esta pagina no
+      // sabe atender.
+      payment_method_types: ['card'],
       metadata: {
         kind: 'shop_order',
         order_id: saved.id,
@@ -255,7 +282,9 @@ async function handleCheckout(req, res, sb, user) {
   res.setHeader('Cache-Control', 'private, no-store');
   return res.status(200).json({
     orderId: saved.id,
+    ref: orderRef(saved.id),
     clientSecret: intent.client_secret,
+    publishableKey: SHOP_STRIPE_PUBLISHABLE,
     mode: SHOP_MODE,
     // Se devuelve lo que el servidor calculo, para que el carrito pueda
     // comparar y avisar si no coincide con lo que mostraba.
@@ -277,14 +306,19 @@ async function handleConfirm(req, res, sb, user) {
 
   const { data: order, error } = await sb
     .from('shop_orders')
-    .select('id, client_id, payment_intent_id, status, total')
+    .select(
+      'id, client_id, client_email, client_name, client_phone, ship_address, ship_suburb, ship_postcode, payment_intent_id, status, shipping, total, mode'
+    )
     .eq('id', orderId)
     .single();
   if (error || !order) return res.status(404).json({ error: 'Not found' });
   // Un pedido es de quien lo hizo. Sin esto, cambiar el id en la llamada
   // mostraria el pedido de otra persona.
   if (order.client_id && order.client_id !== user.id) return res.status(404).json({ error: 'Not found' });
-  if (order.status === 'paid') return res.status(200).json({ status: 'paid', orderId: order.id });
+  const ref = orderRef(order.id);
+  // Pagado, enviado, cancelado: ya no es cosa de este endpoint. Se contesta el
+  // estado y nada mas - sobre todo, no se vuelve a avisar.
+  if (order.status !== 'pending') return res.status(200).json({ status: order.status, orderId: order.id, ref });
   if (!order.payment_intent_id || !SHOP_STRIPE_KEY) return res.status(409).json({ error: 'That order has no payment yet.' });
 
   let intent;
@@ -305,8 +339,110 @@ async function handleConfirm(req, res, sb, user) {
     return res.status(409).json({ error: 'The amount paid does not match the order.' });
   }
 
-  await sb.from('shop_orders').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', order.id);
-  return res.status(200).json({ status: 'paid', orderId: order.id });
+  // pending -> paid en UNA escritura condicionada. Dos llamadas a la vez (un
+  // doble toque, el reintento del navegador) pasan las dos por el chequeo de
+  // arriba; solo una encuentra la fila todavia en 'pending', y solo esa avisa.
+  // Sin la condicion, Diego recibiria un WhatsApp por cada llamada y el
+  // cliente un email por cada una.
+  const { data: moved, error: mErr } = await sb
+    .from('shop_orders')
+    .update({ status: 'paid', paid_at: new Date().toISOString() })
+    .eq('id', order.id)
+    .eq('status', 'pending')
+    .select('id');
+  if (mErr) return res.status(500).json({ error: 'Could not save the payment: ' + mErr.message });
+  if (moved?.length) await notifyPaid(sb, order, ref, str(req.body?.lang, 8));
+  return res.status(200).json({ status: 'paid', orderId: order.id, ref });
+}
+
+// Lo que el cliente y Diego ven como numero de pedido. El id completo es un
+// uuid de 36 caracteres; 8 alcanzan para encontrarlo en el panel y dictarlo
+// por telefono. Es la misma forma que ya tienen las reservas.
+function orderRef(id) {
+  return String(id || '')
+    .replace(/-/g, '')
+    .slice(0, 8)
+    .toUpperCase();
+}
+
+// Los dos avisos de un pedido pagado: WhatsApp a Diego (que tiene que pedirle
+// las piezas a LEBYCLE) y email al cliente. Se esperan, porque Vercel congela
+// la funcion apenas contesta y un fetch suelto se pierde. Pero ninguno puede
+// tumbar la respuesta: el cobro ya esta hecho y el pedido ya dice 'paid'. Lo
+// que falle queda escrito en `notes` del pedido, que es donde Diego lo va a
+// ver, y en los logs.
+export async function notifyPaid(sb, order, ref, lang) {
+  const { data: items, error: iErr } = await sb
+    .from('shop_order_items')
+    .select('sku, name, variant, qty, line_total')
+    .eq('order_id', order.id);
+  if (iErr) console.error('[shop] no pude leer las lineas del pedido', ref, iErr.message);
+  const rows = items || [];
+  const address = [order.ship_address, order.ship_suburb, order.ship_postcode].filter(Boolean).join(', ');
+
+  const calls = [
+    {
+      name: 'whatsapp',
+      path: '/api/send-message?channel=whatsapp',
+      body: {
+        to: SHOP_ALERT_PHONE,
+        template: 'shop_order',
+        data: {
+          ref,
+          clientName: order.client_name,
+          phone: order.client_phone,
+          email: order.client_email,
+          address,
+          // Con el SKU: es lo que Diego le pide a LEBYCLE.
+          lines: rows.map(
+            (i) => `${i.qty} x ${i.name}${i.variant ? ' (' + i.variant + ')' : ''} - ${i.sku} - $${Number(i.line_total).toFixed(2)}`
+          ),
+          total: Number(order.total).toFixed(2),
+          test: order.mode !== 'live',
+        },
+      },
+    },
+    {
+      name: 'email',
+      path: '/api/send-email',
+      body: {
+        type: 'shop_order',
+        to: order.client_email,
+        name: order.client_name || String(order.client_email || '').split('@')[0],
+        orderRef: ref,
+        mode: order.mode,
+        items: rows,
+        shipping: Number(order.shipping) || 0,
+        total: Number(order.total),
+        lang,
+      },
+    },
+  ];
+
+  const results = await Promise.allSettled(
+    calls.map((c) =>
+      fetch(SELF_BASE_URL + c.path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-internal-token': process.env.INTERNAL_API_SECRET || '' },
+        body: JSON.stringify(c.body),
+      })
+    )
+  );
+  const failed = [];
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled' && r.value.ok) return;
+    const why = r.status === 'rejected' ? r.reason?.message || String(r.reason) : 'HTTP ' + r.value.status;
+    failed.push(calls[i].name + ': ' + why);
+  });
+  if (failed.length) {
+    console.error('[shop] aviso fallido para el pedido', ref, failed.join('; '));
+    const { error: nErr } = await sb
+      .from('shop_orders')
+      .update({ notes: 'Aviso fallido - ' + failed.join('; ') })
+      .eq('id', order.id);
+    if (nErr) console.error('[shop] tampoco pude anotarlo en el pedido', ref, nErr.message);
+  }
+  return { sent: calls.length - failed.length, failed };
 }
 
 export async function handleShop(req, res) {
