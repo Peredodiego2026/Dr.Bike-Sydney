@@ -16,13 +16,24 @@ const MAX_QTY = 20;
 // sin que nadie entienda por que.
 const CATALOG_TTL_MS = 50 * 60 * 1000;
 
-// Quien ve la tienda lo decide el servidor (api/shop.js), no este archivo.
-// Esta funcion existe solo para no dibujar un boton que al tocarlo da 404: es
-// cortesia de interfaz, no un permiso. Cambiarla a mano para que devuelva true
-// no abre nada, porque sin sesion valida el endpoint no contesta el catalogo.
+// ══ EL INTERRUPTOR DE LA TIENDA ══════════════════════════════════════════
+//
+// false = la ve solo PREVIEW_EMAILS (hoy, Diego). true = la ve todo el mundo.
+//
+// Vive en DOS archivos a proposito y tienen que decir lo mismo: este, que
+// decide si se dibujan el tab, la franja y el enlace del menu, y
+// api/_shop.js, que decide si el servidor entrega el catalogo. El de este
+// archivo es cortesia de interfaz; el del servidor es el permiso de verdad.
+// tests/unit/shop-switch.test.js falla si no coinciden.
+//
+// Para abrirla a todos: poner true aca Y en api/_shop.js, y sacar el
+// <meta name="robots" content="noindex"> de shop.html si Google la tiene que
+// encontrar. La lista completa esta en docs/SHOP-OPEN.md.
+export const SHOP_IS_PUBLIC = false;
 const PREVIEW_EMAILS = ['peredo.dm@gmail.com'];
 
 export function canSeeShop(user) {
+  if (SHOP_IS_PUBLIC) return true;
   const email = (user?.email || '').trim().toLowerCase();
   return !!email && PREVIEW_EMAILS.includes(email);
 }

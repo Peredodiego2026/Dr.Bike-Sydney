@@ -98,6 +98,16 @@ const PAGES = [
       { path: 'js/landing-modules.js', re: /src="js\/landing-modules\.js\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
+  // La tienda de escritorio (2026-10-03). Nace en esta lista para que su
+  // primer cambio de CSS o JS no salga invisible para quien ya la abrio.
+  {
+    html: 'shop.html',
+    assets: [
+      { path: 'css/variables.css', re: /href="css\/variables\.css\?v=([a-zA-Z0-9-]+)"/ },
+      { path: 'css/shop-desktop.css', re: /href="css\/shop-desktop\.css\?v=([a-zA-Z0-9]+)"/ },
+      { path: 'js/shop-desktop.js', re: /src="js\/shop-desktop\.js\?v=([a-zA-Z0-9]+)"/ },
+    ],
+  },
 ];
 
 // Normalize CRLF -> LF before hashing. This repo has no .gitattributes and

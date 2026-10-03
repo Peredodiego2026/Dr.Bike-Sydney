@@ -75,6 +75,19 @@ const MAX_ORDER_AUD = 2000;
 // sirva al otro dia.
 const SIGN_SECONDS = 3600;
 
+// ══ EL INTERRUPTOR DE LA TIENDA ══════════════════════════════════════════
+//
+// false = solo entran los emails de previewEmails() (hoy, Diego).
+// true  = el catalogo se entrega a cualquiera, con o sin sesion. Comprar
+//         sigue pidiendo sesion: un pedido tiene que ser de alguien.
+//
+// Tiene un gemelo en js/shop.js (SHOP_IS_PUBLIC) que decide si se dibujan el
+// tab, la franja y el enlace. tests/unit/shop-switch.test.js falla si los dos
+// no dicen lo mismo. Lista completa para abrirla: docs/SHOP-OPEN.md.
+//
+// Abrirla NO expone el costo: `cost` no se selecciona nunca, ni para Diego.
+export const SHOP_IS_PUBLIC = false;
+
 // Quien puede ver la tienda. Se configura en Vercel con SHOP_PREVIEW_EMAILS,
 // separados por coma. El valor por defecto es el de Diego: si la variable no
 // esta puesta, la tienda no se abre sola para nadie mas.
@@ -87,6 +100,7 @@ export function previewEmails() {
 }
 
 export function maySeeShop(email) {
+  if (SHOP_IS_PUBLIC) return true;
   const e = (email || '').trim().toLowerCase();
   return !!e && previewEmails().includes(e);
 }
@@ -308,27 +322,27 @@ export async function handleShop(req, res) {
   const method = req.method === 'GET' ? 'GET' : 'POST';
   if (await guard(req, res, { method, rateMax: 60, rateWindow: 60000, rateKey: 'shop' })) return;
 
-  const token = readToken(req);
-  if (!token || !SUPABASE_URL || !SERVICE_KEY) return res.status(404).json({ error: 'Not found' });
-
+  if (!SUPABASE_URL || !SERVICE_KEY) return res.status(404).json({ error: 'Not found' });
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-  const {
-    data: { user },
-    error: uErr,
-  } = await sb.auth.getUser(token);
+  const action = req.query?.action || req.body?.action || '';
+  const buying = req.method === 'POST' && (action === 'checkout' || action === 'confirm');
+
+  // Quien es. Con la tienda privada hace falta para TODO; con la tienda
+  // abierta, solo para comprar - un pedido tiene que ser de alguien.
+  const token = readToken(req);
+  let user = null;
+  if (token) {
+    const { data, error: uErr } = await sb.auth.getUser(token);
+    if (!uErr) user = data?.user || null;
+  }
   // Sesion invalida y sesion sin permiso contestan lo mismo, a proposito: dos
   // respuestas distintas le dirian a quien prueba tokens cual de las dos cosas
   // fallo.
-  if (uErr || !user || !maySeeShop(user.email)) return res.status(404).json({ error: 'Not found' });
+  const needsUser = buying || !SHOP_IS_PUBLIC;
+  if (needsUser && (!user || !maySeeShop(user.email))) return res.status(404).json({ error: 'Not found' });
 
-  // Todo lo que sigue ya probo quien es. El catalogo se pide con GET; el
-  // cobro, con POST y ?action=checkout.
-  if (req.method === 'POST' && (req.query?.action === 'checkout' || req.body?.action === 'checkout')) {
-    return handleCheckout(req, res, sb, user);
-  }
-  if (req.method === 'POST' && (req.query?.action === 'confirm' || req.body?.action === 'confirm')) {
-    return handleConfirm(req, res, sb, user);
-  }
+  if (req.method === 'POST' && action === 'checkout') return handleCheckout(req, res, sb, user);
+  if (req.method === 'POST' && action === 'confirm') return handleConfirm(req, res, sb, user);
 
   const { data: products, error: pErr } = await sb
     .from('shop_products')

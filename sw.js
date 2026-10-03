@@ -1,3 +1,7 @@
+// v138 (2026-10-04): la tienda de escritorio (shop.html, css/shop-desktop.css,
+// js/shop-desktop.js) y el interruptor SHOP_IS_PUBLIC. Cambian js/shop.js y
+// js/shop-ui.js, que se importan sin ?v=: los enlaces de la landing ahora van a
+// shop.html en vez de a la pantalla del celular. Y los dos diccionarios.
 // v137 (2026-10-03): js/shop-ui.js cambio en #465 - la pantalla de error de
 // la tienda gano la flecha de atras y "Ir al inicio" - y ese PR no subio este
 // numero. shop-ui.js se importa sin ?v=, asi que el unico que entrega la
@@ -237,7 +241,7 @@
 // v134: "Photo unavailable", para una foto del chat que no se pudo firmar.
 // v135: la casilla "puede mostrar esta foto en su sitio web" de la resena, y
 // js/supabase.js manda la respuesta (photo_web_ok).
-const CACHE_STATIC = 'drbike-static-v137';
+const CACHE_STATIC = 'drbike-static-v138';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

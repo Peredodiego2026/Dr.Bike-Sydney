@@ -30,17 +30,23 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 // Surfaces whose English text must exist in the shared dictionary. The generated
 // suburb pages are not here: they are emitted per language by
 // scripts/generate-suburb-pages.mjs, so they cannot drift out of sync.
-const HTML_SURFACES = ['index.html', 'landing.html', 'track.html'];
+const HTML_SURFACES = ['index.html', 'landing.html', 'track.html', 'shop.html'];
 // js/landing-inline.js is every classic inline <script> landing.html used to
 // carry, extracted verbatim (docs/PENDIENTES.md 3.2) - same innerHTML-string
 // style as js/app.js, so it needs the same check. js/landing-modules.js (the
 // other extracted file) builds its UI from imported data, not hardcoded
 // strings, so it has nothing for stringsFromJs to find - left out on purpose,
 // not an oversight.
-const JS_SURFACES = ['js/app.js', 'js/components.js', 'js/landing-inline.js', 'js/gift-card.js', 'js/shop-ui.js'];
+const JS_SURFACES = ['js/app.js', 'js/components.js', 'js/landing-inline.js', 'js/gift-card.js', 'js/shop-ui.js', 'js/shop-desktop.js'];
 
 // Strings that stay in English on purpose.
 const ALLOWED = new Set([
+  // La tienda de escritorio: la marca, el telefono, y un texto provisorio que
+  // Diego tiene que reemplazar por el plazo real (no se traduce un recordatorio).
+  'LEBYCLE',
+  'Dr. Bike Sydney ·',
+  'WhatsApp 0433 963 250',
+  '[CONFIRMAR PLAZO DE ENTREGA]',
   // The gift card's own face: a brand lockup and an example address, both of
   // which read the same in every language.
   'DR. BIKE SYDNEY',
