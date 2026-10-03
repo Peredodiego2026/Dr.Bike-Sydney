@@ -6649,7 +6649,7 @@ function shopOrderCard(o) {
   const n = o.items.reduce((s, i) => s + i.qty, 0);
   return `
     <div data-so-card="${esc(o.id)}" style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${st.edge};border-radius:12px">
-      <button type="button" data-so-toggle="${esc(o.id)}" aria-expanded="${open}" style="all:unset;box-sizing:border-box;display:flex;width:100%;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;min-height:44px">
+      <button type="button" data-so-toggle="${esc(o.id)}" aria-expanded="${open}" style="box-sizing:border-box;display:flex;width:100%;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;min-height:44px;background:none;border:0;border-radius:12px;font:inherit;color:inherit;text-align:left">
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:700;color:var(--navy)">#${esc(o.ref)} · ${esc(o.client.name || o.client.email || 'No name')}</div>
           <div style="font-size:12px;color:var(--mgray);margin-top:2px">${soWhen(o.createdAt)} · ${n} item${n === 1 ? '' : 's'} · ${soMoney(o.total)}${o.mode === 'test' ? ' · <span style="font-weight:700">TEST</span>' : ''}</div>
