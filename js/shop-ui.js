@@ -563,7 +563,7 @@ export async function renderShopCheckout() {
     next.disabled = true;
     say('var(--gray)', 'Preparing the payment...');
     try {
-      const data = await startCheckout(await getToken(), getCart(), who);
+      const data = await startCheckout(await getToken(), getCart(), who, getLang());
       if (Math.abs(Number(data.total) - subtotal) > 0.009) {
         say('var(--amber)', 'The price changed to ' + money(data.total) + ' while you were here. Go back and check the cart.');
         next.disabled = false;
