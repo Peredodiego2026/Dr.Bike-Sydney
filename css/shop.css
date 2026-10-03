@@ -478,6 +478,157 @@
   cursor: not-allowed;
 }
 
+/* ── El pago ──────────────────────────────────────────────────────────────── */
+
+.shop-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+/* 16px y no 15: con menos, Safari en iPhone agranda la pagina al tocar el
+   campo y no la vuelve a achicar. */
+.shop-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 0 14px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--navy);
+  background: var(--white);
+}
+
+.shop-fieldset:disabled .shop-input {
+  background: var(--surface);
+  color: var(--gray);
+}
+
+.shop-pay {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 16px;
+}
+
+.shop-pay__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.shop-pay__edit {
+  border: 0;
+  background: none;
+  padding: 0;
+  min-height: 44px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+.shop-pay__test {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--amber);
+  border-radius: 9px;
+  background: var(--amber-lt);
+  color: var(--amber-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.shop-pay__secure {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--gray);
+  text-align: center;
+}
+
+.shop-cardform {
+  display: grid;
+  gap: 10px;
+}
+
+.shop-cardform__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* El campo de Stripe es un iframe con su propio alto: el borde va en la caja
+   de afuera, que es la que muestra el foco. */
+.shop-cardform__field {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 0 14px;
+  background: var(--white);
+}
+
+.shop-cardform__field > * {
+  width: 100%;
+}
+
+.shop-cardform__field:focus-within {
+  border-color: var(--blue);
+}
+
+.shop-paid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 56px;
+  padding-bottom: 40px;
+}
+
+.shop-paid__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-lt);
+  color: var(--green-ink);
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.shop-paid__title {
+  margin: 18px 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.shop-paid__sub {
+  margin: 4px 0;
+  max-width: 340px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--gray);
+}
+
+.shop-paid .shop-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
 /* ── El carrito ───────────────────────────────────────────────────────────── */
 
 .shop-line {

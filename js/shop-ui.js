@@ -27,6 +27,8 @@ import {
   priceCart,
   clearCart,
 } from './shop.js';
+import { startCheckout, confirmOrder, mountCard } from './shop-pay.js';
+import { getLang, translateScreen } from './i18n.js';
 
 const esc = (s) =>
   String(s ?? '')
@@ -443,14 +445,25 @@ export async function renderCart() {
 
 // ── El pago ──────────────────────────────────────────────────────────────────
 //
-// El formulario junta a donde va el pedido y se lo manda al servidor con los
-// SKU y las cantidades. Los importes NO viajan: el servidor los recalcula y
-// contesta lo que de verdad va a cobrar, asi que si lo que mostraba el carrito
-// no coincide, el cliente lo ve antes de pagar y no despues.
+// En dos pasos, igual que en la computadora (js/shop-desktop.js). Primero a
+// donde va: el servidor recalcula los importes, guarda el pedido y crea el
+// cobro. Recien entonces aparece la tarjeta, con el importe del servidor en el
+// boton - si no coincide con lo que mostraba el carrito, se dice antes de
+// pagar y no despues.
+
+// El cobro en curso, entre "Continuar al pago" y "Pagar". Una sola pantalla de
+// pago existe a la vez, asi que alcanza con una variable.
+let pay = null;
+
+function resetPay() {
+  if (pay?.card) pay.card.destroy();
+  pay = null;
+}
 
 export async function renderShopCheckout() {
   const screen = document.querySelector('[data-screen="shop-checkout"]');
   if (!screen) return;
+  resetPay();
   screen.innerHTML = `<div class="screen-content">${spinner('Loading...')}</div>`;
 
   let catalog;
@@ -466,10 +479,9 @@ export async function renderShopCheckout() {
     return;
   }
 
-  const field = (id, label, type, hint) => `
+  const field = (id, label, type, ac) => `
     <label for="${id}" class="shop-group" style="display:block">${label}</label>
-    <input id="${id}" type="${type}" ${hint ? `placeholder="${esc(hint)}"` : ''} autocomplete="${id === 'co-email' ? 'email' : 'on'}"
-      style="width:100%;min-height:48px;border:1.5px solid var(--border);border-radius:9px;padding:0 14px;font-size:15px;font-family:inherit;color:var(--navy);background:var(--white)">`;
+    <input id="${id}" type="${type}" autocomplete="${ac}" class="shop-input">`;
 
   screen.innerHTML = `
     <div class="screen-header" style="display:flex;align-items:center;gap:6px;padding-left:4px">
@@ -491,76 +503,152 @@ export async function renderShopCheckout() {
         <span class="shop-total__value">${money(subtotal)}</span>
       </div>
 
-      ${field('co-name', 'Your name', 'text')}
-      ${field('co-email', 'Email', 'email')}
-      ${field('co-phone', 'Phone', 'tel')}
-      ${field('co-address', 'Street address', 'text')}
-      <div style="display:flex;gap:10px">
-        <div style="flex:2">${field('co-suburb', 'Suburb', 'text')}</div>
-        <div style="flex:1">${field('co-postcode', 'Postcode', 'text')}</div>
-      </div>
+      <fieldset class="shop-fieldset" id="co-details">
+        ${field('co-name', 'Your name', 'text', 'name')}
+        ${field('co-email', 'Email', 'email', 'email')}
+        ${field('co-phone', 'Phone', 'tel', 'tel')}
+        ${field('co-address', 'Street address', 'text', 'street-address')}
+        <div style="display:flex;gap:10px">
+          <div style="flex:2">${field('co-suburb', 'Suburb', 'text', 'address-level2')}</div>
+          <div style="flex:1">${field('co-postcode', 'Postcode', 'text', 'postal-code')}</div>
+        </div>
+      </fieldset>
 
-      <div id="co-msg" class="shop-note" style="margin-top:14px"></div>
+      <section class="shop-pay" id="co-pay" aria-labelledby="co-pay-title" hidden>
+        <div class="shop-pay__head">
+          <div class="shop-group" id="co-pay-title" style="margin:0">Card</div>
+          <button type="button" class="shop-pay__edit" data-co-edit>Change my details</button>
+        </div>
+        <p class="shop-pay__test" id="co-pay-test" hidden>Test mode: no money is taken. Use the card 4242 4242 4242 4242, any future date and any CVC.</p>
+        <div class="shop-cardform" id="co-card"></div>
+        <p class="shop-pay__secure">Your card goes straight to Stripe. We never see the number.</p>
+      </section>
+
+      <div id="co-msg" class="shop-note" role="status" style="margin-top:14px"></div>
     </div>
     <div class="shop-buy">
-      <button type="button" class="shop-add" data-co-pay><span>Place the order</span><span> &middot; ${money(subtotal)}</span></button>
+      <button type="button" class="shop-add" data-co-next><span>Continue to payment</span><span> &middot; ${money(subtotal)}</span></button>
+      <button type="button" class="shop-add" data-co-pay hidden><span>Pay</span><span id="co-pay-amt"></span></button>
     </div>`;
 
   const msg = screen.querySelector('#co-msg');
-  const btn = screen.querySelector('[data-co-pay]');
+  const next = screen.querySelector('[data-co-next]');
+  const payBtn = screen.querySelector('[data-co-pay]');
+  const details = screen.querySelector('#co-details');
+  const box = screen.querySelector('#co-pay');
   const val = (id) => screen.querySelector('#' + id)?.value.trim() || '';
+  // Un mensaje puesto despues de dibujar no pasa solo por el diccionario.
+  const say = (color, text) => {
+    msg.style.color = color;
+    msg.textContent = text;
+    translateScreen(msg);
+  };
 
-  btn.addEventListener('click', async () => {
+  next.addEventListener('click', async () => {
     // Lo que hace falta para despachar. No se valida nada mas: un pedido que
     // no se puede entregar no sirve, y todo lo demas lo arregla un llamado.
     if (!val('co-address') || !val('co-suburb')) {
-      msg.textContent = 'We need an address and a suburb to send this to.';
-      msg.style.color = 'var(--red)';
+      say('var(--red)', 'We need an address and a suburb to send this to.');
       screen.querySelector('#co-address').focus();
       return;
     }
-    btn.disabled = true;
-    msg.style.color = 'var(--gray)';
-    msg.textContent = 'Checking the prices...';
+    const who = {
+      name: val('co-name'),
+      email: val('co-email'),
+      phone: val('co-phone'),
+      address: val('co-address'),
+      suburb: val('co-suburb'),
+      postcode: val('co-postcode'),
+    };
+    next.disabled = true;
+    say('var(--gray)', 'Preparing the payment...');
     try {
-      const token = await getToken();
-      const r = await fetch('/api/shop?action=checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({
-          action: 'checkout',
-          items: getCart(),
-          name: val('co-name'),
-          email: val('co-email'),
-          phone: val('co-phone'),
-          address: val('co-address'),
-          suburb: val('co-suburb'),
-          postcode: val('co-postcode'),
-        }),
-      });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(data.error || 'The order could not be placed (' + r.status + ')');
-
-      // El servidor manda lo que de verdad va a cobrar. Si no coincide con lo
-      // que esta pantalla mostraba, se dice - no se cobra callando la
-      // diferencia.
+      const data = await startCheckout(await getToken(), getCart(), who);
       if (Math.abs(Number(data.total) - subtotal) > 0.009) {
-        msg.style.color = 'var(--amber)';
-        msg.textContent = 'The price changed to ' + money(data.total) + ' while you were here. Go back and check the cart.';
-        btn.disabled = false;
+        say('var(--amber)', 'The price changed to ' + money(data.total) + ' while you were here. Go back and check the cart.');
+        next.disabled = false;
         return;
       }
-      msg.style.color = 'var(--green)';
-      msg.textContent = 'Order ' + String(data.orderId).slice(0, 8) + ' is in. We will email you to confirm.';
-      btn.textContent = 'Order placed';
-      clearCart();
+      const card = await mountCard(screen.querySelector('#co-card'), data.publishableKey, getLang());
+      pay = { ...data, card, details: who };
+      details.disabled = true;
+      next.hidden = true;
+      payBtn.hidden = false;
+      screen.querySelector('#co-pay-amt').textContent = ' · ' + money(data.total);
+      screen.querySelector('#co-pay-test').hidden = data.mode === 'live';
+      box.hidden = false;
+      translateScreen(box);
+      translateScreen(payBtn);
+      say('var(--gray)', '');
+      box.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     } catch (e) {
       // Nunca un catch vacio: si no se pudo, el motivo se lee en pantalla.
-      msg.style.color = 'var(--red)';
-      msg.textContent = e.message;
-      btn.disabled = false;
+      say('var(--red)', e.message);
+      next.disabled = false;
     }
   });
+
+  // Volver a los datos. El cobro creado queda pendiente y sin tocar: no se
+  // cobra nada que no se confirme con la tarjeta.
+  screen.querySelector('[data-co-edit]').addEventListener('click', () => {
+    resetPay();
+    details.disabled = false;
+    box.hidden = true;
+    payBtn.hidden = true;
+    next.hidden = false;
+    next.disabled = false;
+    say('var(--gray)', '');
+  });
+
+  // La tarjeta. Si no pasa, se corrige y se vuelve a tocar Pagar sobre el
+  // mismo cobro: no se crea otro pedido por cada intento.
+  payBtn.addEventListener('click', async () => {
+    if (!pay || payBtn.disabled) return;
+    payBtn.disabled = true;
+    say('var(--gray)', 'Paying...');
+    let status;
+    try {
+      status = await pay.card.pay(pay.clientSecret, pay.details);
+    } catch (e) {
+      say('var(--red)', e.message);
+      payBtn.disabled = false;
+      return;
+    }
+    if (status !== 'succeeded') {
+      say('var(--amber)', 'Your bank has not confirmed the payment yet. We will email you as soon as it does.');
+      return;
+    }
+    const done = { ref: pay.ref, test: pay.mode !== 'live', emailed: false };
+    try {
+      const r = await confirmOrder(await getToken(), pay.orderId, getLang());
+      done.emailed = r.status === 'paid';
+    } catch (e) {
+      // El cobro ya esta hecho; lo que fallo es avisarle a nuestro servidor.
+      // La pantalla de pagado sale igual, con el telefono para llamar.
+      console.error('[shop] confirm failed:', e.message);
+    }
+    clearCart();
+    resetPay();
+    screen.innerHTML = paidScreen(done);
+    translateScreen(screen);
+    window.scrollTo(0, 0);
+  });
+}
+
+function paidScreen({ ref, test, emailed }) {
+  return `
+    <div class="screen-content shop-paid">
+      <div class="shop-paid__icon" aria-hidden="true">&#10003;</div>
+      <h1 class="shop-paid__title">Your order is paid</h1>
+      <p class="shop-paid__sub"><span>Order</span> <b>#${esc(ref)}</b></p>
+      <p class="shop-paid__sub">${
+        emailed
+          ? '<span>We emailed you the details. The tracking number follows as soon as it ships.</span>'
+          : '<span>Your payment went through. If no email arrives in a few minutes, call 0433 963 250.</span>'
+      }</p>
+      ${test ? '<p class="shop-paid__sub"><span>Test order: no money was taken.</span></p>' : ''}
+      <a class="shop-add" href="${shopHref('shop')}" style="text-decoration:none;margin-top:18px">Back to the shop</a>
+    </div>`;
 }
 
 // ── La franja del inicio ─────────────────────────────────────────────────────

@@ -37,6 +37,7 @@ import {
   clearCart,
   priceCart,
 } from './shop.js';
+import { startCheckout, confirmOrder, mountCard } from './shop-pay.js';
 
 const main = document.getElementById('shop-main');
 const PER_PAGE = [20, 30, 50];
@@ -443,14 +444,31 @@ function viewProduct(params) {
 }
 
 // ── El pago ──────────────────────────────────────────────────────────────────
+//
+// En dos pasos. Primero los datos de envio: el servidor pone los precios,
+// guarda el pedido y crea el cobro. Recien entonces aparece la tarjeta, con el
+// importe que el servidor calculo escrito en el boton. Lo que se cobra es
+// exactamente lo que el cliente ve antes de tocar Pagar.
+
+// El cobro en curso, entre "Continuar al pago" y "Pagar".
+let pay = null; // { orderId, ref, clientSecret, publishableKey, total, mode, card, details }
+// Lo escrito en el formulario. Redibujar la pantalla (abrir el carrito y
+// volver, cambiar una cantidad) no tiene que obligar a escribir todo de nuevo.
+const draft = {};
+
+function resetPay() {
+  if (pay?.card) pay.card.destroy();
+  pay = null;
+}
 
 function viewCheckout() {
+  resetPay();
   const { items, subtotal, hasGone } = priceCart(catalog, getCart());
   if (!items.length) {
     return state('&#128722;', 'Your cart is empty', 'Parts you add show up here.', `<a class="sd-btn sd-btn--primary" href="#all">Go to the shop</a>`);
   }
   const field = (id, label, type, ac) =>
-    `<label class="sd-field" for="${id}"><span>${label}</span><input id="${id}" type="${type}" autocomplete="${ac}"></label>`;
+    `<label class="sd-field" for="${id}"><span>${label}</span><input id="${id}" type="${type}" autocomplete="${ac}" value="${esc(draft[id] || '')}"></label>`;
   return `<div class="sd-wrap">
     <div class="sd-crumbs" style="border-bottom:none">
       <button type="button" class="sd-back" data-open-cart aria-label="Back to the cart">${svgBack}</button>
@@ -459,11 +477,24 @@ function viewCheckout() {
     </div>
     <div class="sd-co">
       <form class="sd-co__form" id="sd-co-form" novalidate>
-        ${field('co-name', 'Your name', 'text', 'name')}
-        <div class="sd-co__row">${field('co-email', 'Email', 'email', 'email')}${field('co-phone', 'Phone', 'tel', 'tel')}</div>
-        ${field('co-address', 'Street address', 'text', 'street-address')}
-        <div class="sd-co__row">${field('co-suburb', 'Suburb', 'text', 'address-level2')}${field('co-postcode', 'Postcode', 'text', 'postal-code')}</div>
-        <button type="submit" class="sd-addbig" style="width:100%;margin-top:24px"${hasGone ? ' disabled' : ''}><span>Place the order</span><span> &middot; ${money(subtotal)}</span></button>
+        <fieldset class="sd-co__details" id="sd-co-details">
+          <legend class="sd-side__group">Where it goes</legend>
+          ${field('co-name', 'Your name', 'text', 'name')}
+          <div class="sd-co__row">${field('co-email', 'Email', 'email', 'email')}${field('co-phone', 'Phone', 'tel', 'tel')}</div>
+          ${field('co-address', 'Street address', 'text', 'street-address')}
+          <div class="sd-co__row">${field('co-suburb', 'Suburb', 'text', 'address-level2')}${field('co-postcode', 'Postcode', 'text', 'postal-code')}</div>
+        </fieldset>
+        <button type="submit" class="sd-addbig" id="sd-co-next" style="width:100%;margin-top:24px"${hasGone ? ' disabled' : ''}><span>Continue to payment</span><span> &middot; ${money(subtotal)}</span></button>
+        <section class="sd-pay" id="sd-pay" aria-labelledby="sd-pay-title" hidden>
+          <div class="sd-pay__head">
+            <h2 class="sd-side__group" id="sd-pay-title">Card</h2>
+            <button type="button" class="sd-pay__edit" data-edit-details>Change my details</button>
+          </div>
+          <p class="sd-pay__test" id="sd-pay-test" hidden>Test mode: no money is taken. Use the card 4242 4242 4242 4242, any future date and any CVC.</p>
+          <div class="shop-cardform" id="sd-card"></div>
+          <button type="button" class="sd-addbig" data-pay style="width:100%;margin-top:18px"><span>Pay</span><span id="sd-pay-amt"></span></button>
+          <p class="sd-pay__secure">Your card goes straight to Stripe. We never see the number.</p>
+        </section>
         <div class="sd-msg" id="sd-co-msg" role="status"></div>
       </form>
       <aside class="sd-co__sum" aria-label="Your order">
@@ -481,58 +512,129 @@ function viewCheckout() {
   </div>`;
 }
 
-async function placeOrder(form) {
+function coSay(cls, text) {
   const msg = document.getElementById('sd-co-msg');
-  const btn = form.querySelector('button[type="submit"]');
+  if (!msg) return;
+  msg.className = 'sd-msg ' + cls;
+  msg.textContent = text;
+  // Un mensaje puesto despues de dibujar no pasa por translateScreen solo.
+  translateScreen(msg);
+}
+
+// Paso 1: los datos, el precio del servidor, y la tarjeta.
+async function placeOrder(form) {
+  if (pay) return;
+  const btn = document.getElementById('sd-co-next');
   const val = (id) => form.querySelector('#' + id)?.value.trim() || '';
-  const say = (cls, text) => {
-    msg.className = 'sd-msg ' + cls;
-    msg.textContent = text;
-    // Un mensaje puesto despues de dibujar no pasa por translateScreen solo.
-    translateScreen(msg);
-  };
   if (!val('co-address') || !val('co-suburb')) {
-    say('sd-msg--err', 'We need an address and a suburb to send this to.');
+    coSay('sd-msg--err', 'We need an address and a suburb to send this to.');
     form.querySelector('#co-address').focus();
     return;
   }
+  const details = {
+    name: val('co-name'),
+    email: val('co-email'),
+    phone: val('co-phone'),
+    address: val('co-address'),
+    suburb: val('co-suburb'),
+    postcode: val('co-postcode'),
+  };
   const { subtotal } = priceCart(catalog, getCart());
   btn.disabled = true;
-  say('', 'Checking the prices...');
+  coSay('', 'Preparing the payment...');
   try {
-    const r = await fetch('/api/shop?action=checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (await getToken()) },
-      body: JSON.stringify({
-        action: 'checkout',
-        items: getCart(),
-        name: val('co-name'),
-        email: val('co-email'),
-        phone: val('co-phone'),
-        address: val('co-address'),
-        suburb: val('co-suburb'),
-        postcode: val('co-postcode'),
-      }),
-    });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(data.error || 'The order could not be placed (' + r.status + ')');
+    const data = await startCheckout(await getToken(), getCart(), details);
     // El servidor manda lo que de verdad va a cobrar. Si no coincide con lo
     // que se mostraba, se dice antes: no se cobra callando la diferencia.
     if (Math.abs(Number(data.total) - subtotal) > 0.009) {
-      say('sd-msg--warn', 'The price changed to ' + money(data.total) + ' while you were here. Check the cart before going on.');
+      coSay('sd-msg--warn', 'The price changed to ' + money(data.total) + ' while you were here. Check the cart before going on.');
       btn.disabled = false;
       return;
     }
-    clearCart();
-    refreshCartCount();
-    say('sd-msg--ok', 'Order ' + String(data.orderId).slice(0, 8) + ' is in. We will email you to confirm.');
-    btn.textContent = 'Order placed';
-    translateScreen(btn);
+    const box = document.getElementById('sd-pay');
+    const card = await mountCard(document.getElementById('sd-card'), data.publishableKey, getLang());
+    pay = { ...data, card, details };
+    document.getElementById('sd-co-details').disabled = true;
+    btn.hidden = true;
+    document.getElementById('sd-pay-test').hidden = data.mode === 'live';
+    document.getElementById('sd-pay-amt').textContent = ' · ' + money(data.total);
+    box.hidden = false;
+    translateScreen(box);
+    coSay('', '');
+    // La tarjeta aparece debajo de los datos, fuera de la vista en una
+    // pantalla normal. Sin esto, el boton parece no haber hecho nada.
+    box.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   } catch (e) {
     // Nunca un catch vacio: si no se pudo, el motivo se lee en pantalla.
-    say('sd-msg--err', e.message);
+    coSay('sd-msg--err', e.message);
     btn.disabled = false;
   }
+}
+
+// Volver a los datos. El cobro que se habia creado queda pendiente y sin
+// tocar: no se cobra nada que no se confirme con la tarjeta.
+function editDetails() {
+  resetPay();
+  document.getElementById('sd-co-details').disabled = false;
+  document.getElementById('sd-pay').hidden = true;
+  const next = document.getElementById('sd-co-next');
+  next.hidden = false;
+  next.disabled = false;
+  coSay('', '');
+}
+
+// Paso 2: la tarjeta. Si no pasa, se corrige y se vuelve a tocar Pagar sobre
+// el mismo cobro - no se crea otro pedido por cada intento.
+async function payNow(btn) {
+  if (!pay || btn.disabled) return;
+  btn.disabled = true;
+  coSay('', 'Paying...');
+  let status;
+  try {
+    status = await pay.card.pay(pay.clientSecret, pay.details);
+  } catch (e) {
+    coSay('sd-msg--err', e.message);
+    btn.disabled = false;
+    return;
+  }
+  if (status !== 'succeeded') {
+    coSay('sd-msg--warn', 'Your bank has not confirmed the payment yet. We will email you as soon as it does.');
+    return;
+  }
+
+  // Stripe dice que se cobro. Ahora nuestro servidor lo comprueba con Stripe,
+  // marca el pedido y manda los avisos.
+  const done = { ref: pay.ref, test: pay.mode !== 'live', emailed: false };
+  try {
+    const r = await confirmOrder(await getToken(), pay.orderId, getLang());
+    done.emailed = r.status === 'paid';
+  } catch (e) {
+    // El cobro ya esta hecho: lo que fallo es avisarle a nuestro servidor. El
+    // cliente no puede quedar pensando que no pago, asi que la pantalla de
+    // pagado sale igual, con el telefono para llamar.
+    console.error('[shop] confirm failed:', e.message);
+  }
+  clearCart();
+  refreshCartCount();
+  resetPay();
+  main.innerHTML = viewPaid(done);
+  translateScreen(main);
+  scrollTop();
+}
+
+function viewPaid({ ref, test, emailed }) {
+  return `<div class="sd-wrap"><div class="sd-state">
+    <div class="sd-state__icon" aria-hidden="true">&#10003;</div>
+    <h1 class="sd-state__title">Your order is paid</h1>
+    <div class="sd-state__sub"><span>Order</span> <b>#${esc(ref)}</b></div>
+    <div class="sd-state__sub">${
+      emailed
+        ? '<span>We emailed you the details. The tracking number follows as soon as it ships.</span>'
+        : '<span>Your payment went through. If no email arrives in a few minutes, call 0433 963 250.</span>'
+    }</div>
+    ${test ? '<div class="sd-state__sub"><span>Test order: no money was taken.</span></div>' : ''}
+    <div class="sd-state__actions"><a class="sd-btn sd-btn--primary" href="#">Back to the shop</a></div>
+  </div></div>`;
 }
 
 // ── El carrito ───────────────────────────────────────────────────────────────
@@ -543,6 +645,15 @@ function refreshCartCount() {
   el.textContent = String(n);
   el.hidden = n === 0;
   el.parentElement.setAttribute('aria-label', 'Open the cart, ' + n + ' ' + (n === 1 ? 'item' : 'items'));
+}
+
+// Cambiar el carrito con la tarjeta ya a la vista dejaria un cobro por otro
+// importe. La pantalla de pago se redibuja con los numeros nuevos y vuelve al
+// paso de los datos (lo escrito se conserva en `draft`).
+function cartChanged() {
+  refreshCartCount();
+  paintCart();
+  if (pay && readRoute().route === 'checkout') render();
 }
 
 function paintCart() {
@@ -623,6 +734,9 @@ function render() {
   else if (route === 'product') html = viewProduct(params);
   else if (route === 'checkout') html = viewCheckout();
   else html = viewHome();
+  // Salir del pago suelta la tarjeta: el campo de Stripe no sobrevive a que se
+  // redibuje la pantalla, y un `pay` colgado haria creer que se puede pagar.
+  if (route !== 'checkout') resetPay();
   main.innerHTML = html;
   markCategory(route, params);
   translateScreen(main);
@@ -677,15 +791,23 @@ document.addEventListener('click', (ev) => {
   if (cq) {
     const cur = getCart().find((l) => l.sku === cq.dataset.cq);
     setQty(cq.dataset.cq, (cur?.qty || 0) + Number(cq.dataset.d));
-    refreshCartCount();
-    paintCart();
+    cartChanged();
     return;
   }
   const drop = t.closest('[data-drop]');
   if (drop) {
     removeFromCart(drop.dataset.drop);
-    refreshCartCount();
-    paintCart();
+    cartChanged();
+    return;
+  }
+
+  const payBtn = t.closest('[data-pay]');
+  if (payBtn) {
+    payNow(payBtn);
+    return;
+  }
+  if (t.closest('[data-edit-details]')) {
+    editDetails();
     return;
   }
 
@@ -801,6 +923,11 @@ document.addEventListener('submit', (ev) => {
     ev.preventDefault();
     placeOrder(ev.target);
   }
+});
+
+document.addEventListener('input', (ev) => {
+  const t = ev.target;
+  if (t.id && t.closest('#sd-co-form')) draft[t.id] = t.value;
 });
 
 document.addEventListener('keydown', (ev) => {

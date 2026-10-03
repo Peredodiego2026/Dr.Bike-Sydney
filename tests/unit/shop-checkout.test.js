@@ -49,15 +49,42 @@ vi.mock('stripe', () => ({
 // el test pasaba igual mientras en produccion la tienda contestaba 405 a
 // todo. Un doble que miente en el mismo sentido que el codigo no prueba
 // nada.
-vi.mock('../../api/_security.js', () => ({ guard: async () => false }));
+// El resto de _security.js es el de verdad (isValidEmail, SELF_BASE_URL): solo
+// guard se reemplaza, porque limita por IP y aca no hay una.
+vi.mock('../../api/_security.js', async (importOriginal) => ({ ...(await importOriginal()), guard: async () => false }));
+
+const ITEMS = [{ sku: 'TB-20-AV32L', name: 'Butyl Inner Tube', variant: '20x1.75 Schrader 32 mm', qty: 2, line_total: '13.90' }];
+
+// update() de verdad respeta sus filtros: una fila que ya no esta 'pending' no
+// se mueve, igual que en Postgres. Un doble que actualizara siempre no
+// distinguiria el handler que avisa una vez del que avisa en cada llamada.
+function updateChain(table, patch) {
+  const filters = [];
+  const run = () => {
+    updated.push({ table, patch, filters: filters.slice() });
+    if (table !== 'shop_orders' || !orderRow) return [];
+    if (!filters.every(([k, v]) => orderRow[k] === v)) return [];
+    Object.assign(orderRow, patch);
+    return [{ id: orderRow.id }];
+  };
+  const u = {
+    eq: (k, v) => (filters.push([k, v]), u),
+    select: async () => ({ data: run(), error: null }),
+    then: (resolve, reject) => Promise.resolve({ data: (run(), null), error: null }).then(resolve, reject),
+  };
+  return u;
+}
 
 function chain(table) {
   const c = {
     select: () => c,
     eq: () => c,
-    single: async () => ({ data: orderRow, error: orderRow ? null : new Error('no rows') }),
+    // Una copia: dos confirmaciones a la vez leen la fila cada una por su lado.
+    single: async () => ({ data: orderRow ? { ...orderRow } : null, error: orderRow ? null : new Error('no rows') }),
     in: () => Promise.resolve({ data: table === 'shop_variants' ? VARIANTS : [], error: null }),
     order: () => Promise.resolve({ data: [], error: null }),
+    then: (resolve, reject) =>
+      Promise.resolve({ data: table === 'shop_order_items' ? ITEMS : [], error: null }).then(resolve, reject),
     insert: (rows) => {
       inserted.push({ table, rows });
       return {
@@ -65,13 +92,14 @@ function chain(table) {
         then: (r) => Promise.resolve({ data: null, error: null }).then(r),
       };
     },
-    update: (patch) => {
-      updated.push({ table, patch });
-      return { eq: async () => ({ data: null, error: null }) };
-    },
+    update: (patch) => updateChain(table, patch),
   };
   return c;
 }
+
+// Los avisos salen por fetch a nuestro propio servidor.
+let sent = [];
+let fetchOk = true;
 
 let currentUser = { id: 'u1', email: 'peredo.dm@gmail.com' };
 
@@ -100,15 +128,48 @@ beforeEach(async () => {
   currentUser = { id: 'u1', email: 'peredo.dm@gmail.com' };
   intentStatus = 'succeeded';
   intentReceived = 0;
-  orderRow = { id: 'order-1', client_id: 'u1', payment_intent_id: 'pi_test_123', status: 'pending', total: '13.90' };
+  orderRow = paidableOrder();
+  sent = [];
+  fetchOk = true;
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url, init) => {
+      sent.push({ url, headers: init.headers, body: JSON.parse(init.body) });
+      return { ok: fetchOk, status: fetchOk ? 200 : 500, json: async () => ({}) };
+    })
+  );
+  process.env.INTERNAL_API_SECRET = 'internal-test';
   process.env.SHOP_STRIPE_SECRET_KEY = 'sk_test_fake';
+  process.env.SHOP_STRIPE_PUBLISHABLE_KEY = 'pk_test_fake';
   vi.resetModules();
   handler = (await import('../../api/_shop.js')).handleShop;
 });
 
 afterEach(() => {
   delete process.env.SHOP_STRIPE_SECRET_KEY;
+  delete process.env.SHOP_STRIPE_PUBLISHABLE_KEY;
+  delete process.env.INTERNAL_API_SECRET;
+  vi.unstubAllGlobals();
 });
+
+function paidableOrder(extra = {}) {
+  return {
+    id: 'order-1',
+    client_id: 'u1',
+    client_email: 'cliente@example.com',
+    client_name: 'Ana',
+    client_phone: '0400 000 000',
+    ship_address: '1 Test St',
+    ship_suburb: 'Bondi',
+    ship_postcode: '2026',
+    payment_intent_id: 'pi_test_123',
+    status: 'pending',
+    shipping: '0',
+    total: '13.90',
+    mode: 'test',
+    ...extra,
+  };
+}
 
 const confirm = (body) =>
   handler(
@@ -283,5 +344,129 @@ describe('pagar se confirma preguntandole a Stripe, no al navegador', () => {
     orderRow = { id: 'order-1', client_id: 'otro-usuario', payment_intent_id: 'pi_test_123', status: 'pending', total: '13.90' };
     const res = await confirm({ orderId: 'order-1' });
     expect(res.statusCode).toBe(404);
+  });
+});
+
+describe('la tarjeta habla con la misma cuenta que creo el cobro', () => {
+  it('el checkout devuelve la clave publica de la tienda y el numero de pedido', async () => {
+    const res = await checkout({ items: [{ sku: 'TB-20-AV32L', qty: 1 }] });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.publishableKey).toBe('pk_test_fake');
+    expect(res.body.ref).toBe('ORDER1');
+  });
+
+  it('el cobro es solo con tarjeta, que es lo unico que el formulario ofrece', async () => {
+    await checkout({ items: [{ sku: 'TB-20-AV32L', qty: 1 }] });
+    expect(intentArgs.payment_method_types).toEqual(['card']);
+    expect(intentArgs.automatic_payment_methods).toBeUndefined();
+  });
+
+  it('sin la clave publica no se crea ningun pedido', async () => {
+    delete process.env.SHOP_STRIPE_PUBLISHABLE_KEY;
+    vi.resetModules();
+    const h = (await import('../../api/_shop.js')).handleShop;
+    const res = await h(
+      { method: 'POST', query: { action: 'checkout' }, headers: { authorization: 'Bearer good' }, body: { items: [{ sku: 'TB-20-AV32L', qty: 1 }] } },
+      fakeRes()
+    );
+    expect(res.statusCode).toBe(503);
+    expect(inserted).toHaveLength(0);
+    expect(intentArgs).toBeNull();
+  });
+
+  it('una clave de pruebas con una real se rechaza antes de cobrar', async () => {
+    process.env.SHOP_STRIPE_PUBLISHABLE_KEY = 'pk_live_otra';
+    vi.resetModules();
+    const h = (await import('../../api/_shop.js')).handleShop;
+    const res = await h(
+      { method: 'POST', query: { action: 'checkout' }, headers: { authorization: 'Bearer good' }, body: { items: [{ sku: 'TB-20-AV32L', qty: 1 }] } },
+      fakeRes()
+    );
+    expect(res.statusCode).toBe(503);
+    expect(inserted).toHaveLength(0);
+  });
+
+  it('un email que no es un email no se usa: va el de la cuenta', async () => {
+    await checkout({ items: [{ sku: 'TB-20-AV32L', qty: 1 }], email: 'esto no es un email' });
+    expect(inserted.find((i) => i.table === 'shop_orders').rows.client_email).toBe('peredo.dm@gmail.com');
+  });
+
+  it('un email bien escrito se respeta', async () => {
+    await checkout({ items: [{ sku: 'TB-20-AV32L', qty: 1 }], email: 'otra@example.com' });
+    expect(inserted.find((i) => i.table === 'shop_orders').rows.client_email).toBe('otra@example.com');
+  });
+});
+
+describe('un pedido pagado avisa una vez, y solo una', () => {
+  beforeEach(() => {
+    intentStatus = 'succeeded';
+    intentReceived = 1390;
+  });
+
+  it('avisa a Diego por WhatsApp y al cliente por email', async () => {
+    const res = await confirm({ orderId: 'order-1', lang: 'es' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ status: 'paid', ref: 'ORDER1' });
+    expect(sent).toHaveLength(2);
+
+    const wa = sent.find((s) => s.url.includes('/api/send-message?channel=whatsapp'));
+    expect(wa.url.startsWith('https://drbikesydney.com.au/')).toBe(true);
+    expect(wa.headers['x-internal-token']).toBe('internal-test');
+    expect(wa.body).toMatchObject({ to: '0433963250', template: 'shop_order' });
+    expect(wa.body.data).toMatchObject({ ref: 'ORDER1', total: '13.90', test: true, address: '1 Test St, Bondi, 2026' });
+    // Con el SKU, que es lo que Diego le pide a LEBYCLE.
+    expect(wa.body.data.lines[0]).toContain('TB-20-AV32L');
+
+    const mail = sent.find((s) => s.url.endsWith('/api/send-email'));
+    expect(mail.headers['x-internal-token']).toBe('internal-test');
+    expect(mail.body).toMatchObject({ type: 'shop_order', to: 'cliente@example.com', orderRef: 'ORDER1', lang: 'es', mode: 'test' });
+    expect(mail.body.items).toHaveLength(1);
+  });
+
+  it('confirmar dos veces seguidas no avisa dos veces', async () => {
+    await confirm({ orderId: 'order-1' });
+    await confirm({ orderId: 'order-1' });
+    expect(sent).toHaveLength(2);
+  });
+
+  it('dos confirmaciones a la vez tampoco: solo la que mueve la fila avisa', async () => {
+    const [a, b] = await Promise.all([confirm({ orderId: 'order-1' }), confirm({ orderId: 'order-1' })]);
+    expect(a.body.status).toBe('paid');
+    expect(b.body.status).toBe('paid');
+    expect(sent).toHaveLength(2);
+    const moves = updated.filter((u) => u.patch.status === 'paid');
+    expect(moves.every((u) => u.filters.some(([k, v]) => k === 'status' && v === 'pending'))).toBe(true);
+  });
+
+  it('un pedido ya pagado contesta pagado sin preguntarle a Stripe ni avisar', async () => {
+    orderRow = paidableOrder({ status: 'paid' });
+    intentStatus = 'requires_payment_method'; // si se lo preguntara, diria otra cosa
+    const res = await confirm({ orderId: 'order-1' });
+    expect(res.body.status).toBe('paid');
+    expect(sent).toHaveLength(0);
+  });
+
+  it('un cobro por otro importe no avisa a nadie', async () => {
+    intentReceived = 1;
+    const res = await confirm({ orderId: 'order-1' });
+    expect(res.statusCode).toBe(409);
+    expect(sent).toHaveLength(0);
+  });
+
+  it('un cobro que no paso no avisa a nadie', async () => {
+    intentStatus = 'requires_payment_method';
+    await confirm({ orderId: 'order-1' });
+    expect(sent).toHaveLength(0);
+  });
+
+  it('si un aviso falla, el pedido queda pagado igual y lo dice en las notas', async () => {
+    fetchOk = false;
+    const res = await confirm({ orderId: 'order-1' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe('paid');
+    expect(orderRow.status).toBe('paid');
+    expect(orderRow.notes).toMatch(/Aviso fallido/);
+    expect(orderRow.notes).toMatch(/whatsapp/);
+    expect(orderRow.notes).toMatch(/email/);
   });
 });

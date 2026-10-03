@@ -71,7 +71,9 @@ vi.mock('@supabase/supabase-js', () => ({
     storage: { from: () => ({ createSignedUrls: async () => ({ data: [], error: null }) }) },
   }),
 }));
-vi.mock('../../api/_security.js', () => ({ guard: async () => false }));
+// El resto de _security.js es el de verdad (isValidEmail, SELF_BASE_URL): solo
+// guard se reemplaza, porque limita por IP y aca no hay una.
+vi.mock('../../api/_security.js', async (importOriginal) => ({ ...(await importOriginal()), guard: async () => false }));
 
 function fakeRes() {
   const r = { statusCode: 0, body: null, headers: {} };

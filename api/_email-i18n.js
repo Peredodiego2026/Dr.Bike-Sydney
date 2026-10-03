@@ -167,6 +167,17 @@ const dict = {
 
     // ── tip_received ────────────────────────────────────────────────────────
     'Goes directly to the mechanic': 'Va directo al mecánico',
+
+    // ── shop_order (api/_shop.js) ───────────────────────────────────────────
+    // '>Shipping<' keeps its tags: a product name with the word in it must not
+    // be translated along with the row label.
+    'Order received!': '¡Pedido recibido!',
+    'Thanks for your order,': 'Gracias por tu pedido,',
+    '. We are ordering your parts now and will email you the tracking number as soon as they ship.': '. Ya estamos pidiendo tus repuestos y te mandaremos el número de seguimiento por correo apenas salgan.',
+    'Test order &mdash; no money was taken.': 'Pedido de prueba &mdash; no se cobró dinero.',
+    'Your order': 'Tu pedido',
+    '>Shipping<': '>Envío<',
+    'Total paid': 'Total pagado',
   },
 
   zh: {
@@ -293,6 +304,14 @@ const dict = {
     'Redeem my birthday gift &rarr;': '领取我的生日礼物 &rarr;',
 
     'Goes directly to the mechanic': '全额直接给技师',
+
+    'Order received!': '订单已收到！',
+    'Thanks for your order,': '感谢您的订单，',
+    '. We are ordering your parts now and will email you the tracking number as soon as they ship.': '。我们正在为您订购配件，发货后会立即通过邮件把物流单号发给您。',
+    'Test order &mdash; no money was taken.': '测试订单 &mdash; 未扣款。',
+    'Your order': '您的订单',
+    '>Shipping<': '>运费<',
+    'Total paid': '已付总额',
   },
 };
 
@@ -325,6 +344,7 @@ const subjectDict = {
     '! A gift from Dr. Bike Sydney': '! Un regalo de Dr. Bike Sydney',
     '🔐 Action required — verify your Dr. Bike payment':
       '🔐 Acción requerida — verifica tu pago de Dr. Bike',
+    '📦 Order received —': '📦 Pedido recibido —',
   },
   zh: {
     '✅ Booking confirmed —': '✅ 预订已确认 —',
@@ -347,6 +367,7 @@ const subjectDict = {
     '🎂 Happy Birthday,': '🎂 生日快乐，',
     '! A gift from Dr. Bike Sydney': '！来自 Dr. Bike Sydney 的礼物',
     '🔐 Action required — verify your Dr. Bike payment': '🔐 需要您操作 — 请验证 Dr. Bike 付款',
+    '📦 Order received —': '📦 订单已收到 —',
   },
 };
 

@@ -74,7 +74,9 @@ vi.mock('@supabase/supabase-js', () => ({ createClient: () => fakeClient(current
 // el test pasaba igual mientras en produccion la tienda contestaba 405 a
 // todo. Un doble que miente en el mismo sentido que el codigo no prueba
 // nada.
-vi.mock('../../api/_security.js', () => ({ guard: async () => false }));
+// El resto de _security.js es el de verdad (isValidEmail, SELF_BASE_URL): solo
+// guard se reemplaza, porque limita por IP y aca no hay una.
+vi.mock('../../api/_security.js', async (importOriginal) => ({ ...(await importOriginal()), guard: async () => false }));
 
 function fakeRes() {
   const r = { statusCode: 0, body: null, headers: {} };
