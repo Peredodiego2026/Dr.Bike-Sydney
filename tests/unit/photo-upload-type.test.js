@@ -144,7 +144,19 @@ describe('the three upload sites use it', () => {
       expect(i, `${prefix} is gone from ${name}`).toBeGreaterThan(-1);
       // The path literal ends at the closing backtick.
       const line = src.slice(i, src.indexOf('`', i));
-      expect(line, `${prefix} does not use kind.ext`).toContain('${kind.ext}');
+      // `${ext}` is allowed alongside `${kind.ext}` since 2026-10-02, and only
+      // because of what the line above it has to say: the mechanic photo is
+      // re-encoded to JPEG before upload, so the extension cannot come from
+      // kind - the file being uploaded is not the file that was picked. The
+      // rule this test defends is unchanged: never the browser's word for it.
+      // `ext` is assigned from a literal or from kind.ext, never from the file.
+      const ok = line.includes('${kind.ext}') || line.includes('${ext}');
+      expect(ok, `${prefix} does not use kind.ext`).toBe(true);
+      if (line.includes('${ext}') && !line.includes('${kind.ext}')) {
+        expect(src, `${name} takes ext from the file`).toMatch(
+          /const ext = smaller \? '[a-z]+' : kind\.ext;/
+        );
+      }
     }
   });
 
@@ -153,7 +165,11 @@ describe('the three upload sites use it', () => {
     // into the public bucket, plus the private upload both try first
     // (uploadPrivateJobPhoto, api/_job-photos.js).
     expect((mechCode.match(/contentType: kind\.contentType/g) || []).length).toBe(3);
-    expect((adminCode.match(/contentType: kind\.contentType/g) || []).length).toBe(1);
+    // Uno desde el 2026-10-02: admin.js re-codifica la foto de perfil a JPEG
+    // antes de subirla, asi que pasa una variable. Sigue sin salir del archivo:
+    // o es un literal propio, o es kind.contentType.
+    expect((adminCode.match(/contentType: kind\.contentType/g) || []).length).toBe(0);
+    expect(adminCode).toMatch(/const contentType = smaller \? '[a-z/]+' : kind\.contentType;/);
   });
 });
 

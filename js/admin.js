@@ -8679,13 +8679,53 @@ function safeImageUpload(file) {
   return { ok: true, ext, contentType: ALLOWED[ext] };
 }
 
+// Achica la foto antes de subirla. Una foto de perfil se muestra a 120px de
+// lado, y hasta el 2026-10-02 se subia tal cual salia del telefono: habia una
+// de 1.9 MB en el bucket publico, y la landing la bajaba ENTERA en cada visita.
+// Eso solo gasto 6.4 GB de transferencia en un ciclo - el 128% de la cuota del
+// plan - y puso al proyecto entero en periodo de gracia. Medido en produccion
+// el 2026-10-02: 1.88 MB por visita, 3481 visitas para gastar los 6.4 GB, que
+// es el trafico normal de un mes.
+//
+// 600px de lado alcanza para una pantalla retina al doble de tamano, y deja la
+// foto en unos 60 KB: treinta veces menos.
+const PHOTO_MAX_SIDE = 600;
+const PHOTO_QUALITY = 0.82;
+
+async function shrinkPhoto(file) {
+  // Si algo falla - un formato que el navegador no decodifica, un canvas
+  // bloqueado - se sube el original. Una foto grande es un problema de costo;
+  // una foto que no se sube es un mecanico sin cara en la web.
+  try {
+    // window. delante: admin.js es un script clasico y el linter no tiene
+    // createImageBitmap entre sus globales, aunque todo navegador actual lo trae.
+    const bitmap = await window.createImageBitmap(file);
+    const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size <= 200 * 1024) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close?.();
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', PHOTO_QUALITY));
+    // Si el resultado no es mas chico, no vale la pena perder calidad.
+    return blob && blob.size < file.size ? blob : null;
+  } catch {
+    return null;
+  }
+}
+
 async function uploadMechanicPhoto(file, contactId) {
   const kind = safeImageUpload(file);
   if (!kind.ok) throw new Error(kind.reason);
-  const path = `profiles/${contactId || 'new'}_${Date.now()}.${kind.ext}`;
+  const smaller = await shrinkPhoto(file);
+  const body = smaller || file;
+  const ext = smaller ? 'jpg' : kind.ext;
+  const contentType = smaller ? 'image/jpeg' : kind.contentType;
+  const path = `profiles/${contactId || 'new'}_${Date.now()}.${ext}`;
   const { error } = await sb.storage
     .from('job-photos')
-    .upload(path, file, { upsert: true, contentType: kind.contentType });
+    .upload(path, body, { upsert: true, contentType });
   if (error) throw error;
   const { data: urlData } = sb.storage.from('job-photos').getPublicUrl(path);
   return urlData?.publicUrl || null;
