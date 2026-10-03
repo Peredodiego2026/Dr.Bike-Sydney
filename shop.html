@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+    // La tienda de escritorio. En un telefono va la de la SPA, que esta hecha
+    // para el pulgar: aca hay barra lateral de filtros y cuatro columnas.
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      window.location.replace('/index.html?view=shop#shop');
+    }
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Shop - Dr. Bike Sydney</title>
+  <!-- Privada mientras el acuerdo con LEBYCLE no este cerrado: que ningun
+       buscador la liste. Ademas no figura en sitemap.xml a proposito. -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/icon-512.svg?v=2" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+  <link href="css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css?v=b58e9c267c">
+  <link rel="stylesheet" href="css/shop-desktop.css?v=9e47d45bcb">
+</head>
+<body class="sd-body">
+  <a class="skip-link" href="#shop-main">Skip to the shop</a>
+
+  <div class="sd-strip"><span>LEBYCLE parts, straight from the maker</span> &nbsp;/&nbsp; <span>Delivered across Australia</span> &nbsp;/&nbsp; 0433 963 250</div>
+
+  <header class="sd-head">
+    <div class="sd-wrap">
+      <a class="sd-logo" href="/landing.html" aria-label="Dr. Bike Sydney, home">
+        <svg width="46" height="30" viewBox="0 0 46 30" fill="none" aria-hidden="true"><path d="M3 3h11a9 9 0 0 1 0 18H3z" stroke="var(--blue)" stroke-width="5" stroke-linejoin="round"/><path d="M26 3h10a7 7 0 0 1 0 14h-10M26 15h11a7 7 0 0 1 0 14H26" stroke="var(--blue)" stroke-width="4.6" stroke-linejoin="round"/></svg>
+        <span>
+          <span class="sd-logo__name">Dr. <b>Bike</b> Sydney</span>
+          <span class="sd-logo__tag" style="display:block">Healthy bikes, happy riders</span>
+        </span>
+      </a>
+      <nav class="sd-nav" aria-label="Main">
+        <a href="/landing.html">Services</a>
+        <a href="/landing.html#mechanics">Mechanics</a>
+        <a href="/landing.html#memberships">Memberships</a>
+        <a href="/landing.html#fleet" class="sd-nav__fleet">Fleet &rarr;</a>
+        <a href="#" aria-current="page">Shop</a>
+        <a href="/landing.html#about">About</a>
+      </nav>
+      <div class="sd-actions">
+        <button type="button" class="sd-cartbtn" data-open-cart aria-label="Open the cart">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2.2l2.3 11.5a2 2 0 0 0 2 1.5h7.9a2 2 0 0 0 2-1.6L20 7H5.3"/></svg>
+          <span class="sd-cartbtn__n" id="sd-cart-n" hidden>0</span>
+        </button>
+        <a class="sd-account" id="sd-account" href="/landing.html">Sign In</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="sd-cats">
+    <div class="sd-wrap">
+      <nav aria-label="Shop sections" style="display:flex;gap:28px">
+        <a href="#all" data-cat="">All products</a>
+        <a href="#all?s=parts" data-cat="parts">Parts</a>
+        <a href="#all?s=tools" data-cat="tools">Tools</a>
+        <a href="#all?s=accessories" data-cat="accessories">Accessories</a>
+        <a href="#all?s=care" data-cat="care">Care</a>
+        <a href="#all?s=gear" data-cat="gear">Gear</a>
+      </nav>
+      <form class="sd-search" id="sd-search" role="search">
+        <label for="sd-q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search the shop</label>
+        <input id="sd-q" type="search" placeholder="Search parts and tools" autocomplete="off">
+        <button type="submit" aria-label="Search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--white)" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <main id="shop-main" tabindex="-1">
+    <div class="sd-wrap"><div class="sd-state"><div class="sd-state__sub">Loading the shop...</div></div></div>
+  </main>
+
+  <footer class="sd-foot">
+    <div class="sd-wrap">
+      <span>Dr. Bike Sydney &middot; <span>mobile bike service across Sydney</span> &middot; <span>Mon - Sun: 8:30AM - 4:00PM</span></span>
+      <span><a href="https://wa.me/61433963250">WhatsApp 0433 963 250</a> &middot; <a href="/terms.html">Terms</a></span>
+    </div>
+  </footer>
+
+  <div id="sd-veil" class="sd-veil" data-close-cart hidden></div>
+  <aside id="sd-drawer" class="sd-drawer" role="dialog" aria-modal="true" aria-labelledby="sd-drawer-title" hidden>
+    <div class="sd-drawer__head">
+      <span class="sd-drawer__title" id="sd-drawer-title">Cart</span>
+      <button type="button" class="sd-drawer__close" data-close-cart aria-label="Close the cart">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
+    <div class="sd-drawer__body" id="sd-drawer-body"></div>
+    <div class="sd-drawer__foot" id="sd-drawer-foot"></div>
+  </aside>
+
+  <script type="module" src="js/shop-desktop.js?v=1f7f21d588"></script>
+</body>
+</html>

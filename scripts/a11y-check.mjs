@@ -25,7 +25,7 @@ const problems = [];
 // ── 1. The pages a visitor actually lands on need a skip link ───────────────
 // admin and mechanic are staff tools behind a login, reached by people who use
 // them all day; the public pages are where this matters.
-for (const page of ['index.html', 'landing.html']) {
+for (const page of ['index.html', 'landing.html', 'shop.html']) {
   const html = read(page);
   if (!/class="skip-link"/.test(html)) {
     problems.push(`${page}: no skip link. A keyboard user tabs the whole header first.`);

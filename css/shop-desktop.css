@@ -1,0 +1,1384 @@
+/* css/shop-desktop.css - la tienda LEBYCLE en la computadora (shop.html).
+ *
+ * Es la tienda que Diego eligio en el canvas de bocetos, con la estructura de
+ * rockandroad.cl: barra de categorias oscura con buscador, banner, filtros a
+ * la izquierda, 20 productos por pagina y "Add to cart" en cada tarjeta. La
+ * primera version de la tienda en escritorio era la pantalla del celular
+ * estirada a cuatro columnas, y Diego la marco como erronea el 03-oct.
+ *
+ * Todo sale de css/variables.css. Un hex escrito aca no lo pisa ningun tema y
+ * scripts/color-check.mjs lo rechaza. */
+
+.sd-body {
+  margin: 0;
+  background: var(--white);
+  color: var(--navy);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* `hidden` es display:none del navegador, y lo pisa cualquier regla que
+ * declare display. Aca eso pasaba con el cajon del carrito (display:flex):
+ * quedaba SIEMPRE abierto tapando la pagina, y el contador del carrito
+ * mostraba "0". Es el mismo error que dejo visible el tab Shop de la app para
+ * cualquier cuenta. Una regla para toda la pagina, no un parche por elemento. */
+.sd-body [hidden] {
+  display: none !important;
+}
+
+.sd-wrap {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 3000;
+  background: var(--navy);
+  color: var(--white);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+.sd-body a:focus-visible,
+.sd-body button:focus-visible,
+.sd-body input:focus-visible,
+.sd-body select:focus-visible {
+  outline: 2.5px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Arriba de todo ──────────────────────────────────────────────────────── */
+
+.sd-strip {
+  background: var(--navy);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  padding: 10px 16px;
+}
+
+.sd-head {
+  border-bottom: 1px solid var(--border-lt);
+  background: var(--white);
+}
+
+.sd-head .sd-wrap {
+  height: 84px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.sd-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.sd-logo__name {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.sd-logo__name b {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.sd-logo__tag {
+  font-size: 12px;
+  color: var(--blue);
+  margin-top: 1px;
+}
+
+.sd-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.sd-nav a {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--gray);
+  text-decoration: none;
+  padding: 6px 0;
+}
+
+.sd-nav a:hover {
+  color: var(--navy);
+}
+
+.sd-nav a[aria-current='page'] {
+  color: var(--navy);
+  font-weight: 700;
+  border-bottom: 2.5px solid var(--blue);
+}
+
+.sd-nav__fleet {
+  color: var(--blue) !important;
+  font-weight: 600 !important;
+}
+
+.sd-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.sd-cartbtn {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.sd-cartbtn:hover {
+  background: var(--surface);
+}
+
+.sd-cartbtn__n {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--red);
+  color: var(--white);
+  font-size: 10.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sd-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 9px;
+  background: var(--blue);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* La barra de categorias. rockandroad la tiene casi negra; aca es --navy, que
+ * es el oscuro de la marca. */
+.sd-cats {
+  background: var(--navy);
+}
+
+.sd-cats .sd-wrap {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.sd-cats a {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--blue-pale);
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 2.5px solid transparent;
+}
+
+.sd-cats a:hover {
+  color: var(--white);
+}
+
+.sd-cats a[aria-current='true'] {
+  color: var(--white);
+  font-weight: 800;
+  border-bottom-color: var(--blue);
+}
+
+.sd-search {
+  display: flex;
+  margin-left: auto;
+  width: 340px;
+}
+
+.sd-search input {
+  flex-grow: 1;
+  min-width: 0;
+  height: 38px;
+  border: none;
+  border-radius: 6px 0 0 6px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--navy);
+  background: var(--white);
+}
+
+.sd-search button {
+  width: 48px;
+  height: 38px;
+  border: none;
+  border-radius: 0 6px 6px 0;
+  background: var(--blue);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── La portada de la tienda ─────────────────────────────────────────────── */
+
+.sd-hero {
+  background: linear-gradient(105deg, var(--navy) 0%, var(--blue-dark) 62%, var(--blue) 100%);
+  color: var(--white);
+  overflow: hidden;
+}
+
+.sd-hero .sd-wrap {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.sd-hero__text {
+  padding: 40px 0 40px 46px;
+  max-width: 640px;
+}
+
+.sd-hero__kicker {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--blue-pale);
+}
+
+.sd-hero__title {
+  margin: 12px 0 0;
+  font-size: 58px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.03;
+}
+
+.sd-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  margin-top: 26px;
+  padding: 0 28px;
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--navy);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sd-hero__img {
+  margin-left: auto;
+  margin-right: 36px;
+  height: 280px;
+  width: auto;
+  display: block;
+}
+
+.sd-trust {
+  border-bottom: 1px solid var(--border-lt);
+}
+
+.sd-trust .sd-wrap {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  flex-wrap: wrap;
+}
+
+.sd-trust span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray);
+}
+
+.sd-brand {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-top: 40px;
+  padding: 26px 34px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.sd-brand__name {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+
+.sd-brand__rule {
+  width: 1px;
+  height: 46px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.sd-brand__text {
+  font-size: 15px;
+  color: var(--gray);
+  line-height: 1.6;
+  max-width: 760px;
+  margin: 0;
+}
+
+.sd-sec {
+  margin-top: 48px;
+}
+
+.sd-sec__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sd-sec__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.sd-sec__more {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--red);
+  text-decoration: none;
+}
+
+.sd-grid6 {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 26px 22px;
+  margin-top: 24px;
+}
+
+.sd-workshop {
+  display: flex;
+  gap: 52px;
+  align-items: center;
+  margin: 58px 0 72px;
+}
+
+.sd-workshop__text {
+  flex-grow: 1;
+}
+
+.sd-workshop__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.sd-workshop p {
+  font-size: 14.5px;
+  color: var(--gray);
+  line-height: 1.75;
+  margin: 14px 0 0;
+  max-width: 560px;
+}
+
+.sd-workshop__hours {
+  margin-top: 18px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sd-workshop__img {
+  width: 560px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+/* ── La tarjeta de producto ──────────────────────────────────────────────── */
+
+.sd-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-card__link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.sd-card__shot {
+  position: relative;
+  height: 190px;
+  background: var(--surface);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sd-grid6 .sd-card__shot {
+  height: 160px;
+}
+
+/* Las fotos del catalogo traen fondo blanco: sin multiply, cada una dibuja su
+ * cuadrado adentro del gris y la grilla se ve rota. */
+.sd-card__shot img {
+  max-height: 80%;
+  max-width: 84%;
+  width: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  transition: transform 0.25s ease;
+}
+
+.sd-card__link:hover .sd-card__shot img {
+  transform: scale(1.04);
+}
+
+.sd-card__sizes {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 0 10px 0 10px;
+}
+
+.sd-card__price {
+  margin-top: 12px;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--red);
+  letter-spacing: -0.01em;
+}
+
+/* Dos lineas reservadas siempre: un nombre largo no empuja la fila. */
+.sd-card__name {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.4;
+  min-height: 39px;
+}
+
+.sd-card__add {
+  margin-top: 10px;
+  width: 100%;
+  min-height: 42px;
+  border: none;
+  border-radius: 8px;
+  background: var(--blue);
+  color: var(--white);
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sd-card__add:hover {
+  background: var(--blue-dark);
+}
+
+.sd-card__add:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── El catalogo ─────────────────────────────────────────────────────────── */
+
+.sd-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0 20px;
+  border-bottom: 1px solid var(--border-lt);
+}
+
+.sd-back {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.sd-back:hover {
+  border-color: var(--gray-lt);
+}
+
+.sd-crumbs__path {
+  font-size: 12.5px;
+  color: var(--gray-lt);
+}
+
+.sd-crumbs__path a {
+  color: var(--gray-lt);
+  text-decoration: none;
+}
+
+.sd-crumbs__path a:hover {
+  color: var(--navy);
+}
+
+.sd-crumbs__title {
+  margin: 6px 0 0;
+  font-size: 31px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.sd-crumbs__sub {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.sd-layout {
+  display: flex;
+}
+
+.sd-side {
+  width: 236px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-lt);
+  padding: 26px 24px 40px 0;
+  box-sizing: border-box;
+}
+
+.sd-side__group {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin: 0 0 10px;
+}
+
+.sd-side__rule {
+  height: 1px;
+  background: var(--border-lt);
+  margin: 20px 0;
+}
+
+.sd-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  cursor: pointer;
+}
+
+.sd-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--blue);
+  flex-shrink: 0;
+}
+
+.sd-check__name {
+  font-size: 14px;
+  color: var(--navy);
+  flex-grow: 1;
+}
+
+.sd-check__n {
+  font-size: 12.5px;
+  color: var(--gray-lt);
+}
+
+.sd-side__clear {
+  margin-top: 16px;
+  border: none;
+  background: none;
+  color: var(--blue);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.sd-main {
+  flex-grow: 1;
+  min-width: 0;
+  padding: 24px 0 60px 44px;
+}
+
+.sd-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.sd-toolbar__count {
+  font-size: 13.5px;
+  color: var(--gray);
+}
+
+.sd-toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.sd-perpage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--gray);
+}
+
+.sd-perpage button {
+  min-width: 38px;
+  height: 34px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--gray);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sd-perpage button[aria-pressed='true'] {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+  font-weight: 700;
+}
+
+.sd-sort {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--gray);
+}
+
+.sd-sort select {
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--navy);
+  background: var(--white);
+  cursor: pointer;
+}
+
+.sd-grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 30px 24px;
+}
+
+.sd-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 40px;
+}
+
+.sd-pager button {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sd-pager button[aria-current='page'] {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+  font-weight: 700;
+}
+
+.sd-pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sd-pager__info {
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-lt);
+  margin-top: 12px;
+}
+
+/* ── La ficha del producto ───────────────────────────────────────────────── */
+
+.sd-pd {
+  display: flex;
+  gap: 52px;
+  padding: 8px 0 0;
+}
+
+.sd-pd__shot {
+  width: 520px;
+  height: 520px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sd-pd__shot img {
+  max-height: 80%;
+  max-width: 82%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.sd-pd__info {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.sd-pd__brand {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.sd-pd__title {
+  margin: 8px 0 0;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.sd-pd__priceline {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.sd-pd__price {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--red);
+  letter-spacing: -0.02em;
+}
+
+.sd-pd__note {
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.sd-pd__rule {
+  height: 1px;
+  background: var(--border-lt);
+  margin: 22px 0;
+}
+
+.sd-pd__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-top: 22px;
+}
+
+.sd-pd__hint {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--gray-lt);
+}
+
+.sd-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sd-opt {
+  min-height: 46px;
+  padding: 6px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sd-opt:hover {
+  border-color: var(--gray-lt);
+}
+
+.sd-opt[aria-pressed='true'] {
+  border: 2px solid var(--blue);
+  background: var(--blue-lt);
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+/* Una opcion que no existe con lo que ya esta elegido: se puede tocar igual,
+ * y al tocarla cambian las otras para que la combinacion exista. */
+.sd-opt--far {
+  opacity: 0.45;
+}
+
+.sd-opt__hint {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--gray-lt);
+}
+
+.sd-opt[aria-pressed='true'] .sd-opt__hint {
+  color: var(--blue-dark);
+}
+
+.sd-select {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 460px;
+  height: 48px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 0 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--navy);
+  background: var(--white);
+}
+
+.sd-buy {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.sd-qty {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.sd-qty button {
+  width: 46px;
+  height: 50px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--gray);
+  font-family: inherit;
+}
+
+.sd-qty__n {
+  width: 34px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-addbig {
+  flex-grow: 1;
+  min-height: 52px;
+  border: none;
+  border-radius: 9px;
+  background: var(--blue);
+  color: var(--white);
+  font-size: 15.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sd-addbig:hover {
+  background: var(--blue-dark);
+}
+
+.sd-boxes {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sd-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 15px;
+}
+
+.sd-box__title {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.sd-box__sub {
+  font-size: 12.5px;
+  color: var(--gray);
+  margin-top: 1px;
+}
+
+.sd-box a {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.sd-specs {
+  margin-top: 46px;
+}
+
+.sd-specs__title {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 800;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid var(--border);
+}
+
+.sd-specs__row {
+  display: flex;
+  padding: 12px 16px;
+  font-size: 13.5px;
+}
+
+.sd-specs__row:nth-child(odd) {
+  background: var(--surface);
+}
+
+.sd-specs__k {
+  width: 230px;
+  flex-shrink: 0;
+  color: var(--gray);
+}
+
+.sd-specs__v {
+  font-weight: 600;
+}
+
+/* ── El carrito, un cajon que entra por la derecha ───────────────────────── */
+
+.sd-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+  background: color-mix(in srgb, var(--navy) 45%, transparent);
+}
+
+.sd-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  width: 420px;
+  max-width: 100%;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--navy) 18%, transparent);
+}
+
+.sd-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 0 12px 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sd-drawer__title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.sd-drawer__close {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.sd-drawer__body {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 4px 24px;
+}
+
+.sd-drawer__foot {
+  border-top: 1px solid var(--border);
+  padding: 18px 24px 22px;
+}
+
+.sd-line {
+  display: flex;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-lt);
+}
+
+.sd-line__shot {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sd-line__shot img {
+  max-height: 80%;
+  max-width: 80%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.sd-line__name {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.sd-line__variant {
+  font-size: 12.5px;
+  color: var(--gray);
+  margin-top: 2px;
+}
+
+.sd-line__ctrl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.sd-line__ctrl .sd-qty {
+  height: 36px;
+}
+
+.sd-line__ctrl .sd-qty button {
+  width: 34px;
+  height: 34px;
+  font-size: 17px;
+}
+
+.sd-line__ctrl .sd-qty__n {
+  width: 26px;
+  font-size: 14px;
+}
+
+.sd-line__drop {
+  border: none;
+  background: none;
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.sd-line__price {
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-line--gone {
+  opacity: 0.55;
+}
+
+.sd-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sd-total__label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sd-total__value {
+  font-size: 24px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-note {
+  font-size: 12.5px;
+  color: var(--gray);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* ── El pago ─────────────────────────────────────────────────────────────── */
+
+.sd-co {
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+  padding: 8px 0 72px;
+}
+
+.sd-co__form {
+  flex-grow: 1;
+  min-width: 0;
+  max-width: 620px;
+}
+
+.sd-co__row {
+  display: flex;
+  gap: 14px;
+}
+
+.sd-field {
+  display: block;
+  margin-top: 16px;
+  flex: 1;
+}
+
+.sd-field span {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 7px;
+}
+
+.sd-field input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 0 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--navy);
+  background: var(--white);
+}
+
+.sd-co__sum {
+  width: 380px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 22px;
+  background: var(--surface);
+}
+
+.sd-co__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+}
+
+.sd-msg {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sd-msg--err {
+  color: var(--red);
+}
+
+.sd-msg--ok {
+  color: var(--green);
+}
+
+.sd-msg--warn {
+  color: var(--amber);
+}
+
+/* ── Estados ─────────────────────────────────────────────────────────────── */
+
+.sd-state {
+  text-align: center;
+  padding: 90px 16px 110px;
+}
+
+.sd-state__icon {
+  font-size: 40px;
+}
+
+.sd-state__title {
+  margin: 12px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.sd-state__sub {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--gray);
+}
+
+.sd-state__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.sd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 9px;
+  font-size: 14.5px;
+  font-weight: 700;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+}
+
+.sd-btn--primary {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: var(--white);
+}
+
+.sd-btn--block {
+  width: 100%;
+}
+
+.sd-foot {
+  border-top: 1px solid var(--border);
+  padding: 26px 0 34px;
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.sd-foot .sd-wrap {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.sd-foot a {
+  color: var(--gray);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-card__shot img {
+    transition: none;
+  }
+}

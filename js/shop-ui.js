@@ -41,10 +41,16 @@ const money = (n) => '$' + Number(n).toFixed(2);
 // ahi y alcanza el hash; en landing.html no, y un '#shop' a secas se queda
 // en la landing mostrando nada. index.html deja entrar a estas rutas aunque
 // el navegador sea de escritorio (index.html:26).
+// En la computadora la tienda es shop.html, con su propio diseno (filtros a la
+// izquierda, 20 por pagina). Hasta el 2026-10-03 estos enlaces abrian la
+// pantalla del celular estirada, y Diego la marco como erronea.
 const shopHref = (hash) => {
   if (document.querySelector('[data-screen="shop"]')) return '#' + hash;
   const [route, query] = hash.split('?');
-  return '/index.html?view=' + route + (query ? '&' + query : '') + '#' + hash;
+  const slug = new URLSearchParams(query || '').get('slug');
+  if (route === 'shop-product' && slug) return '/shop.html#product?slug=' + encodeURIComponent(slug);
+  if (route === 'cart') return '/shop.html#cart';
+  return '/shop.html#all';
 };
 
 // El estado de la tienda vive aca y no en la URL: volver atras del producto a
