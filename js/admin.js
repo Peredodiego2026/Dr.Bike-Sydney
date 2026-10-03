@@ -6640,8 +6640,11 @@ function photoDay(p) {
 
 function photoTile(p) {
   const picked = _photoSel?.has(p.key);
-  const img = p.url
-    ? `<img src="${esc(p.url)}" alt="${esc(PHOTO_KIND_LABEL[p.kind])} - ${esc(p.client_name || '')}" loading="lazy">`
+  // The 400px copy when there is one (api/_job-photos.js thumbPathOf): a grid
+  // of full photos is what put Supabase's transfer quota over the limit.
+  const src = p.thumb_url || p.url;
+  const img = src
+    ? `<img src="${esc(src)}" alt="${esc(PHOTO_KIND_LABEL[p.kind])} - ${esc(p.client_name || '')}" loading="lazy">`
     : '<span class="ph-tile-missing">Could not load this photo</span>';
   return `<button type="button" class="ph-tile${picked ? ' sel' : ''}" data-ph-key="${esc(p.key)}" aria-pressed="${picked ? 'true' : 'false'}">
     ${img}
@@ -6751,7 +6754,7 @@ function renderWebsiteView(list) {
         : 'Original no longer in Photos';
       return `<li class="ph-web-row">
         <span class="ph-web-pos">${i + 1}</span>
-        <img src="${esc(w.url)}" alt="" loading="lazy">
+        <img src="${esc(p?.thumb_url || w.url)}" alt="" loading="lazy">
         <div class="ph-web-who"><strong>${who}</strong><span>${meta}</span></div>
         <button type="button" class="ph-web-btn" data-ph-move="${esc(w.name)}" data-dir="-1" aria-label="Move up"${i === 0 ? ' disabled' : ''}>${PH_ICON.up}</button>
         <button type="button" class="ph-web-btn" data-ph-move="${esc(w.name)}" data-dir="1" aria-label="Move down"${i === n - 1 ? ' disabled' : ''}>${PH_ICON.down}</button>
@@ -6761,7 +6764,7 @@ function renderWebsiteView(list) {
     .join('');
   const preview = n
     ? `<div class="ph-web-preview">
-        <img src="${esc(_website[0].url)}" alt="First photo of the carousel">
+        <img src="${esc(_photos.find((x) => x.showcase_name === _website[0].name)?.thumb_url || _website[0].url)}" alt="First photo of the carousel">
         <span class="ph-web-preview-tag">Landing preview</span>
         <div class="ph-web-dots">${'<span></span>'.repeat(Math.min(n, 8))}</div>
       </div>`

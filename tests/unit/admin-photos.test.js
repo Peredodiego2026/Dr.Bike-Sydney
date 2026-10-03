@@ -98,8 +98,16 @@ globalThis.fetch = async (url, init = {}) => {
   }
   if (u.endsWith('/storage/v1/object/sign/job-photos-private')) {
     const { paths } = JSON.parse(init.body);
+    // Only the before photo has a small copy - like a photo taken after
+    // 03-oct-2026 next to older ones. Storage answers a missing object with
+    // an error row and no signedURL.
+    const hasThumb = (p) => !p.endsWith('_thumb.jpg') || p.startsWith(`jobs/${B1}/before_`);
     return ok(
-      paths.map((p) => ({ path: p, signedURL: `/object/sign/job-photos-private/${p}?token=t` }))
+      paths.map((p) =>
+        hasThumb(p)
+          ? { path: p, signedURL: `/object/sign/job-photos-private/${p}?token=t` }
+          : { path: p, signedURL: null, error: 'Either the object does not exist' }
+      )
     );
   }
   if (u.endsWith('/storage/v1/object/list/job-photos')) {
@@ -234,6 +242,12 @@ describe('the list (role admin-photos-list)', () => {
 
     const chat = byKey[`job-photos-private/chat/${B3}/1759300000000.png`];
     expect(chat).toMatchObject({ kind: 'chat', client_name: 'Carol', service_name: 'Flat tyre' });
+
+    // The small copy for the tile when there is one; none for older photos,
+    // and none for the old public ones (the tile then loads the full photo).
+    expect(before.thumb_url).toMatch(/before_1759200000000_thumb\.jpg\?token=t$/);
+    expect(chat.thumb_url).toBeNull();
+    expect(after.thumb_url).toBeNull();
 
     const review = byKey[REVIEW_NO];
     expect(review).toMatchObject({ kind: 'review', client_name: 'Alice', web_ok: false });
