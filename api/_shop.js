@@ -41,7 +41,17 @@ import { createClient } from '@supabase/supabase-js';
 import { guard } from './_security.js';
 import Stripe from 'stripe';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
+// Con el mismo respaldo que TODOS los demas archivos de api/. La primera
+// version no lo tenia, y en Vercel SUPABASE_URL no esta configurada - el
+// proyecto entero vive de este respaldo. Sin el, la linea del handler que
+// exige SUPABASE_URL contestaba 404 a todo el mundo, incluida la unica cuenta
+// que tiene permiso. Diego, el 02-oct: "dice que shop no esta disponible en
+// esta cuenta, y en esta cuenta es donde si debe estar disponible".
+//
+// Los tests no lo vieron porque ponian process.env.SUPABASE_URL a mano: el
+// entorno de prueba tenia algo que produccion no tiene.
+// tests/unit/shop-really-answers.test.js ahora corre SIN esa variable.
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
 
 export const SHOP_BUCKET = 'shop-photos';

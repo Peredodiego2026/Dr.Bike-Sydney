@@ -12,7 +12,13 @@
 // GET, este archivo se pone rojo.
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-process.env.SUPABASE_URL = 'https://example.supabase.co';
+// SUPABASE_URL NO se pone, a proposito: en Vercel no esta configurada y el
+// proyecto entero vive del respaldo escrito en cada archivo. La version
+// anterior de esta linea la ponia a mano, y por eso ningun test vio que
+// api/_shop.js no tenia respaldo y contestaba 404 a todos, incluida la cuenta
+// de Diego. Un entorno de prueba con algo que produccion no tiene esconde
+// exactamente esta clase de bug.
+delete process.env.SUPABASE_URL;
 process.env.SUPABASE_SERVICE_KEY = 'test-service-key';
 
 vi.mock('@supabase/supabase-js', () => ({
