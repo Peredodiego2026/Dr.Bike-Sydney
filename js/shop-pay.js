@@ -64,8 +64,8 @@ async function postShop(token, body) {
 
 // details: { name, email, phone, address, suburb, postcode }. Los importes no
 // viajan: el servidor los recalcula y contesta lo que de verdad va a cobrar.
-export function startCheckout(token, items, details) {
-  return postShop(token, { action: 'checkout', items, ...details });
+export function startCheckout(token, items, details, lang) {
+  return postShop(token, { action: 'checkout', items, ...details, lang });
 }
 
 export function confirmOrder(token, orderId, lang) {

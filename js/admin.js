@@ -527,6 +527,7 @@ const titles = {
   calendar: 'Calendar',
   memberships: 'Memberships',
   services: 'Services & Prices',
+  'shop-orders': 'Shop Orders',
 };
 const subs = {
   dashboard: 'Live operations · Sydney',
@@ -546,6 +547,7 @@ const subs = {
   memberships: 'Active plans · Stripe subscriptions',
   inventory: 'Stock, internal cost and client price per part',
   services: 'One catalog for the whole site - edit a price here and it updates everywhere',
+  'shop-orders': 'LEBYCLE parts orders - order them, ship them, refund them',
 };
 
 function go(page, btn) {
@@ -592,6 +594,7 @@ function go(page, btn) {
     loadNewsletter();
   }
   if (page === 'memberships') loadMemberships();
+  if (page === 'shop-orders') loadShopOrders();
 
   // Update mobile bottom nav active state
   ['dashboard', 'bookings', 'clients', 'finance'].forEach((p) => {
@@ -6536,6 +6539,338 @@ async function loadClaims() {
       showToast('Claim updated ✓');
       loadClaims();
     });
+  });
+}
+
+// ── SHOP ORDERS ──────────────────────────────────────────────────────────────
+// The LEBYCLE parts shop, after the client pays (api/_shop-admin.js):
+//   Not paid -> Paid -> Ordered from LEBYCLE -> On its way -> Delivered
+// with Refund available from Paid onwards. Every step is a conditional write
+// on the server, so two open tabs cannot ship or refund the same order twice.
+// Nothing is deleted from here: an order is a record.
+const SHOP_STATUS = {
+  pending: {
+    label: 'Not paid',
+    fg: 'var(--amber-ink)',
+    bg: 'var(--amber-lt)',
+    edge: 'var(--amber)',
+  },
+  paid: {
+    label: 'Paid - order it',
+    fg: 'var(--blue-text)',
+    bg: 'var(--blue-lt)',
+    edge: 'var(--blue)',
+  },
+  ordered: {
+    label: 'Ordered from LEBYCLE',
+    fg: 'var(--purple-text)',
+    bg: 'var(--purple-lt)',
+    edge: 'var(--purple)',
+  },
+  packed: {
+    label: 'Ordered from LEBYCLE',
+    fg: 'var(--purple-text)',
+    bg: 'var(--purple-lt)',
+    edge: 'var(--purple)',
+  },
+  sent: {
+    label: 'On its way',
+    fg: 'var(--green-text)',
+    bg: 'var(--green-lt)',
+    edge: 'var(--green)',
+  },
+  delivered: { label: 'Delivered', fg: 'var(--gray)', bg: 'var(--border-lt)', edge: 'var(--gray)' },
+  cancelled: {
+    label: 'Cancelled',
+    fg: 'var(--gray)',
+    bg: 'var(--border-lt)',
+    edge: 'var(--border)',
+  },
+  refunded: { label: 'Refunded', fg: 'var(--red-text)', bg: 'var(--red-lt)', edge: 'var(--red)' },
+};
+const SHOP_FILTERS = [
+  ['todo', 'To do', (o) => ['paid', 'ordered', 'packed', 'sent'].includes(o.status)],
+  ['pending', 'Not paid', (o) => o.status === 'pending'],
+  ['paid', 'Paid', (o) => o.status === 'paid'],
+  ['ordered', 'Ordered', (o) => o.status === 'ordered' || o.status === 'packed'],
+  ['sent', 'On its way', (o) => o.status === 'sent'],
+  ['delivered', 'Delivered', (o) => o.status === 'delivered'],
+  ['closed', 'Cancelled / refunded', (o) => o.status === 'cancelled' || o.status === 'refunded'],
+  ['all', 'All', () => true],
+];
+let _shopOrders = [];
+let _shopMode = 'test';
+let _shopFilter = 'todo';
+const _shopOpen = new Set();
+let _shopWired = false;
+
+const soMoney = (n) =>
+  n === null || n === undefined || !Number.isFinite(Number(n)) ? '—' : '$' + Number(n).toFixed(2);
+const soWhen = (iso) =>
+  iso
+    ? new Date(iso).toLocaleString('en-AU', {
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : '';
+
+async function shopAdmin(body) {
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) throw new Error('Admin session expired - sign in again.');
+  const r = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'admin-shop', access_token: session.access_token, ...body }),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'The server answered ' + r.status);
+  return data;
+}
+
+async function loadShopOrders() {
+  const list = document.getElementById('shop-orders-list');
+  if (!list) return;
+  wireShopOrders();
+  list.innerHTML =
+    '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading the orders...</div>';
+  try {
+    const data = await shopAdmin({ action: 'list' });
+    _shopOrders = data.orders || [];
+    _shopMode = data.shopMode || 'test';
+    renderShopOrders();
+  } catch (e) {
+    list.innerHTML = `<div style="background:var(--red-lt);color:var(--red-text);border-radius:12px;padding:14px 16px;font-size:13px">${esc(e.message)}</div>`;
+  }
+}
+
+function renderShopOrders() {
+  const bar = document.getElementById('shop-orders-filters');
+  const list = document.getElementById('shop-orders-list');
+  if (!bar || !list) return;
+  bar.innerHTML = SHOP_FILTERS.map(([key, label, keep]) => {
+    const n = _shopOrders.filter(keep).length;
+    const on = key === _shopFilter;
+    return `<button type="button" data-so-filter="${key}" aria-pressed="${on}" style="min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid ${on ? 'var(--blue)' : 'var(--border)'};background:${on ? 'var(--blue-lt)' : 'var(--white)'};color:${on ? 'var(--blue-text)' : 'var(--navy)'};font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer">${label} <span style="color:var(--mgray);font-weight:500">${n}</span></button>`;
+  }).join('');
+
+  const banners = [];
+  if (_shopOrders.length && !_shopOrders[0].migrated) {
+    banners.push(
+      '<div style="background:var(--amber-lt);color:var(--amber-ink);border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.5"><strong>One SQL step is missing.</strong> Run <code>scripts/shop-orders-fulfillment.sql</code> in Supabase &gt; SQL Editor. Until then the orders show here but cannot be moved to Ordered, On its way or Delivered.</div>'
+    );
+  }
+  if (_shopMode === 'test') {
+    banners.push(
+      '<div style="background:var(--off);border:1px dashed var(--border);color:var(--gray);border-radius:12px;padding:12px 16px;font-size:13px">The shop is on Stripe <strong>test</strong> keys: these are practice orders, no real money moved.</div>'
+    );
+  }
+
+  const keep = (SHOP_FILTERS.find(([k]) => k === _shopFilter) || SHOP_FILTERS[0])[2];
+  const shown = _shopOrders.filter(keep);
+  if (!shown.length) {
+    list.innerHTML =
+      banners.join('') +
+      `<div style="text-align:center;padding:48px;color:var(--mgray)"><div style="font-size:36px;margin-bottom:8px">📦</div><div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:4px">${_shopOrders.length ? 'Nothing here' : 'No shop orders yet'}</div><div style="font-size:13px">${_shopOrders.length ? 'Try another filter.' : 'Orders from the parts shop will appear here.'}</div></div>`;
+    return;
+  }
+  list.innerHTML = banners.join('') + shown.map(shopOrderCard).join('');
+}
+
+function shopOrderCard(o) {
+  const st = SHOP_STATUS[o.status] || SHOP_STATUS.pending;
+  const open = _shopOpen.has(o.id);
+  const n = o.items.reduce((s, i) => s + i.qty, 0);
+  return `
+    <div data-so-card="${esc(o.id)}" style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${st.edge};border-radius:12px">
+      <button type="button" data-so-toggle="${esc(o.id)}" aria-expanded="${open}" style="all:unset;box-sizing:border-box;display:flex;width:100%;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;min-height:44px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">#${esc(o.ref)} · ${esc(o.client.name || o.client.email || 'No name')}</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${soWhen(o.createdAt)} · ${n} item${n === 1 ? '' : 's'} · ${soMoney(o.total)}${o.mode === 'test' ? ' · <span style="font-weight:700">TEST</span>' : ''}</div>
+        </div>
+        <span style="background:${st.bg};color:${st.fg};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${st.label}</span>
+        <span aria-hidden="true" style="color:var(--mgray);font-size:18px;transform:rotate(${open ? 90 : 0}deg);transition:transform .15s">›</span>
+      </button>
+      ${open ? shopOrderDetail(o) : ''}
+    </div>`;
+}
+
+function shopOrderDetail(o) {
+  const lines = o.items
+    .map((i) => {
+      const cost = i.unitCost === null ? null : i.unitCost * i.qty;
+      const margin = cost === null ? null : i.lineTotal - cost;
+      return `<tr>
+        <td style="padding:7px 8px 7px 0;font-size:13px;color:var(--navy)">${i.qty} × ${esc(i.name)}${i.variant ? `<div style="font-size:12px;color:var(--mgray)">${esc(i.variant)}</div>` : ''}</td>
+        <td style="padding:7px 8px;font-size:12px;color:var(--mgray);font-family:ui-monospace,Menlo,monospace">${esc(i.sku)}</td>
+        <td style="padding:7px 8px;font-size:13px;color:var(--navy);text-align:right">${soMoney(i.lineTotal)}</td>
+        <td style="padding:7px 8px;font-size:13px;color:var(--mgray);text-align:right">${soMoney(cost)}</td>
+        <td style="padding:7px 0 7px 8px;font-size:13px;font-weight:600;color:var(--navy);text-align:right">${soMoney(margin)}</td>
+      </tr>`;
+    })
+    .join('');
+  const costs = o.items.map((i) => (i.unitCost === null ? null : i.unitCost * i.qty));
+  const totalCost = costs.every((c) => c !== null) ? costs.reduce((s, c) => s + c, 0) : null;
+  const margin = totalCost === null ? null : o.total - totalCost;
+  const pct = margin === null || !o.total ? '' : ' (' + Math.round((margin / o.total) * 100) + '%)';
+
+  const step = (label, when, extra) =>
+    when
+      ? `<div style="display:flex;gap:10px;font-size:13px;padding:3px 0"><span style="color:var(--mgray);min-width:150px">${label}</span><span style="color:var(--navy)">${soWhen(when)}${extra ? ' · ' + extra : ''}</span></div>`
+      : '';
+  const track = o.trackingNumber
+    ? `${o.carrier ? esc(o.carrier) + ' ' : ''}<strong>${esc(o.trackingNumber)}</strong>${o.trackingUrl ? ` · <a href="${esc(o.trackingUrl)}" target="_blank" rel="noopener" style="color:var(--blue-text)">track</a>` : ''}`
+    : '';
+
+  const field = (id, label, ph) =>
+    `<label style="display:block;flex:1;min-width:160px"><span style="display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">${label}</span><input class="inp" data-so-field="${id}" placeholder="${ph}" style="width:100%;min-height:44px;padding:8px 12px;font-size:14px"></label>`;
+  const btn = (act, label, kind) => {
+    const styles = {
+      primary: 'background:var(--blue);color:#fff;border:none',
+      plain: 'background:var(--white);color:var(--navy);border:1.5px solid var(--border)',
+      danger: 'background:var(--white);color:var(--red-text);border:1.5px solid var(--red-lt)',
+    };
+    return `<button type="button" data-so-act="${act}" data-so-id="${esc(o.id)}" style="${styles[kind]};border-radius:8px;padding:0 16px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">${label}</button>`;
+  };
+  const refundable = ['paid', 'ordered', 'packed', 'sent', 'delivered'].includes(o.status);
+  let next = '';
+  if (o.status === 'pending') {
+    next = `<div style="font-size:13px;color:var(--gray);margin-bottom:10px">The client started paying and the page never confirmed it. Stripe has the answer.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${btn('check', 'Check with Stripe', 'primary')}${btn('cancel', 'Cancel order', 'plain')}</div>`;
+  } else if (o.status === 'paid') {
+    next = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">${field('supplierRef', "LEBYCLE's order number", 'e.g. LB-20481')}${btn('ordered', 'Mark as ordered', 'primary')}</div>`;
+  } else if (o.status === 'ordered' || o.status === 'packed') {
+    next = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">${field('carrier', 'Carrier', 'e.g. AusPost')}${field('trackingNumber', 'Tracking number', 'Required')}${field('trackingUrl', 'Tracking link (optional)', 'https://...')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${btn('sent', 'Mark as sent - emails the client', 'primary')}</div>`;
+  } else if (o.status === 'sent') {
+    next = `<div style="display:flex;gap:8px;flex-wrap:wrap">${btn('delivered', 'Mark as delivered', 'primary')}</div>`;
+  }
+
+  return `
+    <div style="border-top:1px solid var(--border-lt);padding:14px 16px 16px">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;min-width:520px">
+          <thead><tr>
+            <th style="text-align:left;font-size:11px;color:var(--mgray);font-weight:600;padding:0 8px 6px 0;text-transform:uppercase;letter-spacing:0.06em">Item</th>
+            <th style="text-align:left;font-size:11px;color:var(--mgray);font-weight:600;padding:0 8px 6px;text-transform:uppercase;letter-spacing:0.06em">SKU</th>
+            <th style="text-align:right;font-size:11px;color:var(--mgray);font-weight:600;padding:0 8px 6px;text-transform:uppercase;letter-spacing:0.06em">Charged</th>
+            <th style="text-align:right;font-size:11px;color:var(--mgray);font-weight:600;padding:0 8px 6px;text-transform:uppercase;letter-spacing:0.06em">Your cost</th>
+            <th style="text-align:right;font-size:11px;color:var(--mgray);font-weight:600;padding:0 0 6px 8px;text-transform:uppercase;letter-spacing:0.06em">Margin</th>
+          </tr></thead>
+          <tbody>${lines}</tbody>
+          <tfoot><tr>
+            <td colspan="2" style="padding:9px 8px 0 0;font-size:13px;font-weight:700;color:var(--navy);border-top:1px solid var(--border)">Total${o.shipping ? ' (incl. ' + soMoney(o.shipping) + ' shipping)' : ''}</td>
+            <td style="padding:9px 8px 0;font-size:14px;font-weight:800;color:var(--navy);text-align:right;border-top:1px solid var(--border)">${soMoney(o.total)}</td>
+            <td style="padding:9px 8px 0;font-size:13px;color:var(--mgray);text-align:right;border-top:1px solid var(--border)">${soMoney(totalCost)}</td>
+            <td style="padding:9px 0 0 8px;font-size:14px;font-weight:800;color:var(--green-text);text-align:right;border-top:1px solid var(--border)">${soMoney(margin)}${pct}</td>
+          </tr></tfoot>
+        </table>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:16px">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Ship to</div>
+          <div style="font-size:14px;font-weight:600;color:var(--navy)">${esc(o.client.name || '—')}</div>
+          <div style="font-size:13px;color:var(--gray);line-height:1.6">${esc(o.address || 'No address')}<br>
+            ${o.client.phone ? `<a href="tel:${esc(o.client.phone)}" style="color:var(--blue-text)">${esc(o.client.phone)}</a> · ` : ''}<a href="mailto:${esc(o.client.email)}" style="color:var(--blue-text)">${esc(o.client.email)}</a></div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">History</div>
+          ${step('Created', o.createdAt)}${step('Paid', o.paidAt)}${step('Ordered from LEBYCLE', o.orderedAt, o.supplierRef ? 'their #' + esc(o.supplierRef) : '')}${step('Sent', o.sentAt, track)}${step('Delivered', o.deliveredAt)}${step('Refunded', o.refundedAt)}
+        </div>
+      </div>
+
+      ${next ? `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-lt)">${next}</div>` : ''}
+
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-lt);display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <label style="display:block;flex:1;min-width:220px"><span style="display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Notes</span>
+          <textarea class="inp" data-so-field="notes" rows="2" style="width:100%;padding:8px 12px;font-size:13px;resize:vertical">${esc(o.notes || '')}</textarea></label>
+        ${btn('note', 'Save note', 'plain')}
+        ${refundable ? btn('refund', 'Refund ' + soMoney(o.total), 'danger') : ''}
+      </div>
+    </div>`;
+}
+
+const SHOP_DONE = {
+  check: 'Checked with Stripe',
+  cancel: 'Order cancelled',
+  ordered: 'Marked as ordered',
+  sent: 'Marked as sent - the client gets the tracking number',
+  delivered: 'Marked as delivered',
+  refund: 'Refunded',
+  note: 'Note saved',
+};
+
+async function runShopAction(btn) {
+  const id = btn.dataset.soId;
+  const action = btn.dataset.soAct;
+  const card = btn.closest('[data-so-card]');
+  const val = (f) => card?.querySelector(`[data-so-field="${f}"]`)?.value.trim() || '';
+  const order = _shopOrders.find((o) => o.id === id);
+  if (
+    action === 'refund' &&
+    !confirm(
+      `Refund ${soMoney(order?.total)} to the client's card for order #${order?.ref}?\n\nStripe sends the money back. This cannot be undone.`
+    )
+  )
+    return;
+  if (action === 'cancel' && !confirm(`Cancel unpaid order #${order?.ref}? Nothing was charged.`))
+    return;
+  const body = { action, orderId: id };
+  if (action === 'ordered') body.supplierRef = val('supplierRef');
+  if (action === 'sent')
+    Object.assign(body, {
+      carrier: val('carrier'),
+      trackingNumber: val('trackingNumber'),
+      trackingUrl: val('trackingUrl'),
+    });
+  if (action === 'note') body.notes = val('notes');
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  btn.textContent = 'Working...';
+  try {
+    const r = await shopAdmin(body);
+    let msg = SHOP_DONE[action] || 'Done';
+    if (action === 'check')
+      msg =
+        r.status === 'paid'
+          ? 'Stripe says PAID - the client and you were notified'
+          : 'Stripe says: ' + r.status;
+    if (r.emailed === false) msg += ' (the email to the client failed - see the note)';
+    showToast(msg);
+    await loadShopOrders();
+  } catch (e) {
+    showToast(e.message);
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.textContent = label;
+  }
+}
+
+function wireShopOrders() {
+  if (_shopWired) return;
+  _shopWired = true;
+  document.getElementById('shop-orders-filters')?.addEventListener('click', (e) => {
+    const f = e.target.closest('[data-so-filter]');
+    if (!f) return;
+    _shopFilter = f.dataset.soFilter;
+    renderShopOrders();
+  });
+  document.getElementById('shop-orders-list')?.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-so-toggle]');
+    if (t) {
+      const id = t.dataset.soToggle;
+      if (_shopOpen.has(id)) _shopOpen.delete(id);
+      else _shopOpen.add(id);
+      renderShopOrders();
+      return;
+    }
+    const a = e.target.closest('[data-so-act]');
+    if (a && !a.disabled) runShopAction(a);
   });
 }
 

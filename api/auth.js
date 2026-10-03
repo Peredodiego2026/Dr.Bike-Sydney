@@ -6094,6 +6094,7 @@ async function readPostHog(days) {
 }
 
 import { handleShop } from './_shop.js';
+import { handleShopAdmin } from './_shop-admin.js';
 import { withSentry, captureMessage } from './_sentry.js';
 export default withSentry(handler, 'auth');
 async function handler(req, res) {
@@ -6152,6 +6153,8 @@ async function handler(req, res) {
           role === 'photo-sign' ||
           // Admin > Photos re-reads the list after every select-and-act.
           role.startsWith('admin-photos-') ||
+          // Admin > Shop Orders re-reads the list after every step it moves.
+          role === 'admin-shop' ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -6233,5 +6236,15 @@ async function handler(req, res) {
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);
+  // Admin > Shop Orders. The admin check happens HERE, before the module is
+  // reached: api/_shop-admin.js never decides who gets in.
+  if (role === 'admin-shop') {
+    const auth = await verifyAdminSession(
+      req.body?.access_token,
+      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
+    );
+    if (auth.error) return res.status(auth.status).json({ error: auth.error });
+    return handleShopAdmin(req, res, auth.sb);
+  }
   return handleAdmin(req, res);
 }

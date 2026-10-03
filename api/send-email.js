@@ -20,6 +20,7 @@ const MUTED = '#475569';
 const RULE = '#E2E8F0';
 const PAPER = '#F8FAFC';
 const BLUE = '#2563EB';
+const WHITE = '#fff';
 async function handler(req, res) {
   if (await guard(req, res, { rateMax: 5, rateWindow: 60000 })) return;
   if (verifyInternalAuth(req, res)) return; // Solo nuestra app puede llamar este endpoint // 20/min messaging
@@ -93,6 +94,14 @@ async function handler(req, res) {
     qty: Math.max(1, Math.floor(Number(i?.qty)) || 1),
     lineTotal: Number(i?.line_total) || 0,
   }));
+  // Envio y reembolso de un pedido de la tienda (api/_shop-admin.js).
+  const shopTracking = sanitize(String(req.body.trackingNumber || '')).slice(0, 80);
+  const shopCarrier = sanitize(String(req.body.carrier || '')).slice(0, 60);
+  // Termina como el href de un boton: solo un https sin comillas ni espacios,
+  // y el & escrito como en HTML.
+  const shopTrackUrl = /^https:\/\/[^\s"'<>]+$/.test(String(req.body.trackingUrl || ''))
+    ? String(req.body.trackingUrl).replace(/&/g, '&amp;')
+    : '';
   const gst = Math.round((price || 0) / 11);
   const net = (price || 0) - gst;
   // Present only on the booking confirmation. A total with no mention of what
@@ -102,11 +111,11 @@ async function handler(req, res) {
   const year = new Date().getFullYear();
 
   const header = (color, emoji, title) => `
-    <div style="font-family:Inter,Arial,sans-serif;max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+    <div style="font-family:Inter,Arial,sans-serif;max-width:580px;margin:0 auto;background:${WHITE};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
     <div style="background:${color};padding:32px 28px;text-align:center">
       <div style="font-size:38px;margin-bottom:8px">${emoji}</div>
       <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Dr. Bike Sydney</div>
-      <div style="font-size:22px;font-weight:800;color:#fff">${title}</div>
+      <div style="font-size:22px;font-weight:800;color:${WHITE}">${title}</div>
     </div>`;
 
   const footer = () => `
@@ -460,6 +469,38 @@ async function handler(req, res) {
                 .join('')}
               ${shopShipping > 0 ? `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${MUTED}">Shipping</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right">$${shopShipping.toFixed(2)}</td></tr>` : ''}
               <tr><td style="padding:10px 0 0;font-weight:700;color:${INK};font-size:14px;border-top:2px solid ${RULE}">Total paid</td><td style="padding:10px 0 0;font-weight:800;color:${BLUE};font-size:18px;text-align:right;border-top:2px solid ${RULE}">$${shopTotal.toFixed(2)} AUD</td></tr>
+            </table>
+          </div>
+          <p style="font-size:12px;color:${MUTED};text-align:center;margin:0">Questions? Call us on 0433 963 250.</p>
+        </div>${footer()}`,
+    },
+    shop_shipped: {
+      subject: `🚚 Your order is on its way — #${orderRef}`,
+      html: `${header(BLUE, '🚚', 'Your order is on its way!')}
+        <div style="padding:32px 28px">
+          <p style="color:${MUTED};font-size:14px;margin:0 0 20px;line-height:1.6">Your parts are on their way, <strong style="color:${INK}">${name}</strong>. Use the tracking number below to follow the parcel.</p>
+          ${shopTest ? `<p style="background:${PAPER};border:1px dashed ${RULE};border-radius:10px;padding:10px 14px;color:${MUTED};font-size:12px;margin:0 0 20px">Test order &mdash; no money was taken.</p>` : ''}
+          <div style="background:${PAPER};border-radius:12px;padding:20px;margin-bottom:24px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:0 0 8px;color:${MUTED};font-size:13px">Your order</td><td style="padding:0 0 8px;font-weight:600;color:${INK};font-size:13px;text-align:right">#${orderRef}</td></tr>
+              ${shopCarrier ? `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${MUTED}">Carrier</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right">${shopCarrier}</td></tr>` : ''}
+              <tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${MUTED}">Tracking number</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:700;color:${INK};text-align:right">${shopTracking}</td></tr>
+            </table>
+          </div>
+          ${shopTrackUrl ? `<a href="${shopTrackUrl}" style="display:block;background:${BLUE};color:${WHITE};text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:20px">Track my parcel &rarr;</a>` : ''}
+          <p style="font-size:12px;color:${MUTED};text-align:center;margin:0">Questions? Call us on 0433 963 250.</p>
+        </div>${footer()}`,
+    },
+    shop_refunded: {
+      subject: `↩️ Refund for order #${orderRef}`,
+      html: `${header(INK, '↩️', 'Your refund is on its way')}
+        <div style="padding:32px 28px">
+          <p style="color:${MUTED};font-size:14px;margin:0 0 20px;line-height:1.6">We refunded your order, <strong style="color:${INK}">${name}</strong>. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.</p>
+          ${shopTest ? `<p style="background:${PAPER};border:1px dashed ${RULE};border-radius:10px;padding:10px 14px;color:${MUTED};font-size:12px;margin:0 0 20px">Test order &mdash; no money was taken.</p>` : ''}
+          <div style="background:${PAPER};border-radius:12px;padding:20px;margin-bottom:24px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:0 0 8px;color:${MUTED};font-size:13px">Your order</td><td style="padding:0 0 8px;font-weight:600;color:${INK};font-size:13px;text-align:right">#${orderRef}</td></tr>
+              <tr><td style="padding:10px 0 0;font-weight:700;color:${INK};font-size:14px;border-top:2px solid ${RULE}">Refunded</td><td style="padding:10px 0 0;font-weight:800;color:${BLUE};font-size:18px;text-align:right;border-top:2px solid ${RULE}">$${shopTotal.toFixed(2)} AUD</td></tr>
             </table>
           </div>
           <p style="font-size:12px;color:${MUTED};text-align:center;margin:0">Questions? Call us on 0433 963 250.</p>

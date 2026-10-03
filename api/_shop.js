@@ -265,6 +265,9 @@ async function handleCheckout(req, res, sb, user) {
       payment_method_types: ['card'],
       metadata: {
         kind: 'shop_order',
+        // El idioma en que compro: Admin lo lee de aca para mandarle el email
+        // de 'enviado' o de reembolso en su idioma.
+        lang: str(req.body?.lang, 8),
         order_id: saved.id,
         email,
         items: items.map((i) => i.sku + ' x' + i.qty).join(', ').slice(0, 480),
@@ -304,61 +307,74 @@ async function handleConfirm(req, res, sb, user) {
   const orderId = str(req.body?.orderId, 64);
   if (!orderId) return res.status(400).json({ error: 'Which order?' });
 
-  const { data: order, error } = await sb
-    .from('shop_orders')
-    .select(
-      'id, client_id, client_email, client_name, client_phone, ship_address, ship_suburb, ship_postcode, payment_intent_id, status, shipping, total, mode'
-    )
-    .eq('id', orderId)
-    .single();
+  const { data: order, error } = await sb.from('shop_orders').select(ORDER_FOR_SETTLE).eq('id', orderId).single();
   if (error || !order) return res.status(404).json({ error: 'Not found' });
   // Un pedido es de quien lo hizo. Sin esto, cambiar el id en la llamada
   // mostraria el pedido de otra persona.
   if (order.client_id && order.client_id !== user.id) return res.status(404).json({ error: 'Not found' });
+  const out = await settleOrder(sb, order, str(req.body?.lang, 8));
+  return res.status(out.code).json(out.body);
+}
+
+// Las columnas que settleOrder() necesita. Admin lee el pedido con estas mismas.
+export const ORDER_FOR_SETTLE =
+  'id, client_id, client_email, client_name, client_phone, ship_address, ship_suburb, ship_postcode, payment_intent_id, status, shipping, total, mode';
+
+// Lo que decide si un pedido quedo pagado, en un solo lugar. Lo llaman el
+// navegador del cliente (action=confirm) y Admin > Shop Orders ("Check with
+// Stripe", para el pago que el navegador no llego a confirmar). Devuelve
+// { code, body } en vez de contestar, para que cada uno conteste a su manera.
+export async function settleOrder(sb, order, lang) {
   const ref = orderRef(order.id);
-  // Pagado, enviado, cancelado: ya no es cosa de este endpoint. Se contesta el
+  // Pagado, enviado, cancelado: ya no es cosa de esta funcion. Se contesta el
   // estado y nada mas - sobre todo, no se vuelve a avisar.
-  if (order.status !== 'pending') return res.status(200).json({ status: order.status, orderId: order.id, ref });
-  if (!order.payment_intent_id || !SHOP_STRIPE_KEY) return res.status(409).json({ error: 'That order has no payment yet.' });
+  if (order.status !== 'pending') return { code: 200, body: { status: order.status, orderId: order.id, ref } };
+  if (!order.payment_intent_id || !SHOP_STRIPE_KEY) return { code: 409, body: { error: 'That order has no payment yet.' } };
 
   let intent;
   try {
     const stripe = new Stripe(SHOP_STRIPE_KEY);
     intent = await stripe.paymentIntents.retrieve(order.payment_intent_id);
   } catch (e) {
-    return res.status(502).json({ error: 'Could not check the payment: ' + e.message });
+    return { code: 502, body: { error: 'Could not check the payment: ' + e.message } };
   }
 
   if (intent.status !== 'succeeded') {
-    return res.status(200).json({ status: intent.status, orderId: order.id });
+    return { code: 200, body: { status: intent.status, orderId: order.id, ref } };
   }
   // El importe tambien se comprueba: un cobro por menos de lo que el pedido
   // dice no lo deja pagado.
   if (Math.round(Number(order.total) * 100) !== intent.amount_received) {
     await sb.from('shop_orders').update({ notes: 'Importe cobrado distinto al del pedido' }).eq('id', order.id);
-    return res.status(409).json({ error: 'The amount paid does not match the order.' });
+    return { code: 409, body: { error: 'The amount paid does not match the order.' } };
   }
 
   // pending -> paid en UNA escritura condicionada. Dos llamadas a la vez (un
-  // doble toque, el reintento del navegador) pasan las dos por el chequeo de
-  // arriba; solo una encuentra la fila todavia en 'pending', y solo esa avisa.
-  // Sin la condicion, Diego recibiria un WhatsApp por cada llamada y el
-  // cliente un email por cada una.
+  // doble toque, el reintento del navegador, Admin revisando al mismo tiempo)
+  // pasan las dos por el chequeo de arriba; solo una encuentra la fila todavia
+  // en 'pending', y solo esa avisa. Sin la condicion, Diego recibiria un
+  // WhatsApp por cada llamada y el cliente un email por cada una.
   const { data: moved, error: mErr } = await sb
     .from('shop_orders')
     .update({ status: 'paid', paid_at: new Date().toISOString() })
     .eq('id', order.id)
     .eq('status', 'pending')
     .select('id');
-  if (mErr) return res.status(500).json({ error: 'Could not save the payment: ' + mErr.message });
-  if (moved?.length) await notifyPaid(sb, order, ref, str(req.body?.lang, 8));
-  return res.status(200).json({ status: 'paid', orderId: order.id, ref });
+  if (mErr) return { code: 500, body: { error: 'Could not save the payment: ' + mErr.message } };
+  if (moved?.length) await notifyPaid(sb, order, ref, lang);
+  return { code: 200, body: { status: 'paid', orderId: order.id, ref } };
 }
+
+// La cuenta de Stripe de la tienda (no la del negocio). null si no esta puesta.
+export function shopStripe() {
+  return SHOP_STRIPE_KEY ? new Stripe(SHOP_STRIPE_KEY) : null;
+}
+export { SHOP_MODE };
 
 // Lo que el cliente y Diego ven como numero de pedido. El id completo es un
 // uuid de 36 caracteres; 8 alcanzan para encontrarlo en el panel y dictarlo
 // por telefono. Es la misma forma que ya tienen las reservas.
-function orderRef(id) {
+export function orderRef(id) {
   return String(id || '')
     .replace(/-/g, '')
     .slice(0, 8)

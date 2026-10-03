@@ -178,6 +178,18 @@ const dict = {
     'Your order': 'Tu pedido',
     '>Shipping<': '>Envío<',
     'Total paid': 'Total pagado',
+
+    // ── shop_shipped / shop_refunded (api/_shop-admin.js) ─────────────────────
+    'Your order is on its way!': '¡Tu pedido va en camino!',
+    'Your parts are on their way,': 'Tus repuestos van en camino,',
+    '. Use the tracking number below to follow the parcel.': '. Usa el número de seguimiento de abajo para seguir el paquete.',
+    '>Carrier<': '>Transportista<',
+    'Tracking number': 'Número de seguimiento',
+    'Track my parcel &rarr;': 'Seguir mi paquete &rarr;',
+    'Your refund is on its way': 'Tu reembolso va en camino',
+    'We refunded your order,': 'Te reembolsamos el pedido,',
+    '. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.': '. El dinero vuelve a la tarjeta con la que pagaste; los bancos suelen tardar de 5 a 10 días hábiles en mostrarlo.',
+    '>Refunded<': '>Reembolsado<',
   },
 
   zh: {
@@ -312,6 +324,17 @@ const dict = {
     'Your order': '您的订单',
     '>Shipping<': '>运费<',
     'Total paid': '已付总额',
+
+    'Your order is on its way!': '您的订单已发货！',
+    'Your parts are on their way,': '您的配件正在路上，',
+    '. Use the tracking number below to follow the parcel.': '。请使用下方的物流单号跟踪包裹。',
+    '>Carrier<': '>承运商<',
+    'Tracking number': '物流单号',
+    'Track my parcel &rarr;': '跟踪我的包裹 &rarr;',
+    'Your refund is on its way': '您的退款正在处理',
+    'We refunded your order,': '我们已为您的订单退款，',
+    '. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.': '。款项将退回您付款时使用的银行卡；银行通常需要 5 到 10 个工作日才会显示。',
+    '>Refunded<': '>已退款<',
   },
 };
 
@@ -345,6 +368,8 @@ const subjectDict = {
     '🔐 Action required — verify your Dr. Bike payment':
       '🔐 Acción requerida — verifica tu pago de Dr. Bike',
     '📦 Order received —': '📦 Pedido recibido —',
+    '🚚 Your order is on its way —': '🚚 Tu pedido va en camino —',
+    '↩️ Refund for order': '↩️ Reembolso del pedido',
   },
   zh: {
     '✅ Booking confirmed —': '✅ 预订已确认 —',
@@ -368,6 +393,8 @@ const subjectDict = {
     '! A gift from Dr. Bike Sydney': '！来自 Dr. Bike Sydney 的礼物',
     '🔐 Action required — verify your Dr. Bike payment': '🔐 需要您操作 — 请验证 Dr. Bike 付款',
     '📦 Order received —': '📦 订单已收到 —',
+    '🚚 Your order is on its way —': '🚚 您的订单已发货 —',
+    '↩️ Refund for order': '↩️ 订单退款',
   },
 };
 
