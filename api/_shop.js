@@ -267,7 +267,7 @@ async function handleCheckout(req, res, sb, user) {
         kind: 'shop_order',
         // El idioma en que compro: Admin lo lee de aca para mandarle el email
         // de 'enviado' o de reembolso en su idioma.
-        lang: str(req.body?.lang, 8),
+        ...(str(req.body?.lang, 8) ? { lang: str(req.body?.lang, 8) } : {}),
         order_id: saved.id,
         email,
         items: items.map((i) => i.sku + ' x' + i.qty).join(', ').slice(0, 480),
@@ -361,7 +361,9 @@ export async function settleOrder(sb, order, lang) {
     .eq('status', 'pending')
     .select('id');
   if (mErr) return { code: 500, body: { error: 'Could not save the payment: ' + mErr.message } };
-  if (moved?.length) await notifyPaid(sb, order, ref, lang);
+  // Admin ("Check with Stripe") no sabe en que idioma compro el cliente: lo
+  // dice la metadata del cobro, que se escribio en el checkout.
+  if (moved?.length) await notifyPaid(sb, order, ref, lang || intent.metadata?.lang || '');
   return { code: 200, body: { status: 'paid', orderId: order.id, ref } };
 }
 
