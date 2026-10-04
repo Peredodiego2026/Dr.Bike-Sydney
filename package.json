@@ -7,7 +7,7 @@
     "@growthbook/growthbook": "^1.7.0",
     "@sentry/node": "^10.75.0",
     "@supabase/supabase-js": "^2.117.2",
-    "pdfkit": "^0.19.1",
+    "pdfkit": "^0.20.2",
     "resend": "^6.30.0",
     "sharp": "^0.35.4",
     "stripe": "^22.6.2",
