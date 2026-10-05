@@ -38,6 +38,9 @@ import {
   priceCart,
   goneLabel,
   maxQty,
+  shippingFor,
+  deliveryHtml,
+  shippingNoteHtml,
 } from './shop.js';
 import { startCheckout, confirmOrder, mountCard } from './shop-pay.js';
 
@@ -426,7 +429,7 @@ function viewProduct(params) {
         <div class="sd-boxes">
           <div class="sd-box">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="6" width="13" height="10.5" rx="1.6"/><path d="M14.5 10h3.4l3.1 3.1v3.4h-6.5z"/><circle cx="6" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg>
-            <div><div class="sd-box__title">Delivered across Australia</div><div class="sd-box__sub">[CONFIRMAR PLAZO DE ENTREGA]</div></div>
+            <div><div class="sd-box__title">Delivered across Australia</div><div class="sd-box__sub">${deliveryHtml(catalog)}</div></div>
           </div>
           <div class="sd-box">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5z"/></svg>
@@ -483,6 +486,7 @@ function viewCheckout() {
   if (!items.length) {
     return state('&#128722;', 'Your cart is empty', 'Parts you add show up here.', `<a class="sd-btn sd-btn--primary" href="#all">Go to the shop</a>`);
   }
+  const ship = shippingFor(catalog, subtotal);
   const field = (id, label, type, ac) =>
     `<label class="sd-field" for="${id}"><span>${label}</span><input id="${id}" type="${type}" autocomplete="${ac}" value="${esc(draft[id] || '')}"></label>`;
   return `<div class="sd-wrap">
@@ -500,7 +504,7 @@ function viewCheckout() {
           ${field('co-address', 'Street address', 'text', 'street-address')}
           <div class="sd-co__row">${field('co-suburb', 'Suburb', 'text', 'address-level2')}${field('co-postcode', 'Postcode', 'text', 'postal-code')}</div>
         </fieldset>
-        <button type="submit" class="sd-addbig" id="sd-co-next" style="width:100%;margin-top:24px"${hasGone ? ' disabled' : ''}><span>Continue to payment</span><span> &middot; ${money(subtotal)}</span></button>
+        <button type="submit" class="sd-addbig" id="sd-co-next" style="width:100%;margin-top:24px"${hasGone ? ' disabled' : ''}><span>Continue to payment</span><span> &middot; ${money(subtotal + ship)}</span></button>
         <section class="sd-pay" id="sd-pay" aria-labelledby="sd-pay-title" hidden>
           <div class="sd-pay__head">
             <h2 class="sd-side__group" id="sd-pay-title">Card</h2>
@@ -521,8 +525,15 @@ function viewCheckout() {
           )
           .join('')}
         <div class="sd-pd__rule" aria-hidden="true" style="margin:14px 0"></div>
-        <div class="sd-total"><span class="sd-total__label">Subtotal</span><span class="sd-total__value">${money(subtotal)}</span></div>
-        <div class="sd-note">Delivery is worked out at checkout. [CONFIRMAR PLAZO DE ENTREGA]</div>
+        ${
+          catalog.shipping
+            ? `<div class="sd-co__item"><span>Subtotal</span><b>${money(subtotal)}</b></div>
+               <div class="sd-co__item"><span>Shipping</span><b>${ship ? money(ship) : '<span>Free</span>'}</b></div>
+               <div class="sd-total"><span class="sd-total__label">Total</span><span class="sd-total__value">${money(subtotal + ship)}</span></div>
+               <div class="sd-note">${deliveryHtml(catalog)}</div>`
+            : `<div class="sd-total"><span class="sd-total__label">Subtotal</span><span class="sd-total__value">${money(subtotal)}</span></div>
+               <div class="sd-note">Delivery is worked out at checkout. [CONFIRMAR PLAZO DE ENTREGA]</div>`
+        }
       </aside>
     </div>
   </div>`;
@@ -556,13 +567,14 @@ async function placeOrder(form) {
     postcode: val('co-postcode'),
   };
   const { subtotal } = priceCart(catalog, getCart());
+  const expected = subtotal + shippingFor(catalog, subtotal);
   btn.disabled = true;
   coSay('', 'Preparing the payment...');
   try {
     const data = await startCheckout(await getToken(), getCart(), details, getLang());
     // El servidor manda lo que de verdad va a cobrar. Si no coincide con lo
     // que se mostraba, se dice antes: no se cobra callando la diferencia.
-    if (Math.abs(Number(data.total) - subtotal) > 0.009) {
+    if (Math.abs(Number(data.total) - expected) > 0.009) {
       coSay('sd-msg--warn', 'The price changed to ' + money(data.total) + ' while you were here. Check the cart before going on.');
       btn.disabled = false;
       return;
@@ -705,7 +717,7 @@ function paintCart() {
       )
       .join('');
     foot.innerHTML = `<div class="sd-total"><span class="sd-total__label">Subtotal</span><span class="sd-total__value">${money(subtotal)}</span></div>
-      <div class="sd-note">Delivery is worked out at checkout. [CONFIRMAR PLAZO DE ENTREGA]</div>
+      <div class="sd-note">${shippingNoteHtml(catalog, subtotal)}</div>
       ${hasGone ? `<div class="sd-note" style="color:var(--red)">One of these cannot be bought right now. Remove it or lower the quantity to keep going.</div>` : ''}
       <a class="sd-btn sd-btn--primary sd-btn--block" href="#checkout" data-close-cart style="margin-top:14px${hasGone ? ';pointer-events:none;opacity:.5' : ''}"><span>Checkout</span><span> &middot; ${money(subtotal)}</span></a>
       <button type="button" class="sd-btn sd-btn--block" data-close-cart style="margin-top:8px">Keep shopping</button>`;
