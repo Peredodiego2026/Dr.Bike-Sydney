@@ -1745,4 +1745,10 @@ export default {
   'Some items are no longer available.': 'Algunos productos ya no están disponibles.',
   'That order has no payment yet.': 'Ese pedido todavía no tiene un pago.',
   'The amount paid does not match the order.': 'El monto pagado no coincide con el pedido.',
+  // La tienda: stock y agotados
+  'Sold out': 'Agotado',
+  'Only': 'Quedan solo',
+  'left': 'disponibles',
+  'One of these cannot be bought right now. Remove it or lower the quantity to keep going.': 'Algo de esto no se puede comprar ahora. Quítalo o baja la cantidad para seguir.',
+  'Some items are sold out or have fewer left than you asked for.': 'Algunos productos están agotados o quedan menos de los que pediste.',
 };

@@ -353,6 +353,35 @@
   color: var(--blue);
 }
 
+/* Agotado: se ve, no se compra (stock 0 en Admin > Shop Products). */
+.shop-card__sold {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--red-lt);
+  color: var(--red-text);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.shop-opt--out > span:first-child {
+  color: var(--gray);
+  text-decoration: line-through;
+}
+
+.shop-opt--out .shop-opt__hint {
+  color: var(--red-text);
+}
+
+.shop-desc {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--gray);
+}
+
 .shop-title {
   margin: 5px 0 0;
   font-size: 21px;

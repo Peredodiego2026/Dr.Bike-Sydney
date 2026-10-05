@@ -528,6 +528,7 @@ const titles = {
   memberships: 'Memberships',
   services: 'Services & Prices',
   'shop-orders': 'Shop Orders',
+  'shop-products': 'Shop Products',
 };
 const subs = {
   dashboard: 'Live operations · Sydney',
@@ -548,6 +549,7 @@ const subs = {
   inventory: 'Stock, internal cost and client price per part',
   services: 'One catalog for the whole site - edit a price here and it updates everywhere',
   'shop-orders': 'LEBYCLE parts orders - order them, ship them, refund them',
+  'shop-products': 'The parts catalogue - prices, your cost and margin, stock, photos',
 };
 
 function go(page, btn) {
@@ -595,6 +597,7 @@ function go(page, btn) {
   }
   if (page === 'memberships') loadMemberships();
   if (page === 'shop-orders') loadShopOrders();
+  if (page === 'shop-products') loadShopProducts();
 
   // Update mobile bottom nav active state
   ['dashboard', 'bookings', 'clients', 'finance'].forEach((p) => {
@@ -6818,6 +6821,369 @@ function wireShopOrders() {
     }
     const a = e.target.closest('[data-so-act]');
     if (a && !a.disabled) runShopAction(a);
+  });
+}
+
+// ── SHOP PRODUCTS ────────────────────────────────────────────────────────────
+// The LEBYCLE catalogue, edited by hand (api/_shop-admin-catalog.js): name,
+// section, description, photo, and per option the price, Diego's cost (with
+// the margin worked out live as he types) and the stock. Empty stock means no
+// limit; 0 means sold out - it stays visible in the shop but cannot be bought.
+// "Visible" off hides a product without losing it; Delete removes it for good
+// (orders keep their own copy of names and prices).
+let _spData = null;
+let _spQuery = '';
+let _spSection = 'all';
+let _spStatus = 'all';
+let _spShown = 30;
+const _spOpen = new Set();
+let _spWired = false;
+
+const SP_STATUS = [
+  ['all', 'All products'],
+  ['visible', 'Visible'],
+  ['hidden', 'Hidden'],
+  ['soldout', 'Sold out'],
+  ['low', 'Low stock (5 or less)'],
+  ['nophoto', 'No photo'],
+];
+const SP_LABEL = 'display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px';
+
+function spMargin(price, cost) {
+  const p = Number(price);
+  const c = cost === '' || cost === null || cost === undefined ? NaN : Number(cost);
+  if (!Number.isFinite(p) || !Number.isFinite(c) || p <= 0) return '—';
+  const m = p - c;
+  return '$' + m.toFixed(2) + ' (' + Math.round((m / p) * 100) + '%)';
+}
+
+function spKeep(p) {
+  const q = _spQuery.toLowerCase();
+  if (q && !p.name.toLowerCase().includes(q) && !p.variants.some((v) => v.sku.toLowerCase().includes(q))) return false;
+  if (_spSection !== 'all' && p.section !== _spSection) return false;
+  if (_spStatus === 'visible') return p.active;
+  if (_spStatus === 'hidden') return !p.active;
+  if (_spStatus === 'soldout') return p.variants.some((v) => v.stock === 0);
+  if (_spStatus === 'low') return p.variants.some((v) => v.stock !== null && v.stock <= 5);
+  if (_spStatus === 'nophoto') return !p.photoRef;
+  return true;
+}
+
+async function loadShopProducts() {
+  const list = document.getElementById('sp-list');
+  if (!list) return;
+  wireShopProducts();
+  list.innerHTML = '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading the catalogue...</div>';
+  try {
+    _spData = await shopAdmin({ action: 'products' });
+    renderShopProducts();
+  } catch (e) {
+    list.innerHTML = `<div style="background:var(--red-lt);color:var(--red-text);border-radius:12px;padding:14px 16px;font-size:13px">${esc(e.message)}</div>`;
+  }
+}
+
+function renderShopProducts() {
+  const bar = document.getElementById('sp-toolbar');
+  const list = document.getElementById('sp-list');
+  if (!bar || !list || !_spData) return;
+  const sections = _spData.sections || [];
+  if (!bar.dataset.built) {
+    bar.dataset.built = '1';
+    bar.innerHTML = `
+      <input id="sp-q" class="inp" type="search" placeholder="Search by name or code" aria-label="Search products" style="flex:1;min-width:200px;min-height:44px;padding:8px 12px;font-size:14px">
+      <select id="sp-section" class="inp" aria-label="Section" style="width:auto;min-height:44px;padding:8px 12px;font-size:14px;cursor:pointer">
+        <option value="all">All sections</option>${sections.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}
+      </select>
+      <select id="sp-status" class="inp" aria-label="Status" style="width:auto;min-height:44px;padding:8px 12px;font-size:14px;cursor:pointer">
+        ${SP_STATUS.map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}
+      </select>
+      <button type="button" data-sp-new style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">+ Add product</button>`;
+  }
+
+  const all = _spData.products || [];
+  const shown = all.filter(spKeep);
+  const head = [];
+  if (!_spData.migrated) {
+    head.push(
+      '<div style="background:var(--amber-lt);color:var(--amber-ink);border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.5"><strong>One SQL step is missing.</strong> Run <code>scripts/shop-catalog-admin.sql</code> in Supabase &gt; SQL Editor. Until then you can look, but saving answers that the step is missing (descriptions and stock need it).</div>'
+    );
+  }
+  head.push(`<div style="font-size:13px;color:var(--mgray)">${shown.length} of ${all.length} products</div>`);
+  if (_spOpen.has('__new')) head.push(spCard(null));
+  const rows = shown.slice(0, _spShown).map(spCard).join('');
+  const more =
+    shown.length > _spShown
+      ? `<button type="button" data-sp-more style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Show ${Math.min(30, shown.length - _spShown)} more</button>`
+      : '';
+  list.innerHTML = head.join('') + (rows || '<div style="text-align:center;padding:40px;color:var(--mgray);font-size:13px">No products match.</div>') + more;
+}
+
+function spCard(p) {
+  const isNew = !p;
+  const key = isNew ? '__new' : p.slug;
+  const open = _spOpen.has(key);
+  if (isNew) return `<div data-sp-card="__new" style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:12px">${spEditor(null)}</div>`;
+  const prices = p.variants.map((v) => v.price);
+  const from = Math.min(...prices);
+  const to = Math.max(...prices);
+  const soldOut = p.variants.length && p.variants.every((v) => v.stock === 0);
+  const someOut = !soldOut && p.variants.some((v) => v.stock === 0);
+  const badge = (txt, fg, bg) => `<span style="background:${bg};color:${fg};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${txt}</span>`;
+  const sec = (_spData.sections || []).find((s) => s.id === p.section)?.name || p.section;
+  return `
+    <div data-sp-card="${esc(key)}" style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${p.active ? (soldOut ? 'var(--red)' : 'var(--green)') : 'var(--border)'};border-radius:12px">
+      <button type="button" data-sp-toggle="${esc(key)}" aria-expanded="${open}" style="box-sizing:border-box;display:flex;width:100%;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;min-height:44px;background:none;border:0;border-radius:12px;font:inherit;color:inherit;text-align:left">
+        <span style="width:48px;height:48px;border-radius:8px;background:var(--off);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--mgray);font-size:11px">${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover">` : 'No photo'}</span>
+        <span style="flex:1;min-width:0">
+          <span style="display:block;font-size:15px;font-weight:700;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>
+          <span style="display:block;font-size:12px;color:var(--mgray);margin-top:2px">${esc(sec)} · ${p.variants.length} option${p.variants.length === 1 ? '' : 's'} · $${from.toFixed(2)}${to !== from ? '–$' + to.toFixed(2) : ''}</span>
+        </span>
+        ${!p.active ? badge('Hidden', 'var(--gray)', 'var(--border-lt)') : ''}
+        ${soldOut ? badge('Sold out', 'var(--red-text)', 'var(--red-lt)') : someOut ? badge('Some sold out', 'var(--amber-ink)', 'var(--amber-lt)') : ''}
+        <span aria-hidden="true" style="color:var(--mgray);font-size:18px;transform:rotate(${open ? 90 : 0}deg);transition:transform .15s">›</span>
+      </button>
+      ${open ? spEditor(p) : ''}
+    </div>`;
+}
+
+function spVariantRow(v, isNewRow) {
+  return `<tr data-sp-row${isNewRow ? ' data-sp-newrow' : ''}>
+    <td style="padding:4px 6px 4px 0"><input class="inp" data-f="label" value="${esc(v.label)}" aria-label="Option" placeholder="e.g. 700x28c Presta" style="width:100%;min-width:140px;min-height:40px;padding:6px 10px;font-size:13px"></td>
+    <td style="padding:4px 6px"><input class="inp" data-f="sku" value="${esc(v.sku)}" aria-label="Code" placeholder="SKU"${isNewRow ? '' : ' readonly'} style="width:100%;min-width:110px;min-height:40px;padding:6px 10px;font-size:12px;font-family:ui-monospace,Menlo,monospace${isNewRow ? '' : ';background:var(--off);color:var(--mgray)'}"></td>
+    <td style="padding:4px 6px"><input class="inp" data-f="cost" type="number" step="0.01" min="0" value="${v.cost === null || v.cost === undefined ? '' : v.cost}" aria-label="Your cost" style="width:90px;min-height:40px;padding:6px 10px;font-size:13px;text-align:right"></td>
+    <td style="padding:4px 6px"><input class="inp" data-f="price" type="number" step="0.01" min="0.01" value="${v.price ?? ''}" aria-label="Price" style="width:90px;min-height:40px;padding:6px 10px;font-size:13px;text-align:right"></td>
+    <td data-sp-margin style="padding:4px 6px;font-size:13px;font-weight:600;color:var(--green-text);text-align:right;white-space:nowrap">${spMargin(v.price, v.cost)}</td>
+    <td style="padding:4px 6px"><input class="inp" data-f="stock" type="number" step="1" min="0" value="${v.stock === null || v.stock === undefined ? '' : v.stock}" aria-label="Stock (empty = no limit)" placeholder="∞" style="width:80px;min-height:40px;padding:6px 10px;font-size:13px;text-align:right"></td>
+    <td style="padding:4px 0 4px 6px"><button type="button" data-sp-delrow aria-label="Remove this option" style="background:none;border:1.5px solid var(--border);border-radius:8px;min-width:40px;min-height:40px;color:var(--red-text);cursor:pointer;font-size:16px">×</button></td>
+  </tr>`;
+}
+
+function spEditor(p) {
+  const isNew = !p;
+  const sections = _spData.sections || [];
+  const d = p || { name: '', section: sections[0]?.id || 'parts', active: true, description: '', photoRef: null, img: null, variants: [{ sku: '', label: '', cost: null, price: '', stock: null }] };
+  return `
+    <form data-sp-form="${isNew ? '__new' : esc(p.slug)}" data-photo-ref="${esc(d.photoRef || '')}" style="border-top:${isNew ? '0' : '1px solid var(--border-lt)'};padding:14px 16px 16px" novalidate>
+      ${isNew ? '<div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px">New product</div>' : ''}
+      <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start">
+        <div>
+          <div data-sp-preview style="width:120px;height:120px;border-radius:10px;background:var(--off);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--mgray);font-size:12px">${d.img ? `<img src="${esc(d.img)}" alt="" style="width:100%;height:100%;object-fit:cover">` : 'No photo'}</div>
+          <label style="position:relative;display:flex;align-items:center;justify-content:center;margin-top:8px;min-height:40px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;color:var(--navy);cursor:pointer">${d.img ? 'Change photo' : 'Add photo'}<input type="file" accept="image/*" data-sp-photo style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer"></label>
+        </div>
+        <div style="display:grid;gap:12px">
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <label style="display:block;flex:2;min-width:220px"><span style="${SP_LABEL}">Name</span><input class="inp" data-f="name" value="${esc(d.name)}" style="width:100%;min-height:44px;padding:8px 12px;font-size:14px"></label>
+            <label style="display:block;flex:1;min-width:150px"><span style="${SP_LABEL}">Section</span>
+              <select class="inp" data-f="section" style="width:100%;min-height:44px;padding:8px 12px;font-size:14px;cursor:pointer">${sections.map((s) => `<option value="${esc(s.id)}"${s.id === d.section ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>
+            <label style="display:flex;align-items:center;gap:8px;min-height:44px;align-self:flex-end;font-size:14px;color:var(--navy);cursor:pointer"><input type="checkbox" data-f="active"${d.active ? ' checked' : ''} style="width:20px;height:20px"> Visible in the shop</label>
+          </div>
+          <label style="display:block"><span style="${SP_LABEL}">Description (what the client reads on the product page)</span>
+            <textarea class="inp" data-f="description" rows="3" maxlength="2000" style="width:100%;padding:8px 12px;font-size:13px;resize:vertical">${esc(d.description || '')}</textarea></label>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;min-width:640px">
+          <thead><tr>
+            ${['Option', 'Code (SKU)', 'Your cost', 'Price', 'Margin', 'Stock', ''].map((h, i) => `<th style="text-align:${i >= 2 && i <= 5 ? 'right' : 'left'};font-size:11px;color:var(--mgray);font-weight:600;padding:0 6px 6px ${i ? '6px' : '0'};text-transform:uppercase;letter-spacing:0.06em">${h}</th>`).join('')}
+          </tr></thead>
+          <tbody data-sp-rows>${d.variants.map((v) => spVariantRow(v, isNew)).join('')}</tbody>
+        </table>
+      </div>
+      <div style="font-size:12px;color:var(--mgray);margin-top:6px">Stock: empty = no limit · 0 = sold out (still shown, cannot be bought).</div>
+      <button type="button" data-sp-addrow style="margin-top:10px;background:var(--off);border:1.5px dashed var(--border);border-radius:8px;min-height:40px;padding:0 14px;font-size:13px;font-weight:600;color:var(--navy);font-family:var(--sans);cursor:pointer">+ Add an option</button>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--border-lt)">
+        <button type="submit" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 18px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">${isNew ? 'Create product' : 'Save changes'}</button>
+        ${isNew ? '<button type="button" data-sp-cancel style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:0 16px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Cancel</button>' : `<button type="button" data-sp-delete="${esc(p.slug)}" style="margin-left:auto;background:var(--white);color:var(--red-text);border:1.5px solid var(--red-lt);border-radius:8px;padding:0 16px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Delete product</button>`}
+      </div>
+    </form>`;
+}
+
+function spCollect(form) {
+  // Product fields and option fields never share a name, so a plain lookup is safe.
+  const f = (name) => form.querySelector(`[data-f="${name}"]`);
+  const variants = [...form.querySelectorAll('[data-sp-row]')].map((row) => {
+    const v = (n) => row.querySelector(`[data-f="${n}"]`)?.value.trim() ?? '';
+    return { label: v('label'), sku: v('sku'), cost: v('cost'), price: v('price'), stock: v('stock') };
+  });
+  const slug = form.dataset.spForm === '__new' ? null : form.dataset.spForm;
+  return {
+    product: {
+      slug,
+      name: f('name').value.trim(),
+      section: f('section').value,
+      active: f('active').checked,
+      description: f('description').value.trim(),
+      photoRef: form.dataset.photoRef || null,
+    },
+    variants: variants.map((v) => ({
+      ...v,
+      cost: v.cost === '' ? null : Number(v.cost),
+      price: Number(v.price),
+      stock: v.stock === '' ? null : Number(v.stock),
+    })),
+  };
+}
+
+// Product photos are shown up to ~600px wide on the product page; 1000px
+// covers a retina screen and keeps a photo around 80 KB. Same reason as
+// shrinkPhoto(): an uncompressed upload is what blew the storage quota.
+async function shrinkShopPhoto(file) {
+  const bitmap = await window.createImageBitmap(file);
+  const scale = Math.min(1, 1000 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+  let blob = await new Promise((res) => canvas.toBlob(res, 'image/webp', 0.82));
+  // A browser that cannot write WebP hands back a PNG instead: use JPEG then.
+  if (!blob || blob.type !== 'image/webp') blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.85));
+  if (!blob) throw new Error('This photo could not be read. Try a JPG or PNG.');
+  return blob;
+}
+
+async function spUploadPhoto(form, file) {
+  const kind = safeImageUpload(file);
+  if (!kind.ok) throw new Error(kind.reason);
+  const preview = form.querySelector('[data-sp-preview]');
+  preview.textContent = 'Uploading...';
+  const blob = await shrinkShopPhoto(file);
+  const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
+  const up = await shopAdmin({ action: 'photo-upload', slug: form.dataset.spForm === '__new' ? '' : form.dataset.spForm, name: form.querySelector('[data-f="name"]').value, ext });
+  const { error } = await sb.storage.from(up.bucket).uploadToSignedUrl(up.path, up.token, blob, { contentType: blob.type });
+  if (error) throw new Error('Upload failed: ' + error.message);
+  form.dataset.photoRef = up.photoRef;
+  preview.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+  showToast('Photo uploaded - press Save to keep it');
+}
+
+async function spSave(form) {
+  const btn = form.querySelector('button[type="submit"]');
+  const body = spCollect(form);
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  try {
+    const r = await shopAdmin({ action: 'product-save', ...body });
+    _spOpen.delete('__new');
+    _spOpen.add(r.slug);
+    showToast(body.product.slug ? 'Saved' : 'Product created');
+    await loadShopProducts();
+  } catch (e) {
+    showToast(e.message);
+    btn.disabled = false;
+    btn.style.opacity = '';
+  }
+}
+
+async function spDelete(slug) {
+  const p = (_spData?.products || []).find((x) => x.slug === slug);
+  if (!confirm(`Delete "${p?.name || slug}" for good?\n\nIt disappears from the shop and from this list. Orders already placed keep their copy.\nTo take it off the shop without losing it, untick "Visible in the shop" instead.`)) return;
+  try {
+    await shopAdmin({ action: 'product-delete', slug });
+    _spOpen.delete(slug);
+    showToast('Product deleted');
+    await loadShopProducts();
+  } catch (e) {
+    showToast(e.message);
+  }
+}
+
+function wireShopProducts() {
+  if (_spWired) return;
+  _spWired = true;
+  const bar = document.getElementById('sp-toolbar');
+  const list = document.getElementById('sp-list');
+  bar?.addEventListener('input', (e) => {
+    if (e.target.id === 'sp-q') {
+      _spQuery = e.target.value.trim();
+      _spShown = 30;
+      renderShopProducts();
+    }
+  });
+  bar?.addEventListener('change', (e) => {
+    if (e.target.id === 'sp-section') _spSection = e.target.value;
+    if (e.target.id === 'sp-status') _spStatus = e.target.value;
+    _spShown = 30;
+    renderShopProducts();
+  });
+  bar?.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-sp-new]')) return;
+    _spOpen.add('__new');
+    renderShopProducts();
+    document.querySelector('[data-sp-form="__new"] [data-f="name"]')?.focus();
+  });
+  list?.addEventListener('click', (e) => {
+    const t = e.target;
+    const tog = t.closest('[data-sp-toggle]');
+    if (tog) {
+      const k = tog.dataset.spToggle;
+      if (_spOpen.has(k)) _spOpen.delete(k);
+      else _spOpen.add(k);
+      renderShopProducts();
+      return;
+    }
+    if (t.closest('[data-sp-more]')) {
+      _spShown += 30;
+      renderShopProducts();
+      return;
+    }
+    if (t.closest('[data-sp-cancel]')) {
+      _spOpen.delete('__new');
+      renderShopProducts();
+      return;
+    }
+    const del = t.closest('[data-sp-delete]');
+    if (del) {
+      spDelete(del.dataset.spDelete);
+      return;
+    }
+    if (t.closest('[data-sp-addrow]')) {
+      const tbody = t.closest('form').querySelector('[data-sp-rows]');
+      tbody.insertAdjacentHTML('beforeend', spVariantRow({ sku: '', label: '', cost: null, price: '', stock: null }, true));
+      tbody.lastElementChild.querySelector('[data-f="label"]').focus();
+      return;
+    }
+    const delRow = t.closest('[data-sp-delrow]');
+    if (delRow) {
+      const row = delRow.closest('[data-sp-row]');
+      const form = delRow.closest('form');
+      if (form.querySelectorAll('[data-sp-row]').length === 1) {
+        showToast('A product needs at least one option. Delete the product instead.');
+        return;
+      }
+      const label = row.querySelector('[data-f="label"]').value || 'this option';
+      if (!row.hasAttribute('data-sp-newrow') && !confirm(`Remove "${label}"? It is deleted when you press Save.`)) return;
+      row.remove();
+    }
+  });
+  // The margin is worked out as Diego types the cost or the price.
+  list?.addEventListener('input', (e) => {
+    const row = e.target.closest('[data-sp-row]');
+    if (!row || !['cost', 'price'].includes(e.target.dataset.f)) return;
+    row.querySelector('[data-sp-margin]').textContent = spMargin(
+      row.querySelector('[data-f="price"]').value,
+      row.querySelector('[data-f="cost"]').value
+    );
+  });
+  list?.addEventListener('change', async (e) => {
+    if (!e.target.matches('[data-sp-photo]')) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await spUploadPhoto(e.target.closest('form'), file);
+    } catch (err) {
+      showToast(err.message);
+      const pv = e.target.closest('form').querySelector('[data-sp-preview]');
+      if (pv) pv.textContent = 'Upload failed';
+    }
+  });
+  list?.addEventListener('submit', (e) => {
+    const form = e.target.closest('[data-sp-form]');
+    if (!form) return;
+    e.preventDefault();
+    spSave(form);
   });
 }
 

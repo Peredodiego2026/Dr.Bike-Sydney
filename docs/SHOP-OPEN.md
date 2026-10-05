@@ -27,6 +27,10 @@ cliente.
       `docs/RUNBOOK-SQL.md`). Sin eso, Admin > Shop Orders lista los pedidos
       pero no los puede pasar a "pedido a LEBYCLE", "enviado" ni "entregado".
       Hecho el 2026-10-04 (ok = true).
+- [ ] `scripts/shop-catalog-admin.sql` corrido en Supabase (fila 51 de
+      `docs/RUNBOOK-SQL.md`). Agrega descripcion, stock, destacados, fotos
+      extra y `shop_settings`. Sin eso la tienda anda igual, pero Admin >
+      Shop Products no puede guardar.
 - [ ] El aviso de Stripe para pagos que el navegador no llego a confirmar
       (cliente que cierra la pestaña justo despues de pagar). El codigo ya
       esta: `api/stripe-webhook.js` manda `payment_intent.succeeded` de un

@@ -1589,4 +1589,10 @@ export default {
   'Some items are no longer available.': '部分商品已无货。',
   'That order has no payment yet.': '该订单尚无付款。',
   'The amount paid does not match the order.': '付款金额与订单不符。',
+  // La tienda: stock y agotados
+  'Sold out': '已售罄',
+  'Only': '仅剩',
+  'left': '件',
+  'One of these cannot be bought right now. Remove it or lower the quantity to keep going.': '其中有商品暂时无法购买。请移除或减少数量后继续。',
+  'Some items are sold out or have fewer left than you asked for.': '部分商品已售罄或库存不足。',
 };

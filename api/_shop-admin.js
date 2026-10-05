@@ -21,6 +21,7 @@
 
 import { SELF_BASE_URL } from './_security.js';
 import { ORDER_FOR_SETTLE, settleOrder, orderRef, shopStripe, SHOP_MODE } from './_shop.js';
+import { listProducts, saveProduct, deleteProduct, photoUploadUrl } from './_shop-admin-catalog.js';
 
 const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
@@ -176,6 +177,11 @@ async function list(sb, res) {
 export async function handleShopAdmin(req, res, sb) {
   const action = str(req.body?.action, 24);
   if (action === 'list') return list(sb, res);
+  // Admin > Shop Products (api/_shop-admin-catalog.js)
+  if (action === 'products') return listProducts(sb, res);
+  if (action === 'product-save') return saveProduct(sb, req, res);
+  if (action === 'product-delete') return deleteProduct(sb, req, res);
+  if (action === 'photo-upload') return photoUploadUrl(sb, req, res);
 
   const id = str(req.body?.orderId, 64);
   if (!id) return res.status(400).json({ error: 'Which order?' });

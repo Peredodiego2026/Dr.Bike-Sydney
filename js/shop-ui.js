@@ -26,6 +26,8 @@ import {
   removeFromCart,
   priceCart,
   clearCart,
+  goneLabel,
+  maxQty,
 } from './shop.js';
 import { startCheckout, confirmOrder, mountCard } from './shop-pay.js';
 import { getLang, translateScreen } from './i18n.js';
@@ -86,12 +88,13 @@ function backBtn(label) {
 
 function card(p) {
   const n = p.variants.length;
+  const soldOut = p.variants.every((v) => v.stock === 0);
   return `<a class="shop-card" href="${shopHref('shop-product?slug=' + encodeURIComponent(p.slug))}" data-shop-link="${esc(p.slug)}">
       <div class="shop-card__shot">
         ${n > 1 ? `<span class="shop-card__sizes">${n} sizes</span>` : ''}
         ${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">` : ''}
       </div>
-      <div class="shop-card__price">${n > 1 ? 'From ' : ''}${money(p.from)}</div>
+      <div class="shop-card__price">${n > 1 ? 'From ' : ''}${money(p.from)}${soldOut ? ' <span class="shop-card__sold">Sold out</span>' : ''}</div>
       <div class="shop-card__name">${esc(p.name)}</div>
     </a>`;
 }
@@ -306,15 +309,16 @@ export async function renderShopProduct() {
                <div class="shop-opts" data-shop-opts>
                  ${product.variants
                    .map(
-                     (x) => `<button type="button" class="shop-opt" data-sku="${esc(x.sku)}" aria-pressed="${x.sku === sku}">
+                     (x) => `<button type="button" class="shop-opt${x.stock === 0 ? ' shop-opt--out' : ''}" data-sku="${esc(x.sku)}" aria-pressed="${x.sku === sku}">
                        <span>${esc(x.label)}</span>
-                       ${x.price !== v.price ? `<span class="shop-opt__hint">${money(x.price)}</span>` : ''}
+                       ${x.stock === 0 ? '<span class="shop-opt__hint">Sold out</span>' : x.price !== v.price ? `<span class="shop-opt__hint">${money(x.price)}</span>` : ''}
                      </button>`
                    )
                    .join('')}
                </div>`
             : ''
         }
+        ${product.desc ? `<p class="shop-desc">${esc(product.desc).replace(/\n/g, '<br>')}</p>` : ''}
         <div class="shop-group">Code</div>
         <div style="font-size:14px;color:var(--navy);font-weight:600">${esc(v.sku)}</div>
         <div class="shop-note" style="margin-top:18px">Not sure which one fits? Send us a photo on WhatsApp and we will tell you &mdash; 0433 963 250.</div>
@@ -325,18 +329,24 @@ export async function renderShopProduct() {
           <span class="shop-qty__n" data-qty-n>${qty}</span>
           <button type="button" data-qty="1" aria-label="One more">+</button>
         </div>
-        <button type="button" class="shop-add" data-shop-add><span>Add to cart</span><span> &middot; ${money(v.price * qty)}</span></button>
+        ${
+          v.stock === 0
+            ? '<button type="button" class="shop-add" disabled><span>Sold out</span></button>'
+            : `<button type="button" class="shop-add" data-shop-add><span>Add to cart</span><span> &middot; ${money(v.price * qty)}</span></button>`
+        }
       </div>`;
 
     screen.querySelectorAll('[data-sku]').forEach((b) =>
       b.addEventListener('click', () => {
         sku = b.dataset.sku;
+        qty = Math.max(1, Math.min(qty, maxQty(findVariant(product, sku)) || 1));
         paint();
       })
     );
     screen.querySelectorAll('[data-qty]').forEach((b) =>
       b.addEventListener('click', () => {
-        qty = Math.max(1, Math.min(20, qty + Number(b.dataset.qty)));
+        // No mas de lo que queda, si la opcion tiene limite.
+        qty = Math.max(1, Math.min(maxQty(findVariant(product, sku)) || 1, qty + Number(b.dataset.qty)));
         paint();
       })
     );
@@ -386,7 +396,7 @@ export async function renderCart() {
                   <div class="shop-line__shot">${i.img ? `<img src="${esc(i.img)}" alt="">` : ''}</div>
                   <div style="flex-grow:1;min-width:0">
                     <div class="shop-line__name">${esc(i.name)}</div>
-                    <div class="shop-line__variant">${i.gone ? 'No longer available' : esc(i.variant)}</div>
+                    <div class="shop-line__variant">${i.gone ? goneLabel(i) : esc(i.variant)}</div>
                     <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
                       <div class="shop-qty" style="height:38px">
                         <button type="button" data-line="${esc(i.sku)}" data-d="-1" aria-label="One less">&minus;</button>
@@ -405,7 +415,7 @@ export async function renderCart() {
                  <span class="shop-total__value">${money(subtotal)}</span>
                </div>
                <div class="shop-note">Delivery is worked out at checkout. [CONFIRMAR PLAZO DE ENTREGA]</div>
-               ${hasGone ? `<div class="shop-note" style="color:var(--red)">One of these is no longer in the catalogue. Remove it to keep going.</div>` : ''}`
+               ${hasGone ? `<div class="shop-note" style="color:var(--red)">One of these cannot be bought right now. Remove it or lower the quantity to keep going.</div>` : ''}`
             : `<div class="shop-empty">
                  <div class="shop-empty__icon">&#128722;</div>
                  <div class="shop-empty__title">Your cart is empty</div>

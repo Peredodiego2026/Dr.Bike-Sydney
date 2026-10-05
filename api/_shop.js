@@ -134,7 +134,7 @@ function readToken(req) {
 
 // Las fotos se piden todas juntas. De a una seria una llamada por producto:
 // 307 idas y vueltas para dibujar una grilla.
-async function signPhotos(sb, refs) {
+export async function signPhotos(sb, refs) {
   const paths = [...new Set(refs.filter(Boolean))].map((r) => r.replace(SHOP_BUCKET + '/', ''));
   if (!paths.length) return {};
   const { data, error } = await sb.storage.from(SHOP_BUCKET).createSignedUrls(paths, SIGN_SECONDS);
@@ -174,18 +174,46 @@ function cleanLines(raw) {
 
 const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
+// Las secciones de la tienda. Admin > Shop Products las usa para el selector.
+export const SHOP_SECTIONS = [
+  { id: 'parts', name: 'Parts' },
+  { id: 'tools', name: 'Tools' },
+  { id: 'accessories', name: 'Accessories' },
+  { id: 'care', name: 'Care' },
+  { id: 'gear', name: 'Gear' },
+];
+
+// Hasta que se corra scripts/shop-catalog-admin.sql, las columnas nuevas
+// (description, stock...) no existen, y pedirlas rompe la consulta ENTERA. Se
+// piden con ellas y, si la base contesta que no existen, se vuelven a pedir
+// sin ellas: la tienda sigue andando igual que antes del SQL.
+export function isMissingColumn(err) {
+  const msg = String(err?.message || '') + ' ' + String(err?.code || '');
+  return /does not exist|schema cache|PGRST204|42703/i.test(msg);
+}
+export async function selectWithFallback(build, full, basic) {
+  const r = await build(full);
+  if (r.error && isMissingColumn(r.error)) return build(basic);
+  return r;
+}
+
 async function handleCheckout(req, res, sb, user) {
   const lines = cleanLines(req.body?.items);
   if (!lines.length) return res.status(400).json({ error: 'Your cart is empty.' });
 
   // El precio sale de la base, no del pedido.
-  const { data: rows, error } = await sb
-    .from('shop_variants')
-    .select('sku, label, price, shop_products!inner(name, active)')
-    .in(
-      'sku',
-      lines.map((l) => l.sku)
-    );
+  const { data: rows, error } = await selectWithFallback(
+    (cols) =>
+      sb
+        .from('shop_variants')
+        .select(cols)
+        .in(
+          'sku',
+          lines.map((l) => l.sku)
+        ),
+    'sku, label, price, stock, shop_products!inner(name, active)',
+    'sku, label, price, shop_products!inner(name, active)'
+  );
   if (error) return res.status(500).json({ error: 'Could not price the cart: ' + error.message });
 
   const bySku = new Map((rows || []).filter((r) => r.shop_products?.active).map((r) => [r.sku, r]));
@@ -194,6 +222,18 @@ async function handleCheckout(req, res, sb, user) {
     // Se nombra lo que falta para que el carrito pueda marcarlo. Un "algo
     // salio mal" obliga al cliente a vaciar el carrito y empezar de nuevo.
     return res.status(409).json({ error: 'Some items are no longer available.', missing: missing.map((l) => l.sku) });
+  }
+  // Stock: null es sin limite. Agotado, o menos de lo pedido, se rechaza ANTES
+  // de cobrar, y se dice cuantos quedan para que el carrito lo muestre.
+  const short = lines.filter((l) => {
+    const left = bySku.get(l.sku).stock;
+    return left !== null && left !== undefined && l.qty > Number(left);
+  });
+  if (short.length) {
+    return res.status(409).json({
+      error: 'Some items are sold out or have fewer left than you asked for.',
+      soldOut: short.map((l) => ({ sku: l.sku, left: Number(bySku.get(l.sku).stock) })),
+    });
   }
 
   const items = lines.map((l) => {
@@ -363,8 +403,41 @@ export async function settleOrder(sb, order, lang) {
   if (mErr) return { code: 500, body: { error: 'Could not save the payment: ' + mErr.message } };
   // Admin ("Check with Stripe") no sabe en que idioma compro el cliente: lo
   // dice la metadata del cobro, que se escribio en el checkout.
-  if (moved?.length) await notifyPaid(sb, order, ref, lang || intent.metadata?.lang || '');
+  if (moved?.length) {
+    await takeStock(sb, order.id);
+    await notifyPaid(sb, order, ref, lang || intent.metadata?.lang || '');
+  }
   return { code: 200, body: { status: 'paid', orderId: order.id, ref } };
+}
+
+// El stock baja recien cuando el pedido se cobra, y solo el de las variantes
+// que tienen limite (null = sin limite, no se toca). Es mejor esfuerzo: dos
+// pedidos cobrados en el mismo segundo podrian descontar sobre el mismo
+// numero. En dropshipping el stock de aca es una referencia, no un deposito:
+// el de verdad lo tiene LEBYCLE. Nunca tumba el cobro, que ya paso.
+async function takeStock(sb, orderId) {
+  const { data: lines, error } = await sb.from('shop_order_items').select('sku, qty').eq('order_id', orderId);
+  if (error || !lines?.length) return;
+  const { data: vars, error: vErr } = await sb
+    .from('shop_variants')
+    .select('sku, stock')
+    .in(
+      'sku',
+      lines.map((l) => l.sku)
+    );
+  if (vErr) {
+    if (!isMissingColumn(vErr)) console.error('[shop] no pude leer el stock', orderId, vErr.message);
+    return;
+  }
+  for (const v of vars || []) {
+    if (v.stock === null || v.stock === undefined) continue;
+    const qty = lines.filter((l) => l.sku === v.sku).reduce((n, l) => n + Number(l.qty), 0);
+    const { error: uErr } = await sb
+      .from('shop_variants')
+      .update({ stock: Math.max(0, Number(v.stock) - qty) })
+      .eq('sku', v.sku);
+    if (uErr) console.error('[shop] no pude bajar el stock', v.sku, uErr.message);
+  }
 }
 
 // La cuenta de Stripe de la tienda (no la del negocio). null si no esta puesta.
@@ -498,17 +571,18 @@ export async function handleShop(req, res) {
   if (req.method === 'POST' && action === 'checkout') return handleCheckout(req, res, sb, user);
   if (req.method === 'POST' && action === 'confirm') return handleConfirm(req, res, sb, user);
 
-  const { data: products, error: pErr } = await sb
-    .from('shop_products')
-    .select('slug, name, section, price_from, price_to, photo_ref, sort_rank')
-    .eq('active', true)
-    .order('sort_rank', { ascending: true });
+  const { data: products, error: pErr } = await selectWithFallback(
+    (cols) => sb.from('shop_products').select(cols).eq('active', true).order('sort_rank', { ascending: true }),
+    'slug, name, section, price_from, price_to, photo_ref, sort_rank, description',
+    'slug, name, section, price_from, price_to, photo_ref, sort_rank'
+  );
   if (pErr) return res.status(500).json({ error: 'Could not load the shop: ' + pErr.message });
 
-  const { data: variants, error: vErr } = await sb
-    .from('shop_variants')
-    .select('sku, label, price, position, product_id, shop_products!inner(slug)')
-    .order('position', { ascending: true });
+  const { data: variants, error: vErr } = await selectWithFallback(
+    (cols) => sb.from('shop_variants').select(cols).order('position', { ascending: true }),
+    'sku, label, price, position, stock, product_id, shop_products!inner(slug)',
+    'sku, label, price, position, product_id, shop_products!inner(slug)'
+  );
   if (vErr) return res.status(500).json({ error: 'Could not load the shop: ' + vErr.message });
 
   const signed = await signPhotos(sb, (products || []).map((p) => p.photo_ref));
@@ -522,6 +596,7 @@ export async function handleShop(req, res) {
       from: Number(p.price_from),
       to: Number(p.price_to),
       img: signed[p.photo_ref] || null,
+      desc: p.description || '',
       variants: [],
     });
   }
@@ -530,7 +605,8 @@ export async function handleShop(req, res) {
     // tiene por que salir del servidor ni para el: el navegador no lo usa, y
     // lo que no viaja no se filtra.
     const p = bySlug.get(v.shop_products?.slug);
-    if (p) p.variants.push({ sku: v.sku, label: v.label, price: Number(v.price) });
+    // stock: null = sin limite, 0 = agotado (se ve, no se compra), n = quedan n.
+    if (p) p.variants.push({ sku: v.sku, label: v.label, price: Number(v.price), stock: v.stock ?? null });
   }
 
   const list = [...bySlug.values()].filter((p) => p.variants.length);
@@ -540,13 +616,7 @@ export async function handleShop(req, res) {
     brand: 'LEBYCLE',
     currency: 'AUD',
     photosExpireIn: SIGN_SECONDS,
-    sections: [
-      { id: 'parts', name: 'Parts' },
-      { id: 'tools', name: 'Tools' },
-      { id: 'accessories', name: 'Accessories' },
-      { id: 'care', name: 'Care' },
-      { id: 'gear', name: 'Gear' },
-    ],
+    sections: SHOP_SECTIONS,
     products: list,
   });
 }
