@@ -134,3 +134,25 @@ describe('translateEmailSubject', () => {
     expect(out).toContain('💛 Propina recibida — $15');
   });
 });
+
+describe('el saludo', () => {
+  // 14 plantillas empiezan con "Hi <strong>nombre</strong>, ...". Hasta el
+  // 2026-10-04 el resto de la frase se traducia y el "Hi" quedaba en ingles.
+  const html = '<p style="x">Hi <strong style="color:#0D1F3C">Ana</strong>, your booking is confirmed</p><p>High tide. This is fine.</p>';
+
+  it('se traduce en espanol y en chino', () => {
+    expect(translateEmailHtml(html, 'es')).toContain('>Hola <strong');
+    expect(translateEmailHtml(html, 'zh')).toContain('>您好 <strong');
+  });
+
+  it('no se come palabras que contienen "Hi"', () => {
+    expect(translateEmailHtml(html, 'es')).toContain('High tide. This is fine.');
+  });
+
+  it('ninguna plantilla de send-email.js saluda de otra forma', () => {
+    const src = fs.readFileSync(new URL('../../api/send-email.js', import.meta.url), 'utf8');
+    const greetings = src.match(/>Hi\b[^<]{0,3}</g) || [];
+    expect(greetings.length).toBeGreaterThan(0);
+    expect(greetings.every((g) => g === '>Hi <')).toBe(true);
+  });
+});

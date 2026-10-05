@@ -32,6 +32,9 @@ const dict = {
     'Questions? Call us on 0433 963 250.': '¿Dudas? Llámanos al 0433 963 250.',
     'Need to change something? Call or text 0433 963 250.':
       '¿Necesitas cambiar algo? Llama o escribe al 0433 963 250.',
+    // El saludo de 14 plantillas. Con la etiqueta incluida: un 'Hi' suelto
+    // se comeria cualquier palabra que lo contenga ("High", "This").
+    '>Hi <strong': '>Hola <strong',
     'Date & time': 'Fecha y hora',
     'Net amount': 'Importe neto',
     'GST (10%)': 'GST (10%)',
@@ -206,6 +209,7 @@ const dict = {
       '有疑问？回复此邮件，或通过 WhatsApp 联系 +61 433 963 250',
     'Questions? Call us on 0433 963 250.': '有疑问？请致电 0433 963 250。',
     'Need to change something? Call or text 0433 963 250.': '需要更改？请致电或短信 0433 963 250。',
+    '>Hi <strong': '>您好 <strong',
     'Date & time': '日期和时间',
     'Net amount': '不含税金额',
     'GST (10%)': 'GST（10%）',
