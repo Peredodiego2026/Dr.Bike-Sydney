@@ -6748,6 +6748,141 @@ updateHomeNav();
   window.history.replaceState(null, '', window.location.pathname + '#' + hash);
 })();
 
+// ── Recent work: the photos Diego marks "On website" in Admin > Photos ──
+// Admin publishes web-sized copies to the public `job-photos` bucket under
+// showcase/, plus showcase/_order.json with the order he picked
+// (api/_photo-gallery.js). Both index.html and landing.html carry the section
+// and load this module, so it lives here once. Every photo shown is Supabase
+// egress, the plan's tightest limit, so nothing is fetched until the visitor
+// is near this part of the page, each photo loads only when it is shown, and
+// the automatic advance runs once through the set while the carousel is on
+// screen and then rests. With nothing published the section never appears.
+function initRecentWork() {
+  const section = document.getElementById('recent-work');
+  const near = document.getElementById('reviews');
+  if (!section || !near || !('IntersectionObserver' in window)) return;
+  const BASE =
+    'https://tgpipbloisahufaywhqb.supabase.co/storage/v1/object/public/job-photos/showcase/';
+  const MAX = 12;
+  const ADVANCE_MS = 6000;
+  const NAME = /^(jobs|chat|reviews)_[0-9a-f-]{8,64}_[a-z0-9_]+\.[a-z0-9]+$/i;
+  const img = document.getElementById('rw-img');
+  const frame = section.querySelector('.rw-frame');
+  const prev = document.getElementById('rw-prev');
+  const next = document.getElementById('rw-next');
+  const dots = document.getElementById('rw-dots');
+  const count = document.getElementById('rw-count');
+  let names = [];
+  let at = 0;
+  let timer = null;
+  let advanced = 0;
+  let onScreen = false;
+  let held = false;
+  let autoplay = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+  const show = (i) => {
+    at = (i + names.length) % names.length;
+    img.classList.add('rw-loading');
+    // The alt text lives in the page as a hidden span so the language switch
+    // translates it like any other text.
+    img.alt = document.getElementById('rw-alt')?.textContent || '';
+    img.src = BASE + encodeURIComponent(names[at]);
+    count.textContent = `${at + 1} / ${names.length}`;
+    [...dots.children].forEach((d, k) => d.classList.toggle('rw-dot-on', k === at));
+  };
+  const build = () => {
+    const many = names.length > 1;
+    prev.hidden = next.hidden = count.hidden = dots.hidden = !many;
+    dots.innerHTML = names.map((_, k) => `<span class="rw-dot" data-i="${k}"></span>`).join('');
+  };
+  const stop = () => {
+    if (timer) clearInterval(timer);
+    timer = null;
+  };
+  const tick = () => {
+    if (!onScreen || held || document.hidden) return;
+    show(at + 1);
+    advanced += 1;
+    if (advanced >= names.length - 1) stop();
+  };
+  // Any move by the visitor ends the automatic advance for good.
+  const go = (i) => {
+    autoplay = false;
+    stop();
+    show(i);
+  };
+
+  img.addEventListener('load', () => img.classList.remove('rw-loading'));
+  img.addEventListener('error', () => {
+    console.warn('[recent-work] photo did not load, skipping it:', names[at]);
+    names.splice(at, 1);
+    if (!names.length) {
+      stop();
+      section.hidden = true;
+      return;
+    }
+    build();
+    show(at);
+  });
+  prev.addEventListener('click', () => go(at - 1));
+  next.addEventListener('click', () => go(at + 1));
+  dots.addEventListener('click', (e) => {
+    const d = e.target.closest('.rw-dot');
+    if (d) go(Number(d.dataset.i));
+  });
+  section.addEventListener('keydown', (e) => {
+    if (names.length < 2) return;
+    if (e.key === 'ArrowLeft') go(at - 1);
+    else if (e.key === 'ArrowRight') go(at + 1);
+  });
+  frame.addEventListener('mouseenter', () => (held = true));
+  frame.addEventListener('mouseleave', () => (held = false));
+  section.addEventListener('focusin', () => (held = true));
+  section.addEventListener('focusout', () => (held = false));
+  let startX = null;
+  frame.addEventListener('pointerdown', (e) => (startX = e.clientX));
+  frame.addEventListener('pointercancel', () => (startX = null));
+  frame.addEventListener('pointerup', (e) => {
+    if (startX === null || names.length < 2) return;
+    const dx = e.clientX - startX;
+    startX = null;
+    if (Math.abs(dx) > 40) go(dx < 0 ? at + 1 : at - 1);
+  });
+
+  const load = () =>
+    fetch(BASE + '_order.json')
+      // No file yet means nothing has been published: the section just stays
+      // hidden. (Storage answers a missing object with 400, not 404.)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        names = (Array.isArray(d?.order) ? d.order : []).filter((n) => NAME.test(n)).slice(0, MAX);
+        if (!names.length) return;
+        build();
+        section.hidden = false;
+        show(0);
+        new IntersectionObserver(
+          (entries) => {
+            onScreen = entries[0].isIntersecting;
+            if (onScreen && autoplay && !timer && names.length > 1)
+              timer = setInterval(tick, ADVANCE_MS);
+          },
+          { threshold: 0.6 }
+        ).observe(frame);
+      })
+      .catch((e) => console.warn('[recent-work] could not read the photo list:', e.message));
+
+  const watch = new IntersectionObserver(
+    (entries) => {
+      if (!entries[0].isIntersecting) return;
+      watch.disconnect();
+      load();
+    },
+    { rootMargin: '800px 0px' }
+  );
+  watch.observe(near);
+}
+
+initRecentWork();
 initShopAccess();
 // landing.html loads this module too (for the shared booking wizard) AND its
 // own js/landing-inline.js, which wires this exact same button id to its own
