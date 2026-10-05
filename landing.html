@@ -62,7 +62,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel up to 2 hours before your appointment at no charge."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes, we carry common parts in the van, but they are not included in the service price — they are charged separately at cost price with no markup."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $25, depending on your suburb) is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=897283619f">
+  <link rel="stylesheet" href="css/landing.css?v=6dff9f6aea">
   <link rel="stylesheet" href="css/shop.css?v=10dc5c2f4e">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
@@ -844,6 +844,31 @@
   </div>
 </section>
 
+<!-- ── RECENT WORK ─────────────────────────────────────────────────────────────
+     The photos Diego marks "On website" in Admin > Photos. Hidden until there
+     is at least one; js/landing-inline.js fills it. -->
+<section id="recent-work" class="rw-section" hidden aria-labelledby="rw-h">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge">OUR WORK</span>
+      <h2 class="section-h2" id="rw-h" style="font-size:2rem">Recent Work</h2>
+      <p class="section-sub">Real bikes our mechanics have fixed around Sydney, photographed on the job.</p>
+    </div>
+    <div class="rw" aria-roledescription="carousel">
+      <div class="rw-frame">
+        <img class="rw-img" id="rw-img" alt="" width="1200" height="900" loading="lazy" decoding="async" draggable="false">
+        <button type="button" class="rw-btn rw-prev" id="rw-prev" aria-label="Previous photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button type="button" class="rw-btn rw-next" id="rw-next" aria-label="Next photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+      <div class="rw-foot">
+        <div class="rw-dots" id="rw-dots" aria-hidden="true"></div>
+        <span class="rw-count" id="rw-count" aria-live="polite"></span>
+      </div>
+      <span id="rw-alt" hidden>A bike repaired by Dr. Bike Sydney</span>
+    </div>
+  </div>
+</section>
+
 <!-- ── TESTIMONIALS ──────────────────────────────────────────────────────────── -->
 <section id="reviews" style="padding:96px 0;background:white">
   <div class="container">
@@ -1477,13 +1502,13 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=628e4e016b"></script>
+<script src="js/landing-inline.js?v=d9e9f25557"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=72dbfef149"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing
      router.js, supabase.js, components.js or stripe.js here loads each of them
      a second time, under a URL the imports inside app.js never resolve to. -->
-<script src="js/app.js?v=2e3da7355d" type="module"></script>
+<script src="js/app.js?v=404ae84151" type="module"></script>
 <script src="js/live-prices.js?v=20260728a" defer></script>
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>

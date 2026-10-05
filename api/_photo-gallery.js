@@ -229,6 +229,37 @@ export async function copyToShowcase(src, { supabaseUrl, serviceKey, fetchImpl =
   return put.ok;
 }
 
+// The landing carousel shows these copies to every visitor who scrolls that
+// far, and Supabase egress is the plan's tightest limit (6.4GB of 5GB used in
+// Sept 2026). So Admin sends a web-sized JPEG it made in the browser (about
+// 1200px, a fraction of the original's weight) and that is what goes public.
+// Only a real JPEG under the cap is accepted; anything else returns false and
+// the caller copies the original instead.
+export const SHOWCASE_WEB_MAX_BYTES = 1_500_000;
+export async function uploadToShowcase(
+  src,
+  base64,
+  { supabaseUrl, serviceKey, fetchImpl = fetch }
+) {
+  const body = Buffer.from(String(base64 || '').replace(/^data:image\/\w+;base64,/, ''), 'base64');
+  const isJpeg = body.length > 3 && body[0] === 0xff && body[1] === 0xd8 && body[2] === 0xff;
+  if (!isJpeg || body.length > SHOWCASE_WEB_MAX_BYTES) return false;
+  const dest = `${SHOWCASE_FOLDER}/${showcaseName(src)}`;
+  const put = await fetchImpl(`${supabaseUrl}/storage/v1/object/${SHOWCASE_BUCKET}/${dest}`, {
+    method: 'POST',
+    headers: hdrs(serviceKey, {
+      'Content-Type': 'image/jpeg',
+      'x-upsert': 'true',
+      // A returning visitor's browser keeps it for a week instead of
+      // downloading it again - the name never points at a different photo.
+      'cache-control': 'max-age=604800',
+    }),
+    body,
+  });
+  if (!put.ok) console.warn(`[photo-gallery] could not write web copy ${dest}: HTTP ${put.status}`);
+  return put.ok;
+}
+
 // Deletes copies from `showcase/`. Never anything else: the names are checked
 // against the shape showcaseName() produces before they reach Storage.
 export async function removeFromShowcase(names, { supabaseUrl, serviceKey, fetchImpl = fetch }) {
