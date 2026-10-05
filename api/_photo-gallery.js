@@ -297,18 +297,26 @@ export function settleOrder(saved, listed) {
   return out;
 }
 
-export async function readOrder({ supabaseUrl, serviceKey, fetchImpl = fetch }) {
+// `missing` is true only when Storage says the file is not there (it answers
+// 400 for that, sometimes 404) - never for an error that might hide a real
+// order, so a caller can safely create it then.
+export async function readOrderFile({ supabaseUrl, serviceKey, fetchImpl = fetch }) {
   try {
     const r = await fetchImpl(
       `${supabaseUrl}/storage/v1/object/authenticated/${SHOWCASE_BUCKET}/${ORDER_FILE}`,
       { headers: hdrs(serviceKey) }
     );
-    if (!r.ok) return [];
+    if (!r.ok) return { order: [], missing: r.status === 400 || r.status === 404 };
     const d = await r.json();
-    return Array.isArray(d?.order) ? d.order.filter(isShowcaseName) : [];
-  } catch {
-    return [];
+    return { order: Array.isArray(d?.order) ? d.order.filter(isShowcaseName) : [], missing: false };
+  } catch (e) {
+    console.warn('[photo-gallery] could not read the website order:', e.message);
+    return { order: [], missing: false };
   }
+}
+
+export async function readOrder(opts) {
+  return (await readOrderFile(opts)).order;
 }
 
 export async function writeOrder(order, { supabaseUrl, serviceKey, fetchImpl = fetch }) {
