@@ -56,6 +56,8 @@ function table(name) {
     return out;
   };
   const run = () => {
+    // Un corte de red justo al leer el stock: se tira, no vuelve como error.
+    if (db.stockThrows && name === 'shop_variants' && cols === 'sku, stock') throw new Error('fetch failed');
     if (!migrated && NEW_COLS.some((c) => cols.includes(c))) {
       return { data: null, error: { message: 'column ' + name + '.' + NEW_COLS.find((c) => cols.includes(c)) + ' does not exist', code: '42703' } };
     }
@@ -355,5 +357,29 @@ describe('borrar y fotos', () => {
     expect(res.body.path).toMatch(/^brake-pads-b-[a-z0-9]+\.jpg$/);
     expect(res.body.photoRef).toBe('shop-photos/' + res.body.path);
     expect(uploads).toEqual([res.body.path]);
+  });
+});
+
+describe('lo que encontro la segunda revision', () => {
+  it('si leer el stock se cae, el pedido queda pagado Y salen los avisos', async () => {
+    const order = { id: 'o9', client_id: 'u1', client_email: 'a@b.com', client_name: 'Ana', client_phone: null, ship_address: '1 St', ship_suburb: 'Bondi', ship_postcode: '2026', payment_intent_id: 'pi_9', status: 'pending', shipping: 0, total: 18, mode: 'test' };
+    db.shop_orders = [order];
+    db.shop_order_items = [{ order_id: 'o9', sku: 'TS-1', qty: 1, name: 'BB Socket', variant: 'S39', line_total: 18 }];
+    db.stockThrows = true;
+    const out = await shop.settleOrder(sb, { ...order }, '');
+    expect(out.body.status).toBe('paid');
+    expect(sent).toHaveLength(2);
+  });
+
+  it('guardar desde el editor no le quita el "destacado"', async () => {
+    db.shop_products[0].featured = true;
+    await save({ slug: 'brake-pads', name: 'Brake Pads', section: 'parts', active: true }, [v('BP-1', 'Resin', 9), v('BP-2', 'Metal', 12)]);
+    expect(db.shop_products[0].featured).toBe(true);
+  });
+
+  it('pero si lo manda explicito, se guarda', async () => {
+    db.shop_products[0].featured = true;
+    await save({ slug: 'brake-pads', name: 'Brake Pads', section: 'parts', active: true, featured: false }, [v('BP-1', 'Resin', 9)]);
+    expect(db.shop_products[0].featured).toBe(false);
   });
 });

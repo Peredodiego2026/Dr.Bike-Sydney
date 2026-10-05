@@ -416,6 +416,27 @@ export async function settleOrder(sb, order, lang) {
 // numero. En dropshipping el stock de aca es una referencia, no un deposito:
 // el de verdad lo tiene LEBYCLE. Nunca tumba el cobro, que ya paso.
 async function takeStock(sb, orderId) {
+  // Un corte de red aca no puede tumbar settleOrder: el pedido ya esta pagado y
+  // lo que sigue son los avisos. Sin este try, una excepcion dejaba el pedido
+  // en 'paid' sin WhatsApp a Diego ni email al cliente.
+  try {
+    await moveStock(sb, orderId, -1);
+  } catch (e) {
+    console.error('[shop] no pude bajar el stock del pedido', orderId, e?.message || e);
+  }
+}
+
+// Devuelve el stock de un pedido reembolsado antes de pedirselo a LEBYCLE: esas
+// piezas nunca salieron. Mejor esfuerzo, igual que takeStock.
+export async function giveStockBack(sb, orderId) {
+  try {
+    await moveStock(sb, orderId, +1);
+  } catch (e) {
+    console.error('[shop] no pude devolver el stock del pedido', orderId, e?.message || e);
+  }
+}
+
+async function moveStock(sb, orderId, sign) {
   const { data: lines, error } = await sb.from('shop_order_items').select('sku, qty').eq('order_id', orderId);
   if (error || !lines?.length) return;
   const { data: vars, error: vErr } = await sb
@@ -434,9 +455,9 @@ async function takeStock(sb, orderId) {
     const qty = lines.filter((l) => l.sku === v.sku).reduce((n, l) => n + Number(l.qty), 0);
     const { error: uErr } = await sb
       .from('shop_variants')
-      .update({ stock: Math.max(0, Number(v.stock) - qty) })
+      .update({ stock: Math.max(0, Number(v.stock) + sign * qty) })
       .eq('sku', v.sku);
-    if (uErr) console.error('[shop] no pude bajar el stock', v.sku, uErr.message);
+    if (uErr) console.error('[shop] no pude mover el stock', v.sku, uErr.message);
   }
 }
 

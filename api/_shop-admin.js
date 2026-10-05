@@ -20,7 +20,7 @@
 // reembolsa, y queda.
 
 import { SELF_BASE_URL } from './_security.js';
-import { ORDER_FOR_SETTLE, settleOrder, orderRef, shopStripe, SHOP_MODE } from './_shop.js';
+import { ORDER_FOR_SETTLE, settleOrder, orderRef, shopStripe, SHOP_MODE, giveStockBack } from './_shop.js';
 import { listProducts, saveProduct, deleteProduct, photoUploadUrl } from './_shop-admin-catalog.js';
 
 const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
@@ -278,6 +278,9 @@ export async function handleShopAdmin(req, res, sb) {
         );
         const ok = await move(sb, id, REFUNDABLE, { status: 'refunded', refunded_at: now, refund_id: refund.id });
         if (!ok) return res.status(200).json({ status: 'refunded', refundId: refund.id });
+        // Si todavia no se le habia pedido a LEBYCLE, esas piezas no salieron:
+        // vuelven al stock. Pedido o enviado, ya no.
+        if (order.status === 'paid') await giveStockBack(sb, id);
         const emailed = await emailClient(sb, order, 'shop_refunded', {});
         return res.status(200).json({ status: 'refunded', refundId: refund.id, emailed });
       }
