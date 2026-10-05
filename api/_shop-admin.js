@@ -172,11 +172,98 @@ async function list(sb, res) {
   });
 }
 
+// ── El reporte ───────────────────────────────────────────────────────────────
+//
+// Ventas y margen de un periodo, para Admin > Shop Orders > Sales report.
+//
+// El costo es el de HOY (shop_variants.cost): una linea de pedido guarda lo
+// que se cobro, no lo que costaba la pieza ese dia. Con una lista mayorista que
+// cambia pocas veces al año la diferencia es chica, y el panel lo dice. Las
+// lineas sin costo cargado se cuentan aparte para que el margen no mienta.
+//
+// Por defecto solo pedidos REALES: los de prueba (claves de Stripe test)
+// inflarian las ventas. El panel tiene un tilde para incluirlos.
+const SOLD = ['paid', 'ordered', 'packed', 'sent', 'delivered'];
+const r2 = (n) => Math.round(n * 100) / 100;
+
+export async function report(sb, req, res) {
+  const days = Math.max(0, Math.min(3650, Math.floor(Number(req.body?.days) || 0)));
+  const includeTest = req.body?.includeTest === true;
+  let q = sb.from('shop_orders').select('id, status, mode, total, subtotal, shipping, created_at');
+  if (days > 0) q = q.gte('created_at', new Date(Date.now() - days * 86400000).toISOString());
+  const { data: all, error } = await q;
+  if (error) return res.status(500).json({ error: 'Could not read the orders: ' + error.message });
+
+  const orders = (all || []).filter((o) => includeTest || o.mode === 'live');
+  const sold = orders.filter((o) => SOLD.includes(o.status));
+  const refunded = orders.filter((o) => o.status === 'refunded');
+
+  let items = [];
+  if (sold.length) {
+    const { data, error: iErr } = await sb
+      .from('shop_order_items')
+      .select('order_id, sku, name, qty, line_total')
+      .in(
+        'order_id',
+        sold.map((o) => o.id)
+      );
+    if (iErr) return res.status(500).json({ error: 'Could not read the order lines: ' + iErr.message });
+    items = data || [];
+  }
+  const costBySku = {};
+  const skus = [...new Set(items.map((i) => i.sku))];
+  if (skus.length) {
+    const { data } = await sb.from('shop_variants').select('sku, cost').in('sku', skus);
+    for (const v of data || []) if (v.cost !== null && v.cost !== undefined) costBySku[v.sku] = Number(v.cost);
+  }
+
+  let cost = 0;
+  let missingCost = 0;
+  const byProduct = {};
+  for (const i of items) {
+    const unit = costBySku[i.sku];
+    const lineCost = unit === undefined ? null : unit * Number(i.qty);
+    if (lineCost === null) missingCost++;
+    else cost += lineCost;
+    const p = (byProduct[i.name] ||= { name: i.name, qty: 0, revenue: 0, cost: 0, costKnown: true });
+    p.qty += Number(i.qty);
+    p.revenue += Number(i.line_total);
+    if (lineCost === null) p.costKnown = false;
+    else p.cost += lineCost;
+  }
+  const revenue = sold.reduce((n, o) => n + Number(o.total), 0);
+  const products = sold.reduce((n, o) => n + Number(o.subtotal), 0);
+  const shipping = sold.reduce((n, o) => n + Number(o.shipping || 0), 0);
+  const margin = products - cost;
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  return res.status(200).json({
+    days,
+    includeTest,
+    orders: sold.length,
+    revenue: r2(revenue),
+    products: r2(products),
+    shipping: r2(shipping),
+    cost: r2(cost),
+    margin: r2(margin),
+    marginPct: products > 0 ? Math.round((margin / products) * 100) : null,
+    avgOrder: sold.length ? r2(revenue / sold.length) : null,
+    refunds: { count: refunded.length, amount: r2(refunded.reduce((n, o) => n + Number(o.total), 0)) },
+    notPaid: orders.filter((o) => o.status === 'pending').length,
+    missingCost,
+    top: Object.values(byProduct)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10)
+      .map((p) => ({ name: p.name, qty: p.qty, revenue: r2(p.revenue), margin: p.costKnown ? r2(p.revenue - p.cost) : null })),
+  });
+}
+
 // ── Las acciones ─────────────────────────────────────────────────────────────
 
 export async function handleShopAdmin(req, res, sb) {
   const action = str(req.body?.action, 24);
   if (action === 'list') return list(sb, res);
+  if (action === 'report') return report(sb, req, res);
   // Admin > Shop Products (api/_shop-admin-catalog.js)
   if (action === 'products') return listProducts(sb, res);
   if (action === 'product-save') return saveProduct(sb, req, res);

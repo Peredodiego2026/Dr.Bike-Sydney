@@ -31,6 +31,8 @@ import {
   shippingFor,
   shippingNoteHtml,
   deliveryHtml,
+  pickHome,
+  photosOf,
 } from './shop.js';
 import { startCheckout, confirmOrder, mountCard } from './shop-pay.js';
 import { getLang, translateScreen } from './i18n.js';
@@ -285,6 +287,10 @@ export async function renderShopProduct() {
   // coincidiria con el de la lista y parece un error.
   let sku = [...product.variants].sort((a, b) => a.price - b.price)[0].sku;
   let qty = 1;
+  // Fotos: se cambian tocando la miniatura, nunca deslizando. Deslizar desde
+  // el borde es "atras" en el telefono, y Diego pidio que no se pisen.
+  const photos = photosOf(product);
+  let photo = 0;
 
   const paint = () => {
     const v = findVariant(product, sku);
@@ -295,7 +301,16 @@ export async function renderShopProduct() {
         ${cartBtn()}
       </div>
       <div class="screen-content">
-        <div class="shop-hero">${product.img ? `<img src="${esc(product.img)}" alt="${esc(product.name)}">` : ''}</div>
+        <div class="shop-hero">${photos[photo] ? `<img src="${esc(photos[photo])}" alt="${esc(product.name)}">` : ''}</div>
+        ${
+          photos.length > 1
+            ? `<div class="shop-thumbs">${photos
+                .map(
+                  (src, i) => `<button type="button" class="shop-thumb" data-photo="${i}" aria-label="Show this photo" aria-pressed="${i === photo}"><img src="${esc(src)}" alt=""></button>`
+                )
+                .join('')}</div>`
+            : ''
+        }
         <div class="shop-brand" style="margin-top:16px">${esc(catalog.brand || 'LEBYCLE')}</div>
         <h2 class="shop-title">${esc(product.name)}</h2>
         <div style="display:flex;align-items:baseline;gap:9px;margin-top:7px">
@@ -343,6 +358,12 @@ export async function renderShopProduct() {
       b.addEventListener('click', () => {
         sku = b.dataset.sku;
         qty = Math.max(1, Math.min(qty, maxQty(findVariant(product, sku)) || 1));
+        paint();
+      })
+    );
+    screen.querySelectorAll('[data-photo]').forEach((b) =>
+      b.addEventListener('click', () => {
+        photo = Number(b.dataset.photo) || 0;
         paint();
       })
     );
@@ -682,7 +703,7 @@ export async function mountShopBand() {
     // algo que el visitante no pidio seria peor que el silencio.
     return;
   }
-  const picks = sortProducts(catalog.products, 'stocked').slice(0, 8);
+  const picks = pickHome(catalog.products, 8);
   band.innerHTML = `
     <div class="lp-container">
       <div class="shop-band__head">

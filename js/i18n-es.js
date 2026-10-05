@@ -1782,4 +1782,7 @@ export default {
   'Delivered in': 'Llega en',
   'business days': 'días hábiles',
   'Delivery is worked out at checkout.': 'El envío se calcula al pagar.',
+  // La tienda: destacados y fotos
+  'Show this photo': 'Ver esta foto',
+  'Featured': 'Destacados',
 };

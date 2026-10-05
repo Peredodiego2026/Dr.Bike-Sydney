@@ -1625,4 +1625,7 @@ export default {
   'Delivered in': '送达时间',
   'business days': '个工作日',
   'Delivery is worked out at checkout.': '运费在结账时计算。',
+  // La tienda: destacados y fotos
+  'Show this photo': '查看这张照片',
+  'Featured': '精选推荐',
 };
