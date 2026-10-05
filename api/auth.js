@@ -60,6 +60,7 @@ import {
   showcaseName,
   settleOrder,
   readOrder,
+  readOrderFile,
   writeOrder,
 } from './_photo-gallery.js';
 // The factor lookup runs in front of every admin request. Four seconds is
@@ -5228,7 +5229,16 @@ export async function handleAdminPhotosList(req, res) {
   try {
     const listed = await listShowcase(opts);
     onSite = new Set(listed);
-    order = settleOrder(await readOrder(opts), listed);
+    const saved = await readOrderFile(opts);
+    order = settleOrder(saved.order, listed);
+    // The landing and the phone home ask for this file on every visit that
+    // reaches the reviews. Until it exists Storage answers 400, which every
+    // visitor's console shows as a red error. Opening Photos once creates it
+    // - empty while nothing is published.
+    if (saved.missing)
+      await writeOrder(order, opts).catch((e) =>
+        console.warn('[admin-photos] could not create the website order:', e.message)
+      );
   } catch (e) {
     console.warn('[admin-photos] could not list the website photos:', e.message);
   }
