@@ -5,6 +5,15 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      # Stripe 23 pins API version 2026-09-30.endive, which answers 400 to
+      # `payment_method_types` on PaymentIntents and Checkout Sessions - and
+      # every payment we take sends it (api/auth.js, api/_shop.js,
+      # api/create-payment-session.js). CI stays green because the tests mock
+      # Stripe. Take the major only together with that migration
+      # (docs/PENDIENTES.md). Minor and patch releases of 22 still come.
+      - dependency-name: "stripe"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
