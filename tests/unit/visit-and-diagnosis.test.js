@@ -36,7 +36,16 @@ describe('the old name is gone from every surface', () => {
           continue;
         }
         if (!/\.(html|js)$/.test(e.name)) continue;
-        const txt = fs.readFileSync(path.join(dir, e.name), 'utf8');
+        // Un archivo que otro test planta y borra al instante
+        // (abn-single-source.test.js) puede desaparecer entre readdir y esta
+        // lectura. Ese se salta; cualquier otro error sigue tirando.
+        let txt;
+        try {
+          txt = fs.readFileSync(path.join(dir, e.name), 'utf8');
+        } catch (err) {
+          if (err.code === 'ENOENT') continue;
+          throw err;
+        }
         if (/call-out fee/i.test(txt) || /What's My Fee/i.test(txt)) {
           offenders.push(path.join(dir, e.name));
         }
