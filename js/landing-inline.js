@@ -661,6 +661,148 @@ let _authMode = 'signin';
     });
 }());
 
+/* ── Recent work: the photos Diego marks "On website" in Admin > Photos ── */
+// Admin publishes web-sized copies to the public `job-photos` bucket under
+// showcase/, plus showcase/_order.json with the order he picked
+// (api/_photo-gallery.js). Every photo shown here is Supabase egress, the
+// plan's tightest limit, so nothing is fetched until the visitor is near this
+// part of the page, each photo loads only when it is shown, and the automatic
+// advance runs once through the set while the carousel is on screen and then
+// rests. With nothing published the section never appears.
+(function () {
+  const section = document.getElementById('recent-work');
+  const near = document.getElementById('reviews');
+  if (!section || !near || !('IntersectionObserver' in window)) return;
+  const BASE = 'https://tgpipbloisahufaywhqb.supabase.co/storage/v1/object/public/job-photos/showcase/';
+  const MAX = 12;
+  const ADVANCE_MS = 6000;
+  const NAME = /^(jobs|chat|reviews)_[0-9a-f-]{8,64}_[a-z0-9_]+\.[a-z0-9]+$/i;
+  const img = document.getElementById('rw-img');
+  const frame = section.querySelector('.rw-frame');
+  const prev = document.getElementById('rw-prev');
+  const next = document.getElementById('rw-next');
+  const dots = document.getElementById('rw-dots');
+  const count = document.getElementById('rw-count');
+  let names = [];
+  let at = 0;
+  let timer = null;
+  let advanced = 0;
+  let onScreen = false;
+  let held = false;
+  let autoplay = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function show(i) {
+    at = (i + names.length) % names.length;
+    img.classList.add('rw-loading');
+    // The alt text lives in the page as a hidden span so the language switch
+    // translates it like any other text.
+    img.alt = (document.getElementById('rw-alt') || {}).textContent || '';
+    img.src = BASE + encodeURIComponent(names[at]);
+    count.textContent = (at + 1) + ' / ' + names.length;
+    Array.prototype.forEach.call(dots.children, function (d, k) {
+      d.classList.toggle('rw-dot-on', k === at);
+    });
+  }
+
+  function build() {
+    const many = names.length > 1;
+    prev.hidden = next.hidden = count.hidden = dots.hidden = !many;
+    dots.innerHTML = names.map(function (_, k) {
+      return '<span class="rw-dot" data-i="' + k + '"></span>';
+    }).join('');
+  }
+
+  function stop() {
+    if (timer) clearInterval(timer);
+    timer = null;
+  }
+
+  function tick() {
+    if (!onScreen || held || document.hidden) return;
+    show(at + 1);
+    advanced += 1;
+    if (advanced >= names.length - 1) stop();
+  }
+
+  // Any move by the visitor ends the automatic advance for good.
+  function go(i) {
+    autoplay = false;
+    stop();
+    show(i);
+  }
+
+  img.addEventListener('load', function () {
+    img.classList.remove('rw-loading');
+  });
+  img.addEventListener('error', function () {
+    console.warn('[recent-work] photo did not load, skipping it:', names[at]);
+    names.splice(at, 1);
+    if (!names.length) {
+      stop();
+      section.hidden = true;
+      return;
+    }
+    build();
+    show(at);
+  });
+  prev.addEventListener('click', function () { go(at - 1); });
+  next.addEventListener('click', function () { go(at + 1); });
+  dots.addEventListener('click', function (e) {
+    const d = e.target.closest('.rw-dot');
+    if (d) go(Number(d.getAttribute('data-i')));
+  });
+  section.addEventListener('keydown', function (e) {
+    if (names.length < 2) return;
+    if (e.key === 'ArrowLeft') go(at - 1);
+    else if (e.key === 'ArrowRight') go(at + 1);
+  });
+  frame.addEventListener('mouseenter', function () { held = true; });
+  frame.addEventListener('mouseleave', function () { held = false; });
+  section.addEventListener('focusin', function () { held = true; });
+  section.addEventListener('focusout', function () { held = false; });
+  let startX = null;
+  frame.addEventListener('pointerdown', function (e) { startX = e.clientX; });
+  frame.addEventListener('pointerup', function (e) {
+    if (startX === null || names.length < 2) return;
+    const dx = e.clientX - startX;
+    startX = null;
+    if (Math.abs(dx) > 40) go(dx < 0 ? at + 1 : at - 1);
+  });
+  frame.addEventListener('pointercancel', function () { startX = null; });
+
+  function load() {
+    fetch(BASE + '_order.json')
+      .then(function (r) {
+        // No file yet means nothing has been published: the section just stays
+        // hidden. (Storage answers a missing object with 400, not 404.)
+        return r.ok ? r.json() : null;
+      })
+      .then(function (d) {
+        names = (d && Array.isArray(d.order) ? d.order : []).filter(function (n) {
+          return NAME.test(n);
+        }).slice(0, MAX);
+        if (!names.length) return;
+        build();
+        section.hidden = false;
+        show(0);
+        new IntersectionObserver(function (entries) {
+          onScreen = entries[0].isIntersecting;
+          if (onScreen && autoplay && !timer && names.length > 1) timer = setInterval(tick, ADVANCE_MS);
+        }, { threshold: 0.6 }).observe(frame);
+      })
+      .catch(function (e) {
+        console.warn('[recent-work] could not read the photo list:', e.message);
+      });
+  }
+
+  const watch = new IntersectionObserver(function (entries) {
+    if (!entries[0].isIntersecting) return;
+    watch.disconnect();
+    load();
+  }, { rootMargin: '800px 0px' });
+  watch.observe(near);
+}());
+
 document.addEventListener('DOMContentLoaded', function() {
   // updateNavForSession is the ONLY thing that decides what the account button
   // does, so it has to run even when the session lookup fails - otherwise the
@@ -1933,7 +2075,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const comment = (document.getElementById('rv-comment').value || '').trim();
 
     const webOk = document.getElementById('rv-photo-web-ok').checked;
-    const doSubmit = async function(photoBase64) {
+    const doSubmit = async function(photoBase64, photoThumbBase64) {
       // Same rule as js/supabase.js submitReview: the link's token wins, the
       // session is the fallback, and with neither there is nothing to send.
       let cred = null;
@@ -1956,7 +2098,7 @@ document.addEventListener('DOMContentLoaded', function() {
       fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.assign({ role: 'client-review', booking_id: reviewId, rating: currentRating, comment: comment, photo_base64: photoBase64 || null, photo_web_ok: !!photoBase64 && webOk }, cred))
+        body: JSON.stringify(Object.assign({ role: 'client-review', booking_id: reviewId, rating: currentRating, comment: comment, photo_base64: photoBase64 || null, photo_thumb_base64: photoBase64 ? photoThumbBase64 || null : null, photo_web_ok: !!photoBase64 && webOk }, cred))
       })
       .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
       .then(function(res) {
@@ -1985,9 +2127,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (reviewPhotoFile) {
       btn.textContent = 'Uploading photo...';
-      compressImageToBase64(reviewPhotoFile, 1920, 0.82)
-        .then(function(b64) { doSubmit(b64); })
-        .catch(function() { doSubmit(null); });
+      // Plus a 400px copy for the Admin > Photos tile; optional, the tile
+      // falls back to the full photo without it.
+      Promise.all([
+        compressImageToBase64(reviewPhotoFile, 1920, 0.82),
+        compressImageToBase64(reviewPhotoFile, 400, 0.8).catch(function() { return null; }),
+      ])
+        .then(function(r) { doSubmit(r[0], r[1]); })
+        .catch(function() { doSubmit(null, null); });
     } else {
       doSubmit(null);
     }

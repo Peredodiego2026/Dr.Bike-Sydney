@@ -6549,13 +6549,43 @@ async function loadClaims() {
 // on the server, so two open tabs cannot ship or refund the same order twice.
 // Nothing is deleted from here: an order is a record.
 const SHOP_STATUS = {
-  pending: { label: 'Not paid', fg: 'var(--amber-ink)', bg: 'var(--amber-lt)', edge: 'var(--amber)' },
-  paid: { label: 'Paid - order it', fg: 'var(--blue-text)', bg: 'var(--blue-lt)', edge: 'var(--blue)' },
-  ordered: { label: 'Ordered from LEBYCLE', fg: 'var(--purple-text)', bg: 'var(--purple-lt)', edge: 'var(--purple)' },
-  packed: { label: 'Ordered from LEBYCLE', fg: 'var(--purple-text)', bg: 'var(--purple-lt)', edge: 'var(--purple)' },
-  sent: { label: 'On its way', fg: 'var(--green-text)', bg: 'var(--green-lt)', edge: 'var(--green)' },
+  pending: {
+    label: 'Not paid',
+    fg: 'var(--amber-ink)',
+    bg: 'var(--amber-lt)',
+    edge: 'var(--amber)',
+  },
+  paid: {
+    label: 'Paid - order it',
+    fg: 'var(--blue-text)',
+    bg: 'var(--blue-lt)',
+    edge: 'var(--blue)',
+  },
+  ordered: {
+    label: 'Ordered from LEBYCLE',
+    fg: 'var(--purple-text)',
+    bg: 'var(--purple-lt)',
+    edge: 'var(--purple)',
+  },
+  packed: {
+    label: 'Ordered from LEBYCLE',
+    fg: 'var(--purple-text)',
+    bg: 'var(--purple-lt)',
+    edge: 'var(--purple)',
+  },
+  sent: {
+    label: 'On its way',
+    fg: 'var(--green-text)',
+    bg: 'var(--green-lt)',
+    edge: 'var(--green)',
+  },
   delivered: { label: 'Delivered', fg: 'var(--gray)', bg: 'var(--border-lt)', edge: 'var(--gray)' },
-  cancelled: { label: 'Cancelled', fg: 'var(--gray)', bg: 'var(--border-lt)', edge: 'var(--border)' },
+  cancelled: {
+    label: 'Cancelled',
+    fg: 'var(--gray)',
+    bg: 'var(--border-lt)',
+    edge: 'var(--border)',
+  },
   refunded: { label: 'Refunded', fg: 'var(--red-text)', bg: 'var(--red-lt)', edge: 'var(--red)' },
 };
 const SHOP_FILTERS = [
@@ -6574,10 +6604,16 @@ let _shopFilter = 'todo';
 const _shopOpen = new Set();
 let _shopWired = false;
 
-const soMoney = (n) => (n === null || n === undefined || !Number.isFinite(Number(n)) ? '—' : '$' + Number(n).toFixed(2));
+const soMoney = (n) =>
+  n === null || n === undefined || !Number.isFinite(Number(n)) ? '—' : '$' + Number(n).toFixed(2);
 const soWhen = (iso) =>
   iso
-    ? new Date(iso).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+    ? new Date(iso).toLocaleString('en-AU', {
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
     : '';
 
 async function shopAdmin(body) {
@@ -6599,7 +6635,8 @@ async function loadShopOrders() {
   const list = document.getElementById('shop-orders-list');
   if (!list) return;
   wireShopOrders();
-  list.innerHTML = '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading the orders...</div>';
+  list.innerHTML =
+    '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading the orders...</div>';
   try {
     const data = await shopAdmin({ action: 'list' });
     _shopOrders = data.orders || [];
@@ -6773,11 +6810,23 @@ async function runShopAction(btn) {
   const card = btn.closest('[data-so-card]');
   const val = (f) => card?.querySelector(`[data-so-field="${f}"]`)?.value.trim() || '';
   const order = _shopOrders.find((o) => o.id === id);
-  if (action === 'refund' && !confirm(`Refund ${soMoney(order?.total)} to the client's card for order #${order?.ref}?\n\nStripe sends the money back. This cannot be undone.`)) return;
-  if (action === 'cancel' && !confirm(`Cancel unpaid order #${order?.ref}? Nothing was charged.`)) return;
+  if (
+    action === 'refund' &&
+    !confirm(
+      `Refund ${soMoney(order?.total)} to the client's card for order #${order?.ref}?\n\nStripe sends the money back. This cannot be undone.`
+    )
+  )
+    return;
+  if (action === 'cancel' && !confirm(`Cancel unpaid order #${order?.ref}? Nothing was charged.`))
+    return;
   const body = { action, orderId: id };
   if (action === 'ordered') body.supplierRef = val('supplierRef');
-  if (action === 'sent') Object.assign(body, { carrier: val('carrier'), trackingNumber: val('trackingNumber'), trackingUrl: val('trackingUrl') });
+  if (action === 'sent')
+    Object.assign(body, {
+      carrier: val('carrier'),
+      trackingNumber: val('trackingNumber'),
+      trackingUrl: val('trackingUrl'),
+    });
   if (action === 'note') body.notes = val('notes');
   const label = btn.textContent;
   btn.disabled = true;
@@ -6786,7 +6835,11 @@ async function runShopAction(btn) {
   try {
     const r = await shopAdmin(body);
     let msg = SHOP_DONE[action] || 'Done';
-    if (action === 'check') msg = r.status === 'paid' ? 'Stripe says PAID - the client and you were notified' : 'Stripe says: ' + r.status;
+    if (action === 'check')
+      msg =
+        r.status === 'paid'
+          ? 'Stripe says PAID - the client and you were notified'
+          : 'Stripe says: ' + r.status;
     if (r.emailed === false) msg += ' (the email to the client failed - see the note)';
     showToast(msg);
     await loadShopOrders();
@@ -7153,6 +7206,30 @@ function downloadPhotos(items) {
   if (ready.length > 1) showToast(`Downloading ${ready.length} photos`);
 }
 
+// What goes on the website is served to every visitor who scrolls to the
+// landing carousel, and Supabase egress is the plan's tightest limit. So each
+// photo is shrunk here first and the server publishes that
+// (api/_photo-gallery.js uploadToShowcase). null when it cannot be done - the
+// server then copies the original, which still works, just heavier.
+const WEBSITE_PHOTO_MAX_SIDE = 1200;
+async function websiteSizedPhoto(url) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const bitmap = await window.createImageBitmap(await r.blob());
+    const scale = Math.min(1, WEBSITE_PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close?.();
+    return canvas.toDataURL('image/jpeg', 0.8);
+  } catch (e) {
+    console.warn('[photos] no web-sized copy, the original will be published:', e.message);
+    return null;
+  }
+}
+
 async function featurePhotos(items) {
   const todo = items.filter(canPublish);
   const locked = items.filter((p) => !p.on_website && p.web_ok === false).length;
@@ -7160,20 +7237,40 @@ async function featurePhotos(items) {
     if (locked) showToast(PHOTO_NOT_ALLOWED);
     return;
   }
-  try {
-    const d = await photosApi('admin-photos-feature', { refs: todo.map((p) => p.ref) });
-    const skipped = locked ? ` · ${locked} skipped: the client did not allow it` : '';
-    showToast(
-      (d.failed?.length
-        ? `${d.done.length} on the website · ${d.failed.length} could not be copied`
-        : todo.length === 1
-          ? 'On the website ✓'
-          : `${todo.length} photos on the website ✓`) + skipped
-    );
-  } catch (e) {
-    showToast('Could not add to website: ' + e.message);
+  if (todo.length > 1) showToast(`Preparing ${todo.length} photos...`);
+  const done = [];
+  let failed = 0;
+  let lastError = '';
+  // A few per request: each web copy is a few hundred KB of base64, and Vercel
+  // refuses a request body over 4.5MB.
+  for (let i = 0; i < todo.length; i += 4) {
+    const chunk = todo.slice(i, i + 4);
+    const web = {};
+    for (const p of chunk) {
+      const b64 = p.url ? await websiteSizedPhoto(p.url) : null;
+      if (b64) web[p.ref] = b64;
+    }
+    try {
+      const d = await photosApi('admin-photos-feature', { refs: chunk.map((p) => p.ref), web });
+      done.push(...(d.done || []));
+      failed += d.failed?.length || 0;
+    } catch (e) {
+      lastError = e.message;
+      failed += chunk.length;
+    }
+  }
+  if (!done.length) {
+    showToast('Could not add to website: ' + (lastError || 'nothing was copied'));
     return;
   }
+  const skipped = locked ? ` · ${locked} skipped: the client did not allow it` : '';
+  showToast(
+    (failed
+      ? `${done.length} on the website · ${failed} could not be copied`
+      : todo.length === 1
+        ? 'On the website ✓'
+        : `${todo.length} photos on the website ✓`) + skipped
+  );
   _photoSel = null;
   await loadPhotos();
 }

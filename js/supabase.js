@@ -117,7 +117,8 @@ export async function submitReview(
   comment,
   photoBase64,
   trackingToken,
-  photoWebOk = false
+  photoWebOk = false,
+  photoThumbBase64 = null
 ) {
   const {
     data: { session },
@@ -136,6 +137,7 @@ export async function submitReview(
       comment,
       photo_base64: photoBase64 || null,
       photo_web_ok: photoWebOk === true,
+      photo_thumb_base64: photoBase64 ? photoThumbBase64 || null : null,
     }),
   });
   const data = await resp.json();
