@@ -58,7 +58,7 @@
     <meta name="apple-mobile-web-app-title" content="Dr. Bike" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="css/variables.css?v=b58e9c267c" />
-    <link rel="stylesheet" href="css/main.css?v=44e8421f05" />
+    <link rel="stylesheet" href="css/main.css?v=25627d26bf" />
     <link rel="stylesheet" href="css/home.css?v=863962effe" />
     <link rel="stylesheet" href="css/shop.css?v=87b8968dcb" />
     <!-- Google Analytics -->
@@ -1048,6 +1048,46 @@
                   loading="lazy"
                 />
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Recent work: the photos Diego marks "On website" in Admin > Photos.
+             Hidden until there is at least one; js/app.js initRecentWork fills
+             it (the same section landing.html carries). -->
+        <section id="recent-work" class="rw-section" hidden aria-labelledby="rw-h">
+          <div class="lp-container">
+            <div class="section-center">
+              <span class="section-badge">OUR WORK</span>
+              <h2 class="section-h2" id="rw-h">Recent Work</h2>
+              <p class="section-sub">
+                Real bikes our mechanics have fixed around Sydney, photographed on the job.
+              </p>
+            </div>
+            <div class="rw" aria-roledescription="carousel">
+              <div class="rw-frame">
+                <img
+                  class="rw-img"
+                  id="rw-img"
+                  alt=""
+                  width="1200"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                />
+                <button type="button" class="rw-btn rw-prev" id="rw-prev" aria-label="Previous photo">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+                </button>
+                <button type="button" class="rw-btn rw-next" id="rw-next" aria-label="Next photo">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+                </button>
+              </div>
+              <div class="rw-foot">
+                <div class="rw-dots" id="rw-dots" aria-hidden="true"></div>
+                <span class="rw-count" id="rw-count" aria-live="polite"></span>
+              </div>
+              <span id="rw-alt" hidden>A bike repaired by Dr. Bike Sydney</span>
             </div>
           </div>
         </section>
@@ -2415,7 +2455,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=404ae84151" type="module"></script>
+    <script src="js/app.js?v=812bc5701d" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';

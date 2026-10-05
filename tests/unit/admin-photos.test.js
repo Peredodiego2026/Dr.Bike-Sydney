@@ -33,6 +33,9 @@ let calls = [];
 const ON_WEB = `jobs_${B1}_before_1759200000000.jpg`;
 let showcase = new Set();
 let savedOrder = null;
+// What Storage answers for the order file when it is not saved: 400 is what
+// it really says for a missing object.
+let orderMissingStatus = 400;
 
 vi.mock('stripe', () => ({ default: class {} }));
 vi.mock('@supabase/supabase-js', () => ({
@@ -123,7 +126,7 @@ globalThis.fetch = async (url, init = {}) => {
     return ok({ Key: 'x' });
   }
   if (u.endsWith('/object/authenticated/job-photos/showcase/_order.json')) {
-    return savedOrder ? ok({ order: savedOrder }) : no(404);
+    return savedOrder ? ok({ order: savedOrder }) : no(orderMissingStatus);
   }
   if (u.includes('/storage/v1/object/authenticated/')) return ok({});
   if (u.endsWith('/object/job-photos/showcase/_order.json') && method === 'POST') {
@@ -167,6 +170,7 @@ beforeEach(() => {
   calls = [];
   showcase = new Set([ON_WEB]);
   savedOrder = null;
+  orderMissingStatus = 400;
 });
 
 describe('what counts as a job photo', () => {
@@ -436,6 +440,34 @@ describe('the carousel order', () => {
       },
       { name: ON_WEB, url: `${URL_BASE}/storage/v1/object/public/job-photos/showcase/${ON_WEB}` },
     ]);
+  });
+
+  // The landing asks for showcase/_order.json on every visit; until it exists
+  // each visitor's console shows Storage's 400 as a red error.
+  const orderWrites = () =>
+    calls.filter((c) => c.method === 'POST' && c.url.endsWith('/showcase/_order.json'));
+
+  it('opening Photos creates the order file when Storage says it is not there', async () => {
+    for (const status of [400, 404]) {
+      calls = [];
+      savedOrder = null;
+      orderMissingStatus = status;
+      await call(handleAdminPhotosList, { access_token: 'admin-token' });
+      expect(orderWrites(), String(status)).toHaveLength(1);
+      expect(savedOrder).toEqual([ON_WEB]);
+    }
+  });
+
+  it("but never over an order it could not read - a Storage hiccup keeps Diego's order", async () => {
+    orderMissingStatus = 503;
+    await call(handleAdminPhotosList, { access_token: 'admin-token' });
+    expect(orderWrites()).toEqual([]);
+  });
+
+  it('and leaves an existing order file alone', async () => {
+    savedOrder = [ON_WEB];
+    await call(handleAdminPhotosList, { access_token: 'admin-token' });
+    expect(orderWrites()).toEqual([]);
   });
 
   it('a photo put on the website goes to the end of the carousel', async () => {

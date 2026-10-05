@@ -16,8 +16,47 @@ export function initSentry() {
     dsn: DSN,
     environment: process.env.VERCEL_ENV || 'development',
     tracesSampleRate: 0.2,
+    // Sentry 11 collects request bodies, cookies and user info by default when
+    // this is left unset (v10 did not). Our request bodies carry access tokens,
+    // phone numbers, addresses and photos, so this is v10's baseline spelled
+    // out, from Sentry's own migration guide - not a choice to revisit lightly.
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: {
+        request: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+        response: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+      },
+      httpBodies: [],
+      // Plus the query parameters our routes take secrets in (`?token=`,
+      // `?ticket=`, `?key=`, OAuth `code`/`state`).
+      urlQueryParams: {
+        deny: [
+          'forwarded',
+          '-ip',
+          'remote-',
+          'via',
+          '-user',
+          'token',
+          'ticket',
+          'key',
+          'code',
+          'state',
+          'secret',
+          'password',
+        ],
+      },
+      genAI: { inputs: false, outputs: false },
+      databaseQueryData: false,
+      queues: false,
+      graphQL: { document: false, variables: false },
+    },
     // Don't send PII (email, names, cards) to Sentry
     beforeSend(event) {
+      // Sentry 10 attached the raw JSON body as a STRING, so the key loop below
+      // never matched and tokens, phones and addresses went out verbatim
+      // (reproduced 05-oct-2026). A body that is not an object goes whole.
+      if (typeof event.request?.data === 'string') event.request.data = '[REDACTED]';
       if (event.request?.data) {
         const sensitive = ['email', 'name', 'phone', 'card', 'password', 'token', 'access_token'];
         for (const key of sensitive) {

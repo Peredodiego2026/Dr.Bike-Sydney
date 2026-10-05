@@ -5,15 +5,15 @@
   "type": "module",
   "dependencies": {
     "@growthbook/growthbook": "^1.7.0",
-    "@sentry/node": "^10.75.0",
+    "@sentry/node": "^11.1.0",
     "@supabase/supabase-js": "^2.117.2",
-    "pdfkit": "^0.19.1",
-    "resend": "^6.30.0",
+    "pdfkit": "^0.20.2",
+    "resend": "^6.31.0",
     "sharp": "^0.35.4",
     "stripe": "^22.6.2",
     "twilio": "^6.1.1",
     "web-push": "^3.6.7",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
