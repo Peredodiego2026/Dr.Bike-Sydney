@@ -36,6 +36,9 @@ vi.mock('../../api/_security.js', async (importOriginal) => ({ ...(await importO
 // ── La base en memoria ───────────────────────────────────────────────────────
 let db;
 let migrated;
+// Como contesta PostgREST de verdad una columna que no existe (PGRST204), en vez
+// del texto de Postgres. La primera version del handler solo reconocia este ultimo.
+let pgrstStyle = false;
 
 function table(name) {
   const eqs = [];
@@ -46,7 +49,11 @@ function table(name) {
   const run = () => {
     if (patch) {
       if (!migrated && Object.keys(patch).some((k) => ['supplier_ref', 'carrier', 'tracking_url', 'sent_at'].includes(k))) {
-        return { data: null, error: new Error('column "' + Object.keys(patch)[1] + '" of relation "shop_orders" does not exist') };
+        const col = Object.keys(patch)[1];
+        const err = pgrstStyle
+          ? Object.assign(new Error("Could not find the '" + col + "' column of 'shop_orders' in the schema cache"), { code: 'PGRST204' })
+          : new Error('column "' + col + '" of relation "shop_orders" does not exist');
+        return { data: null, error: err };
       }
       const hit = rows();
       hit.forEach((r) => Object.assign(r, patch));
@@ -114,6 +121,7 @@ const row = () => db.shop_orders[0];
 
 beforeEach(async () => {
   migrated = true;
+  pgrstStyle = false;
   piState = { status: 'succeeded', amount_received: 1390, metadata: { lang: 'es' } };
   piCancelled = [];
   refundCalls = [];
@@ -325,5 +333,31 @@ describe('quien entra', () => {
 
   it('es la unica puerta al modulo', () => {
     expect(auth.match(/handleShopAdmin\(/g)).toHaveLength(1);
+  });
+});
+
+describe('lo que se arreglo en la revision', () => {
+  it('sin la migracion, el error tal como lo manda PostgREST tambien dice que SQL falta', async () => {
+    migrated = false;
+    pgrstStyle = true;
+    db.shop_orders = [order()];
+    const res = await act({ action: 'ordered', orderId: ID, supplierRef: 'LB-1' });
+    expect(res.statusCode).toBe(409);
+    expect(res.body.error).toContain('shop-orders-fulfillment.sql');
+  });
+
+  it('"Check with Stripe" manda el email de pedido recibido en el idioma en que se compro', async () => {
+    row().status = 'pending';
+    piState = { status: 'succeeded', amount_received: 1390, metadata: { lang: 'zh' } };
+    await act({ action: 'check', orderId: ID });
+    const mail = sent.find((s) => s.body.type === 'shop_order');
+    expect(mail.body.lang).toBe('zh');
+  });
+
+  it("un pedido en 'packed' (estado viejo) se puede enviar y reembolsar, como muestra el panel", async () => {
+    row().status = 'packed';
+    expect((await act({ action: 'sent', orderId: ID, trackingNumber: 'AP1' })).statusCode).toBe(200);
+    db.shop_orders = [order({ status: 'packed' })];
+    expect((await act({ action: 'refund', orderId: ID })).statusCode).toBe(200);
   });
 });
