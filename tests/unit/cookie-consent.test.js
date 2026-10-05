@@ -34,7 +34,20 @@ function htmlFiles(dir = '.', acc = []) {
   return acc;
 }
 
-const pages = htmlFiles();
+// Cada pagina se lee una vez. Y la que desaparece entre readdir y la lectura se
+// salta: abn-single-source.test.js planta zz-planted-by-a-test.html en la raiz
+// por un instante, corre en paralelo con este, y readFileSync tiraba ENOENT
+// - un fallo al azar en el CI que no tenia nada que ver con el consentimiento.
+// Cualquier otro error de lectura sigue tirando.
+const text = new Map();
+for (const p of htmlFiles()) {
+  try {
+    text.set(p, read(p));
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+}
+const pages = [...text.keys()];
 const VENDORS = /googletagmanager\.com|sentry-cdn\.com|connect\.facebook\.net/;
 
 describe('no analytics runs before the visitor agrees', () => {
@@ -47,7 +60,7 @@ describe('no analytics runs before the visitor agrees', () => {
   it('every analytics tag on every page is inert', () => {
     const live = [];
     for (const p of pages) {
-      const html = read(p);
+      const html = text.get(p);
       for (const m of html.matchAll(/<script\b([^>]*)>/gi)) {
         const attrs = m[1];
         if (!VENDORS.test(attrs)) continue;
@@ -59,7 +72,7 @@ describe('no analytics runs before the visitor agrees', () => {
 
   it('every page that has analytics also loads the consent gate', () => {
     const missing = pages.filter(
-      (p) => read(p).includes('data-consent="analytics"') && !read(p).includes('/js/consent.js')
+      (p) => text.get(p).includes('data-consent="analytics"') && !text.get(p).includes('/js/consent.js')
     );
     expect(missing).toEqual([]);
   });
@@ -69,7 +82,7 @@ describe('no analytics runs before the visitor agrees', () => {
   it('the gate loads before the first blocked tag', () => {
     const wrong = [];
     for (const p of pages) {
-      const html = read(p);
+      const html = text.get(p);
       const g = html.indexOf('/js/consent.js');
       const t = html.search(/<script[^>]*data-consent="analytics"/i);
       if (g === -1 || t === -1) continue;
@@ -81,7 +94,7 @@ describe('no analytics runs before the visitor agrees', () => {
   // A `defer` or `async` on the gate would let the tags be parsed first.
   it('the gate is synchronous', () => {
     const bad = pages.filter((p) =>
-      /<script[^>]*\/js\/consent\.js[^>]*(defer|async)/i.test(read(p))
+      /<script[^>]*\/js\/consent\.js[^>]*(defer|async)/i.test(text.get(p))
     );
     expect(bad).toEqual([]);
   });
@@ -93,13 +106,13 @@ describe('structured data is not collateral damage', () => {
   // work the suburb pages exist for.
   it('no JSON-LD block was gated', () => {
     const broken = pages.filter((p) =>
-      /data-consent="analytics"[^>]*>\s*\{"@context"/.test(read(p))
+      /data-consent="analytics"[^>]*>\s*\{"@context"/.test(text.get(p))
     );
     expect(broken).toEqual([]);
   });
 
   it('the pages that had JSON-LD still have it live', () => {
-    const withLd = pages.filter((p) => read(p).includes('application/ld+json'));
+    const withLd = pages.filter((p) => text.get(p).includes('application/ld+json'));
     expect(withLd.length).toBeGreaterThan(5);
   });
 });
