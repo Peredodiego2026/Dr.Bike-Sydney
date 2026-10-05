@@ -126,7 +126,9 @@ export async function saveProduct(sb, req, res) {
   const section = str(p.section, 20);
   const description = str(p.description, 2000);
   const active = p.active !== false;
-  const featured = !!p.featured;
+  // El editor de hoy no muestra "destacado": si no lo manda, no se toca. Antes
+  // cada "Save" lo dejaba en false sin que nadie lo pidiera.
+  const featured = typeof p.featured === 'boolean' ? p.featured : undefined;
   const photoRef = p.photoRef ? str(p.photoRef, 120) : null;
   if (!name) return res.status(400).json({ error: 'The product needs a name.' });
   if (!SECTION_IDS.includes(section)) return res.status(400).json({ error: 'Pick a section.' });
@@ -167,7 +169,7 @@ export async function saveProduct(sb, req, res) {
     price_to: Math.max(...prices),
     photo_ref: photoRef,
     description: description || null,
-    featured,
+    ...(featured === undefined ? {} : { featured }),
     updated_at: new Date().toISOString(),
   };
 

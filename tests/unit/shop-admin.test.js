@@ -129,7 +129,7 @@ beforeEach(async () => {
   db = {
     shop_orders: [order()],
     shop_order_items: [{ order_id: ID, sku: 'TB-20', name: 'Butyl Inner Tube', variant: '20x1.75', qty: 2, unit_price: '6.95', line_total: '13.90' }],
-    shop_variants: [{ sku: 'TB-20', cost: '1.25' }],
+    shop_variants: [{ sku: 'TB-20', cost: '1.25', stock: 3 }],
   };
   process.env.INTERNAL_API_SECRET = 'internal-test';
   vi.stubGlobal(
@@ -359,5 +359,18 @@ describe('lo que se arreglo en la revision', () => {
     expect((await act({ action: 'sent', orderId: ID, trackingNumber: 'AP1' })).statusCode).toBe(200);
     db.shop_orders = [order({ status: 'packed' })];
     expect((await act({ action: 'refund', orderId: ID })).statusCode).toBe(200);
+  });
+});
+
+describe('el reembolso y el stock', () => {
+  it('reembolsar antes de pedirlo a LEBYCLE devuelve las piezas al stock', async () => {
+    await act({ action: 'refund', orderId: ID });
+    expect(db.shop_variants[0].stock).toBe(5);
+  });
+
+  it('ya pedido o enviado, no: esas piezas ya salieron', async () => {
+    row().status = 'sent';
+    await act({ action: 'refund', orderId: ID });
+    expect(db.shop_variants[0].stock).toBe(3);
   });
 });
