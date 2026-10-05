@@ -25,7 +25,7 @@ import { ORDER_FOR_SETTLE, settleOrder, orderRef, shopStripe, SHOP_MODE } from '
 const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
 // Se cobro, y por lo tanto se puede devolver.
-const REFUNDABLE = ['paid', 'ordered', 'sent', 'delivered'];
+const REFUNDABLE = ['paid', 'ordered', 'packed', 'sent', 'delivered'];
 
 // Lo que contesta la base cuando falta scripts/shop-orders-fulfillment.sql: la
 // columna nueva no existe, o el CHECK viejo no conoce 'ordered'. Se traduce a
@@ -33,7 +33,10 @@ const REFUNDABLE = ['paid', 'ordered', 'sent', 'delivered'];
 // nada a quien tiene que arreglarlo.
 function dbError(res, err) {
   const msg = String(err?.message || err || '');
-  if (/column .* does not exist|shop_orders_status_check|violates check constraint/i.test(msg)) {
+  // PostgREST no siempre deja pasar el texto de Postgres: una columna que no
+  // existe llega como "Could not find the 'x' column ... in the schema cache"
+  // (PGRST204), no como "column x does not exist" (42703).
+  if (/column .* does not exist|schema cache|PGRST204|42703|shop_orders_status_check|violates check constraint/i.test(msg + ' ' + (err?.code || ''))) {
     return res
       .status(409)
       .json({ error: 'The database is missing scripts/shop-orders-fulfillment.sql. Run it in Supabase > SQL Editor, then try again.' });
@@ -90,9 +93,11 @@ async function emailClient(sb, order, type, extra) {
     throw new Error('HTTP ' + r.status);
   } catch (e) {
     console.error('[shop-admin] email', type, 'fallido para', order.id, e.message);
+    // Las notas se releen: Diego puede haber guardado una mientras tanto.
+    const { data: now } = await sb.from('shop_orders').select('notes').eq('id', order.id).single();
     await sb
       .from('shop_orders')
-      .update({ notes: [order.notes, 'Email ' + type + ' fallido - ' + e.message].filter(Boolean).join(' | ') })
+      .update({ notes: [now?.notes, 'Email ' + type + ' fallido - ' + e.message].filter(Boolean).join(' | ') })
       .eq('id', order.id);
     return false;
   }
@@ -185,7 +190,8 @@ export async function handleShopAdmin(req, res, sb) {
       // mismo lugar (settleOrder), y si se cobro salen los mismos avisos.
       case 'check': {
         const { data: full } = await sb.from('shop_orders').select(ORDER_FOR_SETTLE).eq('id', id).single();
-        const out = await settleOrder(sb, full || order, 'en');
+        // Sin idioma: settleOrder lo toma de la metadata del cobro.
+        const out = await settleOrder(sb, full || order, '');
         return res.status(out.code).json(out.body);
       }
 
@@ -231,7 +237,7 @@ export async function handleShopAdmin(req, res, sb) {
         // Solo un https limpio: esto termina como un boton en un email nuestro.
         const trackingUrl = /^https:\/\/[^\s"'<>]+$/.test(link) ? link : '';
         if (link && !trackingUrl) return res.status(400).json({ error: 'The tracking link has to start with https://' });
-        const ok = await move(sb, id, ['paid', 'ordered'], {
+        const ok = await move(sb, id, ['paid', 'ordered', 'packed'], {
           status: 'sent',
           tracking_number: trackingNumber,
           carrier: carrier || null,
