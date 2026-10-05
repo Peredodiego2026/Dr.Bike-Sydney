@@ -279,3 +279,26 @@ describe('el stock en el carrito', () => {
     expect(shop.maxQty({ stock: 500 })).toBe(20);
   });
 });
+
+describe('envio y plazo en la tienda', () => {
+  const cat = { shipping: { fee: 9.95, freeOver: 100 }, delivery: { minDays: 5, maxDays: 10 } };
+
+  it('sin configurar: envio 0 y el texto provisorio de siempre', () => {
+    expect(shop.shippingFor({}, 50)).toBe(0);
+    expect(shop.deliveryHtml({})).toBe('[CONFIRMAR PLAZO DE ENTREGA]');
+    expect(shop.shippingNoteHtml({}, 50)).toContain('[CONFIRMAR PLAZO DE ENTREGA]');
+  });
+
+  it('configurado: la tarifa, gratis desde el monto, y el plazo en spans traducibles', () => {
+    expect(shop.shippingFor(cat, 50)).toBe(9.95);
+    expect(shop.shippingFor(cat, 100)).toBe(0);
+    expect(shop.deliveryHtml(cat)).toBe('<span>Delivered in</span> 5–10 <span>business days</span>');
+    expect(shop.shippingNoteHtml(cat, 50)).toContain('<span>Shipping</span> $9.95');
+    expect(shop.shippingNoteHtml(cat, 50)).toContain('<span>free over</span> $100.00');
+    expect(shop.shippingNoteHtml(cat, 120)).toContain('<span>Free shipping</span>');
+  });
+
+  it('un plazo de un solo numero no repite el rango', () => {
+    expect(shop.deliveryHtml({ delivery: { minDays: 7, maxDays: 7 } })).toBe('<span>Delivered in</span> 7 <span>business days</span>');
+  });
+});

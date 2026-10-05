@@ -36,6 +36,8 @@ function table(name) {
   let patch = null;
   let del = false;
   let insertRow = null;
+  let upsertRows = null;
+  let upsertKey = null;
   let cols = '*';
   const rows = () =>
     (db[name] || []).filter(
@@ -61,6 +63,17 @@ function table(name) {
     if (!migrated && NEW_COLS.some((c) => cols.includes(c))) {
       return { data: null, error: { message: 'column ' + name + '.' + NEW_COLS.find((c) => cols.includes(c)) + ' does not exist', code: '42703' } };
     }
+    if (upsertRows) {
+      if (!migrated && name === 'shop_settings') return { data: null, error: { message: 'relation "shop_settings" does not exist', code: '42P01' } };
+      const key = upsertKey || 'id';
+      for (const r of upsertRows) {
+        const hit = (db[name] ||= []).find((x) => x[key] === r[key]);
+        if (hit) Object.assign(hit, r);
+        else db[name].push({ ...r });
+      }
+      return { data: null, error: null };
+    }
+    if (!migrated && name === 'shop_settings') return { data: null, error: { message: 'relation "shop_settings" does not exist', code: '42P01' } };
     if (insertRow) {
       if (missing(insertRow)) return { data: null, error: { message: "Could not find the 'description' column of '" + name + "' in the schema cache", code: 'PGRST204' } };
       const row = { id: 'id-' + Math.random().toString(36).slice(2), ...insertRow };
@@ -90,6 +103,7 @@ function table(name) {
     update: (p) => ((patch = p), q),
     delete: () => ((del = true), q),
     insert: (r) => ((insertRow = r), q),
+    upsert: (r, opts) => ((upsertRows = r), (upsertKey = opts?.onConflict), q),
     single: async () => {
       const r = run();
       if (r.error) return r;
@@ -381,5 +395,132 @@ describe('lo que encontro la segunda revision', () => {
     db.shop_products[0].featured = true;
     await save({ slug: 'brake-pads', name: 'Brake Pads', section: 'parts', active: true, featured: false }, [v('BP-1', 'Resin', 9)]);
     expect(db.shop_products[0].featured).toBe(false);
+  });
+});
+
+// ── PR 4: envio, plazo, reglas e importacion ─────────────────────────────────
+
+describe('el envio y el plazo', () => {
+  const setShip = (fee, freeOver, delivery) => {
+    db.shop_settings = [{ key: 'shipping', value: { fee, freeOver } }];
+    if (delivery) db.shop_settings.push({ key: 'delivery', value: delivery });
+  };
+
+  it('sin configurar: envio 0 y el catalogo no dice nada de envio ni plazo', async () => {
+    const res = await catalog();
+    expect(res.body.shipping).toBeUndefined();
+    expect(res.body.delivery).toBeUndefined();
+    const co = await checkout([{ sku: 'BP-1', qty: 1 }]);
+    expect(co.body.shipping).toBe(0);
+    expect(co.body.total).toBe(9);
+  });
+
+  it('configurado: el catalogo lo dice y el cobro lo suma', async () => {
+    setShip(9.95, 100, { minDays: 5, maxDays: 10 });
+    const res = await catalog();
+    expect(res.body.shipping).toEqual({ fee: 9.95, freeOver: 100 });
+    expect(res.body.delivery).toEqual({ minDays: 5, maxDays: 10 });
+    const co = await checkout([{ sku: 'BP-1', qty: 1 }]);
+    expect(co.body).toMatchObject({ subtotal: 9, shipping: 9.95, total: 18.95 });
+    expect(intentArgs.amount).toBe(1895);
+  });
+
+  it('desde el "gratis desde", no se cobra envio', async () => {
+    setShip(9.95, 100);
+    const co = await checkout([{ sku: 'TS-1', qty: 3 }, { sku: 'BP-1', qty: 5 }]);
+    expect(co.body.subtotal).toBe(110.85);
+    expect(co.body.shipping).toBe(0);
+  });
+
+  it('antes del SQL el cobro sigue andando, sin envio', async () => {
+    migrated = false;
+    const co = await checkout([{ sku: 'BP-1', qty: 1 }]);
+    expect(co.statusCode).toBe(200);
+    expect(co.body.shipping).toBe(0);
+  });
+
+  it('la cuenta del servidor y la del navegador son la misma', async () => {
+    const client = await import('../../js/shop.js');
+    for (const [fee, freeOver, sub] of [[9.95, 100, 50], [9.95, 100, 100], [9.95, null, 500], [0, null, 10]]) {
+      const settings = { shipping: { fee, freeOver } };
+      expect(client.shippingFor(shop.publicSettings(settings), sub)).toBe(shop.shippingFor(settings, sub));
+    }
+  });
+});
+
+const call = (fn, body) => fn(sb, { body }, fakeRes());
+
+describe('guardar los ajustes', () => {
+  it('sin guardar nunca, trae las reglas de precio originales', async () => {
+    const res = await admin.getSettings(sb, fakeRes());
+    expect(res.body.pricing.fx).toBe(1.4352);
+    expect(res.body.pricing.bands).toHaveLength(4);
+  });
+
+  it('guarda envio, plazo y reglas, y se leen igual', async () => {
+    const body = { shipping: { fee: 9.95, freeOver: 100 }, delivery: { minDays: 5, maxDays: 10 }, pricing: { fx: 1.5, minPrice: 5.95, bands: [{ upTo: 20, mult: 3 }, { upTo: null, mult: 2 }] } };
+    expect((await call(admin.saveSettings, body)).statusCode).toBe(200);
+    const res = await admin.getSettings(sb, fakeRes());
+    expect(res.body).toMatchObject(body);
+  });
+
+  it.each([
+    ['envio negativo', { shipping: { fee: -1 } }, /fee/],
+    ['plazo al reves', { delivery: { minDays: 10, maxDays: 5 } }, /maximum/],
+    ['plazo con decimales', { delivery: { minDays: 2.5 } }, /whole number/],
+    ['tasa absurda', { pricing: { fx: 0, minPrice: 5, bands: [{ upTo: null, mult: 2 }] } }, /exchange rate/],
+    ['bandas desordenadas', { pricing: { fx: 1.4, minPrice: 5, bands: [{ upTo: 30, mult: 2 }, { upTo: 10, mult: 3 }, { upTo: null, mult: 1.5 }] } }, /bigger/],
+    ['multiplicador menor a 1', { pricing: { fx: 1.4, minPrice: 5, bands: [{ upTo: null, mult: 0.5 }] } }, /multiplier/],
+  ])('rechaza %s sin guardar nada', async (_, body, re) => {
+    const res = await call(admin.saveSettings, body);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(re);
+    expect(db.shop_settings || []).toHaveLength(0);
+  });
+
+  it('antes del SQL dice que SQL falta', async () => {
+    migrated = false;
+    const res = await call(admin.saveSettings, { shipping: { fee: 5 } });
+    expect(res.statusCode).toBe(409);
+    expect(res.body.error).toContain('shop-catalog-admin.sql');
+  });
+});
+
+describe('aplicar una importacion', () => {
+  it('actualiza costos siempre, precios solo donde se aceptaron, y agota lo marcado', async () => {
+    const res = await call(admin.applyImport, {
+      updates: [
+        { sku: 'BP-1', cost: 2.5, price: 10.95 },
+        { sku: 'TS-1', cost: 7, price: null },
+      ],
+      soldOut: ['BP-2'],
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.updated).toBe(3);
+    const v = (sku) => db.shop_variants.find((x) => x.sku === sku);
+    expect(v('BP-1')).toMatchObject({ cost: 2.5, price: 10.95 });
+    expect(v('TS-1')).toMatchObject({ cost: 7, price: 21.95 });
+    expect(v('BP-2').stock).toBe(0);
+    // El "desde/hasta" del producto se recalcula con el precio nuevo.
+    expect(db.shop_products.find((p) => p.id === 'p1')).toMatchObject({ price_from: 10.95, price_to: 12 });
+  });
+
+  it('nunca crea opciones: un codigo que no esta en la tienda se salta', async () => {
+    const res = await call(admin.applyImport, { updates: [{ sku: 'NO-EXISTE', cost: 1 }, { sku: 'BP-1', cost: 2 }] });
+    expect(res.body).toMatchObject({ updated: 1, skipped: 1 });
+    expect(db.shop_variants.some((x) => x.sku === 'NO-EXISTE')).toBe(false);
+  });
+
+  it.each([
+    ['nada', {}, /Nothing/],
+    ['costo negativo', { updates: [{ sku: 'BP-1', cost: -1 }] }, /cost/],
+    ['precio cero', { updates: [{ sku: 'BP-1', cost: 1, price: 0 }] }, /price/],
+    ['codigo raro', { updates: [{ sku: 'A,B', cost: 1 }] }, /code/],
+  ])('rechaza %s sin escribir nada', async (_, body, re) => {
+    const before = JSON.stringify(db.shop_variants);
+    const res = await call(admin.applyImport, body);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(re);
+    expect(JSON.stringify(db.shop_variants)).toBe(before);
   });
 });

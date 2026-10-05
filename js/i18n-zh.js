@@ -1617,4 +1617,12 @@ export default {
   'left': '件',
   'One of these cannot be bought right now. Remove it or lower the quantity to keep going.': '其中有商品暂时无法购买。请移除或减少数量后继续。',
   'Some items are sold out or have fewer left than you asked for.': '部分商品已售罄或库存不足。',
+  // La tienda: envio y plazo
+  'Shipping': '运费',
+  'Free': '免费',
+  'Free shipping': '免运费',
+  'free over': '满额免运费：',
+  'Delivered in': '送达时间',
+  'business days': '个工作日',
+  'Delivery is worked out at checkout.': '运费在结账时计算。',
 };

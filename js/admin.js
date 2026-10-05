@@ -6950,6 +6950,9 @@ function renderShopProducts() {
       <select id="sp-status" class="inp" aria-label="Status" style="width:auto;min-height:44px;padding:8px 12px;font-size:14px;cursor:pointer">
         ${SP_STATUS.map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}
       </select>
+      <button type="button" data-sp-settings-open style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:0 14px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Shop settings</button>
+      <button type="button" data-sp-import-open style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:0 14px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Import LEBYCLE list</button>
+      <input type="file" id="sp-import-file" accept=".xlsx,.csv" hidden>
       <button type="button" data-sp-new style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 16px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">+ Add product</button>`;
   }
 
@@ -6961,6 +6964,8 @@ function renderShopProducts() {
       '<div style="background:var(--amber-lt);color:var(--amber-ink);border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.5"><strong>One SQL step is missing.</strong> Run <code>scripts/shop-catalog-admin.sql</code> in Supabase &gt; SQL Editor. Until then you can look, but saving answers that the step is missing (descriptions and stock need it).</div>'
     );
   }
+  if (_spPanel === 'settings') head.push(spSettingsPanel());
+  if (_spPanel === 'import') head.push(spImportPanel());
   head.push(`<div style="font-size:13px;color:var(--mgray)">${shown.length} of ${all.length} products</div>`);
   if (_spOpen.has('__new')) head.push(spCard(null));
   const rows = shown.slice(0, _spShown).map(spCard).join('');
@@ -6969,6 +6974,8 @@ function renderShopProducts() {
       ? `<button type="button" data-sp-more style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Show ${Math.min(30, shown.length - _spShown)} more</button>`
       : '';
   list.innerHTML = head.join('') + (rows || '<div style="text-align:center;padding:40px;color:var(--mgray);font-size:13px">No products match.</div>') + more;
+  const sf = list.querySelector('[data-sp-settings]');
+  if (sf) spRulesExample(sf);
 }
 
 function spCard(p) {
@@ -7146,6 +7153,7 @@ async function spDelete(slug) {
 function wireShopProducts() {
   if (_spWired) return;
   _spWired = true;
+  wireShopSettingsAndImport();
   const bar = document.getElementById('sp-toolbar');
   const list = document.getElementById('sp-list');
   bar?.addEventListener('input', (e) => {
@@ -7237,6 +7245,268 @@ function wireShopProducts() {
     if (!form) return;
     e.preventDefault();
     spSave(form);
+  });
+}
+
+// ── SHOP SETTINGS + IMPORT ───────────────────────────────────────────────────
+// Two panels on top of Shop Products (api/_shop-admin-catalog.js):
+//   - Shop settings: shipping fee and "free over", delivery days, and the
+//     pricing rules (exchange rate, cost bands, minimum price) the import uses
+//     to suggest prices. Shipping and delivery show in the shop at once.
+//   - Import LEBYCLE list: Diego picks the price list (.xlsx or .csv). It is
+//     read in the browser (js/shop-import.js), compared with the shop, and
+//     only what he ticks is sent. Costs that changed are always updated;
+//     prices only where he accepts the suggestion; codes no longer in the list
+//     are marked sold out only if he ticks them.
+let _spSettings = null;
+let _spPanel = null; // 'settings' | 'import' | null
+let _spDiff = null;
+
+async function loadShopSettings() {
+  try {
+    _spSettings = await shopAdmin({ action: 'settings' });
+  } catch (e) {
+    _spSettings = null;
+    showToast('Could not read the shop settings: ' + e.message);
+  }
+}
+
+const spNum = (v) => (v === null || v === undefined || v === '' ? '' : String(v));
+
+function spSettingsPanel() {
+  const s = _spSettings || {};
+  const p = s.pricing || window.ShopImport?.DEFAULT_PRICING || { fx: 1.4352, minPrice: 4.95, bands: [] };
+  const inp = (id, val, label, extra = '') =>
+    `<label style="display:block"><span style="${SP_LABEL}">${label}</span><input class="inp" data-set="${id}" type="number" step="any" min="0" value="${esc(spNum(val))}" ${extra} style="width:100%;min-height:44px;padding:8px 12px;font-size:14px"></label>`;
+  const bands = (p.bands || [])
+    .map(
+      (b, i, all) => `<tr data-band>
+        <td style="padding:4px 6px 4px 0;font-size:13px;color:var(--mgray);white-space:nowrap">${i === 0 ? 'Cost under' : i === all.length - 1 ? 'Anything above' : 'Under'}</td>
+        <td style="padding:4px 6px">${i === all.length - 1 ? '<span style="font-size:13px;color:var(--mgray)">—</span>' : `<input class="inp" data-f="upTo" type="number" step="any" min="0" value="${esc(spNum(b.upTo))}" aria-label="Cost up to (AUD)" style="width:90px;min-height:40px;padding:6px 10px;font-size:13px">`}</td>
+        <td style="padding:4px 6px;font-size:13px;color:var(--mgray)">× </td>
+        <td style="padding:4px 0 4px 6px"><input class="inp" data-f="mult" type="number" step="any" min="1" value="${esc(spNum(b.mult))}" aria-label="Multiplier" style="width:80px;min-height:40px;padding:6px 10px;font-size:13px"></td>
+      </tr>`
+    )
+    .join('');
+  return `
+    <form data-sp-settings style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:12px;padding:16px" novalidate>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">Shop settings</div>
+        <button type="button" data-sp-close style="background:none;border:0;min-height:44px;font-size:13px;font-weight:700;color:var(--blue-text);cursor:pointer">Close</button>
+      </div>
+      ${s.migrated === false ? '<div style="background:var(--amber-lt);color:var(--amber-ink);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:12px">Run <code>scripts/shop-catalog-admin.sql</code> in Supabase first: there is nowhere to save these yet.</div>' : ''}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;align-items:start">
+        <fieldset style="border:1px solid var(--border-lt);border-radius:10px;padding:12px;display:grid;gap:10px;align-content:start;min-width:0">
+          <legend style="font-size:13px;font-weight:700;color:var(--navy);padding:0 4px">Shipping (AUD)</legend>
+          ${inp('shipFee', s.shipping?.fee, 'Fee per order')}
+          ${inp('shipFree', s.shipping?.freeOver, 'Free over (empty = never)')}
+        </fieldset>
+        <fieldset style="border:1px solid var(--border-lt);border-radius:10px;padding:12px;display:grid;gap:10px;align-content:start;min-width:0">
+          <legend style="font-size:13px;font-weight:700;color:var(--navy);padding:0 4px">Delivery (business days)</legend>
+          ${inp('dMin', s.delivery?.minDays, 'From', 'step="1"')}
+          ${inp('dMax', s.delivery?.maxDays, 'To', 'step="1"')}
+        </fieldset>
+        <fieldset style="border:1px solid var(--border-lt);border-radius:10px;padding:12px;display:grid;gap:10px;align-content:start;min-width:0">
+          <legend style="font-size:13px;font-weight:700;color:var(--navy);padding:0 4px">Pricing rules (for the import)</legend>
+          ${inp('fx', p.fx, 'Exchange rate (1 USD = ? AUD)')}
+          ${inp('minPrice', p.minPrice, 'Minimum price (AUD)')}
+          <table style="border-collapse:collapse"><tbody data-bands>${bands}</tbody></table>
+          <div data-sp-example style="font-size:12px;color:var(--mgray)"></div>
+        </fieldset>
+      </div>
+      <div style="font-size:12px;color:var(--mgray);margin-top:10px">Shipping and delivery show in the shop as soon as you save. Prices only change when you import a list and accept the suggestions.</div>
+      <button type="submit" style="margin-top:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 18px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Save settings</button>
+    </form>`;
+}
+
+function spReadRules(form) {
+  const v = (id) => form.querySelector(`[data-set="${id}"]`)?.value.trim() ?? '';
+  const bands = [...form.querySelectorAll('[data-band]')].map((row, i, all) => ({
+    upTo: i === all.length - 1 ? null : Number(row.querySelector('[data-f="upTo"]').value),
+    mult: Number(row.querySelector('[data-f="mult"]').value),
+  }));
+  return {
+    shipping: { fee: v('shipFee') === '' ? 0 : Number(v('shipFee')), freeOver: v('shipFree') === '' ? null : Number(v('shipFree')) },
+    delivery: v('dMin') === '' ? null : { minDays: Number(v('dMin')), maxDays: v('dMax') === '' ? null : Number(v('dMax')) },
+    pricing: { fx: Number(v('fx')), minPrice: Number(v('minPrice')), bands },
+  };
+}
+
+// A live example under the rules, so a typo in a multiplier is seen before saving.
+function spRulesExample(form) {
+  const out = form.querySelector('[data-sp-example]');
+  if (!out || !window.ShopImport) return;
+  const r = spReadRules(form).pricing;
+  const ex = [1, 5, 20, 60].map((usd) => {
+    const aud = window.ShopImport.costAud(usd, r);
+    return `US$${usd} → cost $${aud.toFixed(2)} → price $${(window.ShopImport.priceFor(aud, r) || 0).toFixed(2)}`;
+  });
+  out.innerHTML = ex.join('<br>');
+}
+
+async function spSaveSettings(form) {
+  const body = spReadRules(form);
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  try {
+    await shopAdmin({ action: 'settings-save', ...(body.delivery ? body : { shipping: body.shipping, pricing: body.pricing }) });
+    showToast('Settings saved');
+    await loadShopSettings();
+    renderShopProducts();
+  } catch (e) {
+    showToast(e.message);
+    btn.disabled = false;
+  }
+}
+
+// ── Import ──
+async function spReadList(file) {
+  if (!window.ShopImport) throw new Error('The importer did not load. Reload the page.');
+  const isCsv = /\.csv$/i.test(file.name);
+  const rows = isCsv ? window.ShopImport.readCsv(await file.text()) : await window.ShopImport.readWorkbook(await file.arrayBuffer());
+  const rules = _spSettings?.pricing || window.ShopImport.DEFAULT_PRICING;
+  _spDiff = { file: file.name, ...window.ShopImport.diffCatalog(_spData?.products || [], rows, rules) };
+  _spPanel = 'import';
+  renderShopProducts();
+}
+
+function spImportPanel() {
+  const d = _spDiff;
+  if (!d) return '';
+  const m = (n) => '$' + Number(n).toFixed(2);
+  const changed = d.changed
+    .map((c, i) => {
+      const marginNow = c.price - c.newCost;
+      const marginNew = c.suggested - c.newCost;
+      return `<tr>
+        <td style="padding:6px 8px 6px 0"><input type="checkbox" data-imp-price="${i}"${c.suggested && Math.abs(c.suggested - c.price) > 0.004 ? ' checked' : ''} aria-label="Use the suggested price for ${esc(c.sku)}" style="width:18px;height:18px"></td>
+        <td style="padding:6px 8px;font-size:13px;color:var(--navy)">${esc(c.product)}<div style="font-size:12px;color:var(--mgray)">${esc(c.option)} · <span style="font-family:ui-monospace,Menlo,monospace">${esc(c.sku)}</span></div></td>
+        <td style="padding:6px 8px;font-size:13px;text-align:right;white-space:nowrap">${c.oldCost === null ? '—' : m(c.oldCost)} → <strong>${m(c.newCost)}</strong></td>
+        <td style="padding:6px 8px;font-size:13px;text-align:right">${m(c.price)}<div style="font-size:11px;color:${marginNow < 0 ? 'var(--red-text)' : 'var(--mgray)'}">margin ${m(marginNow)}</div></td>
+        <td style="padding:6px 0 6px 8px;font-size:13px;text-align:right;font-weight:700;color:var(--navy)">${c.suggested ? m(c.suggested) : '—'}<div style="font-size:11px;font-weight:400;color:var(--mgray)">margin ${m(marginNew)}</div></td>
+      </tr>`;
+    })
+    .join('');
+  const missing = d.missing
+    .map(
+      (x, i) => `<label style="display:flex;align-items:center;gap:8px;min-height:36px;font-size:13px;color:var(--navy)"><input type="checkbox" data-imp-out="${i}" style="width:18px;height:18px"> ${esc(x.product)} · ${esc(x.option)} <span style="font-family:ui-monospace,Menlo,monospace;color:var(--mgray);font-size:12px">${esc(x.sku)}</span>${x.stock === 0 ? ' <span style="color:var(--red-text)">(already sold out)</span>' : ''}</label>`
+    )
+    .join('');
+  const added = d.added
+    .slice(0, 60)
+    .map((a) => `<div style="font-size:13px;color:var(--navy);padding:3px 0">${esc(a.name || a.sku)} <span style="font-family:ui-monospace,Menlo,monospace;color:var(--mgray);font-size:12px">${esc(a.sku)}</span> · cost ${m(a.newCost)} · suggested ${a.suggested ? m(a.suggested) : '—'}</div>`)
+    .join('');
+  const box = 'max-height:360px;overflow-y:auto;border:1px solid var(--border-lt);border-radius:10px;padding:8px 12px';
+  return `
+    <div data-sp-import style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:12px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">Import: ${esc(d.file)}</div>
+        <button type="button" data-sp-close style="background:none;border:0;min-height:44px;font-size:13px;font-weight:700;color:var(--blue-text);cursor:pointer">Close</button>
+      </div>
+      <div style="font-size:13px;color:var(--gray);margin:4px 0 14px">${d.total} codes in the list · <strong>${d.changed.length}</strong> cost changes · <strong>${d.added.length}</strong> new codes · <strong>${d.missing.length}</strong> no longer in the list · ${d.same} unchanged</div>
+
+      ${
+        d.changed.length
+          ? `<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px">Cost changes - the new cost is always saved; tick to also use the suggested price</div>
+             <div style="${box}"><table style="width:100%;border-collapse:collapse;min-width:560px"><thead><tr>
+               <th style="text-align:left;font-size:11px;color:var(--mgray);padding:0 8px 6px 0"><input type="checkbox" data-imp-all-price aria-label="Tick all suggested prices" style="width:18px;height:18px"></th>
+               <th style="text-align:left;font-size:11px;color:var(--mgray);padding:0 8px 6px;text-transform:uppercase;letter-spacing:0.06em">Product</th>
+               <th style="text-align:right;font-size:11px;color:var(--mgray);padding:0 8px 6px;text-transform:uppercase;letter-spacing:0.06em">Your cost</th>
+               <th style="text-align:right;font-size:11px;color:var(--mgray);padding:0 8px 6px;text-transform:uppercase;letter-spacing:0.06em">Price now</th>
+               <th style="text-align:right;font-size:11px;color:var(--mgray);padding:0 0 6px 8px;text-transform:uppercase;letter-spacing:0.06em">Suggested</th>
+             </tr></thead><tbody>${changed}</tbody></table></div>`
+          : '<div style="font-size:13px;color:var(--green-text)">No cost changed.</div>'
+      }
+
+      ${
+        d.missing.length
+          ? `<div style="font-size:13px;font-weight:700;color:var(--navy);margin:16px 0 6px">No longer in LEBYCLE's list - tick to mark sold out</div><div style="${box}">${missing}</div>`
+          : ''
+      }
+      ${
+        d.added.length
+          ? `<div style="font-size:13px;font-weight:700;color:var(--navy);margin:16px 0 6px">New codes in the list (${d.added.length}) - add them with "+ Add product" if you want to sell them</div><div style="${box}">${added}${d.added.length > 60 ? `<div style="font-size:12px;color:var(--mgray);padding-top:6px">...and ${d.added.length - 60} more</div>` : ''}</div>`
+          : ''
+      }
+      <button type="button" data-imp-apply style="margin-top:14px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 18px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer"${d.changed.length || d.missing.length ? '' : ' disabled'}>Apply</button>
+    </div>`;
+}
+
+async function spApplyImport(panel) {
+  const d = _spDiff;
+  const updates = d.changed.map((c, i) => ({
+    sku: c.sku,
+    cost: c.newCost,
+    price: panel.querySelector(`[data-imp-price="${i}"]`)?.checked && c.suggested ? c.suggested : null,
+  }));
+  const soldOut = d.missing.filter((_, i) => panel.querySelector(`[data-imp-out="${i}"]`)?.checked).map((x) => x.sku);
+  const prices = updates.filter((u) => u.price !== null).length;
+  if (!updates.length && !soldOut.length) return showToast('Nothing ticked to apply.');
+  if (!confirm(`Apply the import?\n\n• ${updates.length} costs updated\n• ${prices} prices changed to the suggestion\n• ${soldOut.length} options marked sold out`)) return;
+  const btn = panel.querySelector('[data-imp-apply]');
+  btn.disabled = true;
+  btn.textContent = 'Applying...';
+  try {
+    const r = await shopAdmin({ action: 'import-apply', updates, soldOut });
+    showToast(`Done: ${r.updated} options updated`);
+    _spDiff = null;
+    _spPanel = null;
+    await loadShopProducts();
+  } catch (e) {
+    showToast(e.message);
+    btn.disabled = false;
+    btn.textContent = 'Apply';
+  }
+}
+
+function wireShopSettingsAndImport() {
+  const list = document.getElementById('sp-list');
+  const bar = document.getElementById('sp-toolbar');
+  bar?.addEventListener('click', async (e) => {
+    if (e.target.closest('[data-sp-settings-open]')) {
+      _spPanel = _spPanel === 'settings' ? null : 'settings';
+      if (_spPanel && !_spSettings) await loadShopSettings();
+      renderShopProducts();
+    }
+    if (e.target.closest('[data-sp-import-open]')) document.getElementById('sp-import-file')?.click();
+  });
+  bar?.addEventListener('change', async (e) => {
+    if (e.target.id !== 'sp-import-file') return;
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    showToast('Reading ' + file.name + '...');
+    try {
+      if (!_spSettings) await loadShopSettings();
+      await spReadList(file);
+    } catch (err) {
+      showToast(err.message);
+    }
+  });
+  list?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-sp-close]')) {
+      _spPanel = null;
+      _spDiff = null;
+      renderShopProducts();
+      return;
+    }
+    const all = e.target.closest('[data-imp-all-price]');
+    if (all) {
+      document.querySelectorAll('[data-imp-price]').forEach((c) => (c.checked = all.checked));
+      return;
+    }
+    const apply = e.target.closest('[data-imp-apply]');
+    if (apply && !apply.disabled) spApplyImport(apply.closest('[data-sp-import]'));
+  });
+  list?.addEventListener('input', (e) => {
+    const form = e.target.closest('[data-sp-settings]');
+    if (form) spRulesExample(form);
+  });
+  list?.addEventListener('submit', (e) => {
+    const form = e.target.closest('[data-sp-settings]');
+    if (!form) return;
+    e.preventDefault();
+    spSaveSettings(form);
   });
 }
 

@@ -175,6 +175,50 @@ function cleanLines(raw) {
 const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
 // Las secciones de la tienda. Admin > Shop Products las usa para el selector.
+// ── Envio y plazo ────────────────────────────────────────────────────────────
+//
+// Los pone Diego en Admin > Shop Products > Shop settings (tabla shop_settings,
+// scripts/shop-catalog-admin.sql). Sin configurar - o antes del SQL - el envio
+// es 0 y la tienda muestra el texto provisorio, igual que hasta ahora.
+export async function loadShopSettings(sb) {
+  const { data, error } = await sb.from('shop_settings').select('key, value');
+  if (error) {
+    // Antes del SQL la tabla no existe: la tienda sigue sin envio ni plazo.
+    if (!/does not exist|schema cache|PGRST20|42P01/i.test(String(error.message) + ' ' + String(error.code || ''))) {
+      console.error('[shop] no pude leer shop_settings', error.message);
+    }
+    return {};
+  }
+  return Object.fromEntries((data || []).map((r) => [r.key, r.value]));
+}
+
+// El envio de un pedido: la tarifa, salvo que el subtotal llegue al "gratis
+// desde". La misma cuenta hace js/shop.js para mostrarlo; esta es la que cobra.
+export function shippingFor(settings, subtotal) {
+  const sh = settings?.shipping;
+  const fee = Number(sh?.fee);
+  if (!Number.isFinite(fee) || fee <= 0) return 0;
+  const free = Number(sh?.freeOver);
+  if (Number.isFinite(free) && free > 0 && subtotal >= free) return 0;
+  return Number(fee.toFixed(2));
+}
+
+// Lo que el navegador necesita saber del envio y el plazo (nada mas).
+export function publicSettings(settings) {
+  const out = {};
+  const fee = Number(settings?.shipping?.fee);
+  if (Number.isFinite(fee) && fee >= 0 && settings?.shipping) {
+    const free = Number(settings.shipping.freeOver);
+    out.shipping = { fee, freeOver: Number.isFinite(free) && free > 0 ? free : null };
+  }
+  const min = Number(settings?.delivery?.minDays);
+  if (Number.isInteger(min) && min > 0) {
+    const max = Number(settings.delivery.maxDays);
+    out.delivery = { minDays: min, maxDays: Number.isInteger(max) && max >= min ? max : min };
+  }
+  return out;
+}
+
 export const SHOP_SECTIONS = [
   { id: 'parts', name: 'Parts' },
   { id: 'tools', name: 'Tools' },
@@ -249,7 +293,8 @@ async function handleCheckout(req, res, sb, user) {
     };
   });
   const subtotal = Number(items.reduce((s, i) => s + i.line_total, 0).toFixed(2));
-  const shipping = 0; // [CONFIRMAR COSTO DE ENVIO] - hasta entonces no se cobra.
+  // El envio sale de Admin > Shop settings. Sin configurar, 0.
+  const shipping = shippingFor(await loadShopSettings(sb), subtotal);
   const total = Number((subtotal + shipping).toFixed(2));
 
   if (total <= 0) return res.status(400).json({ error: 'Your cart is empty.' });
@@ -606,7 +651,10 @@ export async function handleShop(req, res) {
   );
   if (vErr) return res.status(500).json({ error: 'Could not load the shop: ' + vErr.message });
 
-  const signed = await signPhotos(sb, (products || []).map((p) => p.photo_ref));
+  const [signed, settings] = await Promise.all([
+    signPhotos(sb, (products || []).map((p) => p.photo_ref)),
+    loadShopSettings(sb),
+  ]);
 
   const bySlug = new Map();
   for (const p of products || []) {
@@ -638,6 +686,8 @@ export async function handleShop(req, res) {
     currency: 'AUD',
     photosExpireIn: SIGN_SECONDS,
     sections: SHOP_SECTIONS,
+    // Envio y plazo, si Diego los configuro. Ausentes = todavia no.
+    ...publicSettings(settings),
     products: list,
   });
 }

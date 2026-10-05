@@ -37,6 +37,8 @@ const PAGES = [
     assets: [
       { path: 'css/variables.css', re: /href="css\/variables\.css\?v=([a-zA-Z0-9-]+)"/ },
       { path: 'js/admin.js', re: /src="js\/admin\.js\?v=([a-zA-Z0-9]+)"/ },
+      // El lector de la lista de LEBYCLE (Admin > Shop Products > Import).
+      { path: 'js/shop-import.js', re: /src="js\/shop-import\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/admin.css', re: /href="css\/admin\.css\?v=([a-zA-Z0-9]+)"/ },
     ],
   },

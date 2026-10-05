@@ -226,6 +226,39 @@ export function goneLabel(item) {
   return '<span>No longer available</span>';
 }
 
+// ── Envio y plazo ────────────────────────────────────────────────────────────
+// Llegan con el catalogo si Diego los configuro en Admin > Shop settings. La
+// misma cuenta del envio hace el servidor (api/_shop.js shippingFor), que es
+// el que cobra; esta es para mostrar el total antes de pagar.
+export function shippingFor(catalog, subtotal) {
+  const sh = catalog?.shipping;
+  const fee = Number(sh?.fee);
+  if (!sh || !Number.isFinite(fee) || fee <= 0) return 0;
+  if (sh.freeOver && subtotal >= sh.freeOver) return 0;
+  return fee;
+}
+
+const usd = (n) => '$' + Number(n).toFixed(2);
+
+// El plazo, en spans para que cada texto fijo pase por el diccionario. Sin
+// configurar, el recordatorio de siempre (no se traduce: es para Diego).
+export function deliveryHtml(catalog) {
+  const d = catalog?.delivery;
+  if (!d?.minDays) return '[CONFIRMAR PLAZO DE ENTREGA]';
+  const range = d.maxDays && d.maxDays !== d.minDays ? d.minDays + '–' + d.maxDays : String(d.minDays);
+  return '<span>Delivered in</span> ' + range + ' <span>business days</span>';
+}
+
+// Una linea para el carrito: cuanto es el envio, o que todavia no esta fijado.
+export function shippingNoteHtml(catalog, subtotal) {
+  const sh = catalog?.shipping;
+  if (!sh) return '<span>Delivery is worked out at checkout.</span> [CONFIRMAR PLAZO DE ENTREGA]';
+  const fee = shippingFor(catalog, subtotal);
+  const head = fee > 0 ? '<span>Shipping</span> ' + usd(fee) : '<span>Free shipping</span>';
+  const tail = fee > 0 && sh.freeOver ? ' &middot; <span>free over</span> ' + usd(sh.freeOver) : '';
+  return head + tail + ' &middot; ' + deliveryHtml(catalog);
+}
+
 // Si la variante tiene limite, no se puede elegir mas de lo que queda.
 export function maxQty(variant) {
   const left = variant?.stock ?? null;

@@ -28,6 +28,9 @@ import {
   clearCart,
   goneLabel,
   maxQty,
+  shippingFor,
+  shippingNoteHtml,
+  deliveryHtml,
 } from './shop.js';
 import { startCheckout, confirmOrder, mountCard } from './shop-pay.js';
 import { getLang, translateScreen } from './i18n.js';
@@ -414,7 +417,7 @@ export async function renderCart() {
                  <span class="shop-total__label">Subtotal</span>
                  <span class="shop-total__value">${money(subtotal)}</span>
                </div>
-               <div class="shop-note">Delivery is worked out at checkout. [CONFIRMAR PLAZO DE ENTREGA]</div>
+               <div class="shop-note">${shippingNoteHtml(catalog, subtotal)}</div>
                ${hasGone ? `<div class="shop-note" style="color:var(--red)">One of these cannot be bought right now. Remove it or lower the quantity to keep going.</div>` : ''}`
             : `<div class="shop-empty">
                  <div class="shop-empty__icon">&#128722;</div>
@@ -488,6 +491,7 @@ export async function renderShopCheckout() {
     window.location.hash = 'cart';
     return;
   }
+  const ship = shippingFor(catalog, subtotal);
 
   const field = (id, label, type, ac) => `
     <label for="${id}" class="shop-group" style="display:block">${label}</label>
@@ -508,10 +512,14 @@ export async function renderShopCheckout() {
           </div>`
         )
         .join('')}
-      <div class="shop-total">
-        <span class="shop-total__label">Subtotal</span>
-        <span class="shop-total__value">${money(subtotal)}</span>
-      </div>
+      ${
+        catalog.shipping
+          ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14px"><span style="color:var(--gray)">Subtotal</span><span style="font-weight:700;color:var(--navy)">${money(subtotal)}</span></div>
+             <div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14px"><span style="color:var(--gray)">Shipping</span><span style="font-weight:700;color:var(--navy)">${ship ? money(ship) : '<span>Free</span>'}</span></div>
+             <div class="shop-total"><span class="shop-total__label">Total</span><span class="shop-total__value">${money(subtotal + ship)}</span></div>
+             <div class="shop-note">${deliveryHtml(catalog)}</div>`
+          : `<div class="shop-total"><span class="shop-total__label">Subtotal</span><span class="shop-total__value">${money(subtotal)}</span></div>`
+      }
 
       <fieldset class="shop-fieldset" id="co-details">
         ${field('co-name', 'Your name', 'text', 'name')}
@@ -537,7 +545,7 @@ export async function renderShopCheckout() {
       <div id="co-msg" class="shop-note" role="status" style="margin-top:14px"></div>
     </div>
     <div class="shop-buy">
-      <button type="button" class="shop-add" data-co-next><span>Continue to payment</span><span> &middot; ${money(subtotal)}</span></button>
+      <button type="button" class="shop-add" data-co-next><span>Continue to payment</span><span> &middot; ${money(subtotal + ship)}</span></button>
       <button type="button" class="shop-add" data-co-pay hidden><span>Pay</span><span id="co-pay-amt"></span></button>
     </div>`;
 
@@ -574,7 +582,7 @@ export async function renderShopCheckout() {
     say('var(--gray)', 'Preparing the payment...');
     try {
       const data = await startCheckout(await getToken(), getCart(), who, getLang());
-      if (Math.abs(Number(data.total) - subtotal) > 0.009) {
+      if (Math.abs(Number(data.total) - (subtotal + ship)) > 0.009) {
         say('var(--amber)', 'The price changed to ' + money(data.total) + ' while you were here. Go back and check the cart.');
         next.disabled = false;
         return;
