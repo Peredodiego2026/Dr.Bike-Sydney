@@ -55,7 +55,7 @@ function formatDuration(secs) {
   return `${m} min`;
 }
 
-function buildPDF({
+export function buildPDF({
   invoiceNumber,
   invoiceDate,
   clientName,

@@ -12040,3 +12040,65 @@ Arreglado en los dos lados, a proposito:
 
 El servidor es el arreglo de fondo; el del cliente evita que el caso comun
 llegue a pedirlo.
+
+---
+
+## 112. Dependencias de octubre: Stripe 23 frenado, Sentry mandaba el cuerpo de las requests (05-oct-2026)
+
+Cinco PRs de Dependabot (#478 a #482). Cuatro entran juntas en
+`chore/deps-oct-5`; Stripe no.
+
+### Stripe 23 - NO, y por que el CI verde no alcanzaba
+
+`stripe@23` fija la version de API `2026-09-30.endive`, que **quita
+`payment_method_types`** de PaymentIntents, SetupIntents y Checkout Sessions:
+mandarlo devuelve 400 `payment_method_types_no_longer_supported`. Lo mandan
+los tres lugares que cobran: `api/auth.js` (reserva), `api/_shop.js` (tienda),
+`api/create-payment-session.js` (membresias). Mergear #479 = ningun cobro
+pasa. El CI estaba verde porque los tests mockean Stripe.
+
+`.github/dependabot.yml` ahora ignora los majors de `stripe` (los minor y
+patch de 22 siguen llegando). **Pendiente** para cuando se quiera Endive:
+cambiar los tres `payment_method_types: ['card']` por
+`allowed_payment_method_types: ['card']` (o metodos dinamicos, que es decidir
+que medios de pago ve el cliente - eso es de Diego), en el mismo deploy que el
+SDK, y probarlo con claves de test antes de produccion. Dahlia (la version
+actual) sigue soportada.
+
+### Sentry 11 - si, con la recoleccion de datos escrita a mano
+
+Sentry 11 junta por defecto cuerpos de request, cookies y datos de usuario si
+no se le dice otra cosa. `api/_sentry.js` ahora fija `dataCollection` en la
+linea base de v10 (de la guia de migracion de Sentry) y ademas tapa los query
+params donde nuestras rutas reciben secretos (`token`, `ticket`, `key`,
+`code`, `state`).
+
+**Lo que aparecio al probarlo**: con un servidor falso de Sentry y una ruta que
+tira error, **Sentry 10 - lo que corre hoy - mandaba el cuerpo entero** como
+texto: access token, telefono, direccion, y la cookie de sesion. El
+`beforeSend` que debia taparlo recorre claves de un objeto, y el cuerpo llega
+como string, asi que nunca tapo nada. Ahora un cuerpo-string se reemplaza
+entero. Con Sentry 11 + la config: ninguno de esos valores sale; el nombre de
+la ruta (`role=`) sigue visible para depurar.
+
+En produccion Sentry se inicializa recien en el primer error (lazy), asi que no
+se puede afirmar que cada error haya filtrado todo eso; el caso de la prueba
+es el mas favorable a la fuga. Igual, la red de seguridad no funcionaba.
+
+### pdfkit 0.20 - si, con un test que renderiza la factura de verdad
+
+0.20 reescribio la carga de fuentes estandar, y su propio changelog arregla en
+0.20.2 un "Cannot find module" de fuentes en bundlers y file tracers (Vercel es
+uno). Si `buildPDF` tira, `send-invoice.js` lo atrapa y manda la factura **sin
+PDF** - nadie se enteraria. Ahora:
+
+- `buildPDF` se exporta y `tests/unit/invoice-pdf.test.js` la corre con pdfkit
+  real: PDF valido, Helvetica y Helvetica-Bold, y el texto dibujado (cliente,
+  total, inspeccion) leido de los streams.
+- Trazado con `@vercel/nft` (lo que usa Vercel para armar la funcion): entran
+  `pdfkit.node.mjs` y los `.cjs` de las fuentes, sin warnings.
+
+### zod 4.6.5, resend 6.31.0 - minor, sin cambios de codigo
+
+Mas `npm audit fix`: axios (via twilio) 1.18.1 -> 1.20.0 y brace-expansion,
+dos "high" que ya estaban en main. `npm audit`: 0.
