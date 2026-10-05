@@ -46,7 +46,7 @@ export function costAud(costUsd, rules = DEFAULT_PRICING) {
 // ── El .xlsx ─────────────────────────────────────────────────────────────────
 
 async function inflateRaw(bytes) {
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  const stream = new Blob([bytes]).stream().pipeThrough(new globalThis.DecompressionStream('deflate-raw'));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
@@ -65,7 +65,7 @@ function zipIndex(buf) {
   if (eocd < 0) throw new Error('This file is not an Excel workbook (.xlsx).');
   const count = dv.getUint16(eocd + 10, true);
   let p = dv.getUint32(eocd + 16, true);
-  const dec = new TextDecoder();
+  const dec = new globalThis.TextDecoder();
   const entries = new Map();
   for (let n = 0; n < count; n++) {
     if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('The workbook is damaged.');

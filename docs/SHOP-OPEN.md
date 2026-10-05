@@ -11,10 +11,10 @@ Si alguna de estas no esta resuelta, **preguntar antes de abrir**. Abrir la
 tienda con un plazo de entrega inventado es prometerle algo falso a un
 cliente.
 
-- [ ] Plazo de entrega real. Hoy dice `[CONFIRMAR PLAZO DE ENTREGA]` en la
-      ficha, el carrito y el pago (grep ese texto).
-- [ ] Costo de envio. Hoy se cobra $0 (`shipping = 0` en `api/_shop.js`,
-      con un `[CONFIRMAR COSTO DE ENVIO]` al lado).
+- [ ] Plazo de entrega y costo de envio reales, cargados en Admin > Shop
+      Products > Shop settings. Mientras no se carguen, la tienda dice
+      `[CONFIRMAR PLAZO DE ENTREGA]` y el envio es $0. Al guardarlos se ven
+      en la ficha, el carrito y el pago, y el envio se cobra.
 - [ ] Que LEBYCLE permite revender en Australia (ya hay un distribuidor,
       Cycle Motion).
 - [ ] Moneda de la lista mayorista (se calculo como USD a FX 1.4352).

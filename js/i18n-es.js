@@ -1774,4 +1774,12 @@ export default {
   'left': 'disponibles',
   'One of these cannot be bought right now. Remove it or lower the quantity to keep going.': 'Algo de esto no se puede comprar ahora. Quítalo o baja la cantidad para seguir.',
   'Some items are sold out or have fewer left than you asked for.': 'Algunos productos están agotados o quedan menos de los que pediste.',
+  // La tienda: envio y plazo
+  'Shipping': 'Envío',
+  'Free': 'Gratis',
+  'Free shipping': 'Envío gratis',
+  'free over': 'gratis desde',
+  'Delivered in': 'Llega en',
+  'business days': 'días hábiles',
+  'Delivery is worked out at checkout.': 'El envío se calcula al pagar.',
 };
