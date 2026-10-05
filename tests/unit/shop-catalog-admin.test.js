@@ -524,3 +524,41 @@ describe('aplicar una importacion', () => {
     expect(JSON.stringify(db.shop_variants)).toBe(before);
   });
 });
+
+// ── PR 5: destacados y fotos extra ───────────────────────────────────────────
+
+describe('destacados y fotos extra', () => {
+  it('el catalogo dice cual es destacado y trae las fotos extra firmadas', async () => {
+    db.shop_products[0].featured = true;
+    db.shop_products[0].gallery = ['shop-photos/pads-2.webp', 'shop-photos/pads-3.webp'];
+    const res = await catalog();
+    const pads = res.body.products.find((p) => p.slug === 'brake-pads');
+    expect(pads.featured).toBe(true);
+    expect(pads.gallery).toEqual(['https://signed/pads-2.webp', 'https://signed/pads-3.webp']);
+    expect(res.body.products.find((p) => p.slug === 'bb-socket').gallery).toEqual([]);
+  });
+
+  it('Admin guarda las fotos extra y el destacado', async () => {
+    const res = await save(
+      { slug: 'brake-pads', name: 'Brake Pads', section: 'parts', active: true, featured: true, gallery: ['shop-photos/a-1.webp', 'shop-photos/b-2.jpg'] },
+      [v('BP-1', 'Resin', 9)]
+    );
+    expect(res.statusCode).toBe(200);
+    expect(db.shop_products[0]).toMatchObject({ featured: true, gallery: ['shop-photos/a-1.webp', 'shop-photos/b-2.jpg'] });
+  });
+
+  it('si el panel no manda fotos extra, no se borran', async () => {
+    db.shop_products[0].gallery = ['shop-photos/keep-1.webp'];
+    await save({ slug: 'brake-pads', name: 'Brake Pads', section: 'parts', active: true }, [v('BP-1', 'Resin', 9)]);
+    expect(db.shop_products[0].gallery).toEqual(['shop-photos/keep-1.webp']);
+  });
+
+  it.each([
+    ['mas de 8', Array.from({ length: 9 }, (_, i) => 'shop-photos/p-' + i + '.webp'), /Up to 8/],
+    ['una foto de afuera', ['https://evil.example/x.png'], /not valid/],
+  ])('rechaza %s', async (_, gallery, re) => {
+    const res = await save({ slug: 'brake-pads', name: 'Brake Pads', section: 'parts', active: true, gallery }, [v('BP-1', 'Resin', 9)]);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(re);
+  });
+});

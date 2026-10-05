@@ -6650,6 +6650,65 @@ async function loadShopOrders() {
   }
 }
 
+// ── Sales report (api/_shop-admin.js report) ──
+let _shopReportOpen = false;
+let _shopReport = null;
+let _shopReportDays = 30;
+let _shopReportTest = false;
+
+async function loadShopReport() {
+  _shopReport = { loading: true };
+  renderShopOrders();
+  try {
+    _shopReport = await shopAdmin({ action: 'report', days: _shopReportDays, includeTest: _shopReportTest });
+  } catch (e) {
+    _shopReport = { error: e.message };
+  }
+  renderShopOrders();
+}
+
+function shopReportPanel() {
+  const r = _shopReport || {};
+  const m = (n) => (n === null || n === undefined ? '—' : '$' + Number(n).toFixed(2));
+  const tile = (label, value, sub) =>
+    `<div style="background:var(--off);border-radius:10px;padding:12px 14px;min-width:0"><div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em">${label}</div><div style="font-size:20px;font-weight:800;color:var(--navy);margin-top:4px;font-variant-numeric:tabular-nums">${value}</div>${sub ? `<div style="font-size:12px;color:var(--mgray);margin-top:2px">${sub}</div>` : ''}</div>`;
+  const controls = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <select class="inp" data-rep-days aria-label="Period" style="width:auto;min-height:40px;padding:6px 10px;font-size:13px;cursor:pointer">
+        ${[[7, 'Last 7 days'], [30, 'Last 30 days'], [90, 'Last 90 days'], [365, 'Last 12 months'], [0, 'All time']].map(([d, l]) => `<option value="${d}"${d === _shopReportDays ? ' selected' : ''}>${l}</option>`).join('')}
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;min-height:40px"><input type="checkbox" data-rep-test${_shopReportTest ? ' checked' : ''} style="width:18px;height:18px"> Include test orders</label>
+    </div>`;
+  let body;
+  if (r.loading) body = '<div style="color:var(--mgray);font-size:13px;padding:12px 0">Adding it up...</div>';
+  else if (r.error) body = `<div style="color:var(--red-text);font-size:13px;padding:12px 0">${esc(r.error)}</div>`;
+  else {
+    const top = (r.top || [])
+      .map(
+        (p) => `<tr><td style="padding:6px 8px 6px 0;font-size:13px;color:var(--navy)">${esc(p.name)}</td><td style="padding:6px 8px;font-size:13px;text-align:right">${p.qty}</td><td style="padding:6px 8px;font-size:13px;text-align:right">${m(p.revenue)}</td><td style="padding:6px 0 6px 8px;font-size:13px;text-align:right;font-weight:700;color:var(--green-text)">${m(p.margin)}</td></tr>`
+      )
+      .join('');
+    body = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px">
+        ${tile('Orders', r.orders ?? 0, r.avgOrder ? 'avg ' + m(r.avgOrder) : '')}
+        ${tile('Sales', m(r.revenue), r.shipping ? 'incl. ' + m(r.shipping) + ' shipping' : '')}
+        ${tile('Your cost', m(r.cost), 'at today\'s LEBYCLE prices')}
+        ${tile('Margin', m(r.margin), r.marginPct === null || r.marginPct === undefined ? '' : r.marginPct + '% of product sales')}
+        ${tile('Refunds', r.refunds?.count ?? 0, r.refunds?.amount ? m(r.refunds.amount) : '')}
+      </div>
+      ${r.missingCost ? `<div style="font-size:12px;color:var(--amber-ink);margin-top:8px">${r.missingCost} sold line(s) have no cost loaded, so the margin is higher than it really is. Add the cost in Shop Products.</div>` : ''}
+      ${r.notPaid ? `<div style="font-size:12px;color:var(--mgray);margin-top:6px">${r.notPaid} checkout(s) started and never paid in this period (not counted).</div>` : ''}
+      ${
+        top
+          ? `<div style="font-size:13px;font-weight:700;color:var(--navy);margin:14px 0 4px">Best sellers</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:420px"><thead><tr>${['Product', 'Sold', 'Sales', 'Margin'].map((h, i) => `<th style="text-align:${i ? 'right' : 'left'};font-size:11px;color:var(--mgray);font-weight:600;padding:0 ${i === 3 ? 0 : 8}px 6px ${i ? 8 : 0}px;text-transform:uppercase;letter-spacing:0.06em">${h}</th>`).join('')}</tr></thead><tbody>${top}</tbody></table></div>`
+          : '<div style="font-size:13px;color:var(--mgray);margin-top:12px">No sales in this period yet.</div>'
+      }`;
+  }
+  return `<div data-so-report-panel style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:12px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div style="font-size:15px;font-weight:700;color:var(--navy)">Sales report</div>${controls}</div>
+      ${body}
+    </div>`;
+}
+
 function renderShopOrders() {
   const bar = document.getElementById('shop-orders-filters');
   const list = document.getElementById('shop-orders-list');
@@ -6658,7 +6717,8 @@ function renderShopOrders() {
     const n = _shopOrders.filter(keep).length;
     const on = key === _shopFilter;
     return `<button type="button" data-so-filter="${key}" aria-pressed="${on}" style="min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid ${on ? 'var(--blue)' : 'var(--border)'};background:${on ? 'var(--blue-lt)' : 'var(--white)'};color:${on ? 'var(--blue-text)' : 'var(--navy)'};font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer">${label} <span style="color:var(--mgray);font-weight:500">${n}</span></button>`;
-  }).join('');
+  }).join('') +
+    `<button type="button" data-so-report aria-pressed="${_shopReportOpen}" style="margin-left:auto;min-height:40px;padding:0 14px;border-radius:8px;border:1.5px solid ${_shopReportOpen ? 'var(--purple)' : 'var(--border)'};background:${_shopReportOpen ? 'var(--purple-lt)' : 'var(--white)'};color:${_shopReportOpen ? 'var(--purple-text)' : 'var(--navy)'};font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Sales report</button>`;
 
   const banners = [];
   if (_shopOrders.length && !_shopOrders[0].migrated) {
@@ -6672,6 +6732,7 @@ function renderShopOrders() {
     );
   }
 
+  if (_shopReportOpen) banners.unshift(shopReportPanel());
   const keep = (SHOP_FILTERS.find(([k]) => k === _shopFilter) || SHOP_FILTERS[0])[2];
   const shown = _shopOrders.filter(keep);
   if (!shown.length) {
@@ -6857,7 +6918,22 @@ async function runShopAction(btn) {
 function wireShopOrders() {
   if (_shopWired) return;
   _shopWired = true;
+  document.getElementById('shop-orders-list')?.addEventListener('change', (e) => {
+    if (e.target.matches('[data-rep-days]')) {
+      _shopReportDays = Number(e.target.value);
+      loadShopReport();
+    } else if (e.target.matches('[data-rep-test]')) {
+      _shopReportTest = e.target.checked;
+      loadShopReport();
+    }
+  });
   document.getElementById('shop-orders-filters')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-so-report]')) {
+      _shopReportOpen = !_shopReportOpen;
+      if (_shopReportOpen) loadShopReport();
+      else renderShopOrders();
+      return;
+    }
     const f = e.target.closest('[data-so-filter]');
     if (!f) return;
     _shopFilter = f.dataset.soFilter;
@@ -6899,6 +6975,7 @@ const SP_STATUS = [
   ['soldout', 'Sold out'],
   ['low', 'Low stock (5 or less)'],
   ['nophoto', 'No photo'],
+  ['featured', 'Featured'],
 ];
 const SP_LABEL = 'display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px';
 
@@ -6919,6 +6996,7 @@ function spKeep(p) {
   if (_spStatus === 'soldout') return p.variants.some((v) => v.stock === 0);
   if (_spStatus === 'low') return p.variants.some((v) => v.stock !== null && v.stock <= 5);
   if (_spStatus === 'nophoto') return !p.photoRef;
+  if (_spStatus === 'featured') return p.featured;
   return true;
 }
 
@@ -6998,6 +7076,7 @@ function spCard(p) {
           <span style="display:block;font-size:15px;font-weight:700;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>
           <span style="display:block;font-size:12px;color:var(--mgray);margin-top:2px">${esc(sec)} · ${p.variants.length} option${p.variants.length === 1 ? '' : 's'} · $${from.toFixed(2)}${to !== from ? '–$' + to.toFixed(2) : ''}</span>
         </span>
+        ${p.featured ? badge('★ Featured', 'var(--amber-ink)', 'var(--amber-lt)') : ''}
         ${!p.active ? badge('Hidden', 'var(--gray)', 'var(--border-lt)') : ''}
         ${soldOut ? badge('Sold out', 'var(--red-text)', 'var(--red-lt)') : someOut ? badge('Some sold out', 'var(--amber-ink)', 'var(--amber-lt)') : ''}
         <span aria-hidden="true" style="color:var(--mgray);font-size:18px;transform:rotate(${open ? 90 : 0}deg);transition:transform .15s">›</span>
@@ -7021,9 +7100,10 @@ function spVariantRow(v, isNewRow) {
 function spEditor(p) {
   const isNew = !p;
   const sections = _spData.sections || [];
-  const d = p || { name: '', section: sections[0]?.id || 'parts', active: true, description: '', photoRef: null, img: null, variants: [{ sku: '', label: '', cost: null, price: '', stock: null }] };
+  const d = p || { name: '', section: sections[0]?.id || 'parts', active: true, featured: false, description: '', photoRef: null, img: null, gallery: [], variants: [{ sku: '', label: '', cost: null, price: '', stock: null }] };
+  const gallery = d.gallery || [];
   return `
-    <form data-sp-form="${isNew ? '__new' : esc(p.slug)}" data-photo-ref="${esc(d.photoRef || '')}" style="border-top:${isNew ? '0' : '1px solid var(--border-lt)'};padding:14px 16px 16px" novalidate>
+    <form data-sp-form="${isNew ? '__new' : esc(p.slug)}" data-photo-ref="${esc(d.photoRef || '')}" data-gallery="${esc(JSON.stringify(gallery.map((g) => g.ref)))}" style="border-top:${isNew ? '0' : '1px solid var(--border-lt)'};padding:14px 16px 16px" novalidate>
       ${isNew ? '<div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px">New product</div>' : ''}
       <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start">
         <div>
@@ -7036,9 +7116,17 @@ function spEditor(p) {
             <label style="display:block;flex:1;min-width:150px"><span style="${SP_LABEL}">Section</span>
               <select class="inp" data-f="section" style="width:100%;min-height:44px;padding:8px 12px;font-size:14px;cursor:pointer">${sections.map((s) => `<option value="${esc(s.id)}"${s.id === d.section ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>
             <label style="display:flex;align-items:center;gap:8px;min-height:44px;align-self:flex-end;font-size:14px;color:var(--navy);cursor:pointer"><input type="checkbox" data-f="active"${d.active ? ' checked' : ''} style="width:20px;height:20px"> Visible in the shop</label>
+            <label style="display:flex;align-items:center;gap:8px;min-height:44px;align-self:flex-end;font-size:14px;color:var(--navy);cursor:pointer"><input type="checkbox" data-f="featured"${d.featured ? ' checked' : ''} style="width:20px;height:20px"> Featured on the shop home</label>
           </div>
           <label style="display:block"><span style="${SP_LABEL}">Description (what the client reads on the product page)</span>
             <textarea class="inp" data-f="description" rows="3" maxlength="2000" style="width:100%;padding:8px 12px;font-size:13px;resize:vertical">${esc(d.description || '')}</textarea></label>
+          <div>
+            <span style="${SP_LABEL}">More photos (up to 8, shown as thumbnails on the product page)</span>
+            <div data-sp-gallery style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              ${gallery.map((g) => spGalleryThumb(g.ref, g.img)).join('')}
+              <label style="position:relative;display:flex;align-items:center;justify-content:center;width:64px;height:64px;border:1.5px dashed var(--border);border-radius:8px;font-size:22px;color:var(--mgray);cursor:pointer" title="Add photos">+<input type="file" accept="image/*" multiple data-sp-gallery-add aria-label="Add more photos" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer"></label>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -7060,6 +7148,38 @@ function spEditor(p) {
     </form>`;
 }
 
+function spGalleryThumb(ref, img) {
+  return `<span data-g="${esc(ref)}" style="position:relative;width:64px;height:64px;border-radius:8px;background:var(--off);overflow:hidden;display:inline-flex;align-items:center;justify-content:center;color:var(--mgray);font-size:10px">${img ? `<img src="${esc(img)}" alt="" style="width:100%;height:100%;object-fit:cover">` : 'photo'}<button type="button" data-g-del="${esc(ref)}" aria-label="Remove this photo" style="position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;border:0;background:var(--navy);color:#fff;font-size:14px;line-height:1;cursor:pointer">×</button></span>`;
+}
+
+// Uploads each picked file the same way as the main photo, and adds its
+// reference to the form. Nothing is kept until "Save changes".
+async function spAddGallery(form, files) {
+  const refs = JSON.parse(form.dataset.gallery || '[]');
+  const box = form.querySelector('[data-sp-gallery]');
+  const room = 8 - refs.length;
+  if (room <= 0) return showToast('Up to 8 extra photos per product.');
+  let added = 0;
+  for (const file of [...files].slice(0, room)) {
+    const kind = safeImageUpload(file);
+    if (!kind.ok) {
+      showToast(kind.reason);
+      continue;
+    }
+    const blob = await shrinkShopPhoto(file);
+    const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
+    const up = await shopAdmin({ action: 'photo-upload', slug: form.dataset.spForm === '__new' ? '' : form.dataset.spForm, name: form.querySelector('[data-f="name"]').value, ext });
+    const { error } = await sb.storage.from(up.bucket).uploadToSignedUrl(up.path, up.token, blob, { contentType: blob.type });
+    if (error) throw new Error('Upload failed: ' + error.message);
+    refs.push(up.photoRef);
+    box.lastElementChild.insertAdjacentHTML('beforebegin', spGalleryThumb(up.photoRef, URL.createObjectURL(blob)));
+    added++;
+  }
+  form.dataset.gallery = JSON.stringify(refs);
+  if (files.length > room) showToast('Only ' + room + ' more photo(s) fit - up to 8 per product.');
+  else if (added) showToast(added + ' photo(s) uploaded - press Save to keep them');
+}
+
 function spCollect(form) {
   // Product fields and option fields never share a name, so a plain lookup is safe.
   const f = (name) => form.querySelector(`[data-f="${name}"]`);
@@ -7076,6 +7196,8 @@ function spCollect(form) {
       active: f('active').checked,
       description: f('description').value.trim(),
       photoRef: form.dataset.photoRef || null,
+      featured: f('featured').checked,
+      gallery: JSON.parse(form.dataset.gallery || '[]'),
     },
     variants: variants.map((v) => ({
       ...v,
@@ -7206,6 +7328,14 @@ function wireShopProducts() {
       tbody.lastElementChild.querySelector('[data-f="label"]').focus();
       return;
     }
+    const gDel = t.closest('[data-g-del]');
+    if (gDel) {
+      const form = gDel.closest('form');
+      const refs = JSON.parse(form.dataset.gallery || '[]').filter((r) => r !== gDel.dataset.gDel);
+      form.dataset.gallery = JSON.stringify(refs);
+      gDel.closest('[data-g]').remove();
+      return;
+    }
     const delRow = t.closest('[data-sp-delrow]');
     if (delRow) {
       const row = delRow.closest('[data-sp-row]');
@@ -7229,6 +7359,17 @@ function wireShopProducts() {
     );
   });
   list?.addEventListener('change', async (e) => {
+    if (e.target.matches('[data-sp-gallery-add]')) {
+      const files = e.target.files;
+      const form = e.target.closest('form');
+      try {
+        if (files?.length) await spAddGallery(form, files);
+      } catch (err) {
+        showToast(err.message);
+      }
+      e.target.value = '';
+      return;
+    }
     if (!e.target.matches('[data-sp-photo]')) return;
     const file = e.target.files?.[0];
     if (!file) return;

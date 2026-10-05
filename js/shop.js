@@ -259,6 +259,21 @@ export function shippingNoteHtml(catalog, subtotal) {
   return head + tail + ' &middot; ' + deliveryHtml(catalog);
 }
 
+// Lo que va en la portada y en la franja del inicio: primero los destacados
+// que Diego marco en Admin (con foto), y despues, para completar, los de mas
+// medidas. Sin destacados es exactamente lo de antes.
+export function pickHome(products, n) {
+  const withImg = (products || []).filter((p) => p.img);
+  const featured = withImg.filter((p) => p.featured);
+  const rest = sortProducts(withImg, 'stocked').filter((p) => !p.featured);
+  return [...featured, ...rest].slice(0, n);
+}
+
+// Todas las fotos de un producto, la principal primero.
+export function photosOf(product) {
+  return [product?.img, ...(product?.gallery || [])].filter(Boolean);
+}
+
 // Si la variante tiene limite, no se puede elegir mas de lo que queda.
 export function maxQty(variant) {
   const left = variant?.stock ?? null;

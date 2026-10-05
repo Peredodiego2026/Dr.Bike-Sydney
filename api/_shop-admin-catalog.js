@@ -41,7 +41,7 @@ export async function listProducts(sb, res) {
   let migrated = true;
   let { data: products, error } = await sb
     .from('shop_products')
-    .select('id, slug, name, section, price_from, price_to, photo_ref, sort_rank, active, description, featured')
+    .select('id, slug, name, section, price_from, price_to, photo_ref, sort_rank, active, description, featured, gallery')
     .order('sort_rank', { ascending: true });
   if (error && isMissingColumn(error)) {
     migrated = false;
@@ -58,7 +58,7 @@ export async function listProducts(sb, res) {
     .order('position', { ascending: true });
   if (vErr) return res.status(500).json({ error: 'Could not read the variants: ' + vErr.message });
 
-  const signed = await signPhotos(sb, (products || []).map((p) => p.photo_ref));
+  const signed = await signPhotos(sb, (products || []).flatMap((p) => [p.photo_ref, ...(Array.isArray(p.gallery) ? p.gallery : [])]));
   const byProduct = {};
   for (const v of variants || []) {
     (byProduct[v.product_id] ||= []).push({
@@ -82,6 +82,7 @@ export async function listProducts(sb, res) {
       description: p.description || '',
       photoRef: p.photo_ref || null,
       img: signed[p.photo_ref] || null,
+      gallery: (Array.isArray(p.gallery) ? p.gallery : []).map((ref) => ({ ref, img: signed[ref] || null })),
       variants: byProduct[p.id] || [],
     })),
   });
@@ -130,6 +131,11 @@ export async function saveProduct(sb, req, res) {
   // cada "Save" lo dejaba en false sin que nadie lo pidiera.
   const featured = typeof p.featured === 'boolean' ? p.featured : undefined;
   const photoRef = p.photoRef ? str(p.photoRef, 120) : null;
+  // Fotos extra: hasta 8, todas del bucket privado. Si el panel no las manda,
+  // no se tocan (igual que "destacado").
+  const gallery = Array.isArray(p.gallery) ? p.gallery.map((g) => str(g, 120)).filter(Boolean) : undefined;
+  if (gallery && gallery.length > 8) return res.status(400).json({ error: 'Up to 8 extra photos per product.' });
+  if (gallery && gallery.some((g) => !PHOTO_RE.test(g))) return res.status(400).json({ error: 'One of the extra photos is not valid. Upload it again.' });
   if (!name) return res.status(400).json({ error: 'The product needs a name.' });
   if (!SECTION_IDS.includes(section)) return res.status(400).json({ error: 'Pick a section.' });
   if (photoRef && !PHOTO_RE.test(photoRef)) return res.status(400).json({ error: 'That photo reference is not valid. Upload the photo again.' });
@@ -168,6 +174,7 @@ export async function saveProduct(sb, req, res) {
     price_from: Math.min(...prices),
     price_to: Math.max(...prices),
     photo_ref: photoRef,
+    ...(gallery === undefined ? {} : { gallery }),
     description: description || null,
     ...(featured === undefined ? {} : { featured }),
     updated_at: new Date().toISOString(),

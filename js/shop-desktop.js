@@ -41,6 +41,8 @@ import {
   shippingFor,
   deliveryHtml,
   shippingNoteHtml,
+  pickHome,
+  photosOf,
 } from './shop.js';
 import { startCheckout, confirmOrder, mountCard } from './shop-pay.js';
 
@@ -123,10 +125,9 @@ function state(icon, title, sub, actions = '') {
 // ── La portada ───────────────────────────────────────────────────────────────
 
 function viewHome() {
-  const picks = sortProducts(catalog.products, 'stocked')
-    .filter((p) => p.img)
-    .slice(0, 6);
-  const hero = findProduct(catalog, 'bicycle-wheelset') || picks[0];
+  const picks = pickHome(catalog.products, 6);
+  const anyFeatured = picks.some((p) => p.featured);
+  const hero = (anyFeatured && picks[0]) || findProduct(catalog, 'bicycle-wheelset') || picks[0];
   return `
   <section class="sd-hero">
     <div class="sd-wrap">
@@ -158,7 +159,7 @@ function viewHome() {
     </div>
     <section class="sd-sec">
       <div class="sd-sec__head">
-        <h2 class="sd-sec__title">Most stocked</h2>
+        <h2 class="sd-sec__title">${anyFeatured ? 'Featured' : 'Most stocked'}</h2>
         <a class="sd-sec__more" href="#all"><span>See all</span> &rarr;</a>
       </div>
       <div class="sd-grid6">${picks.map((p) => card(p, false)).join('')}</div>
@@ -335,7 +336,7 @@ function axesOf(product) {
   };
 }
 
-const pd = { slug: null, sku: null, qty: 1 };
+const pd = { slug: null, sku: null, qty: 1, photo: 0 };
 
 function viewProduct(params) {
   const product = findProduct(catalog, params.get('slug'));
@@ -348,7 +349,10 @@ function viewProduct(params) {
     // tarjeta: si arrancara otra, el precio de la ficha no coincidiria.
     pd.sku = [...product.variants].sort((a, b) => a.price - b.price)[0].sku;
     pd.qty = 1;
+    pd.photo = 0;
   }
+  const photos = photosOf(product);
+  if (pd.photo >= photos.length) pd.photo = 0;
   const v = findVariant(product, pd.sku) || product.variants[0];
   // Cambiar a una opcion con menos stock no deja la cantidad por encima.
   pd.qty = Math.max(1, Math.min(pd.qty, maxQty(v) || 1));
@@ -403,7 +407,18 @@ function viewProduct(params) {
       <div class="sd-crumbs__path"><a href="#">Shop</a> &nbsp;/&nbsp; <a href="#all?s=${esc(product.cat)}">${esc(sectionName(catalog, product.cat))}</a> &nbsp;/&nbsp; <span style="color:var(--navy)">${esc(product.name)}</span></div>
     </div>
     <div class="sd-pd">
-      <div class="sd-pd__shot">${product.img ? `<img src="${esc(product.img)}" alt="${esc(product.name)}">` : ''}</div>
+      <div class="sd-pd__media">
+        <div class="sd-pd__shot">${photos[pd.photo] ? `<img src="${esc(photos[pd.photo])}" alt="${esc(product.name)}">` : ''}</div>
+        ${
+          photos.length > 1
+            ? `<div class="sd-pd__thumbs">${photos
+                .map(
+                  (src, i) => `<button type="button" class="sd-pd__thumb" data-photo="${i}" aria-label="Show this photo" aria-pressed="${i === pd.photo}"><img src="${esc(src)}" alt=""></button>`
+                )
+                .join('')}</div>`
+            : ''
+        }
+      </div>
       <div class="sd-pd__info">
         <div class="sd-pd__brand">${esc(catalog.brand || 'LEBYCLE')}</div>
         <h1 class="sd-pd__title">${esc(product.name)}</h1>
@@ -895,6 +910,12 @@ document.addEventListener('click', (ev) => {
         render();
       }
     }
+    return;
+  }
+  const ph = t.closest('[data-photo]');
+  if (ph) {
+    pd.photo = Number(ph.dataset.photo) || 0;
+    render();
     return;
   }
   const pq = t.closest('[data-pqty]');

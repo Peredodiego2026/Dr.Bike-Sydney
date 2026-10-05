@@ -302,3 +302,21 @@ describe('envio y plazo en la tienda', () => {
     expect(shop.deliveryHtml({ delivery: { minDays: 7, maxDays: 7 } })).toBe('<span>Delivered in</span> 7 <span>business days</span>');
   });
 });
+
+describe('portada y fotos', () => {
+  const P = (slug, extra) => ({ slug, name: slug, cat: 'parts', from: 1, to: 1, img: 'x', variants: [{ sku: slug, label: '', price: 1 }], ...extra });
+
+  it('los destacados van primero; despues se completa como antes', () => {
+    const list = [P('a'), P('b', { featured: true }), P('c', { featured: true, img: null }), P('d', { featured: true })];
+    expect(shop.pickHome(list, 3).map((p) => p.slug)).toEqual(['b', 'd', 'a']);
+  });
+
+  it('sin destacados, lo de siempre', () => {
+    expect(shop.pickHome([P('a'), P('b')], 5).map((p) => p.slug)).toEqual(['a', 'b']);
+  });
+
+  it('las fotos de un producto: la principal primero', () => {
+    expect(shop.photosOf({ img: 'main', gallery: ['g1', 'g2'] })).toEqual(['main', 'g1', 'g2']);
+    expect(shop.photosOf({ img: null, gallery: [] })).toEqual([]);
+  });
+});

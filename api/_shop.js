@@ -639,7 +639,7 @@ export async function handleShop(req, res) {
 
   const { data: products, error: pErr } = await selectWithFallback(
     (cols) => sb.from('shop_products').select(cols).eq('active', true).order('sort_rank', { ascending: true }),
-    'slug, name, section, price_from, price_to, photo_ref, sort_rank, description',
+    'slug, name, section, price_from, price_to, photo_ref, sort_rank, description, featured, gallery',
     'slug, name, section, price_from, price_to, photo_ref, sort_rank'
   );
   if (pErr) return res.status(500).json({ error: 'Could not load the shop: ' + pErr.message });
@@ -652,7 +652,8 @@ export async function handleShop(req, res) {
   if (vErr) return res.status(500).json({ error: 'Could not load the shop: ' + vErr.message });
 
   const [signed, settings] = await Promise.all([
-    signPhotos(sb, (products || []).map((p) => p.photo_ref)),
+    // Las fotos extra se firman en la MISMA llamada que las principales.
+    signPhotos(sb, (products || []).flatMap((p) => [p.photo_ref, ...(Array.isArray(p.gallery) ? p.gallery : [])])),
     loadShopSettings(sb),
   ]);
 
@@ -666,6 +667,8 @@ export async function handleShop(req, res) {
       to: Number(p.price_to),
       img: signed[p.photo_ref] || null,
       desc: p.description || '',
+      featured: !!p.featured,
+      gallery: (Array.isArray(p.gallery) ? p.gallery : []).map((ref) => signed[ref]).filter(Boolean),
       variants: [],
     });
   }

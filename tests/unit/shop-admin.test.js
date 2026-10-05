@@ -43,9 +43,10 @@ let pgrstStyle = false;
 function table(name) {
   const eqs = [];
   const ins = [];
+  const gtes = [];
   let patch = null;
   const rows = () =>
-    db[name].filter((r) => eqs.every(([k, v]) => r[k] === v) && ins.every(([k, vs]) => vs.includes(r[k])));
+    db[name].filter((r) => eqs.every(([k, v]) => r[k] === v) && ins.every(([k, vs]) => vs.includes(r[k])) && gtes.every(([k, v]) => String(r[k]) >= v));
   const run = () => {
     if (patch) {
       if (!migrated && Object.keys(patch).some((k) => ['supplier_ref', 'carrier', 'tracking_url', 'sent_at'].includes(k))) {
@@ -67,6 +68,7 @@ function table(name) {
     limit: () => q,
     eq: (k, v) => (eqs.push([k, v]), q),
     in: (k, vs) => (ins.push([k, vs]), q),
+    gte: (k, v) => (gtes.push([k, v]), q),
     update: (p) => ((patch = p), q),
     single: async () => {
       const r = rows()[0];
@@ -372,5 +374,56 @@ describe('el reembolso y el stock', () => {
     row().status = 'sent';
     await act({ action: 'refund', orderId: ID });
     expect(db.shop_variants[0].stock).toBe(3);
+  });
+});
+
+describe('el reporte de ventas', () => {
+  const day = (n) => new Date(Date.now() - n * 86400000).toISOString();
+  const o = (id, extra) => ({ id, status: 'paid', mode: 'live', total: '0', subtotal: '0', shipping: '0', created_at: day(1), ...extra });
+  beforeEach(() => {
+    db.shop_orders = [
+      o('a', { total: '29.85', subtotal: '19.90', shipping: '9.95' }),
+      o('b', { status: 'delivered', total: '25', subtotal: '25' }),
+      o('c', { mode: 'test', total: '100', subtotal: '100' }),
+      o('d', { status: 'refunded', total: '12', subtotal: '12' }),
+      o('e', { status: 'pending', total: '50', subtotal: '50' }),
+      o('f', { total: '40', subtotal: '40', created_at: day(60) }),
+    ];
+    db.shop_order_items = [
+      { order_id: 'a', sku: 'TB-20', name: 'Butyl Inner Tube', qty: 2, line_total: '19.90' },
+      { order_id: 'b', sku: 'NO-COST', name: 'Chain Tool', qty: 1, line_total: '25' },
+      { order_id: 'c', sku: 'TB-20', name: 'Butyl Inner Tube', qty: 10, line_total: '100' },
+      { order_id: 'f', sku: 'TB-20', name: 'Butyl Inner Tube', qty: 4, line_total: '40' },
+    ];
+    db.shop_variants = [{ sku: 'TB-20', cost: '1.25' }];
+  });
+
+  it('cuenta solo pedidos reales, del periodo, y cobrados', async () => {
+    const r = (await act({ action: 'report', days: 30 })).body;
+    expect(r.orders).toBe(2);
+    expect(r.revenue).toBe(54.85);
+    expect(r.products).toBe(44.9);
+    expect(r.shipping).toBe(9.95);
+    expect(r.cost).toBe(2.5);
+    expect(r.margin).toBe(42.4);
+    expect(r.refunds).toEqual({ count: 1, amount: 12 });
+    expect(r.notPaid).toBe(1);
+  });
+
+  it('avisa las lineas sin costo, en vez de inflar el margen en silencio', async () => {
+    const r = (await act({ action: 'report', days: 30 })).body;
+    expect(r.missingCost).toBe(1);
+    expect(r.top.find((p) => p.name === 'Chain Tool').margin).toBeNull();
+  });
+
+  it('con el tilde de prueba incluye los pedidos de prueba', async () => {
+    const r = (await act({ action: 'report', days: 30, includeTest: true })).body;
+    expect(r.orders).toBe(3);
+    expect(r.top[0]).toMatchObject({ name: 'Butyl Inner Tube', qty: 12, revenue: 119.9 });
+  });
+
+  it('"todo el tiempo" incluye lo viejo', async () => {
+    const r = (await act({ action: 'report', days: 0 })).body;
+    expect(r.orders).toBe(3);
   });
 });
