@@ -235,7 +235,7 @@ function dedupe(rows) {
 // cost). Devuelve tres listas y lo que no cambio.
 export function diffCatalog(products, rows, rules = DEFAULT_PRICING) {
   const inShop = new Map();
-  for (const p of products || []) for (const v of p.variants || []) inShop.set(v.sku, { product: p, variant: v });
+  for (const p of products || []) for (const v of (p && p.variants) || []) if (v && v.sku) inShop.set(v.sku, { product: p, variant: v });
   const listed = new Set();
   const changed = [];
   const added = [];
