@@ -241,3 +241,41 @@ describe('filtros y orden', () => {
     expect(shop.countsByBand(CATALOG)).toMatchObject({ under10: 1, '10to25': 1, over60: 1 });
   });
 });
+
+describe('el stock en el carrito', () => {
+  const stocked = (stock) => ({
+    sections: CATALOG.sections,
+    products: [{ slug: 'x', name: 'Brake Pads', cat: 'parts', from: 9, to: 9, img: null, variants: [{ sku: 'BP-1', label: 'Resin', price: 9, stock }] }],
+  });
+
+  it('sin limite (null) se compra normal', () => {
+    const r = shop.priceCart(stocked(null), [{ sku: 'BP-1', qty: 20 }]);
+    expect(r.hasGone).toBe(false);
+    expect(r.items[0].why).toBe('');
+  });
+
+  it('agotado (0) frena el pago y lo dice', () => {
+    const r = shop.priceCart(stocked(0), [{ sku: 'BP-1', qty: 1 }]);
+    expect(r.hasGone).toBe(true);
+    expect(r.items[0].why).toBe('soldout');
+    expect(shop.goneLabel(r.items[0])).toBe('<span>Sold out</span>');
+  });
+
+  it('pedir mas de lo que queda tambien frena, y dice cuantos quedan', () => {
+    const r = shop.priceCart(stocked(3), [{ sku: 'BP-1', qty: 5 }]);
+    expect(r.hasGone).toBe(true);
+    expect(r.items[0].why).toBe('short');
+    expect(shop.goneLabel(r.items[0])).toBe('<span>Only</span> 3 <span>left</span>');
+  });
+
+  it('justo lo que queda, se puede', () => {
+    expect(shop.priceCart(stocked(3), [{ sku: 'BP-1', qty: 3 }]).hasGone).toBe(false);
+  });
+
+  it('el selector de cantidad no pasa de lo que queda', () => {
+    expect(shop.maxQty({ stock: null })).toBe(20);
+    expect(shop.maxQty({ stock: 3 })).toBe(3);
+    expect(shop.maxQty({ stock: 0 })).toBe(0);
+    expect(shop.maxQty({ stock: 500 })).toBe(20);
+  });
+});

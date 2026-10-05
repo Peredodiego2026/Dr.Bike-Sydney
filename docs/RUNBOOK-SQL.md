@@ -375,13 +375,24 @@ with
      and exists (select 1 from col where t='shop_orders' and c='tracking_url')
      and exists (select 1 from pg_constraint where conname = 'shop_orders_status_check'
                    and pg_get_constraintdef(oid) ilike '%ordered%'))
+  -- 51 entro el 2026-10-04 con Admin > Shop Products: descripcion, stock,
+  -- destacados, fotos extra, y shop_settings (envio, plazo, reglas de precio).
+  -- shop_settings lleva el mismo cerrojo que el catalogo: cero politicas.
+  union all select 51, 'shop-catalog-admin.sql', 'shop_products.description/featured/gallery, shop_variants.stock, y shop_settings sin politicas',
+    (exists (select 1 from col where t='shop_products' and c='description')
+     and exists (select 1 from col where t='shop_products' and c='gallery')
+     and exists (select 1 from col where t='shop_variants' and c='stock')
+     and exists (select 1 from col where t='shop_settings' and c='value')
+     and coalesce((select c.relrowsecurity from pg_class c where c.relname = 'shop_settings'), false)
+     and not exists (select 1 from pg_policy p join pg_class c on c.oid = p.polrelid
+                       where c.relname = 'shop_settings'))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 45 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 46 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 

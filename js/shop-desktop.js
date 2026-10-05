@@ -36,6 +36,8 @@ import {
   removeFromCart,
   clearCart,
   priceCart,
+  goneLabel,
+  maxQty,
 } from './shop.js';
 import { startCheckout, confirmOrder, mountCard } from './shop-pay.js';
 
@@ -83,6 +85,7 @@ const svgCheck =
 // lleva a la ficha: no se puede agregar "unas pastillas" sin saber cuales.
 function card(p, withButton = true) {
   const n = p.variants.length;
+  const soldOut = p.variants.every((v) => v.stock === 0);
   const href = '#product?slug=' + encodeURIComponent(p.slug);
   return `<div class="sd-card">
     <a class="sd-card__link" href="${href}">
@@ -90,14 +93,16 @@ function card(p, withButton = true) {
         ${n > 1 ? `<span class="sd-card__sizes">${n} <span>sizes</span></span>` : ''}
         ${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">` : ''}
       </div>
-      <div class="sd-card__price">${n > 1 ? '<span>From</span> ' : ''}${money(p.from)}</div>
+      <div class="sd-card__price">${n > 1 ? '<span>From</span> ' : ''}${money(p.from)}${soldOut ? ' <span class="sd-card__sold">Sold out</span>' : ''}</div>
       <div class="sd-card__name">${esc(p.name)}</div>
     </a>
     ${
       withButton
         ? n > 1
           ? `<a class="sd-card__add" href="${href}" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Choose size</a>`
-          : `<button type="button" class="sd-card__add" data-add="${esc(p.variants[0].sku)}">Add to cart</button>`
+          : soldOut
+            ? '<button type="button" class="sd-card__add" disabled>Sold out</button>'
+            : `<button type="button" class="sd-card__add" data-add="${esc(p.variants[0].sku)}">Add to cart</button>`
         : ''
     }
   </div>`;
@@ -342,6 +347,8 @@ function viewProduct(params) {
     pd.qty = 1;
   }
   const v = findVariant(product, pd.sku) || product.variants[0];
+  // Cambiar a una opcion con menos stock no deja la cantidad por encima.
+  pd.qty = Math.max(1, Math.min(pd.qty, maxQty(v) || 1));
   const n = product.variants.length;
   const axes = axesOf(product);
 
@@ -366,15 +373,19 @@ function viewProduct(params) {
   } else if (n > 1 && n <= 12) {
     options = `<div class="sd-pd__label"><span>Size and fit</span></div><div class="sd-opts">${product.variants
       .map(
-        (x) => `<button type="button" class="sd-opt" data-pick="${esc(x.sku)}" aria-pressed="${x.sku === v.sku}">${esc(x.label)}${
-          x.price !== v.price ? `<span class="sd-opt__hint">${money(x.price)}</span>` : ''
+        (x) => `<button type="button" class="sd-opt${x.stock === 0 ? ' sd-opt--out' : ''}" data-pick="${esc(x.sku)}" aria-pressed="${x.sku === v.sku}">${esc(x.label)}${
+          x.stock === 0
+            ? '<span class="sd-opt__hint">Sold out</span>'
+            : x.price !== v.price
+              ? `<span class="sd-opt__hint">${money(x.price)}</span>`
+              : ''
         }</button>`
       )
       .join('')}</div>`;
   } else if (n > 12) {
     options = `<label class="sd-pd__label" for="sd-pick"><span>Size and fit</span><span class="sd-pd__hint">${n} <span>options</span></span></label>
       <select id="sd-pick" class="sd-select" data-pick-select>${product.variants
-        .map((x) => `<option value="${esc(x.sku)}"${x.sku === v.sku ? ' selected' : ''}>${esc(x.label)} - ${money(x.price)}</option>`)
+        .map((x) => `<option value="${esc(x.sku)}"${x.sku === v.sku ? ' selected' : ''}>${esc(x.label)} - ${x.stock === 0 ? 'Sold out' : money(x.price)}</option>`)
         .join('')}</select>`;
   }
 
@@ -397,6 +408,7 @@ function viewProduct(params) {
           <span class="sd-pd__price">${money(v.price)}</span>
           <span class="sd-pd__note">${n > 1 ? `${n} <span>sizes and fits</span>` : '<span>One size</span>'}</span>
         </div>
+        ${product.desc ? `<p class="sd-pd__desc">${esc(product.desc).replace(/\n/g, '<br>')}</p>` : ''}
         <div class="sd-pd__rule" aria-hidden="true"></div>
         ${options}
         <div class="sd-buy">
@@ -405,7 +417,11 @@ function viewProduct(params) {
             <span class="sd-qty__n">${pd.qty}</span>
             <button type="button" data-pqty="1" aria-label="One more">+</button>
           </div>
-          <button type="button" class="sd-addbig" data-padd><span>Add to cart</span><span> &middot; ${money(v.price * pd.qty)}</span></button>
+          ${
+            v.stock === 0
+              ? '<button type="button" class="sd-addbig" disabled><span>Sold out</span></button>'
+              : `<button type="button" class="sd-addbig" data-padd><span>Add to cart</span><span> &middot; ${money(v.price * pd.qty)}</span></button>`
+          }
         </div>
         <div class="sd-boxes">
           <div class="sd-box">
@@ -674,7 +690,7 @@ function paintCart() {
           <div class="sd-line__shot">${i.img ? `<img src="${esc(i.img)}" alt="">` : ''}</div>
           <div style="flex-grow:1;min-width:0">
             <div class="sd-line__name">${esc(i.name)}</div>
-            <div class="sd-line__variant">${i.gone ? '<span>No longer available</span>' : esc(i.variant)}</div>
+            <div class="sd-line__variant">${i.gone ? goneLabel(i) : esc(i.variant)}</div>
             <div class="sd-line__ctrl">
               <div class="sd-qty">
                 <button type="button" data-cq="${esc(i.sku)}" data-d="-1" aria-label="One less">&minus;</button>
@@ -690,7 +706,7 @@ function paintCart() {
       .join('');
     foot.innerHTML = `<div class="sd-total"><span class="sd-total__label">Subtotal</span><span class="sd-total__value">${money(subtotal)}</span></div>
       <div class="sd-note">Delivery is worked out at checkout. [CONFIRMAR PLAZO DE ENTREGA]</div>
-      ${hasGone ? `<div class="sd-note" style="color:var(--red)">One of these is no longer in the shop. Remove it to keep going.</div>` : ''}
+      ${hasGone ? `<div class="sd-note" style="color:var(--red)">One of these cannot be bought right now. Remove it or lower the quantity to keep going.</div>` : ''}
       <a class="sd-btn sd-btn--primary sd-btn--block" href="#checkout" data-close-cart style="margin-top:14px${hasGone ? ';pointer-events:none;opacity:.5' : ''}"><span>Checkout</span><span> &middot; ${money(subtotal)}</span></a>
       <button type="button" class="sd-btn sd-btn--block" data-close-cart style="margin-top:8px">Keep shopping</button>`;
   }
@@ -871,7 +887,8 @@ document.addEventListener('click', (ev) => {
   }
   const pq = t.closest('[data-pqty]');
   if (pq) {
-    pd.qty = Math.max(1, Math.min(20, pd.qty + Number(pq.dataset.pqty)));
+    const max = maxQty(findVariant(findProduct(catalog, readRoute().params.get('slug')), pd.sku)) || 1;
+    pd.qty = Math.max(1, Math.min(max, pd.qty + Number(pq.dataset.pqty)));
     render();
     return;
   }

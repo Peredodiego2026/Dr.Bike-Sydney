@@ -218,11 +218,29 @@ export function clearCart() {
 //
 // Esto es para MOSTRAR. El importe que se cobra lo calcula el servidor con la
 // misma tabla, y si no coincide manda el servidor.
+// Lo que dice una linea que no se puede comprar. Partido en spans para que cada
+// texto fijo pase por el diccionario (translateScreen reemplaza nodos enteros).
+export function goneLabel(item) {
+  if (item.why === 'soldout') return '<span>Sold out</span>';
+  if (item.why === 'short') return '<span>Only</span> ' + Number(item.left) + ' <span>left</span>';
+  return '<span>No longer available</span>';
+}
+
+// Si la variante tiene limite, no se puede elegir mas de lo que queda.
+export function maxQty(variant) {
+  const left = variant?.stock ?? null;
+  return left === null ? 20 : Math.max(0, Math.min(20, left));
+}
+
 export function priceCart(catalog, lines = readRaw()) {
   const items = lines.map((l) => {
     for (const p of catalog?.products || []) {
       const v = findVariant(p, l.sku);
       if (v) {
+        // Stock: null = sin limite, 0 = agotado. Pedir mas de lo que queda
+        // tambien frena el pago, y el carrito dice cuantos quedan.
+        const left = v.stock ?? null;
+        const why = left === 0 ? 'soldout' : left !== null && l.qty > left ? 'short' : '';
         return {
           sku: l.sku,
           qty: l.qty,
@@ -232,11 +250,13 @@ export function priceCart(catalog, lines = readRaw()) {
           variant: v.label,
           unit: v.price,
           total: Number((v.price * l.qty).toFixed(2)),
-          gone: false,
+          gone: !!why,
+          why,
+          left,
         };
       }
     }
-    return { sku: l.sku, qty: l.qty, name: l.sku, slug: null, img: null, variant: '', unit: 0, total: 0, gone: true };
+    return { sku: l.sku, qty: l.qty, name: l.sku, slug: null, img: null, variant: '', unit: 0, total: 0, gone: true, why: 'gone', left: 0 };
   });
   const subtotal = Number(items.reduce((s, i) => s + i.total, 0).toFixed(2));
   return { items, subtotal, count: cartCount(lines), hasGone: items.some((i) => i.gone) };

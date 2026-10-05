@@ -845,6 +845,38 @@
   letter-spacing: -0.02em;
 }
 
+/* Agotado: se ve, no se compra (stock 0 en Admin > Shop Products). */
+.sd-card__sold,
+.shop-card__sold {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--red-lt);
+  color: var(--red-text);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+/* Sin tachar: un tachado en el boton tacharia tambien el "Sold out" de adentro. */
+.sd-opt.sd-opt--out {
+  color: var(--gray);
+  background: var(--surface);
+}
+
+.sd-opt--out .sd-opt__hint {
+  color: var(--red-text);
+}
+
+.sd-pd__desc {
+  margin: 14px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gray);
+  max-width: 62ch;
+}
+
 .sd-pd__note {
   font-size: 14px;
   color: var(--gray);
