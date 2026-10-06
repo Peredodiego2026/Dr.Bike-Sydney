@@ -11,10 +11,18 @@ Si alguna de estas no esta resuelta, **preguntar antes de abrir**. Abrir la
 tienda con un plazo de entrega inventado es prometerle algo falso a un
 cliente.
 
-- [ ] Plazo de entrega y costo de envio reales, cargados en Admin > Shop
-      Products > Shop settings. Mientras no se carguen, la tienda dice
-      `[CONFIRMAR PLAZO DE ENTREGA]` y el envio es $0. Al guardarlos se ven
-      en la ficha, el carrito y el pago, y el envio se cobra.
+- [x] Plazo de entrega y costo de envio reales, cargados en Admin > Shop
+      Products > Shop settings. Hecho el 2026-10-06: envio $13.95, gratis
+      desde $130, entrega en 7-14 dias habiles (sale de comparar AusPost y
+      CouriersPlease por zona de Sydney). Si alguna vez se borran, la tienda
+      vuelve a decir `[CONFIRMAR PLAZO DE ENTREGA]` y el envio pasa a $0.
+- [x] `scripts/shop-ship-surcharge.sql` corrido en Supabase (fila 52 de
+      `docs/RUNBOOK-SQL.md`). Agrega el recargo de envio por producto pesado
+      (`shop_products.ship_surcharge`), que se cobra siempre, aun sobre los
+      $130. Hecho el 2026-10-06 (ok = true), con 7 pesados cargados:
+      Repair Workstation Unit $55, Repair Stand $40, Bicycle Floor Stand y
+      Hub Bearing Press Set $25, Bicycle Wheelset $20, las dos horquillas $15.
+      Se cambian desde Admin > Shop Products, campo "Extra shipping".
 - [ ] Que LEBYCLE permite revender en Australia (ya hay un distribuidor,
       Cycle Motion).
 - [ ] Moneda de la lista mayorista (se calculo como USD a FX 1.4352).
