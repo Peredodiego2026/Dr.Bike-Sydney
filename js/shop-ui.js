@@ -31,6 +31,7 @@ import {
   shippingFor,
   shippingNoteHtml,
   deliveryHtml,
+  heavyNote,
   pickHome,
   photosOf,
 } from './shop.js';
@@ -412,6 +413,7 @@ export async function renderShopProduct() {
             : ''
         }
         ${product.desc ? `<p class="shop-desc">${esc(product.desc).replace(/\n/g, '<br>')}</p>` : ''}
+        ${heavyNote(product) ? `<div class="shop-note" style="margin-top:10px;color:var(--amber-ink)">${heavyNote(product)}</div>` : ''}
         <div class="shop-group">Code</div>
         <div style="font-size:14px;color:var(--navy);font-weight:600">${esc(v.sku)}</div>
         <div class="shop-note" style="margin-top:18px">Not sure which one fits? Send us a photo on WhatsApp and we will tell you &mdash; 0433 963 250.</div>
@@ -516,7 +518,7 @@ export async function renderCart() {
                  <span class="shop-total__label">Subtotal</span>
                  <span class="shop-total__value">${money(subtotal)}</span>
                </div>
-               <div class="shop-note">${shippingNoteHtml(catalog, subtotal)}</div>
+               <div class="shop-note">${shippingNoteHtml(catalog, subtotal, items)}</div>
                ${hasGone ? `<div class="shop-note" style="color:var(--red)">One of these cannot be bought right now. Remove it or lower the quantity to keep going.</div>` : ''}`
             : `<div class="shop-empty">
                  <div class="shop-empty__icon">&#128722;</div>
@@ -589,7 +591,7 @@ export async function renderShopCheckout() {
     window.location.hash = 'cart';
     return;
   }
-  const ship = shippingFor(catalog, subtotal);
+  const ship = shippingFor(catalog, subtotal, items);
 
   const field = (id, label, type, ac) => `
     <label for="${id}" class="shop-group" style="display:block">${label}</label>

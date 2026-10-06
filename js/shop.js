@@ -125,7 +125,8 @@ export function filterProducts(catalog, { sections = [], bands = [], query = '' 
       if (!b || !bands.includes(b.id)) return false;
     }
     if (q) {
-      const hay = p.name.toLowerCase().includes(q) || p.variants.some((v) => v.sku.toLowerCase().includes(q));
+      const hay =
+        p.name.toLowerCase().includes(q) || p.variants.some((v) => v.sku.toLowerCase().includes(q));
       if (!hay) return false;
     }
     return true;
@@ -133,7 +134,10 @@ export function filterProducts(catalog, { sections = [], bands = [], query = '' 
 }
 
 export const SORTS = {
-  stocked: { name: 'Most stocked first', fn: (a, b) => b.variants.length - a.variants.length || a.from - b.from },
+  stocked: {
+    name: 'Most stocked first',
+    fn: (a, b) => b.variants.length - a.variants.length || a.from - b.from,
+  },
   cheap: { name: 'Price, low to high', fn: (a, b) => a.from - b.from },
   dear: { name: 'Price, high to low', fn: (a, b) => b.from - a.from },
   name: { name: 'Name, A to Z', fn: (a, b) => a.name.localeCompare(b.name) },
@@ -230,12 +234,26 @@ export function goneLabel(item) {
 // Llegan con el catalogo si Diego los configuro en Admin > Shop settings. La
 // misma cuenta del envio hace el servidor (api/_shop.js shippingFor), que es
 // el que cobra; esta es para mostrar el total antes de pagar.
-export function shippingFor(catalog, subtotal) {
+// Igual que el servidor (api/_shop.js): base + recargo por pesado. items son
+// los del carrito ya precificados (priceCart), cada uno con shipSurcharge.
+export function shippingFor(catalog, subtotal, items = []) {
   const sh = catalog?.shipping;
   const fee = Number(sh?.fee);
-  if (!sh || !Number.isFinite(fee) || fee <= 0) return 0;
-  if (sh.freeOver && subtotal >= sh.freeOver) return 0;
-  return fee;
+  const base =
+    !sh || !Number.isFinite(fee) || fee <= 0 || (sh.freeOver && subtotal >= sh.freeOver) ? 0 : fee;
+  const sur = (items || []).reduce(
+    (s, i) => s + (Number(i.shipSurcharge) || 0) * (Number(i.qty) || 0),
+    0
+  );
+  return Number((base + sur).toFixed(2));
+}
+
+// La nota de un pesado, para la ficha: '+$X envio'. Vacia si no tiene recargo.
+export function heavyNote(product) {
+  const s = Number(product?.shipSurcharge) || 0;
+  return s > 0
+    ? '<span>Heavier item</span> &middot; +$' + s.toFixed(2) + ' <span>shipping</span>'
+    : '';
 }
 
 const usd = (n) => '$' + Number(n).toFixed(2);
@@ -245,18 +263,24 @@ const usd = (n) => '$' + Number(n).toFixed(2);
 export function deliveryHtml(catalog) {
   const d = catalog?.delivery;
   if (!d?.minDays) return '[CONFIRMAR PLAZO DE ENTREGA]';
-  const range = d.maxDays && d.maxDays !== d.minDays ? d.minDays + '–' + d.maxDays : String(d.minDays);
+  const range =
+    d.maxDays && d.maxDays !== d.minDays ? d.minDays + '–' + d.maxDays : String(d.minDays);
   return '<span>Delivered in</span> ' + range + ' <span>business days</span>';
 }
 
 // Una linea para el carrito: cuanto es el envio, o que todavia no esta fijado.
-export function shippingNoteHtml(catalog, subtotal) {
+export function shippingNoteHtml(catalog, subtotal, items = []) {
   const sh = catalog?.shipping;
   if (!sh) return '<span>Delivery is worked out at checkout.</span> [CONFIRMAR PLAZO DE ENTREGA]';
-  const fee = shippingFor(catalog, subtotal);
+  const fee = shippingFor(catalog, subtotal, items);
+  const heavy = (items || []).some((i) => Number(i.shipSurcharge) > 0);
   const head = fee > 0 ? '<span>Shipping</span> ' + usd(fee) : '<span>Free shipping</span>';
-  const tail = fee > 0 && sh.freeOver ? ' &middot; <span>free over</span> ' + usd(sh.freeOver) : '';
-  return head + tail + ' &middot; ' + deliveryHtml(catalog);
+  // Con un pesado, el 'gratis desde' no aplica (el recargo siempre se cobra),
+  // asi que no se promete; en su lugar se aclara por que el envio sube.
+  const tail =
+    fee > 0 && sh.freeOver && !heavy ? ' &middot; <span>free over</span> ' + usd(sh.freeOver) : '';
+  const note = heavy ? ' &middot; <span>includes heavier items</span>' : '';
+  return head + tail + ' &middot; ' + deliveryHtml(catalog) + note;
 }
 
 // Lo que va en la portada y en la franja del inicio: primero los destacados
@@ -298,13 +322,27 @@ export function priceCart(catalog, lines = readRaw()) {
           variant: v.label,
           unit: v.price,
           total: Number((v.price * l.qty).toFixed(2)),
+          shipSurcharge: Number(p.shipSurcharge) || 0,
           gone: !!why,
           why,
           left,
         };
       }
     }
-    return { sku: l.sku, qty: l.qty, name: l.sku, slug: null, img: null, variant: '', unit: 0, total: 0, gone: true, why: 'gone', left: 0 };
+    return {
+      sku: l.sku,
+      qty: l.qty,
+      name: l.sku,
+      slug: null,
+      img: null,
+      variant: '',
+      unit: 0,
+      total: 0,
+      shipSurcharge: 0,
+      gone: true,
+      why: 'gone',
+      left: 0,
+    };
   });
   const subtotal = Number(items.reduce((s, i) => s + i.total, 0).toFixed(2));
   return { items, subtotal, count: cartCount(lines), hasGone: items.some((i) => i.gone) };

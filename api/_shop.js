@@ -75,7 +75,9 @@ const SHOP_STRIPE_PUBLISHABLE = process.env.SHOP_STRIPE_PUBLISHABLE_KEY || '';
 // Una de pruebas con una real no funciona: Stripe contesta "no such
 // payment_intent" recien al pagar, con el cliente ya mirando la tarjeta.
 // Mejor saberlo antes de crear el pedido.
-const SHOP_KEYS_MATCH = SHOP_STRIPE_PUBLISHABLE.startsWith(SHOP_MODE === 'live' ? 'pk_live_' : 'pk_test_');
+const SHOP_KEYS_MATCH = SHOP_STRIPE_PUBLISHABLE.startsWith(
+  SHOP_MODE === 'live' ? 'pk_live_' : 'pk_test_'
+);
 
 // Diego. Es el mismo numero que BUSINESS_PHONES en _security.js, asi que
 // send-message lo acepta como destino de una llamada interna.
@@ -150,7 +152,6 @@ export async function signPhotos(sb, refs) {
   return out;
 }
 
-
 // ── El cobro ─────────────────────────────────────────────────────────────────
 //
 // Lo unico que llega del navegador es [{ sku, qty }] y los datos de envio. Los
@@ -184,7 +185,11 @@ export async function loadShopSettings(sb) {
   const { data, error } = await sb.from('shop_settings').select('key, value');
   if (error) {
     // Antes del SQL la tabla no existe: la tienda sigue sin envio ni plazo.
-    if (!/does not exist|schema cache|PGRST20|42P01/i.test(String(error.message) + ' ' + String(error.code || ''))) {
+    if (
+      !/does not exist|schema cache|PGRST20|42P01/i.test(
+        String(error.message) + ' ' + String(error.code || '')
+      )
+    ) {
       console.error('[shop] no pude leer shop_settings', error.message);
     }
     return {};
@@ -194,13 +199,22 @@ export async function loadShopSettings(sb) {
 
 // El envio de un pedido: la tarifa, salvo que el subtotal llegue al "gratis
 // desde". La misma cuenta hace js/shop.js para mostrarlo; esta es la que cobra.
-export function shippingFor(settings, subtotal) {
+// base: la tarifa fija, que el "gratis desde" libera. items: [{ shipSurcharge,
+// qty }], cada pesado suma su recargo (por unidad). El recargo SIEMPRE se
+// cobra, aun sobre el umbral: es flete real, no la base.
+export function shippingFor(settings, subtotal, items = []) {
   const sh = settings?.shipping;
   const fee = Number(sh?.fee);
-  if (!Number.isFinite(fee) || fee <= 0) return 0;
   const free = Number(sh?.freeOver);
-  if (Number.isFinite(free) && free > 0 && subtotal >= free) return 0;
-  return Number(fee.toFixed(2));
+  const base =
+    !Number.isFinite(fee) || fee <= 0 || (Number.isFinite(free) && free > 0 && subtotal >= free)
+      ? 0
+      : fee;
+  const sur = (items || []).reduce(
+    (s, i) => s + (Number(i.shipSurcharge) || 0) * (Number(i.qty) || 0),
+    0
+  );
+  return Number((base + sur).toFixed(2));
 }
 
 // Lo que el navegador necesita saber del envio y el plazo (nada mas).
@@ -255,7 +269,7 @@ async function handleCheckout(req, res, sb, user) {
           'sku',
           lines.map((l) => l.sku)
         ),
-    'sku, label, price, stock, shop_products!inner(name, active)',
+    'sku, label, price, stock, shop_products!inner(name, active, ship_surcharge)',
     'sku, label, price, shop_products!inner(name, active)'
   );
   if (error) return res.status(500).json({ error: 'Could not price the cart: ' + error.message });
@@ -265,7 +279,9 @@ async function handleCheckout(req, res, sb, user) {
   if (missing.length) {
     // Se nombra lo que falta para que el carrito pueda marcarlo. Un "algo
     // salio mal" obliga al cliente a vaciar el carrito y empezar de nuevo.
-    return res.status(409).json({ error: 'Some items are no longer available.', missing: missing.map((l) => l.sku) });
+    return res
+      .status(409)
+      .json({ error: 'Some items are no longer available.', missing: missing.map((l) => l.sku) });
   }
   // Stock: null es sin limite. Agotado, o menos de lo pedido, se rechaza ANTES
   // de cobrar, y se dice cuantos quedan para que el carrito lo muestre.
@@ -293,19 +309,31 @@ async function handleCheckout(req, res, sb, user) {
     };
   });
   const subtotal = Number(items.reduce((s, i) => s + i.line_total, 0).toFixed(2));
-  // El envio sale de Admin > Shop settings. Sin configurar, 0.
-  const shipping = shippingFor(await loadShopSettings(sb), subtotal);
+  // El envio sale de Admin > Shop settings; el recargo del pesado, de
+  // shop_products (leido arriba junto al precio). Sin configurar, 0.
+  const surItems = lines.map((l) => ({
+    qty: l.qty,
+    shipSurcharge: bySku.get(l.sku)?.shop_products?.ship_surcharge,
+  }));
+  const shipping = shippingFor(await loadShopSettings(sb), subtotal, surItems);
   const total = Number((subtotal + shipping).toFixed(2));
 
   if (total <= 0) return res.status(400).json({ error: 'Your cart is empty.' });
   if (total > MAX_ORDER_AUD) {
-    return res.status(400).json({ error: 'That order is over $' + MAX_ORDER_AUD + '. Call us on 0433 963 250 and we sort it out.' });
+    return res
+      .status(400)
+      .json({
+        error:
+          'That order is over $' + MAX_ORDER_AUD + '. Call us on 0433 963 250 and we sort it out.',
+      });
   }
   if (!SHOP_STRIPE_KEY || !SHOP_STRIPE_PUBLISHABLE) {
     return res.status(503).json({ error: 'The shop checkout is not switched on yet.' });
   }
   if (!SHOP_KEYS_MATCH) {
-    console.error('[shop] SHOP_STRIPE_SECRET_KEY y SHOP_STRIPE_PUBLISHABLE_KEY no son del mismo modo (test/live)');
+    console.error(
+      '[shop] SHOP_STRIPE_SECRET_KEY y SHOP_STRIPE_PUBLISHABLE_KEY no son del mismo modo (test/live)'
+    );
     return res.status(503).json({ error: 'The shop checkout is not switched on yet.' });
   }
 
@@ -331,10 +359,16 @@ async function handleCheckout(req, res, sb, user) {
   // La fila se escribe ANTES de cobrar. Si Stripe contesta y el servidor se
   // cae en el medio, queda un pedido pendiente que se puede cerrar a mano; al
   // reves quedaria un cobro sin ningun rastro de que se compro.
-  const { data: saved, error: oErr } = await sb.from('shop_orders').insert(order).select('id').single();
+  const { data: saved, error: oErr } = await sb
+    .from('shop_orders')
+    .insert(order)
+    .select('id')
+    .single();
   if (oErr) return res.status(500).json({ error: 'Could not save the order: ' + oErr.message });
 
-  const { error: iErr } = await sb.from('shop_order_items').insert(items.map((i) => ({ ...i, order_id: saved.id })));
+  const { error: iErr } = await sb
+    .from('shop_order_items')
+    .insert(items.map((i) => ({ ...i, order_id: saved.id })));
   if (iErr) return res.status(500).json({ error: 'Could not save the order: ' + iErr.message });
 
   let intent;
@@ -355,13 +389,19 @@ async function handleCheckout(req, res, sb, user) {
         ...(str(req.body?.lang, 8) ? { lang: str(req.body?.lang, 8) } : {}),
         order_id: saved.id,
         email,
-        items: items.map((i) => i.sku + ' x' + i.qty).join(', ').slice(0, 480),
+        items: items
+          .map((i) => i.sku + ' x' + i.qty)
+          .join(', ')
+          .slice(0, 480),
       },
     });
   } catch (e) {
     // El pedido queda marcado, no borrado: un pedido que desaparece no deja
     // ver que el cobro fallo.
-    await sb.from('shop_orders').update({ status: 'cancelled', notes: 'Stripe: ' + e.message }).eq('id', saved.id);
+    await sb
+      .from('shop_orders')
+      .update({ status: 'cancelled', notes: 'Stripe: ' + e.message })
+      .eq('id', saved.id);
     return res.status(502).json({ error: 'The payment could not be started: ' + e.message });
   }
 
@@ -383,7 +423,6 @@ async function handleCheckout(req, res, sb, user) {
   });
 }
 
-
 // Marcar un pedido como pagado. NO se confia en que el navegador diga que
 // pago: se le pregunta a Stripe por ese cobro y se mira su estado. Un cliente
 // puede llamar a este endpoint cuantas veces quiera; lo unico que decide es lo
@@ -392,11 +431,16 @@ async function handleConfirm(req, res, sb, user) {
   const orderId = str(req.body?.orderId, 64);
   if (!orderId) return res.status(400).json({ error: 'Which order?' });
 
-  const { data: order, error } = await sb.from('shop_orders').select(ORDER_FOR_SETTLE).eq('id', orderId).single();
+  const { data: order, error } = await sb
+    .from('shop_orders')
+    .select(ORDER_FOR_SETTLE)
+    .eq('id', orderId)
+    .single();
   if (error || !order) return res.status(404).json({ error: 'Not found' });
   // Un pedido es de quien lo hizo. Sin esto, cambiar el id en la llamada
   // mostraria el pedido de otra persona.
-  if (order.client_id && order.client_id !== user.id) return res.status(404).json({ error: 'Not found' });
+  if (order.client_id && order.client_id !== user.id)
+    return res.status(404).json({ error: 'Not found' });
   const out = await settleOrder(sb, order, str(req.body?.lang, 8));
   return res.status(out.code).json(out.body);
 }
@@ -413,8 +457,10 @@ export async function settleOrder(sb, order, lang) {
   const ref = orderRef(order.id);
   // Pagado, enviado, cancelado: ya no es cosa de esta funcion. Se contesta el
   // estado y nada mas - sobre todo, no se vuelve a avisar.
-  if (order.status !== 'pending') return { code: 200, body: { status: order.status, orderId: order.id, ref } };
-  if (!order.payment_intent_id || !SHOP_STRIPE_KEY) return { code: 409, body: { error: 'That order has no payment yet.' } };
+  if (order.status !== 'pending')
+    return { code: 200, body: { status: order.status, orderId: order.id, ref } };
+  if (!order.payment_intent_id || !SHOP_STRIPE_KEY)
+    return { code: 409, body: { error: 'That order has no payment yet.' } };
 
   let intent;
   try {
@@ -430,7 +476,10 @@ export async function settleOrder(sb, order, lang) {
   // El importe tambien se comprueba: un cobro por menos de lo que el pedido
   // dice no lo deja pagado.
   if (Math.round(Number(order.total) * 100) !== intent.amount_received) {
-    await sb.from('shop_orders').update({ notes: 'Importe cobrado distinto al del pedido' }).eq('id', order.id);
+    await sb
+      .from('shop_orders')
+      .update({ notes: 'Importe cobrado distinto al del pedido' })
+      .eq('id', order.id);
     return { code: 409, body: { error: 'The amount paid does not match the order.' } };
   }
 
@@ -482,7 +531,10 @@ export async function giveStockBack(sb, orderId) {
 }
 
 async function moveStock(sb, orderId, sign) {
-  const { data: lines, error } = await sb.from('shop_order_items').select('sku, qty').eq('order_id', orderId);
+  const { data: lines, error } = await sb
+    .from('shop_order_items')
+    .select('sku, qty')
+    .eq('order_id', orderId);
   if (error || !lines?.length) return;
   const { data: vars, error: vErr } = await sb
     .from('shop_variants')
@@ -492,7 +544,8 @@ async function moveStock(sb, orderId, sign) {
       lines.map((l) => l.sku)
     );
   if (vErr) {
-    if (!isMissingColumn(vErr)) console.error('[shop] no pude leer el stock', orderId, vErr.message);
+    if (!isMissingColumn(vErr))
+      console.error('[shop] no pude leer el stock', orderId, vErr.message);
     return;
   }
   for (const v of vars || []) {
@@ -535,7 +588,9 @@ export async function notifyPaid(sb, order, ref, lang) {
     .eq('order_id', order.id);
   if (iErr) console.error('[shop] no pude leer las lineas del pedido', ref, iErr.message);
   const rows = items || [];
-  const address = [order.ship_address, order.ship_suburb, order.ship_postcode].filter(Boolean).join(', ');
+  const address = [order.ship_address, order.ship_suburb, order.ship_postcode]
+    .filter(Boolean)
+    .join(', ');
 
   const calls = [
     {
@@ -552,7 +607,8 @@ export async function notifyPaid(sb, order, ref, lang) {
           address,
           // Con el SKU: es lo que Diego le pide a LEBYCLE.
           lines: rows.map(
-            (i) => `${i.qty} x ${i.name}${i.variant ? ' (' + i.variant + ')' : ''} - ${i.sku} - $${Number(i.line_total).toFixed(2)}`
+            (i) =>
+              `${i.qty} x ${i.name}${i.variant ? ' (' + i.variant + ')' : ''} - ${i.sku} - $${Number(i.line_total).toFixed(2)}`
           ),
           total: Number(order.total).toFixed(2),
           test: order.mode !== 'live',
@@ -580,7 +636,10 @@ export async function notifyPaid(sb, order, ref, lang) {
     calls.map((c) =>
       fetch(SELF_BASE_URL + c.path, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-token': process.env.INTERNAL_API_SECRET || '' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+        },
         body: JSON.stringify(c.body),
       })
     )
@@ -588,7 +647,8 @@ export async function notifyPaid(sb, order, ref, lang) {
   const failed = [];
   results.forEach((r, i) => {
     if (r.status === 'fulfilled' && r.value.ok) return;
-    const why = r.status === 'rejected' ? r.reason?.message || String(r.reason) : 'HTTP ' + r.value.status;
+    const why =
+      r.status === 'rejected' ? r.reason?.message || String(r.reason) : 'HTTP ' + r.value.status;
     failed.push(calls[i].name + ': ' + why);
   });
   if (failed.length) {
@@ -632,14 +692,20 @@ export async function handleShop(req, res) {
   // respuestas distintas le dirian a quien prueba tokens cual de las dos cosas
   // fallo.
   const needsUser = buying || !SHOP_IS_PUBLIC;
-  if (needsUser && (!user || !maySeeShop(user.email))) return res.status(404).json({ error: 'Not found' });
+  if (needsUser && (!user || !maySeeShop(user.email)))
+    return res.status(404).json({ error: 'Not found' });
 
   if (req.method === 'POST' && action === 'checkout') return handleCheckout(req, res, sb, user);
   if (req.method === 'POST' && action === 'confirm') return handleConfirm(req, res, sb, user);
 
   const { data: products, error: pErr } = await selectWithFallback(
-    (cols) => sb.from('shop_products').select(cols).eq('active', true).order('sort_rank', { ascending: true }),
-    'slug, name, section, price_from, price_to, photo_ref, sort_rank, description, featured, gallery',
+    (cols) =>
+      sb
+        .from('shop_products')
+        .select(cols)
+        .eq('active', true)
+        .order('sort_rank', { ascending: true }),
+    'slug, name, section, price_from, price_to, photo_ref, sort_rank, description, featured, gallery, ship_surcharge',
     'slug, name, section, price_from, price_to, photo_ref, sort_rank'
   );
   if (pErr) return res.status(500).json({ error: 'Could not load the shop: ' + pErr.message });
@@ -653,7 +719,10 @@ export async function handleShop(req, res) {
 
   const [signed, settings] = await Promise.all([
     // Las fotos extra se firman en la MISMA llamada que las principales.
-    signPhotos(sb, (products || []).flatMap((p) => [p.photo_ref, ...(Array.isArray(p.gallery) ? p.gallery : [])])),
+    signPhotos(
+      sb,
+      (products || []).flatMap((p) => [p.photo_ref, ...(Array.isArray(p.gallery) ? p.gallery : [])])
+    ),
     loadShopSettings(sb),
   ]);
 
@@ -668,7 +737,10 @@ export async function handleShop(req, res) {
       img: signed[p.photo_ref] || null,
       desc: p.description || '',
       featured: !!p.featured,
-      gallery: (Array.isArray(p.gallery) ? p.gallery : []).map((ref) => signed[ref]).filter(Boolean),
+      gallery: (Array.isArray(p.gallery) ? p.gallery : [])
+        .map((ref) => signed[ref])
+        .filter(Boolean),
+      shipSurcharge: Number(p.ship_surcharge) || 0,
       variants: [],
     });
   }
@@ -678,7 +750,13 @@ export async function handleShop(req, res) {
     // lo que no viaja no se filtra.
     const p = bySlug.get(v.shop_products?.slug);
     // stock: null = sin limite, 0 = agotado (se ve, no se compra), n = quedan n.
-    if (p) p.variants.push({ sku: v.sku, label: v.label, price: Number(v.price), stock: v.stock ?? null });
+    if (p)
+      p.variants.push({
+        sku: v.sku,
+        label: v.label,
+        price: Number(v.price),
+        stock: v.stock ?? null,
+      });
   }
 
   const list = [...bySlug.values()].filter((p) => p.variants.length);

@@ -41,7 +41,9 @@ export async function listProducts(sb, res) {
   let migrated = true;
   let { data: products, error } = await sb
     .from('shop_products')
-    .select('id, slug, name, section, price_from, price_to, photo_ref, sort_rank, active, description, featured, gallery')
+    .select(
+      'id, slug, name, section, price_from, price_to, photo_ref, sort_rank, active, description, featured, gallery, ship_surcharge'
+    )
     .order('sort_rank', { ascending: true });
   if (error && isMissingColumn(error)) {
     migrated = false;
@@ -50,15 +52,23 @@ export async function listProducts(sb, res) {
       .select('id, slug, name, section, price_from, price_to, photo_ref, sort_rank, active')
       .order('sort_rank', { ascending: true }));
   }
-  if (error) return res.status(500).json({ error: 'Could not read the products: ' + error.message });
+  if (error)
+    return res.status(500).json({ error: 'Could not read the products: ' + error.message });
 
   const { data: variants, error: vErr } = await sb
     .from('shop_variants')
-    .select(migrated ? 'sku, label, price, cost, stock, position, product_id' : 'sku, label, price, cost, position, product_id')
+    .select(
+      migrated
+        ? 'sku, label, price, cost, stock, position, product_id'
+        : 'sku, label, price, cost, position, product_id'
+    )
     .order('position', { ascending: true });
   if (vErr) return res.status(500).json({ error: 'Could not read the variants: ' + vErr.message });
 
-  const signed = await signPhotos(sb, (products || []).flatMap((p) => [p.photo_ref, ...(Array.isArray(p.gallery) ? p.gallery : [])]));
+  const signed = await signPhotos(
+    sb,
+    (products || []).flatMap((p) => [p.photo_ref, ...(Array.isArray(p.gallery) ? p.gallery : [])])
+  );
   const byProduct = {};
   for (const v of variants || []) {
     (byProduct[v.product_id] ||= []).push({
@@ -79,10 +89,17 @@ export async function listProducts(sb, res) {
       section: p.section,
       active: p.active !== false,
       featured: !!p.featured,
+      shipSurcharge:
+        p.ship_surcharge === null || p.ship_surcharge === undefined
+          ? null
+          : Number(p.ship_surcharge),
       description: p.description || '',
       photoRef: p.photo_ref || null,
       img: signed[p.photo_ref] || null,
-      gallery: (Array.isArray(p.gallery) ? p.gallery : []).map((ref) => ({ ref, img: signed[ref] || null })),
+      gallery: (Array.isArray(p.gallery) ? p.gallery : []).map((ref) => ({
+        ref,
+        img: signed[ref] || null,
+      })),
       variants: byProduct[p.id] || [],
     })),
   });
@@ -96,7 +113,8 @@ export async function listProducts(sb, res) {
 // dos primeras.
 
 function cleanVariants(raw) {
-  if (!Array.isArray(raw) || !raw.length) return { error: 'A product needs at least one size or option.' };
+  if (!Array.isArray(raw) || !raw.length)
+    return { error: 'A product needs at least one size or option.' };
   if (raw.length > 200) return { error: 'Too many options in one product.' };
   const seen = new Set();
   const out = [];
@@ -107,16 +125,26 @@ function cleanVariants(raw) {
     const cost = num(v?.cost);
     const stock = num(v?.stock);
     const row = `Row ${i + 1}`;
-    if (!SKU_RE.test(sku)) return { error: `${row}: the code (SKU) can only have letters, numbers and - _ . * / +` };
+    if (!SKU_RE.test(sku))
+      return { error: `${row}: the code (SKU) can only have letters, numbers and - _ . * / +` };
     if (seen.has(sku)) return { error: `${row}: the code ${sku} is repeated.` };
     seen.add(sku);
     if (!label) return { error: `${row}: write what this option is (size, colour...).` };
-    if (!Number.isFinite(price) || price <= 0 || price > 5000) return { error: `${row}: the price has to be between $0.01 and $5000.` };
-    if (cost !== null && (!Number.isFinite(cost) || cost < 0 || cost > 5000)) return { error: `${row}: the cost is not a valid amount.` };
+    if (!Number.isFinite(price) || price <= 0 || price > 5000)
+      return { error: `${row}: the price has to be between $0.01 and $5000.` };
+    if (cost !== null && (!Number.isFinite(cost) || cost < 0 || cost > 5000))
+      return { error: `${row}: the cost is not a valid amount.` };
     if (stock !== null && (!Number.isInteger(stock) || stock < 0 || stock > 100000)) {
       return { error: `${row}: stock is a whole number, or empty for no limit.` };
     }
-    out.push({ sku, label, price: Number(price.toFixed(2)), cost: cost === null ? null : Number(cost.toFixed(2)), stock, position: i });
+    out.push({
+      sku,
+      label,
+      price: Number(price.toFixed(2)),
+      cost: cost === null ? null : Number(cost.toFixed(2)),
+      stock,
+      position: i,
+    });
   }
   return { variants: out };
 }
@@ -133,12 +161,34 @@ export async function saveProduct(sb, req, res) {
   const photoRef = p.photoRef ? str(p.photoRef, 120) : null;
   // Fotos extra: hasta 8, todas del bucket privado. Si el panel no las manda,
   // no se tocan (igual que "destacado").
-  const gallery = Array.isArray(p.gallery) ? p.gallery.map((g) => str(g, 120)).filter(Boolean) : undefined;
-  if (gallery && gallery.length > 8) return res.status(400).json({ error: 'Up to 8 extra photos per product.' });
-  if (gallery && gallery.some((g) => !PHOTO_RE.test(g))) return res.status(400).json({ error: 'One of the extra photos is not valid. Upload it again.' });
+  const gallery = Array.isArray(p.gallery)
+    ? p.gallery.map((g) => str(g, 120)).filter(Boolean)
+    : undefined;
+  if (gallery && gallery.length > 8)
+    return res.status(400).json({ error: 'Up to 8 extra photos per product.' });
+  if (gallery && gallery.some((g) => !PHOTO_RE.test(g)))
+    return res
+      .status(400)
+      .json({ error: 'One of the extra photos is not valid. Upload it again.' });
+  // Recargo de envio del pesado. undefined = el panel no lo mando (no se toca);
+  // null = vacio (sin recargo); un numero entre 0 y 500.
+  let shipSurcharge;
+  if ('shipSurcharge' in p) {
+    if (p.shipSurcharge === null || p.shipSurcharge === '') shipSurcharge = null;
+    else {
+      shipSurcharge = Number(p.shipSurcharge);
+      if (!Number.isFinite(shipSurcharge) || shipSurcharge < 0 || shipSurcharge > 500) {
+        return res.status(400).json({ error: 'The extra shipping has to be between $0 and $500.' });
+      }
+      shipSurcharge = Number(shipSurcharge.toFixed(2));
+    }
+  }
   if (!name) return res.status(400).json({ error: 'The product needs a name.' });
   if (!SECTION_IDS.includes(section)) return res.status(400).json({ error: 'Pick a section.' });
-  if (photoRef && !PHOTO_RE.test(photoRef)) return res.status(400).json({ error: 'That photo reference is not valid. Upload the photo again.' });
+  if (photoRef && !PHOTO_RE.test(photoRef))
+    return res
+      .status(400)
+      .json({ error: 'That photo reference is not valid. Upload the photo again.' });
   const cv = cleanVariants(req.body?.variants);
   if (cv.error) return res.status(400).json({ error: cv.error });
   const variants = cv.variants;
@@ -148,8 +198,13 @@ export async function saveProduct(sb, req, res) {
   const slugIn = str(p.slug, 80);
   let product = null;
   if (slugIn) {
-    const { data, error } = await sb.from('shop_products').select('id, slug').eq('slug', slugIn).maybeSingle();
-    if (error) return res.status(500).json({ error: 'Could not read the product: ' + error.message });
+    const { data, error } = await sb
+      .from('shop_products')
+      .select('id, slug')
+      .eq('slug', slugIn)
+      .maybeSingle();
+    if (error)
+      return res.status(500).json({ error: 'Could not read the product: ' + error.message });
     if (!data) return res.status(404).json({ error: 'That product no longer exists. Reload.' });
     product = data;
   }
@@ -164,7 +219,10 @@ export async function saveProduct(sb, req, res) {
     );
   if (tErr) return res.status(500).json({ error: 'Could not check the codes: ' + tErr.message });
   const clash = (taken || []).find((t) => !product || t.product_id !== product.id);
-  if (clash) return res.status(409).json({ error: `The code ${clash.sku} already belongs to another product.` });
+  if (clash)
+    return res
+      .status(409)
+      .json({ error: `The code ${clash.sku} already belongs to another product.` });
 
   const prices = variants.map((v) => v.price);
   const row = {
@@ -175,6 +233,7 @@ export async function saveProduct(sb, req, res) {
     price_to: Math.max(...prices),
     photo_ref: photoRef,
     ...(gallery === undefined ? {} : { gallery }),
+    ...(shipSurcharge === undefined ? {} : { ship_surcharge: shipSurcharge }),
     description: description || null,
     ...(featured === undefined ? {} : { featured }),
     updated_at: new Date().toISOString(),
@@ -187,7 +246,10 @@ export async function saveProduct(sb, req, res) {
     } else {
       // Slug nuevo y libre: "brake-pads", "brake-pads-2"...
       const base = slugify(name);
-      const { data: like } = await sb.from('shop_products').select('slug').like('slug', base + '%');
+      const { data: like } = await sb
+        .from('shop_products')
+        .select('slug')
+        .like('slug', base + '%');
       const used = new Set((like || []).map((r) => r.slug));
       let slug = base;
       for (let n = 2; used.has(slug); n++) slug = base + '-' + n;
@@ -202,19 +264,36 @@ export async function saveProduct(sb, req, res) {
 
     // Variantes: lo que ya no esta en la lista se borra (Diego lo quito en la
     // pantalla y lo confirmo); lo demas se actualiza o se crea.
-    const { data: current, error: cErr } = await sb.from('shop_variants').select('sku').eq('product_id', product.id);
+    const { data: current, error: cErr } = await sb
+      .from('shop_variants')
+      .select('sku')
+      .eq('product_id', product.id);
     if (cErr) throw cErr;
     const keep = new Set(variants.map((v) => v.sku));
     const gone = (current || []).map((c) => c.sku).filter((s) => !keep.has(s));
     if (gone.length) {
-      const { error } = await sb.from('shop_variants').delete().eq('product_id', product.id).in('sku', gone);
+      const { error } = await sb
+        .from('shop_variants')
+        .delete()
+        .eq('product_id', product.id)
+        .in('sku', gone);
       if (error) throw error;
     }
     const have = new Set((current || []).map((c) => c.sku));
     for (const v of variants) {
-      const fields = { label: v.label, price: v.price, cost: v.cost, stock: v.stock, position: v.position };
+      const fields = {
+        label: v.label,
+        price: v.price,
+        cost: v.cost,
+        stock: v.stock,
+        position: v.position,
+      };
       const { error } = have.has(v.sku)
-        ? await sb.from('shop_variants').update(fields).eq('product_id', product.id).eq('sku', v.sku)
+        ? await sb
+            .from('shop_variants')
+            .update(fields)
+            .eq('product_id', product.id)
+            .eq('sku', v.sku)
         : await sb.from('shop_variants').insert({ ...fields, sku: v.sku, product_id: product.id });
       if (error) throw error;
     }
@@ -252,8 +331,11 @@ export async function photoUploadUrl(sb, req, res) {
   const ext = req.body?.ext === 'jpg' ? 'jpg' : 'webp';
   const path = `${base}-${Date.now().toString(36)}.${ext}`;
   const { data, error } = await sb.storage.from(SHOP_BUCKET).createSignedUploadUrl(path);
-  if (error) return res.status(500).json({ error: 'Could not prepare the upload: ' + error.message });
-  return res.status(200).json({ bucket: SHOP_BUCKET, path, token: data.token, photoRef: SHOP_BUCKET + '/' + path });
+  if (error)
+    return res.status(500).json({ error: 'Could not prepare the upload: ' + error.message });
+  return res
+    .status(200)
+    .json({ bucket: SHOP_BUCKET, path, token: data.token, photoRef: SHOP_BUCKET + '/' + path });
 }
 
 // ── Ajustes: envio, plazo, reglas de precio ──────────────────────────────────
@@ -273,12 +355,19 @@ const DEFAULT_PRICING = {
 };
 
 // Antes del SQL la tabla shop_settings no existe.
-const noTable = (e) => isMissingColumn(e) || /42P01|PGRST205|relation .* does not exist|Could not find the table/i.test(String(e?.message) + ' ' + String(e?.code || ''));
+const noTable = (e) =>
+  isMissingColumn(e) ||
+  /42P01|PGRST205|relation .* does not exist|Could not find the table/i.test(
+    String(e?.message) + ' ' + String(e?.code || '')
+  );
 
 export async function getSettings(sb, res) {
   const { data, error } = await sb.from('shop_settings').select('key, value');
   if (error) {
-    if (noTable(error)) return res.status(200).json({ migrated: false, shipping: null, delivery: null, pricing: DEFAULT_PRICING });
+    if (noTable(error))
+      return res
+        .status(200)
+        .json({ migrated: false, shipping: null, delivery: null, pricing: DEFAULT_PRICING });
     return res.status(500).json({ error: 'Could not read the settings: ' + error.message });
   }
   const by = Object.fromEntries((data || []).map((r) => [r.key, r.value]));
@@ -297,35 +386,51 @@ export function cleanSettings(b) {
   if (b.shipping) {
     const fee = n2(b.shipping.fee);
     const freeOver = n2(b.shipping.freeOver);
-    if (fee === null || !Number.isFinite(fee) || fee < 0 || fee > 200) return { error: 'Shipping: the fee has to be between $0 and $200.' };
+    if (fee === null || !Number.isFinite(fee) || fee < 0 || fee > 200)
+      return { error: 'Shipping: the fee has to be between $0 and $200.' };
     if (freeOver !== null && (!Number.isFinite(freeOver) || freeOver <= 0 || freeOver > 5000)) {
       return { error: 'Shipping: "free over" is an amount up to $5000, or empty for never free.' };
     }
-    out.shipping = { fee: Number(fee.toFixed(2)), freeOver: freeOver === null ? null : Number(freeOver.toFixed(2)) };
+    out.shipping = {
+      fee: Number(fee.toFixed(2)),
+      freeOver: freeOver === null ? null : Number(freeOver.toFixed(2)),
+    };
   }
   if (b.delivery) {
     const min = n2(b.delivery.minDays);
     const max = n2(b.delivery.maxDays);
-    if (!Number.isInteger(min) || min < 1 || min > 90) return { error: 'Delivery: the minimum is a whole number of business days, 1 to 90.' };
-    if (max !== null && (!Number.isInteger(max) || max < min || max > 120)) return { error: 'Delivery: the maximum has to be at least the minimum.' };
+    if (!Number.isInteger(min) || min < 1 || min > 90)
+      return { error: 'Delivery: the minimum is a whole number of business days, 1 to 90.' };
+    if (max !== null && (!Number.isInteger(max) || max < min || max > 120))
+      return { error: 'Delivery: the maximum has to be at least the minimum.' };
     out.delivery = { minDays: min, maxDays: max === null ? min : max };
   }
   if (b.pricing) {
     const fx = n2(b.pricing.fx);
     const minPrice = n2(b.pricing.minPrice);
     const bands = Array.isArray(b.pricing.bands) ? b.pricing.bands : [];
-    if (!Number.isFinite(fx) || fx < 0.1 || fx > 10) return { error: 'Pricing: the exchange rate looks wrong.' };
-    if (!Number.isFinite(minPrice) || minPrice < 0 || minPrice > 1000) return { error: 'Pricing: the minimum price looks wrong.' };
+    if (!Number.isFinite(fx) || fx < 0.1 || fx > 10)
+      return { error: 'Pricing: the exchange rate looks wrong.' };
+    if (!Number.isFinite(minPrice) || minPrice < 0 || minPrice > 1000)
+      return { error: 'Pricing: the minimum price looks wrong.' };
     if (!bands.length || bands.length > 8) return { error: 'Pricing: between 1 and 8 cost bands.' };
     const clean = [];
     for (const [i, band] of bands.entries()) {
       const last = i === bands.length - 1;
       const upTo = last ? null : n2(band.upTo);
       const mult = n2(band.mult);
-      if (!last && (!Number.isFinite(upTo) || upTo <= 0 || (clean.length && upTo <= clean[clean.length - 1].upTo))) {
-        return { error: `Pricing: band ${i + 1} needs an "up to" amount bigger than the one before.` };
+      if (
+        !last &&
+        (!Number.isFinite(upTo) ||
+          upTo <= 0 ||
+          (clean.length && upTo <= clean[clean.length - 1].upTo))
+      ) {
+        return {
+          error: `Pricing: band ${i + 1} needs an "up to" amount bigger than the one before.`,
+        };
       }
-      if (!Number.isFinite(mult) || mult < 1 || mult > 20) return { error: `Pricing: band ${i + 1} needs a multiplier between 1 and 20.` };
+      if (!Number.isFinite(mult) || mult < 1 || mult > 20)
+        return { error: `Pricing: band ${i + 1} needs a multiplier between 1 and 20.` };
       clean.push({ upTo, mult });
     }
     out.pricing = { fx, minPrice, bands: clean };
@@ -336,7 +441,11 @@ export function cleanSettings(b) {
 export async function saveSettings(sb, req, res) {
   const cs = cleanSettings(req.body || {});
   if (cs.error) return res.status(400).json({ error: cs.error });
-  const rows = Object.entries(cs.settings).map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }));
+  const rows = Object.entries(cs.settings).map(([key, value]) => ({
+    key,
+    value,
+    updated_at: new Date().toISOString(),
+  }));
   if (!rows.length) return res.status(400).json({ error: 'Nothing to save.' });
   const { error } = await sb.from('shop_settings').upsert(rows, { onConflict: 'key' });
   if (error) {
@@ -355,8 +464,10 @@ export async function saveSettings(sb, req, res) {
 export async function applyImport(sb, req, res) {
   const updates = Array.isArray(req.body?.updates) ? req.body.updates : [];
   const soldOut = Array.isArray(req.body?.soldOut) ? req.body.soldOut : [];
-  if (!updates.length && !soldOut.length) return res.status(400).json({ error: 'Nothing to apply.' });
-  if (updates.length + soldOut.length > 3000) return res.status(400).json({ error: 'Too many changes in one go.' });
+  if (!updates.length && !soldOut.length)
+    return res.status(400).json({ error: 'Nothing to apply.' });
+  if (updates.length + soldOut.length > 3000)
+    return res.status(400).json({ error: 'Too many changes in one go.' });
 
   const changes = new Map();
   for (const [i, u] of updates.entries()) {
@@ -364,9 +475,14 @@ export async function applyImport(sb, req, res) {
     const cost = n2(u?.cost);
     const price = n2(u?.price);
     if (!SKU_RE.test(sku)) return res.status(400).json({ error: `Change ${i + 1}: bad code.` });
-    if (cost === null || !Number.isFinite(cost) || cost < 0 || cost > 5000) return res.status(400).json({ error: `${sku}: the cost is not a valid amount.` });
-    if (price !== null && (!Number.isFinite(price) || price <= 0 || price > 5000)) return res.status(400).json({ error: `${sku}: the price is not a valid amount.` });
-    changes.set(sku, { cost: Number(cost.toFixed(2)), price: price === null ? null : Number(price.toFixed(2)) });
+    if (cost === null || !Number.isFinite(cost) || cost < 0 || cost > 5000)
+      return res.status(400).json({ error: `${sku}: the cost is not a valid amount.` });
+    if (price !== null && (!Number.isFinite(price) || price <= 0 || price > 5000))
+      return res.status(400).json({ error: `${sku}: the price is not a valid amount.` });
+    changes.set(sku, {
+      cost: Number(cost.toFixed(2)),
+      price: price === null ? null : Number(price.toFixed(2)),
+    });
   }
   for (const raw of soldOut) {
     const sku = str(raw, 40);
@@ -397,19 +513,42 @@ export async function applyImport(sb, req, res) {
 
   // El "desde / hasta" de cada producto tocado, recalculado con todas sus opciones.
   const productIds = [...new Set(rows.map((r) => r.product_id))];
-  const { data: all, error: aErr } = await sb.from('shop_variants').select('product_id, price').in('product_id', productIds);
-  const { data: prods, error: pErr } = await sb.from('shop_products').select('*').in('id', productIds);
-  if (aErr || pErr) return res.status(500).json({ error: 'Prices saved, but the product ranges could not be updated: ' + (aErr || pErr).message });
+  const { data: all, error: aErr } = await sb
+    .from('shop_variants')
+    .select('product_id, price')
+    .in('product_id', productIds);
+  const { data: prods, error: pErr } = await sb
+    .from('shop_products')
+    .select('*')
+    .in('id', productIds);
+  if (aErr || pErr)
+    return res
+      .status(500)
+      .json({
+        error:
+          'Prices saved, but the product ranges could not be updated: ' + (aErr || pErr).message,
+      });
   const range = {};
   for (const v of all || []) {
     const r = (range[v.product_id] ||= { from: Infinity, to: 0 });
     r.from = Math.min(r.from, Number(v.price));
     r.to = Math.max(r.to, Number(v.price));
   }
-  const prodRows = (prods || []).map((p) => ({ ...p, price_from: range[p.id]?.from ?? p.price_from, price_to: range[p.id]?.to ?? p.price_to }));
+  const prodRows = (prods || []).map((p) => ({
+    ...p,
+    price_from: range[p.id]?.from ?? p.price_from,
+    price_to: range[p.id]?.to ?? p.price_to,
+  }));
   if (prodRows.length) {
     const { error } = await sb.from('shop_products').upsert(prodRows, { onConflict: 'id' });
-    if (error) return res.status(500).json({ error: 'Prices saved, but the product ranges could not be updated: ' + error.message });
+    if (error)
+      return res
+        .status(500)
+        .json({
+          error: 'Prices saved, but the product ranges could not be updated: ' + error.message,
+        });
   }
-  return res.status(200).json({ ok: true, updated: rows.length, skipped: skus.length - rows.length });
+  return res
+    .status(200)
+    .json({ ok: true, updated: rows.length, skipped: skus.length - rows.length });
 }

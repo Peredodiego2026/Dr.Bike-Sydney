@@ -386,13 +386,18 @@ with
      and coalesce((select c.relrowsecurity from pg_class c where c.relname = 'shop_settings'), false)
      and not exists (select 1 from pg_policy p join pg_class c on c.oid = p.polrelid
                        where c.relname = 'shop_settings'))
+  -- 52 entro el 2026-10-06: recargo de envio por producto, para los ~12
+  -- pesados (soportes, ruedas, horquillas) que perdian con la tarifa fija.
+  union all select 52, 'shop-ship-surcharge.sql', 'shop_products.ship_surcharge (recargo de envio del pesado)',
+    (exists (select 1 from col where t='shop_products' and c='ship_surcharge')
+     and exists (select 1 from pg_constraint where conname = 'shop_products_ship_surcharge_check'))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 46 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 47 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 

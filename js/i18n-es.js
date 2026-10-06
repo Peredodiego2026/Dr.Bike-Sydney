@@ -1770,13 +1770,15 @@ export default {
   'The amount paid does not match the order.': 'El monto pagado no coincide con el pedido.',
   // La tienda: stock y agotados
   'Sold out': 'Agotado',
-  'Only': 'Quedan solo',
-  'left': 'disponibles',
-  'One of these cannot be bought right now. Remove it or lower the quantity to keep going.': 'Algo de esto no se puede comprar ahora. Quítalo o baja la cantidad para seguir.',
-  'Some items are sold out or have fewer left than you asked for.': 'Algunos productos están agotados o quedan menos de los que pediste.',
+  Only: 'Quedan solo',
+  left: 'disponibles',
+  'One of these cannot be bought right now. Remove it or lower the quantity to keep going.':
+    'Algo de esto no se puede comprar ahora. Quítalo o baja la cantidad para seguir.',
+  'Some items are sold out or have fewer left than you asked for.':
+    'Algunos productos están agotados o quedan menos de los que pediste.',
   // La tienda: envio y plazo
-  'Shipping': 'Envío',
-  'Free': 'Gratis',
+  Shipping: 'Envío',
+  Free: 'Gratis',
   'Free shipping': 'Envío gratis',
   'free over': 'gratis desde',
   'Delivered in': 'Llega en',
@@ -1784,5 +1786,8 @@ export default {
   'Delivery is worked out at checkout.': 'El envío se calcula al pagar.',
   // La tienda: destacados y fotos
   'Show this photo': 'Ver esta foto',
-  'Featured': 'Destacados',
+  Featured: 'Destacados',
+  'includes heavier items': 'incluye artículos más pesados',
+  'Heavier item': 'Artículo más pesado',
+  shipping: 'de envío',
 };
