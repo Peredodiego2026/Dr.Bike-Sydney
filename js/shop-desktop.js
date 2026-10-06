@@ -41,6 +41,7 @@ import {
   shippingFor,
   deliveryHtml,
   shippingNoteHtml,
+  heavyNote,
   pickHome,
   photosOf,
 } from './shop.js';
@@ -271,7 +272,9 @@ function viewCatalog(params) {
       <div class="sd-main">
         <div class="sd-toolbar">
           <div class="sd-toolbar__count">${
-            list.length ? `<span>Showing</span> ${from + 1}-${from + shown.length} <span>of</span> ${list.length}` : ''
+            list.length
+              ? `<span>Showing</span> ${from + 1}-${from + shown.length} <span>of</span> ${list.length}`
+              : ''
           }</div>
           <div class="sd-toolbar__right">
             <div class="sd-perpage"><span>Show</span>
@@ -280,7 +283,10 @@ function viewCatalog(params) {
             <label class="sd-sort"><span>Sort</span>
               <select data-sort aria-label="Sort the products">
                 ${Object.entries(SORTS)
-                  .map(([k, v]) => `<option value="${k}"${k === f.sort ? ' selected' : ''}>${esc(v.name)}</option>`)
+                  .map(
+                    ([k, v]) =>
+                      `<option value="${k}"${k === f.sort ? ' selected' : ''}>${esc(v.name)}</option>`
+                  )
                   .join('')}
               </select>
             </label>
@@ -341,7 +347,12 @@ const pd = { slug: null, sku: null, qty: 1, photo: 0 };
 function viewProduct(params) {
   const product = findProduct(catalog, params.get('slug'));
   if (!product) {
-    return state('&#128269;', 'That product is no longer in the shop', '', `<a class="sd-btn sd-btn--primary" href="#all">See all products</a>`);
+    return state(
+      '&#128269;',
+      'That product is no longer in the shop',
+      '',
+      `<a class="sd-btn sd-btn--primary" href="#all">See all products</a>`
+    );
   }
   if (pd.slug !== product.slug) {
     pd.slug = product.slug;
@@ -380,19 +391,23 @@ function viewProduct(params) {
   } else if (n > 1 && n <= 12) {
     options = `<div class="sd-pd__label"><span>Size and fit</span></div><div class="sd-opts">${product.variants
       .map(
-        (x) => `<button type="button" class="sd-opt${x.stock === 0 ? ' sd-opt--out' : ''}" data-pick="${esc(x.sku)}" aria-pressed="${x.sku === v.sku}">${esc(x.label)}${
-          x.stock === 0
-            ? '<span class="sd-opt__hint">Sold out</span>'
-            : x.price !== v.price
-              ? `<span class="sd-opt__hint">${money(x.price)}</span>`
-              : ''
-        }</button>`
+        (x) =>
+          `<button type="button" class="sd-opt${x.stock === 0 ? ' sd-opt--out' : ''}" data-pick="${esc(x.sku)}" aria-pressed="${x.sku === v.sku}">${esc(x.label)}${
+            x.stock === 0
+              ? '<span class="sd-opt__hint">Sold out</span>'
+              : x.price !== v.price
+                ? `<span class="sd-opt__hint">${money(x.price)}</span>`
+                : ''
+          }</button>`
       )
       .join('')}</div>`;
   } else if (n > 12) {
     options = `<label class="sd-pd__label" for="sd-pick"><span>Size and fit</span><span class="sd-pd__hint">${n} <span>options</span></span></label>
       <select id="sd-pick" class="sd-select" data-pick-select>${product.variants
-        .map((x) => `<option value="${esc(x.sku)}"${x.sku === v.sku ? ' selected' : ''}>${esc(x.label)} - ${x.stock === 0 ? 'Sold out' : money(x.price)}</option>`)
+        .map(
+          (x) =>
+            `<option value="${esc(x.sku)}"${x.sku === v.sku ? ' selected' : ''}>${esc(x.label)} - ${x.stock === 0 ? 'Sold out' : money(x.price)}</option>`
+        )
         .join('')}</select>`;
   }
 
@@ -413,7 +428,8 @@ function viewProduct(params) {
           photos.length > 1
             ? `<div class="sd-pd__thumbs">${photos
                 .map(
-                  (src, i) => `<button type="button" class="sd-pd__thumb" data-photo="${i}" aria-label="Show this photo" aria-pressed="${i === pd.photo}"><img src="${esc(src)}" alt=""></button>`
+                  (src, i) =>
+                    `<button type="button" class="sd-pd__thumb" data-photo="${i}" aria-label="Show this photo" aria-pressed="${i === pd.photo}"><img src="${esc(src)}" alt=""></button>`
                 )
                 .join('')}</div>`
             : ''
@@ -444,7 +460,7 @@ function viewProduct(params) {
         <div class="sd-boxes">
           <div class="sd-box">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="6" width="13" height="10.5" rx="1.6"/><path d="M14.5 10h3.4l3.1 3.1v3.4h-6.5z"/><circle cx="6" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg>
-            <div><div class="sd-box__title">Delivered across Australia</div><div class="sd-box__sub">${deliveryHtml(catalog)}</div></div>
+            <div><div class="sd-box__title">Delivered across Australia</div><div class="sd-box__sub">${deliveryHtml(catalog)}${heavyNote(product) ? `<br>${heavyNote(product)}` : ''}</div></div>
           </div>
           <div class="sd-box">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5z"/></svg>
@@ -462,7 +478,10 @@ function viewProduct(params) {
         ['Code', v.sku],
         ['Sizes in this product', String(n)],
       ]
-        .map(([k, val]) => `<div class="sd-specs__row"><div class="sd-specs__k">${esc(k)}</div><div class="sd-specs__v">${esc(val)}</div></div>`)
+        .map(
+          ([k, val]) =>
+            `<div class="sd-specs__row"><div class="sd-specs__k">${esc(k)}</div><div class="sd-specs__v">${esc(val)}</div></div>`
+        )
         .join('')}
     </section>
     ${
@@ -499,9 +518,14 @@ function viewCheckout() {
   resetPay();
   const { items, subtotal, hasGone } = priceCart(catalog, getCart());
   if (!items.length) {
-    return state('&#128722;', 'Your cart is empty', 'Parts you add show up here.', `<a class="sd-btn sd-btn--primary" href="#all">Go to the shop</a>`);
+    return state(
+      '&#128722;',
+      'Your cart is empty',
+      'Parts you add show up here.',
+      `<a class="sd-btn sd-btn--primary" href="#all">Go to the shop</a>`
+    );
   }
-  const ship = shippingFor(catalog, subtotal);
+  const ship = shippingFor(catalog, subtotal, items);
   const field = (id, label, type, ac) =>
     `<label class="sd-field" for="${id}"><span>${label}</span><input id="${id}" type="${type}" autocomplete="${ac}" value="${esc(draft[id] || '')}"></label>`;
   return `<div class="sd-wrap">
@@ -536,7 +560,8 @@ function viewCheckout() {
         <h2 class="sd-side__group">Your order</h2>
         ${items
           .map(
-            (i) => `<div class="sd-co__item"><span>${esc(i.name)} <span style="color:var(--gray)">x${i.qty}</span></span><b>${money(i.total)}</b></div>`
+            (i) =>
+              `<div class="sd-co__item"><span>${esc(i.name)} <span style="color:var(--gray)">x${i.qty}</span></span><b>${money(i.total)}</b></div>`
           )
           .join('')}
         <div class="sd-pd__rule" aria-hidden="true" style="margin:14px 0"></div>
@@ -545,7 +570,7 @@ function viewCheckout() {
             ? `<div class="sd-co__item"><span>Subtotal</span><b>${money(subtotal)}</b></div>
                <div class="sd-co__item"><span>Shipping</span><b>${ship ? money(ship) : '<span>Free</span>'}</b></div>
                <div class="sd-total"><span class="sd-total__label">Total</span><span class="sd-total__value">${money(subtotal + ship)}</span></div>
-               <div class="sd-note">${deliveryHtml(catalog)}</div>`
+               <div class="sd-note">${deliveryHtml(catalog)}${items.some((i) => i.shipSurcharge) ? ` &middot; <span>includes heavier items</span>` : ''}</div>`
             : `<div class="sd-total"><span class="sd-total__label">Subtotal</span><span class="sd-total__value">${money(subtotal)}</span></div>
                <div class="sd-note">Delivery is worked out at checkout. [CONFIRMAR PLAZO DE ENTREGA]</div>`
         }
@@ -581,8 +606,8 @@ async function placeOrder(form) {
     suburb: val('co-suburb'),
     postcode: val('co-postcode'),
   };
-  const { subtotal } = priceCart(catalog, getCart());
-  const expected = subtotal + shippingFor(catalog, subtotal);
+  const { items, subtotal } = priceCart(catalog, getCart());
+  const expected = subtotal + shippingFor(catalog, subtotal, items);
   btn.disabled = true;
   coSay('', 'Preparing the payment...');
   try {
@@ -590,12 +615,21 @@ async function placeOrder(form) {
     // El servidor manda lo que de verdad va a cobrar. Si no coincide con lo
     // que se mostraba, se dice antes: no se cobra callando la diferencia.
     if (Math.abs(Number(data.total) - expected) > 0.009) {
-      coSay('sd-msg--warn', 'The price changed to ' + money(data.total) + ' while you were here. Check the cart before going on.');
+      coSay(
+        'sd-msg--warn',
+        'The price changed to ' +
+          money(data.total) +
+          ' while you were here. Check the cart before going on.'
+      );
       btn.disabled = false;
       return;
     }
     const box = document.getElementById('sd-pay');
-    const card = await mountCard(document.getElementById('sd-card'), data.publishableKey, getLang());
+    const card = await mountCard(
+      document.getElementById('sd-card'),
+      data.publishableKey,
+      getLang()
+    );
     pay = { ...data, card, details };
     document.getElementById('sd-co-details').disabled = true;
     btn.hidden = true;
@@ -606,7 +640,10 @@ async function placeOrder(form) {
     coSay('', '');
     // La tarjeta aparece debajo de los datos, fuera de la vista en una
     // pantalla normal. Sin esto, el boton parece no haber hecho nada.
-    box.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    box.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'start',
+    });
   } catch (e) {
     // Nunca un catch vacio: si no se pudo, el motivo se lee en pantalla.
     coSay('sd-msg--err', e.message);
@@ -641,7 +678,10 @@ async function payNow(btn) {
     return;
   }
   if (status !== 'succeeded') {
-    coSay('sd-msg--warn', 'Your bank has not confirmed the payment yet. We will email you as soon as it does.');
+    coSay(
+      'sd-msg--warn',
+      'Your bank has not confirmed the payment yet. We will email you as soon as it does.'
+    );
     return;
   }
 
@@ -687,7 +727,10 @@ function refreshCartCount() {
   const n = cartCount();
   el.textContent = String(n);
   el.hidden = n === 0;
-  el.parentElement.setAttribute('aria-label', 'Open the cart, ' + n + ' ' + (n === 1 ? 'item' : 'items'));
+  el.parentElement.setAttribute(
+    'aria-label',
+    'Open the cart, ' + n + ' ' + (n === 1 ? 'item' : 'items')
+  );
 }
 
 // Cambiar el carrito con la tarjeta ya a la vista dejaria un cobro por otro
@@ -732,7 +775,7 @@ function paintCart() {
       )
       .join('');
     foot.innerHTML = `<div class="sd-total"><span class="sd-total__label">Subtotal</span><span class="sd-total__value">${money(subtotal)}</span></div>
-      <div class="sd-note">${shippingNoteHtml(catalog, subtotal)}</div>
+      <div class="sd-note">${shippingNoteHtml(catalog, subtotal, items)}</div>
       ${hasGone ? `<div class="sd-note" style="color:var(--red)">One of these cannot be bought right now. Remove it or lower the quantity to keep going.</div>` : ''}
       <a class="sd-btn sd-btn--primary sd-btn--block" href="#checkout" data-close-cart style="margin-top:14px${hasGone ? ';pointer-events:none;opacity:.5' : ''}"><span>Checkout</span><span> &middot; ${money(subtotal)}</span></a>
       <button type="button" class="sd-btn sd-btn--block" data-close-cart style="margin-top:8px">Keep shopping</button>`;
@@ -760,7 +803,8 @@ function closeCart() {
 
 function markCategory(route, params) {
   const sec = route === 'all' ? readFilters(params).sections : [];
-  const active = sec.length === 1 ? sec[0] : route === 'all' && !params.get('q') && !sec.length ? '' : null;
+  const active =
+    sec.length === 1 ? sec[0] : route === 'all' && !params.get('q') && !sec.length ? '' : null;
   document.querySelectorAll('.sd-cats [data-cat]').forEach((a) => {
     if (a.dataset.cat === active) a.setAttribute('aria-current', 'true');
     else a.removeAttribute('aria-current');
@@ -920,7 +964,8 @@ document.addEventListener('click', (ev) => {
   }
   const pq = t.closest('[data-pqty]');
   if (pq) {
-    const max = maxQty(findVariant(findProduct(catalog, readRoute().params.get('slug')), pd.sku)) || 1;
+    const max =
+      maxQty(findVariant(findProduct(catalog, readRoute().params.get('slug')), pd.sku)) || 1;
     pd.qty = Math.max(1, Math.min(max, pd.qty + Number(pq.dataset.pqty)));
     render();
     return;

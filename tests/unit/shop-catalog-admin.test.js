@@ -53,7 +53,7 @@ function table(name) {
     if (!migrated) for (const c of NEW_COLS) delete out[c];
     if (name === 'shop_variants') {
       const p = db.shop_products.find((x) => x.id === r.product_id);
-      out.shop_products = p ? { name: p.name, active: p.active, slug: p.slug } : null;
+      out.shop_products = p ? { name: p.name, active: p.active, slug: p.slug, ship_surcharge: p.ship_surcharge ?? null } : null;
     }
     return out;
   };
@@ -152,11 +152,13 @@ beforeEach(async () => {
     shop_products: [
       { id: 'p1', slug: 'brake-pads', name: 'Brake Pads', section: 'parts', price_from: 9, price_to: 12, photo_ref: 'shop-photos/brake-pads.webp', sort_rank: 1, active: true, description: 'Resin pads.', featured: false },
       { id: 'p2', slug: 'bb-socket', name: 'BB Socket', section: 'tools', price_from: 21.95, price_to: 21.95, photo_ref: null, sort_rank: 2, active: true, description: null, featured: false },
+      { id: 'p3', slug: 'repair-stand', name: 'Repair Stand', section: 'tools', price_from: 609, price_to: 609, photo_ref: null, sort_rank: 3, active: true, description: null, featured: false, ship_surcharge: 40 },
     ],
     shop_variants: [
       { sku: 'BP-1', label: 'Resin', price: 9, cost: 1.5, stock: null, position: 0, product_id: 'p1' },
       { sku: 'BP-2', label: 'Metal', price: 12, cost: 2, stock: 0, position: 1, product_id: 'p1' },
       { sku: 'TS-1', label: 'S39', price: 21.95, cost: 6, stock: 3, position: 0, product_id: 'p2' },
+      { sku: 'RS-1', label: 'Pro', price: 609, cost: 420, stock: null, position: 0, product_id: 'p3' },
     ],
     shop_orders: [],
     shop_order_items: [],
@@ -195,7 +197,7 @@ describe('el catalogo', () => {
     migrated = false;
     const res = await catalog();
     expect(res.statusCode).toBe(200);
-    expect(res.body.products).toHaveLength(2);
+    expect(res.body.products).toHaveLength(3);
     expect(res.body.products[0].desc).toBe('');
     expect(res.body.products[0].variants[0].stock).toBeNull();
   });
@@ -287,7 +289,7 @@ describe('la lista de Admin', () => {
     const res = await admin.listProducts(sb, fakeRes());
     expect(res.statusCode).toBe(200);
     expect(res.body.migrated).toBe(false);
-    expect(res.body.products).toHaveLength(2);
+    expect(res.body.products).toHaveLength(3);
   });
 });
 
@@ -560,5 +562,50 @@ describe('destacados y fotos extra', () => {
     const res = await save({ slug: 'brake-pads', name: 'Brake Pads', section: 'parts', active: true, gallery }, [v('BP-1', 'Resin', 9)]);
     expect(res.statusCode).toBe(400);
     expect(res.body.error).toMatch(re);
+  });
+});
+
+describe('recargo de envio del pesado', () => {
+  it('el catalogo expone el recargo por producto (0 si no tiene)', async () => {
+    const res = await catalog();
+    expect(res.body.products.find((p) => p.slug === 'repair-stand').shipSurcharge).toBe(40);
+    expect(res.body.products.find((p) => p.slug === 'brake-pads').shipSurcharge).toBe(0);
+  });
+
+  it('el checkout suma el recargo al envio, y el envio sale de la base', async () => {
+    db.shop_settings = [{ key: 'shipping', value: { fee: 13.95, freeOver: 130 } }];
+    const res = await checkout([{ sku: 'RS-1', qty: 1 }]);
+    // subtotal 609 > 130 -> base liberada, pero el recargo 40 SIEMPRE se cobra.
+    expect(res.body.shipping).toBe(40);
+    expect(res.body.total).toBe(649);
+    expect(intentArgs.amount).toBe(64900);
+  });
+
+  it('recargo por unidad (x cantidad), sumado a la base si el pedido es chico', async () => {
+    db.shop_settings = [{ key: 'shipping', value: { fee: 13.95, freeOver: 99999 } }];
+    const res = await checkout([{ sku: 'BP-1', qty: 1 }, { sku: 'RS-1', qty: 2 }]);
+    // base 13.95 (subtotal < 1000) + 40*2 = 93.95
+    expect(res.body.shipping).toBe(93.95);
+  });
+
+  it('sin pesados, el envio es solo la base (nada cambia)', async () => {
+    db.shop_settings = [{ key: 'shipping', value: { fee: 13.95, freeOver: 130 } }];
+    const res = await checkout([{ sku: 'BP-1', qty: 1 }]);
+    expect(res.body.shipping).toBe(13.95);
+  });
+
+  it('Admin guarda y valida el recargo', async () => {
+    expect((await save({ slug: 'repair-stand', name: 'Repair Stand', section: 'tools', active: true, shipSurcharge: 45 }, [v('RS-1', 'Pro', 609)])).statusCode).toBe(200);
+    expect(db.shop_products.find((x) => x.slug === 'repair-stand').ship_surcharge).toBe(45);
+    expect((await save({ slug: 'repair-stand', name: 'Repair Stand', section: 'tools', active: true, shipSurcharge: 9999 }, [v('RS-1', 'Pro', 609)])).statusCode).toBe(400);
+    // vacio = sin recargo
+    await save({ slug: 'repair-stand', name: 'Repair Stand', section: 'tools', active: true, shipSurcharge: null }, [v('RS-1', 'Pro', 609)]);
+    expect(db.shop_products.find((x) => x.slug === 'repair-stand').ship_surcharge).toBeNull();
+  });
+
+  it('si el panel no manda el recargo, no se toca', async () => {
+    db.shop_products.find((x) => x.slug === 'repair-stand').ship_surcharge = 40;
+    await save({ slug: 'repair-stand', name: 'Repair Stand', section: 'tools', active: true }, [v('RS-1', 'Pro', 609)]);
+    expect(db.shop_products.find((x) => x.slug === 'repair-stand').ship_surcharge).toBe(40);
   });
 });

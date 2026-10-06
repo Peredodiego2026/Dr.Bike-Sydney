@@ -1613,13 +1613,14 @@ export default {
   'The amount paid does not match the order.': '付款金额与订单不符。',
   // La tienda: stock y agotados
   'Sold out': '已售罄',
-  'Only': '仅剩',
-  'left': '件',
-  'One of these cannot be bought right now. Remove it or lower the quantity to keep going.': '其中有商品暂时无法购买。请移除或减少数量后继续。',
+  Only: '仅剩',
+  left: '件',
+  'One of these cannot be bought right now. Remove it or lower the quantity to keep going.':
+    '其中有商品暂时无法购买。请移除或减少数量后继续。',
   'Some items are sold out or have fewer left than you asked for.': '部分商品已售罄或库存不足。',
   // La tienda: envio y plazo
-  'Shipping': '运费',
-  'Free': '免费',
+  Shipping: '运费',
+  Free: '免费',
   'Free shipping': '免运费',
   'free over': '满额免运费：',
   'Delivered in': '送达时间',
@@ -1627,5 +1628,8 @@ export default {
   'Delivery is worked out at checkout.': '运费在结账时计算。',
   // La tienda: destacados y fotos
   'Show this photo': '查看这张照片',
-  'Featured': '精选推荐',
+  Featured: '精选推荐',
+  'includes heavier items': '含较重商品',
+  'Heavier item': '较重商品',
+  shipping: '运费',
 };

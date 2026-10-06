@@ -320,3 +320,43 @@ describe('portada y fotos', () => {
     expect(shop.photosOf({ img: null, gallery: [] })).toEqual([]);
   });
 });
+
+describe('recargo de envio del pesado (cliente)', () => {
+  const cat = (fee, freeOver) => ({ shipping: { fee, freeOver }, delivery: { minDays: 7, maxDays: 14 } });
+  const heavy = { shipSurcharge: 40, qty: 1 };
+  const light = { shipSurcharge: 0, qty: 2 };
+
+  it('base + recargo; el "gratis desde" libera la base pero no el recargo', () => {
+    expect(shop.shippingFor(cat(13.95, 130), 50, [light])).toBe(13.95);
+    expect(shop.shippingFor(cat(13.95, 130), 50, [heavy])).toBe(53.95);
+    // sobre el umbral: base liberada, recargo sigue
+    expect(shop.shippingFor(cat(13.95, 130), 700, [heavy])).toBe(40);
+    expect(shop.shippingFor(cat(13.95, 130), 700, [light])).toBe(0);
+  });
+
+  it('el recargo es por unidad', () => {
+    expect(shop.shippingFor(cat(13.95, 9999), 100, [{ shipSurcharge: 40, qty: 2 }])).toBe(93.95);
+  });
+
+  it('heavyNote: muestra +$X solo si tiene recargo', () => {
+    expect(shop.heavyNote({ shipSurcharge: 40 })).toContain('+$40.00');
+    expect(shop.heavyNote({ shipSurcharge: 40 })).toContain('Heavier item');
+    expect(shop.heavyNote({ shipSurcharge: 0 })).toBe('');
+    expect(shop.heavyNote({})).toBe('');
+  });
+
+  it('la nota del carrito avisa de los pesados y no promete gratis', () => {
+    const withHeavy = shop.shippingNoteHtml(cat(13.95, 130), 50, [heavy]);
+    expect(withHeavy).toContain('includes heavier items');
+    expect(withHeavy).not.toContain('free over');
+    const noHeavy = shop.shippingNoteHtml(cat(13.95, 130), 50, [light]);
+    expect(noHeavy).toContain('free over');
+    expect(noHeavy).not.toContain('includes heavier items');
+  });
+
+  it('priceCart trae el recargo de cada linea', () => {
+    const c = { sections: [], products: [{ slug: 'x', name: 'Repair Stand', cat: 'tools', from: 609, to: 609, img: null, shipSurcharge: 40, variants: [{ sku: 'RS-1', label: 'Pro', price: 609 }] }] };
+    const r = shop.priceCart(c, [{ sku: 'RS-1', qty: 1 }]);
+    expect(r.items[0].shipSurcharge).toBe(40);
+  });
+});

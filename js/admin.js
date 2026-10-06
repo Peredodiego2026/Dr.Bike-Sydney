@@ -6660,7 +6660,11 @@ async function loadShopReport() {
   _shopReport = { loading: true };
   renderShopOrders();
   try {
-    _shopReport = await shopAdmin({ action: 'report', days: _shopReportDays, includeTest: _shopReportTest });
+    _shopReport = await shopAdmin({
+      action: 'report',
+      days: _shopReportDays,
+      includeTest: _shopReportTest,
+    });
   } catch (e) {
     _shopReport = { error: e.message };
   }
@@ -6674,24 +6678,38 @@ function shopReportPanel() {
     `<div style="background:var(--off);border-radius:10px;padding:12px 14px;min-width:0"><div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em">${label}</div><div style="font-size:20px;font-weight:800;color:var(--navy);margin-top:4px;font-variant-numeric:tabular-nums">${value}</div>${sub ? `<div style="font-size:12px;color:var(--mgray);margin-top:2px">${sub}</div>` : ''}</div>`;
   const controls = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <select class="inp" data-rep-days aria-label="Period" style="width:auto;min-height:40px;padding:6px 10px;font-size:13px;cursor:pointer">
-        ${[[7, 'Last 7 days'], [30, 'Last 30 days'], [90, 'Last 90 days'], [365, 'Last 12 months'], [0, 'All time']].map(([d, l]) => `<option value="${d}"${d === _shopReportDays ? ' selected' : ''}>${l}</option>`).join('')}
+        ${[
+          [7, 'Last 7 days'],
+          [30, 'Last 30 days'],
+          [90, 'Last 90 days'],
+          [365, 'Last 12 months'],
+          [0, 'All time'],
+        ]
+          .map(
+            ([d, l]) =>
+              `<option value="${d}"${d === _shopReportDays ? ' selected' : ''}>${l}</option>`
+          )
+          .join('')}
       </select>
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;min-height:40px"><input type="checkbox" data-rep-test${_shopReportTest ? ' checked' : ''} style="width:18px;height:18px"> Include test orders</label>
     </div>`;
   let body;
-  if (r.loading) body = '<div style="color:var(--mgray);font-size:13px;padding:12px 0">Adding it up...</div>';
-  else if (r.error) body = `<div style="color:var(--red-text);font-size:13px;padding:12px 0">${esc(r.error)}</div>`;
+  if (r.loading)
+    body = '<div style="color:var(--mgray);font-size:13px;padding:12px 0">Adding it up...</div>';
+  else if (r.error)
+    body = `<div style="color:var(--red-text);font-size:13px;padding:12px 0">${esc(r.error)}</div>`;
   else {
     const top = (r.top || [])
       .map(
-        (p) => `<tr><td style="padding:6px 8px 6px 0;font-size:13px;color:var(--navy)">${esc(p.name)}</td><td style="padding:6px 8px;font-size:13px;text-align:right">${p.qty}</td><td style="padding:6px 8px;font-size:13px;text-align:right">${m(p.revenue)}</td><td style="padding:6px 0 6px 8px;font-size:13px;text-align:right;font-weight:700;color:var(--green-text)">${m(p.margin)}</td></tr>`
+        (p) =>
+          `<tr><td style="padding:6px 8px 6px 0;font-size:13px;color:var(--navy)">${esc(p.name)}</td><td style="padding:6px 8px;font-size:13px;text-align:right">${p.qty}</td><td style="padding:6px 8px;font-size:13px;text-align:right">${m(p.revenue)}</td><td style="padding:6px 0 6px 8px;font-size:13px;text-align:right;font-weight:700;color:var(--green-text)">${m(p.margin)}</td></tr>`
       )
       .join('');
     body = `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px">
         ${tile('Orders', r.orders ?? 0, r.avgOrder ? 'avg ' + m(r.avgOrder) : '')}
         ${tile('Sales', m(r.revenue), r.shipping ? 'incl. ' + m(r.shipping) + ' shipping' : '')}
-        ${tile('Your cost', m(r.cost), 'at today\'s LEBYCLE prices')}
+        ${tile('Your cost', m(r.cost), "at today's LEBYCLE prices")}
         ${tile('Margin', m(r.margin), r.marginPct === null || r.marginPct === undefined ? '' : r.marginPct + '% of product sales')}
         ${tile('Refunds', r.refunds?.count ?? 0, r.refunds?.amount ? m(r.refunds.amount) : '')}
       </div>
@@ -6713,11 +6731,12 @@ function renderShopOrders() {
   const bar = document.getElementById('shop-orders-filters');
   const list = document.getElementById('shop-orders-list');
   if (!bar || !list) return;
-  bar.innerHTML = SHOP_FILTERS.map(([key, label, keep]) => {
-    const n = _shopOrders.filter(keep).length;
-    const on = key === _shopFilter;
-    return `<button type="button" data-so-filter="${key}" aria-pressed="${on}" style="min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid ${on ? 'var(--blue)' : 'var(--border)'};background:${on ? 'var(--blue-lt)' : 'var(--white)'};color:${on ? 'var(--blue-text)' : 'var(--navy)'};font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer">${label} <span style="color:var(--mgray);font-weight:500">${n}</span></button>`;
-  }).join('') +
+  bar.innerHTML =
+    SHOP_FILTERS.map(([key, label, keep]) => {
+      const n = _shopOrders.filter(keep).length;
+      const on = key === _shopFilter;
+      return `<button type="button" data-so-filter="${key}" aria-pressed="${on}" style="min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid ${on ? 'var(--blue)' : 'var(--border)'};background:${on ? 'var(--blue-lt)' : 'var(--white)'};color:${on ? 'var(--blue-text)' : 'var(--navy)'};font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer">${label} <span style="color:var(--mgray);font-weight:500">${n}</span></button>`;
+    }).join('') +
     `<button type="button" data-so-report aria-pressed="${_shopReportOpen}" style="margin-left:auto;min-height:40px;padding:0 14px;border-radius:8px;border:1.5px solid ${_shopReportOpen ? 'var(--purple)' : 'var(--border)'};background:${_shopReportOpen ? 'var(--purple-lt)' : 'var(--white)'};color:${_shopReportOpen ? 'var(--purple-text)' : 'var(--navy)'};font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Sales report</button>`;
 
   const banners = [];
@@ -6977,7 +6996,8 @@ const SP_STATUS = [
   ['nophoto', 'No photo'],
   ['featured', 'Featured'],
 ];
-const SP_LABEL = 'display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px';
+const SP_LABEL =
+  'display:block;font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px';
 
 function spMargin(price, cost) {
   const p = Number(price);
@@ -6989,7 +7009,12 @@ function spMargin(price, cost) {
 
 function spKeep(p) {
   const q = _spQuery.toLowerCase();
-  if (q && !p.name.toLowerCase().includes(q) && !p.variants.some((v) => v.sku.toLowerCase().includes(q))) return false;
+  if (
+    q &&
+    !p.name.toLowerCase().includes(q) &&
+    !p.variants.some((v) => v.sku.toLowerCase().includes(q))
+  )
+    return false;
   if (_spSection !== 'all' && p.section !== _spSection) return false;
   if (_spStatus === 'visible') return p.active;
   if (_spStatus === 'hidden') return !p.active;
@@ -7004,7 +7029,8 @@ async function loadShopProducts() {
   const list = document.getElementById('sp-list');
   if (!list) return;
   wireShopProducts();
-  list.innerHTML = '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading the catalogue...</div>';
+  list.innerHTML =
+    '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading the catalogue...</div>';
   try {
     _spData = await shopAdmin({ action: 'products' });
     renderShopProducts();
@@ -7044,14 +7070,20 @@ function renderShopProducts() {
   }
   if (_spPanel === 'settings') head.push(spSettingsPanel());
   if (_spPanel === 'import') head.push(spImportPanel());
-  head.push(`<div style="font-size:13px;color:var(--mgray)">${shown.length} of ${all.length} products</div>`);
+  head.push(
+    `<div style="font-size:13px;color:var(--mgray)">${shown.length} of ${all.length} products</div>`
+  );
   if (_spOpen.has('__new')) head.push(spCard(null));
   const rows = shown.slice(0, _spShown).map(spCard).join('');
   const more =
     shown.length > _spShown
       ? `<button type="button" data-sp-more style="background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;min-height:44px;font-size:13px;font-weight:700;font-family:var(--sans);cursor:pointer">Show ${Math.min(30, shown.length - _spShown)} more</button>`
       : '';
-  list.innerHTML = head.join('') + (rows || '<div style="text-align:center;padding:40px;color:var(--mgray);font-size:13px">No products match.</div>') + more;
+  list.innerHTML =
+    head.join('') +
+    (rows ||
+      '<div style="text-align:center;padding:40px;color:var(--mgray);font-size:13px">No products match.</div>') +
+    more;
   const sf = list.querySelector('[data-sp-settings]');
   if (sf) spRulesExample(sf);
 }
@@ -7060,13 +7092,15 @@ function spCard(p) {
   const isNew = !p;
   const key = isNew ? '__new' : p.slug;
   const open = _spOpen.has(key);
-  if (isNew) return `<div data-sp-card="__new" style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:12px">${spEditor(null)}</div>`;
+  if (isNew)
+    return `<div data-sp-card="__new" style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:12px">${spEditor(null)}</div>`;
   const prices = p.variants.map((v) => v.price);
   const from = Math.min(...prices);
   const to = Math.max(...prices);
   const soldOut = p.variants.length && p.variants.every((v) => v.stock === 0);
   const someOut = !soldOut && p.variants.some((v) => v.stock === 0);
-  const badge = (txt, fg, bg) => `<span style="background:${bg};color:${fg};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${txt}</span>`;
+  const badge = (txt, fg, bg) =>
+    `<span style="background:${bg};color:${fg};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0">${txt}</span>`;
   const sec = (_spData.sections || []).find((s) => s.id === p.section)?.name || p.section;
   return `
     <div data-sp-card="${esc(key)}" style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${p.active ? (soldOut ? 'var(--red)' : 'var(--green)') : 'var(--border)'};border-radius:12px">
@@ -7100,7 +7134,17 @@ function spVariantRow(v, isNewRow) {
 function spEditor(p) {
   const isNew = !p;
   const sections = _spData.sections || [];
-  const d = p || { name: '', section: sections[0]?.id || 'parts', active: true, featured: false, description: '', photoRef: null, img: null, gallery: [], variants: [{ sku: '', label: '', cost: null, price: '', stock: null }] };
+  const d = p || {
+    name: '',
+    section: sections[0]?.id || 'parts',
+    active: true,
+    featured: false,
+    description: '',
+    photoRef: null,
+    img: null,
+    gallery: [],
+    variants: [{ sku: '', label: '', cost: null, price: '', stock: null }],
+  };
   const gallery = d.gallery || [];
   return `
     <form data-sp-form="${isNew ? '__new' : esc(p.slug)}" data-photo-ref="${esc(d.photoRef || '')}" data-gallery="${esc(JSON.stringify(gallery.map((g) => g.ref)))}" style="border-top:${isNew ? '0' : '1px solid var(--border-lt)'};padding:14px 16px 16px" novalidate>
@@ -7120,6 +7164,9 @@ function spEditor(p) {
           </div>
           <label style="display:block"><span style="${SP_LABEL}">Description (what the client reads on the product page)</span>
             <textarea class="inp" data-f="description" rows="3" maxlength="2000" style="width:100%;padding:8px 12px;font-size:13px;resize:vertical">${esc(d.description || '')}</textarea></label>
+          <label style="display:block;max-width:280px"><span style="${SP_LABEL}">Extra shipping for this item (AUD, empty = none)</span>
+            <input class="inp" data-f="shipSurcharge" type="number" step="0.01" min="0" value="${d.shipSurcharge ? d.shipSurcharge : ''}" placeholder="0.00" style="width:100%;min-height:44px;padding:8px 12px;font-size:14px">
+            <span style="display:block;font-size:12px;color:var(--mgray);margin-top:4px">For heavy/bulky items. Added on top of the flat shipping fee, and shown to the client as "heavier item".</span></label>
           <div>
             <span style="${SP_LABEL}">More photos (up to 8, shown as thumbnails on the product page)</span>
             <div data-sp-gallery style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -7168,11 +7215,21 @@ async function spAddGallery(form, files) {
     }
     const blob = await shrinkShopPhoto(file);
     const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
-    const up = await shopAdmin({ action: 'photo-upload', slug: form.dataset.spForm === '__new' ? '' : form.dataset.spForm, name: form.querySelector('[data-f="name"]').value, ext });
-    const { error } = await sb.storage.from(up.bucket).uploadToSignedUrl(up.path, up.token, blob, { contentType: blob.type });
+    const up = await shopAdmin({
+      action: 'photo-upload',
+      slug: form.dataset.spForm === '__new' ? '' : form.dataset.spForm,
+      name: form.querySelector('[data-f="name"]').value,
+      ext,
+    });
+    const { error } = await sb.storage
+      .from(up.bucket)
+      .uploadToSignedUrl(up.path, up.token, blob, { contentType: blob.type });
     if (error) throw new Error('Upload failed: ' + error.message);
     refs.push(up.photoRef);
-    box.lastElementChild.insertAdjacentHTML('beforebegin', spGalleryThumb(up.photoRef, URL.createObjectURL(blob)));
+    box.lastElementChild.insertAdjacentHTML(
+      'beforebegin',
+      spGalleryThumb(up.photoRef, URL.createObjectURL(blob))
+    );
     added++;
   }
   form.dataset.gallery = JSON.stringify(refs);
@@ -7185,7 +7242,13 @@ function spCollect(form) {
   const f = (name) => form.querySelector(`[data-f="${name}"]`);
   const variants = [...form.querySelectorAll('[data-sp-row]')].map((row) => {
     const v = (n) => row.querySelector(`[data-f="${n}"]`)?.value.trim() ?? '';
-    return { label: v('label'), sku: v('sku'), cost: v('cost'), price: v('price'), stock: v('stock') };
+    return {
+      label: v('label'),
+      sku: v('sku'),
+      cost: v('cost'),
+      price: v('price'),
+      stock: v('stock'),
+    };
   });
   const slug = form.dataset.spForm === '__new' ? null : form.dataset.spForm;
   return {
@@ -7197,6 +7260,8 @@ function spCollect(form) {
       description: f('description').value.trim(),
       photoRef: form.dataset.photoRef || null,
       featured: f('featured').checked,
+      shipSurcharge:
+        f('shipSurcharge').value.trim() === '' ? null : Number(f('shipSurcharge').value),
       gallery: JSON.parse(form.dataset.gallery || '[]'),
     },
     variants: variants.map((v) => ({
@@ -7221,7 +7286,8 @@ async function shrinkShopPhoto(file) {
   bitmap.close?.();
   let blob = await new Promise((res) => canvas.toBlob(res, 'image/webp', 0.82));
   // A browser that cannot write WebP hands back a PNG instead: use JPEG then.
-  if (!blob || blob.type !== 'image/webp') blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.85));
+  if (!blob || blob.type !== 'image/webp')
+    blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.85));
   if (!blob) throw new Error('This photo could not be read. Try a JPG or PNG.');
   return blob;
 }
@@ -7233,8 +7299,15 @@ async function spUploadPhoto(form, file) {
   preview.textContent = 'Uploading...';
   const blob = await shrinkShopPhoto(file);
   const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
-  const up = await shopAdmin({ action: 'photo-upload', slug: form.dataset.spForm === '__new' ? '' : form.dataset.spForm, name: form.querySelector('[data-f="name"]').value, ext });
-  const { error } = await sb.storage.from(up.bucket).uploadToSignedUrl(up.path, up.token, blob, { contentType: blob.type });
+  const up = await shopAdmin({
+    action: 'photo-upload',
+    slug: form.dataset.spForm === '__new' ? '' : form.dataset.spForm,
+    name: form.querySelector('[data-f="name"]').value,
+    ext,
+  });
+  const { error } = await sb.storage
+    .from(up.bucket)
+    .uploadToSignedUrl(up.path, up.token, blob, { contentType: blob.type });
   if (error) throw new Error('Upload failed: ' + error.message);
   form.dataset.photoRef = up.photoRef;
   preview.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="" style="width:100%;height:100%;object-fit:cover">`;
@@ -7261,7 +7334,12 @@ async function spSave(form) {
 
 async function spDelete(slug) {
   const p = (_spData?.products || []).find((x) => x.slug === slug);
-  if (!confirm(`Delete "${p?.name || slug}" for good?\n\nIt disappears from the shop and from this list. Orders already placed keep their copy.\nTo take it off the shop without losing it, untick "Visible in the shop" instead.`)) return;
+  if (
+    !confirm(
+      `Delete "${p?.name || slug}" for good?\n\nIt disappears from the shop and from this list. Orders already placed keep their copy.\nTo take it off the shop without losing it, untick "Visible in the shop" instead.`
+    )
+  )
+    return;
   try {
     await shopAdmin({ action: 'product-delete', slug });
     _spOpen.delete(slug);
@@ -7324,7 +7402,10 @@ function wireShopProducts() {
     }
     if (t.closest('[data-sp-addrow]')) {
       const tbody = t.closest('form').querySelector('[data-sp-rows]');
-      tbody.insertAdjacentHTML('beforeend', spVariantRow({ sku: '', label: '', cost: null, price: '', stock: null }, true));
+      tbody.insertAdjacentHTML(
+        'beforeend',
+        spVariantRow({ sku: '', label: '', cost: null, price: '', stock: null }, true)
+      );
       tbody.lastElementChild.querySelector('[data-f="label"]').focus();
       return;
     }
@@ -7345,7 +7426,11 @@ function wireShopProducts() {
         return;
       }
       const label = row.querySelector('[data-f="label"]').value || 'this option';
-      if (!row.hasAttribute('data-sp-newrow') && !confirm(`Remove "${label}"? It is deleted when you press Save.`)) return;
+      if (
+        !row.hasAttribute('data-sp-newrow') &&
+        !confirm(`Remove "${label}"? It is deleted when you press Save.`)
+      )
+        return;
       row.remove();
     }
   });
@@ -7416,7 +7501,8 @@ const spNum = (v) => (v === null || v === undefined || v === '' ? '' : String(v)
 
 function spSettingsPanel() {
   const s = _spSettings || {};
-  const p = s.pricing || window.ShopImport?.DEFAULT_PRICING || { fx: 1.4352, minPrice: 4.95, bands: [] };
+  const p = s.pricing ||
+    window.ShopImport?.DEFAULT_PRICING || { fx: 1.4352, minPrice: 4.95, bands: [] };
   const inp = (id, val, label, extra = '') =>
     `<label style="display:block"><span style="${SP_LABEL}">${label}</span><input class="inp" data-set="${id}" type="number" step="any" min="0" value="${esc(spNum(val))}" ${extra} style="width:100%;min-height:44px;padding:8px 12px;font-size:14px"></label>`;
   const bands = (p.bands || [])
@@ -7467,8 +7553,14 @@ function spReadRules(form) {
     mult: Number(row.querySelector('[data-f="mult"]').value),
   }));
   return {
-    shipping: { fee: v('shipFee') === '' ? 0 : Number(v('shipFee')), freeOver: v('shipFree') === '' ? null : Number(v('shipFree')) },
-    delivery: v('dMin') === '' ? null : { minDays: Number(v('dMin')), maxDays: v('dMax') === '' ? null : Number(v('dMax')) },
+    shipping: {
+      fee: v('shipFee') === '' ? 0 : Number(v('shipFee')),
+      freeOver: v('shipFree') === '' ? null : Number(v('shipFree')),
+    },
+    delivery:
+      v('dMin') === ''
+        ? null
+        : { minDays: Number(v('dMin')), maxDays: v('dMax') === '' ? null : Number(v('dMax')) },
     pricing: { fx: Number(v('fx')), minPrice: Number(v('minPrice')), bands },
   };
 }
@@ -7490,7 +7582,10 @@ async function spSaveSettings(form) {
   const btn = form.querySelector('button[type="submit"]');
   btn.disabled = true;
   try {
-    await shopAdmin({ action: 'settings-save', ...(body.delivery ? body : { shipping: body.shipping, pricing: body.pricing }) });
+    await shopAdmin({
+      action: 'settings-save',
+      ...(body.delivery ? body : { shipping: body.shipping, pricing: body.pricing }),
+    });
     showToast('Settings saved');
     await loadShopSettings();
     renderShopProducts();
@@ -7504,9 +7599,14 @@ async function spSaveSettings(form) {
 async function spReadList(file) {
   if (!window.ShopImport) throw new Error('The importer did not load. Reload the page.');
   const isCsv = /\.csv$/i.test(file.name);
-  const rows = isCsv ? window.ShopImport.readCsv(await file.text()) : await window.ShopImport.readWorkbook(await file.arrayBuffer());
+  const rows = isCsv
+    ? window.ShopImport.readCsv(await file.text())
+    : await window.ShopImport.readWorkbook(await file.arrayBuffer());
   const rules = _spSettings?.pricing || window.ShopImport.DEFAULT_PRICING;
-  _spDiff = { file: file.name, ...window.ShopImport.diffCatalog(_spData?.products || [], rows, rules) };
+  _spDiff = {
+    file: file.name,
+    ...window.ShopImport.diffCatalog(_spData?.products || [], rows, rules),
+  };
   _spPanel = 'import';
   renderShopProducts();
 }
@@ -7530,14 +7630,19 @@ function spImportPanel() {
     .join('');
   const missing = d.missing
     .map(
-      (x, i) => `<label style="display:flex;align-items:center;gap:8px;min-height:36px;font-size:13px;color:var(--navy)"><input type="checkbox" data-imp-out="${i}" style="width:18px;height:18px"> ${esc(x.product)} · ${esc(x.option)} <span style="font-family:ui-monospace,Menlo,monospace;color:var(--mgray);font-size:12px">${esc(x.sku)}</span>${x.stock === 0 ? ' <span style="color:var(--red-text)">(already sold out)</span>' : ''}</label>`
+      (x, i) =>
+        `<label style="display:flex;align-items:center;gap:8px;min-height:36px;font-size:13px;color:var(--navy)"><input type="checkbox" data-imp-out="${i}" style="width:18px;height:18px"> ${esc(x.product)} · ${esc(x.option)} <span style="font-family:ui-monospace,Menlo,monospace;color:var(--mgray);font-size:12px">${esc(x.sku)}</span>${x.stock === 0 ? ' <span style="color:var(--red-text)">(already sold out)</span>' : ''}</label>`
     )
     .join('');
   const added = d.added
     .slice(0, 60)
-    .map((a) => `<div style="font-size:13px;color:var(--navy);padding:3px 0">${esc(a.name || a.sku)} <span style="font-family:ui-monospace,Menlo,monospace;color:var(--mgray);font-size:12px">${esc(a.sku)}</span> · cost ${m(a.newCost)} · suggested ${a.suggested ? m(a.suggested) : '—'}</div>`)
+    .map(
+      (a) =>
+        `<div style="font-size:13px;color:var(--navy);padding:3px 0">${esc(a.name || a.sku)} <span style="font-family:ui-monospace,Menlo,monospace;color:var(--mgray);font-size:12px">${esc(a.sku)}</span> · cost ${m(a.newCost)} · suggested ${a.suggested ? m(a.suggested) : '—'}</div>`
+    )
     .join('');
-  const box = 'max-height:360px;overflow-y:auto;border:1px solid var(--border-lt);border-radius:10px;padding:8px 12px';
+  const box =
+    'max-height:360px;overflow-y:auto;border:1px solid var(--border-lt);border-radius:10px;padding:8px 12px';
   return `
     <div data-sp-import style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:12px;padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
@@ -7578,12 +7683,20 @@ async function spApplyImport(panel) {
   const updates = d.changed.map((c, i) => ({
     sku: c.sku,
     cost: c.newCost,
-    price: panel.querySelector(`[data-imp-price="${i}"]`)?.checked && c.suggested ? c.suggested : null,
+    price:
+      panel.querySelector(`[data-imp-price="${i}"]`)?.checked && c.suggested ? c.suggested : null,
   }));
-  const soldOut = d.missing.filter((_, i) => panel.querySelector(`[data-imp-out="${i}"]`)?.checked).map((x) => x.sku);
+  const soldOut = d.missing
+    .filter((_, i) => panel.querySelector(`[data-imp-out="${i}"]`)?.checked)
+    .map((x) => x.sku);
   const prices = updates.filter((u) => u.price !== null).length;
   if (!updates.length && !soldOut.length) return showToast('Nothing ticked to apply.');
-  if (!confirm(`Apply the import?\n\n• ${updates.length} costs updated\n• ${prices} prices changed to the suggestion\n• ${soldOut.length} options marked sold out`)) return;
+  if (
+    !confirm(
+      `Apply the import?\n\n• ${updates.length} costs updated\n• ${prices} prices changed to the suggestion\n• ${soldOut.length} options marked sold out`
+    )
+  )
+    return;
   const btn = panel.querySelector('[data-imp-apply]');
   btn.disabled = true;
   btn.textContent = 'Applying...';
@@ -7609,7 +7722,8 @@ function wireShopSettingsAndImport() {
       if (_spPanel && !_spSettings) await loadShopSettings();
       renderShopProducts();
     }
-    if (e.target.closest('[data-sp-import-open]')) document.getElementById('sp-import-file')?.click();
+    if (e.target.closest('[data-sp-import-open]'))
+      document.getElementById('sp-import-file')?.click();
   });
   bar?.addEventListener('change', async (e) => {
     if (e.target.id !== 'sp-import-file') return;
