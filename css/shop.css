@@ -150,6 +150,121 @@
 
 /* ── La tienda ────────────────────────────────────────────────────────────── */
 
+/* G2: el buscador arriba de todo. 16px para que iOS no haga zoom al tocarlo. */
+.shop-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 14px;
+  margin: 2px 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+}
+
+.shop-search:focus-within {
+  border-color: var(--blue);
+}
+
+.shop-search svg {
+  flex-shrink: 0;
+}
+
+.shop-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--navy);
+}
+
+/* El destacado, debajo de toda la grilla y cerrable con la X. */
+.shop-feat {
+  position: relative;
+  margin-top: 22px;
+  padding: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.shop-feat__x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--gray);
+  cursor: pointer;
+}
+
+.shop-feat__label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+
+.shop-feat__body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+}
+
+.shop-feat__shot {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.shop-feat__shot img {
+  max-width: 84%;
+  max-height: 84%;
+  object-fit: contain;
+}
+
+.shop-feat__text {
+  min-width: 0;
+}
+
+.shop-feat__name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.shop-feat__sub {
+  font-size: 12.5px;
+  color: var(--gray);
+  margin-top: 3px;
+}
+
+.shop-feat__price {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-top: 8px;
+}
+
 .shop-top {
   display: flex;
   align-items: center;

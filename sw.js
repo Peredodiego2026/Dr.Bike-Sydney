@@ -241,7 +241,7 @@
 // v134: "Photo unavailable", para una foto del chat que no se pudo firmar.
 // v135: la casilla "puede mostrar esta foto en su sitio web" de la resena, y
 // js/supabase.js manda la respuesta (photo_web_ok).
-const CACHE_STATIC = 'drbike-static-v145';
+const CACHE_STATIC = 'drbike-static-v146';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
