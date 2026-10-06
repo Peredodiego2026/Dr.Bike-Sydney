@@ -1,9 +1,62 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-09-04) - read this first
+## Current state (2026-10-06) - read this first
+
+**La tienda de repuestos LEBYCLE (dropshipping) esta COMPLETA, mergeada y en
+produccion - pero CERRADA.** Solo la ve la cuenta de Diego
+(peredo.dm@gmail.com); para el resto del mundo no existe. Se construyo en los
+PR #471-#498 (el journal no se habia tocado desde el 04-sep, por eso este
+bloque; los items de seguridad de esa fecha quedaron todos cerrados en octubre
+- ver el historial abajo y la auditoria de oct-2026).
+
+### Que hay
+- **Superficies:** `shop.html` (escritorio, `js/shop-desktop.js`) y el SPA
+  movil `index.html` (`js/shop-ui.js`), con logica compartida en `js/shop.js`.
+  Admin tiene Pedidos, Productos, Ajustes, Importar y Reporte de ventas en
+  `admin.html`/`js/admin.js`.
+- **Backend:** `api/_shop.js` (publico) y `api/_shop-admin.js` +
+  `api/_shop-admin-catalog.js`, despachados desde `api/auth.js`
+  (`role=shop` -> handleShop; `role=admin-shop` -> verifyAdminSession +
+  handleShopAdmin). Rewrite `/api/shop` -> `/api/auth?role=shop` en
+  `vercel.json`. Se hace asi por el limite de 12 funciones de Vercel.
+- **Tablas:** `shop_products`, `shop_variants`, `shop_orders` (+ lineas). RLS
+  ON, cero policies, `revoke all` de anon/authenticated: devuelven 401, nadie
+  las toca sin pasar por el servidor.
+- **Pagos:** Stripe en modo TEST (`SHOP_STRIPE_*`), aislado de la cuenta del
+  negocio. Precio AUTORITATIVO en el servidor: el cliente solo manda
+  `{sku, qty}`; precio, stock, costo y recargo salen de la DB.
+- **Envio:** tarifa fija $13.95, gratis desde $130, mas recargo por producto
+  pesado (`shop_products.ship_surcharge`, se cobra siempre, aun sobre el
+  umbral). 7 pesados cargados (#498, SQL corrido 06-oct).
+
+### Invariantes que NO se rompen
+- La tienda sigue cerrada hasta que Diego diga "abrir para todo el mundo".
+  El como esta en `docs/SHOP-OPEN.md` (dos flags `SHOP_IS_PUBLIC`); antes de
+  tocarlos hay que confirmar plazo de entrega, costo de envio y claves Stripe
+  LIVE.
+- **El costo mayorista (`shop_variants.cost`) no se expone jamas** en ninguna
+  respuesta publica. El catalogo manda `shipSurcharge` (info de envio), nunca
+  `cost`.
+
+### Pendiente Diego (nada bloquea el codigo; todo es cosa de el)
+1. **Compra de prueba real** en produccion desde su cuenta, con la tarjeta
+   test `4242 4242 4242 4242`: confirma Stripe + las 3 notificaciones
+   end-to-end en vivo.
+2. **Re-subir la foto pesada del mecanico antes del 29-oct** (cuota de
+   Supabase Storage).
+3. Opcional: `SHOP_STRIPE_WEBHOOK_SECRET` para aislar los eventos del webhook
+   de la tienda de los del negocio.
+4. Cuando quiera: decidir abrir la tienda al publico (ver invariante de
+   arriba).
+
+---
+
+## 2026-09-04 — Cierre de hallazgos de seguridad de la auditoria (historial)
 
 **Sesion de cierre de los hallazgos de seguridad de la auditoria del profesor
 sobre `f496270`.** Nueve PR. Siete mergeados y en produccion, dos esperando.
+(Los dos que faltaban - #418 bucket de evidencia y #419 RLS+AAL2 - se cerraron
+en octubre; ver la memoria de la auditoria de oct-2026.)
 
 ### Lo que se cerro
 
