@@ -57,7 +57,8 @@ const shopHref = (hash) => {
   if (document.querySelector('[data-screen="shop"]')) return '#' + hash;
   const [route, query] = hash.split('?');
   const slug = new URLSearchParams(query || '').get('slug');
-  if (route === 'shop-product' && slug) return '/shop.html#product?slug=' + encodeURIComponent(slug);
+  if (route === 'shop-product' && slug)
+    return '/shop.html#product?slug=' + encodeURIComponent(slug);
   if (route === 'cart') return '/shop.html#cart';
   return '/shop.html#all';
 };
@@ -96,10 +97,10 @@ function card(p) {
   const soldOut = p.variants.every((v) => v.stock === 0);
   return `<a class="shop-card" href="${shopHref('shop-product?slug=' + encodeURIComponent(p.slug))}" data-shop-link="${esc(p.slug)}">
       <div class="shop-card__shot">
-        ${n > 1 ? `<span class="shop-card__sizes">${n} sizes</span>` : ''}
+        ${n > 1 ? `<span class="shop-card__sizes">${n} <span>sizes</span></span>` : ''}
         ${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">` : ''}
       </div>
-      <div class="shop-card__price">${n > 1 ? 'From ' : ''}${money(p.from)}${soldOut ? ' <span class="shop-card__sold">Sold out</span>' : ''}</div>
+      <div class="shop-card__price">${n > 1 ? '<span>From</span> ' : ''}${money(p.from)}${soldOut ? ' <span class="shop-card__sold">Sold out</span>' : ''}</div>
       <div class="shop-card__name">${esc(p.name)}</div>
     </a>`;
 }
@@ -152,10 +153,25 @@ export async function renderShop() {
   paintShop(screen, catalog);
 }
 
-function paintShop(screen, catalog) {
-  const list = sortProducts(filterProducts(catalog, state), state.sort);
-  const active = state.sections.length + state.bands.length;
+// El destacado se puede cerrar; que quede cerrado en el proximo paint es una
+// comodidad por visitante, no un estado que deba viajar: localStorage, y si el
+// navegador lo niega (incognito), simplemente vuelve a aparecer.
+function featDismissed() {
+  try {
+    return localStorage.getItem('drbike-shop-feat-hidden') === '1';
+  } catch {
+    return false;
+  }
+}
+function dismissFeat() {
+  try {
+    localStorage.setItem('drbike-shop-feat-hidden', '1');
+  } catch {
+    /* sin localStorage, no se recuerda; no es critico */
+  }
+}
 
+function paintShop(screen, catalog) {
   screen.innerHTML = `
     <div class="screen-header" style="display:flex;align-items:center;gap:6px;padding-left:4px">
       ${backBtn('Back')}
@@ -163,34 +179,89 @@ function paintShop(screen, catalog) {
       ${cartBtn()}
     </div>
     <div class="screen-content">
+      <label class="shop-search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--gray-lt)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <input type="search" data-shop-search placeholder="Search parts and tools" aria-label="Search the shop" value="${esc(state.query)}" autocomplete="off">
+      </label>
       <div class="shop-top">
         <button type="button" class="shop-filter-btn" data-shop-filters>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-          <span>${active ? `Filters &middot; ${active}` : 'All products'}</span>
+          <span>${state.sections.length + state.bands.length ? `Filters &middot; ${state.sections.length + state.bands.length}` : 'All products'}</span>
         </button>
 
         <select class="shop-sort" data-shop-sort aria-label="Sort the products">
           ${Object.entries(SORTS)
-            .map(([k, v]) => `<option value="${k}"${k === state.sort ? ' selected' : ''}>${esc(v.name)}</option>`)
+            .map(
+              ([k, v]) =>
+                `<option value="${k}"${k === state.sort ? ' selected' : ''}>${esc(v.name)}</option>`
+            )
             .join('')}
         </select>
       </div>
-      ${
-        list.length
-          ? `<div class="shop-grid">${list.map(card).join('')}</div>`
-          : `<div class="shop-empty">
-               <div class="shop-empty__icon">&#128269;</div>
-               <div class="shop-empty__title">Nothing matches those filters</div>
-               <div class="shop-empty__sub">Try removing one of them.</div>
-             </div>`
-      }
+      <div data-shop-results>${shopResults(catalog)}</div>
     </div>`;
 
+  // La busqueda redibuja SOLO los resultados, no toda la pantalla: si redibujara
+  // todo, el input perderia el foco en cada letra.
+  const results = screen.querySelector('[data-shop-results]');
+  const repaintResults = () => {
+    results.innerHTML = shopResults(catalog);
+    wireResults(screen, catalog, results);
+  };
+  screen.querySelector('[data-shop-search]')?.addEventListener('input', (ev) => {
+    state.query = ev.target.value;
+    repaintResults();
+  });
   screen.querySelector('[data-shop-sort]')?.addEventListener('change', (ev) => {
     state.sort = ev.target.value;
-    paintShop(screen, catalog);
+    repaintResults();
   });
-  screen.querySelector('[data-shop-filters]')?.addEventListener('click', () => openFilters(screen, catalog));
+  screen
+    .querySelector('[data-shop-filters]')
+    ?.addEventListener('click', () => openFilters(screen, catalog));
+  wireResults(screen, catalog, results);
+}
+
+// La grilla y, debajo de todo, el destacado que se puede cerrar. El destacado
+// solo aparece en la vista normal (sin buscar ni filtrar): mientras alguien
+// busca, un producto que no pidio seria ruido.
+function shopResults(catalog) {
+  const list = sortProducts(filterProducts(catalog, state), state.sort);
+  const browsing = !state.query.trim() && !state.sections.length && !state.bands.length;
+  const feat = browsing && !featDismissed() ? pickHome(catalog.products, 1)[0] : null;
+  const grid = list.length
+    ? `<div class="shop-grid">${list.map(card).join('')}</div>`
+    : `<div class="shop-empty">
+         <div class="shop-empty__icon">&#128269;</div>
+         <div class="shop-empty__title">Nothing matches those filters</div>
+         <div class="shop-empty__sub">Try removing one of them.</div>
+       </div>`;
+  return grid + (feat ? featCard(feat) : '');
+}
+
+function featCard(p) {
+  const n = p.variants.length;
+  return `<section class="shop-feat">
+      <button type="button" class="shop-feat__x" data-feat-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+      <div class="shop-feat__label">Featured</div>
+      <a class="shop-feat__body" href="${shopHref('shop-product?slug=' + encodeURIComponent(p.slug))}" data-shop-link="${esc(p.slug)}">
+        <div class="shop-feat__shot">${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">` : ''}</div>
+        <div class="shop-feat__text">
+          <div class="shop-feat__name">${esc(p.name)}</div>
+          <div class="shop-feat__sub">${n > 1 ? `${n} <span>sizes and fits</span>` : '<span>One size</span>'}</div>
+          <div class="shop-feat__price">${n > 1 ? '<span>From</span> ' : ''}${money(p.from)} <span aria-hidden="true">&rarr;</span></div>
+        </div>
+      </a>
+    </section>`;
+}
+
+function wireResults(screen, catalog, results) {
+  results.querySelector('[data-feat-close]')?.addEventListener('click', () => {
+    dismissFeat();
+    results.querySelector('.shop-feat')?.remove();
+  });
 }
 
 // ── El panel de filtros ──────────────────────────────────────────────────────
@@ -243,7 +314,8 @@ function openFilters(screen, catalog) {
   sheet.addEventListener('change', (ev) => {
     const sec = ev.target.dataset.sec;
     const band = ev.target.dataset.band;
-    const flip = (arr, v) => (ev.target.checked ? [...new Set([...arr, v])] : arr.filter((x) => x !== v));
+    const flip = (arr, v) =>
+      ev.target.checked ? [...new Set([...arr, v])] : arr.filter((x) => x !== v);
     if (sec) draft.sections = flip(draft.sections, sec);
     if (band) draft.bands = flip(draft.bands, band);
   });
@@ -306,7 +378,8 @@ export async function renderShopProduct() {
           photos.length > 1
             ? `<div class="shop-thumbs">${photos
                 .map(
-                  (src, i) => `<button type="button" class="shop-thumb" data-photo="${i}" aria-label="Show this photo" aria-pressed="${i === photo}"><img src="${esc(src)}" alt=""></button>`
+                  (src, i) =>
+                    `<button type="button" class="shop-thumb" data-photo="${i}" aria-label="Show this photo" aria-pressed="${i === photo}"><img src="${esc(src)}" alt=""></button>`
                 )
                 .join('')}</div>`
             : ''
@@ -327,7 +400,9 @@ export async function renderShopProduct() {
                <div class="shop-opts" data-shop-opts>
                  ${product.variants
                    .map(
-                     (x) => `<button type="button" class="shop-opt${x.stock === 0 ? ' shop-opt--out' : ''}" data-sku="${esc(x.sku)}" aria-pressed="${x.sku === sku}">
+                     (
+                       x
+                     ) => `<button type="button" class="shop-opt${x.stock === 0 ? ' shop-opt--out' : ''}" data-sku="${esc(x.sku)}" aria-pressed="${x.sku === sku}">
                        <span>${esc(x.label)}</span>
                        ${x.stock === 0 ? '<span class="shop-opt__hint">Sold out</span>' : x.price !== v.price ? `<span class="shop-opt__hint">${money(x.price)}</span>` : ''}
                      </button>`
@@ -370,7 +445,10 @@ export async function renderShopProduct() {
     screen.querySelectorAll('[data-qty]').forEach((b) =>
       b.addEventListener('click', () => {
         // No mas de lo que queda, si la opcion tiene limite.
-        qty = Math.max(1, Math.min(maxQty(findVariant(product, sku)) || 1, qty + Number(b.dataset.qty)));
+        qty = Math.max(
+          1,
+          Math.min(maxQty(findVariant(product, sku)) || 1, qty + Number(b.dataset.qty))
+        );
         paint();
       })
     );
@@ -476,7 +554,6 @@ export async function renderCart() {
   paint();
 }
 
-
 // ── El pago ──────────────────────────────────────────────────────────────────
 //
 // En dos pasos, igual que en la computadora (js/shop-desktop.js). Primero a
@@ -527,7 +604,9 @@ export async function renderShopCheckout() {
       <div class="shop-group" style="margin-top:0">Your order</div>
       ${items
         .map(
-          (i) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14px">
+          (
+            i
+          ) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14px">
             <span style="color:var(--navy)">${esc(i.name)} <span style="color:var(--gray)">x${i.qty}</span></span>
             <span style="font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums">${money(i.total)}</span>
           </div>`
@@ -604,11 +683,20 @@ export async function renderShopCheckout() {
     try {
       const data = await startCheckout(await getToken(), getCart(), who, getLang());
       if (Math.abs(Number(data.total) - (subtotal + ship)) > 0.009) {
-        say('var(--amber)', 'The price changed to ' + money(data.total) + ' while you were here. Go back and check the cart.');
+        say(
+          'var(--amber)',
+          'The price changed to ' +
+            money(data.total) +
+            ' while you were here. Go back and check the cart.'
+        );
         next.disabled = false;
         return;
       }
-      const card = await mountCard(screen.querySelector('#co-card'), data.publishableKey, getLang());
+      const card = await mountCard(
+        screen.querySelector('#co-card'),
+        data.publishableKey,
+        getLang()
+      );
       pay = { ...data, card, details: who };
       details.disabled = true;
       next.hidden = true;
@@ -619,7 +707,10 @@ export async function renderShopCheckout() {
       translateScreen(box);
       translateScreen(payBtn);
       say('var(--gray)', '');
-      box.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+      box.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
     } catch (e) {
       // Nunca un catch vacio: si no se pudo, el motivo se lee en pantalla.
       say('var(--red)', e.message);
@@ -654,7 +745,10 @@ export async function renderShopCheckout() {
       return;
     }
     if (status !== 'succeeded') {
-      say('var(--amber)', 'Your bank has not confirmed the payment yet. We will email you as soon as it does.');
+      say(
+        'var(--amber)',
+        'Your bank has not confirmed the payment yet. We will email you as soon as it does.'
+      );
       return;
     }
     const done = { ref: pay.ref, test: pay.mode !== 'live', emailed: false };
@@ -743,9 +837,12 @@ document.addEventListener('click', (ev) => {
     // hacia nada: el boton parecia roto.
     forgetCatalog();
     const screen = retry.closest('[data-screen]');
-    const again = { shop: renderShop, 'shop-product': renderShopProduct, cart: renderCart, 'shop-checkout': renderShopCheckout }[
-      screen?.dataset.screen
-    ];
+    const again = {
+      shop: renderShop,
+      'shop-product': renderShopProduct,
+      cart: renderCart,
+      'shop-checkout': renderShopCheckout,
+    }[screen?.dataset.screen];
     if (again) again();
   }
 });
