@@ -8426,12 +8426,11 @@ async function loadInventory() {
   tbody.innerHTML =
     '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr>';
 
-  const { data, error } = await sb.from('parts_inventory').select('*').order('name');
-  if (error) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red-text)">Error: ${escapeHtml(error.message)}<br><small>Run the SQL migration first (see console)</small></td></tr>`;
-    console.log(
-      `SQL: CREATE TABLE parts_inventory (id uuid PRIMARY KEY, name text, category text, stock integer, min_stock integer, cost_price numeric, created_at timestamptz)`
-    );
+  let data;
+  try {
+    data = await photosApi('admin-inventory-list');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red-text)">Error: ${escapeHtml(e.message)}</td></tr>`;
     return;
   }
 
@@ -8513,12 +8512,16 @@ function renderInventory() {
     .join('');
 }
 
-async function adjustStock(id, current, delta) {
-  const newStock = Math.max(0, current + delta);
-  await sb.from('parts_inventory').update({ stock: newStock }).eq('id', id);
-  const part = inventoryData.find((p) => p.id === id);
-  if (part) part.stock = newStock;
-  renderInventory();
+async function adjustStock(id, _current, delta) {
+  // Goes through the ledger (admin-inventory-adjust -> adjust_part_stock), so the
+  // change is auditable and clamped at 0 server-side. Reload to show the truth.
+  try {
+    await photosApi('admin-inventory-adjust', { id, delta });
+  } catch (e) {
+    showToast('Could not update stock: ' + e.message);
+    return;
+  }
+  await loadInventory();
 }
 
 function openPartModal(id) {
@@ -8579,14 +8582,10 @@ async function savePart(id) {
     cost_price: cost,
     sell_price: sell,
   };
-  let error;
-  if (id) {
-    ({ error } = await sb.from('parts_inventory').update(payload).eq('id', id));
-  } else {
-    ({ error } = await sb.from('parts_inventory').insert(payload));
-  }
-  if (error) {
-    showToast('Save failed: ' + error.message);
+  try {
+    await photosApi('admin-inventory-upsert', { ...(id ? { id } : {}), ...payload });
+  } catch (e) {
+    showToast('Save failed: ' + e.message);
     return;
   }
   document.getElementById('part-modal').remove();
@@ -8596,7 +8595,12 @@ async function savePart(id) {
 
 async function deletePart(id) {
   if (!confirm('Delete this part from inventory?')) return;
-  await sb.from('parts_inventory').delete().eq('id', id);
+  try {
+    await photosApi('admin-inventory-delete', { id });
+  } catch (e) {
+    showToast('Delete failed: ' + e.message);
+    return;
+  }
   showToast('Part removed');
   loadInventory();
 }
