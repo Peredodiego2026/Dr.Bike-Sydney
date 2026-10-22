@@ -2573,10 +2573,22 @@ async function handleMechanicComplete(req, res) {
       const qty = parseInt(p?.qty, 10);
       if (!p?.id || !Number.isFinite(qty) || qty <= 0) continue;
       if (costLookupOk) partsCostActual += qty * (costById.get(p.id) || 0);
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decrement_part_stock`, {
+      // adjust_part_stock (negative delta) instead of decrement_part_stock: it
+      // does the same atomic, non-negative decrement AND writes a job_used row
+      // to stock_movements with this booking's id, so cancelling the job later
+      // can return exactly what it took (revertJobStock). Same return shape
+      // (id, name, new_stock, min_stock) plus `applied`, so the low-stock check
+      // below is unchanged.
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
         method: 'POST',
         headers: sbHdr,
-        body: JSON.stringify({ p_part_id: p.id, p_qty: qty }),
+        body: JSON.stringify({
+          p_part_id: p.id,
+          p_delta: -qty,
+          p_reason: 'job_used',
+          p_job_id: booking_id,
+          p_created_by: String(auth.mechanic?.name || auth.mechanic?.id || 'mechanic'),
+        }),
       });
       if (!r.ok) continue;
       const row = (await r.json())[0];
@@ -3512,6 +3524,49 @@ async function handleClientHistory(req, res) {
   return res.status(200).json(data || []);
 }
 
+// Give a cancelled job its parts back. Reads what the completion actually
+// deducted from the ledger (job_used rows for this booking) rather than the
+// booking's free-text parts_used, and writes the inverse as job_reverted via
+// the same atomic RPC. Idempotent: a job already reverted (a job_reverted row
+// exists) or that never used parts is a no-op, so calling it twice is safe.
+export async function revertJobStock(bookingId, serviceKey, createdBy = 'revert') {
+  const hdr = {
+    apikey: serviceKey,
+    Authorization: `Bearer ${serviceKey}`,
+    'Content-Type': 'application/json',
+  };
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/stock_movements?select=part_id,delta,reason&job_id=eq.${encodeURIComponent(bookingId)}`,
+      { headers: hdr }
+    );
+    if (!resp.ok) return;
+    const rows = await resp.json();
+    if (rows.some((r) => r.reason === 'job_reverted')) return; // already given back
+    const used = rows.filter((r) => r.reason === 'job_used');
+    if (!used.length) return; // nothing was ever deducted for this job
+    // Sum per part in case the job used the same part in more than one line.
+    const byPart = new Map();
+    for (const r of used) byPart.set(r.part_id, (byPart.get(r.part_id) || 0) + Number(r.delta));
+    for (const [partId, delta] of byPart) {
+      if (delta >= 0) continue; // job_used deltas are negative; skip anything odd
+      await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+        method: 'POST',
+        headers: hdr,
+        body: JSON.stringify({
+          p_part_id: partId,
+          p_delta: -delta, // return exactly what was taken
+          p_reason: 'job_reverted',
+          p_job_id: bookingId,
+          p_created_by: createdBy,
+        }),
+      });
+    }
+  } catch (e) {
+    console.warn('[revert-stock] could not return stock for', bookingId, e.message);
+  }
+}
+
 async function handleMechanicUpdateStatus(req, res) {
   const { booking_id, status, mechanic_notes } = req.body;
   if (!booking_id || !status)
@@ -3542,7 +3597,11 @@ async function handleMechanicUpdateStatus(req, res) {
         apikey: SERVICE_KEY,
         Authorization: `Bearer ${SERVICE_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
+        // representation (not minimal): we need to know whether a row actually
+        // changed before returning stock, so a mechanic cancelling a job that
+        // is not theirs (ownership filter matches nothing) never triggers a
+        // revert.
+        Prefer: 'return=representation',
       },
       body: JSON.stringify({
         status,
@@ -3555,6 +3614,20 @@ async function handleMechanicUpdateStatus(req, res) {
     const errText = await updateResp.text();
     console.error('update-status error:', updateResp.status, errText);
     return res.status(500).json({ error: 'Failed to update booking', detail: errText });
+  }
+  // Cancelling a job that had been completed must give its parts back. Only on
+  // a real cancel that actually hit a row this mechanic owns; revertJobStock is
+  // idempotent and a no-op when the job never used parts, so the common case
+  // (cancelling a pending job) costs one cheap ledger read and nothing else.
+  if (status === 'cancelled') {
+    const updated = await updateResp.json().catch(() => []);
+    if (Array.isArray(updated) && updated.length) {
+      await revertJobStock(
+        booking_id,
+        SERVICE_KEY,
+        String(mechanic?.name || mechanic?.id || 'mechanic')
+      );
+    }
   }
   return res.status(200).json({ ok: true });
 }
