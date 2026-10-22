@@ -8415,10 +8415,16 @@ async function deleteContact(id) {
 
 // ── INVENTORY / SPARE PARTS ────────────────────────────────────────────────────
 let inventoryData = [];
+// 'Tubes' is the category of the 61 Duro inner tubes seeded on 2026-10-22
+// (scripts/add-stock-movements-and-tube-seed.sql). Without it here they were
+// listed under General, and opening one in the edit modal left no option
+// selected - the browser then picks the first ('Brakes'), so saving any tube
+// silently moved it to Brakes.
 const PART_CATEGORIES = [
   'Brakes',
   'Drivetrain',
   'Wheels & Tyres',
+  'Tubes',
   'Cockpit',
   'Cables',
   'Suspension',

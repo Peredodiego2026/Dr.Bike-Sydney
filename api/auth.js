@@ -3663,17 +3663,18 @@ export async function handleAdminInventoryList(req, res) {
   return res.status(200).json(await resp.json());
 }
 
-const INV_META_FIELDS = [
-  'name',
-  'category',
-  'min_stock',
-  'cost_price',
-  'sell_price',
-  'wheel_size',
-  'valve_type',
-  'valve_length_mm',
-  'width_range',
-];
+// A non-negative number, or NaN when it is not one. '' and null are "no value",
+// which only nullable fields accept.
+function invNumber(v, { int = false, nullable = false } = {}) {
+  if (v === null || v === '') return nullable ? null : NaN;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0 || (int && !Number.isInteger(n))) return NaN;
+  return n;
+}
+function invText(v, max) {
+  if (v === null || v === undefined) return null;
+  return String(v).trim().slice(0, max) || null;
+}
 
 export async function handleAdminInventoryUpsert(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -3682,50 +3683,78 @@ export async function handleAdminInventoryUpsert(req, res) {
   const b = req.body || {};
   const name = typeof b.name === 'string' ? b.name.trim() : '';
   if (!name) return res.status(400).json({ error: 'name required' });
+  if (name.length > 120) return res.status(400).json({ error: 'name is too long (120 max)' });
   const who = String(auth.user?.email || 'admin');
   const sbHdr = {
     apikey: SERVICE_KEY,
     Authorization: `Bearer ${SERVICE_KEY}`,
     'Content-Type': 'application/json',
   };
-  const meta = {};
-  for (const f of INV_META_FIELDS) if (b[f] !== undefined) meta[f] = b[f];
-  const stock = b.stock === undefined || b.stock === null ? null : parseInt(b.stock, 10);
+
+  // Validated here, not trusted from the page: these numbers become the price a
+  // client is charged and the stock-value totals in Finance.
+  const meta = { name };
+  if (b.category !== undefined) meta.category = invText(b.category, 40) || 'General';
+  for (const [f, max] of [
+    ['wheel_size', 20],
+    ['valve_type', 20],
+    ['width_range', 20],
+  ])
+    if (b[f] !== undefined) meta[f] = invText(b[f], max);
+  for (const [f, opts] of [
+    ['min_stock', { int: true }],
+    ['cost_price', {}],
+    ['sell_price', { nullable: true }],
+    ['valve_length_mm', { int: true, nullable: true }],
+  ]) {
+    if (b[f] === undefined) continue;
+    const n = invNumber(b[f], opts);
+    if (Number.isNaN(n))
+      return res.status(400).json({ error: `${f} must be a number of 0 or more` });
+    meta[f] = n;
+  }
+  let stock = null;
+  if (b.stock !== undefined && b.stock !== null && b.stock !== '') {
+    stock = invNumber(b.stock, { int: true });
+    if (Number.isNaN(stock))
+      return res.status(400).json({ error: 'stock must be a whole number of 0 or more' });
+  }
 
   if (b.id) {
     // Existing part: metadata is a plain PATCH; a stock change is an auditable
     // 'adjustment' through the RPC, never a blind overwrite.
-    if (Object.keys(meta).length) {
-      const up = await fetch(
-        `${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(b.id)}`,
-        {
-          method: 'PATCH',
-          headers: { ...sbHdr, Prefer: 'return=minimal' },
-          body: JSON.stringify(meta),
-        }
-      );
-      if (!up.ok) return res.status(500).json({ error: 'Failed to save part' });
-    }
-    if (stock !== null && Number.isFinite(stock)) {
-      const cur = await fetch(
-        `${SUPABASE_URL}/rest/v1/parts_inventory?select=stock&id=eq.${encodeURIComponent(b.id)}&limit=1`,
-        { headers: sbHdr }
-      );
-      const row = cur.ok ? (await cur.json())?.[0] : null;
-      if (row) {
-        const delta = stock - Number(row.stock);
-        if (delta !== 0) {
-          await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
-            method: 'POST',
-            headers: sbHdr,
-            body: JSON.stringify({
-              p_part_id: b.id,
-              p_delta: delta,
-              p_reason: 'adjustment',
-              p_created_by: who,
-            }),
-          });
-        }
+    const up = await fetch(
+      `${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(b.id)}`,
+      {
+        method: 'PATCH',
+        headers: { ...sbHdr, Prefer: 'return=representation' },
+        body: JSON.stringify(meta),
+      }
+    );
+    if (!up.ok) return res.status(500).json({ error: 'Failed to save part' });
+    const saved = await up.json().catch(() => []);
+    if (!Array.isArray(saved) || !saved.length)
+      return res.status(404).json({ error: 'Part not found - it may have been deleted' });
+    // "Set the stock to N" becomes the difference from what is there now. Read
+    // and adjust are two steps, so a mechanic using the same part in between
+    // makes the final count off by that one use - the ledger still records
+    // every real change, and the admin sees the true number after the reload.
+    if (stock !== null) {
+      // The PATCH above already returned the row, current stock included.
+      const delta = stock - Number(saved[0].stock);
+      if (delta !== 0) {
+        const adj = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+          method: 'POST',
+          headers: sbHdr,
+          body: JSON.stringify({
+            p_part_id: b.id,
+            p_delta: delta,
+            p_reason: 'adjustment',
+            p_created_by: who,
+          }),
+        });
+        if (!adj.ok)
+          return res.status(500).json({ error: 'Part saved, but the stock change failed' });
       }
     }
     return res.status(200).json({ ok: true, id: b.id });
@@ -3733,11 +3762,11 @@ export async function handleAdminInventoryUpsert(req, res) {
 
   // New part: insert with its starting stock, then record the 'initial' movement
   // (the stock is already set, so log it rather than adjust from zero).
-  const startStock = stock !== null && Number.isFinite(stock) && stock > 0 ? stock : 0;
+  const startStock = stock ?? 0;
   const ins = await fetch(`${SUPABASE_URL}/rest/v1/parts_inventory`, {
     method: 'POST',
     headers: { ...sbHdr, Prefer: 'return=representation' },
-    body: JSON.stringify({ ...meta, name, stock: startStock }),
+    body: JSON.stringify({ ...meta, stock: startStock }),
   });
   if (!ins.ok) return res.status(500).json({ error: 'Failed to create part' });
   const created = (await ins.json())?.[0];
