@@ -28,6 +28,25 @@ consulta responde una sola pregunta - si falta correr un script - y nada mas.
 
 ---
 
+## NUEVO (22-oct-2026): inventario - ledger de movimientos + camaras Duro
+
+**Hay que correr `scripts/add-stock-movements-and-tube-seed.sql` una vez en el
+SQL editor de Supabase.** Es idempotente (se puede correr dos veces sin
+duplicar). Agrega, SIN tocar lo que ya funciona:
+
+- la tabla `stock_movements` (historial auditable de cada cambio de stock),
+- la funcion `adjust_part_stock()` (mueve stock y escribe el historial en una
+  sola operacion; ademas puede DEVOLVER stock, para revertir un trabajo),
+- cuatro columnas de camara en `parts_inventory` (medida, valvula, largo, ancho),
+- las 61 camaras Duro (18 variantes) a costo $2 / precio $15.
+
+Al final del script hay dos consultas de verificacion: deben dar **18 variantes
+/ 61 unidades** y al menos 18 filas `initial` en el historial. Hasta que no se
+corra, los commits de codigo que vienen despues (endpoints, admin, mecanico) no
+tienen la tabla ni la funcion contra que trabajar.
+
+---
+
 ### El resultado anterior, del 2026-08-10
 
 Diego corrio la consulta de la seccion 3 contra produccion el mismo dia. **Las
