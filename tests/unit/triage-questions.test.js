@@ -52,8 +52,8 @@ const CATALOG = [
   ['Tubeless Tyre Install', 'Wheels & tyres'],
   ['Tyre / Tube Install', 'Wheels & tyres'],
   ['Tyre Replacement', 'Wheels & tyres'],
-  ['Wheel Truing — Major', 'Wheels & tyres'],
-  ['Wheel Truing — Minor', 'Wheels & tyres'],
+  ['Wheel Truing \u2014 Major', 'Wheels & tyres'],
+  ['Wheel Truing \u2014 Minor', 'Wheels & tyres'],
 ];
 
 // Every question any of the 33 services (or an unknown category) can reach.
@@ -198,8 +198,8 @@ describe('las excepciones, una por una', () => {
     ['Brake Pad Install', 'Brakes', ['brand', 'pad_material'], []],
     ['Hydro Brake Install', 'Brakes', ['brand', 'current_brakes'], []],
     ['Spoke Replacement', 'Wheels & tyres', ['broken_spokes', 'hub_brand'], ['tyre_size']],
-    ['Wheel Truing — Minor', 'Wheels & tyres', ['has_broken_spokes'], ['tyre_size']],
-    ['Wheel Truing — Major', 'Wheels & tyres', ['has_broken_spokes'], ['tyre_size']],
+    ['Wheel Truing \u2014 Minor', 'Wheels & tyres', ['has_broken_spokes'], ['tyre_size']],
+    ['Wheel Truing \u2014 Major', 'Wheels & tyres', ['has_broken_spokes'], ['tyre_size']],
     ['Tubeless Tyre Install', 'Wheels & tyres', ['tyre_size'], ['tyre_system']],
     ['Tyre / Tube Install', 'Wheels & tyres', ['tyre_size', 'tyre_system', 'own_tyre'], []],
     ['Tyre Replacement', 'Wheels & tyres', ['tyre_size', 'tyre_system'], ['own_tyre']],

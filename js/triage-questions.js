@@ -330,8 +330,8 @@ export const SERVICE_OVERRIDES = {
   // Wheels & tyres. The two Wheel Truing names carry the real em dash from the
   // services table; written as an escape so this file stays ASCII.
   'Spoke Replacement': () => pick('broken_spokes', 'hub_brand'),
-  'Wheel Truing — Minor': () => pick('has_broken_spokes'),
-  'Wheel Truing — Major': () => pick('has_broken_spokes'),
+  'Wheel Truing \u2014 Minor': () => pick('has_broken_spokes'),
+  'Wheel Truing \u2014 Major': () => pick('has_broken_spokes'),
   // Tubeless already answers "tube or tubeless".
   'Tubeless Tyre Install': (base) => base.filter((q) => q.id !== 'tyre_system'),
   'Tyre / Tube Install': (base) => [...base, ...pick('own_tyre')],
