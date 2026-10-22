@@ -391,13 +391,21 @@ with
   union all select 52, 'shop-ship-surcharge.sql', 'shop_products.ship_surcharge (recargo de envio del pesado)',
     (exists (select 1 from col where t='shop_products' and c='ship_surcharge')
      and exists (select 1 from pg_constraint where conname = 'shop_products_ship_surcharge_check'))
+  -- 53 entro el 2026-10-23 con el triage de la reserva: las respuestas que el
+  -- cliente da en el paso 1. A diferencia de casi todas las de arriba, esta NO
+  -- es inofensiva si falta: el servidor escribe `triage` en cada reserva nueva,
+  -- y si la columna no existe crear una reserva devuelve 500 y nadie puede
+  -- reservar (seccion 13). Se mira `triage` y tambien las dos de referencias
+  -- porque la migracion es una sola y una a medias no sirve.
+  union all select 53, 'add-triage-columns.sql', 'bookings.triage (jsonb) + triage_photo_ref + triage_video_ref',
+    (select count(*) = 3 from col where t='bookings' and c in ('triage','triage_photo_ref','triage_video_ref'))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 47 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 48 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
@@ -947,3 +955,56 @@ cosas:
 
 **Ojo con la ruta:** el PIN NO esta en "Mechanic Profile" (esa pantalla es la
 ficha que ve el cliente: foto, bio, rating). Esta en Settings.
+
+---
+
+## 13. `add-triage-columns.sql` (23-oct-2026) - ANTES de mergear el PR del triage
+
+**Se corre ANTES de mergear el PR que guarda el triage, no despues.** Si el
+codigo llega primero, nadie puede reservar hasta que se corra. El codigo que ya
+esta en produccion no la necesita: correrla antes no cambia nada de lo que se ve.
+
+Agrega tres columnas a `bookings`, todas vacias para las reservas que ya
+existen:
+
+| Columna            | Tipo    | Que guarda                                                       |
+| ------------------ | ------- | ---------------------------------------------------------------- |
+| `triage`           | `jsonb` | Lo que el cliente contesto en el paso 1 (marca, modelo, sintoma) |
+| `triage_photo_ref` | `text`  | Referencia a su foto, en el bucket privado. No una URL           |
+| `triage_video_ref` | `text`  | Lo mismo para un video corto de un ruido                         |
+
+**Que pasa si el PR se mergea primero.** `handleCreateBooking` (`api/auth.js`)
+arma una fila y la escribe entera; el PR del triage le suma `triage` (con
+`NULL` si el cliente no contesto: la columna se nombra igual). PostgREST
+rechaza una escritura que nombra una columna que no existe - es el mismo error
+que dejo a Reset PIN en 500 para todos (seccion 12).
+
+La reserva empieza ahi: `hold-slot` inserta la fila antes de tocar la tarjeta.
+Resultado: `500 Could not create booking` en cada intento y **nadie puede
+reservar** hasta que se corra el script. No se le cobra a nadie, pero es la web
+sin reservas. Por el camino sin hold (el servidor todavia lo acepta) el insert
+va DESPUES del cobro, y un 500 ahi no reembolsa: solo reembolsan el turno
+ocupado (`23505`) y el hold vencido.
+
+El codigo de las coordenadas (`address_lat`) esquiva esto a proposito
+escribiendo la columna en un UPDATE aparte, para que su ausencia cueste el ETA
+y nada mas. Aca no se hace: `triage` viaja en la misma fila. Correr el script
+antes es lo que lo hace seguro.
+
+**Como se corre:** seccion 2, con el contenido de `scripts/add-triage-columns.sql`.
+Es idempotente (`ADD COLUMN IF NOT EXISTS`) y no toca datos: correrlo dos veces
+no hace nada la segunda.
+
+**Como saber que quedo bien:** el archivo termina con un `SELECT` que devuelve una
+fila, `ok = true`. Si dice `false`, falta alguna de las tres o tiene otro tipo.
+Despues, la fila 53 de la consulta de la seccion 3 tiene que decir `OK`.
+
+**Lo que esto NO hace.**
+
+- `triage_photo_ref` queda vacia hasta que se entregue la foto (otro PR), y
+  esa foto necesita que el bucket privado se cree a mano, como los de las
+  secciones 0.b y 0.b2.
+- `triage_video_ref` no la escribe nada todavia. Esta para cuando haya donde
+  subir el video.
+- La cola de revision (el estado de la revision, la fecha y la nota de Diego)
+  son otras tres columnas, de otro entregable, con su propio script.
