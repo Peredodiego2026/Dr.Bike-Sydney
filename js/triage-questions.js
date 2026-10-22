@@ -6,7 +6,7 @@
 // right part BEFORE he drives out.
 //
 // HOW A SERVICE FINDS ITS QUESTIONS (questionsFor), in this order:
-//   1. SERVICE_OVERRIDES[service.name]  - one of the 19 exceptions (or Emergency)
+//   1. SERVICE_OVERRIDES[service.name]  - one of the 20 exceptions (or Emergency)
 //   2. CATEGORY_SETS[service.category]  - the 9 base sets
 //   3. DEFAULT_SET                      - a category this file has never heard of
 // The questions hang off the CATEGORY, not the service, on purpose: a service
@@ -264,6 +264,19 @@ const QUESTIONS = [
 
   // --- General & assembly -------------------------------------------------------
   {
+    id: 'part_wanted',
+    ask: 'What would you like us to install?',
+    options: [
+      'Rack',
+      'Mudguards',
+      'Lights',
+      'Bottle cage',
+      'Pedals',
+      'Something else',
+      'I am not sure',
+    ],
+  },
+  {
     id: 'in_box',
     ask: 'Is the bike still in its box?',
     options: ['Yes, it is still boxed', 'No, it is out of the box', 'I am not sure'],
@@ -274,6 +287,14 @@ const QUESTIONS = [
     options: ['Yes, everything is there', 'No, something is missing', 'I am not sure'],
   },
 ];
+
+// Every call to questionsFor() hands out these same objects. Freeze them so a
+// caller that writes to one throws (modules are strict) instead of changing the
+// catalogue for the rest of the session.
+for (const q of QUESTIONS) {
+  if (q.options) Object.freeze(q.options);
+  Object.freeze(q);
+}
 
 const BY_ID = new Map(QUESTIONS.map((q) => [q.id, q]));
 
@@ -310,7 +331,7 @@ export const CATEGORY_SETS = {
 };
 
 // The exceptions, by exact service name. Each takes the category's base set
-// and returns the set this service asks. Source: the spec's "Las 19
+// and returns the set this service asks. Source: the spec's "Las 20
 // excepciones" (22-oct-2026), plus Emergency Service. Confirmed by Diego where
 // noted; every other line is the spec's proposal. The handlebar, headset and
 // saddle questions are the spec's "each with its own question" - the wording is
@@ -362,6 +383,9 @@ export const SERVICE_OVERRIDES = {
   'Saddle Fitting': (base) => [...base, ...pick('fit_goal')],
 
   // General & assembly
+  // The base set only asks whether the customer has the part. WHICH part is
+  // what tells the mechanic what to load, so it goes first.
+  'Accessory / Part Install': (base) => [...pick('part_wanted'), ...base],
   'Bike Assembly': () => pick('in_box', 'parts_complete'),
 
   // Not maintenance: someone stranded. app.js diverts it to a WhatsApp modal
@@ -376,8 +400,8 @@ function own(table, key) {
   return Object.getOwnPropertyDescriptor(table, key)?.value;
 }
 
-// service: { name, category }. Always returns a NEW array (the question objects
-// inside are shared, so treat them as read-only).
+// service: { name, category }. Always returns a NEW array. The question objects
+// inside are shared and frozen: copy one ({ ...q }) before changing it.
 export function questionsFor(service) {
   const { name, category } = service || {};
   const base = own(CATEGORY_SETS, category) || DEFAULT_SET;

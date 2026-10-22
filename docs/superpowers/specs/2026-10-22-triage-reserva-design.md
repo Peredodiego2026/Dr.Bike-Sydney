@@ -82,7 +82,7 @@ documenta para las tarjetas de marketing:
 > immediately, and on no marketing page ever"
 
 Atado a la categoría, el servicio nuevo hereda las preguntas de su familia el
-mismo día. **9 juegos base + 19 excepciones cubren los 33.**
+mismo día. **9 juegos base + 20 excepciones cubren los 33.**
 
 ### Por qué las preguntas viven en el código y no en la base
 
@@ -229,11 +229,15 @@ con Diego salvo donde se indica.
 | **Programados**          |     5 | Nada, y está bien. Lleva "saltear" visible                            |
 | **General y armado**     |     2 | Si la pieza la trae el cliente                                        |
 
-### Las 19 excepciones
+### Las 20 excepciones
 
 Contadas una por una sobre el catálogo. Los mockups decían "11" y era un conteo
-mal hecho; el número real es 19, y 14 de los 33 servicios heredan su categoría
+mal hecho; el número real es 20, y 13 de los 33 servicios heredan su categoría
 sin cambios.
+
+_Corregido el 23-oct: esta tabla decía 19 y le faltaba Accessory / Part Install.
+El mockup que vio Diego sí preguntaba qué pieza instalar; el texto no lo
+recogió._
 
 | Servicio                     | Qué cambia                                                                                                        |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -253,6 +257,7 @@ sin cambios.
 | Air Can Service              | Suma: ¿horquilla o amortiguador trasero?                                                                          |
 | Handlebar / Headset / Saddle | Cada uno con su pregunta propia                                                                                   |
 | Bike Assembly                | Cambia a: ¿viene en caja? ¿están todas las piezas?                                                                |
+| Accessory / Part Install     | Suma primero: ¿qué querés instalar? Portaequipaje, guardabarros, luces, portabidón, pedales u otra                |
 
 ### Cinta de manillar: una sola pregunta menos
 

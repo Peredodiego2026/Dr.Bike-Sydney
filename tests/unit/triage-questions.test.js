@@ -165,8 +165,8 @@ describe('los 33 servicios del catalogo', () => {
     for (const key of Object.keys(SERVICE_OVERRIDES)) expect(names.has(key), key).toBe(true);
   });
 
-  it('son 19 excepciones del spec mas la emergencia', () => {
-    expect(Object.keys(SERVICE_OVERRIDES)).toHaveLength(20);
+  it('son 20 excepciones del spec mas la emergencia', () => {
+    expect(Object.keys(SERVICE_OVERRIDES)).toHaveLength(21);
     expect(SERVICE_OVERRIDES).toHaveProperty('Emergency Service');
   });
 
@@ -223,7 +223,7 @@ describe('las excepciones, una por una', () => {
     ['Saddle Fitting', 'Cockpit & levers', ['fit_goal'], []],
     ['Bar Tape Install', 'Cockpit & levers', ['bike_type'], ['bar_swap', 'tape_colour']],
     ['Bike Assembly', 'General & assembly', ['in_box', 'parts_complete'], ['own_part']],
-    ['Accessory / Part Install', 'General & assembly', ['own_part'], ['in_box']],
+    ['Accessory / Part Install', 'General & assembly', ['part_wanted', 'own_part'], ['in_box']],
     ['Tune-Up', 'Scheduled services', ['notes'], ['brand']],
   ];
 
@@ -241,8 +241,50 @@ describe('las excepciones, una por una', () => {
     expect(brand.optional).toBeFalsy();
   });
 
+  it('Accessory / Part Install dice QUE pieza se instala, antes de preguntar si la trae', () => {
+    // Sin esto el mecanico sabe si el cliente tiene la pieza y no cual es.
+    const qs = questionsFor({ name: 'Accessory / Part Install', category: 'General & assembly' });
+    expect(qs.map((q) => q.id)).toEqual(['part_wanted', 'own_part']);
+    const part = qs[0];
+    expect(part.ask).toBe('What would you like us to install?');
+    expect(part.options).toEqual([
+      'Rack',
+      'Mudguards',
+      'Lights',
+      'Bottle cage',
+      'Pedals',
+      'Something else',
+      'I am not sure',
+    ]);
+    expect(part.optional).toBeFalsy();
+  });
+
   it('el programado lleva un "saltear" visible: todas sus preguntas son opcionales', () => {
     for (const q of CATEGORY_SETS['Scheduled services']) expect(q.optional, q.id).toBe(true);
+  });
+});
+
+describe('el catalogo es de solo lectura', () => {
+  // Las preguntas se comparten entre todas las llamadas a questionsFor(). Si
+  // la UI le escribe un campo a una, el catalogo queda corrompido para el resto
+  // de la sesion. Congeladas, escribirles lanza (los modulos son estrictos) en
+  // vez de cambiar nada en silencio.
+  it('toda pregunta y sus opciones estan congeladas', () => {
+    for (const q of reachableQuestions()) {
+      expect(Object.isFrozen(q), q.id).toBe(true);
+      if (q.options) expect(Object.isFrozen(q.options), q.id + ' options').toBe(true);
+    }
+  });
+
+  it('escribirle a una pregunta lanza y no cambia el catalogo', () => {
+    const [first] = questionsFor({ name: 'x', category: 'Brakes' });
+    const ask = first.ask;
+    expect(() => {
+      first.ask = 'otra cosa';
+    }).toThrow(TypeError);
+    expect(() => first.options.push('Una marca nueva')).toThrow(TypeError);
+    expect(questionsFor({ name: 'x', category: 'Brakes' })[0].ask).toBe(ask);
+    expect(labelFor(first.id)).toBe(ask);
   });
 });
 
