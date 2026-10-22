@@ -3132,15 +3132,17 @@ async function confirmCancel() {
   const reason = document.getElementById('cancel-reason').value;
   const notes = document.getElementById('cancel-notes').value;
   const fullReason = [reason, notes].filter(Boolean).join(' — ');
-  const { data: upd, error: cErr } = await sb
-    .from('bookings')
-    .update({ status: 'cancelled', cancellation_reason: fullReason })
-    .eq('id', id)
-    .select();
-  if (cErr || !upd || !upd.length) {
-    showToast(
-      'Could not cancel: ' + (cErr?.message || 'no permission / run add-cancellation-reason.sql')
-    );
+  // Server-side (api/auth.js handleAdminCancelBooking): cancelling a completed
+  // job there also puts the parts it used back in stock, which the old
+  // browser-side update never did.
+  let upd;
+  let partsBack = 0;
+  try {
+    const d = await photosApi('admin-cancel-booking', { id, reason: fullReason });
+    upd = [d.booking];
+    partsBack = Object.values(d.parts_returned || {}).reduce((s, q) => s + q, 0);
+  } catch (e) {
+    showToast('Could not cancel: ' + e.message);
     return;
   }
   const b = allBookings.find((x) => x.id === id);
@@ -3150,7 +3152,11 @@ async function confirmCancel() {
   }
   document.getElementById('cancel-modal').style.display = 'none';
   applyBookingFilters();
-  showToast('Booking cancelled');
+  showToast(
+    partsBack
+      ? `Booking cancelled · ${partsBack} part${partsBack === 1 ? '' : 's'} back in stock`
+      : 'Booking cancelled'
+  );
 
   if (upd[0]?.google_event_id) {
     const { data: sess } = await sb.auth.getSession();
