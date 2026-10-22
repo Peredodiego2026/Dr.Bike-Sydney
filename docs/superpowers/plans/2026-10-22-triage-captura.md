@@ -39,7 +39,7 @@ Cinco entradas que el spec implica y que ninguna tarea ejercita por sí sola. Ca
 
 | Archivo                                          | Responsabilidad                                                                   |
 | ------------------------------------------------ | --------------------------------------------------------------------------------- |
-| `js/triage-questions.js` **(nuevo)**             | Los 9 juegos y las 19 excepciones, como datos. Sin DOM, sin red.                  |
+| `js/triage-questions.js` **(nuevo)**             | Los 9 juegos y las 20 excepciones, como datos. Sin DOM, sin red.                  |
 | `js/app.js` **(modificar)**                      | Dibuja el triage en la tarjeta seleccionada; lo mete en `appState` y el borrador. |
 | `api/auth.js` **(modificar)**                    | Valida y guarda `triage` en la fila.                                              |
 | `js/admin.js` **(modificar)**                    | Muestra el triage en el detalle de la reserva.                                    |
@@ -149,7 +149,7 @@ Expected: FAIL, `questionsFor is not defined`
 
 - [ ] **Step 3: Escribir `js/triage-questions.js`**
 
-Las preguntas salen de la tabla "Las preguntas, por categoría" y de "Las 19 excepciones" del spec. Reglas:
+Las preguntas salen de la tabla "Las preguntas, por categoría" y de "Las 20 excepciones" del spec. Reglas:
 
 - Todo `ask`, `hint` y cada opción son **strings literales en inglés**, nunca interpolados: `i18n-check` camina nodos de texto y no ve un string construido.
 - Las opciones cerradas terminan en `'I am not sure'`.
