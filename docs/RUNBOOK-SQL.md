@@ -410,6 +410,16 @@ with
   union all select 52, 'shop-ship-surcharge.sql', 'shop_products.ship_surcharge (recargo de envio del pesado)',
     (exists (select 1 from col where t='shop_products' and c='ship_surcharge')
      and exists (select 1 from pg_constraint where conname = 'shop_products_ship_surcharge_check'))
+  -- 53 entro el 2026-10-22 con el inventario: el ledger stock_movements, la
+  -- funcion adjust_part_stock (mueve stock y escribe el ledger en una sola
+  -- operacion; puede devolver stock al revertir) y las 4 columnas de camara en
+  -- parts_inventory. El seed de las 61 Duro es dato, no esquema: se verifica con
+  -- las dos consultas al pie del propio .sql, no aca.
+  union all select 53, 'add-stock-movements-and-tube-seed.sql', 'tabla stock_movements, funcion adjust_part_stock, y las 4 columnas de camara en parts_inventory',
+    (exists (select 1 from tbl where t = 'stock_movements')
+     and exists (select 1 from fn where f = 'adjust_part_stock')
+     and (select count(*) = 4 from col where t='parts_inventory'
+            and c in ('wheel_size','valve_type','valve_length_mm','width_range')))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
