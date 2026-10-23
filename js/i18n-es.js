@@ -1915,4 +1915,8 @@ export default {
   'Are all the parts there?': '¿Están todas las piezas?',
   'Yes, everything is there': 'Sí, está todo',
   'No, something is missing': 'No, falta algo',
+  // Triage de la reserva, paso 1: el encabezado del panel y el aviso de la cinta.
+  'Help us bring the right part': 'Ayudanos a llevar la pieza correcta',
+  'Optional. Skip anything you are not sure about.': 'Opcional. Omití lo que no sepas.',
+  'The bar tape we fit comes in black.': 'La cinta de manubrio que colocamos es negra.',
 };

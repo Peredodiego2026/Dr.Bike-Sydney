@@ -1755,4 +1755,8 @@ export default {
   'Are all the parts there?': '零件都齐全吗？',
   'Yes, everything is there': '是的，都齐全',
   'No, something is missing': '不，缺了一些',
+  // Triage de la reserva, paso 1: el encabezado del panel y el aviso de la cinta.
+  'Help us bring the right part': '帮助我们带上合适的零件',
+  'Optional. Skip anything you are not sure about.': '可选填。不确定的可以跳过。',
+  'The bar tape we fit comes in black.': '我们安装的车把带为黑色。',
 };

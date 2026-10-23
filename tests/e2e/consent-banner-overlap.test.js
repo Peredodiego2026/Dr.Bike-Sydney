@@ -62,6 +62,13 @@ async function openTheDateStep(page) {
     return card ? card.textContent.replace(/\s+/g, ' ').trim().slice(0, 40) : null;
   });
   if (!picked) throw new Error('no bookable service card on the list');
+  // A tap on a card used to jump straight to step 2. Now the service's optional
+  // triage questions unfold under it and Continue is what moves on. Waiting for
+  // either keeps this working on both sides of the deploy (this file runs
+  // against production by default): #triage-panel means "tap Continue",
+  // #cal-wrap means the tap already advanced by itself.
+  await page.waitForSelector('#cal-wrap, #triage-panel', { timeout: 30000 });
+  if (await page.locator('#triage-panel').count()) await page.locator('#s1-continue').click();
   // #cal-wrap only exists on step 2, so this is what says the click took.
   await page.waitForSelector('#cal-wrap', { timeout: 30000 });
   await page.waitForSelector('.screen.active .sticky-bottom .btn', { timeout: 30000 });

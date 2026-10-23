@@ -499,6 +499,124 @@ body {
   font-size: 15px;
 }
 
+/* ── Booking triage ──────────────────────────────────────────────────────────
+   The optional questions that unfold under the service card the client tapped
+   (js/app.js, "The triage"). Flat chips, everything visible at once, nothing
+   nested - the owner's "restaurant menu" layout.
+
+   It is the SIBLING of the card, not a child. The card is role="button" with its
+   own click and key handlers, so controls inside it would be nested interactive
+   content and a Space typed into the notes field would re-click the card. The
+   panel is pulled up by exactly the list's gap and drops its top border so the
+   two read as one unit: the card's own bottom edge is the divider. */
+.service-card.has-triage {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  scroll-margin-top: var(--space-4);
+}
+
+.triage {
+  /* Must equal the gap of .services-list above. */
+  margin-top: calc(var(--space-3) * -1);
+  padding: var(--space-4);
+  background: var(--white);
+  border: 1px solid var(--blue);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+}
+.triage__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.triage__sub {
+  font-size: 12px;
+  color: var(--gray);
+  margin-top: 2px;
+}
+.triage__note {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-dark-text);
+  background: var(--blue-lt);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: var(--space-3);
+}
+.triage__q {
+  margin-top: var(--space-4);
+}
+.triage__ask {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.triage__hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--gray);
+  margin-top: 2px;
+}
+.triage__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.triage__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+/* Only where hover is real: on a phone it sticks to the last chip tapped, which
+   would leave a chip the client just un-chose looking half-selected. */
+@media (hover: hover) {
+  .triage__chip:hover {
+    border-color: var(--blue);
+  }
+}
+/* The tick is the selected state for anyone who cannot tell two blues apart. */
+.triage__chip.is-on {
+  background: var(--blue-lt);
+  border-color: var(--blue);
+  color: var(--blue-dark-text);
+}
+.triage__chip.is-on::before {
+  content: '\2713';
+  margin-right: 6px;
+}
+.triage__input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin-top: var(--space-2);
+  padding: 0 12px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  /* 16px: anything smaller makes iOS zoom the page on focus. */
+  font-size: 16px;
+  color: var(--navy);
+}
+.triage__input:focus {
+  border-color: var(--blue);
+}
+
 /* ── Desktop overrides ──────────────────────────────────────────────────────── */
 @media (min-width: 768px) {
   .bottom-nav {
