@@ -2573,10 +2573,22 @@ async function handleMechanicComplete(req, res) {
       const qty = parseInt(p?.qty, 10);
       if (!p?.id || !Number.isFinite(qty) || qty <= 0) continue;
       if (costLookupOk) partsCostActual += qty * (costById.get(p.id) || 0);
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decrement_part_stock`, {
+      // adjust_part_stock (negative delta) instead of decrement_part_stock: it
+      // does the same atomic, non-negative decrement AND writes a job_used row
+      // to stock_movements with this booking's id, so cancelling the job later
+      // can return exactly what it took (revertJobStock). Same return shape
+      // (id, name, new_stock, min_stock) plus `applied`, so the low-stock check
+      // below is unchanged.
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
         method: 'POST',
         headers: sbHdr,
-        body: JSON.stringify({ p_part_id: p.id, p_qty: qty }),
+        body: JSON.stringify({
+          p_part_id: p.id,
+          p_delta: -qty,
+          p_reason: 'job_used',
+          p_job_id: booking_id,
+          p_created_by: String(auth.mechanic?.name || auth.mechanic?.id || 'mechanic'),
+        }),
       });
       if (!r.ok) continue;
       const row = (await r.json())[0];
@@ -3512,6 +3524,58 @@ async function handleClientHistory(req, res) {
   return res.status(200).json(data || []);
 }
 
+// Give a cancelled job its parts back. Reads what the job actually took from
+// the ledger (its job_used rows) rather than the booking's free-text
+// parts_used, and returns it as job_reverted through the same atomic RPC.
+//
+// Works on the NET per part (job_used + job_reverted so far), not on "has it
+// been reverted before": a job that is cancelled, reopened, completed again
+// and cancelled again owes the second deduction too, and a first version that
+// stopped at the first job_reverted row would have kept it. Idempotent all the
+// same - once a job is given back its net is 0 and a second call does nothing.
+// Returns what it gave back, { [partId]: qty }.
+export async function revertJobStock(bookingId, serviceKey, createdBy = 'revert') {
+  const hdr = {
+    apikey: serviceKey,
+    Authorization: `Bearer ${serviceKey}`,
+    'Content-Type': 'application/json',
+  };
+  const returned = {};
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/stock_movements?select=part_id,delta,reason&job_id=eq.${encodeURIComponent(bookingId)}`,
+      { headers: hdr }
+    );
+    // A failed read gives back nothing: guessing would invent stock.
+    if (!resp.ok) return returned;
+    const rows = await resp.json();
+    const net = new Map();
+    for (const r of rows) {
+      if (r.reason !== 'job_used' && r.reason !== 'job_reverted') continue;
+      net.set(r.part_id, (net.get(r.part_id) || 0) + Number(r.delta));
+    }
+    for (const [partId, n] of net) {
+      if (!(n < 0)) continue; // nothing (left) to give back for this part
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+        method: 'POST',
+        headers: hdr,
+        body: JSON.stringify({
+          p_part_id: partId,
+          p_delta: -n, // exactly what is still out
+          p_reason: 'job_reverted',
+          p_job_id: bookingId,
+          p_created_by: createdBy,
+        }),
+      });
+      if (r.ok) returned[partId] = -n;
+      else console.warn('[revert-stock] RPC failed for part', partId, r.status);
+    }
+  } catch (e) {
+    console.warn('[revert-stock] could not return stock for', bookingId, e.message);
+  }
+  return returned;
+}
+
 async function handleMechanicUpdateStatus(req, res) {
   const { booking_id, status, mechanic_notes } = req.body;
   if (!booking_id || !status)
@@ -3534,15 +3598,23 @@ async function handleMechanicUpdateStatus(req, res) {
     status === 'enroute'
       ? `&or=(mechanic_id.is.null,mechanic_id.eq.${encodeURIComponent(mechanic.id)})`
       : `&mechanic_id=eq.${encodeURIComponent(mechanic.id)}`;
+  // A cancel only matches a job that is not cancelled yet, so the stock
+  // return below fires on the transition itself: a double tap, or two phones
+  // cancelling at once, updates one row once and returns the parts once.
+  const transitionFilter = status === 'cancelled' ? '&status=neq.cancelled' : '';
   const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}${ownershipFilter}`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}${ownershipFilter}${transitionFilter}`,
     {
       method: 'PATCH',
       headers: {
         apikey: SERVICE_KEY,
         Authorization: `Bearer ${SERVICE_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
+        // representation (not minimal): we need to know whether a row actually
+        // changed before returning stock, so a mechanic cancelling a job that
+        // is not theirs (ownership filter matches nothing) never triggers a
+        // revert.
+        Prefer: 'return=representation',
       },
       body: JSON.stringify({
         status,
@@ -3555,6 +3627,20 @@ async function handleMechanicUpdateStatus(req, res) {
     const errText = await updateResp.text();
     console.error('update-status error:', updateResp.status, errText);
     return res.status(500).json({ error: 'Failed to update booking', detail: errText });
+  }
+  // Cancelling a job that had been completed must give its parts back. Only on
+  // a real cancel that actually hit a row this mechanic owns; revertJobStock is
+  // idempotent and a no-op when the job never used parts, so the common case
+  // (cancelling a pending job) costs one cheap ledger read and nothing else.
+  if (status === 'cancelled') {
+    const updated = await updateResp.json().catch(() => []);
+    if (Array.isArray(updated) && updated.length) {
+      await revertJobStock(
+        booking_id,
+        SERVICE_KEY,
+        String(mechanic?.name || mechanic?.id || 'mechanic')
+      );
+    }
   }
   return res.status(200).json({ ok: true });
 }
@@ -5454,10 +5540,46 @@ async function verifyAdminSession(access_token, SERVICE_KEY) {
   return { sb, user, aal };
 }
 
+// Admin > Bookings > Cancel. Used to be a browser-side update with the anon
+// key, which could cancel a COMPLETED job and leave the parts it used out of
+// stock for good - the admin's Cancel button shows on every booking that is
+// not cancelled yet, completed ones included. Now it cancels here and gives
+// the parts back (revertJobStock, a no-op for a job that never used any).
+// Matches only a booking that is not cancelled yet, so the return fires on
+// the transition and a double click cannot return the stock twice.
+export async function handleAdminCancelBooking(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const id = req.body?.id;
+  if (!id) return res.status(400).json({ error: 'id required' });
+  // Stored as plain text, escaped wherever it is shown (admin.js and app.js).
+  const reason =
+    typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 500) || null : null;
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(id)}&status=neq.cancelled`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({ status: 'cancelled', cancellation_reason: reason }),
+    }
+  );
+  if (!r.ok) return res.status(500).json({ error: 'Could not cancel the booking' });
+  const rows = await r.json().catch(() => []);
+  if (!Array.isArray(rows) || !rows.length)
+    return res.status(409).json({ error: 'Booking not found or already cancelled' });
+  const returned = await revertJobStock(id, SERVICE_KEY, String(auth.user?.email || 'admin'));
+  return res.status(200).json({ booking: rows[0], parts_returned: returned });
+}
+
 // Cleans up a booking's synced calendar event after an admin-side cancel
-// (admin.js's confirmCancel() cancels the booking directly via the browser
-// Supabase client, so this is the one server hop needed to reach the Google
-// Calendar credentials, which must never be exposed client-side).
+// (admin.js's confirmCancel() cancels through handleAdminCancelBooking, but the
+// Google Calendar credentials live only here and must never reach the browser).
 async function handleAdminDeleteCalendarEvent(req, res) {
   const { access_token, event_id } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -6230,6 +6352,7 @@ async function handler(req, res) {
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-create-booking') return handleAdminCreateBooking(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
+  if (role === 'admin-cancel-booking') return handleAdminCancelBooking(req, res);
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   if (role === 'submit-claim') return handleSubmitClaim(req, res);
   if (role === 'admin-orphan-audit') return handleAdminOrphanAudit(req, res);
